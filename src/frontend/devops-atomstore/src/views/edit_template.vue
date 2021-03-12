@@ -167,7 +167,7 @@
             return {
                 showContent: false,
                 descTemplate: '',
-                docsLink: 'http://tempdocklink/pages/viewpage.action?pageId=15008944',
+                docsLink: `${DOCS_URL_PREFIX}/document/6.0/129/7775`,
                 sortList: [],
                 labelList: [],
                 categoryList: [],

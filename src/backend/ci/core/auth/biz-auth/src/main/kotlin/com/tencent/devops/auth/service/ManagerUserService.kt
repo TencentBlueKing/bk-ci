@@ -1,25 +1,3 @@
-package com.tencent.devops.auth.service
-
-import com.tencent.devops.auth.constant.AuthMessageCode
-import com.tencent.devops.auth.dao.ManagerUserDao
-import com.tencent.devops.auth.dao.ManagerUserHistoryDao
-import com.tencent.devops.auth.entity.UserChangeType
-import com.tencent.devops.auth.pojo.ManagerUserEntity
-import com.tencent.devops.auth.pojo.dto.ManagerUserDTO
-import com.tencent.devops.auth.refresh.dispatch.AuthRefreshDispatch
-import com.tencent.devops.auth.refresh.event.ManagerUserChangeEvent
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.api.util.PageUtil
-import com.tencent.devops.common.api.util.Watcher
-import com.tencent.devops.common.service.utils.LogUtils
-import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
-import java.time.LocalTime
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -32,12 +10,13 @@ import java.time.LocalTime
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -46,37 +25,113 @@ import java.time.LocalTime
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+package com.tencent.devops.auth.service
+
+import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.dao.ManagerUserDao
+import com.tencent.devops.auth.dao.ManagerUserHistoryDao
+import com.tencent.devops.auth.dao.ManagerWhiteDao
+import com.tencent.devops.auth.entity.UserChangeType
+import com.tencent.devops.auth.pojo.ManagerUserEntity
+import com.tencent.devops.auth.pojo.WhiteEntify
+import com.tencent.devops.auth.pojo.dto.ManagerUserDTO
+import com.tencent.devops.auth.pojo.enum.UrlType
+import com.tencent.devops.auth.refresh.dispatch.AuthRefreshDispatch
+import com.tencent.devops.auth.refresh.event.ManagerUserChangeEvent
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import org.jooq.DSLContext
+import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
+import java.time.LocalTime
+import java.util.concurrent.TimeUnit
+
+@Suppress("ALL")
 @Service
 class ManagerUserService @Autowired constructor(
     val dslContext: DSLContext,
     val managerUserDao: ManagerUserDao,
     val managerUserHistoryDao: ManagerUserHistoryDao,
-    val refreshDispatch: AuthRefreshDispatch
+    val managerWhiteDao: ManagerWhiteDao,
+    val refreshDispatch: AuthRefreshDispatch,
+    val managerOrganizationService: ManagerOrganizationService
 ) {
 
+    @Value("\${devopsGateway.host:#{null}}")
+    private val devopsGateway: String? = null
+
+    fun batchCreateManagerByUser(userId: String, managerUser: ManagerUserDTO): Int {
+        val users = managerUser.userId.split(",")
+        users.forEach {
+            val managerInfo = ManagerUserDTO(
+                timeout = managerUser.timeout,
+                userId = it,
+                managerId = managerUser.managerId
+            )
+            createManagerUser(userId, managerInfo)
+        }
+        return users.count()
+    }
+
+    fun batchCreateManager(userId: String, managerId: String, managerUser: String, timeout: Int): Boolean {
+        val managerIds = managerId.split(",")
+        val managerUsers = managerUser.split(",")
+        managerUsers.forEach { user ->
+            managerIds.forEach { manager ->
+                val managerInfo = ManagerUserDTO(
+                    timeout = timeout,
+                    userId = user,
+                    managerId = manager.toInt()
+                )
+                createManagerUser(userId, managerInfo)
+            }
+        }
+        return true
+    }
+
+    fun batchDelete(userId: String, managerIds: String, deleteUsers: String): Boolean {
+        val managerIdArr = managerIds.split(",")
+        val managerUsers = deleteUsers.split(",")
+        managerUsers.forEach { user ->
+            managerIdArr.forEach { manager ->
+                deleteManagerUser(userId, manager.toInt(), user)
+            }
+        }
+        return true
+    }
+
     fun createManagerUser(userId: String, managerUser: ManagerUserDTO): Int {
-        logger.info("createManagerUser | $userId | $managerUser")
         val managerInfo = ManagerUserEntity(
             createUser = userId,
             managerId = managerUser.managerId,
             startTime = System.currentTimeMillis(),
-            timeoutTime = System.currentTimeMillis() + (DateTimeUtil.minuteToSecond(managerUser.timeout!!) * 1000),
+            timeoutTime = System.currentTimeMillis() + TimeUnit.MINUTES.toMillis(managerUser.timeout!!.toLong()),
             userId = managerUser.userId
         )
+        LOG.info("createManagerUser | $managerInfo")
 
         val record = managerUserDao.get(dslContext, managerInfo.managerId, managerInfo.userId)
 
         if (record != null) {
-            logger.warn("createManagerUser user has this manager $userId $managerInfo $record")
+            LOG.warn("createManagerUser user has this manager $userId $managerInfo $record")
             throw ErrorCodeException(
-                defaultMessage = "",
+                defaultMessage = MessageCodeUtil.getCodeMessage(messageCode = AuthMessageCode.MANAGER_USER_EXIST,
+                    params = arrayOf(managerInfo.userId)),
                 errorCode = AuthMessageCode.MANAGER_USER_EXIST
             )
         }
 
         val id = managerUserDao.create(dslContext, managerInfo)
         managerUserHistoryDao.create(dslContext, managerInfo)
-        logger.info("createManagerUser send message to mq| $id | $userId | $managerUser")
+        LOG.info("createManagerUser send message to mq| $id | $userId | $managerUser")
         refreshDispatch.dispatch(
             ManagerUserChangeEvent(
                 refreshType = "createManagerUser",
@@ -89,13 +144,11 @@ class ManagerUserService @Autowired constructor(
     }
 
     fun deleteManagerUser(userId: String, managerId: Int, deleteUser: String): Boolean {
-        logger.info("deleteManagerUser | $userId | $deleteUser")
-        logger.info("deleteManagerUser delete alive table $deleteUser, $managerId")
-        val id = managerUserDao.delete(dslContext, managerId, deleteUser)
-        logger.info("deleteManagerUser update history table $deleteUser, $managerId")
+        LOG.info("deleteManagerUser | $userId | $deleteUser| $managerId")
+        managerUserDao.delete(dslContext, managerId, deleteUser)
         val userHistoryRecords = managerUserHistoryDao.get(dslContext, managerId, deleteUser)
         if (userHistoryRecords == null) {
-            logger.info("deleteManagerUser history table is empty $managerId $deleteUser")
+            LOG.info("deleteManagerUser history table is empty $managerId $deleteUser")
             return true
         }
         managerUserHistoryDao.updateById(
@@ -103,7 +156,7 @@ class ManagerUserService @Autowired constructor(
             id = userHistoryRecords.id,
             userId = userId
         )
-        logger.info("deleteManagerUser send message to mq | $userId | $managerId | $deleteUser")
+        LOG.info("deleteManagerUser send message to mq | $userId | $managerId | $deleteUser")
         refreshDispatch.dispatch(
             ManagerUserChangeEvent(
                 refreshType = "deleteManagerUser",
@@ -134,20 +187,21 @@ class ManagerUserService @Autowired constructor(
             }
             return managerList
         } catch (e: Exception) {
-            logger.warn("aliveManagerListByManagerId fail：", e)
+            LOG.warn("aliveManagerListByManagerId fail：", e)
             throw e
         } finally {
             LogUtils.printCostTimeWE(watcher, warnThreshold = 10, errorThreshold = 50)
         }
     }
 
-    fun timeoutManagerListByManagerId(managerId: Int, page: Int ? = 0, pageSize: Int ? = 50): Page<ManagerUserEntity>? {
+    fun timeoutManagerListByManagerId(managerId: Int, page: Int? = 0, pageSize: Int? = 50): Page<ManagerUserEntity>? {
         val managerList = mutableListOf<ManagerUserEntity>()
         val watcher = Watcher("timeoutManagerListByManagerId| $managerId")
         try {
             val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
 
-            val userRecords = managerUserHistoryDao.list(dslContext, managerId, sqlLimit.limit, sqlLimit.offset) ?: return null
+            val userRecords = managerUserHistoryDao.list(dslContext, managerId, sqlLimit.limit, sqlLimit.offset)
+                ?: return null
             val count = managerUserHistoryDao.count(dslContext, managerId)
 
             userRecords.forEach {
@@ -167,7 +221,7 @@ class ManagerUserService @Autowired constructor(
                 records = managerList
             )
         } catch (e: Exception) {
-            logger.warn("timeoutManagerListByManagerId fail:", e)
+            LOG.warn("timeoutManagerListByManagerId fail:", e)
             throw e
         } finally {
             LogUtils.printCostTimeWE(watcher, warnThreshold = 10, errorThreshold = 50)
@@ -189,7 +243,7 @@ class ManagerUserService @Autowired constructor(
     fun deleteTimeoutUser(): Boolean {
         var offset = 0
         val limit = 100
-        logger.info("auto delete timeoutUser start ${LocalTime.now()}")
+        LOG.info("auto delete timeoutUser start ${LocalTime.now()}")
         val watcher = Watcher("autoDeleteManager")
         try {
             do {
@@ -203,15 +257,126 @@ class ManagerUserService @Autowired constructor(
                 offset += limit
             } while (records?.size == offset)
         } catch (e: Exception) {
-            logger.warn("auto delete TimeoutUser fail:", e)
+            LOG.warn("auto delete TimeoutUser fail:", e)
         } finally {
             LogUtils.printCostTimeWE(watcher)
         }
-        logger.info("auto delete timeoutUser success")
+        LOG.info("auto delete timeoutUser success")
         return true
     }
 
+    fun createManagerUserByUrl(managerId: Int, userId: String): String {
+        val whiteRecord = getWhiteUser(managerId, userId)
+        if (whiteRecord == null) {
+            LOG.warn("createManagerUserByUrl user:$userId not in $managerId whiteList")
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.MANAGER_GRANT_WHITELIST_USER_EXIST,
+                defaultMessage = MessageCodeUtil.getCodeMessage(
+                    messageCode = AuthMessageCode.MANAGER_GRANT_WHITELIST_USER_EXIST,
+                    params = arrayOf(userId))
+            )
+        }
+        val managerUser = ManagerUserDTO(
+            managerId = managerId,
+            userId = userId,
+            timeout = 120
+        )
+        createManagerUser("system", managerUser)
+        return "授权成功, 获取管理员权限120分钟"
+    }
+
+    fun grantCancelManagerUserByUrl(managerId: Int, userId: String): String {
+        val whiteRecord = getWhiteUser(managerId, userId)
+        if (whiteRecord == null) {
+            LOG.warn("grantCancelManagerUserByUrl user:$userId not in $managerId whiteList")
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.MANAGER_GRANT_WHITELIST_USER_EXIST,
+                defaultMessage = MessageCodeUtil.getCodeMessage(
+                    messageCode = AuthMessageCode.MANAGER_GRANT_WHITELIST_USER_EXIST,
+                    params = arrayOf(userId))
+            )
+        }
+        deleteManagerUser("system", managerId, userId)
+        return "取消授权成功, 缓存在5分钟后完全失效"
+    }
+
+    fun createWhiteUser(managerId: Int, userIds: String): Boolean {
+        val userList = userIds.split(",")
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            userList.forEach {
+                if (it.isEmpty()) {
+                    return@forEach
+                }
+
+                val record = managerWhiteDao.get(context, managerId, it)
+                if (record != null) {
+                    LOG.warn("createWhiteUser $managerId $it is exist")
+                    throw ErrorCodeException(
+                        errorCode = AuthMessageCode.MANAGER_WHITE_USER_EXIST,
+                        defaultMessage = MessageCodeUtil.getCodeMessage(
+                            messageCode = AuthMessageCode.MANAGER_WHITE_USER_EXIST,
+                            params = arrayOf(it))
+                    )
+                }
+
+                managerWhiteDao.create(context, managerId, it)
+            }
+        }
+        return true
+    }
+
+    fun deleteWhiteUser(ids: String): Boolean {
+        val idList = ids.split(",")
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            idList.forEach {
+                val id = it.toInt()
+                managerWhiteDao.delete(context, id)
+            }
+        }
+        return true
+    }
+
+    fun listWhiteUser(managerId: Int): List<WhiteEntify>? {
+        val records = managerWhiteDao.list(dslContext, managerId) ?: return emptyList()
+        val whiteUsers = mutableListOf<WhiteEntify>()
+        records.forEach {
+            whiteUsers.add(WhiteEntify(
+                id = it.id,
+                managerId = it.managerId,
+                user = it.userId
+            ))
+        }
+        return whiteUsers
+    }
+
+    fun getWhiteUser(managerId: Int, userId: String): WhiteEntify? {
+        val record = managerWhiteDao.get(dslContext, managerId, userId) ?: return null
+        return WhiteEntify(
+            id = record.id,
+            managerId = record.managerId,
+            user = record.userId
+        )
+    }
+
+    fun getManagerUrl(managerId: Int, urlType: UrlType): String {
+        val managerRecord = managerOrganizationService.getManagerInfo(managerId)
+        if (managerRecord == null) {
+            LOG.warn("getManagerUrl $managerId $urlType manager not exist")
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.MANAGER_ORG_NOT_EXIST
+            )
+        }
+
+        val host = devopsGateway
+        return when (urlType) {
+            UrlType.GRANT -> "$host/ms/auth/api/user/auth/manager/users/grant/$managerId"
+            UrlType.CANCEL -> "$host/ms/auth/api/user/auth/manager/users/cancel/grant/$managerId"
+        }
+    }
+
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        private val LOG = LoggerFactory.getLogger(ManagerUserService::class.java)
     }
 }

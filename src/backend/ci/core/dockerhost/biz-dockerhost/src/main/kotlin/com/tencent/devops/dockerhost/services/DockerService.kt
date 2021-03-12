@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -43,7 +44,7 @@ import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
-@Service
+@Service@Suppress("ALL")
 class DockerService @Autowired constructor(
     private val dockerHostBuildService: DockerHostBuildService
 ) {
@@ -107,7 +108,7 @@ class DockerService @Autowired constructor(
         buildId: String,
         dockerRunParam: DockerRunParam
     ): DockerRunResponse {
-        logger.info("Start dockerRun projectId: $projectId, pipelineId: $pipelineId, vmSeqId: $vmSeqId, buildId: $buildId, dockerRunParam: $dockerRunParam.")
+        logger.info("$buildId|dockerRun|vmSeqId=$vmSeqId|image=${dockerRunParam.imageName}|${dockerRunParam.command}")
 
         val (containerId, timeStamp, portBindingList) = dockerHostBuildService.dockerRun(
             projectId = projectId,
@@ -116,12 +117,13 @@ class DockerService @Autowired constructor(
             buildId = buildId,
             dockerRunParam = dockerRunParam
         )
-        logger.info("End dockerRun projectId: $projectId, pipelineId: $pipelineId, vmSeqId: $vmSeqId, buildId: $buildId, dockerRunParam: $dockerRunParam")
+
+        logger.info("$buildId|dockerRunEnd|vmSeqId=$vmSeqId|poolNo=${dockerRunParam.poolNo}")
         return DockerRunResponse(containerId, timeStamp, portBindingList)
     }
 
     fun dockerStop(projectId: String, pipelineId: String, vmSeqId: String, buildId: String, containerId: String) {
-        logger.info("projectId: $projectId, pipelineId: $pipelineId, vmSeqId: $vmSeqId, buildId: $buildId, containerId: $containerId")
+        logger.info("$buildId|dockerStop|vmSeqId=$vmSeqId|containerId=$containerId")
         dockerHostBuildService.dockerStop(projectId, pipelineId, vmSeqId, buildId, containerId)
     }
 
@@ -134,7 +136,7 @@ class DockerService @Autowired constructor(
         logStartTimeStamp: Int,
         printLog: Boolean? = true
     ): DockerLogsResponse {
-        logger.info("[$buildId]|[$vmSeqId]|[$containerId]|[$logStartTimeStamp] Enter DockerService.getDockerRunLogs...")
+        logger.info("$buildId|getDockerRunLogs|vmSeqId=$vmSeqId|$containerId|logStartTimeStamp=$logStartTimeStamp")
         val containerState = dockerHostBuildService.getContainerState(containerId)
         val isRunning = if (containerState != null) {
             containerState.running ?: false
@@ -143,7 +145,9 @@ class DockerService @Autowired constructor(
         }
 
         val exitCode = when {
-            containerState != null -> if (containerState.exitCodeLong == null) Constants.DOCKER_EXIST_CODE else containerState.exitCodeLong!!.toInt()
+            containerState != null -> if (containerState.exitCodeLong == null) {
+                Constants.DOCKER_EXIST_CODE
+            } else containerState.exitCodeLong!!.toInt()
             else -> null
         }
 
@@ -153,7 +157,7 @@ class DockerService @Autowired constructor(
             dockerHostBuildService.getDockerLogs(containerId, logStartTimeStamp)
         }
 
-        logger.info("[$buildId]|[$vmSeqId]|[$containerId] Finish DockerService.getDockerRunLogs...")
+        logger.info("$buildId|getDockerRunLogsEnd|vmSeqId=$vmSeqId|$containerId")
         return DockerLogsResponse(isRunning, exitCode, logs)
     }
 

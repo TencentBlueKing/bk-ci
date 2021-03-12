@@ -97,6 +97,10 @@ Vue.mixin({
     }
 })
 
+if (window.top === window.self) { // 只能以iframe形式嵌入
+    location.href = `${WEB_URL_PIRFIX}${location.pathname}`
+}
+
 global.pipelineVue = new Vue({
     el: '#app',
     router: createRouter(store),

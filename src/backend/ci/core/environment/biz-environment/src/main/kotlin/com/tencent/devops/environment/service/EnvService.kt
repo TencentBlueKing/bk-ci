@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -73,7 +74,7 @@ import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Service
+@Service@Suppress("ALL")
 class EnvService @Autowired constructor(
     private val dslContext: DSLContext,
     private val envDao: EnvDao,
@@ -577,6 +578,43 @@ class EnvService @Autowired constructor(
             records = envList,
             pageSize = offset,
             page = limit
+        )
+    }
+
+    override fun searchByName(projectId: String, envName: String, limit: Int, offset: Int): Page<EnvWithPermission> {
+        val envList = mutableListOf<EnvWithPermission>()
+        val envRecords = envDao.searchByName(
+                dslContext = dslContext,
+                offset = offset,
+                limit = limit,
+                projectId = projectId,
+                envName = envName
+        )
+        envRecords.map {
+            envList.add(
+                    EnvWithPermission(
+                            envHashId = HashUtil.encodeLongId(it.envId),
+                            name = it.envName,
+                            desc = it.envDesc,
+                            envType = if (it.envType == EnvType.TEST.name) EnvType.DEV.name else it.envType, // 兼容性代码
+                            nodeCount = null,
+                            envVars = jacksonObjectMapper().readValue(it.envVars),
+                            createdUser = it.createdUser,
+                            createdTime = it.createdTime.timestamp(),
+                            updatedUser = it.updatedUser,
+                            updatedTime = it.updatedTime.timestamp(),
+                            canEdit = null,
+                            canDelete = null,
+                            canUse = null
+                    )
+            )
+        }
+        val count = envDao.countByName(dslContext, projectId, envName)
+        return Page(
+                count = count.toLong(),
+                records = envList,
+                pageSize = offset,
+                page = limit
         )
     }
 

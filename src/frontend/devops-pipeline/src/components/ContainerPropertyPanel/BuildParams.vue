@@ -415,7 +415,6 @@
                             [key]: value
                         })
                     }
-
                     this.handleChange([
                         ...this.renderParams
                     ])

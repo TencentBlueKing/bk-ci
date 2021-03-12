@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -29,11 +30,13 @@ package com.tencent.devops.project.resources
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.pojo.OrgInfo
+import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.service.ProjectOrganizationService
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.service.ProjectPermissionService
@@ -96,20 +99,26 @@ class ServiceProjectResourceImpl @Autowired constructor(
     override fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?): Result<Boolean> {
         // 创建项目
         val createExtInfo = ProjectCreateExtInfo(
-                needAuth = true,
-                needValidate = true
+            needAuth = true,
+            needValidate = true
         )
         projectService.create(
                 userId = userId,
                 projectCreateInfo = projectCreateInfo,
                 accessToken = accessToken,
-                createExt = createExtInfo
+                createExt = createExtInfo,
+                channel = ProjectChannelCode.BS
         )
 
         return Result(true)
     }
 
-    override fun update(userId: String, projectId: String, projectUpdateInfo: ProjectUpdateInfo, accessToken: String?): Result<Boolean> {
+    override fun update(
+        userId: String,
+        projectId: String,
+        projectUpdateInfo: ProjectUpdateInfo,
+        accessToken: String?
+    ): Result<Boolean> {
         return Result(projectService.update(userId, projectId, projectUpdateInfo, accessToken))
     }
 
@@ -120,5 +129,17 @@ class ServiceProjectResourceImpl @Autowired constructor(
 
     override fun isOrgProject(projectId: String, orgInfos: OrgInfo): Result<Boolean> {
         return Result(projectOrganizationService.isOrgProject(projectId, orgInfos))
+    }
+
+    override fun getMinId(): Result<Long> {
+        return Result(projectService.getMinId())
+    }
+
+    override fun getMaxId(): Result<Long> {
+        return Result(projectService.getMaxId())
+    }
+
+    override fun getProjectListById(minId: Long, maxId: Long): Result<List<ProjectBaseInfo>> {
+        return Result(projectService.getProjectListById(minId, maxId))
     }
 }

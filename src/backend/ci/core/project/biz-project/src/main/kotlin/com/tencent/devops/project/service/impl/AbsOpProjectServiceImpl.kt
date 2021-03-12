@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -35,7 +36,6 @@ import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.ProjectInfoResponse
-import com.tencent.devops.project.ProjectInfoResponseMacOSGray
 import com.tencent.devops.project.ProjectInfoResponseRepoGray
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
@@ -54,6 +54,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.util.CollectionUtils
 
+@Suppress("ALL")
 abstract class AbsOpProjectServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectDao: ProjectDao,
@@ -71,7 +72,7 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
     }
 
     override fun setGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean {
-        logger.info("Set gray projec:the projectCodeList is: $projectCodeList,operateFlag is:$operateFlag")
+        logger.info("Set gray project:the projectCodeList is: $projectCodeList,operateFlag is:$operateFlag")
         // 使用set集合（去除重复元素）操作提交的项目列表
         for (item in projectCodeList) {
             if (1 == operateFlag) {
@@ -80,6 +81,21 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             } else if (2 == operateFlag) {
                 gray.removeGrayProject(item, redisOperation) // 取消项目为灰度项目
 //                redisOperation.removeSetMember(gray.getGrayRedisKey(), item) // 取消项目为灰度项目
+            }
+        }
+        val projectCodeSet = grayProjectSet()
+        logger.info("the set projectSet is: $projectCodeSet")
+        return true
+    }
+
+    override fun setCodeCCGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean {
+        logger.info("Set gray codecc project:the projectCodeList is: $projectCodeList,operateFlag is:$operateFlag")
+        // 使用set集合（去除重复元素）操作提交的项目列表
+        for (item in projectCodeList) {
+            if (1 == operateFlag) {
+                gray.addCodeCCGrayProject(item, redisOperation) // 添加项目为灰度项目
+            } else if (2 == operateFlag) {
+                gray.removeCodeCCGrayProject(item, redisOperation) // 取消项目为灰度项目
             }
         }
         val projectCodeSet = grayProjectSet()
@@ -143,7 +159,8 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
         }
         // 判断项目是不是审核的情况
         var flag = false
-        if (1 == dbProjectRecord.approvalStatus && (2 == projectInfoRequest.approvalStatus || 3 == projectInfoRequest.approvalStatus)) {
+        if (1 == dbProjectRecord.approvalStatus &&
+            (2 == projectInfoRequest.approvalStatus || 3 == projectInfoRequest.approvalStatus)) {
             flag = true
             projectInfoRequest.approver = projectInfoRequest.approver
             projectInfoRequest.approvalTime = System.currentTimeMillis()
@@ -231,7 +248,13 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             offset = offset,
             limit = limit,
             grayFlag = grayFlag,
-            englishNames = grayProjectSet
+            repoGrayFlag = null,
+            macosGrayFlag = null,
+            codeCCGrayFlag = null,
+            grayNames = grayProjectSet,
+            repoGrayNames = null,
+            macosGrayNames = null,
+            codeCCGrayNames = null
         )
         val totalCount = projectDao.getProjectCount(
             dslContext = dslContext,
@@ -243,7 +266,13 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             approver = approver,
             approvalStatus = approvalStatus,
             grayFlag = grayFlag,
-            englishNames = grayProjectSet
+            repoGrayFlag = null,
+            macosGrayFlag = null,
+            codeCCGrayFlag = null,
+            grayNames = grayProjectSet,
+            repoGrayNames = null,
+            macosGrayNames = null,
+            codeCCGrayNames = null
         )
         val dataList = mutableListOf<ProjectInfoResponse>()
 
@@ -268,13 +297,19 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
         offset: Int,
         limit: Int,
         grayFlag: Boolean,
-        repoGrayFlag: Boolean
+        codeCCGrayFlag: Boolean?,
+        repoGrayFlag: Boolean?,
+        macosGrayFlag: Boolean?
     ): Result<Map<String, Any?>?> {
         val dataObj = mutableMapOf<String, Any?>()
 
         val grayProjectSet = grayProjectSet()
 
+        val codeCCGrayProjectSet = grayCodeCCProjectSet()
+
         val repoGrayProjectSet = repoGrayProjectSet()
+
+        val macosGrayProjectSet = macosGrayProjectSet()
 
         val projectInfos = projectDao.getProjectList(
             dslContext = dslContext,
@@ -289,8 +324,12 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             limit = limit,
             grayFlag = grayFlag,
             repoGrayFlag = repoGrayFlag,
+            macosGrayFlag = macosGrayFlag,
+            codeCCGrayFlag = codeCCGrayFlag,
             grayNames = grayProjectSet,
-            repoGrayNames = repoGrayProjectSet
+            codeCCGrayNames = codeCCGrayProjectSet,
+            repoGrayNames = repoGrayProjectSet,
+            macosGrayNames = macosGrayProjectSet
         )
         val totalCount = projectDao.getProjectCount(
             dslContext = dslContext,
@@ -302,9 +341,13 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             approver = approver,
             approvalStatus = approvalStatus,
             grayFlag = grayFlag,
+            codeCCGrayFlag = codeCCGrayFlag,
             repoGrayFlag = repoGrayFlag,
+            macosGrayFlag = macosGrayFlag,
             grayNames = grayProjectSet,
-            repoGrayNames = repoGrayProjectSet
+            codeCCGrayNames = codeCCGrayProjectSet,
+            repoGrayNames = repoGrayProjectSet,
+            macosGrayNames = macosGrayProjectSet
         )
         val dataList = mutableListOf<ProjectInfoResponseRepoGray>()
 
@@ -313,80 +356,10 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             val projectInfo = getProjectInfoResponseRepoGray(
                 projectData = projectData,
                 grayProjectSet = grayProjectSet,
-                repoProjectSet = repoGrayProjectSet
+                codeCCProjectSet = codeCCGrayProjectSet,
+                repoProjectSet = repoGrayProjectSet,
+                macosProjectSet = macosGrayProjectSet
             )
-            dataList.add(projectInfo)
-        }
-        dataObj["projectList"] = dataList
-        dataObj["count"] = totalCount
-        return Result(dataObj)
-    }
-
-    override fun getProjectList(
-        projectName: String?,
-        englishName: String?,
-        projectType: Int?,
-        isSecrecy: Boolean?,
-        creator: String?,
-        approver: String?,
-        approvalStatus: Int?,
-        offset: Int,
-        limit: Int,
-        grayFlag: Boolean,
-        repoGrayFlag: Boolean,
-        macosGrayFlag: Boolean
-    ): Result<Map<String, Any?>?> {
-        val dataObj = mutableMapOf<String, Any?>()
-
-        val grayProjectSet = grayProjectSet()
-        val repoGrayProjectSet = repoGrayProjectSet()
-        val macosGrayProjectSet = macosGray.grayProjectSet(redisOperation)
-
-        val projectInfos = projectDao.getProjectList(
-            dslContext = dslContext,
-            projectName = projectName,
-            englishName = englishName,
-            projectType = projectType,
-            isSecrecy = isSecrecy,
-            creator = creator,
-            approver = approver,
-            approvalStatus = approvalStatus,
-            offset = offset,
-            limit = limit,
-            grayFlag = grayFlag,
-            repoGrayFlag = repoGrayFlag,
-            macosGrayFlag = macosGrayFlag,
-            grayNames = grayProjectSet,
-            repoGrayNames = repoGrayProjectSet,
-            macosGrayNames = macosGrayProjectSet
-        )
-        val totalCount = projectDao.getProjectCount(
-            dslContext = dslContext,
-            projectName = projectName,
-            englishName = englishName,
-            projectType = projectType,
-            isSecrecy = isSecrecy,
-            creator = creator,
-            approver = approver,
-            approvalStatus = approvalStatus,
-            grayFlag = grayFlag,
-            repoGrayFlag = repoGrayFlag,
-            macosGrayFlag = macosGrayFlag,
-            grayNames = grayProjectSet,
-            repoGrayNames = repoGrayProjectSet,
-            macosGrayNames = macosGrayProjectSet
-        )
-        val dataList = mutableListOf<ProjectInfoResponseMacOSGray>()
-
-        for (i in projectInfos.indices) {
-            val projectData = projectInfos[i]
-            val projectInfo =
-                getProjectInfoResponseMacOSGray(
-                    projectData = projectData,
-                    grayProjectSet = grayProjectSet,
-                    repoProjectSet = repoGrayProjectSet,
-                    macosProjectSet = macosGrayProjectSet
-                )
             dataList.add(projectInfo)
         }
         dataObj["projectList"] = dataList
@@ -415,12 +388,22 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
                 approver = approver,
                 approvalStatus = approvalStatus,
                 grayFlag = grayFlag,
-                englishNames = grayProjectSet()
+                repoGrayFlag = null,
+                macosGrayFlag = null,
+                codeCCGrayFlag = null,
+                grayNames = grayProjectSet(),
+                repoGrayNames = null,
+                macosGrayNames = null,
+                codeCCGrayNames = null
             )
         )
     }
 
     private fun grayProjectSet() = gray.grayProjectSet(redisOperation)
+
+    private fun grayCodeCCProjectSet() = gray.grayCodeCCProjectSet(redisOperation)
+
+    private fun macosGrayProjectSet() = macosGray.grayProjectSet(redisOperation)
 
     private fun repoGrayProjectSet() = repoGray.grayProjectSet(redisOperation)
 
@@ -461,6 +444,8 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
     private fun getProjectInfoResponseRepoGray(
         projectData: TProjectRecord,
         grayProjectSet: Set<String>,
+        codeCCProjectSet: Set<String>,
+        macosProjectSet: Set<String>,
         repoProjectSet: Set<String>
     ): ProjectInfoResponseRepoGray {
         return ProjectInfoResponseRepoGray(
@@ -489,46 +474,7 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             kind = projectData.kind,
             enabled = projectData.enabled ?: true,
             grayFlag = grayProjectSet.contains(projectData.englishName),
-            repoGrayFlag = repoProjectSet.contains(projectData.englishName),
-            hybridCCAppId = projectData.hybridCcAppId,
-            enableExternal = projectData.enableExternal,
-            enableIdc = projectData.enableIdc,
-            pipelineLimit = projectData.pipelineLimit
-        )
-    }
-
-    private fun getProjectInfoResponseMacOSGray(
-        projectData: TProjectRecord,
-        grayProjectSet: Set<String>,
-        repoProjectSet: Set<String>,
-        macosProjectSet: Set<String>
-    ): ProjectInfoResponseMacOSGray {
-        return ProjectInfoResponseMacOSGray(
-            projectId = projectData.projectId,
-            projectName = projectData.projectName,
-            projectEnglishName = projectData.englishName,
-            creatorBgName = projectData.creatorBgName,
-            creatorDeptName = projectData.creatorDeptName,
-            creatorCenterName = projectData.creatorCenterName,
-            bgId = projectData.bgId,
-            bgName = projectData.bgName,
-            deptId = projectData.deptId,
-            deptName = projectData.deptName,
-            centerId = projectData.centerId,
-            centerName = projectData.centerName,
-            projectType = projectData.projectType,
-            approver = projectData.approver,
-            approvalTime = projectData.approvalTime?.timestampmilli(),
-            approvalStatus = projectData.approvalStatus,
-            secrecyFlag = projectData.isSecrecy,
-            creator = projectData.creator,
-            createdAtTime = projectData.createdAt.timestampmilli(),
-            ccAppId = projectData.ccAppId,
-            useBk = projectData.useBk,
-            offlinedFlag = projectData.isOfflined,
-            kind = projectData.kind,
-            enabled = projectData.enabled ?: true,
-            grayFlag = grayProjectSet.contains(projectData.englishName),
+            codeCCGrayFlag = codeCCProjectSet.contains(projectData.englishName),
             repoGrayFlag = repoProjectSet.contains(projectData.englishName),
             macosGrayFlag = macosProjectSet.contains(projectData.englishName),
             hybridCCAppId = projectData.hybridCcAppId,

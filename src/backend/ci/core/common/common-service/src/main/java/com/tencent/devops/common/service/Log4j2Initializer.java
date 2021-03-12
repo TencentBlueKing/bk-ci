@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -133,23 +134,27 @@ public class Log4j2Initializer implements ApplicationContextInitializer<Configur
                     .addAttribute("pattern", "%d{yyyy.MM.dd HH:mm:ss,SSS}|%X{bizId}| [%12.12t] %5level %-40.40c{1.} %-4.4L %msg%n%throwable")
                     .addAttribute("charset", "UTF-8");
 
+            String maxFileSize = environment.getProperty("log.maxFileSize", "300 MB");
             ComponentBuilder triggeringPolicy = builder.newComponent("Policies")
                     .addComponent(builder.newComponent("TimeBasedTriggeringPolicy").addAttribute("interval", "1").addAttribute("modulate", "true"))
-                    .addComponent(builder.newComponent("SizeBasedTriggeringPolicy").addAttribute("size", "300 MB"));
+                    .addComponent(builder.newComponent("SizeBasedTriggeringPolicy").addAttribute("size", maxFileSize));
 
+            String maxFileAge = environment.getProperty("log.maxFileAge", "30d");
             ComponentBuilder deleteAction = builder.newComponent("Delete")
                     .addAttribute("basePath", logPath)
                     .addAttribute("maxDepth", 2)
                     .addComponent(builder.newComponent("IfFileName").addAttribute("glob", "*.log.gz"))
-                    .addComponent(builder.newComponent("IfLastModified").addAttribute("age", "30d"));
+                    .addComponent(builder.newComponent("IfLastModified").addAttribute("age", maxFileAge));
 
+            String maxFileIndex = environment.getProperty("log.maxFileIndex", "30");
+            System.out.println(String.format("maxFileSize:%s,maxFileAge:%s,maxFileIndex:%s", maxFileSize, maxFileAge, maxFileIndex));
             appenderBuilder = builder.newAppender("Rolling", "RollingFile")
                     .addAttribute("fileName", logPath + appName + ".log")
                     .addAttribute("filePattern", logPath + appName + "-%d{yyyy-MM-dd}-%i.log.gz")
                     .add(rollingLayoutBuilder)
                     .addComponent(
                             builder.newComponent("DefaultRolloverStrategy")
-                                    .addAttribute("max", "30")
+                                    .addAttribute("max", maxFileIndex)
                                     .addComponent(deleteAction)
                     )
                     .addComponent(triggeringPolicy);

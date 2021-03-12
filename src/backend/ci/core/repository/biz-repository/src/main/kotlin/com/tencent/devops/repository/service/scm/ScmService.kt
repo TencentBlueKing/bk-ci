@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -45,6 +46,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
+@Suppress("ALL")
 class ScmService @Autowired constructor(
     private val svnConfig: SVNConfig,
     private val gitConfig: GitConfig
@@ -149,7 +151,7 @@ class ScmService @Autowired constructor(
         token: String,
         userName: String
     ): List<String> {
-        logger.info("[$projectName|$url|$type|$token|$userName] Start to list tags")
+        logger.info("[$projectName|$url|$type|$userName] Start to list tags")
         val startEpoch = System.currentTimeMillis()
         try {
             return ScmFactory.getScm(
@@ -178,7 +180,7 @@ class ScmService @Autowired constructor(
         region: CodeSvnRegion?,
         userName: String
     ): TokenCheckResult {
-        logger.info("[$projectName|$url|$type|$token|$userName] Start to check the private key and token")
+        logger.info("checkPrivateKeyAndToken[$projectName|$url|$type|$userName]")
         val startEpoch = System.currentTimeMillis()
         try {
             ScmFactory.getScm(
@@ -193,12 +195,9 @@ class ScmService @Autowired constructor(
                 userName = userName
             )
                 .checkTokenAndPrivateKey()
-        } catch (e: Throwable) {
-            logger.warn(
-                "Fail to check the private key (projectName=$projectName, type=$type, privateKey=$privateKey, passPhrase=$passPhrase, token=$token, region=$region, username=$userName",
-                e
-            )
-            return TokenCheckResult(false, e.message ?: "Fail to check the svn private key")
+        } catch (ignore: Throwable) {
+            logger.warn("CheckKeyFail|projectName=$projectName|type=$type|region=$region|username=$userName", ignore)
+            return TokenCheckResult(false, ignore.message ?: "Fail to check the svn private key")
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to check the private key and token")
         }
@@ -215,7 +214,7 @@ class ScmService @Autowired constructor(
         region: CodeSvnRegion?,
         repoUsername: String
     ): TokenCheckResult {
-        logger.info("[$projectName|$url|$type|$username|$password|$token|$region|$repoUsername] Start to check the username and password")
+        logger.info("checkUsernameAndPassword[$projectName|$url|$type|$username|$region|$repoUsername]")
         val startEpoch = System.currentTimeMillis()
         try {
             ScmFactory.getScm(
@@ -230,12 +229,9 @@ class ScmService @Autowired constructor(
                 userName = repoUsername
             )
                 .checkTokenAndUsername()
-        } catch (e: Throwable) {
-            logger.warn(
-                "Fail to check the private key (projectName=$projectName, type=$type, username=$username, token=$token, region=$region, repoUsername=$repoUsername",
-                e
-            )
-            return TokenCheckResult(false, e.message ?: "Fail to check the svn private key")
+        } catch (ignore: Throwable) {
+            logger.warn("CheckPwdFail|projectName=$projectName|type=$type|region=$region|user=$repoUsername", ignore)
+            return TokenCheckResult(false, ignore.message ?: "Fail to check the svn private key")
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to check username and password")
         }
@@ -254,7 +250,7 @@ class ScmService @Autowired constructor(
         event: String?,
         hookUrl: String?
     ) {
-        logger.info("[$projectName|$url|$type|$token|$region|$userName|$event|$hookUrl] Start to add web hook")
+        logger.info("[$projectName|$url|$type|$region|$userName|$event|$hookUrl] Start to add web hook")
         val startEpoch = System.currentTimeMillis()
         try {
             val realHookUrl = if (!hookUrl.isNullOrBlank()) {

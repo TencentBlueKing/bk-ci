@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -28,7 +29,6 @@ package com.tencent.devops.artifactory.resources
 
 import com.tencent.devops.artifactory.api.builds.BuildFileResource
 import com.tencent.devops.artifactory.pojo.GetFileDownloadUrlsResponse
-import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
@@ -39,24 +39,25 @@ import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
 import javax.servlet.http.HttpServletResponse
 
-@RestResource
-class BuildFileResourceImpl @Autowired constructor(private val archiveFileService: ArchiveFileService) :
-    BuildFileResource {
+@RestResource@Suppress("ALL")
+class BuildFileResourceImpl @Autowired constructor(
+    private val archiveFileService: ArchiveFileService
+) : BuildFileResource {
 
     override fun downloadFile(filePath: String, response: HttpServletResponse) {
         archiveFileService.downloadFile(filePath, response)
     }
 
     override fun archiveFile(
-        projectCode: String?,
-        pipelineId: String?,
-        buildId: String?,
+        projectCode: String,
+        pipelineId: String,
+        buildId: String,
         fileType: FileTypeEnum,
         customFilePath: String?,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
     ): Result<String?> {
-        return archiveFileService.archiveFile(
+        val url = archiveFileService.archiveFile(
             userId = "",
             projectId = projectCode,
             pipelineId = pipelineId,
@@ -67,6 +68,7 @@ class BuildFileResourceImpl @Autowired constructor(private val archiveFileServic
             disposition = disposition,
             fileChannelType = FileChannelTypeEnum.BUILD
         )
+        return Result(url)
     }
 
     override fun downloadArchiveFile(
@@ -95,19 +97,15 @@ class BuildFileResourceImpl @Autowired constructor(private val archiveFileServic
         fileType: FileTypeEnum,
         customFilePath: String?
     ): Result<GetFileDownloadUrlsResponse?> {
-        val artifactoryType = when (fileType) {
-            FileTypeEnum.BK_ARCHIVE -> ArtifactoryType.PIPELINE
-            FileTypeEnum.BK_CUSTOM -> ArtifactoryType.CUSTOM_DIR
-            else -> ArtifactoryType.CUSTOM_DIR
-        }
-        return archiveFileService.getFileDownloadUrls(
+        val urls = archiveFileService.getFileDownloadUrls(
             userId = "",
             projectId = projectCode,
             pipelineId = pipelineId,
             buildId = buildId,
-            artifactoryType = artifactoryType,
+            artifactoryType = fileType.toArtifactoryType(),
             customFilePath = customFilePath,
             fileChannelType = FileChannelTypeEnum.BUILD
         )
+        return Result(urls)
     }
 }

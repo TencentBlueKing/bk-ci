@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -149,6 +150,9 @@ interface OPProjectResource {
         @ApiParam(value = "是否灰度 true：是 false：否", required = true)
         @QueryParam(value = "is_gray")
         grayFlag: Boolean,
+        @ApiParam(value = "是否灰度 true：是 false：否", required = false)
+        @QueryParam(value = "is_codecc_gray")
+        codeCCGrayFlag: Boolean?,
         @ApiParam(value = "是否仓库灰度 true：是 false：否", required = true)
         @QueryParam(value = "is_repo_gray")
         repoGrayFlag: Boolean,
@@ -189,6 +193,9 @@ interface OPProjectResource {
         @ApiParam(value = "是否灰度 true：是 false：否", required = true)
         @QueryParam(value = "is_gray")
         grayFlag: Boolean,
+        @ApiParam(value = "是否CodeCC灰度 true：是 false：否", required = false)
+        @QueryParam(value = "is_codecc_gray")
+        codeCCGrayFlag: Boolean?,
         @ApiParam(value = "是否仓库灰度 true：是 false：否", required = true)
         @QueryParam(value = "is_repo_gray")
         repoGrayFlag: Boolean,
@@ -269,6 +276,14 @@ interface OPProjectResource {
     @PUT
     @Path("/setGrayProject")
     fun setGrayProject(
+        @ApiParam(value = "灰度项目设置请求实体", required = true)
+        projectGraySetRequest: OpProjectGraySetRequest
+    ): Result<Boolean>
+
+    @ApiOperation("灰度项目设置")
+    @PUT
+    @Path("/codecc/setGrayProject")
+    fun setCodeCCGrayProject(
         @ApiParam(value = "灰度项目设置请求实体", required = true)
         projectGraySetRequest: OpProjectGraySetRequest
     ): Result<Boolean>

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -166,15 +167,16 @@ object ProcessMessageCode {
     const val ERROR_BUILD_TASK_ACROSS_PROJECT_PARAM_TARGETPROJECTID = "2101123"
 
     const val ERROR_BUILD_TASK_QUALITY_IN = "2101137" // 质量红线(准入)检测失败
-    const val ERROR_BUILD_TASK_QUALITY_IN_INTERCEPT = "2101908" // 质量红线(准入)配置有误：Fail to find quality gate intercept element
+    // 质量红线(准入)配置有误：Fail to find quality gate intercept element
+    const val ERROR_BUILD_TASK_QUALITY_IN_INTERCEPT = "2101908"
     const val ERROR_BUILD_TASK_QUALITY_OUT = "2101909" // 质量红线(准出)检测失败
-    const val ERROR_BUILD_TASK_QUALITY_OUT_INTERCEPT = "2101910" // 质量红线(准出)配置有误：Fail to find quality gate intercept element
+    // 质量红线(准出)配置有误：Fail to find quality gate intercept element
+    const val ERROR_BUILD_TASK_QUALITY_OUT_INTERCEPT = "2101910"
 
     const val ERROR_PARAM_PROJEC_ID_NULL = "2101101" // 项目ID为空
     const val ERROR_PARAM_USER_ID_NULL = "2101102" // 用户ID为空
     const val ERROR_PARAM_PIPELINE_ID_NULL = "2101103" // 参数：流水线ID为空
     const val ERROR_PARAM_PIPELINE_NAME_TOO_LONG = "2101104" // 参数：流水线名称过长
-    const val ERROR_PARAM_PIPELINE_NAME_DUP = "2101105" // 参数：流水线名称重复
 
     // 权限错误 210198开头
     const val ERROR_PERMISSION_VIEW_NEED = "2101981" // 无查看权限
@@ -185,7 +187,6 @@ object ProcessMessageCode {
     const val ERROR_PERMISSION_NOT_IN_PROJECT = "2101990" // 非项目成员
 
     // 流水线模块业务错误21011
-    const val ERROR_ADD_PIPELINE_TIMER_QUARTZ = "2101105" // 流水线的定时Quartz任务保存失败
     const val ERROR_DEL_PIPELINE_TIMER_QUARTZ = "2101107" // 流水线的定时Quartz任务删除失败
 
     const val ERROR_PIPELINE_DENY_RUN = "2101197" // 流水线不能执行
@@ -212,4 +213,7 @@ object ProcessMessageCode {
     const val BUILD_MSG_SERVICE = "2101315" // 服务触发
     const val BUILD_MSG_PIPELINE = "2101316" // 流水线触发
     const val BUILD_MSG_DESC = "2101317" // 构建信息描述
+
+    // 人工审核插件编辑时输入参数错误
+    const val ERROR_PARAM_MANUALREVIEW = "2101105"
 }

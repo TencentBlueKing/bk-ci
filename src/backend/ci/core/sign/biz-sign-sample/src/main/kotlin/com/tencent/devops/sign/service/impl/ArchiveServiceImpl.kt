@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -29,21 +30,21 @@ package com.tencent.devops.sign.service.impl
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.service.ArchiveService
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
-import java.io.File
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import okhttp3.Headers
 import okhttp3.MediaType
 import okhttp3.MultipartBody
 import okhttp3.Request
 import okhttp3.RequestBody
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+import java.io.File
 
 @Service
 class ArchiveServiceImpl @Autowired constructor(
@@ -57,30 +58,32 @@ class ArchiveServiceImpl @Autowired constructor(
     override fun archive(
         signedIpaFile: File,
         ipaSignInfo: IpaSignInfo,
-        properties: Map<String, String>?
+        properties: MutableMap<String, String>?
     ): Boolean {
-        logger.info("uploadFile, userId: ${ipaSignInfo.userId}, projectId: ${ipaSignInfo.projectId},archiveType: ${ipaSignInfo.archiveType}, archivePath: ${ipaSignInfo.archivePath}")
+        logger.info("uploadFile, userId: ${ipaSignInfo.userId}, projectId: ${ipaSignInfo.projectId}," +
+            "archiveType: ${ipaSignInfo.archiveType}, archivePath: ${ipaSignInfo.archivePath}")
         val artifactoryType = when (ipaSignInfo.archiveType.toLowerCase()) {
             "pipeline" -> FileTypeEnum.BK_ARCHIVE
             "custom" -> FileTypeEnum.BK_CUSTOM
             else -> FileTypeEnum.BK_ARCHIVE
         }
         val url =
-                "${commonConfig.devopsDevnetProxyGateway}/ms/artifactory/api/service/artifactories/file/archive?fileType=$artifactoryType&customFilePath=${ipaSignInfo.archivePath}"
+            "${commonConfig.devopsDevnetProxyGateway}/ms/artifactory/api/service/artifactories/file/archive" +
+                "?fileType=$artifactoryType&customFilePath=${ipaSignInfo.archivePath}"
         val fileBody = RequestBody.create(MediaType.parse("multipart/form-data"), signedIpaFile)
         val requestBody = MultipartBody.Builder()
-                .setType(MultipartBody.FORM)
-                .addFormDataPart("file", signedIpaFile.name, fileBody)
-                .build()
+            .setType(MultipartBody.FORM)
+            .addFormDataPart("file", signedIpaFile.name, fileBody)
+            .build()
         val headers = mutableMapOf<String, String>()
         headers[AUTH_HEADER_DEVOPS_PROJECT_ID] = ipaSignInfo.projectId
         headers[AUTH_HEADER_DEVOPS_PIPELINE_ID] = ipaSignInfo.pipelineId ?: ""
         headers[AUTH_HEADER_DEVOPS_BUILD_ID] = ipaSignInfo.buildId ?: ""
         val request = Request.Builder()
-                .url(url)
-                .headers(Headers.of(headers))
-                .post(requestBody)
-                .build()
+            .url(url)
+            .headers(Headers.of(headers))
+            .post(requestBody)
+            .build()
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {

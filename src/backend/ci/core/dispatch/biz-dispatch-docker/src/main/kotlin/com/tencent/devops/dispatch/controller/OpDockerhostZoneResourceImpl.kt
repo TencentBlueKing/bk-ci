@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -35,8 +36,9 @@ import com.tencent.devops.dispatch.service.DockerHostZoneTaskService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class OpDockerhostZoneResourceImpl @Autowired constructor(private val dockerHostZoneTaskService: DockerHostZoneTaskService) :
-    OpDockerHostZoneResource {
+class OpDockerhostZoneResourceImpl @Autowired constructor(
+    private val dockerHostZoneTaskService: DockerHostZoneTaskService
+) : OpDockerHostZoneResource {
     override fun create(hostIp: String, zone: Zone, remark: String?): Result<Boolean> {
         dockerHostZoneTaskService.create(hostIp, zone.toString(), remark)
         return Result(true)
@@ -48,7 +50,10 @@ class OpDockerhostZoneResourceImpl @Autowired constructor(private val dockerHost
     }
 
     override fun list(page: Int, pageSize: Int): Result<DockerHostZoneWithPage> {
-        return Result(DockerHostZoneWithPage(dockerHostZoneTaskService.count(), dockerHostZoneTaskService.list(page, pageSize)))
+        return Result(DockerHostZoneWithPage(
+            total = dockerHostZoneTaskService.count(),
+            data = dockerHostZoneTaskService.list(page, pageSize)
+        ))
     }
 
     override fun enable(hostIp: String, enable: Boolean): Result<Boolean> {

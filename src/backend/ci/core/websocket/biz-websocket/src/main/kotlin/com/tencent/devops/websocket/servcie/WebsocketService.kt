@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -27,7 +28,6 @@
 package com.tencent.devops.websocket.servcie
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.dispatch.TransferDispatch
@@ -46,10 +46,10 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 
 @Service
+@Suppress("ALL")
 class WebsocketService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val transferDispatch: TransferDispatch,
-    private val client: Client,
     private val projectProxyService: ProjectProxyService
 ) {
     companion object {
@@ -92,7 +92,6 @@ class WebsocketService @Autowired constructor(
             }
 
             val normalPage = PageUtils.buildNormalPage(newPage)
-            logger.info("WebsocketService-changePage:user:$userId,sessionId:$sessionId,newPage:$newPage,normalPage:$normalPage")
             val existsSessionId = RedisUtlis.getSessionIdByUserId(redisOperation, userId)
             if (existsSessionId == null) {
                 RedisUtlis.writeSessionIdByRedis(redisOperation, userId, sessionId)
@@ -137,7 +136,6 @@ class WebsocketService @Autowired constructor(
             val redisPage = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId)
             var clearPage = oldPage
             if (!oldPage.isNullOrEmpty() && redisPage != oldPage) {
-                logger.warn("loginOut error: oldPage:$oldPage, redisPage:$redisPage, userId:$userId, sessionId:$sessionId")
                 clearPage = PageUtils.buildNormalPage(oldPage!!)
             }
 
@@ -261,7 +259,7 @@ class WebsocketService @Autowired constructor(
         return cacheMaxSession
     }
 
-    private fun checkParams(userId: String, sessionId: String): Boolean {
+    private fun checkParams(userId: String?, sessionId: String?): Boolean {
         if (userId == null) {
             return false
         }

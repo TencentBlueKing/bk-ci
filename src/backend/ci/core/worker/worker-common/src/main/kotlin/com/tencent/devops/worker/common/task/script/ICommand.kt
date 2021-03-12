@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -34,6 +35,7 @@ import java.io.File
 
 interface ICommand {
 
+    @Suppress("ALL")
     fun execute(
         buildId: String,
         script: String,
@@ -53,8 +55,8 @@ interface ICommand {
             } else {
                 try {
                     CredentialUtils.getCredential(buildId, key, false)[0]
-                } catch (e: Exception) {
-                    logger.warn("环境变量($key)不存在", e)
+                } catch (ignored: Exception) {
+                    logger.warn("环境变量($key)不存在", ignored)
                     "\${$key}"
                 }
             }
@@ -65,56 +67,3 @@ interface ICommand {
         private val logger = LoggerFactory.getLogger(ICommand::class.java)
     }
 }
-
-/*
-fun main(argv: Array<String>) {
-    val s = "adb\${dafs\${a}dfas\${b}"
-    println(parseTemplate(s, mapOf("a" to "A", "b" to "B")))
-}
-fun parseTemplate(command: String, data: Map<String, String>) : String {
-    if (command.isBlank()) {
-        return command
-    }
-    val newValue = StringBuilder()
-    var index = 0
-    while (index < command.length) {
-        val c = command[index]
-        if (c == '$' && (index + 1) < command.length && command[index+1] == '{') {
-            val inside = StringBuilder()
-            index = parseVariable(command, index+2, inside, data)
-            newValue.append(inside)
-        }
-        else {
-            newValue.append(c)
-            index++
-        }
-    }
-    return newValue.toString()
-}
-
-fun parseVariable(command: String, start: Int, newValue: StringBuilder, data: Map<String, String>): Int {
-    val token = StringBuilder()
-    var index = start
-    while (index < command.length) {
-        val c = command[index]
-        if (c == '$' && (index + 1) < command.length && command[index+1] == '{') {
-            val inside = StringBuilder()
-            index = parseVariable(command, index+2, inside, data)
-            token.append(inside)
-        }
-        else if (c == '}'){
-            val tokenValue = getVariable(data, token.toString()) ?: "\${$token}"
-            newValue.append(tokenValue)
-            return index+1
-        }
-        else {
-            token.append(c)
-            index++
-        }
-    }
-    newValue.append("\${").append(token)
-    return index
-}
-
-fun getVariable(data: Map<String, String>, key: String) = data[key]
-*/

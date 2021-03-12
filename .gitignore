@@ -1,5 +1,6 @@
 .DS_Store
 .idea
+.vscode
 .gradle
 bin/
 docs/node_modules
@@ -27,3 +28,5 @@ src/backend/ci/.setting
 out
 **version.txt
 /src/backend/ci/.settings/
+.prebuild.yml
+.temp

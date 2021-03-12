@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -45,13 +46,13 @@ import com.tencent.devops.dispatch.docker.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
+import com.tencent.devops.dispatch.docker.service.DockerHostProxyService
 import com.tencent.devops.dispatch.docker.utils.CommonUtils
 import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import okhttp3.MediaType
-import okhttp3.Request
 import okhttp3.RequestBody
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -59,7 +60,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import java.net.SocketTimeoutException
 
-@Component
+@Component@Suppress("ALL")
 class DockerHostClient @Autowired constructor(
     private val pipelineDockerBuildDao: PipelineDockerBuildDao,
     private val pipelineDockerIPInfoDao: PipelineDockerIPInfoDao,
@@ -68,11 +69,12 @@ class DockerHostClient @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val client: Client,
     private val dslContext: DSLContext,
-    private val defaultImageConfig: DefaultImageConfig
+    private val defaultImageConfig: DefaultImageConfig,
+    private val dockerHostProxyService: DockerHostProxyService
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(DockerHostClient::class.java)
+        private val LOG = LoggerFactory.getLogger(DockerHostClient::class.java)
     }
 
     fun startBuild(
@@ -99,11 +101,7 @@ class DockerHostClient @Autowired constructor(
             poolNo = poolNo
         )
 
-        logger.info("secretKey: ${dispatchMessage.secretKey}")
-        logger.info("agentId: ${dispatchMessage.id}")
         val dispatchType = dispatchMessage.dispatchType as DockerDispatchType
-        logger.info("dockerHostBuild:(${dispatchMessage.userId},${dispatchMessage.projectId},${dispatchMessage.pipelineId},${dispatchMessage.buildId},${dispatchType.imageType?.name},${dispatchType.imageCode},${dispatchType.imageVersion},${dispatchType.credentialId},${dispatchType.credentialProject})")
-
         val dockerImage = if (dispatchType.imageType == ImageType.THIRD) {
             dispatchType.dockerBuildVersion
         } else {
@@ -119,13 +117,14 @@ class DockerHostClient @Autowired constructor(
                 }
             }
         }
-        logger.info("Docker images is: $dockerImage")
+        LOG.info("${dispatchMessage.buildId}|startBuild|${dispatchMessage.id}|$dockerImage" +
+            "|${dispatchType.imageCode}|${dispatchType.imageVersion}|${dispatchType.credentialId}" +
+            "|${dispatchType.credentialProject}")
         var userName: String? = null
         var password: String? = null
         if (dispatchType.imageType == ImageType.THIRD) {
             if (!dispatchType.credentialId.isNullOrBlank()) {
                 val projectId = if (dispatchType.credentialProject.isNullOrBlank()) {
-                    logger.warn("dockerHostBuild:credentialProject=nullOrBlank,buildId=${dispatchMessage.buildId},credentialId=${dispatchType.credentialId}")
                     dispatchMessage.projectId
                 } else {
                     dispatchType.credentialProject!!
@@ -206,28 +205,27 @@ class DockerHostClient @Autowired constructor(
             containerHashId = ""
         )
 
-        val proxyUrl = dockerHostUtils.getIdc2DevnetProxyUrl("/api/docker/build/end", dockerIp)
-        val request = Request.Builder().url(proxyUrl)
-            .delete(
-                RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"),
-                    JsonUtil.toJson(requestBody)
-                )
-            )
-            .addHeader("Accept", "application/json; charset=utf-8")
-            .addHeader("Content-Type", "application/json; charset=utf-8")
-            .build()
+        val request = dockerHostProxyService.getDockerHostProxyRequest(
+            dockerHostUri = "/api/docker/build/end",
+            dockerHostIp = dockerIp
+        ).delete(
+            RequestBody.create(
+            MediaType.parse("application/json; charset=utf-8"),
+            JsonUtil.toJson(requestBody)
+        )).build()
 
         OkhttpUtils.doHttp(request).use { resp ->
             val responseBody = resp.body()!!.string()
-            logger.info("[$projectId|$pipelineId|$buildId] End build Docker VM $dockerIp responseBody: $responseBody")
+            LOG.info("[$projectId|$pipelineId|$buildId] End build Docker VM $dockerIp responseBody: $responseBody")
             val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
             if (response["status"] == 0) {
                 response["data"] as Boolean
             } else {
                 val msg = response["message"] as String
-                logger.error("[$projectId|$pipelineId|$buildId] End build Docker VM failed, msg: $msg")
-                throw DockerServiceException(ErrorCodeEnum.END_VM_ERROR.errorType, ErrorCodeEnum.END_VM_ERROR.errorCode, "End build Docker VM failed, msg: $msg")
+                LOG.error("[$projectId|$pipelineId|$buildId] End build Docker VM failed, msg: $msg")
+                throw DockerServiceException(errorType = ErrorCodeEnum.END_VM_ERROR.errorType,
+                    errorCode = ErrorCodeEnum.END_VM_ERROR.errorCode,
+                    errorMsg = "End build Docker VM failed, msg: $msg")
             }
         }
     }
@@ -241,24 +239,23 @@ class DockerHostClient @Autowired constructor(
         retryTime: Int = 0,
         unAvailableIpList: Set<String>? = null
     ) {
-        val proxyUrl = dockerHostUtils.getIdc2DevnetProxyUrl("/api/docker/build/start", dockerIp, dockerHostPort)
-        val request = Request.Builder().url(proxyUrl)
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(requestBody)))
-            .addHeader("Accept", "application/json; charset=utf-8")
-            .addHeader("Content-Type", "application/json; charset=utf-8")
+        val request = dockerHostProxyService.getDockerHostProxyRequest(
+            dockerHostUri = "/api/docker/build/start",
+            dockerHostIp = dockerIp,
+            dockerHostPort = dockerHostPort
+        ).post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(requestBody)))
             .build()
 
-        logger.info("[${dispatchMessage.projectId}|${dispatchMessage.pipelineId}|${dispatchMessage.buildId}|$retryTime] Start build Docker VM $dockerIp, url: $proxyUrl, requestBody: $requestBody")
+        LOG.info("dockerStart|${dispatchMessage.buildId}|$retryTime|$dockerIp|${request.url()}")
         try {
             OkhttpUtils.doLongHttp(request).use { resp ->
                 if (resp.isSuccessful) {
                     val responseBody = resp.body()!!.string()
-                    logger.info("[${dispatchMessage.projectId}|${dispatchMessage.pipelineId}|${dispatchMessage.buildId}|$retryTime] Start build Docker VM $dockerIp responseBody: $responseBody")
                     val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
                     when {
                         response["status"] == 0 -> {
                             val containerId = response["data"] as String
-                            logger.info("[${dispatchMessage.projectId}|${dispatchMessage.pipelineId}|${dispatchMessage.buildId}|$retryTime] update container: $containerId")
+                            LOG.info("${dispatchMessage.buildId}|$retryTime| update container: $containerId")
                             // 更新task状态以及构建历史记录，并记录漂移日志
                             dockerHostUtils.updateTaskSimpleAndRecordDriftLog(
                                 dispatchMessage = dispatchMessage,
@@ -273,13 +270,21 @@ class DockerHostClient @Autowired constructor(
                         }
                         else -> {
                             val msg = response["message"] as String
-                            logger.error("[${dispatchMessage.projectId}|${dispatchMessage.pipelineId}|${dispatchMessage.buildId}|$retryTime] Start build Docker VM failed, msg: $msg")
-                            throw DockerServiceException(ErrorCodeEnum.START_VM_FAIL.errorType, ErrorCodeEnum.START_VM_FAIL.errorCode, "Start build Docker VM failed, msg: $msg")
+                            LOG.error("${dispatchMessage.buildId}|$retryTime| Start build Docker VM failed, msg: $msg")
+                            throw DockerServiceException(errorType = ErrorCodeEnum.START_VM_FAIL.errorType,
+                                errorCode = ErrorCodeEnum.START_VM_FAIL.errorCode,
+                                errorMsg = "Start build Docker VM failed, msg: $msg")
                         }
                     }
                 } else {
                     // 服务异常重试
-                    doRetry(dispatchMessage, retryTime, dockerIp, requestBody, driftIpInfo, resp.message(), unAvailableIpList)
+                    doRetry(dispatchMessage = dispatchMessage,
+                        retryTime = retryTime,
+                        dockerIp = dockerIp,
+                        requestBody = requestBody,
+                        driftIpInfo = driftIpInfo,
+                        errorMessage = resp.message(),
+                        unAvailableIpList = unAvailableIpList)
                 }
             }
         } catch (e: SocketTimeoutException) {
@@ -287,8 +292,10 @@ class DockerHostClient @Autowired constructor(
             if (e.message == "timeout") {
                 doRetry(dispatchMessage, retryTime, dockerIp, requestBody, driftIpInfo, e.message, unAvailableIpList)
             } else {
-                logger.error("[${dispatchMessage.projectId}|${dispatchMessage.pipelineId}|${dispatchMessage.buildId}|$retryTime] Start build Docker VM failed, msg: ${e.message}")
-                throw DockerServiceException(ErrorCodeEnum.START_VM_FAIL.errorType, ErrorCodeEnum.START_VM_FAIL.errorCode, "Start build Docker VM failed, msg: ${e.message}")
+                LOG.error("${dispatchMessage.buildId}|$retryTime| Start build Docker VM failed, msg: ${e.message}")
+                throw DockerServiceException(errorType = ErrorCodeEnum.START_VM_FAIL.errorType,
+                    errorCode = ErrorCodeEnum.START_VM_FAIL.errorCode,
+                    errorMsg = "Start build Docker VM failed, msg: ${e.message}")
             }
         }
     }
@@ -303,7 +310,6 @@ class DockerHostClient @Autowired constructor(
         unAvailableIpList: Set<String>?
     ) {
         if (retryTime < 3) {
-            logger.warn("[${dispatchMessage.projectId}|${dispatchMessage.pipelineId}|${dispatchMessage.buildId}|$retryTime] Start build Docker VM in $dockerIp failed, retry startBuild.")
             val unAvailableIpListLocal: Set<String> = unAvailableIpList?.plus(dockerIp) ?: setOf(dockerIp)
             val retryTimeLocal = retryTime + 1
             // 当前IP不可用，保险起见将当前ip可用性置为false，并重新获取可用ip
@@ -324,8 +330,10 @@ class DockerHostClient @Autowired constructor(
                 unAvailableIpList = unAvailableIpListLocal
             )
         } else {
-            logger.error("[${dispatchMessage.projectId}|${dispatchMessage.pipelineId}|${dispatchMessage.buildId}|$retryTime] Start build Docker VM failed, retry $retryTime times. message: $errorMessage")
-            throw DockerServiceException(ErrorCodeEnum.RETRY_START_VM_FAIL.errorType, ErrorCodeEnum.RETRY_START_VM_FAIL.errorCode, "Start build Docker VM failed, retry $retryTime times.")
+            LOG.error("${dispatchMessage.buildId}|$retryTime|doRetry $retryTime times. message: $errorMessage")
+            throw DockerServiceException(errorType = ErrorCodeEnum.RETRY_START_VM_FAIL.errorType,
+                errorCode = ErrorCodeEnum.RETRY_START_VM_FAIL.errorCode,
+                errorMsg = "Start build Docker VM failed, retry $retryTime times.")
         }
     }
 }

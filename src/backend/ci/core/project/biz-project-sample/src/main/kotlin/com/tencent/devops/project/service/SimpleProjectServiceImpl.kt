@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -26,6 +27,7 @@
 
 package com.tencent.devops.project.service
 
+import com.tencent.devops.artifactory.api.service.ServiceBkRepoResource
 import com.tencent.devops.artifactory.api.service.ServiceFileResource
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.common.api.exception.OperationException
@@ -54,42 +56,60 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.io.File
 
+@Suppress("ALL")
 @Service
 class SimpleProjectServiceImpl @Autowired constructor(
     projectPermissionService: ProjectPermissionService,
-    private val dslContext: DSLContext,
-    private val projectDao: ProjectDao,
+    dslContext: DSLContext,
+    projectDao: ProjectDao,
     projectJmxApi: ProjectJmxApi,
     redisOperation: RedisOperation,
     gray: Gray,
     client: Client,
     projectDispatcher: ProjectDispatcher,
-    private val authPermissionApi: AuthPermissionApi,
-    private val projectAuthServiceCode: ProjectAuthServiceCode
-) : AbsProjectServiceImpl(projectPermissionService, dslContext, projectDao, projectJmxApi, redisOperation, gray, client, projectDispatcher, authPermissionApi, projectAuthServiceCode) {
+    authPermissionApi: AuthPermissionApi,
+    projectAuthServiceCode: ProjectAuthServiceCode
+) : AbsProjectServiceImpl(
+    projectPermissionService,
+    dslContext,
+    projectDao,
+    projectJmxApi,
+    redisOperation,
+    gray,
+    client,
+    projectDispatcher,
+    authPermissionApi,
+    projectAuthServiceCode
+) {
 
     override fun getDeptInfo(userId: String): UserDeptDetail {
         return UserDeptDetail(
-                bgName = "",
-                bgId = "1",
-                centerName = "",
-                centerId = "1",
-                deptName = "",
-                deptId = "1",
-                groupId = "0",
-                groupName = ""
+            bgName = "",
+            bgId = "1",
+            centerName = "",
+            centerId = "1",
+            deptName = "",
+            deptId = "1",
+            groupId = "0",
+            groupName = ""
         )
     }
 
-    override fun createExtProjectInfo(userId: String, projectId: String, accessToken: String?, projectCreateInfo: ProjectCreateInfo, projectCreateExt: ProjectCreateExtInfo) {
-        return
+    override fun createExtProjectInfo(
+        userId: String,
+        projectId: String,
+        accessToken: String?,
+        projectCreateInfo: ProjectCreateInfo,
+        createExtInfo: ProjectCreateExtInfo
+    ) {
+        client.get(ServiceBkRepoResource::class).createProjectResource(userId, projectCreateInfo.englishName)
     }
 
     override fun saveLogoAddress(userId: String, projectCode: String, logoFile: File): String {
         // 保存Logo文件
         val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
         val result =
-                CommonUtils.serviceUploadFile(userId, serviceUrlPrefix, logoFile, FileChannelTypeEnum.WEB_SHOW.name)
+            CommonUtils.serviceUploadFile(userId, serviceUrlPrefix, logoFile, FileChannelTypeEnum.WEB_SHOW.name)
         if (result.isNotOk()) {
             throw OperationException("${result.status}:${result.message}")
         }
@@ -112,17 +132,21 @@ class SimpleProjectServiceImpl @Autowired constructor(
         // 随机生成首字母图片
         val firstChar = projectCode.substring(0, 1).toUpperCase()
         return ImageUtil.drawImage(
-                firstChar,
-                Width,
-                Height
+            firstChar,
+            Width,
+            Height
         )
+    }
+
+    override fun organizationMarkUp(projectCreateInfo: ProjectCreateInfo, userDeptDetail: UserDeptDetail): ProjectCreateInfo {
+        return projectCreateInfo
     }
 
     override fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean {
         val validate = projectPermissionService.verifyUserProjectPermission(
-                projectCode = projectCode,
-                userId = userId,
-                permission = permission
+            projectCode = projectCode,
+            userId = userId,
+            permission = permission
         )
         if (!validate) {
             logger.warn("$projectCode| $userId| ${permission.value} validatePermission fail")
@@ -133,8 +157,8 @@ class SimpleProjectServiceImpl @Autowired constructor(
 
     override fun modifyProjectAuthResource(projectCode: String, projectName: String) {
         projectPermissionService.modifyResource(
-                projectCode = projectCode,
-                projectName = projectName
+            projectCode = projectCode,
+            projectName = projectName
         )
     }
 

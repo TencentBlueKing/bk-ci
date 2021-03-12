@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -53,7 +54,7 @@ import javax.ws.rs.core.MediaType
 @Api(tags = ["BUILD_ARTIFACTORY"], description = "仓库-文件管理")
 @Path("/build/artifactories/")
 @Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)@Suppress("ALL")
 interface BuildFileResource {
 
     @ApiOperation("下载文件")
@@ -74,13 +75,13 @@ interface BuildFileResource {
     fun archiveFile(
         @ApiParam("projectCode", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        projectCode: String?,
+        projectCode: String,
         @ApiParam("pipelineId", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_PIPELINE_ID)
-        pipelineId: String?,
+        pipelineId: String,
         @ApiParam("buildId", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
-        buildId: String?,
+        buildId: String,
         @ApiParam("文件类型", required = true)
         @QueryParam("fileType")
         fileType: FileTypeEnum,

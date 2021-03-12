@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -29,6 +30,7 @@ package com.tencent.devops.project.api.service
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.project.pojo.OrgInfo
+import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
@@ -190,4 +192,26 @@ interface ServiceProjectResource {
         @ApiParam("orgInfo", required = true)
         orgInfos: OrgInfo
     ): Result<Boolean>
+
+    @GET
+    @Path("/getMinId")
+    @ApiOperation("查询最小项目ID")
+    fun getMinId(): Result<Long>
+
+    @GET
+    @Path("/getMaxId")
+    @ApiOperation("查询最大项目ID")
+    fun getMaxId(): Result<Long>
+
+    @GET
+    @Path("/getProjectListById")
+    @ApiOperation("根据ID查询项目列表")
+    fun getProjectListById(
+        @ApiParam("最小项目ID", required = true)
+        @QueryParam("minId")
+        minId: Long,
+        @ApiParam("最大项目ID", required = true)
+        @QueryParam("maxId")
+        maxId: Long
+    ): Result<List<ProjectBaseInfo>>
 }

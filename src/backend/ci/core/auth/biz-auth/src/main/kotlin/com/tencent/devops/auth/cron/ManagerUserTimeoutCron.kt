@@ -1,10 +1,3 @@
-package com.tencent.devops.auth.cron
-
-import com.tencent.devops.auth.service.ManagerUserService
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.scheduling.annotation.Scheduled
-import org.springframework.stereotype.Component
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -17,12 +10,13 @@ import org.springframework.stereotype.Component
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -31,9 +25,22 @@ import org.springframework.stereotype.Component
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+package com.tencent.devops.auth.cron
+
+import com.tencent.devops.auth.entity.ManagerChangeType
+import com.tencent.devops.auth.refresh.dispatch.AuthRefreshDispatch
+import com.tencent.devops.auth.refresh.event.ManagerOrganizationChangeEvent
+import com.tencent.devops.auth.service.ManagerOrganizationService
+import com.tencent.devops.auth.service.ManagerUserService
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.scheduling.annotation.Scheduled
+import org.springframework.stereotype.Component
+
 @Component
 class ManagerUserTimeoutCron @Autowired constructor(
-    val managerUserService: ManagerUserService
+    val managerUserService: ManagerUserService,
+    val managerOrganizationService: ManagerOrganizationService,
+    val refreshDispatch: AuthRefreshDispatch
 ) {
 
     /**
@@ -42,5 +49,22 @@ class ManagerUserTimeoutCron @Autowired constructor(
     @Scheduled(cron = "0 0/2 * * * ?")
     fun newClearTimeoutCache() {
         managerUserService.deleteTimeoutUser()
+    }
+
+    /**
+     * 每5分钟，刷新缓存数据
+     */
+    @Scheduled(cron = "0 0/5 * * * ?")
+    fun refreshCache() {
+        val managerList = managerOrganizationService.listManager() ?: return
+        managerList.forEach {
+            refreshDispatch.dispatch(
+                ManagerOrganizationChangeEvent(
+                    refreshType = "updateManagerOrganization",
+                    managerId = it.id!!,
+                    managerChangeType = ManagerChangeType.UPDATE
+                )
+            )
+        }
     }
 }
