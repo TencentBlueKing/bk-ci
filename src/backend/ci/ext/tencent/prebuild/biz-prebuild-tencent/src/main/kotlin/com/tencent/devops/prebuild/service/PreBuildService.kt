@@ -76,12 +76,12 @@ import com.tencent.devops.plugin.api.UserCodeccResource
 import com.tencent.devops.prebuild.dao.PreBuildPluginVersionDao
 import com.tencent.devops.prebuild.dao.PrebuildPersonalMachineDao
 import com.tencent.devops.prebuild.dao.PrebuildProjectDao
-import com.tencent.devops.prebuild.pojo.PrePluginVersion
-import com.tencent.devops.prebuild.pojo.enums.PreBuildPluginType
 import com.tencent.devops.prebuild.pojo.HistoryResponse
+import com.tencent.devops.prebuild.pojo.PrePluginVersion
 import com.tencent.devops.prebuild.pojo.PreProject
 import com.tencent.devops.prebuild.pojo.StartUpReq
 import com.tencent.devops.prebuild.pojo.UserProject
+import com.tencent.devops.prebuild.pojo.enums.PreBuildPluginType
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildId
@@ -96,7 +96,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
-import java.lang.RuntimeException
 
 @Service
 class PreBuildService @Autowired constructor(
@@ -301,7 +300,8 @@ class PreBuildService @Autowired constructor(
         job.job.steps.forEach {
             var step = it
             if (startUpReq.extraParam != null && ((step is MarketBuildTask && step.inputs.atomCode == CodeCCScanInContainerTask.atomCode) ||
-                (step is CodeCCScanInContainerTask))) {
+                        (step is CodeCCScanInContainerTask))
+            ) {
                 val whitePath = mutableListOf<String>()
                 // idea右键codecc扫描
                 if (!(startUpReq.extraParam!!.codeccScanPath.isNullOrBlank())) {
@@ -348,7 +348,9 @@ class PreBuildService @Autowired constructor(
                 }
                 step.inputs = SyncLocalCodeInput(
                     step.inputs?.agentId ?: agentInfo.agentId,
-                    step.inputs?.workspace ?: startUpReq.workspace
+                    step.inputs?.workspace ?: startUpReq.workspace,
+                    step.inputs?.useDelete ?: true,
+                    step.inputs?.syncGitRepository ?: false
                 )
 
                 installMarketAtom(userId, "syncCodeToRemote") // 确保同步代码插件安装
@@ -648,7 +650,8 @@ class PreBuildService @Autowired constructor(
 
     fun validateCIBuildYaml(yamlStr: String) = CiYamlUtils.validateYaml(yamlStr)
 
-    fun checkYml(yamlStr: String) = CiYamlUtils.checkYaml(YamlUtil.getObjectMapper().readValue(yamlStr, CIBuildYaml::class.java))
+    fun checkYml(yamlStr: String) =
+        CiYamlUtils.checkYaml(YamlUtil.getObjectMapper().readValue(yamlStr, CIBuildYaml::class.java))
 
     fun getPluginVersion(userId: String, pluginType: PreBuildPluginType): PrePluginVersion? {
         val record = preBuildVersionDao.getVersion(pluginType = pluginType.name, dslContext = dslContext) ?: return null
@@ -662,19 +665,20 @@ class PreBuildService @Autowired constructor(
     }
 
     fun creatPluginVersion(prePluginVersion: PrePluginVersion): Boolean {
-        val record = preBuildVersionDao.getVersion(pluginType = prePluginVersion.pluginType.name, dslContext = dslContext)
+        val record =
+            preBuildVersionDao.getVersion(pluginType = prePluginVersion.pluginType.name, dslContext = dslContext)
         if (record != null) {
             throw RuntimeException("已存在当前插件类型的版本信息，无法新增")
         }
         return with(prePluginVersion) {
-                preBuildVersionDao.create(
-                    version = version,
-                    modifyUser = modifyUser,
-                    desc = desc,
-                    pluginType = pluginType.name,
-                    dslContext = dslContext
-                ) > 0
-            }
+            preBuildVersionDao.create(
+                version = version,
+                modifyUser = modifyUser,
+                desc = desc,
+                pluginType = pluginType.name,
+                dslContext = dslContext
+            ) > 0
+        }
     }
 
     fun deletePluginVersion(version: String): Boolean {
@@ -683,14 +687,14 @@ class PreBuildService @Autowired constructor(
 
     fun updatePluginVersion(prePluginVersion: PrePluginVersion): Boolean {
         return with(prePluginVersion) {
-                preBuildVersionDao.update(
-                    version = version,
-                    modifyUser = modifyUser,
-                    desc = desc,
-                    pluginType = pluginType.name,
-                    dslContext = dslContext
-                ) > 0
-            }
+            preBuildVersionDao.update(
+                version = version,
+                modifyUser = modifyUser,
+                desc = desc,
+                pluginType = pluginType.name,
+                dslContext = dslContext
+            ) > 0
+        }
     }
 
     fun getPluginVersionList(): List<PrePluginVersion> {
