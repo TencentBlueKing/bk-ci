@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -38,6 +39,7 @@ import com.tencent.devops.project.service.ProjectService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.servlet.http.HttpServletRequest
 
+@Suppress("ALL")
 @RestResource
 class OPProjectResourceImpl @Autowired constructor(
     private val opProjectService: OpProjectService,
@@ -55,6 +57,15 @@ class OPProjectResourceImpl @Autowired constructor(
     override fun setGrayProject(projectGraySetRequest: OpProjectGraySetRequest): Result<Boolean> {
         return Result(
             data = opProjectService.setGrayProject(
+                projectGraySetRequest.projectCodeList,
+                projectGraySetRequest.operateFlag
+            )
+        )
+    }
+
+    override fun setCodeCCGrayProject(projectGraySetRequest: OpProjectGraySetRequest): Result<Boolean> {
+        return Result(
+            data = opProjectService.setCodeCCGrayProject(
                 projectGraySetRequest.projectCodeList,
                 projectGraySetRequest.operateFlag
             )
@@ -129,10 +140,24 @@ class OPProjectResourceImpl @Autowired constructor(
         offset: Int,
         limit: Int,
         grayFlag: Boolean,
+        codeCCGrayFlag: Boolean?,
         repoGrayFlag: Boolean,
         request: HttpServletRequest
     ): Result<Map<String, Any?>?> {
-        return opProjectService.getProjectList(projectName = projectName, englishName = englishName, projectType = projectType, isSecrecy = isSecrecy, creator = creator, approver = approver, approvalStatus = approvalStatus, offset = offset, limit = limit, grayFlag = grayFlag, repoGrayFlag = repoGrayFlag)
+        return opProjectService.getProjectList(
+            projectName = projectName,
+            englishName = englishName,
+            projectType = projectType,
+            isSecrecy = isSecrecy,
+            creator = creator,
+            approver = approver,
+            approvalStatus = approvalStatus,
+            offset = offset,
+            limit = limit,
+            grayFlag = grayFlag,
+            repoGrayFlag = repoGrayFlag,
+            macosGrayFlag = null,
+            codeCCGrayFlag = codeCCGrayFlag)
     }
 
     override fun getProjectList(
@@ -146,23 +171,44 @@ class OPProjectResourceImpl @Autowired constructor(
         offset: Int,
         limit: Int,
         grayFlag: Boolean,
+        codeCCGrayFlag: Boolean?,
         repoGrayFlag: Boolean,
         macosGrayFlag: Boolean,
         request: HttpServletRequest
     ): Result<Map<String, Any?>?> {
-        return opProjectService.getProjectList(projectName = projectName, englishName = englishName, projectType = projectType, isSecrecy = isSecrecy, creator = creator, approver = approver, approvalStatus = approvalStatus, offset = offset, limit = limit, grayFlag = grayFlag, repoGrayFlag = repoGrayFlag, macosGrayFlag = macosGrayFlag)
+        return opProjectService.getProjectList(
+            projectName = projectName,
+            englishName = englishName,
+            projectType = projectType,
+            isSecrecy = isSecrecy,
+            creator = creator,
+            approver = approver,
+            approvalStatus = approvalStatus,
+            offset = offset,
+            limit = limit,
+            grayFlag = grayFlag,
+            repoGrayFlag = repoGrayFlag,
+            macosGrayFlag = macosGrayFlag,
+            codeCCGrayFlag = codeCCGrayFlag
+        )
     }
 
     override fun setRepoGrayProject(projectGraySetRequest: OpProjectGraySetRequest): Result<Boolean> {
-        return Result(data = opProjectService.setRepoGrayProject(projectGraySetRequest.projectCodeList, projectGraySetRequest.operateFlag))
+        return Result(data = opProjectService.setRepoGrayProject(
+            projectCodeList = projectGraySetRequest.projectCodeList,
+            operateFlag = projectGraySetRequest.operateFlag))
     }
 
     override fun setRepoNotGrayProject(projectGraySetRequest: OpProjectGraySetRequest): Result<Boolean> {
-        return Result(data = opProjectService.setRepoNotGrayProject(projectGraySetRequest.projectCodeList, projectGraySetRequest.operateFlag))
+        return Result(data = opProjectService.setRepoNotGrayProject(
+            projectCodeList = projectGraySetRequest.projectCodeList,
+            operateFlag = projectGraySetRequest.operateFlag))
     }
 
     override fun setMacOSGrayProject(projectGraySetRequest: OpProjectGraySetRequest): Result<Boolean> {
-        return Result(data = opProjectService.setMacOSGrayProject(projectGraySetRequest.projectCodeList, projectGraySetRequest.operateFlag))
+        return Result(data = opProjectService.setMacOSGrayProject(
+            projectCodeList = projectGraySetRequest.projectCodeList,
+            operateFlag = projectGraySetRequest.operateFlag))
     }
 
     override fun synProject(projectCode: String, isRefresh: Boolean): Result<Boolean> {

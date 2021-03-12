@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -95,6 +96,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
+import java.lang.RuntimeException
 
 @Service
 class PreBuildService @Autowired constructor(
@@ -648,8 +650,8 @@ class PreBuildService @Autowired constructor(
 
     fun checkYml(yamlStr: String) = CiYamlUtils.checkYaml(YamlUtil.getObjectMapper().readValue(yamlStr, CIBuildYaml::class.java))
 
-    fun getPluginVersion(userId: String, pluginType: String): PrePluginVersion? {
-        val record = preBuildVersionDao.getVersion(pluginType = pluginType, dslContext = dslContext) ?: return null
+    fun getPluginVersion(userId: String, pluginType: PreBuildPluginType): PrePluginVersion? {
+        val record = preBuildVersionDao.getVersion(pluginType = pluginType.name, dslContext = dslContext) ?: return null
         return PrePluginVersion(
             version = record.version,
             desc = record.desc,
@@ -657,5 +659,50 @@ class PreBuildService @Autowired constructor(
             updateTime = DateTimeUtil.toDateTime(record.updateTime as LocalDateTime),
             pluginType = PreBuildPluginType.valueOf(record.pluginType)
         )
+    }
+
+    fun creatPluginVersion(prePluginVersion: PrePluginVersion): Boolean {
+        val record = preBuildVersionDao.getVersion(pluginType = prePluginVersion.pluginType.name, dslContext = dslContext)
+        if (record != null) {
+            throw RuntimeException("已存在当前插件类型的版本信息，无法新增")
+        }
+        return with(prePluginVersion) {
+                preBuildVersionDao.create(
+                    version = version,
+                    modifyUser = modifyUser,
+                    desc = desc,
+                    pluginType = pluginType.name,
+                    dslContext = dslContext
+                ) > 0
+            }
+    }
+
+    fun deletePluginVersion(version: String): Boolean {
+        return preBuildVersionDao.delete(version, dslContext) > 0
+    }
+
+    fun updatePluginVersion(prePluginVersion: PrePluginVersion): Boolean {
+        return with(prePluginVersion) {
+                preBuildVersionDao.update(
+                    version = version,
+                    modifyUser = modifyUser,
+                    desc = desc,
+                    pluginType = pluginType.name,
+                    dslContext = dslContext
+                ) > 0
+            }
+    }
+
+    fun getPluginVersionList(): List<PrePluginVersion> {
+        val records = preBuildVersionDao.list(dslContext) ?: return listOf()
+        return records.map {
+            PrePluginVersion(
+                version = it.version,
+                desc = it.desc,
+                modifyUser = it.modifyUser,
+                updateTime = DateTimeUtil.toDateTime(it.updateTime as LocalDateTime),
+                pluginType = PreBuildPluginType.valueOf(it.pluginType)
+            )
+        }
     }
 }

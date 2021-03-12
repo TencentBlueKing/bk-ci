@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -93,7 +94,7 @@ import java.util.TimeZone
 import java.util.concurrent.TimeUnit
 import javax.annotation.PostConstruct
 
-@Component
+@Component@Suppress("ALL")
 class DockerHostBuildService(
     private val dockerHostConfig: DockerHostConfig,
     private val environment: Environment,
@@ -170,7 +171,9 @@ class DockerHostBuildService(
         log(
             buildId = buildId,
             red = true,
-            message = if (shutdown) "构建环境启动后即退出，请检查镜像是否合法或联系【蓝盾助手】查看，构建任务将失败退出" else "启动构建环境失败，构建任务将重试",
+            message = if (shutdown) {
+                "构建环境启动后即退出，请检查镜像是否合法或联系【蓝盾助手】查看，构建任务将失败退出"
+            } else "启动构建环境失败，构建任务将重试",
             tag = VMUtils.genStartVMTaskId(containerId),
             containerHashId = containerHashId
         )
@@ -303,8 +306,9 @@ class DockerHostBuildService(
     private fun createPullImage(dockerBuildInfo: DockerHostBuildInfo) {
         val imageName = CommonUtils.normalizeImageName(dockerBuildInfo.imageName)
         val taskId = VMUtils.genStartVMTaskId(dockerBuildInfo.vmSeqId.toString())
-
-        if (dockerBuildInfo.imagePublicFlag == true && dockerBuildInfo.imageRDType?.toLowerCase() == ImageRDTypeEnum.SELF_DEVELOPED.name.toLowerCase()) {
+        // docker pull
+        if (dockerBuildInfo.imagePublicFlag == true &&
+            dockerBuildInfo.imageRDType.equals(ImageRDTypeEnum.SELF_DEVELOPED.name, ignoreCase = true)) {
             log(
                 buildId = dockerBuildInfo.buildId,
                 message = "自研公共镜像，不从仓库拉取，直接从本地启动...",
@@ -324,7 +328,8 @@ class DockerHostBuildService(
                     containerHashId = dockerBuildInfo.containerHashId
                 )
             } catch (t: UnauthorizedException) {
-                val errorMessage = "无权限拉取镜像：$imageName，请检查镜像路径或凭证是否正确；[buildId=${dockerBuildInfo.buildId}][containerHashId=${dockerBuildInfo.containerHashId}]"
+                val errorMessage = "无权限拉取镜像：$imageName，请检查镜像路径或凭证是否正确；" +
+                    "[buildId=${dockerBuildInfo.buildId}][containerHashId=${dockerBuildInfo.containerHashId}]"
                 logger.error(errorMessage, t)
                 // 直接失败，禁止使用本地镜像
                 throw ContainerException(
@@ -333,7 +338,8 @@ class DockerHostBuildService(
                 )
                 // throw NoSuchImageException(errorMessage)
             } catch (t: NotFoundException) {
-                val errorMessage = "镜像不存在：$imageName，请检查镜像路径或凭证是否正确；[buildId=${dockerBuildInfo.buildId}][containerHashId=${dockerBuildInfo.containerHashId}]"
+                val errorMessage = "镜像不存在：$imageName，请检查镜像路径或凭证是否正确；" +
+                    "[buildId=${dockerBuildInfo.buildId}][containerHashId=${dockerBuildInfo.containerHashId}]"
                 logger.error(errorMessage, t)
                 // 直接失败，禁止使用本地镜像
                 throw ContainerException(
@@ -364,7 +370,8 @@ class DockerHostBuildService(
             // docker run
             val binds = DockerBindLoader.loadBinds(dockerBuildInfo)
 
-            val containerName = "dispatch-${dockerBuildInfo.buildId}-${dockerBuildInfo.vmSeqId}-${RandomUtil.randomString()}"
+            val containerName =
+                "dispatch-${dockerBuildInfo.buildId}-${dockerBuildInfo.vmSeqId}-${RandomUtil.randomString()}"
             val container = httpLongDockerCli.createContainerCmd(imageName)
                 .withName(containerName)
                 .withCmd("/bin/sh", ENTRY_POINT_CMD)
@@ -486,7 +493,7 @@ class DockerHostBuildService(
 
             val ticket = dockerBuildParam.ticket
             val args = dockerBuildParam.args
-            ticket.forEach { it ->
+            ticket.forEach {
                 val baseConfig = AuthConfig()
                     .withUsername(it.second)
                     .withPassword(it.third)
@@ -563,7 +570,10 @@ class DockerHostBuildService(
         } catch (e: Throwable) {
             logger.error("Docker build and push failed, exception: ", e)
             val cause = if (e.cause != null && e.cause!!.message != null) {
-                e.cause!!.message!!.removePrefix(getWorkspace(pipelineId, vmSeqId.toInt(), dockerBuildParam.poolNo ?: "0"))
+                e.cause!!.message!!.removePrefix(getWorkspace(pipelineId = pipelineId,
+                    vmSeqId = vmSeqId.toInt(),
+                    poolNo = dockerBuildParam.poolNo ?: "0")
+                )
             } else {
                 ""
             }
@@ -670,14 +680,16 @@ class DockerHostBuildService(
                 dockerRunPortBindingList.add(DockerRunPortBinding(hostIp, it, localPort))
             }
 
-            val containerName = "dockerRun-${dockerBuildInfo.buildId}-${dockerBuildInfo.vmSeqId}-${RandomUtil.randomString()}"
+            val containerName =
+                "dockerRun-${dockerBuildInfo.buildId}-${dockerBuildInfo.vmSeqId}-${RandomUtil.randomString()}"
 
             val container = if (dockerRunParam.command.isEmpty() || dockerRunParam.command.equals("[]")) {
                 httpLongDockerCli.createContainerCmd(imageName)
                     .withName(containerName)
                     .withEnv(env)
                     .withVolumes(DockerVolumeLoader.loadVolumes(dockerBuildInfo))
-                    .withHostConfig(HostConfig().withBinds(binds).withNetworkMode("bridge").withPortBindings(portBindings))
+                    .withHostConfig(HostConfig()
+                        .withBinds(binds).withNetworkMode("bridge").withPortBindings(portBindings))
                     .withWorkingDir(dockerHostConfig.volumeWorkspace)
                     .exec()
             } else {
@@ -686,7 +698,8 @@ class DockerHostBuildService(
                     .withCmd(dockerRunParam.command)
                     .withEnv(env)
                     .withVolumes(DockerVolumeLoader.loadVolumes(dockerBuildInfo))
-                    .withHostConfig(HostConfig().withBinds(binds).withNetworkMode("bridge").withPortBindings(portBindings))
+                    .withHostConfig(HostConfig()
+                        .withBinds(binds).withNetworkMode("bridge").withPortBindings(portBindings))
                     .withWorkingDir(dockerHostConfig.volumeWorkspace)
                     .exec()
             }
@@ -775,7 +788,7 @@ class DockerHostBuildService(
      * 监控系统负载，超过一定阈值，对于占用负载较高的容器，主动降低负载
      */
     fun monitorSystemLoad() {
-        logger.info("Monitor systemLoad cpu: ${SigarUtil.getAverageLongCpuLoad()}, mem: ${SigarUtil.getAverageLongMemLoad()}")
+        logger.info("Monitor|cpu: ${SigarUtil.getAverageLongCpuLoad()}, mem: ${SigarUtil.getAverageLongMemLoad()}")
         if (SigarUtil.getAverageLongCpuLoad() > dockerHostConfig.elasticitySystemCpuThreshold ?: 80 ||
             SigarUtil.getAverageLongMemLoad() > dockerHostConfig.elasticitySystemMemThreshold ?: 80
         ) {
@@ -800,7 +813,6 @@ class DockerHostBuildService(
 
                 // 优先判断CPU
                 val elasticityCpuThreshold = dockerHostConfig.elasticityCpuThreshold ?: 80
-                logger.info("containerId: ${container.id} | checkContainerStats cpuUsagePer: $cpuUsagePer, cpuThreshold: $elasticityCpuThreshold")
                 if (cpuUsagePer >= elasticityCpuThreshold) {
                     // 上报负载超额预警到数据平台
                     dockerHostBuildLogResourceApi.sendFormatLog(mapOf(
@@ -816,10 +828,11 @@ class DockerHostBuildService(
                     continue
                 }
 
-                if (statistics.memoryStats != null && statistics.memoryStats.usage != null && statistics.memoryStats.limit != null) {
+                if (statistics.memoryStats != null &&
+                    statistics.memoryStats.usage != null &&
+                    statistics.memoryStats.limit != null) {
                     val memUsage = statistics.memoryStats.usage!! * 100 / statistics.memoryStats.limit!!
                     val elasticityMemThreshold = dockerHostConfig.elasticityMemThreshold ?: 80
-                    logger.info("containerId: ${container.id} | checkContainerStats memUsage: $memUsage, memThreshold: $elasticityMemThreshold")
                     if (memUsage >= elasticityMemThreshold) {
                         // 上报负载超额预警到数据平台
                         dockerHostBuildLogResourceApi.sendFormatLog(mapOf(
@@ -855,8 +868,12 @@ class DockerHostBuildService(
         val memReservation = dockerHostConfig.elasticityMemReservation ?: 32 * 1024 * 1024 * 1024L
         val cpuPeriod = dockerHostConfig.elasticityCpuPeriod ?: 10000
         val cpuQuota = dockerHostConfig.elasticityCpuQuota ?: 80000
-        httpDockerCli.updateContainerCmd(containerId).withMemoryReservation(memReservation).withCpuPeriod(cpuPeriod).withCpuQuota(cpuQuota).exec()
-        logger.info("<<<< Trigger container reset, containerId: $containerId, memReservation: $memReservation, cpuPeriod: $cpuPeriod, cpuQuota: $cpuQuota")
+        httpDockerCli.updateContainerCmd(containerId)
+            .withMemoryReservation(memReservation)
+            .withCpuPeriod(cpuPeriod)
+            .withCpuQuota(cpuQuota).exec()
+        logger.info("<<<< Trigger container reset, containerId: $containerId," +
+            " memReservation: $memReservation, cpuPeriod: $cpuPeriod, cpuQuota: $cpuQuota")
     }
 
     fun clearContainers() {
@@ -932,7 +949,8 @@ class DockerHostBuildService(
 
                 val lastUsedDate = LocalImageCache.getDate(image)
                 if (null != lastUsedDate) {
-                    if ((Date().time - lastUsedDate.time) / (1000 * 60 * 60 * 24) >= dockerHostConfig.localImageCacheDays) {
+                    val days = TimeUnit.MILLISECONDS.toDays(Date().time - lastUsedDate.time)
+                    if (days >= dockerHostConfig.localImageCacheDays) {
                         logger.info("remove local image, ${it.repoTags}")
                         try {
                             httpLongDockerCli.removeImageCmd(image).exec()
