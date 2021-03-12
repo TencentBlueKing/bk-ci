@@ -41,7 +41,6 @@ import com.tencent.devops.log.pojo.enums.LogStatus
 import com.tencent.devops.log.pojo.enums.LogType
 import com.tencent.devops.log.pojo.message.LogMessage
 import com.tencent.devops.log.pojo.message.LogMessageWithLineNo
-import com.tencent.devops.log.utils.LogMQEventDispatcher
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.client.LogClient
@@ -53,6 +52,7 @@ import com.tencent.devops.log.service.LogStatusService
 import com.tencent.devops.log.service.LogTagService
 import com.tencent.devops.log.util.Constants
 import com.tencent.devops.log.util.ESIndexUtils
+import com.tencent.devops.log.util.LogMQEventDispatcher
 import org.elasticsearch.ElasticsearchStatusException
 import org.elasticsearch.action.admin.indices.open.OpenIndexRequest
 import org.elasticsearch.action.bulk.BulkRequest

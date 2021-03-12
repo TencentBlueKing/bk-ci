@@ -27,7 +27,6 @@
 
 package com.tencent.devops.log.lucene
 
-import com.tencent.devops.log.utils.LogMQEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.WebAutoConfiguration
 import com.tencent.devops.log.jmx.v2.LogBeanV2
@@ -36,6 +35,7 @@ import com.tencent.devops.log.service.LogService
 import com.tencent.devops.log.service.LogStatusService
 import com.tencent.devops.log.service.LogTagService
 import com.tencent.devops.log.service.impl.LogServiceLuceneImpl
+import com.tencent.devops.log.util.LogMQEventDispatcher
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
