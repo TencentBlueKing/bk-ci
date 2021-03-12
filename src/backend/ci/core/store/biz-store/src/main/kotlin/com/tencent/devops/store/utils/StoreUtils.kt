@@ -25,28 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.common.impl
+package com.tencent.devops.store.utils
 
-import com.tencent.devops.artifactory.api.service.ServiceFileResource
-import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.utils.CommonUtils
-import com.tencent.devops.store.utils.StoreUtils
-import org.springframework.stereotype.Service
-import java.io.File
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.common.service.utils.SpringContextUtil
 
-@Service
-class SampleStoreLogoServiceImpl : StoreLogoServiceImpl() {
+object StoreUtils {
 
-    override fun uploadStoreLogo(userId: String, file: File): Result<String?> {
-        val serviceUrlPrefix = client.getServiceUrl(ServiceFileResource::class)
-        val logoUrl = CommonUtils.serviceUploadFile(
-            userId = userId,
-            serviceUrlPrefix = serviceUrlPrefix,
-            file = file,
-            fileChannelType = FileChannelTypeEnum.WEB_SHOW.name
-        ).data
-        // 开源版如果logoUrl的域名和ci域名一样，则logoUrl无需带上域名，防止域名变更影响图片显示（logoUrl会存db）
-        return Result(if (logoUrl != null) StoreUtils.removeUrlHost(logoUrl) else logoUrl)
+    /**
+     * 移除链接地址中的域名信息
+     * @param url 链接地址
+     */
+    fun removeUrlHost(url: String): String {
+        val host = getHost()
+        return url.removePrefix(host)
+    }
+
+    /**
+     * 为链接地址添加域名信息
+     * @param url 链接地址
+     */
+    fun addUrlHost(url: String): String {
+        val host = getHost()
+        return if (!url.startsWith("http://") && !url.startsWith("https://")) {
+            if (url.startsWith("/")) "$host$url" else "$host/$url"
+        } else {
+            url
+        }
+    }
+
+    private fun getHost(): String {
+        val commonConfig: CommonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
+        return HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
     }
 }
