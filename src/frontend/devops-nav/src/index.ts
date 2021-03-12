@@ -29,6 +29,7 @@ import showAskPermissionDialog from './components/AskPermissionDialog'
 import bsWebSocket from '@/utils/bsWebSocket.js'
 import '@/assets/scss/index.scss'
 import { judgementLsVersion } from './utils/util'
+import '@icon-cool/bk-icon-devops/src/index'
 
 // 全量引入 bk-magic-vue
 import bkMagic from 'bk-magic-vue'

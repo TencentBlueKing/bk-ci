@@ -33,9 +33,9 @@
         data () {
             return {
                 storeChartTabs: [
-                    { name: 'totalDownloads', label: '安装量', count: 10 },
-                    { name: 'execTrend', label: '执行趋势', count: 20 },
-                    { name: 'failDetail', label: '错误分析', count: 30 }
+                    { name: 'totalDownloads', label: this.$t('store.安装量'), count: 10 },
+                    { name: 'execTrend', label: this.$t('store.执行趋势'), count: 20 },
+                    { name: 'failDetail', label: this.$t('store.错误分析'), count: 30 }
                 ],
                 storeChart: {},
                 timeList: [
@@ -121,7 +121,7 @@
                         labels: dailyStatisticList.map(x => x.statisticsTime),
                         datasets: [
                             {
-                                label: '安装量',
+                                label: this.$t('store.安装量'),
                                 backgroundColor: 'rgba(43, 124, 255,0.3)',
                                 borderColor: 'rgba(43, 124, 255,1)',
                                 lineTension: 0,
@@ -213,7 +213,7 @@
                         labels: dailyStatisticList.map(x => x.statisticsTime),
                         datasets: [
                             {
-                                label: '执行成功率',
+                                label: this.$t('store.执行成功率'),
                                 fill: true,
                                 backgroundColor: 'rgba(43, 124, 255,0.3)',
                                 borderColor: 'rgba(43, 124, 255,1)',
@@ -225,7 +225,7 @@
                                 data: dailyStatisticList.map(x => x.dailySuccessRate)
                             },
                             {
-                                label: '执行失败率',
+                                label: this.$t('store.执行失败率'),
                                 fill: true,
                                 backgroundColor: 'rgba(0, 204, 158, 0.3)',
                                 borderColor: 'rgba(0, 204, 158, 1)',
@@ -245,7 +245,13 @@
                             tooltip: {
                                 mode: 'x',
                                 intersect: false,
-                                singleInRange: true
+                                singleInRange: true,
+                                callbacks: {
+                                    label (context) {
+                                        const index = context.dataIndex
+                                        return context.dataset.label + ': ' + context.dataset.data[index] + '%'
+                                    }
+                                }
                             },
                             legend: {
                                 position: 'top',
@@ -317,7 +323,7 @@
                         labels: totalFailDetail.map(x => x.name),
                         datasets: [
                             {
-                                label: '错误分析',
+                                label: this.$t('store.错误分析'),
                                 hoverOffset: 4,
                                 data: totalFailDetail.map(x => x.failNum),
                                 backgroundColor: ['#FF3784', '#36A2EB', '#4BC0C0', '#F77825', '#9966FF', '#00A8C6', '#379F7A', '#CC2738', '#8B628A', '#8FBE00', '#606060'],
