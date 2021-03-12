@@ -36,7 +36,7 @@ import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.client.JfrogService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.RepoGray
-import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.log.utils.BuildLogPrinter
 import com.tencent.devops.plugin.pojo.luna.LunaUploadParam
 import okhttp3.MediaType
 import okhttp3.Request

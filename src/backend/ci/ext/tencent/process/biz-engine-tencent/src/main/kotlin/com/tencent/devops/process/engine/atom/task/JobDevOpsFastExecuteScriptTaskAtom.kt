@@ -39,7 +39,7 @@ import com.tencent.devops.common.job.api.pojo.FastExecuteScriptRequest
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.ServiceNodeResource
-import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.element.JobDevOpsFastExecuteScriptElement
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_ENV_ID_IS_NULL
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_ENV_NAME_IS_NULL

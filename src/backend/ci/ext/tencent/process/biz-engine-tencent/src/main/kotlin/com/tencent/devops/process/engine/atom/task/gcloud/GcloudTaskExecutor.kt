@@ -31,7 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.log.utils.BuildLogPrinter
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory

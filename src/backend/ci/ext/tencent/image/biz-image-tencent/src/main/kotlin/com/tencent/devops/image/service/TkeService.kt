@@ -43,7 +43,7 @@ import com.tencent.devops.image.config.DockerConfig
 import com.tencent.devops.image.pojo.PushImageTask
 import com.tencent.devops.image.pojo.enums.TaskStatus
 import com.tencent.devops.image.pojo.tke.TkePushImageParam
-import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.log.utils.BuildLogPrinter
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody

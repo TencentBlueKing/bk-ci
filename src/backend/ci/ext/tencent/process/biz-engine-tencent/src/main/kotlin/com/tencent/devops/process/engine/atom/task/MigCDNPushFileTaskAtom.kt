@@ -30,7 +30,7 @@ package com.tencent.devops.process.engine.atom.task
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.log.utils.BuildLogPrinter
 import com.tencent.devops.plugin.api.ServiceMigCDNResource
 import com.tencent.devops.plugin.pojo.migcdn.MigCDNUploadParam
 import com.tencent.devops.common.pipeline.element.MigCDNPushFileElement

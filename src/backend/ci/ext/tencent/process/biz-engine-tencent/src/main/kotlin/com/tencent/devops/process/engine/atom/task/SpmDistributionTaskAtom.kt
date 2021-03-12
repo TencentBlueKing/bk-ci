@@ -41,7 +41,7 @@ import com.tencent.devops.common.pipeline.element.SpmDistributionElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.log.utils.BuildLogPrinter
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.exception.BuildTaskException

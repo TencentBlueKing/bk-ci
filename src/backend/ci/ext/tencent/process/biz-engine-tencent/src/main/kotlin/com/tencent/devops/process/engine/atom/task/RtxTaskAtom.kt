@@ -43,7 +43,7 @@ import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextT
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextTextText
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextView
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextViewLink
-import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.log.utils.BuildLogPrinter
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
 import com.tencent.devops.process.engine.atom.AtomResponse

@@ -36,7 +36,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.element.SendSmsNotifyElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.log.utils.BuildLogPrinter
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.SmsNotifyMessage
 import com.tencent.devops.process.engine.atom.AtomResponse

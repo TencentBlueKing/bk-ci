@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.log.utils.BuildLogPrinter
 import com.tencent.devops.plugin.api.cos.ServicePluginCosResource
 import com.tencent.devops.plugin.pojo.cos.CdnUploadFileInfo
 import com.tencent.devops.common.pipeline.element.CosCdnDistributionElementDev
