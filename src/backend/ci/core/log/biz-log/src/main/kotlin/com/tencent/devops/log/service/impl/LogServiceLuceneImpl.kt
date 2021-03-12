@@ -39,7 +39,6 @@ import com.tencent.devops.log.pojo.QueryLogs
 import com.tencent.devops.log.pojo.enums.LogStatus
 import com.tencent.devops.log.pojo.message.LogMessage
 import com.tencent.devops.log.pojo.message.LogMessageWithLineNo
-import com.tencent.devops.log.utils.LogMQEventDispatcher
 import com.tencent.devops.log.jmx.v2.LogBeanV2
 import com.tencent.devops.log.lucene.LuceneClient
 import com.tencent.devops.log.service.IndexService
@@ -47,6 +46,7 @@ import com.tencent.devops.log.service.LogService
 import com.tencent.devops.log.service.LogStatusService
 import com.tencent.devops.log.service.LogTagService
 import com.tencent.devops.log.util.Constants
+import com.tencent.devops.log.util.LogMQEventDispatcher
 import com.tencent.devops.log.util.LuceneIndexUtils
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
