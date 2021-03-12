@@ -27,7 +27,7 @@
 
 package com.tencent.devops.log.lucene
 
-import com.tencent.devops.common.log.utils.LogMQEventDispatcher
+import com.tencent.devops.log.utils.LogMQEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.WebAutoConfiguration
 import com.tencent.devops.log.jmx.v2.LogBeanV2

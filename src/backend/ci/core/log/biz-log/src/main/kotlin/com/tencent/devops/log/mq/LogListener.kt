@@ -27,11 +27,11 @@
 
 package com.tencent.devops.log.mq
 
-import com.tencent.devops.common.log.pojo.LogBatchEvent
-import com.tencent.devops.common.log.pojo.LogEvent
-import com.tencent.devops.common.log.pojo.LogStatusEvent
+import com.tencent.devops.log.pojo.LogBatchEvent
+import com.tencent.devops.log.pojo.LogEvent
+import com.tencent.devops.log.pojo.LogStatusEvent
 import com.tencent.devops.log.service.LogService
-import com.tencent.devops.common.log.utils.LogMQEventDispatcher
+import com.tencent.devops.log.utils.LogMQEventDispatcher
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
