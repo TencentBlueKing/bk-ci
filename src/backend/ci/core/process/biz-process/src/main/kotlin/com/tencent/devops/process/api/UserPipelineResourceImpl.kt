@@ -47,6 +47,7 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineService
+import com.tencent.devops.process.engine.service.PipelineVersionService
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.Permission
@@ -90,7 +91,8 @@ class UserPipelineResourceImpl @Autowired constructor(
     private val pipelineInfoFacadeService: PipelineInfoFacadeService
     private val pipelineInfoService: PipelineInfoService,
     private val client: Client,
-    private val pipelineRepositoryService: PipelineRepositoryService
+    private val pipelineRepositoryService: PipelineRepositoryService,
+    private val pipelineVersionService: PipelineVersionService
 ) : UserPipelineResource {
 
     override fun hasCreatePermission(userId: String, projectId: String): Result<Boolean> {
@@ -149,7 +151,7 @@ class UserPipelineResourceImpl @Autowired constructor(
             )
         )
         val pipelineId = PipelineId(pipelineService.createPipeline(userId, projectId, pipeline, ChannelCode.BS))
-        val audit = Audit(AuthResourceType.PIPELINE_DEFAULT.value,pipelineId.id,pipeline.name,userId,"create","新增流水线", projectId)
+        val audit = Audit(AuthResourceType.PIPELINE_DEFAULT.value, pipelineId.id, pipeline.name, userId, "create", "新增流水线", projectId)
         client.get(ServiceAuditResource::class).create(audit)
         return Result(pipelineId)
     }
@@ -265,6 +267,12 @@ class UserPipelineResourceImpl @Autowired constructor(
         return Result(pipelineInfoFacadeService.getPipeline(userId, projectId, pipelineId, ChannelCode.BS))
     }
 
+    override fun getVersion(userId: String, projectId: String, pipelineId: String, version: Int): Result<Model> {
+        checkParam(userId, projectId)
+        checkPipelineId(pipelineId)
+        return Result(pipelineVersionService.getPipeline(userId, projectId, pipelineId, ChannelCode.BS, version))
+    }
+
     override fun generateRemoteToken(
         userId: String,
         projectId: String,
@@ -280,10 +288,18 @@ class UserPipelineResourceImpl @Autowired constructor(
         checkPipelineId(pipelineId)
         pipelineInfoFacadeService.deletePipeline(userId, projectId, pipelineId, ChannelCode.BS)
         val pipeline = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId,ChannelCode.BS)
+        val pipeline = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, ChannelCode.BS)
                 ?: throw NotFoundException("指定的流水线不存在")
         pipelineService.deletePipeline(userId, projectId, pipelineId, ChannelCode.BS)
-        val audit = Audit(AuthResourceType.PIPELINE_DEFAULT.value, pipelineId, pipeline.pipelineName, userId,"delete","删除流水线", projectId)
+        val audit = Audit(AuthResourceType.PIPELINE_DEFAULT.value, pipelineId, pipeline.pipelineName, userId, "delete", "删除流水线", projectId)
         client.get(ServiceAuditResource::class).create(audit)
+        return Result(true)
+    }
+
+    override fun softDeleteVersion(userId: String, projectId: String, pipelineId: String, version: Int): Result<Boolean> {
+        checkParam(userId, projectId)
+        checkPipelineId(pipelineId)
+        pipelineVersionService.deletePipelineVersion(userId, projectId, pipelineId, version, ChannelCode.BS)
         return Result(true)
     }
 
@@ -460,5 +476,21 @@ class UserPipelineResourceImpl @Autowired constructor(
                 throw InvalidParamException("最大排队数量非法")
             }
         }
+    }
+
+    override fun versionList(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        page: Int?,
+        pageSize: Int?,
+        sortType: PipelineSortType?
+    ): Result<PipelineViewPipelinePage<PipelineInfo>> {
+        checkParam(userId, projectId)
+        return Result(
+                pipelineVersionService.listPipelineVersion(
+                        userId, projectId, pipelineId, page, pageSize, sortType ?: PipelineSortType.CREATE_TIME, ChannelCode.BS
+                )
+        )
     }
 }

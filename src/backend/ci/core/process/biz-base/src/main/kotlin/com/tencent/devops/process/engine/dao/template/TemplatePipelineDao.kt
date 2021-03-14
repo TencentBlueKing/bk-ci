@@ -121,6 +121,17 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
         }
     }
 
+    fun listByPipeline(
+        dslContext: DSLContext,
+        pipelineId: String
+    ): TTemplatePipelineRecord? {
+        with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
+            return dslContext.selectFrom(this)
+                    .where(PIPELINE_ID.eq(pipelineId))
+                    .fetchOne()
+        }
+    }
+
     fun listByPipelines(
         dslContext: DSLContext,
         pipelineIds: Set<String>,

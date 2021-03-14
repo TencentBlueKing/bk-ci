@@ -32,6 +32,8 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineSettingResource
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
+import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
+import com.tencent.devops.process.service.PipelineSettingService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -44,5 +46,9 @@ class UserPipelineSettingResourceImpl @Autowired constructor(
 
     override fun getSetting(userId: String, projectId: String, pipelineId: String): Result<PipelineSetting> {
         return Result(pipelineSettingFacadeService.userGetSetting(userId, projectId, pipelineId))
+    }
+
+    override fun getSettingVersion(userId: String, projectId: String, pipelineId: String, version: Int): Result<PipelineSettingVersion> {
+        return Result(pipelineSettingService.userGetSettingVersion(userId, projectId, pipelineId, version))
     }
 }
