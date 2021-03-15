@@ -57,6 +57,7 @@ import com.tencent.devops.dispatch.docker.dao.PipelineDockerPoolDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskDao
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.docker.pojo.DockerHostInfo
+import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostType
 import com.tencent.devops.dispatch.docker.utils.CommonUtils
 import com.tencent.devops.dispatch.docker.utils.DockerHostLock
@@ -114,7 +115,7 @@ class DockerHostBuildService @Autowired constructor(
     fun enable(pipelineId: String, vmSeqId: Int?, enable: Boolean) =
         pipelineDockerEnableDao.enable(dslContext, pipelineId, vmSeqId, enable)
 
-    fun dockerHostBuild(event: PipelineAgentStartupEvent) {
+/*    fun dockerHostBuild(event: PipelineAgentStartupEvent) {
         val dispatchType = event.dispatchType as DockerDispatchType
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
@@ -244,9 +245,9 @@ class DockerHostBuildService @Autowired constructor(
                 dockerImage = dockerImage
             )
         }
-    }
+    }*/
 
-    private fun saveDockerInfoToBuildDetail(
+/*    private fun saveDockerInfoToBuildDetail(
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -261,7 +262,7 @@ class DockerHostBuildService @Autowired constructor(
             vmSeqId,
             VmInfo("", DockerUtils.parseShortImage(dockerImage))
         )
-    }
+    }*/
 
     fun finishDockerBuild(event: PipelineAgentShutdownEvent) {
         LOG.info("${event.buildId}|finishDockerBuild|vmSeqId(${event.vmSeqId})|result(${event.buildResult})")
@@ -673,7 +674,7 @@ class DockerHostBuildService @Autowired constructor(
         )
     }
 
-    fun buildLessDockerHost(event: PipelineBuildLessStartupDispatchEvent) {
+/*    fun buildLessDockerHost(event: PipelineBuildLessStartupDispatchEvent) {
         LOG.info("[${event.buildId}]|BUILD_LESS| Start docker host build ($event)}")
         val dispatchType = event.dispatchType as DockerDispatchType
         dslContext.transaction { configuration ->
@@ -758,7 +759,7 @@ class DockerHostBuildService @Autowired constructor(
                 )
             )
         }
-    }
+    }*/
 
     fun finishBuildLessDockerHost(buildId: String, vmSeqId: String?, userId: String, success: Boolean) {
         LOG.info("[$buildId]|BUILD_LESS| Finish vmSeqId($vmSeqId) with result($success)")
@@ -782,13 +783,14 @@ class DockerHostBuildService @Autowired constructor(
 
     private fun dispatchStopCmd(record: TDispatchPipelineDockerBuildRecord, userId: String) {
         if (record.dockerIp.isNotEmpty()) {
-            dockerHostClient.endAgentLessBuild(
+            dockerHostClient.endBuild(
                 projectId = record.projectId,
                 pipelineId = record.pipelineId,
                 buildId = record.buildId,
                 vmSeqId = record.vmSeqId?.toInt() ?: 0,
                 containerId = record.containerId,
-                dockerIp = record.dockerIp
+                dockerIp = record.dockerIp,
+                clusterType = DockerHostClusterType.AGENT_LESS
             )
         }
 /*
