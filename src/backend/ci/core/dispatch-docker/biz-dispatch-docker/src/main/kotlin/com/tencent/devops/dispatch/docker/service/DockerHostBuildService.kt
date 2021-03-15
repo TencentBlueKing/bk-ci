@@ -781,36 +781,41 @@ class DockerHostBuildService @Autowired constructor(
     }
 
     private fun dispatchStopCmd(record: TDispatchPipelineDockerBuildRecord, userId: String) {
-        /*val dockerLessTask = pipelineDockerTaskDao.getTask(dslContext, record.buildId, record.vmSeqId)
+        if (record.dockerIp.isNotEmpty()) {
+            dockerHostClient.endAgentLessBuild(
+                projectId = record.projectId,
+                pipelineId = record.pipelineId,
+                buildId = record.buildId,
+                vmSeqId = record.vmSeqId?.toInt() ?: 0,
+                containerId = record.containerId,
+                dockerIp = record.dockerIp
+            )
+        }
+/*
+        val dockerLessTask = pipelineDockerTaskDao.getTask(dslContext, record.buildId, record.vmSeqId)
             ?: run {
                 logger.warn("[${record.buildId}]|BUILD_LESS| can not found vmSeqId(${record.vmSeqId}) task")
                 return
-            }*/
+            }
 
-        val dockerHostBuildHis = pipelineDockerBuildDao.getBuild(
-            dslContext = dslContext,
-            buildId = record.buildId,
-            vmSeqId = record.vmSeqId
-        )
-
-        if (dockerHostBuildHis == null || dockerHostBuildHis.dockerIp.isNullOrBlank()) {
-            LOG.warn("[${record.buildId}]|BUILD_LESS| can not find hostTag")
+        if (dockerLessTask.hostTag.isNullOrBlank()) {
+            logger.warn("[${record.buildId}]|BUILD_LESS| can not find hostTag")
             return
         }
 
-        LOG.info("[${record.buildId}]|BUILD_LESS|Finish docker(${dockerHostBuildHis.containerId})")
+        logger.info("[${record.buildId}]|BUILD_LESS| Finish docker(${dockerLessTask.containerId})| hostTag=${dockerLessTask.hostTag}")
 
         pipelineEventDispatcher.dispatch(
             PipelineBuildLessDockerShutdownEvent(
-                routeKeySuffix = dockerHostBuildHis.dockerIp, // 路由Key的后缀
+                routeKeySuffix = dockerLessTask.hostTag, // 路由Key的后缀
                 source = DockerHostBuildService::class.java.name, // 来源
                 projectId = record.projectId,
                 pipelineId = record.pipelineId,
                 userId = userId,
                 buildId = record.buildId,
-                dockerContainerId = dockerHostBuildHis.containerId
+                dockerContainerId = dockerLessTask.containerId
             )
-        )
+        )*/
     }
 
     fun getHost(hostTag: String): Result<DockerHostInfo>? {
