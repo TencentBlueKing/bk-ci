@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.UserLogResource
-import com.tencent.devops.log.pojo.QueryLogs
+import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.log.service.LogPermissionService
 import com.tencent.devops.log.service.LogServiceDispatcher
 import org.springframework.beans.factory.annotation.Autowired

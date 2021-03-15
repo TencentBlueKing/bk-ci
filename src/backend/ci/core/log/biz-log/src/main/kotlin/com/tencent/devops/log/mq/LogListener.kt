@@ -27,9 +27,9 @@
 
 package com.tencent.devops.log.mq
 
-import com.tencent.devops.log.pojo.LogBatchEvent
-import com.tencent.devops.log.pojo.LogEvent
-import com.tencent.devops.log.pojo.LogStatusEvent
+import com.tencent.devops.common.log.pojo.LogBatchEvent
+import com.tencent.devops.common.log.pojo.LogEvent
+import com.tencent.devops.common.log.pojo.LogStatusEvent
 import com.tencent.devops.log.service.LogService
 import com.tencent.devops.log.util.LogMQEventDispatcher
 import org.slf4j.LoggerFactory
@@ -53,12 +53,14 @@ class LogListener @Autowired constructor(
             if (!result && event.retryTime >= 0) {
                 logger.warn("Retry to add the log event [${event.buildId}|${event.retryTime}]")
                 with(event) {
-                    logMQEventDispatcher.dispatch(LogEvent(
+                    logMQEventDispatcher.dispatch(
+                        LogEvent(
                         buildId = buildId,
                         logs = logs,
                         retryTime = retryTime - 1,
                         delayMills = getNextDelayMills(retryTime)
-                    ))
+                    )
+                    )
                 }
             }
         }
@@ -75,12 +77,14 @@ class LogListener @Autowired constructor(
             if (!result && event.retryTime >= 0) {
                 logger.warn("Retry to add log batch event [${event.buildId}|${event.retryTime}]")
                 with(event) {
-                    logMQEventDispatcher.dispatch(LogBatchEvent(
+                    logMQEventDispatcher.dispatch(
+                        LogBatchEvent(
                         buildId = buildId,
                         logs = logs,
                         retryTime = retryTime - 1,
                         delayMills = getNextDelayMills(retryTime)
-                    ))
+                    )
+                    )
                 }
             }
         }

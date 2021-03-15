@@ -25,17 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.pojo.enums
+package com.tencent.devops.common.log.pojo.message
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+/**
+ *
+ * Powered By Tencent
+ */
+data class LegacyLogMessage(
+    val tag: String,
+    val buildId: String,
+    val message: String,
+    val timestamp: Long,
+    val nanoTime: Long
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (other == null || other.javaClass != this.javaClass) return false
 
-@ApiModel("日志类型")
-enum class LogType {
-    @ApiModelProperty("启动日志")
-    START,
-    @ApiModelProperty("结束日志")
-    END,
-    @ApiModelProperty("普通的日志")
-    LOG
+        val otherObj = other as LegacyLogMessage
+        return this.buildId == otherObj.buildId &&
+            this.nanoTime == otherObj.nanoTime
+    }
+
+    override fun hashCode(): Int {
+        return "${buildId}_$nanoTime".hashCode()
+    }
+
+    override fun toString(): String {
+        return "LegacyLogMessage(tag='$tag', buildId='$buildId', " +
+            "message='$message', timestamp=$timestamp, nanoTime=$nanoTime)"
+    }
 }

@@ -28,7 +28,7 @@
 package com.tencent.devops.log.util
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.log.pojo.ILogEvent
+import com.tencent.devops.common.log.pojo.ILogEvent
 import com.tencent.devops.common.web.mq.EXTEND_RABBIT_TEMPLATE_NAME
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate

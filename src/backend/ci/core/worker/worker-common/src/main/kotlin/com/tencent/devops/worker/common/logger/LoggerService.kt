@@ -28,8 +28,8 @@
 package com.tencent.devops.worker.common.logger
 
 import com.tencent.devops.log.meta.Ansi
-import com.tencent.devops.log.pojo.message.LogMessage
-import com.tencent.devops.log.pojo.enums.LogType
+import com.tencent.devops.common.log.pojo.message.LogMessage
+import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.worker.common.LOG_SUBTAG_FINISH_FLAG
 import com.tencent.devops.worker.common.LOG_SUBTAG_FLAG
 import com.tencent.devops.worker.common.api.ApiFactory

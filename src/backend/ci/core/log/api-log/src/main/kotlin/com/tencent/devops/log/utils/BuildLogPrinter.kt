@@ -30,8 +30,8 @@ package com.tencent.devops.log.utils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.log.api.print.ServiceLogPrintResource
 import com.tencent.devops.log.meta.Ansi
-import com.tencent.devops.log.pojo.message.LogMessage
-import com.tencent.devops.log.pojo.enums.LogType
+import com.tencent.devops.common.log.pojo.message.LogMessage
+import com.tencent.devops.common.log.pojo.enums.LogType
 
 class BuildLogPrinter(
     private val client: Client
