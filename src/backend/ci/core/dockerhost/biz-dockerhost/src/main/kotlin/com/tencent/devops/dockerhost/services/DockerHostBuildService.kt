@@ -351,10 +351,10 @@ class DockerHostBuildService(
 
         if (exitCode != 0L && DockerExitCodeEnum.getValue(exitCode) != null) {
             val errorCodeEnum = DockerExitCodeEnum.getValue(exitCode)!!.errorCodeEnum
-            logger.error("[${dockerBuildInfo.buildId}]|[${dockerBuildInfo.vmSeqId}] waitAgentUp failed ${errorCodeEnum.formatErrorMessage}. containerId: $containerId")
+            logger.error("[${dockerBuildInfo.buildId}]|[${dockerBuildInfo.vmSeqId}] waitAgentUp failed. ${errorCodeEnum.formatErrorMessage}. containerId: $containerId")
             throw ContainerException(
                 errorCodeEnum = errorCodeEnum,
-                message = "Wait agentUp failed ${errorCodeEnum.formatErrorMessage}"
+                message = "Failed to wait agent up. ${errorCodeEnum.formatErrorMessage}"
             )
         }
     }
