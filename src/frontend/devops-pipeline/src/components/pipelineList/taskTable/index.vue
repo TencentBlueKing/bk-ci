@@ -1,7 +1,7 @@
 <template>
     <bk-table
         size="small"
-        style="margin-bottom: 10px; overflow: initial;"
+        style="margin-bottom: 10px;"
         :data="listWithConfig"
         :outer-border="false">
         <bk-table-column
@@ -228,9 +228,6 @@
         }
         >thead>tr>th {
             border: 0;
-        }
-        /deep/ .bk-table-body-wrapper {
-            overflow: inherit;
         }
      }
     .table-tr-overflow {
