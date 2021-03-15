@@ -35,8 +35,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.gray.Gray
-import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
-import com.tencent.devops.dispatch.docker.pojo.DockerHostInfo
 import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.utils.CommonUtils
@@ -54,7 +52,7 @@ class DockerHostBuildResourceApi constructor(
 ) : AbstractBuildResourceApi(dockerHostConfig, gray) {
     private val logger = LoggerFactory.getLogger(DockerHostBuildResourceApi::class.java)
 
-    fun startBuild(hostTag: String): Result<DockerHostBuildInfo>? {
+/*    fun startBuild(hostTag: String): Result<DockerHostBuildInfo>? {
         val path = "/${getUrlPrefix()}/api/dockerhost/startBuild?hostTag=$hostTag"
         val request = buildPost(path)
 
@@ -140,7 +138,7 @@ class DockerHostBuildResourceApi constructor(
             }
             return objectMapper.readValue(responseContent)
         }
-    }
+    }*/
 
     fun postLog(buildId: String, red: Boolean, message: String, tag: String? = "", jobId: String? = "") {
         try {

@@ -310,7 +310,8 @@ class DockerHostClient @Autowired constructor(
         buildId: String,
         vmSeqId: Int,
         containerId: String,
-        dockerIp: String
+        dockerIp: String,
+        clusterType: DockerHostClusterType = DockerHostClusterType.COMMON
     ) {
         val requestBody = DockerHostBuildInfo(
             projectId = projectId,
@@ -334,7 +335,8 @@ class DockerHostClient @Autowired constructor(
 
         val request = dockerHostProxyService.getDockerHostProxyRequest(
             dockerHostUri = "/api/docker/build/end",
-            dockerHostIp = dockerIp
+            dockerHostIp = dockerIp,
+            clusterType = clusterType
         ).delete(
             RequestBody.create(
             MediaType.parse("application/json; charset=utf-8"),
@@ -357,63 +359,6 @@ class DockerHostClient @Autowired constructor(
         }
     }
 
-    fun endAgentLessBuild(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        vmSeqId: Int,
-        containerId: String,
-        dockerIp: String
-    ) {
-        val requestBody = DockerHostBuildInfo(
-            projectId = projectId,
-            agentId = "",
-            pipelineId = pipelineId,
-            buildId = buildId,
-            vmSeqId = vmSeqId,
-            secretKey = "",
-            status = 0,
-            imageName = "",
-            containerId = containerId,
-            wsInHost = true,
-            poolNo = 0,
-            registryUser = "",
-            registryPwd = "",
-            imageType = "",
-            imagePublicFlag = false,
-            imageRDType = null,
-            containerHashId = ""
-        )
-
-        val dockerIpInfo = pipelineDockerIPInfoDao.getDockerIpInfo(dslContext, dockerIp) ?: throw DockerServiceException(
-            ErrorType.SYSTEM, ErrorCodeEnum.DOCKER_IP_NOT_AVAILABLE.errorCode, "Docker IP: $dockerIp is not available.")
-        val proxyUrl = "http://" + dockerIp + ":" + dockerIpInfo.dockerHostPort + "/api/docker-agentless/build/end"
-        val request = Request.Builder().url(proxyUrl)
-            .delete(
-                RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"),
-                    JsonUtil.toJson(requestBody)
-                )
-            )
-            .addHeader("Accept", "application/json; charset=utf-8")
-            .addHeader("Content-Type", "application/json; charset=utf-8")
-            .build()
-
-        OkhttpUtils.doHttp(request).use { resp ->
-            val responseBody = resp.body()!!.string()
-            LOG.info("[$projectId|$pipelineId|$buildId] End build Docker VM $dockerIp responseBody: $responseBody")
-            val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
-            if (response["status"] == 0) {
-                response["data"] as Boolean
-            } else {
-                val msg = response["message"] as String
-                LOG.error("[$projectId|$pipelineId|$buildId] End build Docker VM failed, msg: $msg")
-                throw DockerServiceException(ErrorType.SYSTEM, ErrorCodeEnum.END_VM_ERROR.errorCode, "End build Docker VM failed, msg: $msg")
-            }
-        }
-    }
-
-
     private fun dockerBuildStart(
         dockerIp: String,
         dockerHostPort: Int,
@@ -427,7 +372,8 @@ class DockerHostClient @Autowired constructor(
         val request = dockerHostProxyService.getDockerHostProxyRequest(
             dockerHostUri = "/api/docker/build/start",
             dockerHostIp = dockerIp,
-            dockerHostPort = dockerHostPort
+            dockerHostPort = dockerHostPort,
+            clusterType = clusterType
         ).post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(requestBody)))
             .build()
 

@@ -49,7 +49,7 @@ class BuildDockerHostResourceImpl @Autowired constructor(
     private val dispatchDockerService: DispatchDockerService
 ) : BuildDockerHostResource {
 
-    override fun getHost(hostTag: String): Result<DockerHostInfo>? {
+/*    override fun getHost(hostTag: String): Result<DockerHostInfo>? {
         return dockerHostBuildService.getHost(hostTag)
     }
 
@@ -93,7 +93,7 @@ class BuildDockerHostResourceImpl @Autowired constructor(
         message: String?
     ): Result<Boolean>? {
         return dockerHostDebugService.rollbackDebug(pipelineId, vmSeqId, shutdown, message)
-    }
+    }*/
 
     override fun alert(level: AlertLevel, title: String, message: String): Result<Boolean>? {
         AlertUtils.doAlert(level, title, message)

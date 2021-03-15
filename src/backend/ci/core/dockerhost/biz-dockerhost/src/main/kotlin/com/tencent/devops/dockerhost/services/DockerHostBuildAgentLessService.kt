@@ -156,6 +156,10 @@ class DockerHostBuildAgentLessService(
     }
 
     override fun stopContainer(dockerHostBuildInfo: DockerHostBuildInfo) {
+        if (dockerHostBuildInfo.containerId.isEmpty()) {
+            return
+        }
+
         try {
             // docker stop
             val containerInfo = httpDockerCli.inspectContainerCmd(dockerHostBuildInfo.containerId).exec()
@@ -181,6 +185,14 @@ class DockerHostBuildAgentLessService(
 
     private fun getWorkspace(pipelineId: String, vmSeqId: String): String {
         return "${dockerHostConfig.hostPathWorkspace}/$pipelineId/$vmSeqId/"
+    }
+
+    fun clearContainers() {
+        val containerInfo = httpDockerCli.listContainersCmd().withStatusFilter(setOf("exited")).exec()
+        for (container in containerInfo) {
+            logger.info("Clear container, containerId: ${container.id}")
+            httpDockerCli.removeContainerCmd(container.id).exec()
+        }
     }
 
     companion object {
