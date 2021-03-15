@@ -25,16 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.sign
+package com.tencent.devops.openapi
 
 import com.tencent.devops.common.service.MicroService
 import com.tencent.devops.common.service.MicroServiceApplication
-import org.springframework.scheduling.annotation.EnableAsync
 
 @MicroService
-@EnableAsync
-class Application
+class OpenApiApplication
 
 fun main(args: Array<String>) {
-    MicroServiceApplication.run(Application::class, args)
+    MicroServiceApplication.run(OpenApiApplication::class, args)
 }

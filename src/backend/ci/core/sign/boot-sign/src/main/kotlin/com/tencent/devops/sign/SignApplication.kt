@@ -25,16 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch
+package com.tencent.devops.sign
 
 import com.tencent.devops.common.service.MicroService
 import com.tencent.devops.common.service.MicroServiceApplication
-import org.springframework.context.annotation.ComponentScan
+import org.springframework.scheduling.annotation.EnableAsync
 
 @MicroService
-@ComponentScan("com.tencent.devops.plugin", "com.tencent.devops.dispatch")
-class Application
+@EnableAsync
+class SignApplication
 
 fun main(args: Array<String>) {
-    MicroServiceApplication.run(Application::class, args)
+    MicroServiceApplication.run(SignApplication::class, args)
 }

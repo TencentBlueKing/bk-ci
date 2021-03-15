@@ -31,8 +31,8 @@ import com.tencent.devops.common.service.MicroService
 import com.tencent.devops.common.service.MicroServiceApplication
 
 @MicroService
-class Application
+class TicketApplication
 
 fun main(args: Array<String>) {
-    MicroServiceApplication.run(Application::class, args)
+    MicroServiceApplication.run(TicketApplication::class, args)
 }
