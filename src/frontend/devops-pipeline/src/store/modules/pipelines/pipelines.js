@@ -483,8 +483,35 @@ const actions = {
         }).then(response => {
             return response.data
         })
-    }
+    },
 
+    // 流水线历史版本列表
+    requestPipelineVersionList (_, { projectId, pipelineId, page = 1, pageSize = 15 }) {
+        return ajax.get(AJAX_URL_PIRFIX + `/process/api/user/pipelines/${projectId}/${pipelineId}/version`, {
+            params: {
+                page,
+                pageSize
+            }
+        })
+    },
+    // 查询流水线历史版本编排内容
+    requestPipelineByVersion: (_, { projectId, pipelineId, version }) => {
+        return ajax.get(`/${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}/${version}`)
+    },
+    // 查询流水线历史版本设置内容
+    requestPipelineSettingByVersion: (_, { projectId, pipelineId, version }) => {
+        return ajax.get(`/${PROCESS_API_URL_PREFIX}/user/setting/get`, {
+            params: {
+                projectId,
+                pipelineId,
+                version
+            }
+        })
+    },
+    // 删除流水线历史版本
+    deletePipelineVersion (_, { projectId, pipelineId, version }) {
+        return ajax.delete(`${prefix}${projectId}/${pipelineId}/${version}`)
+    }
 }
 
 export default {
