@@ -302,6 +302,18 @@ class ExtServiceDao {
         }
     }
 
+    fun countByName(dslContext: DSLContext, serviceName: String, serviceCode: String? = null): Int {
+        with(TExtensionService.T_EXTENSION_SERVICE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(SERVICE_NAME.eq(serviceName))
+            conditions.add(DELETE_FLAG.eq(false))
+            if (serviceCode != null) {
+                conditions.add(SERVICE_CODE.eq(serviceCode))
+            }
+            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)
+        }
+    }
+
     fun getServiceLatestByCode(dslContext: DSLContext, serviceCode: String): TExtensionServiceRecord? {
         return with(TExtensionService.T_EXTENSION_SERVICE) {
             dslContext.selectFrom(this).where(DELETE_FLAG.eq(false)).and(SERVICE_CODE.eq(serviceCode))

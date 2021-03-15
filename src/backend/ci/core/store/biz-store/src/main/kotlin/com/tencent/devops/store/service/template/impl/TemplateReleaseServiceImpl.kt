@@ -164,19 +164,17 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
     ): Result<String?> {
         logger.info("the userId is :$userId,marketTemplateUpdateRequest is :$marketTemplateUpdateRequest")
         val templateCode = marketTemplateUpdateRequest.templateCode
-        val templateRecords = marketTemplateDao.getTemplatesByTemplateCode(dslContext, templateCode)
-        logger.info("the templateRecords is :$templateRecords")
-        if (null != templateRecords && templateRecords.size > 0) {
+        val templateCount = marketTemplateDao.countByCode(dslContext, templateCode)
+        if (templateCount > 0) {
             val templateName = marketTemplateUpdateRequest.templateName
             // 判断更新的名称是否已存在
-            val count = marketTemplateDao.countByName(dslContext, templateName)
-            if (validateNameIsExist(count, templateRecords, templateName)) {
+            if (validateNameIsExist(templateCode, templateName)) {
                 return MessageCodeUtil.generateResponseDataObject(
                     CommonMessageCode.PARAMETER_IS_EXIST,
                     arrayOf(templateName)
                 )
             }
-            val templateRecord = templateRecords[0]
+            val templateRecord = marketTemplateDao.getUpToDateTemplateByCode(dslContext, templateCode)!!
             // 判断最近一个模板版本的状态，如果不是首次发布，则只有处于审核驳回、已发布、上架中止和已下架的插件状态才允许添加新的版本
             val templateFinalStatusList = mutableListOf(
                     TemplateStatusEnum.AUDIT_REJECT.status.toByte(),
@@ -184,7 +182,7 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
                     TemplateStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
                     TemplateStatusEnum.UNDERCARRIAGED.status.toByte()
             )
-            if (templateRecords.size == 1) {
+            if (templateCount == 1) {
                 // 如果是首次发布，处于初始化的模板状态也允许添加新的版本
                 templateFinalStatusList.add(TemplateStatusEnum.INIT.status.toByte())
             }
@@ -206,7 +204,7 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
             var templateId = UUIDUtil.generate()
             dslContext.transaction { t ->
                 val context = DSL.using(t)
-                if (1 == templateRecords.size) {
+                if (1 == templateCount) {
                     if (StringUtils.isEmpty(templateRecord.version)) {
                         // 首次创建版本
                         templateId = templateRecord.id
@@ -405,23 +403,16 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
     }
 
     private fun validateNameIsExist(
-        count: Int,
-        templateRecords: org.jooq.Result<TTemplateRecord>,
+        templateCode: String,
         templateName: String
     ): Boolean {
         var flag = false
+        val count = marketTemplateDao.countByName(dslContext, templateName)
         if (count > 0) {
-            for (item in templateRecords) {
-                if (templateName == item.templateName) {
-                    flag = true
-                    break
-                }
-            }
-            if (!flag) {
-                return true
-            }
+            // 判断模板名称是否重复（模板升级允许名称一样）
+            flag = marketTemplateDao.countByName(dslContext, templateCode, templateName) < 1
         }
-        return false
+        return flag
     }
 
     /**

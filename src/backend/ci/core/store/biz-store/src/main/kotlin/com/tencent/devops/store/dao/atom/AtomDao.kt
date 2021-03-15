@@ -126,9 +126,14 @@ class AtomDao : AtomBaseDao() {
         }
     }
 
-    fun countByName(dslContext: DSLContext, name: String): Int {
+    fun countByName(dslContext: DSLContext, name: String, atomCode: String? = null): Int {
         with(TAtom.T_ATOM) {
-            return dslContext.selectCount().from(this).where(NAME.eq(name)).fetchOne(0, Int::class.java)
+            val conditions = mutableListOf<Condition>()
+            conditions.add(NAME.eq(name))
+            if (atomCode != null) {
+                conditions.add(ATOM_CODE.eq(atomCode))
+            }
+            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)
         }
     }
 

@@ -149,7 +149,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
             val totalNum = totalSuccessNum + totalFailNum
             successRate =
                 if (totalNum > 0) String.format("%.2f", totalSuccessNum.toDouble() * 100 / totalNum)
-                    .toDouble() else 100.00
+                    .toDouble() else null
         }
         return generateStoreStatistic(record, successRate)
     }

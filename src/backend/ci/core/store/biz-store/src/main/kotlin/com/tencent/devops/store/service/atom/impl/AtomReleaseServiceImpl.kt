@@ -290,21 +290,20 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             }
         }
         // 判断插件是不是首次创建版本
-        val atomRecords = marketAtomDao.getAtomsByAtomCode(dslContext, atomCode)
-        logger.info("the atomRecords is :$atomRecords")
-        if (null == atomRecords || atomRecords.size < 1) {
+        val atomCount = atomDao.countByCode(dslContext, atomCode)
+        if (atomCount < 1) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomCode))
         }
         // 判断更新的插件名称是否重复
         if (validateAtomNameIsExist(
-                marketAtomUpdateRequest.name,
-                atomRecords
+                atomCode = atomCode,
+                atomName = marketAtomUpdateRequest.name
             )
         ) return MessageCodeUtil.generateResponseDataObject(
             CommonMessageCode.PARAMETER_IS_EXIST,
             arrayOf(marketAtomUpdateRequest.name)
         )
-        val atomRecord = atomRecords[0]
+        val atomRecord = atomDao.getNewestAtomByCode(dslContext, atomCode)!!
         // 校验前端传的版本号是否正确
         val releaseType = marketAtomUpdateRequest.releaseType
         val osList = marketAtomUpdateRequest.os
@@ -710,23 +709,16 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     }
 
     private fun validateAtomNameIsExist(
-        atomName: String,
-        atomRecords: org.jooq.Result<TAtomRecord>
+        atomCode: String,
+        atomName: String
     ): Boolean {
-        val count = atomDao.countByName(dslContext, atomName)
         var flag = false
+        val count = atomDao.countByName(dslContext, atomName)
         if (count > 0) {
-            for (item in atomRecords) {
-                if (atomName == item.name) {
-                    flag = true
-                    break
-                }
-            }
-            if (!flag) {
-                return true
-            }
+            // 判断插件名称是否重复（插件升级允许名称一样）
+            flag = atomDao.countByName(dslContext, atomName, atomCode) < 1
         }
-        return false
+        return flag
     }
 
     private fun upgradeMarketAtom(

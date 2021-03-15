@@ -375,11 +375,16 @@ class MarketTemplateDao {
         }
     }
 
-    fun countByName(dslContext: DSLContext, templateName: String): Int {
+    fun countByName(dslContext: DSLContext, templateName: String, templateCode: String? = null): Int {
         with(TTemplate.T_TEMPLATE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(TEMPLATE_NAME.eq(templateName))
+            if (templateCode != null) {
+                conditions.add(TEMPLATE_CODE.eq(templateCode))
+            }
             return dslContext.selectCount()
                 .from(this)
-                .where(TEMPLATE_NAME.eq(templateName))
+                .where(conditions)
                 .fetchOne(0, Int::class.java)
         }
     }
