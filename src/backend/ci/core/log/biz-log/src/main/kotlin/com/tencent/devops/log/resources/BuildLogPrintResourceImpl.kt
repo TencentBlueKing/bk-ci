@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.print.BuildLogPrintResource
-import com.tencent.devops.log.pojo.message.LogMessage
+import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.log.utils.BuildLogPrinter
 import org.springframework.beans.factory.annotation.Autowired
 

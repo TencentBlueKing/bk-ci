@@ -25,34 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.pojo.message
+package com.tencent.devops.common.log.pojo
+
+import com.tencent.devops.common.log.pojo.enums.LogStatus
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
 /**
  *
  * Powered By Tencent
  */
-data class LegacyLogMessage(
-    val tag: String,
+@ApiModel("日志查询模型")
+data class QueryLogs(
+    @ApiModelProperty("构建ID", required = true)
     val buildId: String,
-    val message: String,
-    val timestamp: Long,
-    val nanoTime: Long
-) {
-    override fun equals(other: Any?): Boolean {
-        if (this === other) return true
-        if (other == null || other.javaClass != this.javaClass) return false
-
-        val otherObj = other as LegacyLogMessage
-        return this.buildId == otherObj.buildId &&
-            this.nanoTime == otherObj.nanoTime
-    }
-
-    override fun hashCode(): Int {
-        return "${buildId}_$nanoTime".hashCode()
-    }
-
-    override fun toString(): String {
-        return "LegacyLogMessage(tag='$tag', buildId='$buildId', " +
-            "message='$message', timestamp=$timestamp, nanoTime=$nanoTime)"
-    }
-}
+    @ApiModelProperty("是否结束", required = true)
+    var finished: Boolean,
+    @ApiModelProperty("是否有后续日志", required = false)
+    var hasMore: Boolean? = false,
+    @ApiModelProperty("日志列表", required = true)
+    var logs: MutableList<LogLine> = mutableListOf(),
+    @ApiModelProperty("所用时间", required = false)
+    var timeUsed: Long = 0,
+    @ApiModelProperty("日志查询状态", required = false)
+    var status: LogStatus = LogStatus.SUCCEED,
+    @ApiModelProperty("日志子tag列表", required = true)
+    var subTags: List<String>? = null
+)

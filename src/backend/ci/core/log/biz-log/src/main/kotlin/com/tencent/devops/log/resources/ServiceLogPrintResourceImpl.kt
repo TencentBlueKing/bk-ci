@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.print.ServiceLogPrintResource
-import com.tencent.devops.log.pojo.LogEvent
-import com.tencent.devops.log.pojo.LogStatusEvent
-import com.tencent.devops.log.pojo.message.LogMessage
+import com.tencent.devops.common.log.pojo.LogEvent
+import com.tencent.devops.common.log.pojo.LogStatusEvent
+import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.log.util.LogMQEventDispatcher
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -72,14 +72,16 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("无效的构建ID")
         }
-        logMQEventDispatcher.dispatch(LogStatusEvent(
+        logMQEventDispatcher.dispatch(
+            LogStatusEvent(
             buildId = buildId,
             finished = false,
             tag = tag ?: "",
             subTag = subTag,
             jobId = jobId ?: "",
             executeCount = executeCount
-        ))
+        )
+        )
         return Result(true)
     }
 
@@ -94,14 +96,16 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("无效的构建ID")
         }
-        logMQEventDispatcher.dispatch(LogStatusEvent(
+        logMQEventDispatcher.dispatch(
+            LogStatusEvent(
             buildId = buildId,
             finished = finished,
             tag = tag ?: "",
             subTag = subTag,
             jobId = jobId ?: "",
             executeCount = executeCount
-        ))
+        )
+        )
         return Result(true)
     }
 }

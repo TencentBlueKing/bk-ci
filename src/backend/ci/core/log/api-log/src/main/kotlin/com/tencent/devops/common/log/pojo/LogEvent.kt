@@ -25,27 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.pojo.enums
+package com.tencent.devops.common.log.pojo
 
-import com.fasterxml.jackson.annotation.JsonValue
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.log.pojo.message.LogMessage
 
-@ApiModel("日志状态")
-enum class LogStatus(private val status: Int) {
-    @ApiModelProperty("正常结束")
-    SUCCEED(0),
-    @ApiModelProperty("日志为空")
-    EMPTY(1),
-    @ApiModelProperty("日志被清除")
-    CLEAN(2),
-    @ApiModelProperty("日志被关闭")
-    CLOSED(3),
-    @ApiModelProperty("其他异常")
-    FAIL(999);
-
-    @JsonValue
-    fun jsonValue(): Int {
-        return status
-    }
-}
+@Event(MQ.EXCHANGE_LOG_BUILD_EVENT, MQ.ROUTE_LOG_BUILD_EVENT)
+data class LogEvent(
+    override val buildId: String,
+    val logs: List<LogMessage>,
+    override val retryTime: Int = 2,
+    override val delayMills: Int = 0
+) : ILogEvent(buildId, retryTime, delayMills)

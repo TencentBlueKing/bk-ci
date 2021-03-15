@@ -27,7 +27,7 @@
 
 package com.tencent.devops.log.util
 
-import com.tencent.devops.log.pojo.message.LogMessageWithLineNo
+import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
 import org.apache.lucene.document.Document
 import org.apache.lucene.document.Field
 import org.apache.lucene.document.IntPoint

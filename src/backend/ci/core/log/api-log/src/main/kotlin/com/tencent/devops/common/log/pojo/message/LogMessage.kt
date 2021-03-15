@@ -25,9 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.pojo.message
+package com.tencent.devops.common.log.pojo.message
 
-import com.tencent.devops.log.pojo.enums.LogType
+import com.tencent.devops.common.log.pojo.enums.LogType
 
 /**
  *
