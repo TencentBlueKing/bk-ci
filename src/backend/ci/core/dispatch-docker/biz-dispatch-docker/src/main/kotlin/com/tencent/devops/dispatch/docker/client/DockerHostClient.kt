@@ -427,7 +427,8 @@ class DockerHostClient @Autowired constructor(
         val request = dockerHostProxyService.getDockerHostProxyRequest(
             dockerHostUri = "/api/docker/build/start",
             dockerHostIp = dockerIp,
-            dockerHostPort = dockerHostPort
+            dockerHostPort = dockerHostPort,
+            clusterType = clusterType
         ).post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(requestBody)))
             .build()
 

@@ -29,7 +29,6 @@ package com.tencent.devops.dispatch.docker.utils
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.redis.RedisLock
@@ -51,7 +50,6 @@ import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerI
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.net.URLEncoder
 import java.util.Random
@@ -77,9 +75,6 @@ class DockerHostUtils @Autowired constructor(
 
         private val logger = LoggerFactory.getLogger(DockerHostUtils::class.java)
     }
-
-    @Value("\${devopsGateway.idcProxy}")
-    val idcProxy: String? = null
 
     fun getAvailableDockerIpWithSpecialIps(
         projectId: String,

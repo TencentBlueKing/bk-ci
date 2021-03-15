@@ -156,6 +156,10 @@ class DockerHostBuildAgentLessService(
     }
 
     override fun stopContainer(dockerHostBuildInfo: DockerHostBuildInfo) {
+        if (dockerHostBuildInfo.containerId.isEmpty()) {
+            return
+        }
+
         try {
             // docker stop
             val containerInfo = httpDockerCli.inspectContainerCmd(dockerHostBuildInfo.containerId).exec()
