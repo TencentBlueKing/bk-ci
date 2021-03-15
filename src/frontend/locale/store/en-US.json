@@ -1,5 +1,8 @@
 {
     "store": "Store",
+    "执行成功数": "Number of successful executions",
+    "执行失败数": "Number of execution failures",
+    "最近三个月内的执行成功率": "Execution success rate in the last three months",
     "执行趋势": "Execution trend",
     "错误分析": "Error analysis",
     "执行成功率": "Execution success rate",

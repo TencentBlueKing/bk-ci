@@ -207,6 +207,10 @@
 
             paintTrend (dailyStatisticList) {
                 const context = document.querySelector('.store-chart')
+                const successRate = this.$t('store.执行成功率')
+                const failRate = this.$t('store.执行失败率')
+                const successNum = this.$t('store.执行成功数')
+                const failNum = this.$t('store.执行失败数')
                 this.storeChart = new BKChart(context, {
                     type: 'line',
                     data: {
@@ -215,8 +219,8 @@
                             {
                                 label: this.$t('store.执行成功率'),
                                 fill: true,
-                                backgroundColor: 'rgba(43, 124, 255,0.3)',
-                                borderColor: 'rgba(43, 124, 255,1)',
+                                backgroundColor: 'rgba(5, 155, 255, 0.3)',
+                                borderColor: 'rgba(5, 155, 255, 1)',
                                 lineTension: 0,
                                 borderWidth: 2,
                                 pointRadius: 0,
@@ -227,8 +231,8 @@
                             {
                                 label: this.$t('store.执行失败率'),
                                 fill: true,
-                                backgroundColor: 'rgba(0, 204, 158, 0.3)',
-                                borderColor: 'rgba(0, 204, 158, 1)',
+                                backgroundColor: 'rgba(34, 207, 207, 0.3)',
+                                borderColor: 'rgba(34, 207, 207, 1)',
                                 lineTension: 0,
                                 borderWidth: 2,
                                 pointRadius: 0,
@@ -249,7 +253,17 @@
                                 callbacks: {
                                     label (context) {
                                         const index = context.dataIndex
-                                        return context.dataset.label + ': ' + context.dataset.data[index] + '%'
+                                        const curStatis = dailyStatisticList[index]
+                                        let label = ''
+                                        switch (context.dataset.label) {
+                                            case successRate:
+                                                label = `${successRate} / ${successNum}：${curStatis.dailySuccessRate}% / ${curStatis.dailySuccessNum}`
+                                                break
+                                            case failRate:
+                                                label = `${failRate} / ${failNum}：${curStatis.dailyFailRate}% / ${curStatis.dailyFailNum}`
+                                                break
+                                        }
+                                        return label
                                     }
                                 }
                             },
