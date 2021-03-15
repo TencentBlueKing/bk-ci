@@ -339,7 +339,7 @@ class DockerHostBuildService @Autowired constructor(
         }
     }
 
-    fun startBuild(hostTag: String): Result<DockerHostBuildInfo>? {
+/*    fun startBuild(hostTag: String): Result<DockerHostBuildInfo>? {
         val stopWatch = StopWatch()
         stopWatch.start("fetchHostZone")
         val hostZone = pipelineDockerHostZoneDao.getHostZone(dslContext, hostTag)
@@ -584,7 +584,7 @@ class DockerHostBuildService @Autowired constructor(
             stopWatch.stop()
             LOG.info("[$hostTag|$grayFlag]|endBuild| $message| watch=$stopWatch")
         }
-    }
+    }*/
 
     /**
      * 每120分钟执行一次，更新大于两天状态还是running的pool，以及大于两天状态还是running的build history，并主动关机
@@ -820,7 +820,7 @@ class DockerHostBuildService @Autowired constructor(
         )*/
     }
 
-    fun getHost(hostTag: String): Result<DockerHostInfo>? {
+/*    fun getHost(hostTag: String): Result<DockerHostInfo>? {
         val hostZone = pipelineDockerHostZoneDao.getHostZone(dslContext, hostTag)
         LOG.info("[getHost]| hostTag=$hostTag, hostZone=$hostZone")
         return if (hostZone == null) {
@@ -828,7 +828,7 @@ class DockerHostBuildService @Autowired constructor(
         } else {
             Result(DockerHostInfo(hostZone.routeKey ?: MQ.DEFAULT_BUILD_LESS_DOCKET_HOST_ROUTE_SUFFIX))
         }
-    }
+    }*/
 
     fun log(buildId: String, red: Boolean, message: String, tag: String? = "", jobId: String? = "") {
         LOG.info("write log from docker host, buildId: $buildId, msg: $message, tag: $tag, jobId= $jobId")

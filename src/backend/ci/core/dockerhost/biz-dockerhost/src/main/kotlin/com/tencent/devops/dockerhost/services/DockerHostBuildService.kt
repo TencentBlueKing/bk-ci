@@ -94,7 +94,8 @@ import java.util.TimeZone
 import java.util.concurrent.TimeUnit
 import javax.annotation.PostConstruct
 
-@Component@Suppress("ALL")
+@Suppress("ALL")
+@Component
 class DockerHostBuildService(
     private val dockerHostConfig: DockerHostConfig,
     private val environment: Environment,

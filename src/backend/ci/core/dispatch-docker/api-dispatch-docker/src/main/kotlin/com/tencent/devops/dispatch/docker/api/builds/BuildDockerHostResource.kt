@@ -52,7 +52,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)@Suppress("ALL")
 interface BuildDockerHostResource {
 
-    @ApiOperation("轮询开始任务")
+/*    @ApiOperation("轮询开始任务")
     @POST
     @Path("/startBuild")
     fun startBuild(
@@ -151,7 +151,7 @@ interface BuildDockerHostResource {
         shutdown: Boolean? = false,
         @ApiParam("message", required = true)
         message: String?
-    ): Result<Boolean>?
+    ): Result<Boolean>?*/
 
     @ApiOperation("系统监控告警")
     @POST
@@ -168,14 +168,14 @@ interface BuildDockerHostResource {
         message: String
     ): Result<Boolean>?
 
-    @ApiOperation("获取主机信息")
+/*    @ApiOperation("获取主机信息")
     @GET
     @Path("/host")
     fun getHost(
         @ApiParam("dockerHost标识", required = true)
         @QueryParam("hostTag")
         hostTag: String
-    ): Result<DockerHostInfo>?
+    ): Result<DockerHostInfo>?*/
 
     @ApiOperation("上报日志信息")
     @POST

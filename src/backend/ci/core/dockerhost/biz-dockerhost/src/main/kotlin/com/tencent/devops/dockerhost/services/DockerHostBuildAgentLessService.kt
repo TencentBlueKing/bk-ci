@@ -187,6 +187,14 @@ class DockerHostBuildAgentLessService(
         return "${dockerHostConfig.hostPathWorkspace}/$pipelineId/$vmSeqId/"
     }
 
+    fun clearContainers() {
+        val containerInfo = httpDockerCli.listContainersCmd().withStatusFilter(setOf("exited")).exec()
+        for (container in containerInfo) {
+            logger.info("Clear container, containerId: ${container.id}")
+            httpDockerCli.removeContainerCmd(container.id).exec()
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(DockerHostBuildAgentLessService::class.java)
     }
