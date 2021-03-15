@@ -101,7 +101,7 @@ class DockerHostBuildService(
     private val dockerHostBuildApi: DockerHostBuildResourceApi,
     private val dockerHostBuildLogResourceApi: DockerHostBuildLogResourceApi,
     private val alertApi: AlertApi
-) {
+) : AbstractDockerHostBuildService(dockerHostConfig, dockerHostBuildApi) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(DockerHostBuildService::class.java)
@@ -111,82 +111,6 @@ class DockerHostBuildService(
         .withDockerConfig(dockerHostConfig.dockerConfig)
         .withApiVersion(dockerHostConfig.apiVersion)
         .build()
-
-    final var httpClient: DockerHttpClient = OkDockerHttpClient.Builder()
-        .dockerHost(config.dockerHost)
-        .sslConfig(config.sslConfig)
-        .connectTimeout(5000)
-        .readTimeout(30000)
-        .build()
-
-    final var longHttpClient: DockerHttpClient = OkDockerHttpClient.Builder()
-        .dockerHost(config.dockerHost)
-        .sslConfig(config.sslConfig)
-        .connectTimeout(5000)
-        .readTimeout(300000)
-        .build()
-
-    private val httpDockerCli = DockerClientBuilder.getInstance(config).withDockerHttpClient(httpClient).build()
-
-    private val httpLongDockerCli = DockerClientBuilder.getInstance(config).withDockerHttpClient(longHttpClient).build()
-
-    fun startBuild(): DockerHostBuildInfo? {
-        val result = dockerHostBuildApi.startBuild(CommonUtils.getInnerIP())
-        if (result != null) {
-            if (result.isNotOk()) {
-                return null
-            }
-        }
-        return result!!.data!!
-    }
-
-    fun endBuild(): DockerHostBuildInfo? {
-        val result = dockerHostBuildApi.endBuild(CommonUtils.getInnerIP())
-        if (result != null) {
-            if (result.isNotOk()) {
-                return null
-            }
-        }
-        return result!!.data!!
-    }
-
-    fun reportContainerId(buildId: String, vmSeqId: Int, containerId: String): Boolean {
-        val result = dockerHostBuildApi.reportContainerId(buildId, vmSeqId, containerId)
-        if (result != null) {
-            if (result.isNotOk()) {
-                logger.info("[$buildId]|reportContainerId return msg: ${result.message}")
-                return false
-            }
-        }
-        return result!!.data!!
-    }
-
-    fun rollbackBuild(
-        buildId: String,
-        vmSeqId: Int,
-        shutdown: Boolean,
-        containerId: String,
-        containerHashId: String?
-    ): Boolean {
-        log(
-            buildId = buildId,
-            red = true,
-            message = if (shutdown) {
-                "构建环境启动后即退出，请检查镜像是否合法或联系【蓝盾助手】查看，构建任务将失败退出"
-            } else "启动构建环境失败，构建任务将重试",
-            tag = VMUtils.genStartVMTaskId(containerId),
-            containerHashId = containerHashId
-        )
-
-        val result = dockerHostBuildApi.rollbackBuild(buildId, vmSeqId, shutdown)
-        if (result != null) {
-            if (result.isNotOk()) {
-                logger.info("[$buildId]|rollbackBuild return msg: ${result.message}")
-                return false
-            }
-        }
-        return result!!.data!!
-    }
 
     fun createPullImage(
         imageType: String?,
@@ -255,36 +179,36 @@ class DockerHostBuildService(
         return Result(checkImageResponse)
     }
 
-    fun createContainer(dockerBuildInfo: DockerHostBuildInfo): String {
-        val imageName = CommonUtils.normalizeImageName(dockerBuildInfo.imageName)
+    override fun createContainer(dockerHostBuildInfo: DockerHostBuildInfo): String {
+        val imageName = CommonUtils.normalizeImageName(dockerHostBuildInfo.imageName)
         // 执行docker pull
-        createPullImage(dockerBuildInfo)
+        createPullImage(dockerHostBuildInfo)
 
         // 执行docker run
-        val containerId = createDockerRun(dockerBuildInfo, imageName)
+        val containerId = createDockerRun(dockerHostBuildInfo, imageName)
 
         // 等待一段时间，检查一下agent是否正常启动
-        waitAgentUp(dockerBuildInfo, containerId)
+        waitAgentUp(dockerHostBuildInfo, containerId)
 
         return containerId
     }
 
-    fun stopContainer(dockerBuildInfo: DockerHostBuildInfo) {
+    override fun stopContainer(dockerHostBuildInfo: DockerHostBuildInfo) {
         try {
             // docker stop
-            val containerInfo = httpLongDockerCli.inspectContainerCmd(dockerBuildInfo.containerId).exec()
+            val containerInfo = httpLongDockerCli.inspectContainerCmd(dockerHostBuildInfo.containerId).exec()
             if ("exited" != containerInfo.state.status) {
-                httpLongDockerCli.stopContainerCmd(dockerBuildInfo.containerId).withTimeout(15).exec()
+                httpLongDockerCli.stopContainerCmd(dockerHostBuildInfo.containerId).withTimeout(15).exec()
             }
         } catch (e: Throwable) {
-            logger.error("Stop the container failed, containerId: ${dockerBuildInfo.containerId}, error msg: $e")
+            logger.error("Stop the container failed, containerId: ${dockerHostBuildInfo.containerId}, error msg: $e")
         }
 
         try {
             // docker rm
-            httpLongDockerCli.removeContainerCmd(dockerBuildInfo.containerId).exec()
+            httpLongDockerCli.removeContainerCmd(dockerHostBuildInfo.containerId).exec()
         } catch (e: Throwable) {
-            logger.error("Stop the container failed, containerId: ${dockerBuildInfo.containerId}, error msg: $e")
+            logger.error("Stop the container failed, containerId: ${dockerHostBuildInfo.containerId}, error msg: $e")
         } finally {
             // 找出所有跟本次构建关联的dockerRun启动容器并停止容器
             val containerInfo = httpLongDockerCli.listContainersCmd().withStatusFilter(setOf("running")).exec()
@@ -292,12 +216,12 @@ class DockerHostBuildService(
                 try {
                     // logger.info("${dockerBuildInfo.buildId}|${dockerBuildInfo.vmSeqId} containerName: ${container.names[0]}")
                     val containerName = container.names[0]
-                    if (containerName.contains(getDockerRunStopPattern(dockerBuildInfo))) {
-                        logger.info("${dockerBuildInfo.buildId}|${dockerBuildInfo.vmSeqId} stop dockerRun container, containerId: ${container.id}")
+                    if (containerName.contains(getDockerRunStopPattern(dockerHostBuildInfo))) {
+                        logger.info("${dockerHostBuildInfo.buildId}|${dockerHostBuildInfo.vmSeqId} stop dockerRun container, containerId: ${container.id}")
                         httpLongDockerCli.stopContainerCmd(container.id).withTimeout(15).exec()
                     }
                 } catch (e: Exception) {
-                    logger.error("${dockerBuildInfo.buildId}|${dockerBuildInfo.vmSeqId} Stop dockerRun container failed, containerId: ${container.id}", e)
+                    logger.error("${dockerHostBuildInfo.buildId}|${dockerHostBuildInfo.vmSeqId} Stop dockerRun container failed, containerId: ${container.id}", e)
                 }
             }
         }
@@ -986,25 +910,6 @@ class DockerHostBuildService(
         } catch (e: Exception) {
             logger.error("check container: $containerId state failed, return ", e)
             return null
-        }
-    }
-
-    fun log(buildId: String, message: String, tag: String?, containerHashId: String?) {
-        return log(buildId, false, message, tag, containerHashId)
-    }
-
-    fun log(buildId: String, red: Boolean, message: String, tag: String?, containerHashId: String?) {
-        logger.info("write log to dispatch, buildId: $buildId, message: $message")
-        try {
-            dockerHostBuildApi.postLog(
-                buildId = buildId,
-                red = red,
-                message = message,
-                tag = tag,
-                jobId = containerHashId
-            )
-        } catch (t: Throwable) {
-            logger.info("write log to dispatch failed")
         }
     }
 

@@ -31,6 +31,9 @@ import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
 import com.tencent.devops.dispatch.docker.service.dispatcher.BuildLessDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.dispatch.docker.client.DockerHostClient
+import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
+import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
 import org.springframework.beans.factory.annotation.Autowired
@@ -39,7 +42,9 @@ import org.springframework.stereotype.Component
 @Component
 class BuildLessDockerDispatcher @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
-    private val dockerHostBuildService: DockerHostBuildService
+    private val dockerHostBuildService: DockerHostBuildService,
+    private val dockerHostClient: DockerHostClient,
+    private val dockerHostUtils: DockerHostUtils
 ) : BuildLessDispatcher {
     override fun canDispatch(event: PipelineBuildLessStartupDispatchEvent) =
         event.dispatchType is DockerDispatchType
@@ -54,7 +59,16 @@ class BuildLessDockerDispatcher @Autowired constructor(
             jobId = event.containerHashId,
             executeCount = event.executeCount ?: 1
         )
-        dockerHostBuildService.buildLessDockerHost(event)
+        // dockerHostBuildService.buildLessDockerHost(event)
+        val agentLessDockerIp = dockerHostUtils.getAvailableDockerIpWithSpecialIps(
+            projectId = event.projectId,
+            pipelineId = event.pipelineId,
+            vmSeqId = event.vmSeqId,
+            specialIpSet = emptySet(),
+            unAvailableIpList = emptySet(),
+            clusterName = DockerHostClusterType.AGENT_LESS
+        )
+        dockerHostClient.startAgentLessBuild(agentLessDockerIp.first, agentLessDockerIp.second, event)
     }
 
     override fun shutdown(event: PipelineBuildLessShutdownDispatchEvent) {

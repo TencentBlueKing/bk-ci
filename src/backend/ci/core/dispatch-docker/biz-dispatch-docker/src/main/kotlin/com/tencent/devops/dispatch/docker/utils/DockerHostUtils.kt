@@ -29,6 +29,7 @@ package com.tencent.devops.dispatch.docker.utils
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.redis.RedisLock
@@ -44,11 +45,13 @@ import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskDriftDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
 import com.tencent.devops.dispatch.docker.pojo.DockerHostLoadConfig
+import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerIpInfoRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.net.URLEncoder
 import java.util.Random
@@ -75,12 +78,16 @@ class DockerHostUtils @Autowired constructor(
         private val logger = LoggerFactory.getLogger(DockerHostUtils::class.java)
     }
 
+    @Value("\${devopsGateway.idcProxy}")
+    val idcProxy: String? = null
+
     fun getAvailableDockerIpWithSpecialIps(
         projectId: String,
         pipelineId: String,
         vmSeqId: String,
         specialIpSet: Set<String>,
-        unAvailableIpList: Set<String> = setOf()
+        unAvailableIpList: Set<String> = setOf(),
+        clusterName: DockerHostClusterType = DockerHostClusterType.COMMON
     ): Pair<String, Int> {
         val grayEnv = gray.isGray()
 
@@ -89,19 +96,30 @@ class DockerHostUtils @Autowired constructor(
         logger.info("Docker host load config: ${JsonUtil.toJson(dockerHostLoadConfigTriple)}")
 
         // 先取容量负载比较小的，同时满足负载条件的（负载阈值具体由OP平台配置)，从满足的节点中随机选择一个
-        val firstPair = dockerLoadCheck(dockerHostLoadConfigTriple.first, grayEnv, specialIpSet, unAvailableIpList)
+        val firstPair = dockerLoadCheck(
+            dockerHostLoadConfig = dockerHostLoadConfigTriple.first,
+            grayEnv = grayEnv,
+            clusterName = clusterName,
+            specialIpSet = specialIpSet,
+            unAvailableIpList = unAvailableIpList
+        )
         val dockerPair = if (firstPair.first.isEmpty()) {
-            val secondPair = dockerLoadCheck(dockerHostLoadConfig = dockerHostLoadConfigTriple.second,
+            val secondPair = dockerLoadCheck(
+                dockerHostLoadConfig = dockerHostLoadConfigTriple.second,
                 grayEnv = grayEnv,
+                clusterName = clusterName,
                 specialIpSet = specialIpSet,
-                unAvailableIpList = unAvailableIpList)
+                unAvailableIpList = unAvailableIpList
+            )
             if (secondPair.first.isEmpty()) {
                 dockerLoadCheck(
                     dockerHostLoadConfig = dockerHostLoadConfigTriple.third,
                     grayEnv = grayEnv,
+                    clusterName = clusterName,
                     specialIpSet = specialIpSet,
                     unAvailableIpList = unAvailableIpList,
-                    finalCheck = true)
+                    finalCheck = true
+                )
             } else {
                 secondPair
             }
@@ -127,12 +145,13 @@ class DockerHostUtils @Autowired constructor(
         projectId: String,
         pipelineId: String,
         vmSeqId: String,
-        unAvailableIpList: Set<String>
+        unAvailableIpList: Set<String>,
+        clusterType: DockerHostClusterType = DockerHostClusterType.COMMON
     ): Pair<String, Int> {
         // 先判断是否OP已配置专机，若配置了专机，从专机列表中选择一个容量最小的
         val specialIpSet = pipelineDockerHostDao.getHostIps(dslContext, projectId).toSet()
         logger.info("getAvailableDockerIp projectId: $projectId | specialIpSet: $specialIpSet")
-        return getAvailableDockerIpWithSpecialIps(projectId, pipelineId, vmSeqId, specialIpSet, unAvailableIpList)
+        return getAvailableDockerIpWithSpecialIps(projectId, pipelineId, vmSeqId, specialIpSet, unAvailableIpList, clusterType)
     }
 
     fun getIdlePoolNo(pipelineId: String, vmSeq: String): Int {
@@ -320,6 +339,7 @@ class DockerHostUtils @Autowired constructor(
     private fun dockerLoadCheck(
         dockerHostLoadConfig: DockerHostLoadConfig,
         grayEnv: Boolean,
+        clusterName: DockerHostClusterType,
         specialIpSet: Set<String>,
         unAvailableIpList: Set<String>,
         finalCheck: Boolean = false
@@ -328,6 +348,7 @@ class DockerHostUtils @Autowired constructor(
             pipelineDockerIpInfoDao.getAvailableDockerIpList(
                 dslContext = dslContext,
                 grayEnv = grayEnv,
+                clusterName = clusterName.name,
                 cpuLoad = dockerHostLoadConfig.cpuLoadThreshold,
                 memLoad = dockerHostLoadConfig.memLoadThreshold,
                 diskLoad = dockerHostLoadConfig.diskLoadThreshold,
