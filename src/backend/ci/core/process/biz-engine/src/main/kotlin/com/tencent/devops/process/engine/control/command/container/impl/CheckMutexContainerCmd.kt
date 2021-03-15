@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.engine.control.command.container.impl
 
-import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ContainerMutexStatus
 import com.tencent.devops.process.engine.control.MutexControl
@@ -55,7 +54,7 @@ class CheckMutexContainerCmd(
 
     override fun execute(commandContext: ContainerContext) {
         // 终止或者结束事件不做互斥判断
-        if (!ActionType.isEnd(commandContext.event.actionType)) {
+        if (!commandContext.event.actionType.isEnd()) {
             mutexCheck(commandContext)
         }
     }

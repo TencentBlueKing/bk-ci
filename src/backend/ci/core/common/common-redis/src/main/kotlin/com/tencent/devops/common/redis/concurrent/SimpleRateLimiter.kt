@@ -25,17 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory
+package com.tencent.devops.common.redis.concurrent
 
-import com.tencent.devops.artifactory.service.impl.DiskArchiveFileServiceImpl
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Primary
+import com.tencent.devops.common.redis.RedisOperation
 
-@Configuration
-class SampleArtifactoryServiceConfig {
+class SimpleRateLimiter(private val redisOperation: RedisOperation) {
 
-    @Bean
-    @Primary
-    fun archiveFileService() = DiskArchiveFileServiceImpl()
+    /**
+     * 在[seconds]秒内，获取锁[lock]数量不超过[bucketSize]，否则返回false
+     */
+    fun acquire(bucketSize: Int, lock: String, seconds: Long = 60): Boolean {
+        return if (redisOperation.increment(lock, 1) ?: 1 <= bucketSize) {
+            redisOperation.expire(lock, seconds)
+            true
+        } else {
+            release(lock)
+            redisOperation.expire(lock, seconds)
+            false
+        }
+    }
+
+    /**
+     * 释放获得的锁[lock]
+     */
+    fun release(lock: String) {
+        if (redisOperation.hasKey(lock)) {
+            redisOperation.increment(lock, -1)
+        }
+    }
 }

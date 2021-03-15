@@ -84,6 +84,7 @@ include ":core:misc:model-misc"
 include ":core:quality"
 include ":core:quality:api-quality"
 include ":core:quality:biz-quality"
+include ":core:quality:biz-quality-sample"
 include ":core:quality:boot-quality"
 include ":core:quality:model-quality"
 

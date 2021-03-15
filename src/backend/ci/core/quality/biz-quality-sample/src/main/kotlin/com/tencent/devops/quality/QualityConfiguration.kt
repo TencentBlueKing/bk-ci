@@ -25,37 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.event.enums
+package com.tencent.devops.quality
 
-/**
- * 事件动作
- * @version 1.0
- */
-enum class ActionType {
-    RETRY, // 重试
-    START, // 开始
-    REFRESH, // 刷新ElementAdditionalOptions
-    END, // 强制结束当前节点，会导致当前构建容器结束
-    SKIP, // 跳过-不执行
-    TERMINATE, // 终止
-    ;
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthResourceApi
+import com.tencent.devops.common.auth.code.QualityAuthServiceCode
+import com.tencent.devops.quality.service.QualityPermissionService
+import com.tencent.devops.quality.service.SampleQualityPermissionServiceImpl
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
 
-    fun isStartOrRefresh() = isStart() || this == REFRESH
+@Suppress("UNUSED")
+@Configuration
+@ConditionalOnWebApplication
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+class QualityConfiguration {
 
-    fun isStart() = START == this || RETRY == this
-
-    fun isEnd() = END == this || isTerminate()
-
-    fun isTerminate() = TERMINATE == this
-
-    companion object {
-        @Deprecated(replaceWith = ReplaceWith("isStart"), message = "replace by isStart")
-        fun isStart(actionType: ActionType) = actionType.isStart()
-
-        @Deprecated(replaceWith = ReplaceWith("isEnd"), message = "replace by isEnd")
-        fun isEnd(actionType: ActionType) = actionType.isEnd()
-
-        @Deprecated(replaceWith = ReplaceWith("isTerminate"), message = "replace by isTerminate")
-        fun isTerminate(actionType: ActionType) = actionType.isTerminate()
-    }
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "sample")
+    fun sampleProjectPermissionService(
+        authPermissionApi: AuthPermissionApi,
+        authResourceApi: AuthResourceApi,
+        qualityAuthServiceCode: QualityAuthServiceCode
+    ): QualityPermissionService = SampleQualityPermissionServiceImpl(
+        authPermissionApi = authPermissionApi,
+        authResourceApi = authResourceApi,
+        qualityAuthServiceCode = qualityAuthServiceCode
+    )
 }

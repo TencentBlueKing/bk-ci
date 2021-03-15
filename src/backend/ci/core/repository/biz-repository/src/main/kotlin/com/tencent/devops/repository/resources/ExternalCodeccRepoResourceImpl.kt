@@ -49,15 +49,18 @@ class ExternalCodeccRepoResourceImpl @Autowired constructor(
         reversion: String?,
         branch: String?,
         subModule: String?,
-        repositoryType: RepositoryType?
+        repositoryType:
+        RepositoryType?
     ): Result<String> {
-        return Result(repoFileService.getFileContent(
-            repositoryConfig = buildConfig(repoId, repositoryType),
-            filePath = filePath,
-            reversion = reversion,
-            branch = branch,
-            subModule = subModule
-        ))
+        return Result(
+            repoFileService.getFileContent(
+                repositoryConfig = buildConfig(repoId, repositoryType),
+                filePath = filePath,
+                reversion = reversion,
+                branch = branch,
+                subModule = subModule
+            )
+        )
     }
 
     override fun getFileContentV2(
@@ -68,14 +71,15 @@ class ExternalCodeccRepoResourceImpl @Autowired constructor(
         subModule: String?,
         repositoryType: RepositoryType?
     ): Result<String> {
-        return Result(repoFileService.getFileContent(
-            repositoryConfig = buildConfig(repositoryId = repoId, repositoryType = repositoryType),
-            filePath = filePath,
-            reversion = reversion,
-            branch = branch,
-            subModule = subModule,
-            svnFullPath = true
-        ))
+        return Result(
+            repoFileService.getFileContent(
+                repositoryConfig = buildConfig(repoId, repositoryType),
+                filePath = filePath,
+                reversion = reversion,
+                branch = branch,
+                subModule = subModule,
+                svnFullPath = true)
+        )
     }
 
     override fun getGitFileContentCommon(
@@ -86,7 +90,15 @@ class ExternalCodeccRepoResourceImpl @Autowired constructor(
         authType: RepoAuthType?,
         subModule: String?
     ): Result<String> {
-        return Result(commonRepoFileService.getGitFileContent(repoUrl, filePath, ref, token, authType, subModule))
+        return Result(
+            commonRepoFileService.getGitFileContent(
+                repoUrl = repoUrl,
+                filePath = filePath,
+                ref = ref,
+                token = token,
+                authType = authType,
+                subModule = subModule)
+        )
     }
 
     override fun getGitFileContentOAuth(
@@ -95,7 +107,12 @@ class ExternalCodeccRepoResourceImpl @Autowired constructor(
         filePath: String,
         ref: String?
     ): Result<String> {
-        return commonRepoFileService.getGitFileContentOauth(userId, repoName, filePath, ref)
+        return commonRepoFileService.getGitFileContentOauth(
+            userId = userId,
+            repoName = repoName,
+            filePath = filePath,
+            ref = ref
+        )
     }
 
     override fun getRepoMembers(repoUrl: String, userId: String): Result<List<GitMember>> {
