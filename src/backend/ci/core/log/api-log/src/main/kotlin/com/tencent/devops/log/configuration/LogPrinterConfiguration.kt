@@ -27,10 +27,7 @@
 package com.tencent.devops.log.configuration
 
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.web.mq.EXTEND_RABBIT_TEMPLATE_NAME
 import com.tencent.devops.log.utils.BuildLogPrinter
-import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
@@ -43,9 +40,5 @@ import org.springframework.core.Ordered
 class LogPrinterConfiguration {
 
     @Bean
-    fun buildLogPrinter(
-        @Qualifier(value = EXTEND_RABBIT_TEMPLATE_NAME)
-        rabbitTemplate: RabbitTemplate,
-        client: Client
-    ) = BuildLogPrinter(client)
+    fun buildLogPrinter(client: Client) = BuildLogPrinter(client)
 }
