@@ -19,7 +19,7 @@
                     </template>
                     <i v-else class="devops-icon icon-circle-2-1 spin-icon" />
                 </bread-crumb>
-                <version-sideslider v-if="$route.name === 'pipelinesEdit' && !pipelineType.editMode"></version-sideslider>
+                <version-sideslider v-if="$route.name === 'pipelinesEdit'"></version-sideslider>
             </div>
             <template v-if="$route.name === 'pipelinesPreview'" slot="right">
                 <router-link :to="{ name: 'pipelinesEdit' }"><bk-button>{{ $t('edit') }}</bk-button></router-link>
