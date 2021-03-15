@@ -25,6 +25,7 @@ const pipelinesGroup = () => import(/* webpackChunkName: "pipelinesGroup" */'../
 const pipelinesView = () => import(/* webpackChunkName: "pipelinesView" */'../../views/list/view')
 const pipelinesTemplate = () => import(/* webpackChunkName: "pipelinesTemplate" */'../../views/list/template')
 const pipelinesRestore = () => import(/* webpackChunkName: "pipelinesRestore" */'../../views/list/restore')
+const pipelinesAudit = () => import(/* webpackChunkName: "pipelinesAudit" */'../../views/list/audit')
 
 const templateEntry = () => import(/* webpackChunkName: "pipelinesTemplate" */'../../views/template/')
 const templateEdit = () => import(/* webpackChunkName: "pipelinesTemplate" */'../../views/template/edit.vue')
@@ -95,6 +96,11 @@ const routes = [
                         name: 'pipelinesRestore',
                         component: pipelinesRestore
 
+                    },
+                    {
+                        path: 'audit',
+                        name: 'pipelinesAudit',
+                        component: pipelinesAudit
                     },
                     {
                         path: ':type?',

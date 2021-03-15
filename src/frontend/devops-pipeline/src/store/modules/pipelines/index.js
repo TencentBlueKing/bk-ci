@@ -24,6 +24,7 @@ import pipelinesGroup from './pipelinesGroup'
 import pipelinesView from './pipelinesView'
 import pipelinesTemplate from './pipelinesTemplate'
 import pipelinesRestore from './pipelinesRestore'
+import pipelinesAudit from './pipelinesAudit'
 
 const assign = Object.assign
 
@@ -35,7 +36,8 @@ const modules = [
     pipelinesGroup,
     pipelinesView,
     pipelinesTemplate,
-    pipelinesRestore
+    pipelinesRestore,
+    pipelinesAudit
 ]
 
 const state = {

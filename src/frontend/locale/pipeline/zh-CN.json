@@ -7,6 +7,13 @@
     "viewManage": "视图管理",
     "templateManage": "模板管理",
     "pluginManage": "插件管理",
+    "operatorAudit": "操作审计",
+    "audit": {
+        "operator": "操作人",
+        "operateTime": "操作时间",
+        "operateTimePlaceholder": "请选择时间范围",
+        "enterPlaceholder": "按下Enter键搜索"
+    },
     "err503": "服务正在部署中，请稍候...",
     "err400": "内部服务异常",
     "err403": "无权限",
