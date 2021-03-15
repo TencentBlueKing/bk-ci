@@ -28,6 +28,12 @@
 package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.LATEST_EXECUTE_TIME
+import com.tencent.devops.common.api.constant.LATEST_EXECUTOR
+import com.tencent.devops.common.api.constant.LATEST_MODIFIER
+import com.tencent.devops.common.api.constant.LATEST_UPDATE_TIME
+import com.tencent.devops.common.api.constant.PIPELINE_URL
+import com.tencent.devops.common.api.constant.VERSION
 import com.tencent.devops.common.api.enums.TaskStatusEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
@@ -38,6 +44,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.dao.PipelineAtomReplaceBaseDao
 import com.tencent.devops.process.dao.PipelineAtomReplaceItemDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
@@ -300,7 +307,14 @@ class PipelineAtomService @Autowired constructor(
             dataList.addAll(pageDataList)
             page++
         } while (pipelineAtomRelList?.size == DEFAULT_PAGE_SIZE)
-        val headers = arrayOf("流水线链接", "版本", "最近修改人", "最近修改时间", "最近执行人", "最近执行时间")
+        val headers = arrayOf(
+            MessageCodeUtil.getCodeLanMessage(PIPELINE_URL),
+            MessageCodeUtil.getCodeLanMessage(VERSION),
+            MessageCodeUtil.getCodeLanMessage(LATEST_MODIFIER),
+            MessageCodeUtil.getCodeLanMessage(LATEST_UPDATE_TIME),
+            MessageCodeUtil.getCodeLanMessage(LATEST_EXECUTOR),
+            MessageCodeUtil.getCodeLanMessage(LATEST_EXECUTE_TIME)
+        )
         val bytes = CsvUtil.writeCsv(headers, dataList)
         CsvUtil.setCsvResponse(atomCode, bytes, response)
     }

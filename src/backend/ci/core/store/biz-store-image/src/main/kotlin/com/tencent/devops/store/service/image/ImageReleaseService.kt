@@ -288,9 +288,8 @@ abstract class ImageReleaseService {
         if (checkLatest && imageTag == LATEST) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(imageTag))
         }
-        val imageRecords = marketImageDao.getImagesByImageCode(dslContext, imageCode)
-        logger.info("the imageRecords is :$imageRecords")
-        if (null == imageRecords || imageRecords.size == 0) {
+        val imageCount = imageDao.countByCode(dslContext, imageCode)
+        if (imageCount < 1) {
             return MessageCodeUtil.generateResponseDataObject(
                 CommonMessageCode.PARAMETER_IS_INVALID,
                 arrayOf(imageCode)
@@ -298,12 +297,11 @@ abstract class ImageReleaseService {
         }
         val imageName = marketImageUpdateRequest.imageName
         // 判断更新的名称是否已存在
-        val count = imageDao.countByName(dslContext, imageName)
-        if (validateNameIsExist(count, imageRecords, imageName)) return MessageCodeUtil.generateResponseDataObject(
+        if (validateNameIsExist(imageCode, imageName)) return MessageCodeUtil.generateResponseDataObject(
             CommonMessageCode.PARAMETER_IS_EXIST,
             arrayOf(imageName)
         )
-        val imageRecord = imageRecords[0]
+        val imageRecord = marketImageDao.getNewestImageByCode(dslContext, imageCode)!!
         val imageSourceType = marketImageUpdateRequest.imageSourceType
         val imageRepoName = marketImageUpdateRequest.imageRepoName
         if (imageSourceType == ImageType.BKDEVOPS) {
@@ -383,7 +381,7 @@ abstract class ImageReleaseService {
             ImageStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
             ImageStatusEnum.UNDERCARRIAGED.status.toByte()
         )
-        if (imageRecords.size == 1) {
+        if (imageCount == 1) {
             // 如果是首次发布，处于初始化的镜像状态也允许添加新的版本
             imageFinalStatusList.add(ImageStatusEnum.INIT.status.toByte())
         }
@@ -893,23 +891,16 @@ abstract class ImageReleaseService {
     abstract fun getAllowReleaseStatus(isNormalUpgrade: Boolean?): ImageStatusEnum
 
     private fun validateNameIsExist(
-        count: Int,
-        imageRecords: org.jooq.Result<TImageRecord>,
+        imageCode: String,
         imageName: String
     ): Boolean {
         var flag = false
+        val count = imageDao.countByName(dslContext, imageName)
         if (count > 0) {
-            for (item in imageRecords) {
-                if (imageName == item.imageName) {
-                    flag = true
-                    break
-                }
-            }
-            if (!flag) {
-                return true
-            }
+            // 判断镜像名称是否重复（镜像升级允许名称一样）
+            flag = imageDao.countByName(dslContext, imageCode, imageName) < 1
         }
-        return false
+        return flag
     }
 
     private fun getNormalUpgradeFlag(imageCode: String, status: Int): Boolean {

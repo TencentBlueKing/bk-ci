@@ -162,8 +162,7 @@ class StoreStatisticDailyDao {
         storeCode: String,
         storeType: Byte,
         startTime: LocalDateTime,
-        endTime: LocalDateTime,
-        timeDescFlag: Boolean = false
+        endTime: LocalDateTime
     ): Result<TStoreStatisticsDailyRecord>? {
         with(TStoreStatisticsDaily.T_STORE_STATISTICS_DAILY) {
             val conditions = mutableListOf<Condition>()
@@ -171,13 +170,7 @@ class StoreStatisticDailyDao {
             conditions.add(STORE_TYPE.eq(storeType))
             conditions.add(STATISTICS_TIME.ge(startTime))
             conditions.add(STATISTICS_TIME.le(endTime))
-            val baseStep = dslContext.selectFrom(this).where(conditions)
-            if (timeDescFlag) {
-                baseStep.orderBy(CREATE_TIME.desc())
-            } else {
-                baseStep.orderBy(CREATE_TIME.asc())
-            }
-            return baseStep.fetch()
+            return dslContext.selectFrom(this).where(conditions).orderBy(STATISTICS_TIME.asc()).fetch()
         }
     }
 }

@@ -104,16 +104,16 @@ class ImageDao {
 
     fun countByName(
         dslContext: DSLContext,
-        imageName: String?
+        imageName: String,
+        imageCode: String? = null
     ): Int {
         with(TImage.T_IMAGE) {
             val conditions = mutableListOf<Condition>()
-            val baseStep = dslContext.selectCount().from(this)
-            if (!imageName.isNullOrBlank()) {
-                conditions.add(IMAGE_NAME.eq(imageName))
+            conditions.add(IMAGE_NAME.eq(imageName))
+            if (imageCode != null) {
+                conditions.add(IMAGE_CODE.eq(imageCode))
             }
-            baseStep.where(conditions)
-            return baseStep.fetchOne(0, Int::class.java)
+            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)
         }
     }
 
