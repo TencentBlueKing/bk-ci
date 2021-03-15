@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -141,7 +142,7 @@ class ServiceDockerHostResourceImpl @Autowired constructor(
         return try {
             Result(dockerService.startBuild(dockerHostBuildInfo))
         } catch (e: NoSuchImageException) {
-            logger.error("Create container container failed, no such image. pipelineId: ${dockerHostBuildInfo.pipelineId}, vmSeqId: ${dockerHostBuildInfo.vmSeqId}, err: ${e.message}")
+            logger.error("BuildNoSuchImage|${dockerHostBuildInfo.buildId}|${dockerHostBuildInfo.vmSeqId}|${e.message}")
             dockerHostBuildService.log(
                 buildId = dockerHostBuildInfo.buildId,
                 red = true,
@@ -151,7 +152,7 @@ class ServiceDockerHostResourceImpl @Autowired constructor(
             )
             Result(1, "构建环境启动失败，镜像不存在, 镜像:${dockerHostBuildInfo.imageName}", "")
         } catch (e: ContainerException) {
-            logger.error("Create container failed, rollback build. buildId: ${dockerHostBuildInfo.buildId}, vmSeqId: ${dockerHostBuildInfo.vmSeqId}")
+            logger.error("BuildRollBack|${dockerHostBuildInfo.buildId}|${dockerHostBuildInfo.vmSeqId}|${e.message}")
             dockerHostBuildService.log(
                 buildId = dockerHostBuildInfo.buildId,
                 red = true,

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -36,24 +37,28 @@ import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 import java.util.Base64
 
+@Suppress("ALL")
 object CommonUtils {
 
     private val logger = LoggerFactory.getLogger(CommonUtils::class.java)
 
-    fun getCredential(client: Client, projectId: String, credentialId: String, type: CredentialType): MutableMap<String, String> {
+    fun getCredential(
+        client: Client,
+        projectId: String,
+        credentialId: String,
+        type: CredentialType
+    ): MutableMap<String, String> {
         val pair = DHUtil.initKey()
         val encoder = Base64.getEncoder()
         val decoder = Base64.getDecoder()
         val credentialResult = client.get(ServiceCredentialResource::class).get(projectId, credentialId,
                 encoder.encodeToString(pair.publicKey))
         if (credentialResult.isNotOk() || credentialResult.data == null) {
-            logger.error("Fail to get the credential($credentialId) of project($projectId) because of ${credentialResult.message}")
             throw OperationException("Fail to get the credential($credentialId) of project($projectId)")
         }
 
         val credential = credentialResult.data!!
         if (type != credential.credentialType) {
-            logger.error("CredentialId is invalid, expect:${type.name}, but real:${credential.credentialType.name}")
             throw ParamBlankException("Fail to get the credential($credentialId) of project($projectId)")
         }
 
@@ -91,7 +96,12 @@ object CommonUtils {
         return ticketMap
     }
 
-    fun getAuthConfig(registryHost: String, imageName: String, registryUser: String?, registryPwd: String?): AuthConfig? {
+    fun getAuthConfig(
+        registryHost: String,
+        imageName: String,
+        registryUser: String?,
+        registryPwd: String?
+    ): AuthConfig? {
         logger.info("registry host: $registryHost")
         return if (registryUser.isNullOrBlank()) {
             AuthConfig().withRegistryAddress(registryHost)

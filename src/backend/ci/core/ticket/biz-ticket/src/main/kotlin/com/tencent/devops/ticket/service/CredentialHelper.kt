@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -35,11 +36,12 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.util.Base64
 
+@Suppress("ALL")
 @Component
 class CredentialHelper {
     companion object {
-        private val SSH_PRIVATE_PREFIX = "-----BEGIN RSA PRIVATE KEY-----"
-        private val SSH_PRIVATE_SUFFIX = "-----END RSA PRIVATE KEY-----"
+        private const val SSH_PRIVATE_PREFIX = "-----BEGIN RSA PRIVATE KEY-----"
+        private const val SSH_PRIVATE_SUFFIX = "-----END RSA PRIVATE KEY-----"
     }
 
     @Value("\${credential.mixer}")
@@ -109,46 +111,6 @@ class CredentialHelper {
             }
         }
     }
-
-//    private fun isValidUpdate(credentialType: CredentialType, v1: String, v2: String?): Boolean {
-//        return when (credentialType) {
-//            CredentialType.PASSWORD -> {
-//                true
-//            }
-//            CredentialType.ACCESSTOKEN -> {
-//                true
-//            }
-//            CredentialType.USERNAME_PASSWORD -> {
-//                true
-//            }
-//            CredentialType.SECRETKEY -> {
-//                true
-//            }
-//            CredentialType.APPID_SECRETKEY -> {
-//                v2 ?: return false
-//                true
-//            }
-//            CredentialType.SSH_PRIVATEKEY -> {
-//                if (!(v1.startsWith(SSH_PRIVATE_PREFIX) && v1.endsWith(SSH_PRIVATE_SUFFIX)) && v1 != credentialMixer) {
-//                    return false
-//                }
-//                true
-//            }
-//            CredentialType.TOKEN_SSH_PRIVATEKEY -> {
-//                v2 ?: return false
-//                if (!(v2.startsWith(SSH_PRIVATE_PREFIX) && v2.endsWith(SSH_PRIVATE_SUFFIX)) && v2 != credentialMixer) {
-//                    return false
-//                }
-//                true
-//            }
-//            CredentialType.TOKEN_USERNAME_PASSWORD -> {
-//                true
-//            }
-//            CredentialType.COS_APPID_SECRETID_SECRETKEY_REGION -> {
-//                true
-//            }
-//        }
-//    }
 
     fun encryptCredential(
         aesEncryptedCredential: String?,

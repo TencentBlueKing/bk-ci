@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -25,8 +26,6 @@
  */
 
 package com.tencent.devops.process.utils
-
-import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 
 const val PIPELINE_VERSION = "BK_CI_PIPELINE_VERSION" // "pipeline.version"
 const val PIPELINE_START_PARENT_PIPELINE_ID = "BK_CI_PARENT_PIPELINE_ID" // "pipeline.start.parent.pipeline.id"
@@ -171,61 +170,6 @@ const val PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX = 4000
  */
 const val PIPELINE_MESSAGE_STRING_LENGTH_MAX = 30000
 
-/**
- * 流水线设置-启动的通知模板代码
- */
-const val PIPELINE_STARTUP_NOTIFY_TEMPLATE = "PIPELINE_STARTUP_NOTIFY_TEMPLATE"
-
-/**
- * 流水线设置-启动的详情通知模板代码
- */
-const val PIPELINE_STARTUP_NOTIFY_TEMPLATE_DETAIL = "PIPELINE_STARTUP_NOTIFY_TEMPLATE_DETAIL"
-
-/**
- * 流水线设置-执行成功的通知模板代码
- */
-const val PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE = "PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE"
-
-/**
- * 流水线设置-执行成功的详情通知模板代码
- */
-const val PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE_DETAIL = "PIPELINE_SHUTDOWN_SUCCESS_NOTIFY_TEMPLATE_DETAIL"
-
-/**
- * 流水线设置-执行失败的通知模板代码
- */
-const val PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE = "PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE"
-
-/**
- * 流水线设置-执行失败的详情通知模板代码
- */
-const val PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE_DETAIL = "PIPELINE_SHUTDOWN_FAILURE_NOTIFY_TEMPLATE_DETAIL"
-
-/**
- * 流水线设置-执行取消的通知模板代码
- */
-const val PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE = "PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE"
-
-/**
- * 流水线设置-执行取消的详情通知模板代码
- */
-const val PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE_DETAIL = "PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE_DETAIL"
-
-/**
- * 流水线设置-人工审核插件的通知模板代码
- */
-const val PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE = "MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE"
-
-/**
- * 流水线设置-stage阶段审核的通知模板代码
- */
-const val PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE = "MANUAL_REVIEW_STAGE_NOTIFY_TEMPLATE"
-
-/**
- * 使用模板批量更新流水线的通知模板代码
- */
-const val PIPELINE_UPDATE_TEMPLATE_INSTANCE_NOTIFY_TEMPLATE = "UPDATE_TEMPLATE_INSTANCE_NOTIFY_TEMPLATE"
-
 const val PIPELINE_TIME_START = "BK_CI_BUILD_START_TIME" // "pipeline.time.start"
 
 const val PIPELINE_TIME_END = "BK_CI_BUILD_END_TIME" // "pipeline.time.end"
@@ -236,205 +180,3 @@ const val PIPELINE_BUILD_MSG = "BK_CI_BUILD_MSG"
  * 保存流水线编排的最大个数
  */
 const val PIPELINE_RES_NUM_MIN = 50
-
-object PipelineVarUtil {
-
-    /**
-     * 前置拼接
-     */
-    private val oldPrefixMappingNew = mapOf(
-        "pipeline.material.url" to PIPELINE_MATERIAL_URL,
-        "pipeline.material.branchName" to PIPELINE_MATERIAL_BRANCHNAME,
-        "pipeline.material.aliasName" to PIPELINE_MATERIAL_ALIASNAME,
-        "pipeline.material.new.commit.id" to PIPELINE_MATERIAL_NEW_COMMIT_ID,
-        "pipeline.material.new.commit.times" to PIPELINE_MATERIAL_NEW_COMMIT_TIMES,
-        "pipeline.material.new.commit.comment" to PIPELINE_MATERIAL_NEW_COMMIT_COMMENT
-    )
-
-    private val newPrefixMappingOld = oldPrefixMappingNew.map { kv -> kv.value to kv.key }.toMap()
-
-    /**
-     * 以下用于兼容旧参数
-     */
-    private val oldVarMappingNewVar = mapOf(
-        "pipeline.start.isMobile" to PIPELINE_START_MOBILE,
-        "repoName" to PIPELINE_REPO_NAME,
-        "pipeline.version" to PIPELINE_VERSION,
-        "pipeline.start.parent.build.task.id" to PIPELINE_START_PARENT_BUILD_TASK_ID,
-        "pipeline.start.parent.build.id" to PIPELINE_START_PARENT_BUILD_ID,
-        "MajorVersion" to MAJORVERSION,
-        "MinorVersion" to MINORVERSION,
-        "FixVersion" to FIXVERSION,
-        "BuildNo" to BUILD_NO,
-        "pipeline.start.channel" to PIPELINE_START_CHANNEL,
-        "pipeline.build.last.update" to PIPELINE_BUILD_LAST_UPDATE,
-        "pipeline.build.svn.revision" to PIPELINE_BUILD_SVN_REVISION,
-        "pipeline.start.parent.pipeline.id" to PIPELINE_START_PARENT_PIPELINE_ID,
-        "pipeline.start.user.id" to PIPELINE_START_USER_ID,
-        "pipeline.start.task.id" to PIPELINE_START_TASK_ID,
-        "pipeline.retry.start.task.id" to PIPELINE_RETRY_START_TASK_ID,
-        "pipeline.retry.build.id" to PIPELINE_RETRY_BUILD_ID,
-        "pipeline.id" to PIPELINE_ID,
-        "pipeline.retry.count" to PIPELINE_RETRY_COUNT,
-        "pipeline.time.start" to PIPELINE_TIME_START,
-        "pipeline.time.end" to PIPELINE_TIME_END,
-        "pipeline.time.duration" to PIPELINE_TIME_DURATION,
-        "project.name.chinese" to PROJECT_NAME_CHINESE,
-        "pipeline.name" to PIPELINE_NAME,
-        "pipeline.build.num" to PIPELINE_BUILD_NUM,
-        "pipeline.start.user.name" to PIPELINE_START_USER_NAME,
-        "pipeline.start.type" to PIPELINE_START_TYPE,
-        "hookRevision" to PIPELINE_WEBHOOK_REVISION,
-        "hookBranch" to PIPELINE_WEBHOOK_BRANCH,
-        "hookSourceBranch" to PIPELINE_WEBHOOK_SOURCE_BRANCH,
-        "hookTargetBranch" to PIPELINE_WEBHOOK_TARGET_BRANCH,
-        "hookSourceUrl" to PIPELINE_WEBHOOK_SOURCE_URL,
-        "hookTargetUrl" to PIPELINE_WEBHOOK_TARGET_URL,
-        "hookBlock" to PIPELINE_WEBHOOK_BLOCK,
-        "hookType" to PIPELINE_WEBHOOK_TYPE,
-        "hookRepo" to PIPELINE_WEBHOOK_REPO,
-        "hookRepoType" to PIPELINE_WEBHOOK_REPO_TYPE,
-        "hookEventType" to PIPELINE_WEBHOOK_EVENT_TYPE,
-        "bk_hookMergeRequestId" to PIPELINE_WEBHOOK_MR_ID,
-        "bk_hookMergeRequest_committer" to PIPELINE_WEBHOOK_MR_COMMITTER,
-        "pipeline.start.webhook.user.id" to PIPELINE_START_WEBHOOK_USER_ID,
-        "pipeline.start.pipeline.user.id" to PIPELINE_START_PIPELINE_USER_ID,
-        "git_mr_number" to GIT_MR_NUMBER,
-        "github_pr_number" to GITHUB_PR_NUMBER,
-        "project.name" to PROJECT_NAME,
-        "pipeline.build.id" to PIPELINE_BUILD_ID,
-        "pipeline.job.id" to PIPELINE_VMSEQ_ID,
-        "pipeline.task.id" to PIPELINE_ELEMENT_ID,
-        "turbo.task.id" to PIPELINE_TURBO_TASK_ID,
-        "report.dynamic.root.url" to REPORT_DYNAMIC_ROOT_URL
-    )
-
-    private val newVarMappingOldVar = oldVarMappingNewVar.map { kv -> kv.value to kv.key }.toMap()
-
-    /**
-     * 填充旧变量名，兼容用户在流水线中旧的写法
-     */
-    fun fillOldVarWithType(varMaps: Map<String, Pair<String, BuildFormPropertyType>>) {
-        val mutableList = varMaps.toMutableMap()
-        turningWithType(newVarMappingOldVar, mutableList)
-        prefixTurningWithType(newPrefixMappingOld, mutableList)
-    }
-
-    /**
-     * 填充旧变量名，兼容用户在流水线中旧的写法
-     */
-    fun fillOldVar(vars: MutableMap<String, String>) {
-        turning(newVarMappingOldVar, vars)
-        prefixTurning(newPrefixMappingOld, vars)
-    }
-
-    /**
-     * 从新变量前缀的变量中查出并增加旧变量，会做去重
-     * @param vars 变量Map
-     * @return 包含新旧变量的Map
-     */
-    fun mixOldVarAndNewVar(vars: MutableMap<String, String>): MutableMap<String, String> {
-        // 旧流水线的前缀变量追加 一些旧代码类插件生成的
-        prefixTurning(newPrefixMappingOld, vars)
-
-        val allVars = mutableMapOf<String, String>()
-        vars.forEach {
-            // 从新转旧: 新流水线产生的变量 兼容在旧流水线中已经使用到的旧变量
-            val oldVarName = newVarToOldVar(it.key)
-            if (!oldVarName.isNullOrBlank()) {
-                allVars[oldVarName!!] = it.value // 旧变量写入，如果之前有了，则替换
-                allVars[it.key] = it.value // 新变量仍然写入
-            } else {
-                // 从旧转新: 兼容从旧入口写入的数据转到新的流水线运行
-                val newVarName = oldVarToNewVar(it.key)
-                // 新变量已经存在，忽略旧变量转换
-                if (!newVarName.isNullOrBlank() && !vars.contains(newVarName)) {
-                    allVars[newVarName!!] = it.value
-                }
-                // 已经存在从新变量转化过来的旧变量，则不覆盖，放弃
-                if (!allVars.containsKey(it.key)) {
-                    allVars[it.key] = it.value
-                }
-            }
-        }
-        return allVars
-    }
-
-    /**
-     * 旧变量转新变量
-     */
-    fun replaceOldByNewVar(varMaps: MutableMap<String, Pair<String, BuildFormPropertyType>>) {
-        turningWithType(oldVarMappingNewVar, varMaps, true)
-        prefixTurningWithType(oldPrefixMappingNew, varMaps, true)
-    }
-
-    private fun turningWithType(
-        mapping: Map<String, String>,
-        varMaps: MutableMap<String, Pair<String, BuildFormPropertyType>>,
-        replace: Boolean = false
-    ) {
-        mapping.forEach {
-            // 如果新旧key同时存在，则保留原value
-            if (varMaps[it.key] != null && varMaps[it.value] == null) {
-                varMaps[it.value] = varMaps[it.key]!!
-                if (replace) {
-                    varMaps.remove(it.key)
-                }
-            }
-        }
-    }
-
-    private fun turning(mapping: Map<String, String>, vars: MutableMap<String, String>, replace: Boolean = false) {
-        mapping.forEach {
-            // 如果新旧key同时存在，则保留原value
-            if (vars[it.key] != null && vars[it.value] == null) {
-                vars[it.value] = vars[it.key]!!
-                if (replace) {
-                    vars.remove(it.key)
-                }
-            }
-        }
-    }
-
-    private fun prefixTurning(
-        mapping: Map<String, String>,
-        vars: MutableMap<String, String>,
-        replace: Boolean = false
-    ) {
-        val keys = HashSet(vars.keys)
-        keys.forEach v@{ fullKey ->
-            mapping.forEach m@{ (key, value) ->
-                if (fullKey.startsWith(key)) {
-                    vars["$value${fullKey.substring(key.length)}"] = vars[fullKey]!!
-                    if (replace) {
-                        vars.remove(fullKey)
-                    }
-                    return@v
-                }
-            }
-        }
-    }
-
-    private fun prefixTurningWithType(
-        mapping: Map<String, String>,
-        varMaps: MutableMap<String, Pair<String, BuildFormPropertyType>>,
-        replace: Boolean = false
-    ) {
-        val keys = HashSet(varMaps.keys)
-        keys.forEach v@{ fullKey ->
-            mapping.forEach m@{ (key, value) ->
-                if (fullKey.startsWith(key)) {
-                    varMaps["$value${fullKey.substring(key.length)}"] = varMaps[fullKey]!!
-                    if (replace) {
-                        varMaps.remove(fullKey)
-                    }
-                    return@v
-                }
-            }
-        }
-    }
-
-    fun oldVarToNewVar(oldVarName: String): String? = oldVarMappingNewVar[oldVarName]
-
-    fun newVarToOldVar(newVarName: String): String? = newVarMappingOldVar[newVarName]
-}

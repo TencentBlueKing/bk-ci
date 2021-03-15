@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -60,6 +61,7 @@ import java.io.FileInputStream
 import java.security.KeyStore
 import javax.net.ssl.SSLContext
 
+@Suppress("ALL")
 @Configuration
 @ConditionalOnProperty(prefix = "log.storage", name = ["type"], havingValue = "elasticsearch")
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
@@ -70,30 +72,43 @@ class ESAutoConfiguration : DisposableBean {
     private val host: String? = null
     @Value("\${log.elasticsearch.port}")
     private val port: Int? = null
+
     @Value("\${log.elasticsearch.cluster}")
     private val cluster: String? = null
+
     @Value("\${log.elasticsearch.name}")
     private val name: String? = null
+
     @Value("\${log.elasticsearch.username:#{null}}")
     private val username: String? = null
+
     @Value("\${log.elasticsearch.password:#{null}}")
     private val password: String? = null
+
     @Value("\${log.elasticsearch.https:#{null}}")
     private val https: String? = null
+
     @Value("\${log.elasticsearch.keystore.filePath:#{null}}")
     private val keystoreFilePath: String? = null
+
     @Value("\${log.elasticsearch.keystore.password:#{null}}")
     private val keystorePassword: String? = null
+
     @Value("\${log.elasticsearch.truststore.filePath:#{null}}")
     private val truststoreFilePath: String? = null
+
     @Value("\${log.elasticsearch.truststore.password:#{null}}")
     private val truststorePassword: String? = null
+
     @Value("\${log.elasticsearch.shards:#{null}}")
     private val shards: Int? = null
+
     @Value("\${log.elasticsearch.replicas:#{null}}")
     private val replicas: Int? = null
+
     @Value("\${log.elasticsearch.shardsPerNode:#{null}}")
     private val shardsPerNode: Int? = null
+
     @Value("\${log.elasticsearch.socketTimeout:#{null}}")
     private val socketTimeout: Int? = null
 
