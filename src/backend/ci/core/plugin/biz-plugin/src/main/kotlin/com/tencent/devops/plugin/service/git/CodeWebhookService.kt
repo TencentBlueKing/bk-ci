@@ -43,6 +43,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
 import com.tencent.devops.plugin.api.pojo.GithubPrEvent
+import com.tencent.devops.plugin.api.pojo.PluginGitCheck
 import com.tencent.devops.plugin.dao.PluginGitCheckDao
 import com.tencent.devops.plugin.dao.PluginGithubCheckDao
 import com.tencent.devops.plugin.service.ScmService
@@ -297,7 +298,7 @@ class CodeWebhookService @Autowired constructor(
                         pipelineId = pipelineId,
                         repositoryConfig = repositoryConfig,
                         commitId = commitId,
-                        buildNumber = buildNum.toInt()
+                        eventType = webhookEventType!!
                     )
 
                     if (record == null) {
@@ -309,23 +310,32 @@ class CodeWebhookService @Autowired constructor(
                         )
                         pluginGitCheckDao.create(
                             dslContext = dslContext,
-                            pipelineId = pipelineId,
-                            buildNumber = buildNum.toInt(),
-                            repositoryConfig = repositoryConfig,
-                            commitId = commitId,
-                            context = context
+                            pluginGitCheck = PluginGitCheck(
+                                pipelineId = pipelineId,
+                                buildNumber = buildNum.toInt(),
+                                repositoryHashId = repositoryConfig.repositoryHashId,
+                                repositoryName = repositoryConfig.repositoryName,
+                                commitId = commitId,
+                                context = context,
+                                eventType = webhookEventType
+                            )
                         )
                     } else {
-                        scmService.addGitCommitCheck(
-                            event = event,
-                            targetUrl = targetUrl,
-                            context = record.context ?: pipelineName,
-                            description = description
-                        )
-                        pluginGitCheckDao.update(
-                            dslContext = dslContext,
-                            id = record.id
-                        )
+                        if (buildNum.toInt() > record.buildNumber) {
+                            scmService.addGitCommitCheck(
+                                event = event,
+                                targetUrl = targetUrl,
+                                context = record.context ?: pipelineName,
+                                description = description
+                            )
+                            pluginGitCheckDao.update(
+                                dslContext = dslContext,
+                                id = record.id,
+                                buildNumber = buildNum.toInt()
+                            )
+                        } else {
+                            logger.info("Code web hook commit check has bigger build number(${record.buildNumber})")
+                        }
                     }
                     // mr锁定并且状态为pending时才需要解锁hook锁
                     if (block && state == GIT_COMMIT_CHECK_STATE_PENDING) {
