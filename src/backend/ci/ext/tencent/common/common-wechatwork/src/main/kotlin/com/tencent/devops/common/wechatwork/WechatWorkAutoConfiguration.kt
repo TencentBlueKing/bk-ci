@@ -47,7 +47,7 @@ class WechatWorkAutoConfiguration {
     fun wechatWorkProperties() = WechatWorkProperties()
 
     @Bean
-    @Profile("dev", "default", "test", "qcloud", "exp", "local")
+    @Profile("dev","dev-v3","default", "test", "qcloud", "exp", "local")
     fun wechatWorkConfigurationDev(wechatWorkProperties: WechatWorkProperties) = WechatWorkConfiguration(
         wechatWorkProperties.devCorpId,
         wechatWorkProperties.devServiceId,
