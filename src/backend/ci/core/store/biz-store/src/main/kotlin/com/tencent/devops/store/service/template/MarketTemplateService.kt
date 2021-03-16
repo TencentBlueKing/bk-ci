@@ -29,7 +29,9 @@ package com.tencent.devops.store.service.template
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.model.store.tables.records.TStoreDeptRelRecord
 import com.tencent.devops.store.pojo.template.InstallTemplateReq
 import com.tencent.devops.store.pojo.template.MarketTemplateMain
 import com.tencent.devops.store.pojo.template.MarketTemplateResp
@@ -126,4 +128,10 @@ interface MarketTemplateService {
         templateId: String,
         templateCode: String
     ): Result<Boolean>
+
+
+    /**
+     * 获取stage下插件对应的机构信息
+     */
+    fun getStageAtomDeptMap(stageList: List<Stage>): MutableMap<String, Map<String, List<TStoreDeptRelRecord>>>
 }
