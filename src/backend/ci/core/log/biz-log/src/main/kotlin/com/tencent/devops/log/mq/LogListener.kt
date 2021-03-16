@@ -53,14 +53,12 @@ class LogListener @Autowired constructor(
             if (!result && event.retryTime >= 0) {
                 logger.warn("Retry to add the log event [${event.buildId}|${event.retryTime}]")
                 with(event) {
-                    buildLogPrintService.asyncDispatchEvent(
-                        LogEvent(
+                    buildLogPrintService.dispatchEvent(LogEvent(
                         buildId = buildId,
                         logs = logs,
                         retryTime = retryTime - 1,
                         delayMills = getNextDelayMills(retryTime)
-                    )
-                    )
+                    ))
                 }
             }
         }
@@ -77,14 +75,12 @@ class LogListener @Autowired constructor(
             if (!result && event.retryTime >= 0) {
                 logger.warn("Retry to add log batch event [${event.buildId}|${event.retryTime}]")
                 with(event) {
-                    buildLogPrintService.asyncDispatchEvent(
-                        LogBatchEvent(
+                    buildLogPrintService.dispatchEvent(LogBatchEvent(
                         buildId = buildId,
                         logs = logs,
                         retryTime = retryTime - 1,
                         delayMills = getNextDelayMills(retryTime)
-                    )
-                    )
+                    ))
                 }
             }
         }
@@ -101,18 +97,16 @@ class LogListener @Autowired constructor(
             if (!result && event.retryTime >= 0) {
                 logger.warn("Retry to add the multi lines [${event.buildId}|${event.retryTime}]")
                 with(event) {
-                    buildLogPrintService.asyncDispatchEvent(
-                        LogStatusEvent(
-                            buildId = buildId,
-                            finished = finished,
-                            tag = tag,
-                            subTag = subTag,
-                            jobId = jobId,
-                            executeCount = executeCount,
-                            retryTime = retryTime - 1,
-                            delayMills = getNextDelayMills(retryTime)
-                        )
-                    )
+                    buildLogPrintService.dispatchEvent(LogStatusEvent(
+                        buildId = buildId,
+                        finished = finished,
+                        tag = tag,
+                        subTag = subTag,
+                        jobId = jobId,
+                        executeCount = executeCount,
+                        retryTime = retryTime - 1,
+                        delayMills = getNextDelayMills(retryTime)
+                    ))
                 }
             }
         }
