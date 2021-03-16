@@ -28,6 +28,7 @@
 package com.tencent.devops.store.service.template.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -36,6 +37,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -51,6 +53,7 @@ import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.common.ClassifyDao
+import com.tencent.devops.store.dao.common.StoreDeptRelDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreStatisticDao
@@ -112,6 +115,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
     lateinit var storeProjectRelDao: StoreProjectRelDao
     @Autowired
     lateinit var storeMemberDao: StoreMemberDao
+    @Autowired
+    lateinit var storeDeptRelDao: StoreDeptRelDao
     @Autowired
     lateinit var templateCategoryService: TemplateCategoryService
     @Autowired
@@ -635,35 +640,26 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         if (null == templateModel) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
         }
-        var invalidAtomList = emptyList<String>()
+        val invalidAtomList = mutableListOf<String>()
         val needInstallAtomMap = mutableMapOf<String, TAtomRecord>()
         val stageList = templateModel.stages
+        // 获取每个stage下插件的机构信息
+        val stageAtomDeptMap = getStageAtomDeptMap(stageList)
         stageList.forEach { stage ->
             val containerList = stage.containers
+            val stageId = stage.id
+            val currentStageAtomDeptMap = stageAtomDeptMap[stageId]
             containerList.forEach { container ->
                 val elementList = container.elements
                 elementList.forEach { element ->
                     // 判断用户的组织架构是否在原子插件的可见范围之内
-                    val atomCode = element.getAtomCode()
-                    val atomVersion = element.version
-                    logger.info("the atomCode is:$atomCode，atomVersion is:$atomVersion")
-                    val atomRecord = if (atomVersion.isNotEmpty()) {
-                        val atomStatusList = listOf(
-                            AtomStatusEnum.RELEASED.status.toByte(),
-                            AtomStatusEnum.UNDERCARRIAGING.status.toByte()
-                        )
-                        atomDao.getPipelineAtom(dslContext, atomCode, atomVersion, atomStatusList)
-                    } else {
-                        marketAtomDao.getLatestAtomByCode(dslContext, atomCode) // 兼容历史存量原子插件的情况
-                    }
-                    if (null == atomRecord || atomRecord.deleteFlag) {
-                        return MessageCodeUtil.generateResponseDataObject(
-                            messageCode = StoreMessageCode.USER_TEMPLATE_ATOM_IS_INVALID,
-                            params = arrayOf(atomCode)
-                        )
-                    }
-                    invalidAtomList = generateUserAtomInvalidVisibleAtom(atomCode, userId, atomRecord, element)
-                    if (!atomRecord.defaultFlag) needInstallAtomMap[atomCode] = atomRecord
+                    validateUserAtomVisible(
+                        element = element,
+                        userId = userId,
+                        currentStageAtomDeptMap = currentStageAtomDeptMap,
+                        invalidAtomList = invalidAtomList,
+                        needInstallAtomMap = needInstallAtomMap
+                    )
                 }
             }
         }
@@ -709,11 +705,84 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         return Result(true)
     }
 
-    abstract fun generateUserAtomInvalidVisibleAtom(
-        atomCode: String,
+    private fun validateUserAtomVisible(
+        element: Element,
         userId: String,
-        atomRecord: TAtomRecord,
-        element: Element
+        currentStageAtomDeptMap: Map<String, List<Int>>?,
+        invalidAtomList: MutableList<String>,
+        needInstallAtomMap: MutableMap<String, TAtomRecord>
+    ) {
+        val atomCode = element.getAtomCode()
+        val atomVersion = element.version
+        val atomRecord = if (atomVersion.isNotEmpty()) {
+            val atomStatusList = listOf(
+                AtomStatusEnum.RELEASED.status.toByte(),
+                AtomStatusEnum.UNDERCARRIAGING.status.toByte()
+            )
+            atomDao.getPipelineAtom(dslContext, atomCode, atomVersion, atomStatusList)
+        } else {
+            marketAtomDao.getLatestAtomByCode(dslContext, atomCode) // 兼容历史存量原子插件的情况
+        }
+        if (null == atomRecord || atomRecord.deleteFlag) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_TEMPLATE_ATOM_IS_INVALID,
+                params = arrayOf(userId)
+            )
+        }
+        val userDeptIdList = storeUserService.getUserDeptList(userId) // 获取用户的机构ID信息
+        val atomDeptIdList = currentStageAtomDeptMap?.get(atomCode)
+        invalidAtomList.addAll(generateUserAtomInvalidVisibleAtom(
+            userId = userId,
+            userDeptIdList = userDeptIdList,
+            atomCode = atomCode,
+            atomName = element.name,
+            defaultFlag = atomRecord.defaultFlag,
+            atomDeptIdList = atomDeptIdList
+        ))
+        if (!atomRecord.defaultFlag) needInstallAtomMap[atomCode] = atomRecord
+    }
+
+    private fun getStageAtomDeptMap(stageList: List<Stage>): MutableMap<String, Map<String, List<Int>>> {
+        val stageAtomDeptMap = mutableMapOf<String, Map<String, List<Int>>>()
+        stageList.forEach { stage ->
+            val stageAtomSet = mutableSetOf<String>()
+            val containerList = stage.containers
+            containerList.forEach { container ->
+                val elementList = container.elements
+                elementList.forEach { element ->
+                    stageAtomSet.add(element.getAtomCode())
+                }
+            }
+            val atomDeptRelRecords = storeDeptRelDao.batchList(
+                dslContext = dslContext,
+                storeCodeList = stageAtomSet.toList(),
+                storeType = StoreTypeEnum.ATOM.type.toByte()
+            )
+            val atomDeptRelMap = mutableMapOf<String, MutableList<Int>>()
+            atomDeptRelRecords?.forEach { atomDeptRelRecord ->
+                val atomCode = atomDeptRelRecord.storeCode
+                val atomDeptIdList = atomDeptRelMap[atomCode]
+                if (atomDeptIdList != null) {
+                    atomDeptIdList.add(atomDeptRelRecord.deptId)
+                } else {
+                    atomDeptRelMap[atomCode] = mutableListOf(atomDeptRelRecord.deptId)
+                }
+            }
+            val stageId = stage.id
+            if (stageId != null) {
+                stageAtomDeptMap[stageId] = atomDeptRelMap
+            }
+        }
+        return stageAtomDeptMap
+    }
+
+    abstract fun generateUserAtomInvalidVisibleAtom(
+        userId: String,
+        userDeptIdList: List<Int>,
+        atomCode: String,
+        atomName: String,
+        defaultFlag: Boolean,
+        atomDeptIdList: List<Int>?
     ): List<String>
 
     abstract fun validateTempleAtomVisible(templateCode: String, templateModel: Model): Result<Boolean>
