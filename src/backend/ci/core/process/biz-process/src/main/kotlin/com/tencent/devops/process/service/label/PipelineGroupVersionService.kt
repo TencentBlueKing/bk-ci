@@ -119,5 +119,4 @@ class PipelineGroupVersionService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineGroupVersionService::class.java)
     }
-
 }

@@ -61,7 +61,7 @@ class PipelineRepositoryVersionService constructor(
     private val pipelineResVersionDao: PipelineResVersionDao,
     private val pipelineModelTaskVersionDao: PipelineModelTaskVersionDao,
     private val pipelineSettingVersionDao: PipelineSettingVersionDao,
-        private val templatePipelineDao: TemplatePipelineDao
+    private val templatePipelineDao: TemplatePipelineDao
 ) {
 
     fun getPipelineInfo(projectId: String?, pipelineId: String, channelCode: ChannelCode? = null): PipelineInfo? {
