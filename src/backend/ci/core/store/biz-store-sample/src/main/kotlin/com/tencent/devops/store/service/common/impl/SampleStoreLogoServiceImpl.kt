@@ -30,6 +30,7 @@ import com.tencent.devops.artifactory.api.service.ServiceFileResource
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.utils.CommonUtils
+import com.tencent.devops.store.utils.StoreUtils
 import org.springframework.stereotype.Service
 import java.io.File
 
