@@ -44,14 +44,14 @@ class BuildLogPrintService(
 ) {
 
     private val logExecutorService = ThreadPoolExecutor(
-        100,
+        10,
         100,
         0L,
         TimeUnit.MILLISECONDS,
         LinkedBlockingQueue(10000)
     )
 
-    private fun dispatchEvent(event: ILogEvent) {
+    fun dispatchEvent(event: ILogEvent) {
         try {
             val eventType = event::class.java.annotations.find { s -> s is Event } as Event
             rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event) { message ->
