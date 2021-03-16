@@ -59,7 +59,7 @@ import org.springframework.jmx.export.MBeanExporter
 
 @Configuration
 @ConditionalOnWebApplication
-@ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "old_v0")
+@ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class AuthAutoConfiguration {
 

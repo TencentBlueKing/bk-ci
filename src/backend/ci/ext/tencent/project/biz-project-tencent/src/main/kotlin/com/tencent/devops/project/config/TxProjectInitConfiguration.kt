@@ -82,7 +82,7 @@ class TxProjectInitConfiguration {
     fun managerService(client: Client) = ManagerService(client)
 
     @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "old_v0")
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
     fun projectPermissionService(
         objectMapper: ObjectMapper,
         authProperties: BkAuthProperties,
