@@ -38,6 +38,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -51,6 +52,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventTy
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
 import com.tencent.devops.plugin.api.pojo.GithubPrEvent
+import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineWebHookQueueService
@@ -65,6 +67,7 @@ import com.tencent.devops.process.pojo.code.WebhookCommit
 import com.tencent.devops.process.pojo.code.git.GitEvent
 import com.tencent.devops.process.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.process.pojo.code.git.GitPushEvent
+import com.tencent.devops.process.pojo.code.github.GithubCheckRunEvent
 import com.tencent.devops.process.pojo.code.github.GithubCreateEvent
 import com.tencent.devops.process.pojo.code.github.GithubEvent
 import com.tencent.devops.process.pojo.code.github.GithubPullRequestEvent
@@ -174,6 +177,7 @@ class PipelineBuildWebhookService @Autowired constructor(
             GithubPushEvent.classType -> objectMapper.readValue<GithubPushEvent>(body)
             GithubCreateEvent.classType -> objectMapper.readValue<GithubCreateEvent>(body)
             GithubPullRequestEvent.classType -> objectMapper.readValue<GithubPullRequestEvent>(body)
+            GithubCheckRunEvent.classType -> objectMapper.readValue<GithubCheckRunEvent>(body)
             else -> {
                 logger.info("Github event($eventType) is ignored")
                 return true
@@ -192,6 +196,27 @@ class PipelineBuildWebhookService @Autowired constructor(
                     logger.info("Github pull request no open or update")
                     return true
                 }
+            }
+            is GithubCheckRunEvent -> {
+                if (event.action != "rerequested") {
+                    logger.info("Unsupported check run action:${event.action}")
+                    return true
+                }
+                val buildInfo = event.checkRun.externalId
+                if (buildInfo == null) {
+                    logger.info("github check run externalId is empty")
+                    return true
+                }
+                with(buildInfo) {
+                    client.get(ServiceBuildResource::class).retry(
+                        userId = userId,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        channelCode = ChannelCode.BS
+                    )
+                }
+                return true
             }
         }
 
