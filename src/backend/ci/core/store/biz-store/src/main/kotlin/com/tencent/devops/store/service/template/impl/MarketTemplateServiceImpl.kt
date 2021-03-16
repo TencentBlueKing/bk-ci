@@ -42,6 +42,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
+import com.tencent.devops.model.store.tables.records.TStoreDeptRelRecord
 import com.tencent.devops.model.store.tables.records.TTemplateRecord
 import com.tencent.devops.process.api.template.ServiceTemplateResource
 import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
@@ -708,7 +709,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
     private fun validateUserAtomVisible(
         element: Element,
         userId: String,
-        currentStageAtomDeptMap: Map<String, List<Int>>?,
+        currentStageAtomDeptMap: Map<String, List<TStoreDeptRelRecord>>?,
         invalidAtomList: MutableList<String>,
         needInstallAtomMap: MutableMap<String, TAtomRecord>
     ) {
@@ -730,20 +731,20 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             )
         }
         val userDeptIdList = storeUserService.getUserDeptList(userId) // 获取用户的机构ID信息
-        val atomDeptIdList = currentStageAtomDeptMap?.get(atomCode)
+        val atomDeptList = currentStageAtomDeptMap?.get(atomCode)
         invalidAtomList.addAll(generateUserAtomInvalidVisibleAtom(
             userId = userId,
             userDeptIdList = userDeptIdList,
             atomCode = atomCode,
             atomName = element.name,
             defaultFlag = atomRecord.defaultFlag,
-            atomDeptIdList = atomDeptIdList
+            atomDeptList = atomDeptList
         ))
         if (!atomRecord.defaultFlag) needInstallAtomMap[atomCode] = atomRecord
     }
 
-    private fun getStageAtomDeptMap(stageList: List<Stage>): MutableMap<String, Map<String, List<Int>>> {
-        val stageAtomDeptMap = mutableMapOf<String, Map<String, List<Int>>>()
+    fun getStageAtomDeptMap(stageList: List<Stage>): MutableMap<String, Map<String, List<TStoreDeptRelRecord>>> {
+        val stageAtomDeptMap = mutableMapOf<String, Map<String, List<TStoreDeptRelRecord>>>()
         stageList.forEach { stage ->
             val stageAtomSet = mutableSetOf<String>()
             val containerList = stage.containers
@@ -758,14 +759,14 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 storeCodeList = stageAtomSet.toList(),
                 storeType = StoreTypeEnum.ATOM.type.toByte()
             )
-            val atomDeptRelMap = mutableMapOf<String, MutableList<Int>>()
+            val atomDeptRelMap = mutableMapOf<String, MutableList<TStoreDeptRelRecord>>()
             atomDeptRelRecords?.forEach { atomDeptRelRecord ->
                 val atomCode = atomDeptRelRecord.storeCode
-                val atomDeptIdList = atomDeptRelMap[atomCode]
-                if (atomDeptIdList != null) {
-                    atomDeptIdList.add(atomDeptRelRecord.deptId)
+                val atomDeptList = atomDeptRelMap[atomCode]
+                if (atomDeptList != null) {
+                    atomDeptList.add(atomDeptRelRecord)
                 } else {
-                    atomDeptRelMap[atomCode] = mutableListOf(atomDeptRelRecord.deptId)
+                    atomDeptRelMap[atomCode] = mutableListOf(atomDeptRelRecord)
                 }
             }
             val stageId = stage.id
@@ -782,7 +783,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         atomCode: String,
         atomName: String,
         defaultFlag: Boolean,
-        atomDeptIdList: List<Int>?
+        atomDeptList: List<TStoreDeptRelRecord>?
     ): List<String>
 
     abstract fun validateTempleAtomVisible(templateCode: String, templateModel: Model): Result<Boolean>

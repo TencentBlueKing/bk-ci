@@ -29,6 +29,7 @@ package com.tencent.devops.store.service.template.impl
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.model.store.tables.records.TStoreDeptRelRecord
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.template.SampleMarketTemplateService
 import org.springframework.stereotype.Service
@@ -63,7 +64,7 @@ class SampleMarketTemplateServiceImpl : SampleMarketTemplateService, MarketTempl
         atomCode: String,
         atomName: String,
         defaultFlag: Boolean,
-        atomDeptIdList: List<Int>?
+        atomDeptList: List<TStoreDeptRelRecord>?
     ): List<String> {
         // 开源版没有可见范围的概念，没有因为可见范围而无效的插件
         return emptyList()
