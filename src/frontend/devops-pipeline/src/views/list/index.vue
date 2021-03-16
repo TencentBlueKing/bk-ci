@@ -121,6 +121,9 @@
                     case 'pipelinesRestore':
                         title = this.$t('restore.recycleBin')
                         break
+                    case 'pipelinesAudit':
+                        title = this.$t('operatorAudit')
+                        break
                     default:
                         title = this.$t('more')
                         break
