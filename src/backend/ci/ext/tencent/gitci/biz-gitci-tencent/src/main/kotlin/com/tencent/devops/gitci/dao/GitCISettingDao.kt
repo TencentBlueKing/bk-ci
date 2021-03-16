@@ -30,6 +30,7 @@ package com.tencent.devops.gitci.dao
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.gitci.pojo.EnvironmentVariables
 import com.tencent.devops.gitci.pojo.GitRepositoryConf
 import com.tencent.devops.model.gitci.tables.TRepositoryConf
@@ -70,7 +71,10 @@ class GitCISettingDao {
                         ENV,
                         CREATE_TIME,
                         UPDATE_TIME,
-                        PROJECT_CODE
+                        PROJECT_CODE,
+                        ENABLE_NOTIFY,
+                        NOTIFY_TYPE,
+                        NOTIFY_RECEIVERS
                         )
                         .values(
                             conf.gitProjectId,
@@ -88,7 +92,10 @@ class GitCISettingDao {
                             if (conf.env == null) { "" } else { JsonUtil.toJson(conf.env!!) },
                             LocalDateTime.now(),
                             LocalDateTime.now(),
-                            projectCode
+                            projectCode,
+                            conf.enableNotify,
+                            conf.notifyType?.joinToString(",") { it.name },
+                            conf.notifyReceivers?.joinToString(",")
                         ).execute()
                 } else {
                     context.update(this)
@@ -160,8 +167,11 @@ class GitCISettingDao {
                     },
                     createTime = conf.createTime.timestampmilli(),
                     updateTime = conf.updateTime.timestampmilli(),
-                    projectCode = conf.projectCode
-                        )
+                    projectCode = conf.projectCode,
+                    enableNotify = conf.enableNotify,
+                    notifyType = conf.notifyType.split(",").map { NotifyType.valueOf(it) },
+                    notifyReceivers = conf.notifyReceivers.split(",")
+                )
             }
         }
     }

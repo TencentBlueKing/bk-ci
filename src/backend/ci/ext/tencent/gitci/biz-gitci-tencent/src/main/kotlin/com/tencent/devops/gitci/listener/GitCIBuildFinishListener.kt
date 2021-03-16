@@ -32,10 +32,13 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
+import com.tencent.devops.gitci.pojo.GitRepositoryConf
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.ExchangeTypes
@@ -51,6 +54,7 @@ class GitCIBuildFinishListener @Autowired constructor(
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitCISettingDao: GitCISettingDao,
+    private val client: Client,
     private val scmClient: ScmClient,
     private val dslContext: DSLContext
 ) {
@@ -75,7 +79,7 @@ class GitCIBuildFinishListener @Autowired constructor(
 
                 val objectKind = record["OBJECT_KIND"] as String
 
-                // 推送结束构建消息,当人工触发时不推送构建消息
+                // 推送结束构建消息,当人工触发时不推送CommitCheck消息
                 if (objectKind != OBJECT_KIND_MANUAL) {
                     val commitId = record["COMMIT_ID"] as String
                     val gitProjectId = record["GIT_PROJECT_ID"] as Long
@@ -105,9 +109,39 @@ class GitCIBuildFinishListener @Autowired constructor(
                         gitProjectConf = gitProjectConf
                     )
                 }
+
+
             }
         } catch (e: Throwable) {
             logger.error("Fail to push commit check build(${buildFinishEvent.buildId})", e)
+        }
+    }
+
+    private fun notify(conf: GitRepositoryConf) {
+        if (conf.enableNotify == null || !conf.enableNotify!!) {
+            return
+        }
+        if (conf.notifyType == null || conf.notifyType!!.isEmpty()) {
+            logger.warn("gitCI project: ${conf.gitProjectId} enable notify but not have notifyType")
+        }
+        if (conf.notifyReceivers == null || conf.notifyReceivers!!.isEmpty()) {
+            logger.warn("gitCI project: ${conf.gitProjectId} enable notify but not have notifyType")
+        }
+        conf.notifyType!!.forEach {
+            sendNotify(it, conf.notifyReceivers!!)
+        }
+    }
+
+    // 工蜂CI目前只支持企业微信和邮件通知
+    private fun sendNotify(notify: NotifyType, receivers: List<String>) {
+        when (notify) {
+            NotifyType.EMAIL -> {
+
+            }
+            NotifyType.RTX -> {
+
+            }
+            else -> return
         }
     }
 
