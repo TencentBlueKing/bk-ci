@@ -29,6 +29,7 @@ package com.tencent.devops.dispatch.docker.api.builds
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.mq.alert.AlertLevel
+import com.tencent.devops.dispatch.docker.pojo.DockerHostInfo
 import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import io.swagger.annotations.Api
@@ -165,14 +166,14 @@ interface BuildDockerHostResource {
         message: String
     ): Result<Boolean>?
 
-/*    @ApiOperation("获取主机信息")
+    @ApiOperation("获取主机信息")
     @GET
     @Path("/host")
     fun getHost(
         @ApiParam("dockerHost标识", required = true)
         @QueryParam("hostTag")
         hostTag: String
-    ): Result<DockerHostInfo>?*/
+    ): Result<DockerHostInfo>?
 
     @ApiOperation("上报日志信息")
     @POST

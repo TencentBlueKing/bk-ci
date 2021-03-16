@@ -28,6 +28,7 @@
 package com.tencent.devops.dockerhost.services
 
 import com.github.dockerjava.api.DockerClient
+import com.github.dockerjava.api.exception.NotModifiedException
 import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.okhttp.OkDockerHttpClient
@@ -70,6 +71,34 @@ abstract class AbstractDockerHostBuildService constructor(
     abstract fun createContainer(dockerHostBuildInfo: DockerHostBuildInfo): String
 
     abstract fun stopContainer(dockerHostBuildInfo: DockerHostBuildInfo)
+
+    fun stopContainer(containerId: String, buildId: String) {
+        if (containerId.isEmpty()) {
+            return
+        }
+
+        try {
+            // docker stop
+            val containerInfo = httpDockerCli.inspectContainerCmd(containerId).exec()
+            if ("exited" != containerInfo.state.status) {
+                httpDockerCli.stopContainerCmd(containerId).withTimeout(15).exec()
+            }
+        } catch (e: NotModifiedException) {
+            logger.error("[$buildId]| Stop the container failed, containerId: $containerId already stopped.")
+        } catch (ignored: Throwable) {
+            logger.error("[$buildId]| Stop the container failed, containerId: $containerId, error msg: $ignored", ignored)
+        }
+
+        try {
+            // docker rm
+            httpDockerCli.removeContainerCmd(containerId).exec()
+        } catch (ignored: Throwable) {
+            logger.error(
+                "[$buildId]| Stop the container failed, containerId: $containerId, error msg: $ignored",
+                ignored
+            )
+        }
+    }
 
     fun log(buildId: String, message: String, tag: String?, containerHashId: String?) {
         return log(buildId, false, message, tag, containerHashId)

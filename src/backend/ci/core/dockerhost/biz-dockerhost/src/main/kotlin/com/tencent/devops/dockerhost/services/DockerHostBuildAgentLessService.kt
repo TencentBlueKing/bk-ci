@@ -27,18 +27,20 @@
 
 package com.tencent.devops.dockerhost.services
 
-import com.github.dockerjava.api.exception.NotModifiedException
 import com.github.dockerjava.api.model.AccessMode
+import com.github.dockerjava.api.model.AuthConfig
 import com.github.dockerjava.api.model.Bind
 import com.github.dockerjava.api.model.Binds
 import com.github.dockerjava.api.model.HostConfig
 import com.github.dockerjava.api.model.Volume
 import com.github.dockerjava.core.command.PullImageResultCallback
+import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.common.ErrorCodeEnum
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.AlertApi
+import com.tencent.devops.dockerhost.dispatch.BuildResourceApi
 import com.tencent.devops.dockerhost.dispatch.DockerEnv
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
 import com.tencent.devops.dockerhost.exception.ContainerException
@@ -52,6 +54,7 @@ import com.tencent.devops.dockerhost.utils.ENV_KEY_AGENT_ID
 import com.tencent.devops.dockerhost.utils.ENV_KEY_AGENT_SECRET_KEY
 import com.tencent.devops.dockerhost.utils.ENV_KEY_GATEWAY
 import com.tencent.devops.dockerhost.utils.ENV_KEY_PROJECT_ID
+import com.tencent.devops.process.pojo.mq.PipelineBuildLessDockerStartupEvent
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -65,83 +68,35 @@ class DockerHostBuildAgentLessService(
     dockerHostBuildApi: DockerHostBuildResourceApi,
     private val dockerHostConfig: DockerHostConfig,
     private val dockerHostWorkSpaceService: DockerHostWorkSpaceService,
-    private val alertApi: AlertApi
+    private val alertApi: AlertApi,
+    private val buildResourceApi: BuildResourceApi
 ) : AbstractDockerHostBuildService(dockerHostConfig, dockerHostBuildApi) {
 
     override fun createContainer(dockerHostBuildInfo: DockerHostBuildInfo): String {
         try {
+            val authConfig = AuthConfig()
+                .withUsername(dockerHostConfig.registryUsername)
+                .withPassword(SecurityUtil.decrypt(dockerHostConfig.registryPassword!!))
+                .withRegistryAddress(dockerHostConfig.registryUrl)
             // docker pull
             val imageName = CommonUtils.normalizeImageName(dockerHostBuildInfo.imageName)
             try {
                 LocalImageCache.saveOrUpdate(imageName)
-                httpDockerCli.pullImageCmd(imageName).exec(PullImageResultCallback()).awaitCompletion()
+                httpDockerCli.pullImageCmd(imageName)
+                    .withAuthConfig(authConfig).exec(PullImageResultCallback()).awaitCompletion()
             } catch (t: Throwable) {
                 logger.warn("[${dockerHostBuildInfo.buildId}]|Fail to pull the image $imageName of build ${dockerHostBuildInfo.buildId}", t)
             }
 
-            val hostWorkspace = getWorkspace(dockerHostBuildInfo.pipelineId, dockerHostBuildInfo.vmSeqId.toString().trim())
-            val linkPath = dockerHostWorkSpaceService.createSymbolicLink(hostWorkspace)
-
-            // docker run
-            val volumeWs = Volume(dockerHostConfig.volumeWorkspace)
-            val volumeMavenRepo = Volume(dockerHostConfig.volumeMavenRepo)
-            val volumeNpmPrefix = Volume(dockerHostConfig.volumeNpmPrefix)
-            val volumeNpmCache = Volume(dockerHostConfig.volumeNpmCache)
-            val volumeCcache = Volume(dockerHostConfig.volumeCcache)
-            val volumeApps = Volume(dockerHostConfig.volumeApps)
-            val volumeInit = Volume(dockerHostConfig.volumeInit)
-            val volumeLogs = Volume(dockerHostConfig.volumeLogs)
-            val volumeHosts = Volume(dockerHostConfig.hostPathHosts)
-            val volumeGradleCache = Volume(dockerHostConfig.volumeGradleCache)
-            val volumeTmpLink = Volume(linkPath)
-
-            val gateway = DockerEnv.getGatway()
-            logger.info("[${dockerHostBuildInfo.buildId}]|gateway is: $gateway")
-            val binds = Binds(
-                Bind("${dockerHostConfig.hostPathMavenRepo}/${dockerHostBuildInfo.pipelineId}/", volumeMavenRepo),
-                Bind("${dockerHostConfig.hostPathNpmPrefix}/${dockerHostBuildInfo.pipelineId}/", volumeNpmPrefix),
-                Bind("${dockerHostConfig.hostPathNpmCache}/${dockerHostBuildInfo.pipelineId}/", volumeNpmCache),
-                Bind("${dockerHostConfig.hostPathCcache}/${dockerHostBuildInfo.pipelineId}/", volumeCcache),
-                Bind(dockerHostConfig.hostPathApps, volumeApps, AccessMode.ro),
-                Bind(dockerHostConfig.hostPathInit, volumeInit, AccessMode.ro),
-                Bind(dockerHostConfig.hostPathHosts, volumeHosts, AccessMode.ro),
-                Bind("${dockerHostConfig.hostPathLogs}/${dockerHostBuildInfo.buildId}/${dockerHostBuildInfo.vmSeqId}/", volumeLogs),
-                Bind("${dockerHostConfig.hostPathGradleCache}/${dockerHostBuildInfo.pipelineId}/", volumeGradleCache),
-                Bind(linkPath, volumeTmpLink),
-                Bind(hostWorkspace, volumeWs)
+            return createDockerRun(
+                pipelineId = dockerHostBuildInfo.pipelineId,
+                vmSeqId = dockerHostBuildInfo.vmSeqId.toString(),
+                buildId = dockerHostBuildInfo.buildId,
+                imageName = imageName,
+                projectId = dockerHostBuildInfo.projectId,
+                agentId = dockerHostBuildInfo.agentId,
+                secretKey = dockerHostBuildInfo.secretKey
             )
-            val container = httpDockerCli.createContainerCmd(imageName)
-                .withCmd("/bin/sh", ENTRY_POINT_CMD)
-                .withEnv(
-                    listOf(
-                        "$ENV_KEY_PROJECT_ID=${dockerHostBuildInfo.projectId}",
-                        "$ENV_KEY_AGENT_ID=${dockerHostBuildInfo.agentId}",
-                        "$ENV_KEY_AGENT_SECRET_KEY=${dockerHostBuildInfo.secretKey}",
-                        "$ENV_KEY_GATEWAY=$gateway",
-                        "TERM=xterm-256color",
-                        "$ENV_DOCKER_HOST_IP=${CommonUtils.getInnerIP()}",
-                        "$BK_DISTCC_LOCAL_IP=${CommonUtils.getInnerIP()}",
-                        "$ENV_BK_CI_DOCKER_HOST_IP=${CommonUtils.getInnerIP()}",
-                        "$ENV_BK_CI_DOCKER_HOST_WORKSPACE=$linkPath"
-                    )
-                )
-                .withHostConfig(
-                    // CPU and memory Limit
-                    HostConfig()
-                        .withMemory(dockerHostConfig.memory)
-                        .withMemorySwap(dockerHostConfig.memory)
-                        .withCpuQuota(dockerHostConfig.cpuQuota.toLong())
-                        .withCpuPeriod(dockerHostConfig.cpuPeriod.toLong())
-                        .withBinds(binds)
-                        .withNetworkMode("bridge")
-                )
-                .withVolumes(volumeWs).withVolumes(volumeApps).withVolumes(volumeInit)
-                .exec()
-
-            logger.info("[${dockerHostBuildInfo.buildId}]|Created container $container")
-            httpDockerCli.startContainerCmd(container.id).exec()
-
-            return container.id
         } catch (ignored: Throwable) {
             logger.error("[${dockerHostBuildInfo.buildId}]| create Container failed ", ignored)
             alertApi.alert(
@@ -156,35 +111,119 @@ class DockerHostBuildAgentLessService(
     }
 
     override fun stopContainer(dockerHostBuildInfo: DockerHostBuildInfo) {
-        if (dockerHostBuildInfo.containerId.isEmpty()) {
-            return
-        }
+        stopContainer(dockerHostBuildInfo.containerId, dockerHostBuildInfo.buildId)
+    }
 
+    fun createContainer(event: PipelineBuildLessDockerStartupEvent): String {
         try {
-            // docker stop
-            val containerInfo = httpDockerCli.inspectContainerCmd(dockerHostBuildInfo.containerId).exec()
-            if ("exited" != containerInfo.state.status) {
-                httpDockerCli.stopContainerCmd(dockerHostBuildInfo.containerId).withTimeout(15).exec()
+            // docker pull
+            try {
+                val authConfig = AuthConfig()
+                    .withUsername(dockerHostConfig.registryUsername)
+                    .withPassword(SecurityUtil.decrypt(dockerHostConfig.registryPassword!!))
+                    .withRegistryAddress(dockerHostConfig.registryUrl)
+
+                LocalImageCache.saveOrUpdate(event.dockerImage)
+                httpDockerCli.pullImageCmd(event.dockerImage)
+                    .withAuthConfig(authConfig).exec(PullImageResultCallback()).awaitCompletion()
+            } catch (t: Throwable) {
+                logger.warn("[${event.buildId}]|PullImageFail|image=${event.dockerImage}", t)
             }
-        } catch (e: NotModifiedException) {
-            logger.error("[${dockerHostBuildInfo.buildId}]| Stop the container failed, containerId: ${dockerHostBuildInfo.containerId} already stopped.")
-        } catch (ignored: Throwable) {
-            logger.error("[${dockerHostBuildInfo.buildId}]| Stop the container failed, containerId: ${dockerHostBuildInfo.containerId}, error msg: $ignored", ignored)
-        }
 
-        try {
-            // docker rm
-            httpDockerCli.removeContainerCmd(dockerHostBuildInfo.containerId).exec()
+            return createDockerRun(
+                pipelineId = event.pipelineId,
+                vmSeqId = event.vmSeqId,
+                buildId = event.buildId,
+                imageName = event.dockerImage,
+                projectId = event.projectId,
+                agentId = event.agentId,
+                secretKey = event.secretKey
+            )
         } catch (ignored: Throwable) {
-            logger.error(
-                "[${dockerHostBuildInfo.buildId}]| Stop the container failed, containerId: ${dockerHostBuildInfo.containerId}, error msg: $ignored",
-                ignored
+            logger.warn("[${event.buildId}]| create Container failed ", ignored)
+            alertApi.alert(
+                AlertLevel.HIGH.name, "Docker构建机创建容器失败", "Docker构建机创建容器失败, " +
+                        "母机IP:${CommonUtils.getInnerIP()}， 失败信息：${ignored.message}"
+            )
+            throw ContainerException(
+                errorCodeEnum = ErrorCodeEnum.CREATE_CONTAINER_ERROR,
+                message = "[${event.buildId}]|Create container failed"
             )
         }
     }
 
-    private fun getWorkspace(pipelineId: String, vmSeqId: String): String {
-        return "${dockerHostConfig.hostPathWorkspace}/$pipelineId/$vmSeqId/"
+    private fun createDockerRun(
+        pipelineId: String,
+        vmSeqId: String,
+        buildId: String,
+        imageName: String,
+        projectId: String,
+        agentId: String,
+        secretKey: String
+    ): String {
+        val hostWorkspace = getWorkspace(pipelineId, vmSeqId.trim())
+        val linkPath = dockerHostWorkSpaceService.createSymbolicLink(hostWorkspace)
+
+        // docker run
+        val volumeWs = Volume(dockerHostConfig.volumeWorkspace)
+        val volumeMavenRepo = Volume(dockerHostConfig.volumeMavenRepo)
+        val volumeNpmPrefix = Volume(dockerHostConfig.volumeNpmPrefix)
+        val volumeNpmCache = Volume(dockerHostConfig.volumeNpmCache)
+        val volumeCcache = Volume(dockerHostConfig.volumeCcache)
+        val volumeApps = Volume(dockerHostConfig.volumeApps)
+        val volumeInit = Volume(dockerHostConfig.volumeInit)
+        val volumeLogs = Volume(dockerHostConfig.volumeLogs)
+        val volumeHosts = Volume(dockerHostConfig.hostPathHosts)
+        val volumeGradleCache = Volume(dockerHostConfig.volumeGradleCache)
+        val volumeTmpLink = Volume(linkPath)
+
+        val gateway = DockerEnv.getGatway()
+        logger.info("[$buildId]|gateway is: $gateway")
+        val binds = Binds(
+            Bind("${dockerHostConfig.hostPathMavenRepo}/$pipelineId/", volumeMavenRepo),
+            Bind("${dockerHostConfig.hostPathNpmPrefix}/$pipelineId/", volumeNpmPrefix),
+            Bind("${dockerHostConfig.hostPathNpmCache}/$pipelineId/", volumeNpmCache),
+            Bind("${dockerHostConfig.hostPathCcache}/$pipelineId/", volumeCcache),
+            Bind(dockerHostConfig.hostPathApps, volumeApps, AccessMode.ro),
+            Bind(dockerHostConfig.hostPathInit, volumeInit, AccessMode.ro),
+            Bind(dockerHostConfig.hostPathHosts, volumeHosts, AccessMode.ro),
+            Bind("${dockerHostConfig.hostPathLogs}/$buildId/$vmSeqId/", volumeLogs),
+            Bind("${dockerHostConfig.hostPathGradleCache}/$pipelineId/", volumeGradleCache),
+            Bind(linkPath, volumeTmpLink),
+            Bind(hostWorkspace, volumeWs)
+        )
+        val container = httpDockerCli.createContainerCmd(imageName)
+            .withCmd("/bin/sh", ENTRY_POINT_CMD)
+            .withEnv(
+                listOf(
+                    "$ENV_KEY_PROJECT_ID=$projectId",
+                    "$ENV_KEY_AGENT_ID=$agentId",
+                    "$ENV_KEY_AGENT_SECRET_KEY=$secretKey",
+                    "$ENV_KEY_GATEWAY=$gateway",
+                    "TERM=xterm-256color",
+                    "$ENV_DOCKER_HOST_IP=${CommonUtils.getInnerIP()}",
+                    "$BK_DISTCC_LOCAL_IP=${CommonUtils.getInnerIP()}",
+                    "$ENV_BK_CI_DOCKER_HOST_IP=${CommonUtils.getInnerIP()}",
+                    "$ENV_BK_CI_DOCKER_HOST_WORKSPACE=$linkPath"
+                )
+            )
+            .withHostConfig(
+                // CPU and memory Limit
+                HostConfig()
+                    .withMemory(dockerHostConfig.memory)
+                    .withMemorySwap(dockerHostConfig.memory)
+                    .withCpuQuota(dockerHostConfig.cpuQuota.toLong())
+                    .withCpuPeriod(dockerHostConfig.cpuPeriod.toLong())
+                    .withBinds(binds)
+                    .withNetworkMode("bridge")
+            )
+            .withVolumes(volumeWs).withVolumes(volumeApps).withVolumes(volumeInit)
+            .exec()
+
+        logger.info("[$buildId]|Created container $container")
+        httpDockerCli.startContainerCmd(container.id).exec()
+
+        return container.id
     }
 
     fun clearContainers() {
@@ -193,6 +232,21 @@ class DockerHostBuildAgentLessService(
             logger.info("Clear container, containerId: ${container.id}")
             httpDockerCli.removeContainerCmd(container.id).exec()
         }
+    }
+
+    fun reportContainerId(buildId: String, vmSeqId: String, containerId: String): Boolean {
+        val result = buildResourceApi.reportContainerId(buildId, vmSeqId, containerId, CommonUtils.getInnerIP())
+        if (result != null) {
+            if (result.isNotOk()) {
+                logger.info("reportContainerId return msg: ${result.message}")
+                return false
+            }
+        }
+        return result!!.data!!
+    }
+
+    private fun getWorkspace(pipelineId: String, vmSeqId: String): String {
+        return "${dockerHostConfig.hostPathWorkspace}/$pipelineId/$vmSeqId/"
     }
 
     companion object {

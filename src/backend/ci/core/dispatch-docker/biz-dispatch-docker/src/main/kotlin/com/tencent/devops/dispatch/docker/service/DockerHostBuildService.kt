@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
@@ -44,7 +45,7 @@ import com.tencent.devops.dispatch.docker.dao.PipelineDockerHostZoneDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerPoolDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskDao
-import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
+import com.tencent.devops.dispatch.docker.pojo.DockerHostInfo
 import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
 import com.tencent.devops.dispatch.docker.utils.RedisUtils
 import com.tencent.devops.dispatch.pojo.ContainerInfo
@@ -732,66 +733,7 @@ class DockerHostBuildService @Autowired constructor(
         }
     }*/
 
-    fun finishBuildLessDockerHost(buildId: String, vmSeqId: String?, userId: String, success: Boolean) {
-        LOG.info("[$buildId]|BUILD_LESS| Finish vmSeqId($vmSeqId) with result($success)")
-        if (vmSeqId.isNullOrBlank()) {
-            val records = pipelineDockerBuildDao.listBuilds(dslContext, buildId)
-            if (records.isEmpty()) {
-                return
-            }
-            records.forEach {
-                dispatchStopCmd(it, userId)
-                finishBuild(it, success, true)
-            }
-        } else {
-            val record = pipelineDockerBuildDao.getBuild(dslContext, buildId, vmSeqId!!.toInt())
-            if (record != null) {
-                dispatchStopCmd(record, userId)
-                finishBuild(record, success, true)
-            }
-        }
-    }
-
-    private fun dispatchStopCmd(record: TDispatchPipelineDockerBuildRecord, userId: String) {
-        if (record.dockerIp.isNotEmpty()) {
-            dockerHostClient.endBuild(
-                projectId = record.projectId,
-                pipelineId = record.pipelineId,
-                buildId = record.buildId,
-                vmSeqId = record.vmSeqId?.toInt() ?: 0,
-                containerId = record.containerId,
-                dockerIp = record.dockerIp,
-                clusterType = DockerHostClusterType.AGENT_LESS
-            )
-        }
-/*
-        val dockerLessTask = pipelineDockerTaskDao.getTask(dslContext, record.buildId, record.vmSeqId)
-            ?: run {
-                logger.warn("[${record.buildId}]|BUILD_LESS| can not found vmSeqId(${record.vmSeqId}) task")
-                return
-            }
-
-        if (dockerLessTask.hostTag.isNullOrBlank()) {
-            logger.warn("[${record.buildId}]|BUILD_LESS| can not find hostTag")
-            return
-        }
-
-        logger.info("[${record.buildId}]|BUILD_LESS| Finish docker(${dockerLessTask.containerId})| hostTag=${dockerLessTask.hostTag}")
-
-        pipelineEventDispatcher.dispatch(
-            PipelineBuildLessDockerShutdownEvent(
-                routeKeySuffix = dockerLessTask.hostTag, // 路由Key的后缀
-                source = DockerHostBuildService::class.java.name, // 来源
-                projectId = record.projectId,
-                pipelineId = record.pipelineId,
-                userId = userId,
-                buildId = record.buildId,
-                dockerContainerId = dockerLessTask.containerId
-            )
-        )*/
-    }
-
-/*    fun getHost(hostTag: String): Result<DockerHostInfo>? {
+    fun getHost(hostTag: String): Result<DockerHostInfo>? {
         val hostZone = pipelineDockerHostZoneDao.getHostZone(dslContext, hostTag)
         LOG.info("[getHost]| hostTag=$hostTag, hostZone=$hostZone")
         return if (hostZone == null) {
@@ -799,7 +741,7 @@ class DockerHostBuildService @Autowired constructor(
         } else {
             Result(DockerHostInfo(hostZone.routeKey ?: MQ.DEFAULT_BUILD_LESS_DOCKET_HOST_ROUTE_SUFFIX))
         }
-    }*/
+    }
 
     fun log(buildId: String, red: Boolean, message: String, tag: String? = "", jobId: String? = "") {
         LOG.info("write log from docker host, buildId: $buildId, msg: $message, tag: $tag, jobId= $jobId")

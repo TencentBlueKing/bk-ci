@@ -660,25 +660,6 @@ class DockerHostBuildService(
         }
     }
 
-    fun dockerStop(projectId: String, pipelineId: String, vmSeqId: String, buildId: String, containerId: String) {
-        try {
-            // docker stop
-            val containerInfo = httpLongDockerCli.inspectContainerCmd(containerId).exec()
-            if ("exited" != containerInfo.state.status) {
-                httpLongDockerCli.stopContainerCmd(containerId).withTimeout(15).exec()
-            }
-        } catch (e: Throwable) {
-            logger.error("Stop the container failed, containerId: $containerId, error msg: $e")
-        }
-
-        try {
-            // docker rm
-            httpLongDockerCli.removeContainerCmd(containerId).exec()
-        } catch (e: Throwable) {
-            logger.error("Stop the container failed, containerId: $containerId, error msg: $e")
-        }
-    }
-
     fun getDockerLogs(containerId: String, lastLogTime: Int): List<String> {
         val logs = ArrayList<String>()
         val logContainerCmd = httpLongDockerCli.logContainerCmd(containerId)
