@@ -29,7 +29,6 @@ package com.tencent.devops.plugin.service.git
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -49,7 +48,6 @@ import com.tencent.devops.plugin.dao.PluginGitCheckDao
 import com.tencent.devops.plugin.dao.PluginGithubCheckDao
 import com.tencent.devops.plugin.service.ScmService
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.pojo.code.github.CheckRunExternalId
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_BLOCK
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_EVENT_TYPE
@@ -323,7 +321,7 @@ class CodeWebhookService @Autowired constructor(
                             )
                         )
                     } else {
-                        if (buildNum.toInt() > record.buildNumber) {
+                        if (buildNum.toInt() >= record.buildNumber) {
                             scmService.addGitCommitCheck(
                                 event = event,
                                 targetUrl = targetUrl,
@@ -460,14 +458,7 @@ class CodeWebhookService @Autowired constructor(
                         name = name,
                         commitId = commitId,
                         detailUrl = detailUrl,
-                        externalId = JsonUtil.toJson(
-                            CheckRunExternalId(
-                                userId = userId,
-                                projectId = projectId,
-                                pipelineId = pipelineId,
-                                buildId = buildId
-                            )
-                        ),
+                        externalId = "${userId}_${projectId}_${pipelineId}_$buildId",
                         status = status,
                         startedAt = startedAt?.atZone(ZoneId.systemDefault())?.format(DateTimeFormatter.ISO_INSTANT),
                         conclusion = conclusion,
@@ -490,14 +481,7 @@ class CodeWebhookService @Autowired constructor(
                             name = name,
                             commitId = commitId,
                             detailUrl = detailUrl,
-                            externalId = JsonUtil.toJson(
-                                CheckRunExternalId(
-                                    userId = userId,
-                                    projectId = projectId,
-                                    pipelineId = pipelineId,
-                                    buildId = buildId
-                                )
-                            ),
+                            externalId = "${userId}_${projectId}_${pipelineId}_$buildId",
                             status = status,
                             startedAt = startedAt?.atZone(ZoneId.systemDefault())?.format(
                                 DateTimeFormatter.ISO_INSTANT

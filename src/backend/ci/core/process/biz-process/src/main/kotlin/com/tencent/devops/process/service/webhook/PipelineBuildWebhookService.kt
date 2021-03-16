@@ -202,20 +202,22 @@ class PipelineBuildWebhookService @Autowired constructor(
                     logger.info("Unsupported check run action:${event.action}")
                     return true
                 }
-                val buildInfo = event.checkRun.externalId
-                if (buildInfo == null) {
+                if (event.checkRun.externalId == null) {
                     logger.info("github check run externalId is empty")
                     return true
                 }
-                with(buildInfo) {
-                    client.get(ServiceBuildResource::class).retry(
-                        userId = userId,
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        buildId = buildId,
-                        channelCode = ChannelCode.BS
-                    )
+                val buildInfo = event.checkRun.externalId!!.split("_")
+                if (buildInfo.size < 4) {
+                    logger.info("the buildInfo of github check run is error")
+                    return true
                 }
+                client.get(ServiceBuildResource::class).retry(
+                    userId = buildInfo[0],
+                    projectId = buildInfo[1],
+                    pipelineId = buildInfo[2],
+                    buildId = buildInfo[3],
+                    channelCode = ChannelCode.BS
+                )
                 return true
             }
         }

@@ -44,15 +44,8 @@ data class GithubCheckRunEvent(
 data class CheckRun(
     val id: String,
     @JsonProperty("external_id")
-    val externalId: CheckRunExternalId? = null,
+    val externalId: String? = null,
     @JsonProperty("details_url")
     val detailsUrl: String? = null,
     val status: String
-)
-
-data class CheckRunExternalId(
-    val userId: String,
-    val projectId: String,
-    val pipelineId: String,
-    val buildId: String
 )
