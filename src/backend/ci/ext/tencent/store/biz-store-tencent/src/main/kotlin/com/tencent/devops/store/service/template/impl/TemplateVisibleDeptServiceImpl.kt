@@ -27,27 +27,31 @@
 
 package com.tencent.devops.store.service.template.impl
 
+import com.google.common.cache.CacheBuilder
+import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.model.store.tables.records.TStoreDeptRelRecord
 import com.tencent.devops.process.api.template.ServiceTemplateResource
 import com.tencent.devops.project.api.service.ServiceProjectOrganizationResource
 import com.tencent.devops.store.constant.StoreMessageCode
-import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
-import com.tencent.devops.store.dao.common.StoreDeptRelDao
 import com.tencent.devops.store.dao.template.MarketTemplateDao
 import com.tencent.devops.store.pojo.common.DeptInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreVisibleDeptService
+import com.tencent.devops.store.service.template.MarketTemplateService
 import com.tencent.devops.store.service.template.TemplateVisibleDeptService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 /**
  * 模板可见范围逻辑类
@@ -57,14 +61,22 @@ import org.springframework.stereotype.Service
 class TemplateVisibleDeptServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
-    private val storeDeptRelDao: StoreDeptRelDao,
     private val marketTemplateDao: MarketTemplateDao,
     private val marketAtomDao: MarketAtomDao,
-    private val atomDao: AtomDao,
+    private val marketTemplateService: MarketTemplateService,
     private val storeVisibleDeptService: StoreVisibleDeptService
 ) : TemplateVisibleDeptService {
 
     private val logger = LoggerFactory.getLogger(TemplateVisibleDeptServiceImpl::class.java)
+
+    private val cache = CacheBuilder.newBuilder().maximumSize(1000)
+        .expireAfterWrite(5, TimeUnit.MINUTES)
+        .build(object : CacheLoader<String, Boolean?>() {
+            override fun load(atomCode: String): Boolean? {
+                val atomRecord = marketAtomDao.getLatestAtomByCode(dslContext, atomCode)
+                return atomRecord?.defaultFlag
+            }
+        })
 
     /**
      * 设置模板可见范围
@@ -116,79 +128,90 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
         logger.info("validateTemplateVisibleDept templateModel is :$templateModel,deptInfos is :$deptInfos")
         val invalidAtomList = mutableListOf<String>()
         val stageList = templateModel.stages
+        val stageAtomDeptMap = marketTemplateService.getStageAtomDeptMap(stageList)
         stageList.forEach { stage ->
+            val stageId = stage.id
+            val currentStageAtomDeptMap = stageAtomDeptMap[stageId]
             val containerList = stage.containers
             containerList.forEach { container ->
                 val elementList = container.elements
                 elementList.forEach { element ->
                     // 判断插件的可见范围是否在模板的可见范围之内
                     val atomCode = element.getAtomCode()
-                    val atomVersion = element.version
-                    logger.info("the atomCode is:$atomCode，atomVersion is:$atomVersion")
-                    val atomRecord = if (atomVersion.isNotEmpty()) {
-                        atomDao.getPipelineAtom(dslContext, atomCode, atomVersion)
-                    } else {
-                        marketAtomDao.getLatestAtomByCode(dslContext, atomCode) // 兼容历史存量原子插件的情况
-                    }
-                    logger.info("the atomRecord is:$atomRecord")
-                    if (null == atomRecord) {
-                        return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomCode))
-                    }
-                    val atomDeptRelRecords = storeDeptRelDao.batchList(dslContext, listOf(atomCode), StoreTypeEnum.ATOM.type.toByte())
-                    logger.info("the atomCode is :$atomCode,atomDeptRelRecords is :$atomDeptRelRecords")
+                    val atomName = element.name
+                    // 判断插件是否为默认插件
+                    val defaultFlag = cache.get(atomCode)
+                        ?: throw ErrorCodeException(
+                            errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                            params = arrayOf(atomCode)
+                        )
                     // 如果插件是默认插件，则无需校验与模板的可见范围
-                    if (!atomRecord.defaultFlag) {
-                        var flag = false
-                        atomDeptRelRecords?.forEach deptEach@{ deptRel ->
-                            logger.info("the begin atomDeptId is:${deptRel.deptId}")
-                            val atomDeptId = deptRel.deptId
-                            logger.info("atomDeptId is:$atomDeptId")
-                            val atomDeptName = deptRel.deptName
-                            val atomDepts = atomDeptName.split("/")
-                            val atomDeptSize = atomDepts.size
-                            logger.info("atomDeptSize is:$atomDeptSize")
-                            deptInfos?.forEach { dept ->
-                                val templateDeptId = dept.deptId
-                                logger.info("templateDeptId is:$templateDeptId")
-                                val templateDeptName = dept.deptName
-                                val templateDepts = templateDeptName.split("/")
-                                val templateDeptSize = templateDepts.size
-                                logger.info("templateDeptSize is:$templateDeptSize")
-                                if (templateDeptSize < atomDeptSize) {
-                                    // 原子可见范围比模板可见范围小，不符合要求
-                                } else {
-                                    if (templateDeptId == atomDeptId) {
-                                        flag = true // 原子插件在模板的可见范围内
-                                        return@deptEach
-                                    }
-                                    val gap = templateDeptSize - atomDeptSize
-                                    // 判断模板的上级机构是否属于原子插件的可见范围
-                                    val parentDeptInfoList = client.get(ServiceProjectOrganizationResource::class).getParentDeptInfos(templateDeptId.toString(), gap + 1).data
-                                    logger.info("the parentDeptInfoList is:$parentDeptInfoList")
-                                    parentDeptInfoList?.forEach {
-                                        logger.info("the validate atomDeptId is:$atomDeptId,parentTemplateDeptId is:${it.id}")
-                                        if (it.id.toInt() == atomDeptId) {
-                                            flag = true // 原子插件在模板的可见范围内
-                                            return@deptEach
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                        // 判断每个插件下的可见范围是否都在模板的可见范围之内
-                        logger.info("the flag is:$flag")
-                        if (!flag) {
-                            logger.info("template dept visible is large than atom")
-                            invalidAtomList.add(element.name)
+                    if (!defaultFlag) {
+                        handleInvalidAtomList(
+                            currentStageAtomDeptMap = currentStageAtomDeptMap,
+                            atomCode = atomCode,
+                            deptInfos = deptInfos,
+                            invalidAtomList = invalidAtomList,
+                            atomName = atomName
+                        )
+                    }
+                }
+            }
+        }
+        logger.info("validateTemplateVisibleDept invalidAtomList:$invalidAtomList")
+        if (invalidAtomList.isNotEmpty()) {
+            // 存在不在插件的可见范围内的模板，给出错误提示
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_TEMPLATE_ATOM_VISIBLE_DEPT_IS_INVALID,
+                params = arrayOf(JsonUtil.toJson(invalidAtomList)),
+                data = false
+            )
+        }
+        return Result(true)
+    }
+
+    private fun handleInvalidAtomList(
+        currentStageAtomDeptMap: Map<String, List<TStoreDeptRelRecord>>?,
+        atomCode: String,
+        deptInfos: List<DeptInfo>?,
+        invalidAtomList: MutableList<String>,
+        atomName: String
+    ) {
+        var flag = false
+        val atomDeptRelRecords = currentStageAtomDeptMap?.get(atomCode)
+        atomDeptRelRecords?.forEach deptEach@{ deptRel ->
+            val atomDeptId = deptRel.deptId
+            val atomDeptName = deptRel.deptName
+            val atomDepts = atomDeptName.split("/")
+            val atomDeptSize = atomDepts.size
+            deptInfos?.forEach { dept ->
+                val templateDeptId = dept.deptId
+                val templateDeptName = dept.deptName
+                val templateDepts = templateDeptName.split("/")
+                val templateDeptSize = templateDepts.size
+                if (templateDeptSize < atomDeptSize) {
+                    // 插件可见范围比模板可见范围小，不符合要求
+                } else {
+                    if (templateDeptId == atomDeptId) {
+                        flag = true // 原子插件在模板的可见范围内
+                        return@deptEach
+                    }
+                    val gap = templateDeptSize - atomDeptSize
+                    // 判断模板的上级机构是否属于插件的可见范围
+                    val parentDeptInfoList = client.get(ServiceProjectOrganizationResource::class)
+                        .getParentDeptInfos(templateDeptId.toString(), gap + 1).data
+                    parentDeptInfoList?.forEach {
+                        if (it.id.toInt() == atomDeptId) {
+                            flag = true // 插件在模板的可见范围内
+                            return@deptEach
                         }
                     }
                 }
             }
         }
-        if (invalidAtomList.isNotEmpty()) {
-            // 存在不在原子插件的可见范围内的模板，给出错误提示
-            return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_TEMPLATE_ATOM_VISIBLE_DEPT_IS_INVALID, arrayOf(JsonUtil.toJson(invalidAtomList)), false)
+        // 判断每个插件下的可见范围是否都在模板的可见范围之内
+        if (!flag) {
+            invalidAtomList.add(atomName)
         }
-        return Result(true)
     }
 }
