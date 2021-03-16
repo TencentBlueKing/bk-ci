@@ -49,5 +49,8 @@ data class GitCIProjectInfo(
     val gitHttpsUrl: String?,
     @ApiModelProperty("gitSshUrl")
     @JsonProperty("ssh_url_to_repo")
-    val gitSshUrl: String?
+    val gitSshUrl: String?,
+    @ApiModelProperty("带有所有者的项目名称")
+    @JsonProperty("path_with_namespace")
+    val pathWithNamespace: String
 )
