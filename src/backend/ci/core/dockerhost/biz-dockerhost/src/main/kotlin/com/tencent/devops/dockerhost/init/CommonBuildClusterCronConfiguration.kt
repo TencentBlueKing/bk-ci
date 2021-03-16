@@ -90,7 +90,7 @@ class CommonBuildClusterCronConfiguration @Autowired constructor(
                 Runnable { runner.clearDockerRunTimeoutContainers() }, 1800 * 1000, 1000
             )
         )
-        //}
+        // }
     }
 
     @Autowired
