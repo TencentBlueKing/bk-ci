@@ -32,6 +32,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.common.web.mq.alert.AlertUtils
 import com.tencent.devops.dispatch.docker.api.builds.BuildDockerHostResource
+import com.tencent.devops.dispatch.docker.pojo.DockerHostInfo
 import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
 import com.tencent.devops.dispatch.docker.service.DispatchDockerService
 import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
@@ -46,10 +47,10 @@ class BuildDockerHostResourceImpl @Autowired constructor(
     private val dispatchDockerService: DispatchDockerService
 ) : BuildDockerHostResource {
 
-/*    override fun getHost(hostTag: String): Result<DockerHostInfo>? {
+    override fun getHost(hostTag: String): Result<DockerHostInfo>? {
         return dockerHostBuildService.getHost(hostTag)
     }
-
+/*
     override fun rollbackBuild(buildId: String, vmSeqId: Int, shutdown: Boolean?): Result<Boolean>? {
         return dockerHostBuildService.rollbackBuild(buildId, vmSeqId, shutdown)
     }
