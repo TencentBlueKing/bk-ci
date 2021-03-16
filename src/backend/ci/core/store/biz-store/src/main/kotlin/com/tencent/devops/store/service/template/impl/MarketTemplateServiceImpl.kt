@@ -743,7 +743,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         if (!atomRecord.defaultFlag) needInstallAtomMap[atomCode] = atomRecord
     }
 
-    fun getStageAtomDeptMap(stageList: List<Stage>): MutableMap<String, Map<String, List<TStoreDeptRelRecord>>> {
+    override fun getStageAtomDeptMap(stageList: List<Stage>): MutableMap<String, Map<String, List<TStoreDeptRelRecord>>> {
         val stageAtomDeptMap = mutableMapOf<String, Map<String, List<TStoreDeptRelRecord>>>()
         stageList.forEach { stage ->
             val stageAtomSet = mutableSetOf<String>()
