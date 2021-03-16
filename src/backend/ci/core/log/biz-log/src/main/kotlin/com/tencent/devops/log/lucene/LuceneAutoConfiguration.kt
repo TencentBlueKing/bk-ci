@@ -88,7 +88,7 @@ class LuceneAutoConfiguration {
             logStatusService = logStatusService,
             logTagService = logTagService,
             logBeanV2 = logBeanV2,
-            logMQEventDispatcher = buildLogPrintService
+            buildLogPrintService = buildLogPrintService
         )
     }
 }

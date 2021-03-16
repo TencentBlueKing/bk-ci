@@ -237,7 +237,7 @@ class ESAutoConfiguration : DisposableBean {
             logTagService = logTagService,
             logBeanV2 = logBeanV2,
             createIndexBeanV2 = createIndexBeanV2,
-            logMQEventDispatcher = buildLogPrintService,
+            buildLogPrintService = buildLogPrintService,
             redisOperation = redisOperation
         )
     }
