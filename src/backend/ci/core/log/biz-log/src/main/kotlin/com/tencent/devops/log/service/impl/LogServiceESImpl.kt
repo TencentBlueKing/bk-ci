@@ -52,7 +52,7 @@ import com.tencent.devops.log.service.LogStatusService
 import com.tencent.devops.log.service.LogTagService
 import com.tencent.devops.log.util.Constants
 import com.tencent.devops.log.util.ESIndexUtils
-import com.tencent.devops.log.util.LogMQEventDispatcher
+import com.tencent.devops.log.util.BuildLogPrintService
 import org.elasticsearch.ElasticsearchStatusException
 import org.elasticsearch.action.admin.indices.open.OpenIndexRequest
 import org.elasticsearch.action.bulk.BulkRequest
@@ -90,7 +90,7 @@ class LogServiceESImpl constructor(
     private val createIndexBeanV2: CreateIndexBeanV2,
     private val logBeanV2: LogBeanV2,
     private val redisOperation: RedisOperation,
-    private val logMQEventDispatcher: LogMQEventDispatcher
+    private val buildLogPrintService: BuildLogPrintService
 ) : LogService {
 
     companion object {
@@ -112,7 +112,7 @@ class LogServiceESImpl constructor(
     override fun addLogEvent(event: LogEvent) {
         val logMessage = addLineNo(event.buildId, event.logs)
         if (logMessage.isNotEmpty()) {
-            logMQEventDispatcher.dispatch(LogBatchEvent(event.buildId, logMessage))
+            buildLogPrintService.asyncDispatchEvent(LogBatchEvent(event.buildId, logMessage))
         }
     }
 

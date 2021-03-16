@@ -34,7 +34,7 @@ import com.tencent.devops.log.api.print.ServiceLogPrintResource
 import com.tencent.devops.common.log.pojo.LogEvent
 import com.tencent.devops.common.log.pojo.LogStatusEvent
 import com.tencent.devops.common.log.pojo.message.LogMessage
-import com.tencent.devops.log.util.LogMQEventDispatcher
+import com.tencent.devops.log.util.BuildLogPrintService
 import org.springframework.beans.factory.annotation.Autowired
 
 /**
@@ -43,14 +43,14 @@ import org.springframework.beans.factory.annotation.Autowired
  */
 @RestResource
 class ServiceLogPrintResourceImpl @Autowired constructor(
-    private val logMQEventDispatcher: LogMQEventDispatcher
+    private val buildLogPrintService: BuildLogPrintService
 ) : ServiceLogPrintResource {
 
     override fun addLogLine(buildId: String, logMessage: LogMessage): Result<Boolean> {
         if (buildId.isBlank()) {
             throw ParamBlankException("无效的构建ID")
         }
-        logMQEventDispatcher.dispatch(LogEvent(buildId, listOf(logMessage)))
+        buildLogPrintService.asyncDispatchEvent(LogEvent(buildId, listOf(logMessage)))
         return Result(true)
     }
 
@@ -58,7 +58,7 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("无效的构建ID")
         }
-        logMQEventDispatcher.dispatch(LogEvent(buildId, logMessages))
+        buildLogPrintService.asyncDispatchEvent(LogEvent(buildId, logMessages))
         return Result(true)
     }
 
@@ -72,15 +72,15 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("无效的构建ID")
         }
-        logMQEventDispatcher.dispatch(
+        buildLogPrintService.asyncDispatchEvent(
             LogStatusEvent(
-            buildId = buildId,
-            finished = false,
-            tag = tag ?: "",
-            subTag = subTag,
-            jobId = jobId ?: "",
-            executeCount = executeCount
-        )
+                buildId = buildId,
+                finished = false,
+                tag = tag ?: "",
+                subTag = subTag,
+                jobId = jobId ?: "",
+                executeCount = executeCount
+            )
         )
         return Result(true)
     }
@@ -96,16 +96,14 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("无效的构建ID")
         }
-        logMQEventDispatcher.dispatch(
-            LogStatusEvent(
+        buildLogPrintService.asyncDispatchEvent(LogStatusEvent(
             buildId = buildId,
             finished = finished,
             tag = tag ?: "",
             subTag = subTag,
             jobId = jobId ?: "",
             executeCount = executeCount
-        )
-        )
+        ))
         return Result(true)
     }
 }

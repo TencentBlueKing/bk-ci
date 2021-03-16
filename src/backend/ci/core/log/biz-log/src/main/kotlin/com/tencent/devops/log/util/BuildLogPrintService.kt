@@ -32,16 +32,27 @@ import com.tencent.devops.common.log.pojo.ILogEvent
 import com.tencent.devops.common.web.mq.EXTEND_RABBIT_TEMPLATE_NAME
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.RejectedExecutionException
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 import javax.annotation.Resource
 
-class LogMQEventDispatcher(
+class BuildLogPrintService(
     @Resource(name = EXTEND_RABBIT_TEMPLATE_NAME)
     private val rabbitTemplate: RabbitTemplate
 ) {
 
-    fun dispatch(event: ILogEvent) {
+    private val logExecutorService = ThreadPoolExecutor(
+        100,
+        100,
+        0L,
+        TimeUnit.MILLISECONDS,
+        LinkedBlockingQueue(10000)
+    )
+
+    private fun dispatchEvent(event: ILogEvent) {
         try {
-//            logger.info("[${event.buildId}] Dispatch the event")
             val eventType = event::class.java.annotations.find { s -> s is Event } as Event
             rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event) { message ->
                 // 事件中的变量指定
@@ -57,5 +68,17 @@ class LogMQEventDispatcher(
         }
     }
 
-    private val logger = LoggerFactory.getLogger(LogMQEventDispatcher::class.java)
+    fun asyncDispatchEvent(event: ILogEvent) {
+        try {
+            logExecutorService.execute {
+                dispatchEvent(event)
+            }
+        } catch (e: RejectedExecutionException) {
+            // 队列满时的处理逻辑
+
+            logger.error("[${event.buildId}] asyncDispatchEvent failed with queue tasks exceed the limit", e)
+        }
+    }
+
+    private val logger = LoggerFactory.getLogger(BuildLogPrintService::class.java)
 }

@@ -31,7 +31,7 @@ import com.tencent.devops.common.log.pojo.LogBatchEvent
 import com.tencent.devops.common.log.pojo.LogEvent
 import com.tencent.devops.common.log.pojo.LogStatusEvent
 import com.tencent.devops.log.service.LogService
-import com.tencent.devops.log.util.LogMQEventDispatcher
+import com.tencent.devops.log.util.BuildLogPrintService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -39,7 +39,7 @@ import org.springframework.stereotype.Component
 @Component
 class LogListener @Autowired constructor(
     private val logService: LogService,
-    private val logMQEventDispatcher: LogMQEventDispatcher
+    private val buildLogPrintService: BuildLogPrintService
 ) {
 
     fun logEvent(event: LogEvent) {
@@ -53,7 +53,7 @@ class LogListener @Autowired constructor(
             if (!result && event.retryTime >= 0) {
                 logger.warn("Retry to add the log event [${event.buildId}|${event.retryTime}]")
                 with(event) {
-                    logMQEventDispatcher.dispatch(
+                    buildLogPrintService.asyncDispatchEvent(
                         LogEvent(
                         buildId = buildId,
                         logs = logs,
@@ -77,7 +77,7 @@ class LogListener @Autowired constructor(
             if (!result && event.retryTime >= 0) {
                 logger.warn("Retry to add log batch event [${event.buildId}|${event.retryTime}]")
                 with(event) {
-                    logMQEventDispatcher.dispatch(
+                    buildLogPrintService.asyncDispatchEvent(
                         LogBatchEvent(
                         buildId = buildId,
                         logs = logs,
@@ -101,7 +101,7 @@ class LogListener @Autowired constructor(
             if (!result && event.retryTime >= 0) {
                 logger.warn("Retry to add the multi lines [${event.buildId}|${event.retryTime}]")
                 with(event) {
-                    logMQEventDispatcher.dispatch(
+                    buildLogPrintService.asyncDispatchEvent(
                         LogStatusEvent(
                             buildId = buildId,
                             finished = finished,
