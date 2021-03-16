@@ -27,7 +27,7 @@
 
 package com.tencent.devops.log.es
 
-import com.tencent.devops.log.util.LogMQEventDispatcher
+import com.tencent.devops.log.util.BuildLogPrintService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.WebAutoConfiguration
 import com.tencent.devops.log.client.LogClient
@@ -228,7 +228,7 @@ class ESAutoConfiguration : DisposableBean {
         @Autowired createIndexBeanV2: CreateIndexBeanV2,
         @Autowired logBeanV2: LogBeanV2,
         @Autowired redisOperation: RedisOperation,
-        @Autowired logMQEventDispatcher: LogMQEventDispatcher
+        @Autowired buildLogPrintService: BuildLogPrintService
     ): LogService {
         return LogServiceESImpl(
             logClient = logESClient,
@@ -237,7 +237,7 @@ class ESAutoConfiguration : DisposableBean {
             logTagService = logTagService,
             logBeanV2 = logBeanV2,
             createIndexBeanV2 = createIndexBeanV2,
-            logMQEventDispatcher = logMQEventDispatcher,
+            logMQEventDispatcher = buildLogPrintService,
             redisOperation = redisOperation
         )
     }

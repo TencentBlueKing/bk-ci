@@ -25,13 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.utils
+package com.tencent.devops.common.log.utils
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.log.api.print.ServiceLogPrintResource
 import com.tencent.devops.log.meta.Ansi
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.pojo.enums.LogType
+import org.slf4j.LoggerFactory
 
 class BuildLogPrinter(
     private val client: Client
@@ -45,24 +46,32 @@ class BuildLogPrinter(
         executeCount: Int,
         subTag: String? = null
     ) {
-        genLogPrintPrintResource().addLogLine(
-            buildId = buildId,
-            logMessage = genLogMessage(
-                message = message,
-                tag = tag,
-                subTag = subTag,
-                jobId = jobId,
-                logType = LogType.LOG,
-                executeCount = executeCount
+        try {
+            genLogPrintPrintResource().addLogLine(
+                buildId = buildId,
+                logMessage = genLogMessage(
+                    message = message,
+                    tag = tag,
+                    subTag = subTag,
+                    jobId = jobId,
+                    logType = LogType.LOG,
+                    executeCount = executeCount
+                )
             )
-        )
+        } catch (e: Exception) {
+            logger.error("[$buildId]|addLine error|message=$message", e)
+        }
     }
 
     fun addLines(buildId: String, logMessages: List<LogMessage>) {
-        genLogPrintPrintResource().addLogMultiLine(
-            buildId = buildId,
-            logMessages = logMessages
-        )
+        try {
+            genLogPrintPrintResource().addLogMultiLine(
+                buildId = buildId,
+                logMessages = logMessages
+            )
+        } catch (e: Exception) {
+            logger.error("[$buildId]|addLine error|logMessages=$logMessages", e)
+        }
     }
 
     fun addFoldStartLine(
@@ -136,14 +145,20 @@ class BuildLogPrinter(
         subTag: String? = null,
         jobId: String? = null,
         executeCount: Int?
-    ) = genLogPrintPrintResource().updateLogStatus(
-        buildId = buildId,
-        finished = finished,
-        tag = tag,
-        subTag = subTag,
-        jobId = jobId ?: "",
-        executeCount = executeCount
-    )
+    ) {
+        try {
+            genLogPrintPrintResource().updateLogStatus(
+                buildId = buildId,
+                finished = finished,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId ?: "",
+                executeCount = executeCount
+            )
+        } catch (e: Exception) {
+            logger.error("[$buildId]|updateLogStatus error|finished=$finished", e)
+        }
+    }
 
     fun stopLog(
         buildId: String,
@@ -181,5 +196,9 @@ class BuildLogPrinter(
 
     private fun genLogPrintPrintResource(): ServiceLogPrintResource {
         return client.get(ServiceLogPrintResource::class)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(BuildLogPrinter::class.java)
     }
 }

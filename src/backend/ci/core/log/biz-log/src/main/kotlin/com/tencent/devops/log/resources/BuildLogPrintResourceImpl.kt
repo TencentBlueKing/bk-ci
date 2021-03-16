@@ -29,10 +29,13 @@ package com.tencent.devops.log.resources
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.log.pojo.LogEvent
+import com.tencent.devops.common.log.pojo.LogStatusEvent
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.print.BuildLogPrintResource
 import com.tencent.devops.common.log.pojo.message.LogMessage
-import com.tencent.devops.log.utils.BuildLogPrinter
+import com.tencent.devops.log.meta.Ansi
+import com.tencent.devops.log.util.BuildLogPrintService
 import org.springframework.beans.factory.annotation.Autowired
 
 /**
@@ -41,14 +44,14 @@ import org.springframework.beans.factory.annotation.Autowired
  */
 @RestResource
 class BuildLogPrintResourceImpl @Autowired constructor(
-    private val buildLogPrinter: BuildLogPrinter
+    private val buildLogPrintService: BuildLogPrintService
 ) : BuildLogPrintResource {
 
     override fun addLogLine(buildId: String, logMessage: LogMessage): Result<Boolean> {
         if (buildId.isBlank()) {
             throw ParamBlankException("无效的构建ID")
         }
-        buildLogPrinter.addLines(buildId, listOf(logMessage))
+        buildLogPrintService.asyncDispatchEvent(LogEvent(buildId, listOf(logMessage)))
         return Result(true)
     }
 
@@ -56,14 +59,10 @@ class BuildLogPrintResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("无效的构建ID")
         }
-        buildLogPrinter.addRedLine(
+        buildLogPrintService.asyncDispatchEvent(LogEvent(
             buildId = buildId,
-            message = logMessage.message,
-            tag = logMessage.tag,
-            subTag = logMessage.subTag,
-            jobId = logMessage.jobId,
-            executeCount = logMessage.executeCount ?: 1
-        )
+            logs = listOf(logMessage.copy(message = Ansi().bold().fgRed().a(logMessage.message).reset().toString()))
+        ))
         return Result(true)
     }
 
@@ -71,14 +70,10 @@ class BuildLogPrintResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("无效的构建ID")
         }
-        buildLogPrinter.addYellowLine(
+        buildLogPrintService.asyncDispatchEvent(LogEvent(
             buildId = buildId,
-            message = logMessage.message,
-            tag = logMessage.tag,
-            subTag = logMessage.subTag,
-            jobId = logMessage.jobId,
-            executeCount = logMessage.executeCount ?: 1
-        )
+            logs = listOf(logMessage.copy(message = Ansi().bold().fgYellow().a(logMessage.message).reset().toString()))
+        ))
         return Result(true)
     }
 
@@ -86,7 +81,7 @@ class BuildLogPrintResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("无效的构建ID")
         }
-        buildLogPrinter.addLines(buildId, logMessages)
+        buildLogPrintService.asyncDispatchEvent(LogEvent(buildId, logMessages))
         return Result(true)
     }
 
@@ -100,14 +95,14 @@ class BuildLogPrintResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("无效的构建ID")
         }
-        buildLogPrinter.updateLogStatus(
+        buildLogPrintService.asyncDispatchEvent(LogStatusEvent(
             buildId = buildId,
             finished = false,
             tag = tag ?: "",
             subTag = subTag,
             jobId = jobId ?: "",
             executeCount = executeCount
-        )
+        ))
         return Result(true)
     }
 
@@ -122,14 +117,14 @@ class BuildLogPrintResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("无效的构建ID")
         }
-        buildLogPrinter.updateLogStatus(
+        buildLogPrintService.asyncDispatchEvent(LogStatusEvent(
             buildId = buildId,
             finished = finished,
             tag = tag ?: "",
             subTag = subTag,
             jobId = jobId ?: "",
             executeCount = executeCount
-        )
+        ))
         return Result(true)
     }
 }

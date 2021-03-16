@@ -30,7 +30,7 @@ package com.tencent.devops.process.engine.atom
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.log.utils.BuildLogPrinter
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
