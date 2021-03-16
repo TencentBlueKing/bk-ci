@@ -148,7 +148,8 @@ class GitCITriggerService @Autowired constructor(
             branch = gitRequestEvent.branch,
             objectKind = gitRequestEvent.objectKind,
             description = triggerBuildReq.customCommitMsg,
-            triggerUser = gitRequestEvent.userId
+            triggerUser = gitRequestEvent.userId,
+            sourceGitProjectId = gitRequestEvent.sourceGitProjectId
         )
         dispatchEvent(GitCIRequestTriggerEvent(
             pipeline = buildPipeline,
@@ -335,7 +336,8 @@ class GitCITriggerService @Autowired constructor(
                         branch = gitRequestEvent.branch,
                         objectKind = gitRequestEvent.objectKind,
                         description = gitRequestEvent.commitMsg,
-                        triggerUser = gitRequestEvent.userId
+                        triggerUser = gitRequestEvent.userId,
+                        sourceGitProjectId = gitRequestEvent.sourceGitProjectId
                     )
                     dispatchEvent(GitCIRequestTriggerEvent(
                         pipeline = buildPipeline,
