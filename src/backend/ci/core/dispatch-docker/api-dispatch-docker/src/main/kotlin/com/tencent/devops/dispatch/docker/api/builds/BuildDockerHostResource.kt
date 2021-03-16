@@ -29,9 +29,6 @@ package com.tencent.devops.dispatch.docker.api.builds
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.mq.alert.AlertLevel
-import com.tencent.devops.dispatch.pojo.ContainerInfo
-import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
-import com.tencent.devops.dispatch.docker.pojo.DockerHostInfo
 import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import io.swagger.annotations.Api

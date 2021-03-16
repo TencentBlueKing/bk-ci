@@ -32,9 +32,6 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.common.web.mq.alert.AlertUtils
 import com.tencent.devops.dispatch.docker.api.builds.BuildDockerHostResource
-import com.tencent.devops.dispatch.pojo.ContainerInfo
-import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
-import com.tencent.devops.dispatch.docker.pojo.DockerHostInfo
 import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
 import com.tencent.devops.dispatch.docker.service.DispatchDockerService
 import com.tencent.devops.dispatch.docker.service.DockerHostBuildService

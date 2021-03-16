@@ -49,8 +49,7 @@ class NoBuildClusterConfiguration @Autowired constructor(
     val dockerHostBuildAgentLessService: DockerHostBuildAgentLessService
 ) : SchedulingConfigurer {
 
-    override fun configureTasks(
-        scheduledTaskRegistrar: ScheduledTaskRegistrar) {
+    override fun configureTasks(scheduledTaskRegistrar: ScheduledTaskRegistrar) {
         // 5分钟清理一次已经退出的容器
         scheduledTaskRegistrar.addFixedRateTask(
             IntervalTask(

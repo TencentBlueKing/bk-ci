@@ -40,7 +40,7 @@ import org.slf4j.LoggerFactory
 abstract class AbstractDockerHostBuildService constructor(
     dockerHostConfig: DockerHostConfig,
     private val dockerHostBuildApi: DockerHostBuildResourceApi
-){
+) {
 
     private val logger = LoggerFactory.getLogger(AbstractDockerHostBuildService::class.java)
 
