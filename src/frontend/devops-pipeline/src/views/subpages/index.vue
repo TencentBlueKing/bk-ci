@@ -19,6 +19,7 @@
                     </template>
                     <i v-else class="devops-icon icon-circle-2-1 spin-icon" />
                 </bread-crumb>
+                <version-sideslider v-if="$route.name === 'pipelinesEdit'"></version-sideslider>
             </div>
             <template v-if="$route.name === 'pipelinesPreview'" slot="right">
                 <router-link :to="{ name: 'pipelinesEdit' }"><bk-button>{{ $t('edit') }}</bk-button></router-link>
@@ -96,6 +97,7 @@
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
     import showTooltip from '@/components/common/showTooltip'
     import exportDialog from '@/components/ExportDialog'
+    import versionSideslider from '@/components/VersionSideslider'
     export default {
         components: {
             innerHeader,
@@ -104,7 +106,8 @@
             showTooltip,
             BreadCrumbItem,
             ReviewDialog,
-            exportDialog
+            exportDialog,
+            versionSideslider
         },
         mixins: [pipelineOperateMixin],
         data () {

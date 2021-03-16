@@ -19,6 +19,7 @@
     "add": "Add",
     "copy": "Duplicate",
     "save": "Save",
+    "at": "At",
     "rename": "Rename",
     "delete": "Delete",
     "confirm": "Confirm",
@@ -401,7 +402,8 @@
         "rebuildSuc": "Rebuild successfully",
         "rebuildFail": "Rebuild failed",
         "stopSuc": "cancel successfully",
-        "stopFail": "cancel failed"
+        "stopFail": "cancel failed",
+        "loadPipelineVersionSuccess": "load version {version} successed，please confirm pipeline content"
     },
     "history": {
         "logEmpty": "Log is empty",
