@@ -38,7 +38,8 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserPipelineSettingResourceImpl @Autowired constructor(
-    private val pipelineSettingFacadeService: PipelineSettingFacadeService
+    private val pipelineSettingFacadeService: PipelineSettingFacadeService,
+    private val pipelineSettingService: PipelineSettingService
 ) : UserPipelineSettingResource {
     override fun saveSetting(userId: String, setting: PipelineSetting): Result<String> {
         return Result(pipelineSettingFacadeService.saveSetting(userId, setting))

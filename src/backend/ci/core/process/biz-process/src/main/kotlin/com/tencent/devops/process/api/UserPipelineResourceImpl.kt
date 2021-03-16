@@ -29,24 +29,19 @@ package com.tencent.devops.process.api
 
 import com.tencent.devops.audit.api.ServiceAuditResource
 import com.tencent.devops.audit.api.pojo.Audit
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineResource
 import com.tencent.devops.process.engine.pojo.PipelineInfo
-import com.tencent.devops.process.engine.service.PipelineInfoService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.engine.service.PipelineVersionService
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -88,8 +83,7 @@ class UserPipelineResourceImpl @Autowired constructor(
     private val pipelineRemoteAuthService: PipelineRemoteAuthService,
     private val pipelinePermissionService: PipelinePermissionService,
     private val stageTagService: StageTagService,
-    private val pipelineInfoFacadeService: PipelineInfoFacadeService
-    private val pipelineInfoService: PipelineInfoService,
+    private val pipelineInfoFacadeService: PipelineInfoFacadeService,
     private val client: Client,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineVersionService: PipelineVersionService
@@ -150,7 +144,6 @@ class UserPipelineResourceImpl @Autowired constructor(
                 userId = userId, projectId = projectId, model = pipeline, channelCode = ChannelCode.BS
             )
         )
-        val pipelineId = PipelineId(pipelineService.createPipeline(userId, projectId, pipeline, ChannelCode.BS))
         val audit = Audit(AuthResourceType.PIPELINE_DEFAULT.value, pipelineId.id, pipeline.name, userId, "create", "新增流水线", projectId)
         client.get(ServiceAuditResource::class).create(audit)
         return Result(pipelineId)
@@ -287,10 +280,8 @@ class UserPipelineResourceImpl @Autowired constructor(
         checkParam(userId, projectId)
         checkPipelineId(pipelineId)
         pipelineInfoFacadeService.deletePipeline(userId, projectId, pipelineId, ChannelCode.BS)
-        val pipeline = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId,ChannelCode.BS)
         val pipeline = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, ChannelCode.BS)
                 ?: throw NotFoundException("指定的流水线不存在")
-        pipelineService.deletePipeline(userId, projectId, pipelineId, ChannelCode.BS)
         val audit = Audit(AuthResourceType.PIPELINE_DEFAULT.value, pipelineId, pipeline.pipelineName, userId, "delete", "删除流水线", projectId)
         client.get(ServiceAuditResource::class).create(audit)
         return Result(true)

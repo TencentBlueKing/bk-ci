@@ -166,6 +166,7 @@ class PipelineRepositoryService constructor(
                 maxPipelineResNum = pipelineSetting?.maxPipelineResNum
             )
         } else {
+            val version = 1
             create(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -175,7 +176,8 @@ class PipelineRepositoryService constructor(
                 canManualStartup = canManualStartup,
                 canElementSkip = canElementSkip,
                 buildNo = buildNo,
-                modelTasks = modelTasks
+                modelTasks = modelTasks,
+                version = version
             )
         }
     }
@@ -508,7 +510,8 @@ class PipelineRepositoryService constructor(
         canManualStartup: Boolean,
         canElementSkip: Boolean,
         buildNo: BuildNo?,
-        modelTasks: Set<PipelineModelTask>
+        modelTasks: Set<PipelineModelTask>,
+        version: Int
     ): DeployPipelineResult {
 
         val taskCount: Int = model.taskCount()

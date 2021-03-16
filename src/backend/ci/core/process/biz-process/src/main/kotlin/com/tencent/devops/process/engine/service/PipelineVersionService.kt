@@ -44,8 +44,6 @@ import com.tencent.devops.process.jmx.pipeline.PipelineBean
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
-import com.tencent.devops.process.service.PipelineUserService
-import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.label.PipelineGroupVersionService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -60,9 +58,7 @@ class PipelineVersionService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineRepositoryVersionService: PipelineRepositoryVersionService,
     private val pipelinePermissionService: PipelinePermissionService,
-    private val pipelineGroupService: PipelineGroupService,
     private val pipelineGroupVersionService: PipelineGroupVersionService,
-    private val pipelineUserService: PipelineUserService,
     private val pipelineBean: PipelineBean,
     private val processJmxApi: ProcessJmxApi,
     private val dslContext: DSLContext,
