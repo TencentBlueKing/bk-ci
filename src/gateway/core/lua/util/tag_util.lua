@@ -41,15 +41,15 @@ function _M:get_tag(ns_config)
                 ngx.log(ngx.ERR, "tag failed to new redis ", err)
             else
                 -- 从redis获取tag
-                local redRes, err = red.hget(red_key, devops_project)
+                local redRes, err = red:hget(red_key, devops_project)
                 if not redRes then
                     ngx.log(ngx.ERR, "tag failed to get redis result: ", err)
                     tag_cache:hset(red_key, devops_project, default_tag)
                 else
                     if redRes == ngx.null then
-                        tag_cache:hset(red_key, devops_project, default_tag)
+                        tag_cache:set(devops_project, default_tag, 30)
                     else
-                        tag_cache:hset(red_key, devops_project, redRes)
+                        tag_cache:set(devops_project, redRes, 30)
                         tag = redRes
                     end
                 end
