@@ -104,7 +104,6 @@ class LogServiceESImpl constructor(
 
     override fun pipelineFinish(event: PipelineBuildFinishBroadCastEvent) {
         with(event) {
-            logger.info("[$projectId|$pipelineId|$buildId] build finish")
             indexService.flushLineNum2DB(buildId)
         }
     }
@@ -151,7 +150,6 @@ class LogServiceESImpl constructor(
 
     override fun updateLogStatus(event: LogStatusEvent) {
         with(event) {
-            logger.info("[$buildId|$tag|$subTag|$jobId|$executeCount|$finished] Start to update log status")
             logStatusService.finish(
                 buildId = buildId,
                 tag = tag,
@@ -727,7 +725,6 @@ class LogServiceESImpl constructor(
         jobId: String? = null,
         executeCount: Int?
     ): QueryLogs {
-        logger.info("[$index|$buildId|$tag|$subTag|$jobId|$executeCount] doQueryInitLogs")
         val logStatus = if (tag == null && jobId != null) getLogStatus(
             buildId = buildId,
             tag = jobId,
@@ -764,7 +761,7 @@ class LogServiceESImpl constructor(
                 jobId = jobId,
                 executeCount = executeCount
             )
-            logger.info("Get the query builder: $boolQueryBuilder")
+            logger.info("[$index|$buildId|$tag|$subTag|$jobId|$executeCount] doQueryInitLogs get the query builder: $boolQueryBuilder")
 
             val searchRequest = SearchRequest(index)
                 .source(
@@ -825,7 +822,6 @@ class LogServiceESImpl constructor(
         jobId: String?,
         executeCount: Int?
     ): QueryLogs {
-        logger.info("[$index|$buildId|$tag|$subTag|$jobId|$executeCount] doQueryLogsAfterLine")
         val logStatus = if (tag == null && jobId != null) {
             getLogStatus(
                 buildId = buildId,
@@ -867,6 +863,7 @@ class LogServiceESImpl constructor(
                 executeCount = executeCount
             ).must(QueryBuilders.rangeQuery("lineNo").gte(start))
 
+            logger.info("[$index|$buildId|$tag|$subTag|$jobId|$executeCount] doQueryLogsAfterLine get the query builder: $boolQueryBuilder")
             val searchRequest = SearchRequest(index)
                 .source(
                     SearchSourceBuilder()
@@ -946,7 +943,6 @@ class LogServiceESImpl constructor(
         jobId: String?,
         executeCount: Int?
     ): QueryLogs {
-        logger.info("[$index|$buildId|$tag|$subTag|$jobId|$executeCount] doQueryLogsBeforeLine")
         val logStatus = if (tag == null && jobId != null) {
             getLogStatus(
                 buildId = buildId,
@@ -1000,6 +996,7 @@ class LogServiceESImpl constructor(
             ).must(QueryBuilders.rangeQuery("lineNo").gte(start))
                 .must(QueryBuilders.rangeQuery("lineNo").lte(end))
 
+            logger.info("[$index|$buildId|$tag|$subTag|$jobId|$executeCount] doQueryLogsBeforeLine get the query builder: $boolQueryBuilder")
             val searchRequest = SearchRequest(index)
                 .source(
                     SearchSourceBuilder()
