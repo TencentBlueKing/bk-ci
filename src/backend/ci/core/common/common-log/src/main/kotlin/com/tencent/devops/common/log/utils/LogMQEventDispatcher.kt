@@ -29,9 +29,12 @@ package com.tencent.devops.common.log.utils
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.log.pojo.ILogEvent
+import com.tencent.devops.common.log.pojo.LogEvent
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.mq.EXTEND_RABBIT_TEMPLATE_NAME
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
+import org.springframework.beans.factory.annotation.Value
 import javax.annotation.Resource
 
 class LogMQEventDispatcher(
@@ -39,14 +42,17 @@ class LogMQEventDispatcher(
     private val rabbitTemplate: RabbitTemplate
 ) {
 
+    @Value("\${log.limit.lineMaxLength:#{null}}")
+    private val lineMaxLength: Int? = null
+
     fun dispatch(event: ILogEvent) {
         try {
-//            logger.info("[${event.buildId}] Dispatch the event")
-            val eventType = event::class.java.annotations.find { s -> s is Event } as Event
-            rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event) { message ->
+            val fixedEvent = if (event is LogEvent) getFixedLogEvent(event) else event
+            val eventType = fixedEvent::class.java.annotations.find { s -> s is Event } as Event
+            rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, fixedEvent) { message ->
                 // 事件中的变量指定
-                if (event.delayMills > 0) {
-                    message.messageProperties.setHeader("x-delay", event.delayMills)
+                if (fixedEvent.delayMills > 0) {
+                    message.messageProperties.setHeader("x-delay", fixedEvent.delayMills)
                 } else if (eventType.delayMills > 0) { // 事件类型固化默认值
                     message.messageProperties.setHeader("x-delay", eventType.delayMills)
                 }
@@ -55,6 +61,13 @@ class LogMQEventDispatcher(
         } catch (ignored: Throwable) {
             logger.error("Fail to dispatch the event($event)", ignored)
         }
+    }
+
+    private fun getFixedLogEvent(logEvent: LogEvent): LogEvent {
+        val fixedLogs = logEvent.logs.map {
+            it.copy(message = CommonUtils.interceptStringInLength(it.message, lineMaxLength ?: 32766) ?: "")
+        }.toList()
+        return logEvent.copy(logs = fixedLogs)
     }
 
     private val logger = LoggerFactory.getLogger(LogMQEventDispatcher::class.java)
