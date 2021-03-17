@@ -35,8 +35,8 @@ import com.tencent.devops.common.service.MicroServiceApplication
  * Powered By Tencent
  */
 @MicroService
-class Application
+class QualityApplication
 
 fun main(args: Array<String>) {
-    MicroServiceApplication.run(Application::class, args)
+    MicroServiceApplication.run(QualityApplication::class, args)
 }

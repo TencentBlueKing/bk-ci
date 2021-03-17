@@ -25,17 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory
+package com.tencent.devops.store
 
-import com.tencent.devops.artifactory.service.impl.DiskArchiveFileServiceImpl
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.context.annotation.Primary
+import com.tencent.devops.common.service.MicroService
+import com.tencent.devops.common.service.MicroServiceApplication
+import org.springframework.context.annotation.ComponentScan
 
-@Configuration
-class SampleArtifactoryServiceConfig {
+@MicroService
+@ComponentScan("com.tencent.devops.store")
+class StoreApplication
 
-    @Bean
-    @Primary
-    fun archiveFileService() = DiskArchiveFileServiceImpl()
+fun main(args: Array<String>) {
+    MicroServiceApplication.run(StoreApplication::class, args)
 }

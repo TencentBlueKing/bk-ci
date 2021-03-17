@@ -25,18 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost
+package com.tencent.devops.websocket
 
 import com.tencent.devops.common.service.MicroService
 import com.tencent.devops.common.service.MicroServiceApplication
+import org.springframework.context.annotation.ComponentScan
 
-/**
- *
- * Powered By Tencent
- */
+@ComponentScan("com.tencent.devops.websocket")
 @MicroService
-class Application
+class WebSocketApplication
 
 fun main(args: Array<String>) {
-    MicroServiceApplication.run(Application::class, args)
+    MicroServiceApplication.run(WebSocketApplication::class, args)
 }
