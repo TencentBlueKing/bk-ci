@@ -85,7 +85,8 @@ class DockerHostBuildAgentLessService(
                 httpDockerCli.pullImageCmd(imageName)
                     .withAuthConfig(authConfig).exec(PullImageResultCallback()).awaitCompletion()
             } catch (t: Throwable) {
-                logger.warn("[${dockerHostBuildInfo.buildId}]|Fail to pull the image $imageName of build ${dockerHostBuildInfo.buildId}", t)
+                logger.warn("[${dockerHostBuildInfo.buildId}]|Fail to pull the image $imageName of build" +
+                        " ${dockerHostBuildInfo.buildId}", t)
             }
 
             return createDockerRun(

@@ -64,9 +64,15 @@ abstract class AbstractDockerHostBuildService constructor(
         .readTimeout(300000)
         .build()
 
-    val httpDockerCli: DockerClient = DockerClientBuilder.getInstance(config).withDockerHttpClient(httpClient).build()
+    val httpDockerCli: DockerClient = DockerClientBuilder
+        .getInstance(config)
+        .withDockerHttpClient(httpClient)
+        .build()
 
-    val httpLongDockerCli: DockerClient = DockerClientBuilder.getInstance(config).withDockerHttpClient(longHttpClient).build()
+    val httpLongDockerCli: DockerClient = DockerClientBuilder
+        .getInstance(config)
+        .withDockerHttpClient(longHttpClient)
+        .build()
 
     abstract fun createContainer(dockerHostBuildInfo: DockerHostBuildInfo): String
 
@@ -86,7 +92,8 @@ abstract class AbstractDockerHostBuildService constructor(
         } catch (e: NotModifiedException) {
             logger.error("[$buildId]| Stop the container failed, containerId: $containerId already stopped.")
         } catch (ignored: Throwable) {
-            logger.error("[$buildId]| Stop the container failed, containerId: $containerId, error msg: $ignored", ignored)
+            logger.error("[$buildId]| Stop the container failed, containerId: $containerId, " +
+                    "error msg: $ignored", ignored)
         }
 
         try {

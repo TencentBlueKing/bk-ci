@@ -46,13 +46,15 @@ class AgentLessDockerHostResourceImpl @Autowired constructor(
             logger.warn("Create agentLess container, dockerHostBuildInfo: $dockerHostBuildInfo")
             Result(dockerHostBuildAgentLessService.createContainer(dockerHostBuildInfo))
         } catch (e: ContainerException) {
-            logger.error("Create container failed, rollback build. buildId: ${dockerHostBuildInfo.buildId}, vmSeqId: ${dockerHostBuildInfo.vmSeqId}")
+            logger.error("Create container failed, rollback build. buildId: ${dockerHostBuildInfo.buildId}," +
+                    " vmSeqId: ${dockerHostBuildInfo.vmSeqId}")
             Result(e.errorCodeEnum.errorCode, "构建环境启动失败: ${e.message}", "")
         }
     }
 
     override fun endBuild(dockerHostBuildInfo: DockerHostBuildInfo): Result<Boolean> {
-        logger.warn("[${dockerHostBuildInfo.buildId}] | Stop the container, containerId: ${dockerHostBuildInfo.containerId}")
+        logger.warn("[${dockerHostBuildInfo.buildId}] | Stop the container, " +
+                "containerId: ${dockerHostBuildInfo.containerId}")
         dockerHostBuildAgentLessService.stopContainer(dockerHostBuildInfo)
 
         return Result(true)
