@@ -43,6 +43,9 @@ class BuildLessStopListener(
 
     fun handleMessage(event: PipelineBuildLessDockerShutdownEvent) {
         logger.info("[${event.buildId}]| Stop container(${event.dockerContainerId})")
-        dockerHostBuildAgentLessService.stopContainer(event.buildId, event.dockerContainerId)
+        dockerHostBuildAgentLessService.stopContainer(
+            containerId = event.dockerContainerId,
+            buildId = event.buildId
+        )
     }
 }

@@ -35,6 +35,21 @@ BEGIN
         ALTER TABLE T_DISPATCH_THIRDPARTY_AGENT_BUILD ADD INDEX `IDX_AGENTID_STATUS_UPDATE` (`AGENT_ID`, `STATUS`, `UPDATED_TIME`);
     END IF;
 
+        IF EXISTS(SELECT 1
+              FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_DISPATCH_PIPELINE_DOCKER_IP_INFO'
+                AND COLUMN_NAME = 'CLUSTER_NAME') THEN
+        IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_DISPATCH_PIPELINE_DOCKER_IP_INFO'
+                        AND COLUMN_NAME = 'CLUSTER_NAME'
+                        AND COLUMN_TYPE = 'varchar(64)') THEN
+            ALTER TABLE T_DISPATCH_PIPELINE_DOCKER_IP_INFO MODIFY COLUMN CLUSTER_NAME varchar(64) DEFAULT 'COMMON';
+        END IF;
+    END IF;
+
     COMMIT;
 
 END <CI_UBF>
