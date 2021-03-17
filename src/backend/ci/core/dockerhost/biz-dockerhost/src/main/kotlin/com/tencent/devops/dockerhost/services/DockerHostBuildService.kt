@@ -218,13 +218,13 @@ class DockerHostBuildService(
                     // logger.info("${dockerBuildInfo.buildId}|${dockerBuildInfo.vmSeqId} containerName: ${container.names[0]}")
                     val containerName = container.names[0]
                     if (containerName.contains(getDockerRunStopPattern(dockerHostBuildInfo))) {
-                        logger.info("${dockerHostBuildInfo.buildId}|${dockerHostBuildInfo.vmSeqId} stop dockerRun container," +
-                                " containerId: ${container.id}")
+                        logger.info("${dockerHostBuildInfo.buildId}|${dockerHostBuildInfo.vmSeqId} " +
+                                "stop dockerRun container, containerId: ${container.id}")
                         httpLongDockerCli.stopContainerCmd(container.id).withTimeout(15).exec()
                     }
                 } catch (e: Exception) {
-                    logger.error("${dockerHostBuildInfo.buildId}|${dockerHostBuildInfo.vmSeqId} Stop dockerRun container failed," +
-                            " containerId: ${container.id}", e)
+                    logger.error("${dockerHostBuildInfo.buildId}|${dockerHostBuildInfo.vmSeqId} " +
+                            "Stop dockerRun container failed, containerId: ${container.id}", e)
                 }
             }
         }
