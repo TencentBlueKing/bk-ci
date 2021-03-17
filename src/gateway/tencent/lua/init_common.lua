@@ -39,6 +39,7 @@ itloginUtil = require("util.itlogin_util")
 urlUtil = require("util.url_util")
 tagUtil = require("util.tag_util")
 projectUtil = require("util.project_util")
+loadBalanceUtil = require("util.loadbalance_util")
 
 math.randomseed(ngx.now()*1000)
 uuid.seed()
