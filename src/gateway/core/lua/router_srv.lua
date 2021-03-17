@@ -115,7 +115,6 @@ if target == nil then
     end
 
     if target == nil then
-        ngx.log(ngx.ERR, "DNS answer didn't include ip or a port , service :" .. service_name)
         ngx.exit(503)
     end
 end
