@@ -56,8 +56,7 @@
                 if (this.url) {
                     const url = this.handleDeepValue(/\$\{([^\}]+)\}/gim, this.url)
                     this.$ajax.get(url).then((res) => {
-                        const tipStr = this.getResponseData(res, this.dataPath, '[object String]') || ''
-                        if (typeof tipStr !== 'string') throw new Error(this.$t('editPage.tipError'))
+                        const tipStr = this.getResponseData(res, this.dataPath, '')
                         this.handleData(tipStr)
                     }).catch((err) => {
                         console.error(err.message || err)
