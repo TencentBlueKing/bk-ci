@@ -64,7 +64,7 @@ export default {
         }
     },
     methods: {
-        getResponseData (response, dataPath = 'data.records') {
+        getResponseData (response, dataPath = 'data.records', resultType = '[object Array]') {
             try {
                 switch (true) {
                     case Array.isArray(response.data):
@@ -80,7 +80,7 @@ export default {
                             result = result[key]
                             pos++
                         }
-                        if (pos === path.length && Array.isArray(result)) {
+                        if (pos === path.length && Object.prototype.toString.call(result) === resultType) {
                             return result
                         } else {
                             throw Error(this.$t('editPage.failToGetData'))
