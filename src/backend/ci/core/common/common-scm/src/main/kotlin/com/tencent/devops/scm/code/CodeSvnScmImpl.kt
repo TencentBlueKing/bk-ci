@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -45,6 +46,7 @@ import org.tmatesoft.svn.core.SVNLogEntry
 import org.tmatesoft.svn.core.SVNNodeKind
 import org.tmatesoft.svn.core.io.SVNRepository
 
+@Suppress("ALL")
 class CodeSvnScmImpl constructor(
     override val projectName: String,
     override val branchName: String?,
@@ -129,7 +131,8 @@ class CodeSvnScmImpl constructor(
     }
 
     override fun addWebHook(hookUrl: String) {
-        logger.info("[${svnConfig.apiKey}|${svnConfig.apiUrl}|${svnConfig.webhookApiUrl}|${svnConfig.svnHookUrl}] Start to add the webhook for the repo $projectName")
+        logger.info("[$hookUrl|${svnConfig.apiUrl}|${svnConfig.webhookApiUrl}|${svnConfig.svnHookUrl}] " +
+            "|AddWebHookSVN|repo=$projectName")
         try {
             val hooks = SVNApi.getWebhooks(svnConfig, url)
             val addHooks = if (hooks.isEmpty()) {
@@ -163,11 +166,9 @@ class CodeSvnScmImpl constructor(
         context: String,
         description: String,
         block: Boolean
-    ) {
-    }
+    ) = Unit
 
-    override fun addMRComment(mrId: Long, comment: String) {
-    }
+    override fun addMRComment(mrId: Long, comment: String) = Unit
 
     override fun lock(repoName: String, applicant: String, subpath: String) {
         logger.info("Start to lock the repo $repoName")

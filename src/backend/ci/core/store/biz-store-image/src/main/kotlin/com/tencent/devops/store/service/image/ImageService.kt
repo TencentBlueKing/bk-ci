@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -118,6 +119,7 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import kotlin.math.ceil
 
+@Suppress("ALL")
 @RefreshScope
 @Service
 abstract class ImageService @Autowired constructor() {
@@ -206,7 +208,6 @@ abstract class ImageService @Autowired constructor() {
             totalPages = if (validPageSize > 0) ceil(count * 1.0 / validPageSize).toInt() else -1,
             records = imageVersionList
         )
-        logger.info("$interfaceName:getImageVersionListByCode:Output:Page($count,$validPage,$validPageSize,imageVersionList.size=${imageVersionList.size})")
         return Result(pageObj)
     }
 
@@ -316,7 +317,13 @@ abstract class ImageService @Autowired constructor() {
             val statistic = imageStatisticData?.get(imageCode)
             val members = memberData?.get(imageCode)
 
-            val installFlag = generateInstallFlag(it[KEY_IMAGE_FEATURE_PUBLIC_FLAG] as Boolean, members, userId, visibleList, userDeptList)
+            val installFlag = generateInstallFlag(
+                defaultFlag = it[KEY_IMAGE_FEATURE_PUBLIC_FLAG] as Boolean,
+                members = members,
+                userId = userId,
+                visibleList = visibleList,
+                userDeptList = userDeptList
+            )
             val classifyId = it[KEY_CLASSIFY_ID] as String
             val (imageSizeNum, imageSize) = getImageSizeInfoByStr(it.get(KEY_IMAGE_SIZE) as String)
             results.add(
@@ -350,7 +357,10 @@ abstract class ImageService @Autowired constructor() {
         return results
     }
 
-    abstract fun batchGetVisibleDept(imageCodeList: List<String>, image: StoreTypeEnum): HashMap<String, MutableList<Int>>?
+    abstract fun batchGetVisibleDept(
+        imageCodeList: List<String>,
+        image: StoreTypeEnum
+    ): HashMap<String, MutableList<Int>>?
 
     private fun getDefaultDescTypeBySortType(sortType: MarketImageSortTypeEnum?): Boolean {
         return when (sortType) {
@@ -382,10 +392,8 @@ abstract class ImageService @Autowired constructor() {
         pageSize: Int?,
         interfaceName: String? = "Anon interface"
     ): Result<MarketImageResp> {
-        logger.info("$interfaceName:searchImage:Input:($userId,$keyword,$imageSourceType,$classifyCode,$categoryCode,$labelCode,$score,$sortType,$page,$pageSize)")
         // 获取用户组织架构
         val userDeptList = storeUserService.getUserDeptList(userId)
-        logger.info("$interfaceName:searchImage:Inner:userDeptList=$userDeptList")
         val result = MarketImageResp(
             count = count(
                 userId = userId,
@@ -632,7 +640,6 @@ abstract class ImageService @Autowired constructor() {
             totalPages = if (validPageSize > 0) ceil(count * 1.0 / validPageSize).toInt() else -1,
             records = myImageList
         )
-        logger.info("$interfaceName:getMyImageList:Output:Page($validPage:$validPageSize:$count:myImageList.size=${myImageList.size})")
         return Result(pageObj)
     }
 
@@ -662,7 +669,6 @@ abstract class ImageService @Autowired constructor() {
         imageVersion: String?,
         interfaceName: String? = "Anon interface"
     ): ImageRepoInfo {
-        logger.info("$interfaceName:getImageRepoInfoByCodeAndVersion:Input:($userId,$projectCode,$pipelineId,$buildId,$imageCode,$imageVersion)")
         // 区分是否为调试项目
         val imageStatusList = imageCommonService.generateImageStatusList(imageCode, projectCode)
         val imageRecords =
@@ -670,13 +676,13 @@ abstract class ImageService @Autowired constructor() {
                 dslContext = dslContext,
                 imageCode = imageCode,
                 imageStatusSet = imageStatusList.toSet(),
-                baseVersion = imageVersion?.replace("*", "")
+                baseVersion = imageVersion
             )
         imageRecords?.sortWith(Comparator { o1, o2 ->
             ImageUtil.compareVersion(o2.get(KEY_IMAGE_VERSION) as String?, o1.get(KEY_IMAGE_VERSION) as String?)
         })
         val latestImage = imageRecords?.get(0)
-        val imageRepoInfo = if (null == latestImage) {
+        return if (null == latestImage) {
             // 运行时异常情况兜底，通知管理员
             val titleParams = mutableMapOf<String, String>()
             titleParams["userId"] = userId
@@ -701,10 +707,6 @@ abstract class ImageService @Autowired constructor() {
         } else {
             getImageRepoInfoByRecord(latestImage)
         }
-        with(imageRepoInfo) {
-            logger.info("getImageRepoInfoByCodeAndVersion:Output($sourceType,$repoUrl,$repoName,$repoTag,$ticketId,$ticketProject)")
-        }
-        return imageRepoInfo
     }
 
     fun getSelfDevelopPublicImages(
@@ -712,11 +714,9 @@ abstract class ImageService @Autowired constructor() {
     ): List<ImageRepoInfo> {
         logger.info("$interfaceName:Input()")
         val records = imageDao.listRunnableSelfDevelopPublicImages(dslContext)
-        val resultList = records?.map {
+        return records?.map {
             getImageRepoInfoByRecord(it)
         } ?: emptyList()
-        logger.info("$interfaceName:Output(resultList.size=${resultList.size},${resultList.map { it.repoUrl + "/" + it.repoName + ":" + it.repoTag }})")
-        return resultList
     }
 
     @Value("\${store.defaultImageSourceType}")
@@ -794,9 +794,9 @@ abstract class ImageService @Autowired constructor() {
         interfaceName: String? = "Anon interface"
     ): ImageDetail {
         logger.info("$interfaceName:getLatestImageDetailByCode:Input:($userId,$imageCode,$imageVersion)")
-        if (null == imageVersion) {
+        return if (null == imageVersion) {
             // 不传version默认返回最新版本
-            return getLatestImageDetailByCode(userId, imageCode, interfaceName)
+            getLatestImageDetailByCode(userId, imageCode, interfaceName)
         } else {
             val imageRecord =
                 imageDao.getImageByCodeAndVersion(dslContext, imageCode, imageVersion) ?: throw ErrorCodeException(
@@ -804,7 +804,7 @@ abstract class ImageService @Autowired constructor() {
                     defaultMessage = "image is null,imageCode=$imageCode, imageVersion=$imageVersion",
                     params = arrayOf(imageCode, imageVersion)
                 )
-            return getImageDetail(userId, imageRecord)
+            getImageDetail(userId, imageRecord)
         }
     }
 
@@ -1008,8 +1008,17 @@ abstract class ImageService @Autowired constructor() {
     ) {
         dslContext.transaction { t ->
             val context = DSL.using(t)
-            marketImageDao.updateImageBaseInfoByCode(context, userId, imageCode, ImageBaseInfoUpdateRequest(deleteFlag = true))
-            marketImageFeatureDao.updateImageFeature(context, userId, ImageFeatureUpdateRequest(imageCode = imageCode, deleteFlag = true))
+            marketImageDao.updateImageBaseInfoByCode(
+                dslContext = context,
+                userId = userId,
+                imageCode = imageCode,
+                imageBaseInfoUpdateRequest = ImageBaseInfoUpdateRequest(deleteFlag = true)
+            )
+            marketImageFeatureDao.updateImageFeature(
+                dslContext = context,
+                userId = userId,
+                imageFeatureUpdateRequest = ImageFeatureUpdateRequest(imageCode = imageCode, deleteFlag = true)
+            )
         }
     }
 
@@ -1019,7 +1028,7 @@ abstract class ImageService @Autowired constructor() {
         imageId: String,
         categoryIdList: List<String>
     ) {
-        if (!categoryIdList.isEmpty()) {
+        if (categoryIdList.isNotEmpty()) {
             categoryIdList.forEach {
                 if (categoryDao.countById(context, it.trim(), StoreTypeEnum.IMAGE.type.toByte()) == 0) {
                     throw CategoryNotExistException(
@@ -1122,12 +1131,9 @@ abstract class ImageService @Autowired constructor() {
         }
         val imageIdList = mutableListOf(newestImageRecord.id)
         val latestImageRecord = imageDao.getLatestImageByCode(dslContext, imageCode)
-        logger.info("updateImageBaseInfo latestImageRecord is :$latestImageRecord")
         if (null != latestImageRecord) {
-            logger.info("$interfaceName:updateImageBaseInfo:Inner:latestImageRecord=(${latestImageRecord.id},${latestImageRecord.imageName},${latestImageRecord.version},${latestImageRecord.imageStatus})")
             imageIdList.add(latestImageRecord.id)
         }
-        logger.info("$interfaceName:updateImageBaseInfo:Inner:imageIdList:$imageIdList")
         dslContext.transaction { t ->
             val context = DSL.using(t)
             marketImageDao.updateImageBaseInfo(

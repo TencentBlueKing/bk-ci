@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -39,10 +40,18 @@ import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
+@Suppress("ALL")
 @Repository
 class StoreProjectRelDao {
 
-    fun addStoreProjectRel(dslContext: DSLContext, userId: String, storeCode: String, projectCode: String, type: Byte, storeType: Byte) {
+    fun addStoreProjectRel(
+        dslContext: DSLContext,
+        userId: String,
+        storeCode: String,
+        projectCode: String,
+        type: Byte,
+        storeType: Byte
+    ) {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
             dslContext.insertInto(this,
                 ID,
@@ -118,7 +127,12 @@ class StoreProjectRelDao {
     /**
      * 根据商城组件标识和用户已授权的项目列表，查询已安装商城组件的项目列表
      */
-    fun getInstalledProject(dslContext: DSLContext, storeCode: String, storeType: Byte, authorizedProjectCodeList: Set<String>): Result<TStoreProjectRelRecord>? {
+    fun getInstalledProject(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: Byte,
+        authorizedProjectCodeList: Set<String>
+    ): Result<TStoreProjectRelRecord>? {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
             return dslContext.selectFrom(this)
                 .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)))
@@ -310,7 +324,9 @@ class StoreProjectRelDao {
                 .where(STORE_CODE.eq(storeCode))
                 .and(STORE_TYPE.eq(storeType.type.toByte()))
                 .and(PROJECT_CODE.eq(projectCode))
-                .and(TYPE.`in`(listOf(StoreProjectTypeEnum.INIT.type.toByte(), StoreProjectTypeEnum.TEST.type.toByte())))
+                .and(TYPE.`in`(
+                    listOf(StoreProjectTypeEnum.INIT.type.toByte(), StoreProjectTypeEnum.TEST.type.toByte())
+                ))
                 .fetchOne(0, Long::class.java) != 0L
         }
     }

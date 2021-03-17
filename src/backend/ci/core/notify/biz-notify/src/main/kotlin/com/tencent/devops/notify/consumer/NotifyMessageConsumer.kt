@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -75,8 +76,8 @@ class NotifyMessageConsumer @Autowired constructor(
             rtxNotifyMessageWithOperation.clearReceivers()
             rtxNotifyMessageWithOperation.addAllReceivers(parseStaff)
             rtxService.sendMessage(rtxNotifyMessageWithOperation)
-        } catch (ex: Exception) {
-            logger.error("Failed process received RTX message", ex)
+        } catch (ignored: Exception) {
+            logger.warn("Failed process received RTX message", ignored)
         }
     }
 
@@ -100,8 +101,8 @@ class NotifyMessageConsumer @Autowired constructor(
             emailNotifyMessageWithOperation.addAllCcs(parseCc)
             emailNotifyMessageWithOperation.addAllReceivers(parseStaff)
             emailService.sendMessage(emailNotifyMessageWithOperation)
-        } catch (ex: Exception) {
-            logger.error("Failed process received Email message", ex)
+        } catch (ignored: Exception) {
+            logger.warn("Failed process received Email message", ignored)
         }
     }
 
@@ -117,8 +118,8 @@ class NotifyMessageConsumer @Autowired constructor(
             smsNotifyMessageWithOperation.clearReceivers()
             smsNotifyMessageWithOperation.addAllReceivers(parseStaff)
             smsService.sendMessage(smsNotifyMessageWithOperation)
-        } catch (ex: Exception) {
-            logger.error("Failed process received SMS message", ex)
+        } catch (ignored: Exception) {
+            logger.warn("Failed process received SMS message", ignored)
         }
     }
 
@@ -134,8 +135,8 @@ class NotifyMessageConsumer @Autowired constructor(
             wechatNotifyMessageWithOperation.clearReceivers()
             wechatNotifyMessageWithOperation.addAllReceivers(parseStaff)
             wechatService.sendMessage(wechatNotifyMessageWithOperation)
-        } catch (ex: Exception) {
-            logger.error("Failed process received Wechat message", ex)
+        } catch (ignored: Exception) {
+            logger.warn("Failed process received Wechat message", ignored)
         }
     }
 }

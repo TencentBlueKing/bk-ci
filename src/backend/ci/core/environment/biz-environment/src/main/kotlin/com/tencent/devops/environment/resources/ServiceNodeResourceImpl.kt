@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -47,15 +48,24 @@ class ServiceNodeResourceImpl @Autowired constructor(
         return Result(nodeService.listByNodeType("", projectId, nodeType))
     }
 
-    override fun listRawByHashIds(userId: String, projectId: String, nodeHashIds: List<String>): Result<List<NodeBaseInfo>> {
+    override fun listRawByHashIds(
+        userId: String,
+        projectId: String,
+        nodeHashIds: List<String>
+    ): Result<List<NodeBaseInfo>> {
         if (nodeHashIds.isEmpty()) {
-            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_, params = arrayOf("nodeHashIds"))
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
+                params = arrayOf("nodeHashIds"))
         }
 
         return Result(nodeService.listRawServerNodeByIds(userId, projectId, nodeHashIds))
     }
 
-    override fun listRawByEnvHashIds(userId: String, projectId: String, envHashIds: List<String>): Result<Map<String, List<NodeBaseInfo>>> {
+    override fun listRawByEnvHashIds(
+        userId: String,
+        projectId: String,
+        envHashIds: List<String>
+    ): Result<Map<String, List<NodeBaseInfo>>> {
         if (envHashIds.isEmpty()) {
             throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_, params = arrayOf("envHashIds"))
         }
@@ -67,7 +77,11 @@ class ServiceNodeResourceImpl @Autowired constructor(
         return Result(nodeService.listUsableServerNodes(userId, projectId))
     }
 
-    override fun listByHashIds(userId: String, projectId: String, nodeHashIds: List<String>): Result<List<NodeWithPermission>> {
+    override fun listByHashIds(
+        userId: String,
+        projectId: String,
+        nodeHashIds: List<String>
+    ): Result<List<NodeWithPermission>> {
         return Result(nodeService.listByHashIds(userId, projectId, nodeHashIds))
     }
 

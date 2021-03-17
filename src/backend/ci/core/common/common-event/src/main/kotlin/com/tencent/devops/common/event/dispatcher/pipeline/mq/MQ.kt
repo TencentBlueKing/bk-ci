@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -27,7 +28,7 @@
 package com.tencent.devops.common.event.dispatcher.pipeline.mq
 
 object MQ {
-
+    // 核心交换机及队列 ====================================
     const val ENGINE_PROCESS_LISTENER_EXCHANGE = "e.engine.pipeline.listener"
 
     const val ROUTE_PIPELINE_UPDATE = "r.engine.pipeline.update"
@@ -48,16 +49,6 @@ object MQ {
     const val ROUTE_PIPELINE_BUILD_TASK_START = "r.engine.pipeline.build.task.start"
     const val QUEUE_PIPELINE_BUILD_TASK_START = "q.engine.pipeline.build.task.start"
 
-    const val EXCHANGE_PIPELINE_MONITOR_DIRECT = "e.engine.pipeline.listener.monitor"
-    const val ROUTE_PIPELINE_BUILD_MONITOR = "r.engine.pipeline.listener.monitor"
-    const val QUEUE_PIPELINE_BUILD_MONITOR = "q.engine.pipeline.listener.monitor"
-
-    const val ROUTE_PIPELINE_BUILD_HEART_BEAT = "r.engine.pipeline.build.hb"
-    const val QUEUE_PIPELINE_BUILD_HEART_BEAT = "q.engine.pipeline.build.hb"
-
-    const val ROUTE_PIPELINE_BUILD_CONTAINER_STARTUP = "r.engine.pipeline.build.container.startup"
-    const val QUEUE_PIPELINE_BUILD_CONTAINER_STARTUP = "q.engine.pipeline.build.container.startup"
-
     const val ROUTE_PIPELINE_BUILD_STAGE = "r.engine.pipeline.build.stage"
     const val QUEUE_PIPELINE_BUILD_STAGE = "q.engine.pipeline.build.stage"
 
@@ -72,15 +63,30 @@ object MQ {
     const val ROUTE_PIPELINE_PAUSE_TASK_EXECUTE = "r.engine.pipeline.pause.task.execute"
     const val QUEUE_PIPELINE_PAUSE_TASK_EXECUTE = "q.engine.pipeline.pause.task.execute"
 
-    // 构建启动广播exchange
+    // 监控 ====================================
+    const val EXCHANGE_PIPELINE_MONITOR_DIRECT = "e.engine.pipeline.listener.monitor"
+
+    // 接收上述广播的队列
+    const val ROUTE_PIPELINE_BUILD_MONITOR = "r.engine.pipeline.listener.monitor"
+    const val QUEUE_PIPELINE_BUILD_MONITOR = "q.engine.pipeline.listener.monitor"
+    const val ROUTE_PIPELINE_BUILD_HEART_BEAT = "r.engine.pipeline.build.hb"
+    const val QUEUE_PIPELINE_BUILD_HEART_BEAT = "q.engine.pipeline.build.hb"
+    // 构建产生的审核通知类队列
+    const val ROUTE_PIPELINE_BUILD_NOTIFY = "r.engine.pipeline.build.notify"
+    const val QUEUE_PIPELINE_BUILD_NOTIFY = "q.engine.pipeline.build.notify"
+    // 构建状态Websocket推送解耦
+    const val ROUTE_PIPELINE_BUILD_WEBSOCKET = "r.engine.pipeline.build.websocket"
+    const val QUEUE_PIPELINE_BUILD_WEBSOCKET = "q.engine.pipeline.build.websocket"
+
+    // 构建启动广播exchange ====================================
     const val EXCHANGE_PIPELINE_BUILD_START_FANOUT = "e.engine.pipeline.build.start.fanout"
     const val QUEUE_PIPELINE_BUILD_START_DISPATCHER = "q.engine.pipeline.build.start.dispatcher"
     const val QUEUE_PIPELINE_BUILD_START_WEBHOOK_QUEUE = "q.engine.pipeline.build.start.webhook.queue"
 
-    // 构建结束后续广播exchange
+    // 构建结束后续广播exchange ====================================
     const val EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT = "e.engine.pipeline.build.finish"
+
     // 接收上述广播的队列
-    const val QUEUE_PIPELINE_BUILD_NOTIFY = "q.engine.pipeline.build.notify"
     const val QUEUE_PIPELINE_BUILD_FINISH_MEASURE = "q.engine.pipeline.build.measure"
     const val QUEUE_PIPELINE_BUILD_FINISH_CODE_WEBHOOK = "q.engine.pipeline.build.code.webhook"
     const val QUEUE_PIPELINE_BUILD_FINISH_ATOM_MARKET = "q.engine.pipeline.build.atom.market"
@@ -90,32 +96,33 @@ object MQ {
     const val QUEUE_PIPELINE_BUILD_FINISH_SUBPIPEINE = "q.engine.pipeline.build.subpipeline"
     const val QUEUE_PIPELINE_BUILD_FINISH_WEBHOOK_QUEUE = "q.engine.pipeline.build.finish.webhook.queue"
 
+    const val QUEUE_PIPELINE_BUILD_FINISH_EXT = "q.engine.pipeline.build.finish.ext"
     const val QUEUE_PIPELINE_BUILD_FINISH_DISPATCHER = "q.engine.pipeline.build.dispatcher"
 
-    // 插件结束后续广播exchange
+    // 插件结束后续广播exchange ====================================
     const val EXCHANGE_PIPELINE_BUILD_ELEMENT_FINISH_FANOUT = "e.engine.pipeline.build.element.finish"
-//    const val ROUTE_PIPELINE_BUILD_ELEMENT_FINISH = "r.engine.pipeline.build.element.finish"
+
     // 接收上述广播的队列
     const val QUEUE_PIPELINE_BUILD_ELEMENT_FINISH_LAMBDA = "q.engine.pipeline.build.element.lambda"
-    const val QUEUE_PIPELINE_BUILD_FINISH_EXT = "q.engine.pipeline.build.finish.ext"
 
-    // 定时变更广播exchange
+    // 定时变更广播exchange ====================================
     const val EXCHANGE_PIPELINE_TIMER_CHANGE_FANOUT = "e.engine.pipeline.timer.change"
 
-    // 流水线扩展交换器
+    // 流水线扩展交换器 ====================================
     const val EXCHANGE_PIPELINE_EXTENDS_FANOUT = "e.fanout.engine.pipeline.extends"
+
     // 流水线模型分析队列
     const val ROUTE_PIPELINE_EXTENDS_MODEL = "r.engine.pipeline.extends.model"
     const val QUEUE_PIPELINE_EXTENDS_MODEL = "q.engine.pipeline.extends.model"
 
-    // AGENT 构建机消息队列
+    // AGENT 构建机消息队列 ====================================
     const val EXCHANGE_AGENT_LISTENER_DIRECT = "e.engine.pipeline.agent.listener"
     const val ROUTE_AGENT_STARTUP = "r.engine.pipeline.agent.startup"
     const val QUEUE_AGENT_STARTUP = "q.engine.pipeline.agent.startup"
     const val ROUTE_AGENT_SHUTDOWN = "r.engine.pipeline.agent.shutdown"
     const val QUEUE_AGENT_SHUTDOWN = "q.engine.pipeline.agent.shutdown"
 
-    // 无构建环境的Docker构建机启停消息队列
+    // 无构建环境的Docker构建机启停消息队列 ====================================
     const val EXCHANGE_BUILD_LESS_AGENT_LISTENER_DIRECT = "e.engine.pipeline.bl.agent"
     const val ROUTE_BUILD_LESS_AGENT_STARTUP_DISPATCH = "r.engine.pipeline.bl.agent.dispatch.startup"
     const val QUEUE_BUILD_LESS_AGENT_STARTUP_DISPATCH = "q.engine.pipeline.bl.agent.dispatch.startup"
@@ -125,6 +132,7 @@ object MQ {
     const val QUEUE_BUILD_LESS_AGENT_SHUTDOWN_PREFFIX = "q.engine.pipeline.bl.agent.shutdown."
 
     const val DEFAULT_BUILD_LESS_DOCKET_HOST_ROUTE_SUFFIX = "sys_default"
+    // ================================================================================================
 
     // 日志事件
     const val EXCHANGE_LOG_BUILD_EVENT = "e.engine.log.build.event"

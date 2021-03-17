@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -72,7 +73,8 @@ class DockerHostBuildResourceApi constructor(
     }
 
     fun reportContainerId(buildId: String, vmSeqId: Int, containerId: String): Result<Boolean>? {
-        val path = "/${getUrlPrefix()}/api/dockerhost/containerId?buildId=$buildId&vmSeqId=$vmSeqId&containerId=$containerId"
+        val path = "/${getUrlPrefix()}/api/dockerhost/containerId" +
+            "?buildId=$buildId&vmSeqId=$vmSeqId&containerId=$containerId"
         val request = buildPost(path)
 
         OkhttpUtils.doHttp(request).use { response ->
@@ -106,7 +108,8 @@ class DockerHostBuildResourceApi constructor(
     }
 
     fun rollbackBuild(buildId: String, vmSeqId: Int, shutdown: Boolean): Result<Boolean>? {
-        val path = "/${getUrlPrefix()}/api/dockerhost/rollbackBuild?buildId=$buildId&vmSeqId=$vmSeqId&shutdown=$shutdown"
+        val path = "/${getUrlPrefix()}/api/dockerhost/rollbackBuild" +
+            "?buildId=$buildId&vmSeqId=$vmSeqId&shutdown=$shutdown"
         val request = buildPost(path)
 
         OkhttpUtils.doHttp(request).use { response ->
@@ -142,7 +145,9 @@ class DockerHostBuildResourceApi constructor(
     fun postLog(buildId: String, red: Boolean, message: String, tag: String? = "", jobId: String? = "") {
         try {
             val path = "/${getUrlPrefix()}/api/dockerhost/postlog?buildId=$buildId&red=$red&tag=$tag&jobId=$jobId"
-            val request = buildPost(path, RequestBody.create(MediaType.parse("application/json; charset=utf-8"), message))
+            val request = buildPost(path = path,
+                requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), message)
+            )
 
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body()!!.string()
