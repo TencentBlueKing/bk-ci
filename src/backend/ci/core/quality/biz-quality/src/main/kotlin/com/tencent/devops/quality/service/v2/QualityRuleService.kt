@@ -463,7 +463,8 @@ class QualityRuleService @Autowired constructor(
                 pipelineExecuteCount = rule.executeCount,
                 interceptTimes = rule.interceptTimes,
                 enable = rule.enable,
-                permissions = rulePermission
+                permissions = rulePermission,
+                gatewayId = rule.gatewayId
             )
         } ?: listOf()
         return Pair(count, list)
