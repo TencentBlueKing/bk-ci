@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import feign.Request
 import feign.RequestTemplate
+import org.slf4j.LoggerFactory
 import org.springframework.cloud.client.ServiceInstance
 import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
 import java.util.concurrent.ConcurrentHashMap
@@ -60,6 +61,10 @@ class MicroServiceTarget<T> constructor(
         val matchTagInstances = ArrayList<ServiceInstance>()
 
         instances.forEach next@{ serviceInstance ->
+            if (serviceName == "project") {
+                logger.info("consul info: $serviceInstance, tags $tag")
+            }
+
             if (serviceInstance.metadata.isEmpty())
                 return@next
             if (serviceInstance.metadata.values.contains(tag)) {
@@ -99,4 +104,8 @@ class MicroServiceTarget<T> constructor(
     override fun name() = serviceName
 
     private fun ServiceInstance.url() = "${if (isSecure) "https" else "http"}://$host:$port/api"
+
+    companion object {
+        val logger = LoggerFactory.getLogger(MicroServiceTarget::class.java)
+    }
 }
