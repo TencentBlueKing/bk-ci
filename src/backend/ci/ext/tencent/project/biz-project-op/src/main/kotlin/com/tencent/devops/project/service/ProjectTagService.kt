@@ -92,7 +92,7 @@ class ProjectTagService @Autowired constructor(
             deptId = opProjectTagUpdateDTO.deptId
         ).map { it.englishName }
 
-        executorService.submit {
+        executorService.execute {
             ProjectTagRefresh(
                 consulTag = opProjectTagUpdateDTO.consulTags,
                 redisOperation = redisOperation,
@@ -123,6 +123,7 @@ class ProjectTagService @Autowired constructor(
     ) : Runnable {
         override fun run() {
             val watcher = Watcher("ProjectTagRefresh $consulTag")
+            logger.info("ProjectTagRefresh start $consulTag $projectCodeIds")
             projectCodeIds.forEach { projectCode ->
                 redisOperation.hset(TAG_REDIS_KEY, projectCode, consulTag)
             }
