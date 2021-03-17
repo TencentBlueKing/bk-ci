@@ -61,7 +61,7 @@ class InfluxdbClient {
             InfluxDBFactory.connect(influxdbServer, influxdbUserName, influxdbPassword)
     }
 
-    private fun getInfluxDb(): InfluxDB? {
+    fun getInfluxDb(): InfluxDB? {
         logger.info("getInfluxDb -> influxdbServer: $influxdbServer")
         return try {
             influxdb
