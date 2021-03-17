@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.common.ci.OBJECT_KIND_PUSH
@@ -663,8 +664,12 @@ class GitCIBuildService @Autowired constructor(
             }
         }
 
+        val vars = yaml.variables?.map { (key, value) ->
+            key to EnvUtils.parseEnv(value, startParams)
+        }?.toMap()
+
         // 用户自定义变量
-        startParams.putAll(yaml.variables ?: mapOf())
+        startParams.putAll(vars ?: mapOf())
 
         startParams.forEach {
             result.add(BuildFormProperty(
