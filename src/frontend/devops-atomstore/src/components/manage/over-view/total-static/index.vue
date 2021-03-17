@@ -53,7 +53,7 @@
                         { name: 'pipeline-count', label: this.$t('store.流水线个数'), value: res.pipelineCnt },
                         { name: 'comment-num', label: this.$t('store.评论数'), value: res.commentCnt },
                         { name: 'rate', label: this.$t('store.评分'), value: res.score },
-                        { name: 'icon-success-rate', label: this.$t('store.成功率'), value: res.successRate + '%', tips: this.$t('store.最近三个月内的执行成功率') }
+                        { name: 'icon-success-rate', label: this.$t('store.成功率'), value: ![undefined, null].includes(res.successRate) ? `${res.successRate}%` : '--', tips: this.$t('store.最近三个月内的执行成功率') }
                     ]
                 })
             }
@@ -98,8 +98,8 @@
                 }
                 .item-value {
                     font-weight: 600;
-                    font-size: .34rem;
-                    line-height: .36rem;
+                    font-size: .3rem;
+                    line-height: .3rem;
                     margin-top: .03rem;
                 }
             }

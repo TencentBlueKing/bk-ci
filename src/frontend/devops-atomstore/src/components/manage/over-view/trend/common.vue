@@ -7,9 +7,9 @@
 
             <bk-select class="common-time" v-model="time" :clearable="false">
                 <bk-option v-for="item in timeList"
-                    :key="item"
-                    :id="item"
-                    :name="item"
+                    :key="item.value"
+                    :id="item.value"
+                    :name="item.name"
                 ></bk-option>
             </bk-select>
         </header>
@@ -39,9 +39,9 @@
                 ],
                 storeChart: {},
                 timeList: [
-                    'weeks',
-                    'months',
-                    'years'
+                    { name: this.$t('store.周'), value: 'weeks' },
+                    { name: this.$t('store.月'), value: 'months' },
+                    { name: this.$t('store.年'), value: 'years' }
                 ],
                 time: 'weeks',
                 chartTab: 'totalDownloads',
@@ -72,7 +72,7 @@
                         resolve(chartData)
                     } else {
                         const code = this.detail.atomCode
-                        const now = moment().subtract(1, 'days')
+                        const now = moment(moment().format('YYYY-MM-DD')).subtract(1, 'days')
                         const params = {
                             endTime: now.format('YYYY-MM-DD HH:mm:ss'),
                             startTime: now.subtract(1, this.time).format('YYYY-MM-DD HH:mm:ss')
@@ -223,7 +223,7 @@
                                 borderColor: 'rgba(5, 155, 255, 1)',
                                 lineTension: 0,
                                 borderWidth: 2,
-                                pointRadius: 0,
+                                pointRadius: 2,
                                 pointHitRadius: 3,
                                 pointHoverRadius: 3,
                                 data: dailyStatisticList.map(x => x.dailySuccessRate)
@@ -231,11 +231,11 @@
                             {
                                 label: this.$t('store.执行失败率'),
                                 fill: true,
-                                backgroundColor: 'rgba(34, 207, 207, 0.3)',
-                                borderColor: 'rgba(34, 207, 207, 1)',
+                                backgroundColor: 'rgba(255, 24, 113, 0.3)',
+                                borderColor: 'rgba(255, 24, 113, 1)',
                                 lineTension: 0,
                                 borderWidth: 2,
-                                pointRadius: 0,
+                                pointRadius: 2,
                                 pointHitRadius: 3,
                                 pointHoverRadius: 3,
                                 data: dailyStatisticList.map(x => x.dailyFailRate)
@@ -340,7 +340,13 @@
                                 label: this.$t('store.错误分析'),
                                 hoverOffset: 4,
                                 data: totalFailDetail.map(x => x.failNum),
-                                backgroundColor: ['#FF3784', '#36A2EB', '#4BC0C0', '#F77825', '#9966FF', '#00A8C6', '#379F7A', '#CC2738', '#8B628A', '#8FBE00', '#606060'],
+                                backgroundColor: [
+                                    'rgba(51,157,255,1)',
+                                    'rgba(59,206,149,1)',
+                                    'rgba(255,156,74,1)',
+                                    'rgba(255,111,114,1)',
+                                    'rgba(248,211,15,1)'
+                                ],
                                 hoverBorderColor: 'white',
                                 datalabels: {
                                     labels: {
@@ -405,7 +411,7 @@
         align-items: center;
         justify-content: space-between;
         .common-time {
-            width: 200px;
+            width: 250px;
         }
     }
 
@@ -425,7 +431,7 @@
                 color: #63656e;
                 min-width: 36px;
                 padding: 0;
-                margin-right: 16px;
+                margin-right: 20px;
                 &:last-child {
                     margin: 0;
                 }
