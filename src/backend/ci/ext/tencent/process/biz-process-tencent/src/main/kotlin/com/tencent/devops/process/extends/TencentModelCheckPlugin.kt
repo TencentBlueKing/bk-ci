@@ -25,13 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.pojo
+package com.tencent.devops.process.extends
 
-data class BranchBuilds(
-    val branch: String,
-    val buildTotal: Long,
-    val buildIds: String,
-    val eventIds: String,
-    val gitProjectId: Long,
-    val sourceGitProjectId: Long?
-)
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.container.Stage
+import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.extend.DefaultModelCheckPlugin
+import org.springframework.context.annotation.Primary
+import org.springframework.stereotype.Service
+
+@Primary
+@Service
+class TencentModelCheckPlugin constructor(override val client: Client) : DefaultModelCheckPlugin(client) {
+
+    /**
+     * 注：因内部历史原因，存在大量中文命名的变量，所以相对默认检查器，减少针对命名的规范检查
+     */
+    override fun checkTriggerContainer(stage: Stage) {
+        (stage.containers.getOrNull(0) ?: throw ErrorCodeException(
+            defaultMessage = "流水线Stage为空",
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
+        )) as TriggerContainer
+    }
+}
