@@ -138,7 +138,8 @@ class DispatchDockerService @Autowired constructor(
                 dockerHostPort = dockerIpUpdateVO.dockerHostPort,
                 enable = dockerIpUpdateVO.enable,
                 grayEnv = dockerIpUpdateVO.grayEnv,
-                specialOn = dockerIpUpdateVO.specialOn
+                specialOn = dockerIpUpdateVO.specialOn,
+                clusterName = dockerIpUpdateVO.clusterType.name
             )
             return true
         } catch (e: Exception) {
