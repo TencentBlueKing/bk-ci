@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStartBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -42,6 +43,7 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
+import com.tencent.devops.plugin.api.pojo.GitCommitCheckInfo
 import com.tencent.devops.plugin.api.pojo.GithubPrEvent
 import com.tencent.devops.plugin.api.pojo.PluginGitCheck
 import com.tencent.devops.plugin.dao.PluginGitCheckDao
@@ -59,6 +61,7 @@ import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TYPE
 import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_CONCLUSION_FAILURE
 import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_CONCLUSION_SUCCESS
 import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_STATUS_COMPLETED
+import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_STATUS_IN_PROGRESS
 import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_ERROR
 import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_FAILURE
 import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_PENDING
@@ -86,20 +89,161 @@ class CodeWebhookService @Autowired constructor(
     private val gitWebhookUnlockService: GitWebhookUnlockService
 ) {
 
-    fun onFinish(event: PipelineBuildFinishBroadCastEvent) {
-        val buildId = event.buildId
-        val buildStatus = BuildStatus.valueOf(event.status)
-        logger.info("Code web hook on finish [$buildId]: $event")
+    fun onStart(event: PipelineBuildStartBroadCastEvent) {
+        with(event) {
+            execute(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                userId = userId,
+                triggerType = triggerType
+            ) { info ->
+                with(info) {
+                    val webhookType = CodeType.valueOf(webhookType)
+                    val webhookEventType = CodeEventType.valueOf(webhookEventType)
+                    when {
+                        webhookEventType == CodeEventType.MERGE_REQUEST &&
+                            (webhookType == CodeType.GIT || webhookType == CodeType.TGIT) -> {
+                            logger.info(
+                                "$buildId|WebHook_ADD_GIT_COMMIT_CHECK|$pipelineId|$repositoryConfig|$commitId]"
+                            )
+                            addGitCommitCheckEvent(
+                                GitCommitCheckEvent(
+                                    source = "codeWebhook_pipeline_build_trigger",
+                                    userId = event.userId,
+                                    projectId = projectId,
+                                    pipelineId = pipelineId,
+                                    buildId = buildId,
+                                    repositoryConfig = repositoryConfig,
+                                    commitId = commitId,
+                                    state = GIT_COMMIT_CHECK_STATE_PENDING,
+                                    block = block
+                                )
+                            )
+                        }
+                        webhookEventType == CodeEventType.PULL_REQUEST && webhookType == CodeType.GITHUB -> {
+                            logger.info(
+                                "$buildId|WebHook_ADD_GITHUB_COMMIT_CHECK|$pipelineId|$repositoryConfig|$commitId]"
+                            )
+                            addGithubPrEvent(
+                                GithubPrEvent(
+                                    source = "codeWebhook_pipeline_build_trigger",
+                                    userId = event.userId,
+                                    projectId = projectId,
+                                    pipelineId = pipelineId,
+                                    buildId = buildId,
+                                    repositoryConfig = repositoryConfig,
+                                    commitId = commitId,
+                                    status = GITHUB_CHECK_RUNS_STATUS_IN_PROGRESS,
+                                    startedAt = LocalDateTime.now().timestamp(),
+                                    conclusion = null,
+                                    completedAt = null
+                                )
+                            )
+                        }
+                        else -> {
+                            logger.info("$buildId|code type $webhookType and event type $webhookEventType ignored")
+                        }
+                    }
+                }
+            }
+        }
+    }
 
-        if (event.triggerType != StartType.WEB_HOOK.name) {
+    fun onFinish(event: PipelineBuildFinishBroadCastEvent) {
+        logger.info("Code web hook on finish [${event.buildId}]")
+        with(event) {
+            val buildStatus = BuildStatus.valueOf(event.status)
+            execute(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                userId = userId,
+                triggerType = triggerType
+            ) { info ->
+                with(info) {
+                    val webhookType = CodeType.valueOf(webhookType)
+                    val webhookEventType = CodeEventType.valueOf(webhookEventType)
+
+                    when {
+                        (webhookType == CodeType.GIT || webhookType == CodeType.TGIT) &&
+                            webhookEventType == CodeEventType.MERGE_REQUEST -> {
+                            val state = if (buildStatus == BuildStatus.SUCCEED) {
+                                GIT_COMMIT_CHECK_STATE_SUCCESS
+                            } else {
+                                GIT_COMMIT_CHECK_STATE_FAILURE
+                            }
+
+                            addGitCommitCheckEvent(
+                                GitCommitCheckEvent(
+                                    source = "codeWebhook",
+                                    projectId = projectId,
+                                    pipelineId = pipelineId,
+                                    buildId = buildId,
+                                    repositoryConfig = repositoryConfig,
+                                    commitId = commitId,
+                                    state = state,
+                                    block = block,
+                                    status = event.status,
+                                    triggerType = event.triggerType,
+                                    startTime = event.startTime ?: 0L,
+                                    mergeRequestId = mergeRequestId,
+                                    userId = event.userId,
+                                    retryTime = 3
+                                )
+                            )
+                        }
+                        webhookType == CodeType.GITHUB && webhookEventType == CodeEventType.PULL_REQUEST -> {
+                            val status = GITHUB_CHECK_RUNS_STATUS_COMPLETED
+                            val conclusion = if (buildStatus == BuildStatus.SUCCEED) {
+                                GITHUB_CHECK_RUNS_CONCLUSION_SUCCESS
+                            } else {
+                                GITHUB_CHECK_RUNS_CONCLUSION_FAILURE
+                            }
+
+                            addGithubPrEvent(
+                                GithubPrEvent(
+                                    source = "codeWebhook",
+                                    projectId = projectId,
+                                    pipelineId = pipelineId,
+                                    buildId = buildId,
+                                    repositoryConfig = repositoryConfig,
+                                    commitId = commitId,
+                                    status = status,
+                                    startedAt = null,
+                                    conclusion = conclusion,
+                                    completedAt = LocalDateTime.now().timestamp(),
+                                    userId = event.userId,
+                                    retryTime = 3
+                                )
+                            )
+                        }
+                        else -> {
+                            logger.info("$buildId|code type $webhookType and event type $webhookEventType ignored")
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private fun execute(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        userId: String,
+        triggerType: String,
+        action: (GitCommitCheckInfo) -> Unit
+    ) {
+        if (triggerType != StartType.WEB_HOOK.name) {
             logger.info("Process instance($buildId) is not web hook triggered")
             return
         }
 
         try {
             val buildHistoryResult = client.get(ServiceBuildResource::class).getBuildVars(
-                userId = event.userId, projectId = event.projectId,
-                pipelineId = event.pipelineId, buildId = buildId, channelCode = ChannelCode.GIT
+                userId = userId, projectId = projectId,
+                pipelineId = pipelineId, buildId = buildId, channelCode = ChannelCode.GIT
             )
 
             if (buildHistoryResult.isNotOk() || buildHistoryResult.data == null) {
@@ -113,9 +257,6 @@ class CodeWebhookService @Autowired constructor(
                 logger.warn("Process instance($buildId) variables is empty")
                 return
             }
-
-            val projectId = event.projectId
-            val pipelineId = event.pipelineId
 
             val commitId = variables[PIPELINE_WEBHOOK_REVISION]
             var repositoryId = variables[PIPELINE_WEBHOOK_REPO]
@@ -143,70 +284,26 @@ class CodeWebhookService @Autowired constructor(
                 return
             }
 
-            val webhookType = CodeType.valueOf(webhookTypeStr!!)
-            val webhookEventType = CodeEventType.valueOf(webhookEventTypeStr!!)
+            val block = variables[PIPELINE_WEBHOOK_BLOCK]?.toBoolean() ?: false
+            val mrId = variables[PIPELINE_WEBHOOK_MR_ID]?.toLong()
 
-            when {
-                (webhookType == CodeType.GIT || webhookType == CodeType.TGIT) &&
-                    webhookEventType == CodeEventType.MERGE_REQUEST -> {
-                    val block = variables[PIPELINE_WEBHOOK_BLOCK]?.toBoolean() ?: false
-                    val mrId = variables[PIPELINE_WEBHOOK_MR_ID]?.toLong()
-                    val state = if (buildStatus == BuildStatus.SUCCEED) {
-                        GIT_COMMIT_CHECK_STATE_SUCCESS
-                    } else {
-                        GIT_COMMIT_CHECK_STATE_FAILURE
-                    }
-
-                    addGitCommitCheckEvent(
-                        GitCommitCheckEvent(
-                            source = "codeWebhook",
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            buildId = buildId,
-                            repositoryConfig = repositoryConfig,
-                            commitId = commitId!!,
-                            state = state,
-                            block = block,
-                            status = event.status,
-                            triggerType = event.triggerType,
-                            startTime = event.startTime ?: 0L,
-                            mergeRequestId = mrId,
-                            userId = event.userId,
-                            retryTime = 3
-                        )
-                    )
-                }
-                webhookType == CodeType.GITHUB && webhookEventType == CodeEventType.PULL_REQUEST -> {
-                    val status = GITHUB_CHECK_RUNS_STATUS_COMPLETED
-                    val conclusion = if (buildStatus == BuildStatus.SUCCEED) {
-                        GITHUB_CHECK_RUNS_CONCLUSION_SUCCESS
-                    } else {
-                        GITHUB_CHECK_RUNS_CONCLUSION_FAILURE
-                    }
-
-                    addGithubPrEvent(
-                        GithubPrEvent(
-                            source = "codeWebhook",
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            buildId = buildId,
-                            repositoryConfig = repositoryConfig,
-                            commitId = commitId!!,
-                            status = status,
-                            startedAt = null,
-                            conclusion = conclusion,
-                            completedAt = LocalDateTime.now().timestamp(),
-                            userId = event.userId,
-                            retryTime = 3
-                        )
-                    )
-                }
-                else -> {
-                    logger.info("$buildId|code type $webhookType and event type $webhookEventType ignored")
-                }
-            }
+            action(
+                GitCommitCheckInfo(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    repositoryConfig = repositoryConfig,
+                    commitId = commitId!!,
+                    block = block,
+                    triggerType = triggerType,
+                    mergeRequestId = mrId,
+                    userId = userId,
+                    webhookType = webhookTypeStr!!,
+                    webhookEventType = webhookEventTypeStr!!
+                )
+            )
         } catch (ignore: Throwable) {
-            logger.error("Code webhook on finish fail", ignore)
+            logger.error("[$buildId]|Code webhook fail", ignore)
         }
     }
 

@@ -32,7 +32,6 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.RepositoryTypeNew
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.Watcher
-import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.pojo.message.LogMessage
@@ -48,10 +47,6 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
-import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
-import com.tencent.devops.plugin.api.pojo.GithubPrEvent
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
@@ -78,13 +73,10 @@ import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.repository.api.ServiceRepositoryResource
-import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_STATUS_IN_PROGRESS
-import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_PENDING
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Service
@@ -511,7 +503,6 @@ class PipelineBuildWebhookService @Autowired constructor(
                 signPipelineVersion = pipelineInfo.version,
                 frequencyLimit = false
             )
-            dispatchCommitCheck(projectId = projectId, webhookCommit = webhookCommit, buildId = buildId)
             pipelineWebHookQueueService.onWebHookTrigger(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -532,53 +523,6 @@ class PipelineBuildWebhookService @Autowired constructor(
             return ""
         } finally {
             logger.info("$pipelineId|WEBHOOK_TRIGGER|repo=$repoName|time=${System.currentTimeMillis() - startEpoch}")
-        }
-    }
-
-    private fun dispatchCommitCheck(
-        projectId: String,
-        webhookCommit: WebhookCommit,
-        buildId: String
-    ) {
-        with(webhookCommit) {
-            when {
-                webhookCommit.eventType == CodeEventType.MERGE_REQUEST &&
-                    (webhookCommit.codeType == CodeType.GIT || webhookCommit.codeType == CodeType.TGIT) -> {
-                    logger.info("$buildId|WebHook_ADD_GIT_COMMIT_CHECK|$pipelineId|$repositoryConfig|$commitId]")
-                    pipelineEventDispatcher.dispatch(
-                        GitCommitCheckEvent(
-                            source = "codeWebhook_pipeline_build_trigger",
-                            userId = userId,
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            buildId = buildId,
-                            repositoryConfig = repositoryConfig,
-                            commitId = commitId,
-                            state = GIT_COMMIT_CHECK_STATE_PENDING,
-                            block = block
-                        )
-                    )
-                }
-                webhookCommit.eventType == CodeEventType.PULL_REQUEST && webhookCommit.codeType == CodeType.GITHUB -> {
-                    logger.info("$buildId|WebHook_ADD_GITHUB_COMMIT_CHECK|$pipelineId|$repositoryConfig|$commitId]")
-                    pipelineEventDispatcher.dispatch(
-                        GithubPrEvent(
-                            source = "codeWebhook_pipeline_build_trigger",
-                            userId = userId,
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            buildId = buildId,
-                            repositoryConfig = repositoryConfig,
-                            commitId = commitId,
-                            status = GITHUB_CHECK_RUNS_STATUS_IN_PROGRESS,
-                            startedAt = LocalDateTime.now().timestamp(),
-                            conclusion = null,
-                            completedAt = null
-                        )
-                    )
-                }
-                else -> Unit
-            }
         }
     }
 }
