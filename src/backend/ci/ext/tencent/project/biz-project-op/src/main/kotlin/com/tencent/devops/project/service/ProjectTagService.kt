@@ -50,7 +50,7 @@ class ProjectTagService @Autowired constructor(
     val projectDao: ProjectDao
 ) {
 
-    private val executorService = Executors.newSingleThreadExecutor()
+    private val executePool = Executors.newFixedThreadPool(1)
 
     fun updateTagByProject(
         opProjectTagUpdateDTO: OpProjectTagUpdateDTO
@@ -62,8 +62,8 @@ class ProjectTagService @Autowired constructor(
             projectIds = opProjectTagUpdateDTO.projectCodeList!!,
             consulTag = opProjectTagUpdateDTO.consulTags
         )
-        executorService.submit {
-            ProjectTagRefresh(
+        executePool.submit {
+            projectTagRefresh(
                 consulTag = opProjectTagUpdateDTO.consulTags,
                 redisOperation = redisOperation,
                 projectCodeIds = opProjectTagUpdateDTO.projectCodeList!!
@@ -92,8 +92,8 @@ class ProjectTagService @Autowired constructor(
             deptId = opProjectTagUpdateDTO.deptId
         ).map { it.englishName }
 
-        executorService.execute {
-            ProjectTagRefresh(
+        executePool.submit {
+            projectTagRefresh(
                 consulTag = opProjectTagUpdateDTO.consulTags,
                 redisOperation = redisOperation,
                 projectCodeIds = projectCodes
@@ -116,20 +116,19 @@ class ProjectTagService @Autowired constructor(
         }
     }
 
-    class ProjectTagRefresh(
-        val consulTag: String,
-        val projectCodeIds: List<String>,
-        val redisOperation: RedisOperation
-    ) : Runnable {
-        override fun run() {
-            val watcher = Watcher("ProjectTagRefresh $consulTag")
-            logger.info("ProjectTagRefresh start $consulTag $projectCodeIds")
-            projectCodeIds.forEach { projectCode ->
-                redisOperation.hset(TAG_REDIS_KEY, projectCode, consulTag)
-            }
-            logger.info("ProjectTagRefresh success. $consulTag ${projectCodeIds.size}")
-            LogUtils.printCostTimeWE(watcher)
+    fun projectTagRefresh(
+        consulTag: String,
+        projectCodeIds: List<String>,
+        redisOperation: RedisOperation
+    ) {
+        val watcher = Watcher("ProjectTagRefresh $consulTag")
+        logger.info("ProjectTagRefresh start $consulTag $projectCodeIds")
+        projectCodeIds.forEach { projectCode ->
+            redisOperation.hset(TAG_REDIS_KEY, projectCode, consulTag)
         }
+        logger.info("ProjectTagRefresh success. $consulTag ${projectCodeIds.size}")
+        LogUtils.printCostTimeWE(watcher)
+
     }
 
     companion object {
