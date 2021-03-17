@@ -408,7 +408,7 @@ class QualityRuleService @Autowired constructor(
         val srcTemplateIdMap = if (templateIds.isNotEmpty()) client.get(ServiceTemplateResource::class)
             .listTemplateById(templateIds, null).data?.templates ?: mapOf()
         else mapOf()
-        val templateIdMap = mutableMapOf<String, OptionalTemplate>();
+        val templateIdMap = mutableMapOf<String, OptionalTemplate>()
         srcTemplateIdMap.entries.forEach { templateIdMap[it.value.templateId] = it.value }
 
         val templatePipelineCountMap = client.get(ServiceTemplateInstanceResource::class)
