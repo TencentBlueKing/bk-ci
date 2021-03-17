@@ -59,10 +59,6 @@ class CommonBuildClusterCronConfiguration @Autowired constructor(
         scheduledTaskRegistrar.setScheduler(Executors.newScheduledThreadPool(10))
         val random = (Random().nextInt(15) % (15 - 8 + 1) + 8) * 100
 
-/*        if (dockerHostConfig.dockerhostMode != null && (dockerHostConfig.dockerhostMode.equals("docker_build") || dockerHostConfig.dockerhostMode.equals(
-                "codecc_build"
-            ))
-        ) {*/
         scheduledTaskRegistrar.addFixedRateTask(
             IntervalTask(
                 Runnable { runner.clearExitedContainer() }, 1200 * 1000, 3600 * 1000

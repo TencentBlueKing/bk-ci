@@ -146,7 +146,13 @@ class DockerHostUtils @Autowired constructor(
         // 先判断是否OP已配置专机，若配置了专机，从专机列表中选择一个容量最小的
         val specialIpSet = pipelineDockerHostDao.getHostIps(dslContext, projectId).toSet()
         logger.info("getAvailableDockerIp projectId: $projectId | specialIpSet: $specialIpSet")
-        return getAvailableDockerIpWithSpecialIps(projectId, pipelineId, vmSeqId, specialIpSet, unAvailableIpList, clusterType)
+        return getAvailableDockerIpWithSpecialIps(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            vmSeqId = vmSeqId,
+            specialIpSet = specialIpSet,
+            unAvailableIpList = unAvailableIpList,
+            clusterName = clusterType)
     }
 
     fun getIdlePoolNo(pipelineId: String, vmSeq: String): Int {

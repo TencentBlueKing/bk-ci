@@ -25,16 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.service
+package com.tencent.devops.environment
 
 import com.tencent.devops.common.service.MicroService
 import com.tencent.devops.common.service.MicroServiceApplication
 import org.springframework.context.annotation.ComponentScan
 
 @MicroService
-@ComponentScan("com.tencent.devops.auth")
-class Application
+@ComponentScan("com.tencent.devops.plugin", "com.tencent.devops.environment")
+class EnvironmentApplication
 
 fun main(args: Array<String>) {
-    MicroServiceApplication.run(Application::class, args)
+    MicroServiceApplication.run(EnvironmentApplication::class, args)
 }
