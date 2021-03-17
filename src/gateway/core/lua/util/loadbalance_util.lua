@@ -44,7 +44,7 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
 
         if not dns then
             ngx.log(ngx.ERR, "failed to instantiate the resolver: ", err)
-            ngx.exit(503)
+            return nil
         end
 
         -- 查询dns
@@ -52,16 +52,16 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
 
         if not records then
             ngx.log(ngx.ERR, "failed to query the DNS server: ", err)
-            ngx.exit(503)
+            return nil
         end
 
         if records.errcode then
             if records.errcode == 3 then
                 ngx.log(ngx.ERR, "DNS error code #" .. records.errcode .. ": ", records.errstr)
-                ngx.exit(503)
+                return nil
             else
                 ngx.log(ngx.ERR, "DNS error #" .. records.errcode .. ": ", err)
-                ngx.exit(503)
+                return nil
             end
         end
 
@@ -78,6 +78,7 @@ function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
 
         local ip_len = #ips
         if ip_len == 0 or port == nil then
+            ngx.log(ngx.ERR, "DNS answer didn't include ip or a port , service :" .. service_name)
             return nil
         end
 
