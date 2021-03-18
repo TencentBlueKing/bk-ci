@@ -47,13 +47,17 @@ class LogMQEventDispatcher(
 
     fun dispatch(event: ILogEvent) {
         try {
-            val fixedEvent = if (event is LogEvent) getFixedLogEvent(event) else event
+            // 如果配置了长度限制才做截断处理
+            val fixedEvent = if (event is LogEvent && lineMaxLength != null) {
+                getFixedLogEvent(event)
+            } else event
             val eventType = fixedEvent::class.java.annotations.find { s -> s is Event } as Event
             rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, fixedEvent) { message ->
                 // 事件中的变量指定
                 if (fixedEvent.delayMills > 0) {
                     message.messageProperties.setHeader("x-delay", fixedEvent.delayMills)
-                } else if (eventType.delayMills > 0) { // 事件类型固化默认值
+                } else if (eventType.delayMills > 0) {
+                    // 事件类型固化默认值
                     message.messageProperties.setHeader("x-delay", eventType.delayMills)
                 }
                 message
@@ -64,8 +68,10 @@ class LogMQEventDispatcher(
     }
 
     private fun getFixedLogEvent(logEvent: LogEvent): LogEvent {
+        // 若配置值为空或负数则限制为32KB
+        val maxLength = if (lineMaxLength == null || lineMaxLength <= 0) 32766 else lineMaxLength
         val fixedLogs = logEvent.logs.map {
-            it.copy(message = CommonUtils.interceptStringInLength(it.message, lineMaxLength ?: 32766) ?: "")
+            it.copy(message = CommonUtils.interceptStringInLength(it.message, maxLength) ?: "")
         }.toList()
         return logEvent.copy(logs = fixedLogs)
     }
