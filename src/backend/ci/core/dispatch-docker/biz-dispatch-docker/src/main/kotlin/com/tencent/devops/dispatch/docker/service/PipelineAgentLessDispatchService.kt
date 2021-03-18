@@ -112,26 +112,23 @@ class PipelineAgentLessDispatchService @Autowired constructor(
     fun shutdown(event: PipelineBuildLessShutdownDispatchEvent) {
         try {
             LOG.info("[${event.buildId}]| Start to finish the pipeline build($event)")
-            finishBuildLessDockerHost(event.buildId, event.vmSeqId, event.userId, event.buildResult)
+            if (event.vmSeqId.isNullOrBlank()) {
+                val records = pipelineDockerBuildDao
+                    .listBuilds(dslContext, event.buildId)
+                records.forEach {
+                    finishBuild(it, event.buildResult)
+                }
+            } else {
+                val record = pipelineDockerBuildDao
+                    .getBuild(dslContext, event.buildId, event.vmSeqId!!.toInt())
+                if (record != null) {
+                    finishBuild(record, event.buildResult)
+                }
+            }
         } finally {
             buildLogPrinter.stopLog(buildId = event.buildId, tag = "", jobId = null)
             // 不管shutdown成功失败，都要回收配额；这里回收job，将自动累加agent执行时间
             jobQuotaService.removeRunningJob(event.projectId, event.buildId, event.vmSeqId)
-        }
-    }
-
-    fun finishBuildLessDockerHost(buildId: String, vmSeqId: String?, userId: String, success: Boolean) {
-        LOG.info("[$buildId]|BUILD_LESS| Finish vmSeqId($vmSeqId) with result($success)")
-        if (vmSeqId.isNullOrBlank()) {
-            val records = pipelineDockerBuildDao.listBuilds(dslContext, buildId)
-            records.forEach {
-                finishBuild(it, success)
-            }
-        } else {
-            val record = pipelineDockerBuildDao.getBuild(dslContext, buildId, vmSeqId!!.toInt())
-            if (record != null) {
-                finishBuild(record, success)
-            }
         }
     }
 
