@@ -44,15 +44,15 @@ import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.client.LogClient
-import com.tencent.devops.log.jmx.v2.CreateIndexBeanV2
-import com.tencent.devops.log.jmx.v2.LogBeanV2
+import com.tencent.devops.log.jmx.CreateIndexBean
+import com.tencent.devops.log.jmx.LogStorageBean
 import com.tencent.devops.log.service.IndexService
 import com.tencent.devops.log.service.LogService
 import com.tencent.devops.log.service.LogStatusService
 import com.tencent.devops.log.service.LogTagService
 import com.tencent.devops.log.util.Constants
 import com.tencent.devops.log.util.ESIndexUtils
-import com.tencent.devops.log.util.BuildLogPrintService
+import com.tencent.devops.log.service.BuildLogPrintService
 import org.elasticsearch.ElasticsearchStatusException
 import org.elasticsearch.action.admin.indices.open.OpenIndexRequest
 import org.elasticsearch.action.bulk.BulkRequest
@@ -87,8 +87,8 @@ class LogServiceESImpl constructor(
     private val indexService: IndexService,
     private val logStatusService: LogStatusService,
     private val logTagService: LogTagService,
-    private val createIndexBeanV2: CreateIndexBeanV2,
-    private val logBeanV2: LogBeanV2,
+    private val createIndexBean: CreateIndexBean,
+    private val logStorageBean: LogStorageBean,
     private val redisOperation: RedisOperation,
     private val buildLogPrintService: BuildLogPrintService
 ) : LogService {
@@ -144,7 +144,7 @@ class LogServiceESImpl constructor(
             success = true
         } finally {
             val elapse = System.currentTimeMillis() - currentEpoch
-            logBeanV2.batchWrite(elapse, success)
+            logStorageBean.batchWrite(elapse, success)
         }
     }
 
@@ -185,7 +185,7 @@ class LogServiceESImpl constructor(
             success = logStatusSuccess(result.status)
             return result
         } finally {
-            logBeanV2.query(System.currentTimeMillis() - currentEpoch, success)
+            logStorageBean.query(System.currentTimeMillis() - currentEpoch, success)
         }
     }
 
@@ -272,7 +272,7 @@ class LogServiceESImpl constructor(
             }
             return queryLogs
         } finally {
-            logBeanV2.query(System.currentTimeMillis() - startEpoch, success)
+            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
         }
     }
 
@@ -300,7 +300,7 @@ class LogServiceESImpl constructor(
             success = logStatusSuccess(result.status)
             return result
         } finally {
-            logBeanV2.query(System.currentTimeMillis() - startEpoch, success)
+            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
         }
     }
 
@@ -331,7 +331,7 @@ class LogServiceESImpl constructor(
             success = logStatusSuccess(result.status)
             return result
         } finally {
-            logBeanV2.query(System.currentTimeMillis() - startEpoch, success)
+            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
         }
     }
 
@@ -438,7 +438,7 @@ class LogServiceESImpl constructor(
             queryLogs.logs = result.logs
             queryLogs.timeUsed = System.currentTimeMillis() - startEpoch
         } finally {
-            logBeanV2.query(System.currentTimeMillis() - startEpoch, success)
+            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
         }
         return queryLogs
     }
@@ -467,7 +467,7 @@ class LogServiceESImpl constructor(
             result.timeUsed = System.currentTimeMillis() - startEpoch
             return result
         } finally {
-            logBeanV2.query(System.currentTimeMillis() - startEpoch, success)
+            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
         }
     }
 
@@ -525,7 +525,7 @@ class LogServiceESImpl constructor(
             logger.error("Query init logs failed because of ${e.javaClass}. buildId: $buildId", e)
             queryLogs.status = LogStatus.FAIL
         } finally {
-            logBeanV2.query(System.currentTimeMillis() - startEpoch, success)
+            logStorageBean.query(System.currentTimeMillis() - startEpoch, success)
         }
 
         return PageQueryLogs(
@@ -1132,7 +1132,7 @@ class LogServiceESImpl constructor(
             if (bulkLines != lines) {
                 logger.warn("[$buildId] Part of bulk lines failed, lines:$lines, bulkLines:$bulkLines")
             }
-            logBeanV2.bulkRequest(System.currentTimeMillis() - currentEpoch, bulkLines > 0)
+            logStorageBean.bulkRequest(System.currentTimeMillis() - currentEpoch, bulkLines > 0)
         }
     }
 
@@ -1240,7 +1240,7 @@ class LogServiceESImpl constructor(
             logger.error("[${createClient.clusterName}] Create index $index failure", e)
             return false
         } finally {
-            createIndexBeanV2.execute(System.currentTimeMillis() - startEpoch, success)
+            createIndexBean.execute(System.currentTimeMillis() - startEpoch, success)
         }
     }
 

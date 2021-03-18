@@ -34,7 +34,7 @@ import com.tencent.devops.log.api.print.ServiceLogPrintResource
 import com.tencent.devops.common.log.pojo.LogEvent
 import com.tencent.devops.common.log.pojo.LogStatusEvent
 import com.tencent.devops.common.log.pojo.message.LogMessage
-import com.tencent.devops.log.util.BuildLogPrintService
+import com.tencent.devops.log.service.BuildLogPrintService
 import org.springframework.beans.factory.annotation.Autowired
 
 /**

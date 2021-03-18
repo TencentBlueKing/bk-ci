@@ -35,7 +35,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.print.BuildLogPrintResource
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.log.meta.Ansi
-import com.tencent.devops.log.util.BuildLogPrintService
+import com.tencent.devops.log.service.BuildLogPrintService
 import org.springframework.beans.factory.annotation.Autowired
 
 /**
