@@ -301,19 +301,22 @@ class DockerHostUtils @Autowired constructor(
                         cpuLoadThreshold = 80,
                         memLoadThreshold = 50,
                         diskLoadThreshold = 80,
-                        diskIOLoadThreshold = 80
+                        diskIOLoadThreshold = 50,
+                        usedNum = 40
                     ),
                     dockerHostLoadConfig["second"] ?: DockerHostLoadConfig(
                         cpuLoadThreshold = 90,
                         memLoadThreshold = 70,
                         diskLoadThreshold = 90,
-                        diskIOLoadThreshold = 85
+                        diskIOLoadThreshold = 70,
+                        usedNum = 50
                     ),
                     dockerHostLoadConfig["third"] ?: DockerHostLoadConfig(
                         cpuLoadThreshold = 100,
                         memLoadThreshold = 80,
                         diskLoadThreshold = 95,
-                        diskIOLoadThreshold = 85
+                        diskIOLoadThreshold = 85,
+                        usedNum = 50
                     )
                 )
             } catch (e: Exception) {
@@ -322,18 +325,27 @@ class DockerHostUtils @Autowired constructor(
         }
 
         return Triple(
-            first = DockerHostLoadConfig(cpuLoadThreshold = 80,
+            first = DockerHostLoadConfig(
+                cpuLoadThreshold = 80,
                 memLoadThreshold = 50,
                 diskLoadThreshold = 80,
-                diskIOLoadThreshold = 80),
-            second = DockerHostLoadConfig(cpuLoadThreshold = 90,
+                diskIOLoadThreshold = 50,
+                usedNum = 40
+            ),
+            second = DockerHostLoadConfig(
+                cpuLoadThreshold = 90,
                 memLoadThreshold = 70,
                 diskLoadThreshold = 90,
-                diskIOLoadThreshold = 85),
-            third = DockerHostLoadConfig(cpuLoadThreshold = 100,
+                diskIOLoadThreshold = 70,
+                usedNum = 50
+            ),
+            third = DockerHostLoadConfig(
+                cpuLoadThreshold = 100,
                 memLoadThreshold = 80,
                 diskLoadThreshold = 95,
-                diskIOLoadThreshold = 85)
+                diskIOLoadThreshold = 85,
+                usedNum = 50
+            )
         )
     }
 
@@ -349,12 +361,13 @@ class DockerHostUtils @Autowired constructor(
             pipelineDockerIpInfoDao.getAvailableDockerIpList(
                 dslContext = dslContext,
                 grayEnv = grayEnv,
-                clusterName = clusterName.name,
+                clusterName = clusterName,
                 cpuLoad = dockerHostLoadConfig.cpuLoadThreshold,
                 memLoad = dockerHostLoadConfig.memLoadThreshold,
                 diskLoad = dockerHostLoadConfig.diskLoadThreshold,
                 diskIOLoad = dockerHostLoadConfig.diskIOLoadThreshold,
-                specialIpSet = specialIpSet
+                specialIpSet = specialIpSet,
+                usedNum = dockerHostLoadConfig.usedNum
             )
 
         return if (dockerIpList.isNotEmpty && sufficientResources(finalCheck, dockerIpList.size, grayEnv)) {
