@@ -575,8 +575,8 @@ class CodeWebhookService @Autowired constructor(
                     )
                 } else {
                     if (buildNum.toInt() >= record.buildNumber) {
-                        // github的re-run时，需要将状态重新置为in_progress
-                        val checkRunId = if (conclusion == null) {
+                        // 如果重试，需要将状态重新置为in_progress
+                        val checkRunId = if (conclusion == null && buildNum.toInt() == record.buildNumber) {
                             val result = scmService.addGithubCheckRuns(
                                 projectId = projectId,
                                 repositoryConfig = repositoryConfig,
