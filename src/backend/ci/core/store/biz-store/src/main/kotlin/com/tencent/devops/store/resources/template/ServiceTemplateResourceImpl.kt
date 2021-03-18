@@ -66,4 +66,16 @@ class ServiceTemplateResourceImpl @Autowired constructor(
             )
         )
     }
+
+    override fun validateUserTemplateComponentVisibleDept(
+        userId: String,
+        templateCode: String,
+        projectCode: String
+    ): Result<Boolean> {
+        return marketTemplateService.validateUserTemplateComponentVisibleDept(
+            userId = userId,
+            templateCode = templateCode,
+            projectCodeList = arrayListOf(projectCode)
+        )
+    }
 }
