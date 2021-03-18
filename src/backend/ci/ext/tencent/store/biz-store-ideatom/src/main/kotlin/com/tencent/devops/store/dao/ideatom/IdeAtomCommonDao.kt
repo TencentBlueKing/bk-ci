@@ -28,7 +28,9 @@
 package com.tencent.devops.store.dao.ideatom
 
 import com.tencent.devops.model.store.tables.TIdeAtom
+import com.tencent.devops.model.store.tables.TIdeAtomFeature
 import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
+import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -79,5 +81,27 @@ class IdeAtomCommonDao : AbstractStoreCommonDao() {
 
     override fun getStoreDevLanguages(dslContext: DSLContext, storeCode: String): List<String>? {
         return null
+    }
+
+    override fun getStoreBaseInfoByCode(dslContext: DSLContext, storeCode: String): StoreBaseInfo? {
+        val tia = TIdeAtom.T_IDE_ATOM
+        val tiaf = TIdeAtomFeature.T_IDE_ATOM_FEATURE
+        val atomRecord = dslContext.selectFrom(tia)
+            .where(tia.ATOM_CODE.eq(storeCode).and(tia.LATEST_FLAG.eq(true)))
+            .fetchOne()
+        return if (atomRecord != null) {
+            val publicFlag = dslContext.select(tiaf.PUBLIC_FLAG).from(tiaf)
+                .where(tiaf.ATOM_CODE.eq(storeCode))
+                .fetchOne(0, Boolean::class.java)
+            StoreBaseInfo(
+                storeId = atomRecord.id,
+                storeCode = atomRecord.atomCode,
+                storeName = atomRecord.atomName,
+                version = atomRecord.version,
+                publicFlag = publicFlag
+            )
+        } else {
+            null
+        }
     }
 }

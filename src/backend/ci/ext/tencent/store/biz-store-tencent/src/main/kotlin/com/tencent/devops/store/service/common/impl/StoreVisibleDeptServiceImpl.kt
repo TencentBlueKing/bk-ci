@@ -29,12 +29,15 @@ package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.project.api.service.ServiceProjectOrganizationResource
 import com.tencent.devops.store.dao.common.StoreDeptRelDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.pojo.common.DeptInfo
 import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
+import com.tencent.devops.store.pojo.common.UserStoreDeptInfoRequest
 import com.tencent.devops.store.pojo.common.VisibleApproveReq
 import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -51,6 +54,7 @@ import org.springframework.stereotype.Service
 @Service
 class StoreVisibleDeptServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
+    private val client: Client,
     private val storeDeptRelDao: StoreDeptRelDao,
     private val storeMemberDao: StoreMemberDao
 ) : StoreVisibleDeptService {
@@ -60,17 +64,31 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
     /**
      * 查看store组件可见范围
      */
-    override fun getVisibleDept(storeCode: String, storeType: StoreTypeEnum, deptStatus: DeptStatusEnum?): Result<StoreVisibleDeptResp?> {
+    override fun getVisibleDept(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        deptStatus: DeptStatusEnum?
+    ): Result<StoreVisibleDeptResp?> {
         logger.info("the storeCode is :$storeCode,storeType is :$storeType,deptStatus is :$deptStatus")
-        val storeDeptRelRecords = storeDeptRelDao.getDeptInfosByStoreCode(dslContext, storeCode, storeType.type.toByte(), deptStatus, null)
-        logger.info("the storeDeptRelRecords is :$storeDeptRelRecords")
+        val storeDeptRelRecords = storeDeptRelDao.getDeptInfosByStoreCode(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeType.type.toByte(),
+            deptStatus = deptStatus,
+            deptIdList = null
+        )
         return Result(
             if (storeDeptRelRecords == null) {
                 null
             } else {
                 val deptInfos = mutableListOf<DeptInfo>()
                 storeDeptRelRecords.forEach {
-                    deptInfos.add(DeptInfo(it.deptId, it.deptName, DeptStatusEnum.getStatus(it.status.toInt()), it.comment))
+                    deptInfos.add(DeptInfo(
+                        deptId = it.deptId,
+                        deptName = it.deptName,
+                        status = DeptStatusEnum.getStatus(it.status.toInt()),
+                        comment = it.comment
+                    ))
                 }
                 StoreVisibleDeptResp(deptInfos)
             }
@@ -80,9 +98,16 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
     /**
      * 批量获取已经审核通过的可见范围
      */
-    override fun batchGetVisibleDept(storeCodeList: List<String?>, storeType: StoreTypeEnum): Result<HashMap<String, MutableList<Int>>> {
+    override fun batchGetVisibleDept(
+        storeCodeList: List<String?>,
+        storeType: StoreTypeEnum
+    ): Result<HashMap<String, MutableList<Int>>> {
         val ret = hashMapOf<String, MutableList<Int>>()
-        val storeDeptRelRecords = storeDeptRelDao.batchList(dslContext, storeCodeList, storeType.type.toByte())
+        val storeDeptRelRecords = storeDeptRelDao.batchList(
+            dslContext = dslContext,
+            storeCodeList = storeCodeList,
+            storeType = storeType.type.toByte()
+        )
         storeDeptRelRecords?.forEach {
             val list = if (ret.containsKey(it["STORE_CODE"] as String)) {
                 ret[it["STORE_CODE"] as String]!!
@@ -99,15 +124,33 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
     /**
      * 设置store组件可见范围
      */
-    override fun addVisibleDept(userId: String, storeCode: String, deptInfos: List<DeptInfo>, storeType: StoreTypeEnum): Result<Boolean> {
-        logger.info("addVisibleDept userId is :$userId,storeCode is :$storeCode,deptInfos is :$deptInfos,storeType is :$storeType")
+    override fun addVisibleDept(
+        userId: String,
+        storeCode: String,
+        deptInfos: List<DeptInfo>,
+        storeType: StoreTypeEnum
+    ): Result<Boolean> {
+        logger.info("addVisibleDept userId:$userId,storeCode:$storeCode,deptInfos:$deptInfos,storeType:$storeType")
         // 判断用户是否有权限设置可见范围
-        if (!storeMemberDao.isStoreAdmin(dslContext, userId, storeCode, storeType.type.toByte())) {
-            return MessageCodeUtil.generateResponseDataObject(messageCode = CommonMessageCode.PERMISSION_DENIED, data = false)
+        if (!storeMemberDao.isStoreAdmin(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = storeCode,
+                storeType = storeType.type.toByte()
+            )) {
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                data = false
+            )
         }
         val deptIdApprovedList = mutableListOf<DeptInfo>()
         deptInfos.forEach forEach@{
-            val count = storeDeptRelDao.countByCodeAndDeptId(dslContext, storeCode, it.deptId, storeType.type.toByte())
+            val count = storeDeptRelDao.countByCodeAndDeptId(
+                dslContext = dslContext,
+                storeCode = storeCode,
+                deptId = it.deptId,
+                storeType = storeType.type.toByte()
+            )
             if (count>0) {
                 return@forEach
             }
@@ -123,34 +166,56 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
             comment = "AUTO APPROVE",
             storeType = storeType.type.toByte()
         )
-
         return Result(true)
     }
 
     /**
      * 删除store组件可见范围
      */
-    override fun deleteVisibleDept(userId: String, storeCode: String, deptIds: String, storeType: StoreTypeEnum): Result<Boolean> {
+    override fun deleteVisibleDept(
+        userId: String,
+        storeCode: String,
+        deptIds: String,
+        storeType: StoreTypeEnum
+    ): Result<Boolean> {
         logger.info("the userId is :$userId,storeCode is :$storeCode,deptIds is :$deptIds,storeType is :$storeType")
         // 判断用户是否有权限删除可见范围
-        if (!storeMemberDao.isStoreAdmin(dslContext, userId, storeCode, storeType.type.toByte())) {
-            return MessageCodeUtil.generateResponseDataObject(messageCode = CommonMessageCode.PERMISSION_DENIED, data = false)
+        if (!storeMemberDao.isStoreAdmin(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = storeCode,
+                storeType = storeType.type.toByte()
+            )) {
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                data = false
+            )
         }
         val deptIdIntList = mutableListOf<Int>()
         val deptIdStrList = deptIds.split(",")
         deptIdStrList.forEach {
             deptIdIntList.add(it.toInt())
         }
-        storeDeptRelDao.batchDelete(dslContext, storeCode, deptIdIntList, storeType.type.toByte())
+        storeDeptRelDao.batchDelete(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            deptIdList = deptIdIntList,
+            storeType = storeType.type.toByte()
+        )
         return Result(true)
     }
 
     /**
      * 审核可见范围
      */
-    override fun approveVisibleDept(userId: String, storeCode: String, visibleApproveReq: VisibleApproveReq, storeType: StoreTypeEnum): Result<Boolean> {
+    override fun approveVisibleDept(
+        userId: String,
+        storeCode: String,
+        visibleApproveReq: VisibleApproveReq,
+        storeType: StoreTypeEnum
+    ): Result<Boolean> {
         val deptIdIntList = visibleApproveReq.deptIdList
-        logger.info("approveVisibleDept, the userId is :$userId,storeCode is :$storeCode,deptIds is :$deptIdIntList,storeType is :$storeType")
+        logger.info("approveVisible userId:$userId,storeCode:$storeCode,deptIds:$deptIdIntList,storeType:$storeType")
         val status =
             if (visibleApproveReq.result == PASS) {
                 DeptStatusEnum.APPROVED.status.toByte()
@@ -158,8 +223,62 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
                 DeptStatusEnum.REJECT.status.toByte()
             }
 
-        storeDeptRelDao.batchUpdate(dslContext, userId, storeCode, deptIdIntList, status, visibleApproveReq.message, storeType.type.toByte())
-
+        storeDeptRelDao.batchUpdate(
+            dslContext = dslContext,
+            userId = userId,
+            storeCode = storeCode,
+            deptIdList = deptIdIntList,
+            status = status,
+            comment = visibleApproveReq.message,
+            storeType = storeType.type.toByte()
+        )
         return Result(true)
+    }
+
+    override fun checkUserInvalidVisibleStoreInfo(
+        userStoreDeptInfoRequest: UserStoreDeptInfoRequest
+    ): Boolean {
+        // 如果是公共组件，则无需校验与用户的可见范围
+        if (!userStoreDeptInfoRequest.publicFlag) {
+            val isStoreMember = storeMemberDao.isStoreMember(
+                dslContext = dslContext,
+                userId = userStoreDeptInfoRequest.userId,
+                storeCode = userStoreDeptInfoRequest.storeCode,
+                storeType = userStoreDeptInfoRequest.storeType.type.toByte()
+            )
+            return getInvalidStoreFlag(
+                isStoreMember = isStoreMember,
+                storeDepInfoList = userStoreDeptInfoRequest.storeDepInfoList,
+                userDeptIdList = userStoreDeptInfoRequest.userDeptIdList
+            )
+        }
+        return true
+    }
+
+    private fun getInvalidStoreFlag(
+        isStoreMember: Boolean,
+        storeDepInfoList: List<DeptInfo>?,
+        userDeptIdList: List<Int>
+    ): Boolean {
+        var flag = false
+        if (isStoreMember) {
+            flag = true
+        } else {
+            storeDepInfoList?.forEach deptEach@{ storeDepInfo ->
+                val storeDeptId = storeDepInfo.deptId
+                if (storeDeptId == 0 || userDeptIdList.contains(storeDeptId)) {
+                    return true // 用户在组件的可见范围内
+                } else {
+                    // 判断该组件的可见范围是否设置了全公司可见
+                    val parentDeptInfoList = client.get(ServiceProjectOrganizationResource::class)
+                        .getParentDeptInfos(storeDeptId.toString(), 1).data
+                    if (null != parentDeptInfoList && parentDeptInfoList.isEmpty()) {
+                        // 没有上级机构说明设置的可见范围是全公司
+                        return true // 用户在组件的可见范围内
+                    }
+                }
+            }
+        }
+        return flag
     }
 }

@@ -32,6 +32,7 @@ import com.tencent.devops.model.store.tables.TExtensionService
 import com.tencent.devops.model.store.tables.TExtensionServiceEnvInfo
 import com.tencent.devops.model.store.tables.TExtensionServiceFeature
 import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
+import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -89,5 +90,27 @@ class ServiceCommonDao : AbstractStoreCommonDao() {
             .where(tes.SERVICE_CODE.eq(storeCode).and(tes.LATEST_FLAG.eq(true)))
             .fetchOne(0, String()::class.java)
         return arrayListOf(language, JS)
+    }
+
+    override fun getStoreBaseInfoByCode(dslContext: DSLContext, storeCode: String): StoreBaseInfo? {
+        val tes = TExtensionService.T_EXTENSION_SERVICE.`as`("tes")
+        val tesf = TExtensionServiceFeature.T_EXTENSION_SERVICE_FEATURE.`as`("tesf")
+        val serviceRecord = dslContext.selectFrom(tes)
+            .where(tes.SERVICE_CODE.eq(storeCode).and(tes.LATEST_FLAG.eq(true)))
+            .fetchOne()
+        return if (serviceRecord != null) {
+            val publicFlag = dslContext.select(tesf.PUBLIC_FLAG).from(tesf)
+                .where(tesf.SERVICE_CODE.eq(storeCode))
+                .fetchOne(0, Boolean::class.java)
+            StoreBaseInfo(
+                storeId = serviceRecord.id,
+                storeCode = serviceRecord.serviceCode,
+                storeName = serviceRecord.serviceName,
+                version = serviceRecord.version,
+                publicFlag = publicFlag
+            )
+        } else {
+            null
+        }
     }
 }

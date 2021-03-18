@@ -29,11 +29,7 @@ package com.tencent.devops.store.service.template.impl
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.model.store.tables.records.TAtomRecord
-import com.tencent.devops.model.store.tables.records.TStoreDeptRelRecord
-import com.tencent.devops.project.api.service.ServiceProjectOrganizationResource
-import com.tencent.devops.store.dao.common.StoreDeptRelDao
+import com.tencent.devops.store.pojo.common.UserStoreDeptInfoRequest
 import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreVisibleDeptService
@@ -76,63 +72,6 @@ class TxMarketTemplateServiceImpl : TxMarketTemplateService, MarketTemplateServi
         }
     }
 
-    override fun generateUserAtomInvalidVisibleAtom(
-        userId: String,
-        userDeptIdList: List<Int>,
-        atomCode: String,
-        atomName: String,
-        defaultFlag: Boolean,
-        atomDeptList: List<TStoreDeptRelRecord>?
-    ): List<String> {
-        val invalidAtomList = mutableListOf<String>()
-        // 如果插件是默认插件，则无需校验与用户的可见范围
-        if (!defaultFlag) {
-            val isAtomMember = storeMemberDao.isStoreMember(
-                dslContext = dslContext,
-                userId = userId,
-                storeCode = atomCode,
-                storeType = StoreTypeEnum.ATOM.type.toByte()
-            )
-            val flag = getInvalidAtomFlag(
-                isAtomMember = isAtomMember,
-                atomDeptList = atomDeptList,
-                userDeptIdList = userDeptIdList
-            )
-            if (!flag) {
-                invalidAtomList.add(atomName)
-            }
-        }
-        return invalidAtomList
-    }
-
-    private fun getInvalidAtomFlag(
-        isAtomMember: Boolean,
-        atomDeptList: List<TStoreDeptRelRecord>?,
-        userDeptIdList: List<Int>
-    ): Boolean {
-        var flag = false
-        if (isAtomMember) {
-            flag = true
-        } else {
-            atomDeptList?.forEach deptEach@{ atomDept ->
-                if (userDeptIdList.contains(atomDept.deptId)) {
-                    flag = true // 用户在原子插件的可见范围内
-                    return@deptEach
-                } else {
-                    // 判断该插件的可见范围是否设置了全公司可见
-                    val parentDeptInfoList = client.get(ServiceProjectOrganizationResource::class)
-                        .getParentDeptInfos(atomDept.deptId.toString(), 1).data
-                    if (null != parentDeptInfoList && parentDeptInfoList.isEmpty()) {
-                        // 没有上级机构说明设置的可见范围是全公司
-                        flag = true // 用户在插件的可见范围内
-                        return@deptEach
-                    }
-                }
-            }
-        }
-        return flag
-    }
-
     override fun validateTempleAtomVisible(templateCode: String, templateModel: Model): Result<Boolean> {
         // 校验模板与插件的可见范围
         val templateDeptInfos = storeVisibleDeptService.getVisibleDept(
@@ -144,5 +83,9 @@ class TxMarketTemplateServiceImpl : TxMarketTemplateService, MarketTemplateServi
             templateModel = templateModel,
             deptInfos = templateDeptInfos
         )
+    }
+
+    override fun checkUserInvalidVisibleStoreInfo(userStoreDeptInfoRequest: UserStoreDeptInfoRequest): Boolean {
+        return storeVisibleDeptService.checkUserInvalidVisibleStoreInfo(userStoreDeptInfoRequest)
     }
 }
