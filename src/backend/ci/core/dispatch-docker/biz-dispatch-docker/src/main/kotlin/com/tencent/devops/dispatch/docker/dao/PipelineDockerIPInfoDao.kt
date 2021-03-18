@@ -27,6 +27,7 @@
 
 package com.tencent.devops.dispatch.docker.dao
 
+import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import com.tencent.devops.model.dispatch.tables.TDispatchPipelineDockerIpInfo
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerIpInfoRecord
 import org.jooq.Condition
@@ -210,11 +211,12 @@ class PipelineDockerIPInfoDao {
     fun getAvailableDockerIpList(
         dslContext: DSLContext,
         grayEnv: Boolean,
-        clusterName: String,
+        clusterName: DockerHostClusterType,
         cpuLoad: Int,
         memLoad: Int,
         diskLoad: Int,
         diskIOLoad: Int,
+        usedNum: Int,
         specialIpSet: Set<String> = setOf()
     ): Result<TDispatchPipelineDockerIpInfoRecord> {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
@@ -222,11 +224,12 @@ class PipelineDockerIPInfoDao {
                 mutableListOf<Condition>(
                     ENABLE.eq(true),
                     GRAY_ENV.eq(grayEnv),
-                    CLUSTER_NAME.eq(clusterName)
+                    CLUSTER_NAME.eq(clusterName.name)
                 )
 
-            if (specialIpSet.isEmpty() || specialIpSet.toString() == "[]") {
-                // 没有配置专机，则过滤开启了专机独享的ip
+            if (clusterName == DockerHostClusterType.COMMON &&
+                (specialIpSet.isEmpty() || specialIpSet.toString() == "[]")) {
+                // 没有配置专机，则过滤开启了专机独享的ip，并且只有公共集群才考虑专机问题
                 conditions.add(SPECIAL_ON.eq(false))
             }
 
@@ -234,6 +237,7 @@ class PipelineDockerIPInfoDao {
             conditions.add(MEM_LOAD.lessOrEqual(memLoad))
             conditions.add(DISK_LOAD.lessOrEqual(diskLoad))
             conditions.add(DISK_IO_LOAD.lessOrEqual(diskIOLoad))
+            conditions.add(USED_NUM.lessOrEqual(usedNum))
 
             if (specialIpSet.isNotEmpty() && specialIpSet.toString() != "[]") {
                 conditions.add(DOCKER_IP.`in`(specialIpSet))
