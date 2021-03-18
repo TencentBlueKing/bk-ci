@@ -34,11 +34,20 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.pojo.GitRepositoryConf
+import com.tencent.devops.gitci.pojo.enums.GitCINotifyTemplateEnum
+import com.tencent.devops.gitci.pojo.enums.GitCINotifyType
+import com.tencent.devops.model.gitci.tables.records.TGitPipelineResourceRecord
+import com.tencent.devops.model.gitci.tables.records.TGitRequestEventBuildRecord
+import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
+import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
+import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.pojo.BuildHistory
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.ExchangeTypes
@@ -48,6 +57,7 @@ import org.springframework.amqp.rabbit.annotation.QueueBinding
 import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.lang.Exception
 
 @Service
 class GitCIBuildFinishListener @Autowired constructor(
@@ -79,25 +89,46 @@ class GitCIBuildFinishListener @Autowired constructor(
 
                 val objectKind = record["OBJECT_KIND"] as String
 
+                // 检测状态
+                val state = if (BuildStatus.isFailure(BuildStatus.valueOf(buildFinishEvent.status))) {
+                    "failure"
+                } else {
+                    "success"
+                }
+
+                val commitId = record["COMMIT_ID"] as String
+                val gitProjectId = record["GIT_PROJECT_ID"] as Long
+                var mergeRequestId = 0L
+                if (record["MERGE_REQUEST_ID"] != null) {
+                    mergeRequestId = record["MERGE_REQUEST_ID"] as Long
+                }
+                val description = record["DESCRIPTION"] as String
+                val gitProjectConf = gitCISettingDao.getSetting(dslContext, gitProjectId)
+                    ?: throw OperationException("git ci projectCode not exist")
+                val event = gitRequestEventBuildDao.getByBuildId(dslContext, buildFinishEvent.buildId)
+                    ?: throw OperationException("git ci buildEvent not exist")
+                val pipeline = gitPipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId)
+                    ?: throw OperationException("git ci pipeline not exist")
+                val buildInfo = client.get(ServiceBuildResource::class)
+                    .getBatchBuildStatus(
+                        projectId = gitProjectConf.projectCode!!,
+                        buildId = setOf(buildFinishEvent.buildId),
+                        channelCode = ChannelCode.GIT
+                    ).data
+                if (buildInfo == null || buildInfo.isEmpty()) {
+                    throw OperationException("git ci buildInfo not exist")
+                }
+                // 构建结束发送通知
+                notify(
+                    state = state,
+                    conf = gitProjectConf,
+                    event = event,
+                    pipeline = pipeline,
+                    build = buildInfo.first()
+                )
+
                 // 推送结束构建消息,当人工触发时不推送CommitCheck消息
                 if (objectKind != OBJECT_KIND_MANUAL) {
-                    val commitId = record["COMMIT_ID"] as String
-                    val gitProjectId = record["GIT_PROJECT_ID"] as Long
-                    var mergeRequestId = 0L
-                    if (record["MERGE_REQUEST_ID"] != null) {
-                        mergeRequestId = record["MERGE_REQUEST_ID"] as Long
-                    }
-                    val description = record["DESCRIPTION"] as String
-                    val gitProjectConf = gitCISettingDao.getSetting(dslContext, gitProjectId)
-                        ?: throw OperationException("git ci projectCode not exist")
-
-                    // 检测状态
-                    val state = if (BuildStatus.isFailure(BuildStatus.valueOf(buildFinishEvent.status))) {
-                        "failure"
-                    } else {
-                        "success"
-                    }
-                    val pipeline = gitPipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId)
                     scmClient.pushCommitCheck(
                         commitId = commitId,
                         description = description,
@@ -109,15 +140,19 @@ class GitCIBuildFinishListener @Autowired constructor(
                         gitProjectConf = gitProjectConf
                     )
                 }
-
-
             }
         } catch (e: Throwable) {
             logger.error("Fail to push commit check build(${buildFinishEvent.buildId})", e)
         }
     }
 
-    private fun notify(conf: GitRepositoryConf) {
+    private fun notify(
+        state: String,
+        conf: GitRepositoryConf,
+        event: TGitRequestEventBuildRecord,
+        pipeline: TGitPipelineResourceRecord,
+        build: BuildHistory
+    ) {
         if (conf.enableNotify == null || !conf.enableNotify!!) {
             return
         }
@@ -128,20 +163,69 @@ class GitCIBuildFinishListener @Autowired constructor(
             logger.warn("gitCI project: ${conf.gitProjectId} enable notify but not have notifyType")
         }
         conf.notifyType!!.forEach {
-            sendNotify(it, conf.notifyReceivers!!)
+            sendNotify(state, it, conf, event, pipeline, build)
         }
     }
 
     // 工蜂CI目前只支持企业微信和邮件通知
-    private fun sendNotify(notify: NotifyType, receivers: List<String>) {
+    private fun sendNotify(
+        state: String,
+        notify: GitCINotifyType,
+        conf: GitRepositoryConf,
+        event: TGitRequestEventBuildRecord,
+        pipeline: TGitPipelineResourceRecord,
+        build: BuildHistory
+    ) {
         when (notify) {
-            NotifyType.EMAIL -> {
-
+            GitCINotifyType.EMAIL -> {
+                val request = getEmailSendRequest(state, conf, event, pipeline, build)
+                client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
             }
-            NotifyType.RTX -> {
-
+            GitCINotifyType.RTX_CUSTOM -> {
             }
             else -> return
+        }
+    }
+
+    private fun getEmailSendRequest(
+        state: String,
+        conf: GitRepositoryConf,
+        event: TGitRequestEventBuildRecord,
+        pipeline: TGitPipelineResourceRecord,
+        build: BuildHistory
+    ): SendNotifyMessageTemplateRequest {
+        val notifyTemplateEnum = if (state == "success") {
+            GitCINotifyTemplateEnum.GITCI_BUILD_SUCCESS_TEMPLATE
+        } else {
+            GitCINotifyTemplateEnum.GITCI_BUILD_FAILED_TEMPLATE
+        }
+        val titleParams = mapOf(
+            "projectName" to getProjectName(conf),
+            "branchName" to event.branch,
+            "pipelineName" to (pipeline.displayName ?: pipeline.filePath),
+            "buildNum" to build.buildNum.toString()
+        )
+        val bodyParams = mapOf(
+            "content" to "邮件通知测试"
+        )
+        return SendNotifyMessageTemplateRequest(
+            templateCode = notifyTemplateEnum.templateCode,
+            receivers = conf.notifyReceivers!!.toMutableSet(),
+            cc = mutableSetOf(),
+            titleParams = titleParams,
+            bodyParams = bodyParams,
+            notifyType = mutableSetOf(NotifyType.EMAIL.name)
+        )
+    }
+
+    private fun getProjectName(conf: GitRepositoryConf): String {
+        return try {
+            val names = conf.homepage.split("/")
+            val userName = names[names.lastIndex - 1]
+            val projectName = names.last()
+            "$userName/$projectName"
+        } catch (e: Exception) {
+            conf.name
         }
     }
 

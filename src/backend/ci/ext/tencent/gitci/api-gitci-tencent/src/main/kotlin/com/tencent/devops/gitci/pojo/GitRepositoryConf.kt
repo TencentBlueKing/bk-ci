@@ -26,8 +26,7 @@
  */
 
 package com.tencent.devops.gitci.pojo
-
-import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.gitci.pojo.enums.GitCINotifyType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -68,7 +67,7 @@ data class GitRepositoryConf(
     @ApiModelProperty("是否开启通知")
     val enableNotify: Boolean? = false,
     @ApiModelProperty("选择的通知方式")
-    val notifyType: List<NotifyType>? = listOf(),
+    val notifyType: List<GitCINotifyType>? = listOf(),
     @ApiModelProperty("通知的接受者")
     val notifyReceivers: List<String>? = listOf()
 ) : Repository(gitProjectId, name, url, homepage, gitHttpUrl, gitSshUrl)

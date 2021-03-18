@@ -30,9 +30,9 @@ package com.tencent.devops.gitci.dao
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.gitci.pojo.EnvironmentVariables
 import com.tencent.devops.gitci.pojo.GitRepositoryConf
+import com.tencent.devops.gitci.pojo.enums.GitCINotifyType
 import com.tencent.devops.model.gitci.tables.TRepositoryConf
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -169,7 +169,7 @@ class GitCISettingDao {
                     updateTime = conf.updateTime.timestampmilli(),
                     projectCode = conf.projectCode,
                     enableNotify = conf.enableNotify,
-                    notifyType = conf.notifyType.split(",").map { NotifyType.valueOf(it) },
+                    notifyType = conf.notifyType.split(",").map { GitCINotifyType.valueOf(it) },
                     notifyReceivers = conf.notifyReceivers.split(",")
                 )
             }
