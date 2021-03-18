@@ -128,14 +128,4 @@ interface MarketTemplateService {
         templateId: String,
         templateCode: String
     ): Result<Boolean>
-
-    /**
-     * 获取stage下插件对应的机构信息
-     */
-    fun getStageAtomDeptMap(stageList: List<Stage>): MutableMap<String, Map<String, List<DeptInfo>?>>
-
-    /**
-     * 获取模板下镜像对应的机构信息
-     */
-    fun getTemplateImageDeptMap(stageList: List<Stage>): Map<String, List<DeptInfo>?>
 }
