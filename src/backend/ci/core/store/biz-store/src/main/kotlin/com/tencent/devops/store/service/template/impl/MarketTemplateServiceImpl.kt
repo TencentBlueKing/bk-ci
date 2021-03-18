@@ -872,7 +872,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         if (!storeBaseInfo.publicFlag && validFlag) needInstallAtomMap[atomCode] = storeBaseInfo
     }
 
-    private fun getTemplateImageDeptMap(stageList: List<Stage>): Map<String, List<DeptInfo>?> {
+    override fun getTemplateImageDeptMap(stageList: List<Stage>): Map<String, List<DeptInfo>?> {
         val templateImageCodeSet = mutableSetOf<String>()
         stageList.forEach { stage ->
             val containerList = stage.containers
