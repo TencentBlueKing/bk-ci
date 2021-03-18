@@ -76,7 +76,7 @@ class DockerHostUtils @Autowired constructor(
         private val logger = LoggerFactory.getLogger(DockerHostUtils::class.java)
     }
 
-    @Value("\${dispatch.defaultAgentLessIp:}")
+    @Value("\${dispatch.defaultAgentLessIp:127.0.0.1}")
     val defaultAgentLessIp: String = ""
 
     fun getAvailableDockerIpWithSpecialIps(
@@ -127,9 +127,10 @@ class DockerHostUtils @Autowired constructor(
 
         if (dockerPair.first.isEmpty()) {
             // agentless方案升级兼容
+            logger.info("defaultAgentLessIp: $defaultAgentLessIp")
             if (clusterName == DockerHostClusterType.AGENT_LESS && defaultAgentLessIp.isNotEmpty()) {
                 val defaultAgentLessIpList = defaultAgentLessIp.split(",")
-                return Pair(defaultAgentLessIpList[Random().nextInt(defaultAgentLessIpList.size)], 0)
+                return Pair(defaultAgentLessIpList[Random().nextInt(defaultAgentLessIpList.size)], 80)
             }
 
             if (specialIpSet.isNotEmpty()) {
