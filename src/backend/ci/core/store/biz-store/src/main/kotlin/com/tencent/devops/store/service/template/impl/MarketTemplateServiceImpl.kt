@@ -40,7 +40,6 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
-import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -59,7 +58,6 @@ import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
 import com.tencent.devops.store.dao.common.ClassifyDao
-import com.tencent.devops.store.dao.common.StoreDeptRelDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreStatisticDao
@@ -85,6 +83,7 @@ import com.tencent.devops.store.pojo.template.enums.TemplateRdTypeEnum
 import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
 import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreCommentService
+import com.tencent.devops.store.service.common.StoreDeptService
 import com.tencent.devops.store.service.common.StoreMemberService
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.StoreUserService
@@ -126,8 +125,6 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
     @Autowired
     lateinit var storeMemberDao: StoreMemberDao
     @Autowired
-    lateinit var storeDeptRelDao: StoreDeptRelDao
-    @Autowired
     lateinit var templateCategoryService: TemplateCategoryService
     @Autowired
     lateinit var templateLabelService: TemplateLabelService
@@ -146,6 +143,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
     lateinit var classifyService: ClassifyService
     @Autowired
     lateinit var templateModelService: TemplateModelService
+    @Autowired
+    lateinit var storeDeptService: StoreDeptService
     @Autowired
     lateinit var client: Client
 
@@ -683,9 +682,9 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         val userDeptIdList = storeUserService.getUserDeptList(userId) // 获取用户的机构ID信息
         val stageList = templateModel.stages
         // 获取模板下镜像的机构信息
-        val templateImageDeptMap = getTemplateImageDeptMap(stageList)
+        val templateImageDeptMap = storeDeptService.getTemplateImageDeptMap(stageList)
         // 获取每个stage下插件的机构信息
-        val stageAtomDeptMap = getStageAtomDeptMap(stageList)
+        val stageAtomDeptMap = storeDeptService.getStageAtomDeptMap(stageList)
         projectCodeList.forEach { projectCode ->
             // 获取已安装的镜像标识列表
             val installImageCodes = getInstallStoreCodes(
@@ -870,69 +869,6 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         )
         if (!validFlag) invalidAtomList.add(element.name)
         if (!storeBaseInfo.publicFlag && validFlag) needInstallAtomMap[atomCode] = storeBaseInfo
-    }
-
-    override fun getTemplateImageDeptMap(stageList: List<Stage>): Map<String, List<DeptInfo>?> {
-        val templateImageCodeSet = mutableSetOf<String>()
-        stageList.forEach { stage ->
-            val containerList = stage.containers
-            containerList.forEach { container ->
-                if (container is VMBuildContainer && container.dispatchType is DockerDispatchType) {
-                    val imageCode = (container.dispatchType as DockerDispatchType).imageCode
-                    if (!imageCode.isNullOrBlank()) templateImageCodeSet.add(imageCode!!)
-                }
-            }
-        }
-        return getStoreDeptRelMap(templateImageCodeSet, StoreTypeEnum.IMAGE.type.toByte())
-    }
-
-    override fun getStageAtomDeptMap(stageList: List<Stage>): MutableMap<String, Map<String, List<DeptInfo>?>> {
-        val stageAtomDeptMap = mutableMapOf<String, Map<String, List<DeptInfo>?>>()
-        stageList.forEach { stage ->
-            val stageAtomSet = mutableSetOf<String>()
-            val containerList = stage.containers
-            containerList.forEach { container ->
-                val elementList = container.elements
-                elementList.forEach { element ->
-                    stageAtomSet.add(element.getAtomCode())
-                }
-            }
-            val storeType = StoreTypeEnum.ATOM.type.toByte()
-            val atomDeptRelMap = getStoreDeptRelMap(stageAtomSet, storeType)
-            val stageId = stage.id
-            if (stageId != null) {
-                stageAtomDeptMap[stageId] = atomDeptRelMap
-            }
-        }
-        return stageAtomDeptMap
-    }
-
-    private fun getStoreDeptRelMap(
-        storeCodeList: MutableCollection<String>,
-        storeType: Byte
-    ): MutableMap<String, MutableList<DeptInfo>?> {
-        val storeDeptRelRecords = storeDeptRelDao.batchList(
-            dslContext = dslContext,
-            storeCodeList = storeCodeList,
-            storeType = storeType
-        )
-        val storeDeptRelMap = mutableMapOf<String, MutableList<DeptInfo>?>()
-        storeDeptRelRecords?.forEach { storeDeptRelRecord ->
-            val deptId = storeDeptRelRecord.deptId
-            val deptName = storeDeptRelRecord.deptName
-            val storeCode = storeDeptRelRecord.storeCode
-            val storeDeptList = storeDeptRelMap[storeCode]
-            if (storeDeptList != null) {
-                storeDeptList.add(DeptInfo(deptId, deptName))
-            } else {
-                storeDeptRelMap[storeCode] = mutableListOf(DeptInfo(deptId, deptName))
-            }
-        }
-        storeCodeList.removeAll(storeDeptRelMap.keys)
-        storeCodeList.forEach { storeCode ->
-            storeDeptRelMap[storeCode] = null
-        }
-        return storeDeptRelMap
     }
 
     abstract fun checkUserInvalidVisibleStoreInfo(userStoreDeptInfoRequest: UserStoreDeptInfoRequest): Boolean
