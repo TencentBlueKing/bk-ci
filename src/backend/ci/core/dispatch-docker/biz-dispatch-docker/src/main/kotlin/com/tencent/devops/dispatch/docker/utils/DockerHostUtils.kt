@@ -50,8 +50,8 @@ import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerI
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import java.net.URLEncoder
 import java.util.Random
 
 @Component
@@ -75,6 +75,9 @@ class DockerHostUtils @Autowired constructor(
 
         private val logger = LoggerFactory.getLogger(DockerHostUtils::class.java)
     }
+
+    @Value("\${dispatch.defaultAgentLessIp:}")
+    val defaultAgentLessIp: String = ""
 
     fun getAvailableDockerIpWithSpecialIps(
         projectId: String,
@@ -123,6 +126,12 @@ class DockerHostUtils @Autowired constructor(
         }
 
         if (dockerPair.first.isEmpty()) {
+            // agentless方案升级兼容
+            if (clusterName == DockerHostClusterType.AGENT_LESS && defaultAgentLessIp.isNotEmpty()) {
+                val defaultAgentLessIpList = defaultAgentLessIp.split(",")
+                return Pair(defaultAgentLessIpList[Random().nextInt(defaultAgentLessIpList.size)], 0)
+            }
+
             if (specialIpSet.isNotEmpty()) {
                 throw DockerServiceException(errorType = ErrorCodeEnum.NO_SPECIAL_VM_ERROR.errorType,
                     errorCode = ErrorCodeEnum.NO_SPECIAL_VM_ERROR.errorCode,
@@ -423,6 +432,4 @@ class DockerHostUtils @Autowired constructor(
 
         return false
     }
-
-    private fun urlEncode(s: String) = URLEncoder.encode(s, "UTF-8")
 }
