@@ -27,7 +27,9 @@
 package com.tencent.devops.store.dao.image
 
 import com.tencent.devops.model.store.tables.TImage
+import com.tencent.devops.model.store.tables.TImageFeature
 import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
+import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -78,5 +80,27 @@ class ImageCommonDao : AbstractStoreCommonDao() {
 
     override fun getStoreDevLanguages(dslContext: DSLContext, storeCode: String): List<String>? {
         return null
+    }
+
+    override fun getStoreBaseInfoByCode(dslContext: DSLContext, storeCode: String): StoreBaseInfo? {
+        val ti = TImage.T_IMAGE
+        val tif = TImageFeature.T_IMAGE_FEATURE
+        val imageRecord = dslContext.selectFrom(ti)
+            .where(ti.IMAGE_CODE.eq(storeCode).and(ti.LATEST_FLAG.eq(true)))
+            .fetchOne()
+        return if (imageRecord != null) {
+            val publicFlag = dslContext.select(tif.PUBLIC_FLAG).from(tif)
+                .where(tif.IMAGE_CODE.eq(storeCode))
+                .fetchOne(0, Boolean::class.java)
+            StoreBaseInfo(
+                storeId = imageRecord.id,
+                storeCode = imageRecord.imageCode,
+                storeName = imageRecord.imageName,
+                version = imageRecord.version,
+                publicFlag = publicFlag
+            )
+        } else {
+            null
+        }
     }
 }

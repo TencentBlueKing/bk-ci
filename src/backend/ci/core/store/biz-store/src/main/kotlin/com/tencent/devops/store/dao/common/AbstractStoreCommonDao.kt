@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.dao.common
 
+import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -58,4 +59,9 @@ abstract class AbstractStoreCommonDao {
         dslContext: DSLContext,
         storeCode: String
     ): List<String>?
+
+    abstract fun getStoreBaseInfoByCode(
+        dslContext: DSLContext,
+        storeCode: String
+    ): StoreBaseInfo?
 }

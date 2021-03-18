@@ -30,14 +30,16 @@ package com.tencent.devops.store.pojo.common
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("机构信息报文体")
-data class DeptInfo(
-    @ApiModelProperty("机构ID", required = true)
-    val deptId: Int,
-    @ApiModelProperty("机构名称", required = true)
-    val deptName: String,
-    @ApiModelProperty("机构审核状态(0：待审核 1：审核通过 2：审核驳回)", required = false)
-    val status: String? = null,
-    @ApiModelProperty("批注", required = false)
-    val comment: String? = null
+@ApiModel("组件基本信息")
+data class StoreBaseInfo(
+    @ApiModelProperty("组件Id", required = true)
+    val storeId: String,
+    @ApiModelProperty("组件代码", required = true)
+    val storeCode: String,
+    @ApiModelProperty("组件名称", required = true)
+    val storeName: String,
+    @ApiModelProperty("组件版本号", required = true)
+    val version: String,
+    @ApiModelProperty("是否为公共组件", required = true)
+    val publicFlag: Boolean
 )

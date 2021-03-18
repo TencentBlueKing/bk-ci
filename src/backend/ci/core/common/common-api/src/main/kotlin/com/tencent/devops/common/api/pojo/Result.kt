@@ -45,6 +45,7 @@ data class Result<out T>(
     val data: T? = null
 ) {
     constructor(data: T) : this(0, null, data)
+    constructor(message: String?, data: T) : this(0, message, data)
     constructor(status: Int, message: String) : this(status, message, null)
 
     @JsonIgnore

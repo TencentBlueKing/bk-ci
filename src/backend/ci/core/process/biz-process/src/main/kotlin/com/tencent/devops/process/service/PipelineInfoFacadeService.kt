@@ -62,7 +62,7 @@ import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.template.service.TemplateService
-import com.tencent.devops.store.api.common.ServiceStoreResource
+import com.tencent.devops.store.api.template.ServiceTemplateResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -213,8 +213,8 @@ class PipelineInfoFacadeService @Autowired constructor(
             if (model.srcTemplateId != null) {
                 watcher.start("store_template_perm")
                 val srcTemplateId = model.srcTemplateId as String
-                val validateRet = client.get(ServiceStoreResource::class)
-                    .validateUserTemplateAtomVisibleDept(
+                val validateRet = client.get(ServiceTemplateResource::class)
+                    .validateUserTemplateComponentVisibleDept(
                         userId = userId,
                         templateCode = srcTemplateId,
                         projectCode = projectId

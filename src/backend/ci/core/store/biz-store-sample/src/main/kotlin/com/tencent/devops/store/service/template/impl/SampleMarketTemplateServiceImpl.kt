@@ -29,7 +29,7 @@ package com.tencent.devops.store.service.template.impl
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.model.store.tables.records.TStoreDeptRelRecord
+import com.tencent.devops.store.pojo.common.UserStoreDeptInfoRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.template.SampleMarketTemplateService
 import org.springframework.stereotype.Service
@@ -44,6 +44,10 @@ class SampleMarketTemplateServiceImpl : SampleMarketTemplateService, MarketTempl
         return Result(data = null)
     }
 
+    override fun checkUserInvalidVisibleStoreInfo(userStoreDeptInfoRequest: UserStoreDeptInfoRequest): Boolean {
+        return true
+    }
+
     override fun generateInstallFlag(
         defaultFlag: Boolean,
         members: MutableList<String>?,
@@ -56,18 +60,6 @@ class SampleMarketTemplateServiceImpl : SampleMarketTemplateService, MarketTempl
         } else {
             visibleList != null && (visibleList.contains(0) || visibleList.intersect(userDeptList).count() > 0)
         }
-    }
-
-    override fun generateUserAtomInvalidVisibleAtom(
-        userId: String,
-        userDeptIdList: List<Int>,
-        atomCode: String,
-        atomName: String,
-        defaultFlag: Boolean,
-        atomDeptList: List<TStoreDeptRelRecord>?
-    ): List<String> {
-        // 开源版没有可见范围的概念，没有因为可见范围而无效的插件
-        return emptyList()
     }
 
     override fun validateTempleAtomVisible(templateCode: String, templateModel: Model): Result<Boolean> {

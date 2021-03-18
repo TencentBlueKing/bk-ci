@@ -36,15 +36,13 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreBuildService
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.UserSensitiveConfService
-import com.tencent.devops.store.service.template.MarketTemplateService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceStoreResourceImpl @Autowired constructor(
     private val storeProjectService: StoreProjectService,
     private val sensitiveConfService: UserSensitiveConfService,
-    private val storeBuildService: StoreBuildService,
-    private val marketTemplateService: MarketTemplateService
+    private val storeBuildService: StoreBuildService
 ) : ServiceStoreResource {
 
     override fun uninstall(storeCode: String, storeType: StoreTypeEnum, projectCode: String): Result<Boolean> {
@@ -61,17 +59,5 @@ class ServiceStoreResourceImpl @Autowired constructor(
         storeBuildResultRequest: StoreBuildResultRequest
     ): Result<Boolean> {
         return storeBuildService.handleStoreBuildResult(pipelineId, buildId, storeBuildResultRequest)
-    }
-
-    override fun validateUserTemplateAtomVisibleDept(
-        userId: String,
-        templateCode: String,
-        projectCode: String?
-    ): Result<Boolean> {
-        return marketTemplateService.validateUserTemplateAtomVisibleDept(
-            userId = userId,
-            templateCode = templateCode,
-            projectCodeList = if (null != projectCode) listOf(projectCode) else null
-        )
     }
 }

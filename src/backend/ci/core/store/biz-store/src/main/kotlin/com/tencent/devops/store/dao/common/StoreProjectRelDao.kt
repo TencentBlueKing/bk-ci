@@ -431,4 +431,24 @@ class StoreProjectRelDao {
             .and(tStoreProjectRel.TYPE.eq(StoreProjectTypeEnum.TEST.type.toByte()))
             .fetch()
     }
+
+    /**
+     * 获取安装该项目项目的组件
+     */
+    fun getInstallStoreCodesByProject(
+        dslContext: DSLContext,
+        projectCode: String,
+        storeCodes: Collection<String>,
+        storeType: StoreTypeEnum
+    ): Result<Record1<String>>? {
+        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            return dslContext.select(STORE_CODE).from(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(STORE_CODE.`in`(storeCodes))
+                .and(STORE_TYPE.eq(storeType.type.toByte()))
+                .and(TYPE.eq(StoreProjectTypeEnum.COMMON.type.toByte()))
+                .groupBy(STORE_CODE)
+                .fetch()
+        }
+    }
 }
