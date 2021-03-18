@@ -898,7 +898,7 @@ abstract class ImageReleaseService {
         val count = imageDao.countByName(dslContext, imageName)
         if (count > 0) {
             // 判断镜像名称是否重复（镜像升级允许名称一样）
-            flag = imageDao.countByName(dslContext, imageCode, imageName) < 1
+            flag = imageDao.countByName(dslContext, imageCode, imageName) >= count
         }
         return flag
     }
