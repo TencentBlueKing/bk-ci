@@ -424,8 +424,8 @@
                 padding-top: 6px;
             }
         }
-        .name-icon {
-            padding: 0;
+        .devops-icon.name-icon {
+            padding-left: 0;
             margin-left: 4px;
         }
         .bk-form-input, .bk-form-password, .bk-selector, .bk-form-textarea {
