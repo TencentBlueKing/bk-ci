@@ -25,16 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin
+package com.tencent.devops.dockerhost
 
 import com.tencent.devops.common.service.MicroService
 import com.tencent.devops.common.service.MicroServiceApplication
-import org.springframework.context.annotation.ComponentScan
 
+/**
+ *
+ * Powered By Tencent
+ */
 @MicroService
-@ComponentScan("com.tencent.devops.plugin", "com.tencent.devops.plugin")
-class Application
+class DockerhostApplication
 
 fun main(args: Array<String>) {
-    MicroServiceApplication.run(Application::class, args)
+    MicroServiceApplication.run(DockerhostApplication::class, args)
 }

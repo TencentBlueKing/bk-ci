@@ -25,18 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log
+package com.tencent.devops.artifactory
 
 import com.tencent.devops.common.service.MicroService
 import com.tencent.devops.common.service.MicroServiceApplication
+import org.springframework.context.annotation.ComponentScan
 
-/**
- *
- * Powered By Tencent
- */
 @MicroService
-class Application
+@ComponentScan("com.tencent.devops.plugin", "com.tencent.devops.artifactory")
+class ArtifactoryApplication
 
 fun main(args: Array<String>) {
-    MicroServiceApplication.run(Application::class, args)
+    MicroServiceApplication.run(ArtifactoryApplication::class, args)
 }

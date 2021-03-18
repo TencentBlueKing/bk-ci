@@ -24,19 +24,17 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.dispatch.docker
+
+package com.tencent.devops.plugin
 
 import com.tencent.devops.common.service.MicroService
 import com.tencent.devops.common.service.MicroServiceApplication
 import org.springframework.context.annotation.ComponentScan
 
 @MicroService
-@ComponentScan(
-    "com.tencent.devops.dispatch.docker",
-    "com.tencent.devops.common.dispatch.sdk"
-)
-class Application
+@ComponentScan("com.tencent.devops.plugin", "com.tencent.devops.plugin")
+class PluginApplication
 
 fun main(args: Array<String>) {
-    MicroServiceApplication.run(Application::class, args)
+    MicroServiceApplication.run(PluginApplication::class, args)
 }
