@@ -1195,7 +1195,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         val count = extServiceDao.countByName(dslContext, serviceName)
         if (count > 0) {
             // 判断微扩展名称是否重复（微扩展升级允许名称一样）
-            flag = extServiceDao.countByName(dslContext, serviceName, serviceCode) < 1
+            flag = extServiceDao.countByName(dslContext, serviceName, serviceCode) >= count
         }
         return flag
     }

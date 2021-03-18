@@ -52,15 +52,22 @@ import java.time.LocalDateTime
 @Repository
 class IdeAtomDao {
 
-    fun countByName(dslContext: DSLContext, atomName: String): Long {
+    fun countByName(dslContext: DSLContext, atomName: String, atomCode: String? = null): Long {
         with(TIdeAtom.T_IDE_ATOM) {
-            return dslContext.selectCount().from(this).where(ATOM_NAME.eq(atomName)).fetchOne(0, Long::class.java)
+            val conditions = mutableListOf<Condition>()
+            conditions.add(ATOM_NAME.eq(atomName))
+            if (atomCode != null) {
+                conditions.add(ATOM_CODE.eq(atomCode))
+            }
+            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Long::class.java)
         }
     }
 
     fun countByCode(dslContext: DSLContext, atomCode: String): Long {
         with(TIdeAtom.T_IDE_ATOM) {
-            return dslContext.selectCount().from(this).where(ATOM_CODE.eq(atomCode)).fetchOne(0, Long::class.java)
+            return dslContext.selectCount().from(this)
+                .where(ATOM_CODE.eq(atomCode))
+                .fetchOne(0, Long::class.java)
         }
     }
 

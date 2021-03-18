@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.model.store.tables.records.TIdeAtomRecord
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
@@ -99,14 +98,13 @@ class OpIdeAtomServiceImpl @Autowired constructor(
     override fun addIdeAtom(userId: String, ideAtomCreateRequest: IdeAtomCreateRequest): Result<Boolean> {
         logger.info("addIdeAtom userId is :$userId , ideAtomCreateRequest is :$ideAtomCreateRequest")
         val atomCode = ideAtomCreateRequest.atomCode
-        val atomRecords = ideAtomDao.getIdeAtomsByAtomCode(dslContext, atomCode)
-        logger.info("the atomRecords is :$atomRecords")
-        val addIdeAtomResult = if (null == atomRecords || atomRecords.isEmpty()) {
+        val atomCount = ideAtomDao.countByCode(dslContext, atomCode)
+        val addIdeAtomResult = if (atomCount < 1) {
             // 首次创建版本
             createIdeAtom(userId, atomCode, ideAtomCreateRequest)
         } else {
             // 升级版本
-            upgradeIdeAtom(userId, atomRecords, atomCode, ideAtomCreateRequest)
+            upgradeIdeAtom(userId, atomCode, ideAtomCreateRequest)
         }
         logger.info("the addIdeAtomResult is :$addIdeAtomResult")
         if (addIdeAtomResult.isNotOk()) {
@@ -115,19 +113,22 @@ class OpIdeAtomServiceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun updateIdeAtom(userId: String, atomId: String, ideAtomUpdateRequest: IdeAtomUpdateRequest): Result<Boolean> {
+    override fun updateIdeAtom(
+        userId: String,
+        atomId: String,
+        ideAtomUpdateRequest: IdeAtomUpdateRequest
+    ): Result<Boolean> {
         logger.info("updateIdeAtom userId is :$userId , ideAtomUpdateRequest is :$ideAtomUpdateRequest")
         val atomRecord = ideAtomDao.getIdeAtomById(dslContext, atomId)
         logger.info("the atomRecord is :$atomRecord")
         if (null == atomRecord) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomId))
         }
+        val atomCode = atomRecord.atomCode
         val atomName = ideAtomUpdateRequest.atomName
         if (null != atomName) {
-            val atomRecords = ideAtomDao.getIdeAtomsByAtomCode(dslContext, atomRecord.atomCode)
             // 判断更新的名称是否已存在
-            val count = ideAtomDao.countByName(dslContext, atomName)
-            if (validateNameIsExist(count, atomRecords!!, atomName)) return MessageCodeUtil.generateResponseDataObject(
+            if (validateNameIsExist(atomCode, atomName)) return MessageCodeUtil.generateResponseDataObject(
                 CommonMessageCode.PARAMETER_IS_EXIST,
                 arrayOf(atomName),
                 false
@@ -137,7 +138,11 @@ class OpIdeAtomServiceImpl @Autowired constructor(
         val visibilityLevel = ideAtomUpdateRequest.visibilityLevel
         val dbVisibilityLevel = atomRecord.visibilityLevel
         if (null != visibilityLevel && visibilityLevel.level != dbVisibilityLevel) {
-            val changeResult = changeGitRepositoryVisibility(atomRecord.atomCode, userId, visibilityLevel)
+            val changeResult = changeGitRepositoryVisibility(
+                atomCode = atomRecord.atomCode,
+                userId = userId,
+                visibilityLevel = visibilityLevel
+            )
             if (changeResult.isNotOk()) {
                 return changeResult
             }
@@ -191,7 +196,10 @@ class OpIdeAtomServiceImpl @Autowired constructor(
         val releasedCount = ideAtomDao.countReleaseAtomById(dslContext, atomId)
         logger.info("releasedCount: $releasedCount")
         if (releasedCount > 0) {
-            return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_ATOM_RELEASED_IS_NOT_ALLOW_DELETE, arrayOf(atomCode))
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_ATOM_RELEASED_IS_NOT_ALLOW_DELETE,
+                params = arrayOf(atomCode)
+            )
         }
         dslContext.transaction { t ->
             val context = DSL.using(t)
@@ -249,7 +257,15 @@ class OpIdeAtomServiceImpl @Autowired constructor(
         }
         val atomCount = ideAtomDao.countByCode(dslContext, atomCode)
         val totalPages = PageUtil.calTotalPage(pageSize, atomCount)
-        return Result(Page(count = atomCount, page = page ?: 1, pageSize = pageSize ?: -1, totalPages = totalPages, records = opIdeAtomItemList))
+        return Result(
+            data = Page(
+                count = atomCount,
+                page = page ?: 1,
+                pageSize = pageSize ?: -1,
+                totalPages = totalPages,
+                records = opIdeAtomItemList
+            )
+        )
     }
 
     override fun listIdeAtoms(
@@ -262,8 +278,8 @@ class OpIdeAtomServiceImpl @Autowired constructor(
         page: Int,
         pageSize: Int
     ): Result<Page<OpIdeAtomItem>?> {
-        logger.info("listIdeAtoms atomName is :$atomName,atomType is :$atomType,classifyCode is :$classifyCode,categoryCodes is :$categoryCodes")
-        logger.info("listIdeAtoms labelCodes is :$labelCodes,processFlag is :$processFlag,page is :$page,pageSize is :$pageSize")
+        logger.info("listIdeAtoms atomName:$atomName,atomType:$atomType,classifyCode:$classifyCode,categoryCodes:$categoryCodes")
+        logger.info("listIdeAtoms labelCodes:$labelCodes,processFlag:$processFlag,page:$page,pageSize:$pageSize")
         val labelCodeList = if (labelCodes.isNullOrEmpty()) null else labelCodes?.split(",")
         val categoryCodeList = if (categoryCodes.isNullOrEmpty()) null else categoryCodes?.split(",")
         val atomRecords = ideAtomDao.listOpIdeAtoms(
@@ -336,11 +352,23 @@ class OpIdeAtomServiceImpl @Autowired constructor(
             processFlag = processFlag
         )
         val totalPages = PageUtil.calTotalPage(pageSize, atomCount)
-        return Result(Page(count = atomCount, page = page, pageSize = pageSize, totalPages = totalPages, records = opIdeAtomItemList))
+        return Result(
+            Page(
+                count = atomCount,
+                page = page,
+                pageSize = pageSize,
+                totalPages = totalPages,
+                records = opIdeAtomItemList
+            )
+        )
     }
 
-    override fun releaseIdeAtom(userId: String, atomId: String, ideAtomReleaseRequest: IdeAtomReleaseRequest): Result<Boolean> {
-        logger.info("releaseIdeAtom userId is :$userId,atomId is :$atomId,ideAtomReleaseRequest is :$ideAtomReleaseRequest")
+    override fun releaseIdeAtom(
+        userId: String,
+        atomId: String,
+        ideAtomReleaseRequest: IdeAtomReleaseRequest
+    ): Result<Boolean> {
+        logger.info("releaseIdeAtom userId:$userId,atomId:$atomId,ideAtomReleaseRequest:$ideAtomReleaseRequest")
         val atomRecord = ideAtomDao.getIdeAtomById(dslContext, atomId)
         logger.info("the atomRecord is :$atomRecord")
         if (null == atomRecord) {
@@ -418,7 +446,11 @@ class OpIdeAtomServiceImpl @Autowired constructor(
             val atomRecord = ideAtomDao.getIdeAtom(dslContext, atomCode, version!!.trim())
             logger.info("atomRecord is $atomRecord")
             if (null == atomRecord) {
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf("$atomCode:$version"), false)
+                return MessageCodeUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                    params = arrayOf("$atomCode:$version"),
+                    data = false
+                )
             }
             if (IdeAtomStatusEnum.RELEASED.status.toByte() != atomRecord.atomStatus) {
                 return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
@@ -441,7 +473,8 @@ class OpIdeAtomServiceImpl @Autowired constructor(
                     if (newestReleaseAtomRecord.id == atomRecord.id) {
                         var atomId: String? = null
                         if (releaseAtomRecords.size == 1) {
-                            val newestUndercarriagedAtom = ideAtomDao.getNewestUndercarriagedAtomsByCode(context, atomCode)
+                            val newestUndercarriagedAtom =
+                                ideAtomDao.getNewestUndercarriagedAtomsByCode(context, atomCode)
                             if (null != newestUndercarriagedAtom) {
                                 atomId = newestUndercarriagedAtom.id
                             }
@@ -467,8 +500,15 @@ class OpIdeAtomServiceImpl @Autowired constructor(
             // 把IDE插件所有已发布的版本全部下架
             dslContext.transaction { t ->
                 val context = DSL.using(t)
-                ideAtomDao.updateAtomStatusByCode(context, atomCode, false, IdeAtomStatusEnum.RELEASED.status.toByte(),
-                    IdeAtomStatusEnum.UNDERCARRIAGED.status.toByte(), userId, "undercarriage")
+                ideAtomDao.updateAtomStatusByCode(
+                    dslContext = context,
+                    atomCode = atomCode,
+                    latestFlag = false,
+                    atomOldStatus = IdeAtomStatusEnum.RELEASED.status.toByte(),
+                    atomNewStatus = IdeAtomStatusEnum.UNDERCARRIAGED.status.toByte(),
+                    userId = userId,
+                    msg = "undercarriage"
+                )
                 val newestUndercarriagedAtom = ideAtomDao.getNewestUndercarriagedAtomsByCode(context, atomCode)
                 if (null != newestUndercarriagedAtom) {
                     // 把发布时间最晚的下架版本latestFlag置为true
@@ -488,78 +528,92 @@ class OpIdeAtomServiceImpl @Autowired constructor(
 
     private fun upgradeIdeAtom(
         userId: String,
-        atomRecords: org.jooq.Result<TIdeAtomRecord>,
         atomCode: String,
         ideAtomCreateRequest: IdeAtomCreateRequest
     ): Result<Boolean> {
-        if (atomRecords.size == 0) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomCode))
-        }
         val atomName = ideAtomCreateRequest.atomName
         // 判断更新的名称是否已存在
-        val count = ideAtomDao.countByName(dslContext, atomName)
-        if (validateNameIsExist(count, atomRecords, atomName)) return MessageCodeUtil.generateResponseDataObject(
+        if (validateNameIsExist(atomCode, atomName)) return MessageCodeUtil.generateResponseDataObject(
             CommonMessageCode.PARAMETER_IS_EXIST,
             arrayOf(atomName)
         )
-        val atomRecord = atomRecords[0]
+        val atomRecord = ideAtomDao.getNewestAtomByCode(dslContext, atomCode)
+            ?: return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(atomCode),
+                data = false
+            )
         // 校验前端传的版本号是否正确
         val releaseType = ideAtomCreateRequest.releaseType
         val version = ideAtomCreateRequest.version
         val dbVersion = atomRecord.version
         // 最近的版本处于上架中止状态，重新升级版本号不变
         val cancelFlag = atomRecord.atomStatus == IdeAtomStatusEnum.GROUNDING_SUSPENSION.status.toByte()
-        val requireVersion = if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) dbVersion else storeCommonService.getRequireVersion(dbVersion, releaseType)
-        if (version != requireVersion) {
-            return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_ATOM_VERSION_IS_INVALID, arrayOf(version, requireVersion))
-        }
-        if (atomRecords.size > 0) {
-            // 判断最近一个IDE插件版本的状态，只有处于审核驳回、已发布、上架中止和已下架的状态才允许添加新的版本
-            val atomFinalStatusList = listOf(
-                IdeAtomStatusEnum.AUDIT_REJECT.status.toByte(),
-                IdeAtomStatusEnum.RELEASED.status.toByte(),
-                IdeAtomStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
-                IdeAtomStatusEnum.UNDERCARRIAGED.status.toByte()
+        val requireVersion =
+            if (cancelFlag && releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) dbVersion
+            else storeCommonService.getRequireVersion(
+                dbVersion = dbVersion,
+                releaseType = releaseType
             )
-            if (!atomFinalStatusList.contains(atomRecord.atomStatus)) {
-                return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_ATOM_VERSION_IS_NOT_FINISH, arrayOf(atomRecord.atomName, atomRecord.version))
-            }
-            // 更新git代码库信息
-            val visibilityLevel = ideAtomCreateRequest.visibilityLevel
-            val dbVisibilityLevel = atomRecord.visibilityLevel
-            if (visibilityLevel.level != dbVisibilityLevel) {
-                val changeResult = changeGitRepositoryVisibility(atomCode, userId, visibilityLevel)
-                if (changeResult.isNotOk()) {
-                    return changeResult
-                }
-            }
-            val atomId = UUIDUtil.generate()
-            val finalReleaseType = if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
-                val imageVersion = marketIdeAtomVersionLogDao.getIdeAtomVersion(dslContext, atomId)
-                imageVersion.releaseType
-            } else {
-                releaseType.releaseType.toByte()
-            }
-            logger.info("finalReleaseType is $finalReleaseType")
-            upgradeIdeAtom(userId, ideAtomCreateRequest, finalReleaseType)
+        if (version != requireVersion) {
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_ATOM_VERSION_IS_INVALID,
+                params = arrayOf(version, requireVersion)
+            )
         }
+        // 判断最近一个IDE插件版本的状态，只有处于审核驳回、已发布、上架中止和已下架的状态才允许添加新的版本
+        val atomFinalStatusList = listOf(
+            IdeAtomStatusEnum.AUDIT_REJECT.status.toByte(),
+            IdeAtomStatusEnum.RELEASED.status.toByte(),
+            IdeAtomStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
+            IdeAtomStatusEnum.UNDERCARRIAGED.status.toByte()
+        )
+        if (!atomFinalStatusList.contains(atomRecord.atomStatus)) {
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_ATOM_VERSION_IS_NOT_FINISH,
+                params = arrayOf(atomRecord.atomName, atomRecord.version)
+            )
+        }
+        // 更新git代码库信息
+        val visibilityLevel = ideAtomCreateRequest.visibilityLevel
+        val dbVisibilityLevel = atomRecord.visibilityLevel
+        if (visibilityLevel.level != dbVisibilityLevel) {
+            val changeResult = changeGitRepositoryVisibility(atomCode, userId, visibilityLevel)
+            if (changeResult.isNotOk()) {
+                return changeResult
+            }
+        }
+        val atomId = UUIDUtil.generate()
+        val finalReleaseType = if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE) {
+            val imageVersion = marketIdeAtomVersionLogDao.getIdeAtomVersion(dslContext, atomId)
+            imageVersion.releaseType
+        } else {
+            releaseType.releaseType.toByte()
+        }
+        logger.info("finalReleaseType is $finalReleaseType")
+        upgradeIdeAtom(userId, ideAtomCreateRequest, finalReleaseType)
         return Result(true)
     }
 
-    private fun changeGitRepositoryVisibility(atomCode: String, userId: String, visibilityLevel: VisibilityLevelEnum): Result<Boolean> {
+    private fun changeGitRepositoryVisibility(
+        atomCode: String,
+        userId: String,
+        visibilityLevel: VisibilityLevelEnum
+    ): Result<Boolean> {
         // 更新git代码库可见范围
         val updateGitRepositoryResult: Result<Boolean>
         val atomFeatureRecord = marketIdeAtomFeatureDao.getIdeAtomFeature(dslContext, atomCode)!!
         try {
-            updateGitRepositoryResult = client.get(ServiceGitRepositoryResource::class).updateGitCodeRepositoryByProjectName(
-                userId,
-                atomFeatureRecord.namespacePath,
-                UpdateGitProjectInfo(
-                    visibilityLevel = visibilityLevel.level,
-                    forkEnabled = visibilityLevel == VisibilityLevelEnum.LOGIN_PUBLIC
-                ),
-                TokenTypeEnum.PRIVATE_KEY
-            )
+            updateGitRepositoryResult =
+                client.get(ServiceGitRepositoryResource::class).updateGitCodeRepositoryByProjectName(
+                    userId = userId,
+                    projectName = atomFeatureRecord.namespacePath,
+                    updateGitProjectInfo = UpdateGitProjectInfo(
+                        visibilityLevel = visibilityLevel.level,
+                        forkEnabled = visibilityLevel == VisibilityLevelEnum.LOGIN_PUBLIC
+                    ),
+                    tokenType = TokenTypeEnum.PRIVATE_KEY
+                )
         } catch (e: Exception) {
             logger.error("updateGitCodeRepository error  is :$e", e)
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
@@ -572,19 +626,31 @@ class OpIdeAtomServiceImpl @Autowired constructor(
         return Result(true)
     }
 
-    private fun createIdeAtom(userId: String, atomCode: String, ideAtomCreateRequest: IdeAtomCreateRequest): Result<Boolean> {
+    private fun createIdeAtom(
+        userId: String,
+        atomCode: String,
+        ideAtomCreateRequest: IdeAtomCreateRequest
+    ): Result<Boolean> {
         // 判断插件代码是否存在
         val codeCount = ideAtomDao.countByCode(dslContext, atomCode)
         if (codeCount > 0) {
             // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST, arrayOf(atomCode), false)
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                params = arrayOf(atomCode),
+                data = false
+            )
         }
         val atomName = ideAtomCreateRequest.atomName
         // 判断插件分类名称是否存在
         val nameCount = ideAtomDao.countByName(dslContext, atomName)
         if (nameCount > 0) {
             // 抛出错误提示
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST, arrayOf(atomName), false)
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_EXIST,
+                params = arrayOf(atomName),
+                data = false
+            )
         }
         // 远程调工蜂接口创建代码库
         val repositoryInfo: RepositoryInfo?
@@ -697,22 +763,15 @@ class OpIdeAtomServiceImpl @Autowired constructor(
     }
 
     private fun validateNameIsExist(
-        count: Long,
-        ideAtomRecords: org.jooq.Result<TIdeAtomRecord>,
+        atomCode: String,
         atomName: String
     ): Boolean {
         var flag = false
+        val count = ideAtomDao.countByName(dslContext, atomName)
         if (count > 0) {
-            for (item in ideAtomRecords) {
-                if (atomName == item.atomName) {
-                    flag = true
-                    break
-                }
-            }
-            if (!flag) {
-                return true
-            }
+            // 判断IDE插件名称是否重复（IDE插件升级允许名称一样）
+            flag = ideAtomDao.countByName(dslContext, atomName, atomCode) >= count
         }
-        return false
+        return flag
     }
 }
