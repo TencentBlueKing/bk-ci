@@ -44,6 +44,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckInfo
+import com.tencent.devops.plugin.api.pojo.GithubCheckRun
 import com.tencent.devops.plugin.api.pojo.GithubPrEvent
 import com.tencent.devops.plugin.api.pojo.PluginGitCheck
 import com.tencent.devops.plugin.dao.PluginGitCheckDao
@@ -90,6 +91,7 @@ class CodeWebhookService @Autowired constructor(
 ) {
 
     fun onStart(event: PipelineBuildStartBroadCastEvent) {
+        logger.info("Code web hook on start [${event.buildId}]")
         with(event) {
             execute(
                 projectId = projectId,
@@ -563,32 +565,57 @@ class CodeWebhookService @Autowired constructor(
                     )
                     pluginGithubCheckDao.create(
                         dslContext = dslContext,
-                        pipelineId = pipelineId,
-                        buildNumber = buildNum.toInt(),
-                        repositoryConfig = repositoryConfig,
-                        commitId = commitId,
-                        checkRunId = result.id
+                        checkRun = GithubCheckRun(
+                            pipelineId = pipelineId,
+                            buildNumber = buildNum.toInt(),
+                            repositoryConfig = repositoryConfig,
+                            commitId = commitId,
+                            checkRunId = result.id
+                        )
                     )
                 } else {
                     if (buildNum.toInt() >= record.buildNumber) {
-                        scmService.updateGithubCheckRuns(
-                            checkRunId = record.checkRunId,
-                            projectId = projectId,
-                            repositoryConfig = repositoryConfig,
-                            name = name,
-                            commitId = commitId,
-                            detailUrl = detailUrl,
-                            externalId = "${userId}_${projectId}_${pipelineId}_$buildId",
-                            status = status,
-                            startedAt = startedAt?.atZone(ZoneId.systemDefault())?.format(
-                                DateTimeFormatter.ISO_INSTANT
-                            ),
-                            conclusion = conclusion,
-                            completedAt = completedAt?.atZone(ZoneId.systemDefault())?.format(
-                                DateTimeFormatter.ISO_INSTANT
+                        // github的re-run时，需要将状态重新置为in_progress
+                        val checkRunId = if (conclusion == null) {
+                            val result = scmService.addGithubCheckRuns(
+                                projectId = projectId,
+                                repositoryConfig = repositoryConfig,
+                                name = name,
+                                commitId = commitId,
+                                detailUrl = detailUrl,
+                                externalId = "${userId}_${projectId}_${pipelineId}_$buildId",
+                                status = status,
+                                startedAt = startedAt?.atZone(ZoneId.systemDefault())?.format(
+                                    DateTimeFormatter.ISO_INSTANT
+                                ),
+                                conclusion = conclusion,
+                                completedAt = completedAt?.atZone(ZoneId.systemDefault())?.format(
+                                    DateTimeFormatter.ISO_INSTANT
+                                )
                             )
-                        )
-                        pluginGithubCheckDao.update(dslContext, record.id, buildNum.toInt())
+                            result.id
+                        } else {
+                            scmService.updateGithubCheckRuns(
+                                checkRunId = record.checkRunId,
+                                projectId = projectId,
+                                repositoryConfig = repositoryConfig,
+                                name = name,
+                                commitId = commitId,
+                                detailUrl = detailUrl,
+                                externalId = "${userId}_${projectId}_${pipelineId}_$buildId",
+                                status = status,
+                                startedAt = startedAt?.atZone(ZoneId.systemDefault())?.format(
+                                    DateTimeFormatter.ISO_INSTANT
+                                ),
+                                conclusion = conclusion,
+                                completedAt = completedAt?.atZone(ZoneId.systemDefault())?.format(
+                                    DateTimeFormatter.ISO_INSTANT
+                                )
+                            )
+                            record.checkRunId
+                        }
+
+                        pluginGithubCheckDao.update(dslContext, record.id, buildNum.toInt(), checkRunId)
                     } else {
                         logger.info("Code web hook check run has bigger build number(${record.buildNumber})")
                     }
