@@ -50,8 +50,8 @@ import com.tencent.devops.store.dao.template.MarketTemplateDao
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.DeptInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.common.StoreDeptService
 import com.tencent.devops.store.service.common.StoreVisibleDeptService
-import com.tencent.devops.store.service.template.MarketTemplateService
 import com.tencent.devops.store.service.template.TemplateVisibleDeptService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -69,7 +69,7 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
     private val client: Client,
     private val marketTemplateDao: MarketTemplateDao,
     private val atomDao: AtomDao,
-    private val marketTemplateService: MarketTemplateService,
+    private val storeDeptService: StoreDeptService,
     private val storeVisibleDeptService: StoreVisibleDeptService
 ) : TemplateVisibleDeptService {
 
@@ -144,9 +144,9 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
         val invalidAtomList = mutableListOf<String>()
         val stageList = templateModel.stages
         // 获取模板下镜像的机构信息
-        val templateImageDeptMap = marketTemplateService.getTemplateImageDeptMap(stageList)
+        val templateImageDeptMap = storeDeptService.getTemplateImageDeptMap(stageList)
         // 获取模板下插件的机构信息
-        val stageAtomDeptMap = marketTemplateService.getStageAtomDeptMap(stageList)
+        val stageAtomDeptMap = storeDeptService.getStageAtomDeptMap(stageList)
         stageList.forEach { stage ->
             val stageId = stage.id
             val currentStageAtomDeptMap = stageAtomDeptMap[stageId]
