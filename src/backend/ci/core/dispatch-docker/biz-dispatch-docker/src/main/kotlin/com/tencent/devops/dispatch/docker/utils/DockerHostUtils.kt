@@ -130,7 +130,7 @@ class DockerHostUtils @Autowired constructor(
             logger.info("defaultAgentLessIp: $defaultAgentLessIp")
             if (clusterName == DockerHostClusterType.AGENT_LESS && defaultAgentLessIp.isNotEmpty()) {
                 val defaultAgentLessIpList = defaultAgentLessIp.split(",")
-                return Pair(defaultAgentLessIpList[Random().nextInt(defaultAgentLessIpList.size)], 0)
+                return Pair(defaultAgentLessIpList[Random().nextInt(defaultAgentLessIpList.size)], 80)
             }
 
             if (specialIpSet.isNotEmpty()) {

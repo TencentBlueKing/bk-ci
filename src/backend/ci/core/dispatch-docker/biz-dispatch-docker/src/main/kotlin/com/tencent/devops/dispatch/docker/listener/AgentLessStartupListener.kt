@@ -33,10 +33,12 @@ import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
 import com.tencent.devops.dispatch.docker.service.PipelineAgentLessDispatchService
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
 import org.slf4j.LoggerFactory
@@ -53,7 +55,8 @@ class AgentLessStartupListener @Autowired
 constructor(
     private val pipelineAgentLessDispatchService: PipelineAgentLessDispatchService,
     private val client: Client,
-    private val pipelineEventDispatcher: PipelineEventDispatcher
+    private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val buildLogPrinter: BuildLogPrinter
 ) {
 
     @RabbitListener(
@@ -75,6 +78,14 @@ constructor(
             pipelineAgentLessDispatchService.startUpBuildLess(event)
         } catch (t: Throwable) {
             logger.warn("[${event.buildId}|${event.vmSeqId}] Container startup failure")
+
+            buildLogPrinter.addRedLine(
+                buildId = event.buildId,
+                message = "Start buildless Docker VM failed. ${t.message}",
+                tag = VMUtils.genStartVMTaskId(event.vmSeqId),
+                jobId = event.containerHashId,
+                executeCount = event.executeCount ?: 1
+            )
 
             val (errorType, errorCode, errorMsg) = if (t is DockerServiceException) {
                 Triple(t.errorType, t.errorCode, t.message)
