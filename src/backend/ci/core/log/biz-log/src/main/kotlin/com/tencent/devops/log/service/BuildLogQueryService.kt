@@ -37,7 +37,7 @@ import javax.ws.rs.core.Response
 
 @Service
 @Suppress("ALL")
-class LogServiceDispatcher @Autowired constructor(
+class BuildLogQueryService @Autowired constructor(
     private val logService: LogService
 ) {
 

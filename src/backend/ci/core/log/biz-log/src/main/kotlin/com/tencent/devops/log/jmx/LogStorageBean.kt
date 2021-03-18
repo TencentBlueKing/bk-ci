@@ -25,20 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.jmx.v2
+package com.tencent.devops.log.jmx
 
 import org.springframework.jmx.export.annotation.ManagedAttribute
 import org.springframework.jmx.export.annotation.ManagedResource
 import org.springframework.stereotype.Component
 import java.util.concurrent.atomic.AtomicLong
 
-/**
- * deng
- * 2019-02-28
- */
 @Component
 @ManagedResource(objectName = "com.tencent.devops.log.v2:type=logs", description = "log performance")
-class LogBeanV2 {
+class LogStorageBean {
 
     private val batchWriteCount = AtomicLong(0)
     private val batchWriteElapse = AtomicLong(0)

@@ -29,13 +29,13 @@ package com.tencent.devops.log.lucene
 
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.WebAutoConfiguration
-import com.tencent.devops.log.jmx.v2.LogBeanV2
+import com.tencent.devops.log.jmx.LogStorageBean
 import com.tencent.devops.log.service.IndexService
 import com.tencent.devops.log.service.LogService
 import com.tencent.devops.log.service.LogStatusService
 import com.tencent.devops.log.service.LogTagService
 import com.tencent.devops.log.service.impl.LogServiceLuceneImpl
-import com.tencent.devops.log.util.BuildLogPrintService
+import com.tencent.devops.log.service.BuildLogPrintService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
@@ -75,7 +75,7 @@ class LuceneAutoConfiguration {
         @Autowired logStatusService: LogStatusService,
         @Autowired logTagService: LogTagService,
         @Autowired defaultKeywords: List<String>,
-        @Autowired logBeanV2: LogBeanV2,
+        @Autowired logStorageBean: LogStorageBean,
         @Autowired buildLogPrintService: BuildLogPrintService
     ): LogService {
         if (indexMaxSize == null || indexMaxSize!! <= 0) {
@@ -87,7 +87,7 @@ class LuceneAutoConfiguration {
             indexService = indexService,
             logStatusService = logStatusService,
             logTagService = logTagService,
-            logBeanV2 = logBeanV2,
+            logStorageBean = logStorageBean,
             buildLogPrintService = buildLogPrintService
         )
     }

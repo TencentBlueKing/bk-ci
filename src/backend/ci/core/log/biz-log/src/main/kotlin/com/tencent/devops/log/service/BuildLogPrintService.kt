@@ -25,11 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.util
+package com.tencent.devops.log.service
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.log.pojo.ILogEvent
 import com.tencent.devops.common.web.mq.EXTEND_RABBIT_TEMPLATE_NAME
+import com.tencent.devops.log.jmx.LogPrintBean
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import java.util.concurrent.LinkedBlockingQueue
@@ -40,7 +41,8 @@ import javax.annotation.Resource
 
 class BuildLogPrintService(
     @Resource(name = EXTEND_RABBIT_TEMPLATE_NAME)
-    private val rabbitTemplate: RabbitTemplate
+    private val rabbitTemplate: RabbitTemplate,
+    private val logPrintBean: LogPrintBean
 ) {
 
     private val logExecutorService = ThreadPoolExecutor(
@@ -75,8 +77,10 @@ class BuildLogPrintService(
             }
         } catch (e: RejectedExecutionException) {
             // 队列满时的处理逻辑
-
             logger.error("[${event.buildId}] asyncDispatchEvent failed with queue tasks exceed the limit", e)
+        } finally {
+            logPrintBean.savePrintTaskCount(logExecutorService.taskCount)
+            logPrintBean.savePrintActiveCount(logExecutorService.activeCount.toLong())
         }
     }
 

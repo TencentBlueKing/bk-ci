@@ -27,13 +27,13 @@
 
 package com.tencent.devops.log.es
 
-import com.tencent.devops.log.util.BuildLogPrintService
+import com.tencent.devops.log.service.BuildLogPrintService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.WebAutoConfiguration
 import com.tencent.devops.log.client.LogClient
 import com.tencent.devops.log.client.impl.LogClientImpl
-import com.tencent.devops.log.jmx.v2.CreateIndexBeanV2
-import com.tencent.devops.log.jmx.v2.LogBeanV2
+import com.tencent.devops.log.jmx.CreateIndexBean
+import com.tencent.devops.log.jmx.LogStorageBean
 import com.tencent.devops.log.service.IndexService
 import com.tencent.devops.log.service.LogService
 import com.tencent.devops.log.service.LogStatusService
@@ -225,8 +225,8 @@ class ESAutoConfiguration : DisposableBean {
         @Autowired logStatusService: LogStatusService,
         @Autowired logTagService: LogTagService,
         @Autowired defaultKeywords: List<String>,
-        @Autowired createIndexBeanV2: CreateIndexBeanV2,
-        @Autowired logBeanV2: LogBeanV2,
+        @Autowired createIndexBean: CreateIndexBean,
+        @Autowired logStorageBean: LogStorageBean,
         @Autowired redisOperation: RedisOperation,
         @Autowired buildLogPrintService: BuildLogPrintService
     ): LogService {
@@ -235,8 +235,8 @@ class ESAutoConfiguration : DisposableBean {
             indexService = indexService,
             logStatusService = logStatusService,
             logTagService = logTagService,
-            logBeanV2 = logBeanV2,
-            createIndexBeanV2 = createIndexBeanV2,
+            logStorageBean = logStorageBean,
+            createIndexBean = createIndexBean,
             buildLogPrintService = buildLogPrintService,
             redisOperation = redisOperation
         )
