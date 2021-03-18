@@ -76,7 +76,7 @@ class DockerHostUtils @Autowired constructor(
         private val logger = LoggerFactory.getLogger(DockerHostUtils::class.java)
     }
 
-    @Value("\${dispatch.defaultAgentLessIp:\"\"}")
+    @Value("\${dispatch.defaultAgentLessIp:}")
     val defaultAgentLessIp: String = ""
 
     fun getAvailableDockerIpWithSpecialIps(
