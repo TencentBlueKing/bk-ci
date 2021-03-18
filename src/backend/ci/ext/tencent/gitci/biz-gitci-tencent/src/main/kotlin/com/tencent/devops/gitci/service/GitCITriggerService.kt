@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -107,9 +108,6 @@ class GitCITriggerService @Autowired constructor(
         val id = gitRequestEventDao.saveGitRequest(dslContext, gitRequestEvent)
         gitRequestEvent.id = id
 
-        val originYaml = triggerBuildReq.yaml
-        val (yamlObject, normalizedYaml) = prepareCIBuildYaml(gitRequestEvent, originYaml, null) ?: return false
-
         val existsPipeline = gitPipelineResourceDao.getPipelineById(dslContext, triggerBuildReq.gitProjectId, pipelineId) ?: throw OperationException("git ci pipelineId not exist")
         // 如果该流水线已保存过，则继续使用
         val buildPipeline = GitProjectPipeline(
@@ -121,6 +119,25 @@ class GitCITriggerService @Autowired constructor(
             creator = existsPipeline.creator,
             latestBuildInfo = null
         )
+
+        val originYaml = triggerBuildReq.yaml
+        // 如果当前文件没有内容直接不触发
+        if (originYaml.isNullOrBlank()) {
+            logger.warn("Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}")
+            gitRequestEventNotBuildDao.save(
+                dslContext = dslContext,
+                eventId = gitRequestEvent.id!!,
+                pipelineId = if (buildPipeline.pipelineId.isBlank()) null else buildPipeline.pipelineId,
+                filePath = buildPipeline.filePath,
+                originYaml = originYaml,
+                normalizedYaml = null,
+                reason = TriggerReason.TRIGGER_NOT_MATCH.name,
+                reasonDetail = TriggerReason.TRIGGER_NOT_MATCH.detail,
+                gitProjectId = gitRequestEvent.gitProjectId
+            )
+        }
+        val (yamlObject, normalizedYaml) =
+            prepareCIBuildYaml(gitRequestEvent, originYaml, existsPipeline.filePath, existsPipeline.pipelineId) ?: return false
 
         val gitBuildId = gitRequestEventBuildDao.save(
             dslContext = dslContext,
@@ -199,10 +216,37 @@ class GitCITriggerService @Autowired constructor(
         }
 
         // 获取指定目录下所有yml文件
-        val yamlPathList = if (isFork) getCIYamlList(forkGitToken!!, gitRequestEvent, isMrEvent) else getCIYamlList(gitToken, gitRequestEvent, isMrEvent)
+        val yamlPathList = if (isFork) {
+            getCIYamlList(forkGitToken!!, gitRequestEvent, isMrEvent)
+        } else {
+            getCIYamlList(gitToken, gitRequestEvent, isMrEvent)
+        }
         // 兼容旧的根目录yml文件
-        yamlPathList.add(ciFileName)
+        val isCIYamlExist = if (isFork) {
+            isCIYamlExist(forkGitToken!!, gitRequestEvent, isMrEvent)
+        } else {
+            isCIYamlExist(gitToken, gitRequestEvent, isMrEvent)
+        }
+        if (isCIYamlExist) {
+            yamlPathList.add(ciFileName)
+        }
         logger.info("matchAndTriggerPipeline in gitProjectId:${gitProjectConf.gitProjectId}, yamlPathList: $yamlPathList, path2PipelineExists: $path2PipelineExists")
+        // 如果没有Yaml文件则直接不触发
+        if (yamlPathList.isEmpty()) {
+            logger.error("gitProjectId: ${gitRequestEvent.gitProjectId} cannot found ci yaml from git")
+            gitRequestEventNotBuildDao.save(
+                dslContext = dslContext,
+                eventId = gitRequestEvent.id!!,
+                pipelineId = null,
+                filePath = null,
+                originYaml = null,
+                normalizedYaml = null,
+                reason = TriggerReason.GIT_CI_YAML_NOT_FOUND.name,
+                reasonDetail = TriggerReason.GIT_CI_YAML_NOT_FOUND.detail,
+                gitProjectId = gitRequestEvent.gitProjectId
+            )
+            return false
+        }
 
         // 比较Mr请求中的yml版本模拟pre merge，源分支版本落后时不触发
         if (isMrEvent && !checkYmlVersion(yamlPathList, gitRequestEvent, forkGitToken?.accessToken, gitToken.accessToken)) {
@@ -220,13 +264,10 @@ class GitCITriggerService @Autowired constructor(
             return false
         }
 
-        var hasYamlFile = false
         yamlPathList.forEach { filePath ->
             try {
-                val originYaml = if (isFork) getYamlFromGit(forkGitToken!!, gitRequestEvent, filePath, isMrEvent)
-                    else getYamlFromGit(gitToken, gitRequestEvent, filePath, isMrEvent)
-                val (yamlObject, normalizedYaml) = prepareCIBuildYaml(gitRequestEvent, originYaml, filePath) ?: return@forEach
-                val displayName = if (!yamlObject.name.isNullOrBlank()) yamlObject.name!! else filePath.removeSuffix(ciFileExtension)
+                // 因为要为 GIT_CI_YAML_INVALID 这个异常添加文件信息，所以先创建流水线，后面再根据Yaml修改流水线名称即可
+                var displayName = filePath.removeSuffix(ciFileExtension)
                 val existsPipeline = path2PipelineExists[filePath]
 
                 // 如果该流水线已保存过，则继续使用
@@ -240,6 +281,30 @@ class GitCITriggerService @Autowired constructor(
                         creator = gitRequestEvent.userId,
                         latestBuildInfo = null
                     )
+                // 为已存在的流水线设置名称
+                buildPipeline.displayName = displayName
+                val originYaml = if (isFork) getYamlFromGit(forkGitToken!!, gitRequestEvent, filePath, isMrEvent)
+                    else getYamlFromGit(gitToken, gitRequestEvent, filePath, isMrEvent)
+                // 如果当前文件没有内容直接不触发
+                if (originYaml.isNullOrBlank()) {
+                    logger.warn("Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}")
+                    gitRequestEventNotBuildDao.save(
+                        dslContext = dslContext,
+                        eventId = gitRequestEvent.id!!,
+                        pipelineId = if (buildPipeline.pipelineId.isBlank()) null else buildPipeline.pipelineId,
+                        filePath = buildPipeline.filePath,
+                        originYaml = originYaml,
+                        normalizedYaml = null,
+                        reason = TriggerReason.TRIGGER_NOT_MATCH.name,
+                        reasonDetail = TriggerReason.TRIGGER_NOT_MATCH.detail,
+                        gitProjectId = gitRequestEvent.gitProjectId
+                    )
+                }
+                val (yamlObject, normalizedYaml) =
+                    prepareCIBuildYaml(gitRequestEvent, originYaml, filePath, buildPipeline.pipelineId) ?: return@forEach
+                // 若是Yaml格式没问题，则取Yaml中的流水线名称，并修改当前流水线名称
+                displayName = if (!yamlObject.name.isNullOrBlank()) yamlObject.name!! else filePath.removeSuffix(ciFileExtension)
+                buildPipeline.displayName = displayName
 
                 val matcher = GitCIWebHookMatcher(event)
 
@@ -297,28 +362,12 @@ class GitCITriggerService @Autowired constructor(
                         gitProjectId = gitRequestEvent.gitProjectId
                     )
                 }
-                hasYamlFile = true
             } catch (e: Exception) {
                 logger.error("yamlPathList in gitProjectId:${gitProjectConf.gitProjectId} has invalid yaml file[$filePath]: ", e)
                 return@forEach
             }
         }
-
-        if (!hasYamlFile) {
-            logger.error("gitProjectId: ${gitRequestEvent.gitProjectId} cannot found ci yaml from git")
-            gitRequestEventNotBuildDao.save(
-                dslContext = dslContext,
-                eventId = gitRequestEvent.id!!,
-                pipelineId = null,
-                filePath = null,
-                originYaml = null,
-                normalizedYaml = null,
-                reason = TriggerReason.GIT_CI_YAML_NOT_FOUND.name,
-                reasonDetail = TriggerReason.GIT_CI_YAML_NOT_FOUND.detail,
-                gitProjectId = gitRequestEvent.gitProjectId
-            )
-        }
-        return hasYamlFile
+        return true
     }
 
     fun validateCIBuildYaml(yamlStr: String) = CiYamlUtils.validateYaml(yamlStr)
@@ -348,7 +397,12 @@ class GitCITriggerService @Autowired constructor(
         return CiYamlUtils.normalizeGitCiYaml(yamlObject)
     }
 
-    private fun prepareCIBuildYaml(gitRequestEvent: GitRequestEvent, originYaml: String?, filePath: String?): Pair<CIBuildYaml, String>? {
+    private fun prepareCIBuildYaml(
+        gitRequestEvent: GitRequestEvent,
+        originYaml: String?,
+        filePath: String?,
+        pipelineId: String?
+    ): Pair<CIBuildYaml, String>? {
 
         if (originYaml.isNullOrBlank()) {
             return null
@@ -361,12 +415,12 @@ class GitCITriggerService @Autowired constructor(
             gitRequestEventNotBuildDao.save(
                 dslContext = dslContext,
                 eventId = gitRequestEvent.id!!,
-                pipelineId = null,
+                pipelineId = pipelineId,
                 filePath = filePath,
                 originYaml = originYaml,
                 normalizedYaml = null,
                 reason = TriggerReason.GIT_CI_YAML_INVALID.name,
-                reasonDetail = TriggerReason.GIT_CI_YAML_INVALID.detail,
+                reasonDetail = e.message.toString(),
                 gitProjectId = gitRequestEvent.gitProjectId
             )
             return null
@@ -539,7 +593,7 @@ class GitCITriggerService @Autowired constructor(
         }
     }
 
-    // 检查是否存在冲突，供listener使用
+    // 检查是否存在冲突，供Rabbit Listener使用
     fun checkMrConflictByListener(
         token: String,
         gitRequestEvent: GitRequestEvent,
@@ -734,6 +788,16 @@ class GitCITriggerService @Autowired constructor(
         val ciFileList = getFileTreeFromGit(gitToken, gitRequestEvent, ciFileDirectoryName, isMrEvent)
             .filter { it.name.endsWith(ciFileExtension) }
         return ciFileList.map { ciFileDirectoryName + File.separator + it.name }.toMutableList()
+    }
+
+    private fun isCIYamlExist(
+        gitToken: GitToken,
+        gitRequestEvent: GitRequestEvent,
+        isMrEvent: Boolean = false
+    ): Boolean {
+        val ciFileList = getFileTreeFromGit(gitToken, gitRequestEvent, "", isMrEvent)
+            .filter { it.name == ciFileName }
+        return ciFileList.isNotEmpty()
     }
 
     private fun getFileTreeFromGit(

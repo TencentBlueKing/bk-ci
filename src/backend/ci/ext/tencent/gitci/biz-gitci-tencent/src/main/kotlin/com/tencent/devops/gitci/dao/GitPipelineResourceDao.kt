@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -64,6 +65,21 @@ class GitPipelineResourceDao {
                 LocalDateTime.now(),
                 LocalDateTime.now()
             ).execute()
+        }
+    }
+
+    fun updatePipeline(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        pipelineId: String,
+        displayName: String
+    ): Int {
+        with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
+            return dslContext.update(this)
+                .set(DISPLAY_NAME, displayName)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(PIPELINE_ID.eq(pipelineId))
+                .execute()
         }
     }
 
@@ -134,7 +150,7 @@ class GitPipelineResourceDao {
             if (!keyword.isNullOrBlank()) {
                 dsl.and(DISPLAY_NAME.like("%$keyword%"))
             }
-            return dsl.orderBy(UPDATE_TIME.desc())
+            return dsl.orderBy(ENABLED.desc(), UPDATE_TIME.desc())
                 .limit(limit).offset(offset)
                 .fetch()
         }

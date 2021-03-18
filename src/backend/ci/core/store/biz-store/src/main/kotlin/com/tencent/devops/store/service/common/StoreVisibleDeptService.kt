@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -37,30 +38,53 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
  * store组件可见范围逻辑类
  * since: 2019-01-08
  */
+@Suppress("ALL")
 interface StoreVisibleDeptService {
 
     /**
      * 查看store组件可见范围
      */
-    fun getVisibleDept(storeCode: String, storeType: StoreTypeEnum, deptStatus: DeptStatusEnum?): Result<StoreVisibleDeptResp?>
+    fun getVisibleDept(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        deptStatus: DeptStatusEnum?
+    ): Result<StoreVisibleDeptResp?>
 
     /**
      * 批量获取已经审核通过的可见范围
      */
-    fun batchGetVisibleDept(storeCodeList: List<String?>, storeType: StoreTypeEnum): Result<HashMap<String, MutableList<Int>>>
+    fun batchGetVisibleDept(
+        storeCodeList: List<String?>,
+        storeType: StoreTypeEnum
+    ): Result<HashMap<String, MutableList<Int>>>
 
     /**
      * 设置store组件可见范围
      */
-    fun addVisibleDept(userId: String, storeCode: String, deptInfos: List<DeptInfo>, storeType: StoreTypeEnum): Result<Boolean>
+    fun addVisibleDept(
+        userId: String,
+        storeCode: String,
+        deptInfos: List<DeptInfo>,
+        storeType: StoreTypeEnum
+    ): Result<Boolean>
 
     /**
      * 删除store组件可见范围
      */
-    fun deleteVisibleDept(userId: String, storeCode: String, deptIds: String, storeType: StoreTypeEnum): Result<Boolean>
+    fun deleteVisibleDept(
+        userId: String,
+        storeCode: String,
+        deptIds: String,
+        storeType: StoreTypeEnum
+    ): Result<Boolean>
 
     /**
      * 审核可见范围
      */
-    fun approveVisibleDept(userId: String, storeCode: String, visibleApproveReq: VisibleApproveReq, storeType: StoreTypeEnum): Result<Boolean>
+    fun approveVisibleDept(
+        userId: String,
+        storeCode: String,
+        visibleApproveReq: VisibleApproveReq,
+        storeType: StoreTypeEnum
+    ): Result<Boolean>
 }

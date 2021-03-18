@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -49,7 +50,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 import java.util.regex.Pattern
 
-@Component
+@Component@Suppress("ALL")
 interface BuildListener {
 
     fun getStartupQueue(): String
@@ -97,7 +98,10 @@ interface BuildListener {
 
                 if (!jobQuotaService.checkJobQuota(event, getVmType())) {
                     logger.warn("Job quota excess, return.")
-                    throw BuildFailureException(ErrorType.USER, DispatchSdkErrorCode.JOB_QUOTA_EXCESS, "JOB配额超限", "JOB配额超限")
+                    throw BuildFailureException(errorType = ErrorType.USER,
+                        errorCode = DispatchSdkErrorCode.JOB_QUOTA_EXCESS,
+                        formatErrorMessage = "JOB配额超限",
+                        errorMessage = "JOB配额超限")
                 }
 
                 val dispatchMessage = dispatchService.build(event, getStartupQueue())
@@ -106,7 +110,11 @@ interface BuildListener {
                 jobQuotaService.addRunningJob(event.projectId, getVmType(), event.buildId, event.vmSeqId)
                 success = true
             } catch (e: BuildFailureException) {
-                dispatchService.logRed(event.buildId, event.containerHashId, event.vmSeqId, "启动构建机失败 - ${e.message}", event.executeCount)
+                dispatchService.logRed(buildId = event.buildId,
+                    containerHashId = event.containerHashId,
+                    vmSeqId = event.vmSeqId,
+                    message = "启动构建机失败 - ${e.message}",
+                    executeCount = event.executeCount)
 
                 errorCode = e.errorCode
                 errorMessage = e.formatErrorMessage
@@ -115,13 +123,22 @@ interface BuildListener {
                 onFailure(dispatchService, event, e)
             } catch (t: Throwable) {
                 logger.warn("Fail to handle the start up message - DispatchService($event)", t)
-                dispatchService.logRed(event.buildId, event.containerHashId, event.vmSeqId, "启动构建机失败 - ${t.message}", event.executeCount)
+                dispatchService.logRed(buildId = event.buildId,
+                    containerHashId = event.containerHashId,
+                    vmSeqId = event.vmSeqId,
+                    message = "启动构建机失败 - ${t.message}",
+                    executeCount = event.executeCount)
 
                 errorCode = DispatchSdkErrorCode.SDK_SYSTEM_ERROR
                 errorMessage = "Fail to handle the start up message"
                 errorType = ErrorType.SYSTEM
 
-                onFailure(dispatchService, event, BuildFailureException(ErrorType.SYSTEM, DispatchSdkErrorCode.SDK_SYSTEM_ERROR, "Fail to handle the start up message", "Fail to handle the start up message"))
+                onFailure(dispatchService = dispatchService,
+                    event = event,
+                    e = BuildFailureException(errorType = ErrorType.SYSTEM,
+                        errorCode = DispatchSdkErrorCode.SDK_SYSTEM_ERROR,
+                        formatErrorMessage = "Fail to handle the start up message",
+                        errorMessage = "Fail to handle the start up message"))
             } finally {
                 // 上报monitoring
                 dispatchService.sendDispatchMonitoring(
@@ -186,23 +203,37 @@ interface BuildListener {
 
     fun getVmType(): JobQuotaVmType?
 
-    fun log(buildLogPrinter: BuildLogPrinter, buildId: String, containerHashId: String?, vmSeqId: String, message: String, executeCount: Int?) {
+    fun log(
+        buildLogPrinter: BuildLogPrinter,
+        buildId: String,
+        containerHashId: String?,
+        vmSeqId: String,
+        message: String,
+        executeCount: Int?
+    ) {
         buildLogPrinter.addLine(
-            buildId,
-            message,
-            VMUtils.genStartVMTaskId(vmSeqId),
-            containerHashId,
-            executeCount ?: 1
+            buildId = buildId,
+            message = message,
+            tag = VMUtils.genStartVMTaskId(vmSeqId),
+            jobId = containerHashId,
+            executeCount = executeCount ?: 1
         )
     }
 
-    fun logRed(buildLogPrinter: BuildLogPrinter, buildId: String, containerHashId: String?, vmSeqId: String, message: String, executeCount: Int?) {
+    fun logRed(
+        buildLogPrinter: BuildLogPrinter,
+        buildId: String,
+        containerHashId: String?,
+        vmSeqId: String,
+        message: String,
+        executeCount: Int?
+    ) {
         buildLogPrinter.addRedLine(
-            buildId,
-            message,
-            VMUtils.genStartVMTaskId(vmSeqId),
-            containerHashId,
-            executeCount ?: 1
+            buildId = buildId,
+            message = message,
+            tag = VMUtils.genStartVMTaskId(vmSeqId),
+            jobId = containerHashId,
+            executeCount = executeCount ?: 1
         )
     }
 
@@ -215,7 +246,10 @@ interface BuildListener {
         logger.info("Retry the event($event) in $sleepTimeInMS ms")
         if (event.retryTime > retryTimes) {
             logger.warn("Fail to dispatch the agent start event with $retryTimes times - ($event)")
-            onFailure(ErrorType.SYSTEM, DispatchSdkErrorCode.RETRY_STARTUP_FAIL, "Fail to start up the job after $retryTimes times", "Fail to start up the job after $retryTimes times")
+            onFailure(errorType = ErrorType.SYSTEM,
+                errorCode = DispatchSdkErrorCode.RETRY_STARTUP_FAIL,
+                formatErrorMessage = "Fail to start up the job after $retryTimes times",
+                message = "Fail to start up the job after $retryTimes times")
         }
         val sleepTime = if (sleepTimeInMS <= 5000) {
             // 重试不能低于5秒
@@ -282,7 +316,11 @@ interface BuildListener {
 
     private fun getClient() = SpringContextUtil.getBean(Client::class.java)
 
-    private fun onFailure(dispatchService: DispatchService, event: PipelineAgentStartupEvent, e: BuildFailureException) {
+    private fun onFailure(
+        dispatchService: DispatchService,
+        event: PipelineAgentStartupEvent,
+        e: BuildFailureException
+    ) {
         dispatchService.onContainerFailure(event, e)
     }
 

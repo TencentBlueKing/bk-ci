@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -35,7 +36,6 @@ import com.tencent.devops.log.es.ESAutoConfiguration
 import com.tencent.devops.log.es.ESClient
 import com.tencent.devops.log.es.ESProperties
 import com.tencent.devops.log.util.ESConfigUtils
-import org.apache.http.HttpHost
 import org.apache.http.auth.AuthScope
 import org.apache.http.auth.UsernamePasswordCredentials
 import org.apache.http.impl.client.BasicCredentialsProvider
@@ -84,6 +84,8 @@ class LogESAutoConfiguration {
     private val e1ShardsPerNode: Int? = null
     @Value("\${log.elasticsearch.socketTimeout:#{null}}")
     private val e1socketTimeout: Int? = null
+    @Value("\${log.elasticsearch.https:#{null}}")
+    private val e1Https: String? = null
 
     @Value("\${log.elasticsearch2.ip:#{null}}")
     private val e2IP: String? = null
@@ -109,6 +111,8 @@ class LogESAutoConfiguration {
     private val e2ShardsPerNode: Int? = null
     @Value("\${log.elasticsearch2.socketTimeout:#{null}}")
     private val e2socketTimeout: Int? = null
+    @Value("\${log.elasticsearch.https:#{null}}")
+    private val e2Https: String? = null
 
     private val tcpKeepAliveSeconds = 30000                     // 探活连接时长
     private val connectTimeout = 1000                           // 请求连接超时
@@ -138,10 +142,11 @@ class LogESAutoConfiguration {
             30000
         }
 
-        val httpHost = HttpHost(e1IP, httpPort, "http")
         val credentialsProvider = getBasicCredentialsProvider(e1Username!!, e1Password!!)
         val builder = ESConfigUtils.getClientBuilder(
-            httpHost = httpHost,
+            host = e1IP!!,
+            port = httpPort,
+            https = boolConvert(e1Https),
             tcpKeepAliveSeconds = tcpKeepAliveSeconds.toLong(),
             connectTimeout = connectTimeout,
             socketTimeout = socketTimeout,
@@ -186,10 +191,11 @@ class LogESAutoConfiguration {
             30000
         }
 
-        val httpHost = HttpHost(e2IP, httpPort, "http")
         val credentialsProvider = getBasicCredentialsProvider(e2Username!!, e2Password!!)
         val builder = ESConfigUtils.getClientBuilder(
-            httpHost = httpHost,
+            host = e2IP!!,
+            port = httpPort,
+            https = boolConvert(e2Https),
             tcpKeepAliveSeconds = tcpKeepAliveSeconds.toLong(),
             connectTimeout = connectTimeout,
             socketTimeout = socketTimeout,

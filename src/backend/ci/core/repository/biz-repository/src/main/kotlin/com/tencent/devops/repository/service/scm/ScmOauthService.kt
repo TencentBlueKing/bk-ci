@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -40,6 +41,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
+@Suppress("ALL")
 class ScmOauthService @Autowired constructor(
     private val gitConfig: GitConfig,
     private val svnConfig: SVNConfig
@@ -90,16 +92,16 @@ class ScmOauthService @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         try {
             return ScmOauthFactory.getScm(
-                projectName,
-                url,
-                type,
-                null,
-                privateKey,
-                passPhrase,
-                token,
-                region,
-                userName,
-                null
+                projectName = projectName,
+                url = url,
+                type = type,
+                branchName = null,
+                privateKey = privateKey,
+                passPhrase = passPhrase,
+                token = token,
+                region = region,
+                userName = userName,
+                event = null
             ).getBranches()
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list branches")
@@ -116,7 +118,17 @@ class ScmOauthService @Autowired constructor(
         logger.info("[$projectName|$url|$type|$userName] Start to list tags")
         val startEpoch = System.currentTimeMillis()
         try {
-            return ScmOauthFactory.getScm(projectName, url, type, null, null, null, token, null, userName, null)
+            return ScmOauthFactory.getScm(
+                projectName = projectName,
+                url = url,
+                type = type,
+                branchName = null,
+                privateKey = null,
+                passPhrase = null,
+                token = token,
+                region = null,
+                userName = userName,
+                event = null)
                 .getTags()
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list tags")
@@ -136,13 +148,20 @@ class ScmOauthService @Autowired constructor(
         logger.info("[$projectName|$url|$type|$userName] Start to check private key and token")
         val startEpoch = System.currentTimeMillis()
         try {
-            ScmOauthFactory.getScm(projectName, url, type, null, privateKey, passPhrase, token, region, userName, null)
+            ScmOauthFactory.getScm(
+                projectName = projectName,
+                url = url,
+                type = type,
+                branchName = null,
+                privateKey = privateKey,
+                passPhrase = passPhrase,
+                token = token,
+                region = region,
+                userName = userName,
+                event = null)
                 .checkTokenAndPrivateKey()
         } catch (e: Throwable) {
-            logger.warn(
-                "Fail to check the private key (projectName=$projectName, type=$type, region=$region, username=$userName",
-                e
-            )
+            logger.warn("CheckPrivateKeyFail|projectName=$projectName|type=$type|region=$region|username=$userName", e)
             return TokenCheckResult(false, e.message ?: "Fail to check the svn private key")
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to check private key and token")
@@ -179,7 +198,16 @@ class ScmOauthService @Autowired constructor(
                     throw RuntimeException("Unknown repository type ($type) when add webhook")
                 }
             }
-            ScmOauthFactory.getScm(projectName, url, type, null, privateKey, passPhrase, token, region, userName, event)
+            ScmOauthFactory.getScm(projectName = projectName,
+                url = url,
+                type = type,
+                branchName = null,
+                privateKey = privateKey,
+                passPhrase = passPhrase,
+                token = token,
+                region = region,
+                userName = userName,
+                event = event)
                 .addWebHook(hookUrl)
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to add web hook")
@@ -193,11 +221,26 @@ class ScmOauthService @Autowired constructor(
         try {
             with(request) {
                 val scm =
-                    ScmOauthFactory.getScm(projectName, url, type, null, privateKey, passPhrase, token, region, "", "")
-                scm.addCommitCheck(commitId, state, targetUrl, context, description, block)
+                    ScmOauthFactory.getScm(projectName = projectName,
+                        url = url,
+                        type = type,
+                        branchName = null,
+                        privateKey = privateKey,
+                        passPhrase = passPhrase,
+                        token = token,
+                        region = region,
+                        userName = "",
+                        event = "")
+                scm.addCommitCheck(commitId = commitId,
+                    state = state,
+                    targetUrl = targetUrl,
+                    context = context,
+                    description = description,
+                    block = block)
                 if (mrRequestId != null) {
                     if (reportData.second.isEmpty()) return
-                    val comment = QualityUtils.getQualityReport(reportData.first, reportData.second)
+                    val comment = QualityUtils.getQualityReport(titleData = reportData.first,
+                        resultData = reportData.second)
                     scm.addMRComment(mrRequestId!!, comment)
                 }
             }

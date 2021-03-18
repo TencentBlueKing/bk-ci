@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -38,7 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.stereotype.Component
 
-@Component
+@Component@Suppress("ALL")
 class WebSocketListener @Autowired constructor(
     val objectMapper: ObjectMapper,
     val messagingTemplate: SimpMessagingTemplate,
@@ -46,7 +47,7 @@ class WebSocketListener @Autowired constructor(
 ) : Listener<SendMessage> {
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(this::class.java)
     }
 
     override fun execute(event: SendMessage) {
@@ -66,15 +67,18 @@ class WebSocketListener @Autowired constructor(
                 sessionList.forEach { session ->
                     if (websocketService.isCacheSession(session)) {
                         watcher.start("PushMsg:$session")
-                        messagingTemplate.convertAndSend("/topic/bk/notify/$session", objectMapper.writeValueAsString(event.notifyPost))
+                        messagingTemplate.convertAndSend(
+                            "/topic/bk/notify/$session",
+                            objectMapper.writeValueAsString(event.notifyPost)
+                        )
                         watcher.stop()
                     }
                 }
             } else {
                 logger.info("webSocketListener sessionList is empty. page:${event.page} user:${event.userId} ")
             }
-        } catch (ex: Exception) {
-            logger.error("webSocketListener error", ex)
+        } catch (ignored: Exception) {
+            logger.error("webSocketListener error", ignored)
         } finally {
             LogUtils.printCostTimeWE(watcher = watcher)
         }
@@ -92,7 +96,8 @@ class WebSocketListener @Autowired constructor(
     private fun isPushTimeOut(event: SendMessage): Boolean {
         if (event is PipelineMessage) {
             if (System.currentTimeMillis() - event.startTime > 2 * 60 * 1000) {
-                logger.warn("websocket Consumers get message timeout | ${event.userId} | ${event.page} | ${event.buildId} | ${event.startTime}")
+                logger.warn("websocket Consumers get message timeout | " +
+                    "${event.userId} | ${event.page} | ${event.buildId} | ${event.startTime}")
                 return true
             }
         }

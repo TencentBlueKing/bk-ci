@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -35,7 +36,8 @@ enum class CredentialType {
     SSH_PRIVATEKEY,                         // v1 = privateKey, v2=passphrase?
     TOKEN_SSH_PRIVATEKEY,                   // v1 = token, v2 = privateKey, v3=passphrase?
     TOKEN_USERNAME_PASSWORD,                // v1 = token, v2 = username, v3=password
-    COS_APPID_SECRETID_SECRETKEY_REGION; // v1 = cosappId, v2 = secretId, v3 = secretKey, v4 = region
+    COS_APPID_SECRETID_SECRETKEY_REGION, // v1 = cosappId, v2 = secretId, v3 = secretKey, v4 = region
+    MULTI_LINE_PASSWORD; // 密码中有换行符 v1 = password, v2=v3=v4=null
 
     companion object {
         fun getKeyMap(credentialType: String): Map<String, String> {
@@ -72,6 +74,7 @@ enum class CredentialType {
                     keyMap["v3"] = "secretKey"
                     keyMap["v4"] = "region"
                 }
+                MULTI_LINE_PASSWORD.name -> keyMap["v1"] = "password"
             }
             return keyMap
         }

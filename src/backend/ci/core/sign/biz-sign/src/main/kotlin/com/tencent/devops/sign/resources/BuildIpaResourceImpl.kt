@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -52,7 +53,7 @@ class BuildIpaResourceImpl @Autowired constructor(
     private val objectMapper: ObjectMapper
 ) : BuildIpaResource {
     companion object {
-        val logger = LoggerFactory.getLogger(BuildIpaResourceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(BuildIpaResourceImpl::class.java)
     }
 
     override fun ipaSign(
@@ -66,22 +67,30 @@ class BuildIpaResourceImpl @Autowired constructor(
         val ipaSignInfo = signInfoService.check(signInfoService.decodeIpaSignInfo(ipaSignInfoHeader, objectMapper))
         if (!checkParams(ipaSignInfo, projectId, pipelineId, buildId)) {
             logger.warn("构建机无权限在工程(${ipaSignInfo.projectId})的流水线(${ipaSignInfo.pipelineId})中发起iOS企业重签名.")
-            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_NOT_AUTH_UPLOAD, defaultMessage = "构建机无权限在工程(${ipaSignInfo.projectId})的流水线(${ipaSignInfo.pipelineId})中发起iOS企业重签名.")
+            throw ErrorCodeException(
+                errorCode = SignMessageCode.ERROR_NOT_AUTH_UPLOAD,
+                defaultMessage = "构建机无权限在工程(${ipaSignInfo.projectId})的流水线(${ipaSignInfo.pipelineId})中发起iOS企业重签名."
+            )
         }
         var taskExecuteCount = 1
         try {
-            val (ipaFile, taskExecuteCount) =
-                signService.uploadIpaAndDecodeInfo(resignId, ipaSignInfo, ipaSignInfoHeader, ipaInputStream)
+            val (ipaFile, taskExecuteCount2) = signService.uploadIpaAndDecodeInfo(
+                resignId = resignId,
+                ipaSignInfo = ipaSignInfo,
+                ipaSignInfoHeader = ipaSignInfoHeader,
+                ipaInputStream = ipaInputStream
+            )
+            taskExecuteCount = taskExecuteCount2
             syncSignService.asyncSign(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
             return Result(resignId)
-        } catch (e: Exception) {
+        } catch (ignored: Exception) {
             signInfoService.failResign(
                 resignId = resignId,
                 info = ipaSignInfo,
                 executeCount = taskExecuteCount,
-                message = e.message ?: "Start sign task with exception"
+                message = ignored.message ?: "Start sign task with exception"
             )
-            throw e
+            throw ignored
         }
     }
 
@@ -122,6 +131,8 @@ class BuildIpaResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String
     ): Boolean {
-        return ipaSignInfo.projectId == projectId && ipaSignInfo.pipelineId == pipelineId && ipaSignInfo.buildId == buildId
+        return ipaSignInfo.projectId == projectId &&
+            ipaSignInfo.pipelineId == pipelineId &&
+            ipaSignInfo.buildId == buildId
     }
 }

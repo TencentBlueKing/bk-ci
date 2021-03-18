@@ -1,23 +1,3 @@
-package com.tencent.devops.auth.service
-
-import com.tencent.devops.auth.constant.AuthMessageCode
-import com.tencent.devops.auth.dao.ManagerOrganizationDao
-import com.tencent.devops.auth.dao.ManagerUserDao
-import com.tencent.devops.auth.entity.ManagerChangeType
-import com.tencent.devops.auth.entity.ManagerOrganizationInfo
-import com.tencent.devops.auth.pojo.ManageOrganizationEntity
-import com.tencent.devops.auth.pojo.dto.ManageOrganizationDTO
-import com.tencent.devops.auth.refresh.dispatch.AuthRefreshDispatch
-import com.tencent.devops.auth.refresh.event.ManagerOrganizationChangeEvent
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.api.util.Watcher
-import com.tencent.devops.common.service.utils.LogUtils
-import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -43,6 +23,26 @@ import org.springframework.stereotype.Service
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
+package com.tencent.devops.auth.service
+
+import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.dao.ManagerOrganizationDao
+import com.tencent.devops.auth.dao.ManagerUserDao
+import com.tencent.devops.auth.entity.ManagerChangeType
+import com.tencent.devops.auth.entity.ManagerOrganizationInfo
+import com.tencent.devops.auth.pojo.ManageOrganizationEntity
+import com.tencent.devops.auth.pojo.dto.ManageOrganizationDTO
+import com.tencent.devops.auth.refresh.dispatch.AuthRefreshDispatch
+import com.tencent.devops.auth.refresh.event.ManagerOrganizationChangeEvent
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.service.utils.LogUtils
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
 @Service
 class ManagerOrganizationService @Autowired constructor(
@@ -125,11 +125,13 @@ class ManagerOrganizationService @Autowired constructor(
     fun getManagerOrganization(managerId: Int): ManageOrganizationEntity? {
         val watcher = Watcher("getManagerOrganization")
         watcher.start("getManager")
-        val record = managerOrganizationDao.get(dslContext, managerId) ?: null
+        val record = managerOrganizationDao.get(dslContext, managerId) ?: return null
         watcher.start("getStrategyName")
         val strategyName = strategyService.getStrategyName(record!!.strategyid.toString()) ?: ""
         watcher.start("getParentOrganizationInfo")
-        val parentOrganizationInfo = organizationService.getParentOrganizationInfo(record!!.organizationId.toString(), record!!.level)
+        val parentOrganizationInfo = organizationService.getParentOrganizationInfo(
+            organizationId = record!!.organizationId.toString(),
+            level = record!!.level)
         val parentOrg = parentOrganizationInfo?.sortedBy { it.level } ?: null
         watcher.start("getOrganizationInfo")
         logger.info("list createTime: ${record.createTime}, ${DateTimeUtil.toDateTime(record.createTime)}")
@@ -214,7 +216,8 @@ class ManagerOrganizationService @Autowired constructor(
 
         when (action) {
             createAction -> if (record != null && record!!.size > 0) {
-                logger.warn("checkBeforeExecute fail, createAction:$record| ${managerOrganization.organizationId}| ${managerOrganization.strategyId} is exist")
+                logger.warn("checkBeforeExecute fail, createAction:$record|" +
+                    " ${managerOrganization.organizationId}| ${managerOrganization.strategyId} is exist")
                 throw ErrorCodeException(
                     defaultMessage = "",
                     errorCode = AuthMessageCode.MANAGER_ORG_EXIST
@@ -225,8 +228,9 @@ class ManagerOrganizationService @Autowired constructor(
                     return
                 }
                 val ids = record!!.map { it.id }
-                logger.warn("checkBeforeExecute fail, updateAction: $ids |$id | ${managerOrganization.organizationId}| ${managerOrganization.strategyId} is not exist")
                 if (!ids.contains(id) || ids.size > 1) {
+                    logger.warn("checkBeforeExecute fail, updateAction: $ids |$id |" +
+                        " ${managerOrganization.organizationId}| ${managerOrganization.strategyId} is not exist")
                     throw ErrorCodeException(
                         defaultMessage = "",
                         errorCode = AuthMessageCode.MANAGER_ORG_EXIST
@@ -247,7 +251,7 @@ class ManagerOrganizationService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        val logger = LoggerFactory.getLogger(ManagerOrganizationService::class.java)
         const val createAction = "create"
         const val updateAction = "update"
     }

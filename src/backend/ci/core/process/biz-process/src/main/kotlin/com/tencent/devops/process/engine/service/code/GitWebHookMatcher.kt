@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -30,6 +31,19 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventTy
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.BRANCH_NAME_NOT_MATCH
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.EVENT_TYPE_NOT_MATCH
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.EXCLUDE_BRANCH_NAME_NOT_MATCH
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.EXCLUDE_MSG_NOT_MATCH
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.EXCLUDE_PATHS_NOT_MATCH
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.EXCLUDE_SOURCE_BRANCH_NAME_NOT_MATCH
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.EXCLUDE_TAG_NAME_NOT_MATCH
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.EXCLUDE_USERS_NOT_MATCH
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.INCLUDE_PATHS_NOT_MATCH
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.INCLUDE_SOURCE_BRANCH_NAME_NOT_MATCH
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.REPOSITORY_TYPE_NOT_MATCH
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.REPOSITORY_URL_NOT_MATCH
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.TAG_NAME_NOT_MATCH
 import com.tencent.devops.process.pojo.code.git.GitEvent
 import com.tencent.devops.process.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.process.pojo.code.git.GitPushEvent
@@ -45,6 +59,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.util.AntPathMatcher
 import java.util.regex.Pattern
 
+@Suppress("ALL")
 open class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
 
     companion object {
@@ -67,23 +82,23 @@ open class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
 
             if (repository !is CodeGitRepository && repository !is CodeTGitRepository) {
                 logger.warn("Is not code repo for git web hook for repo and pipeline: $repository, $pipelineId")
-                return ScmWebhookMatcher.MatchResult(false)
+                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = REPOSITORY_TYPE_NOT_MATCH)
             }
             if (!matchUrl(repository)) {
                 logger.warn("Is not match for event and pipeline: $event, $pipelineId")
-                return ScmWebhookMatcher.MatchResult(false)
+                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = REPOSITORY_URL_NOT_MATCH)
             }
 
             // 检测事件类型是否符合
             if (!doEventTypeMatch(webHookParams.eventType)) {
                 logger.warn("Is not match event type for pipeline: ${webHookParams.eventType}, $pipelineId")
-                return ScmWebhookMatcher.MatchResult(false)
+                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = EVENT_TYPE_NOT_MATCH)
             }
 
             // 检查用户是否符合
             if (!doUserMatch(webHookParams.excludeUsers)) {
                 logger.warn("Is not match user for pipeline: ${webHookParams.excludeUsers}, $pipelineId")
-                return ScmWebhookMatcher.MatchResult(false)
+                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = EXCLUDE_USERS_NOT_MATCH)
             }
 
             // 真正对事件进行检查
@@ -182,35 +197,35 @@ open class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
 
             if (doExcludeBranchMatch(excludeBranchName, eventBranch, pipelineId)) {
                 logger.warn("Do mr match fail for exclude branch match for pipeline: $pipelineId")
-                return ScmWebhookMatcher.MatchResult(false)
+                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = EXCLUDE_BRANCH_NAME_NOT_MATCH)
             }
 
             if (doExcludePathMatch(changeFiles, excludePaths, pipelineId)) {
                 logger.warn("Do mr event match fail for exclude path match for pipeline: $pipelineId")
-                return ScmWebhookMatcher.MatchResult(false)
+                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = EXCLUDE_PATHS_NOT_MATCH)
             }
 
             if (doExcludeSourceBranchMatch(excludeSourceBranchName, eventSourceBranch, pipelineId)) {
                 logger.warn("Do mr event match fail for exclude source branch match for pipeline: $pipelineId")
-                return ScmWebhookMatcher.MatchResult(false)
+                return ScmWebhookMatcher.MatchResult(false, failedReason = EXCLUDE_SOURCE_BRANCH_NAME_NOT_MATCH)
             }
 
             val matchBranch = doIncludeBranchMatch(branchName, eventBranch, pipelineId)
             if (matchBranch == null) {
                 logger.warn("Do mr match fail for include branch not match for pipeline: $pipelineId")
-                return ScmWebhookMatcher.MatchResult(false)
+                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = BRANCH_NAME_NOT_MATCH)
             }
 
             val matchPaths = doIncludePathMatch(changeFiles, includePaths, pipelineId)
             if (matchPaths == null) {
                 logger.warn("Do mr event match fail for include path not match for pipeline: $pipelineId")
-                return ScmWebhookMatcher.MatchResult(false)
+                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = INCLUDE_PATHS_NOT_MATCH)
             }
 
             val matchSourceBranch = doIncludeSourceBranchMatch(includeSourceBranchName, eventSourceBranch, pipelineId)
             if (matchSourceBranch == null) {
                 logger.warn("Do mr match fail for include source branch not match for pipeline: $pipelineId")
-                return ScmWebhookMatcher.MatchResult(false)
+                return ScmWebhookMatcher.MatchResult(false, failedReason = INCLUDE_SOURCE_BRANCH_NAME_NOT_MATCH)
             }
 
             logger.info("Do mr match success for pipeline: $pipelineId")
@@ -218,7 +233,10 @@ open class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
         }
     }
 
-    private fun doPushMatch(webHookParams: ScmWebhookMatcher.WebHookParams, pipelineId: String): ScmWebhookMatcher.MatchResult {
+    private fun doPushMatch(
+        webHookParams: ScmWebhookMatcher.WebHookParams,
+        pipelineId: String
+    ): ScmWebhookMatcher.MatchResult {
         val eventBranch = getBranch()
         with(webHookParams) {
             val commits = (event as GitPushEvent).commits
@@ -233,29 +251,29 @@ open class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
 
             if (doExcludeBranchMatch(excludeBranchName, eventBranch, pipelineId)) {
                 logger.warn("Do push event match fail for exclude branch match for pipeline: $pipelineId")
-                return ScmWebhookMatcher.MatchResult(false)
+                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = EXCLUDE_BRANCH_NAME_NOT_MATCH)
             }
 
             if (doExcludePathMatch(eventPaths, excludePaths, pipelineId)) {
                 logger.warn("Do push event match fail for exclude path match for pipeline: $pipelineId")
-                return ScmWebhookMatcher.MatchResult(false)
+                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = EXCLUDE_PATHS_NOT_MATCH)
             }
 
             if (doExcludeMsgMatch(commitMsg[0], pipelineId)) {
                 logger.warn("Do push event match fail for exclude message match for pipeline: $pipelineId")
-                return ScmWebhookMatcher.MatchResult(false)
+                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = EXCLUDE_MSG_NOT_MATCH)
             }
 
             val matchBranch = doIncludeBranchMatch(branchName, eventBranch, pipelineId)
             if (matchBranch == null) {
                 logger.warn("Do push event match fail for include branch not match for pipeline: $pipelineId")
-                return ScmWebhookMatcher.MatchResult(false)
+                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = BRANCH_NAME_NOT_MATCH)
             }
 
             val matchPaths = doIncludePathMatch(eventPaths, includePaths, pipelineId)
             if (matchPaths == null) {
                 logger.warn("Do push event match fail for include path not match for pipeline: $pipelineId")
-                return ScmWebhookMatcher.MatchResult(false)
+                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = INCLUDE_PATHS_NOT_MATCH)
             }
 
             logger.info("Do push match success for pipeline: $pipelineId")
@@ -263,7 +281,10 @@ open class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
         }
     }
 
-    private fun doTagMatch(webHookParams: ScmWebhookMatcher.WebHookParams, pipelineId: String): ScmWebhookMatcher.MatchResult {
+    private fun doTagMatch(
+        webHookParams: ScmWebhookMatcher.WebHookParams,
+        pipelineId: String
+    ): ScmWebhookMatcher.MatchResult {
         // 只触发tag创建事件
         val gitTagPushEvent = event as GitTagPushEvent
         val isCreateTag = gitTagPushEvent.operation_kind == "create"
@@ -277,13 +298,13 @@ open class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
         with(webHookParams) {
             if (doExcludeBranchMatch(excludeTagName, eventTag, pipelineId)) {
                 logger.warn("Do tag event match fail for exclude branch match for pipeline: $pipelineId")
-                return ScmWebhookMatcher.MatchResult(false)
+                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = EXCLUDE_TAG_NAME_NOT_MATCH)
             }
 
             val matchBranch = doIncludeBranchMatch(tagName, eventTag, pipelineId)
             if (matchBranch == null) {
                 logger.warn("Do tag event match fail for include branch not match for pipeline: $pipelineId")
-                return ScmWebhookMatcher.MatchResult(false)
+                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = TAG_NAME_NOT_MATCH)
             }
 
             logger.info("Do tag match success for pipeline: $pipelineId")
@@ -292,7 +313,11 @@ open class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
     }
 
     // null 表示没匹配上
-    private fun doIncludePathMatch(eventPaths: Collection<String>?, includePaths: String?, pipelineId: String): String? {
+    private fun doIncludePathMatch(
+        eventPaths: Collection<String>?,
+        includePaths: String?,
+        pipelineId: String
+    ): String? {
         logger.info("Do include path match for pipeline: $pipelineId, $eventPaths")
         // include的话，为空则为包含，开区间
         if (includePaths.isNullOrBlank()) return ""
@@ -343,7 +368,11 @@ open class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
         return false
     }
 
-    private fun doExcludePathMatch(eventPaths: Collection<String>?, excludePaths: String?, pipelineId: String): Boolean {
+    private fun doExcludePathMatch(
+        eventPaths: Collection<String>?,
+        excludePaths: String?,
+        pipelineId: String
+    ): Boolean {
         logger.info("Do exclude path match for pipeline: $pipelineId, $eventPaths")
         // 排除的话，为空则为不包含，闭区间
         if (excludePaths.isNullOrBlank()) return false
@@ -436,7 +465,11 @@ open class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
         return false
     }
 
-    private fun doExcludeSourceBranchMatch(excludeSourceBranchName: String?, eventSourceBranch: String, pipelineId: String): Boolean {
+    private fun doExcludeSourceBranchMatch(
+        excludeSourceBranchName: String?,
+        eventSourceBranch: String,
+        pipelineId: String
+    ): Boolean {
         logger.info("Do exclude source branch match for pipeline: $pipelineId, $eventSourceBranch")
         if (excludeSourceBranchName.isNullOrBlank()) return false
 
@@ -444,14 +477,18 @@ open class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
         logger.info("Exclude source branch set for pipeline: $pipelineId, ${excludeSourceBranchNameSet.map { it }}")
         excludeSourceBranchNameSet.forEach {
             if (isBranchMatch(it, eventSourceBranch)) {
-                logger.warn("The exclude source branch match the git event branch for pipeline: $pipelineId, $eventSourceBranch")
+                logger.warn("The exclude source branch match:$pipelineId, $eventSourceBranch")
                 return true
             }
         }
         return false
     }
 
-    private fun doIncludeSourceBranchMatch(sourceBranchName: String?, eventSourceBranch: String, pipelineId: String): String? {
+    private fun doIncludeSourceBranchMatch(
+        sourceBranchName: String?,
+        eventSourceBranch: String,
+        pipelineId: String
+    ): String? {
         logger.info("Do include source branch match for pipeline: $pipelineId, $eventSourceBranch")
         if (sourceBranchName.isNullOrBlank()) return ""
 
@@ -459,7 +496,7 @@ open class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
         logger.info("Include source branch set for pipeline: $pipelineId, ${includeSourceBranchNameSet.map { it }}")
         includeSourceBranchNameSet.forEach {
             if (isBranchMatch(it, eventSourceBranch)) {
-                logger.warn("The include source branch match the git event branch for pipeline: $pipelineId, $eventSourceBranch")
+                logger.warn("The include source branch match: $pipelineId, $eventSourceBranch")
                 return it
             }
         }

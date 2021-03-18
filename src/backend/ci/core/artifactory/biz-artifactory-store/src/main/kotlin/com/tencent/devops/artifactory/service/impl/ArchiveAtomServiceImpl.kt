@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -55,18 +56,23 @@ import java.io.InputStream
 import java.nio.file.Files
 import java.util.concurrent.TimeUnit
 
+@Suppress("ALL")
 abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
 
-    private val logger = LoggerFactory.getLogger(ArchiveAtomServiceImpl::class.java)
-
-    private val FRONTEND_PATH = "frontend"
+    companion object {
+        private val logger = LoggerFactory.getLogger(ArchiveAtomServiceImpl::class.java)
+        private const val FRONTEND_PATH = "frontend"
+    }
 
     @Autowired
     lateinit var redisOperation: RedisOperation
+
     @Autowired
     lateinit var client: Client
+
     @Autowired
     lateinit var dslContext: DSLContext
+
     @Autowired
     lateinit var fileDao: FileDao
 
@@ -76,7 +82,6 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
         disposition: FormDataContentDisposition,
         archiveAtomRequest: ArchiveAtomRequest
     ): Result<ArchiveAtomResponse?> {
-        logger.info("archiveAtom, userId: $userId, disposition: $disposition, archiveAtomRequest: $archiveAtomRequest")
         // 校验用户上传的插件包是否合法
         val projectCode = archiveAtomRequest.projectCode
         val atomCode = archiveAtomRequest.atomCode
@@ -85,7 +90,6 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
         val os = archiveAtomRequest.os
         val verifyAtomPackageResult = client.get(ServiceMarketAtomArchiveResource::class)
             .verifyAtomPackageByUserId(userId, projectCode, atomCode, version, releaseType, os)
-        logger.info("verifyAtomPackageResult: $verifyAtomPackageResult")
         if (verifyAtomPackageResult.isNotOk()) {
             return Result(verifyAtomPackageResult.status, verifyAtomPackageResult.message, null)
         }
@@ -97,8 +101,12 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
         val taskDataMap: Map<String, Any>
         try { // 校验taskJson配置是否正确
             val verifyAtomTaskJsonResult =
-                client.get(ServiceMarketAtomArchiveResource::class).verifyAtomTaskJson(userId, projectCode, atomCode, version)
-            logger.info("verifyAtomTaskJsonResult: $verifyAtomTaskJsonResult")
+                client.get(ServiceMarketAtomArchiveResource::class).verifyAtomTaskJson(
+                    userId = userId,
+                    projectCode = projectCode,
+                    atomCode = atomCode,
+                    version = version
+                )
             if (verifyAtomTaskJsonResult.isNotOk()) {
                 return Result(verifyAtomTaskJsonResult.status, verifyAtomTaskJsonResult.message, null)
             }
@@ -151,7 +159,6 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
         disposition: FormDataContentDisposition,
         reArchiveAtomRequest: ReArchiveAtomRequest
     ): Result<ArchiveAtomResponse?> {
-        logger.info("reArchiveAtom userId is:$userId,file info is:$disposition,reArchiveAtomRequest is:$reArchiveAtomRequest")
         val archiveAtomRequest = ArchiveAtomRequest(
             projectCode = reArchiveAtomRequest.projectCode,
             atomCode = reArchiveAtomRequest.atomCode,
@@ -160,7 +167,6 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
             os = null
         )
         val archiveAtomResult = archiveAtom(userId, inputStream, disposition, archiveAtomRequest)
-        logger.info("archiveAtomResult is:$archiveAtomResult")
         if (archiveAtomResult.isNotOk()) {
             return archiveAtomResult
         }
@@ -168,8 +174,11 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
         val atomEnvRequest = archiveAtomResultData.atomEnvRequest
         val taskDataMap = archiveAtomResultData.taskDataMap
         val updateAtomInfoResult = client.get(ServiceMarketAtomArchiveResource::class)
-            .updateAtomPkgInfo(userId, reArchiveAtomRequest.atomId, AtomPkgInfoUpdateRequest(atomEnvRequest, taskDataMap))
-        logger.info("updateAtomInfoResult is:$updateAtomInfoResult")
+            .updateAtomPkgInfo(
+                userId = userId,
+                atomId = reArchiveAtomRequest.atomId,
+                atomPkgInfoUpdateRequest = AtomPkgInfoUpdateRequest(atomEnvRequest, taskDataMap)
+            )
         if (updateAtomInfoResult.isNotOk()) {
             return Result(updateAtomInfoResult.status, updateAtomInfoResult.message, null)
         }

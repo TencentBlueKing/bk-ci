@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -119,7 +120,6 @@ class BluekingV3ResourceApi @Autowired constructor(
         resourceCode: String,
         resourceName: String
     ) {
-        logger.info("v3 createResource projectCode[$projectCode] resourceCode[$resourceCode] resourceName[$resourceName] resourceType[${resourceType.value}]")
         val ancestors = mutableListOf<AncestorsApiReq>()
         if (resourceType != AuthResourceType.PROJECT) {
             ancestors.add(AncestorsApiReq(
@@ -129,8 +129,15 @@ class BluekingV3ResourceApi @Autowired constructor(
             ))
         }
         val iamApiReq = IamCreateApiReq(
-                creator = user,
-                name = resourceName, id = resourceCode, type = resourceType.value, system = iamConfiguration.systemId, ancestors = ancestors, bk_app_code = "", bk_app_secret = "", bk_username = user
+            creator = user,
+            name = resourceName,
+            id = resourceCode,
+            type = resourceType.value,
+            system = iamConfiguration.systemId,
+            ancestors = ancestors,
+            bk_app_code = "",
+            bk_app_secret = "",
+            bk_username = user
         )
         iamEsbService.createRelationResource(iamApiReq)
     }

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -42,12 +43,12 @@ import com.tencent.devops.dispatch.docker.api.user.UserDockerHostResource
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerDebugDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskSimpleDao
-import com.tencent.devops.dispatch.pojo.ContainerInfo
-import com.tencent.devops.dispatch.pojo.DebugStartParam
-import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
 import com.tencent.devops.dispatch.docker.service.DockerHostDebugService
 import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
+import com.tencent.devops.dispatch.pojo.ContainerInfo
+import com.tencent.devops.dispatch.pojo.DebugStartParam
+import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.process.constant.ProcessMessageCode
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -55,6 +56,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
 @RestResource
+@Suppress("ALL")
 class UserDockerHostResourceImpl @Autowired constructor(
     private val dockerHostBuildService: DockerHostBuildService,
     private val dockerHostDebugService: DockerHostDebugService,
@@ -76,7 +78,8 @@ class UserDockerHostResourceImpl @Autowired constructor(
         // 查询是否已经有启动调试容器了，如果有，直接返回成功
         val result = dockerHostDebugService.getDebugStatus(debugStartParam.pipelineId, debugStartParam.vmSeqId)
         if (result.status == 0) {
-            logger.info("${debugStartParam.pipelineId}|${debugStartParam.vmSeqId}| start debug. Container already exists, ContainerInfo: $result.data")
+            logger.info("${debugStartParam.pipelineId}|startDebug|j(${debugStartParam.vmSeqId})|" +
+                "Container Exist|ContainerId=${result.data?.containerId}")
             return Result(true)
         }
 
@@ -123,7 +126,8 @@ class UserDockerHostResourceImpl @Autowired constructor(
                         imageRDType = null
                     )
 
-                    logger.info("${debugStartParam.pipelineId}|${debugStartParam.vmSeqId}| start debug. Container already running, ContainerInfo: ${dockerBuildHistory.containerId}")
+                    logger.info("${debugStartParam.pipelineId}|startDebug|j(${debugStartParam.vmSeqId})|" +
+                        "Container running|ContainerId=${dockerBuildHistory.containerId}")
                     return Result(true)
                 }
             }
@@ -132,12 +136,24 @@ class UserDockerHostResourceImpl @Autowired constructor(
             poolNo = dockerBuildHistory.poolNo
         } else {
             // 没有构建历史的情况下debug，且没有分配构建IP，预先分配构建IP
-            val taskHistory = pipelineDockerTaskSimpleDao.getByPipelineIdAndVMSeq(dslContext, debugStartParam.pipelineId, debugStartParam.vmSeqId)
+            val taskHistory = pipelineDockerTaskSimpleDao.getByPipelineIdAndVMSeq(
+                dslContext = dslContext,
+                pipelineId = debugStartParam.pipelineId,
+                vmSeq = debugStartParam.vmSeqId
+            )
             if (taskHistory != null) {
                 dockerIp = taskHistory.dockerIp
             } else {
-                dockerIp = dockerHostUtils.getAvailableDockerIp(debugStartParam.projectId, debugStartParam.pipelineId, debugStartParam.vmSeqId, setOf()).first
-                pipelineDockerTaskSimpleDao.createOrUpdate(dslContext, debugStartParam.pipelineId, debugStartParam.vmSeqId, dockerIp)
+                dockerIp = dockerHostUtils.getAvailableDockerIp(
+                    projectId = debugStartParam.projectId,
+                    pipelineId = debugStartParam.pipelineId,
+                    vmSeqId = debugStartParam.vmSeqId,
+                    unAvailableIpList = setOf()).first
+                pipelineDockerTaskSimpleDao.createOrUpdate(
+                    dslContext = dslContext,
+                    pipelineId = debugStartParam.pipelineId,
+                    vmSeq = debugStartParam.vmSeqId,
+                    dockerIp = dockerIp)
             }
             // 首次构建poolNo=1
             poolNo = 1
@@ -163,7 +179,12 @@ class UserDockerHostResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun getDebugStatus(userId: String, projectId: String, pipelineId: String, vmSeqId: String): Result<ContainerInfo>? {
+    override fun getDebugStatus(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        vmSeqId: String
+    ): Result<ContainerInfo>? {
         checkPermission(userId, projectId, pipelineId, vmSeqId)
 
         return dockerHostDebugService.getDebugStatus(pipelineId, vmSeqId)
@@ -175,12 +196,24 @@ class UserDockerHostResourceImpl @Autowired constructor(
         return dockerHostDebugService.deleteDebug(pipelineId, vmSeqId)
     }
 
-    override fun getContainerInfo(userId: String, projectId: String, pipelineId: String, buildId: String, vmSeqId: String): Result<ContainerInfo>? {
+    override fun getContainerInfo(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        vmSeqId: String
+    ): Result<ContainerInfo>? {
         checkParam(userId, projectId, pipelineId, vmSeqId)
         if (buildId.isBlank()) {
             throw ParamBlankException("BuildId参数非法")
         }
-        if (!bkAuthPermissionApi.validateUserResourcePermission(userId, pipelineAuthServiceCode, AuthResourceType.PIPELINE_DEFAULT, projectId, pipelineId, AuthPermission.VIEW)) {
+        if (!bkAuthPermissionApi.validateUserResourcePermission(
+                user = userId,
+                serviceCode = pipelineAuthServiceCode,
+                resourceType = AuthResourceType.PIPELINE_DEFAULT,
+                projectCode = projectId,
+                resourceCode = pipelineId,
+                permission = AuthPermission.VIEW)) {
             throw PermissionForbiddenException("用户（$userId) 无权限获取流水线($pipelineId)详情")
         }
 
