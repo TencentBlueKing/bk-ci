@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -39,10 +40,14 @@ import java.util.concurrent.atomic.AtomicLong
 @ManagedResource(objectName = "com.tencent.devops.log.v2:type=logs", description = "log performance")
 class LogBeanV2 {
 
-    private val executeCount = AtomicLong(0)
-    private val executeElapse = AtomicLong(0)
+    private val batchWriteCount = AtomicLong(0)
+    private val batchWriteElapse = AtomicLong(0)
     private val calculateCount = AtomicLong(0)
     private val failureCount = AtomicLong(0)
+
+    private val bulkRequestCount = AtomicLong(0)
+    private val bulkRequestElapse = AtomicLong(0)
+    private val bulkRequestFailureCount = AtomicLong(0)
 
     private val queryLogCount = AtomicLong(0)
     private val queryLogElapse = AtomicLong(0)
@@ -50,12 +55,21 @@ class LogBeanV2 {
     private val queryFailureCount = AtomicLong(0)
 
     @Synchronized
-    fun execute(elapse: Long, success: Boolean) {
-        executeCount.incrementAndGet()
+    fun batchWrite(elapse: Long, success: Boolean) {
+        batchWriteCount.incrementAndGet()
         calculateCount.incrementAndGet()
-        executeElapse.addAndGet(elapse)
+        batchWriteElapse.addAndGet(elapse)
         if (!success) {
             failureCount.incrementAndGet()
+        }
+    }
+
+    @Synchronized
+    fun bulkRequest(elapse: Long, success: Boolean) {
+        bulkRequestCount.incrementAndGet()
+        bulkRequestElapse.addAndGet(elapse)
+        if (!success) {
+            bulkRequestFailureCount.incrementAndGet()
         }
     }
 
@@ -72,8 +86,20 @@ class LogBeanV2 {
     @Synchronized
     @ManagedAttribute
     fun getLogPerformance(): Double {
-        val elapse = executeElapse.getAndSet(0)
+        val elapse = batchWriteElapse.getAndSet(0)
         val count = calculateCount.getAndSet(0)
+        return if (count == 0L) {
+            0.0
+        } else {
+            elapse.toDouble() / count
+        }
+    }
+
+    @Synchronized
+    @ManagedAttribute
+    fun getBulkPerformance(): Double {
+        val elapse = bulkRequestElapse.getAndSet(0)
+        val count = bulkRequestCount.getAndSet(0)
         return if (count == 0L) {
             0.0
         } else {
@@ -94,10 +120,13 @@ class LogBeanV2 {
     }
 
     @ManagedAttribute
-    fun getExecuteCount() = executeCount.get()
+    fun getExecuteCount() = batchWriteCount.get()
 
     @ManagedAttribute
     fun getFailureCount() = failureCount.get()
+
+    @ManagedAttribute
+    fun getBulkFailureCount() = bulkRequestFailureCount.get()
 
     @ManagedAttribute
     fun getQueryCount() = queryLogCount.get()

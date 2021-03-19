@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -41,10 +42,10 @@ data class QualityRuleMatchTask(
     val controlStage: ControlPointPosition,
     @ApiModelProperty("规则列表", required = true)
     val ruleList: List<RuleMatchRule>,
-    @ApiModelProperty("阈值列表", required = true)
-    val thresholdList: List<RuleThreshold>,
-    @ApiModelProperty("审核用户列表", required = true)
-    val auditUserList: Set<String>
+    @ApiModelProperty("阈值列表", required = false)
+    val thresholdList: List<RuleThreshold>?,
+    @ApiModelProperty("审核用户列表", required = false)
+    val auditUserList: Set<String>?
 ) {
     @ApiModel("质量红线-拦截规则v2")
     data class RuleMatchRule(

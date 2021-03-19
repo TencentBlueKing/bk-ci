@@ -1,0 +1,12 @@
+apply plugin: "maven"
+
+dependencies {
+    compile project(":core:common:common-api")
+    compile project(":core:common:common-service")
+    compile project(":core:common:common-external-auth")
+    compile "org.springframework.boot:spring-boot-starter-amqp"
+    compile "org.springframework.boot:spring-boot-starter-aop"
+    compile "com.github.ulisesbocchio:jasypt-spring-boot-starter"
+    compile group: 'net.sf.json-lib', name: 'json-lib', classifier: "jdk15"
+    compile "org.apache.xmlrpc:xmlrpc-client"
+}

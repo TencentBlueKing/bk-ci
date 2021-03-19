@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -30,7 +31,9 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.listener.Listener
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
+import com.tencent.devops.common.service.trace.TraceTag
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 
 abstract class BaseListener<in T : IPipelineEvent>(val pipelineEventDispatcher: PipelineEventDispatcher) :
     Listener<T> {
@@ -47,10 +50,18 @@ abstract class BaseListener<in T : IPipelineEvent>(val pipelineEventDispatcher: 
     override fun execute(event: T) {
         var result = false
         try {
+            val traceId = MDC.get(TraceTag.BIZID)
+            if (traceId.isNullOrEmpty()) {
+                if (!event.traceId.isNullOrEmpty()) {
+                    MDC.put(TraceTag.BIZID, event.traceId)
+                } else {
+                    MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
+                }
+            }
             run(event)
             result = true
         } catch (ignored: Throwable) {
-            logger.error("[${event.pipelineId}]|FAIL|event=$event|e=$ignored", ignored)
+            logger.error("[ENGINE_MQ_SEVERE][${event.pipelineId}]|[${event.source}]|FAIL|e=$ignored")
         } finally {
             if (!result && event.retryTime > 0) {
                 event.retryTime = event.retryTime - 1
@@ -63,8 +74,9 @@ abstract class BaseListener<in T : IPipelineEvent>(val pipelineEventDispatcher: 
                     }
                 }
                 pipelineEventDispatcher.dispatch(event)
-                logger.warn("[${event.pipelineId}]|FAIL|event=$event")
+                logger.warn("[ENGINE_MQ_SEVERE][${event.pipelineId}]|[${event.source}]|FAIL_TO_RETRY")
             }
+            MDC.remove(TraceTag.BIZID)
         }
     }
 

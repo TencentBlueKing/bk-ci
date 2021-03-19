@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -28,6 +29,7 @@ package com.tencent.devops.common.pipeline.utils
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
+import com.tencent.devops.common.api.enums.RepositoryTypeNew
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -35,10 +37,12 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitlabElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.CodeSvnElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.GithubElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGenericWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
 
 object RepositoryConfigUtils {
 
@@ -84,6 +88,37 @@ object RepositoryConfigUtils {
                 element.repositoryName,
                 element.repositoryType ?: RepositoryType.ID
             )
+            is CodeTGitWebHookTriggerElement -> RepositoryConfig(
+                element.data.input.repositoryHashId,
+                element.data.input.repositoryName,
+                element.data.input.repositoryType ?: RepositoryType.ID
+            )
+            is CodeGitGenericWebHookTriggerElement -> {
+                with(element.data.input) {
+                    when (repositoryType) {
+                        RepositoryTypeNew.URL ->
+                            RepositoryConfig(
+                                repositoryHashId = null,
+                                repositoryName = repositoryUrl,
+                                repositoryType = RepositoryType.NAME
+                            )
+                        RepositoryTypeNew.ID ->
+                            RepositoryConfig(
+                                repositoryHashId = repositoryHashId,
+                                repositoryName = repositoryName,
+                                repositoryType = RepositoryType.ID
+                            )
+                        RepositoryTypeNew.NAME ->
+                            RepositoryConfig(
+                                repositoryHashId = repositoryHashId,
+                                repositoryName = repositoryName,
+                                repositoryType = RepositoryType.NAME
+                            )
+                        else ->
+                            throw InvalidParamException("Unknown repositoryType -> $element")
+                    }
+                }
+            }
             else -> throw InvalidParamException("Unknown code element -> $element")
         }
     }

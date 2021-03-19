@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -27,12 +28,16 @@
 package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.user.UserProjectResource
+import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.service.ProjectService
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
@@ -45,16 +50,31 @@ class UserProjectResourceImpl @Autowired constructor(
 ) : UserProjectResource {
 
     override fun list(userId: String, accessToken: String?): Result<List<ProjectVO>> {
-        return Result(projectService.list(userId))
+        return Result(projectService.list(userId, accessToken))
     }
 
-    override fun get(projectId: String, accessToken: String?): Result<ProjectVO> {
-        return Result(projectService.getByEnglishName(projectId) ?: throw OperationException("项目不存在"))
+    override fun get(userId: String, projectId: String, accessToken: String?): Result<ProjectVO> {
+        return Result(projectService.getByEnglishName(userId, projectId, accessToken)
+            ?: throw OperationException("项目不存在"))
+    }
+
+    override fun getContainEmpty(userId: String, projectId: String, accessToken: String?): Result<ProjectVO?> {
+        return Result(projectService.getByEnglishName(userId, projectId, accessToken))
     }
 
     override fun create(userId: String, projectCreateInfo: ProjectCreateInfo, accessToken: String?): Result<Boolean> {
         // 创建项目
-        projectService.create(userId, projectCreateInfo)
+        val projectCreateExt = ProjectCreateExtInfo(
+            needValidate = true,
+            needAuth = true
+        )
+        projectService.create(
+            userId = userId,
+            projectCreateInfo = projectCreateInfo,
+            accessToken = accessToken,
+            createExt = projectCreateExt,
+            channel = ProjectChannelCode.BS
+        )
 
         return Result(true)
     }
@@ -65,7 +85,7 @@ class UserProjectResourceImpl @Autowired constructor(
         projectUpdateInfo: ProjectUpdateInfo,
         accessToken: String?
     ): Result<Boolean> {
-        return Result(projectService.update(userId, projectId, projectUpdateInfo))
+        return Result(projectService.update(userId, projectId, projectUpdateInfo, accessToken))
     }
 
     override fun enable(
@@ -79,12 +99,12 @@ class UserProjectResourceImpl @Autowired constructor(
 
     override fun updateLogo(
         userId: String,
-        projectId: String,
+        englishName: String,
         inputStream: InputStream,
         disposition: FormDataContentDisposition,
         accessToken: String?
-    ): Result<Boolean> {
-        return projectService.updateLogo(userId, projectId, inputStream, disposition)
+    ): Result<ProjectLogo> {
+        return projectService.updateLogo(userId, englishName, inputStream, disposition, accessToken)
     }
 
     override fun validate(
@@ -95,5 +115,18 @@ class UserProjectResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         projectService.validate(validateType, name, projectId)
         return Result(true)
+    }
+
+    override fun hasCreatePermission(userId: String): Result<Boolean> {
+        return Result(projectService.hasCreatePermission(userId))
+    }
+
+    override fun hasPermission(userId: String, projectId: String, permission: AuthPermission): Result<Boolean> {
+        return Result(projectService.verifyUserProjectPermission(
+            accessToken = null,
+            userId = userId,
+            projectId = projectId,
+            permission = permission
+        ))
     }
 }

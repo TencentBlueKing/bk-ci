@@ -68,10 +68,11 @@ import {
     SET_SAVE_STATUS,
     SET_DEFAULT_STAGE_TAG,
     TOGGLE_REVIEW_DIALOG,
-    TOGGLE_STAGE_REVIEW_PANEL
+    TOGGLE_STAGE_REVIEW_PANEL,
+    SET_IMPORTED_JSON
 } from './constants'
 import { PipelineEditActionCreator, actionCreator } from './atomUtil'
-import { hashID } from '@/utils/util'
+import { hashID, randomString } from '@/utils/util'
 
 function rootCommit (commit,
     ACTION_CONST, payload) {
@@ -89,8 +90,8 @@ function getMapByKey (list, key) {
 }
 
 export default {
-    triggerStage ({ commit }, { projectId, pipelineId, buildNo, stageId, cancel }) {
-        return request.post(`/${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildNo}/stages/${stageId}/manualStart?cancel=${cancel}`)
+    triggerStage ({ commit }, { projectId, pipelineId, buildNo, stageId, cancel, reviewParams }) {
+        return request.post(`/${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildNo}/stages/${stageId}/manualStart?cancel=${cancel}`, { reviewParams })
     },
     async fetchStageTagList ({ commit }) {
         try {
@@ -115,7 +116,7 @@ export default {
     addStoreAtom ({ commit, state }) {
         const store = state.storeAtomData || {}
         let page = store.page || 1
-        const pageSize = store.pageSize || 1000
+        const pageSize = store.pageSize || 1500
         const keyword = store.keyword || undefined
         const loadEnd = store.loadEnd || false
         const loading = store.loading || false
@@ -129,7 +130,7 @@ export default {
             const storeData = {
                 data: [...atomList, ...records],
                 page: ++page,
-                pageSize: 1000,
+                pageSize: 1500,
                 loadEnd: records.length < pageSize,
                 loading: false,
                 keyword
@@ -222,7 +223,6 @@ export default {
             const containerList = containers.filter(container => container.type !== 'trigger')
             const triggerContainer = containers.find(container => container.type === 'trigger')
             const [containerTypeList, containerModalMap] = getMapByKey(containerList, 'baseOS')
-
             commit(SET_CONTAINER_DETAIL, {
                 containerTypeList: ['TRIGGER', ...containerTypeList],
                 containerModalMap: {
@@ -307,7 +307,7 @@ export default {
             const defaultType = (typeList || []).find(type => type.type === defaultBuildType) || {}
             const defaultBuildResource = defaultType.defaultBuildResource || {}
             const baseOSObject = baseOS !== 'NONE' ? { baseOS } : {}
-            const isError = ['WINDOWS'].includes(baseOS)
+            const isError = ['WINDOWS', 'MACOS'].includes(baseOS)
             commit(ADD_CONTAINER, {
                 ...restPayload,
                 newContainer: {
@@ -326,6 +326,8 @@ export default {
                     },
                     elements: [],
                     containerId: `c-${hashID(32)}`,
+                    jobId: `job_${randomString(3)}`,
+                    nfsSwitch: false,
                     isError
                 }
             })
@@ -448,18 +450,26 @@ export default {
     },
 
     // 第一次拉取日志
-    getInitLog ({ commit }, { projectId, pipelineId, buildId, tag, currentExe }) {
-        let url = `${AJAX_URL_PIRFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}`
-        if (tag || currentExe) url += '?'
-        if (tag) url += `tag=${tag}`
-        if (tag && currentExe) url += '&'
-        if (currentExe) url += `executeCount=${currentExe}`
-        return request.get(url)
+    getInitLog ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, subTag }) {
+        return request.get(`${AJAX_URL_PIRFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}`, {
+            params: {
+                tag,
+                executeCount: currentExe,
+                subTag
+            }
+        })
     },
 
-    // 第一次拉取日志
-    getAfterLog ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, lineNo }) {
-        return request.get(`${AJAX_URL_PIRFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/after?start=${lineNo}${currentExe ? '&executeCount=' + currentExe : ''}${tag ? '&tag=' + tag : ''}`)
+    // 后续拉取日志
+    getAfterLog ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, lineNo, subTag }) {
+        return request.get(`${AJAX_URL_PIRFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/after`, {
+            params: {
+                start: lineNo,
+                executeCount: currentExe,
+                tag,
+                subTag
+            }
+        })
     },
 
     getMacSysVersion () {
@@ -468,5 +478,12 @@ export default {
 
     getMacXcodeVersion () {
         return request.get(`${MACOS_API_URL_PREFIX}/user/xcodeVersions`)
+    },
+    setImportedPipelineJson ({ commit }, importedJson) {
+        commit(SET_IMPORTED_JSON, importedJson)
+    },
+
+    pausePlugin ({ commit }, { projectId, pipelineId, buildId, taskId, isContinue, stageId, containerId, element }) {
+        return request.post(`${PROCESS_API_URL_PREFIX}/user/builds/projects/${projectId}/pipelines/${pipelineId}/builds/${buildId}/taskIds/${taskId}/execution/pause?isContinue=${isContinue}&stageId=${stageId}&containerId=${containerId}`, element)
     }
 }

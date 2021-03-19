@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -48,6 +49,11 @@ class AgentGrayUtils constructor(
         private const val GREY_CAN_UPGRADE_AGENT_SET_KEY = "environment:thirdparty:grey_can_upgrade"
         private const val LOCK_UPGRADE_AGENT_SET_KEY = "environment:thirdparty:lock_upgrade"
         private const val FORCE_UPGRADE_AGENT_SET_KEY = "environment:thirdparty:force_upgrade"
+
+        private const val DEFAULT_GATEWAY_KEY = "environment:thirdparty:default_gateway"
+        private const val DEFAULT_FILE_GATEWAY_KEY = "environment:thirdparty:default_file_gateway"
+        private const val USE_DEFAULT_GATEWAY_KEY = "environment:thirdparty:use_default_gateway"
+        private const val USE_DEFAULT_FILE_GATEWAY_KEY = "environment:thirdparty:use_default_file_gateway"
     }
 
     fun checkForceUpgrade(agentHashId: String): Boolean {
@@ -157,5 +163,21 @@ class AgentGrayUtils constructor(
         } else {
             CURRENT_AGENT_VERSION
         }
+    }
+
+    fun getDefaultGateway(): String? {
+        return redisOperation.get(DEFAULT_GATEWAY_KEY)
+    }
+
+    fun getDefaultFileGateway(): String? {
+        return redisOperation.get(DEFAULT_FILE_GATEWAY_KEY)
+    }
+
+    fun useDefaultGateway(): Boolean {
+        return redisOperation.get(USE_DEFAULT_GATEWAY_KEY) == "true"
+    }
+
+    fun useDefaultFileGateway(): Boolean {
+        return redisOperation.get(USE_DEFAULT_FILE_GATEWAY_KEY) == "true"
     }
 }

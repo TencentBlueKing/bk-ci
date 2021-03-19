@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -43,20 +44,21 @@ import com.tencent.devops.ticket.pojo.CertIOSInfo
 import com.tencent.devops.ticket.pojo.CertTlsInfo
 import com.tencent.devops.ticket.pojo.CertWithPermission
 import com.tencent.devops.ticket.pojo.enums.Permission
+import com.tencent.devops.ticket.service.CertPermissionService
 import com.tencent.devops.ticket.service.CertService
-import com.tencent.devops.ticket.service.CredentialPermissionService
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
 
+@Suppress("ALL")
 @RestResource
 class UserCertResourceImpl @Autowired constructor(
     private val certService: CertService,
-    private val credentialPermissionService: CredentialPermissionService
+    private val certPermissionService: CertPermissionService
 ) : UserCertResource {
 
     override fun hasCreatePermission(userId: String, projectId: String): Result<Boolean> {
-        return Result(credentialPermissionService.validatePermission(userId, projectId, AuthPermission.CREATE))
+        return Result(certPermissionService.validatePermission(userId, projectId, AuthPermission.CREATE))
     }
 
     override fun getIos(userId: String, projectId: String, certId: String): Result<CertIOSInfo> {
@@ -307,7 +309,6 @@ class UserCertResourceImpl @Autowired constructor(
         val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         val result =
             certService.hasPermissionList(userId, projectId, certType, bkAuthPermission, limit.offset, limit.limit)
-//      val result = certService.hasPermissionList(userId, projectId, certType, bkAuthPermission, limit.offset, limit.limit, isCommonEnterprise)
         return Result(Page(pageNotNull, pageSizeNotNull, result.count, result.records))
     }
 

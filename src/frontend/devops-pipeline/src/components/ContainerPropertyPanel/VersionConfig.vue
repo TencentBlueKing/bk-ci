@@ -140,6 +140,9 @@
             ]),
             isDefaultDiff ({ key, value }) {
                 const param = this.params.find(param => param.id === key)
+                if (param && typeof param.defaultValue === 'boolean') {
+                    param.defaultValue = String(param.defaultValue)
+                }
                 return param && key ? param.defaultValue !== value : false
             },
             getVersionById (id) {
@@ -366,7 +369,7 @@
         }
         &.diff-param-item {
             .bk-form-input[name=value] {
-                color: #45E35F !important;
+                color: #4cbd20 !important;
             }
 
         }

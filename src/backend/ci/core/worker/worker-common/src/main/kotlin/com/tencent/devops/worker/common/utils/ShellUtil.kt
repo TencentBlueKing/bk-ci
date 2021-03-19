@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -38,6 +39,7 @@ import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
 import java.io.File
 import java.nio.file.Files
 
+@Suppress("ALL")
 object ShellUtil {
 
     private const val setEnv = "setEnv(){\n" +
@@ -87,20 +89,27 @@ object ShellUtil {
         runtimeVariables: Map<String, String>,
         continueNoneZero: Boolean = false,
         systemEnvVariables: Map<String, String>? = null,
-        prefix: String = ""
+        prefix: String = "",
+        errorMessage: String? = null,
+        workspace: File = dir,
+        print2Logger: Boolean = true
     ): String {
         return executeUnixCommand(
             command = getCommandFile(
                 buildId = buildId,
                 script = script,
                 dir = dir,
+                workspace = workspace,
                 buildEnvs = buildEnvs,
                 runtimeVariables = runtimeVariables,
                 continueNoneZero = continueNoneZero,
                 systemEnvVariables = systemEnvVariables
             ).canonicalPath,
             sourceDir = dir,
-            prefix = prefix
+            prefix = prefix,
+            errorMessage = errorMessage,
+            print2Logger = print2Logger,
+            executeErrorMessage = ""
         )
     }
 
@@ -111,7 +120,8 @@ object ShellUtil {
         buildEnvs: List<BuildEnv>,
         runtimeVariables: Map<String, String>,
         continueNoneZero: Boolean = false,
-        systemEnvVariables: Map<String, String>? = null
+        systemEnvVariables: Map<String, String>? = null,
+        workspace: File = dir
     ): File {
         val file = Files.createTempFile("devops_script", ".sh").toFile()
         file.deleteOnExit()
@@ -122,7 +132,7 @@ object ShellUtil {
             command.append(bashStr).append("\n")
         }
 
-        command.append("export $WORKSPACE_ENV=${dir.absolutePath}\n")
+        command.append("export $WORKSPACE_ENV=${workspace.absolutePath}\n")
             .append("export DEVOPS_BUILD_SCRIPT_FILE=${file.absolutePath}\n")
 
         // 设置系统环境变量
@@ -187,24 +197,40 @@ object ShellUtil {
             command.append("set +e\n")
         }
 
-        command.append(setEnv.replace("##resultFile##", File(dir, ScriptEnvUtils.getEnvFile(buildId)).absolutePath))
-        command.append(setGateValue.replace("##gateValueFile##", File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).absolutePath))
+        command.append(setEnv.replace(oldValue = "##resultFile##",
+            newValue = File(dir, ScriptEnvUtils.getEnvFile(buildId)).absolutePath))
+        command.append(setGateValue.replace(oldValue = "##gateValueFile##",
+            newValue = File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).absolutePath))
         command.append(script)
 
         file.writeText(command.toString())
-        executeUnixCommand("chmod +x ${file.absolutePath}", dir)
+        executeUnixCommand(command = "chmod +x ${file.absolutePath}", sourceDir = dir)
 
         return file
     }
 
-    private fun executeUnixCommand(command: String, sourceDir: File, prefix: String = ""): String {
+    private fun executeUnixCommand(
+        command: String,
+        sourceDir: File,
+        prefix: String = "",
+        errorMessage: String? = null,
+        print2Logger: Boolean = true,
+        executeErrorMessage: String? = null
+    ): String {
         try {
-            return CommandLineUtils.execute(command, sourceDir, true, prefix)
+            return CommandLineUtils.execute(
+                command = command,
+                workspace = sourceDir,
+                print2Logger = print2Logger,
+                prefix = prefix,
+                executeErrorMessage = executeErrorMessage
+            )
         } catch (ignored: Throwable) {
-            LoggerService.addNormalLine("Fail to run the command $command because of error(${ignored.message})")
+            val errorInfo = errorMessage ?: "Fail to run the command $command"
+            LoggerService.addNormalLine("$errorInfo because of error(${ignored.message})")
             throw throw TaskExecuteException(
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.SYSTEM_INNER_TASK_ERROR,
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_SCRIPT_COMMAND_INVAILD,
                 errorMsg = ignored.message ?: ""
             )
         }

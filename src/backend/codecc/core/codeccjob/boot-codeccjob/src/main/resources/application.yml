@@ -1,0 +1,94 @@
+# 服务配置文件模板
+spring:
+  profiles: prod
+  application:
+    name: job
+    desc: Job Service
+    version: 4.0.0
+    packageName: com.tencent.bk.codecc.job
+  # consul config do not need to change
+  redis:
+    database: 1
+    host:
+    port:
+    password:
+    pool:
+      maxActive: 16
+      maxWait: -1
+      maxIdle: 16
+      minIdle: 0
+  rabbitmq:
+    virtual-host:
+    username:
+    password:
+    addresses:
+    listener:
+      simple:
+        concurrency: 10
+        acknowledge-mode: auto
+  cloud:
+    consul:
+      discovery:
+        tags:
+        health-check-path: /management/health
+        heartbeat:
+          enabled: true
+        query-passing: true
+        preferIpAddress: true
+  http:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+  data:
+    mongodb:
+      uri:
+
+server:
+  port:
+  servlet-path: /
+  undertow:
+    worker-threads: 100
+
+# monitor path config
+management:
+  security:
+    enabled: false
+  context-path: /management
+
+
+auth:
+  envName:
+  url:
+  codeccCode:
+  codeccSecret:
+  systemId:
+  codeccResourceType:
+  pipelineResourceType:
+  codeccServiceCode:
+  pipelineServiceCode:
+
+bkAuth:
+  envName:
+  url:
+  codeccCode:
+  codeccSecret:
+  systemId:
+  codeccResourceType:
+  pipelineResourceType:
+  codeccServiceCode:
+  pipelineServiceCode:
+
+devopsGateway:
+  host:
+
+
+codecc:
+  encryptor:
+    password:
+  env:
+  privatetoken:
+  classurl:
+  public:
+    account:
+    password:

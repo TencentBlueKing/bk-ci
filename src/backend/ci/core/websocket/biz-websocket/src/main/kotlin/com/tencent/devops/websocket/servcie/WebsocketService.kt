@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -27,16 +28,16 @@
 package com.tencent.devops.websocket.servcie
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.dispatch.TransferDispatch
+import com.tencent.devops.websocket.keys.WebsocketKeys
 import com.tencent.devops.common.websocket.utils.RedisUtlis
+import com.tencent.devops.common.websocket.utils.RedisUtlis.cleanUserSessionBySessionId
 import com.tencent.devops.websocket.event.ChangePageTransferEvent
 import com.tencent.devops.websocket.event.ClearSessionEvent
 import com.tencent.devops.websocket.event.ClearUserSessionTransferEvent
 import com.tencent.devops.websocket.event.LoginOutTransferEvent
-import com.tencent.devops.websocket.keys.WebsocketKeys
 import com.tencent.devops.websocket.utils.PageUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -45,10 +46,10 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 
 @Service
+@Suppress("ALL")
 class WebsocketService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val transferDispatch: TransferDispatch,
-    private val client: Client,
     private val projectProxyService: ProjectProxyService
 ) {
     companion object {
@@ -91,7 +92,6 @@ class WebsocketService @Autowired constructor(
             }
 
             val normalPage = PageUtils.buildNormalPage(newPage)
-            logger.info("WebsocketService-changePage:user:$userId,sessionId:$sessionId,newPage:$newPage,normalPage:$normalPage")
             val existsSessionId = RedisUtlis.getSessionIdByUserId(redisOperation, userId)
             if (existsSessionId == null) {
                 RedisUtlis.writeSessionIdByRedis(redisOperation, userId, sessionId)
@@ -103,18 +103,7 @@ class WebsocketService @Autowired constructor(
                 RedisUtlis.cleanPageSessionBySessionId(redisOperation, oldPage, sessionId)
             }
             RedisUtlis.refreshPageSession(redisOperation, sessionId, normalPage)
-            logger.info(
-                "userSession[user:$userId,sessionId:${RedisUtlis.getSessionIdByUserId(
-                    redisOperation,
-                    userId
-                )}}]"
-            )
-            logger.info(
-                "pageSession[page:$newPage,sessionId:${RedisUtlis.getSessionListFormPageSessionByPage(
-                    redisOperation,
-                    normalPage
-                )}]"
-            )
+
             logger.info("sessionPage[session:$sessionId,page:$normalPage]")
             if (needTransfer && transferData!!.isNotEmpty()) {
                 transferDispatch.dispatch(
@@ -143,11 +132,10 @@ class WebsocketService @Autowired constructor(
         val redisLock = lockUser(sessionId)
         try {
             redisLock.lock()
-            logger.info("WebsocketService-loginOut:user:$userId,sessionId:$sessionId")
+            logger.info("WebsocketService loginOut:user:$userId,sessionId:$sessionId")
             val redisPage = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId)
             var clearPage = oldPage
             if (!oldPage.isNullOrEmpty() && redisPage != oldPage) {
-                logger.warn("loginOut error: oldPage:$oldPage, redisPage:$redisPage, userId:$userId, sessionId:$sessionId")
                 clearPage = PageUtils.buildNormalPage(oldPage!!)
             }
 
@@ -157,6 +145,7 @@ class WebsocketService @Autowired constructor(
             } else if (redisPage != null) {
                 RedisUtlis.cleanPageSessionBySessionId(redisOperation, redisPage, sessionId)
             }
+            cleanUserSessionBySessionId(redisOperation, userId, sessionId)
             if (needTransfer && transferData!!.isNotEmpty()) {
                 transferDispatch.dispatch(
                     LoginOutTransferEvent(
@@ -176,11 +165,10 @@ class WebsocketService @Autowired constructor(
         try {
             redisLock.lock()
             logger.info("clearUserSession:user:$userId,sessionId:$sessionId")
-            logger.info("before clearUserSession:${RedisUtlis.getSessionIdByUserId(redisOperation, userId)}")
+            RedisUtlis.deleteUserSessionBySession(redisOperation, sessionId)
             RedisUtlis.deleteSigelSessionByUser(redisOperation, userId, sessionId)
 //            RedisUtlis.cleanSessionTimeOutBySession(redisOperation, sessionId)
             removeCacheSession(sessionId)
-            logger.info("after clearUserSession:${RedisUtlis.getSessionIdByUserId(redisOperation, userId)}")
             if (needTransfer && transferData!!.isNotEmpty()) {
                 transferDispatch.dispatch(
                     ClearUserSessionTransferEvent(
@@ -195,12 +183,12 @@ class WebsocketService @Autowired constructor(
         }
     }
 
-    fun clearSession(userId: String, sessionId: String): Result<Boolean> {
+    fun clearAllBySession(userId: String, sessionId: String): Result<Boolean> {
         logger.info("clearSession| $userId| $sessionId")
         val page = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId)
         clearUserSession(userId, sessionId, null)
         if (page != null) {
-            logger.info("$userId| $sessionId| ws loginOut fail, page[$page], refresh by interface")
+            logger.info("$userId| $sessionId|$page clear when disconnection")
             loginOut(userId, sessionId, page)
         }
         if (!isCacheSession(sessionId)) {
@@ -224,10 +212,12 @@ class WebsocketService @Autowired constructor(
         cacheSessionList.add(sessionId)
     }
 
+    // 清楚实例内部缓存的session
     fun removeCacheSession(sessionId: String) {
         cacheSessionList.remove(sessionId)
     }
 
+    // 判断获取到的session是否由该实例持有,只有持有了该实例才能做push动作
     fun isCacheSession(sessionId: String): Boolean {
         if (cacheSessionList.contains(sessionId)) {
             logger.debug("sessionId[$sessionId] is in this host")
@@ -269,7 +259,7 @@ class WebsocketService @Autowired constructor(
         return cacheMaxSession
     }
 
-    private fun checkParams(userId: String, sessionId: String): Boolean {
+    private fun checkParams(userId: String?, sessionId: String?): Boolean {
         if (userId == null) {
             return false
         }

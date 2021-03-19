@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -48,8 +49,8 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
             request = request,
             connectTimeoutInSec = 5L,
             errorMessage = errorMessage,
-            readTimeoutInSec = 120L,
-            writeTimeoutInSec = 120L
+            readTimeoutInSec = 30L,
+            writeTimeoutInSec = 30L
         )
         return objectMapper.readValue(responseContent)
     }
@@ -62,8 +63,8 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
             request = request,
             connectTimeoutInSec = 5L,
             errorMessage = errorMessage,
-            readTimeoutInSec = 120L,
-            writeTimeoutInSec = 120L
+            readTimeoutInSec = 30L,
+            writeTimeoutInSec = 30L
         )
         return objectMapper.readValue(responseContent)
     }
@@ -80,8 +81,8 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
             request = request,
             connectTimeoutInSec = 5L,
             errorMessage = errorMessage,
-            readTimeoutInSec = 120L,
-            writeTimeoutInSec = 120L
+            readTimeoutInSec = 30L,
+            writeTimeoutInSec = 30L
         )
         return objectMapper.readValue(responseContent)
     }
@@ -94,8 +95,8 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
             request = request,
             connectTimeoutInSec = 5L,
             errorMessage = errorMessage,
-            readTimeoutInSec = 120L,
-            writeTimeoutInSec = 120L
+            readTimeoutInSec = 30L,
+            writeTimeoutInSec = 30L
         )
         return objectMapper.readValue(responseContent)
     }
@@ -148,6 +149,21 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
         val path = sb.toString()
         val request = buildGet(path)
         val errorMessage = "获取构建任务详情失败"
+        val responseContent = request(
+            request = request,
+            connectTimeoutInSec = 5L,
+            errorMessage = errorMessage,
+            readTimeoutInSec = 30L,
+            writeTimeoutInSec = 30L
+        )
+        return objectMapper.readValue(responseContent)
+    }
+
+    override fun timeout(): Result<Boolean> {
+
+        val path = "/ms/process/api/build/builds/timeout"
+        val request = buildPost(path)
+        val errorMessage = "构建超时结束请求失败"
         val responseContent = request(
             request = request,
             connectTimeoutInSec = 5L,

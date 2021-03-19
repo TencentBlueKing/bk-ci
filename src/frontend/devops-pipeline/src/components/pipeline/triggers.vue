@@ -18,12 +18,11 @@
 
 <script>
     import { bus } from '@/utils/bus'
-    import { mapActions } from 'vuex'
+    import { mapState } from 'vuex'
     export default {
         props: {
             beforeExec: {
-                type: Function,
-                default: () => () => {}
+                type: Function
             },
             canManualStartup: {
                 type: Boolean,
@@ -46,6 +45,9 @@
             }
         },
         computed: {
+            ...mapState('atom', [
+                'executeStatus'
+            ]),
             projectId () {
                 return this.$route.params.projectId
             },
@@ -54,11 +56,14 @@
             }
         },
         watch: {
-            async replay (val, oldVal) {
+            replay (val, oldVal) {
                 if (val) {
                     this.$store.state.pipelines.replay = false
-                    await this.toggleStatus()
+                    this.toggleStatus()
                 }
+            },
+            executeStatus (executing) {
+                this.disabled = executing
             }
         },
         mounted () {
@@ -68,16 +73,6 @@
             bus.$off('trigger-excute', this.toggleStatus)
         },
         methods: {
-            ...mapActions('atom', [
-                'setExecuteStatus'
-            ]),
-            /**
-             * 清除select错误
-             */
-            selectedHandler (name) {
-                this.$validator.errors.remove(name)
-            },
-
             handleParamChange (name, value) {
                 this.paramValues[name] = value
             },
@@ -86,19 +81,16 @@
              */
             async toggleStatus () {
                 if (this.disabled || this.status === 'running' || !this.canManualStartup) return
-                this.setExecuteStatus(true)
                 this.disabled = true
-                this.setExecuteStatus(true)
                 // debugger
                 if (this.beforeExec && typeof this.beforeExec === 'function') {
-                    if (!await this.beforeExec(true)) {
+                    const result = await this.beforeExec(true)
+                    if (result.code !== 0) {
                         this.disabled = false
-                        this.setExecuteStatus(false)
                         return
                     }
                 }
 
-                this.$emit('click-event')
                 try {
                     if (this.pipelineId && this.projectId) {
                         const res = await this.$store.dispatch('pipelines/requestStartupInfo', {
@@ -107,8 +99,9 @@
                         })
                         if (res.canManualStartup) {
                             this.paramList = res.properties.filter(p => p.required)
+                            const buildList = res.properties.filter(p => p.propertyType === 'BUILD')
 
-                            if (res.canElementSkip || this.paramList.length || (res.buildNo && res.buildNo.required)) {
+                            if (res.canElementSkip || this.paramList.length || (res.buildNo && res.buildNo.required) || buildList.length) {
                                 this.$store.commit('pipelines/updateCurAtomPrams', res)
                                 this.$router.push({
                                     name: 'pipelinesPreview',
@@ -117,8 +110,9 @@
                                         pipelineId: this.pipelineId
                                     }
                                 })
+                                this.disabled = false
                             } else {
-                                await this.execPipeline()
+                                this.execPipeline()
                             }
                         } else {
                             throw new Error(this.$t('newlist.withoutManualAtom'))
@@ -127,54 +121,26 @@
                         throw new Error(this.$t('newlist.paramsErr'))
                     }
                 } catch (err) {
-                    if (err.code === 403) { // 没有权限执行
-                        this.$showAskPermissionDialog({
-                            noPermissionList: [{
-                                resource: this.$t('pipeline'),
-                                option: this.$t('exec')
-                            }],
-                            applyPermissionUrl: `${PERM_URL_PIRFIX}/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.projectId}&service_code=pipeline&role_executor=pipeline:${this.pipelineId}`
-                        })
-                    } else {
-                        this.$showTips({
-                            message: err.message || err,
-                            theme: 'error'
-                        })
-                    }
-                } finally {
-                    this.setExecuteStatus(false)
                     this.disabled = false
+                    this.handleError(err, [{
+                        actionId: this.$permissionActionMap.execute,
+                        resourceId: this.$permissionResourceMap.pipeline,
+                        instanceId: [{
+                            id: this.pipelineId,
+                            name: this.pipelineId
+                        }],
+                        projectId: this.projectId
+                    }])
                 }
             },
             /**
              * 执行流水线
              */
-            async execPipeline (params = {}) {
-                await this.$emit('exec', {
+            execPipeline (params = {}) {
+                this.$emit('exec', {
                     ...params,
                     pipelineId: this.pipelineId
                 })
-                this.disabled = false
-            },
-            /**
-             *  点击确定的回调函数
-             */
-            async confirmHandler () {
-                let valid = true
-                if (this.$refs.paramsForm) {
-                    valid = await this.$refs.paramsForm.$validator.validateAll()
-                    this.$refs.paramsForm.submitForm()
-                }
-                if (valid) {
-                    const { paramValues, execPipeline } = this
-                    await execPipeline(paramValues)
-                }
-            },
-            /**
-             * 点击取消的回调函数
-             */
-            cancelHandler () {
-                this.disabled = false
             }
         }
     }

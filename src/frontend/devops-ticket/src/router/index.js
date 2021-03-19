@@ -28,10 +28,10 @@ const credentialList = () => import(/* webpackChunkName: 'credentialList' */ '..
 const createCredential = () => import(/* webpackChunkName: 'createCredential' */ '../views/create_credential')
 
 // 我的证书
-// const certList = () => import(/* webpackChunkName: 'certificateList' */'../views/certificate_list')
+const certList = () => import(/* webpackChunkName: 'certificateList' */'../views/certificate_list')
 
 // 我的证书
-// const createCert = () => import(/* webpackChunkName: 'createCertificate' */'../views/create_certificate')
+const createCert = () => import(/* webpackChunkName: 'createCertificate' */'../views/create_certificate')
 
 const routes = [
     {
@@ -81,40 +81,40 @@ const routes = [
                     header: 'credentialManage',
                     to: 'credentialList'
                 }
+            },
+            {
+                path: 'certList',
+                name: 'certList',
+                component: certList,
+                meta: {
+                    title: 'certList',
+                    logo: 'ticket',
+                    header: 'credentialManage',
+                    to: 'credentialList'
+                }
+            },
+            {
+                path: 'createCert/:certType?',
+                name: 'createCert',
+                component: createCert,
+                meta: {
+                    title: 'createCert',
+                    logo: 'ticket',
+                    header: 'credentialManage',
+                    to: 'credentialList'
+                }
+            },
+            {
+                path: 'editCert/:certType/:certId',
+                name: 'editCert',
+                component: createCert,
+                meta: {
+                    title: 'editCert',
+                    logo: 'ticket',
+                    header: 'credentialManage',
+                    to: 'credentialList'
+                }
             }
-            // {
-            //     path: 'certList',
-            //     name: 'certList',
-            //     component: certList,
-            //     meta: {
-            //         title: 'certList',
-            //         logo: 'ticket',
-            //         header: 'credentialManage',
-            //         to: 'credentialList'
-            //     }
-            // },
-            // {
-            //     path: 'createCert/:certType?',
-            //     name: 'createCert',
-            //     component: createCert,
-            //     meta: {
-            //         title: 'createCert',
-            //         logo: 'ticket',
-            //         header: 'credentialManage',
-            //         to: 'credentialList'
-            //     }
-            // },
-            // {
-            //     path: 'editCert/:certType/:certId',
-            //     name: 'editCert',
-            //     component: createCert,
-            //     meta: {
-            //         title: 'editCert',
-            //         logo: 'ticket',
-            //         header: 'credentialManage',
-            //         to: 'credentialList'
-            //     }
-            // }
         ]
     }
 ]

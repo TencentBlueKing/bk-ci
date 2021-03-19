@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -30,22 +31,23 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.ticket.pojo.Cert
-import com.tencent.devops.ticket.pojo.CertAndroid
 import com.tencent.devops.ticket.pojo.CertAndroidInfo
-import com.tencent.devops.ticket.pojo.CertAndroidWithCredential
-import com.tencent.devops.ticket.pojo.CertEnterprise
 import com.tencent.devops.ticket.pojo.CertEnterpriseInfo
-import com.tencent.devops.ticket.pojo.CertIOS
 import com.tencent.devops.ticket.pojo.CertIOSInfo
-import com.tencent.devops.ticket.pojo.CertTls
 import com.tencent.devops.ticket.pojo.CertTlsInfo
+import com.tencent.devops.ticket.pojo.CertIOS
 import com.tencent.devops.ticket.pojo.CertWithPermission
+import com.tencent.devops.ticket.pojo.CertEnterprise
+import com.tencent.devops.ticket.pojo.CertAndroid
+import com.tencent.devops.ticket.pojo.CertAndroidWithCredential
+import com.tencent.devops.ticket.pojo.CertTls
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
 import java.io.InputStream
 import java.util.Base64
 
+@Suppress("ALL")
 interface CertService {
 
     fun uploadIos(
@@ -154,6 +156,12 @@ interface CertService {
         limit: Int
     ): SQLPage<CertWithPermission>
 
+    fun list(
+        projectId: String,
+        offset: Int,
+        limit: Int
+    ): SQLPage<Cert>
+
     fun hasPermissionList(
         userId: String,
         projectId: String,
@@ -190,6 +198,15 @@ interface CertService {
     ): CertAndroidWithCredential
 
     fun queryTlsByProject(projectId: String, certId: String, publicKey: String): CertTls
+
+    fun getCertByIds(certIds: Set<String>): List<Cert>?
+
+    fun searchByCertId(
+        projectId: String,
+        offset: Int,
+        limit: Int,
+        certId: String
+    ): SQLPage<Cert>
 
     private fun encryptCert(
         cert: ByteArray,

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -28,6 +29,7 @@ package com.tencent.devops.process.plugin.trigger.element
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.plugin.ElementBizPlugin
@@ -46,8 +48,7 @@ class TimerTriggerElementBizPlugin constructor(
         return TimerTriggerElement::class.java
     }
 
-    override fun check(element: TimerTriggerElement, appearedCnt: Int) {
-    }
+    override fun check(element: TimerTriggerElement, appearedCnt: Int) = Unit
 
     override fun afterCreate(
         element: TimerTriggerElement,
@@ -109,9 +110,9 @@ class TimerTriggerElementBizPlugin constructor(
         }
     }
 
-    override fun beforeDelete(element: TimerTriggerElement, userId: String, pipelineId: String?) {
-        if (pipelineId != null) {
-            pipelineTimerService.deleteTimer(pipelineId, userId)
+    override fun beforeDelete(element: TimerTriggerElement, param: BeforeDeleteParam) {
+        if (param.pipelineId.isNotBlank()) {
+            pipelineTimerService.deleteTimer(param.pipelineId, param.userId)
         }
     }
 

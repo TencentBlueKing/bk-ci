@@ -107,21 +107,21 @@
                 certType: '',
                 certData: {},
                 certTypeList: [
-                    {
-                        label: this.$t('ticket.cert.iosCert'),
-                        value: 'ios',
-                        icon: 'icon-macos'
-                    },
-                    {
-                        label: this.$t('ticket.cert.androidCert'),
-                        value: 'android',
-                        icon: 'icon-android-shape'
-                    },
-                    {
-                        label: this.$t('ticket.cert.sslOrTlsCert'),
-                        value: 'tls',
-                        icon: 'icon-personal-cert'
-                    },
+                    // {
+                    //     label: this.$t('ticket.cert.iosCert'),
+                    //     value: 'ios',
+                    //     icon: 'icon-macos'
+                    // },
+                    // {
+                    //     label: this.$t('ticket.cert.androidCert'),
+                    //     value: 'android',
+                    //     icon: 'icon-android-shape'
+                    // },
+                    // {
+                    //     label: this.$t('ticket.cert.sslOrTlsCert'),
+                    //     value: 'tls',
+                    //     icon: 'icon-personal-cert'
+                    // },
                     {
                         label: this.$t('ticket.cert.iosCorporatesignCert'),
                         value: 'enterprise',
@@ -180,7 +180,7 @@
         methods: {
             init () {
                 const params = this.$route.params || {}
-                this.certType = params.certType ? params.certType.toLowerCase() : 'ios'
+                this.certType = params.certType ? params.certType.toLowerCase() : 'enterprise'
                 this.isEdit = this.$route.name === 'editCert'
 
                 if (this.isEdit) {
@@ -199,8 +199,12 @@
             },
 
             goToApplyPerm () {
-                const url = `/backend/api/perm/apply/subsystem/?client_id=ticket&project_code=${this.projectId}&service_code=ticket&role_creator=cert`
-                window.open(url, '_blank')
+                // const url = `/backend/api/perm/apply/subsystem/?client_id=ticket&project_code=${this.projectId}&service_code=ticket&role_creator=cert`
+                // window.open(url, '_blank')
+                this.applyPermission(this.$permissionActionMap.create, this.$permissionResourceMap.cert, [{
+                    id: this.projectId,
+                    type: this.$permissionResourceTypeMap.PROJECT
+                }])
             },
 
             async requestCertDetail (callBack) {
@@ -247,6 +251,17 @@
                         message = this.$t('ticket.cert.successfullyCreatedCert')
                     }
                 } catch (err) {
+                    if (err.code === 403) {
+                        const actionId = this.isEdit ? this.$permissionActionMap.edit : this.$permissionActionMap.create
+                        const instanceId = this.isEdit ? [{
+                            id: formData.certId,
+                            type: this.$permissionResourceTypeMap.TICKET_CERT
+                        }] : []
+                        this.applyPermission(actionId, this.$permissionResourceMap.cert, [{
+                            id: this.projectId,
+                            type: this.$permissionResourceTypeMap.PROJECT
+                        }, ...instanceId])
+                    }
                     message = err.message ? err.message : err
                     theme = 'error'
                 } finally {

@@ -19,12 +19,17 @@ import LayoutFull from './components/layout/layout-full'
 import i18n from './i18n'
 import './common/bkmagic'
 import App from './App'
+import { format } from 'date-fns'
 
 Vue.component('layout-outer', LayoutOuter)
 Vue.component('layout-inner', LayoutInner)
 Vue.component('layout-full', LayoutFull)
 Vue.component('app-exception', Exception)
 Vue.component('app-auth', AuthComponent)
+Vue.filter('formatDate', (value, arg1) => {
+    if (!value) return '--'
+    return arg1 === 'date' ? format(value, 'YYYY-MM-DD') : format(value, 'YYYY-MM-DD HH:mm:ss')
+})
 
 auth.requestCurrentUser().then(user => {
     injectCSRFTokenToHeaders()
@@ -44,12 +49,12 @@ auth.requestCurrentUser().then(user => {
 }, err => {
     let message
     if (err.status === 403) {
-        message = this.$t('exception.Sorry，您的权限不足！')
+        message = this.$t('Sorry，您的权限不足！')
         if (err.data && err.data.msg) {
             message = err.data.msg
         }
     } else {
-        message = this.$t('st.无法连接到后端服务，请稍候再试。')
+        message = this.$t('无法连接到后端服务，请稍候再试。')
     }
 
     const divStyle = ''

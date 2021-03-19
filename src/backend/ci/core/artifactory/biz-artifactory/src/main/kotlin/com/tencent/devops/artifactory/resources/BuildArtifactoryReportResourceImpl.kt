@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -27,8 +28,6 @@
 package com.tencent.devops.artifactory.resources
 
 import com.tencent.devops.artifactory.api.builds.BuildArtifactoryReportResource
-import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
-import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.service.ArchiveFileService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
@@ -40,28 +39,6 @@ class BuildArtifactoryReportResourceImpl @Autowired constructor(
 ) :
     BuildArtifactoryReportResource {
     override fun getRootUrl(projectId: String, pipelineId: String, buildId: String, taskId: String): Result<String> {
-        val result = archiveFileService.generateDestPath(
-            fileType = FileTypeEnum.BK_REPORT,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            customFilePath = taskId
-        )
-
-        if (result.isNotOk()) {
-            return Result(result.status, result.message, null)
-        }
-        val filePath = result.data!!
-        val url = archiveFileService.transformFileUrl(
-            fileType = FileTypeEnum.BK_REPORT,
-            wildFlag = false,
-            pathPattern = filePath,
-            fileChannelType = FileChannelTypeEnum.WEB_SHOW,
-            filePath = filePath
-        )
-        if (url.isNullOrBlank()) {
-            return Result("")
-        }
-        return Result(url!!)
+        return Result(archiveFileService.getReportRootUrl(projectId, pipelineId, buildId, taskId))
     }
 }

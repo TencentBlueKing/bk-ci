@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -30,7 +31,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwTemplateInstanceResourceV3
 import com.tencent.devops.process.api.template.ServiceTemplateInstanceResource
-import com.tencent.devops.process.api.template.UserTemplateInstanceResource
 import com.tencent.devops.process.pojo.template.TemplateInstanceCreate
 import com.tencent.devops.process.pojo.template.TemplateInstancePage
 import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
@@ -51,7 +51,7 @@ class ApigwTemplateInstanceResourceV3Impl @Autowired constructor(private val cli
         useTemplateSettings: Boolean,
         instances: List<TemplateInstanceCreate>
     ): TemplateOperationRet {
-        logger.info("create TemplateInstances :userId=$userId,projectId=$projectId,templateId:$templateId,version:$version,useTemplateSettings:$useTemplateSettings,instances:$instances")
+        logger.info("createTemplateInstances|userId=$userId|projectId=$projectId|templateId=$templateId|ver=$version")
         return client.get(ServiceTemplateInstanceResource::class).createTemplateInstances(
             userId = userId,
             projectId = projectId,
@@ -72,8 +72,8 @@ class ApigwTemplateInstanceResourceV3Impl @Autowired constructor(private val cli
         useTemplateSettings: Boolean,
         instances: List<TemplateInstanceUpdate>
     ): TemplateOperationRet {
-        logger.info("update TemplateInstances :userId=$userId,projectId=$projectId,templateId:$templateId,version:$version,useTemplateSettings:$useTemplateSettings,instances:$instances")
-        return client.get(UserTemplateInstanceResource::class).updateTemplate(
+        logger.info("updateTemplateInstances|userId=$userId|projectId=$projectId|templateId=$templateId|ver=$version")
+        return client.get(ServiceTemplateInstanceResource::class).updateTemplate(
             userId = userId,
             projectId = projectId,
             templateId = templateId,
@@ -93,8 +93,9 @@ class ApigwTemplateInstanceResourceV3Impl @Autowired constructor(private val cli
         pageSize: Int?,
         searchKey: String?
     ): Result<TemplateInstancePage> {
-        logger.info("list TemplateInstances :userId=$userId,projectId=$projectId,templateId:$templateId,page:$page,pageSize:$pageSize,searchKey:$searchKey")
-        return client.get(UserTemplateInstanceResource::class).listTemplate(
+        logger.info("listTemplateInstances|userId=$userId|projectId=$projectId|templateId=$templateId|" +
+            "page=$page|pageSize=$pageSize|searchKey=$searchKey")
+        return client.get(ServiceTemplateInstanceResource::class).listTemplate(
             userId = userId,
             projectId = projectId,
             templateId = templateId,

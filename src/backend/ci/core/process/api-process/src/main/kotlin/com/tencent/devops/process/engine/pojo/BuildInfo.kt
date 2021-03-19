@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -26,7 +27,7 @@
 
 package com.tencent.devops.process.engine.pojo
 
-import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 
@@ -47,26 +48,34 @@ data class BuildInfo(
     val parentBuildId: String?,
     val parentTaskId: String?,
     val channelCode: ChannelCode,
-    var errorType: ErrorType?,
-    var errorCode: Int?,
-    var errorMsg: String?
+    var errorInfoList: List<ErrorInfo>?
 ) {
 
     fun isFinish() = when {
-        status.name == BuildStatus.STAGE_SUCCESS.name && endTime != null && endTime > 0 && startTime != null && endTime > startTime -> true
-        else -> BuildStatus.isFinish(status)
+        status.name == BuildStatus.STAGE_SUCCESS.name &&
+            endTime != null &&
+            endTime > 0 &&
+            startTime != null &&
+            endTime > startTime
+        -> true
+        else -> status.isFinish()
     }
 
     fun isSuccess() = when {
-        status.name == BuildStatus.STAGE_SUCCESS.name && endTime != null && endTime > 0 && startTime != null && endTime > startTime -> true
-        else -> BuildStatus.isSuccess(status)
+        status.name == BuildStatus.STAGE_SUCCESS.name &&
+            endTime != null &&
+            endTime > 0 &&
+            startTime != null &&
+            endTime > startTime
+        -> true
+        else -> status.isSuccess()
     }
 
-    fun isFailure() = BuildStatus.isFailure(status)
+    fun isFailure() = status.isFailure()
 
-    fun isCancel() = BuildStatus.isCancel(status)
+    fun isCancel() = status.isCancel()
 
     fun isStageSuccess() = status == BuildStatus.STAGE_SUCCESS
 
-    fun isReadyToRun() = BuildStatus.isReadyToRun(status)
+    fun isReadyToRun() = status.isReadyToRun()
 }

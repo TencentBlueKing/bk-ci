@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -34,13 +35,17 @@ import org.springframework.stereotype.Component
 import java.util.concurrent.TimeUnit
 
 @Component
+@Suppress("ALL")
 class Gray {
 
     @Value("\${project.gray.v2:#{null}}")
     private val grayFlag: String? = "false"
 
-    var gray: Boolean? = null
+    private var gray: Boolean? = null
+
     private val redisKey = "project:setting:gray:v2" // v2灰度项目列表存在redis的标识key
+
+    private val codeCCRedisKey = "project:setting:gray:codecc:v2" // v2 CodeCC灰度项目列表存在redis的标识key
 
     private val cache = CacheBuilder.newBuilder()
         .maximumSize(10)
@@ -70,6 +75,22 @@ class Gray {
         redisOperation.removeSetMember(getGrayRedisKey(), projectId) // 取消项目为灰度项目
         try {
             cache.invalidate(getGrayRedisKey())
+        } catch (ignored: Exception) {
+        }
+    }
+
+    fun addCodeCCGrayProject(projectId: String, redisOperation: RedisOperation) {
+        redisOperation.addSetValue(getCodeCCGrayRedisKey(), projectId) // 添加项目为灰度项目
+        try {
+            cache.invalidate(getCodeCCGrayRedisKey())
+        } catch (ignored: Exception) {
+        }
+    }
+
+    fun removeCodeCCGrayProject(projectId: String, redisOperation: RedisOperation) {
+        redisOperation.removeSetMember(getCodeCCGrayRedisKey(), projectId) // 取消项目为灰度项目
+        try {
+            cache.invalidate(getCodeCCGrayRedisKey())
         } catch (ignored: Exception) {
         }
     }
@@ -105,7 +126,27 @@ class Gray {
         return projects!!
     }
 
+    fun grayCodeCCProjectSet(redisOperation: RedisOperation): Set<String> {
+        var projects = cache.getIfPresent(getCodeCCGrayRedisKey())
+        if (projects != null) {
+            return projects
+        }
+        synchronized(this) {
+            projects = cache.getIfPresent(getCodeCCGrayRedisKey())
+            if (projects != null) {
+                return projects!!
+            }
+            logger.info("Refresh the local gray codecc projects")
+            projects = redisOperation.getSetMembers(getCodeCCGrayRedisKey())?.filter { !it.isBlank() }?.toSet()
+                ?: emptySet()
+            cache.put(getCodeCCGrayRedisKey(), projects!!)
+        }
+        return projects!!
+    }
+
     fun getGrayRedisKey() = redisKey
+
+    fun getCodeCCGrayRedisKey() = codeCCRedisKey
 
     companion object {
         private val logger = LoggerFactory.getLogger(Gray::class.java)

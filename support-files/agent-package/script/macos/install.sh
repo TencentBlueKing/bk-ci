@@ -99,6 +99,7 @@ function installAgentService()
 
 function writeSSHConfig()
 {
+  echo "writeSSHConfig"
 }
 
 # if [[ "${workspace}" = ~ ]]; then

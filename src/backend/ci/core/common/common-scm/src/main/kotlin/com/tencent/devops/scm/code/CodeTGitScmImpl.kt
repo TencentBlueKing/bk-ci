@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -35,6 +36,7 @@ import com.tencent.devops.scm.code.git.api.GitApi
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.pojo.RevisionInfo
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
 import org.slf4j.LoggerFactory
@@ -49,11 +51,12 @@ class CodeTGitScmImpl constructor(
     private val gitConfig: GitConfig,
     private val event: String? = null
 ) : IScm {
+    private val apiUrl = GitUtils.getGitApiUrl(apiUrl = gitConfig.tGitApiUrl, repoUrl = url)
 
     override fun getLatestRevision(): RevisionInfo {
         val branch = branchName ?: "master"
         val gitBranch = gitApi.getBranch(
-            host = gitConfig.tGitApiUrl,
+            host = apiUrl,
             token = token,
             projectName = projectName,
             branchName = branch
@@ -66,10 +69,10 @@ class CodeTGitScmImpl constructor(
     }
 
     override fun getBranches() =
-        gitApi.listBranches(gitConfig.tGitApiUrl, token, projectName)
+        gitApi.listBranches(apiUrl, token, projectName)
 
     override fun getTags() =
-        gitApi.listTags(gitConfig.tGitApiUrl, token, projectName)
+        gitApi.listTags(apiUrl, token, projectName)
 
     override fun checkTokenAndPrivateKey() {
         if (privateKey == null) {
@@ -151,7 +154,7 @@ class CodeTGitScmImpl constructor(
             )
         }
         try {
-            gitApi.addWebhook(gitConfig.tGitApiUrl, token, projectName, hookUrl, event)
+            gitApi.addWebhook(apiUrl, token, projectName, hookUrl, event)
         } catch (e: ScmException) {
             throw ScmException(
                 MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_FAIL),
@@ -173,7 +176,7 @@ class CodeTGitScmImpl constructor(
         }
         try {
             gitApi.addCommitCheck(
-                host = gitConfig.tGitApiUrl,
+                host = apiUrl,
                 token = token,
                 projectName = projectName,
                 commitId = commitId,

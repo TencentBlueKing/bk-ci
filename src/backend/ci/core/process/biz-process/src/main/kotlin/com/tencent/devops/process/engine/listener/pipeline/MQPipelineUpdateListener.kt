@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -26,13 +27,13 @@
 
 package com.tencent.devops.process.engine.listener.pipeline
 
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.control.CallBackControl
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
-import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.process.service.PipelineUserService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -43,25 +44,25 @@ import org.springframework.stereotype.Component
  */
 @Component
 class MQPipelineUpdateListener @Autowired constructor(
-    private val pipelineUserService: PipelineUserService,
     private val pipelineRuntimeService: PipelineRuntimeService,
-    private val pipelineRepositoryService: PipelineRepositoryService,
     private val callBackControl: CallBackControl,
     pipelineEventDispatcher: PipelineEventDispatcher
 ) : BaseListener<PipelineUpdateEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineUpdateEvent) {
-        if (event.buildNo != null) {
-            pipelineRuntimeService.updateBuildNo(event.pipelineId, event.buildNo.buildNo)
-            logger.info("[${event.pipelineId}] updateBuildNo!")
+        val watcher = Watcher(id = "${event.traceId}|UpdatePipeline#${event.pipelineId}|${event.userId}")
+        try {
+            if (event.buildNo != null) {
+                watcher.start("updateBuildNo")
+                pipelineRuntimeService.updateBuildNo(event.pipelineId, event.buildNo!!.buildNo)
+                watcher.stop()
+            }
+
+            watcher.start("callback")
+            callBackControl.pipelineUpdateEvent(projectId = event.projectId, pipelineId = event.pipelineId)
+        } finally {
+            watcher.stop()
+            LogUtils.printCostTimeWE(watcher)
         }
-        val model = pipelineRepositoryService.getModel(event.pipelineId)
-        if (model == null || model.stages.isEmpty()) {
-            logger.warn("[${event.pipelineId}]|pipeline model stage is empty")
-            return
-        }
-        val pipelineId = event.pipelineId
-        pipelineUserService.update(pipelineId, event.userId)
-        callBackControl.pipelineUpdateEvent(projectId = event.projectId, pipelineId = event.pipelineId)
     }
 }

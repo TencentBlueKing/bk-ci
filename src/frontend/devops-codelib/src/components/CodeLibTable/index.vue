@@ -10,6 +10,17 @@
         <bk-table-column :label="$t('codelib.aliasName')" prop="aliasName"></bk-table-column>
         <bk-table-column :label="$t('codelib.address')" prop="url"></bk-table-column>
         <bk-table-column :label="$t('codelib.type')" prop="type" :formatter="typeFormatter"></bk-table-column>
+        <bk-table-column :label="$t('codelib.authIdentity')">
+            <template slot-scope="props">
+                <span>{{ props.row.authType }}@</span><!--
+                --><a class="text-link"
+                    v-if="!['OAUTH'].includes(props.row.authType)"
+                    :href="`/console/ticket/${projectId}/editCredential/${props.row.authIdentity}`"
+                    target="_blank"
+                >{{ props.row.authIdentity }}</a><!--
+                --><span v-else>{{ props.row.authIdentity }}</span>
+            </template>
+        </bk-table-column>
         <bk-table-column :label="$t('codelib.operation')" width="150">
             <template slot-scope="props">
                 <bk-button theme="primary" text @click="editCodeLib(props.row)">{{ $t('codelib.edit') }}</bk-button>
@@ -141,18 +152,10 @@
             },
 
             deleteCodeLib ({ repositoryHashId, aliasName }) {
-                const subHeader = this.$createElement(
-                    'p',
-                    {
-                        style: {
-                            textAlign: 'center'
-                        }
-                    },
-                    `${this.$t('codelib.deleteCodelib')}${aliasName}`
-                )
                 this.$bkInfo({
-                    subHeader,
-                    title: this.$t('codelib.confirm'),
+                    theme: 'warning',
+                    type: 'warning',
+                    subTitle: this.$t('codelib.deleteCodelib', [aliasName]),
                     confirmFn: () => {
                         const { projectId, currentPage, pageSize, count, totalPages } = this
                         this.isLoading = true
@@ -178,10 +181,24 @@
                                 this.switchPage(currentPage, pageSize)
                             }
                         }).catch((e) => {
-                            this.$bkMessage({
-                                message: e.message,
-                                theme: 'error'
-                            })
+                            if (e.code === 403) {
+                                this.$showAskPermissionDialog({
+                                    noPermissionList: [{
+                                        actionId: this.$permissionActionMap.edit,
+                                        resourceId: this.$permissionResourceMap.code,
+                                        instanceId: [{
+                                            id: repositoryHashId,
+                                            name: aliasName
+                                        }],
+                                        projectId: this.projectId
+                                    }]
+                                })
+                            } else {
+                                this.$bkMessage({
+                                    message: e.message,
+                                    theme: 'error'
+                                })
+                            }
                         }).finally(() => {
                             this.isLoading = false
                         })

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -27,12 +28,14 @@
 package com.tencent.devops.store.dao.common
 
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.model.store.tables.TStoreComment
 import com.tencent.devops.model.store.tables.TStoreCommentPraise
 import com.tencent.devops.model.store.tables.records.TStoreCommentPraiseRecord
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 
+@Suppress("ALL")
 @Repository
 class StoreCommentPraiseDao {
 
@@ -72,6 +75,18 @@ class StoreCommentPraiseDao {
     fun deleteStoreCommentPraise(dslContext: DSLContext, userId: String, commentId: String) {
         with(TStoreCommentPraise.T_STORE_COMMENT_PRAISE) {
             dslContext.deleteFrom(this).where(COMMENT_ID.eq(commentId).and(CREATOR.eq(userId))).execute()
+        }
+    }
+
+    fun deleteStoreCommentPraise(dslContext: DSLContext, storeCode: String, storeType: Byte) {
+        val tsc = TStoreComment.T_STORE_COMMENT
+        val commentIds =
+            dslContext.select(tsc.ID).from(tsc).where(tsc.STORE_CODE.eq(storeCode).and(tsc.STORE_TYPE.eq(storeType)))
+                .fetch()
+        with(TStoreCommentPraise.T_STORE_COMMENT_PRAISE) {
+            dslContext.deleteFrom(this)
+                .where(COMMENT_ID.`in`(commentIds))
+                .execute()
         }
     }
 }

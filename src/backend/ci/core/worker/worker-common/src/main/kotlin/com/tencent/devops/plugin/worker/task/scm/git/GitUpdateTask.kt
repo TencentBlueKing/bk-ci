@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -35,6 +36,7 @@ import com.tencent.devops.common.log.Ansi
 import com.tencent.devops.common.pipeline.enums.GitPullModeType
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.plugin.worker.task.scm.util.DirectoryUtil
 import com.tencent.devops.plugin.worker.task.scm.util.GitUtil
 import com.tencent.devops.plugin.worker.task.scm.util.RepoCommitUtil
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
@@ -74,7 +76,9 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.Writer
 import java.net.URL
+import java.nio.file.Files
 
+@Suppress("ALL")
 open class GitUpdateTask constructor(
     protected open val projectName: String,
     protected open val userName: String,
@@ -100,8 +104,9 @@ open class GitUpdateTask constructor(
 
     private val writer = object : Writer() {
         override fun write(cbuf: CharArray?, off: Int, len: Int) {
-            if (cbuf == null)
+            if (cbuf == null) {
                 return
+            }
             LoggerService.addNormalLine(String(cbuf, off, len))
         }
 
@@ -121,14 +126,10 @@ open class GitUpdateTask constructor(
     open fun cleanupWorkspace() {
         if (workspace.exists()) {
             LoggerService.addNormalLine("Clean up the workspace(${workspace.path})")
-            workspace.listFiles()?.forEach {
-                val deleteSuccess = if (it.isDirectory) {
-                    it.deleteRecursively()
-                } else {
-                    it.delete()
-                }
-                LoggerService.addNormalLine("delete the file: ${it.canonicalPath} ($deleteSuccess)")
-            }
+            Files.list(workspace.toPath())
+                .forEach(DirectoryUtil::deleteRecursively)
+            val deleteSuccess = true
+            LoggerService.addNormalLine("delete the file: ${workspace.canonicalPath} ($deleteSuccess)")
         }
     }
 
@@ -188,9 +189,13 @@ open class GitUpdateTask constructor(
             }
 
             val startType =
-                if (variables[PIPELINE_START_TYPE] != null) StartType.valueOf(variables[PIPELINE_START_TYPE]!!) else null
+                if (variables[PIPELINE_START_TYPE] != null) {
+                    StartType.valueOf(variables[PIPELINE_START_TYPE]!!)
+                } else null
             val hookType =
-                if (variables[PIPELINE_WEBHOOK_EVENT_TYPE] != null) CodeEventType.valueOf(variables[PIPELINE_WEBHOOK_EVENT_TYPE]!!) else null
+                if (variables[PIPELINE_WEBHOOK_EVENT_TYPE] != null) {
+                    CodeEventType.valueOf(variables[PIPELINE_WEBHOOK_EVENT_TYPE]!!)
+                } else null
             val sourceBranch = variables[PIPELINE_WEBHOOK_SOURCE_BRANCH]
             val targetBranch = variables[PIPELINE_WEBHOOK_TARGET_BRANCH]
             val sourceUrl = variables[PIPELINE_WEBHOOK_SOURCE_URL]
@@ -507,7 +512,7 @@ open class GitUpdateTask constructor(
 
         if (pullResult.mergeResult.mergeStatus == MergeResult.MergeStatus.CONFLICTING) {
             LoggerService.addRedLine("Merge branch $branchName conflict")
-            pullResult.mergeResult.conflicts.forEach { (file, value) ->
+            pullResult.mergeResult.conflicts.forEach { file ->
                 LoggerService.addRedLine("Conflict file $file")
             }
             throw TaskExecuteException(
@@ -522,8 +527,9 @@ open class GitUpdateTask constructor(
 
     private fun isBranchExist(git: Git, branch: String): Boolean {
         git.branchList().call().forEach {
-            if (Repository.shortenRefName(it.name) == branch)
+            if (Repository.shortenRefName(it.name) == branch) {
                 return true
+            }
         }
         return false
     }
@@ -638,6 +644,17 @@ open class GitUpdateTask constructor(
                  * 2. convert ssh url to http url
                  */
                 val subHost = getUrlHost(url)
+                // 相对路径的 Submodule, 直接使用相对路径
+                if (subHost == "") {
+                    result.add(
+                        Submodule(
+                            path,
+                            url,
+                            url
+                        )
+                    )
+                    continue
+                }
                 if (rootHost != subHost) continue
 
                 if (convertSubmoduleUrl) {
@@ -703,13 +720,16 @@ open class GitUpdateTask constructor(
     private fun getUrlHost(url: String): String {
         try {
             val actualUrl = url.trim()
-            if (actualUrl.startsWith("http")) return URL(actualUrl).host
-            return actualUrl.substring("git@".length, actualUrl.indexOf(":"))
+            return when {
+                actualUrl.startsWith("http") -> return URL(actualUrl).host
+                actualUrl.startsWith("git@") -> actualUrl.substring("git@".length, actualUrl.indexOf(":"))
+                else -> ""
+            }
         } catch (e: Exception) {
             logger.warn("Fail to get the url host - ($url)", e)
             throw TaskExecuteException(
-                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
-                errorType = ErrorType.SYSTEM,
+                errorType = ErrorType.THIRD_PARTY,
+                errorCode = ErrorCode.THIRD_PARTY_INTERFACE_ERROR,
                 errorMsg = "获取git代码库主机信息失败: $url"
             )
         }
@@ -742,7 +762,9 @@ open class GitUpdateTask constructor(
                 clone.setProgressMonitor(TextProgressMonitor(writer))
                 clone.call()
             } catch (e: Exception) {
-                LoggerService.addRedLine("Fail to checkout the submodule(${walk.modulesPath}) with url(${walk.modulesUrl}) to revision(${walk.objectId}) because of ${e.message}")
+                LoggerService.addRedLine(
+                    "Fail to checkout the submodule(${walk.modulesPath}) " +
+                        "with url(${walk.modulesUrl}) to revision(${walk.objectId}) because of ${e.message}")
                 throw e
             }
         }

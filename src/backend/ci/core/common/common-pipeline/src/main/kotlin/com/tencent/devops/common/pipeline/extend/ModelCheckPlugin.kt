@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -28,6 +29,7 @@ package com.tencent.devops.common.pipeline.extend
 
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 
 /**
  * 对流水线模型中的设置的agent进行检查的扩展点
@@ -40,7 +42,7 @@ interface ModelCheckPlugin {
      * @param
      * @throws RuntimeException 子类  将检查失败或异常的以RuntimeException子类抛出
      */
-    fun checkModelIntegrity(model: Model)
+    fun checkModelIntegrity(model: Model, projectId: String?)
 
     fun checkJob(jobContainer: Container, projectId: String, pipelineId: String, userId: String)
 
@@ -58,9 +60,8 @@ interface ModelCheckPlugin {
      * @param pipelineId 流水线id
      */
     fun beforeDeleteElementInExistsModel(
-        userId: String,
         existModel: Model,
         sourceModel: Model? = null,
-        pipelineId: String?
+        param: BeforeDeleteParam
     )
 }

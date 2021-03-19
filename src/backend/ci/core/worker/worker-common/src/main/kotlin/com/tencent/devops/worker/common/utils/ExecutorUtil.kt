@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -29,6 +30,7 @@ package com.tencent.devops.worker.common.utils
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.worker.common.logger.LoggerService
 import org.apache.commons.exec.CommandLine
 import org.apache.commons.exec.DefaultExecutor
@@ -38,6 +40,8 @@ import java.io.File
 
 object ExecutorUtil {
     private val executor = DefaultExecutor()
+
+    private val threadLocal = ThreadLocal<String>()
 
     fun runCommand(command: String, maskCommand: String, workDir: File? = null): Int {
         val outputStream = object : LogOutputStream() {
@@ -66,12 +70,29 @@ object ExecutorUtil {
         if (exitValue != 0) {
             LoggerService.addNormalLine("Fail to execute the command($maskCommand) with exit code ($exitValue)")
             throw TaskExecuteException(
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.SYSTEM_INNER_TASK_ERROR,
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_SCRIPT_COMMAND_INVAILD,
                 errorMsg = "Fail to run the command - $maskCommand"
             )
         }
         LoggerService.addNormalLine("Finish the command, exitValue=$exitValue")
         return exitValue
+    }
+
+    private fun setThreadLocal() {
+        val randomNum = UUIDUtil.generate()
+        threadLocal.set(randomNum)
+    }
+
+    fun getThreadLocal(): String {
+        val value = threadLocal.get()
+        if (value == null) {
+            setThreadLocal()
+        }
+        return threadLocal.get()
+    }
+
+    fun removeThreadLocal() {
+        threadLocal.remove()
     }
 }

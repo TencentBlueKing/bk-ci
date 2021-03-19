@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -28,13 +29,13 @@ package com.tencent.devops.common.web.handler
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.annotation.BkExceptionMapper
 import org.slf4j.LoggerFactory
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.ExceptionMapper
-import javax.ws.rs.ext.Provider
 
-@Provider
+@BkExceptionMapper
 class ErrorCodeExceptionMapper : ExceptionMapper<ErrorCodeException> {
     companion object {
         val logger = LoggerFactory.getLogger(ErrorCodeExceptionMapper::class.java)!!
@@ -48,11 +49,7 @@ class ErrorCodeExceptionMapper : ExceptionMapper<ErrorCodeException> {
             data = null,
             defaultMessage = exception.defaultMessage
         )
-//        // 在提示信息末尾附加uniqueId定位信息
-//        if (null != errorResult.message && errorResult.message!!.startsWith("[uniqueId=")) {
-//            errorResult =
-//                Result(errorResult.status, errorResult.message + "[uniqueId=${exception.uniqueId}]", errorResult.data)
-//        }
+
         return Response.status(exception.statusCode).type(MediaType.APPLICATION_JSON_TYPE)
             .entity(errorResult).build()
     }

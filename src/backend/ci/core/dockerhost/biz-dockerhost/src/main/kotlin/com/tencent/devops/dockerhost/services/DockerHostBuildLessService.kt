@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -27,6 +28,7 @@
 package com.tencent.devops.dockerhost.services
 
 import com.github.dockerjava.api.model.AccessMode
+import com.github.dockerjava.api.model.AuthConfig
 import com.github.dockerjava.api.model.Bind
 import com.github.dockerjava.api.model.Binds
 import com.github.dockerjava.api.model.HostConfig
@@ -34,11 +36,13 @@ import com.github.dockerjava.api.model.Volume
 import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.core.command.PullImageResultCallback
+import com.github.dockerjava.okhttp.OkDockerHttpClient
+import com.github.dockerjava.transport.DockerHttpClient
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.web.mq.alert.AlertLevel
-import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
+import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.AlertApi
 import com.tencent.devops.dockerhost.dispatch.BuildResourceApi
@@ -62,45 +66,44 @@ import org.slf4j.LoggerFactory
  * 无构建环境的docker服务实现
  * @version 1.0
  */
-
+@Suppress("ALL")
 class DockerHostBuildLessService(
     private val dockerHostConfig: DockerHostConfig,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val dockerHostWorkSpaceService: DockerHostWorkSpaceService
+    private val dockerHostWorkSpaceService: DockerHostWorkSpaceService,
+    private val buildResourceApi: BuildResourceApi,
+    private val dockerHostBuildResourceApi: DockerHostBuildResourceApi,
+    private val alertApi: AlertApi
 ) {
-
-    private val alertApi: AlertApi =
-        AlertApi()
-
-    private val buildApi = BuildResourceApi()
-
-    private val dockerHostBuildApi: DockerHostBuildResourceApi = DockerHostBuildResourceApi()
-
     private val hostTag = CommonUtils.getInnerIP()
 
     private val config = DefaultDockerClientConfig.createDefaultConfigBuilder()
         .withDockerConfig(dockerHostConfig.dockerConfig)
         .withApiVersion(dockerHostConfig.apiVersion)
-        .withRegistryUrl(dockerHostConfig.registryUrl)
-        .withRegistryUsername(dockerHostConfig.registryUsername)
-        .withRegistryPassword(SecurityUtil.decrypt(dockerHostConfig.registryPassword!!))
         .build()!!
 
-    private val dockerCli = DockerClientBuilder.getInstance(config).build()
+    var longHttpClient: DockerHttpClient = OkDockerHttpClient.Builder()
+        .dockerHost(config.dockerHost)
+        .sslConfig(config.sslConfig)
+        .connectTimeout(5000)
+        .readTimeout(300000)
+        .build()
+
+    private val dockerCli = DockerClientBuilder.getInstance(config).withDockerHttpClient(longHttpClient).build()
 
     fun retryDispatch(event: PipelineBuildLessDockerStartupEvent) {
         event.retryTime = event.retryTime - 1
         if (event.retryTime > 0) {
             pipelineEventDispatcher.dispatch(event)
         } else {
-            val result = buildApi.dockerStartFail(
+            val result = buildResourceApi.dockerStartFail(
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,
                 buildId = event.buildId,
                 vmSeqId = event.vmSeqId,
                 status = BuildStatus.FAILED
             )
-            logger.error("[${event.buildId}]| can redispatch any more, set VM status result:$result")
+            logger.warn("[${event.buildId}]| can redispatch any more, set VM status result:$result")
             alertApi.alert(
                 AlertLevel.HIGH.name, "Docker重新分配事件失败", "Docker重新分配事件失败, " +
                     "母机IP:${CommonUtils.getInnerIP()}， 镜像名称：${event.dockerImage}"
@@ -112,10 +115,16 @@ class DockerHostBuildLessService(
         try {
             // docker pull
             try {
+                val authConfig = AuthConfig()
+                    .withUsername(dockerHostConfig.registryUsername)
+                    .withPassword(SecurityUtil.decrypt(dockerHostConfig.registryPassword!!))
+                    .withRegistryAddress(dockerHostConfig.registryUrl)
+
                 LocalImageCache.saveOrUpdate(event.dockerImage)
-                dockerCli.pullImageCmd(event.dockerImage).exec(PullImageResultCallback()).awaitCompletion()
+                dockerCli.pullImageCmd(event.dockerImage)
+                    .withAuthConfig(authConfig).exec(PullImageResultCallback()).awaitCompletion()
             } catch (t: Throwable) {
-                logger.warn("[${event.buildId}]|Fail to pull the image ${event.dockerImage} of build ${event.buildId}", t)
+                logger.warn("[${event.buildId}]|PullImageFail|image=${event.dockerImage}", t)
             }
 
             val hostWorkspace = getWorkspace(event.pipelineId, event.vmSeqId.trim())
@@ -182,7 +191,7 @@ class DockerHostBuildLessService(
 
             return container.id
         } catch (ignored: Throwable) {
-            logger.error("[${event.buildId}]| create Container failed ", ignored)
+            logger.warn("[${event.buildId}]| create Container failed ", ignored)
             alertApi.alert(
                 AlertLevel.HIGH.name, "Docker构建机创建容器失败", "Docker构建机创建容器失败, " +
                     "母机IP:${CommonUtils.getInnerIP()}， 失败信息：${ignored.message}"
@@ -192,7 +201,7 @@ class DockerHostBuildLessService(
     }
 
     fun endBuild(): DockerHostBuildInfo? {
-        val result = dockerHostBuildApi.endBuild(CommonUtils.getInnerIP())
+        val result = dockerHostBuildResourceApi.endBuild(CommonUtils.getInnerIP())
         if (result != null) {
             if (result.isNotOk()) {
                 return null
@@ -202,7 +211,7 @@ class DockerHostBuildLessService(
     }
 
     fun reportContainerId(buildId: String, vmSeqId: String, containerId: String): Boolean {
-        val result = buildApi.reportContainerId(buildId, vmSeqId, containerId, hostTag)
+        val result = buildResourceApi.reportContainerId(buildId, vmSeqId, containerId, hostTag)
         if (result != null) {
             if (result.isNotOk()) {
                 logger.info("reportContainerId return msg: ${result.message}")
@@ -220,17 +229,14 @@ class DockerHostBuildLessService(
                 dockerCli.stopContainerCmd(containerId).withTimeout(15).exec()
             }
         } catch (ignored: Throwable) {
-            logger.error("[$buildId]| Stop the container failed, containerId: $containerId, error msg: $ignored", ignored)
+            logger.warn("[$buildId]| Stop the container failed, j($containerId), error msg: $ignored", ignored)
         }
 
         try {
             // docker rm
             dockerCli.removeContainerCmd(containerId).exec()
         } catch (ignored: Throwable) {
-            logger.error(
-                "[$buildId]| Stop the container failed, containerId: $containerId, error msg: $ignored",
-                ignored
-            )
+            logger.warn("[$buildId]|STOP_DOCKER_FAIL| containerId: $containerId, error msg: $ignored", ignored)
         }
     }
 
@@ -239,7 +245,7 @@ class DockerHostBuildLessService(
             val dockerInfo = dockerCli.infoCmd().exec()
             return dockerInfo.containersRunning ?: 0
         } catch (ignored: Throwable) {
-            logger.error("Get container num failed")
+            logger.warn("Get container num failed")
         }
         return 0
     }

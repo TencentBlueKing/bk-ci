@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -37,12 +38,14 @@ enum class AtomStatusEnum(val status: Int) {
     RELEASED(7), // 已发布
     GROUNDING_SUSPENSION(8), // 上架中止
     UNDERCARRIAGING(9), // 下架中
-    UNDERCARRIAGED(10); // 已下架
+    UNDERCARRIAGED(10), // 已下架
+    CODECCING(11), // 代码检查中
+    CODECC_FAIL(12); // 代码检查失败
 
     companion object {
 
         fun getAtomStatus(name: String): AtomStatusEnum? {
-            AtomStatusEnum.values().forEach { enumObj ->
+            values().forEach { enumObj ->
                 if (enumObj.name == name) {
                     return enumObj
                 }
@@ -63,6 +66,8 @@ enum class AtomStatusEnum(val status: Int) {
                 8 -> GROUNDING_SUSPENSION.name
                 9 -> UNDERCARRIAGING.name
                 10 -> UNDERCARRIAGED.name
+                11 -> CODECCING.name
+                12 -> CODECC_FAIL.name
                 else -> INIT.name
             }
         }

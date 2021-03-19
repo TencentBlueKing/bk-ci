@@ -73,7 +73,7 @@
         },
         watch: {
             queryParams (newQueryParams, oldQueryParams) {
-                if (this.urlParamKeys.some(key => newQueryParams[key] !== oldQueryParams[key])) {
+                if (this.isParamsChanged(newQueryParams, oldQueryParams)) {
                     this.debounceGetOptionList()
                     this.handleChange(this.name, '')
                     this.displayName = ''
@@ -161,7 +161,7 @@
             },
 
             isEnvVar (str) {
-                return /^\$(\{\w+\}|\w+)$/.test(str)
+                return /^\$(\{[^\}\s]+\}|\w+)$/.test(str)
             },
 
             handleBlur () {
@@ -233,12 +233,12 @@
                     const options = getResponseData(res, dataPath)
 
                     this.optionList = this.formatList(options, '', paramId, paramName)
-                    if (this.value) {
-                        this.displayName = this.getDisplayName(this.value)
-                    }
                 } catch (e) {
                     console.error(e)
                 } finally {
+                    if (this.value) {
+                        this.displayName = this.getDisplayName(this.value)
+                    }
                     this.loading = false
                 }
             }

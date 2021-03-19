@@ -1,0 +1,4 @@
+noop:\
+com.tencent.bkrepo.common.stream.binder.noop.NoOpBinderConfiguration
+memory:\
+com.tencent.bkrepo.common.stream.binder.memory.config.MemoryBinderConfiguration

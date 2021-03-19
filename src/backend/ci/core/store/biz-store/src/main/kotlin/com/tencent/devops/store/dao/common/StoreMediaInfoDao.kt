@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -31,7 +32,6 @@ import com.tencent.devops.model.store.tables.TStoreMediaInfo
 import com.tencent.devops.model.store.tables.records.TStoreMediaInfoRecord
 import com.tencent.devops.store.pojo.common.StoreMediaInfo
 import com.tencent.devops.store.pojo.common.StoreMediaInfoRequest
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -39,6 +39,7 @@ import java.time.LocalDateTime
 
 @Repository
 class StoreMediaInfoDao {
+
     fun add(dslContext: DSLContext, id: String, userId: String, storeMediaInfoReq: StoreMediaInfoRequest, type: Byte) {
         with(TStoreMediaInfo.T_STORE_MEDIA_INFO) {
             dslContext.insertInto(
@@ -79,10 +80,10 @@ class StoreMediaInfoDao {
         }
     }
 
-    fun deleteByStoreCode(dslContext: DSLContext, storeCode: String, storeType: StoreTypeEnum) {
+    fun deleteByStoreCode(dslContext: DSLContext, storeCode: String, storeType: Byte) {
         with(TStoreMediaInfo.T_STORE_MEDIA_INFO) {
             dslContext.delete(this).where(
-                STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType.type.toByte()))
+                STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType))
             ).execute()
         }
     }

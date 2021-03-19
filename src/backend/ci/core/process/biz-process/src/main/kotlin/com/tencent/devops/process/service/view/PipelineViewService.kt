@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -35,17 +36,7 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.process.tables.records.TPipelineViewRecord
-import com.tencent.devops.process.constant.ProcessMessageCode.ALL_PIPELINES_LABEL
-import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_DEL_PIPELINE_VIEW_NO_PERM
-import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_EDIT_PIPELINE_VIEW_NO_PERM
-import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_VIEW_HAD_EXISTS
-import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_VIEW_MAX_LIMIT
-import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_VIEW_NOT_FOUND
-import com.tencent.devops.process.constant.ProcessMessageCode.FAVORITE_PIPELINES_LABEL
-import com.tencent.devops.process.constant.ProcessMessageCode.MY_PIPELINES_LABEL
-import com.tencent.devops.process.constant.ProcessMessageCode.PERSON_VIEW_LABEL
-import com.tencent.devops.process.constant.ProcessMessageCode.PROJECT_VIEW_LABEL
-import com.tencent.devops.process.constant.ProcessMessageCode.SYSTEM_VIEW_LABEL
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineViewUserLastViewDao
 import com.tencent.devops.process.dao.PipelineViewUserSettingsDao
 import com.tencent.devops.process.dao.label.PipelineViewDao
@@ -75,6 +66,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 
+@Suppress("ALL")
 @Service
 class PipelineViewService @Autowired constructor(
     private val dslContext: DSLContext,
@@ -88,21 +80,12 @@ class PipelineViewService @Autowired constructor(
 ) {
 
     fun addUsingView(userId: String, projectId: String, viewId: String) {
-        if (pipelineViewLastViewDao.get(dslContext = dslContext, userId = userId, projectId = projectId) == null) {
-            pipelineViewLastViewDao.create(
-                dslContext = dslContext,
-                userId = userId,
-                projectId = projectId,
-                viewId = viewId
-            )
-        } else {
-            pipelineViewLastViewDao.update(
-                dslContext = dslContext,
-                userId = userId,
-                projectId = projectId,
-                viewId = viewId
-            )
-        }
+        pipelineViewLastViewDao.save(
+            dslContext = dslContext,
+            userId = userId,
+            projectId = projectId,
+            viewId = viewId
+        )
     }
 
     fun getUsingView(userId: String, projectId: String): String? {
@@ -124,15 +107,15 @@ class PipelineViewService @Autowired constructor(
         val systemViewList = listOf(
             PipelineViewIdAndName(
                 id = PIPELINE_VIEW_FAVORITE_PIPELINES,
-                name = MessageCodeUtil.getCodeLanMessage(FAVORITE_PIPELINES_LABEL)
+                name = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.FAVORITE_PIPELINES_LABEL)
             ),
             PipelineViewIdAndName(
                 id = PIPELINE_VIEW_MY_PIPELINES,
-                name = MessageCodeUtil.getCodeLanMessage(MY_PIPELINES_LABEL)
+                name = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.MY_PIPELINES_LABEL)
             ),
             PipelineViewIdAndName(
                 id = PIPELINE_VIEW_ALL_PIPELINES,
-                name = MessageCodeUtil.getCodeLanMessage(ALL_PIPELINES_LABEL)
+                name = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.ALL_PIPELINES_LABEL)
             )
         )
 
@@ -156,15 +139,15 @@ class PipelineViewService @Autowired constructor(
         }
 
         val systemPipelineViewClassify = PipelineViewClassify(
-            label = MessageCodeUtil.getCodeLanMessage(SYSTEM_VIEW_LABEL),
+            label = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.SYSTEM_VIEW_LABEL),
             viewList = systemViewList
         )
         val projectPipelineViewClassify = PipelineViewClassify(
-            label = MessageCodeUtil.getCodeLanMessage(PROJECT_VIEW_LABEL),
+            label = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.PROJECT_VIEW_LABEL),
             viewList = projectViewList
         )
         val personPipelineViewClassify = PipelineViewClassify(
-            label = MessageCodeUtil.getCodeLanMessage(PERSON_VIEW_LABEL),
+            label = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.PERSON_VIEW_LABEL),
             viewList = personViewList
         )
 
@@ -182,15 +165,15 @@ class PipelineViewService @Autowired constructor(
             listOf(
                 PipelineViewIdAndName(
                     id = PIPELINE_VIEW_FAVORITE_PIPELINES,
-                    name = MessageCodeUtil.getCodeLanMessage(FAVORITE_PIPELINES_LABEL)
+                    name = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.FAVORITE_PIPELINES_LABEL)
                 ),
                 PipelineViewIdAndName(
                     id = PIPELINE_VIEW_MY_PIPELINES,
-                    name = MessageCodeUtil.getCodeLanMessage(MY_PIPELINES_LABEL)
+                    name = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.MY_PIPELINES_LABEL)
                 ),
                 PipelineViewIdAndName(
                     id = PIPELINE_VIEW_ALL_PIPELINES,
-                    name = MessageCodeUtil.getCodeLanMessage(ALL_PIPELINES_LABEL)
+                    name = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.ALL_PIPELINES_LABEL)
                 )
             )
         } else {
@@ -223,15 +206,15 @@ class PipelineViewService @Autowired constructor(
                     listOf(
                         PipelineViewIdAndName(
                             id = PIPELINE_VIEW_FAVORITE_PIPELINES,
-                            name = MessageCodeUtil.getCodeLanMessage(FAVORITE_PIPELINES_LABEL)
+                            name = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.FAVORITE_PIPELINES_LABEL)
                         ),
                         PipelineViewIdAndName(
                             id = PIPELINE_VIEW_MY_PIPELINES,
-                            name = MessageCodeUtil.getCodeLanMessage(MY_PIPELINES_LABEL)
+                            name = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.MY_PIPELINES_LABEL)
                         ),
                         PipelineViewIdAndName(
                             id = PIPELINE_VIEW_ALL_PIPELINES,
-                            name = MessageCodeUtil.getCodeLanMessage(ALL_PIPELINES_LABEL)
+                            name = MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.ALL_PIPELINES_LABEL)
                         )
                     )
                 )
@@ -255,8 +238,8 @@ class PipelineViewService @Autowired constructor(
     }
 
     fun updateViewSettings(userId: String, projectId: String, viewIdList: List<String>) {
-        if (viewIdList.size > 7) {
-            throw ErrorCodeException(errorCode = ERROR_PIPELINE_VIEW_MAX_LIMIT)
+        if (viewIdList.size > 30) {
+            throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_VIEW_MAX_LIMIT)
         }
 
         val projectViewRecordList = pipelineViewDao.list(dslContext, projectId)
@@ -268,7 +251,10 @@ class PipelineViewService @Autowired constructor(
             }
             if (!projectViewIdList.contains(decode(viewId))) {
                 logger.warn("[$projectId]| Pipeline view($viewId) not exist")
-                throw ErrorCodeException(errorCode = ERROR_PIPELINE_VIEW_NOT_FOUND, params = arrayOf(viewId))
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_VIEW_NOT_FOUND,
+                    params = arrayOf(viewId)
+                )
             }
         }
 
@@ -312,7 +298,10 @@ class PipelineViewService @Autowired constructor(
 
     fun getView(userId: String, projectId: String, viewId: String): PipelineNewView {
         val viewRecord = pipelineViewDao.get(dslContext = dslContext, viewId = decode(viewId))
-            ?: throw ErrorCodeException(errorCode = ERROR_PIPELINE_VIEW_NOT_FOUND, params = arrayOf(viewId))
+            ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_VIEW_NOT_FOUND,
+                params = arrayOf(viewId)
+            )
 
         val filters =
             getFilters(
@@ -354,7 +343,7 @@ class PipelineViewService @Autowired constructor(
         } catch (t: DuplicateKeyException) {
             logger.warn("Fail to create the pipeline $pipelineView by userId")
             throw throw ErrorCodeException(
-                errorCode = ERROR_PIPELINE_VIEW_HAD_EXISTS,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_VIEW_HAD_EXISTS,
                 params = arrayOf(pipelineView.name)
             )
         }
@@ -363,12 +352,15 @@ class PipelineViewService @Autowired constructor(
     fun deleteView(userId: String, projectId: String, viewId: String): Boolean {
         val id = decode(viewId)
         val viewRecord = pipelineViewDao.get(dslContext, decode(viewId))
-            ?: throw ErrorCodeException(errorCode = ERROR_PIPELINE_VIEW_NOT_FOUND, params = arrayOf(viewId))
+            ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_VIEW_NOT_FOUND,
+                params = arrayOf(viewId)
+            )
         val isUserManager = isUserManager(userId, projectId)
 
         if (!(userId == viewRecord.createUser || (viewRecord.isProject && isUserManager))) {
             throw ErrorCodeException(
-                errorCode = ERROR_DEL_PIPELINE_VIEW_NO_PERM,
+                errorCode = ProcessMessageCode.ERROR_DEL_PIPELINE_VIEW_NO_PERM,
                 params = arrayOf(userId, viewId)
             )
         }
@@ -383,12 +375,15 @@ class PipelineViewService @Autowired constructor(
     fun updateView(userId: String, projectId: String, viewId: String, pipelineView: PipelineNewViewUpdate): Boolean {
         val id = decode(viewId)
         val viewRecord = pipelineViewDao.get(dslContext = dslContext, viewId = decode(viewId))
-            ?: throw ErrorCodeException(errorCode = ERROR_PIPELINE_VIEW_NOT_FOUND, params = arrayOf(viewId))
+            ?: throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_VIEW_NOT_FOUND,
+                params = arrayOf(viewId)
+            )
         val isUserManager = isUserManager(userId = userId, projectId = projectId)
 
         if (!(userId == viewRecord.createUser || (viewRecord.isProject && isUserManager))) {
             throw ErrorCodeException(
-                errorCode = ERROR_EDIT_PIPELINE_VIEW_NO_PERM,
+                errorCode = ProcessMessageCode.ERROR_EDIT_PIPELINE_VIEW_NO_PERM,
                 params = arrayOf(userId, viewId)
             )
         }
@@ -413,13 +408,14 @@ class PipelineViewService @Autowired constructor(
         } catch (t: DuplicateKeyException) {
             logger.warn("Fail to update the pipeline $pipelineView by userId")
             throw throw ErrorCodeException(
-                errorCode = ERROR_PIPELINE_VIEW_HAD_EXISTS,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_VIEW_HAD_EXISTS,
                 params = arrayOf(pipelineView.name)
             )
         }
     }
 
-    fun getFilters(pipelineNewView: PipelineNewView): Triple<List<PipelineViewFilterByName>, List<PipelineViewFilterByCreator>, List<PipelineViewFilterByLabel>> {
+    fun getFilters(pipelineNewView: PipelineNewView):
+        Triple<List<PipelineViewFilterByName>, List<PipelineViewFilterByCreator>, List<PipelineViewFilterByLabel>> {
         val filterByNames = mutableListOf<PipelineViewFilterByName>()
         val filterByCreators = mutableListOf<PipelineViewFilterByCreator>()
         val filterByLabels = mutableListOf<PipelineViewFilterByLabel>()
@@ -494,11 +490,13 @@ class PipelineViewService @Autowired constructor(
 
     private fun getSystemViewName(viewId: String): String {
         return when (viewId) {
-            PIPELINE_VIEW_FAVORITE_PIPELINES -> MessageCodeUtil.getCodeLanMessage(FAVORITE_PIPELINES_LABEL)
-            PIPELINE_VIEW_MY_PIPELINES -> MessageCodeUtil.getCodeLanMessage(MY_PIPELINES_LABEL)
-            PIPELINE_VIEW_ALL_PIPELINES -> MessageCodeUtil.getCodeLanMessage(ALL_PIPELINES_LABEL)
+            PIPELINE_VIEW_FAVORITE_PIPELINES -> {
+                MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.FAVORITE_PIPELINES_LABEL)
+            }
+            PIPELINE_VIEW_MY_PIPELINES -> MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.MY_PIPELINES_LABEL)
+            PIPELINE_VIEW_ALL_PIPELINES -> MessageCodeUtil.getCodeLanMessage(ProcessMessageCode.ALL_PIPELINES_LABEL)
             else -> throw ErrorCodeException(
-                errorCode = ERROR_PIPELINE_VIEW_NOT_FOUND, params = arrayOf(viewId)
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_VIEW_NOT_FOUND, params = arrayOf(viewId)
             )
         }
     }

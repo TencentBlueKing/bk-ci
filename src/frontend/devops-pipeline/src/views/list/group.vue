@@ -7,44 +7,73 @@
             }">
             <div class="group-list-wrapper">
                 <section v-show="showContent" :class="['group-list-content','clearfix',{ 'group-list-center': hasGroup }]">
+                  
+                    <div class="group-list-hint" v-if="tagGroupList.length > 0">
+                        <logo size="12" name="warning-circle" />
+                        <span>注意：最多可添加 10 个标签组；同一分组下最多可添加 12 个标签</span>
+                    </div>
                     <div class="group-list-cards"
                         v-for="(group, groupIndex) in tagGroupList" :key="groupIndex"
                         v-bkloading="{ isLoading: loading.isLoading }">
                         <div class="group-list-title">
-                            <span class="title-text">{{group.name}}</span>
-                            <bk-popover placement="bottom" class="group-list-edit" theme="light">
-                                <span class="devops-icon icon-more"></span>
-                                <div class="group-operate-container" slot="content">
-                                    <p class="entry-link" @click="showDialog($event, groupIndex)">{{ $t('rename') }}</p>
-                                    <p class="entry-link" @click="deleteGroup(groupIndex)">{{ $t('delete') }}</p>
-                                </div>
-                            </bk-popover>
+                            <div class="title-text">
+                                <span>
+                                    <b style="margin-right: 8px">{{ groupIndex + 1 }}</b>
+                                    <span v-show="groupIndex !== isShowInputIndex">{{ group.name }}</span>
+                                </span>
+                                <span v-if="groupIndex !== isShowInputIndex">
+                                    <span>
+                                        <a class="entry-link" @click="showInput(groupIndex, group.name)">{{ $t('rename') }}</a>
+                                        <a class="entry-link" @click="deleteGroup(groupIndex)">{{ $t('delete') }}</a>
+                                    </span>
+                                </span>
+                                <span v-else class="group-title-input">
+                                    <span class="bk-form-content">
+                                        <input
+                                            ref="labelInput"
+                                            type="text"
+                                            class="bk-form-input"
+                                            style="width: 95%; margin-right: 10px;"
+                                            :placeholder="$t('group.groupInputTips')"
+                                            v-model="labelValue"
+                                            name="groupName"
+                                            @blur="labelInputBlur(groupIndex, group.name)"
+                                            @keyup.enter="handleSave(groupIndex)"
+                                            maxlength="20"
+                                            id="changeGroup" />
+                                    </span>
+                                    <span>
+                                        <a class="entry-link" @click="handleSave(groupIndex)">{{ $t('save') }}</a>
+                                        <a class="entry-link" @click="handleCancel(groupIndex, group.name)">{{ $t('cancel') }}</a>
+                                    </span>
+                                    <div :class="errors.has('groupName') ? 'error-tips' : 'normal-tips'">{{ errors.first("groupName") }}</div>
+                                </span>
+                            </div>
                         </div>
 
                         <div :class="['group-card', { 'active': active.isActiveGroup === 's' + groupIndex + tagIndex }, { 'showTips': active.isActiveToops === ('s' + groupIndex + tagIndex) }, { 'group-edit': (active.isGroupEdit === 's' + groupIndex + tagIndex) }]"
                             v-for="(item, tagIndex) in group.labels" :key="tagIndex"
                             @mouseleave="inputMouseLeave">
                             <div class="group-card-title">
-                                <span class="tag-text">{{item.name}}</span>
-                                <input type="text" class="tag-input"
+                                <span class="tag-text">{{ item.name }}</span>
+                                <input
+                                    ref="tagInput"
+                                    type="text"
+                                    class="tag-input"
                                     v-model="tagValue"
                                     v-focus="isFocus(groupIndex, tagIndex)"
-                                    maxlength="20"
-                                    @blur="inputBlur($event, groupIndex, tagIndex)"
+                                    maxlength="10"
+                                    @blur="tagInputBlur($event, groupIndex, tagIndex)"
                                     @keyup.enter="tagModify(groupIndex, tagIndex)"
                                     :placeholder="$t('group.labelLimitTips')">
                             </div>
                             <div class="group-card-tools">
-                                <i class="devops-icon icon-edit2 group-card-icon" @click="tagEdit($event, groupIndex, tagIndex)"></i>
-                                <bk-popover ref="toolsConfigRef" placement="top" trigger="click">
-                                    <span class="tools-ele group-card-icon devops-icon icon-close" @click="toggleTools(groupIndex, tagIndex)">
-                                    </span>
-                                    <div slot="content" class="tools-config-tooltip">
-                                        <a class="confirm" @click.stop="tagRemove(groupIndex, tagIndex)">{{ $t('confirm') }}</a>
-                                        <span></span>
-                                        <a class="cancel" @click.stop="hideTools">{{ $t('cancel') }}</a>
-                                    </div>
-                                </bk-popover>
+                                <i class="devops-icon icon-edit2 group-card-icon" v-bk-tooltips="toolTips.rename" @click="tagEdit($event, groupIndex, tagIndex)"></i>
+                                <i class="group-card-icon devops-icon icon-delete" v-bk-tooltips="toolTips.delete" @click="tagRemove(groupIndex, tagIndex)"></i>
+                            </div>
+                            <div v-show="active.isGroupEdit" class="group-card-edit-tools">
+                                <i class="devops-icon icon-check-1 group-card-edit-icon" v-bk-tooltips="toolTips.save" @click="tagSave(groupIndex, tagIndex)"></i>
+                                <i class="devops-icon icon-close group-card-edit-icon" v-bk-tooltips="toolTips.cancel" @click="tagCancel($event, groupIndex, tagIndex)"></i>
                             </div>
                         </div>
 
@@ -52,19 +81,15 @@
                             size="normal"
                             icon="devops-icon icon-plus"
                             class="group-card-add"
-                            v-if="group.labels.length < 10"
+                            v-if="group.labels.length < 12"
                             @click="tagAdd($event, groupIndex)"
                             :disabled="btnIsdisable"
                         >
                             {{ $t('group.addLabel') }}
                         </bk-button>
-                        <bk-button v-else class="group-card-add" size="normal" :disabled="true">
-                            {{ $t('group.labelLimitTips') }}
-                        </bk-button>
                     </div>
 
                     <div class="group-list-cards" v-if="isShowGroupBtn()">
-                        <h3 class="group-list-title"></h3>
                         <bk-button size="large" icon="devops-icon icon-plus" class="group-list-creat"
                             :disabled="btnIsdisable"
                             @click="showDialog"
@@ -121,8 +146,9 @@
 
 <script>
     import { mapGetters } from 'vuex'
+    import Logo from '@/components/Logo'
     import imgemptyTips from '@/components/pipelineList/imgEmptyTips'
-    import { navConfirm } from '@/utils/util'
+    // import { navConfirm } from '@/utils/util'
 
     export default {
         directives: {
@@ -133,7 +159,8 @@
             }
         },
         components: {
-            'empty-tips': imgemptyTips
+            'empty-tips': imgemptyTips,
+            'logo': Logo
         },
         data () {
             return {
@@ -159,13 +186,32 @@
                     padding: 20
                 },
                 tagValue: '',
+                tagOriginalValue: '',
+                labelValue: '',
                 btnIsdisable: false,
                 isAddTagEnter: false,
+                isShowInputIndex: -1,
                 active: {
                     isActiveToops: false,
                     oldActiveToops: 'xxx',
                     isGroupEdit: false,
                     isActiveGroup: false
+                },
+                addTagGroupIndex: null,
+                addTagIndex: null,
+                toolTips: {
+                    rename: {
+                        content: '重命名'
+                    },
+                    delete: {
+                        content: '删除'
+                    },
+                    save: {
+                        content: '保存'
+                    },
+                    cancel: {
+                        content: '取消'
+                    }
                 }
             }
         },
@@ -189,7 +235,7 @@
         },
         methods: {
             isShowGroupBtn () {
-                if (this.tagGroupList.length > 0 && this.tagGroupList.length < 3) {
+                if (this.tagGroupList.length > 0 && this.tagGroupList.length < 10) {
                     let boolean = true
                     this.tagGroupList.forEach((item, index) => {
                         if (!item.labels.length) {
@@ -221,21 +267,78 @@
             addClickListenr () {
                 document.addEventListener('mouseup', this.clickHandler)
             },
+            labelInputBlur (groupIndex, val) {
+                if (this.$refs.labelInput.length) {
+                    this.$refs.labelInput[0].focus()
+                }
+            },
+            handleCancel (groupIndex, val) {
+                // this.resetTag()
+                this.btnIsdisable = false
+                this.labelValue = val
+                this.isShowInputIndex = -1
+            },
+            async handleSave (groupIndex) {
+                this.btnIsdisable = false
+
+                const { $store } = this
+                const params = {
+                    projectId: this.projectId,
+                    name: this.labelValue
+                }
+                
+                let theme, message
+
+                if (!params.name.length) {
+                    const valid = await this.$validator.validate()
+                    
+                    if (!valid) {
+                        return false
+                    }
+                }
+                try {
+                    params.id = this.tagGroupList[groupIndex].id
+                    await $store.dispatch('pipelines/modifyGroup', params).then(res => {
+                        if (res) $store.commit('pipelines/modifyTagGroupById', params)
+                        message = res ? '标签组名称保存成功。' : '标签组名称保存失败。'
+                        theme = res ? 'success' : 'error'
+                    })
+                    this.$bkMessage({
+                        message,
+                        theme
+                    })
+                } catch (err) {
+                    this.errShowTips(err)
+                }
+                this.isShowInputIndex = -1
+            },
+
+            showInput (index, val) {
+                this.resetTag()
+                this.active.isGroupEdit = false
+                this.labelValue = val
+                this.isShowInputIndex = index
+                this.btnIsdisable = true
+                this.$nextTick(function () {
+                    document.getElementById('changeGroup').focus()
+                })
+            },
 
             showDialog (event, groupIndex) {
                 const setting = {
                     isShow: true
                 }
-                if (groupIndex || groupIndex === 0) {
-                    setting.title = this.$t('rename')
-                    setting.groupIndex = groupIndex
-                    setting.value = this.tagGroupList[groupIndex].name
-                } else {
-                    setting.title = this.$t('group.addGroup')
-                    setting.groupIndex = null
-                    setting.value = ''
-                }
+                // if (groupIndex || groupIndex === 0) {
+                //     setting.title = this.$t('rename')
+                //     setting.groupIndex = groupIndex
+                //     setting.value = this.tagGroupList[groupIndex].name
+                // } else {
+                setting.title = this.$t('group.addGroup')
+                setting.groupIndex = null
+                setting.value = ''
+                // }
                 this.groupSetting = Object.assign({}, this.groupSetting, setting)
+
                 this.$nextTick(function () {
                     document.getElementById('newGroup').focus()
                 })
@@ -271,33 +374,78 @@
             },
             deleteGroup (groupIndex) {
                 // const name = this.tagGroupList[groupIndex].name
+                // const content = this.$t('deleteReason')
+                // navConfirm({ type: 'warning', content })
+                //     .then(async () => {
+                //         try {
+                //             await $store.dispatch('pipelines/deleteGroup', {
+                //                 groupId: this.tagGroupList[groupIndex].id
+                //             }).then(res => {
+                //                 if (res) {
+                //                     $store.commit('pipelines/removeTagGroupById', {
+                //                         groupId: this.tagGroupList[groupIndex].id
+                //                     })
+                //                 }
+                //             })
+                //         } catch (err) {
+                //             this.errShowTips(err)
+                //         }
+                //     }).catch(() => {})
+
+                this.addTagIndex = null
+                this.addTagGroupIndex = null
+                this.btnIsdisable = false
+                this.resetTag()
                 const { $store } = this
-                const content = this.$t('group.deleteReason')
-                navConfirm({ type: 'warning', content })
-                    .then(async () => {
+
+                let theme, message
+
+                this.$bkInfo({
+                    title: '确认删除该标签组?',
+                    confirmFn: async () => {
                         try {
                             await $store.dispatch('pipelines/deleteGroup', {
                                 groupId: this.tagGroupList[groupIndex].id
                             }).then(res => {
+                                theme = res ? 'success' : 'error'
+                                message = res ? '删除标签组成功。' : '删除标签组失败。'
                                 if (res) {
                                     $store.commit('pipelines/removeTagGroupById', {
                                         groupId: this.tagGroupList[groupIndex].id
                                     })
                                 }
+                                this.$bkMessage({
+                                    message,
+                                    theme
+                                })
                             })
                         } catch (err) {
                             this.errShowTips(err)
                         }
-                    }).catch(() => {})
+                    }
+                })
             },
 
             tagRemove (groupIndex, tagIndex) { // 标签删除
-                this.REQUEST('deleteTag', {
-                    labelId: this.tagGroupList[groupIndex].labels[tagIndex].id
+                this.resetTag()
+                this.active.isGroupEdit = false
+                this.addTagGroupIndex = null
+                this.addTagIndex = null
+
+                this.$bkInfo({
+                    title: '确认删除该标签?',
+                    confirmFn: () => {
+                        this.REQUEST('deleteTag', {
+                            labelId: this.tagGroupList[groupIndex].labels[tagIndex].id
+                        })
+                    }
                 })
-                if (this.toolsConfigInstance) {
-                    this.toolsConfigInstance.hide()
-                }
+                // this.REQUEST('deleteTag', {
+                //     labelId: this.tagGroupList[groupIndex].labels[tagIndex].id
+                // })
+                // if (this.toolsConfigInstance) {
+                //     this.toolsConfigInstance.hide()
+                // }
             },
             toggleTools (groupIndex, tagIndex) { // 删除提示toggle
                 const active = this.active
@@ -319,7 +467,12 @@
             },
 
             tagEdit (e, groupIndex, tagIndex) {
+                this.resetTag()
+                this.handleCancel()
                 const tagList = this.tagGroupList[groupIndex].labels
+                this.tagOriginalValue = tagList[tagIndex].name
+                this.tagOriginalGroupIndex = groupIndex
+                this.tagOriginalTagIndex = tagIndex
                 if ((groupIndex || groupIndex === 0) && (tagIndex || tagIndex === 0)) {
                     this.tagValue = tagList[tagIndex].name
                 }
@@ -330,10 +483,18 @@
                     el.lastElementChild.focus()
                     this.btnIsdisable = true
                 })
+                this.addTagGroupIndex = null
+                this.addTagIndex = null
             },
 
             tagAdd (e, groupIndex) {
+                this.resetTag()
+                this.isShowInputIndex = -1
+                this.tagOriginalGroupIndex = null
+                this.tagOriginalTagIndex = null
                 const group = this.tagGroupList[groupIndex]
+                this.addTagGroupIndex = groupIndex
+                this.addTagIndex = group.labels.length
                 this.tagValue = ''
                 this.btnIsdisable = true
                 this.$store.commit('pipelines/resetTag', {
@@ -342,10 +503,35 @@
                 })
                 this.active.isGroupEdit = 's' + groupIndex + (group.labels.length - 1)
             },
+            tagSave (groupIndex, tagIndex) {
+                this.addTagGroupIndex = groupIndex
+                this.addTagIndex = tagIndex
+                this.tagModify(groupIndex, tagIndex)
+            },
+            tagCancel (e, groupIndex, tagIndex) {
+                const group = this.tagGroupList[groupIndex]
+                if (this.tagOriginalValue) group.labels[tagIndex].name = this.tagOriginalValue
+                this.btnIsdisable = false
+                this.active.isGroupEdit = false
+                if (!group.labels[tagIndex].id) {
+                    if (!this.isAddTagEnter) {
+                        this.$store.commit('pipelines/resetTag', {
+                            groupIndex: groupIndex,
+                            boolean: false
+                        })
+                    }
+                }
+                this.addTagGroupIndex = null
+                this.addTagIndex = null
+                this.active.isGroupEdit = false
+                this.isAddTagEnter = false
+                this.requestGrouptLists()
+            },
             async tagModify (groupIndex, tagIndex) { // 标签input回车
                 const { $store } = this
                 const group = this.tagGroupList[groupIndex]
                 let path, params
+                this.tagOriginalValue = group.labels[tagIndex].name
                 this.isAddTagEnter = false
                 if (this.tagValue) {
                     // ajax提交数据操作
@@ -369,25 +555,37 @@
                     this.REQUEST(path, params, () => {
                         this.reset(groupIndex, tagIndex)
                     })
-                    this.btnIsdisable = false
                     return false
                 } else {
                     return false
                 }
             },
-            inputBlur (e, groupIndex, tagIndex) {
-                const group = this.tagGroupList[groupIndex]
-                this.btnIsdisable = false
-                this.active.isGroupEdit = false
-                if (!group.labels[tagIndex].id) {
-                    if (!this.isAddTagEnter) {
+            resetTag () {
+                if (typeof this.addTagGroupIndex === 'number' && this.addTagGroupIndex !== null && this.addTagIndex !== null) {
+                    const group = this.tagGroupList[this.addTagGroupIndex]
+                    this.btnIsdisable = false
+                    this.active.isGroupEdit = false
+                    if (!group.labels[this.addTagIndex].hasOwnProperty('groupId')) {
                         this.$store.commit('pipelines/resetTag', {
-                            groupIndex: groupIndex,
+                            groupIndex: this.addTagGroupIndex,
                             boolean: false
                         })
                     }
+                    this.isAddTagEnter = false
                 }
-                this.isAddTagEnter = false
+                this.addTagGroupIndex = null
+                this.addTagIndex = null
+            },
+            tagInputBlur (e, groupIndex, tagIndex) {
+                let newTagIndex = tagIndex
+                if (groupIndex) {
+                    for (let index = 0; index < groupIndex; index++) {
+                        newTagIndex += this.tagGroupList[index].labels.length
+                    }
+                }
+                if (this.$refs.tagInput[newTagIndex]) {
+                    this.$refs.tagInput[newTagIndex].focus()
+                }
             },
             inputMouseLeave () {
                 this.active.isActiveGroup = false
@@ -417,17 +615,39 @@
                 })
             },
             async REQUEST (method, params, call) {
+                // method
+                // modifyTag 修改标签
+                // deleteTag 删除标签
+                // addTag 新增标签
+                // addGroup 新增标签组
                 const { $store } = this
+                let theme, message
+
                 try {
                     const res = await $store.dispatch('pipelines/' + method, params)
                     if (res) {
                         this.requestGrouptLists()
+                        theme = res ? 'success' : 'error'
+                        if (method === 'modifyTag') message = res ? '标签名称保存成功。' : '标签名称保存失败。'
+                        if (method === 'deleteTag') message = res ? '删除标签成功。' : '删除标签失败。'
+                        if (method === 'addTag') message = res ? '新增标签成功。' : '新增标签失败。'
+                        if (method === 'addGroup') message = res ? '新增标签组成功。' : '新增标签组失败。'
                         if (call) {
                             call()
                         }
                     }
+                    this.btnIsdisable = false
+                    if (!this.btnIsdisable) {
+                        this.$bkMessage({
+                            theme,
+                            message
+                        })
+                    }
                 } catch (err) {
                     this.errShowTips(err)
+                    if (this.tagOriginalGroupIndex && this.tagOriginalTagIndex) {
+                        this.tagGroupList[this.tagOriginalGroupIndex].labels[this.tagOriginalTagIndex].name = this.tagOriginalValue
+                    }
                 }
             }
         }
@@ -447,7 +667,7 @@
         top: 0;
     }
     .group-card {
-        width: 314px;
+        width: 389px;
         height: 54px;
         line-height: 54px;
         margin-bottom: 5px;
@@ -504,8 +724,14 @@
                 }
             }
         }
+        &-hint {
+            font-size: 12px;
+            color: #979BA5;
+        }
         &-content {
-            width: 1002px;
+            width: 1700px;
+            // display: flex;
+            // flex-wrap: wrap;
             margin: 0 auto;
             padding-top: 16px;
             transform: translateX(10px)
@@ -514,9 +740,12 @@
             transform: translateX(0);
         }
         &-cards {
-            float: left;
-            width: 314px;
-            margin: 0 20px 15px 0;
+            display: flex;
+            flex-wrap: wrap;
+            width: 100%;
+            background-color: #FFF;
+            padding: 24px;
+            margin: 10px 0 20px;
             .bk-button {
                 &:hover {
                     border: 1px solid $iconPrimaryColor
@@ -537,7 +766,7 @@
                 text-overflow: ellipsis;
                 white-space: nowrap;
                 .tag-text {
-                        display: inline
+                    display: inline
                 }
                 .tag-input {
                     display: none;
@@ -550,7 +779,8 @@
                     }
                 }
             }
-            .group-card-tools {
+            .group-card-tools,
+            .group-card-edit-tools {
                 display: none;
                 position: absolute;
                 top: 21px;
@@ -561,10 +791,11 @@
                     font-size: 10px;
                     color: $fontLigtherColor;
                 }
-                .group-card-icon {
+                .group-card-icon,
+                .group-card-edit-icon {
                     position: relative;
                     display: inline-block;
-                    margin-left: 7px;
+                    margin-left: 10px;
                     padding: 3px;
                     -webkit-user-select: none;
                     &.active {
@@ -581,6 +812,7 @@
             .group-card {
                 position: relative;
                 background: #fff;
+                margin-right: 24px;
                 cursor: default;
                 /* normal */
                 &:hover {
@@ -608,11 +840,17 @@
                     .group-card-tools {
                         display: none;
                     }
+                    .group-card-edit-tools {
+                        display: inline;
+                    }
                 }
                 /** showTips **/
                 &.showTips {
                     .group-card-title{
                         padding-right: 56px;
+                    }
+                    .group-card-edit-tools {
+                        display: none;
                     }
                     .group-card-tools {
                         display: inline;
@@ -625,6 +863,12 @@
                     .group-card-tools {
                         display: none;
                     }
+                    .group-card-edit-tools {
+                        display: inline;
+                        .tips-content {
+                            display: block;
+                        }
+                    }
                     .group-card-title{
                         border: 1px solid $borderWeightColor;
                     }
@@ -632,7 +876,7 @@
             }
 
             .group-card-add {
-                width: 100%;
+                width: 389px;
                 height: 54px;
                 line-height: 54px;
                 border: 1px dashed $borderWeightColor;
@@ -640,8 +884,8 @@
             }
             .group-list-creat {
                 width: 100%;
-                height: 113px;
-                line-height: 113px;
+                height: 54px;
+                line-height: 54px;
                 border: 1px dashed $borderWeightColor;
                 background: $bgHoverColor;
             }
@@ -649,19 +893,23 @@
         &-title {
             position: relative;
             display: inline-block;
-            max-width: 100%;
+            width: 100%;
             padding-right: 20px;
-            height: 24px;
-            line-height: 24px;
-            margin: 0 0 13px;
+            line-height: 32px;
+            margin: 0 0 10px;
             color: #333C48;
-            font-size: 18px;
+            font-size: 14px;
             .title-text {
-                display: inline-block;
+                display: flex;
+                justify-content: space-between;
                 width: 100%;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
+            }
+            .group-title-input {
+                flex: 1;
+                margin-left: 5px;
             }
             .bk-tooltip {
                 position: absolute;
@@ -689,22 +937,10 @@
             }
         }
     }
-    .group-operate-container {
-        .entry-link {
-            padding: 5px 3px;
-            font-size: 14px;
-            cursor: pointer;
-            color: $fontWeightColor;
-            > a {
-                color: $fontWeightColor;
-            }
-            &:hover {
-                color: $primaryColor;
-                > a {
-                    color: $primaryColor;
-                }
-            }
-        }
+    .entry-link {
+        color: #699DF4;
+        font-size: 14px;
+        cursor: pointer;
     }
 
     .tools-config-tooltip {

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -38,15 +39,20 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxCodeCCScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
+import com.tencent.devops.plugin.codecc.pojo.CodeccMeasureInfo
 import com.tencent.devops.plugin.codecc.pojo.coverity.CodeccReport
 import com.tencent.devops.plugin.codecc.pojo.coverity.CoverityResult
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
+import java.net.URLEncoder
+import javax.ws.rs.HttpMethod
 
+@Suppress("ALL")
 open class CodeccApi constructor(
     private val codeccApiUrl: String,
+    private val codeccApiProxyUrl: String,
     private val createPath: String = "/ms/task/api/service/task",
     private val updatePath: String = "/ms/task/api/service/task",
     private val existPath: String = "/ms/task/api/service/task/exists",
@@ -60,6 +66,8 @@ open class CodeccApi constructor(
         private val logger = LoggerFactory.getLogger(CodeccApi::class.java)
         private const val USER_NAME_HEADER = "X-DEVOPS-UID"
         private const val DEVOPS_PROJECT_ID = "X-DEVOPS-PROJECT-ID"
+        private const val DEVOPS_TASK_ID = "X-DEVOPS-TASK-ID"
+        private const val COMMIT_ID = "commitId"
         private const val CONTENT_TYPE = "Content-Type"
         private const val CONTENT_TYPE_JSON = "application/json"
     }
@@ -197,9 +205,8 @@ open class CodeccApi constructor(
             MediaType.parse("application/json; charset=utf-8"), jsonBody
         )
 
-        logger.info("taskExecution url: ${codeccApiUrl + path}")
         val builder = Request.Builder()
-            .url(codeccApiUrl + path)
+            .url(getExecUrl(path))
 
         when (method) {
             "GET" -> {
@@ -226,7 +233,6 @@ open class CodeccApi constructor(
         OkhttpUtils.doHttp(request).use { response ->
             val responseBody = response.body()!!.string()
             if (!response.isSuccessful) {
-                logger.warn("Fail to execute($path) task($body) because of ${response.message()} with response: $responseBody")
                 throw RemoteServiceException("Fail to invoke codecc request")
             }
             logger.info("Get the task response body - $responseBody")
@@ -234,11 +240,21 @@ open class CodeccApi constructor(
         }
     }
 
+    fun getExecUrl(path: String): String {
+        val execUrl = if (codeccApiProxyUrl.isBlank()) {
+            codeccApiUrl + path
+        } else {
+            "$codeccApiProxyUrl?url=${URLEncoder.encode(codeccApiUrl + path, "UTF-8")}"
+        }
+        logger.info("taskExecution url: $execUrl")
+        return execUrl
+    }
+
     private fun getCodeccResult(responseBody: String): CoverityResult {
         val result = objectMapper.readValue<CoverityResult>(responseBody)
         if (result.code != "0" || result.status != 0) throw TaskExecuteException(
-            errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
-            errorType = ErrorType.SYSTEM,
+            errorType = ErrorType.USER,
+            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
             errorMsg = "execute codecc task fail"
         )
         return result
@@ -278,8 +294,8 @@ open class CodeccApi constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to get the codecc report of ($projectId|$pipelineId)", ignored)
             throw TaskExecuteException(
-                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
-                errorType = ErrorType.SYSTEM,
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                 errorMsg = "获取CodeCC报告失败"
             )
         }
@@ -312,6 +328,56 @@ open class CodeccApi constructor(
             path = "/ms/defect/api/service/checkerSet/$checkerSetId/relationships",
             headers = headers,
             method = "POST"
+        )
+        return objectMapper.readValue(result)
+    }
+
+    private fun generateCodeccHeaders(
+        repoId: String,
+        buildId: String?
+    ): MutableMap<String, String> {
+        val headers = mutableMapOf("repoId" to repoId)
+        headers[CONTENT_TYPE] = CONTENT_TYPE_JSON
+        if (null != buildId) headers["buildId"] = buildId
+        return headers
+    }
+
+    fun getCodeccMeasureInfo(repoId: String, buildId: String? = null): Result<CodeccMeasureInfo?> {
+        val result = taskExecution(
+            body = mapOf(),
+            headers = generateCodeccHeaders(repoId, buildId),
+            path = "/ms/defect/api/service/defect/repo/measurement",
+            method = HttpMethod.GET
+        )
+        return objectMapper.readValue(result)
+    }
+
+    fun getCodeccTaskStatusInfo(repoId: String, buildId: String? = null): Result<Int> {
+        val result = taskExecution(
+            body = mapOf(),
+            headers = generateCodeccHeaders(repoId, buildId),
+            path = "/ms/task/api/service/task/repo/status",
+            method = HttpMethod.GET
+        )
+        return objectMapper.readValue(result)
+    }
+
+    fun startCodeccTask(repoId: String, commitId: String? = null): Result<String> {
+        val result = taskExecution(
+            body = mapOf(),
+            path = "/ms/task/api/service/openScan/trigger/repo",
+            headers = generateCodeccHeaders(repoId, commitId),
+            method = HttpMethod.POST
+        )
+        return objectMapper.readValue(result)
+    }
+
+    fun createCodeccPipeline(repoId: String, languages: List<String>): Result<Boolean> {
+        val result = taskExecution(
+            body = mapOf("langs" to languages),
+            path = "/ms/task/api/service/task/repo/create",
+            headers = generateCodeccHeaders(repoId, null),
+            method = HttpMethod.POST
         )
         return objectMapper.readValue(result)
     }

@@ -55,7 +55,7 @@
                     <div class="command-line">
                         1.<a class="refresh-detail" :href="constructImportForm.link">{{ $t('environment.click') }}</a>{{ $t('environment.download') }}Agent
                         <br>
-                        2.{{ $t('environment.check') }}【<a class="refresh-detail" target="_blank" :href="installDocsLink">{{ $t('environment.nodeInfo.installBuildMachineTips') }}Agent</a>】
+                        2.{{ $t('environment.check') }}【<a class="refresh-detail" target="_blank" :href="installDocsLink">{{ $t('environment.nodeInfo.installBuildMachineTips') }}</a>】
                     </div>
                 </div>
                 <p class="handler-prompt">{{ $t('environment.nodeInfo.connectedNodes') }}</p>
@@ -125,7 +125,7 @@
         data () {
             return {
                 defaultMachineCover: require('../../../scss/logo/machine.svg'),
-                installDocsLink: `${DOCS_URL_PREFIX}/${this.$t('allService')}/${this.$t('environment.environmentManage')}/${this.$t('environment.nodeInfo.installBuildMachineTips')}Agent.html`
+                installDocsLink: `${DOCS_URL_PREFIX}/document/6.0/129/7519`
             }
         },
         methods: {

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -26,7 +27,30 @@
 
 package com.tencent.devops.common.api.pojo
 
-enum class ErrorType(val statusName: String, val visiable: Boolean) {
-    SYSTEM("系统运行错误", true), // 0 平台运行报错
-    USER("业务逻辑错误", true) // 1 任务执行报错
+enum class ErrorType(val typeName: String, val num: Int) {
+    SYSTEM("系统运行错误", 0), // 0 系统运行报错
+    USER("用户配置错误", 1), // 1 用户配置报错
+    THIRD_PARTY("第三方系统错误", 2), // 2 第三方系统接入错误
+    PLUGIN("插件执行错误", 3); // 3 插件执行错误
+
+    companion object {
+
+        fun getErrorType(name: String): ErrorType? {
+            values().forEach { enumObj ->
+                if (enumObj.name == name) {
+                    return enumObj
+                }
+            }
+            return null
+        }
+
+        fun getErrorType(ordinal: Int?): ErrorType {
+            return when (ordinal) {
+                0 -> SYSTEM
+                1 -> USER
+                2 -> THIRD_PARTY
+                else -> PLUGIN
+            }
+        }
+    }
 }

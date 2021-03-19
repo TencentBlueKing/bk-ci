@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -34,7 +35,8 @@ import io.jsonwebtoken.Jwts
 import io.jsonwebtoken.SignatureAlgorithm
 import org.jolokia.util.Base64Util
 import org.slf4j.LoggerFactory
-import org.springframework.scheduling.annotation.Scheduled
+import org.springframework.scheduling.annotation.SchedulingConfigurer
+import org.springframework.scheduling.config.ScheduledTaskRegistrar
 import java.net.InetAddress
 import java.security.KeyFactory
 import java.security.PrivateKey
@@ -49,7 +51,7 @@ class JwtManager(
     private val privateKeyString: String?,
     private val publicKeyString: String?,
     private val enable: Boolean
-) {
+) : SchedulingConfigurer {
     private var token: String? = null
     private val publicKey: PublicKey?
     private val privateKey: PrivateKey?
@@ -120,9 +122,17 @@ class JwtManager(
         return true
     }
 
-    @Scheduled(fixedDelay = 5 * 60 * 1000)
+    override fun configureTasks(taskRegistrar: ScheduledTaskRegistrar?) {
+        if (isAuthEnable()) {
+            taskRegistrar?.addFixedDelayTask(
+                this@JwtManager::refreshToken,
+                5 * 60 * 1000
+            )
+        }
+    }
+
     fun refreshToken() {
-        logger.info("Refresh token")
+        logger.info("Refresh service jwt token")
         generateToken()
     }
 

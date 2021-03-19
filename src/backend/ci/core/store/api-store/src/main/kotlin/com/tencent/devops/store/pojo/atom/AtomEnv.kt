@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -26,6 +27,7 @@
 
 package com.tencent.devops.store.pojo.atom
 
+import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -37,10 +39,7 @@ data class AtomEnv(
     val atomCode: String,
     @ApiModelProperty("插件名称", required = true)
     val atomName: String,
-    @ApiModelProperty(
-        "插件状态，INIT：初始化|COMMITTING：提交中|BUILDING：构建中|BUILD_FAIL：构建失败|TESTING：测试中|AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGING：下架中|UNDERCARRIAGED：已下架",
-        required = true
-    )
+    @ApiModelProperty("插件状态", required = true)
     val atomStatus: String,
     @ApiModelProperty("插件创建人", required = true)
     val creator: String,
@@ -52,6 +51,8 @@ data class AtomEnv(
     val docsLink: String?,
     @ApiModelProperty("插件自定义json串", required = false)
     val props: String?,
+    @ApiModelProperty("无构建环境插件是否可以在有构建环境运行标识", required = false)
+    val buildLessRunFlag: Boolean?,
     @ApiModelProperty("插件创建时间", required = true)
     val createTime: Long,
     @ApiModelProperty("插件最后修改时间", required = true)
@@ -69,5 +70,9 @@ data class AtomEnv(
     @ApiModelProperty("插件SHA签名串", required = false)
     val shaContent: String?,
     @ApiModelProperty("插件执行前置命令", required = false)
-    val preCmd: String?
+    val preCmd: String?,
+    @ApiModelProperty("Job类型", required = false)
+    val jobType: JobTypeEnum?,
+    @ApiModelProperty("插件post信息", required = false)
+    val atomPostInfo: AtomPostInfo?
 )

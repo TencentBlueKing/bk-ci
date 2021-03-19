@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -33,11 +34,13 @@ object MimeUtil {
     const val TGZ_MIME_TYPE = "application/x-tar"
     const val ICO_MIME_TYPE = "image/x-icon"
     const val STREAM_MIME_TYPE = "application/octet-stream"
+    private const val HTML_MIME_TYPE = "text/html"
 
     private val mimeMappings = MimeMappings(MimeMappings.DEFAULT).apply {
         add("yaml", YAML_MIME_TYPE)
         add("tgz", TGZ_MIME_TYPE)
         add("ico", ICO_MIME_TYPE)
+        add("html", HTML_MIME_TYPE)
     }
 
     fun mediaType(fileName: String): String {

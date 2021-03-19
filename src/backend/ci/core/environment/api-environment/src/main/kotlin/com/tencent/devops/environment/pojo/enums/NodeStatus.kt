@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -50,7 +51,6 @@ enum class NodeStatus(val statusName: String) {
                 ABNORMAL.name -> ABNORMAL.statusName
                 DELETED.name -> DELETED.statusName
                 LOST.name -> LOST.statusName
-                STARTING.name -> STARTING.statusName
                 CREATING.name -> CREATING.statusName
                 RUNNING.name -> RUNNING.statusName
                 STARTING.name -> STARTING.statusName
@@ -71,7 +71,6 @@ enum class NodeStatus(val statusName: String) {
                 ABNORMAL.name -> ABNORMAL
                 DELETED.name -> DELETED
                 LOST.name -> LOST
-                STARTING.name -> STARTING
                 CREATING.name -> CREATING
                 RUNNING.name -> RUNNING
                 STARTING.name -> STARTING
@@ -91,7 +90,6 @@ enum class NodeStatus(val statusName: String) {
                 NORMAL.statusName -> NORMAL
                 ABNORMAL.statusName -> ABNORMAL
                 DELETED.statusName -> DELETED
-                STARTING.statusName -> STARTING
                 LOST.statusName -> LOST
                 CREATING.statusName -> CREATING
                 RUNNING.statusName -> RUNNING

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -40,6 +41,7 @@ import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
 
 @Repository
+@Suppress("ALL")
 class ThirdPartyAgentDao {
 
     fun add(
@@ -48,7 +50,8 @@ class ThirdPartyAgentDao {
         projectId: String,
         os: OS,
         secretKey: String,
-        gateway: String?
+        gateway: String?,
+        fileGateway: String?
     ): Long {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             return dslContext.insertInto(
@@ -59,7 +62,8 @@ class ThirdPartyAgentDao {
                 SECRET_KEY,
                 CREATED_USER,
                 CREATED_TIME,
-                GATEWAY
+                GATEWAY,
+                FILE_GATEWAY
             ).values(
                 projectId,
                 os.name,
@@ -67,7 +71,8 @@ class ThirdPartyAgentDao {
                 secretKey,
                 userId,
                 LocalDateTime.now(),
-                gateway ?: ""
+                gateway ?: "",
+                fileGateway ?: ""
             )
                 .returning(ID)
                 .fetchOne().id
@@ -110,10 +115,11 @@ class ThirdPartyAgentDao {
         }
     }
 
-    fun updateGateway(dslContext: DSLContext, agentId: Long, gateway: String) {
+    fun updateGateway(dslContext: DSLContext, agentId: Long, gateway: String, fileGateway: String? = null) {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             dslContext.update(this)
                 .set(GATEWAY, gateway)
+                .set(FILE_GATEWAY, fileGateway ?: gateway)
                 .where(ID.eq(agentId))
                 .execute()
         }
@@ -258,7 +264,6 @@ class ThirdPartyAgentDao {
             with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
                 val agentRecord = context.selectFrom(this)
                     .where(ID.eq(id))
-                    .forUpdate()
                     .fetchOne() ?: throw NotFoundException("The agent is not exist")
 
                 val agentStatus = AgentStatus.fromStatus(agentRecord.status)
@@ -309,7 +314,6 @@ class ThirdPartyAgentDao {
             return dslContext.selectFrom(this)
                 .where(ID.eq(id))
                 .and(PROJECT_ID.eq(projectId))
-                .forUpdate()
                 .fetchOne()
         }
     }
@@ -343,12 +347,17 @@ class ThirdPartyAgentDao {
     fun listImportAgent(
         dslContext: DSLContext,
         projectId: String,
-        os: OS
+        os: OS?
     ): List<TEnvironmentThirdpartyAgentRecord> {
         with(TEnvironmentThirdpartyAgent.T_ENVIRONMENT_THIRDPARTY_AGENT) {
             return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(OS.eq(os.name))
+                .where(PROJECT_ID.eq(projectId)).let {
+                    if (null == os) {
+                        it
+                    } else {
+                        it.and(OS.eq(os.name))
+                    }
+                }
                 .fetch()
         }
     }

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -34,6 +35,8 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.atom.AtomPipeline
+import com.tencent.devops.store.pojo.atom.AtomPostReqItem
+import com.tencent.devops.store.pojo.atom.AtomPostResp
 import com.tencent.devops.store.pojo.atom.AtomStatistic
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
@@ -74,21 +77,38 @@ class ServiceMarketAtomResourceImpl @Autowired constructor(
     override fun getAtomStatisticByCode(atomCode: String, username: String): Result<AtomStatistic> {
         // 提供给openApi使用，暂时先使用username来验证权限，等后续openApi层统一加上具体资源访问权限后再去掉
         if (!atomMemberService.isStoreMember(username, atomCode, StoreTypeEnum.ATOM.type.toByte())) {
-            return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_QUERY_ATOM_PERMISSION_IS_INVALID, arrayOf(atomCode))
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_QUERY_ATOM_PERMISSION_IS_INVALID,
+                params = arrayOf(atomCode))
         }
 
         return marketAtomStatisticService.getStatisticByCode(username, atomCode)
     }
 
-    override fun getAtomPipelinesByCode(atomCode: String, username: String, page: Int?, pageSize: Int?): Result<Page<AtomPipeline>> {
+    override fun getAtomPipelinesByCode(
+        atomCode: String,
+        username: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<AtomPipeline>> {
         // 提供给openApi使用，暂时先使用username来验证权限，等后续openApi层统一加上具体资源访问权限后再去掉
         if (!atomMemberService.isStoreMember(username, atomCode, StoreTypeEnum.ATOM.type.toByte())) {
-            return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_QUERY_ATOM_PERMISSION_IS_INVALID, arrayOf(atomCode))
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_QUERY_ATOM_PERMISSION_IS_INVALID,
+                params = arrayOf(atomCode))
         }
         return marketAtomStatisticService.getAtomPipelinesByCode(atomCode, username, page, pageSize)
     }
 
-    override fun installAtom(userId: String, channelCode: ChannelCode?, installAtomReq: InstallAtomReq): Result<Boolean> {
+    override fun installAtom(
+        userId: String,
+        channelCode: ChannelCode?,
+        installAtomReq: InstallAtomReq
+    ): Result<Boolean> {
         return marketAtomService.installAtom("", userId, channelCode ?: ChannelCode.BS, installAtomReq)
+    }
+
+    override fun getPostAtoms(projectCode: String, atomItems: Set<AtomPostReqItem>): Result<AtomPostResp> {
+        return marketAtomService.getPostAtoms(projectCode, atomItems)
     }
 }

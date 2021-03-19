@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -27,7 +28,10 @@
 package com.tencent.devops.common.service.utils
 
 import org.slf4j.LoggerFactory
+import java.io.BufferedInputStream
+import java.io.BufferedOutputStream
 import java.io.File
+import java.io.FileInputStream
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
@@ -35,8 +39,10 @@ import java.io.OutputStream
 import java.nio.charset.Charset
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
+import java.util.zip.ZipOutputStream
 import javax.ws.rs.NotFoundException
 
+@Suppress("ALL")
 object ZipUtil {
 
     private val logger = LoggerFactory.getLogger(ZipUtil::class.java)
@@ -67,9 +73,78 @@ object ZipUtil {
                 inputStream = pair.second
             }
         } catch (e: IOException) {
-            logger.error("unzip error!", e)
+            logger.error("UNZIP file[${srcFile.canonicalPath}] with error: ", e)
         } finally {
             closeUnzipFileStream(fos, inputStream, zipFile)
+        }
+    }
+
+    fun zipDir(srcDir: File, zipFile: String) {
+        FileOutputStream(zipFile).use { fileOutputStream ->
+            BufferedOutputStream(fileOutputStream).use { bufferedOutputStream ->
+                ZipOutputStream(bufferedOutputStream).use { zipOutputStream ->
+                    handleZipOutputStream(srcDir, zipOutputStream)
+                }
+            }
+        }
+    }
+
+    private fun handleZipOutputStream(srcDir: File, zipOutputStream: ZipOutputStream) {
+        try {
+            zipFiles(zipOutputStream, srcDir, "")
+        } catch (e: Exception) {
+            logger.error("ZIP file[${srcDir.canonicalPath}] with error: ", e)
+        } finally {
+            try {
+                zipOutputStream.closeEntry()
+                zipOutputStream.close()
+            } catch (e: IOException) {
+                logger.error("ZIP OutputStream close error:", e)
+            }
+        }
+    }
+
+    @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+    private fun zipFiles(zipOut: ZipOutputStream, sourceFile: File, parentDirPath: String) {
+        val buf = ByteArray(2048)
+        for (file in sourceFile.listFiles()) {
+            val basePath = if (parentDirPath.isBlank()) {
+                file.name
+            } else {
+                parentDirPath + File.separator + file.name
+            }
+            // 递归进入目录，非目录则直接压缩
+            if (file.isDirectory) {
+                val entry = ZipEntry(basePath + File.separator)
+                entry.time = file.lastModified()
+                entry.size = file.length()
+                zipOut.putNextEntry(entry)
+                zipFiles(zipOut, file, basePath)
+            } else {
+                zipFile(zipOut, file, basePath, buf)
+            }
+        }
+    }
+
+    private fun zipFile(zipOut: ZipOutputStream, file: File, basePath: String, buf: ByteArray) {
+        FileInputStream(file).use { fi ->
+            BufferedInputStream(fi).use { origin ->
+                val entry = ZipEntry(basePath)
+                entry.time = file.lastModified()
+                entry.size = file.length()
+                zipOut.putNextEntry(entry)
+                writeWithBuffer(zipOut, buf, origin)
+            }
+        }
+    }
+
+    private fun writeWithBuffer(zipOut: ZipOutputStream, buf: ByteArray, origin: BufferedInputStream) {
+        while (true) {
+            val readBytes = origin.read(buf)
+            if (readBytes == -1) {
+                break
+            }
+            zipOut.write(buf, 0, readBytes)
         }
     }
 

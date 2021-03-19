@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -35,6 +36,9 @@ import io.swagger.annotations.ApiModelProperty
  */
 @ApiModel("镜像详情")
 data class BaseImageInfo(
+    @ApiModelProperty("镜像类型", required = true)
+    var imageType: String?,
+
     @ApiModelProperty("镜像代码", required = true)
     val code: String,
 
@@ -45,5 +49,8 @@ data class BaseImageInfo(
     val version: String,
 
     @ApiModelProperty("是否推荐", required = true)
-    val recommendFlag: Boolean
+    val recommendFlag: Boolean,
+
+    @ApiModelProperty("镜像完整地址", required = true)
+    var value: String?
 )

@@ -91,7 +91,8 @@ CREATE TABLE IF NOT EXISTS `T_FAVORITE` (
   `service_id` bigint(20) DEFAULT NULL COMMENT '服务id',
   `username` varchar(64) DEFAULT NULL COMMENT '用户',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `service_name` (`service_id`,`username`)
+  UNIQUE KEY `service_name` (`service_id`,`username`),
+  KEY `idx_username` (`username`)
 ) ENGINE=InnoDB AUTO_INCREMENT=109 DEFAULT CHARSET=utf8;
 
 -- ----------------------------
@@ -139,6 +140,7 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT` (
   `enable_idc` bit(1) DEFAULT NULL,
   `enabled` bit(1) DEFAULT NULL,
   `CHANNEL` varchar(32) NOT NULL DEFAULT 'BS',
+  `pipeline_limit` int(10) DEFAULT 500 COMMENT '流水线数量上限',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE KEY `project_name` (`project_name`) USING BTREE,
   UNIQUE KEY `project_id` (`project_id`) USING BTREE,

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -26,15 +27,18 @@
 
 package com.tencent.devops.project.config
 
+import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.listener.ProjectEventListener
 import com.tencent.devops.project.listener.SampleProjectEventListener
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.impl.BluekingProjectPermissionServiceImpl
 import com.tencent.devops.project.service.impl.ProjectPermissionServiceImpl
+import com.tencent.devops.project.service.impl.V3ProjectPermissionServiceImpl
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -44,7 +48,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 
-@Suppress("UNUSED")
+@Suppress("ALL")
 @Configuration
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
@@ -80,5 +84,24 @@ class ProjectConfiguration {
         authProjectApi = authProjectApi,
         authResourceApi = authResourceApi,
         projectAuthServiceCode = projectAuthServiceCode
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
+    fun v3ProjectPermissionService(
+        client: Client,
+        authProjectApi: AuthProjectApi,
+        authResourceApi: AuthResourceApi,
+        authPermissionApi: AuthPermissionApi,
+        projectAuthServiceCode: ProjectAuthServiceCode,
+        projectDao: ProjectDao,
+        dslContext: DSLContext
+    ): ProjectPermissionService = V3ProjectPermissionServiceImpl(
+        authProjectApi = authProjectApi,
+        authPermissionApi = authPermissionApi,
+        projectAuthServiceCode = projectAuthServiceCode,
+        projectDao = projectDao,
+        dslContext = dslContext,
+        authResourceApi = authResourceApi
     )
 }

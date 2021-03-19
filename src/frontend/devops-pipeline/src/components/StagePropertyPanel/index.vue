@@ -1,6 +1,6 @@
 <template>
     <bk-sideslider class="bkci-property-panel" width="640" :is-show.sync="visible" :quick-close="true">
-        <header class="stage-panel-header" slot="header">
+        <header :title="stageTitle" class="stage-panel-header" slot="header">
             {{ stageTitle }}
         </header>
         <stage-content v-bind="$props" slot="content"></stage-content>
@@ -50,5 +50,9 @@
     @import '../AtomPropertyPanel/propertyPanel';
     .bkci-property-panel {
         font-size: 14px;
+        .stage-panel-header {
+            @include ellipsis();
+            width: 96%;
+        }
     }
 </style>

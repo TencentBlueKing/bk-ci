@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -29,7 +30,6 @@ package com.tencent.devops.agent.runner
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ReplacementUtils
-import com.tencent.devops.common.log.Ansi
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
 import com.tencent.devops.worker.common.Runner
 import com.tencent.devops.worker.common.SLAVE_AGENT_START_FILE
@@ -46,6 +46,7 @@ import kotlin.system.exitProcess
 object WorkRunner {
     private val logger = LoggerFactory.getLogger(WorkRunner::class.java)
 
+    @Suppress("ALL")
     fun execute(args: Array<String>) {
         try {
             val buildInfo = getBuildInfo(args)!!
@@ -92,9 +93,9 @@ object WorkRunner {
         } catch (e: PropertyNotExistException) {
             logger.warn("The property(${e.key}) is not exist")
             exitProcess(-1)
-        } catch (t: Throwable) {
-            logger.error("Encounter unknown exception", t)
-            LoggerService.addNormalLine(Ansi().fgRed().a("Other unknown error has occurred: " + t.message).reset().toString())
+        } catch (ignore: Throwable) {
+            logger.error("Encounter unknown exception", ignore)
+            LoggerService.addRedLine("Other unknown error has occurred: " + ignore.message)
             exitProcess(-1)
         }
     }
@@ -108,8 +109,8 @@ object WorkRunner {
         try {
             logger.info("Start read the build info ($buildInfoStr)")
             return JsonUtil.getObjectMapper().readValue(buildInfoStr)
-        } catch (t: Throwable) {
-            logger.warn("Fail to read the build Info", t)
+        } catch (ignore: Throwable) {
+            logger.warn("Fail to read the build Info", ignore)
             exitProcess(1)
         }
     }

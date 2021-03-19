@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -29,14 +30,10 @@ package com.tencent.devops.log.resources
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.AuthPermissionApi
-import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.UserLogResource
-import com.tencent.devops.log.model.pojo.QueryLineNo
-import com.tencent.devops.log.model.pojo.QueryLogs
+import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.log.service.LogPermissionService
 import com.tencent.devops.log.service.LogServiceDispatcher
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
@@ -48,8 +45,7 @@ import javax.ws.rs.core.Response
 @RestResource
 class UserLogResourceImpl @Autowired constructor(
     private val logDispatcher: LogServiceDispatcher,
-    private val authPermissionApi: AuthPermissionApi,
-    private val pipelineAuthServiceCode: PipelineAuthServiceCode
+    private val logPermissionService: LogPermissionService
 ) : UserLogResource {
 
     override fun getInitLogs(
@@ -60,6 +56,7 @@ class UserLogResourceImpl @Autowired constructor(
         isAnalysis: Boolean?,
         queryKeywords: String?,
         tag: String?,
+        subTag: String?,
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
@@ -71,28 +68,7 @@ class UserLogResourceImpl @Autowired constructor(
             isAnalysis = isAnalysis,
             queryKeywords = queryKeywords,
             tag = tag,
-            jobId = jobId,
-            executeCount = executeCount
-        )
-    }
-
-    override fun getLineNoByKeywords(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        queryKeywords: String,
-        tag: String?,
-        jobId: String?,
-        executeCount: Int?
-    ): Result<QueryLineNo> {
-        validateAuth(userId, projectId, pipelineId, buildId)
-        return logDispatcher.getLineNoByKeywords(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            queryKeywords = queryKeywords,
-            tag = tag,
+            subTag = subTag,
             jobId = jobId,
             executeCount = executeCount
         )
@@ -108,6 +84,7 @@ class UserLogResourceImpl @Autowired constructor(
         start: Long,
         end: Long,
         tag: String?,
+        subTag: String?,
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
@@ -121,6 +98,7 @@ class UserLogResourceImpl @Autowired constructor(
             start = start,
             end = end,
             tag = tag,
+            subTag = subTag,
             jobId = jobId,
             executeCount = executeCount
         )
@@ -135,6 +113,7 @@ class UserLogResourceImpl @Autowired constructor(
         isAnalysis: Boolean?,
         queryKeywords: String?,
         tag: String?,
+        subTag: String?,
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
@@ -147,6 +126,7 @@ class UserLogResourceImpl @Autowired constructor(
             isAnalysis = isAnalysis,
             queryKeywords = queryKeywords,
             tag = tag,
+            subTag = subTag,
             jobId = jobId,
             executeCount = executeCount
         )
@@ -158,6 +138,7 @@ class UserLogResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         tag: String?,
+        subTag: String?,
         jobId: String?,
         executeCount: Int?,
         fileName: String?
@@ -168,6 +149,7 @@ class UserLogResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             tag = tag ?: "",
+            subTag = subTag ?: "",
             jobId = jobId,
             executeCount = executeCount,
             fileName = fileName
@@ -187,13 +169,10 @@ class UserLogResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        if (!authPermissionApi.validateUserResourcePermission(
-                user = userId,
-                serviceCode = pipelineAuthServiceCode,
-                resourceType = AuthResourceType.PIPELINE_DEFAULT,
-                projectCode = projectId,
-                resourceCode = pipelineId,
-                permission = AuthPermission.VIEW
+        if (!logPermissionService.verifyUserLogPermission(
+                userId = userId,
+                pipelineId = pipelineId,
+                projectCode = projectId
             )
         ) {
             throw PermissionForbiddenException("用户($userId)无权限在工程($projectId)下查看流水线")

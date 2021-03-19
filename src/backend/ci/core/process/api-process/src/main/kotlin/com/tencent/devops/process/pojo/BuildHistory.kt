@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -27,7 +28,9 @@
 package com.tencent.devops.process.pojo
 
 import com.tencent.devops.artifactory.pojo.FileInfo
+import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.process.pojo.code.WebhookInfo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -73,14 +76,16 @@ data class BuildHistory(
     val buildParameters: List<BuildParameters>?,
     @ApiModelProperty("WebHookType", required = false)
     val webHookType: String?,
+    @ApiModelProperty("webhookInfo", required = false)
+    val webhookInfo: WebhookInfo?,
     @ApiModelProperty("启动类型(新)", required = false)
     val startType: String?,
     @ApiModelProperty("推荐版本号", required = false)
     val recommendVersion: String?,
-    @ApiModelProperty("任务执行错误类型", required = false)
-    val errorType: String?,
-    @ApiModelProperty("任务执行错误码", required = false)
-    val errorCode: Int?,
-    @ApiModelProperty("任务执行错误描述", required = false)
-    val errorMsg: String?
+    @ApiModelProperty("是否重试", required = false)
+    val retry: Boolean = false,
+    @ApiModelProperty("流水线任务执行错误", required = false)
+    var errorInfoList: List<ErrorInfo>?,
+    @ApiModelProperty("构建信息", required = false)
+    var buildMsg: String?
 )
