@@ -37,7 +37,7 @@ import java.time.LocalDateTime
 class GithubTokenDao {
     fun create(dslContext: DSLContext, userId: String, accessToken: String, tokenType: String, scope: String) {
         val now = LocalDateTime.now()
-        with(TRepositoryGithubToken._T_REPOSITORY_GITHUB_TOKEN) {
+        with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
             dslContext.insertInto(
                 this,
                 USER_ID,
