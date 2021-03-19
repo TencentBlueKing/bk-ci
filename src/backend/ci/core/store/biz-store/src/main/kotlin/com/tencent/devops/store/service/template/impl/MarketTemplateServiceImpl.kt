@@ -671,10 +671,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             return Result(templateModelResult.status, templateModelResult.message ?: "")
         }
         val templateModel = templateModelResult.data
-        logger.info("the templateModel is :$templateModel")
-        if (null == templateModel) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
-        }
+            ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
         val invalidImageList = mutableListOf<String>()
         val invalidAtomList = mutableListOf<String>()
         val needInstallImageMap = mutableMapOf<String, StoreBaseInfo>()
@@ -769,7 +766,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             val imageCode = dispatchType.imageCode
             val imageName = dispatchType.imageName
             // 已安装的镜像无需再检查
-            if (!imageCode.isNullOrBlank() && installImageCodes.contains(imageCode)) {
+            if (!imageCode.isNullOrBlank() && !installImageCodes.contains(imageCode)) {
                 val storeCommonDao = try {
                     SpringContextUtil.getBean(AbstractStoreCommonDao::class.java, "${storeType}_COMMON_DAO")
                 } catch (e: Exception) {
