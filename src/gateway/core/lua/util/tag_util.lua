@@ -44,13 +44,24 @@ function _M:get_tag(ns_config)
                 local redRes, err = red:hget(red_key, devops_project)
                 if not redRes then
                     ngx.log(ngx.ERR, "tag failed to get redis result: ", err)
-                    tag_cache:hset(red_key, devops_project, default_tag)
+                    tag_cache:set(devops_project, default_tag, 30)
                 else
                     if redRes == ngx.null then
                         tag_cache:set(devops_project, default_tag, 30)
                     else
                         tag_cache:set(devops_project, redRes, 30)
                         tag = redRes
+                    end
+                end
+
+                -- 是否只能用默认tag
+                if tag ~= ns_config.tag then
+                    local pattern = red:get("project:setting:tag:pattern:v2")
+                    if pattern then
+                        if string.find(ngx.var.uri, pattern) then
+                            tag = default_tag
+                            tag_cache:set(devops_project, default_tag, 30)
+                        end
                     end
                 end
 
