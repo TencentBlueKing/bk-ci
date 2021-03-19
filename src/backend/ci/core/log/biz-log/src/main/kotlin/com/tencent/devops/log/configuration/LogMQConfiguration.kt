@@ -41,6 +41,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.ROUTE_LOG_STATU
 import com.tencent.devops.common.web.mq.EXTEND_CONNECTION_FACTORY_NAME
 import com.tencent.devops.common.web.mq.EXTEND_RABBIT_ADMIN_NAME
 import com.tencent.devops.common.web.mq.EXTEND_RABBIT_TEMPLATE_NAME
+import com.tencent.devops.log.jmx.LogPrintBean
 import com.tencent.devops.log.mq.LogListener
 import com.tencent.devops.log.service.LogService
 import com.tencent.devops.log.service.BuildLogPrintService
@@ -116,8 +117,9 @@ class LogMQConfiguration @Autowired constructor() {
     @Bean
     fun logMQEventDispatcher(
         @Qualifier(value = EXTEND_RABBIT_TEMPLATE_NAME)
-        rabbitTemplate: RabbitTemplate
-    ) = BuildLogPrintService(rabbitTemplate)
+        rabbitTemplate: RabbitTemplate,
+        logPrintBean: LogPrintBean
+    ) = BuildLogPrintService(rabbitTemplate, logPrintBean)
 
     @Bean
     fun logEventBind(
