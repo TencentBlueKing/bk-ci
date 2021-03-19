@@ -131,14 +131,13 @@ class PipelineTemplateService @Autowired constructor(
     }
 
     fun getTemplateDetailInfo(templateCode: String, publicFlag: Boolean): Result<TemplateDetailInfo?> {
-        logger.info("the userId is:$templateCode,publicFlag is:$publicFlag")
+        logger.info("getTemplateDetailInfo templateCode is:$templateCode,publicFlag is:$publicFlag")
         if (publicFlag) {
             val publicTemplateRecord = pipelineTemplateDao.getTemplate(dslContext, templateCode.toLong())
                 ?: return MessageCodeUtil.generateResponseDataObject(
                     CommonMessageCode.PARAMETER_IS_INVALID,
                     arrayOf(templateCode)
                 )
-            logger.info("the publicTemplateRecord is:$publicTemplateRecord")
             return Result(
                 TemplateDetailInfo(
                     templateCode = publicTemplateRecord.id.toString(),
@@ -151,7 +150,6 @@ class PipelineTemplateService @Autowired constructor(
             )
         } else {
             val customizeTemplateRecord = templateDao.getLatestTemplate(dslContext, templateCode)
-            logger.info("the customizeTemplateRecord is:$customizeTemplateRecord")
             return Result(
                 TemplateDetailInfo(
                     templateCode = customizeTemplateRecord.id,
