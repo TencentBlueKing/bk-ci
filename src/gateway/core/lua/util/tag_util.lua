@@ -27,50 +27,59 @@ function _M:get_tag(ns_config)
     local tag = default_tag
 
     if devops_project ~= nil and devops_project ~= '' then
-        -- 先从本地缓存获取
+        -- 获取redis连接
+        local red, err = redisUtil:new()
+        if not red then
+            ngx.log(ngx.ERR, "tag failed to new redis ", err)
+            return tag
+        end
+
+        -- 从缓存获取
         local tag_cache = ngx.shared.tag_project_store
         local tag_cache_value = tag_cache:get(devops_project)
         if tag_cache_value ~= nil then
             tag = tag_cache_value
         else
-            -- 再从redis获取
-            local red_key = "project:setting:tag:v2"
-            local red, err = redisUtil:new()
-            if not red then
-                -- redis 获取连接失败
-                ngx.log(ngx.ERR, "tag failed to new redis ", err)
+            -- 从redis获取tag
+            local hash_key = '\xAC\xED\x00\x05t\x00' .. string.char(devops_project:len()) .. devops_project -- 兼容Spring Redis的hashKey的默认序列化
+            local redRes, err = red:hget("project:setting:tag:v2", hash_key)
+            if not redRes then
+                ngx.log(ngx.ERR, "tag failed to get redis result: ", err)
+                tag_cache:set(devops_project, default_tag, 30)
             else
-                -- 从redis获取tag
-                local hash_key = '\xAC\xED\x00\x05t\x00' .. string.char(devops_project:len()) .. devops_project -- 兼容Spring Redis的hashKey的默认序列化
-                local redRes, err = red:hget(red_key, hash_key)
-                if not redRes then
-                    ngx.log(ngx.ERR, "tag failed to get redis result: ", err)
+                if redRes == ngx.null then
                     tag_cache:set(devops_project, default_tag, 30)
                 else
-                    if redRes == ngx.null then
-                        tag_cache:set(devops_project, default_tag, 30)
-                    else
-                        local hash_val = redRes:sub(8) -- 兼容Spring Redis的hashValue的默认序列化
-                        tag_cache:set(devops_project, hash_val, 30)
-                        tag = hash_val
-                    end
+                    local hash_val = redRes:sub(8) -- 兼容Spring Redis的hashValue的默认序列化
+                    tag_cache:set(devops_project, hash_val, 30)
+                    tag = hash_val
                 end
-
-                -- 是否只能用默认tag
-                if tag ~= ns_config.tag then
-                    local pattern = red:get("project:setting:tag:pattern:v2")
-                    if pattern then
-                        if string.find(ngx.var.uri, pattern) then
-                            tag = default_tag
-                            tag_cache:set(devops_project, default_tag, 30)
-                        end
-                    end
-                end
-
-                --- 将redis连接放回pool中
-                red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
             end
         end
+
+        -- 是否只能用默认tag
+        if tag ~= ns_config.tag then
+            local pattern_key = "project:setting:tag:pattern:v2"
+            -- 先从本地缓存获取
+            local pattern_cache_value = tag:get(pattern_key)
+
+            -- 再从redis获取
+            if pattern_cache_value == nil then
+                pattern_cache_value = red:get(pattern_key)
+                if pattern_cache_value == ngx.null then
+                    pattern_cache_value = 'null'
+                end
+                tag_cache:set(pattern_key, pattern_cache_value, 30)
+            end
+
+            -- 不为空且符合正则, 则有特殊处理
+            if pattern_cache_value ~= 'null' and string.find(ngx.var.uri, pattern_cache_value) then
+                tag = default_tag
+            end
+        end
+
+        --- 将redis连接放回pool中
+        red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
     end
 
     -- 设置tag到http请求头
