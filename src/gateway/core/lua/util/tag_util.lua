@@ -49,7 +49,7 @@ function _M:get_tag(ns_config)
                     if redRes == ngx.null then
                         tag_cache:set(devops_project, default_tag, 30)
                     else
-                        tag_cache:set(devops_project, redRes, 30)
+                        tag_cache:set(devops_project, redRes:sub(8), 30)
                         tag = redRes
                     end
                 end
