@@ -66,7 +66,7 @@ class LogMQEventDispatcher(
     }
 
     private fun fixEvent(logEvent: LogEvent) {
-        // 若配置值为空或负数则限制为32KB
+        // 字符数超过32766时analyzer索引分析将失效，同时为保护系统稳定性，若配置值为空或负数则限制为32KB
         val maxLength = if (lineMaxLength == null || lineMaxLength <= 0) 32766 else lineMaxLength
         logEvent.logs.forEach {
             it.message = CommonUtils.interceptStringInLength(it.message, maxLength) ?: ""
