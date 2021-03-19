@@ -74,7 +74,8 @@ class PluginGithubCheckDao {
                     COMMIT_ID,
                     CHECK_RUN_ID,
                     CREATE_TIME,
-                    UPDATE_TIME
+                    UPDATE_TIME,
+                    CHECK_RUN_NAME
                 ).values(
                     pipelineId,
                     buildNumber,
@@ -83,7 +84,8 @@ class PluginGithubCheckDao {
                     commitId,
                     checkRunId,
                     now,
-                    now
+                    now,
+                    checkRunName
                 ).execute()
             }
         }

@@ -536,7 +536,8 @@ class CodeWebhookService @Autowired constructor(
         }
 
         val pipelineName = buildInfo.pipelineName
-        val name = "$pipelineName #$buildNum"
+        val webhookEventType = variables[BK_REPO_GIT_WEBHOOK_EVENT_TYPE]
+        val name = "$pipelineName@$webhookEventType"
         val detailUrl = "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectId/$pipelineId/detail/$buildId"
 
         while (true) {
@@ -570,17 +571,18 @@ class CodeWebhookService @Autowired constructor(
                             buildNumber = buildNum.toInt(),
                             repositoryConfig = repositoryConfig,
                             commitId = commitId,
-                            checkRunId = result.id
+                            checkRunId = result.id,
+                            checkRunName = name
                         )
                     )
                 } else {
                     if (buildNum.toInt() >= record.buildNumber) {
-                        // 如果重试，需要将状态重新置为in_progress
-                        val checkRunId = if (conclusion == null && buildNum.toInt() == record.buildNumber) {
+                        // 如果重试或者reopen，需要将状态重新置为in_progress
+                        val checkRunId = if (conclusion == null) {
                             val result = scmService.addGithubCheckRuns(
                                 projectId = projectId,
                                 repositoryConfig = repositoryConfig,
-                                name = name,
+                                name = record.checkRunName ?: "$pipelineName #$buildNum",
                                 commitId = commitId,
                                 detailUrl = detailUrl,
                                 externalId = "${userId}_${projectId}_${pipelineId}_$buildId",
@@ -599,7 +601,8 @@ class CodeWebhookService @Autowired constructor(
                                 checkRunId = record.checkRunId,
                                 projectId = projectId,
                                 repositoryConfig = repositoryConfig,
-                                name = name,
+                                // 兼容历史数据
+                                name = record.checkRunName ?: "$pipelineName #$buildNum",
                                 commitId = commitId,
                                 detailUrl = detailUrl,
                                 externalId = "${userId}_${projectId}_${pipelineId}_$buildId",
