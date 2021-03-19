@@ -61,7 +61,7 @@ function _M:get_tag(ns_config)
         if tag ~= ns_config.tag then
             local pattern_key = "project:setting:tag:pattern:v2"
             -- 先从本地缓存获取
-            local pattern_cache_value = tag:get(pattern_key)
+            local pattern_cache_value = tag_cache:get(pattern_key)
 
             -- 再从redis获取
             if pattern_cache_value == nil then
