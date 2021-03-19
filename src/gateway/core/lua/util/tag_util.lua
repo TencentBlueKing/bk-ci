@@ -41,7 +41,8 @@ function _M:get_tag(ns_config)
                 ngx.log(ngx.ERR, "tag failed to new redis ", err)
             else
                 -- 从redis获取tag
-                local redRes, err = red:hget(red_key, devops_project)
+                local hash_key = '\xAC\xED\x00\x05t\x00' .. string.char(devops_project:len()) .. devops_project -- 兼容Spring Redis的hashKey的默认序列化
+                local redRes, err = red:hget(red_key, hash_key)
                 if not redRes then
                     ngx.log(ngx.ERR, "tag failed to get redis result: ", err)
                     tag_cache:set(devops_project, default_tag, 30)
@@ -49,8 +50,9 @@ function _M:get_tag(ns_config)
                     if redRes == ngx.null then
                         tag_cache:set(devops_project, default_tag, 30)
                     else
-                        tag_cache:set(devops_project, redRes:sub(8), 30)
-                        tag = redRes
+                        local hash_val = redRes:sub(8) -- 兼容Spring Redis的hashValue的默认序列化
+                        tag_cache:set(devops_project, hash_val, 30)
+                        tag = hash_val
                     end
                 end
 
