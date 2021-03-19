@@ -23,20 +23,36 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-apply plugin: "maven"
+package com.tencent.devops.common.client.consul
 
-dependencies {
-    compile project(":core:common:common-api")
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-security")
-    compile project(":core:common:common-client")
-    compile "org.springframework.boot:spring-boot-starter-jersey"
-    compile "org.springframework.boot:spring-boot-starter-undertow"
-    compile "org.springframework.boot:spring-boot-starter-web"
-    compile "io.swagger:swagger-jersey2-jaxrs"
-    compile "com.github.ulisesbocchio:jasypt-spring-boot-starter"
-    compile "org.springframework.boot:spring-boot-starter-amqp"
-    compile('org.springframework.cloud:spring-cloud-starter-config')
+import com.tencent.devops.common.service.trace.TraceTag
+import org.springframework.stereotype.Component
+import javax.servlet.Filter
+import javax.servlet.FilterChain
+import javax.servlet.FilterConfig
+import javax.servlet.ServletRequest
+import javax.servlet.ServletResponse
+import javax.servlet.http.HttpServletRequest
+
+@Component
+class ConsulFilter : Filter {
+
+    override fun init(p0: FilterConfig?) {
+        TODO("Not yet implemented")
+    }
+
+    override fun doFilter(request: ServletRequest?, response: ServletResponse?, chain: FilterChain?) {
+        val httpServletRequest = request as HttpServletRequest
+        val consulTag = httpServletRequest?.getHeader(ConsulConstants.HEAD_CONSUL_TAG)
+        if (consulTag != null) {
+            ConsulContent.setConsulContent(consulTag)
+        }
+    }
+
+    override fun destroy() {
+        TODO("Not yet implemented")
+    }
 }
