@@ -34,7 +34,7 @@ import com.tencent.devops.common.log.pojo.enums.LogType
  * Powered By Tencent
  */
 data class LogMessage(
-    val message: String,
+    var message: String,
     val timestamp: Long,
     val tag: String = "",
     val jobId: String = "",
