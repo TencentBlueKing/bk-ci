@@ -25,43 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.jmx
+package com.tencent.devops.log.util
 
-import org.springframework.jmx.export.annotation.ManagedAttribute
-import org.springframework.jmx.export.annotation.ManagedResource
-import org.springframework.stereotype.Component
-import java.util.concurrent.atomic.AtomicInteger
-import java.util.concurrent.atomic.AtomicLong
-
-@Component
-@ManagedResource(objectName = "com.tencent.devops.log.print:type=logs", description = "log print performance")
-class LogPrintBean {
-
-    private val printTaskCount = AtomicLong(0)
-    private val printActiveCount = AtomicInteger(0)
-    private val printQueueSize = AtomicInteger(0)
-
-    @Synchronized
-    fun savePrintTaskCount(taskCount: Long) {
-        printTaskCount.set(taskCount)
-    }
-
-    @Synchronized
-    fun savePrintActiveCount(activeCount: Int) {
-        printActiveCount.set(activeCount)
-    }
-
-    @Synchronized
-    fun savePrintQueueSize(queueSize: Int) {
-        printQueueSize.set(queueSize)
-    }
-
-    @ManagedAttribute
-    fun getPrintTaskCount() = printTaskCount.get()
-
-    @ManagedAttribute
-    fun getPrintActiveCount() = printActiveCount.get()
-
-    @ManagedAttribute
-    fun getPrintQueueSize() = printQueueSize.get()
+enum class LogErrorCodeEnum(
+    val errorCode: Int,
+    val formatErrorMessage: String
+) {
+    PRINT_QUEUE_LIMIT(errorCode = 2108001, formatErrorMessage = "log print queue exceeds the limit")
 }

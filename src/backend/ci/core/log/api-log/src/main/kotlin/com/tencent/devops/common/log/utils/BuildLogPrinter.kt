@@ -70,7 +70,7 @@ class BuildLogPrinter(
                 logMessages = logMessages
             )
         } catch (e: Exception) {
-            logger.error("[$buildId]|addLine error|logMessages=$logMessages", e)
+            logger.error("[$buildId]|addLines error|logMessages=$logMessages", e)
         }
     }
 

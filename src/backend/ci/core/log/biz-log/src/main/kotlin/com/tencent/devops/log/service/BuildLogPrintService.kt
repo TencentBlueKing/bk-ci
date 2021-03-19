@@ -27,12 +27,17 @@
 
 package com.tencent.devops.log.service
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.log.pojo.ILogEvent
+import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.web.mq.EXTEND_RABBIT_TEMPLATE_NAME
 import com.tencent.devops.log.jmx.LogPrintBean
+import com.tencent.devops.log.util.IndexNameUtils
+import com.tencent.devops.log.util.LogErrorCodeEnum
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
+import org.springframework.scheduling.annotation.Scheduled
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.ThreadPoolExecutor
@@ -78,10 +83,19 @@ class BuildLogPrintService(
         } catch (e: RejectedExecutionException) {
             // 队列满时的处理逻辑
             logger.error("[${event.buildId}] asyncDispatchEvent failed with queue tasks exceed the limit", e)
-        } finally {
-            logPrintBean.savePrintTaskCount(logExecutorService.taskCount)
-            logPrintBean.savePrintActiveCount(logExecutorService.activeCount.toLong())
+            throw ErrorCodeException(
+                statusCode = 509,
+                errorCode = LogErrorCodeEnum.PRINT_QUEUE_LIMIT.errorCode.toString(),
+                defaultMessage = LogErrorCodeEnum.PRINT_QUEUE_LIMIT.formatErrorMessage
+            )
         }
+    }
+
+    @Scheduled(initialDelay = 10000, fixedDelay = 10000)
+    fun createNextIndex() {
+        logPrintBean.savePrintTaskCount(logExecutorService.taskCount)
+        logPrintBean.savePrintActiveCount(logExecutorService.activeCount)
+        logPrintBean.savePrintQueueSize(logExecutorService.queue.size)
     }
 
     private val logger = LoggerFactory.getLogger(BuildLogPrintService::class.java)
