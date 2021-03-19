@@ -269,16 +269,16 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
                     val templateDeptSize = templateDepts.size
                     if (templateDeptSize >= storeDeptSize) {
                         if (storeDeptId == 0 || templateDeptId == storeDeptId) {
-                            flag = true // 原子插件在模板的可见范围内
+                            flag = true // 组件在模板的可见范围内
                             return@breaking
                         }
                         val gap = templateDeptSize - storeDeptSize
-                        // 判断模板的上级机构是否属于插件的可见范围
+                        // 判断模板的上级机构是否属于组件的可见范围
                         val parentDeptInfoList = client.get(ServiceProjectOrganizationResource::class)
                             .getParentDeptInfos(templateDeptId.toString(), gap + 1).data
                         parentDeptInfoList?.forEach {
                             if (it.id.toInt() == storeDeptId) {
-                                flag = true // 插件在模板的可见范围内
+                                flag = true // 组件在模板的可见范围内
                                 return@breaking
                             }
                         }
@@ -286,7 +286,7 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
                 }
             }
         }
-        // 判断每个插件下的可见范围是否都在模板的可见范围之内
+        // 判断每个组件下的可见范围是否都在模板的可见范围之内
         if (!flag) {
             invalidStoreList.add(storeName)
         }
