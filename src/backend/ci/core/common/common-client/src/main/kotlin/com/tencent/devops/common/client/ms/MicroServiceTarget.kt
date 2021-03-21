@@ -63,7 +63,7 @@ class MicroServiceTarget<T> constructor(
 
         // 若前文中有指定过consul tag则用指定的，否则用本地的consul tag
         val consulContentTag = ConsulContent.getConsulContent()
-        val useConsulTag = if (consulContentTag != null || !consulContentTag.isNullOrEmpty()) {
+        val useConsulTag = if (!consulContentTag.isNullOrEmpty()) {
             consulContentTag
         } else tag
 
