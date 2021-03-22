@@ -43,14 +43,16 @@ import com.tencent.devops.store.service.common.StoreDailyStatisticService
 import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import org.jooq.DSLContext
 import org.jooq.Record4
-import org.jooq.Record5
+import org.jooq.Record6
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
+import java.time.LocalDateTime
 import java.util.Calendar
 
 @Suppress("ALL")
@@ -62,6 +64,10 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
     private val storeStatisticTotalDao: StoreStatisticTotalDao,
     private val storeDailyStatisticService: StoreDailyStatisticService
 ) : StoreTotalStatisticService {
+
+    @Value("\${statistics.timeSpanMonth:-3}")
+    private val timeSpanMonth: Int = -3
+
     companion object {
         private val logger = LoggerFactory.getLogger(StoreTotalStatisticServiceImpl::class.java)
         private const val DEFAULT_PAGE_SIZE = 50
@@ -126,14 +132,13 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
             format = "yyyy-MM-dd"
         )
         val dailyStatisticList = storeDailyStatisticService.getDailyStatisticListByCode(
-            userId = userId,
             storeCode = storeCode,
             storeType = storeType,
             startTime = DateTimeUtil.convertDateToLocalDateTime(
                 DateTimeUtil.getFutureDate(
                     localDateTime = endTime,
                     unit = Calendar.MONTH,
-                    timeSpan = -3
+                    timeSpan = timeSpanMonth
                 )
             ),
             endTime = endTime
@@ -165,8 +170,8 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
         )
         val storeStatisticMap = hashMapOf<String, StoreStatistic>()
         records?.map {
-            if (it.value5() != null) {
-                val storeCode = it.value5()
+            val storeCode = it.value6()
+            if (storeCode != null) {
                 storeStatisticMap[storeCode] = generateStoreStatistic(it)
             }
         }
@@ -193,7 +198,6 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
     ): StoreStatisticTrendData {
         logger.info("getStatisticTrendDataByCode $userId,$storeCode,$storeType,$startTime,$endTime")
         val dailyStatisticList = storeDailyStatisticService.getDailyStatisticListByCode(
-            userId = userId,
             storeCode = storeCode,
             storeType = storeType,
             startTime = DateTimeUtil.stringToLocalDateTime(startTime),
@@ -236,7 +240,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
     }
 
     private fun generateStoreStatistic(
-        record: Record5<Int, Int, BigDecimal, Int, String>?,
+        record: Record6<Int, Int, BigDecimal, Int, Int, String>?,
         successRate: Double? = null
     ): StoreStatistic {
         return StoreStatistic(
@@ -244,6 +248,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
             commentCnt = record?.value2() ?: 0,
             score = String.format("%.1f", record?.value3()?.toDouble()).toDoubleOrNull(),
             pipelineCnt = record?.value4() ?: 0,
+            recentExecuteNum = record?.value5() ?: 0,
             successRate = successRate
         )
     }
@@ -264,6 +269,25 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
             val scoreAverage: Double = if (score > 0 && comments > 0) {
                 score.div(comments)
             } else 0.toDouble()
+            // 统计最近组件执行次数
+            val endTime = LocalDateTime.now()
+            val dailyStatisticList = storeDailyStatisticService.getDailyStatisticListByCode(
+                storeCode = code,
+                storeType = storeType,
+                startTime = DateTimeUtil.convertDateToLocalDateTime(
+                    DateTimeUtil.getFutureDate(
+                        localDateTime = LocalDateTime.now(),
+                        unit = Calendar.MONTH,
+                        timeSpan = timeSpanMonth
+                    )
+                ),
+                endTime = endTime
+            )
+            var totalExecuteNum = 0
+            dailyStatisticList?.forEach { dailyStatistic ->
+                totalExecuteNum += dailyStatistic.dailySuccessNum
+                totalExecuteNum += dailyStatistic.dailyFailNum
+            }
             storeStatisticTotalDao.updateStatisticData(
                 dslContext = dslContext,
                 storeCode = code,
@@ -271,7 +295,8 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
                 downloads = downloads,
                 comments = comments,
                 score = score.toInt(),
-                scoreAverage = scoreAverage
+                scoreAverage = scoreAverage,
+                recentExecuteNum = totalExecuteNum
             )
         }
     }

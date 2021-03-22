@@ -80,7 +80,7 @@ interface ServicePipelineTaskResource {
     ): Result<Page<PipelineProjectRel>>
 
     @ApiOperation("获取使用插件的流水线数量")
-    @GET
+    @POST
     @Path("/listPipelineNumByAtomCodes")
     fun listPipelineNumByAtomCodes(
         @ApiParam("项目ID", required = false)

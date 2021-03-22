@@ -270,7 +270,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         updateTime = DateTimeUtil.toDateTime(it["UPDATE_TIME"] as LocalDateTime),
                         recommendFlag = it["RECOMMEND_FLAG"] as? Boolean,
                         yamlFlag = it["YAML_FLAG"] as? Boolean,
-                        dailyStatisticList = getRecentDailyStatisticList(userId, atomCode)
+                        dailyStatisticList = getRecentDailyStatisticList(atomCode)
                     )
                 )
             }
@@ -336,7 +336,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 rdType = null,
                 yamlFlag = null,
                 recommendFlag = null,
-                sortType = MarketAtomSortTypeEnum.DOWNLOAD_COUNT,
+                sortType = MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM,
                 desc = true,
                 page = page,
                 pageSize = pageSize
@@ -580,14 +580,13 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     frontendType = FrontendTypeEnum.getFrontendTypeObj(htmlTemplateVersion),
                     yamlFlag = feature?.yamlFlag,
                     editFlag = marketAtomCommonService.checkEditCondition(atomCode),
-                    dailyStatisticList = getRecentDailyStatisticList(userId, atomCode)
+                    dailyStatisticList = getRecentDailyStatisticList(atomCode)
                 )
             )
         }
     }
 
     private fun getRecentDailyStatisticList(
-        userId: String,
         atomCode: String
     ): List<StoreDailyStatistic>? {
         // 统计昨天为截止日期的最近一周的数据
@@ -596,7 +595,6 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             format = "yyyy-MM-dd"
         )
         return storeDailyStatisticService.getDailyStatisticListByCode(
-            userId = userId,
             storeCode = atomCode,
             storeType = StoreTypeEnum.ATOM.type.toByte(),
             startTime = DateTimeUtil.convertDateToLocalDateTime(
