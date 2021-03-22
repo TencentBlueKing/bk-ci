@@ -91,7 +91,7 @@ class PluginGithubCheckDao {
         }
     }
 
-    fun update(dslContext: DSLContext, id: Long, buildNumber: Int, checkRunId: Int) {
+    fun update(dslContext: DSLContext, id: Long, buildNumber: Int, checkRunId: Long) {
         with(TPluginGithubCheck.T_PLUGIN_GITHUB_CHECK) {
             dslContext.update(this)
                 .set(BUILD_NUMBER, buildNumber)

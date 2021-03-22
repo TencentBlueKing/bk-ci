@@ -34,6 +34,6 @@ data class GithubCheckRun(
     val buildNumber: Int,
     val repositoryConfig: RepositoryConfig,
     val commitId: String,
-    val checkRunId: Int,
+    val checkRunId: Long,
     val checkRunName: String? = null
 )
