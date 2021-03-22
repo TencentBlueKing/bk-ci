@@ -219,7 +219,6 @@
             changeProject () {
                 this.$toggleProjectMenu(true)
             },
-
             async toApplyPermission () {
                 try {
                     const { projectId } = this.$route.params

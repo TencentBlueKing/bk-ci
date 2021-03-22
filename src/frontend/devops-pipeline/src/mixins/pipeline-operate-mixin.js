@@ -587,6 +587,7 @@ export default {
         changeProject () {
             this.$toggleProjectMenu(true)
         },
+
         async toApplyPermission (actionId, pipeline) {
             try {
                 const { projectId } = this.$route.params
