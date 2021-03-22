@@ -537,7 +537,9 @@ class PipelineRepositoryService constructor(
                         // 沿用模板的配置
                         val setting = getSetting(templateId)
                         ?: throw ErrorCodeException(errorCode = ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS)
-                        saveSetting(userId, setting)
+                        setting.pipelineId = pipelineId
+                        setting.pipelineName = model.name
+                        pipelineSettingDao.saveSetting(dslContext, setting)
                     } else {
                         // #3311
                         // 蓝盾正常的BS渠道的默认没设置setting的，将发通知改成失败才发通知

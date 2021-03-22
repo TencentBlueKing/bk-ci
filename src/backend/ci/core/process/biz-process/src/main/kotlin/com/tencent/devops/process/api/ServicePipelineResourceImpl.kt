@@ -67,7 +67,8 @@ class ServicePipelineResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipeline: Model,
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        useTemplateSettings: Boolean?
     ): Result<PipelineId> {
         checkUserId(userId)
         checkProjectId(projectId)
@@ -78,7 +79,8 @@ class ServicePipelineResourceImpl @Autowired constructor(
                     projectId = projectId,
                     model = pipeline,
                     channelCode = channelCode,
-                    checkPermission = ChannelCode.isNeedAuth(channelCode)
+                    checkPermission = ChannelCode.isNeedAuth(channelCode),
+                    useTemplateSettings = useTemplateSettings
                 )
             )
         )
