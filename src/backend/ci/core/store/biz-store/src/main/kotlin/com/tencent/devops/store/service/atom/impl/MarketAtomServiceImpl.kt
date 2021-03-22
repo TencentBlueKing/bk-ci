@@ -270,7 +270,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         updateTime = DateTimeUtil.toDateTime(it["UPDATE_TIME"] as LocalDateTime),
                         recommendFlag = it["RECOMMEND_FLAG"] as? Boolean,
                         yamlFlag = it["YAML_FLAG"] as? Boolean,
-                        dailyStatisticList = getRecentDailyStatisticList(atomCode)
+                        dailyStatisticList = getRecentDailyStatisticList(atomCode),
+                        recentExecuteNum = statistic?.recentExecuteNum ?: 0
                     )
                 )
             }
@@ -364,7 +365,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         rdType = null,
                         yamlFlag = null,
                         recommendFlag = null,
-                        sortType = MarketAtomSortTypeEnum.DOWNLOAD_COUNT,
+                        sortType = MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM,
                         desc = true,
                         page = page,
                         pageSize = pageSize
