@@ -27,13 +27,14 @@
 
 package com.tencent.devops.store.resources.atom
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.UserMarketAtomResource
 import com.tencent.devops.store.pojo.atom.AtomDevLanguage
 import com.tencent.devops.store.pojo.atom.AtomVersion
-import com.tencent.devops.store.pojo.atom.AtomVersionListResp
+import com.tencent.devops.store.pojo.atom.AtomVersionListItem
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.MarketAtomResp
 import com.tencent.devops.store.pojo.atom.MarketMainItem
@@ -104,8 +105,13 @@ class UserMarketAtomResourceImpl @Autowired constructor(
         return marketAtomService.getAtomByCode(userId, atomCode)
     }
 
-    override fun getAtomVersionsByCode(userId: String, atomCode: String): Result<AtomVersionListResp> {
-        return marketAtomService.getAtomVersionsByCode(userId, atomCode)
+    override fun getAtomVersionsByCode(
+        userId: String,
+        atomCode: String,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<AtomVersionListItem>> {
+        return marketAtomService.getAtomVersionsByCode(userId, atomCode, page, pageSize)
     }
 
     override fun installAtom(accessToken: String, userId: String, installAtomReq: InstallAtomReq): Result<Boolean> {
