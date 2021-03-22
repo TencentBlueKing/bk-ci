@@ -37,6 +37,7 @@ import com.tencent.devops.log.util.IndexNameUtils
 import com.tencent.devops.log.util.LogErrorCodeEnum
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.RejectedExecutionException
@@ -50,12 +51,15 @@ class BuildLogPrintService(
     private val logPrintBean: LogPrintBean
 ) {
 
+    @Value("\${log.limit.taskPoolSize:#{null}}")
+    private val taskPoolSize: Int? = null
+
     private val logExecutorService = ThreadPoolExecutor(
         10,
         100,
         0L,
         TimeUnit.MILLISECONDS,
-        LinkedBlockingQueue(10000)
+        LinkedBlockingQueue(taskPoolSize ?: 1000)
     )
 
     fun dispatchEvent(event: ILogEvent) {
