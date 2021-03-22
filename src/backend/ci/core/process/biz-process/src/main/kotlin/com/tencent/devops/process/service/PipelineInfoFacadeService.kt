@@ -176,7 +176,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         instanceType: String? = PipelineInstanceTypeEnum.FREEDOM.type,
         buildNo: BuildNo? = null,
         param: List<BuildFormProperty>? = null,
-        fixTemplateVersion: Long? = null
+        fixTemplateVersion: Long? = null,
+        useTemplateSettings: Boolean? = false
     ): String {
         val watcher =
             Watcher(id = "createPipeline|$projectId|$userId|$channelCode|$checkPermission|$instanceType|$fixPipelineId")
@@ -260,7 +261,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                     signPipelineId = fixPipelineId,
                     userId = userId,
                     channelCode = channelCode,
-                    create = true
+                    create = true,
+                    useTemplateSettings = useTemplateSettings
                 ).pipelineId
                 watcher.stop()
 
