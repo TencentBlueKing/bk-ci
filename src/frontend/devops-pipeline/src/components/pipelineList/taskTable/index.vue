@@ -1,7 +1,7 @@
 <template>
     <bk-table
         size="small"
-        style="margin-bottom: 10px; overflow: initial;"
+        style="margin-bottom: 10px;"
         :data="listWithConfig"
         :outer-border="false">
         <bk-table-column
@@ -130,18 +130,20 @@
         <bk-table-column
             :label="$t('operate')"
             prop="action"
-            key="action">
+            key="action"
+            class-name="option-menu">
             <template slot-scope="{ row }">
                 <ext-menu
                     v-if="row.hasPermission"
                     :config="row.feConfig">
                 </ext-menu>
-                <a v-else
-                    href="javascript:;"
-                    class="text-link"
-                    @click.stop.prevent="applyPermission(row)">
-                    {{ $t('newlist.applyPerm') }}
-                </a>
+                <div class="option-text-link" v-else>
+                    <a href="javascript:;"
+                        class="text-link"
+                        @click.stop.prevent="applyPermission(row)">
+                        {{ $t('newlist.applyPerm') }}
+                    </a>
+                </div>
             </template>
         </bk-table-column>
     </bk-table>
@@ -215,14 +217,17 @@
                 background-color: transparent;
             }
         }
+        .option-menu .cell {
+            overflow: visible;
+        }
+        .option-text-link {
+            overflow: hidden;
+        }
         .bk-table th>.cell {
             height: 60px;
         }
         >thead>tr>th {
             border: 0;
-        }
-        /deep/ .bk-table-body-wrapper {
-            overflow: inherit;
         }
      }
     .table-tr-overflow {
@@ -238,7 +243,7 @@
             z-index: 4;
             opacity: 1;
         }
-         .table-list-overflow {
+        .table-list-overflow {
             width: 100%;
             height: 100%;
             position: absolute;
