@@ -30,6 +30,7 @@ package com.tencent.devops.plugin.init
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
 import com.tencent.devops.plugin.listener.CodeWebhookFinishListener
+import com.tencent.devops.plugin.listener.CodeWebhookStartListener
 import com.tencent.devops.plugin.listener.GitHubPullRequestListener
 import com.tencent.devops.plugin.listener.TGitCommitListener
 import org.springframework.amqp.core.Binding
@@ -52,6 +53,7 @@ import org.springframework.context.annotation.Configuration
  * 流水线监控配置
  */
 @Configuration
+@Suppress("ALL")
 class CodeWebhookListenerConfiguration {
 
     @Bean
@@ -65,6 +67,13 @@ class CodeWebhookListenerConfiguration {
     @Bean
     fun pipelineFanoutExchange(): FanoutExchange {
         val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_EXTENDS_FANOUT, true, false)
+        fanoutExchange.isDelayed = true
+        return fanoutExchange
+    }
+
+    @Bean
+    fun pipelineBuildStartFanoutExchange(): FanoutExchange {
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_START_FANOUT, true, false)
         fanoutExchange.isDelayed = true
         return fanoutExchange
     }
@@ -106,6 +115,38 @@ class CodeWebhookListenerConfiguration {
     ): SimpleMessageListenerContainer {
         val container = SimpleMessageListenerContainer(connectionFactory)
         container.setQueueNames(buildFinishCodeWebhookQueue.name)
+        val concurrency = webhookConcurrency!!
+        container.setConcurrentConsumers(concurrency)
+        container.setMaxConcurrentConsumers(Math.max(10, concurrency))
+        container.setRabbitAdmin(rabbitAdmin)
+
+        val adapter = MessageListenerAdapter(listener, listener::execute.name)
+        adapter.setMessageConverter(messageConverter)
+        container.messageListener = adapter
+        return container
+    }
+
+    @Bean
+    fun buildStartCodeWebhookQueue() = Queue(MQ.QUEUE_PIPELINE_BUILD_START_CODE_WEBHOOK)
+
+    @Bean
+    fun buildStartCodeWebhookQueueBind(
+        @Autowired buildStartCodeWebhookQueue: Queue,
+        @Autowired pipelineBuildStartFanoutExchange: FanoutExchange
+    ): Binding {
+        return BindingBuilder.bind(buildStartCodeWebhookQueue).to(pipelineBuildStartFanoutExchange)
+    }
+
+    @Bean
+    fun codeWebhookStartListenerContainer(
+        @Autowired connectionFactory: ConnectionFactory,
+        @Autowired buildStartCodeWebhookQueue: Queue,
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired listener: CodeWebhookStartListener,
+        @Autowired messageConverter: Jackson2JsonMessageConverter
+    ): SimpleMessageListenerContainer {
+        val container = SimpleMessageListenerContainer(connectionFactory)
+        container.setQueueNames(buildStartCodeWebhookQueue.name)
         val concurrency = webhookConcurrency!!
         container.setConcurrentConsumers(concurrency)
         container.setMaxConcurrentConsumers(Math.max(10, concurrency))

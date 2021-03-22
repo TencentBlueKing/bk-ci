@@ -25,8 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.pojo
+package com.tencent.devops.process.pojo.code.github
 
-data class GithubCheckRunsResponse(
-    val id: Long
+import com.fasterxml.jackson.annotation.JsonProperty
+
+data class GithubCheckRunEvent(
+    val action: String,
+    @JsonProperty("check_run")
+    val checkRun: CheckRun,
+    val repository: GithubRepository,
+    override val sender: GithubSender
+) : GithubEvent(sender) {
+    companion object {
+        const val classType = "check_run"
+    }
+}
+
+data class CheckRun(
+    val id: String,
+    @JsonProperty("external_id")
+    val externalId: String? = null,
+    @JsonProperty("details_url")
+    val detailsUrl: String? = null,
+    val status: String
 )
