@@ -20,6 +20,25 @@ BEGIN
         ALTER TABLE `T_PLUGIN_GIT_CHECK` 
 			ADD COLUMN `EVENT_TYPE` VARCHAR(64) DEFAULT NULL;
     END IF;
+	
+	IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PLUGIN_GITHUB_CHECK'
+                    AND COLUMN_NAME = 'CHECK_RUN_NAME') THEN
+        ALTER TABLE `T_PLUGIN_GITHUB_CHECK` 
+			ADD `CHECK_RUN_NAME` VARCHAR(64) NULL DEFAULT NULL;
+    END IF;
+	
+	IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_PLUGIN_GITHUB_CHECK'
+                    AND COLUMN_NAME = 'CHECK_RUN_ID'
+					AND COLUMN_TYPE = 'bigint(20)') THEN
+        ALTER TABLE `T_PLUGIN_GITHUB_CHECK` 
+			MODIFY `CHECK_RUN_ID` BIGINT(20) NOT NULL;
+    END IF;
 
     COMMIT;
 
