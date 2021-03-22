@@ -262,7 +262,8 @@ class PipelineInfoFacadeService @Autowired constructor(
                     userId = userId,
                     channelCode = channelCode,
                     create = true,
-                    useTemplateSettings = useTemplateSettings
+                    useTemplateSettings = useTemplateSettings,
+                    templateId = model.templateId
                 ).pipelineId
                 watcher.stop()
 

@@ -115,7 +115,8 @@ class PipelineRepositoryService constructor(
         userId: String,
         channelCode: ChannelCode,
         create: Boolean,
-        useTemplateSettings: Boolean? = false
+        useTemplateSettings: Boolean? = false,
+        templateId: String? = null
     ): DeployPipelineResult {
 
         // 生成流水线ID,新流水线以p-开头，以区分以前旧数据
@@ -503,7 +504,8 @@ class PipelineRepositoryService constructor(
         canElementSkip: Boolean,
         buildNo: BuildNo?,
         modelTasks: Set<PipelineModelTask>,
-        useTemplateSettings: Boolean? = false
+        useTemplateSettings: Boolean? = false,
+        templateId: String? = null
     ): DeployPipelineResult {
 
         val taskCount: Int = model.taskCount()
@@ -532,7 +534,6 @@ class PipelineRepositoryService constructor(
                 !model.instanceFromTemplate!!
             ) {
                 if (null == pipelineSettingDao.getSetting(transactionContext, pipelineId)) {
-                    val templateId = model.templateId
                     if (templateId != null && useTemplateSettings == true) {
                         // 沿用模板的配置
                         val setting = getSetting(templateId)
