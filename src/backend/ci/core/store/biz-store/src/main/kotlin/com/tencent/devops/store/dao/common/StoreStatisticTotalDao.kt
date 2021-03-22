@@ -34,7 +34,7 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Query
 import org.jooq.Record1
-import org.jooq.Record5
+import org.jooq.Record6
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
@@ -69,7 +69,8 @@ class StoreStatisticTotalDao {
         downloads: Int,
         comments: Int,
         score: Int,
-        scoreAverage: Double
+        scoreAverage: Double,
+        recentExecuteNum: Int
     ) {
         with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
             dslContext.insertInto(this).columns(
@@ -79,7 +80,8 @@ class StoreStatisticTotalDao {
                 DOWNLOADS,
                 COMMITS,
                 SCORE,
-                SCORE_AVERAGE
+                SCORE_AVERAGE,
+                RECENT_EXECUTE_NUM
             ).values(
                 UUIDUtil.generate(),
                 storeCode,
@@ -87,13 +89,15 @@ class StoreStatisticTotalDao {
                 downloads,
                 comments,
                 score,
-                scoreAverage.toBigDecimal()
+                scoreAverage.toBigDecimal(),
+                recentExecuteNum
             )
                 .onDuplicateKeyUpdate()
                 .set(DOWNLOADS, downloads)
                 .set(COMMITS, comments)
                 .set(SCORE, score)
                 .set(SCORE_AVERAGE, scoreAverage.toBigDecimal())
+                .set(RECENT_EXECUTE_NUM, recentExecuteNum)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(STORE_CODE.eq(storeCode))
                 .and(STORE_TYPE.eq(storeType))
@@ -143,13 +147,14 @@ class StoreStatisticTotalDao {
         dslContext: DSLContext,
         storeCode: String,
         storeType: Byte
-    ): Record5<Int, Int, BigDecimal, Int, String>? {
+    ): Record6<Int, Int, BigDecimal, Int, Int, String>? {
         with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
             return dslContext.select(
                 DOWNLOADS,
                 COMMITS,
                 SCORE_AVERAGE,
                 PIPELINE_NUM,
+                RECENT_EXECUTE_NUM,
                 STORE_CODE
             )
                 .from(this)
@@ -165,13 +170,14 @@ class StoreStatisticTotalDao {
         dslContext: DSLContext,
         storeCodeList: List<String?>,
         storeType: Byte
-    ): Result<Record5<Int, Int, BigDecimal, Int, String>>? {
+    ): Result<Record6<Int, Int, BigDecimal, Int, Int, String>>? {
         with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
             val baseStep = dslContext.select(
                 DOWNLOADS,
                 COMMITS,
                 SCORE_AVERAGE,
                 PIPELINE_NUM,
+                RECENT_EXECUTE_NUM,
                 STORE_CODE
             )
                 .from(this)

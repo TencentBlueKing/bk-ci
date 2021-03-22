@@ -180,15 +180,15 @@ class MarketAtomDao : AtomBaseDao() {
         )
 
         if (null != sortType) {
-            if (sortType == MarketAtomSortTypeEnum.DOWNLOAD_COUNT && score == null) {
+            if (sortType == MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM && score == null) {
                 val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL.`as`("tas")
                 val t =
-                    dslContext.select(tas.STORE_CODE, tas.DOWNLOADS.`as`(MarketAtomSortTypeEnum.DOWNLOAD_COUNT.name))
+                    dslContext.select(tas.STORE_CODE, tas.RECENT_EXECUTE_NUM.`as`(MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM.name))
                         .from(tas).where(tas.STORE_TYPE.eq(storeType)).asTable("t")
                 baseStep.leftJoin(t).on(ta.ATOM_CODE.eq(t.field("STORE_CODE", String::class.java)))
             }
 
-            val realSortType = if (sortType == MarketAtomSortTypeEnum.DOWNLOAD_COUNT) {
+            val realSortType = if (sortType == MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM) {
                 DSL.field(sortType.name)
             } else {
                 ta.field(sortType.name)

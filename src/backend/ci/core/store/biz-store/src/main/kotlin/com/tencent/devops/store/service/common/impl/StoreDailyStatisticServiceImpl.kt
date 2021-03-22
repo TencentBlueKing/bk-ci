@@ -48,13 +48,12 @@ class StoreDailyStatisticServiceImpl @Autowired constructor(
     }
 
     override fun getDailyStatisticListByCode(
-        userId: String,
         storeCode: String,
         storeType: Byte,
         startTime: LocalDateTime,
         endTime: LocalDateTime
     ): List<StoreDailyStatistic>? {
-        logger.info("getDailyStatisticListByCode $userId,$storeCode,$storeType,$startTime,$endTime")
+        logger.info("getDailyStatisticListByCode $storeCode,$storeType,$startTime,$endTime")
         val dailyStatisticRecordList = storeStatisticDailyDao.getDailyStatisticListByCode(
             dslContext = dslContext,
             storeCode = storeCode,

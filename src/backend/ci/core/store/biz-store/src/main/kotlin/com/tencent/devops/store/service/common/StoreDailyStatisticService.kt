@@ -34,14 +34,12 @@ interface StoreDailyStatisticService {
 
     /**
      * 获取组件每日统计信息列表
-     * @param userId 用户ID
      * @param storeCode 组件标识
      * @param storeType 组件类型
      * @param startTime 查询开始时间
      * @param endTime 查询结束时间
      */
     fun getDailyStatisticListByCode(
-        userId: String,
         storeCode: String,
         storeType: Byte,
         startTime: LocalDateTime,
