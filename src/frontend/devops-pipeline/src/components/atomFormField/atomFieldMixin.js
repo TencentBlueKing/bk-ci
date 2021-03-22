@@ -82,7 +82,7 @@ const atomFieldMixin = {
     },
     mounted () {
         const ele = document.querySelector('.atom-form-box')
-        if (this.descTooltips && this.disabled) {
+        if (this.descTooltips.length && this.disabled) {
             this.title = this.descTooltips
             this.readOnly = true
         } else if ((ele && ele.classList.contains('readonly')) || this.disabled) {
