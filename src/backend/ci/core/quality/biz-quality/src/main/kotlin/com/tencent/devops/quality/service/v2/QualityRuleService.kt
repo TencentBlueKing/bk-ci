@@ -405,9 +405,12 @@ class QualityRuleService @Autowired constructor(
         ruleRecordList?.filter { !it.pipelineTemplateRange.isNullOrBlank() }?.forEach {
             templateIds.addAll(it.pipelineTemplateRange.split(","))
         }
-        val templateIdMap = if (templateIds.isNotEmpty()) client.get(ServiceTemplateResource::class)
+        val srcTemplateIdMap = if (templateIds.isNotEmpty()) client.get(ServiceTemplateResource::class)
             .listTemplateById(templateIds, null).data?.templates ?: mapOf()
         else mapOf()
+        val templateIdMap = mutableMapOf<String, OptionalTemplate>()
+        srcTemplateIdMap.entries.forEach { templateIdMap[it.value.templateId] = it.value }
+
         val templatePipelineCountMap = client.get(ServiceTemplateInstanceResource::class)
             .countTemplateInstanceDetail(projectId, templateIds).data ?: mapOf()
 
@@ -463,7 +466,8 @@ class QualityRuleService @Autowired constructor(
                 pipelineExecuteCount = rule.executeCount,
                 interceptTimes = rule.interceptTimes,
                 enable = rule.enable,
-                permissions = rulePermission
+                permissions = rulePermission,
+                gatewayId = rule.gatewayId
             )
         } ?: listOf()
         return Pair(count, list)
