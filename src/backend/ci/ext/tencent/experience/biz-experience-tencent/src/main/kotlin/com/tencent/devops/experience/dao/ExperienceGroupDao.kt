@@ -27,6 +27,7 @@
 
 package com.tencent.devops.experience.dao
 
+import com.tencent.bkrepo.common.artifact.constant.PROJECT_ID
 import com.tencent.devops.model.experience.tables.TExperienceGroup
 import org.jooq.DSLContext
 import org.jooq.Record1
