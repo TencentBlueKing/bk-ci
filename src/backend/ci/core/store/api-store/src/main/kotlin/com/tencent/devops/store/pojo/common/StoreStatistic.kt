@@ -40,7 +40,7 @@ data class StoreStatistic(
     val score: Double?,
     @ApiModelProperty("流水线个数")
     val pipelineCnt: Int? = null,
-    @ApiModelProperty("最近执行次数s")
+    @ApiModelProperty("最近执行次数")
     val recentExecuteNum: Int? = null,
     @ApiModelProperty("成功率")
     val successRate: Double? = null

@@ -77,5 +77,7 @@ data class MarketItem(
     @ApiModelProperty("是否已在该项目安装 true：是，false：否")
     val installed: Boolean? = null,
     @ApiModelProperty("每日统计信息列表")
-    val dailyStatisticList: List<StoreDailyStatistic>? = null
+    val dailyStatisticList: List<StoreDailyStatistic>? = null,
+    @ApiModelProperty("最近执行次数")
+    val recentExecuteNum: Int? = null
 )
