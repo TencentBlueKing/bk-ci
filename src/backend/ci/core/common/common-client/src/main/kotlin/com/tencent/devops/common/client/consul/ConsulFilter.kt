@@ -41,7 +41,6 @@ import javax.servlet.http.HttpServletRequest
 class ConsulFilter : Filter {
 
     override fun init(p0: FilterConfig?) {
-        TODO("Not yet implemented")
     }
 
     override fun doFilter(request: ServletRequest?, response: ServletResponse?, chain: FilterChain?) {
@@ -53,6 +52,5 @@ class ConsulFilter : Filter {
     }
 
     override fun destroy() {
-        TODO("Not yet implemented")
     }
 }
