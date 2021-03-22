@@ -691,7 +691,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             // 批量获取版本内容
             val versionRecords = marketAtomVersionLogDao.getAtomVersions(dslContext, atomIds)
             val versionMap = mutableMapOf<String, String>()
-            versionRecords.forEach { versionRecord ->
+            versionRecords?.forEach { versionRecord ->
                 versionMap[versionRecord.atomId] = versionRecord.content
             }
             records.forEach {
