@@ -36,6 +36,7 @@
                             <vuex-input
                                 :data-vv-scope="`param-${paramIndex}`"
                                 :disabled="true"
+                                v-bk-tooltips="{ content: param.desc, placements: ['bottom'] }"
                                 :handle-change="(name, value) => handleParamChange(name, value, paramIndex)"
                                 v-validate.initial="`required|unique:${data.params.map(p => p.key).join(&quot;,&quot;)}|max: 50|${snonVarRule}`"
                                 name="key"
