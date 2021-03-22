@@ -49,6 +49,7 @@ class ConsulFilter : Filter {
         if (consulTag != null) {
             ConsulContent.setConsulContent(consulTag)
         }
+        chain?.doFilter(request, response)
     }
 
     override fun destroy() {
