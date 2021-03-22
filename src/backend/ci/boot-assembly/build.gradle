@@ -34,7 +34,8 @@ dependencies {
 
     compile project(":core:artifactory:biz-artifactory-store")
     compile project(":core:artifactory:biz-artifactory-sample")
-    compile project(":core:dispatch:biz-dispatch-docker")
+    compile project(":core:dispatch:biz-dispatch")
+    compile project(":core:dispatch-docker:biz-dispatch-docker")
     compile project(":core:environment:biz-environment-sample")
     compile project(":core:image:biz-image")
     compile project(":core:log:biz-log")
