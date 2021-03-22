@@ -30,7 +30,9 @@ package com.tencent.devops.process.api.external
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
@@ -63,6 +65,9 @@ interface ExternalScmResource {
     @POST
     @Path("/codetgit/commit")
     fun webHookCodeTGitCommit(
+        @ApiParam("请求token")
+        @HeaderParam("X-Token")
+        secret: String? = null,
         event: String
     ): Result<Boolean>
 }
