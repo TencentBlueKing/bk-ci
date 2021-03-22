@@ -75,7 +75,7 @@ class MarketAtomVersionLogDao {
         }
     }
 
-    fun getAtomVersions(dslContext: DSLContext, atomIds: List<String>): Result<TAtomVersionLogRecord> {
+    fun getAtomVersions(dslContext: DSLContext, atomIds: List<String>): Result<TAtomVersionLogRecord>? {
         with(TAtomVersionLog.T_ATOM_VERSION_LOG) {
             return dslContext.selectFrom(this)
                 .where(ATOM_ID.`in`(atomIds))
