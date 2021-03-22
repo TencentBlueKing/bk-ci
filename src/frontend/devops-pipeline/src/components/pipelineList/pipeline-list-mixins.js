@@ -10,7 +10,7 @@ export default {
     },
     methods: {
         getHistoryURL (pipelineId) {
-            return `${WEB_URL_PIRFIX}/pipeline/${this.$route.params.projectId}/${pipelineId}/history`
+            return `${WEB_URL_PREFIX}/pipeline/${this.$route.params.projectId}/${pipelineId}/history`
         },
         emitEventHandler (eventName, pipelineId) {
             bus.$emit(eventName, pipelineId)
