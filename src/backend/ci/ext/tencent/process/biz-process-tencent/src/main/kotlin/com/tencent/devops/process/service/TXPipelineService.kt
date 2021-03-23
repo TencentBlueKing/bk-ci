@@ -592,7 +592,10 @@ class TXPipelineService @Autowired constructor(
                 }
                 else -> {
                     logger.info("Not support plugin:${it.getClassType()}, skip...")
-                    comment.append("# 注意：不再支持插件【${it.name}(${it.getClassType()})】的导出！请检查YAML的完整性，或切换为研发商店推荐的插件后再导出。\n")
+                    comment.append(
+                        "# 注意：不再支持插件【${it.name}(${it.getClassType()})】的导出！" +
+                            "请检查YAML的完整性，或切换为研发商店推荐的插件后再导出。\n"
+                    )
                     if (isGitCI) {
                         val task = OldVersionTask(
                             displayName = it.name,
@@ -602,7 +605,8 @@ class TXPipelineService @Autowired constructor(
                         taskList.add(
                             TaskData(
                                 task,
-                                "# ======== 工蜂CI不支持蓝盾老版本插件 ${it.name} ，请在研发商店搜索新插件替换 ======== \n ${it.getClassType()}@latest",
+                                "# ======== 工蜂CI不支持蓝盾老版本插件 ${it.name} ，" +
+                                    "请在研发商店搜索新插件替换 ======== \n ${it.getClassType()}@latest",
                                 toYamlStr(task)
                             )
                         )
@@ -626,7 +630,9 @@ class TXPipelineService @Autowired constructor(
                 val dispatchType = modelContainer.dispatchType ?: return PoolData(null, null, null)
                 // 工蜂CI仅支持docker，devCloud，macos
                 val tip =
-                    "# 注意：工蜂CI暂不支持当前类型的构建机【${dispatchType.buildType().value}(${dispatchType.buildType().name})】的导出, 需检查JOB(${modelContainer.name})的Pool字段 "
+                    "# 注意：工蜂CI暂不支持当前类型的构建机" +
+                        "【${dispatchType.buildType().value}(${dispatchType.buildType().name})】的导出, " +
+                        "需检查JOB(${modelContainer.name})的Pool字段 "
                 when (dispatchType.buildType()) {
                     BuildType.DOCKER, BuildType.PUBLIC_DEVCLOUD -> {
                         return PoolData(
@@ -680,7 +686,11 @@ class TXPipelineService @Autowired constructor(
                         }
                     }
                     else -> {
-                        comment.append("# 注意：暂不支持当前类型的构建机【${dispatchType.buildType().value}(${dispatchType.buildType().name})】的导出, 需检查JOB(${modelContainer.name})的Pool字段 \n")
+                        comment.append(
+                            "# 注意：暂不支持当前类型的构建机" +
+                                "【${dispatchType.buildType().value}(${dispatchType.buildType().name})】的导出, " +
+                                "需检查JOB(${modelContainer.name})的Pool字段 \n"
+                        )
                         return PoolData(null, null, null)
                     }
                 }
@@ -692,7 +702,10 @@ class TXPipelineService @Autowired constructor(
     }
 
     private fun getThirdPartyEnvPool(dispatchType: DispatchType, projectId: String, comment: StringBuilder): Pool? {
-        comment.append("# 注意：【${BuildType.THIRD_PARTY_AGENT_ENV.value}】的环境【${dispatchType.value}】在新业务下可能不存在，请手动修改成存在的环境，并检查操作系统是否正确！ \n")
+        comment.append(
+            "# 注意：【${BuildType.THIRD_PARTY_AGENT_ENV.value}】的环境【${dispatchType.value}】在新业务下可能不存在，" +
+                "请手动修改成存在的环境，并检查操作系统是否正确！ \n"
+        )
         return if (dispatchType is ThirdPartyAgentEnvDispatchType) {
             val agentsResult = if (dispatchType.agentType == AgentType.ID) {
                 client.get(ServiceThirdPartyAgentResource::class)
@@ -702,7 +715,10 @@ class TXPipelineService @Autowired constructor(
                     .getAgentsByEnvName(projectId, dispatchType.value)
             }
             val os = if (agentsResult.isNotOk() || null == agentsResult.data || agentsResult.data!!.isEmpty()) {
-                logger.error("getPoolFromModelContainer , ThirdPartyAgentIDDispatchType , not found agent:${dispatchType.envName}")
+                logger.error(
+                    "getPoolFromModelContainer , ThirdPartyAgentIDDispatchType , " +
+                        "not found agent:${dispatchType.envName}"
+                )
                 VMBaseOS.LINUX
             } else {
                 when (agentsResult.data!![0].os) {
@@ -742,7 +758,10 @@ class TXPipelineService @Autowired constructor(
     }
 
     private fun getThirdPartyAgentPool(dispatchType: DispatchType, projectId: String, comment: StringBuilder): Pool? {
-        comment.append("# 注意：【${BuildType.THIRD_PARTY_AGENT_ID.value}】的节点【${dispatchType.value}】在新业务下可能不存在，请手动修改成存在的节点！ \n")
+        comment.append(
+            "# 注意：【${BuildType.THIRD_PARTY_AGENT_ID.value}】的节点【${dispatchType.value}】在新业务下可能不存在，" +
+                "请手动修改成存在的节点！ \n"
+        )
         return if (dispatchType is ThirdPartyAgentIDDispatchType) {
             val agentResult = if (dispatchType.agentType == AgentType.ID) {
                 client.get(ServiceThirdPartyAgentResource::class)
@@ -752,7 +771,10 @@ class TXPipelineService @Autowired constructor(
                     .getAgentByDisplayName(projectId, dispatchType.value)
             }
             val os = if (agentResult.isNotOk() || null == agentResult.data) {
-                logger.error("getPoolFromModelContainer , ThirdPartyAgentIDDispatchType , not found agent:${dispatchType.displayName}")
+                logger.error(
+                    "getPoolFromModelContainer , ThirdPartyAgentIDDispatchType , " +
+                        "not found agent:${dispatchType.displayName}"
+                )
                 VMBaseOS.LINUX
             } else {
                 when (agentResult.data!!.os) {
