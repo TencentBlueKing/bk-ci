@@ -60,11 +60,11 @@ class ProjectTagService @Autowired constructor(
         projectTagDao.updateProjectTags(
             dslContext = dslContext,
             projectIds = opProjectTagUpdateDTO.projectCodeList!!,
-            consulTag = opProjectTagUpdateDTO.consulTags
+            routerTag = opProjectTagUpdateDTO.routerTag
         )
         executePool.submit {
             projectTagRefresh(
-                consulTag = opProjectTagUpdateDTO.consulTags,
+                consulTag = opProjectTagUpdateDTO.routerTag,
                 redisOperation = redisOperation,
                 projectCodeIds = opProjectTagUpdateDTO.projectCodeList!!
             )
@@ -79,7 +79,7 @@ class ProjectTagService @Autowired constructor(
         checkOrg(opProjectTagUpdateDTO)
         projectTagDao.updateOrgTags(
             dslContext = dslContext,
-            consulTag = opProjectTagUpdateDTO.consulTags,
+            routerTag = opProjectTagUpdateDTO.routerTag,
             bgId = opProjectTagUpdateDTO.bgId,
             centerId = opProjectTagUpdateDTO.centerId,
             deptId = opProjectTagUpdateDTO.deptId
@@ -94,7 +94,33 @@ class ProjectTagService @Autowired constructor(
 
         executePool.submit {
             projectTagRefresh(
-                consulTag = opProjectTagUpdateDTO.consulTags,
+                consulTag = opProjectTagUpdateDTO.routerTag,
+                redisOperation = redisOperation,
+                projectCodeIds = projectCodes
+            )
+        }
+        return Result(true)
+    }
+
+    fun updateTagByChannel(
+        opProjectTagUpdateDTO: OpProjectTagUpdateDTO
+    ): Result<Boolean> {
+        logger.info("updateTagByChannel: $opProjectTagUpdateDTO")
+        checkChannel(opProjectTagUpdateDTO.channel)
+        projectTagDao.updateChannelTags(
+            dslContext = dslContext,
+            routerTag = opProjectTagUpdateDTO.routerTag,
+            channel = opProjectTagUpdateDTO.channel!!
+        )
+
+        val projectCodes = projectTagDao.listByChannel(
+            dslContext = dslContext,
+            channel = opProjectTagUpdateDTO.channel!!
+        ).map { it.englishName }
+
+        executePool.submit {
+            projectTagRefresh(
+                consulTag = opProjectTagUpdateDTO.routerTag,
                 redisOperation = redisOperation,
                 projectCodeIds = projectCodes
             )
@@ -104,6 +130,11 @@ class ProjectTagService @Autowired constructor(
 
     private fun checkProject(projectIds: List<String>?) {
         if (projectIds == null || projectIds.isEmpty()) {
+            throw ParamBlankException("Invalid projectIds")
+        }
+    }
+    private fun checkChannel(channel: String?) {
+        if (channel == null || channel.isEmpty()) {
             throw ParamBlankException("Invalid projectIds")
         }
     }

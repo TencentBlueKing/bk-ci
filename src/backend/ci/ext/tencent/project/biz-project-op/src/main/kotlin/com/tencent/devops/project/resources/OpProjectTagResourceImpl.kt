@@ -46,4 +46,8 @@ class OpProjectTagResourceImpl @Autowired constructor(
     override fun setTagByOrg(opProjectTagUpdateDTO: OpProjectTagUpdateDTO): Result<Boolean> {
         return projectTagService.updateTagByOrg(opProjectTagUpdateDTO)
     }
+
+    override fun setTagByChannel(opProjectTagUpdateDTO: OpProjectTagUpdateDTO): Result<Boolean> {
+        return projectTagService.updateTagByChannel(opProjectTagUpdateDTO)
+    }
 }

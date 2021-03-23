@@ -16,8 +16,8 @@ BEGIN
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_PROJECT'
-                    AND COLUMN_NAME = 'consul_tag') THEN
-        ALTER TABLE T_PROJECT ADD COLUMN `consul_tag` VARCHAR(32) NULL COMMENT 'consul路由tags' AFTER `pipeline_limit`;
+                    AND COLUMN_NAME = 'router_tag') THEN
+        ALTER TABLE T_PROJECT ADD COLUMN `router_tag` VARCHAR(32) NULL COMMENT 'consul路由tags' AFTER `pipeline_limit`;
     END IF;
 
     COMMIT;

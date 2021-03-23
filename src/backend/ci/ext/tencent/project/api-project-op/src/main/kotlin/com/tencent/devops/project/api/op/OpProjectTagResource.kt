@@ -60,4 +60,12 @@ interface OpProjectTagResource {
         @ApiParam(value = "consulTag请求入参", required = true)
         opProjectTagUpdateDTO: OpProjectTagUpdateDTO
     ): Result<Boolean>
+
+    @ApiOperation("按组织设置consul Tag")
+    @PUT
+    @Path("/setTagByChannel")
+    fun setTagByChannel(
+        @ApiParam(value = "consulTag请求入参", required = true)
+        opProjectTagUpdateDTO: OpProjectTagUpdateDTO
+    ): Result<Boolean>
 }

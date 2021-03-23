@@ -34,9 +34,9 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("项目consul tag修改入参")
 data class OpProjectTagUpdateDTO(
-    @JsonProperty(value = "consulTags", required = true)
-    @ApiModelProperty("项目对应的consul tags")
-    val consulTags: String,
+    @JsonProperty(value = "routerTag", required = true)
+    @ApiModelProperty("项目对应的router tags")
+    val routerTag: String,
     @JsonProperty(value = "projectCodeList", required = false)
     @ApiModelProperty("项目编码集合")
     val projectCodeList: List<String>?,
@@ -48,5 +48,8 @@ data class OpProjectTagUpdateDTO(
     val centerId: Long?,
     @JsonProperty(value = "deptId", required = false)
     @ApiModelProperty("deptId")
-    val deptId: Long?
+    val deptId: Long?,
+    @JsonProperty(value = "channel", required = false)
+    @ApiModelProperty("channel")
+    val channel: String?
 )

@@ -30,8 +30,11 @@ package com.tencent.devops.project.dao
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.model.project.Tables
+import com.tencent.devops.model.project.tables.TProject
+import com.tencent.devops.model.project.tables.records.TProjectRecord
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -39,17 +42,27 @@ class ProjectTagDao {
 
     fun updateProjectTags(
         dslContext: DSLContext,
-        consulTag: String,
+        routerTag: String,
         projectIds: List<String>
     ) {
         with(Tables.T_PROJECT) {
-            dslContext.update(this).set(CONSUL_TAG, consulTag).where(ENGLISH_NAME.`in`(projectIds)).execute()
+            dslContext.update(this).set(ROUTER_TAG, routerTag).where(ENGLISH_NAME.`in`(projectIds)).execute()
+        }
+    }
+
+    fun updateChannelTags(
+        dslContext: DSLContext,
+        routerTag: String,
+        channel: String
+    ) {
+        with(Tables.T_PROJECT) {
+            dslContext.update(this).set(ROUTER_TAG, routerTag).where(CHANNEL.eq(channel)).execute()
         }
     }
 
     fun updateOrgTags(
         dslContext: DSLContext,
-        consulTag: String,
+        routerTag: String,
         bgId: Long?,
         centerId: Long?,
         deptId: Long?
@@ -72,7 +85,16 @@ class ProjectTagDao {
             if (deptId != null) {
                 conditions.add(DEPT_ID.eq(deptId))
             }
-            dslContext.update(this).set(CONSUL_TAG, consulTag).where(conditions).execute()
+            dslContext.update(this).set(ROUTER_TAG, routerTag).where(conditions).execute()
+        }
+    }
+
+    fun listByChannel(
+        dslContext: DSLContext,
+        channel: String
+    ): Result<TProjectRecord> {
+        with(TProject.T_PROJECT) {
+            return dslContext.selectFrom(this).where(CHANNEL.eq(channel)).fetch()
         }
     }
 }
