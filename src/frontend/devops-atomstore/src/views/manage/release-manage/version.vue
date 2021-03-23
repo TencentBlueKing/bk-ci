@@ -78,7 +78,9 @@
 
             getAtomVersion () {
                 return this.$store.dispatch('store/requestVersionList', {
-                    atomCode: this.detail.atomCode
+                    atomCode: this.detail.atomCode,
+                    page: this.pagination.current,
+                    pageSize: this.pagination.limit
                 }).then((res) => {
                     this.versionList = res.records || []
                     const lastestVersion = this.versionList[0] || {}

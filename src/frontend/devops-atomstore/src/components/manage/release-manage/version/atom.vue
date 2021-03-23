@@ -1,14 +1,40 @@
 <template>
-    <section class="show-version g-scroll-table">
+    <section class="show-version g-scroll-pagination-table">
         <bk-button theme="primary"
             class="version-button"
             :disabled="disableAddVersion"
             @click="editAtom('upgradeAtom', versionList[0].atomId)"
         > {{ $t('store.新增版本') }} </bk-button>
-        <bk-table :data="versionList" :outer-border="false" :header-border="false" :header-cell-style="{ background: '#fff' }">
+        <bk-table :data="versionList"
+            :outer-border="false"
+            :header-border="false"
+            :header-cell-style="{ background: '#fff' }"
+            :pagination="pagination"
+            @page-change="(page) => $emit('pageChanged', page)"
+            @page-limit-change="(currentLimit, prevLimit) => $emit('pageLimitChanged', currentLimit, prevLimit)"
+        >
             <bk-table-column :label="$t('store.版本')">
                 <template slot-scope="props">
                     <span>{{ props.row.version || 'init' }}</span>
+                </template>
+            </bk-table-column>
+            <bk-table-column :label="$t('store.版本日志')">
+                <template slot-scope="props">
+                    <bk-popover placement="top" theme="light">
+                        <span class="text-overflow">{{ props.row.versionContent }}</span>
+                        <div slot="content" style="white-space: normal;">
+                            <mavon-editor
+                                :editable="false"
+                                default-open="preview"
+                                :subfield="false"
+                                :toolbars-flag="false"
+                                :external-link="false"
+                                :box-shadow="false"
+                                preview-background="#fff"
+                                v-model="props.row.versionContent"
+                            />
+                        </div>
+                    </bk-popover>
                 </template>
             </bk-table-column>
             <bk-table-column :label="$t('store.状态')" prop="atomStatus" :formatter="statusFormatter"></bk-table-column>
@@ -63,7 +89,8 @@
 
     export default {
         props: {
-            versionList: Array
+            versionList: Array,
+            pagination: Object
         },
 
         data () {
