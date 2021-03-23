@@ -38,7 +38,6 @@ import com.tencent.devops.process.engine.utils.TestTool
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 
 class DependOnControlTest {
 
