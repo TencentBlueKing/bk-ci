@@ -115,11 +115,12 @@ class LogMQConfiguration @Autowired constructor() {
     }
 
     @Bean
-    fun logMQEventDispatcher(
+    fun buildLogPrintService(
         @Qualifier(value = EXTEND_RABBIT_TEMPLATE_NAME)
         rabbitTemplate: RabbitTemplate,
-        logPrintBean: LogPrintBean
-    ) = BuildLogPrintService(rabbitTemplate, logPrintBean)
+        logPrintBean: LogPrintBean,
+        logServiceConfig: LogServiceConfig
+    ) = BuildLogPrintService(rabbitTemplate, logPrintBean, logServiceConfig)
 
     @Bean
     fun logEventBind(
