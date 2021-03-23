@@ -20,7 +20,7 @@
                 </li>
                 <li class="detail-item">
                     <span class="detail-label">{{ $t('store.功能标签') }}：</span>
-                    <label-list :label-list="detail.labelList.map(x => x.labelName)"></label-list>
+                    <label-list :label-list="(detail.labelList || []).map(x => x.labelName)"></label-list>
                 </li>
                 <li class="detail-item">
                     <span class="detail-label">{{ $t('store.适用机器') }}：</span>
@@ -65,7 +65,16 @@
                 </li>
                 <li class="detail-item">
                     <span class="detail-label">{{ $t('store.发布描述') }}：</span>
-                    <span>{{detail.versionContent || '--'}}</span>
+                    <mavon-editor
+                        :editable="false"
+                        default-open="preview"
+                        :subfield="false"
+                        :toolbars-flag="false"
+                        :external-link="false"
+                        :box-shadow="false"
+                        preview-background="#fff"
+                        v-model="detail.versionContent"
+                    />
                 </li>
             </ul>
         </section>

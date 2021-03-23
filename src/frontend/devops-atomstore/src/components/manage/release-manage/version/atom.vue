@@ -143,7 +143,7 @@
                 this.hasShowDetail = true
                 this.detailLoading = true
                 this.$store.dispatch('store/requestAtomDetail', { atomId }).then((res) => {
-                    this.detail = res
+                    this.detail = res || {}
                 }).catch((err) => {
                     this.$bkMessage({ message: err.message || err, theme: 'error' })
                 }).finally(() => {

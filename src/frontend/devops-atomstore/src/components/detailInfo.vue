@@ -105,7 +105,18 @@
         <bk-row>
             <bk-col :span="12" class="g-progress-item">
                 <span class="g-progress-label">{{ $t('store.发布描述') }} :</span>
-                <span class="g-progress-content">{{detail.versionContent}}</span>
+                <span class="g-progress-content">
+                    <mavon-editor class="image-remark-input"
+                        ref="mdHook"
+                        v-model="detail.versionContent"
+                        :editable="false"
+                        :toolbars-flag="false"
+                        default-open="preview"
+                        :box-shadow="false"
+                        :subfield="false"
+                        preview-back-ground="#fafbfd"
+                    />
+                </span>
             </bk-col>
         </bk-row>
     </bk-container>

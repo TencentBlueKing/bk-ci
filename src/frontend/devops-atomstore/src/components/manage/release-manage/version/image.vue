@@ -26,9 +26,10 @@
             <bk-table-column :label="$t('store.状态')" prop="imageStatus" :formatter="statusFormatter"></bk-table-column>
             <bk-table-column :label="$t('store.创建人')" prop="creator"></bk-table-column>
             <bk-table-column :label="$t('store.创建时间')" prop="createTime" :formatter="convertTime"></bk-table-column>
-            <bk-table-column :label="$t('store.操作')" width="120" class-name="handler-btn">
+            <bk-table-column :label="$t('store.操作')" width="150" class-name="handler-btn">
                 <template slot-scope="props">
                     <section v-show="!index">
+                        <span class="update-btn" @click="showDetail(props.row.imageId)">{{ $t('store.查看') }}</span>
                         <span class="update-btn"
                             v-if="props.row.imageStatus === 'INIT'"
                             @click="$router.push({ name: 'editImage', params: { imageId: props.row.imageId } })"
@@ -71,14 +72,29 @@
                 </bk-form>
             </template>
         </bk-sideslider>
+
+        <bk-sideslider quick-close
+            class="offline-atom-slider"
+            :is-show.sync="hasShowDetail"
+            :title="$t('store.查看详情')"
+            :width="800">
+            <template slot="content">
+                <image-detail :detail="detail" v-bkloading="{ isLoading: detailLoading }" class="version-detail"></image-detail>
+            </template>
+        </bk-sideslider>
     </section>
 </template>
 
 <script>
     import { imageStatusList } from '@/store/constants'
     import { convertTime } from '@/utils/index'
+    import imageDetail from '../../detail/image-detail/show.vue'
 
     export default {
+        components: {
+            imageDetail
+        },
+
         props: {
             versionList: Array,
             pagination: Object
@@ -103,7 +119,10 @@
                         version: '',
                         reason: ''
                     }
-                }
+                },
+                hasShowDetail: false,
+                detailLoading: false,
+                detail: {}
             }
         },
 
@@ -115,6 +134,18 @@
         },
 
         methods: {
+            showDetail (imageId) {
+                this.hasShowDetail = true
+                this.detailLoading = true
+                this.$store.dispatch('store/requestImageDetail', imageId).then((res) => {
+                    this.detail = res || {}
+                }).catch((err) => {
+                    this.$bkMessage({ message: err.message || err, theme: 'error' })
+                }).finally(() => {
+                    this.detailLoading = false
+                })
+            },
+
             requireRule (name) {
                 return {
                     required: true,
@@ -166,3 +197,9 @@
         }
     }
 </script>
+
+<style lang="scss" scoped>
+    .version-detail {
+        padding: 20px;
+    }
+</style>
