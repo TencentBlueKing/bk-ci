@@ -554,15 +554,18 @@ class MarketAtomDao : AtomBaseDao() {
     fun getAtomsByAtomCode(
         dslContext: DSLContext,
         atomCode: String,
-        page: Int,
-        pageSize: Int
+        page: Int? = null,
+        pageSize: Int? = null
     ): Result<TAtomRecord>? {
         return with(TAtom.T_ATOM) {
-            dslContext.selectFrom(this)
+            val baseStep = dslContext.selectFrom(this)
                 .where(ATOM_CODE.eq(atomCode))
                 .orderBy(CREATE_TIME.desc())
-                .limit((page - 1) * pageSize, pageSize)
-                .fetch()
+            if (null != page && null != pageSize) {
+                baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+            } else {
+                baseStep.fetch()
+            }
         }
     }
 
