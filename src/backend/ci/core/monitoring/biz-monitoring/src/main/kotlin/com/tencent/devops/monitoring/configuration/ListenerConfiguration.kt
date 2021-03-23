@@ -85,11 +85,11 @@ class ListenerConfiguration {
         container.setQueueNames(atomMonitorDataReportQueue.name)
         container.setConcurrentConsumers(1)
         container.setMaxConcurrentConsumers(max(10, 1))
-        container.setAmqpAdmin(rabbitAdmin)
+        container.setRabbitAdmin(rabbitAdmin)
         container.setStartConsumerMinInterval(5000)
         container.setConsecutiveActiveTrigger(10)
         container.setMismatchedQueuesFatal(true)
-        container.setMessageListener(adapter)
+        container.messageListener = adapter
         return container
     }
 

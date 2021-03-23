@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.monitoring.client.InfluxdbClient
 import com.tencent.devops.monitoring.pojo.AtomMonitorFailDetailData
 import com.tencent.devops.monitoring.pojo.AtomMonitorStatisticData
+import org.influxdb.dto.QueryResult
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -82,24 +83,30 @@ class AtomMonitorService @Autowired constructor(
     }
 
     private fun getNum(sql: String): Int {
-        var num = 0
+        val num: Int
         val queryResult = influxdbClient.select(sql)
         if (null != queryResult && !queryResult.hasError()) {
-            queryResult.results.forEach { result ->
-                result.run {
-                    series?.forEach { serie ->
-                        serie.run {
-                            num = values[0][1].let { if (it is Number) it.toInt() else 0 }
-                        }
-                    }
-                }
-            }
+            num = getNumFromResult(queryResult)
         } else {
             logger.error("queryResult error , ${queryResult?.error} , ${queryResult?.results?.size}")
             throw ErrorCodeException(
                 statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
                 errorCode = CommonMessageCode.ERROR_REST_EXCEPTION_COMMON_TIP
             )
+        }
+        return num
+    }
+
+    private fun getNumFromResult(queryResult: QueryResult): Int {
+        var num = 0
+        queryResult.results.forEach { result ->
+            result.run {
+                series?.forEach { serie ->
+                    serie.run {
+                        num = values[0][1].let { if (it is Number) it.toInt() else 0 }
+                    }
+                }
+            }
         }
         return num
     }
