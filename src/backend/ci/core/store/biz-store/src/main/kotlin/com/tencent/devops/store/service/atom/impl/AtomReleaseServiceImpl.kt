@@ -716,7 +716,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         val count = atomDao.countByName(dslContext, atomName)
         if (count > 0) {
             // 判断插件名称是否重复（插件升级允许名称一样）
-            flag = atomDao.countByName(dslContext, atomName, atomCode) < count
+            flag = atomDao.countByName(dslContext = dslContext, name = atomName, atomCode = atomCode) < count
         }
         return flag
     }

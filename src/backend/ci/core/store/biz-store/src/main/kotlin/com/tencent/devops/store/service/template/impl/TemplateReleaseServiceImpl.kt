@@ -410,7 +410,11 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
         val count = marketTemplateDao.countByName(dslContext, templateName)
         if (count > 0) {
             // 判断模板名称是否重复（模板升级允许名称一样）
-            flag = marketTemplateDao.countByName(dslContext, templateCode, templateName) < count
+            flag = marketTemplateDao.countByName(
+                dslContext = dslContext,
+                templateCode = templateCode,
+                templateName = templateName
+            ) < count
         }
         return flag
     }
