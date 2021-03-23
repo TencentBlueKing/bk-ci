@@ -420,13 +420,8 @@ class PipelineBuildWebhookService @Autowired constructor(
                 }
                 return false
             } else {
-                PipelineWebhookBuildLogContext.addLogBuildInfo(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    taskId = element.id!!,
-                    taskName = element.name,
-                    success = false,
-                    triggerResult = matchResult.failedReason
+                logger.info(
+                    "$pipelineId|webhook trigger match unsuccess|(${element.name}|repo(${matcher.getRepoName()})"
                 )
             }
         }

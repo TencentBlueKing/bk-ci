@@ -57,6 +57,7 @@ open class GitApi {
         private const val OPERATION_BRANCH = "拉分支"
         private const val OPERATION_TAG = "拉标签"
         private const val OPERATION_ADD_WEBHOOK = "添加WEBHOOK"
+        private const val OPERATION_UPDATE_WEBHOOK = "修改WEBHOOK"
         private const val OPERATION_LIST_WEBHOOK = "查询WEBHOOK"
         private const val OPERATION_ADD_COMMIT_CHECK = "添加COMMIT CHECK"
         private const val OPERATION_ADD_MR_COMMENT = "添加MR COMMENT"
@@ -112,7 +113,14 @@ open class GitApi {
         return callMethod(OPERATION_BRANCH, request, GitBranch::class.java)
     }
 
-    fun addWebhook(host: String, token: String, projectName: String, hookUrl: String, event: String?) {
+    fun addWebhook(
+        host: String,
+        token: String,
+        projectName: String,
+        hookUrl: String,
+        event: String?,
+        secret: String? = null
+    ) {
         logger.info("[$host|$projectName|$hookUrl|$event] Start add the web hook")
         val existHooks = getHooks(host, token, projectName)
         if (existHooks.isNotEmpty()) {
@@ -145,6 +153,17 @@ open class GitApi {
 
                     if (exist) {
                         logger.info("The web hook url($hookUrl) and event($event) is already exist($it)")
+                        if (!secret.isNullOrBlank()) {
+                            updateHook(
+                                host = host,
+                                hookId = it.id,
+                                token = token,
+                                projectName = projectName,
+                                hookUrl = hookUrl,
+                                event = event,
+                                secret = secret
+                            )
+                        }
                         return
                     }
                 }
@@ -152,7 +171,7 @@ open class GitApi {
         }
 
         // Add the wed hook
-        addHook(host, token, projectName, hookUrl, event)
+        addHook(host, token, projectName, hookUrl, event, secret)
     }
 
     fun addCommitCheck(
@@ -229,8 +248,22 @@ open class GitApi {
         token: String,
         projectName: String,
         hookUrl: String,
-        event: String? = null
+        event: String? = null,
+        secret: String? = null
     ): GitHook {
+        val body = webhookBody(hookUrl, event, secret)
+        val request = post(host, token, "projects/${urlEncode(projectName)}/hooks", body)
+        try {
+            return callMethod(OPERATION_ADD_WEBHOOK, request, GitHook::class.java)
+        } catch (t: GitApiException) {
+            if (t.code == HTTP_403) {
+                throw GitApiException(t.code, "Webhook添加失败，请确保该代码库的凭据关联的用户对代码库有Developer权限")
+            }
+            throw t
+        }
+    }
+
+    private fun webhookBody(hookUrl: String, event: String?, secret: String?): String {
         val params = mutableMapOf<String, String>()
 
         params["url"] = hookUrl
@@ -243,14 +276,30 @@ open class GitApi {
                 params[CodeGitWebhookEvent.PUSH_EVENTS.value] = false.toString()
             }
         }
+        if (!secret.isNullOrBlank()) {
+            params["token"] = secret!!
+        }
         params[CodeGitWebhookEvent.ENABLE_SSL_VERIFICATION.value] = false.toString()
-        val body = JsonUtil.getObjectMapper().writeValueAsString(params)
-        val request = post(host, token, "projects/${urlEncode(projectName)}/hooks", body)
+        return JsonUtil.getObjectMapper().writeValueAsString(params)
+    }
+
+    private fun updateHook(
+        host: String,
+        hookId: Long,
+        token: String,
+        projectName: String,
+        hookUrl: String,
+        event: String? = null,
+        secret: String? = null
+    ): GitHook {
+        logger.info("Start to update webhook of host $host by project $projectName")
+        val body = webhookBody(hookUrl, event, secret)
+        val request = put(host, token, "projects/${urlEncode(projectName)}/hooks/$hookId", body)
         try {
-            return callMethod(OPERATION_ADD_WEBHOOK, request, GitHook::class.java)
+            return callMethod(OPERATION_UPDATE_WEBHOOK, request, GitHook::class.java)
         } catch (t: GitApiException) {
             if (t.code == HTTP_403) {
-                throw GitApiException(t.code, "Webhook添加失败，请确保该代码库的凭据关联的用户对代码库有Developer权限")
+                throw GitApiException(t.code, "Webhook更新失败，请确保该代码库的凭据关联的用户对代码库有Developer权限")
             }
             throw t
         }
