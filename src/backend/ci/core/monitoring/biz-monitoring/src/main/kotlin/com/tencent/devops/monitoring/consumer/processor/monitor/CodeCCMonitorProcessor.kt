@@ -47,7 +47,8 @@ class CodeCCMonitorProcessor : AbstractMonitorProcessor() {
             return
         }
 
-        resultMap.values.asSequence().map { buildMonitorData(it, extData) }.filterNotNull().forEach { monitorDatas.add(it) }
+        resultMap.values.asSequence().map { buildMonitorData(it, extData) }.filterNotNull()
+            .forEach { monitorDatas.add(it) }
     }
 
     private fun buildMonitorData(it: Any?, extData: Map<String, Any>): MonitorData? {

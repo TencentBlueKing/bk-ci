@@ -770,7 +770,7 @@ class OpIdeAtomServiceImpl @Autowired constructor(
         val count = ideAtomDao.countByName(dslContext, atomName)
         if (count > 0) {
             // 判断IDE插件名称是否重复（IDE插件升级允许名称一样）
-            flag = ideAtomDao.countByName(dslContext, atomName, atomCode) >= count
+            flag = ideAtomDao.countByName(dslContext, atomName, atomCode) < count
         }
         return flag
     }

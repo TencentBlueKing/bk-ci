@@ -38,6 +38,7 @@ import org.influxdb.dto.QueryResult
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import java.lang.reflect.Field
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
@@ -142,14 +143,22 @@ class InfluxdbClient {
             if (it.isAnnotationPresent(InfluxTag::class.java)) {
                 tag[it.name] = it.get(any)?.toString() ?: ""
             } else {
-                val value = it.get(any)
-                field[it.name] = if (value == null) "" else {
-                    if (value is Number) value else value.toString()
-                }
+                generateField(it, any, field)
             }
         }
 
         return field to tag
+    }
+
+    private fun generateField(
+        it: Field,
+        any: Any,
+        field: MutableMap<String, Any>
+    ) {
+        val value = it.get(any)
+        field[it.name] = if (value == null) "" else {
+            if (value is Number) value else value.toString()
+        }
     }
 
     /**

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -61,9 +62,9 @@ object CsvUtil {
         val bufferedWriter = BufferedWriter(outputStreamWriter)
         var csvPrinter: CSVPrinter? = null
         try {
-            //创建csvPrinter并设置表格头
+            // 创建csvPrinter并设置表格头
             csvPrinter = CSVPrinter(bufferedWriter, CSVFormat.DEFAULT.withHeader(*headers))
-            //写数据
+            // 写数据
             csvPrinter.printRecords(cellList)
             csvPrinter.flush()
             bytes = byteArrayOutputStream.toString(StandardCharsets.UTF_8.name()).toByteArray()
@@ -78,7 +79,6 @@ object CsvUtil {
                 byteArrayOutputStream.close()
             } catch (e: IOException) {
                 logger.error("stream close error:", e)
-                throw ExecuteException("writeCsv error")
             }
         }
         return bytes
@@ -96,7 +96,7 @@ object CsvUtil {
         response: HttpServletResponse
     ) {
         try {
-            val convertFileName = URLEncoder.encode("${fileName}.csv", StandardCharsets.UTF_8.name())
+            val convertFileName = URLEncoder.encode("$fileName.csv", StandardCharsets.UTF_8.name())
             response.contentType = "application/csv"
             response.characterEncoding = StandardCharsets.UTF_8.name()
             response.setHeader("Pragma", "public")
