@@ -90,6 +90,17 @@ export default {
                 console.error(e)
                 return []
             }
+        },
+        generateReqUrl (url, query) {
+            const queryKey = []
+            let lackParam = false
+            const newUrl = url.replace(/{([^\{\}]+)}/g, (str, key) => {
+                const value = query[key]
+                queryKey.push(key)
+                if (typeof value === 'undefined') lackParam = true
+                return value
+            })
+            return [lackParam ? '' : newUrl, queryKey]
         }
     }
 }

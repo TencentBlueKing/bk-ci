@@ -63,6 +63,10 @@ const atomFieldMixin = {
         },
         clickUnfold: {
             type: Boolean
+        },
+        descTooltips: {
+            type: String,
+            default: ''
         }
     },
     data () {
@@ -78,7 +82,10 @@ const atomFieldMixin = {
     },
     mounted () {
         const ele = document.querySelector('.atom-form-box')
-        if ((ele && ele.classList.contains('readonly')) || this.disabled) {
+        if (this.descTooltips.length && this.disabled) {
+            this.title = this.descTooltips
+            this.readOnly = true
+        } else if ((ele && ele.classList.contains('readonly')) || this.disabled) {
             this.title = this.value
             this.readOnly = true
         }

@@ -19,7 +19,9 @@
 </template>
 
 <script>
+    import mixins from '../mixins'
     export default {
+        mixins: [mixins],
         props: {
             type: {
                 type: String
@@ -128,13 +130,16 @@
                 }
 
                 if (typeof this.url === 'string' && this.url !== '') { // 只有存在url字段时才去请求
-                    let url = this.url
-                    let isErrorParam = false
-                    url = url.replace(/{([^\{\}]+)}/g, (str, key) => {
-                        const value = this.paramValues[key]
-                        if (typeof value === 'undefined') isErrorParam = true
-                        return value
-                    })
+                    // let url = this.url
+                    // let isErrorParam = false
+                    // url = url.replace(/{([^\{\}]+)}/g, (str, key) => {
+                    //     const value = this.paramValues[key]
+                    //     if (typeof value === 'undefined') isErrorParam = true
+                    //     return value
+                    // })
+
+                    let [url] = this.generateReqUrl(this.url, this.paramValues)
+                    if (!url) return
 
                     const urlQuery = this.urlQuery || {}
                     this.queryKey = []
@@ -144,7 +149,6 @@
                         url += `${index <= 0 ? '?' : '&'}${key}=${value}`
                     })
 
-                    if (isErrorParam) return
                     this.loading = true
                     this.$ajax.get(url).then((res) => {
                         this.paramList = res.data || []
