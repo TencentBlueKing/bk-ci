@@ -23,20 +23,14 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
-package com.tencent.devops.dispatch.docker
 
-import com.tencent.devops.common.service.MicroService
-import com.tencent.devops.common.service.MicroServiceApplication
-import org.springframework.context.annotation.ComponentScan
+package com.tencent.devops.common.client.consul
 
-@MicroService
-@ComponentScan(
-    "com.tencent.devops.dispatch.docker",
-    "com.tencent.devops.common.dispatch.sdk"
-)
-class Application
+object ConsulConstants {
 
-fun main(args: Array<String>) {
-    MicroServiceApplication.run(Application::class, args)
+    const val PROJECT_TAG_REDIS_KEY = "project:setting:tag:v2"
+
+    const val HEAD_CONSUL_TAG = "X-HEAD-CONSUL-TAG"
 }

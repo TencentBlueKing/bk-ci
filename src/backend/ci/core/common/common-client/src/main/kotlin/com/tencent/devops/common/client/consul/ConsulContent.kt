@@ -23,18 +23,19 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.environment
+package com.tencent.devops.common.client.consul
 
-import com.tencent.devops.common.service.MicroService
-import com.tencent.devops.common.service.MicroServiceApplication
-import org.springframework.context.annotation.ComponentScan
+object ConsulContent {
+    private val consulContent = ThreadLocal<String>()
 
-@MicroService
-@ComponentScan("com.tencent.devops.plugin", "com.tencent.devops.environment")
-class Application
+    fun getConsulContent(): String? {
+        return consulContent.get()
+    }
 
-fun main(args: Array<String>) {
-    MicroServiceApplication.run(Application::class, args)
+    fun setConsulContent(consulTag: String) {
+        consulContent.set(consulTag)
+    }
 }

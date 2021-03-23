@@ -25,18 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply plugin: "maven"
+package com.tencent.devops.websocket
 
-dependencies {
-    compile project(":core:common:common-api")
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-security")
-    compile project(":core:common:common-client")
-    compile "org.springframework.boot:spring-boot-starter-jersey"
-    compile "org.springframework.boot:spring-boot-starter-undertow"
-    compile "org.springframework.boot:spring-boot-starter-web"
-    compile "io.swagger:swagger-jersey2-jaxrs"
-    compile "com.github.ulisesbocchio:jasypt-spring-boot-starter"
-    compile "org.springframework.boot:spring-boot-starter-amqp"
-    compile('org.springframework.cloud:spring-cloud-starter-config')
+import com.tencent.devops.common.service.MicroService
+import com.tencent.devops.common.service.MicroServiceApplication
+import org.springframework.context.annotation.ComponentScan
+
+@ComponentScan("com.tencent.devops.websocket")
+@MicroService
+class WebSocketApplication
+
+fun main(args: Array<String>) {
+    MicroServiceApplication.run(WebSocketApplication::class, args)
 }

@@ -25,18 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log
+package com.tencent.devops.image
 
 import com.tencent.devops.common.service.MicroService
 import com.tencent.devops.common.service.MicroServiceApplication
 
-/**
- *
- * Powered By Tencent
- */
 @MicroService
-class Application
+class ImageApplication
 
 fun main(args: Array<String>) {
-    MicroServiceApplication.run(Application::class, args)
+    MicroServiceApplication.run(ImageApplication::class, args)
 }

@@ -23,18 +23,35 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.monitoring
+package com.tencent.devops.common.client.consul
 
-import com.tencent.devops.common.service.MicroService
-import com.tencent.devops.common.service.MicroServiceApplication
-import org.springframework.context.annotation.ComponentScan
+import com.tencent.devops.common.service.trace.TraceTag
+import org.springframework.stereotype.Component
+import javax.servlet.Filter
+import javax.servlet.FilterChain
+import javax.servlet.FilterConfig
+import javax.servlet.ServletRequest
+import javax.servlet.ServletResponse
+import javax.servlet.http.HttpServletRequest
 
-@MicroService
-@ComponentScan("com.tencent.devops.monitoring")
-class Application
+@Component
+class ConsulFilter : Filter {
 
-fun main(args: Array<String>) {
-    MicroServiceApplication.run(Application::class, args)
+    override fun init(p0: FilterConfig?) {
+    }
+
+    override fun doFilter(request: ServletRequest?, response: ServletResponse?, chain: FilterChain?) {
+        val httpServletRequest = request as HttpServletRequest
+        val consulTag = httpServletRequest?.getHeader(ConsulConstants.HEAD_CONSUL_TAG)
+        if (consulTag != null) {
+            ConsulContent.setConsulContent(consulTag)
+        }
+        chain?.doFilter(request, response)
+    }
+
+    override fun destroy() {
+    }
 }
