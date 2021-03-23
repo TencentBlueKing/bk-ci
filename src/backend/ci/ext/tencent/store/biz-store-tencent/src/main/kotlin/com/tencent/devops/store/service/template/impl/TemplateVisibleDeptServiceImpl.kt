@@ -220,29 +220,47 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
             val imageCode = dispatchType.imageCode
             val imageName = dispatchType.imageName
             if (!imageCode.isNullOrBlank()) {
-                val storeCommonDao = try {
-                    SpringContextUtil.getBean(AbstractStoreCommonDao::class.java, "${storeType}_COMMON_DAO")
-                } catch (e: Exception) {
-                    logger.warn("StoreCommonDao is not exist")
-                    null
-                }
-                if (storeCommonDao != null) {
-                    val storeBaseInfo = storeCommonDao.getStoreBaseInfoByCode(dslContext, imageCode!!)
-                        ?: throw ErrorCodeException(
-                            errorCode = StoreMessageCode.USER_IMAGE_NOT_EXIST,
-                            params = arrayOf(imageName ?: imageCode)
-                        )
-                    // 如果镜像是公共镜像，则无需校验与模板的可见范围
-                    if (!storeBaseInfo.publicFlag) {
-                        handleInvalidStoreList(
-                            storeDeptMap = templateImageDeptMap,
-                            storeCode = imageCode,
-                            templateDeptInfos = deptInfos,
-                            invalidStoreList = invalidImageList,
-                            storeName = imageName ?: imageCode
-                        )
-                    }
-                }
+                handleInvalidImageList(
+                    storeType = storeType,
+                    imageCode = imageCode,
+                    imageName = imageName,
+                    templateImageDeptMap = templateImageDeptMap,
+                    deptInfos = deptInfos,
+                    invalidImageList = invalidImageList
+                )
+            }
+        }
+    }
+
+    private fun handleInvalidImageList(
+        storeType: String,
+        imageCode: String,
+        imageName: String?,
+        templateImageDeptMap: Map<String, List<DeptInfo>?>,
+        deptInfos: List<DeptInfo>?,
+        invalidImageList: MutableList<String>
+    ) {
+        val storeCommonDao = try {
+            SpringContextUtil.getBean(AbstractStoreCommonDao::class.java, "${storeType}_COMMON_DAO")
+        } catch (e: Exception) {
+            logger.warn("StoreCommonDao is not exist")
+            null
+        }
+        if (storeCommonDao != null) {
+            val storeBaseInfo = storeCommonDao.getStoreBaseInfoByCode(dslContext, imageCode!!)
+                ?: throw ErrorCodeException(
+                    errorCode = StoreMessageCode.USER_IMAGE_NOT_EXIST,
+                    params = arrayOf(imageName ?: imageCode)
+                )
+            // 如果镜像是公共镜像，则无需校验与模板的可见范围
+            if (!storeBaseInfo.publicFlag) {
+                handleInvalidStoreList(
+                    storeDeptMap = templateImageDeptMap,
+                    storeCode = imageCode,
+                    templateDeptInfos = deptInfos,
+                    invalidStoreList = invalidImageList,
+                    storeName = imageName ?: imageCode
+                )
             }
         }
     }
@@ -262,27 +280,21 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
                 val storeDeptName = deptInfo.deptName
                 val storeDepts = storeDeptName.split("/")
                 val storeDeptSize = storeDepts.size
-                templateDeptInfos?.forEach { dept ->
+                templateDeptInfos?.forEach templateDeptEach@{ dept ->
                     val templateDeptId = dept.deptId
                     val templateDeptName = dept.deptName
                     val templateDepts = templateDeptName.split("/")
                     val templateDeptSize = templateDepts.size
-                    if (templateDeptSize >= storeDeptSize) {
-                        if (storeDeptId == 0 || templateDeptId == storeDeptId) {
-                            flag = true // 组件在模板的可见范围内
-                            return@breaking
-                        }
-                        val gap = templateDeptSize - storeDeptSize
-                        // 判断模板的上级机构是否属于组件的可见范围
-                        val parentDeptInfoList = client.get(ServiceProjectOrganizationResource::class)
-                            .getParentDeptInfos(templateDeptId.toString(), gap + 1).data
-                        parentDeptInfoList?.forEach {
-                            if (it.id.toInt() == storeDeptId) {
-                                flag = true // 组件在模板的可见范围内
-                                return@breaking
-                            }
-                        }
+                    if (templateDeptSize < storeDeptSize) {
+                        return@templateDeptEach
                     }
+                    flag = validateTemplateDept(
+                        storeDeptId = storeDeptId,
+                        templateDeptId = templateDeptId,
+                        templateDeptSize = templateDeptSize,
+                        storeDeptSize = storeDeptSize
+                    )
+                    if (flag) return@breaking
                 }
             }
         }
@@ -290,5 +302,40 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
         if (!flag) {
             invalidStoreList.add(storeName)
         }
+    }
+
+    private fun validateTemplateDept(
+        storeDeptId: Int,
+        templateDeptId: Int,
+        templateDeptSize: Int,
+        storeDeptSize: Int
+    ): Boolean {
+        if (storeDeptId == 0 || templateDeptId == storeDeptId) {
+            return true // 组件在模板的可见范围内
+        }
+        // 判断模板的上级机构是否属于组件的可见范围
+        return validateTemplateVisible(
+            templateDeptSize = templateDeptSize,
+            storeDeptSize = storeDeptSize,
+            templateDeptId = templateDeptId,
+            storeDeptId = storeDeptId
+        )
+    }
+
+    private fun validateTemplateVisible(
+        templateDeptSize: Int,
+        storeDeptSize: Int,
+        templateDeptId: Int,
+        storeDeptId: Int
+    ): Boolean {
+        val gap = templateDeptSize - storeDeptSize
+        val parentDeptInfoList = client.get(ServiceProjectOrganizationResource::class)
+            .getParentDeptInfos(templateDeptId.toString(), gap + 1).data
+        parentDeptInfoList?.forEach {
+            if (it.id.toInt() == storeDeptId) {
+                return true // 组件在模板的可见范围内
+            }
+        }
+        return false
     }
 }
