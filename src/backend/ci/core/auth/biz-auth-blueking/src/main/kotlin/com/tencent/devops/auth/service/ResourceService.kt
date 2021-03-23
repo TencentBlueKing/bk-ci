@@ -80,7 +80,7 @@ class ResourceService @Autowired constructor(
         }
 
         val actionType = callBackInfo.type
-        val resourceType = findEnvNode(actionType)
+        val resourceType = ActionUtils.actionType(actionType)
 
         val resourceInfo = callbackService.getResource(resourceType)
         if (resourceInfo == null) {

@@ -56,6 +56,30 @@ class ActionUtilsTest {
     }
 
     @Test
+    fun actionType3() {
+        val actionType = "rule_create"
+        assertEquals("rule", ActionUtils.actionType(actionType))
+    }
+
+    @Test
+    fun actionType4() {
+        val actionType = "experience_group_update"
+        assertEquals("experience_group", ActionUtils.actionType(actionType))
+    }
+
+    @Test
+    fun actionType5() {
+        val actionType = "env_node_view"
+        assertEquals("env_node", ActionUtils.actionType(actionType))
+    }
+
+    @Test
+    fun actionType6() {
+        val actionType = "experience_group_update"
+        assertNotEquals("experience", ActionUtils.actionType(actionType))
+    }
+
+    @Test
     fun decord() {
         val password = "YmtfaWFtOnh5MnM4aXAyOGptaXp5aWoyN2liZ3JucmRoMmw0a3p1"
         val str = StringUtils.decodeAuth(password)
