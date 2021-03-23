@@ -53,8 +53,13 @@ import org.springframework.context.annotation.Configuration
  * 流水线监控配置
  */
 @Configuration
-@Suppress("ALL")
+@Suppress("TooManyFunctions")
 class CodeWebhookListenerConfiguration {
+
+    companion object {
+        private const val BUILD_MAX_CONCURRENT = 10
+        private const val CHECK_MAX_CONCURRENT = 5
+    }
 
     @Bean
     fun rabbitAdmin(connectionFactory: ConnectionFactory): RabbitAdmin {
@@ -117,7 +122,7 @@ class CodeWebhookListenerConfiguration {
         container.setQueueNames(buildFinishCodeWebhookQueue.name)
         val concurrency = webhookConcurrency!!
         container.setConcurrentConsumers(concurrency)
-        container.setMaxConcurrentConsumers(Math.max(10, concurrency))
+        container.setMaxConcurrentConsumers(Math.max(BUILD_MAX_CONCURRENT, concurrency))
         container.setRabbitAdmin(rabbitAdmin)
 
         val adapter = MessageListenerAdapter(listener, listener::execute.name)
@@ -149,7 +154,7 @@ class CodeWebhookListenerConfiguration {
         container.setQueueNames(buildStartCodeWebhookQueue.name)
         val concurrency = webhookConcurrency!!
         container.setConcurrentConsumers(concurrency)
-        container.setMaxConcurrentConsumers(Math.max(10, concurrency))
+        container.setMaxConcurrentConsumers(Math.max(BUILD_MAX_CONCURRENT, concurrency))
         container.setRabbitAdmin(rabbitAdmin)
 
         val adapter = MessageListenerAdapter(listener, listener::execute.name)
@@ -198,7 +203,7 @@ class CodeWebhookListenerConfiguration {
         container.setQueueNames(gitCommitCheckQueue.name)
         val concurrency = gitCommitCheckConcurrency!!
         container.setConcurrentConsumers(concurrency)
-        container.setMaxConcurrentConsumers(Math.max(5, concurrency))
+        container.setMaxConcurrentConsumers(Math.max(CHECK_MAX_CONCURRENT, concurrency))
         container.setRabbitAdmin(rabbitAdmin)
 
         val adapter = MessageListenerAdapter(listener, listener::execute.name)
@@ -237,7 +242,7 @@ class CodeWebhookListenerConfiguration {
         container.setQueueNames(githubPrQueue.name)
         val concurrency = githubPrConcurrency!!
         container.setConcurrentConsumers(concurrency)
-        container.setMaxConcurrentConsumers(Math.max(5, concurrency))
+        container.setMaxConcurrentConsumers(Math.max(CHECK_MAX_CONCURRENT, concurrency))
         container.setRabbitAdmin(rabbitAdmin)
 
         val adapter = MessageListenerAdapter(listener, listener::execute.name)
