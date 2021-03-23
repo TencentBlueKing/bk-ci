@@ -53,6 +53,7 @@
                         v-model="detail.description"
                     />
                 </li>
+                <slot></slot>
             </ul>
         </section>
     </article>
@@ -86,3 +87,66 @@
         }
     }
 </script>
+
+<style lang="scss" scoped>
+.show-detail {
+    display: flex;
+    align-items: flex-start;
+    position: relative;
+    .detail-img {
+        width: 100px;
+        height: 100px;
+        margin-right: 32px;
+    }
+    .detail-items {
+        flex: 1;
+        max-width: calc(100% - 132px);
+        overflow-x: hidden;
+    }
+    .detail-item {
+        font-size: 14px;
+        line-height: 18px;
+        display: flex;
+        align-items: flex-start;
+        &:not(:nth-child(1)) {
+            margin-top: 18px;
+        }
+    }
+    .detail-label {
+        color: #999;
+        min-width: 100px;
+    }
+    .item-name {
+        font-size: 20px;
+        line-height: 24px;
+    }
+    .overflow {
+        max-height: 290px;
+        overflow: hidden;
+    }
+    .summary-all {
+        cursor: pointer;
+        color: #1592ff;
+        font-size: 14px;
+        line-height: 20px;
+        display: block;
+        text-align: center;
+        position: absolute;
+        bottom: -22px;
+        left: 50%;
+        transform: translateX(-50%);
+        &::before {
+            content: '';
+            position: absolute;
+            top: 4px;
+            left: calc(50% - 50px);
+            width: 6px;
+            height: 6px;
+            display: block;
+            transform: rotate(-45deg);
+            border-left: 2px solid #1592ff;
+            border-bottom: 2px solid #1592ff;
+        }
+    }
+}
+</style>

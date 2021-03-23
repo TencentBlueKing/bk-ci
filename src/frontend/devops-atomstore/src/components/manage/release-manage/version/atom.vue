@@ -18,31 +18,13 @@
                     <span>{{ props.row.version || 'init' }}</span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('store.版本日志')">
-                <template slot-scope="props">
-                    <bk-popover placement="top" theme="light">
-                        <span class="text-overflow">{{ props.row.versionContent }}</span>
-                        <div slot="content" style="white-space: normal;">
-                            <mavon-editor
-                                :editable="false"
-                                default-open="preview"
-                                :subfield="false"
-                                :toolbars-flag="false"
-                                :external-link="false"
-                                :box-shadow="false"
-                                preview-background="#fff"
-                                v-model="props.row.versionContent"
-                            />
-                        </div>
-                    </bk-popover>
-                </template>
-            </bk-table-column>
             <bk-table-column :label="$t('store.状态')" prop="atomStatus" :formatter="statusFormatter"></bk-table-column>
             <bk-table-column :label="$t('store.创建人')" prop="creator"></bk-table-column>
             <bk-table-column :label="$t('store.创建时间')" prop="createTime"></bk-table-column>
-            <bk-table-column :label="$t('store.操作')" width="120" class-name="handler-btn">
+            <bk-table-column :label="$t('store.操作')" width="150" class-name="handler-btn">
                 <template slot-scope="props">
                     <section v-show="!index">
+                        <span class="update-btn" @click="showDetail(props.row.atomId)">{{ $t('store.查看') }}</span>
                         <span class="update-btn" v-if="props.row.atomStatus === 'INIT'" @click="editAtom('shelfAtom', props.row.atomId)"> {{ $t('store.上架') }} </span>
                         <span class="update-btn" v-if="progressStatus.indexOf(props.row.atomStatus) > -1" @click="routerProgress(props.row.atomId)"> {{ $t('store.进度') }} </span>
                         <span class="update-btn" v-if="props.row.atomStatus === 'RELEASED'" @click="offlineAtom(props.row)"> {{ $t('store.下架') }} </span>
@@ -81,13 +63,42 @@
                 </bk-form>
             </template>
         </bk-sideslider>
+
+        <bk-sideslider quick-close
+            class="offline-atom-slider"
+            :is-show.sync="hasShowDetail"
+            :title="$t('store.查看详情')"
+            :width="800">
+            <template slot="content">
+                <atom-detail :detail="detail" v-bkloading="{ isLoading: detailLoading }" class="version-detail">
+                    <li class="detail-item">
+                        <span class="detail-label">{{ $t('store.版本日志') }}：</span>
+                        <mavon-editor
+                            :editable="false"
+                            default-open="preview"
+                            :subfield="false"
+                            :toolbars-flag="false"
+                            :external-link="false"
+                            :box-shadow="false"
+                            preview-background="#fff"
+                            v-model="detail.versionContent"
+                        />
+                    </li>
+                </atom-detail>
+            </template>
+        </bk-sideslider>
     </section>
 </template>
 
 <script>
     import { atomStatusMap } from '@/store/constants'
+    import atomDetail from '../../detail/atom-detail/show.vue'
 
     export default {
+        components: {
+            atomDetail
+        },
+
         props: {
             versionList: Array,
             pagination: Object
@@ -109,7 +120,10 @@
                         reason: '',
                         version: ''
                     }
-                }
+                },
+                hasShowDetail: false,
+                detailLoading: false,
+                detail: {}
             }
         },
 
@@ -125,6 +139,18 @@
         },
 
         methods: {
+            showDetail (atomId) {
+                this.hasShowDetail = true
+                this.detailLoading = true
+                this.$store.dispatch('store/requestAtomDetail', { atomId }).then((res) => {
+                    this.detail = res
+                }).catch((err) => {
+                    this.$bkMessage({ message: err.message || err, theme: 'error' })
+                }).finally(() => {
+                    this.detailLoading = false
+                })
+            },
+
             statusFormatter (row, column, cellValue, index) {
                 return this.$t(this.atomStatusList[cellValue])
             },
@@ -188,7 +214,10 @@
 </script>
 
 <style lang="scss" scoped>
-    .manage-version-offline {
+    .manage-version-offline, .version-detail {
         padding: 20px;
+    }
+    /deep/ .bk-sideslider-content {
+        max-height: calc(100% - 60px) !important;
     }
 </style>
