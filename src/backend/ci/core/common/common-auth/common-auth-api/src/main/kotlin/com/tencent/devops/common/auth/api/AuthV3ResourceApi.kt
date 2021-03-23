@@ -36,7 +36,7 @@ enum class AuthV3ResourceApi(val value: String, val oldType: AuthResourceType) {
     QUALITY_RULE("quality_rule", AuthResourceType.QUALITY_RULE),
     QUALITY_GROUP("quality_group", AuthResourceType.QUALITY_GROUP),
     WETEST_TASK("wetest_task", AuthResourceType.WETEST_TASK),
-    WETEST_EMAIL_GROUP("wetest_group", AuthResourceType.WETEST_EMAIL_GROUP)
+    WETEST_EMAIL_GROUP("wetest_group", AuthResourceType.WETEST_EMAIL_GROUP);
 
     companion object {
         fun get(value: String): AuthResourceType {
