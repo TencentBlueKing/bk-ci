@@ -30,6 +30,7 @@ dependencies {
     compile project(":core:common:common-auth:common-auth-blueking")
     compile project(":core:common:common-auth:common-auth-v3")
     compile project(":core:quality:biz-quality")
+    compile project(":core:quality:biz-quality-sample")
 }
 
 apply from: "$rootDir/task_spring_boot_package.gradle"

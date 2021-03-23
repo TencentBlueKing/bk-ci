@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.redis
 
+import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -51,5 +52,10 @@ class RedisAutoConfiguration {
         template.valueSerializer = StringRedisSerializer()
         template.afterPropertiesSet()
         return RedisOperation(template)
+    }
+
+    @Bean
+    fun simpleRateLimiter(@Autowired redisOperation: RedisOperation): SimpleRateLimiter {
+        return SimpleRateLimiter(redisOperation)
     }
 }

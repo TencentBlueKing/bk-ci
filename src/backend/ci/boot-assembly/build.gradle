@@ -34,7 +34,8 @@ dependencies {
 
     compile project(":core:artifactory:biz-artifactory-store")
     compile project(":core:artifactory:biz-artifactory-sample")
-    compile project(":core:dispatch:biz-dispatch-docker")
+    compile project(":core:dispatch:biz-dispatch")
+    compile project(":core:dispatch-docker:biz-dispatch-docker")
     compile project(":core:environment:biz-environment-sample")
     compile project(":core:image:biz-image")
     compile project(":core:log:biz-log")
@@ -42,6 +43,7 @@ dependencies {
     compile project(":core:notify:biz-notify-blueking")
     compile project(":core:openapi:biz-openapi")
     compile project(":core:plugin:biz-plugin")
+    compile project(":core:process:biz-engine")
     compile project(":core:process:biz-process-sample")
     compile project(":core:project:biz-project-sample")
     compile project(":core:quality:biz-quality")

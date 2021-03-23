@@ -32,6 +32,7 @@ import com.tencent.devops.model.repository.tables.TRepositoryCodeGitlab
 import com.tencent.devops.model.repository.tables.records.TRepositoryCodeGitlabRecord
 import com.tencent.devops.repository.pojo.UpdateRepositoryInfoRequest
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
@@ -120,6 +121,14 @@ class RepositoryCodeGitLabDao {
             baseStep.set(UPDATED_TIME, LocalDateTime.now())
                 .where(REPOSITORY_ID.eq(repositoryId))
                 .execute()
+        }
+    }
+
+    fun list(dslContext: DSLContext, repositoryIds: Set<Long>): Result<TRepositoryCodeGitlabRecord>? {
+        with(TRepositoryCodeGitlab.T_REPOSITORY_CODE_GITLAB) {
+            return dslContext.selectFrom(this)
+                .where(REPOSITORY_ID.`in`(repositoryIds))
+                .fetch()
         }
     }
 }

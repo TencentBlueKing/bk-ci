@@ -532,7 +532,7 @@
                 const hasVaildRule = ruleList.some(item =>
                     item.taskId === this.element.atomCode
                     && (item.ruleList.every(rule => !rule.gatewayId)
-                        || item.ruleList.some(rule => this.element.name.indexOf(rule.gatewayId) > -1))
+                    || item.ruleList.some(rule => this.element.name.indexOf(rule.gatewayId) > -1))
                 )
                 return hasVaildRule
             },
@@ -556,7 +556,7 @@
             },
             toSetRule () {
                 this.isSetted = true
-                const url = `${WEB_URL_PIRFIX}/quality/${this.projectId}/createRule/?${this.isTemplatePanel ? 'templateId' : 'pipelineId'}=${this.isTemplatePanel ? this.templateId : this.pipelineId}&element=${this.element.atomCode}`
+                const url = `${WEB_URL_PREFIX}/quality/${this.projectId}/createRule/?${this.isTemplatePanel ? 'templateId' : 'pipelineId'}=${this.isTemplatePanel ? this.templateId : this.pipelineId}&element=${this.element.atomCode}`
                 window.open(url, '_blank')
             },
             requestMatchTemplateRules () {

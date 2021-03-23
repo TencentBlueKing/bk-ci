@@ -66,11 +66,13 @@ declare module '*.vue' {
     export default Vue
 }
 
-declare const LOGIN_SERVICE_URL: string
-declare const GW_URL_PREFIX: string
-declare const DOCS_URL_PREFIX: string
-declare const DEVOPS_LS_VERSION: string
-declare const ENTERPRISE_VERSION: string
+
+declare var LOGIN_SERVICE_URL: string
+declare var API_URL_PREFIX: string
+declare var DOCS_URL_PREFIX: string
+declare var DEVOPS_LS_VERSION: string
+declare var ENTERPRISE_VERSION: string
+
 declare module '*.png'
 
 declare const X_DEVOPS_PROJECT_ID: string

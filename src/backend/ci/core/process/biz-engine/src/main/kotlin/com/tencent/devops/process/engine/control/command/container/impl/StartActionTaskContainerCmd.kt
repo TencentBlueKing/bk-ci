@@ -72,14 +72,14 @@ class StartActionTaskContainerCmd(
         val actionType = commandContext.event.actionType
         commandContext.cmdFlowState = CmdFlowState.FINALLY
         when {
-            ActionType.isStart(actionType) || ActionType.REFRESH == actionType || ActionType.isEnd(actionType) -> {
-                if (!ActionType.isTerminate(actionType)) {
+            actionType.isStartOrRefresh() || actionType.isEnd() -> {
+                if (!actionType.isTerminate()) {
                     commandContext.buildStatus = BuildStatus.SUCCEED
                 }
                 val waitToDoTask = findTask(commandContext)
                 if (waitToDoTask == null) { // 非fast kill的强制终止时到最后无任务，最终状态必定是FAILED
                     val fastKill = FastKillUtils.isFastKillCode(commandContext.event.errorCode)
-                    if (!fastKill && ActionType.isTerminate(actionType) && !commandContext.buildStatus.isFailure()) {
+                    if (!fastKill && actionType.isTerminate() && !commandContext.buildStatus.isFailure()) {
                         commandContext.buildStatus = BuildStatus.FAILED
                     }
                     commandContext.latestSummary = "status=${commandContext.buildStatus}"
@@ -113,8 +113,10 @@ class StartActionTaskContainerCmd(
             if (t.status.isPause()) { // 若为暂停，则要确保拿到的任务为stopVM-关机或者空任务发送next stage任务
                 toDoTask = findNextTaskAfterPause(containerContext, currentTask = t)
                 breakFlag = toDoTask == null
-            } else if (t.status.isRunning()) {
-                breakFlag = ActionType.isStart(containerContext.event.actionType)
+            } else if (t.status.isRunning()) { // 当前有运行中任务
+                // 如果是要启动或者刷新, 当前已经有运行中任务，则需要break
+                breakFlag = containerContext.event.actionType.isStartOrRefresh()
+                // 如果是要终止，则需要拿出当前任务进行终止
                 toDoTask = findRunningTask(containerContext, currentTask = t)
             } else if (t.status.isFailure() || t.status.isCancel()) {
                 // 当前任务已经失败or取消，并且没有设置[失败继续]的， 设置给容器最终FAILED状态
@@ -151,7 +153,7 @@ class StartActionTaskContainerCmd(
     }
 
     private fun isTerminate(containerContext: ContainerContext): Boolean {
-        return ActionType.isTerminate(containerContext.event.actionType) ||
+        return containerContext.event.actionType.isTerminate() ||
             FastKillUtils.isFastKillCode(containerContext.event.errorCode)
     }
 
@@ -161,7 +163,7 @@ class StartActionTaskContainerCmd(
     ): PipelineBuildTask? {
         var toDoTask: PipelineBuildTask? = null
         when {
-            ActionType.isTerminate(containerContext.event.actionType) -> { // 终止命令，需要设置失败，并返回
+            containerContext.event.actionType.isTerminate() -> { // 终止命令，需要设置失败，并返回
                 containerContext.buildStatus = BuildStatus.RUNNING
                 toDoTask = currentTask // 将当前任务传给TaskControl做终止
                 buildLogPrinter.addRedLine(
@@ -172,7 +174,7 @@ class StartActionTaskContainerCmd(
                     executeCount = toDoTask.executeCount ?: 1
                 )
             }
-            ActionType.isEnd(containerContext.event.actionType) -> { // 将当前正在运行的任务传给TaskControl做结束
+            containerContext.event.actionType.isEnd() -> { // 将当前正在运行的任务传给TaskControl做结束
                 containerContext.buildStatus = BuildStatus.RUNNING
                 toDoTask = currentTask
             }
