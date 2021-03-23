@@ -212,10 +212,10 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
             totalFailNum += dailyStatistic.dailyFailNum
             val dailyFailDetail = dailyStatistic.dailyFailDetail
             if (dailyFailDetail != null) {
-                totalSystemFailNum += dailyFailDetail["dailySystemFailNum"] as Int
-                totalUserFailNum += dailyFailDetail["dailyUserFailNum"] as Int
-                totalThirdFailNum += dailyFailDetail["dailyThirdFailNum"] as Int
-                totalComponentFailNum += dailyFailDetail["dailyComponentFailNum"] as Int
+                totalSystemFailNum += dailyFailDetail["dailySystemFailNum"] as? Int ?: 0
+                totalUserFailNum += dailyFailDetail["dailyUserFailNum"] as? Int ?: 0
+                totalThirdFailNum += dailyFailDetail["dailyThirdFailNum"] as? Int ?: 0
+                totalComponentFailNum += dailyFailDetail["dailyComponentFailNum"] as? Int ?: 0
             }
         }
         // 生成这一段时间总的执行失败详情
