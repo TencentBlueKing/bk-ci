@@ -130,7 +130,16 @@ class ServiceGitResourceImpl @Autowired constructor(
         token: String,
         ref: String
     ): Result<String> {
-        return Result(gitService.getGitFileContent(repoName, filePath, authType, token, ref))
+        return Result(
+            gitService.getGitFileContent(
+                repoUrl = null,
+                repoName = repoName,
+                filePath = filePath,
+                authType = authType,
+                token = token,
+                ref = ref
+            )
+        )
     }
 
     override fun getGitlabFileContent(

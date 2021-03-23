@@ -33,6 +33,8 @@ import com.tencent.devops.auth.entity.ManagerOrganizationInfo
 import com.tencent.devops.auth.entity.UserChangeType
 import com.tencent.devops.auth.pojo.UserPermissionInfo
 import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.service.utils.LogUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -40,7 +42,8 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 import javax.annotation.PostConstruct
 
-@Service@Suppress("ALL")
+@Service
+@Suppress("ALL")
 class UserPermissionService @Autowired constructor(
     val strategyService: StrategyService,
     val managerOrganizationService: ManagerOrganizationService,
@@ -210,7 +213,22 @@ class UserPermissionService @Autowired constructor(
             )
             if (userPermissionMap.getIfPresent(user) != null) {
                 val userPermission = userPermissionMap.getIfPresent(user)?.toMutableMap()
-                userPermission!![organizationId.toString()] = userPermissionInfo
+                val organizationPermissionInfo = userPermission!![organizationId.toString()]
+                // 如果有其他策略包含了相同的组织权限, 需要合并两条策略的权限集合
+                if (organizationPermissionInfo != null) {
+                    val mergePermissionMap = mergePermission(
+                        oldPermission = organizationPermissionInfo.permissionMap,
+                        newPermission = permissionMap
+                    )
+                    val newPermissionInfo = UserPermissionInfo(
+                        organizationId = organizationId,
+                        organizationLevel = level,
+                        permissionMap = mergePermissionMap
+                    )
+                    userPermission!![organizationId.toString()] = newPermissionInfo
+                } else {
+                    userPermission!![organizationId.toString()] = userPermissionInfo
+                }
                 userPermissionMap.put(user, userPermission)
             } else {
                 val userPermission = mutableMapOf<String, UserPermissionInfo>()
@@ -218,6 +236,29 @@ class UserPermissionService @Autowired constructor(
                 userPermissionMap.put(user, userPermission)
             }
         }
+    }
+
+    private fun mergePermission(
+        oldPermission: Map<AuthResourceType, List<AuthPermission>>,
+        newPermission: Map<AuthResourceType, List<AuthPermission>>
+    ): Map<AuthResourceType, List<AuthPermission>> {
+        val oldPermissionTypes = oldPermission.keys
+        val newPermissionTypes = newPermission.keys
+        val mergePermissionTypes = mutableSetOf<AuthResourceType>()
+        mergePermissionTypes.addAll(oldPermissionTypes)
+        mergePermissionTypes.addAll(newPermissionTypes)
+        val mergePermissionMap = mutableMapOf<AuthResourceType, List<AuthPermission>>()
+        mergePermissionTypes.forEach {
+            val authPermissionSet = mutableSetOf<AuthPermission>()
+            if (oldPermission[it] != null) {
+                authPermissionSet.addAll(oldPermission[it]!!.toSet())
+            }
+            if (newPermission[it] != null) {
+                authPermissionSet.addAll(newPermission[it]!!.toSet())
+            }
+            mergePermissionMap[it] = authPermissionSet.toList()
+        }
+        return mergePermissionMap
     }
 
     companion object {

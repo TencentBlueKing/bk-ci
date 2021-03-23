@@ -59,7 +59,6 @@ import com.tencent.devops.process.utils.PIPELINE_START_PARENT_PIPELINE_ID
 import com.tencent.devops.store.pojo.common.KEY_VERSION
 import org.apache.lucene.util.RamUsageEstimator
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import java.util.concurrent.TimeUnit
 
 @Suppress("ALL")
@@ -73,12 +72,9 @@ class MeasureServiceImpl constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val atomMonitorSwitch: String,
     private val maxMonitorDataSize: String = "1677216",
-    rabbitTemplate: RabbitTemplate
+    private val measureEventDispatcher: MeasureEventDispatcher,
+    private val atomMonitorEventDispatcher: AtomMonitorEventDispatcher
 ) : MeasureService {
-
-    private val measureEventDispatcher = MeasureEventDispatcher(rabbitTemplate = rabbitTemplate)
-
-    private val atomMonitorEventDispatcher = AtomMonitorEventDispatcher(rabbitTemplate = rabbitTemplate)
 
     override fun postPipelineData(
         projectId: String,

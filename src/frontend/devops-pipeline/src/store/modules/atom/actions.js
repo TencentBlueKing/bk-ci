@@ -450,8 +450,9 @@ export default {
     },
 
     // 第一次拉取日志
+
     getInitLog ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, subTag }) {
-        return request.get(`${AJAX_URL_PIRFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}`, {
+        return request.get(`${API_URL_PREFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}`, {
             params: {
                 tag,
                 executeCount: currentExe,
@@ -462,7 +463,7 @@ export default {
 
     // 后续拉取日志
     getAfterLog ({ commit }, { projectId, pipelineId, buildId, tag, currentExe, lineNo, subTag }) {
-        return request.get(`${AJAX_URL_PIRFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/after`, {
+        return request.get(`${API_URL_PREFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/after`, {
             params: {
                 start: lineNo,
                 executeCount: currentExe,

@@ -62,11 +62,13 @@ class CommonRepoFileService @Autowired constructor(
     ): String {
         val projectName = if (subModule.isNullOrBlank()) GitUtils.getProjectName(repoUrl) else subModule
         return gitService.getGitFileContent(
-                repoName = projectName!!,
-                filePath = filePath.removePrefix("/"),
-                authType = authType,
-                token = token,
-                ref = ref ?: "master")
+            repoUrl = repoUrl,
+            repoName = projectName!!,
+            filePath = filePath.removePrefix("/"),
+            authType = authType,
+            token = token,
+            ref = ref ?: "master"
+        )
     }
 
     fun getGitFileContentOauth(userId: String, repoName: String, filePath: String, ref: String?): Result<String> {
@@ -76,6 +78,7 @@ class CommonRepoFileService @Autowired constructor(
                 ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.OAUTH_TOKEN_IS_INVALID)
         )
         return Result(gitService.getGitFileContent(
+            repoUrl = null,
             repoName = repoName,
             filePath = filePath.removePrefix("/"),
             authType = RepoAuthType.OAUTH,
