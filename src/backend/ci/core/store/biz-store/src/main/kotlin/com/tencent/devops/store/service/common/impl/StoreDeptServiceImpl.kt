@@ -44,7 +44,6 @@ class StoreDeptServiceImpl @Autowired constructor(
     private val storeDeptRelDao: StoreDeptRelDao
 ) : StoreDeptService {
 
-
     override fun getTemplateImageDeptMap(stageList: List<Stage>): Map<String, List<DeptInfo>?> {
         val templateImageCodeSet = mutableSetOf<String>()
         stageList.forEach { stage ->
