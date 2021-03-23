@@ -51,38 +51,34 @@ class BuildLogPrintResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("无效的构建ID")
         }
-        buildLogPrintService.asyncDispatchEvent(LogEvent(buildId, listOf(logMessage)))
-        return Result(true)
+        return buildLogPrintService.asyncDispatchEvent(LogEvent(buildId, listOf(logMessage)))
     }
 
     override fun addRedLogLine(buildId: String, logMessage: LogMessage): Result<Boolean> {
         if (buildId.isBlank()) {
             throw ParamBlankException("无效的构建ID")
         }
-        buildLogPrintService.asyncDispatchEvent(LogEvent(
+        return buildLogPrintService.asyncDispatchEvent(LogEvent(
             buildId = buildId,
             logs = listOf(logMessage.copy(message = Ansi().bold().fgRed().a(logMessage.message).reset().toString()))
         ))
-        return Result(true)
     }
 
     override fun addYellowLogLine(buildId: String, logMessage: LogMessage): Result<Boolean> {
         if (buildId.isBlank()) {
             throw ParamBlankException("无效的构建ID")
         }
-        buildLogPrintService.asyncDispatchEvent(LogEvent(
+        return buildLogPrintService.asyncDispatchEvent(LogEvent(
             buildId = buildId,
             logs = listOf(logMessage.copy(message = Ansi().bold().fgYellow().a(logMessage.message).reset().toString()))
         ))
-        return Result(true)
     }
 
     override fun addLogMultiLine(buildId: String, logMessages: List<LogMessage>): Result<Boolean> {
         if (buildId.isBlank()) {
             throw ParamBlankException("无效的构建ID")
         }
-        buildLogPrintService.asyncDispatchEvent(LogEvent(buildId, logMessages))
-        return Result(true)
+        return buildLogPrintService.asyncDispatchEvent(LogEvent(buildId, logMessages))
     }
 
     override fun addLogStatus(
@@ -95,7 +91,7 @@ class BuildLogPrintResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("无效的构建ID")
         }
-        buildLogPrintService.asyncDispatchEvent(LogStatusEvent(
+        return buildLogPrintService.asyncDispatchEvent(LogStatusEvent(
             buildId = buildId,
             finished = false,
             tag = tag ?: "",
@@ -103,7 +99,6 @@ class BuildLogPrintResourceImpl @Autowired constructor(
             jobId = jobId ?: "",
             executeCount = executeCount
         ))
-        return Result(true)
     }
 
     override fun updateLogStatus(
@@ -117,7 +112,7 @@ class BuildLogPrintResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("无效的构建ID")
         }
-        buildLogPrintService.asyncDispatchEvent(LogStatusEvent(
+        return buildLogPrintService.asyncDispatchEvent(LogStatusEvent(
             buildId = buildId,
             finished = finished,
             tag = tag ?: "",
@@ -125,6 +120,5 @@ class BuildLogPrintResourceImpl @Autowired constructor(
             jobId = jobId ?: "",
             executeCount = executeCount
         ))
-        return Result(true)
     }
 }

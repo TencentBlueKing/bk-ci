@@ -216,15 +216,15 @@
             },
 
             goToStoreDetail (atomCode) {
-                window.open(`${WEB_URL_PIRFIX}/store/atomStore/detail/atom/${atomCode}`, '_blank')
+                window.open(`${WEB_URL_PREFIX}/store/atomStore/detail/atom/${atomCode}`, '_blank')
             },
 
             goToPipeline (pipelineId) {
-                window.open(`${WEB_URL_PIRFIX}/pipeline/${this.projectId}/${pipelineId}/edit`, '_blank')
+                window.open(`${WEB_URL_PREFIX}/pipeline/${this.projectId}/${pipelineId}/edit`, '_blank')
             },
 
             goToStore () {
-                window.open(`${WEB_URL_PIRFIX}/store/market/home?pipeType=atom`, '_blank')
+                window.open(`${WEB_URL_PREFIX}/store/market/home?pipeType=atom`, '_blank')
             }
         }
     }

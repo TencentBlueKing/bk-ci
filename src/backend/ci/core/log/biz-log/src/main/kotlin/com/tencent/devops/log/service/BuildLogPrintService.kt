@@ -27,45 +27,51 @@
 
 package com.tencent.devops.log.service
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.log.pojo.ILogEvent
-import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.log.pojo.LogEvent
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.mq.EXTEND_RABBIT_TEMPLATE_NAME
+import com.tencent.devops.log.configuration.LogServiceConfig
 import com.tencent.devops.log.jmx.LogPrintBean
-import com.tencent.devops.log.util.IndexNameUtils
 import com.tencent.devops.log.util.LogErrorCodeEnum
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.scheduling.annotation.Scheduled
+import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.LinkedBlockingQueue
-import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.ThreadPoolExecutor
 import java.util.concurrent.TimeUnit
+import org.springframework.scheduling.annotation.Scheduled
+import java.util.concurrent.RejectedExecutionException
 import javax.annotation.Resource
 
-class BuildLogPrintService(
+class BuildLogPrintService @Autowired constructor(
     @Resource(name = EXTEND_RABBIT_TEMPLATE_NAME)
     private val rabbitTemplate: RabbitTemplate,
-    private val logPrintBean: LogPrintBean
+    private val logPrintBean: LogPrintBean,
+    private val logServiceConfig: LogServiceConfig
 ) {
 
     private val logExecutorService = ThreadPoolExecutor(
-        10,
-        100,
+        logServiceConfig.corePoolSize ?: 100,
+        logServiceConfig.maxPoolSize ?: 100,
         0L,
         TimeUnit.MILLISECONDS,
-        LinkedBlockingQueue(10000)
+        LinkedBlockingQueue(logServiceConfig.taskQueueSize ?: 1000)
     )
 
     fun dispatchEvent(event: ILogEvent) {
         try {
+            // 如果配置了长度限制才做截断处理
+            if (event is LogEvent && logServiceConfig.lineMaxLength != null) fixEvent(event)
             val eventType = event::class.java.annotations.find { s -> s is Event } as Event
             rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event) { message ->
                 // 事件中的变量指定
                 if (event.delayMills > 0) {
                     message.messageProperties.setHeader("x-delay", event.delayMills)
-                } else if (eventType.delayMills > 0) { // 事件类型固化默认值
+                } else if (eventType.delayMills > 0) {
+                    // 事件类型固化默认值
                     message.messageProperties.setHeader("x-delay", eventType.delayMills)
                 }
                 message
@@ -75,27 +81,40 @@ class BuildLogPrintService(
         }
     }
 
-    fun asyncDispatchEvent(event: ILogEvent) {
-        try {
+    fun asyncDispatchEvent(event: ILogEvent): Result<Boolean> {
+        return try {
             logExecutorService.execute {
                 dispatchEvent(event)
             }
+            Result(true)
         } catch (e: RejectedExecutionException) {
             // 队列满时的处理逻辑
             logger.error("[${event.buildId}] asyncDispatchEvent failed with queue tasks exceed the limit", e)
-            throw ErrorCodeException(
-                statusCode = 509,
-                errorCode = LogErrorCodeEnum.PRINT_QUEUE_LIMIT.errorCode.toString(),
-                defaultMessage = LogErrorCodeEnum.PRINT_QUEUE_LIMIT.formatErrorMessage
+            Result(
+                status = 509,
+                message = LogErrorCodeEnum.PRINT_QUEUE_LIMIT.formatErrorMessage,
+                data = false
             )
         }
     }
 
     @Scheduled(initialDelay = 10000, fixedDelay = 10000)
-    fun createNextIndex() {
+    fun logExecutorPerformance() {
         logPrintBean.savePrintTaskCount(logExecutorService.taskCount)
         logPrintBean.savePrintActiveCount(logExecutorService.activeCount)
         logPrintBean.savePrintQueueSize(logExecutorService.queue.size)
+    }
+
+    private fun fixEvent(logEvent: LogEvent) {
+        // 字符数超过32766时analyzer索引分析将失效，同时为保护系统稳定性，若配置值为空或负数则限制为32KB
+        val maxLength = if (logServiceConfig.lineMaxLength == null || logServiceConfig.lineMaxLength!! <= 0) {
+            32766
+        } else {
+            logServiceConfig.lineMaxLength!!
+        }
+        logEvent.logs.forEach {
+            it.message = CommonUtils.interceptStringInLength(it.message, maxLength) ?: ""
+        }
     }
 
     private val logger = LoggerFactory.getLogger(BuildLogPrintService::class.java)

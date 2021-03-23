@@ -266,7 +266,7 @@
                             path: row.path
                         })
                         const url = isDevnet ? res.url : res.url2
-                        window.location.href = type ? `${GW_URL_PREFIX}/pc/download/devops_pc_forward.html?downloadUrl=${url}` : url
+                        window.location.href = type ? `${API_URL_PREFIX}/pc/download/devops_pc_forward.html?downloadUrl=${url}` : url
                     }
                 } catch (err) {
                     this.handleError(err, [{
