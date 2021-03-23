@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -75,12 +76,12 @@ import com.tencent.devops.plugin.api.UserCodeccResource
 import com.tencent.devops.prebuild.dao.PreBuildPluginVersionDao
 import com.tencent.devops.prebuild.dao.PrebuildPersonalMachineDao
 import com.tencent.devops.prebuild.dao.PrebuildProjectDao
-import com.tencent.devops.prebuild.pojo.PrePluginVersion
-import com.tencent.devops.prebuild.pojo.enums.PreBuildPluginType
 import com.tencent.devops.prebuild.pojo.HistoryResponse
+import com.tencent.devops.prebuild.pojo.PrePluginVersion
 import com.tencent.devops.prebuild.pojo.PreProject
 import com.tencent.devops.prebuild.pojo.StartUpReq
 import com.tencent.devops.prebuild.pojo.UserProject
+import com.tencent.devops.prebuild.pojo.enums.PreBuildPluginType
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildId
@@ -299,7 +300,8 @@ class PreBuildService @Autowired constructor(
         job.job.steps.forEach {
             var step = it
             if (startUpReq.extraParam != null && ((step is MarketBuildTask && step.inputs.atomCode == CodeCCScanInContainerTask.atomCode) ||
-                (step is CodeCCScanInContainerTask))) {
+                        (step is CodeCCScanInContainerTask))
+            ) {
                 val whitePath = mutableListOf<String>()
                 // idea右键codecc扫描
                 if (!(startUpReq.extraParam!!.codeccScanPath.isNullOrBlank())) {
@@ -346,7 +348,9 @@ class PreBuildService @Autowired constructor(
                 }
                 step.inputs = SyncLocalCodeInput(
                     step.inputs?.agentId ?: agentInfo.agentId,
-                    step.inputs?.workspace ?: startUpReq.workspace
+                    step.inputs?.workspace ?: startUpReq.workspace,
+                    step.inputs?.useDelete ?: true,
+                    step.inputs?.syncGitRepository ?: false
                 )
 
                 installMarketAtom(userId, "syncCodeToRemote") // 确保同步代码插件安装
@@ -646,10 +650,11 @@ class PreBuildService @Autowired constructor(
 
     fun validateCIBuildYaml(yamlStr: String) = CiYamlUtils.validateYaml(yamlStr)
 
-    fun checkYml(yamlStr: String) = CiYamlUtils.checkYaml(YamlUtil.getObjectMapper().readValue(yamlStr, CIBuildYaml::class.java))
+    fun checkYml(yamlStr: String) =
+        CiYamlUtils.checkYaml(YamlUtil.getObjectMapper().readValue(yamlStr, CIBuildYaml::class.java))
 
-    fun getPluginVersion(userId: String, pluginType: String): PrePluginVersion? {
-        val record = preBuildVersionDao.getVersion(pluginType = pluginType, dslContext = dslContext) ?: return null
+    fun getPluginVersion(userId: String, pluginType: PreBuildPluginType): PrePluginVersion? {
+        val record = preBuildVersionDao.getVersion(pluginType = pluginType.name, dslContext = dslContext) ?: return null
         return PrePluginVersion(
             version = record.version,
             desc = record.desc,
@@ -657,5 +662,51 @@ class PreBuildService @Autowired constructor(
             updateTime = DateTimeUtil.toDateTime(record.updateTime as LocalDateTime),
             pluginType = PreBuildPluginType.valueOf(record.pluginType)
         )
+    }
+
+    fun creatPluginVersion(prePluginVersion: PrePluginVersion): Boolean {
+        val record =
+            preBuildVersionDao.getVersion(pluginType = prePluginVersion.pluginType.name, dslContext = dslContext)
+        if (record != null) {
+            throw RuntimeException("已存在当前插件类型的版本信息，无法新增")
+        }
+        return with(prePluginVersion) {
+            preBuildVersionDao.create(
+                version = version,
+                modifyUser = modifyUser,
+                desc = desc,
+                pluginType = pluginType.name,
+                dslContext = dslContext
+            ) > 0
+        }
+    }
+
+    fun deletePluginVersion(version: String): Boolean {
+        return preBuildVersionDao.delete(version, dslContext) > 0
+    }
+
+    fun updatePluginVersion(prePluginVersion: PrePluginVersion): Boolean {
+        return with(prePluginVersion) {
+            preBuildVersionDao.update(
+                version = version,
+                modifyUser = modifyUser,
+                desc = desc,
+                pluginType = pluginType.name,
+                dslContext = dslContext
+            ) > 0
+        }
+    }
+
+    fun getPluginVersionList(): List<PrePluginVersion> {
+        val records = preBuildVersionDao.list(dslContext) ?: return listOf()
+        return records.map {
+            PrePluginVersion(
+                version = it.version,
+                desc = it.desc,
+                modifyUser = it.modifyUser,
+                updateTime = DateTimeUtil.toDateTime(it.updateTime as LocalDateTime),
+                pluginType = PreBuildPluginType.valueOf(it.pluginType)
+            )
+        }
     }
 }

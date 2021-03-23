@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -100,6 +101,24 @@ class BkRepoDownloadService @Autowired constructor(
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         val url = bkRepoService.internalDownloadUrl(userId, projectId, artifactoryType, normalizedPath, ttl)
         return Url(url)
+    }
+
+    // 创建临时分享的下载链接，目前仅为bkRepo有，所以并未抽象
+    fun serviceGetInternalTemporaryAccessDownloadUrls(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        argPathSet: Set<String>,
+        ttl: Int,
+        permits: Int?
+    ): List<Url> {
+        logger.info("serviceGetInnerDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, argPathSet: $argPathSet, ttl: $ttl, permits: $permits")
+        val normalizedPaths = mutableSetOf<String>()
+        argPathSet.forEach { path ->
+            normalizedPaths.add(PathUtils.checkAndNormalizeAbsPath(path))
+        }
+        val urls = bkRepoService.internalTemporaryAccessDownloadUrls(userId, projectId, artifactoryType, normalizedPaths, ttl, permits)
+        return urls.map { Url(it) }
     }
 
     override fun getDownloadUrl(

@@ -1,30 +1,28 @@
 /*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- *  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
- *  *
- *  * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
- *  *
- *  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
- *  *
- *  * A copy of the MIT License is included in this file.
- *  *
- *  *
- *  * Terms of the MIT License:
- *  * ---------------------------------------------------
- *  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- *  * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- *  * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- *  * Software is furnished to do so, subject to the following conditions:
- *  *
- *  * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *  *
- *  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
- *  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
- *  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- *  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- *  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
  *
  *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
 package com.tencent.devops.process.service
@@ -52,9 +50,8 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.git.GitPullMode
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
-import com.tencent.devops.process.engine.service.PipelineBuildService
-import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.pojo.pipeline.ExtServiceBuildInitPipelineResp
+import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.store.pojo.dto.ExtServiceBaseInfoDTO
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import org.slf4j.LoggerFactory
@@ -67,8 +64,8 @@ import org.springframework.stereotype.Service
  */
 @Service
 class ExtServiceBuildInitPipelineService @Autowired constructor(
-    private val pipelineService: PipelineService,
-    private val buildService: PipelineBuildService
+    private val pipelineInfoFacadeService: PipelineInfoFacadeService,
+    private val pipelineBuildFacadeService: PipelineBuildFacadeService
 ) {
     private val logger = LoggerFactory.getLogger(ExtServiceBuildInitPipelineService::class.java)
 
@@ -200,7 +197,7 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
         val model = Model(pipelineName, pipelineName, stages)
         logger.info("model is:$model")
         // 保存流水线信息
-        val pipelineId = pipelineService.createPipeline(userId, projectCode, model, ChannelCode.AM)
+        val pipelineId = pipelineInfoFacadeService.createPipeline(userId, projectCode, model, ChannelCode.AM)
         logger.info("createPipeline result is:$pipelineId")
         // 异步启动流水线
         val startParams = mutableMapOf<String, String>() // 启动参数
@@ -212,7 +209,7 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
         var extServiceStatus = ExtServiceStatusEnum.BUILDING
         var buildId: String? = null
         try {
-            buildId = buildService.buildManualStartup(
+            buildId = pipelineBuildFacadeService.buildManualStartup(
                 userId = userId,
                 startType = StartType.SERVICE,
                 projectId = projectCode,

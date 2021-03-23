@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -26,6 +27,9 @@
 
 package com.tencent.devops.gitci.utils
 
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.gitci.pojo.GitRequestEvent
+import com.tencent.devops.scm.api.ServiceGitResource
 import org.slf4j.LoggerFactory
 
 object GitCommonUtils {
@@ -110,5 +114,50 @@ object GitCommonUtils {
             logger.error("image name invalid: $imageNameStr")
             throw Exception("image name invalid.")
         }
+    }
+
+    // 判断是否为fork库的mr请求并返回带fork库信息的event
+    fun checkAndGetForkBranch(gitRequestEvent: GitRequestEvent, client: Client): GitRequestEvent {
+        var realEvent = gitRequestEvent
+        // 如果是来自fork库的分支，单独标识,触发源项目ID和当先不同说明不是同一个库，为fork库
+        if (gitRequestEvent.sourceGitProjectId != null && gitRequestEvent.gitProjectId != gitRequestEvent.sourceGitProjectId) {
+                try {
+                    val gitToken = client.getScm(ServiceGitResource::class).getToken(gitRequestEvent.sourceGitProjectId!!).data!!
+                    logger.info("get token for gitProjectId[${gitRequestEvent.sourceGitProjectId!!}] form scm, token: $gitToken")
+                    val sourceRepositoryConf = client.getScm(ServiceGitResource::class).getProjectInfo(gitToken.accessToken, gitRequestEvent.sourceGitProjectId!!).data
+                    realEvent = gitRequestEvent.copy(
+                        // name_with_namespace: git_namespace/project_name , 要的是  git_namespace:branch
+                        branch = if (sourceRepositoryConf != null) {
+                            "${sourceRepositoryConf.pathWithNamespace.split("/")[0]}:${gitRequestEvent.branch}"
+                        } else {
+                            gitRequestEvent.branch
+                        }
+                    )
+                } catch (e: Exception) {
+                    logger.error("Cannot get source GitProjectInfo: ", e)
+                }
+            }
+        return realEvent
+    }
+
+    // 判断是否为fork库的mr请求并返回带fork库信息的branchName
+    fun checkAndGetForkBranchName(gitProjectId: Long, sourceGitProjectId: Long?, branch: String, client: Client): String {
+        // 如果是来自fork库的分支，单独标识,触发源项目ID和当先不同说明不是同一个库，为fork库
+        if (sourceGitProjectId != null && gitProjectId != sourceGitProjectId) {
+            try {
+                val gitToken = client.getScm(ServiceGitResource::class).getToken(sourceGitProjectId).data!!
+                logger.info("get token for gitProjectId[$sourceGitProjectId] form scm, token: $gitToken")
+                val sourceRepositoryConf = client.getScm(ServiceGitResource::class).getProjectInfo(gitToken.accessToken, sourceGitProjectId).data
+                // name_with_namespace: git_namespace/project_name , 要的是  git_namespace:branch
+                return if (sourceRepositoryConf != null) {
+                    "${sourceRepositoryConf.pathWithNamespace.split("/")[0]}:$branch"
+                } else {
+                    branch
+                }
+            } catch (e: Exception) {
+                logger.error("Cannot get source GitProjectInfo: ", e)
+            }
+        }
+        return branch
     }
 }

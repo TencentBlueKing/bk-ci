@@ -296,21 +296,6 @@ class PipelineModelTaskDao {
         }
     }
 
-    fun getPipelineIdsByAtomCode(
-        dslContext: DSLContext,
-        atomCodes: List<String>,
-        offset: Int,
-        limit: Int
-    ): List<String>? {
-        return with(T_PIPELINE_MODEL_TASK) {
-            dslContext.selectFrom(this)
-                .where(ATOM_CODE.`in`(atomCodes))
-                .orderBy(PIPELINE_ID)
-                .limit(offset, limit)
-                .fetch()
-        }?.map { it.pipelineId }
-    }
-
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineModelTaskDao::class.java)
     }

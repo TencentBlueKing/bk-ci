@@ -1338,7 +1338,7 @@ class PipelineBuildFacadeService(
             )
             return BuildHistoryPage(
                 page = pageNotNull,
-                pageSize = pageSizeNotNull,
+                pageSize = limit,
                 count = result.history.count,
                 records = result.history.records,
                 hasDownloadPermission = result.hasDownloadPermission,
