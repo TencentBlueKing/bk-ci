@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.log.utils.BuildLogPrinter
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.element.ExperienceElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.experience.api.service.ServiceExperienceResource

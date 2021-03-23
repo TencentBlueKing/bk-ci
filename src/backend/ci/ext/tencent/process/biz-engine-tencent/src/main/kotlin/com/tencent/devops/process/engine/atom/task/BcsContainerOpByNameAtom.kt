@@ -42,7 +42,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.BSAuthTokenApi
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.log.utils.BuildLogPrinter
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.element.BcsContainerOpByNameElement
 import com.tencent.devops.common.pipeline.element.bcs.BcsCommandStatus
 import com.tencent.devops.process.engine.atom.AtomResponse

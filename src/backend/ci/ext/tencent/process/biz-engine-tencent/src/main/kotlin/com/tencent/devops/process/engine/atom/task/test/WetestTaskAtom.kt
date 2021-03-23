@@ -39,7 +39,7 @@ import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.pipeline.element.WetestElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.log.utils.BuildLogPrinter
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.plugin.pojo.wetest.WetestAutoTestRequest
 import com.tencent.devops.plugin.pojo.wetest.WetestEmailGroup
 import com.tencent.devops.plugin.pojo.wetest.WetestInstStatus

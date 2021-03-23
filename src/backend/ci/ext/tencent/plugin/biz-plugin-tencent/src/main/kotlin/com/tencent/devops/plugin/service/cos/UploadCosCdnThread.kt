@@ -35,7 +35,7 @@ import com.tencent.devops.common.cos.COSClientConfig
 import com.tencent.devops.common.cos.model.exception.COSException
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.log.utils.BuildLogPrinter
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import net.sf.json.JSONArray
 import okhttp3.MediaType
 import okhttp3.Request

@@ -37,7 +37,7 @@ import com.tencent.devops.common.archive.client.JfrogService
 import com.tencent.devops.common.pipeline.zhiyun.ZhiyunConfig
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.RepoGray
-import com.tencent.devops.log.utils.BuildLogPrinter
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.model.plugin.tables.TPluginZhiyunProduct
 import com.tencent.devops.plugin.dao.ZhiyunProductDao
 import com.tencent.devops.plugin.pojo.zhiyun.ZhiyunProduct

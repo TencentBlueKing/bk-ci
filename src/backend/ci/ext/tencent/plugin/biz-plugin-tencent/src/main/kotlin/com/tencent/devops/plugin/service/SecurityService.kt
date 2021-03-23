@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.UnicodeUtil
 import com.tencent.devops.common.api.util.timestamp
-import com.tencent.devops.log.utils.BuildLogPrinter
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.plugin.pojo.security.UploadParams
 import okhttp3.MultipartBody
 import okhttp3.Request

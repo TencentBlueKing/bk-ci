@@ -38,7 +38,7 @@ import com.tencent.devops.common.gcloud.api.pojo.CommonParam
 import com.tencent.devops.common.gcloud.api.pojo.DeleteVerParam
 import com.tencent.devops.common.pipeline.element.GcloudDeleteVersionElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.log.utils.BuildLogPrinter
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.plugin.api.ServiceGcloudConfResource
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask

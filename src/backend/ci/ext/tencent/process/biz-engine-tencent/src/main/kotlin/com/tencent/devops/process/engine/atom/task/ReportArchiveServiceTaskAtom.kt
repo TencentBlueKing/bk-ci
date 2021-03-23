@@ -36,7 +36,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.job.JobClient
 import com.tencent.devops.common.job.api.pojo.EnvSet
 import com.tencent.devops.common.job.api.pojo.FastPushFileRequest
-import com.tencent.devops.log.utils.BuildLogPrinter
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.element.ReportArchiveServiceElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation

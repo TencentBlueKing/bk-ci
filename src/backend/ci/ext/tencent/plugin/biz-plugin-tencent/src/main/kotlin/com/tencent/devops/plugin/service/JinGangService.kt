@@ -57,7 +57,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.log.utils.BuildLogPrinter
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.model.plugin.tables.TPluginJingang
 import com.tencent.devops.model.plugin.tables.TPluginJingangResult
 import com.tencent.devops.plugin.dao.JinGangAppDao

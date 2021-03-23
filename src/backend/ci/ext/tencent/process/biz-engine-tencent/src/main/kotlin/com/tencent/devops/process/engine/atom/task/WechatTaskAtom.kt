@@ -35,7 +35,7 @@ import com.tencent.devops.common.event.JobWrapper
 import com.tencent.devops.common.pipeline.element.SendWechatNotifyElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.log.utils.BuildLogPrinter
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.WechatNotifyMessage
 import com.tencent.devops.process.engine.atom.AtomResponse

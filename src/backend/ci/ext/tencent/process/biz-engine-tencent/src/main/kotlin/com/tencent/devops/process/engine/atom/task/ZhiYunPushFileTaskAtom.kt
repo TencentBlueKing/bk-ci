@@ -35,7 +35,7 @@ import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.element.ZhiyunPushFileElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.log.utils.BuildLogPrinter
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.plugin.api.ServiceZhiyunResource
 import com.tencent.devops.plugin.pojo.zhiyun.ZhiyunUploadParam
 import com.tencent.devops.process.engine.atom.AtomResponse

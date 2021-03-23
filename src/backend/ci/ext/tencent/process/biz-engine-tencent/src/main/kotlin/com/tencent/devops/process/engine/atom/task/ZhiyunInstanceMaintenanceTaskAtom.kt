@@ -37,7 +37,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.element.ZhiyunInstanceMaintenanceElement
 import com.tencent.devops.common.pipeline.element.enums.ZhiyunOperation
 import com.tencent.devops.common.pipeline.zhiyun.ZhiyunConfig
-import com.tencent.devops.log.utils.BuildLogPrinter
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultSuccessAtomResponse

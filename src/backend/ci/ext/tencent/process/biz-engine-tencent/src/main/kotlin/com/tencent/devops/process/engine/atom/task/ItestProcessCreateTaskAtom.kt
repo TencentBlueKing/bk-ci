@@ -35,7 +35,7 @@ import com.tencent.devops.common.itest.api.ITestClient
 import com.tencent.devops.common.itest.api.request.ProcessCreateRequest
 import com.tencent.devops.common.itest.api.request.ProcessTestMasterRequest
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.log.utils.BuildLogPrinter
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.element.ItestProcessCreateElement
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask

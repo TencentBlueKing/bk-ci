@@ -41,7 +41,7 @@ import com.tencent.devops.dispatch.pojo.enums.TstackVmStatus
 import com.tencent.devops.dispatch.pojo.redis.RedisBuild
 import com.tencent.devops.dispatch.service.vm.TstackClient
 import com.tencent.devops.dispatch.utils.TstackRedisUtils
-import com.tencent.devops.log.utils.BuildLogPrinter
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.model.dispatch.tables.records.TDispatchTstackBuildRecord
 import com.tencent.devops.model.dispatch.tables.records.TDispatchTstackVmRecord
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent

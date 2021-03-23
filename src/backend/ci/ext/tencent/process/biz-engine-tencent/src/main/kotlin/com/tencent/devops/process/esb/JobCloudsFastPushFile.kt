@@ -28,7 +28,7 @@
 package com.tencent.devops.process.esb
 
 import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.log.utils.BuildLogPrinter
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
