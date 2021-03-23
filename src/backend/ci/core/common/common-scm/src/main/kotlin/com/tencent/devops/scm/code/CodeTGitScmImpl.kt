@@ -41,6 +41,7 @@ import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
 import org.slf4j.LoggerFactory
 
+@Suppress("ALL")
 class CodeTGitScmImpl constructor(
     override val projectName: String,
     override val branchName: String?,
@@ -154,7 +155,7 @@ class CodeTGitScmImpl constructor(
             )
         }
         try {
-            gitApi.addWebhook(apiUrl, token, projectName, hookUrl, event)
+            gitApi.addWebhook(apiUrl, token, projectName, hookUrl, event, gitConfig.tGitHookSecret)
         } catch (e: ScmException) {
             throw ScmException(
                 MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_FAIL),
