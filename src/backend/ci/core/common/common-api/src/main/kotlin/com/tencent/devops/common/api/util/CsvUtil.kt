@@ -61,9 +61,9 @@ object CsvUtil {
         val bufferedWriter = BufferedWriter(outputStreamWriter)
         var csvPrinter: CSVPrinter? = null
         try {
-            //创建csvPrinter并设置表格头
+            // 创建csvPrinter并设置表格头
             csvPrinter = CSVPrinter(bufferedWriter, CSVFormat.DEFAULT.withHeader(*headers))
-            //写数据
+            // 写数据
             csvPrinter.printRecords(cellList)
             csvPrinter.flush()
             bytes = byteArrayOutputStream.toString(StandardCharsets.UTF_8.name()).toByteArray()
@@ -96,7 +96,7 @@ object CsvUtil {
         response: HttpServletResponse
     ) {
         try {
-            val convertFileName = URLEncoder.encode("${fileName}.csv", StandardCharsets.UTF_8.name())
+            val convertFileName = URLEncoder.encode("$fileName.csv", StandardCharsets.UTF_8.name())
             response.contentType = "application/csv"
             response.characterEncoding = StandardCharsets.UTF_8.name()
             response.setHeader("Pragma", "public")
