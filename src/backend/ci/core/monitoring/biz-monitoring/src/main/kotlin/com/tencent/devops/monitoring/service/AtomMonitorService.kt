@@ -83,10 +83,14 @@ class AtomMonitorService @Autowired constructor(
     }
 
     private fun getNum(sql: String): Int {
-        val num: Int
+        var num = 0
         val queryResult = influxdbClient.select(sql)
         if (null != queryResult && !queryResult.hasError()) {
-            num = getNumFromResult(queryResult)
+            queryResult.results.forEach { result ->
+                result.run {
+                    num = getNumFromSeries()
+                }
+            }
         } else {
             logger.error("queryResult error , ${queryResult?.error} , ${queryResult?.results?.size}")
             throw ErrorCodeException(
@@ -97,15 +101,11 @@ class AtomMonitorService @Autowired constructor(
         return num
     }
 
-    private fun getNumFromResult(queryResult: QueryResult): Int {
+    private fun QueryResult.Result.getNumFromSeries(): Int {
         var num = 0
-        queryResult.results.forEach { result ->
-            result.run {
-                series?.forEach { serie ->
-                    serie.run {
-                        num = values[0][1].let { if (it is Number) it.toInt() else 0 }
-                    }
-                }
+        series?.forEach { serie ->
+            serie.run {
+                num = values[0][1].let { if (it is Number) it.toInt() else 0 }
             }
         }
         return num
