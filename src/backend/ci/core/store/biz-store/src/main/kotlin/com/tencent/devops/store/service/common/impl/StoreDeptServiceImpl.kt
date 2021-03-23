@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.service.common.impl
 
+import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
@@ -49,13 +50,20 @@ class StoreDeptServiceImpl @Autowired constructor(
         stageList.forEach { stage ->
             val containerList = stage.containers
             containerList.forEach { container ->
-                if (container is VMBuildContainer && container.dispatchType is DockerDispatchType) {
-                    val imageCode = (container.dispatchType as DockerDispatchType).imageCode
-                    if (!imageCode.isNullOrBlank()) templateImageCodeSet.add(imageCode!!)
-                }
+                handleTemplateImageCodeSet(container, templateImageCodeSet)
             }
         }
         return getStoreDeptRelMap(templateImageCodeSet, StoreTypeEnum.IMAGE.type.toByte())
+    }
+
+    private fun handleTemplateImageCodeSet(
+        container: Container,
+        templateImageCodeSet: MutableSet<String>
+    ) {
+        if (container is VMBuildContainer && container.dispatchType is DockerDispatchType) {
+            val imageCode = (container.dispatchType as DockerDispatchType).imageCode
+            if (!imageCode.isNullOrBlank()) templateImageCodeSet.add(imageCode!!)
+        }
     }
 
     override fun getStageAtomDeptMap(stageList: List<Stage>): MutableMap<String, Map<String, List<DeptInfo>?>> {
