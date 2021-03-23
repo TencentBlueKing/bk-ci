@@ -279,8 +279,8 @@ class OpIdeAtomServiceImpl @Autowired constructor(
         page: Int,
         pageSize: Int
     ): Result<Page<OpIdeAtomItem>?> {
-        logger.info("listIdeAtoms atomName:$atomName,atomType:$atomType,classifyCode:$classifyCode,categoryCodes:$categoryCodes")
-        logger.info("listIdeAtoms labelCodes:$labelCodes,processFlag:$processFlag,page:$page,pageSize:$pageSize")
+        logger.info("listIdeAtoms atomName:$atomName,atomType:$atomType,classifyCode:$classifyCode")
+        logger.info("listIdeAtoms labelCodes:$labelCodes,processFlag:$processFlag,categoryCodes:$categoryCodes")
         val labelCodeList = if (labelCodes.isNullOrEmpty()) null else labelCodes?.split(",")
         val categoryCodeList = if (categoryCodes.isNullOrEmpty()) null else categoryCodes?.split(",")
         val atomRecords = ideAtomDao.listOpIdeAtoms(
