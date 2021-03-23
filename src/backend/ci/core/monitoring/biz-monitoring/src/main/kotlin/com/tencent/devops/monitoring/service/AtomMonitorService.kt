@@ -88,7 +88,9 @@ class AtomMonitorService @Autowired constructor(
         if (null != queryResult && !queryResult.hasError()) {
             queryResult.results.forEach { result ->
                 result.run {
-                    num = getNumFromSeries()
+                    series?.forEach { serie ->
+                        num = getNumFromSerie(serie)
+                    }
                 }
             }
         } else {
@@ -101,12 +103,10 @@ class AtomMonitorService @Autowired constructor(
         return num
     }
 
-    private fun QueryResult.Result.getNumFromSeries(): Int {
+    private fun getNumFromSerie(serie: QueryResult.Series): Int {
         var num = 0
-        series?.forEach { serie ->
-            serie.run {
-                num = values[0][1].let { if (it is Number) it.toInt() else 0 }
-            }
+        serie.run {
+            num = values[0][1].let { if (it is Number) it.toInt() else 0 }
         }
         return num
     }
