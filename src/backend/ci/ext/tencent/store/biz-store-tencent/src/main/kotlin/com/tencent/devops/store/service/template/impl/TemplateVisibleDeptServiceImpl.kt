@@ -280,28 +280,37 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
                 val storeDeptName = deptInfo.deptName
                 val storeDepts = storeDeptName.split("/")
                 val storeDeptSize = storeDepts.size
-                templateDeptInfos?.forEach templateDeptEach@{ dept ->
-                    val templateDeptId = dept.deptId
-                    val templateDeptName = dept.deptName
-                    val templateDepts = templateDeptName.split("/")
-                    val templateDeptSize = templateDepts.size
-                    if (templateDeptSize < storeDeptSize) {
-                        return@templateDeptEach
-                    }
-                    flag = validateTemplateDept(
-                        storeDeptId = storeDeptId,
-                        templateDeptId = templateDeptId,
-                        templateDeptSize = templateDeptSize,
-                        storeDeptSize = storeDeptSize
-                    )
-                    if (flag) return@breaking
-                }
+                flag = handleTemplateDeptInfos(templateDeptInfos, storeDeptSize, storeDeptId)
+                if (flag) return@breaking
             }
         }
         // 判断每个组件下的可见范围是否都在模板的可见范围之内
         if (!flag) {
             invalidStoreList.add(storeName)
         }
+    }
+
+    private fun handleTemplateDeptInfos(
+        templateDeptInfos: List<DeptInfo>?,
+        storeDeptSize: Int,
+        storeDeptId: Int
+    ): Boolean {
+        templateDeptInfos?.forEach templateDeptEach@{ dept ->
+            val templateDeptId = dept.deptId
+            val templateDeptName = dept.deptName
+            val templateDepts = templateDeptName.split("/")
+            val templateDeptSize = templateDepts.size
+            if (templateDeptSize < storeDeptSize) {
+                return@templateDeptEach
+            }
+            return validateTemplateDept(
+                storeDeptId = storeDeptId,
+                templateDeptId = templateDeptId,
+                templateDeptSize = templateDeptSize,
+                storeDeptSize = storeDeptSize
+            )
+        }
+        return false
     }
 
     private fun validateTemplateDept(
