@@ -111,7 +111,7 @@ class LogServiceESImpl constructor(
     override fun addLogEvent(event: LogEvent) {
         val logMessage = addLineNo(event.buildId, event.logs)
         if (logMessage.isNotEmpty()) {
-            buildLogPrintService.asyncDispatchEvent(LogBatchEvent(event.buildId, logMessage))
+            buildLogPrintService.dispatchEvent(LogBatchEvent(event.buildId, logMessage))
         }
     }
 

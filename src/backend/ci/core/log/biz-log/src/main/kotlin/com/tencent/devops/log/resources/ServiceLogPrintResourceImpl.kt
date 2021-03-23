@@ -50,8 +50,7 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("无效的构建ID")
         }
-        buildLogPrintService.asyncDispatchEvent(LogEvent(buildId, listOf(logMessage)))
-        return Result(true)
+        return buildLogPrintService.asyncDispatchEvent(LogEvent(buildId, listOf(logMessage)))
     }
 
     override fun addLogMultiLine(buildId: String, logMessages: List<LogMessage>): Result<Boolean> {
@@ -72,7 +71,7 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("无效的构建ID")
         }
-        buildLogPrintService.asyncDispatchEvent(
+        return buildLogPrintService.asyncDispatchEvent(
             LogStatusEvent(
                 buildId = buildId,
                 finished = false,
@@ -82,7 +81,6 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
                 executeCount = executeCount
             )
         )
-        return Result(true)
     }
 
     override fun updateLogStatus(
@@ -96,7 +94,7 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("无效的构建ID")
         }
-        buildLogPrintService.asyncDispatchEvent(LogStatusEvent(
+        return buildLogPrintService.asyncDispatchEvent(LogStatusEvent(
             buildId = buildId,
             finished = finished,
             tag = tag ?: "",
@@ -104,6 +102,5 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
             jobId = jobId ?: "",
             executeCount = executeCount
         ))
-        return Result(true)
     }
 }
