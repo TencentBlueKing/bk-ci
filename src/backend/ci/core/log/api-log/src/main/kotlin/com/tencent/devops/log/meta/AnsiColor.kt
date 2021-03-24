@@ -25,7 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-event")
-    compile project(":core:common:common-web")
+package com.tencent.devops.log.meta
+
+enum class AnsiColor(val value: Int) {
+    BLACK(0),
+    RED(1),
+    GREEN(2),
+    YELLOW(3),
+    BLUE(4),
+    MAGENTA(5),
+    CYAN(6),
+    WHITE(7),
+    DEFAULT(9);
+
+    fun fg(): Int {
+        return value + 30
+    }
+
+    fun bg(): Int {
+        return value + 40
+    }
+
+    fun fgBright(): Int {
+        return value + 90
+    }
+
+    fun bgBright(): Int {
+        return value + 100
+    }
 }

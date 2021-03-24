@@ -30,75 +30,38 @@ package com.tencent.devops.log.jmx
 import org.springframework.jmx.export.annotation.ManagedAttribute
 import org.springframework.jmx.export.annotation.ManagedResource
 import org.springframework.stereotype.Component
+import java.util.concurrent.atomic.AtomicInteger
 import java.util.concurrent.atomic.AtomicLong
 
 @Component
-@ManagedResource(objectName = "com.tencent.devops.log:type=logs", description = "log performance")
-class LogBean {
+@ManagedResource(objectName = "com.tencent.devops.log.print:type=logs", description = "log print performance")
+class LogPrintBean {
 
-    private val executeCount = AtomicLong(0)
-    private val executeElapse = AtomicLong(0)
-    private val calculateCount = AtomicLong(0)
-    private val failureCount = AtomicLong(0)
-
-    private val queryLogCount = AtomicLong(0)
-    private val queryLogElapse = AtomicLong(0)
-    private val queryCalculateCount = AtomicLong(0)
-    private val queryFailureCount = AtomicLong(0)
+    private val printTaskCount = AtomicLong(0)
+    private val printActiveCount = AtomicInteger(0)
+    private val printQueueSize = AtomicInteger(0)
 
     @Synchronized
-    fun execute(elapse: Long, success: Boolean) {
-        executeCount.incrementAndGet()
-        calculateCount.incrementAndGet()
-        executeElapse.addAndGet(elapse)
-        if (!success) {
-            failureCount.incrementAndGet()
-        }
+    fun savePrintTaskCount(taskCount: Long) {
+        printTaskCount.set(taskCount)
     }
 
     @Synchronized
-    fun query(elapse: Long, success: Boolean) {
-        queryLogCount.incrementAndGet()
-        queryCalculateCount.incrementAndGet()
-        queryLogElapse.addAndGet(elapse)
-        if (!success) {
-            queryFailureCount.incrementAndGet()
-        }
+    fun savePrintActiveCount(activeCount: Int) {
+        printActiveCount.set(activeCount)
     }
 
     @Synchronized
-    @ManagedAttribute
-    fun getLogPerformance(): Double {
-        val elapse = executeElapse.getAndSet(0)
-        val count = calculateCount.getAndSet(0)
-        return if (count == 0L) {
-            0.0
-        } else {
-            elapse.toDouble() / count
-        }
-    }
-
-    @Synchronized
-    @ManagedAttribute
-    fun getQueryLogPerformance(): Double {
-        val elapse = queryLogElapse.getAndSet(0)
-        val count = queryCalculateCount.getAndSet(0)
-        return if (count == 0L) {
-            0.0
-        } else {
-            elapse.toDouble() / count
-        }
+    fun savePrintQueueSize(queueSize: Int) {
+        printQueueSize.set(queueSize)
     }
 
     @ManagedAttribute
-    fun getExecuteCount() = executeCount.get()
+    fun getPrintTaskCount() = printTaskCount.get()
 
     @ManagedAttribute
-    fun getFailureCount() = failureCount.get()
+    fun getPrintActiveCount() = printActiveCount.get()
 
     @ManagedAttribute
-    fun getQueryCount() = queryLogCount.get()
-
-    @ManagedAttribute
-    fun getQueryFailureCount() = queryFailureCount.get()
+    fun getPrintQueueSize() = printQueueSize.get()
 }

@@ -25,11 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.log
-
-import com.tencent.devops.common.log.meta.AnsiAttribute
-import com.tencent.devops.common.log.meta.AnsiColor
-import com.tencent.devops.common.log.meta.AnsiErase
+package com.tencent.devops.log.meta
 
 /**
  *
