@@ -11,15 +11,6 @@ BEGIN
     DECLARE db VARCHAR(100);
     SET AUTOCOMMIT = 0;
     SELECT DATABASE() INTO db;
-
-    IF NOT EXISTS(SELECT 1
-                  FROM information_schema.COLUMNS
-                  WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_PLUGIN_GIT_CHECK'
-                    AND COLUMN_NAME = 'EVENT_TYPE') THEN
-        ALTER TABLE `T_PLUGIN_GIT_CHECK` 
-			ADD COLUMN `EVENT_TYPE` VARCHAR(64) DEFAULT NULL;
-    END IF;
 	
 	IF NOT EXISTS(SELECT 1
                   FROM information_schema.COLUMNS

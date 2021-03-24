@@ -33,6 +33,5 @@ data class PluginGitCheck(
     val repositoryHashId: String?,
     val repositoryName: String?,
     val commitId: String,
-    val context: String,
-    val eventType: String
+    val context: String
 )

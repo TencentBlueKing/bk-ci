@@ -397,7 +397,7 @@ class CodeWebhookService @Autowired constructor(
                         pipelineId = pipelineId,
                         repositoryConfig = repositoryConfig,
                         commitId = commitId,
-                        eventType = webhookEventType!!
+                        context = context
                     )
 
                     if (record == null) {
@@ -415,8 +415,7 @@ class CodeWebhookService @Autowired constructor(
                                 repositoryHashId = repositoryConfig.repositoryHashId,
                                 repositoryName = repositoryConfig.repositoryName,
                                 commitId = commitId,
-                                context = context,
-                                eventType = webhookEventType
+                                context = context
                             )
                         )
                     } else {
