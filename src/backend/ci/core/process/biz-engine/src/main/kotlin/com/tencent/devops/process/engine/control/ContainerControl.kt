@@ -133,7 +133,7 @@ class ContainerControl @Autowired constructor(
             mutexGroup = mutexGroup,
             event = this,
             container = container,
-            latestSummary = "init",
+            latestSummary = reason ?: "init",
             watcher = watcher,
             containerTasks = containerTasks,
             variables = variables,
