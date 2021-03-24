@@ -222,7 +222,7 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
             if (!imageCode.isNullOrBlank()) {
                 handleInvalidImageList(
                     storeType = storeType,
-                    imageCode = imageCode,
+                    imageCode = imageCode!!,
                     imageName = imageName,
                     templateImageDeptMap = templateImageDeptMap,
                     deptInfos = deptInfos,
@@ -247,7 +247,7 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
             null
         }
         if (storeCommonDao != null) {
-            val storeBaseInfo = storeCommonDao.getStoreBaseInfoByCode(dslContext, imageCode!!)
+            val storeBaseInfo = storeCommonDao.getStoreBaseInfoByCode(dslContext, imageCode)
                 ?: throw ErrorCodeException(
                     errorCode = StoreMessageCode.USER_IMAGE_NOT_EXIST,
                     params = arrayOf(imageName ?: imageCode)
