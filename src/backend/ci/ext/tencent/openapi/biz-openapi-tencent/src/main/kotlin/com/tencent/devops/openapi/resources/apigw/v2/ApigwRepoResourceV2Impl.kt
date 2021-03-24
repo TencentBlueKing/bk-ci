@@ -42,7 +42,13 @@ class ApigwRepoResourceV2Impl @Autowired constructor(
     val client: Client
 ) : ApigwRepoResourceV2 {
 
-    override fun getBuildReports(appCode: String?, apigwType: String?, userId: String, projectId: String, pipelineId: String, buildId: String): Result<List<TaskReport>?> {
+    override fun getBuildReports(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String): Result<List<TaskReport>?> {
         val needPermission = appCode.isNullOrEmpty()
         logger.info("getBuildReports $appCode| $userId| $projectId| $pipelineId| $buildId| $needPermission")
         val reportListDTO = ReportListDTO(
