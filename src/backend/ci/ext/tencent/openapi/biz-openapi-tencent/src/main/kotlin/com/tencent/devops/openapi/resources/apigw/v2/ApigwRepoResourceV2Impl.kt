@@ -48,7 +48,8 @@ class ApigwRepoResourceV2Impl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        buildId: String): Result<List<TaskReport>?> {
+        buildId: String
+    ): Result<List<TaskReport>?> {
         val needPermission = appCode.isNullOrEmpty()
         logger.info("getBuildReports $appCode| $userId| $projectId| $pipelineId| $buildId| $needPermission")
         val reportListDTO = ReportListDTO(
