@@ -226,6 +226,7 @@ func LoadAgentConfig() error {
 	}
 
 	GAgentConfig.Gateway = landunGateway
+	systemutil.DevopsGateway = landunGateway
 	logs.Info("Gateway: ", GAgentConfig.Gateway)
 	GAgentConfig.FileGateway = landunFileGateway
 	logs.Info("FileGateway: ", GAgentConfig.FileGateway)

@@ -387,7 +387,7 @@
                 this.instanceVersion = data
             },
             toPipelineHistory (pipelineId) {
-                const url = `${WEB_URL_PIRFIX}/pipeline/${this.projectId}/${pipelineId}/history`
+                const url = `${WEB_URL_PREFIX}/pipeline/${this.projectId}/${pipelineId}/history`
                 window.open(url, '_blank')
             }
         }
