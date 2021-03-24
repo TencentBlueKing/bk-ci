@@ -250,3 +250,10 @@ input[disabled="disabled"] {
         padding: 0;
     }
 }
+
+.changed-prop {
+    transition: all 200ms;
+    background-color: #fff4e2;
+    border: 1px solid #ffdfac;
+    padding: 10px;
+}

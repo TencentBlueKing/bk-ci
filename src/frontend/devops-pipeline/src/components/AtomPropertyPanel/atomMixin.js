@@ -95,7 +95,8 @@ const atomMixin = {
     },
     computed: {
         ...mapGetters('atom', [
-            'isThirdPartyContainer'
+            'isThirdPartyContainer',
+            'atomVersionChangedKeys'
         ]),
         isThirdParty () {
             return this.isThirdPartyContainer(this.container)

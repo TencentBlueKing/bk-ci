@@ -551,6 +551,7 @@
         }
     },
     "editPage": {
+        "atomPropChangedTip": "The current version has added new parameters or changed parameter types, please carefully confirm whether the corresponding settings of the parameters meet expectations (the changed fields have been highlighted)!",
         "checkResultTip": "The audit result is required",
         "checkParamTip": "The param is required",
         "manualReviewNameSpaceTip": "The user who actually performed the review",
