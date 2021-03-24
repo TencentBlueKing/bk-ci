@@ -139,11 +139,6 @@ class BuildEndControl @Autowired constructor(
 
         fixTask(buildInfo, buildStatus)
 
-        // 更新buildNo
-        if (!buildStatus.isCancel() && !buildStatus.isFailure()) {
-            setBuildNoWhenBuildSuccess(pipelineId = pipelineId, buildId = buildId)
-        }
-
         // 记录本流水线最后一次构建的状态
         pipelineRuntimeService.finishLatestRunningBuild(
             latestRunningBuild = LatestRunningBuild(
@@ -154,6 +149,11 @@ class BuildEndControl @Autowired constructor(
             currentBuildStatus = buildInfo.status,
             errorInfoList = buildInfo.errorInfoList
         )
+
+        // 更新buildNo
+        if (!buildStatus.isCancel() && !buildStatus.isFailure()) {
+            setBuildNoWhenBuildSuccess(pipelineId = pipelineId, buildId = buildId)
+        }
 
         // 设置状态
         val allStageStatus = pipelineBuildDetailService.buildEnd(
