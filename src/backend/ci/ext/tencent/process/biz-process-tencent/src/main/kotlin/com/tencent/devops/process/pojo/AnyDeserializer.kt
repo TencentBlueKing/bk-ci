@@ -25,16 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.prebuild.pojo
+package com.tencent.devops.process.pojo
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.core.JsonParser
+import com.fasterxml.jackson.databind.DeserializationContext
+import com.fasterxml.jackson.databind.JsonDeserializer
+import com.fasterxml.jackson.databind.ObjectMapper
 
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class ExtraParam(
-    val codeccScanPath: String? = null,
-    val incrementFileList: List<String>? = null,
-    val ideVersion: String? = null,
-    val pluginVersion: String? = null
-)
+class AnyDeserializer : JsonDeserializer<Any>() {
+
+    private val mapper: ObjectMapper = ObjectMapper()
+
+    override fun deserialize(p: JsonParser?, ctxt: DeserializationContext?): Any {
+        return mapper.readValue(p!!.text, Any::class.java)
+    }
+}
