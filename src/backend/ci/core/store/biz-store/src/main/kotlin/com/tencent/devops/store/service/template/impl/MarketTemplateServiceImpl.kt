@@ -729,7 +729,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 // 存在用户不在镜像的可见范围内的镜像，给出错误提示
                 throw ErrorCodeException(
                     errorCode = StoreMessageCode.USER_IMAGE_PROJECT_IS_INVALID,
-                    params = arrayOf(JsonUtil.toJson(invalidAtomList))
+                    params = arrayOf(JsonUtil.toJson(invalidImageList), projectCode)
                 )
             }
             if (invalidAtomList.isNotEmpty()) {
@@ -786,7 +786,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                             userId = userId,
                             userDeptIdList = userDeptIdList,
                             storeCode = imageCode,
-                            storeType = StoreTypeEnum.ATOM,
+                            storeType = StoreTypeEnum.IMAGE,
                             publicFlag = storeBaseInfo.publicFlag,
                             storeDepInfoList = storeDepInfoList
                         )
