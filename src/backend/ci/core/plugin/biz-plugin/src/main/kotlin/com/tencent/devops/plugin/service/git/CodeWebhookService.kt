@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStartBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
@@ -90,7 +90,7 @@ class CodeWebhookService @Autowired constructor(
     private val gitWebhookUnlockService: GitWebhookUnlockService
 ) {
 
-    fun onStart(event: PipelineBuildStartBroadCastEvent) {
+    fun onBuildQueue(event: PipelineBuildQueueBroadCastEvent) {
         logger.info("Code web hook on start [${event.buildId}]")
         with(event) {
             execute(
@@ -152,7 +152,7 @@ class CodeWebhookService @Autowired constructor(
         }
     }
 
-    fun onFinish(event: PipelineBuildFinishBroadCastEvent) {
+    fun onBuildFinished(event: PipelineBuildFinishBroadCastEvent) {
         logger.info("Code web hook on finish [${event.buildId}]")
         with(event) {
             val buildStatus = BuildStatus.valueOf(event.status)

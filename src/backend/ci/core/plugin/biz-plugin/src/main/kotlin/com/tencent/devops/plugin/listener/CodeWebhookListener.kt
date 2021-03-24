@@ -27,20 +27,22 @@
 
 package com.tencent.devops.plugin.listener
 
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
 import com.tencent.devops.plugin.service.git.CodeWebhookService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
-class CodeWebhookFinishListener @Autowired constructor(
-    private val codeWebhookService: CodeWebhookService,
-    pipelineEventDispatcher: PipelineEventDispatcher
-) : BaseListener<PipelineBuildFinishBroadCastEvent>(pipelineEventDispatcher) {
+class CodeWebhookListener @Autowired constructor(
+    private val codeWebhookService: CodeWebhookService
+) {
 
-    override fun run(event: PipelineBuildFinishBroadCastEvent) {
-        codeWebhookService.onFinish(event)
+    fun onBuildQueue(event: PipelineBuildQueueBroadCastEvent) {
+        codeWebhookService.onBuildQueue(event = event)
+    }
+
+    fun onBuildFinished(event: PipelineBuildFinishBroadCastEvent) {
+        codeWebhookService.onBuildFinished(event = event)
     }
 }
