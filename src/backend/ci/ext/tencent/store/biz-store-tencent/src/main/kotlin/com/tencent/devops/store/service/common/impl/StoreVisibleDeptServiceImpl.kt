@@ -246,7 +246,7 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
                 storeCode = userStoreDeptInfoRequest.storeCode,
                 storeType = userStoreDeptInfoRequest.storeType.type.toByte()
             )
-            return getInvalidStoreFlag(
+            return getValidStoreFlag(
                 isStoreMember = isStoreMember,
                 storeDepInfoList = userStoreDeptInfoRequest.storeDepInfoList,
                 userDeptIdList = userStoreDeptInfoRequest.userDeptIdList
@@ -255,7 +255,7 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
         return true
     }
 
-    private fun getInvalidStoreFlag(
+    private fun getValidStoreFlag(
         isStoreMember: Boolean,
         storeDepInfoList: List<DeptInfo>?,
         userDeptIdList: List<Int>
@@ -271,20 +271,32 @@ class StoreVisibleDeptServiceImpl @Autowired constructor(
         storeDepInfoList: List<DeptInfo>?,
         userDeptIdList: List<Int>
     ): Boolean {
-        storeDepInfoList?.forEach deptEach@{ storeDepInfo ->
-            val storeDeptId = storeDepInfo.deptId
-            if (storeDeptId == 0 || userDeptIdList.contains(storeDeptId)) {
-                return true // 用户在组件的可见范围内
-            } else {
-                // 判断该组件的可见范围是否设置了全公司可见
-                val parentDeptInfoList = client.get(ServiceProjectOrganizationResource::class)
-                    .getParentDeptInfos(storeDeptId.toString(), 1).data
-                if (null != parentDeptInfoList && parentDeptInfoList.isEmpty()) {
-                    // 没有上级机构说明设置的可见范围是全公司
-                    return true // 用户在组件的可见范围内
-                }
+        var flag = false
+        run breaking@{
+            storeDepInfoList?.forEach deptEach@{ storeDepInfo ->
+                val storeDeptId = storeDepInfo.deptId
+                flag = validateDeptId(storeDeptId, userDeptIdList)
+                if (flag) return@breaking
             }
         }
-        return false
+        return flag
+    }
+
+    private fun validateDeptId(
+        storeDeptId: Int,
+        userDeptIdList: List<Int>
+    ): Boolean {
+        if (storeDeptId == 0 || userDeptIdList.contains(storeDeptId)) {
+            return true // 用户在组件的可见范围内
+        } else {
+            // 判断该组件的可见范围是否设置了全公司可见
+            val parentDeptInfoList = client.get(ServiceProjectOrganizationResource::class)
+                .getParentDeptInfos(storeDeptId.toString(), 1).data
+            if (null != parentDeptInfoList && parentDeptInfoList.isEmpty()) {
+                // 没有上级机构说明设置的可见范围是全公司
+                return true // 用户在组件的可见范围内
+            }
+            return false
+        }
     }
 }

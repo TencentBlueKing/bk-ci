@@ -340,11 +340,13 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
         val gap = templateDeptSize - storeDeptSize
         val parentDeptInfoList = client.get(ServiceProjectOrganizationResource::class)
             .getParentDeptInfos(templateDeptId.toString(), gap + 1).data
-        parentDeptInfoList?.forEach {
-            if (it.id.toInt() == storeDeptId) {
-                return true // 组件在模板的可见范围内
+        var flag = false
+        run breaking@{
+            parentDeptInfoList?.forEach {
+                flag = it.id.toInt() == storeDeptId // 组件在模板的可见范围内
+                if (flag) return@breaking
             }
         }
-        return false
+        return flag
     }
 }
