@@ -25,16 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.service.dispatcher
+package com.tencent.devops.common.event.pojo.pipeline
 
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.enums.ActionType
 
-interface BuildLessDispatcher {
-
-    fun canDispatch(event: PipelineBuildLessStartupDispatchEvent): Boolean
-
-    fun startUp(event: PipelineBuildLessStartupDispatchEvent)
-
-    fun shutdown(event: PipelineBuildLessShutdownDispatchEvent)
-}
+@Event(exchange = MQ.EXCHANGE_PIPELINE_BUILD_QUEUE_FANOUT)
+data class PipelineBuildQueueBroadCastEvent(
+    override val source: String,
+    override val projectId: String,
+    override val pipelineId: String,
+    override val userId: String,
+    val buildId: String,
+    override var actionType: ActionType,
+    override var delayMills: Int = 0,
+    val triggerType: String
+) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)

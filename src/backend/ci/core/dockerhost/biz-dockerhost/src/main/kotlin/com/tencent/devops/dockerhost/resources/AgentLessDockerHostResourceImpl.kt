@@ -25,33 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dockerhost.listener
+package com.tencent.devops.dockerhost.resources
 
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
+import com.tencent.devops.dockerhost.api.AgentLessDockerHostResource
 import com.tencent.devops.dockerhost.exception.ContainerException
 import com.tencent.devops.dockerhost.services.DockerHostBuildAgentLessService
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessDockerStartupEvent
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
-/**
- * 无构建环境的容器启动消息
- * @version 1.0
- */
-class BuildLessStartListener(
+@RestResource
+class AgentLessDockerHostResourceImpl @Autowired constructor(
     private val dockerHostBuildAgentLessService: DockerHostBuildAgentLessService
-) {
-    private val logger = LoggerFactory.getLogger(BuildLessStartListener::class.java)
+) : AgentLessDockerHostResource {
 
-    fun handleMessage(event: PipelineBuildLessDockerStartupEvent) {
-
-        logger.info("[${event.buildId}]|Create container, event: $event")
-
-        val containerId = try {
-            dockerHostBuildAgentLessService.createContainer(event)
+    override fun startBuild(dockerHostBuildInfo: DockerHostBuildInfo): Result<String> {
+        return try {
+            logger.warn("Create agentLess container, dockerHostBuildInfo: $dockerHostBuildInfo")
+            Result(dockerHostBuildAgentLessService.createContainer(dockerHostBuildInfo))
         } catch (e: ContainerException) {
-            logger.error("[${event.buildId}]|Create_container_failed|rollback_build|vmSeqId=${event.vmSeqId}")
-            return
+            logger.error("Create container failed, rollback build. buildId: ${dockerHostBuildInfo.buildId}," +
+                    " vmSeqId: ${dockerHostBuildInfo.vmSeqId}")
+            Result(e.errorCodeEnum.errorCode, "构建环境启动失败: ${e.message}", "")
         }
-        logger.info("[${event.buildId}]|Create container=$containerId")
-        dockerHostBuildAgentLessService.reportContainerId(event.buildId, event.vmSeqId, containerId)
+    }
+
+    override fun endBuild(dockerHostBuildInfo: DockerHostBuildInfo): Result<Boolean> {
+        logger.warn("[${dockerHostBuildInfo.buildId}] | Stop the container, " +
+                "containerId: ${dockerHostBuildInfo.containerId}")
+        dockerHostBuildAgentLessService.stopContainer(dockerHostBuildInfo)
+
+        return Result(true)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(AgentLessDockerHostResourceImpl::class.java)
     }
 }
