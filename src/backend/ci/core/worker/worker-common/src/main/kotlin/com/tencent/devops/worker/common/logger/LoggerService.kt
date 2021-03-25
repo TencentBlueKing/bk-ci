@@ -310,7 +310,7 @@ object LoggerService {
                 out.println(logMessage.message)
             }
         } catch (e: Exception) {
-            logger.warn("Fail to save the logs(${logMessage})", e)
+            logger.warn("Fail to save the logs($logMessage)", e)
         }
     }
 
@@ -327,9 +327,9 @@ object LoggerService {
                 logger.error("Fail to send the log status ：${result.message}")
             }
             val finishedLogFile = taskId2LogFile[elementId] ?: return
-            if (LogMode.LOCAL == AgentEnv.getLogMode()
-                && !tag.isNullOrBlank()
-                && finishedLogFile.exists()
+            if (LogMode.LOCAL == AgentEnv.getLogMode() &&
+                !tag.isNullOrBlank() &&
+                finishedLogFile.exists()
             ) {
                 archiveService.execute { ArchiveUtils.archivePipelineFile(finishedLogFile, buildVariables!!) }
             }
@@ -339,6 +339,6 @@ object LoggerService {
     }
 
     private fun getLocalLogFileName(): String {
-        return "[${vmSeqId}]${jobName}_${elementName}_${executeCount}.log"
+        return "[$vmSeqId]${jobName}_${elementName}_$executeCount.log"
     }
 }
