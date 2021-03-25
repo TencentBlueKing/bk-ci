@@ -30,6 +30,7 @@ import com.tencent.devops.model.store.tables.TImage
 import com.tencent.devops.model.store.tables.TImageFeature
 import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
 import com.tencent.devops.store.pojo.common.StoreBaseInfo
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -82,11 +83,22 @@ class ImageCommonDao : AbstractStoreCommonDao() {
         return null
     }
 
-    override fun getStoreBaseInfoByCode(dslContext: DSLContext, storeCode: String): StoreBaseInfo? {
+    override fun getNewestStoreBaseInfoByCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeStatus: Byte?
+    ): StoreBaseInfo? {
         val ti = TImage.T_IMAGE
         val tif = TImageFeature.T_IMAGE_FEATURE
+        val conditions = mutableListOf<Condition>()
+        conditions.add(ti.IMAGE_CODE.eq(storeCode))
+        if (storeStatus != null) {
+            conditions.add(ti.IMAGE_STATUS.eq(storeStatus))
+        }
         val imageRecord = dslContext.selectFrom(ti)
-            .where(ti.IMAGE_CODE.eq(storeCode).and(ti.LATEST_FLAG.eq(true)))
+            .where(conditions)
+            .orderBy(ti.CREATE_TIME.desc())
+            .limit(1)
             .fetchOne()
         return if (imageRecord != null) {
             val publicFlag = dslContext.select(tif.PUBLIC_FLAG).from(tif)

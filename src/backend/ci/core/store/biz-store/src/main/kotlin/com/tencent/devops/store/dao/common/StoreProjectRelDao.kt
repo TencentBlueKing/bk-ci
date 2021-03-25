@@ -433,9 +433,9 @@ class StoreProjectRelDao {
     }
 
     /**
-     * 获取安装该项目项目的组件
+     * 获取该项目可用的组件
      */
-    fun getInstallStoreCodesByProject(
+    fun getValidStoreCodesByProject(
         dslContext: DSLContext,
         projectCode: String,
         storeCodes: Collection<String>,
@@ -446,7 +446,6 @@ class StoreProjectRelDao {
                 .where(PROJECT_CODE.eq(projectCode))
                 .and(STORE_CODE.`in`(storeCodes))
                 .and(STORE_TYPE.eq(storeType.type.toByte()))
-                .and(TYPE.eq(StoreProjectTypeEnum.COMMON.type.toByte()))
                 .groupBy(STORE_CODE)
                 .fetch()
         }

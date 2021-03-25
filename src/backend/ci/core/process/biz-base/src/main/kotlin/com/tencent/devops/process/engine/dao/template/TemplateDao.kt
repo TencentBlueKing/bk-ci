@@ -259,6 +259,14 @@ class TemplateDao {
         }
     }
 
+    fun getSrcTemplateId(dslContext: DSLContext, templateId: String): String? {
+        return with(TTemplate.T_TEMPLATE) {
+            dslContext.select(SRC_TEMPLATE_ID).from(this)
+                .where(ID.eq(templateId))
+                .fetchOne(0, String::class.java)
+        }
+    }
+
     fun listTemplate(
         dslContext: DSLContext,
         projectId: String,
