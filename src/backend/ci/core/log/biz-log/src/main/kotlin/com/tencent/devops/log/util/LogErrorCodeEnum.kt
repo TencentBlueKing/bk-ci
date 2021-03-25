@@ -25,32 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.log.meta
+package com.tencent.devops.log.util
 
-enum class AnsiColor(val value: Int) {
-    BLACK(0),
-    RED(1),
-    GREEN(2),
-    YELLOW(3),
-    BLUE(4),
-    MAGENTA(5),
-    CYAN(6),
-    WHITE(7),
-    DEFAULT(9);
-
-    fun fg(): Int {
-        return value + 30
-    }
-
-    fun bg(): Int {
-        return value + 40
-    }
-
-    fun fgBright(): Int {
-        return value + 90
-    }
-
-    fun bgBright(): Int {
-        return value + 100
-    }
+enum class LogErrorCodeEnum(
+    val errorCode: Int,
+    val formatErrorMessage: String
+) {
+    PRINT_QUEUE_LIMIT(errorCode = 2108001, formatErrorMessage = "log print queue exceeds the limit")
 }

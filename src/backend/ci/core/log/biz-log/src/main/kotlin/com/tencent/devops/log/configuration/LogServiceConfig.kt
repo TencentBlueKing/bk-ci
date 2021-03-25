@@ -25,50 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.log.jmx
+package com.tencent.devops.log.configuration
 
-import org.springframework.jmx.export.annotation.ManagedAttribute
-import org.springframework.jmx.export.annotation.ManagedResource
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import java.util.concurrent.atomic.AtomicLong
 
+/**
+ * log模块启动参数配置
+ */
 @Component
-@ManagedResource(
-    objectName = "com.tencent.devops.log:type=index,operation=update",
-    description = "log update index performance"
-)
-class UpdateIndexBean {
+class LogServiceConfig {
 
-    private val executeCount = AtomicLong(0)
-    private val executeElapse = AtomicLong(0)
-    private val calculateCount = AtomicLong(0)
-    private val failureCount = AtomicLong(0)
+    /**
+     * 单行日志的上限截断
+     */
+    @Value("\${log.limit.lineMaxLength:#{null}}")
+    val lineMaxLength: Int? = null
 
-    @Synchronized
-    fun execute(elapse: Long, success: Boolean) {
-        executeCount.incrementAndGet()
-        calculateCount.incrementAndGet()
-        executeElapse.addAndGet(elapse)
-        if (!success) {
-            failureCount.incrementAndGet()
-        }
-    }
+    /**
+     * 日志打印异步线程池大小
+     */
+    @Value("\${log.limit.corePoolSize:#{null}}")
+    val corePoolSize: Int? = null
 
-    @Synchronized
-    @ManagedAttribute
-    fun getUpdateIndexPerformance(): Double {
-        val elapse = executeElapse.getAndSet(0)
-        val count = calculateCount.getAndSet(0)
-        return if (count == 0L) {
-            0.0
-        } else {
-            elapse.toDouble() / count
-        }
-    }
+    /**
+     * 日志打印异步线程池上限
+     */
+    @Value("\${log.limit.maxPoolSize:#{null}}")
+    val maxPoolSize: Int? = null
 
-    @ManagedAttribute
-    fun getExecuteCount() = executeCount.get()
-
-    @ManagedAttribute
-    fun getFailureCount() = failureCount.get()
+    /**
+     * 日志打印异步队列大小
+     */
+    @Value("\${log.limit.taskQueueSize:#{null}}")
+    val taskQueueSize: Int? = null
 }

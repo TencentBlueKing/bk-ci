@@ -40,8 +40,11 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.ROUTE_LOG_BUILD
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.ROUTE_LOG_STATUS_BUILD_EVENT
 import com.tencent.devops.common.web.mq.EXTEND_CONNECTION_FACTORY_NAME
 import com.tencent.devops.common.web.mq.EXTEND_RABBIT_ADMIN_NAME
+import com.tencent.devops.common.web.mq.EXTEND_RABBIT_TEMPLATE_NAME
+import com.tencent.devops.log.jmx.LogPrintBean
 import com.tencent.devops.log.mq.LogListener
 import com.tencent.devops.log.service.LogService
+import com.tencent.devops.log.service.BuildLogPrintService
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
@@ -50,6 +53,7 @@ import org.springframework.amqp.core.FanoutExchange
 import org.springframework.amqp.core.Queue
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
 import org.springframework.amqp.rabbit.core.RabbitAdmin
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
 import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
@@ -109,6 +113,14 @@ class LogMQConfiguration @Autowired constructor() {
     fun logStatusEventQueue(): Queue {
         return Queue(QUEUE_LOG_STATUS_BUILD_EVENT, true)
     }
+
+    @Bean
+    fun buildLogPrintService(
+        @Qualifier(value = EXTEND_RABBIT_TEMPLATE_NAME)
+        rabbitTemplate: RabbitTemplate,
+        logPrintBean: LogPrintBean,
+        logServiceConfig: LogServiceConfig
+    ) = BuildLogPrintService(rabbitTemplate, logPrintBean, logServiceConfig)
 
     @Bean
     fun logEventBind(
