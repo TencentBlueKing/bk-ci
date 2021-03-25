@@ -31,6 +31,7 @@ import com.tencent.devops.model.store.tables.TIdeAtom
 import com.tencent.devops.model.store.tables.TIdeAtomFeature
 import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
 import com.tencent.devops.store.pojo.common.StoreBaseInfo
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -83,11 +84,22 @@ class IdeAtomCommonDao : AbstractStoreCommonDao() {
         return null
     }
 
-    override fun getStoreBaseInfoByCode(dslContext: DSLContext, storeCode: String): StoreBaseInfo? {
+    override fun getNewestStoreBaseInfoByCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeStatus: Byte?
+    ): StoreBaseInfo? {
         val tia = TIdeAtom.T_IDE_ATOM
         val tiaf = TIdeAtomFeature.T_IDE_ATOM_FEATURE
+        val conditions = mutableListOf<Condition>()
+        conditions.add(tia.ATOM_CODE.eq(storeCode))
+        if (storeStatus != null) {
+            conditions.add(tia.ATOM_STATUS.eq(storeStatus))
+        }
         val atomRecord = dslContext.selectFrom(tia)
-            .where(tia.ATOM_CODE.eq(storeCode).and(tia.LATEST_FLAG.eq(true)))
+            .where(conditions)
+            .orderBy(tia.CREATE_TIME.desc())
+            .limit(1)
             .fetchOne()
         return if (atomRecord != null) {
             val publicFlag = dslContext.select(tiaf.PUBLIC_FLAG).from(tiaf)

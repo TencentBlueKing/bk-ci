@@ -50,6 +50,7 @@ import com.tencent.devops.store.dao.template.MarketTemplateDao
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.DeptInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import com.tencent.devops.store.service.common.StoreDeptService
 import com.tencent.devops.store.service.common.StoreVisibleDeptService
 import com.tencent.devops.store.service.template.TemplateVisibleDeptService
@@ -57,6 +58,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.Optional
 import java.util.concurrent.TimeUnit
 
 /**
@@ -77,8 +79,8 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
 
     private val cache = CacheBuilder.newBuilder().maximumSize(1000)
         .expireAfterWrite(5, TimeUnit.MINUTES)
-        .build(object : CacheLoader<String, Boolean?>() {
-            override fun load(atomCode: String): Boolean? {
+        .build(object : CacheLoader<String, Optional<Boolean>>() {
+            override fun load(atomCode: String): Optional<Boolean> {
                 val atomStatusList = listOf(
                     AtomStatusEnum.RELEASED.status.toByte(),
                     AtomStatusEnum.UNDERCARRIAGING.status.toByte()
@@ -88,7 +90,11 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
                     atomCode = atomCode,
                     atomStatusList = atomStatusList
                 )
-                return atomRecord?.defaultFlag
+                return if (atomRecord != null) {
+                    Optional.of(atomRecord.defaultFlag)
+                } else {
+                    Optional.empty()
+                }
             }
         })
 
@@ -191,11 +197,15 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
         val atomCode = element.getAtomCode()
         val atomName = element.name
         // 判断插件是否为默认插件
-        val defaultFlag = cache.get(atomCode)
-            ?: throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(atomCode)
+        val defaultFlagOptional = cache.get(atomCode)
+        val defaultFlag = if (defaultFlagOptional.isPresent) {
+            defaultFlagOptional.get()
+        } else {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_TEMPLATE_ATOM_IS_INVALID,
+                params = arrayOf(element.name)
             )
+        }
         // 如果插件是默认插件，则无需校验与模板的可见范围
         if (!defaultFlag) {
             handleInvalidStoreList(
@@ -247,7 +257,11 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
             null
         }
         if (storeCommonDao != null) {
-            val storeBaseInfo = storeCommonDao.getStoreBaseInfoByCode(dslContext, imageCode)
+            val storeBaseInfo = storeCommonDao.getNewestStoreBaseInfoByCode(
+                dslContext = dslContext,
+                storeCode = imageCode,
+                storeStatus = ImageStatusEnum.RELEASED.status.toByte()
+            )
                 ?: throw ErrorCodeException(
                     errorCode = StoreMessageCode.USER_IMAGE_NOT_EXIST,
                     params = arrayOf(imageName ?: imageCode)

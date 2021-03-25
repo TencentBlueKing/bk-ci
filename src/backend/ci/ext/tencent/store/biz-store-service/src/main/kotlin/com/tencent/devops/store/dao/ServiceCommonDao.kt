@@ -33,6 +33,7 @@ import com.tencent.devops.model.store.tables.TExtensionServiceEnvInfo
 import com.tencent.devops.model.store.tables.TExtensionServiceFeature
 import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
 import com.tencent.devops.store.pojo.common.StoreBaseInfo
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -92,11 +93,22 @@ class ServiceCommonDao : AbstractStoreCommonDao() {
         return arrayListOf(language, JS)
     }
 
-    override fun getStoreBaseInfoByCode(dslContext: DSLContext, storeCode: String): StoreBaseInfo? {
+    override fun getNewestStoreBaseInfoByCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeStatus: Byte?
+    ): StoreBaseInfo? {
         val tes = TExtensionService.T_EXTENSION_SERVICE.`as`("tes")
         val tesf = TExtensionServiceFeature.T_EXTENSION_SERVICE_FEATURE.`as`("tesf")
+        val conditions = mutableListOf<Condition>()
+        conditions.add(tes.SERVICE_CODE.eq(storeCode))
+        if (storeStatus != null) {
+            conditions.add(tes.SERVICE_STATUS.eq(storeStatus))
+        }
         val serviceRecord = dslContext.selectFrom(tes)
-            .where(tes.SERVICE_CODE.eq(storeCode).and(tes.LATEST_FLAG.eq(true)))
+            .where(conditions)
+            .orderBy(tes.CREATE_TIME.desc())
+            .limit(1)
             .fetchOne()
         return if (serviceRecord != null) {
             val publicFlag = dslContext.select(tesf.PUBLIC_FLAG).from(tesf)
