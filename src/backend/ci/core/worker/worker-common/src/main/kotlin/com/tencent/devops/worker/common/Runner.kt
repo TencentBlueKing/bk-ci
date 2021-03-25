@@ -76,6 +76,8 @@ object Runner {
             val retryCount = ParameterUtils.getListValueByKey(variables, PIPELINE_RETRY_COUNT) ?: "0"
             LoggerService.executeCount = retryCount.toInt() + 1
             LoggerService.jobId = buildVariables.containerHashId
+            LoggerService.jobName = buildVariables.vmName
+            LoggerService.buildVariables = buildVariables
 
             Heartbeat.start(buildVariables.timeoutMills) // #2043 添加Job超时监控
             // 开始轮询
@@ -108,6 +110,7 @@ object Runner {
                             val taskDaemon = TaskDaemon(task, buildTask, buildVariables, workspacePathFile)
                             try {
                                 LoggerService.elementId = buildTask.elementId!!
+                                LoggerService.elementName = buildTask.elementName ?: LoggerService.elementId
 
                                 // 开始Task执行
                                 taskDaemon.run()
@@ -186,6 +189,7 @@ object Runner {
                             } finally {
                                 LoggerService.finishTask()
                                 LoggerService.elementId = ""
+                                LoggerService.elementName = ""
                             }
                         }
                         BuildTaskStatus.WAIT -> {
