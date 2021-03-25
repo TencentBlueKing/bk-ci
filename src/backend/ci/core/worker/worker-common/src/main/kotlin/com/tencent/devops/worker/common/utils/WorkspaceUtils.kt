@@ -39,6 +39,9 @@ object WorkspaceUtils {
     fun getWorkspace() =
         File(getLandun(), "workspace")
 
+    fun getBuildLogSpace() =
+        File(getLandun(), "buildLogs")
+
     fun getAgentJar() =
         File(getLandun(), "worker-agent.jar")
 

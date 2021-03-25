@@ -93,6 +93,7 @@ object Runner {
                 workspacePathFile = workspaceInterface.getWorkspace(variablesMap, buildVariables.pipelineId)
 
                 LoggerService.addNormalLine("Start the runner at workspace(${workspacePathFile.absolutePath})")
+                LoggerService.elementId = VMUtils.genStartVMTaskId(buildVariables.containerId)
                 logger.info("Start the runner at workspace(${workspacePathFile.absolutePath})")
 
                 loop@ while (true) {
