@@ -25,16 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.service
+package com.tencent.devops.dockerhost.api
 
-import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
-import okhttp3.Request
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-interface DockerHostProxyService {
-    fun getDockerHostProxyRequest(
-        dockerHostUri: String,
-        dockerHostIp: String,
-        dockerHostPort: Int = 0,
-        clusterType: DockerHostClusterType = DockerHostClusterType.COMMON
-    ): Request.Builder
+@Api(tags = ["DOCKER_HOST"], description = "DockerHost")
+@Path("/docker-agentless")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface AgentLessDockerHostResource {
+
+    @ApiOperation("启动无编译流水线容器构建")
+    @POST
+    @Path("/build/start")
+    fun startBuild(
+        @ApiParam("构建任务", required = true)
+        dockerHostBuildInfo: DockerHostBuildInfo
+    ): Result<String>
+
+    @ApiOperation("终止无编译流水线容器构建")
+    @DELETE
+    @Path("/build/end")
+    fun endBuild(
+        @ApiParam("构建任务", required = true)
+        dockerHostBuildInfo: DockerHostBuildInfo
+    ): Result<Boolean>
 }

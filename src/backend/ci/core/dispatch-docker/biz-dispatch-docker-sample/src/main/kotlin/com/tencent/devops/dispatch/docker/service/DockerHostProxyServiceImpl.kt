@@ -30,6 +30,7 @@ package com.tencent.devops.dispatch.docker.service
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
+import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import okhttp3.Request
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -44,7 +45,8 @@ class DockerHostProxyServiceImpl @Autowired constructor(
     override fun getDockerHostProxyRequest(
         dockerHostUri: String,
         dockerHostIp: String,
-        dockerHostPort: Int
+        dockerHostPort: Int,
+        clusterType: DockerHostClusterType
     ): Request.Builder {
         val url = if (dockerHostPort == 0) {
             val dockerIpInfo = pipelineDockerIPInfoDao.getDockerIpInfo(dslContext, dockerHostIp)
