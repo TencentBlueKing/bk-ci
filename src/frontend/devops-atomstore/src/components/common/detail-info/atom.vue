@@ -14,6 +14,9 @@
                     <icon class="detail-img" name="yaml" size="16" />
                     <span class="approve-msg">{{ $t('store.YAML可用') }}</span>
                 </h5>
+                <div class="canvas-contain">
+                    <canvas class="atom-chart"></canvas>
+                </div>
             </h3>
             <h5 class="detail-info">
                 <span> {{ $t('store.发布者：') }} </span><span>{{detail.publisher || '-'}}</span>
@@ -96,6 +99,7 @@
 </template>
 
 <script>
+    import BKChart from '@blueking/bkcharts'
     import commentRate from '../comment-rate'
     import formTips from '@/components/common/formTips/index'
     import api from '@/api'
@@ -182,8 +186,12 @@
             }
         },
 
-        created () {
+        mounted () {
             this.initData()
+            const chartData = this.drawTrend()
+            this.$once('hook:beforeDestroy', () => {
+                if (chartData.destroy) chartData.destroy()
+            })
         },
 
         methods: {
@@ -201,6 +209,50 @@
 
             closeDialog () {
                 this.clearFormData()
+            },
+
+            drawTrend () {
+                const dailyStatisticList = this.detail.dailyStatisticList || []
+                const context = document.querySelector('.atom-chart')
+                return new BKChart(context, {
+                    type: 'bar',
+                    data: {
+                        labels: dailyStatisticList.map(x => x.statisticsTime),
+                        datasets: [
+                            {
+                                label: this.$t('store.执行成功率'),
+                                backgroundColor: 'rgba(43, 124, 255,0.3)',
+                                borderColor: 'rgba(43, 124, 255,1)',
+                                lineTension: 0,
+                                borderWidth: 0,
+                                pointRadius: 0,
+                                pointHitRadius: 3,
+                                pointHoverRadius: 3,
+                                data: dailyStatisticList.map(x => x.dailySuccessRate)
+                            }
+                        ]
+                    },
+                    options: {
+                        scales: {
+                            x: {
+                                'display': false
+                            },
+                            y: {
+                                'display': false
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                mode: 'x',
+                                intersect: false,
+                                singleInRange: true
+                            },
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                })
             },
 
             confirmDialog () {
@@ -314,6 +366,14 @@
         flex: 1;
         margin: 0 32px;
         max-width: calc(100% - 314px);
+        .canvas-contain {
+            height: 20px;
+            width: 40px;
+            margin-left: 15px;
+            /deep/ div[data-bkcharts-tooltips] {
+                min-width: 120px;
+            }
+        }
         h3 {
             font-size: 22px;
             line-height: 29px;
