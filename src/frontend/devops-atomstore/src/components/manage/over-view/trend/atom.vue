@@ -77,7 +77,7 @@
                             endTime: now.format('YYYY-MM-DD HH:mm:ss'),
                             startTime: now.subtract(1, this.time).format('YYYY-MM-DD HH:mm:ss')
                         }
-                        api.requestStaticChartData(this.type.toUpperCase(), code, params).then((res) => {
+                        return api.requestStaticChartData(this.type.toUpperCase(), code, params).then((res) => {
                             this.chartData[this.time] = res
                             resolve(res)
                         }).catch((err) => {
