@@ -25,16 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.service.dispatcher
+package com.tencent.devops.dispatch.docker.pojo.enums
 
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
+enum class DockerHostClusterType {
+    /**
+     * 公共构建机集群
+     */
+    COMMON,
 
-interface BuildLessDispatcher {
-
-    fun canDispatch(event: PipelineBuildLessStartupDispatchEvent): Boolean
-
-    fun startUp(event: PipelineBuildLessStartupDispatchEvent)
-
-    fun shutdown(event: PipelineBuildLessShutdownDispatchEvent)
+    /**
+     * 无编译环境构建机群
+     */
+    AGENT_LESS
 }
