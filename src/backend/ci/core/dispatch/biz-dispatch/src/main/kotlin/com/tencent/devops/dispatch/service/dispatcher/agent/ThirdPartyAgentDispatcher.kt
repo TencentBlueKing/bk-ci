@@ -148,7 +148,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 buildLogPrinter = buildLogPrinter,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.GET_BUILD_AGENT_ERROR,
-                errorMsg = "获取第三方构建机接口失败，请联系DevOps-helper处理 - ${agentResult.message}"
+                errorMsg = "获取第三方构建机信息失败 - ${agentResult.message}"
             )
             return
         }
@@ -171,7 +171,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 buildLogPrinter = buildLogPrinter,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.FOUND_AGENT_ERROR,
-                errorMsg = "获取第三方构建机接口失败，请联系DevOps-helper处理 - $dispatchType agent为空"
+                errorMsg = "获取第三方构建机信息失败 - $dispatchType agent为空"
             )
             return
         }
@@ -325,7 +325,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.FOUND_AGENT_ERROR,
-                errorMessage = "获取第三方构建机接口失败，请联系DevOps-helper处理 - " +
+                errorMessage = "获取第三方构建机信息失败 - " +
                         "${dispatchType.envName}: ${agentsResult.message}"
             )
             return
@@ -340,7 +340,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.FOUND_AGENT_ERROR,
-                errorMessage = "获取第三方构建机接口失败，请联系DevOps-helper处理 - " +
+                errorMessage = "获取第三方构建机信息失败 - " +
                         "${dispatchType.envName}: agent为空"
             )
             return
@@ -355,7 +355,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.VM_NODE_NULL,
-                errorMessage = "第三方构建机环境（${dispatchType.envName}）的节点为空，请检查环境管理配置，构建集群： ${dispatchType.envName}"
+                errorMessage = "第三方构建机环境（${dispatchType.envName}）的节点为空，请检查环境管理配置，" +
+                        "构建集群： ${dispatchType.envName}"
             )
             return
         }
