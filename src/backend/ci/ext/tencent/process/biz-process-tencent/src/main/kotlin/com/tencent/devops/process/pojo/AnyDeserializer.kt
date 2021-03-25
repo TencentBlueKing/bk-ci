@@ -25,20 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.controller
+package com.tencent.devops.process.pojo
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.dispatch.api.op.OpDockerBuildResource
-import com.tencent.devops.dispatch.service.DockerHostBuildService
-import org.springframework.beans.factory.annotation.Autowired
+import com.fasterxml.jackson.core.JsonParser
+import com.fasterxml.jackson.databind.DeserializationContext
+import com.fasterxml.jackson.databind.JsonDeserializer
+import com.fasterxml.jackson.databind.ObjectMapper
 
-@RestResource
-class OpDockerBuildResourceImpl @Autowired constructor(private val dockerHostBuildService: DockerHostBuildService)
-    : OpDockerBuildResource {
+class AnyDeserializer : JsonDeserializer<Any>() {
 
-    override fun enable(pipelineId: String, vmSeqId: Int?, enable: Boolean): Result<Boolean> {
-        dockerHostBuildService.enable(pipelineId, vmSeqId, enable)
-        return Result(true)
+    private val mapper: ObjectMapper = ObjectMapper()
+
+    override fun deserialize(p: JsonParser?, ctxt: DeserializationContext?): Any {
+        return mapper.readValue(p!!.text, Any::class.java)
     }
 }
