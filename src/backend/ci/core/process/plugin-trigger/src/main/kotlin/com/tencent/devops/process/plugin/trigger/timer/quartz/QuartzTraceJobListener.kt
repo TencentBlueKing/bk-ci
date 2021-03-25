@@ -27,32 +27,27 @@
 
 package com.tencent.devops.process.plugin.trigger.timer.quartz
 
-import com.tencent.devops.process.plugin.trigger.timer.SchedulerManager
-import org.quartz.Scheduler
-import org.quartz.impl.StdSchedulerFactory
+import com.tencent.devops.common.service.trace.TraceTag
+import org.quartz.JobExecutionContext
+import org.quartz.JobExecutionException
+import org.quartz.listeners.JobListenerSupport
+import org.slf4j.MDC
 
-class QuartzSchedulerManager : SchedulerManager() {
-
-    private var scheduler: Scheduler = StdSchedulerFactory().scheduler
-
-    private val triggerGroup = "bkTriggerGroup"
-
-    private val jobGroup = "bkJobGroup"
-
-    init {
-        scheduler.listenerManager.addJobListener(QuartzTraceJobListener())
-        scheduler.start()
+class QuartzTraceJobListener : JobListenerSupport() {
+    override fun getName(): String {
+        return "quartz-trace"
     }
 
-    override fun getJobGroup(): String {
-        return jobGroup
+    override fun jobToBeExecuted(context: JobExecutionContext) {
+        MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
+        log.info("${context.jobDetail.key.name}|PIPELINE_TIMER|bizId:${MDC.get(TraceTag.BIZID)}")
     }
 
-    override fun getTriggerGroup(): String {
-        return triggerGroup
+    override fun jobExecutionVetoed(context: JobExecutionContext?) {
+        MDC.remove(TraceTag.BIZID)
     }
 
-    override fun getScheduler(): Scheduler {
-        return scheduler
+    override fun jobWasExecuted(context: JobExecutionContext?, jobException: JobExecutionException?) {
+        MDC.remove(TraceTag.BIZID)
     }
 }
