@@ -60,8 +60,9 @@ abstract class AbstractStoreCommonDao {
         storeCode: String
     ): List<String>?
 
-    abstract fun getStoreBaseInfoByCode(
+    abstract fun getNewestStoreBaseInfoByCode(
         dslContext: DSLContext,
-        storeCode: String
+        storeCode: String,
+        storeStatus: Byte? = null
     ): StoreBaseInfo?
 }

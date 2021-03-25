@@ -73,6 +73,7 @@ import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.UserStoreDeptInfoRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import com.tencent.devops.store.pojo.template.InstallTemplateReq
 import com.tencent.devops.store.pojo.template.MarketTemplateMain
 import com.tencent.devops.store.pojo.template.MarketTemplateResp
@@ -98,6 +99,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
 import java.time.LocalDateTime
+import java.util.Optional
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
@@ -155,27 +157,24 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
 
     private val cache = CacheBuilder.newBuilder().maximumSize(1000)
         .expireAfterWrite(5, TimeUnit.MINUTES)
-        .build(object : CacheLoader<String, StoreBaseInfo?>() {
-            override fun load(atomCode: String): StoreBaseInfo? {
-                val atomStatusList = listOf(
-                    AtomStatusEnum.RELEASED.status.toByte(),
-                    AtomStatusEnum.UNDERCARRIAGING.status.toByte()
-                )
+        .build(object : CacheLoader<String, Optional<StoreBaseInfo>>() {
+            override fun load(atomCode: String): Optional<StoreBaseInfo> {
                 val atomRecord = atomDao.getPipelineAtom(
                     dslContext = dslContext,
                     atomCode = atomCode,
-                    atomStatusList = atomStatusList
+                    atomStatusList = listOf(AtomStatusEnum.RELEASED.status.toByte())
                 )
                 return if (atomRecord != null) {
-                    StoreBaseInfo(
+                    val storeBaseInfo = StoreBaseInfo(
                         storeId = atomRecord.id,
                         storeCode = atomRecord.atomCode,
                         storeName = atomRecord.name,
                         version = atomRecord.version,
                         publicFlag = atomRecord.defaultFlag
                     )
+                    Optional.of(storeBaseInfo)
                 } else {
-                    null
+                    Optional.empty()
                 }
             }
         })
@@ -683,8 +682,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         // 获取每个stage下插件的机构信息
         val stageAtomDeptMap = storeDeptService.getStageAtomDeptMap(stageList)
         projectCodeList.forEach { projectCode ->
-            // 获取已安装的镜像标识列表
-            val installImageCodes = getInstallStoreCodes(
+            // 获取可用的镜像标识列表
+            val validImageCodes = getValidStoreCodes(
                 projectCode = projectCode,
                 storeCodes = templateImageDeptMap.keys,
                 storeType = StoreTypeEnum.IMAGE
@@ -693,8 +692,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 val containerList = stage.containers
                 val stageId = stage.id
                 val currentStageAtomDeptMap = stageAtomDeptMap[stageId]
-                // 获取已安装的插件标识列表
-                val installAtomCodes = if (currentStageAtomDeptMap != null) getInstallStoreCodes(
+                // 获取可用的插件标识列表
+                val validAtomCodes = if (currentStageAtomDeptMap != null) getValidStoreCodes(
                     projectCode = projectCode,
                     storeCodes = currentStageAtomDeptMap.keys,
                     storeType = StoreTypeEnum.ATOM
@@ -706,7 +705,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                         templateImageDeptMap = templateImageDeptMap,
                         userId = userId,
                         userDeptIdList = userDeptIdList,
-                        installImageCodes = installImageCodes,
+                        validImageCodes = validImageCodes,
                         invalidImageList = invalidImageList,
                         needInstallImageMap = needInstallImageMap
                     )
@@ -718,7 +717,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                             userId = userId,
                             userDeptIdList = userDeptIdList,
                             currentStageAtomDeptMap = currentStageAtomDeptMap,
-                            installAtomCodes = installAtomCodes,
+                            validAtomCodes = validAtomCodes,
                             invalidAtomList = invalidAtomList,
                             needInstallAtomMap = needInstallAtomMap
                         )
@@ -756,7 +755,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         templateImageDeptMap: Map<String, List<DeptInfo>?>,
         userId: String,
         userDeptIdList: List<Int>,
-        installImageCodes: List<String>,
+        validImageCodes: List<String>,
         invalidImageList: MutableList<String>,
         needInstallImageMap: MutableMap<String, StoreBaseInfo>
     ) {
@@ -765,8 +764,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             val dispatchType = container.dispatchType as DockerDispatchType
             val imageCode = dispatchType.imageCode
             val imageName = dispatchType.imageName
-            // 已安装的镜像无需再检查
-            if (!imageCode.isNullOrBlank() && !installImageCodes.contains(imageCode)) {
+            // 可用的镜像无需再检查
+            if (!imageCode.isNullOrBlank() && !validImageCodes.contains(imageCode)) {
                 val storeCommonDao = try {
                     SpringContextUtil.getBean(AbstractStoreCommonDao::class.java, "${storeType}_COMMON_DAO")
                 } catch (e: Exception) {
@@ -774,9 +773,13 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                     null
                 }
                 if (storeCommonDao != null) {
-                    val storeBaseInfo = storeCommonDao.getStoreBaseInfoByCode(dslContext, imageCode!!)
+                    val storeBaseInfo = storeCommonDao.getNewestStoreBaseInfoByCode(
+                        dslContext = dslContext,
+                        storeCode = imageCode!!,
+                        storeStatus = ImageStatusEnum.RELEASED.status.toByte()
+                    )
                         ?: throw ErrorCodeException(
-                            errorCode = StoreMessageCode.USER_IMAGE_NOT_EXIST,
+                            errorCode = StoreMessageCode.USER_TEMPLATE_IMAGE_IS_INVALID,
                             params = arrayOf(imageName ?: imageCode)
                         )
                     val storeDepInfoList = templateImageDeptMap[imageCode]
@@ -820,12 +823,12 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         }
     }
 
-    private fun getInstallStoreCodes(
+    private fun getValidStoreCodes(
         projectCode: String,
         storeCodes: Collection<String>,
         storeType: StoreTypeEnum
     ): List<String> {
-        return storeProjectRelDao.getInstallStoreCodesByProject(
+        return storeProjectRelDao.getValidStoreCodesByProject(
             dslContext = dslContext,
             projectCode = projectCode,
             storeCodes = storeCodes,
@@ -838,21 +841,25 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         userId: String,
         userDeptIdList: List<Int>,
         currentStageAtomDeptMap: Map<String, List<DeptInfo>?>?,
-        installAtomCodes: List<String>?,
+        validAtomCodes: List<String>?,
         invalidAtomList: MutableList<String>,
         needInstallAtomMap: MutableMap<String, StoreBaseInfo>
     ) {
         val atomCode = element.getAtomCode()
         // 已安装的插件无需再检查
-        if (installAtomCodes?.contains(atomCode) == true) {
+        if (validAtomCodes?.contains(atomCode) == true) {
             return
         }
         // 判断插件是否为默认插件
-        val storeBaseInfo = cache.get(atomCode)
-            ?: throw ErrorCodeException(
+        val storeBaseInfoOptional = cache.get(atomCode)
+        val storeBaseInfo = if (storeBaseInfoOptional.isPresent) {
+            storeBaseInfoOptional.get()
+        } else {
+            throw ErrorCodeException(
                 errorCode = StoreMessageCode.USER_TEMPLATE_ATOM_IS_INVALID,
                 params = arrayOf(element.name)
             )
+        }
         val storeDepInfoList = currentStageAtomDeptMap?.get(atomCode)
         val validFlag = checkUserInvalidVisibleStoreInfo(
             UserStoreDeptInfoRequest(

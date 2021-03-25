@@ -38,6 +38,7 @@ import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
 import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -120,10 +121,21 @@ class AtomCommonDao : AbstractStoreCommonDao() {
         }
     }
 
-    override fun getStoreBaseInfoByCode(dslContext: DSLContext, storeCode: String): StoreBaseInfo? {
+    override fun getNewestStoreBaseInfoByCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeStatus: Byte?
+    ): StoreBaseInfo? {
         return with(TAtom.T_ATOM) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(ATOM_CODE.eq(storeCode))
+            if (storeStatus != null) {
+                conditions.add(ATOM_STATUS.eq(storeStatus))
+            }
             val atomRecord = dslContext.selectFrom(this)
-                .where(ATOM_CODE.eq(storeCode).and(LATEST_FLAG.eq(true)))
+                .where(conditions)
+                .orderBy(CREATE_TIME.desc())
+                .limit(1)
                 .fetchOne()
             if (atomRecord != null) {
                 StoreBaseInfo(
