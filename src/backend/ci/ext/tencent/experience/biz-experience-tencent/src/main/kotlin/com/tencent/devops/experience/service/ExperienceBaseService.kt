@@ -33,6 +33,7 @@ import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceGroupDao
 import com.tencent.devops.experience.dao.ExperienceGroupInnerDao
 import com.tencent.devops.experience.dao.ExperienceInnerDao
+import com.tencent.devops.experience.dao.ExperiencePublicDao
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -44,6 +45,7 @@ class ExperienceBaseService @Autowired constructor(
     private val experienceGroupInnerDao: ExperienceGroupInnerDao,
     private val experienceInnerDao: ExperienceInnerDao,
     private val experienceDao: ExperienceDao,
+    private val experiencePublicDao: ExperiencePublicDao,
     private val dslContext: DSLContext
 ) {
     fun getRecordIdsByUserId(
@@ -67,6 +69,7 @@ class ExperienceBaseService @Autowired constructor(
     }
 
     fun userCanExperience(userId: String, experienceId: Long): Boolean {
+        val isPublic = lazy { experiencePublicDao.countByRecordId(dslContext, experienceId) > 0 }
         val inGroup = lazy {
             getGroupIdToUserIdsMap(experienceId).values.asSequence().flatMap { it.asSequence() }.toSet()
                 .contains(userId)
@@ -77,7 +80,7 @@ class ExperienceBaseService @Autowired constructor(
         }
         val isCreator = lazy { experienceDao.get(dslContext, experienceId).creator == userId }
 
-        return inGroup.value || isInnerUser.value || isCreator.value
+        return isPublic.value || inGroup.value || isInnerUser.value || isCreator.value
     }
 
     fun getGroupIdToUserIdsMap(experienceId: Long): MutableMap<Long, MutableSet<String>> {

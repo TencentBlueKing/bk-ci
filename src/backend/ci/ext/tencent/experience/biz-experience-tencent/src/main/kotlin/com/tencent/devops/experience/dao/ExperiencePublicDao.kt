@@ -212,6 +212,16 @@ class ExperiencePublicDao {
         }
     }
 
+    fun countByRecordId(
+        dslContext: DSLContext,
+        recordId: Long
+    ): Int {
+        return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
+            dslContext.selectCount().where(RECORD_ID.eq(recordId)).execute()
+        }
+    }
+
+    @SuppressWarnings("ALL")
     fun updateById(
         dslContext: DSLContext,
         id: Long,
