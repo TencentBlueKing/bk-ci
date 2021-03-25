@@ -170,7 +170,7 @@ class ExperienceAppService(
         val isOldVersion = VersionUtil.compare(appVersion, "2.0.0") < 0
         val canExperience = experienceBaseService.userCanExperience(userId, experienceId)
 
-        //新版本直接抛异常
+        // 新版本直接抛异常
         if (!isOldVersion && !canExperience) {
             throw ErrorCodeException(
                 statusCode = 403,
