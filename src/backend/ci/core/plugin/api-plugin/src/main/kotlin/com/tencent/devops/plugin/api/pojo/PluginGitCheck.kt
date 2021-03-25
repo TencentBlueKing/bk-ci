@@ -25,8 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.pojo
+package com.tencent.devops.plugin.api.pojo
 
-data class GithubCheckRunsResponse(
-    val id: Long
+data class PluginGitCheck(
+    val pipelineId: String,
+    val buildNumber: Int,
+    val repositoryHashId: String?,
+    val repositoryName: String?,
+    val commitId: String,
+    val context: String
 )

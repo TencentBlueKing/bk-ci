@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
@@ -1216,6 +1217,15 @@ class PipelineRuntimeService @Autowired constructor(
                 buildId = buildId,
                 // 刷新历史列表和详情页面
                 refreshTypes = RefreshType.DETAIL.binary
+            ), // 广播构建排队事件
+            PipelineBuildQueueBroadCastEvent(
+                source = "startQueue",
+                projectId = pipelineInfo.projectId,
+                pipelineId = pipelineInfo.pipelineId,
+                userId = userId,
+                buildId = buildId,
+                actionType = actionType,
+                triggerType = startType.name
             )
         )
 

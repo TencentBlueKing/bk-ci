@@ -25,22 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.listener
+package com.tencent.devops.common.event.pojo.pipeline
 
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
-import com.tencent.devops.plugin.service.git.CodeWebhookService
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.enums.ActionType
 
-@Component
-class CodeWebhookFinishListener @Autowired constructor(
-    private val codeWebhookService: CodeWebhookService,
-    pipelineEventDispatcher: PipelineEventDispatcher
-) : BaseListener<PipelineBuildFinishBroadCastEvent>(pipelineEventDispatcher) {
-
-    override fun run(event: PipelineBuildFinishBroadCastEvent) {
-        codeWebhookService.onFinish(event)
-    }
-}
+@Event(exchange = MQ.EXCHANGE_PIPELINE_BUILD_QUEUE_FANOUT)
+data class PipelineBuildQueueBroadCastEvent(
+    override val source: String,
+    override val projectId: String,
+    override val pipelineId: String,
+    override val userId: String,
+    val buildId: String,
+    override var actionType: ActionType,
+    override var delayMills: Int = 0,
+    val triggerType: String
+) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)

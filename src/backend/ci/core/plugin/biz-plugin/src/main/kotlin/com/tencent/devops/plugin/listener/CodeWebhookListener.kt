@@ -25,8 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.pojo
+package com.tencent.devops.plugin.listener
 
-data class GithubCheckRunsResponse(
-    val id: Long
-)
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
+import com.tencent.devops.plugin.service.git.CodeWebhookService
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
+
+@Component
+class CodeWebhookListener @Autowired constructor(
+    private val codeWebhookService: CodeWebhookService
+) {
+
+    fun onBuildQueue(event: PipelineBuildQueueBroadCastEvent) {
+        codeWebhookService.onBuildQueue(event = event)
+    }
+
+    fun onBuildFinished(event: PipelineBuildFinishBroadCastEvent) {
+        codeWebhookService.onBuildFinished(event = event)
+    }
+}
