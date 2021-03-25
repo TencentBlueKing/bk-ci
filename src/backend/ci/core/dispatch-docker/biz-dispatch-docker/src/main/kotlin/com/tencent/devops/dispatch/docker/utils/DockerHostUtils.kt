@@ -34,7 +34,6 @@ import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
-import com.tencent.devops.dispatch.docker.common.Constants
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerHostDao
@@ -70,7 +69,6 @@ class DockerHostUtils @Autowired constructor(
     companion object {
         private const val LOAD_CONFIG_KEY = "dockerhost-load-config"
         private const val DOCKER_DRIFT_THRESHOLD_KEY = "docker-drift-threshold-spKyQ86qdYhAkDDR"
-        private const val DOCKER_IP_COUNT_MAX = 100
         private const val BUILD_POOL_SIZE = 100 // 单个流水线可同时执行的任务数量
 
         private val logger = LoggerFactory.getLogger(DockerHostUtils::class.java)
@@ -269,19 +267,7 @@ class DockerHostUtils @Autowired constructor(
             return Triple(pair.first, pair.second, "")
         }
 
-        // IP当前可用，还要检测当前IP限流是否已达上限
-        val dockerIpCount = redisOperation.get("${Constants.DOCKER_IP_COUNT_KEY_PREFIX}$dockerIp")
-        logger.info("${dispatchMessage.buildId}|${dispatchMessage.vmSeqId} $dockerIp dockerIpCount: $dockerIpCount")
-        return if (dockerIpCount != null && dockerIpCount.toInt() > DOCKER_IP_COUNT_MAX) {
-            val pair = getAvailableDockerIpWithSpecialIps(projectId = dispatchMessage.projectId,
-                pipelineId = dispatchMessage.pipelineId,
-                vmSeqId = dispatchMessage.vmSeqId,
-                specialIpSet = specialIpSet,
-                unAvailableIpList = setOf(dockerIp))
-            Triple(pair.first, pair.second, "IP限流漂移")
-        } else {
-            Triple(dockerIp, dockerIpInfo.dockerHostPort, "")
-        }
+        return Triple(dockerIp, dockerIpInfo.dockerHostPort, "")
     }
 
     fun updateDockerDriftThreshold(threshold: Int) {
@@ -412,7 +398,7 @@ class DockerHostUtils @Autowired constructor(
             if (dockerIpList.size > 0) {
                 val index = random.nextInt(dockerIpList.size)
                 val dockerInfo = dockerIpList[index]
-                if (!unAvailableIpList.contains(dockerInfo.dockerIp) && !exceedIpLimiting(dockerInfo.dockerIp)) {
+                if (!unAvailableIpList.contains(dockerInfo.dockerIp)) {
                     return Pair(dockerInfo.dockerIp, dockerInfo.dockerHostPort)
                 } else {
                     dockerIpList.removeAt(index)
@@ -421,16 +407,5 @@ class DockerHostUtils @Autowired constructor(
         }
 
         return Pair("", 0)
-    }
-
-    private fun exceedIpLimiting(dockerIp: String): Boolean {
-        // 查看当前IP是否已达限流
-        val dockerIpCount = redisOperation.get("${Constants.DOCKER_IP_COUNT_KEY_PREFIX}$dockerIp")
-        logger.info("$dockerIp dockerIpCount: $dockerIpCount")
-        if (dockerIpCount != null && dockerIpCount.toInt() > DOCKER_IP_COUNT_MAX) {
-            return true
-        }
-
-        return false
     }
 }
