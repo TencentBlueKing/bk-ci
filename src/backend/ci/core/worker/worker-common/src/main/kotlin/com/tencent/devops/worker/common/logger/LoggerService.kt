@@ -38,6 +38,7 @@ import com.tencent.devops.worker.common.api.log.LogSDKApi
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.LogMode
 import com.tencent.devops.worker.common.utils.ArchiveUtils
+import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.util.concurrent.Callable
@@ -339,6 +340,7 @@ object LoggerService {
     }
 
     private fun getLocalLogFileName(): String {
-        return "[$vmSeqId]${jobName}_${elementName}_$executeCount.log"
+        return "${WorkspaceUtils.getBuildLogSpace()}/${buildVariables?.projectId}/${buildVariables?.pipelineId}" +
+            "/${buildVariables?.buildId}/[$vmSeqId]${jobName}_${elementName}_$executeCount.log"
     }
 }
