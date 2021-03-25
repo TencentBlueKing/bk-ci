@@ -251,4 +251,8 @@ object AgentEnv {
         }
         return logMode!!
     }
+
+    fun setLogMode(mode: LogMode) {
+        logMode = mode
+    }
 }

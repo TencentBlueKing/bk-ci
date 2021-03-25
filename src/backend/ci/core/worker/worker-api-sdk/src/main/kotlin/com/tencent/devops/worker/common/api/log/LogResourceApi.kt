@@ -40,27 +40,20 @@ import java.lang.StringBuilder
 class LogResourceApi : AbstractBuildResourceApi(), LogSDKApi {
 
     override fun addLogMultiLine(logMessages: List<LogMessage>): Result<Boolean> {
-        return if (LogMode.LOCAL == AgentEnv.getLogMode()) {
-            logMessages.forEach {
-                logger.info(it.message)
-            }
-            Result(true)
-        } else {
-            val path = "/log/api/build/logs/multi"
-            val requestBody = RequestBody.create(
-                MediaType.parse("application/json; charset=utf-8"),
-                objectMapper.writeValueAsString(logMessages)
-            )
-            val request = buildPost(path, requestBody)
-            val responseContent = request(
-                request = request,
-                errorMessage = "上报日志失败",
-                connectTimeoutInSec = 5L,
-                readTimeoutInSec = 30L,
-                writeTimeoutInSec = 30L
-            )
-            objectMapper.readValue(responseContent)
-        }
+        val path = "/log/api/build/logs/multi"
+        val requestBody = RequestBody.create(
+            MediaType.parse("application/json; charset=utf-8"),
+            objectMapper.writeValueAsString(logMessages)
+        )
+        val request = buildPost(path, requestBody)
+        val responseContent = request(
+            request = request,
+            errorMessage = "上报日志失败",
+            connectTimeoutInSec = 5L,
+            readTimeoutInSec = 10L,
+            writeTimeoutInSec = 10L
+        )
+        return objectMapper.readValue(responseContent)
     }
 
     override fun finishLog(tag: String?, jobId: String?, executeCount: Int?, subTag: String?): Result<Boolean> {

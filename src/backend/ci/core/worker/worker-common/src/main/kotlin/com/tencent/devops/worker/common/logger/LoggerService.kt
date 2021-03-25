@@ -30,11 +30,16 @@ package com.tencent.devops.worker.common.logger
 import com.tencent.devops.log.meta.Ansi
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.pojo.enums.LogType
+import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.LOG_SUBTAG_FINISH_FLAG
 import com.tencent.devops.worker.common.LOG_SUBTAG_FLAG
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.log.LogSDKApi
+import com.tencent.devops.worker.common.env.AgentEnv
+import com.tencent.devops.worker.common.env.LogMode
+import com.tencent.devops.worker.common.utils.ArchiveUtils
 import org.slf4j.LoggerFactory
+import java.io.File
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
@@ -47,17 +52,45 @@ import java.util.concurrent.locks.ReentrantLock
 object LoggerService {
 
     private val logResourceApi = ApiFactory.create(LogSDKApi::class)
-
-    private val executorService = Executors.newSingleThreadExecutor()
-    private val flushExecutor = Executors.newSingleThreadExecutor()
-    private val queue = LinkedBlockingQueue<LogMessage>(2000)
     private val logger = LoggerFactory.getLogger(LoggerService::class.java)
-    private val running = AtomicBoolean(true)
     private var future: Future<Boolean>? = null
-    // 当前执行的插件id
+    private val running = AtomicBoolean(true)
+
+    /**
+     * 构建日志处理的异步线程池
+     */
+    private val executorService = Executors.newSingleThreadExecutor()
+
+    /**
+     * 缓冲区处理的异步线程池
+     */
+    private val flushExecutor = Executors.newSingleThreadExecutor()
+
+    /**
+     * 构建日志归档的异步线程池
+     */
+    private val archiveService = Executors.newSingleThreadExecutor()
+
+    /**
+     * 日志上报缓冲队列
+     */
+    private val queue = LinkedBlockingQueue<LogMessage>(2000)
+
+    /**
+     * 日志本地存储文件映射关系
+     */
+    private val taskId2LogFile = mutableMapOf<String, File>()
+
+    /**
+     * 当前执行插件的各类构建信息
+     */
     var elementId = ""
+    var elementName = ""
+    var vmSeqId = ""
     var jobId = ""
+    var jobName = ""
     var executeCount = 1
+    var buildVariables: BuildVariables? = null
 
     private val lock = ReentrantLock()
 
@@ -175,7 +208,7 @@ object LoggerService {
             logType = LogType.LOG,
             executeCount = executeCount
         )
-        logger.info(logMessage.toString())
+        saveLocalLog(logMessage)
         try {
             this.queue.put(logMessage)
         } catch (e: InterruptedException) {
@@ -241,25 +274,71 @@ object LoggerService {
 
     private fun sendMultiLog(logMessages: List<LogMessage>) {
         try {
-            logger.info("Start to send the log - ${logMessages.size}")
+            logger.info("Start to save the log - ${logMessages.size}")
+
+            // 如果模式为本地保存则不做上报
+            if (LogMode.LOCAL == AgentEnv.getLogMode()) {
+                return
+            }
+
+            // 通过上报的结果感知是否需要调整模式
             val result = logResourceApi.addLogMultiLine(logMessages)
-            if (result.isNotOk()) {
-                logger.error("发送构建日志失败：${result.message}")
+            when {
+                result.status == 503 || result.status == 509 -> {
+                    logger.warn("Log storage status is wrong：${result.message}")
+                    AgentEnv.setLogMode(LogMode.LOCAL)
+                }
+                result.isNotOk() -> {
+                    logger.error("Fail to send the multi logs：${result.message}")
+                }
             }
         } catch (e: Exception) {
             logger.warn("Fail to send the logs(${logMessages.size})", e)
         }
     }
 
-    private fun finishLog(tag: String?, jobId: String?, executeCount: Int?, subTag: String? = null) {
+    private fun saveLocalLog(logMessage: LogMessage) {
+        try {
+            // 必要的本地保存
+            var logFile = taskId2LogFile[elementId]
+            if (null == logFile) {
+                logFile = File(getLocalLogFileName())
+                logFile.createNewFile()
+                taskId2LogFile[elementId] = logFile
+            }
+            logFile.printWriter().use { out ->
+                out.println(logMessage.message)
+            }
+        } catch (e: Exception) {
+            logger.warn("Fail to save the logs(${logMessage})", e)
+        }
+    }
+
+    private fun finishLog(
+        tag: String?,
+        jobId: String?,
+        executeCount: Int?,
+        subTag: String? = null
+    ) {
         try {
             logger.info("Start to finish the log")
             val result = logResourceApi.finishLog(tag, jobId, executeCount, subTag)
             if (result.isNotOk()) {
-                logger.error("上报日志状态日志失败：${result.message}")
+                logger.error("Fail to send the log status ：${result.message}")
+            }
+            val finishedLogFile = taskId2LogFile[elementId] ?: return
+            if (LogMode.LOCAL == AgentEnv.getLogMode()
+                && !tag.isNullOrBlank()
+                && finishedLogFile.exists()
+            ) {
+                archiveService.execute { ArchiveUtils.archivePipelineFile(finishedLogFile, buildVariables!!) }
             }
         } catch (e: Exception) {
             logger.warn("Fail to finish the logs", e)
         }
+    }
+
+    private fun getLocalLogFileName(): String {
+        return "[${vmSeqId}]${jobName}_${elementName}_${executeCount}.log"
     }
 }

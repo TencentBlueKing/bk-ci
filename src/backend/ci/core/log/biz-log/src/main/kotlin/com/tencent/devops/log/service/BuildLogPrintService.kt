@@ -34,6 +34,7 @@ import com.tencent.devops.common.log.pojo.LogEvent
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.mq.EXTEND_RABBIT_TEMPLATE_NAME
 import com.tencent.devops.log.configuration.LogServiceConfig
+import com.tencent.devops.log.configuration.StorageProperties
 import com.tencent.devops.log.jmx.LogPrintBean
 import com.tencent.devops.log.util.LogErrorCodeEnum
 import org.slf4j.LoggerFactory
@@ -50,6 +51,7 @@ class BuildLogPrintService @Autowired constructor(
     @Resource(name = EXTEND_RABBIT_TEMPLATE_NAME)
     private val rabbitTemplate: RabbitTemplate,
     private val logPrintBean: LogPrintBean,
+    private val storageProperties: StorageProperties,
     private val logServiceConfig: LogServiceConfig
 ) {
 
@@ -82,6 +84,13 @@ class BuildLogPrintService @Autowired constructor(
     }
 
     fun asyncDispatchEvent(event: ILogEvent): Result<Boolean> {
+        if (storageProperties.enable == false) {
+            return Result(
+                status = 503,
+                message = LogErrorCodeEnum.PRINT_IS_DISABLED.formatErrorMessage,
+                data = false
+            )
+        }
         return try {
             logExecutorService.execute {
                 dispatchEvent(event)
