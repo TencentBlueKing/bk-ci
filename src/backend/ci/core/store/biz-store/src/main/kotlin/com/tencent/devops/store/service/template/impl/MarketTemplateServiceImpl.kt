@@ -688,6 +688,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 storeCodes = templateImageDeptMap.keys,
                 storeType = StoreTypeEnum.IMAGE
             )
+            val totalValidAtomCodes = mutableListOf<String>()
             stageList.forEach { stage ->
                 val containerList = stage.containers
                 val stageId = stage.id
@@ -698,6 +699,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                     storeCodes = currentStageAtomDeptMap.keys,
                     storeType = StoreTypeEnum.ATOM
                 ) else null
+                validAtomCodes?.let { totalValidAtomCodes.addAll(it) }
                 containerList.forEach { container ->
                     // 判断用户的组织架构是否在镜像的可见范围之内
                     validateUserImageVisible(
@@ -738,7 +740,12 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                     params = arrayOf(JsonUtil.toJson(invalidAtomList))
                 )
             }
-            val validateTempleAtomVisibleResult = validateTempleAtomVisible(templateCode, templateModel)
+            val validateTempleAtomVisibleResult = validateTemplateVisibleDept(
+                templateCode = templateCode,
+                templateModel = templateModel,
+                validImageCodes = validImageCodes,
+                validAtomCodes = totalValidAtomCodes
+            )
             if (validateTempleAtomVisibleResult.isNotOk()) {
                 return validateTempleAtomVisibleResult
             }
@@ -877,7 +884,12 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
 
     abstract fun checkUserInvalidVisibleStoreInfo(userStoreDeptInfoRequest: UserStoreDeptInfoRequest): Boolean
 
-    abstract fun validateTempleAtomVisible(templateCode: String, templateModel: Model): Result<Boolean>
+    abstract fun validateTemplateVisibleDept(
+        templateCode: String,
+        templateModel: Model,
+        validImageCodes: List<String>? = null,
+        validAtomCodes: List<String>? = null
+    ): Result<Boolean>
 
     private fun copyQualityRule(
         userId: String,

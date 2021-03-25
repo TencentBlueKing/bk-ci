@@ -62,8 +62,13 @@ class SampleMarketTemplateServiceImpl : SampleMarketTemplateService, MarketTempl
         }
     }
 
-    override fun validateTempleAtomVisible(templateCode: String, templateModel: Model): Result<Boolean> {
-        // 开源版没有可见范围的概念，没有因为可见范围而无效的插件
+    override fun validateTemplateVisibleDept(
+        templateCode: String,
+        templateModel: Model,
+        validImageCodes: List<String>?,
+        validAtomCodes: List<String>?
+    ): Result<Boolean> {
+        // 开源版没有可见范围的概念，没有因为可见范围而无效的组件
         return Result(true)
     }
 }
