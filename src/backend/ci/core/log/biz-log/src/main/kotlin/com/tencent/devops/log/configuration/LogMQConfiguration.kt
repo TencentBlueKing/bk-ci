@@ -119,8 +119,9 @@ class LogMQConfiguration @Autowired constructor() {
         @Qualifier(value = EXTEND_RABBIT_TEMPLATE_NAME)
         rabbitTemplate: RabbitTemplate,
         logPrintBean: LogPrintBean,
+        storageProperties: StorageProperties,
         logServiceConfig: LogServiceConfig
-    ) = BuildLogPrintService(rabbitTemplate, logPrintBean, logServiceConfig)
+    ) = BuildLogPrintService(rabbitTemplate, logPrintBean, storageProperties, logServiceConfig)
 
     @Bean
     fun logEventBind(
