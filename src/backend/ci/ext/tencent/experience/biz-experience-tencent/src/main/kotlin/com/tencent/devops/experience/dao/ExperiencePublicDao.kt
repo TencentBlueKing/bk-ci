@@ -217,7 +217,7 @@ class ExperiencePublicDao {
         recordId: Long
     ): Int {
         return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
-            dslContext.selectCount().where(RECORD_ID.eq(recordId)).execute()
+            dslContext.selectCount().from(this).where(RECORD_ID.eq(recordId)).execute()
         }
     }
 

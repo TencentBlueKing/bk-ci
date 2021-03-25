@@ -48,12 +48,14 @@ class ExperienceBaseService @Autowired constructor(
     private val experiencePublicDao: ExperiencePublicDao,
     private val dslContext: DSLContext
 ) {
+    /**
+     * 列出用户能够访问的体验
+     */
     fun getRecordIdsByUserId(
         userId: String,
         groupIdType: GroupIdTypeEnum
     ): MutableSet<Long> {
         val recordIds = mutableSetOf<Long>()
-        // 把有自己的组的experience拿出来 && 把公开的experience拿出来
         val groupIds = mutableSetOf<Long>()
         if (groupIdType == GroupIdTypeEnum.JUST_PRIVATE || groupIdType == GroupIdTypeEnum.ALL) {
             groupIds.addAll(experienceGroupInnerDao.listGroupIdsByUserId(dslContext, userId).map { it.value1() }
@@ -63,11 +65,13 @@ class ExperienceBaseService @Autowired constructor(
             groupIds.add(ExperienceConstant.PUBLIC_GROUP)
         }
         recordIds.addAll(experienceGroupDao.listRecordIdByGroupIds(dslContext, groupIds).map { it.value1() }.toSet())
-        // 把有自己的experience拿出来
         recordIds.addAll(experienceInnerDao.listRecordIdsByUserId(dslContext, userId).map { it.value1() }.toSet())
         return recordIds
     }
 
+    /**
+     * 判断用户是否能体验
+     */
     fun userCanExperience(userId: String, experienceId: Long): Boolean {
         val isPublic = lazy { experiencePublicDao.countByRecordId(dslContext, experienceId) > 0 }
         val inGroup = lazy {
@@ -83,11 +87,17 @@ class ExperienceBaseService @Autowired constructor(
         return isPublic.value || inGroup.value || isInnerUser.value || isCreator.value
     }
 
+    /**
+     * 获取体验对应的<组号,用户列表>
+     */
     fun getGroupIdToUserIdsMap(experienceId: Long): MutableMap<Long, MutableSet<String>> {
         val groupIds = experienceGroupDao.listGroupIdsByRecordId(dslContext, experienceId).map { it.value1() }.toSet()
         return getGroupIdToUserIds(groupIds)
     }
 
+    /**
+     * 根据组号获取<组号,用户列表>
+     */
     fun getGroupIdToUserIds(groupIds: Set<Long>): MutableMap<Long, MutableSet<String>> {
         val groupIdToUserIds = mutableMapOf<Long, MutableSet<String>>()
         experienceGroupInnerDao.listByGroupIds(dslContext, groupIds).forEach {
@@ -99,7 +109,7 @@ class ExperienceBaseService @Autowired constructor(
             groupIdToUserIds[it.groupId] = userIds
         }
         if (groupIds.contains(ExperienceConstant.PUBLIC_GROUP)) {
-            groupIdToUserIds[0] = ExperienceConstant.PUBLIC_INNER_USERS
+            groupIdToUserIds[ExperienceConstant.PUBLIC_GROUP] = ExperienceConstant.PUBLIC_INNER_USERS
         }
         return groupIdToUserIds
     }
