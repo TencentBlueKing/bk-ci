@@ -27,8 +27,19 @@
 
 package com.tencent.devops.dispatch.docker.listener
 
+import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.dispatch.docker.exception.DockerServiceException
 import com.tencent.devops.dispatch.docker.service.PipelineAgentLessDispatchService
+import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.ExchangeTypes
@@ -41,7 +52,12 @@ import org.springframework.stereotype.Service
 
 @Service
 class AgentLessStartupListener @Autowired
-constructor(private val pipelineAgentLessDispatchService: PipelineAgentLessDispatchService) {
+constructor(
+    private val pipelineAgentLessDispatchService: PipelineAgentLessDispatchService,
+    private val client: Client,
+    private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val buildLogPrinter: BuildLogPrinter
+) {
 
     @RabbitListener(
         bindings = [(QueueBinding(
@@ -60,8 +76,50 @@ constructor(private val pipelineAgentLessDispatchService: PipelineAgentLessDispa
         try {
             logger.info("start build less($event)")
             pipelineAgentLessDispatchService.startUpBuildLess(event)
-        } catch (ignored: Throwable) {
-            logger.error("Fail to start the pipe build($event)", ignored)
+        } catch (t: Throwable) {
+            logger.warn("[${event.buildId}|${event.vmSeqId}] Container startup failure")
+
+            buildLogPrinter.addRedLine(
+                buildId = event.buildId,
+                message = "Start buildless Docker VM failed. ${t.message}",
+                tag = VMUtils.genStartVMTaskId(event.vmSeqId),
+                jobId = event.containerHashId,
+                executeCount = event.executeCount ?: 1
+            )
+
+            val (errorType, errorCode, errorMsg) = if (t is DockerServiceException) {
+                Triple(t.errorType, t.errorCode, t.message)
+            } else {
+                Triple(
+                    ErrorType.SYSTEM,
+                    DispatchSdkErrorCode.SDK_SYSTEM_ERROR,
+                    "Fail to handle the start up message")
+            }
+
+            pipelineEventDispatcher.dispatch(
+                PipelineBuildContainerEvent(
+                    source = "container_startup_sdk",
+                    projectId = event.projectId,
+                    pipelineId = event.pipelineId,
+                    buildId = event.buildId,
+                    userId = event.userId,
+                    stageId = "",
+                    containerId = event.containerId,
+                    containerType = event.dispatchType.value,
+                    actionType = ActionType.TERMINATE
+                )
+            )
+
+            client.get(ServiceBuildResource::class).setVMStatus(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                buildId = event.buildId,
+                vmSeqId = event.vmSeqId,
+                status = BuildStatus.FAILED,
+                errorType = errorType,
+                errorCode = errorCode,
+                errorMsg = errorMsg
+            )
         }
     }
 

@@ -32,8 +32,6 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.common.web.mq.alert.AlertUtils
 import com.tencent.devops.dispatch.docker.api.builds.BuildDockerHostResource
-import com.tencent.devops.dispatch.pojo.ContainerInfo
-import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.docker.pojo.DockerHostInfo
 import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
 import com.tencent.devops.dispatch.docker.service.DispatchDockerService
@@ -52,7 +50,7 @@ class BuildDockerHostResourceImpl @Autowired constructor(
     override fun getHost(hostTag: String): Result<DockerHostInfo>? {
         return dockerHostBuildService.getHost(hostTag)
     }
-
+/*
     override fun rollbackBuild(buildId: String, vmSeqId: Int, shutdown: Boolean?): Result<Boolean>? {
         return dockerHostBuildService.rollbackBuild(buildId, vmSeqId, shutdown)
     }
@@ -93,7 +91,7 @@ class BuildDockerHostResourceImpl @Autowired constructor(
         message: String?
     ): Result<Boolean>? {
         return dockerHostDebugService.rollbackDebug(pipelineId, vmSeqId, shutdown, message)
-    }
+    }*/
 
     override fun alert(level: AlertLevel, title: String, message: String): Result<Boolean>? {
         AlertUtils.doAlert(level, title, message)

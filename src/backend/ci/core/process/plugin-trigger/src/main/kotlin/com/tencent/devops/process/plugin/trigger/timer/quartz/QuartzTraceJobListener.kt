@@ -25,16 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.service
+package com.tencent.devops.process.plugin.trigger.timer.quartz
 
-import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
-import okhttp3.Request
+import com.tencent.devops.common.service.trace.TraceTag
+import org.quartz.JobExecutionContext
+import org.quartz.JobExecutionException
+import org.quartz.listeners.JobListenerSupport
+import org.slf4j.MDC
 
-interface DockerHostProxyService {
-    fun getDockerHostProxyRequest(
-        dockerHostUri: String,
-        dockerHostIp: String,
-        dockerHostPort: Int = 0,
-        clusterType: DockerHostClusterType = DockerHostClusterType.COMMON
-    ): Request.Builder
+class QuartzTraceJobListener : JobListenerSupport() {
+    override fun getName(): String {
+        return "quartz-trace"
+    }
+
+    override fun jobToBeExecuted(context: JobExecutionContext) {
+        MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
+        log.info("${context.jobDetail.key.name}|PIPELINE_TIMER|bizId:${MDC.get(TraceTag.BIZID)}")
+    }
+
+    override fun jobExecutionVetoed(context: JobExecutionContext?) {
+        MDC.remove(TraceTag.BIZID)
+    }
+
+    override fun jobWasExecuted(context: JobExecutionContext?, jobException: JobExecutionException?) {
+        MDC.remove(TraceTag.BIZID)
+    }
 }

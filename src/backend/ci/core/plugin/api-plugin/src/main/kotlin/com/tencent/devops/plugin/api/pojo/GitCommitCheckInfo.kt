@@ -25,16 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.service
+package com.tencent.devops.plugin.api.pojo
 
-import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
-import okhttp3.Request
+import com.tencent.devops.common.api.enums.RepositoryConfig
 
-interface DockerHostProxyService {
-    fun getDockerHostProxyRequest(
-        dockerHostUri: String,
-        dockerHostIp: String,
-        dockerHostPort: Int = 0,
-        clusterType: DockerHostClusterType = DockerHostClusterType.COMMON
-    ): Request.Builder
-}
+data class GitCommitCheckInfo(
+    val projectId: String,
+    val pipelineId: String,
+    val buildId: String,
+    val repositoryConfig: RepositoryConfig,
+    val commitId: String,
+    val block: Boolean,
+    val triggerType: String = "",
+    val mergeRequestId: Long? = null,
+    val userId: String,
+    val webhookType: String,
+    val webhookEventType: String
+)

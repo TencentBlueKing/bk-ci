@@ -25,16 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.service
+package com.tencent.devops.store.utils
 
-import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
-import okhttp3.Request
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.common.service.utils.SpringContextUtil
 
-interface DockerHostProxyService {
-    fun getDockerHostProxyRequest(
-        dockerHostUri: String,
-        dockerHostIp: String,
-        dockerHostPort: Int = 0,
-        clusterType: DockerHostClusterType = DockerHostClusterType.COMMON
-    ): Request.Builder
+object StoreUtils {
+
+    /**
+     * 移除链接地址中的域名信息
+     * @param url 链接地址
+     */
+    fun removeUrlHost(url: String): String {
+        val host = getHost()
+        return url.removePrefix(host)
+    }
+
+    /**
+     * 为链接地址添加域名信息
+     * @param url 链接地址
+     */
+    fun addUrlHost(url: String): String {
+        val host = getHost()
+        return if (!url.startsWith("http://") && !url.startsWith("https://")) {
+            if (url.startsWith("/")) "$host$url" else "$host/$url"
+        } else {
+            url
+        }
+    }
+
+    private fun getHost(): String {
+        val commonConfig: CommonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
+        return HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
+    }
 }

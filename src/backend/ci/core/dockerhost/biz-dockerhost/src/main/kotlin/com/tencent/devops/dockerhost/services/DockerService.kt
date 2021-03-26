@@ -123,8 +123,8 @@ class DockerService @Autowired constructor(
     }
 
     fun dockerStop(projectId: String, pipelineId: String, vmSeqId: String, buildId: String, containerId: String) {
-        logger.info("$buildId|dockerStop|vmSeqId=$vmSeqId|containerId=$containerId")
-        dockerHostBuildService.dockerStop(projectId, pipelineId, vmSeqId, buildId, containerId)
+        logger.info("$buildId|dockerStop|vmSeqId=$vmSeqId|containerId=$containerId dockerStop.")
+        dockerHostBuildService.stopContainer(containerId, buildId)
     }
 
     fun getDockerRunLogs(
