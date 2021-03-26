@@ -63,6 +63,7 @@
                     <span class="detail-label">{{ $t('store.版本') }}：</span>
                     <span>{{detail.version || '--'}}</span>
                 </li>
+                <slot></slot>
                 <li class="detail-item">
                     <span class="detail-label">{{ $t('store.发布描述') }}：</span>
                     <mavon-editor
