@@ -86,13 +86,26 @@ object SignUtils {
             val needResignDirs = scanNeedResignFiles(appDir)
             needResignDirs.forEach { resignDir ->
                 resignDir.listFiles().forEach { subFile ->
-                    // 如果是个拓展则递归进入进行重签
-                    if (subFile.isDirectory && subFile.extension.contains("app")) {
-                        resignAppWildcard(subFile, certId, wildcardInfo)
-                    } else {
-                        // 如果是个其他待签文件则使用住描述文件进行重签
-                        overwriteInfo(subFile, wildcardInfo, false)
-                        codesignFile(certId, subFile.absolutePath)
+                    when {
+                        // 如果是个拓展则递归进入进行重签
+                        subFile.isDirectory && subFile.extension.contains("app") -> {
+                            resignAppWildcard(subFile, certId, wildcardInfo)
+                        }
+
+                        // 如果是个framework则在做一次下层目录扫描
+                        subFile.isDirectory && subFile.extension.contains("framework") -> {
+                            resignFramework(
+                                frameworkDir = subFile,
+                                certId = certId,
+                                info = wildcardInfo
+                            )
+                        }
+
+                        // 如果不是app或framework目录，则使用主描述文件进行重签
+                        else -> {
+                            overwriteInfo(subFile, wildcardInfo, false)
+                            codesignFile(certId, subFile.absolutePath)
+                        }
                     }
                 }
             }
@@ -161,6 +174,7 @@ object SignUtils {
                             )
                             if (!success) return false
                         }
+
                         // 如果是个framework则在做一次下层目录扫描
                         subFile.isDirectory && appDir.extension.contains("framework") -> {
                             resignFramework(
@@ -170,9 +184,9 @@ object SignUtils {
                                 replaceKeyList = replaceKeyList
                             )
                         }
-                        // 如果不是app或framework目录，则做重签操作
+
+                        // 如果不是app或framework目录，则使用主描述文件进行重签
                         else -> {
-                            // 如果是个其他待签文件则使用主描述文件进行重签
                             overwriteInfo(subFile, info, false, replaceKeyList)
                             codesignFile(certId, subFile.absolutePath)
                         }
@@ -189,12 +203,12 @@ object SignUtils {
     }
 
     /**
-     *  framework目录递归签名
+     *  framework目录签名
      *
      *  @param frameworkDir 待签名的最外层app目录
      *  @param certId 本次签名使用的企业证书
      *  @param info 证书信息
-     *  @return 本层app包签名结果
+     *  @return 本层framework包签名结果
      *
      */
     @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
