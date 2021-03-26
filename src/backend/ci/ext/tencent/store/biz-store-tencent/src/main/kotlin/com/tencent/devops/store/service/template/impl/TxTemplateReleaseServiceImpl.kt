@@ -41,13 +41,24 @@ import com.tencent.devops.common.api.constant.SUCCESS
 import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
+import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.template.enums.TemplateStatusEnum
+import com.tencent.devops.store.service.common.StoreVisibleDeptService
+import com.tencent.devops.store.service.template.TemplateVisibleDeptService
 import com.tencent.devops.store.service.template.TxTemplateReleaseService
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class TxTemplateReleaseServiceImpl : TxTemplateReleaseService, TemplateReleaseServiceImpl() {
+
+    @Autowired
+    private lateinit var storeVisibleDeptService: StoreVisibleDeptService
+
+    @Autowired
+    private lateinit var templateVisibleDeptService: TemplateVisibleDeptService
 
     private val logger = LoggerFactory.getLogger(TxTemplateReleaseServiceImpl::class.java)
 
@@ -72,6 +83,18 @@ class TxTemplateReleaseServiceImpl : TxTemplateReleaseService, TemplateReleaseSe
         }
         logger.info("handleProcessInfo processInfo: $processInfo")
         return processInfo
+    }
+
+    override fun validateTemplateVisibleDept(templateCode: String) {
+        val templateDeptInfos = storeVisibleDeptService.getVisibleDept(
+            storeCode = templateCode,
+            storeType = StoreTypeEnum.TEMPLATE,
+            deptStatus = DeptStatusEnum.APPROVED
+        ).data?.deptInfos
+        templateVisibleDeptService.validateTemplateVisibleDept(
+            templateCode = templateCode,
+            deptInfos = templateDeptInfos
+        )
     }
 
     /**

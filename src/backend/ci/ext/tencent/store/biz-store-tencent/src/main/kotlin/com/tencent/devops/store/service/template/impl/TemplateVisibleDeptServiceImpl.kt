@@ -60,6 +60,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.Optional
 import java.util.concurrent.TimeUnit
+import javax.ws.rs.core.Response
 
 /**
  * 模板可见范围逻辑类
@@ -128,24 +129,56 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
         return Result(templateModel)
     }
 
-    override fun validateTemplateVisibleDept(templateCode: String, deptInfos: List<DeptInfo>?): Result<Boolean> {
-        logger.info("validateTemplateVisibleDept templateCode is :$templateCode,deptInfos is :$deptInfos")
+    override fun validateTemplateVisibleDept(
+        templateCode: String,
+        validImageCodes: List<String>?,
+        validAtomCodes: List<String>?
+    ): Result<Boolean> {
+        logger.info("validateTemplateVisibleDept templateCode:$templateCode")
+        return validateTemplateVisibleDept(
+            templateCode = templateCode,
+            validImageCodes = validImageCodes,
+            validAtomCodes = validAtomCodes
+        )
+    }
+
+    override fun validateTemplateVisibleDept(
+        templateCode: String,
+        deptInfos: List<DeptInfo>?,
+        validImageCodes: List<String>?,
+        validAtomCodes: List<String>?
+    ): Result<Boolean> {
+        logger.info("validateTemplateVisibleDept templateCode:$templateCode,deptInfos:$deptInfos")
         val templateModelResult = getTemplateModel(templateCode)
         logger.info("the templateModelResult is :$templateModelResult")
         if (templateModelResult.isNotOk()) {
             // 抛出错误提示
-            return Result(templateModelResult.status, templateModelResult.message ?: "")
+            throw ErrorCodeException(
+                statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                errorCode = templateModelResult.status.toString(),
+                defaultMessage = templateModelResult.message
+            )
         }
         val templateModel = templateModelResult.data
-        logger.info("the templateModel is :$templateModel")
-        if (null == templateModel) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
-        }
-        return validateTemplateVisibleDept(templateModel, deptInfos)
+            ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(templateCode)
+            )
+        return validateTemplateVisibleDept(
+            templateModel = templateModel,
+            deptInfos = deptInfos,
+            validImageCodes = validImageCodes,
+            validAtomCodes = validAtomCodes
+        )
     }
 
-    override fun validateTemplateVisibleDept(templateModel: Model, deptInfos: List<DeptInfo>?): Result<Boolean> {
-        logger.info("validateTemplateVisibleDept templateModel is :$templateModel,deptInfos is :$deptInfos")
+    override fun validateTemplateVisibleDept(
+        templateModel: Model,
+        deptInfos: List<DeptInfo>?,
+        validImageCodes: List<String>?,
+        validAtomCodes: List<String>?
+    ): Result<Boolean> {
+        logger.info("validateTemplateVisibleDept deptInfos is :$deptInfos")
         val invalidImageList = mutableListOf<String>()
         val invalidAtomList = mutableListOf<String>()
         val stageList = templateModel.stages
@@ -159,30 +192,40 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
             val containerList = stage.containers
             containerList.forEach { container ->
                 // 判断镜像的可见范围是否在模板的可见范围之内
-                handleImageVisible(container, templateImageDeptMap, deptInfos, invalidImageList)
+                handleImageVisible(
+                    container = container,
+                    templateImageDeptMap = templateImageDeptMap,
+                    deptInfos = deptInfos,
+                    invalidImageList = invalidImageList,
+                    validImageCodes = validImageCodes
+                )
                 val elementList = container.elements
                 elementList.forEach { element ->
                     // 判断插件的可见范围是否在模板的可见范围之内
-                    handleAtomVisible(element, currentStageAtomDeptMap, deptInfos, invalidAtomList)
+                    handleAtomVisible(
+                        element = element,
+                        currentStageAtomDeptMap = currentStageAtomDeptMap,
+                        deptInfos = deptInfos,
+                        invalidAtomList = invalidAtomList,
+                        validAtomCodes = validAtomCodes
+                    )
                 }
             }
         }
         logger.info("validateTemplateVisibleDept invalidImageList:$invalidImageList")
         if (invalidImageList.isNotEmpty()) {
             // 存在不在插件的可见范围内的模板，给出错误提示
-            return MessageCodeUtil.generateResponseDataObject(
-                messageCode = StoreMessageCode.USER_TEMPLATE_IMAGE_VISIBLE_DEPT_IS_INVALID,
-                params = arrayOf(JsonUtil.toJson(invalidImageList)),
-                data = false
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_TEMPLATE_IMAGE_VISIBLE_DEPT_IS_INVALID,
+                params = arrayOf(JsonUtil.toJson(invalidImageList))
             )
         }
         logger.info("validateTemplateVisibleDept invalidAtomList:$invalidAtomList")
         if (invalidAtomList.isNotEmpty()) {
             // 存在不在插件的可见范围内的模板，给出错误提示
-            return MessageCodeUtil.generateResponseDataObject(
-                messageCode = StoreMessageCode.USER_TEMPLATE_ATOM_VISIBLE_DEPT_IS_INVALID,
-                params = arrayOf(JsonUtil.toJson(invalidAtomList)),
-                data = false
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_TEMPLATE_ATOM_VISIBLE_DEPT_IS_INVALID,
+                params = arrayOf(JsonUtil.toJson(invalidAtomList))
             )
         }
         return Result(true)
@@ -192,7 +235,8 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
         element: Element,
         currentStageAtomDeptMap: Map<String, List<DeptInfo>?>?,
         deptInfos: List<DeptInfo>?,
-        invalidAtomList: MutableList<String>
+        invalidAtomList: MutableList<String>,
+        validAtomCodes: List<String>?
     ) {
         val atomCode = element.getAtomCode()
         val atomName = element.name
@@ -206,8 +250,8 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
                 params = arrayOf(element.name)
             )
         }
-        // 如果插件是默认插件，则无需校验与模板的可见范围
-        if (!defaultFlag) {
+        // 如果插件是默认插件或者在可用插件列表，则无需校验与模板的可见范围
+        if (!defaultFlag || validAtomCodes?.contains(atomCode) == true) {
             handleInvalidStoreList(
                 storeDeptMap = currentStageAtomDeptMap,
                 storeCode = atomCode,
@@ -222,7 +266,8 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
         container: Container,
         templateImageDeptMap: Map<String, List<DeptInfo>?>,
         deptInfos: List<DeptInfo>?,
-        invalidImageList: MutableList<String>
+        invalidImageList: MutableList<String>,
+        validImageCodes: List<String>?
     ) {
         val storeType = StoreTypeEnum.IMAGE.name
         if (container is VMBuildContainer && container.dispatchType is DockerDispatchType) {
@@ -236,7 +281,8 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
                     imageName = imageName,
                     templateImageDeptMap = templateImageDeptMap,
                     deptInfos = deptInfos,
-                    invalidImageList = invalidImageList
+                    invalidImageList = invalidImageList,
+                    validImageCodes = validImageCodes
                 )
             }
         }
@@ -248,7 +294,8 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
         imageName: String?,
         templateImageDeptMap: Map<String, List<DeptInfo>?>,
         deptInfos: List<DeptInfo>?,
-        invalidImageList: MutableList<String>
+        invalidImageList: MutableList<String>,
+        validImageCodes: List<String>?
     ) {
         val storeCommonDao = try {
             SpringContextUtil.getBean(AbstractStoreCommonDao::class.java, "${storeType}_COMMON_DAO")
@@ -266,8 +313,8 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
                     errorCode = StoreMessageCode.USER_IMAGE_NOT_EXIST,
                     params = arrayOf(imageName ?: imageCode)
                 )
-            // 如果镜像是公共镜像，则无需校验与模板的可见范围
-            if (!storeBaseInfo.publicFlag) {
+            // 如果镜像是公共镜像或者在可用镜像列表，则无需校验与模板的可见范围
+            if (!storeBaseInfo.publicFlag || validImageCodes?.contains(imageCode) == true) {
                 handleInvalidStoreList(
                     storeDeptMap = templateImageDeptMap,
                     storeCode = imageCode,

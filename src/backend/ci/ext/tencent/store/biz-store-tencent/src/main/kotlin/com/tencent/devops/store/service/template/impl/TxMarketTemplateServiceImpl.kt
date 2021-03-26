@@ -72,7 +72,12 @@ class TxMarketTemplateServiceImpl : TxMarketTemplateService, MarketTemplateServi
         }
     }
 
-    override fun validateTempleAtomVisible(templateCode: String, templateModel: Model): Result<Boolean> {
+    override fun validateTemplateVisibleDept(
+        templateCode: String,
+        templateModel: Model,
+        validImageCodes: List<String>?,
+        validAtomCodes: List<String>?
+    ): Result<Boolean> {
         // 校验模板与插件的可见范围
         val templateDeptInfos = storeVisibleDeptService.getVisibleDept(
             storeCode = templateCode,
@@ -81,7 +86,9 @@ class TxMarketTemplateServiceImpl : TxMarketTemplateService, MarketTemplateServi
         ).data?.deptInfos
         return templateVisibleDeptService.validateTemplateVisibleDept(
             templateModel = templateModel,
-            deptInfos = templateDeptInfos
+            deptInfos = templateDeptInfos,
+            validImageCodes = validImageCodes,
+            validAtomCodes = validAtomCodes
         )
     }
 

@@ -45,10 +45,29 @@ interface TemplateVisibleDeptService {
     /**
      * 校验模板和插件的可见范围
      */
-    fun validateTemplateVisibleDept(templateCode: String, deptInfos: List<DeptInfo>?): Result<Boolean>
+    fun validateTemplateVisibleDept(
+        templateCode: String,
+        validImageCodes: List<String>? = null,
+        validAtomCodes: List<String>? = null
+    ): Result<Boolean>
 
     /**
      * 校验模板和插件的可见范围
      */
-    fun validateTemplateVisibleDept(templateModel: Model, deptInfos: List<DeptInfo>?): Result<Boolean>
+    fun validateTemplateVisibleDept(
+        templateCode: String,
+        deptInfos: List<DeptInfo>?,
+        validImageCodes: List<String>? = null,
+        validAtomCodes: List<String>? = null
+    ): Result<Boolean>
+
+    /**
+     * 校验模板和插件的可见范围
+     */
+    fun validateTemplateVisibleDept(
+        templateModel: Model,
+        deptInfos: List<DeptInfo>?,
+        validImageCodes: List<String>? = null,
+        validAtomCodes: List<String>? = null
+    ): Result<Boolean>
 }
