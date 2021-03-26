@@ -91,7 +91,7 @@
 			var installButton = document.getElementById("btn_install");
 			installButton.style.display = "block";
 			//var txt = document.getElementById('text');
-			//txt.innerHTML='未安装RD，请先安装RD，然娦«描下载，点击下面的按钮下载安装。';
+			//txt.innerHTML='未安装RD，请先安装RD，然后在扫描下载，点击下面的按钮下载安装。';
 		}
 	}, 2000);
 
@@ -133,7 +133,7 @@
       case "buildReport":
         validateParam = projectId && pipelineId && buildId;
         var tab = flag === 'buildArchive' ? '0' : '2';
-        ifr.src = schemaPrefix + "buildDetail/" + projectId + "/" + pipelineId + "/" + buildId + tab;
+        ifr.src = schemaPrefix + "buildDetail/" + projectId + "/" + pipelineId + "/" + buildId + "/" + tab;
         break;
       case "artifactoryDetail":
         validateParam = projectId && artifactoryType && artifactoryPath;
@@ -150,13 +150,13 @@
 			//在 IOS 9 中，使用 ifr 的方式还是拉不起来程序，需要使用 window.location 的方式
 //			window.location.href = ifr.src;
 
-            //微信从6.5.6新版本剤º新限制
+            //微信从6.5.6新版本后，拉起其它应该有了新限制
             if (isNewWeixin()) {  //大于等于6.5.6
                 if (window.WeixinJSBridge) {
                     doLaunch(ifr.src);
                 }else {
                     document.addEventListener('WeixinJSBridgeReady', function () {
-                        doLaunch(ifr.src); //此时立即调用权陪准备好，所以doLaunch里需要延迟调用
+                        doLaunch(ifr.src); //此时立即调用权限可能还未准备好，所以doLaunch里需要延迟调用
                     });
                 }
             } else {
