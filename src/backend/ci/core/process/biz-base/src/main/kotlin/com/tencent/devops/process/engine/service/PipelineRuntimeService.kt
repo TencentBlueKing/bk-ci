@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
@@ -1216,6 +1217,15 @@ class PipelineRuntimeService @Autowired constructor(
                 buildId = buildId,
                 // 刷新历史列表和详情页面
                 refreshTypes = RefreshType.DETAIL.binary
+            ), // 广播构建排队事件
+            PipelineBuildQueueBroadCastEvent(
+                source = "startQueue",
+                projectId = pipelineInfo.projectId,
+                pipelineId = pipelineInfo.pipelineId,
+                userId = userId,
+                buildId = buildId,
+                actionType = actionType,
+                triggerType = startType.name
             )
         )
 
@@ -1571,6 +1581,10 @@ class PipelineRuntimeService @Autowired constructor(
         pipelineBuildSummaryDao.updateBuildNo(dslContext, pipelineId, buildNo)
     }
 
+    fun updateRecommendVersion(buildId: String, recommendVersion: String) {
+        pipelineBuildDao.updateRecommendVersion(dslContext, buildId, recommendVersion)
+    }
+
     /**
      * 开始最新一次构建
      */
@@ -1673,6 +1687,14 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     fun getRecommendVersion(buildParameters: List<BuildParameters>): String? {
+        val recommendVersionPrefix = getRecommendVersionPrefix(buildParameters) ?: return null
+        val buildNo = if (!buildParameters.none { it.key == BUILD_NO || it.key == "BuildNo" }) {
+            buildParameters.filter { it.key == BUILD_NO || it.key == "BuildNo" }[0].value.toString()
+        } else return null
+        return "$recommendVersionPrefix.$buildNo"
+    }
+
+    fun getRecommendVersionPrefix(buildParameters: List<BuildParameters>): String? {
         val majorVersion = if (!buildParameters.none { it.key == MAJORVERSION || it.key == "MajorVersion" }) {
             buildParameters.filter { it.key == MAJORVERSION || it.key == "MajorVersion" }[0].value.toString()
         } else return null
@@ -1685,11 +1707,7 @@ class PipelineRuntimeService @Autowired constructor(
             buildParameters.filter { it.key == FIXVERSION || it.key == "FixVersion" }[0].value.toString()
         } else return null
 
-        val buildNo = if (!buildParameters.none { it.key == BUILD_NO || it.key == "BuildNo" }) {
-            buildParameters.filter { it.key == BUILD_NO || it.key == "BuildNo" }[0].value.toString()
-        } else return null
-
-        return "$majorVersion.$minorVersion.$fixVersion.$buildNo"
+        return "$majorVersion.$minorVersion.$fixVersion"
     }
 
     fun initBuildParameters(buildId: String) {
@@ -1702,7 +1720,7 @@ class PipelineRuntimeService @Autowired constructor(
         pipelineBuildDao.updateBuildParameters(dslContext, buildId, JsonUtil.toJson(buildParameters))
     }
 
-    private fun getBuildParametersFromStartup(buildId: String): List<BuildParameters> {
+    fun getBuildParametersFromStartup(buildId: String): List<BuildParameters> {
         return try {
             val startupParam = buildStartupParamService.getParam(buildId)
             return getBuildParameters(startupParam)

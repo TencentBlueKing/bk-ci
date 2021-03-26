@@ -25,39 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.service.dispatcher.docker
+package com.tencent.devops.plugin.listener
 
-import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
-import com.tencent.devops.dispatch.docker.service.DockerHostBuildService
-import com.tencent.devops.dispatch.docker.service.dispatcher.BuildLessDispatcher
-import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
+import com.tencent.devops.plugin.service.git.CodeWebhookService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
-class BuildLessDockerDispatcher @Autowired constructor(
-    private val buildLogPrinter: BuildLogPrinter,
-    private val dockerHostBuildService: DockerHostBuildService
-) : BuildLessDispatcher {
-    override fun canDispatch(event: PipelineBuildLessStartupDispatchEvent) =
-        event.dispatchType is DockerDispatchType
+class CodeWebhookListener @Autowired constructor(
+    private val codeWebhookService: CodeWebhookService
+) {
 
-    override fun startUp(event: PipelineBuildLessStartupDispatchEvent) {
-        val dockerDispatch = event.dispatchType as DockerDispatchType
-        val dockerBuildVersion = dockerDispatch.dockerBuildVersion
-        buildLogPrinter.addLine(
-            buildId = event.buildId,
-            message = "Start buildLessDocker $dockerBuildVersion for the build",
-            tag = "",
-            jobId = event.containerHashId,
-            executeCount = event.executeCount ?: 1
-        )
-        dockerHostBuildService.buildLessDockerHost(event)
+    fun onBuildQueue(event: PipelineBuildQueueBroadCastEvent) {
+        codeWebhookService.onBuildQueue(event = event)
     }
 
-    override fun shutdown(event: PipelineBuildLessShutdownDispatchEvent) {
-        dockerHostBuildService.finishBuildLessDockerHost(event.buildId, event.vmSeqId, event.userId, event.buildResult)
+    fun onBuildFinished(event: PipelineBuildFinishBroadCastEvent) {
+        codeWebhookService.onBuildFinished(event = event)
     }
 }

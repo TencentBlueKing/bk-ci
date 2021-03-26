@@ -210,6 +210,11 @@ open class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
                 return ScmWebhookMatcher.MatchResult(false, failedReason = EXCLUDE_SOURCE_BRANCH_NAME_NOT_MATCH)
             }
 
+            if (doExcludeMsgMatch(getMessage(), pipelineId)) {
+                logger.warn("Do push event match fail for exclude message match for pipeline: $pipelineId")
+                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = EXCLUDE_MSG_NOT_MATCH)
+            }
+
             val matchBranch = doIncludeBranchMatch(branchName, eventBranch, pipelineId)
             if (matchBranch == null) {
                 logger.warn("Do mr match fail for include branch not match for pipeline: $pipelineId")
@@ -259,7 +264,7 @@ open class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
                 return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = EXCLUDE_PATHS_NOT_MATCH)
             }
 
-            if (doExcludeMsgMatch(commitMsg[0], pipelineId)) {
+            if (doExcludeMsgMatch(getMessage(), pipelineId)) {
                 logger.warn("Do push event match fail for exclude message match for pipeline: $pipelineId")
                 return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = EXCLUDE_MSG_NOT_MATCH)
             }
@@ -468,9 +473,10 @@ open class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
         }
     }
 
-    private fun doExcludeMsgMatch(commitMsg: String, pipelineId: String): Boolean {
+    private fun doExcludeMsgMatch(commitMsg: String?, pipelineId: String): Boolean {
         logger.info("Do exclude msg match for pipeline: $pipelineId, $commitMsg")
-        if (commitMsg.contains(EXCLUDE_MSG)) {
+        if (commitMsg.isNullOrBlank()) return false
+        if (commitMsg!!.contains(EXCLUDE_MSG)) {
             logger.warn("Do exclude msg match success for pipeline: $pipelineId")
             return true
         }

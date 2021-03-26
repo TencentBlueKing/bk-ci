@@ -33,7 +33,6 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.api.ServiceDockerHostResource
 import com.tencent.devops.dockerhost.exception.ContainerException
-import com.tencent.devops.dockerhost.exception.NoSuchImageException
 import com.tencent.devops.dockerhost.pojo.CheckImageRequest
 import com.tencent.devops.dockerhost.pojo.CheckImageResponse
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
@@ -45,7 +44,6 @@ import com.tencent.devops.dockerhost.pojo.Status
 import com.tencent.devops.dockerhost.services.DockerHostBuildService
 import com.tencent.devops.dockerhost.services.DockerService
 import com.tencent.devops.dockerhost.utils.CommonUtils
-import com.tencent.devops.process.engine.common.VMUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import javax.servlet.http.HttpServletRequest
@@ -141,26 +139,9 @@ class ServiceDockerHostResourceImpl @Autowired constructor(
     override fun startBuild(dockerHostBuildInfo: DockerHostBuildInfo): Result<String> {
         return try {
             Result(dockerService.startBuild(dockerHostBuildInfo))
-        } catch (e: NoSuchImageException) {
-            logger.error("BuildNoSuchImage|${dockerHostBuildInfo.buildId}|${dockerHostBuildInfo.vmSeqId}|${e.message}")
-            dockerHostBuildService.log(
-                buildId = dockerHostBuildInfo.buildId,
-                red = true,
-                message = "构建环境启动失败，镜像不存在, 镜像:${dockerHostBuildInfo.imageName}",
-                tag = VMUtils.genStartVMTaskId(dockerHostBuildInfo.vmSeqId.toString()),
-                containerHashId = dockerHostBuildInfo.containerHashId
-            )
-            Result(1, "构建环境启动失败，镜像不存在, 镜像:${dockerHostBuildInfo.imageName}", "")
         } catch (e: ContainerException) {
-            logger.error("BuildRollBack|${dockerHostBuildInfo.buildId}|${dockerHostBuildInfo.vmSeqId}|${e.message}")
-            dockerHostBuildService.log(
-                buildId = dockerHostBuildInfo.buildId,
-                red = true,
-                message = "构建环境启动失败，错误信息:${e.message}",
-                tag = VMUtils.genStartVMTaskId(dockerHostBuildInfo.vmSeqId.toString()),
-                containerHashId = dockerHostBuildInfo.containerHashId
-            )
-            Result(2, "构建环境启动失败，错误信息:${e.message}", "")
+            logger.error("Create container failed, rollback build. buildId: ${dockerHostBuildInfo.buildId}, vmSeqId: ${dockerHostBuildInfo.vmSeqId}")
+            Result(e.errorCodeEnum.errorCode, "构建环境启动失败: ${e.message}", "")
         }
     }
 

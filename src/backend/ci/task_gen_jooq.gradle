@@ -37,7 +37,7 @@ def moduleName = name.split('-')[1]
 //    moduleName = "atom"
 //}
 def databaseName = moduleName
-def mysqlPrefix = System.getProperty("mysqlPrefix")
+def mysqlPrefix = System.getProperty("mysqlPrefix") ?: System.getenv("mysqlPrefix")
 if (mysqlPrefix != null && mysqlPrefix != "") {
 
     println "jooq build env :" + mysqlPrefix
