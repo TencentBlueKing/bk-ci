@@ -14,7 +14,7 @@
                     <icon class="detail-img" name="yaml" size="16" />
                     <span class="approve-msg">{{ $t('store.YAML可用') }}</span>
                 </h5>
-                <div class="canvas-contain">
+                <div class="canvas-contain" v-if="detail.dailyStatisticList && detail.dailyStatisticList.length">
                     <canvas class="atom-chart"></canvas>
                 </div>
             </h3>
@@ -212,7 +212,7 @@
             },
 
             drawTrend () {
-                const dailyStatisticList = this.detail.dailyStatisticList || []
+                const dailyStatisticList = this.detail.dailyStatisticList
                 const context = document.querySelector('.atom-chart')
                 return new BKChart(context, {
                     type: 'bar',
@@ -221,8 +221,7 @@
                         datasets: [
                             {
                                 label: this.$t('store.执行成功率'),
-                                backgroundColor: 'rgba(43, 124, 255,0.3)',
-                                borderColor: 'rgba(43, 124, 255,1)',
+                                backgroundColor: 'rgba(148, 245, 164, 1)',
                                 lineTension: 0,
                                 borderWidth: 0,
                                 pointRadius: 0,
@@ -235,17 +234,25 @@
                     options: {
                         scales: {
                             x: {
-                                'display': false
+                                display: false
                             },
                             y: {
-                                'display': false
+                                display: false
                             }
                         },
                         plugins: {
                             tooltip: {
                                 mode: 'x',
                                 intersect: false,
-                                singleInRange: true
+                                singleInRange: true,
+                                callbacks: {
+                                    label (context) {
+                                        const index = context.dataIndex
+                                        const curStatis = dailyStatisticList[index]
+                                        const value = curStatis.dailySuccessRate === undefined ? '--' : (curStatis.dailySuccessRate + '%')
+                                        return context.dataset.label + '：' + value
+                                    }
+                                }
                             },
                             legend: {
                                 display: false
@@ -369,9 +376,11 @@
         .canvas-contain {
             height: 20px;
             width: 40px;
-            margin-left: 15px;
+            margin-left: 12px;
+            border-bottom: 1px solid #eee;
+            border-left: 1px solid #eee;
             /deep/ div[data-bkcharts-tooltips] {
-                min-width: 120px;
+                min-width: 140px;
             }
         }
         h3 {
