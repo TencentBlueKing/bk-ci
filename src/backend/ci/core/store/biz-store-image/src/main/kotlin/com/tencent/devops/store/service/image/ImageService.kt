@@ -198,10 +198,9 @@ abstract class ImageService @Autowired constructor() {
         )?.map { it ->
             val imageId = it.get(KEY_IMAGE_ID) as String
             getImageDetailById(userId, imageId, interfaceName)
-        } ?: emptyList()
-        imageVersionList.sortBy {
+        }?.sortedBy {
             -it.createTime
-        }
+        } ?: emptyList()
         val pageObj = Page(
             count = count.toLong(),
             page = validPage,
