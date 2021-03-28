@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: audit${service-suffix}
+    desc: DevOps Audit Service
+    version: 4.0.0
+    packageName: com.tencent.devops.audit
+
+server:
+  port: 21961
