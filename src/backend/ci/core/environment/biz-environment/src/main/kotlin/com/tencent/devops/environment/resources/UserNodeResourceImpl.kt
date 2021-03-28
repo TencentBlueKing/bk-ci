@@ -69,6 +69,10 @@ class UserNodeResourceImpl @Autowired constructor(private val nodeService: NodeS
         return Result(true)
     }
 
+    override fun extListNodes(userId: String, projectId: String): Result<List<NodeWithPermission>> {
+        return Result(listOf())
+    }
+
     private fun sortByUser(nodes: List<NodeWithPermission>, userId: String): List<NodeWithPermission> {
         if (nodes.isEmpty()) {
             return nodes
