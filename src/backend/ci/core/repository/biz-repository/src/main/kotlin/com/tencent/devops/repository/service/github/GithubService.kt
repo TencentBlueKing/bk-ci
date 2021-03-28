@@ -111,7 +111,7 @@ class GithubService @Autowired constructor(
     override fun updateCheckRuns(
         token: String,
         projectName: String,
-        checkRunId: Int,
+        checkRunId: Long,
         checkRuns: GithubCheckRuns
     ) {
         logger.info("Github add check [projectName=$projectName, checkRuns=$checkRuns]")
