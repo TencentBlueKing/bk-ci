@@ -25,31 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api
+package com.tencent.devops.process.service
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.user.UserPipelineSettingResource
-import com.tencent.devops.process.pojo.setting.PipelineSetting
-import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
-import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
-import com.tencent.devops.process.service.PipelineSettingService
+import com.tencent.devops.model.process.tables.records.TPipelineUserVersionRecord
+import com.tencent.devops.process.dao.PipelineUserVersionDao
+import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-@RestResource
-class UserPipelineSettingResourceImpl @Autowired constructor(
-    private val pipelineSettingFacadeService: PipelineSettingFacadeService,
-    private val pipelineSettingService: PipelineSettingService
-) : UserPipelineSettingResource {
-    override fun saveSetting(userId: String, setting: PipelineSetting): Result<String> {
-        return Result(pipelineSettingFacadeService.saveSetting(userId, setting))
+@Service
+class PipelineUserVersionService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val pipelineUserVersionDao: PipelineUserVersionDao
+) {
+
+    fun create(pipelineId: String, userId: String) {
+        pipelineUserVersionDao.create(dslContext, pipelineId, userId)
     }
 
-    override fun getSetting(userId: String, projectId: String, pipelineId: String): Result<PipelineSetting> {
-        return Result(pipelineSettingFacadeService.userGetSetting(userId, projectId, pipelineId))
+    fun update(pipelineId: String, userId: String) {
+        pipelineUserVersionDao.update(dslContext, pipelineId, userId)
     }
 
-    override fun getSettingVersion(userId: String, projectId: String, pipelineId: String, version: Int): Result<PipelineSettingVersion> {
-        return Result(pipelineSettingService.userGetSettingVersion(userId, projectId, pipelineId, version))
+    fun delete(pipelineId: String) {
+        pipelineUserVersionDao.delete(dslContext, pipelineId)
+    }
+
+    fun list(pipelineIds: Set<String>): Result<TPipelineUserVersionRecord> {
+        return pipelineUserVersionDao.list(dslContext, pipelineIds)
     }
 }

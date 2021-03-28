@@ -25,31 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api
+package com.tencent.devops.process.pojo.setting
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.user.UserPipelineSettingResource
-import com.tencent.devops.process.pojo.setting.PipelineSetting
-import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
-import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
-import com.tencent.devops.process.service.PipelineSettingService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT
+import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT
 
-@RestResource
-class UserPipelineSettingResourceImpl @Autowired constructor(
-    private val pipelineSettingFacadeService: PipelineSettingFacadeService,
-    private val pipelineSettingService: PipelineSettingService
-) : UserPipelineSettingResource {
-    override fun saveSetting(userId: String, setting: PipelineSetting): Result<String> {
-        return Result(pipelineSettingFacadeService.saveSetting(userId, setting))
-    }
-
-    override fun getSetting(userId: String, projectId: String, pipelineId: String): Result<PipelineSetting> {
-        return Result(pipelineSettingFacadeService.userGetSetting(userId, projectId, pipelineId))
-    }
-
-    override fun getSettingVersion(userId: String, projectId: String, pipelineId: String, version: Int): Result<PipelineSettingVersion> {
-        return Result(pipelineSettingService.userGetSettingVersion(userId, projectId, pipelineId, version))
-    }
-}
+data class PipelineSettingVersion(
+    val projectId: String = "",
+    val pipelineId: String = "",
+    val pipelineName: String = "",
+    val desc: String = "",
+    val runLockType: PipelineRunLockType = PipelineRunLockType.SINGLE_LOCK,
+    val successSubscription: Subscription = Subscription(),
+    val failSubscription: Subscription = Subscription(),
+    val labels: List<String> = emptyList(),
+    val waitQueueTimeMinute: Int = PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT,
+    val maxQueueSize: Int = PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT,
+    val version: Int = 0,
+    val hasPermission: Boolean? = null
+)

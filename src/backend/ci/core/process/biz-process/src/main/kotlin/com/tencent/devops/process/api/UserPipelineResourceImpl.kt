@@ -27,16 +27,22 @@
 
 package com.tencent.devops.process.api
 
+import com.tencent.devops.audit.api.ServiceAuditResource
+import com.tencent.devops.audit.api.pojo.Audit
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserPipelineResource
 import com.tencent.devops.process.engine.pojo.PipelineInfo
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.engine.service.PipelineVersionService
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.Permission
@@ -65,6 +71,7 @@ import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN
 import org.springframework.beans.factory.annotation.Autowired
+import javax.ws.rs.NotFoundException
 import javax.ws.rs.core.Response
 
 @Suppress("ALL")
@@ -76,7 +83,10 @@ class UserPipelineResourceImpl @Autowired constructor(
     private val pipelineRemoteAuthService: PipelineRemoteAuthService,
     private val pipelinePermissionService: PipelinePermissionService,
     private val stageTagService: StageTagService,
-    private val pipelineInfoFacadeService: PipelineInfoFacadeService
+    private val pipelineInfoFacadeService: PipelineInfoFacadeService,
+    private val client: Client,
+    private val pipelineRepositoryService: PipelineRepositoryService,
+    private val pipelineVersionService: PipelineVersionService
 ) : UserPipelineResource {
 
     override fun hasCreatePermission(userId: String, projectId: String): Result<Boolean> {
@@ -134,6 +144,8 @@ class UserPipelineResourceImpl @Autowired constructor(
                 userId = userId, projectId = projectId, model = pipeline, channelCode = ChannelCode.BS
             )
         )
+        val audit = Audit(AuthResourceType.PIPELINE_DEFAULT.value, pipelineId.id, pipeline.name, userId, "create", "新增流水线", projectId)
+        client.get(ServiceAuditResource::class).create(audit)
         return Result(pipelineId)
     }
 
@@ -248,6 +260,12 @@ class UserPipelineResourceImpl @Autowired constructor(
         return Result(pipelineInfoFacadeService.getPipeline(userId, projectId, pipelineId, ChannelCode.BS))
     }
 
+    override fun getVersion(userId: String, projectId: String, pipelineId: String, version: Int): Result<Model> {
+        checkParam(userId, projectId)
+        checkPipelineId(pipelineId)
+        return Result(pipelineVersionService.getPipeline(userId, projectId, pipelineId, ChannelCode.BS, version))
+    }
+
     override fun generateRemoteToken(
         userId: String,
         projectId: String,
@@ -262,6 +280,17 @@ class UserPipelineResourceImpl @Autowired constructor(
         checkParam(userId, projectId)
         checkPipelineId(pipelineId)
         pipelineInfoFacadeService.deletePipeline(userId, projectId, pipelineId, ChannelCode.BS)
+        val pipeline = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, ChannelCode.BS)
+            ?: throw NotFoundException("指定的流水线不存在")
+        val audit = Audit(AuthResourceType.PIPELINE_DEFAULT.value, pipelineId, pipeline.pipelineName, userId, "delete", "删除流水线", projectId)
+        client.get(ServiceAuditResource::class).create(audit)
+        return Result(true)
+    }
+
+    override fun softDeleteVersion(userId: String, projectId: String, pipelineId: String, version: Int): Result<Boolean> {
+        checkParam(userId, projectId)
+        checkPipelineId(pipelineId)
+        pipelineVersionService.deletePipelineVersion(userId, projectId, pipelineId, version, ChannelCode.BS)
         return Result(true)
     }
 
@@ -438,5 +467,21 @@ class UserPipelineResourceImpl @Autowired constructor(
                 throw InvalidParamException("最大排队数量非法")
             }
         }
+    }
+
+    override fun versionList(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        page: Int?,
+        pageSize: Int?,
+        sortType: PipelineSortType?
+    ): Result<PipelineViewPipelinePage<PipelineInfo>> {
+        checkParam(userId, projectId)
+        return Result(
+            pipelineVersionService.listPipelineVersion(
+                userId, projectId, pipelineId, page, pageSize, sortType ?: PipelineSortType.CREATE_TIME, ChannelCode.BS
+            )
+        )
     }
 }
