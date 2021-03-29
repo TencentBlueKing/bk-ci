@@ -25,6 +25,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+package com.tencent.devops.misc.websocket
+
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
@@ -59,6 +61,5 @@ data class MiscNodeWebsocketPush(
         )
     }
 
-    override fun buildNotifyMessage(message: SendMessage) {
-    }
+    override fun buildNotifyMessage(message: SendMessage) = Unit
 }

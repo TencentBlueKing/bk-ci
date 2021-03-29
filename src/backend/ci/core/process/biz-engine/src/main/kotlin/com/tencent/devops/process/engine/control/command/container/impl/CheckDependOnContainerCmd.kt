@@ -66,6 +66,10 @@ class CheckDependOnContainerCmd(
     private fun checkDependOnStatus(commandContext: ContainerContext, container: PipelineBuildContainer) {
         // 当有依赖job时，根据依赖job的运行状态执行
         when (dependOnControl.dependOnJobStatus(container = container)) {
+            BuildStatus.SKIP -> {
+                commandContext.buildStatus = BuildStatus.FAILED
+                commandContext.latestSummary = "j(${container.containerId}) dependency was skip"
+            }
             BuildStatus.FAILED -> {
                 commandContext.buildStatus = BuildStatus.FAILED
                 commandContext.latestSummary = "j(${container.containerId}) dependency was occupied"
@@ -73,7 +77,6 @@ class CheckDependOnContainerCmd(
             }
             BuildStatus.SUCCEED -> {
                 // 所有依赖都成功运行,则继续执行
-                commandContext.latestSummary = "j(${container.containerId}) dependency check ok"
                 commandContext.cmdFlowState = CmdFlowState.CONTINUE // 依赖全部通过，可继续执行
             }
             else -> {
