@@ -25,13 +25,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.pojo.enums
+package com.tencent.devops.gitci.pojo.rtxCustom
 
-enum class GitCINotifyType {
-    // 企业微信客服
-    RTX_CUSTOM,
-    // 邮件
-    EMAIL,
-    // 企业微信群
-    RTX_GROUP
+enum class ReceiverType(val value: String) {
+    GROUP("group"), SINGLE("single")
 }

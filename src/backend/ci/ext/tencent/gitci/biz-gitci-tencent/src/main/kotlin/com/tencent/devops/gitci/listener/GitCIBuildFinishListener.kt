@@ -28,6 +28,7 @@
 package com.tencent.devops.gitci.listener
 
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -35,6 +36,7 @@ import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
@@ -42,6 +44,9 @@ import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.pojo.GitRepositoryConf
 import com.tencent.devops.gitci.pojo.enums.GitCINotifyTemplateEnum
 import com.tencent.devops.gitci.pojo.enums.GitCINotifyType
+import com.tencent.devops.gitci.pojo.rtxCustom.MessageType
+import com.tencent.devops.gitci.pojo.rtxCustom.ReceiverType
+import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.model.gitci.tables.records.TGitPipelineResourceRecord
 import com.tencent.devops.model.gitci.tables.records.TGitRequestEventBuildRecord
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
@@ -56,6 +61,7 @@ import org.springframework.amqp.rabbit.annotation.Queue
 import org.springframework.amqp.rabbit.annotation.QueueBinding
 import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.lang.Exception
 
@@ -68,6 +74,18 @@ class GitCIBuildFinishListener @Autowired constructor(
     private val scmClient: ScmClient,
     private val dslContext: DSLContext
 ) {
+
+    @Value("\${rtx.corpid:#{null}}")
+    private val corpId: String? = null
+
+    @Value("\${rtx.corpsecret:#{null}}")
+    private val corpSecret: String? = null
+
+    @Value("\${rtx.url:#{null}}")
+    private val rtxUrl: String? = null
+
+    @Value("\${rtx.gitUrl:#{null}}")
+    private val gitUrl: String? = null
 
     @RabbitListener(
         bindings = [(QueueBinding(
@@ -105,27 +123,8 @@ class GitCIBuildFinishListener @Autowired constructor(
                 val description = record["DESCRIPTION"] as String
                 val gitProjectConf = gitCISettingDao.getSetting(dslContext, gitProjectId)
                     ?: throw OperationException("git ci projectCode not exist")
-                val event = gitRequestEventBuildDao.getByBuildId(dslContext, buildFinishEvent.buildId)
-                    ?: throw OperationException("git ci buildEvent not exist")
                 val pipeline = gitPipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId)
                     ?: throw OperationException("git ci pipeline not exist")
-                val buildInfo = client.get(ServiceBuildResource::class)
-                    .getBatchBuildStatus(
-                        projectId = gitProjectConf.projectCode!!,
-                        buildId = setOf(buildFinishEvent.buildId),
-                        channelCode = ChannelCode.GIT
-                    ).data
-                if (buildInfo == null || buildInfo.isEmpty()) {
-                    throw OperationException("git ci buildInfo not exist")
-                }
-                // 构建结束发送通知
-                notify(
-                    state = state,
-                    conf = gitProjectConf,
-                    event = event,
-                    pipeline = pipeline,
-                    build = buildInfo.first()
-                )
 
                 // 推送结束构建消息,当人工触发时不推送CommitCheck消息
                 if (objectKind != OBJECT_KIND_MANUAL) {
@@ -140,35 +139,94 @@ class GitCIBuildFinishListener @Autowired constructor(
                         gitProjectConf = gitProjectConf
                     )
                 }
+
+                if (!checkIsSendNotify(conf = gitProjectConf, state = state)) {
+                    return
+                }
+
+                val sourceProjectId = record["SOURCE_GIT_PROJECT_ID"] as Long
+                val event = gitRequestEventBuildDao.getByBuildId(dslContext, buildFinishEvent.buildId)
+                    ?: throw OperationException("git ci buildEvent not exist")
+                val buildInfo = client.get(ServiceBuildResource::class)
+                    .getBatchBuildStatus(
+                        projectId = gitProjectConf.projectCode!!,
+                        buildId = setOf(buildFinishEvent.buildId),
+                        channelCode = ChannelCode.GIT
+                    ).data
+                if (buildInfo == null || buildInfo.isEmpty()) {
+                    throw OperationException("git ci buildInfo not exist")
+                }
+
+                // 构建结束发送通知
+                notify(
+                    gitProjectId = gitProjectId,
+                    sourceProjectId = sourceProjectId,
+                    mergeRequestId = mergeRequestId,
+                    commitId = commitId,
+                    state = state,
+                    conf = gitProjectConf,
+                    event = event,
+                    pipeline = pipeline,
+                    build = buildInfo.first()
+                )
             }
         } catch (e: Throwable) {
             logger.error("Fail to push commit check build(${buildFinishEvent.buildId})", e)
         }
     }
 
+    // 校验是否发送通知
+    private fun checkIsSendNotify(conf: GitRepositoryConf, state: String): Boolean {
+        // 老数据不发送通知
+        if (conf.enableNotify == null || !conf.enableNotify!!) {
+            return false
+        }
+        if (conf.notifyType == null || conf.notifyType!!.isEmpty()) {
+            logger.warn("gitCI project: ${conf.gitProjectId} enable notify but not have notifyType")
+            return false
+        }
+        if (conf.isFailedNotify == null) {
+            return false
+        }
+        // 仅在失败时发送通知
+        if (conf.isFailedNotify!! && state != "failure") {
+            return false
+        }
+        return true
+    }
+
     private fun notify(
+        gitProjectId: Long,
+        sourceProjectId: Long?,
+        mergeRequestId: Long,
+        commitId: String,
         state: String,
         conf: GitRepositoryConf,
         event: TGitRequestEventBuildRecord,
         pipeline: TGitPipelineResourceRecord,
         build: BuildHistory
     ) {
-        if (conf.enableNotify == null || !conf.enableNotify!!) {
-            return
-        }
-        if (conf.notifyType == null || conf.notifyType!!.isEmpty()) {
-            logger.warn("gitCI project: ${conf.gitProjectId} enable notify but not have notifyType")
-        }
-        if (conf.notifyReceivers == null || conf.notifyReceivers!!.isEmpty()) {
-            logger.warn("gitCI project: ${conf.gitProjectId} enable notify but not have notifyType")
-        }
         conf.notifyType!!.forEach {
-            sendNotify(state, it, conf, event, pipeline, build)
+            sendNotify(
+                gitProjectId = gitProjectId,
+                sourceProjectId = sourceProjectId,
+                mergeRequestId = mergeRequestId,
+                commitId = commitId,
+                state = state,
+                notify = it,
+                conf = conf,
+                event = event,
+                pipeline = pipeline,
+                build = build
+            )
         }
     }
 
-    // 工蜂CI目前只支持企业微信和邮件通知
     private fun sendNotify(
+        gitProjectId: Long,
+        sourceProjectId: Long?,
+        mergeRequestId: Long,
+        commitId: String,
         state: String,
         notify: GitCINotifyType,
         conf: GitRepositoryConf,
@@ -176,12 +234,63 @@ class GitCIBuildFinishListener @Autowired constructor(
         pipeline: TGitPipelineResourceRecord,
         build: BuildHistory
     ) {
+        val receivers = replaceReceivers(conf.notifyReceivers, build.buildParameters)
+
+        val projectName = getProjectName(conf)
+        val branchName = GitCommonUtils.checkAndGetForkBranchName(
+            gitProjectId = gitProjectId,
+            sourceGitProjectId = sourceProjectId,
+            branch = event.branch,
+            client = client
+        )
+        val pipelineName = pipeline.displayName ?: pipeline.filePath.replace(".yml", "")
+        val isMr = mergeRequestId == 0L
+        val requestId = if (isMr) {
+            mergeRequestId.toString()
+        } else {
+            commitId
+        }
+        val buildNum = build.buildNum.toString()
+
         when (notify) {
             GitCINotifyType.EMAIL -> {
-                val request = getEmailSendRequest(state, conf, event, pipeline, build)
+                val request = getEmailSendRequest(state, receivers, projectName, branchName, pipelineName, buildNum)
                 client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
             }
-            GitCINotifyType.RTX_CUSTOM -> {
+            GitCINotifyType.RTX_CUSTOM, GitCINotifyType.RTX_GROUP -> {
+                if (conf.notifyRtxGroups == null || conf.notifyRtxGroups!!.isEmpty()) {
+                    logger.warn("notifyRtxGroups receivers is null ")
+                    return
+                }
+                val accessToken =
+                    RtxCustomApi.getAccessToken(urlPrefix = rtxUrl, corpSecret = corpSecret, corpId = corpId)
+                val content = getRtxCustomContent(
+                    isSuccess = state == "success",
+                    projectName = projectName,
+                    branchName = branchName,
+                    pipelineName = pipelineName,
+                    pipelineId = pipeline.pipelineId,
+                    buildNum = buildNum,
+                    isMr = isMr,
+                    requestId = requestId,
+                    buildTime = build.totalTime,
+                    openUser = build.userId
+                )
+                sendRtxCustomNotify(
+                    accessToken = accessToken,
+                    content = content,
+                    messageType = MessageType.MARKDOWN,
+                    receiverType = if (notify == GitCINotifyType.RTX_CUSTOM) {
+                        ReceiverType.SINGLE
+                    } else {
+                        ReceiverType.GROUP
+                    },
+                    receivers = if (notify == GitCINotifyType.RTX_CUSTOM) {
+                        receivers
+                    } else {
+                        conf.notifyRtxGroups!!
+                    }
+                )
             }
             else -> return
         }
@@ -189,10 +298,11 @@ class GitCIBuildFinishListener @Autowired constructor(
 
     private fun getEmailSendRequest(
         state: String,
-        conf: GitRepositoryConf,
-        event: TGitRequestEventBuildRecord,
-        pipeline: TGitPipelineResourceRecord,
-        build: BuildHistory
+        receivers: Set<String>,
+        projectName: String,
+        branchName: String,
+        pipelineName: String,
+        buildNum: String
     ): SendNotifyMessageTemplateRequest {
         val notifyTemplateEnum = if (state == "success") {
             GitCINotifyTemplateEnum.GITCI_BUILD_SUCCESS_TEMPLATE
@@ -200,17 +310,17 @@ class GitCIBuildFinishListener @Autowired constructor(
             GitCINotifyTemplateEnum.GITCI_BUILD_FAILED_TEMPLATE
         }
         val titleParams = mapOf(
-            "projectName" to getProjectName(conf),
-            "branchName" to event.branch,
-            "pipelineName" to (pipeline.displayName ?: pipeline.filePath),
-            "buildNum" to build.buildNum.toString()
+            "projectName" to projectName,
+            "branchName" to branchName,
+            "pipelineName" to pipelineName,
+            "buildNum" to buildNum
         )
         val bodyParams = mapOf(
             "content" to "邮件通知测试"
         )
         return SendNotifyMessageTemplateRequest(
             templateCode = notifyTemplateEnum.templateCode,
-            receivers = conf.notifyReceivers!!.toMutableSet(),
+            receivers = receivers.toMutableSet(),
             cc = mutableSetOf(),
             titleParams = titleParams,
             bodyParams = bodyParams,
@@ -218,6 +328,65 @@ class GitCIBuildFinishListener @Autowired constructor(
         )
     }
 
+    private fun getRtxCustomContent(
+        isSuccess: Boolean,
+        projectName: String,
+        branchName: String,
+        pipelineName: String,
+        pipelineId: String,
+        buildNum: String,
+        isMr: Boolean,
+        requestId: String,
+        openUser: String,
+        buildTime: Long?
+    ): String {
+        val state = if (isSuccess) {
+            Triple("✔", "info", "success")
+        } else {
+            Triple("❌", "warning", "failed")
+        }
+        val request = if (isMr) {
+            "Merge requests [[!$requestId]] ($gitUrl/$projectName/merge_requests/$requestId)" +
+                    "opened by $openUser \n"
+        } else {
+            "Commit [[${requestId.subSequence(0, 7)}]]($gitUrl/$projectName/commit/$requestId)" +
+                    "pushed by $openUser \n"
+        }
+        val costTime = if (buildTime == null) {
+            ""
+        } else if (buildTime < 60) {
+            "Time cost ${buildTime}s.  \n   "
+        } else {
+            "Time cost ${buildTime / 60}m ${buildTime % 60}s.  \n   "
+        }
+        return " <font color=\"${state.second}\"> ${state.first} </font> " +
+                "$projectName($branchName) - $pipelineName #$buildNum run ${state.third} \n " +
+                request +
+                costTime +
+                "[View it on  工蜂内网版]" +
+                "($gitUrl/$projectName/ci/pipelines#/detail/$pipelineId/?pipelineName=$pipelineName)"
+    }
+
+    private fun sendRtxCustomNotify(
+        accessToken: String,
+        content: String,
+        receivers: Set<String>,
+        messageType: MessageType,
+        receiverType: ReceiverType
+    ) {
+        receivers.forEach { receiver ->
+            RtxCustomApi.sendGitCIFinishMessage(
+                urlPrefix = rtxUrl,
+                token = accessToken,
+                messageType = messageType,
+                receiverType = receiverType,
+                receiverId = receiver,
+                content = content
+            )
+        }
+    }
+
+    // 获取 name/projectName格式的项目名称
     private fun getProjectName(conf: GitRepositoryConf): String {
         return try {
             val names = conf.homepage.split("/")
@@ -227,6 +396,22 @@ class GitCIBuildFinishListener @Autowired constructor(
         } catch (e: Exception) {
             conf.name
         }
+    }
+
+    // 使用启动参数替换接收人
+    private fun replaceReceivers(receivers: Set<String>?, startParams: List<BuildParameters>?): MutableSet<String> {
+        if (receivers == null || receivers.isEmpty()) {
+            return mutableSetOf()
+        }
+        if (startParams == null || startParams.isEmpty()) {
+            return receivers.toMutableSet()
+        }
+        val paramMap = startParams.map {
+            it.key to it.value.toString()
+        }.toMap()
+        return receivers.map { receiver ->
+            EnvUtils.parseEnv(receiver, paramMap)
+        }.toMutableSet()
     }
 
     companion object {

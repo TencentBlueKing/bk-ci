@@ -25,13 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.pojo.enums
+package com.tencent.devops.gitci.pojo.rtxCustom
 
-enum class GitCINotifyType {
-    // 企业微信客服
-    RTX_CUSTOM,
-    // 邮件
-    EMAIL,
-    // 企业微信群
-    RTX_GROUP
-}
+data class RtxMarkdownMessage(
+    val receiver: Receiver,
+    val msgtype: String = "markdown",
+    val markdown: MarkDown
+)
+
+data class Receiver(
+    val type: String,
+    val id: String
+)
+
+data class MarkDown(
+    val content: String
+)

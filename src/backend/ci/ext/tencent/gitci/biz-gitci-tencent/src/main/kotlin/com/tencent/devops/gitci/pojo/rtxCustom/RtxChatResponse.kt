@@ -25,13 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.pojo.enums
+package com.tencent.devops.gitci.pojo.rtxCustom
 
-enum class GitCINotifyType {
-    // 企业微信客服
-    RTX_CUSTOM,
-    // 邮件
-    EMAIL,
-    // 企业微信群
-    RTX_GROUP
-}
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonProperty
+
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class RtxChatResponse(
+    @JsonProperty("errcode")
+    val errCode: Long,
+    @JsonProperty("errmsg")
+    val errMsg: String,
+    @JsonProperty("chatid")
+    val chatId: String
+)

@@ -51,11 +51,12 @@ class GitCISettingDao {
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
                 val record = context.selectFrom(this)
-                        .where(ID.eq(conf.gitProjectId))
-                        .fetchOne()
+                    .where(ID.eq(conf.gitProjectId))
+                    .fetchOne()
                 val now = LocalDateTime.now()
                 if (record == null) {
-                    context.insertInto(this,
+                    context.insertInto(
+                        this,
                         ID,
                         NAME,
                         URL,
@@ -74,8 +75,10 @@ class GitCISettingDao {
                         PROJECT_CODE,
                         ENABLE_NOTIFY,
                         NOTIFY_TYPE,
-                        NOTIFY_RECEIVERS
-                        )
+                        NOTIFY_RECEIVERS,
+                        NOTIFY_RTX_GROUPS,
+                        IS_FAILED_NOTIFY
+                    )
                         .values(
                             conf.gitProjectId,
                             conf.name,
@@ -89,27 +92,75 @@ class GitCISettingDao {
                             conf.buildPushedPullRequest,
                             conf.autoCancelBranchBuilds,
                             conf.autoCancelPullRequestBuilds,
-                            if (conf.env == null) { "" } else { JsonUtil.toJson(conf.env!!) },
+                            if (conf.env == null) {
+                                ""
+                            } else {
+                                JsonUtil.toJson(conf.env!!)
+                            },
                             LocalDateTime.now(),
                             LocalDateTime.now(),
                             projectCode,
                             conf.enableNotify,
-                            conf.notifyType?.joinToString(",") { it.name },
-                            conf.notifyReceivers?.joinToString(",")
+                            if (conf.notifyType == null) {
+                                ""
+                            } else {
+                                JsonUtil.toJson(conf.notifyType!!)
+                            },
+                            if (conf.notifyReceivers == null) {
+                                ""
+                            } else {
+                                JsonUtil.toJson(conf.notifyReceivers!!)
+                            },
+                            if (conf.notifyRtxGroups == null) {
+                                ""
+                            } else {
+                                JsonUtil.toJson(conf.notifyRtxGroups!!)
+                            },
+                            conf.isFailedNotify
                         ).execute()
                 } else {
                     context.update(this)
                         .set(ENABLE_CI, conf.enableCi)
-                            .set(BUILD_PUSHED_BRANCHES, conf.buildPushedBranches)
-                            .set(LIMIT_CONCURRENT_JOBS, conf.limitConcurrentJobs)
-                            .set(BUILD_PUSHED_PULL_REQUEST, conf.buildPushedPullRequest)
-                            .set(AUTO_CANCEL_BRANCH_BUILDS, conf.autoCancelBranchBuilds)
-                            .set(AUTO_CANCEL_PULL_REQUEST_BUILDS, conf.autoCancelPullRequestBuilds)
-                            .set(ENV, if (conf.env == null) { "" } else { JsonUtil.toJson(conf.env!!) })
-                            .set(UPDATE_TIME, now)
-                            .set(PROJECT_CODE, projectCode)
-                            .where(ID.eq(conf.gitProjectId))
-                            .execute()
+                        .set(BUILD_PUSHED_BRANCHES, conf.buildPushedBranches)
+                        .set(LIMIT_CONCURRENT_JOBS, conf.limitConcurrentJobs)
+                        .set(BUILD_PUSHED_PULL_REQUEST, conf.buildPushedPullRequest)
+                        .set(AUTO_CANCEL_BRANCH_BUILDS, conf.autoCancelBranchBuilds)
+                        .set(AUTO_CANCEL_PULL_REQUEST_BUILDS, conf.autoCancelPullRequestBuilds)
+                        .set(
+                            ENV, if (conf.env == null) {
+                                ""
+                            } else {
+                                JsonUtil.toJson(conf.env!!)
+                            }
+                        )
+                        .set(UPDATE_TIME, now)
+                        .set(PROJECT_CODE, projectCode)
+                        .set(ENABLE_NOTIFY, conf.enableNotify)
+                        .set(
+                            NOTIFY_TYPE, if (conf.notifyType == null) {
+                                ""
+                            } else {
+                                JsonUtil.toJson(conf.notifyType!!)
+                            }
+                        )
+                        .set(
+                            NOTIFY_RECEIVERS,
+                            if (conf.notifyReceivers == null) {
+                                ""
+                            } else {
+                                JsonUtil.toJson(conf.notifyReceivers!!)
+                            }
+                        )
+                        .set(
+                            NOTIFY_RTX_GROUPS, if (conf.notifyRtxGroups == null) {
+                                ""
+                            } else {
+                                JsonUtil.toJson(conf.notifyRtxGroups!!)
+                            }
+                        )
+                        .set(IS_FAILED_NOTIFY, conf.isFailedNotify)
+                        .where(ID.eq(conf.gitProjectId))
+                        .execute()
                 }
             }
         }
@@ -169,8 +220,22 @@ class GitCISettingDao {
                     updateTime = conf.updateTime.timestampmilli(),
                     projectCode = conf.projectCode,
                     enableNotify = conf.enableNotify,
-                    notifyType = conf.notifyType.split(",").map { GitCINotifyType.valueOf(it) },
-                    notifyReceivers = conf.notifyReceivers.split(",")
+                    notifyType = if (conf.notifyType.isNullOrBlank()) {
+                        null
+                    } else {
+                        JsonUtil.getObjectMapper().readValue(conf.notifyType) as Set<GitCINotifyType>
+                    },
+                    notifyReceivers = if (conf.notifyReceivers.isNullOrBlank()) {
+                        null
+                    } else {
+                        JsonUtil.getObjectMapper().readValue(conf.notifyReceivers) as Set<String>
+                    },
+                    notifyRtxGroups = if (conf.notifyRtxGroups.isNullOrBlank()) {
+                        null
+                    } else {
+                        JsonUtil.getObjectMapper().readValue(conf.notifyRtxGroups) as Set<String>
+                    },
+                    isFailedNotify = conf.isFailedNotify
                 )
             }
         }

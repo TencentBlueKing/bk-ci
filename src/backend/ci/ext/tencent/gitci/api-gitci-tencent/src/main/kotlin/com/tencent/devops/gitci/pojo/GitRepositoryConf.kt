@@ -26,6 +26,7 @@
  */
 
 package com.tencent.devops.gitci.pojo
+
 import com.tencent.devops.gitci.pojo.enums.GitCINotifyType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -65,9 +66,13 @@ data class GitRepositoryConf(
     @ApiModelProperty("蓝盾项目Code")
     val projectCode: String?,
     @ApiModelProperty("是否开启通知")
-    val enableNotify: Boolean? = false,
+    val enableNotify: Boolean? = true,
     @ApiModelProperty("选择的通知方式")
-    val notifyType: List<GitCINotifyType>? = listOf(),
+    val notifyType: Set<GitCINotifyType>? = setOf(),
     @ApiModelProperty("通知的接受者")
-    val notifyReceivers: List<String>? = listOf()
+    val notifyReceivers: Set<String>? = setOf(),
+    @ApiModelProperty("通知的企业微信群")
+    val notifyRtxGroups: Set<String>? = setOf(),
+    @ApiModelProperty("是否只在失败时通知")
+    val isFailedNotify: Boolean? = true
 ) : Repository(gitProjectId, name, url, homepage, gitHttpUrl, gitSshUrl)
