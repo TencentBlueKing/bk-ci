@@ -115,19 +115,19 @@ class SignInfoService(
 
     fun getSignStatus(resignId: String): EnumResignStatus {
         val record = signHistoryDao.getSignHistory(dslContext, resignId)
-        return EnumResignStatus.parse(record.status)
+        return EnumResignStatus.parse(record?.status)
     }
 
     fun getSignDetail(resignId: String): SignDetail {
         val record = signHistoryDao.getSignHistory(dslContext, resignId)
-        val status = EnumResignStatus.parse(record.status)
+        val status = EnumResignStatus.parse(record?.status)
         return SignDetail(
             resignId = resignId,
             status = status.getValue(),
             message = when (status) {
                 EnumResignStatus.SUCCESS -> "Sign finished."
                 EnumResignStatus.RUNNING -> "Sign is running..."
-                else -> record.errorMessage ?: "Unknown error."
+                else -> record?.errorMessage ?: "Unknown error."
             }
         )
     }
