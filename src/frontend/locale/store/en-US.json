@@ -1,5 +1,6 @@
 {
     "store": "Store",
+    "最近七天暂无执行": "No execution in the last seven days",
     "周": "week",
     "执行成功数": "Number of successful executions",
     "执行失败数": "Number of execution failures",
