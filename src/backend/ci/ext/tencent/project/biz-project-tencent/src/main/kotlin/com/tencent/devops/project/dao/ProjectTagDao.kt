@@ -91,10 +91,12 @@ class ProjectTagDao {
 
     fun listByChannel(
         dslContext: DSLContext,
-        channel: String
+        channel: String,
+        limit: Int,
+        offset: Int
     ): Result<TProjectRecord> {
         with(TProject.T_PROJECT) {
-            return dslContext.selectFrom(this).where(CHANNEL.eq(channel)).fetch()
+            return dslContext.selectFrom(this).where(CHANNEL.eq(channel)).limit(limit).offset(offset).fetch()
         }
     }
 }

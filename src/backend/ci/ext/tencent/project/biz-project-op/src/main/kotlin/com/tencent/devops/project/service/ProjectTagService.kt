@@ -31,11 +31,13 @@ package com.tencent.devops.project.service
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_REDIS_KEY
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.project.api.op.pojo.OpProjectTagUpdateDTO
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectTagDao
+import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -63,8 +65,8 @@ class ProjectTagService @Autowired constructor(
             routerTag = opProjectTagUpdateDTO.routerTag
         )
         executePool.submit {
-            projectTagRefresh(
-                consulTag = opProjectTagUpdateDTO.routerTag,
+            refreshRouterByProject(
+                routerTag = opProjectTagUpdateDTO.routerTag,
                 redisOperation = redisOperation,
                 projectCodeIds = opProjectTagUpdateDTO.projectCodeList!!
             )
@@ -93,8 +95,8 @@ class ProjectTagService @Autowired constructor(
         ).map { it.englishName }
 
         executePool.submit {
-            projectTagRefresh(
-                consulTag = opProjectTagUpdateDTO.routerTag,
+            refreshRouterByProject(
+                routerTag = opProjectTagUpdateDTO.routerTag,
                 redisOperation = redisOperation,
                 projectCodeIds = projectCodes
             )
@@ -113,16 +115,12 @@ class ProjectTagService @Autowired constructor(
             channel = opProjectTagUpdateDTO.channel!!
         )
 
-        val projectCodes = projectTagDao.listByChannel(
-            dslContext = dslContext,
-            channel = opProjectTagUpdateDTO.channel!!
-        ).map { it.englishName }
-
         executePool.submit {
-            projectTagRefresh(
-                consulTag = opProjectTagUpdateDTO.routerTag,
+            refreshRouterByChannel(
+                routerTag = opProjectTagUpdateDTO.routerTag,
                 redisOperation = redisOperation,
-                projectCodeIds = projectCodes
+                channel = opProjectTagUpdateDTO.channel!!,
+                dslContext = dslContext
             )
         }
         return Result(true)
@@ -147,23 +145,44 @@ class ProjectTagService @Autowired constructor(
         }
     }
 
-    fun projectTagRefresh(
-        consulTag: String,
+    fun refreshRouterByProject(
+        routerTag: String,
         projectCodeIds: List<String>,
         redisOperation: RedisOperation
     ) {
-        val watcher = Watcher("ProjectTagRefresh $consulTag")
-        logger.info("ProjectTagRefresh start $consulTag $projectCodeIds")
+        val watcher = Watcher("ProjectTagRefresh $routerTag")
+        logger.info("ProjectTagRefresh start $routerTag $projectCodeIds")
         projectCodeIds.forEach { projectCode ->
-            redisOperation.hset(TAG_REDIS_KEY, projectCode, consulTag)
+            redisOperation.hset(PROJECT_TAG_REDIS_KEY, projectCode, routerTag)
         }
-        logger.info("ProjectTagRefresh success. $consulTag ${projectCodeIds.size}")
+        logger.info("ProjectTagRefresh success. $routerTag ${projectCodeIds.size}")
         LogUtils.printCostTimeWE(watcher)
 
     }
 
+    fun refreshRouterByChannel(
+        routerTag: String,
+        channel: String,
+        redisOperation: RedisOperation,
+        dslContext: DSLContext
+    ) {
+        try {
+            var offset = 0
+            val limit = 500
+            do {
+                val projectInfos = projectTagDao.listByChannel(dslContext, channel!!, limit, offset)
+                projectInfos.forEach {
+                    redisOperation.hset(PROJECT_TAG_REDIS_KEY, it.englishName, routerTag)
+                }
+                offset += limit
+            }
+            while (projectInfos.size == limit)
+        } finally {
+           logger.info("refreshRouterByChannel success")
+        }
+    }
+
     companion object {
-        const val TAG_REDIS_KEY = "project:setting:tag:v2"
         val logger = LoggerFactory.getLogger(ProjectTagService::class.java)
     }
 }
