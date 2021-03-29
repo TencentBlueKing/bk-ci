@@ -994,6 +994,18 @@ class PipelineRepositoryService constructor(
             )
             pipelineModelTaskDao.batchSave(transactionContext, tasks)
         }
+
+        pipelineEventDispatcher.dispatch(
+            PipelineModelAnalysisEvent(
+                source = "restore_pipeline",
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                model = JsonUtil.toJson(existModel),
+                channelCode = channelCode.name
+            )
+        )
+
         return existModel
     }
 

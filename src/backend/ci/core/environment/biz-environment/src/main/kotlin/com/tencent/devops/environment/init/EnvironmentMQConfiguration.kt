@@ -103,11 +103,11 @@ class EnvironmentMQConfiguration {
         val concurrency = modelAnalysisConcurrency!!
         container.setConcurrentConsumers(concurrency)
         container.setMaxConcurrentConsumers(Math.max(10, concurrency))
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
 
         val adapter = MessageListenerAdapter(buildListener, buildListener::execute.name)
         adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
+        container.setMessageListener(adapter)
         return container
     }
 }
