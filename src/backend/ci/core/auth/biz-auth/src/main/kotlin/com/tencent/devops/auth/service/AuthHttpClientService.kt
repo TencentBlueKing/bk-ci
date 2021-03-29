@@ -6,7 +6,6 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_IAM_TOKEN
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.security.jwt.JwtManager
-import io.swagger.annotations.Authorization
 import okhttp3.Headers
 import okhttp3.MediaType
 import okhttp3.OkHttpClient
@@ -123,7 +122,7 @@ class AuthHttpClientService @Autowired constructor(
 
     fun buildPost(path: String, requestBody: RequestBody, gateway: String, token: String?): Request {
         val url = gateway + path
-        logger.info("iam callback url: $url, body: $requestBody")
+        logger.info("iam callback url: $url")
         return Request.Builder().url(url).post(requestBody).headers(Headers.of(buildJwtAndToken(token))).build()
     }
 

@@ -37,19 +37,19 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceProjectAuthResourceImpl @Autowired constructor(
     val authProjectService: AuthProjectService
 ) : ServiceProjectAuthResource {
-    override fun projectInfo(callBackInfo: CallbackRequestDTO): CallbackBaseResponseDTO? {
+    override fun projectInfo(token: String, callBackInfo: CallbackRequestDTO): CallbackBaseResponseDTO? {
         val method = callBackInfo.method
         val page = callBackInfo.page
         when (method) {
             CallbackMethodEnum.LIST_INSTANCE -> {
-                return authProjectService.getProjectList(page)
+                return authProjectService.getProjectList(page, token)
             }
             CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
                 val ids = callBackInfo.filter.idList.map { it.toString() }
-                return authProjectService.getProjectInfo(ids)
+                return authProjectService.getProjectInfo(ids, token)
             }
             CallbackMethodEnum.SEARCH_INSTANCE -> {
-                return authProjectService.searchProjectInstances(callBackInfo.filter.keyword, page)
+                return authProjectService.searchProjectInstances(callBackInfo.filter.keyword, page, token)
             }
         }
         return null
