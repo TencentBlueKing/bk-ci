@@ -2,10 +2,12 @@ package com.tencent.devops.project.api.service
 
 import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
+import com.tencent.devops.common.api.auth.AUTH_HEADER_IAM_TOKEN
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
@@ -20,6 +22,9 @@ interface ServiceProjectAuthResource {
     @Path("/")
     @ApiOperation("iam项目回调接口")
     fun projectInfo(
+        @HeaderParam("Authorization")
+        @ApiParam("token")
+        token: String,
         @ApiParam(value = "回调信息")
         callBackInfo: CallbackRequestDTO
     ): CallbackBaseResponseDTO?

@@ -13,24 +13,26 @@ class ServiceRepositoryAuthResourceImpl @Autowired constructor(
     val repositoryAuthService: RepositoryAuthService
 ) : ServiceRepositoryAuthResource {
 
-    override fun repositoryInfo(callBackInfo: CallbackRequestDTO): CallbackBaseResponseDTO? {
+    override fun repositoryInfo(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO? {
         val method = callBackInfo.method
         val page = callBackInfo.page
         val projectId = callBackInfo.filter.parent.id
         when (method) {
             CallbackMethodEnum.LIST_INSTANCE -> {
-                return repositoryAuthService.getRepository(projectId, page.offset.toInt(), page.limit.toInt())
+                return repositoryAuthService.getRepository(projectId, page.offset.toInt(), page.limit.toInt(), token)
             }
             CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
                 val hashIds = callBackInfo.filter.idList.map { it.toString() }
-                return repositoryAuthService.getRepositoryInfo(hashIds)
+                return repositoryAuthService.getRepositoryInfo(hashIds, token)
             }
             CallbackMethodEnum.SEARCH_INSTANCE -> {
                 return repositoryAuthService.searchRepositoryInstances(
                     projectId = projectId,
                     keyword = callBackInfo.filter.keyword,
                     limit = page.offset.toInt(),
-                    offset = page.limit.toInt())
+                    offset = page.limit.toInt(),
+                    token = token
+                )
             }
         }
         return null

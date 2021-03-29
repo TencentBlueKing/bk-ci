@@ -2,10 +2,12 @@ package com.tencent.devops.environment.api
 
 import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
+import com.tencent.devops.common.api.auth.AUTH_HEADER_IAM_TOKEN
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
@@ -21,7 +23,10 @@ interface ServiceEnvironmentAuthResource {
     @ApiOperation("iam环境管理回调接口")
     fun environmentInfo(
         @ApiParam(value = "回调信息")
-        callBackInfo: CallbackRequestDTO
+        callBackInfo: CallbackRequestDTO,
+        @HeaderParam(AUTH_HEADER_IAM_TOKEN)
+        @ApiParam("token")
+        token: String
     ): CallbackBaseResponseDTO?
 
     @POST
@@ -29,6 +34,9 @@ interface ServiceEnvironmentAuthResource {
     @ApiOperation("iam节点回调接口")
     fun nodeInfo(
         @ApiParam(value = "回调信息")
-        callBackInfo: CallbackRequestDTO
+        callBackInfo: CallbackRequestDTO,
+        @HeaderParam(AUTH_HEADER_IAM_TOKEN)
+        @ApiParam("token")
+        token: String
     ): CallbackBaseResponseDTO?
 }

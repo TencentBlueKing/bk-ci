@@ -13,24 +13,29 @@ class ServiceProcessAuthResourceImpl @Autowired constructor(
     val authPipelineService: AuthPipelineService
 ) : ServiceProcessAuthResource {
 
-    override fun pipelineInfo(callBackInfo: CallbackRequestDTO): CallbackBaseResponseDTO? {
+    override fun pipelineInfo(
+        callBackInfo: CallbackRequestDTO,
+        token: String
+    ): CallbackBaseResponseDTO? {
         val method = callBackInfo.method
         val page = callBackInfo.page
         val projectId = callBackInfo.filter.parent.id
         when (method) {
             CallbackMethodEnum.LIST_INSTANCE -> {
-                return authPipelineService.getPipeline(projectId, page.offset.toInt(), page.limit.toInt())
+                return authPipelineService.getPipeline(projectId, page.offset.toInt(), page.limit.toInt(), token)
             }
             CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
                 val ids = callBackInfo.filter.idList.map { it.toString() }
-                return authPipelineService.getPipelineInfo(ids)
+                return authPipelineService.getPipelineInfo(ids, token)
             }
             CallbackMethodEnum.SEARCH_INSTANCE -> {
                 return authPipelineService.searchPipeline(
                     projectId = projectId,
                     keyword = callBackInfo.filter.keyword,
                     limit = page.offset.toInt(),
-                    offset = page.limit.toInt())
+                    offset = page.limit.toInt(),
+                    token = token
+                )
             }
         }
         return null

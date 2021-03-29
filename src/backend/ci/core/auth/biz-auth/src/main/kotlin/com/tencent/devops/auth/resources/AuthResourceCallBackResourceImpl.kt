@@ -23,47 +23,42 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.auth.api
+package com.tencent.devops.auth.resources
 
 import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.auth.api.callback.AuthResourceCallBackResource
+import com.tencent.devops.auth.service.ResourceService
+import com.tencent.devops.common.web.RestResource
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
-@Api(tags = ["AUTH_RESOURCE_CALLBACK"], description = "权限-资源-回调接口")
-@Path("/service/auth/resource")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface AuthResourceCallBackResource {
-
-    @POST
-    @Path("/projects")
-    @ApiOperation("项目列表")
-    fun projectInfo(
-        @ApiParam(value = "回调信息")
+@RestResource
+class AuthResourceCallBackResourceImpl @Autowired constructor(
+    val resourceService: ResourceService
+) : AuthResourceCallBackResource {
+    override fun projectInfo(
         callBackInfo: CallbackRequestDTO,
-        @HeaderParam("Authorization")
-        @ApiParam("token")
         token: String
-    ): CallbackBaseResponseDTO?
+    ): CallbackBaseResponseDTO {
+        return resourceService.getProject(callBackInfo, token)
+    }
 
-    @POST
-    @Path("/instances/list")
-    @ApiOperation("特定资源列表")
-    fun resourceList(
-        @ApiParam(value = "回调信息")
+    override fun resourceList(
         callBackInfo: CallbackRequestDTO,
-        @HeaderParam("Authorization")
-        @ApiParam("token")
         token: String
-    ): CallbackBaseResponseDTO?
+    ): CallbackBaseResponseDTO? {
+        logger.info("resourceList: $callBackInfo, token: $token")
+        return resourceService.getInstanceByResource(
+                callBackInfo = callBackInfo,
+                token = token
+            )
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(this::class.java)
+    }
 }

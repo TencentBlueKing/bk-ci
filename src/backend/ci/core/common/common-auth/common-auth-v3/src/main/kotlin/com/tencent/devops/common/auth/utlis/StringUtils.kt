@@ -27,6 +27,9 @@
 
 package com.tencent.devops.common.auth.utlis
 
+import java.nio.charset.Charset
+import java.util.Base64
+
 object StringUtils {
     fun obj2List(str: String): List<String> {
         val list = str.substringBefore("]").substringAfter("[").split(",")
