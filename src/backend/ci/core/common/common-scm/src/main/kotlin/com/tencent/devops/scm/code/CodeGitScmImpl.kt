@@ -173,7 +173,10 @@ class CodeGitScmImpl constructor(
         block: Boolean
     ) {
         if (token.isEmpty()) {
-            throw RuntimeException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_EMPTY))
+            throw ScmException(scmType = ScmType.CODE_GIT.name,
+                message = MessageCodeUtil.getCodeLanMessage(
+                    messageCode = RepositoryMessageCode.GIT_TOKEN_EMPTY,
+                    defaultMessage = RepositoryMessageCode.GIT_TOKEN_EMPTY))
         }
         try {
             gitApi.addCommitCheck(
@@ -188,7 +191,10 @@ class CodeGitScmImpl constructor(
                 block = block
             )
         } catch (e: ScmException) {
-            throw RuntimeException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_FAIL))
+            throw ScmException(scmType = ScmType.CODE_GIT.name,
+                message = MessageCodeUtil.getCodeLanMessage(
+                    messageCode = RepositoryMessageCode.GIT_TOKEN_FAIL,
+                    defaultMessage = RepositoryMessageCode.GIT_TOKEN_FAIL))
         }
     }
 
@@ -196,11 +202,11 @@ class CodeGitScmImpl constructor(
         gitApi.addMRComment(apiUrl, token, projectName, mrId, comment)
     }
 
-    override fun lock(repoName: String, applicant: String, subPath: String) {
+    override fun lock(repoName: String, applicant: String, subpath: String) {
         logger.info("Git can not lock")
     }
 
-    override fun unlock(repoName: String, applicant: String, subPath: String) {
+    override fun unlock(repoName: String, applicant: String, subpath: String) {
         logger.info("Git can not unlock")
     }
 
