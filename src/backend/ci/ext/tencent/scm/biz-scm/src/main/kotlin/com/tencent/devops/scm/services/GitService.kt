@@ -1044,7 +1044,7 @@ class GitService @Autowired constructor(
             .build()
         OkhttpUtils.doHttp(request).use {
             val response = it.body()!!.string()
-            logger.info("[gitProjectId=$gitProjectId]|getGitCIProjectInfo with response=$response")
+            logger.info("[url=$url]|getGitCIProjectInfo with response=$response")
             if (!it.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
             return Result(JsonUtil.to(response, GitCIProjectInfo::class.java))
         }

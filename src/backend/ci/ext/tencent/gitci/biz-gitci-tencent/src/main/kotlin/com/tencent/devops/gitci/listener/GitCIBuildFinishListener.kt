@@ -234,7 +234,7 @@ class GitCIBuildFinishListener @Autowired constructor(
         pipeline: TGitPipelineResourceRecord,
         build: BuildHistory
     ) {
-        val receivers = replaceReceivers(conf.notifyReceivers, build.buildParameters)
+        var receivers = replaceReceivers(conf.notifyReceivers, build.buildParameters)
 
         val projectName = getProjectName(conf)
         val branchName = GitCommonUtils.checkAndGetForkBranchName(
@@ -258,9 +258,15 @@ class GitCIBuildFinishListener @Autowired constructor(
                 client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
             }
             GitCINotifyType.RTX_CUSTOM, GitCINotifyType.RTX_GROUP -> {
-                if (conf.notifyRtxGroups == null || conf.notifyRtxGroups!!.isEmpty()) {
+                if (notify == GitCINotifyType.RTX_CUSTOM &&
+                    (conf.notifyRtxGroups == null || conf.notifyRtxGroups!!.isEmpty())
+                ) {
                     logger.warn("notifyRtxGroups receivers is null ")
                     return
+                }
+                // 接收人默认带触发人
+                if (notify == GitCINotifyType.RTX_CUSTOM && receivers.isEmpty()) {
+                    receivers = mutableSetOf(build.userId)
                 }
                 val accessToken =
                     RtxCustomApi.getAccessToken(urlPrefix = rtxUrl, corpSecret = corpSecret, corpId = corpId)
