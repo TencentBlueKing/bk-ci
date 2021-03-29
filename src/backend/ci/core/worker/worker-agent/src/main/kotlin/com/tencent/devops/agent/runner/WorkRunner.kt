@@ -86,6 +86,10 @@ object WorkRunner {
                     if (!dir.exists()) {
                         dir.mkdirs()
                     }
+                    val logDir = WorkspaceUtils.getBuildLogSpace(pipelineId, buildInfo.buildId)
+                    if (!logDir.exists()) {
+                        logDir.mkdirs()
+                    }
                     return dir
                 }
             }, false)

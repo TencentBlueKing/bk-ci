@@ -88,4 +88,7 @@ object WorkspaceUtils {
             File(getWorkspace(), "$pipelineId/src")
         }
     }
+
+    fun getBuildLogSpace(pipelineId: String, buildId: String) =
+        File(getBuildLogSpace(), "$pipelineId/$buildId/src")
 }

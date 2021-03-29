@@ -340,7 +340,7 @@ object LoggerService {
     }
 
     private fun getLocalLogFileName(): String {
-        return "${WorkspaceUtils.getBuildLogSpace()}/${buildVariables?.projectId}/${buildVariables?.pipelineId}" +
-            "/${buildVariables?.buildId}/[$vmSeqId]${jobName}_${elementName}_$executeCount.log"
+        return "${WorkspaceUtils.getBuildLogSpace(buildVariables?.pipelineId!!, buildVariables?.buildId!!)}" +
+            "/[$vmSeqId]${jobName}_${elementName}_$executeCount.log"
     }
 }
