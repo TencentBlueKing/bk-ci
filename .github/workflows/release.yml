@@ -79,12 +79,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-gradle-
       - name: Gradle Build
-        uses: eskatos/gradle-command-action@v1
-        with:
-          gradle-version: 4.8.1
-          build-root-directory: src/backend/ci/core
-          arguments: clean test build -DmavenRepoUrl="http://maven.aliyun.com/nexus/content/groups/public/"
-      
+        working-directory: src/backend/ci
+        run: ./gradlew clean test build -DmavenRepoUrl="http://maven.aliyun.com/nexus/content/groups/public/"
       - name: Create artifact - Step1:init
         run: |
           mkdir -p bkci/frontend

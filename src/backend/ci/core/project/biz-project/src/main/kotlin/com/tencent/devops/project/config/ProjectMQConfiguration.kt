@@ -119,10 +119,10 @@ class ProjectMQConfiguration {
         container.setQueueNames(projectCreateQueue.name)
         container.setConcurrentConsumers(5)
         container.setMaxConcurrentConsumers(10)
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
         val adapter = MessageListenerAdapter(listener, listener::execute.name)
         adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
+        container.setMessageListener(adapter)
         return container
     }
 
@@ -138,10 +138,10 @@ class ProjectMQConfiguration {
         container.setQueueNames(projectUpdateQueue.name)
         container.setConcurrentConsumers(5)
         container.setMaxConcurrentConsumers(10)
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
         val adapter = MessageListenerAdapter(listener, listener::execute.name)
         adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
+        container.setMessageListener(adapter)
         return container
     }
 
@@ -157,10 +157,10 @@ class ProjectMQConfiguration {
         container.setQueueNames(projectUpdateLogoQueue.name)
         container.setConcurrentConsumers(5)
         container.setMaxConcurrentConsumers(10)
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
         val adapter = MessageListenerAdapter(listener, listener::execute.name)
         adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
+        container.setMessageListener(adapter)
         return container
     }
 }
