@@ -24,6 +24,17 @@
     import moment from 'moment'
     import api from '@/api'
 
+    function getTimeRange (time) {
+        const now = moment(moment().format('YYYY-MM-DD')).subtract(1, 'days')
+        const params = {
+            endTime: now.format('YYYY-MM-DD HH:mm:ss'),
+            startTime: now.subtract(1, time)
+        }
+        if (time === 'weeks') params.startTime = params.startTime.add(1, 'days')
+        params.startTime = params.startTime.format('YYYY-MM-DD HH:mm:ss')
+        return params
+    }
+
     export default {
         props: {
             detail: Object,
@@ -72,11 +83,7 @@
                         resolve(chartData)
                     } else {
                         const code = this.detail.atomCode
-                        const now = moment(moment().format('YYYY-MM-DD')).subtract(1, 'days')
-                        const params = {
-                            endTime: now.format('YYYY-MM-DD HH:mm:ss'),
-                            startTime: now.subtract(1, this.time).format('YYYY-MM-DD HH:mm:ss')
-                        }
+                        const params = getTimeRange(this.time)
                         return api.requestStaticChartData(this.type.toUpperCase(), code, params).then((res) => {
                             this.chartData[this.time] = res
                             resolve(res)
@@ -218,7 +225,6 @@
                         datasets: [
                             {
                                 label: this.$t('store.执行成功率'),
-                                fill: true,
                                 backgroundColor: 'rgba(5, 155, 255, 0.3)',
                                 borderColor: 'rgba(5, 155, 255, 1)',
                                 lineTension: 0,
@@ -230,7 +236,6 @@
                             },
                             {
                                 label: this.$t('store.执行失败率'),
-                                fill: true,
                                 backgroundColor: 'rgba(255, 24, 113, 0.3)',
                                 borderColor: 'rgba(255, 24, 113, 1)',
                                 lineTension: 0,

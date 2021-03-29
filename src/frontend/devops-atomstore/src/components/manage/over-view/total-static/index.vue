@@ -98,7 +98,7 @@
                 }
                 .item-value {
                     font-weight: 600;
-                    font-size: .3rem;
+                    font-size: .26rem;
                     line-height: .3rem;
                     margin-top: .03rem;
                 }
