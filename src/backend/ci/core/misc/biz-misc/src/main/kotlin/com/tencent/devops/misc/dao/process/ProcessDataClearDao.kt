@@ -34,6 +34,7 @@ import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import com.tencent.devops.model.process.tables.TPipelineBuildStage
 import com.tencent.devops.model.process.tables.TPipelineBuildTask
 import com.tencent.devops.model.process.tables.TPipelineBuildVar
+import com.tencent.devops.model.process.tables.TReport
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 
@@ -86,7 +87,7 @@ class ProcessDataClearDao {
         pipelineId: String,
         buildId: String
     ) {
-        with(TPipelineBuildStage.T_PIPELINE_BUILD_STAGE) {
+        with(TReport.T_REPORT) {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
