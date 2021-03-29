@@ -25,31 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.auth.utlis
+package com.tencent.devops.common.auth.utils
 
-import java.nio.charset.Charset
-import java.util.Base64
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 
-object StringUtils {
-    fun obj2List(str: String): List<String> {
-        val list = str.substringBefore("]").substringAfter("[").split(",")
-        val newList = mutableListOf<String>()
-        list.map {
-            newList.add(it.trim())
+object ActionUtils {
+
+    fun buildAction(authResourceType: AuthResourceType, permission: AuthPermission): String {
+        return if (permission == AuthPermission.LIST) {
+            "${authResourceType.value}_${AuthPermission.VIEW.value}"
+        } else {
+            "${authResourceType.value}_${permission.value}"
         }
-        return newList
-    }
-
-    fun removeAllElement(set: Set<String>): Set<String> {
-        if (set.contains("*")) {
-            val newSet = mutableSetOf<String>()
-            set.map {
-                if (it != "*") {
-                    newSet.add(it)
-                }
-                return newSet
-            }
-        }
-        return set
     }
 }

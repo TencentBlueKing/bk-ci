@@ -23,20 +23,31 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.common.auth.utlis
+package com.tencent.devops.common.auth.utils
 
-import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthResourceType
-
-object ActionUtils {
-
-    fun buildAction(authResourceType: AuthResourceType, permission: AuthPermission): String {
-        return if (permission == AuthPermission.LIST) {
-            "${authResourceType.value}_${AuthPermission.VIEW.value}"
-        } else {
-            "${authResourceType.value}_${permission.value}"
+object StringUtils {
+    fun obj2List(str: String): List<String> {
+        val list = str.substringBefore("]").substringAfter("[").split(",")
+        val newList = mutableListOf<String>()
+        list.map {
+            newList.add(it.trim())
         }
+        return newList
+    }
+
+    fun removeAllElement(set: Set<String>): Set<String> {
+        if (set.contains("*")) {
+            val newSet = mutableSetOf<String>()
+            set.map {
+                if (it != "*") {
+                    newSet.add(it)
+                }
+                return newSet
+            }
+        }
+        return set
     }
 }
