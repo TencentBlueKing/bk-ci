@@ -48,6 +48,6 @@ class CodeccProjectDataClearConfigService @Autowired constructor(
     }
 
     override fun getChannel(): String {
-        return ProjectChannelCode.BS.name
+        return ProjectChannelCode.CODECC.name
     }
 }
