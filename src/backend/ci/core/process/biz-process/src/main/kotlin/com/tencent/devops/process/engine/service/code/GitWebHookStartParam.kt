@@ -166,7 +166,7 @@ class GitWebHookStartParam(
         startParams[BK_REPO_GIT_WEBHOOK_TAG_OPERATION] = gitTagPushEvent.operation_kind ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT] = gitTagPushEvent.total_commits_count
         startParams[BK_REPO_GIT_WEBHOOK_TAG_USERNAME] = matcher.getUsername()
-        startParams[BK_REPO_GIT_WEBHOOK_TAG_CREATE_FROM] = gitTagPushEvent.create_from
+        startParams[BK_REPO_GIT_WEBHOOK_TAG_CREATE_FROM] = gitTagPushEvent.create_from ?: ""
         genCommitsParam(startParams, gitTagPushEvent.commits)
     }
 
