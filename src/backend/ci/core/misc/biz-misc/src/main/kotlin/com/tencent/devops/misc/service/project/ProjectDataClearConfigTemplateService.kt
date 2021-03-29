@@ -30,7 +30,7 @@ package com.tencent.devops.misc.service.project
 import com.tencent.devops.misc.pojo.project.ProjectDataClearConfig
 import org.springframework.beans.factory.InitializingBean
 
-abstract class ProjectDataClearConfigTemplateService() : ProjectDataClearConfigService, InitializingBean {
+abstract class ProjectDataClearConfigTemplateService : ProjectDataClearConfigService, InitializingBean {
 
     abstract override fun getProjectDataClearConfig(): ProjectDataClearConfig
 
