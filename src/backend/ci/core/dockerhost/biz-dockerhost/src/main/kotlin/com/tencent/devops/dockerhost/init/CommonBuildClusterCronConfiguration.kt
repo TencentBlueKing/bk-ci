@@ -59,39 +59,34 @@ class CommonBuildClusterCronConfiguration @Autowired constructor(
         scheduledTaskRegistrar.setScheduler(Executors.newScheduledThreadPool(10))
         val random = (Random().nextInt(15) % (15 - 8 + 1) + 8) * 100
 
-        if (dockerHostConfig.dockerhostMode != null &&
-            (dockerHostConfig.dockerhostMode.equals("docker_build") || dockerHostConfig.dockerhostMode.equals(
-                "codecc_build"
-            ))
-        ) {
-            scheduledTaskRegistrar.addFixedRateTask(
-                IntervalTask(
-                    Runnable { runner.clearExitedContainer() }, 1200 * 1000, 3600 * 1000
-                )
+        scheduledTaskRegistrar.addFixedRateTask(
+            IntervalTask(
+                Runnable { runner.clearExitedContainer() }, 1200 * 1000, 3600 * 1000
             )
+        )
 
-            scheduledTaskRegistrar.addCronTask(
-                { runner.clearLocalImages() }, clearLocalImageCron!!
-            )
+        scheduledTaskRegistrar.addCronTask(
+            { runner.clearLocalImages() }, clearLocalImageCron!!
+        )
 
-            scheduledTaskRegistrar.addFixedRateTask(
-                IntervalTask(
-                    Runnable { runner.refreshDockerIpStatus() }, 5 * random.toLong(), random.toLong()
-                )
+        scheduledTaskRegistrar.addFixedRateTask(
+            IntervalTask(
+                Runnable { runner.refreshDockerIpStatus() }, 5 * random.toLong(), random.toLong()
             )
+        )
 
-            scheduledTaskRegistrar.addFixedRateTask(
-                IntervalTask(
-                    Runnable { runner.monitorSystemLoad() }, 120 * 1000, random.toLong()
-                )
+        scheduledTaskRegistrar.addFixedRateTask(
+            IntervalTask(
+                Runnable { runner.monitorSystemLoad() }, 120 * 1000, random.toLong()
             )
+        )
 
-            scheduledTaskRegistrar.addFixedRateTask(
-                IntervalTask(
-                    Runnable { runner.clearDockerRunTimeoutContainers() }, 1800 * 1000, 1000
-                )
+        scheduledTaskRegistrar.addFixedRateTask(
+            IntervalTask(
+                Runnable { runner.clearDockerRunTimeoutContainers() }, 1800 * 1000, 1000
             )
-        }
+        )
+        // }
     }
 
     @Autowired
