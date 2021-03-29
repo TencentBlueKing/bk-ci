@@ -5,7 +5,7 @@
             <h3 class="title-with-img">
                 <span :class="{ 'not-recommend': detail.recommendFlag === false }" :title="detail.recommendFlag === false ? $t('store.该插件不推荐使用') : ''">{{detail.name}}</span>
                 <div class="canvas-contain">
-                    <canvas class="atom-chart" v-if="detail.dailyStatisticList && !detail.dailyStatisticList.length"></canvas>
+                    <canvas class="atom-chart" v-if="detail.dailyStatisticList && detail.dailyStatisticList.length"></canvas>
                     <icon v-else class="chart-empty" name="empty" size="16" />
                 </div>
                 <template v-if="userInfo.type !== 'ADMIN' && detail.htmlTemplateVersion !== '1.0'">
