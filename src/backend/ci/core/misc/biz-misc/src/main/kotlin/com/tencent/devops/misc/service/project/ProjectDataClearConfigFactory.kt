@@ -25,37 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.config
+package com.tencent.devops.misc.service.project
 
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.cloud.context.config.annotation.RefreshScope
-import org.springframework.stereotype.Component
+import java.util.concurrent.ConcurrentHashMap
 
-@Component
-@RefreshScope
-class MiscBuildDataClearConfig {
+object ProjectDataClearConfigFactory {
 
-    @Value("\${build.data.clear.switch:false}")
-    val switch: String = "false"
+    private val dataClearConfigServiceMap = ConcurrentHashMap<String, ProjectDataClearConfigService>()
 
-    @Value("\${build.data.clear.maxEveryProjectHandleNum:5}")
-    val maxEveryProjectHandleNum: Int = 5
+    fun getProjectDataClearConfigService(channel: String): ProjectDataClearConfigService? {
+        return dataClearConfigServiceMap[channel]
+    }
 
-    @Value("\${build.data.clear.monthRange:-1}")
-    val bsMonthRange: Int = -1
-
-    @Value("\${build.data.clear.maxKeepNum:10000}")
-    val bsMaxKeepNum: Int = 10000
-
-    @Value("\${build.data.clear.codeccDayRange:-14}")
-    val codeccDayRange: Int = -14
-
-    @Value("\${build.data.clear.codeccMaxKeepNum:14}")
-    val codeccMaxKeepNum: Int = 14
-
-    @Value("\${build.data.clear.otherMonthRange:-1}")
-    val otherMonthRange: Int = -1
-
-    @Value("\${build.data.clear.otherMaxKeepNum:500}")
-    val otherMaxKeepNum: Int = 500
+    fun register(channel: String, projectDataClearConfigService: ProjectDataClearConfigService) {
+        dataClearConfigServiceMap[channel] = projectDataClearConfigService
+    }
 }

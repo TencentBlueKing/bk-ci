@@ -27,55 +27,27 @@
 
 package com.tencent.devops.misc.service.project
 
-import com.tencent.devops.misc.dao.project.ProjectDao
-import com.tencent.devops.misc.pojo.project.ProjectInfo
-import org.jooq.DSLContext
+import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.misc.config.MiscBuildDataClearConfig
+import com.tencent.devops.misc.pojo.project.ProjectDataClearConfig
+import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.Calendar
 
 @Service
-class ProjectService @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val projectDao: ProjectDao
-) {
+class BsProjectDataClearConfigService @Autowired constructor(
+    private val miscBuildDataClearConfig: MiscBuildDataClearConfig
+) : ProjectDataClearConfigTemplateService() {
 
-    fun getMinId(
-        projectIdList: List<String>? = null
-    ): Long? {
-        return projectDao.getMinId(dslContext, projectIdList)
+    override fun getProjectDataClearConfig(): ProjectDataClearConfig {
+        val monthRange = miscBuildDataClearConfig.bsMonthRange
+        val maxStartTime = DateTimeUtil.getFutureDateFromNow(Calendar.MONTH, monthRange)
+        val maxKeepNum = miscBuildDataClearConfig.bsMaxKeepNum
+        return ProjectDataClearConfig(DateTimeUtil.convertDateToLocalDateTime(maxStartTime), maxKeepNum)
     }
 
-    fun getMaxId(
-        projectIdList: List<String>? = null
-    ): Long? {
-        return projectDao.getMaxId(dslContext, projectIdList)
-    }
-
-    fun getProjectInfoList(
-        projectIdList: List<String>? = null,
-        minId: Long? = null,
-        maxId: Long? = null
-    ): List<ProjectInfo>? {
-        val projectInfoRecords = projectDao.getProjectInfoList(
-            dslContext = dslContext,
-            projectIdList = projectIdList,
-            minId = minId,
-            maxId = maxId
-        )
-        return if (projectInfoRecords == null) {
-            null
-        } else {
-            val projectInfoList = mutableListOf<ProjectInfo>()
-            projectInfoRecords.forEach { projectInfoRecord ->
-                projectInfoList.add(
-                    ProjectInfo(
-                        id = projectInfoRecord["ID"] as Long,
-                        projectId = projectInfoRecord["ENGLISH_NAME"] as String,
-                        channel = projectInfoRecord["CHANNEL"] as String
-                    )
-                )
-            }
-            projectInfoList
-        }
+    override fun getChannel(): String {
+        return ProjectChannelCode.BS.name
     }
 }
