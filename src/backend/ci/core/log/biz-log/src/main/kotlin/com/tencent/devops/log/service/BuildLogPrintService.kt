@@ -84,7 +84,7 @@ class BuildLogPrintService @Autowired constructor(
     }
 
     fun asyncDispatchEvent(event: ILogEvent): Result<Boolean> {
-        if (storageProperties.enable == false) {
+        if (!isEnabled(storageProperties.enable)) {
             return Result(
                 status = 503,
                 message = LogErrorCodeEnum.PRINT_IS_DISABLED.formatErrorMessage,
@@ -123,6 +123,15 @@ class BuildLogPrintService @Autowired constructor(
         }
         logEvent.logs.forEach {
             it.message = CommonUtils.interceptStringInLength(it.message, maxLength) ?: ""
+        }
+    }
+
+    private fun isEnabled(value: String?): Boolean {
+        // 假设没有配置默认为开启日志保存
+        return if (!value.isNullOrBlank()) {
+            value!!.toBoolean()
+        } else {
+            true
         }
     }
 
