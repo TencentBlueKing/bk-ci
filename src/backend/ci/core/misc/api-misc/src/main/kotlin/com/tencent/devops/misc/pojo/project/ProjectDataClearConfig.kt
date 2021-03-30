@@ -25,37 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.config
+package com.tencent.devops.misc.pojo.project
 
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.cloud.context.config.annotation.RefreshScope
-import org.springframework.stereotype.Component
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+import java.time.LocalDateTime
 
-@Component
-@RefreshScope
-class MiscBuildDataClearConfig {
-
-    @Value("\${build.data.clear.switch:false}")
-    val switch: String = "false"
-
-    @Value("\${build.data.clear.maxEveryProjectHandleNum:5}")
-    val maxEveryProjectHandleNum: Int = 5
-
-    @Value("\${build.data.clear.monthRange:-1}")
-    val bsMonthRange: Int = -1
-
-    @Value("\${build.data.clear.maxKeepNum:10000}")
-    val bsMaxKeepNum: Int = 10000
-
-    @Value("\${build.data.clear.codeccDayRange:-14}")
-    val codeccDayRange: Int = -14
-
-    @Value("\${build.data.clear.codeccMaxKeepNum:14}")
-    val codeccMaxKeepNum: Int = 14
-
-    @Value("\${build.data.clear.otherMonthRange:-1}")
-    val otherMonthRange: Int = -1
-
-    @Value("\${build.data.clear.otherMaxKeepNum:500}")
-    val otherMaxKeepNum: Int = 500
-}
+@ApiModel("项目流水线数据清理配置")
+data class ProjectDataClearConfig(
+    @ApiModelProperty("流水线最大启动时间", required = true)
+    val maxStartTime: LocalDateTime,
+    @ApiModelProperty("最大保存数量", required = true)
+    val maxKeepNum: Int
+)
