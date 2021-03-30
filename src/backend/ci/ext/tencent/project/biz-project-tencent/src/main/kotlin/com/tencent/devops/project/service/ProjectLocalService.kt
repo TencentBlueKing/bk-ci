@@ -348,6 +348,7 @@ class ProjectLocalService @Autowired constructor(
         return ProjectUtils.packagingBean(record, grayProjectSet())
     }
 
+    @SuppressWarnings("ALL")
     fun getByName(
         name: String,
         nameType: ProjectValidateType,
