@@ -47,7 +47,9 @@ class CheckConditionalSkipContainerCmd : ContainerCmd {
 
     override fun canExecute(commandContext: ContainerContext): Boolean {
         // 仅在初次进入Container
-        return commandContext.cmdFlowState == CmdFlowState.CONTINUE && commandContext.container.status.isReadyToRun()
+        return commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
+            (commandContext.container.status.isReadyToRun() ||
+                commandContext.container.status == BuildStatus.DEPENDENT_WAITING)
     }
 
     override fun execute(commandContext: ContainerContext) {
@@ -56,6 +58,9 @@ class CheckConditionalSkipContainerCmd : ContainerCmd {
             commandContext.buildStatus = BuildStatus.SKIP
             commandContext.latestSummary = "j(${commandContext.container.containerId}) skipped"
             commandContext.cmdFlowState = CmdFlowState.FINALLY // 跳转至FINALLY，处理SKIP
+        } else if (commandContext.buildStatus.isFailure()) {
+            // 如果前置出现失败，则走向结束
+            commandContext.cmdFlowState = CmdFlowState.FINALLY
         }
     }
 
@@ -68,20 +73,23 @@ class CheckConditionalSkipContainerCmd : ContainerCmd {
         }
         // condition check
         val container = containerContext.container
-        val variables = containerContext.variables
-        val buildId = container.buildId
-        val stageId = container.stageId
-        val containerId = container.containerId
         val containerControlOption = container.controlOption
         var skip = false
         if (containerControlOption != null) {
             val jobControlOption = containerControlOption.jobControlOption
             val runCondition = jobControlOption.runCondition
             val conditions = jobControlOption.customVariables ?: emptyList()
-            skip = ControlUtils.checkJobSkipCondition(conditions, variables, buildId, runCondition)
+
+            skip = ControlUtils.checkJobSkipCondition(
+                conditions = conditions,
+                variables = containerContext.variables,
+                buildId = container.buildId,
+                runCondition = runCondition
+            )
+
             if (skip) {
-                LOG.info("ENGINE|$buildId|${containerContext.event.source}|CONTAINER_SKIP|$stageId|j($containerId)" +
-                    "|conditions=$jobControlOption")
+                LOG.info("ENGINE|${container.buildId}|${containerContext.event.source}|CONTAINER_SKIP" +
+                    "|${container.stageId}|j(${container.containerId})|conditions=$jobControlOption")
             }
         }
         return skip

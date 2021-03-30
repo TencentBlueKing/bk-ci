@@ -61,6 +61,5 @@ data class NodeWebsocketPush(
         )
     }
 
-    override fun buildNotifyMessage(message: SendMessage) {
-    }
+    override fun buildNotifyMessage(message: SendMessage) = Unit
 }
