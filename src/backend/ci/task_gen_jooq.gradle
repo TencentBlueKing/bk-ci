@@ -99,4 +99,8 @@ jooq {
         }
         tasks.generateGenenrateJooqSchemaSource.outputs.upToDateWhen { return false }
     }
+
+    compileKotlin {
+        destinationDir = new File("build/generated-src")
+    }
 }

@@ -45,7 +45,7 @@ constructor(private val pipelineAgentLessDispatchService: PipelineAgentLessDispa
 
     @RabbitListener(
         bindings = [(QueueBinding(
-            key = MQ.ROUTE_BUILD_LESS_AGENT_SHUTDOWN_DISPATCH, value = Queue(
+            key = [MQ.ROUTE_BUILD_LESS_AGENT_SHUTDOWN_DISPATCH], value = Queue(
                 value = MQ.QUEUE_BUILD_LESS_AGENT_SHUTDOWN_DISPATCH, durable = "true"
             ),
             exchange = Exchange(

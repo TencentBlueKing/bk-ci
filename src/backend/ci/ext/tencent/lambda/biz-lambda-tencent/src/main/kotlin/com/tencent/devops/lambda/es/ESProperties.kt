@@ -28,11 +28,13 @@
 package com.tencent.devops.lambda.es
 
 import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.boot.context.properties.ConstructorBinding
 
 /**
  *
  * Powered By Tencent
  */
+@ConstructorBinding
 @ConfigurationProperties(prefix = "elasticsearch")
 data class ESProperties(
     val ip: String? = null,

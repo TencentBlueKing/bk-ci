@@ -164,11 +164,11 @@ class LogMQConfiguration @Autowired constructor() {
         container.setQueueNames(logEventQueue.name)
         container.setConcurrentConsumers(1)
         container.setMaxConcurrentConsumers(1)
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
         container.setMismatchedQueuesFatal(true)
         val messageListenerAdapter = MessageListenerAdapter(logListener, logListener::logEvent.name)
         messageListenerAdapter.setMessageConverter(messageConverter)
-        container.messageListener = messageListenerAdapter
+        container.setMessageListener(messageListenerAdapter)
         logger.info("Start log event listener")
         return container
     }
@@ -187,11 +187,11 @@ class LogMQConfiguration @Autowired constructor() {
         container.setQueueNames(logBatchEventQueue.name)
         container.setConcurrentConsumers(10)
         container.setMaxConcurrentConsumers(100)
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
         container.setMismatchedQueuesFatal(true)
         val messageListenerAdapter = MessageListenerAdapter(logListener, logListener::logBatchEvent.name)
         messageListenerAdapter.setMessageConverter(messageConverter)
-        container.messageListener = messageListenerAdapter
+        container.setMessageListener(messageListenerAdapter)
         logger.info("Start log batch event listener")
         return container
     }
@@ -210,11 +210,11 @@ class LogMQConfiguration @Autowired constructor() {
         container.setQueueNames(logStatusEventQueue.name)
         container.setConcurrentConsumers(20)
         container.setMaxConcurrentConsumers(20)
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
         container.setMismatchedQueuesFatal(true)
         val messageListenerAdapter = MessageListenerAdapter(logListener, logListener::logStatusEvent.name)
         messageListenerAdapter.setMessageConverter(messageConverter)
-        container.messageListener = messageListenerAdapter
+        container.setMessageListener(messageListenerAdapter)
         logger.info("Start log status event listener")
         return container
     }
@@ -252,11 +252,11 @@ class LogMQConfiguration @Autowired constructor() {
         container.setQueueNames(pipelineBuildFinishQueue.name)
         container.setConcurrentConsumers(1)
         container.setMaxConcurrentConsumers(1)
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
 
         val adapter = MessageListenerAdapter(logService, logService::pipelineFinish.name)
         adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
+        container.setMessageListener(adapter)
         return container
     }
 

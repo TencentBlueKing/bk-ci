@@ -10,10 +10,7 @@ reports/
 *.iml
 .DS_Store
 *.log
-gradle/
-gradlew
-gradlew.bat
 version.txt
 support-files/etc
+build.yml
 .temp
-/build.yml

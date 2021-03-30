@@ -30,12 +30,9 @@ package com.tencent.devops.worker.common.task.script.powershell
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.task.script.ICommand
 import java.io.File
-import java.util.concurrent.Executors
-import java.util.concurrent.atomic.AtomicInteger
 
-class CommandPowerShellImpl() : ICommand {
-    private val count = AtomicInteger(0)
-    private val executorService = Executors.newFixedThreadPool(2)
+@Suppress("UNUSED")
+class CommandPowerShellImpl : ICommand {
 
     override fun execute(
         buildId: String,
@@ -48,9 +45,6 @@ class CommandPowerShellImpl() : ICommand {
         continueNoneZero: Boolean,
         errorMessage: String?
     ) {
-        try {
-        } finally {
-            executorService.shutdownNow()
-        }
+        TODO("Not yet implemented")
     }
 }

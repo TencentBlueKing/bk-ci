@@ -206,11 +206,11 @@ class CodeWebhookListenerConfiguration {
         val concurrency = gitCommitCheckConcurrency!!
         container.setConcurrentConsumers(concurrency)
         container.setMaxConcurrentConsumers(Math.max(CHECK_MAX_CONCURRENT, concurrency))
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
 
         val adapter = MessageListenerAdapter(listener, listener::execute.name)
         adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
+        container.setMessageListener(adapter)
         return container
     }
 
@@ -245,11 +245,11 @@ class CodeWebhookListenerConfiguration {
         val concurrency = githubPrConcurrency!!
         container.setConcurrentConsumers(concurrency)
         container.setMaxConcurrentConsumers(Math.max(CHECK_MAX_CONCURRENT, concurrency))
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
 
         val adapter = MessageListenerAdapter(listener, listener::execute.name)
         adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
+        container.setMessageListener(adapter)
         return container
     }
 }

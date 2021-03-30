@@ -331,7 +331,7 @@ class DockerHostClient @Autowired constructor(
         )
 
         val request = dockerHostProxyService.getDockerHostProxyRequest(
-            dockerHostUri = "/api/docker/build/end",
+            dockerHostUri = Constants.DOCKERHOST_END_URI,
             dockerHostIp = dockerIp,
             clusterType = clusterType
         ).delete(
@@ -366,8 +366,14 @@ class DockerHostClient @Autowired constructor(
         retryTime: Int = 0,
         unAvailableIpList: Set<String>? = null
     ) {
+        val dockerHostUri = if (clusterType == DockerHostClusterType.AGENT_LESS) {
+            Constants.DOCKERHOST_AGENTLESS_STARTUP_URI
+        } else {
+            Constants.DOCKERHOST_STARTUP_URI
+        }
+
         val request = dockerHostProxyService.getDockerHostProxyRequest(
-            dockerHostUri = "/api/docker/build/start",
+            dockerHostUri = dockerHostUri,
             dockerHostIp = dockerIp,
             dockerHostPort = dockerHostPort,
             clusterType = clusterType

@@ -173,7 +173,10 @@ class CodeTGitScmImpl constructor(
         block: Boolean
     ) {
         if (token.isEmpty()) {
-            throw RuntimeException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_EMPTY))
+            throw ScmException(scmType = ScmType.CODE_TGIT.name,
+                message = MessageCodeUtil.getCodeLanMessage(
+                    messageCode = RepositoryMessageCode.GIT_TOKEN_EMPTY,
+                    defaultMessage = RepositoryMessageCode.GIT_TOKEN_EMPTY))
         }
         try {
             gitApi.addCommitCheck(
@@ -188,12 +191,14 @@ class CodeTGitScmImpl constructor(
                 block = block
             )
         } catch (e: ScmException) {
-            throw RuntimeException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_FAIL))
+            throw ScmException(scmType = ScmType.CODE_TGIT.name,
+                message = MessageCodeUtil.getCodeLanMessage(
+                    messageCode = RepositoryMessageCode.GIT_TOKEN_FAIL,
+                    defaultMessage = RepositoryMessageCode.GIT_TOKEN_FAIL))
         }
     }
 
-    override fun addMRComment(mrId: Long, comment: String) {
-    }
+    override fun addMRComment(mrId: Long, comment: String) = Unit
 
     override fun lock(repoName: String, applicant: String, subpath: String) {
         logger.info("Git can not lock")
