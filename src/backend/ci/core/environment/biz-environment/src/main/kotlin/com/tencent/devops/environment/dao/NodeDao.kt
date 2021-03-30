@@ -58,6 +58,16 @@ class NodeDao {
         }
     }
 
+    fun listThirdpartyNodes(dslContext: DSLContext, projectId: String): List<TNodeRecord> {
+        with(TNode.T_NODE) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(NODE_TYPE.eq(NodeType.THIRDPARTY.name))
+                .orderBy(NODE_ID.desc())
+                .fetch()
+        }
+    }
+
     fun listServerNodes(dslContext: DSLContext, projectId: String): List<TNodeRecord> {
         with(TNode.T_NODE) {
             return dslContext.selectFrom(this)
@@ -544,5 +554,23 @@ class NodeDao {
 
     fun saveNode(dslContext: DSLContext, nodeRecord: TNodeRecord) {
         dslContext.executeUpdate(nodeRecord)
+    }
+
+    fun updateLastBuildTime(dslContext: DSLContext, nodeId: Long, time: LocalDateTime){
+        with(TNode.T_NODE) {
+            dslContext.update(this)
+                .set(LAST_BUILD_TIME, time)
+                .where(NODE_ID.eq(nodeId))
+                .execute()
+        }
+    }
+
+    fun updatePipelineRefCount(dslContext: DSLContext, nodeId: Long, count: Int){
+        with(TNode.T_NODE) {
+            dslContext.update(this)
+                .set(PIPELINE_REF_COUNT, count)
+                .where(NODE_ID.eq(nodeId))
+                .execute()
+        }
     }
 }

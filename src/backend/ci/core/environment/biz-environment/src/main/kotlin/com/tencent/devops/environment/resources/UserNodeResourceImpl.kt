@@ -70,7 +70,7 @@ class UserNodeResourceImpl @Autowired constructor(private val nodeService: NodeS
     }
 
     override fun extListNodes(userId: String, projectId: String): Result<List<NodeWithPermission>> {
-        return Result(listOf())
+        return Result(sortByUser(nodeService.extListNodes(userId, projectId), userId))
     }
 
     private fun sortByUser(nodes: List<NodeWithPermission>, userId: String): List<NodeWithPermission> {

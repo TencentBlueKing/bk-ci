@@ -39,8 +39,8 @@ import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineCreate
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineResponse
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineSeqId
-import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentPipelineService
 import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentMgrService
+import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentPipelineService
 import com.tencent.devops.environment.service.thirdPartyAgent.UpgradeService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -92,6 +92,12 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         checkUserId(userId)
         checkProjectId(projectId)
         return Result(thirdPartyAgentService.listAgents(userId, projectId, os))
+    }
+
+    override fun agentTaskStarted(projectId: String, pipelineId: String, buildId: String, vmSeqId: String,
+                                  agentId: String): Result<Boolean> {
+        thirdPartyAgentService.agentTaskStarted(projectId, pipelineId, buildId, vmSeqId, agentId)
+        return Result(true)
     }
 
     private fun checkUserId(userId: String) {

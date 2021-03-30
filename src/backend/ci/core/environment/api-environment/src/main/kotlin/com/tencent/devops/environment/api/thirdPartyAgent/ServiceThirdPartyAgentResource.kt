@@ -189,4 +189,25 @@ interface ServiceThirdPartyAgentResource {
         @PathParam("os")
         os: OS
     ): Result<List<ThirdPartyAgentInfo>>
+
+    @ApiOperation("构建任务已认领")
+    @POST
+    @Path("/projects/{projectId}/agents/{agentId}/taskStarted")
+    fun agentTaskStarted(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("pipeline ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("build ID", required = true)
+        @QueryParam("buildId")
+        buildId: String,
+        @ApiParam("VM SEQ ID", required = true)
+        @QueryParam("vmSeqId")
+        vmSeqId: String,
+        @ApiParam("agent Hash ID", required = true)
+        @PathParam("agentId")
+        agentId: String
+    ): Result<Boolean>
 }

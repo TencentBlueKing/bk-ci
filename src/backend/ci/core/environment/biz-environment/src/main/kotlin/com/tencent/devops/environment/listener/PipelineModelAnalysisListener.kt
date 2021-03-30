@@ -41,9 +41,9 @@ class PipelineModelAnalysisListener @Autowired constructor(
 ) : BaseListener<PipelineModelAnalysisEvent>(pipelineEventDispatcher) {
     override fun run(event: PipelineModelAnalysisEvent) {
         try {
-            agentPipelineService.analysisAndSave(event)
+            agentPipelineService.analysisPipelineRefAndSave(event)
         } catch (ex: Exception) {
-            logger.error("process pipeline model analysis failed[${event.projectId}|${event.pipelineId}]", ex)
+            logger.error("analysisPipelineRefAndSave failed[${event.source}|${event.projectId}|${event.pipelineId}]", ex)
         }
     }
 }

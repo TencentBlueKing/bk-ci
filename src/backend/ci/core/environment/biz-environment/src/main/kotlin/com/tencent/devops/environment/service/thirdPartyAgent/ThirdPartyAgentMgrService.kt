@@ -58,6 +58,7 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.NodeDao
+import com.tencent.devops.environment.dao.thirdPartyAgent.AgentPipelineRefDao
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentEnableProjectsDao
 import com.tencent.devops.environment.exception.AgentPermissionUnAuthorizedException
@@ -89,6 +90,7 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Date
 import javax.ws.rs.NotFoundException
@@ -102,6 +104,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     private val nodeDao: NodeDao,
     private val envNodeDao: EnvNodeDao,
     private val envDao: EnvDao,
+    private val agentPipelineRefDao: AgentPipelineRefDao,
     @Autowired(required = false)
     private val agentDisconnectNotifyService: IAgentDisconnectNotifyService?,
     private val slaveGatewayService: SlaveGatewayService,
@@ -1255,6 +1258,21 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     }
 
     fun generateSecretKey() = ApiUtil.randomSecretKey()
+
+    fun agentTaskStarted(projectId: String, pipelineId: String, buildId: String, vmSeqId: String, agentId: String) {
+        val agentLongId = HashUtil.decodeIdToLong(agentId)
+        val agent = thirdPartyAgentDao.getAgent(dslContext, agentLongId)
+        if (agent == null) {
+            logger.warn("agent no found")
+            return
+        }
+        val now = LocalDateTime.now()
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            nodeDao.updateLastBuildTime(context, agent.nodeId, now)
+            agentPipelineRefDao.updateLastBuildTime(context, projectId, pipelineId, vmSeqId, agentLongId, now)
+        }
+    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(ThirdPartyAgentMgrService::class.java)

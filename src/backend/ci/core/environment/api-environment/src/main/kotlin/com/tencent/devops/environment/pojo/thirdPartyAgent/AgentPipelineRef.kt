@@ -32,20 +32,26 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("第三方构建机流水线引用信息")
 data class AgentPipelineRef(
+    @ApiModelProperty("Node ID", required = true)
+    val nodeId: Long? = null,
     @ApiModelProperty("Node Hash ID", required = true)
-    val nodeHashId: String,
+    val nodeHashId: String? = null,
+    @ApiModelProperty("Agent ID", required = true)
+    val agentId: Long? = null,
     @ApiModelProperty("Agent Hash ID", required = true)
-    val agentHashId: String,
+    val agentHashId: String? = null,
     @ApiModelProperty("项目ID", required = true)
     val projectId: String,
     @ApiModelProperty("流水线ID", required = true)
     val pipelineId: String,
     @ApiModelProperty("流水线名称", required = true)
     val pipelineName: String,
+    @ApiModelProperty("Vm Seq ID", required = true)
+    val vmSeqId: String?,
     @ApiModelProperty("Job ID", required = true)
-    val jobId: String,
+    val jobId: String?,
     @ApiModelProperty("Job Name", required = true)
     val jobName: String,
     @ApiModelProperty("上次构建时间", required = false)
-    val lastBuildTime: Long?
+    val lastBuildTime: String? = ""
 )

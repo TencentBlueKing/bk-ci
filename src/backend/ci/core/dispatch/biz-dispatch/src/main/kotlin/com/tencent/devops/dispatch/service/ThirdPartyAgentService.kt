@@ -169,6 +169,15 @@ class ThirdPartyAgentService @Autowired constructor(
                 val build = buildRecords[0]
                 logger.info("Start the build(${build.buildId}) of agent($agentId) and seq(${build.vmSeqId})")
                 thirdPartyAgentBuildDao.updateStatus(dslContext, build.id, PipelineTaskStatus.RUNNING)
+
+                try {
+                    client.get(ServiceThirdPartyAgentResource::class)
+                        .agentTaskStarted(projectId, build.pipelineId, build.buildId, build.vmSeqId, build.agentId)
+                } catch (e: RemoteServiceException) {
+                    logger.warn("notify agent task[$projectId|${build.buildId}|${build.vmSeqId}|$agentId]" +
+                        " clained failed, cause: ${e.message}")
+                }
+
                 return AgentResult(
                     AgentStatus.IMPORT_OK,
                     ThirdPartyBuildInfo(projectId, build.buildId, build.vmSeqId, build.workspace)
