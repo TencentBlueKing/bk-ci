@@ -73,10 +73,10 @@ class DependOnControl @Autowired constructor(
             val dependOnJobStatus = jobStatusMap[it.key]
             logBuilder.append("${it.value} $dependOnJobStatus \n")
             // 无状态（兼容），成功状态，计数+1
-            if (dependOnJobStatus == null || dependOnJobStatus.isSuccess()) {
-                successCnt++
-            } else if (dependOnJobStatus == BuildStatus.SKIP) { // 如果发现依赖的Job被跳过
+            if (dependOnJobStatus == BuildStatus.SKIP) { // 如果发现依赖的Job被跳过
                 foundSkip = true
+            } else if (dependOnJobStatus == null || dependOnJobStatus.isSuccess()) {
+                successCnt++
             } else if (dependOnJobStatus.isFailure()) { // 发现非正常构建结束，则表示失败
                 foundFailure = true
             }
