@@ -313,6 +313,8 @@ object LoggerService {
                     elementName = elementName,
                     executeCount = executeCount
                 )
+                logFile.parentFile.mkdirs()
+                logFile.createNewFile()
                 taskId2LogFile[elementId] = logFile
             }
             logFile.printWriter().use { out ->
