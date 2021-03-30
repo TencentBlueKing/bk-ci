@@ -27,10 +27,12 @@
 
 package com.tencent.devops.common.redis
 
+import io.lettuce.core.ScriptOutputType
+import io.lettuce.core.SetArgs
+import io.lettuce.core.api.async.RedisAsyncCommands
+import io.lettuce.core.cluster.api.async.RedisAdvancedClusterAsyncCommands
 import org.slf4j.LoggerFactory
 import org.springframework.data.redis.core.RedisCallback
-import redis.clients.jedis.Jedis
-import redis.clients.jedis.JedisCluster
 
 class RedisLockByValue(
     private val redisOperation: RedisOperation,
@@ -119,11 +121,21 @@ class RedisLockByValue(
     private fun set(key: String, value: String, seconds: Long): String? {
         return redisOperation.execute(RedisCallback { connection ->
 
-            val nativeConnection = connection.nativeConnection
             val result =
-                when (nativeConnection) {
-                    is JedisCluster -> nativeConnection.set(key, value, NX, EX, seconds)
-                    is Jedis -> nativeConnection.set(key, value, NX, EX, seconds)
+                when (val nativeConnection = connection.nativeConnection) {
+                    is RedisAdvancedClusterAsyncCommands<*, *> -> {
+                        (nativeConnection as RedisAdvancedClusterAsyncCommands<ByteArray, ByteArray>)
+                            .statefulConnection.sync()
+                            .set(
+                                key.toByteArray(), value.toByteArray(), SetArgs.Builder.nx().ex(seconds)
+                            )
+                    }
+                    is RedisAsyncCommands<*, *> -> {
+                        (nativeConnection as RedisAsyncCommands<ByteArray, ByteArray>).statefulConnection.sync()
+                            .set(
+                                key.toByteArray(), value.toByteArray(), SetArgs.Builder.nx().ex(seconds)
+                            )
+                    }
                     else -> {
                         logger.warn("Unknown redis connection($nativeConnection)")
                         null
@@ -163,12 +175,25 @@ class RedisLockByValue(
             result = redisOperation.execute(RedisCallback { connection ->
                 val nativeConnection = connection.nativeConnection
 
-                val keys = listOf(lockKey)
-                val values = listOf(lockValue)
+                val keys = arrayOf(lockKey.toByteArray())
                 val queryResult =
                     when (nativeConnection) {
-                        is JedisCluster -> nativeConnection.eval(UNLOCK_LUA, keys, values)
-                        is Jedis -> nativeConnection.eval(UNLOCK_LUA, keys, values)
+                        is RedisAdvancedClusterAsyncCommands<*, *> -> {
+                            (nativeConnection as RedisAdvancedClusterAsyncCommands<ByteArray, ByteArray>).eval<Long>(
+                                UNLOCK_LUA,
+                                ScriptOutputType.INTEGER,
+                                keys,
+                                lockValue.toByteArray()
+                            ).get()
+                        }
+                        is RedisAsyncCommands<*, *> -> {
+                            (nativeConnection as RedisAsyncCommands<ByteArray, ByteArray>).eval<Long>(
+                                UNLOCK_LUA,
+                                ScriptOutputType.INTEGER,
+                                keys,
+                                lockValue.toByteArray()
+                            ).get()
+                        }
                         else -> {
                             logger.warn("Unknown redis connection($nativeConnection)")
                             0L
