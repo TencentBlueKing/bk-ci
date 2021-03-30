@@ -54,30 +54,45 @@ fun main(args: Array<String>) {
     when (buildType) {
         BuildType.DOCKER.name ->
             Runner.run(object : WorkspaceInterface {
-                override fun getWorkspace(variables: Map<String, String>, pipelineId: String): File {
+                override fun getWorkspaceAndLogPath(variables: Map<String, String>, pipelineId: String): Pair<File, File> {
                     val workspace = System.getProperty("devops_workspace")
 
-                    val dir = if (workspace.isNullOrBlank()) {
+                    val workspaceDir = if (workspace.isNullOrBlank()) {
                         File("/data/landun/workspace") // v1 内部版用的/data/landun/workspace 保持一致
                     } else {
                         File(workspace)
                     }
-                    dir.mkdirs()
-                    return dir
+                    workspaceDir.mkdirs()
+
+                    val logPathDir = if (workspace.isNullOrBlank()) {
+                        File("/data/landun/buildLogs")
+                    } else {
+                        File(File(workspace).parentFile, "buildLogs")
+                    }
+                    logPathDir.mkdirs()
+                    return Pair(workspaceDir, logPathDir)
                 }
             })
         BuildType.WORKER.name -> {
             Runner.run(object : WorkspaceInterface {
-                override fun getWorkspace(variables: Map<String, String>, pipelineId: String): File {
-                    val dir = File("./$pipelineId/src")
-                    if (dir.exists()) {
-                        if (!dir.isDirectory) {
-                            throw RuntimeException("Work space directory conflict: ${dir.canonicalPath}")
+                override fun getWorkspaceAndLogPath(variables: Map<String, String>, pipelineId: String): Pair<File, File> {
+                    val workspaceDir = File("./$pipelineId/src")
+                    if (workspaceDir.exists()) {
+                        if (!workspaceDir.isDirectory) {
+                            throw RuntimeException("Work space directory conflict: ${workspaceDir.canonicalPath}")
                         }
                     } else {
-                        dir.mkdirs()
+                        workspaceDir.mkdirs()
                     }
-                    return dir
+                    val logPathDir = File("./$pipelineId/buildLogs")
+                    if (logPathDir.exists()) {
+                        if (!logPathDir.isDirectory) {
+                            throw RuntimeException("Build log directory conflict: ${logPathDir.canonicalPath}")
+                        }
+                    } else {
+                        logPathDir.mkdirs()
+                    }
+                    return Pair(workspaceDir, logPathDir)
                 }
             })
         }
@@ -152,16 +167,23 @@ fun main(args: Array<String>) {
             }
 
             Runner.run(object : WorkspaceInterface {
-                override fun getWorkspace(variables: Map<String, String>, pipelineId: String): File {
+                override fun getWorkspaceAndLogPath(variables: Map<String, String>, pipelineId: String): Pair<File, File> {
                     val workspace = System.getProperty("devops_workspace")
 
-                    val dir = if (workspace.isNullOrBlank()) {
+                    val workspaceDir = if (workspace.isNullOrBlank()) {
                         File("/Users/bkdevops/Landun/workspace") // v1 内部版用的/data/landun/workspace 保持一致
                     } else {
                         File(workspace)
                     }
-                    dir.mkdirs()
-                    return dir
+                    workspaceDir.mkdirs()
+
+                    val logPathDir = if (workspace.isNullOrBlank()) {
+                        File("/Users/bkdevops/Landun/buildLogs") // v1 内部版用的/data/landun/buildLogs 保持一致
+                    } else {
+                        File(File(workspace).parentFile, "buildLogs")
+                    }
+                    logPathDir.mkdirs()
+                    return Pair(workspaceDir, logPathDir)
                 }
             })
         }

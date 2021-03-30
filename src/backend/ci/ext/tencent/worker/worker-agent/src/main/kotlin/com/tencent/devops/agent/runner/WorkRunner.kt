@@ -75,7 +75,7 @@ object WorkRunner {
 
             Runner.run(object : WorkspaceInterface {
                 val workspace = buildInfo.workspace
-                override fun getWorkspace(variables: Map<String, String>, pipelineId: String): File {
+                override fun getWorkspaceAndLogPath(variables: Map<String, String>, pipelineId: String): Pair<File, File> {
                     val replaceWorkspace = if (workspace.isNotBlank()) {
                         ReplacementUtils.replace(workspace, object : ReplacementUtils.KeyReplacement {
                             override fun getReplacement(key: String): String? {
@@ -85,11 +85,15 @@ object WorkRunner {
                     } else {
                         workspace
                     }
-                    val dir = WorkspaceUtils.getPipelineWorkspace(pipelineId, replaceWorkspace)
-                    if (!dir.exists()) {
-                        dir.mkdirs()
+                    val workspaceDir = WorkspaceUtils.getPipelineWorkspace(pipelineId, replaceWorkspace)
+                    if (!workspaceDir.exists()) {
+                        workspaceDir.mkdirs()
                     }
-                    return dir
+                    val logPathDir = WorkspaceUtils.getPipelineLogPath(pipelineId, replaceWorkspace)
+                    if (!logPathDir.exists()) {
+                        logPathDir.mkdirs()
+                    }
+                    return Pair(workspaceDir, logPathDir)
                 }
             }, false)
             exitProcess(0)
