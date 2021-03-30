@@ -32,6 +32,7 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.GET
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
@@ -44,15 +45,44 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpenRtxCustomResource {
 
-    @ApiOperation("接受企业微信客服号回调信息")
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.TEXT_XML)
+    @ApiOperation("接受企业微信客服号回调信息(POST)")
     @POST
     @Path("/push")
     fun getCustomInfo(
-        @ApiParam("企业微信加密签名", required = true)
-        @QueryParam("msg_signature")
-        msgSignature: String?,
-        @ApiParam("随机串", required = true)
-        @QueryParam("nonce")
-        nonce: String?
+        @ApiParam(value = "消息体签名", required = true)
+        @QueryParam(value = "msg_signature")
+        signature: String,
+        @ApiParam(value = "时间戳", required = true)
+        @QueryParam(value = "timestamp")
+        timestamp: Long,
+        @ApiParam(value = "随机数字串", required = true)
+        @QueryParam(value = "nonce")
+        nonce: String,
+        @ApiParam(value = "回调密文", required = true)
+        reqData: String?
+    ): Result<Boolean>
+
+    @Produces(MediaType.APPLICATION_JSON)
+    @Consumes(MediaType.TEXT_XML)
+    @ApiOperation("接受企业微信客服号回调信息(GET)")
+    @GET
+    @Path("/push")
+    fun getCustomInfo(
+        @ApiParam(value = "消息体签名", required = true)
+        @QueryParam(value = "msg_signature")
+        signature: String,
+        @ApiParam(value = "时间戳", required = true)
+        @QueryParam(value = "timestamp")
+        timestamp: Long,
+        @ApiParam(value = "随机数字串", required = true)
+        @QueryParam(value = "nonce")
+        nonce: String,
+        @ApiParam(value = "随机加密字符串", required = true)
+        @QueryParam(value = "echostr")
+        echoStr: String,
+        @ApiParam(value = "回调密文", required = false)
+        reqData: String?
     ): Result<String>
 }

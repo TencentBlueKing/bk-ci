@@ -258,7 +258,7 @@ class GitCIBuildFinishListener @Autowired constructor(
 
         when (notify) {
             GitCINotifyType.EMAIL -> {
-                if (receivers.isEmpty()){
+                if (receivers.isEmpty()) {
                     receivers = mutableSetOf(build.userId)
                 }
                 val request = getEmailSendRequest(state, receivers, projectName, branchName, pipelineName, buildNum)

@@ -30,10 +30,41 @@ package com.tencent.devops.gitci.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.OpenRtxCustomResource
+import com.tencent.devops.gitci.service.OpenRtxCustomService
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class OpenRtxCustomResourceImpl : OpenRtxCustomResource {
-    override fun getCustomInfo(msgSignature: String?, nonce: String?): Result<String> {
-        return Result("")
+class OpenRtxCustomResourceImpl @Autowired constructor(
+    private val openRtxCustomService: OpenRtxCustomService
+) : OpenRtxCustomResource {
+
+    private val logger = LoggerFactory.getLogger(OpenRtxCustomResourceImpl::class.java)
+
+    override fun getCustomInfo(
+        signature: String,
+        timestamp: Long,
+        nonce: String,
+        reqData: String?
+    ): Result<Boolean> {
+        val xmlDocument = openRtxCustomService.callbackPost(signature, timestamp, nonce, reqData)
+        return Result(data = xmlDocument)
+    }
+
+    override fun getCustomInfo(
+        signature: String,
+        timestamp: Long,
+        nonce: String,
+        echoStr: String,
+        reqData: String?
+    ): Result<String> {
+        val sMsg = openRtxCustomService.callbackGet(signature, timestamp, nonce, echoStr)
+        logger.info(sMsg)
+        logger.info(signature)
+        logger.info(timestamp.toString())
+        logger.info(nonce)
+        logger.info(echoStr)
+        logger.info(reqData)
+        return Result(data = sMsg)
     }
 }
