@@ -76,7 +76,6 @@ object Runner {
             val retryCount = ParameterUtils.getListValueByKey(variables, PIPELINE_RETRY_COUNT) ?: "0"
             LoggerService.executeCount = retryCount.toInt() + 1
             LoggerService.jobId = buildVariables.containerHashId
-            LoggerService.jobName = buildVariables.vmName
             LoggerService.buildVariables = buildVariables
 
             Heartbeat.start(buildVariables.timeoutMills) // #2043 添加Job超时监控
@@ -93,7 +92,7 @@ object Runner {
                 workspacePathFile = workspaceInterface.getWorkspace(variablesMap, buildVariables.pipelineId)
 
                 LoggerService.addNormalLine("Start the runner at workspace(${workspacePathFile.absolutePath})")
-                LoggerService.elementId = VMUtils.genStartVMTaskId(buildVariables.containerId)
+                LoggerService.workspacePathFile = workspacePathFile
                 logger.info("Start the runner at workspace(${workspacePathFile.absolutePath})")
 
                 loop@ while (true) {

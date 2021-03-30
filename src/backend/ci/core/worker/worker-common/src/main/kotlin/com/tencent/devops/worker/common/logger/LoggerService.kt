@@ -87,11 +87,10 @@ object LoggerService {
      */
     var elementId = ""
     var elementName = ""
-    var vmSeqId = ""
     var jobId = ""
-    var jobName = ""
     var executeCount = 1
     var buildVariables: BuildVariables? = null
+    var workspacePathFile: File? = null
 
     private val lock = ReentrantLock()
 
@@ -303,7 +302,15 @@ object LoggerService {
             // 必要的本地保存
             var logFile = taskId2LogFile[elementId]
             if (null == logFile) {
-                logFile = File(getLocalLogFileName())
+                logFile = WorkspaceUtils.getBuildLogFile(
+                    workspacePathFile = workspacePathFile,
+                    pipelineId = buildVariables?.pipelineId!!,
+                    buildId = buildVariables?.buildId!!,
+                    vmSeqId = buildVariables?.vmSeqId ?: "",
+                    vmName = buildVariables?.vmName ?: "",
+                    elementName = elementName,
+                    executeCount = executeCount
+                )
                 logFile.createNewFile()
                 taskId2LogFile[elementId] = logFile
             }
@@ -337,10 +344,5 @@ object LoggerService {
         } catch (e: Exception) {
             logger.warn("Fail to finish the logs", e)
         }
-    }
-
-    private fun getLocalLogFileName(): String {
-        return "${WorkspaceUtils.getBuildLogSpace(buildVariables?.pipelineId!!, buildVariables?.buildId!!)}" +
-            "/[$vmSeqId]${jobName}_${elementName}_$executeCount.log"
     }
 }

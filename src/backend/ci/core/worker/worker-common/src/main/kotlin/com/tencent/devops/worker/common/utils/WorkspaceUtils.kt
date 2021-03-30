@@ -28,6 +28,7 @@
 package com.tencent.devops.worker.common.utils
 
 import com.tencent.devops.common.api.enums.OSType
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.worker.common.env.AgentEnv.getOS
 import java.io.File
 
@@ -38,9 +39,6 @@ object WorkspaceUtils {
 
     fun getWorkspace() =
         File(getLandun(), "workspace")
-
-    fun getBuildLogSpace() =
-        File(getLandun(), "buildLogs")
 
     fun getAgentJar() =
         File(getLandun(), "worker-agent.jar")
@@ -89,6 +87,14 @@ object WorkspaceUtils {
         }
     }
 
-    fun getBuildLogSpace(pipelineId: String, buildId: String) =
-        File(getBuildLogSpace(), "$pipelineId/$buildId/src")
+    fun getBuildLogFile(
+        workspacePathFile: File?,
+        pipelineId: String,
+        buildId: String,
+        vmSeqId: String,
+        vmName: String,
+        elementName: String,
+        executeCount: Int
+    ) = File("${(workspacePathFile ?: File("/tmp/${UUIDUtil.generate()}")).absoluteFile}" +
+        "/$pipelineId/$buildId/$vmSeqId/[${vmSeqId}]${vmName}_${elementName}_${executeCount}.log")
 }
