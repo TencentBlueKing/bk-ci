@@ -248,7 +248,7 @@ class GitCIBuildFinishListener @Autowired constructor(
             client = client
         )
         val pipelineName = pipeline.displayName ?: pipeline.filePath.replace(".yml", "")
-        val isMr = mergeRequestId == 0L
+        val isMr = mergeRequestId != 0L
         val requestId = if (isMr) {
             mergeRequestId.toString()
         } else {
@@ -258,6 +258,9 @@ class GitCIBuildFinishListener @Autowired constructor(
 
         when (notify) {
             GitCINotifyType.EMAIL -> {
+                if (receivers.isEmpty()){
+                    receivers = mutableSetOf(build.userId)
+                }
                 val request = getEmailSendRequest(state, receivers, projectName, branchName, pipelineName, buildNum)
                 client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
             }
@@ -356,7 +359,7 @@ class GitCIBuildFinishListener @Autowired constructor(
             Triple("❌", "warning", "failed")
         }
         val request = if (isMr) {
-            "Merge requests [[!$requestId]] ($gitUrl/$projectName/merge_requests/$requestId)" +
+            "Merge requests [[!$requestId]]($gitUrl/$projectName/merge_requests/$requestId)" +
                     "opened by $openUser \n"
         } else {
             "Commit [[${requestId.subSequence(0, 7)}]]($gitUrl/$projectName/commit/$requestId)" +
