@@ -23,19 +23,12 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.auth.refresh.event
+package com.tencent.devops.auth.entity
 
-import com.tencent.devops.auth.entity.StrategyChangeType
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-
-@Event(exchange = MQ.EXCHANGE_AUTH_REFRESH_FANOUT, routeKey = MQ.ROUTE_AUTH_REFRESH_FANOUT)
-data class StrategyUpdateEvent(
-    override val refreshType: String,
-    override var retryCount: Int = 0,
-    override var delayMills: Int = 0,
-    val action: StrategyChangeType,
-    val strategyId: Int
-) : RefreshBroadCastEvent(refreshType, retryCount, delayMills)
+enum class StrategyChangeType {
+    UPDATE,
+    DELETE
+}
