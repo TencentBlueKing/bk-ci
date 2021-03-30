@@ -182,7 +182,8 @@ class StrategyService @Autowired constructor(
     }
 
     fun getStrategy2Map(strategyId: Int): Map<AuthResourceType, List<AuthPermission>> {
-        val strategyStr = getCacheStrategy(strategyId)
+        // 从db获取源数据, 因update数据会导致cache数据差异
+        val strategyStr = refreshStrategy(strategyId.toString(), null)
         logger.info("getStrategy2Map cache: $strategyStr")
         val strategyBody: Map<String, List<String>>
         strategyBody = JsonUtil.to(strategyStr!!)
@@ -241,7 +242,7 @@ class StrategyService @Autowired constructor(
         return null
     }
 
-    private fun refreshStrategy(strategyId: String, inputRecord: TAuthStrategyRecord?): String? {
+    fun refreshStrategy(strategyId: String, inputRecord: TAuthStrategyRecord?): String? {
         val record = inputRecord ?: strategyDao.get(dslContext, strategyId.toInt())
         if (record != null) {
             logger.info("refreshStrategy |$strategyId| ${record.strategyBody}")
