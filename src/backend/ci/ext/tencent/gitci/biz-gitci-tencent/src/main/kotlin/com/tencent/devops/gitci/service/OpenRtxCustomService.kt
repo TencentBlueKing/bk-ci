@@ -27,9 +27,11 @@
 
 package com.tencent.devops.gitci.service
 
-import org.springframework.beans.factory.annotation.Autowired
+import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
+import com.tencent.devops.common.api.util.OkhttpUtils
 import org.springframework.stereotype.Service
-import com.tencent.devops.common.wechatwork.WechatWorkService
+import com.tencent.devops.common.wechatwork.aes.WXBizMsgCrypt
+import com.tencent.devops.common.wechatwork.model.CallbackElement
 import com.tencent.devops.common.wechatwork.model.enums.FromType
 import com.tencent.devops.common.wechatwork.model.enums.MsgType
 import com.tencent.devops.common.wechatwork.model.enums.ReceiverType
@@ -38,18 +40,27 @@ import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextC
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextMessage
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextText
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextTextText
+import com.tencent.devops.gitci.config.RtxCustomConfig
+import com.tencent.devops.gitci.listener.RtxCustomApi
+import okhttp3.MediaType
+import okhttp3.Request
+import okhttp3.RequestBody
+import org.dom4j.Document
+import org.dom4j.DocumentHelper
 import org.dom4j.Element
 import org.slf4j.LoggerFactory
 
 @Service
-class OpenRtxCustomService @Autowired constructor(
-    private val wechatWorkService: WechatWorkService
+class OpenRtxCustomService constructor(
+    private val rtxCustomConfig: RtxCustomConfig
 ) {
 
     private val logger = LoggerFactory.getLogger(OpenRtxCustomService::class.java)
 
+    private val wxcpt = WXBizMsgCrypt(rtxCustomConfig.token, rtxCustomConfig.aeskey, rtxCustomConfig.serviceId)
+
     fun callbackGet(signature: String, timestamp: Long, nonce: String, echoStr: String?): String {
-        return wechatWorkService.verifyURL(signature, timestamp, nonce, echoStr)
+        return verifyURL(signature, timestamp, nonce, echoStr)
     }
 
     fun callbackPost(signature: String, timestamp: Long, nonce: String, reqData: String?): Boolean {
@@ -58,7 +69,7 @@ class OpenRtxCustomService @Autowired constructor(
         logger.info("timestamp:$timestamp")
         logger.info("nonce:$nonce")
         logger.info("reqData:$reqData")
-        val callbackElement = wechatWorkService.getCallbackInfo(signature, timestamp, nonce, reqData)
+        val callbackElement = getCallbackInfo(signature, timestamp, nonce, reqData)
 
         val chatId = callbackElement.chatId
         val receiverType: ReceiverType
@@ -133,8 +144,100 @@ class OpenRtxCustomService @Autowired constructor(
                     val richtextContentList = mutableListOf<RichtextContent>()
                     richtextContentList.add(RichtextText(RichtextTextText("本群ID='$chatId'。PS:群ID可用于蓝盾平台上任意企业微信群通知。")))
                     val richtextMessage = RichtextMessage(receiver, richtextContentList)
-                    wechatWorkService.sendRichText(richtextMessage)
+                    sendRichText(richtextMessage)
                 }
+            }
+        }
+        return true
+    }
+
+    /*
+    * 验证geturl
+    * */
+    private fun verifyURL(signature: String, timestamp: Long, nonce: String, echoStr: String?): String {
+        var verifyResult = ""
+        try {
+            verifyResult = wxcpt.VerifyURL(signature, timestamp.toString(), nonce, echoStr)
+        } catch (e: Exception) {
+            // 验证URL，错误原因请查看异常
+            e.printStackTrace()
+        }
+        return verifyResult
+    }
+
+    /*
+    * 获取密文的xml字符串
+    *
+    * */
+    fun getDecrypeMsg(signature: String, timestamp: Long, nonce: String, reqData: String?): String {
+        var xmlString = ""
+        try {
+            xmlString = wxcpt.DecryptMsg(signature, timestamp.toString(), nonce, reqData)
+        } catch (e: Exception) {
+            // 转换失败，错误原因请查看异常
+            e.printStackTrace()
+        }
+        return xmlString
+    }
+
+    /*
+    * 获取密文的Document对象
+    * */
+    fun getDecrypeDocument(signature: String, timestamp: Long, nonce: String, reqData: String?): Document {
+        val xmlString = getDecrypeMsg(signature, timestamp, nonce, reqData)
+        logger.info("xmlString:$xmlString")
+        return DocumentHelper.parseText(xmlString)
+    }
+
+    /*
+    * 获取密文的CallbackInfo对象
+    * */
+    fun getCallbackInfo(signature: String, timestamp: Long, nonce: String, reqData: String?): CallbackElement {
+        val document = getDecrypeDocument(signature, timestamp, nonce, reqData)
+        val rootElement = document.rootElement
+        val toUserName = (rootElement.elementIterator("ToUserName").next() as Element).text
+        val serviceId = (rootElement.elementIterator("ServiceId").next() as Element).text
+        val agentType = (rootElement.elementIterator("AgentType").next() as Element).text
+        val msgElement = rootElement.elementIterator("Msg").next() as Element
+        val msgType = MsgType.valueOf((msgElement.elementIterator("MsgType").next() as Element).text)
+        val fromElement = msgElement.elementIterator("From").next() as Element
+        val fromType = FromType.valueOf((fromElement.elementIterator("Type").next() as Element).text)
+        val chatId = (fromElement.elementIterator("Id").next() as Element).text
+        return CallbackElement(
+            toUserName,
+            serviceId,
+            agentType,
+            chatId,
+            msgType,
+            fromType,
+            msgElement,
+            fromElement
+        )
+    }
+
+    /*
+    * 发送富文本
+    * */
+    fun sendRichText(richtextMessage: RichtextMessage): Boolean {
+        val accessToken = RtxCustomApi.getAccessToken(
+            corpSecret = rtxCustomConfig.corpSecret,
+            corpId = rtxCustomConfig.corpId,
+            urlPrefix = rtxCustomConfig.rtxUrl
+        )
+        val jsonString = jacksonObjectMapper().writeValueAsString(richtextMessage)
+
+        val sendURL = "${rtxCustomConfig.rtxUrl}/cgi-bin/tencent/chat/send?access_token=$accessToken"
+        val requestBody = RequestBody.create(MediaType.parse("application/json"), jsonString)
+        val sendRequest = Request.Builder()
+            .url(sendURL)
+            .post(requestBody)
+            .build()
+        OkhttpUtils.doHttp(sendRequest).use { response ->
+            //        httpClient.newCall(sendRequest).execute().use { response ->
+            val responseContent = response.body()!!.string()
+            if (!response.isSuccessful) {
+                throw RuntimeException("RtxCustomApi sendRichText error code: ${response.code()} " +
+                        "messge: ${response.message()}")
             }
         }
         return true
