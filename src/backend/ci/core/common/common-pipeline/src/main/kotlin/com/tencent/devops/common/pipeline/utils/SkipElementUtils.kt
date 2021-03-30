@@ -29,7 +29,7 @@ package com.tencent.devops.common.pipeline.utils
 
 object SkipElementUtils {
 
-    val prefix = "devops_container_condition_skip_atoms_"
+    private const val prefix = "devops_container_condition_skip_atoms_"
 
     fun getSkipElementVariableName(elementId: String?) =
         "$prefix$elementId"
