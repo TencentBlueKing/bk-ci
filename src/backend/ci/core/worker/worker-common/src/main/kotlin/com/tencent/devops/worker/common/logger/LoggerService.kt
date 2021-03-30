@@ -90,7 +90,7 @@ object LoggerService {
     var jobId = ""
     var executeCount = 1
     var buildVariables: BuildVariables? = null
-    var workspacePathFile: File? = null
+    var buildLogPathFile: File? = null
 
     private val lock = ReentrantLock()
 
@@ -209,7 +209,7 @@ object LoggerService {
             executeCount = executeCount
         )
         // 如果已经进入Job执行任务，则可以做日志本地落盘
-        if (elementId.isNotBlank() && workspacePathFile != null) saveLocalLog(logMessage)
+        if (elementId.isNotBlank() && buildLogPathFile != null) saveLocalLog(logMessage)
 
         try {
             this.queue.put(logMessage)
@@ -305,8 +305,7 @@ object LoggerService {
             var logFile = taskId2LogFile[elementId]
             if (null == logFile) {
                 logFile = WorkspaceUtils.getBuildLogFile(
-                    workspacePathFile = workspacePathFile,
-                    pipelineId = buildVariables?.pipelineId!!,
+                    buildLogPathFile = buildLogPathFile!!,
                     buildId = buildVariables?.buildId!!,
                     vmSeqId = buildVariables?.vmSeqId ?: "",
                     vmName = buildVariables?.vmName ?: "",

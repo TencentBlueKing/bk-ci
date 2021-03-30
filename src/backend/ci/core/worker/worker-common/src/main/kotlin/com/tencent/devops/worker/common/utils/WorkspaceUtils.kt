@@ -87,14 +87,20 @@ object WorkspaceUtils {
         }
     }
 
+    fun getPipelineLogPath(pipelineId: String, workspace: String): File {
+        return if (workspace.isNotBlank()) {
+            File(workspace)
+        } else {
+            File(getWorkspace(), "$pipelineId/buildLogs")
+        }
+    }
+
     fun getBuildLogFile(
-        workspacePathFile: File?,
-        pipelineId: String,
+        buildLogPathFile: File,
         buildId: String,
         vmSeqId: String,
         vmName: String,
         elementName: String,
         executeCount: Int
-    ) = File("${(workspacePathFile ?: File("/tmp/${UUIDUtil.generate()}")).absoluteFile}" +
-        "/$pipelineId/$buildId/$vmSeqId/[${vmSeqId}]${vmName}_${elementName}_${executeCount}.log")
+    ) = File(buildLogPathFile, "/$buildId/${vmSeqId}-${vmName}_${elementName}_${executeCount}.log")
 }

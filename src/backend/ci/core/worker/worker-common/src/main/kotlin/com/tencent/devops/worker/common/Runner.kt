@@ -59,6 +59,7 @@ object Runner {
     @Suppress("ALL")
     fun run(workspaceInterface: WorkspaceInterface, systemExit: Boolean = true) {
         var workspacePathFile: File? = null
+        val buildLogPathFile: File?
         var failed = false
         try {
             logger.info("Start the worker ...")
@@ -89,11 +90,12 @@ object Runner {
                 showRuntimeEnvs(buildVariables.variablesWithType)
 
                 val variablesMap = buildVariables.variablesWithType.map { it.key to it.value.toString() }.toMap()
-                workspacePathFile = workspaceInterface.getWorkspace(variablesMap, buildVariables.pipelineId)
+                workspacePathFile = workspaceInterface.getWorkspaceAndLogPath(variablesMap, buildVariables.pipelineId).first
+                buildLogPathFile = workspaceInterface.getWorkspaceAndLogPath(variablesMap, buildVariables.pipelineId).second
 
-                LoggerService.addNormalLine("Start the runner at workspace(${workspacePathFile.absolutePath})")
-                logger.info("Start the runner at workspace(${workspacePathFile.absolutePath})")
-                LoggerService.workspacePathFile = workspacePathFile
+                LoggerService.addNormalLine("Start the runner at workspace(${workspacePathFile.absolutePath}), buildLog(${buildLogPathFile.absolutePath})")
+                logger.info("Start the runner at workspace(${workspacePathFile.absolutePath}), buildLog(${buildLogPathFile.absolutePath})")
+                LoggerService.buildLogPathFile = buildLogPathFile
 
                 loop@ while (true) {
                     logger.info("Start to claim the task")
