@@ -92,8 +92,8 @@ object Runner {
                 workspacePathFile = workspaceInterface.getWorkspace(variablesMap, buildVariables.pipelineId)
 
                 LoggerService.addNormalLine("Start the runner at workspace(${workspacePathFile.absolutePath})")
-                LoggerService.workspacePathFile = workspacePathFile
                 logger.info("Start the runner at workspace(${workspacePathFile.absolutePath})")
+                LoggerService.workspacePathFile = workspacePathFile
 
                 loop@ while (true) {
                     logger.info("Start to claim the task")

@@ -208,7 +208,9 @@ object LoggerService {
             logType = LogType.LOG,
             executeCount = executeCount
         )
-        saveLocalLog(logMessage)
+        // 如果已经进入Job执行任务，则可以做日志本地落盘
+        if (elementId.isNotBlank()) saveLocalLog(logMessage)
+
         try {
             this.queue.put(logMessage)
         } catch (e: InterruptedException) {
