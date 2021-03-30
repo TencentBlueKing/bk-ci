@@ -73,7 +73,7 @@ class ExperienceBaseService @Autowired constructor(
      * 判断用户是否能体验
      */
     fun userCanExperience(userId: String, experienceId: Long): Boolean {
-        val isPublic = lazy { experiencePublicDao.countByRecordId(dslContext, experienceId) > 0 }
+        val isPublic = lazy { experiencePublicDao.countByRecordId(dslContext, experienceId)?.value1() ?: 0 > 0 }
         val inGroup = lazy {
             getGroupIdToUserIdsMap(experienceId).values.asSequence().flatMap { it.asSequence() }.toSet()
                 .contains(userId)
