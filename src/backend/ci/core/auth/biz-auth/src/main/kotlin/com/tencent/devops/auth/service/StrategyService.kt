@@ -183,6 +183,7 @@ class StrategyService @Autowired constructor(
 
     fun getStrategy2Map(strategyId: Int): Map<AuthResourceType, List<AuthPermission>> {
         val strategyStr = getCacheStrategy(strategyId)
+        logger.info("getStrategy2Map cache: $strategyStr")
         val strategyBody: Map<String, List<String>>
         strategyBody = JsonUtil.to(strategyStr!!)
         val permissionMap = mutableMapOf<AuthResourceType, List<AuthPermission>>()

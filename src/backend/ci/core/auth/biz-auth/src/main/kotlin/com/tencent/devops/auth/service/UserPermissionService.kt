@@ -229,6 +229,7 @@ class UserPermissionService @Autowired constructor(
                 } else {
                     userPermission!![organizationId.toString()] = userPermissionInfo
                 }
+                logger.info("user $user, managerId: ${managerOrganizationEntity.id} userPermission:$userPermission")
                 userPermissionMap.put(user, userPermission)
             } else {
                 val userPermission = mutableMapOf<String, UserPermissionInfo>()
