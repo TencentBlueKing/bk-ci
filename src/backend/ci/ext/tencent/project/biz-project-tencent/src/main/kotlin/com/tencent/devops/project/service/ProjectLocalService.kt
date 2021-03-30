@@ -111,7 +111,7 @@ class ProjectLocalService @Autowired constructor(
             projectDao.countByEnglishName(dslContext, projectIds) < 1000
         ) {
             val records = projectDao.listByEnglishName(dslContext, projectIds).asSequence().filter {
-                it.englishName.contains(searchName, true)
+                it.projectName.contains(searchName, true)
             }.map {
                 AppProjectVO(
                     projectCode = it.englishName,
