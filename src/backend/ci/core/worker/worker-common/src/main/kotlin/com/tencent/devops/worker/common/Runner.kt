@@ -59,6 +59,7 @@ object Runner {
     @Suppress("ALL")
     fun run(workspaceInterface: WorkspaceInterface, systemExit: Boolean = true) {
         var workspacePathFile: File? = null
+        val buildLogPathFile: File?
         var failed = false
         try {
             logger.info("Start the worker ...")
@@ -76,7 +77,6 @@ object Runner {
             val retryCount = ParameterUtils.getListValueByKey(variables, PIPELINE_RETRY_COUNT) ?: "0"
             LoggerService.executeCount = retryCount.toInt() + 1
             LoggerService.jobId = buildVariables.containerHashId
-            LoggerService.jobName = buildVariables.vmName
             LoggerService.buildVariables = buildVariables
 
             Heartbeat.start(buildVariables.timeoutMills) // #2043 添加Job超时监控
@@ -90,11 +90,12 @@ object Runner {
                 showRuntimeEnvs(buildVariables.variablesWithType)
 
                 val variablesMap = buildVariables.variablesWithType.map { it.key to it.value.toString() }.toMap()
-                workspacePathFile = workspaceInterface.getWorkspace(variablesMap, buildVariables.pipelineId)
+                workspacePathFile = workspaceInterface.getWorkspaceAndLogPath(variablesMap, buildVariables.pipelineId).first
+                buildLogPathFile = workspaceInterface.getWorkspaceAndLogPath(variablesMap, buildVariables.pipelineId).second
 
-                LoggerService.addNormalLine("Start the runner at workspace(${workspacePathFile.absolutePath})")
-                LoggerService.elementId = VMUtils.genStartVMTaskId(buildVariables.containerId)
-                logger.info("Start the runner at workspace(${workspacePathFile.absolutePath})")
+                LoggerService.addNormalLine("Start the runner at workspace(${workspacePathFile.absolutePath}), buildLog(${buildLogPathFile.absolutePath})")
+                logger.info("Start the runner at workspace(${workspacePathFile.absolutePath}), buildLog(${buildLogPathFile.absolutePath})")
+                LoggerService.buildLogPathFile = buildLogPathFile
 
                 loop@ while (true) {
                     logger.info("Start to claim the task")
