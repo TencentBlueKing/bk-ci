@@ -22,6 +22,26 @@ BEGIN
             ADD COLUMN `FILE_GATEWAY` varchar(128) DEFAULT '';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_NODE'
+                    AND COLUMN_NAME = 'PIPELINE_REF_COUNT') THEN
+
+        ALTER TABLE `T_NODE`
+            ADD COLUMN `PIPELINE_REF_COUNT` int(11) NOT NULL DEFAULT '0';
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_NODE'
+                    AND COLUMN_NAME = 'LAST_BUILD_TIME') THEN
+
+        ALTER TABLE `T_NODE`
+            ADD COLUMN `LAST_BUILD_TIME` datetime DEFAULT NULL;
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;
