@@ -262,7 +262,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                 client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
             }
             GitCINotifyType.RTX_CUSTOM, GitCINotifyType.RTX_GROUP -> {
-                if (notify == GitCINotifyType.RTX_CUSTOM &&
+                if (notify == GitCINotifyType.RTX_GROUP &&
                     (conf.notifyRtxGroups == null || conf.notifyRtxGroups!!.isEmpty())
                 ) {
                     logger.warn("notifyRtxGroups receivers is null ")
