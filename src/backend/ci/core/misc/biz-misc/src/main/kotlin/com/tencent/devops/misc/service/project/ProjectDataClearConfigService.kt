@@ -25,12 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.common
+package com.tencent.devops.misc.service.project
 
-object Constants {
-    const val DOCKER_IP_COUNT_KEY_PREFIX = "dispatch_docker_ip_count_"
+import com.tencent.devops.misc.pojo.project.ProjectDataClearConfig
 
-    const val DOCKERHOST_STARTUP_URI = "/api/docker/build/start"
-    const val DOCKERHOST_AGENTLESS_STARTUP_URI = "/api/docker-agentless/build/start"
-    const val DOCKERHOST_END_URI = "/api/docker/build/end"
+interface ProjectDataClearConfigService {
+
+    /**
+     * 获取项目对应的流水线数据清理配置
+     *
+     * @return 流水线数据清理配置
+     */
+    fun getProjectDataClearConfig(): ProjectDataClearConfig
 }

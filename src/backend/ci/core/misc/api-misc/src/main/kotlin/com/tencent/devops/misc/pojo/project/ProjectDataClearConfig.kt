@@ -25,12 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.common
+package com.tencent.devops.misc.pojo.project
 
-object Constants {
-    const val DOCKER_IP_COUNT_KEY_PREFIX = "dispatch_docker_ip_count_"
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+import java.time.LocalDateTime
 
-    const val DOCKERHOST_STARTUP_URI = "/api/docker/build/start"
-    const val DOCKERHOST_AGENTLESS_STARTUP_URI = "/api/docker-agentless/build/start"
-    const val DOCKERHOST_END_URI = "/api/docker/build/end"
-}
+@ApiModel("项目流水线数据清理配置")
+data class ProjectDataClearConfig(
+    @ApiModelProperty("流水线最大启动时间", required = true)
+    val maxStartTime: LocalDateTime,
+    @ApiModelProperty("最大保存数量", required = true)
+    val maxKeepNum: Int
+)
