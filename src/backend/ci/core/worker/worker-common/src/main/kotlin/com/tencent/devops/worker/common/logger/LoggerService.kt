@@ -209,7 +209,7 @@ object LoggerService {
             executeCount = executeCount
         )
         // 如果已经进入Job执行任务，则可以做日志本地落盘
-        if (elementId.isNotBlank()) saveLocalLog(logMessage)
+        if (elementId.isNotBlank() && workspacePathFile != null) saveLocalLog(logMessage)
 
         try {
             this.queue.put(logMessage)
@@ -313,7 +313,6 @@ object LoggerService {
                     elementName = elementName,
                     executeCount = executeCount
                 )
-                logFile.createNewFile()
                 taskId2LogFile[elementId] = logFile
             }
             logFile.printWriter().use { out ->
