@@ -144,7 +144,11 @@ class GitCIBuildFinishListener @Autowired constructor(
                     return
                 }
 
-                val sourceProjectId = record["SOURCE_GIT_PROJECT_ID"] as Long
+                val sourceProjectId = if (record["SOURCE_GIT_PROJECT_ID"] == null) {
+                    null
+                } else {
+                    record["SOURCE_GIT_PROJECT_ID"] as Long
+                }
                 val event = gitRequestEventBuildDao.getByBuildId(dslContext, buildFinishEvent.buildId)
                     ?: throw OperationException("git ci buildEvent not exist")
                 val buildInfo = client.get(ServiceBuildResource::class)
