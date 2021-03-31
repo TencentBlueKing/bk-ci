@@ -36,6 +36,7 @@ import com.tencent.devops.worker.common.WorkspaceInterface
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.task.TaskFactory
+import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import java.io.File
 import java.lang.RuntimeException
 
@@ -49,7 +50,7 @@ fun main(args: Array<String>) {
     when (buildType) {
         BuildType.DOCKER.name ->
             Runner.run(object : WorkspaceInterface {
-                override fun getWorkspaceAndLogPath(variables: Map<String, String>, pipelineId: String): Pair<File, File> {
+                override fun getWorkspaceAndLogDir(variables: Map<String, String>, pipelineId: String): Pair<File, File> {
                     val workspace = System.getProperty("devops_workspace")
 
                     val workspaceDir = if (workspace.isNullOrBlank()) {
@@ -59,18 +60,13 @@ fun main(args: Array<String>) {
                     }
                     workspaceDir.mkdirs()
 
-                    val logPathDir = if (workspace.isNullOrBlank()) {
-                        File("/data/devops/buildLogs")
-                    } else {
-                        File(File(workspace).parentFile, "buildLogs")
-                    }
-                    logPathDir.mkdirs()
+                    val logPathDir = WorkspaceUtils.getPipelineLogDir(pipelineId)
                     return Pair(workspaceDir, logPathDir)
                 }
             })
         BuildType.WORKER.name -> {
             Runner.run(object : WorkspaceInterface {
-                override fun getWorkspaceAndLogPath(variables: Map<String, String>, pipelineId: String): Pair<File, File> {
+                override fun getWorkspaceAndLogDir(variables: Map<String, String>, pipelineId: String): Pair<File, File> {
                     val workspaceDir = File("./$pipelineId/src")
                     if (workspaceDir.exists()) {
                         if (!workspaceDir.isDirectory) {
@@ -79,14 +75,7 @@ fun main(args: Array<String>) {
                     } else {
                         workspaceDir.mkdirs()
                     }
-                    val logPathDir = File("./$pipelineId/buildLogs")
-                    if (logPathDir.exists()) {
-                        if (!logPathDir.isDirectory) {
-                            throw RuntimeException("Build log directory conflict: ${logPathDir.canonicalPath}")
-                        }
-                    } else {
-                        logPathDir.mkdirs()
-                    }
+                    val logPathDir = WorkspaceUtils.getPipelineLogDir(pipelineId)
                     return Pair(workspaceDir, logPathDir)
                 }
             })
