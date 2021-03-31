@@ -28,7 +28,6 @@
 package com.tencent.devops.worker.common.utils
 
 import com.tencent.devops.common.api.enums.OSType
-import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.worker.common.env.AgentEnv.getOS
 import java.io.File
 
@@ -87,20 +86,21 @@ object WorkspaceUtils {
         }
     }
 
-    fun getPipelineLogPath(pipelineId: String, workspace: String): File {
-        return if (workspace.isNotBlank()) {
-            File(workspace)
-        } else {
-            File(getWorkspace(), "$pipelineId/buildLogs")
-        }
+    fun getPipelineLogDir(pipelineId: String): File {
+        return createTempDir("DEVOPS_BUILD_LOGS_${pipelineId}_", null)
     }
 
     fun getBuildLogFile(
-        buildLogPathFile: File,
+        pipelineLogDir: File,
         buildId: String,
         vmSeqId: String,
         vmName: String,
         elementName: String,
         executeCount: Int
-    ) = File(buildLogPathFile, "/$buildId/${vmSeqId}-${vmName}_${elementName}_${executeCount}.log")
+    ):File {
+        val logFile = File(pipelineLogDir, "/$buildId/${vmSeqId}-${vmName}_${elementName}_${executeCount}.log")
+        logFile.parentFile.mkdirs()
+        logFile.createNewFile()
+        return logFile
+    }
 }

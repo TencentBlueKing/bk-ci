@@ -30,5 +30,5 @@ package com.tencent.devops.worker.common
 import java.io.File
 
 interface WorkspaceInterface {
-    fun getWorkspaceAndLogPath(variables: Map<String, String>, pipelineId: String): Pair<File, File>
+    fun getWorkspaceAndLogDir(variables: Map<String, String>, pipelineId: String): Pair<File/*workspaceDir*/, File/*logPathDir*/>
 }
