@@ -20,7 +20,7 @@
             </form-field>
 
             <form-field :required="true" :disabled="disabled" :label="$t('stageTimeoutLabel')" :is-error="!validTimeout" :desc="$t('stageTimeoutDesc')" :error-msg="$t('stageTimeoutError')">
-                <bk-input type="number" :disabled="disabled" v-model="timeout" :min="1" :max="1440">
+                <bk-input type="number" :disabled="disabled" v-model="timeout" :min="1" :max="720">
                     <template slot="append">
                         <div class="group-text">{{ $t('timeMap.hours') }}</div>
                     </template>

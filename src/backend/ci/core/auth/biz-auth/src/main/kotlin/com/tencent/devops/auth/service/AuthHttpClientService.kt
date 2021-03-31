@@ -29,6 +29,7 @@ package com.tencent.devops.auth.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_JWT_TOKEN
+import com.tencent.devops.common.api.auth.AUTH_HEADER_IAM_TOKEN
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.security.jwt.JwtManager
@@ -120,22 +121,20 @@ class AuthHttpClientService @Autowired constructor(
         return RequestBody.create(JsonMediaType, objectMapper.writeValueAsString(data))
     }
 
-    fun buildPost(path: String, gateway: String): Request {
-        val requestBody = RequestBody.create(JsonMediaType, EMPTY)
-        return buildPost(path, requestBody, gateway)
-    }
-
-    fun buildPost(path: String, requestBody: RequestBody, gateway: String): Request {
+    fun buildPost(path: String, requestBody: RequestBody, gateway: String, token: String?): Request {
         val url = gateway + path
-        logger.info("iam callback url: $url, body: $requestBody")
-        return Request.Builder().url(url).post(requestBody).headers(Headers.of(buildJwt())).build()
+        logger.info("iam callback url: $url")
+        return Request.Builder().url(url).post(requestBody).headers(Headers.of(buildJwtAndToken(token))).build()
     }
 
-    private fun buildJwt(): Map<String, String> {
+    private fun buildJwtAndToken(iamToken: String?): Map<String, String> {
         val headerMap = mutableMapOf<String, String>()
         if (jwtManager.isAuthEnable()) {
             val jwtToken = jwtManager.getToken() ?: ""
             headerMap[AUTH_HEADER_DEVOPS_JWT_TOKEN] = jwtToken
+        }
+        if (!iamToken.isNullOrEmpty()) {
+            headerMap[AUTH_HEADER_IAM_TOKEN] = iamToken!!
         }
         return headerMap
     }

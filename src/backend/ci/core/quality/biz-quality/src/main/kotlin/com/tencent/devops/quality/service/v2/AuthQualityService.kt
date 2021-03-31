@@ -32,6 +32,7 @@ import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
@@ -46,10 +47,12 @@ import org.springframework.stereotype.Service
 class AuthQualityService @Autowired constructor(
     val qualityRuleDao: QualityRuleDao,
     val qualityGroupDao: GroupDao,
-    val dslContext: DSLContext
+    val dslContext: DSLContext,
+    val authTokenApi: AuthTokenApi
 ) {
 
-    fun getQualityRule(projectId: String, offset: Int, limit: Int): ListInstanceResponseDTO? {
+    fun getQualityRule(projectId: String, offset: Int, limit: Int, token: String): ListInstanceResponseDTO? {
+        authTokenApi.checkToken(token)
         val qualityRuleInfos = qualityRuleDao.list(
             dslContext = dslContext,
             projectId = projectId,
@@ -72,7 +75,8 @@ class AuthQualityService @Autowired constructor(
         return result.buildListInstanceResult(entityInfo, count)
     }
 
-    fun getQualityRuleInfoByIds(ids: List<Any>?): FetchInstanceInfoResponseDTO? {
+    fun getQualityRuleInfoByIds(ids: List<Any>?, token: String): FetchInstanceInfoResponseDTO? {
+        authTokenApi.checkToken(token)
         val certInfos = qualityRuleDao.listByIds(
             dslContext = dslContext,
             ruleIds = ids!!.toSet() as Set<String>)
@@ -92,7 +96,14 @@ class AuthQualityService @Autowired constructor(
         return result.buildFetchInstanceResult(entityInfo)
     }
 
-    fun searchQualityRule(projectId: String, keyword: String, limit: Int, offset: Int): SearchInstanceInfo {
+    fun searchQualityRule(
+        projectId: String,
+        keyword: String,
+        limit: Int,
+        offset: Int,
+        token: String
+    ): SearchInstanceInfo {
+        authTokenApi.checkToken(token)
         val qualityRuleInfos = qualityRuleDao.searchByIdLike(
             dslContext = dslContext,
             projectId = projectId,
@@ -120,8 +131,8 @@ class AuthQualityService @Autowired constructor(
         return result.buildSearchInstanceResult(entityInfo, count)
     }
 
-
-    fun getQualityGroup(projectId: String, offset: Int, limit: Int): ListInstanceResponseDTO? {
+    fun getQualityGroup(projectId: String, offset: Int, limit: Int, token: String): ListInstanceResponseDTO? {
+        authTokenApi.checkToken(token)
         val qualityGroupInfos = qualityGroupDao.list(
             dslContext = dslContext,
             projectId = projectId,
@@ -144,7 +155,8 @@ class AuthQualityService @Autowired constructor(
         return result.buildListInstanceResult(entityInfo, count)
     }
 
-    fun getQualityGroupInfoByIds(ids: List<Any>?): FetchInstanceInfoResponseDTO? {
+    fun getQualityGroupInfoByIds(ids: List<Any>?, token: String): FetchInstanceInfoResponseDTO? {
+        authTokenApi.checkToken(token)
         val qualityGroupInfos = qualityGroupDao.list(
             dslContext = dslContext,
             groupIds = ids!!.map { it.toString().toLong() }
@@ -165,7 +177,14 @@ class AuthQualityService @Autowired constructor(
         return result.buildFetchInstanceResult(entityInfo)
     }
 
-    fun searchQualityGroup(projectId: String, keyword: String, limit: Int, offset: Int): SearchInstanceInfo {
+    fun searchQualityGroup(
+        projectId: String,
+        keyword: String,
+        limit: Int,
+        offset: Int,
+        token: String
+    ): SearchInstanceInfo {
+        authTokenApi.checkToken(token)
         val qualityGroupInfos = qualityGroupDao.searchByNameLike(
             dslContext = dslContext,
             projectId = projectId,
