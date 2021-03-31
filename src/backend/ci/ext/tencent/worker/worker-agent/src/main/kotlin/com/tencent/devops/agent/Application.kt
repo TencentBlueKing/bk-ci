@@ -164,12 +164,7 @@ fun main(args: Array<String>) {
                         File(workspace)
                     }
                     workspaceDir.mkdirs()
-
-                    val logPathDir = if (workspace.isNullOrBlank()) {
-                        File("/Users/bkdevops/Landun/buildLogs") // v1 内部版用的/data/landun/buildLogs 保持一致
-                    } else {
-                        File(File(workspace).parentFile, "buildLogs")
-                    }
+                    val logPathDir = WorkspaceUtils.getPipelineLogDir(pipelineId)
                     logPathDir.mkdirs()
                     return Pair(workspaceDir, logPathDir)
                 }
