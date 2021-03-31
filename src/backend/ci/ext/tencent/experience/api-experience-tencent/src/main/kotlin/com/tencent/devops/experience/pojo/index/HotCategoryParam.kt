@@ -32,16 +32,16 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.QueryParam
 
 data class HotCategoryParam(
-    @ApiParam("类别ID,1--游戏,2--工具,3--生活,4--社交", required = true)
-    @PathParam("categoryId")
+    @field:ApiParam("类别ID,1--游戏,2--工具,3--生活,4--社交", required = true)
+    @field:PathParam("categoryId")
     val categoryId: Int,
-    @ApiParam("页目", required = false)
-    @QueryParam("page")
+    @field:ApiParam("页目", required = false)
+    @field:QueryParam("page")
     val page: Int,
-    @ApiParam("每页数目", required = false)
-    @QueryParam("pageSize")
+    @field:ApiParam("每页数目", required = false)
+    @field:QueryParam("pageSize")
     val pageSize: Int,
-    @ApiParam("是否包含外部跳转", required = false)
-    @QueryParam("includeExternalUrl")
+    @field:ApiParam("是否包含外部跳转", required = false)
+    @field:QueryParam("includeExternalUrl")
     val includeExternalUrl: Boolean? = false
 )
