@@ -31,17 +31,20 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.PathParam
 import javax.ws.rs.QueryParam
 
-data class HotCategoryParam(
-    @field:ApiParam("类别ID,1--游戏,2--工具,3--生活,4--社交", required = true)
-    @field:PathParam("categoryId")
-    val categoryId: Int,
-    @field:ApiParam("页目", required = false)
-    @field:QueryParam("page")
-    val page: Int,
-    @field:ApiParam("每页数目", required = false)
-    @field:QueryParam("pageSize")
-    val pageSize: Int,
-    @field:ApiParam("是否包含外部跳转", required = false)
-    @field:QueryParam("includeExternalUrl")
-    val includeExternalUrl: Boolean? = false
-)
+class HotCategoryParam {
+    @ApiParam("类别ID,1--游戏,2--工具,3--生活,4--社交", required = true)
+    @PathParam("categoryId")
+    var categoryId: Int = 0
+
+    @ApiParam("页目", required = false)
+    @QueryParam("page")
+    var page: Int = 0
+
+    @ApiParam("每页数目", required = false)
+    @QueryParam("pageSize")
+    var pageSize: Int = 0
+
+    @ApiParam("是否包含外部跳转", required = false)
+    @QueryParam("includeExternalUrl")
+    var includeExternalUrl: Boolean? = false
+}
