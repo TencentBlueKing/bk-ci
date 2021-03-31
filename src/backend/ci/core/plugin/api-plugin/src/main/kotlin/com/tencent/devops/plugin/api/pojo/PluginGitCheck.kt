@@ -25,22 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.listener
+package com.tencent.devops.plugin.api.pojo
 
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
-import com.tencent.devops.plugin.service.git.CodeWebhookService
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
-
-@Component
-class CodeWebhookFinishListener @Autowired constructor(
-    private val codeWebhookService: CodeWebhookService,
-    pipelineEventDispatcher: PipelineEventDispatcher
-) : BaseListener<PipelineBuildFinishBroadCastEvent>(pipelineEventDispatcher) {
-
-    override fun run(event: PipelineBuildFinishBroadCastEvent) {
-        codeWebhookService.onFinish(event)
-    }
-}
+data class PluginGitCheck(
+    val pipelineId: String,
+    val buildNumber: Int,
+    val repositoryHashId: String?,
+    val repositoryName: String?,
+    val commitId: String,
+    val context: String
+)

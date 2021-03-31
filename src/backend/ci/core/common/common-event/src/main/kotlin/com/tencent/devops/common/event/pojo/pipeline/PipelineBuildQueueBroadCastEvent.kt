@@ -25,19 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.utils
+package com.tencent.devops.common.event.pojo.pipeline
 
-import java.nio.charset.Charset
-import java.util.Base64
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.enums.ActionType
 
-object StringUtils {
-    fun decodeAuth(token: String): Pair<String, String> {
-        val str = if (token.contains("Basic ")) {
-            token.substringAfter("Basic ")
-        } else {
-            token
-        }
-        val decodeStr = String(Base64.getDecoder().decode(str), Charset.forName("UTF-8"))
-        return Pair(decodeStr.substringBefore(":"), decodeStr.substringAfter(":"))
-    }
-}
+@Event(exchange = MQ.EXCHANGE_PIPELINE_BUILD_QUEUE_FANOUT)
+data class PipelineBuildQueueBroadCastEvent(
+    override val source: String,
+    override val projectId: String,
+    override val pipelineId: String,
+    override val userId: String,
+    val buildId: String,
+    override var actionType: ActionType,
+    override var delayMills: Int = 0,
+    val triggerType: String
+) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)

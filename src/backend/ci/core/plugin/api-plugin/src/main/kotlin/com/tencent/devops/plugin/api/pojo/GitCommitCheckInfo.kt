@@ -25,16 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.docker.service.dispatcher
+package com.tencent.devops.plugin.api.pojo
 
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
+import com.tencent.devops.common.api.enums.RepositoryConfig
 
-interface BuildLessDispatcher {
-
-    fun canDispatch(event: PipelineBuildLessStartupDispatchEvent): Boolean
-
-    fun startUp(event: PipelineBuildLessStartupDispatchEvent)
-
-    fun shutdown(event: PipelineBuildLessShutdownDispatchEvent)
-}
+data class GitCommitCheckInfo(
+    val projectId: String,
+    val pipelineId: String,
+    val buildId: String,
+    val repositoryConfig: RepositoryConfig,
+    val commitId: String,
+    val block: Boolean,
+    val triggerType: String = "",
+    val mergeRequestId: Long? = null,
+    val userId: String,
+    val webhookType: String,
+    val webhookEventType: String
+)

@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.model.plugin.tables.TPluginGitCheck
 import com.tencent.devops.model.plugin.tables.records.TPluginGitCheckRecord
+import com.tencent.devops.plugin.api.pojo.PluginGitCheck
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -43,13 +44,13 @@ class PluginGitCheckDao {
         pipelineId: String,
         repositoryConfig: RepositoryConfig,
         commitId: String,
-        buildNumber: Int
+        context: String
     ): TPluginGitCheckRecord? {
         with(TPluginGitCheck.T_PLUGIN_GIT_CHECK) {
             val step = dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(COMMIT_ID.eq(commitId))
-                .and(BUILD_NUMBER.eq(buildNumber))
+                .and(CONTEXT.eq(context))
             when (repositoryConfig.repositoryType) {
                 RepositoryType.ID -> step.and(REPO_ID.eq(repositoryConfig.getRepositoryId()))
                 RepositoryType.NAME -> step.and(REPO_NAME.eq(repositoryConfig.getRepositoryId()))
@@ -60,41 +61,40 @@ class PluginGitCheckDao {
 
     fun create(
         dslContext: DSLContext,
-        pipelineId: String,
-        buildNumber: Int,
-        repositoryConfig: RepositoryConfig,
-        commitId: String,
-        context: String
+        pluginGitCheck: PluginGitCheck
     ) {
         val now = LocalDateTime.now()
-        with(TPluginGitCheck.T_PLUGIN_GIT_CHECK) {
-            dslContext.insertInto(
-                this,
-                PIPELINE_ID,
-                BUILD_NUMBER,
-                REPO_ID,
-                REPO_NAME,
-                COMMIT_ID,
-                CREATE_TIME,
-                UPDATE_TIME,
-                CONTEXT
-            ).values(
-                pipelineId,
-                buildNumber,
-                repositoryConfig.repositoryHashId,
-                repositoryConfig.repositoryName,
-                commitId,
-                now,
-                now,
-                context
-            ).execute()
+        with(pluginGitCheck) {
+            with(TPluginGitCheck.T_PLUGIN_GIT_CHECK) {
+                dslContext.insertInto(
+                    this,
+                    PIPELINE_ID,
+                    BUILD_NUMBER,
+                    REPO_ID,
+                    REPO_NAME,
+                    COMMIT_ID,
+                    CREATE_TIME,
+                    UPDATE_TIME,
+                    CONTEXT
+                ).values(
+                    pipelineId,
+                    buildNumber,
+                    repositoryHashId,
+                    repositoryName,
+                    commitId,
+                    now,
+                    now,
+                    context
+                ).execute()
+            }
         }
     }
 
-    fun update(dslContext: DSLContext, id: Long) {
+    fun update(dslContext: DSLContext, id: Long, buildNumber: Int) {
         with(TPluginGitCheck.T_PLUGIN_GIT_CHECK) {
             dslContext.update(this)
                 .set(UPDATE_TIME, LocalDateTime.now())
+                .set(BUILD_NUMBER, buildNumber)
                 .where(ID.eq(id))
                 .execute()
         }

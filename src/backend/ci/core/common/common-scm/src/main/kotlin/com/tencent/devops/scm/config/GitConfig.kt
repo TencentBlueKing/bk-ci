@@ -107,4 +107,7 @@ class GitConfig {
 
     @Value("\${scm.external.tGit.tGitHookUrl:}")
     val tGitHookUrl: String = ""
+
+    @Value("\${scm.external.tGit.hookSecret:}")
+    val tGitHookSecret: String = ""
 }

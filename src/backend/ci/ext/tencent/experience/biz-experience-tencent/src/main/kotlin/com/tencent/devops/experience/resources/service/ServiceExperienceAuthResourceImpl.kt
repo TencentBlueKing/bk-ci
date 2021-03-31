@@ -41,7 +41,7 @@ class ServiceExperienceAuthResourceImpl @Autowired constructor(
     val authExperienceService: AuthExperienceService
 ): ServiceExperienceAuthResource {
 
-    override fun experienceTaskInfo(callBackInfo: CallbackRequestDTO): CallbackBaseResponseDTO? {
+    override fun experienceTaskInfo(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO? {
         val method = callBackInfo.method
         val page = callBackInfo.page
         val projectId = callBackInfo.filter.parent.id
@@ -50,25 +50,28 @@ class ServiceExperienceAuthResourceImpl @Autowired constructor(
                 return authExperienceService.getExperienceTask(
                     projectId = projectId,
                     offset = page.offset.toInt(),
-                    limit = page.limit.toInt()
+                    limit = page.limit.toInt(),
+                    token = token
                 )
             }
             CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
                 val ids = callBackInfo.filter.idList.map { it.toString() }
-                return authExperienceService.getExperienceTaskInfo(ids)
+                return authExperienceService.getExperienceTaskInfo(ids, token)
             }
             CallbackMethodEnum.SEARCH_INSTANCE -> {
                 return authExperienceService.searchExperienceTask(
                     projectId = projectId,
                     keyword = callBackInfo.filter.keyword,
                     limit = page.offset.toInt(),
-                    offset = page.limit.toInt())
+                    offset = page.limit.toInt(),
+                    token = token
+                )
             }
         }
         return null
     }
 
-    override fun experienceGroup(callBackInfo: CallbackRequestDTO): CallbackBaseResponseDTO? {
+    override fun experienceGroup(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO? {
         TODO("Not yet implemented")
     }
 }

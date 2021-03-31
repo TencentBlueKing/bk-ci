@@ -123,7 +123,7 @@ interface ServiceGithubResource {
         projectName: String,
         @ApiParam("checkRunId", required = true)
         @QueryParam("checkRunId")
-        checkRunId: Int,
+        checkRunId: Long,
         checkRuns: GithubCheckRuns
     ): Result<Boolean>
 

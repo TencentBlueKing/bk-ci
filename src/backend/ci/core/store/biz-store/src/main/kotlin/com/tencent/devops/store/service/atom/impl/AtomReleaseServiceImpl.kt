@@ -146,7 +146,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     protected lateinit var atomDetailBaseUrl: String
 
     private fun validateAddMarketAtomReq(
-        userId: String,
         marketAtomCreateRequest: MarketAtomCreateRequest
     ): Result<Boolean> {
         val atomCode = marketAtomCreateRequest.atomCode
@@ -180,7 +179,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     ): Result<Boolean> {
         logger.info("addMarketAtom userId is :$userId,marketAtomCreateRequest is :$marketAtomCreateRequest")
         val atomCode = marketAtomCreateRequest.atomCode
-        val validateResult = validateAddMarketAtomReq(userId, marketAtomCreateRequest)
+        val validateResult = validateAddMarketAtomReq(marketAtomCreateRequest)
         logger.info("the validateResult is :$validateResult")
         if (validateResult.isNotOk()) {
             return validateResult

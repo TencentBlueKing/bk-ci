@@ -32,6 +32,7 @@ import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
@@ -46,10 +47,12 @@ import org.springframework.stereotype.Service
 class AuthExperienceService @Autowired constructor(
     val experienceDao: ExperienceDao,
     val experienceGroupDao: ExperienceGroupDao,
-    val dslContext: DSLContext
+    val dslContext: DSLContext,
+    val authTokenApi: AuthTokenApi
 ) {
 
-    fun getExperienceTask(projectId: String, offset: Int, limit: Int): ListInstanceResponseDTO? {
+    fun getExperienceTask(projectId: String, offset: Int, limit: Int, token: String): ListInstanceResponseDTO? {
+        authTokenApi.checkToken(token)
         val experienceTaskInfos = experienceDao.search(
             dslContext = dslContext,
             projectId = projectId,
@@ -74,7 +77,8 @@ class AuthExperienceService @Autowired constructor(
         return result.buildListInstanceResult(entityInfo, count)
     }
 
-    fun getExperienceTaskInfo(ids: List<Any>?): FetchInstanceInfoResponseDTO? {
+    fun getExperienceTaskInfo(ids: List<Any>?, token: String): FetchInstanceInfoResponseDTO? {
+        authTokenApi.checkToken(token)
         val experienceTaskInfos = experienceDao.list(dslContext, ids!!.toSet() as Set<Long>)
         val result = FetchInstanceInfo()
         if (experienceTaskInfos == null || experienceTaskInfos.isEmpty()) {
@@ -92,7 +96,14 @@ class AuthExperienceService @Autowired constructor(
         return result.buildFetchInstanceResult(entityInfo)
     }
 
-    fun searchExperienceTask(projectId: String, keyword: String, limit: Int, offset: Int): SearchInstanceInfo {
+    fun searchExperienceTask(
+        projectId: String,
+        keyword: String,
+        limit: Int,
+        offset: Int,
+        token: String
+    ): SearchInstanceInfo {
+        authTokenApi.checkToken(token)
         val experienceTaskInfos = experienceDao.search(
             dslContext = dslContext,
             projectId = projectId,
