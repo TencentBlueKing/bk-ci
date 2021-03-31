@@ -32,16 +32,20 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("版本体验-首页-APP信息")
 data class IndexAppInfoVO(
-    @ApiModelProperty("版本体验ID", required = true)
+    @ApiModelProperty("类型", required = true)
+    val type: Int,
+    @ApiModelProperty("版本体验ID", required = false)
     val experienceHashId: String,
     @ApiModelProperty("体验名称", required = true)
     val experienceName: String,
     @ApiModelProperty("创建时间", required = true)
     val createTime: Long,
-    @ApiModelProperty("大小(byte)", required = true)
+    @ApiModelProperty("大小(byte)", required = false)
     val size: Long,
     @ApiModelProperty("logo链接", required = true)
     val logoUrl: String,
     @ApiModelProperty("版本体验BundleIdentifier", required = true)
-    val bundleIdentifier: String
+    val bundleIdentifier: String,
+    @ApiModelProperty("外部链接", required = false)
+    val externalUrl: String
 )

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.experience.service
 
+import com.tencent.devops.artifactory.util.UrlUtil
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
@@ -35,7 +36,6 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.pojo.index.IndexAppInfoVO
 import com.tencent.devops.experience.pojo.index.IndexBannerVO
-import com.tencent.devops.artifactory.util.UrlUtil
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -85,12 +85,14 @@ class ExperienceIndexService @Autowired constructor(
             platform = platformStr
         ).map {
             IndexAppInfoVO(
+                type = it.type,
                 experienceHashId = HashUtil.encodeLongId(it.recordId),
                 experienceName = it.experienceName,
                 createTime = it.updateTime.timestampmilli(),
                 size = it.size,
                 logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl),
-                bundleIdentifier = it.bundleIdentifier
+                bundleIdentifier = it.bundleIdentifier,
+                externalUrl = it.externalLink
             )
         }.toList()
 
@@ -117,12 +119,14 @@ class ExperienceIndexService @Autowired constructor(
             platform = platformStr
         ).map {
             IndexAppInfoVO(
+                type = it.type,
                 experienceHashId = HashUtil.encodeLongId(it.recordId),
                 experienceName = it.experienceName,
                 createTime = it.updateTime.timestampmilli(),
                 size = it.size,
                 logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl),
-                bundleIdentifier = it.bundleIdentifier
+                bundleIdentifier = it.bundleIdentifier,
+                externalUrl = it.externalLink
             )
         }.toList()
 
@@ -150,12 +154,14 @@ class ExperienceIndexService @Autowired constructor(
             platform = platformStr
         ).map {
             IndexAppInfoVO(
+                type = it.type,
                 experienceHashId = HashUtil.encodeLongId(it.recordId),
                 experienceName = it.experienceName,
                 createTime = it.updateTime.timestampmilli(),
                 size = it.size,
                 logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl),
-                bundleIdentifier = it.bundleIdentifier
+                bundleIdentifier = it.bundleIdentifier,
+                externalUrl = it.externalLink
             )
         }.toList()
 
@@ -189,12 +195,14 @@ class ExperienceIndexService @Autowired constructor(
             platform = platformStr
         ).map {
             IndexAppInfoVO(
+                type = it.type,
                 experienceHashId = HashUtil.encodeLongId(it.recordId),
                 experienceName = it.experienceName,
                 createTime = it.updateTime.timestampmilli(),
                 size = it.size,
                 logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl),
-                bundleIdentifier = it.bundleIdentifier
+                bundleIdentifier = it.bundleIdentifier,
+                externalUrl = it.externalLink
             )
         }.toList()
 
@@ -229,12 +237,14 @@ class ExperienceIndexService @Autowired constructor(
             platform = platformStr
         ).map {
             IndexAppInfoVO(
+                type = it.type,
                 experienceHashId = HashUtil.encodeLongId(it.recordId),
                 experienceName = it.experienceName,
                 createTime = it.updateTime.timestampmilli(),
                 size = it.size,
                 logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl),
-                bundleIdentifier = it.bundleIdentifier
+                bundleIdentifier = it.bundleIdentifier,
+                externalUrl = it.externalLink
             )
         }.toList()
 
