@@ -67,7 +67,7 @@ complexity:
   active: true
   ComplexCondition:
     active: true
-    threshold: 4
+    threshold: 9
   ComplexInterface:
     active: false
     threshold: 10
@@ -90,7 +90,7 @@ complexity:
     active: true
     threshold: 120
   LongParameterList:
-    active: true
+    active: false
     functionThreshold: 6
     constructorThreshold: 15
     ignoreDefaultParameters: false
@@ -112,7 +112,7 @@ complexity:
     excludeStringsWithLessThan5Characters: true
     ignoreStringsRegex: '$^'
   TooManyFunctions:
-    active: true
+    active: false
     excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/jsTest/**', '**/iosTest/**']
     thresholdInFiles: 20
     thresholdInClasses: 20
@@ -178,7 +178,7 @@ exceptions:
   NotImplementedDeclaration:
     active: false
   PrintStackTrace:
-    active: true
+    active: false
   RethrowCaughtException:
     active: false
   ReturnFromFinally:
@@ -219,7 +219,7 @@ exceptions:
       - Throwable
     allowedExceptionNameRegex: '_|(ignore|expected).*'
   TooGenericExceptionThrown:
-    active: true
+    active: false
     exceptionNames:
       - Error
       - Exception
@@ -365,7 +365,7 @@ naming:
     excludeClassPattern: '$^'
     ignoreOverridden: true
   EnumNaming:
-    active: true
+    active: false
     excludes: ['**/test/**', '**/androidTest/**', '**/commonTest/**', '**/jvmTest/**', '**/jsTest/**', '**/iosTest/**']
     enumEntryPattern: '[A-Z][_a-zA-Z0-9]*'
   ForbiddenClassName:
@@ -400,7 +400,7 @@ naming:
     active: true
     mustBeFirst: true
   MemberNameEqualsClassName:
-    active: true
+    active: false
     ignoreOverridden: true
   NonBooleanPropertyPrefixedWithIs:
     active: false
@@ -469,7 +469,7 @@ potential-bugs:
     restrictToAnnotatedMethods: true
     returnValueAnnotations: ['*.CheckReturnValue', '*.CheckResult']
   ImplicitDefaultLocale:
-    active: true
+    active: false
   ImplicitUnitReturnType:
     active: false
     allowExplicitReturnType: true
@@ -543,21 +543,21 @@ style:
     active: false
     methods: ['kotlin.io.println', 'kotlin.io.print']
   ForbiddenPublicDataClass:
-    active: true
+    active: false
     ignorePackages: ['*.internal', '*.internal.*']
   ForbiddenVoid:
     active: false
     ignoreOverridden: false
     ignoreUsageInGenerics: false
   FunctionOnlyReturningConstant:
-    active: true
+    active: false
     ignoreOverridableFunction: true
     excludedFunctions: 'describeContents'
     excludeAnnotatedFunction: ['dagger.Provides']
   LibraryCodeMustSpecifyReturnType:
     active: true
   LibraryEntitiesShouldNotBePublic:
-    active: true
+    active: false
   LoopWithTooManyJumpStatements:
     active: true
     maxJumpCount: 1
@@ -610,7 +610,7 @@ style:
     active: false
   ReturnCount:
     active: true
-    max: 2
+    max: 10
     excludedFunctions: 'equals'
     excludeLabeled: false
     excludeReturnFromLambda: true
@@ -623,7 +623,7 @@ style:
     active: false
   ThrowsCount:
     active: true
-    max: 2
+    max: 10
   TrailingWhitespace:
     active: false
   UnderscoresInNumericLiterals:
