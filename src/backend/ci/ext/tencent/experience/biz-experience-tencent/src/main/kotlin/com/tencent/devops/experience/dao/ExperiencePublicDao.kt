@@ -37,12 +37,15 @@ import java.time.LocalDateTime
 
 @Repository
 class ExperiencePublicDao {
+
+    @SuppressWarnings("ALL")
     fun listHot(
         dslContext: DSLContext,
         offset: Int,
         limit: Int,
         category: Int? = null,
-        platform: String?
+        platform: String?,
+        types: List<Int>
     ): Result<TExperiencePublicRecord> {
         val now = LocalDateTime.now()
         return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
@@ -61,12 +64,14 @@ class ExperiencePublicDao {
         }
     }
 
+    @SuppressWarnings("ALL")
     fun listNew(
         dslContext: DSLContext,
         offset: Int,
         limit: Int,
         category: Int? = null,
-        platform: String?
+        platform: String?,
+        types: List<Int>
     ): Result<TExperiencePublicRecord> {
         val now = LocalDateTime.now()
         return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
@@ -89,7 +94,8 @@ class ExperiencePublicDao {
         dslContext: DSLContext,
         offset: Int,
         limit: Int,
-        platform: String?
+        platform: String?,
+        types: List<Int>
     ): Result<TExperiencePublicRecord> {
         val now = LocalDateTime.now()
         return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
