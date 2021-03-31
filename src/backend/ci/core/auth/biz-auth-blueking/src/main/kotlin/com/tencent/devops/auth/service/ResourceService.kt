@@ -60,7 +60,7 @@ class ResourceService @Autowired constructor(
         val request = authHttpClientService.buildPost(
             path = projectInfo!!.path,
             requestBody = authHttpClientService.getJsonRequest(callBackInfo),
-            gateway = projectInfo!!.gateway
+            gateway = projectInfo.gateway
         )
         val response = authHttpClientService.request(request, "调用回调接口失败")
         return buildResult(callBackInfo.method, response)
@@ -74,7 +74,7 @@ class ResourceService @Autowired constructor(
         checkoutParentType(callBackInfo.filter.parent.type)
         if (callBackInfo.method == CallbackMethodEnum.SEARCH_INSTANCE) {
             if (!checkKeyword(callBackInfo.filter.keyword)) {
-                var result = SearchInstanceInfo()
+                val result = SearchInstanceInfo()
                 return result.buildSearchInstanceKeywordFailResult()
             }
         }
@@ -89,9 +89,9 @@ class ResourceService @Autowired constructor(
         }
 
         val request = authHttpClientService.buildPost(
-            path = resourceInfo!!.path,
+            path = resourceInfo.path,
             requestBody = authHttpClientService.getJsonRequest(callBackInfo),
-            gateway = resourceInfo!!.gateway
+            gateway = resourceInfo.gateway
         )
         val response = authHttpClientService.request(request, "调用回调接口失败")
 
@@ -133,7 +133,7 @@ class ResourceService @Autowired constructor(
         return when (method) {
             CallbackMethodEnum.SEARCH_INSTANCE -> {
                 val searchResult = objectMapper.readValue<SearchInstanceInfo>(response)
-                if (searchResult?.data?.count!! > 100L) {
+                if (searchResult.data?.count!! > 100L) {
                     searchResult.buildSearchInstanceResultFailResult()
                 } else {
                     searchResult

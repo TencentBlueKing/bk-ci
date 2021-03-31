@@ -31,7 +31,7 @@ import com.tencent.devops.quality.api.v2.pojo.enums.QualityOperation
 import java.math.BigDecimal
 
 object ThresholdOperationUtil {
-    val DEFAULT = "null"
+    private const val DEFAULT = "null"
 
     fun getOperationName(operation: QualityOperation): String {
         return when (operation) {
