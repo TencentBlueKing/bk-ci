@@ -34,11 +34,11 @@ import org.hashids.Hashids
  * Powered By Tencent
  */
 object HashUtil {
-    private val HASH_SALT = "jhy^3(@So0"
+    private const val HASH_SALT = "jhy^3(@So0"
     private val hashids = Hashids(HASH_SALT, 8, "abcdefghijklmnopqrstuvwxyz")
 
     // 新增其他数据类型的HASH_ID实例，防止被爆破后相同盐值破解PROJECT_ID
-    private val OTHER_HASH_SALT = "xlm&gst@Fami1y"
+    private const val OTHER_HASH_SALT = "xlm&gst@Fami1y"
     private val otherHashIds = Hashids(OTHER_HASH_SALT, 4)
 
     fun encodeLongId(id: Long): String {

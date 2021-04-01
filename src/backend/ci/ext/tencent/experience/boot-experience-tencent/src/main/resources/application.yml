@@ -21,6 +21,11 @@ spring:
     consul:
       discovery:
         tags: local
+  main:
+    allow-bean-definition-overriding: true
+  jmx:
+    enabled: true
 
 server:
   port: 8092
+

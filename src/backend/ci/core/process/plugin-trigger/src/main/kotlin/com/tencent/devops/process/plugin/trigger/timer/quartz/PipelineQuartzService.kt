@@ -78,18 +78,26 @@ class PipelineQuartzService @Autowired constructor(
             list.forEach { timer ->
                 logger.info("TIMER_RELOAD| load crontab($timer)")
                 timer.crontabExpressions.forEach { crontab ->
-                    val md5 = DigestUtils.md5Hex(crontab)
-                    val comboKey = "${timer.pipelineId}_$md5"
-                    schedulerManager.addJob(
-                        comboKey, crontab,
-                        jobBeanClass
-                    )
+                    addJob(pipelineId = timer.pipelineId, crontab = crontab)
                 }
             }
             start += limit
         }
 
         logger.warn("TIMER_RELOAD| reload ok!")
+    }
+
+    fun addJob(pipelineId: String, crontab: String) {
+        try {
+            val md5 = DigestUtils.md5Hex(crontab)
+            val comboKey = "${pipelineId}_$md5"
+            schedulerManager.addJob(
+                comboKey, crontab,
+                jobBeanClass
+            )
+        } catch (e: Exception) {
+            logger.error("TIMER_RELOAD| add job error|pipelineId=$pipelineId|crontab=$crontab", e)
+        }
     }
 
     @PreDestroy

@@ -46,52 +46,53 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTr
 
 object RepositoryConfigUtils {
 
+    @Suppress("ALL")
     fun buildConfig(element: Element): RepositoryConfig {
         return when (element) {
             is CodeGitElement -> RepositoryConfig(
-                element.repositoryHashId,
-                element.repositoryName,
-                element.repositoryType ?: RepositoryType.ID
+                repositoryHashId = element.repositoryHashId,
+                repositoryName = element.repositoryName,
+                repositoryType = element.repositoryType ?: RepositoryType.ID
             )
             is CodeGitWebHookTriggerElement -> RepositoryConfig(
-                element.repositoryHashId,
-                element.repositoryName,
-                element.repositoryType ?: RepositoryType.ID
+                repositoryHashId = element.repositoryHashId,
+                repositoryName = element.repositoryName,
+                repositoryType = element.repositoryType ?: RepositoryType.ID
             )
             is CodeSvnElement -> RepositoryConfig(
-                element.repositoryHashId,
-                element.repositoryName,
-                element.repositoryType ?: RepositoryType.ID
+                repositoryHashId = element.repositoryHashId,
+                repositoryName = element.repositoryName,
+                repositoryType = element.repositoryType ?: RepositoryType.ID
             )
             is CodeSVNWebHookTriggerElement -> RepositoryConfig(
-                element.repositoryHashId,
-                element.repositoryName,
-                element.repositoryType ?: RepositoryType.ID
+                repositoryHashId = element.repositoryHashId,
+                repositoryName = element.repositoryName,
+                repositoryType = element.repositoryType ?: RepositoryType.ID
             )
             is CodeGitlabElement -> RepositoryConfig(
-                element.repositoryHashId,
-                element.repositoryName,
-                element.repositoryType ?: RepositoryType.ID
+                repositoryHashId = element.repositoryHashId,
+                repositoryName = element.repositoryName,
+                repositoryType = element.repositoryType ?: RepositoryType.ID
             )
             is CodeGitlabWebHookTriggerElement -> RepositoryConfig(
-                element.repositoryHashId,
-                element.repositoryName,
-                element.repositoryType ?: RepositoryType.ID
+                repositoryHashId = element.repositoryHashId,
+                repositoryName = element.repositoryName,
+                repositoryType = element.repositoryType ?: RepositoryType.ID
             )
             is GithubElement -> RepositoryConfig(
-                element.repositoryHashId,
-                element.repositoryName,
-                element.repositoryType ?: RepositoryType.ID
+                repositoryHashId = element.repositoryHashId,
+                repositoryName = element.repositoryName,
+                repositoryType = element.repositoryType ?: RepositoryType.ID
             )
             is CodeGithubWebHookTriggerElement -> RepositoryConfig(
-                element.repositoryHashId,
-                element.repositoryName,
-                element.repositoryType ?: RepositoryType.ID
+                repositoryHashId = element.repositoryHashId,
+                repositoryName = element.repositoryName,
+                repositoryType = element.repositoryType ?: RepositoryType.ID
             )
             is CodeTGitWebHookTriggerElement -> RepositoryConfig(
-                element.data.input.repositoryHashId,
-                element.data.input.repositoryName,
-                element.data.input.repositoryType ?: RepositoryType.ID
+                repositoryHashId = element.data.input.repositoryHashId,
+                repositoryName = element.data.input.repositoryName,
+                repositoryType = element.data.input.repositoryType ?: RepositoryType.ID
             )
             is CodeGitGenericWebHookTriggerElement -> {
                 with(element.data.input) {

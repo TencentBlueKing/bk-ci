@@ -27,12 +27,14 @@
 
 package com.tencent.devops.dispatch.docker.service
 
+import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import okhttp3.Request
 
 interface DockerHostProxyService {
     fun getDockerHostProxyRequest(
         dockerHostUri: String,
         dockerHostIp: String,
-        dockerHostPort: Int = 0
+        dockerHostPort: Int = 0,
+        clusterType: DockerHostClusterType = DockerHostClusterType.COMMON
     ): Request.Builder
 }

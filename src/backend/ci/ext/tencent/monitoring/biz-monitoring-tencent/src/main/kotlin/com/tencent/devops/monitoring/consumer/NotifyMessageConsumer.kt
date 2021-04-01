@@ -70,7 +70,7 @@ class NotifyMessageConsumer @Autowired constructor(
 
     @RabbitListener(
         bindings = [(QueueBinding(
-            key = ROUTE_NOTIFY_MESSAGE,
+            key = [ROUTE_NOTIFY_MESSAGE],
             value = Queue(value = QUEUE_NOTIFY_MESSAGE, durable = "true"),
             exchange = Exchange(value = EXCHANGE_NOTIFY_MESSAGE, durable = "true", delayed = "true", type = "topic")))
         ]

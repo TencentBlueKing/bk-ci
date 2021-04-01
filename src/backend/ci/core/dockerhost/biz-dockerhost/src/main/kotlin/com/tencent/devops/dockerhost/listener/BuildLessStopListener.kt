@@ -27,7 +27,7 @@
 
 package com.tencent.devops.dockerhost.listener
 
-import com.tencent.devops.dockerhost.services.DockerHostBuildLessService
+import com.tencent.devops.dockerhost.services.DockerHostBuildAgentLessService
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessDockerShutdownEvent
 import org.slf4j.LoggerFactory
 
@@ -36,13 +36,16 @@ import org.slf4j.LoggerFactory
  * @version 1.0
  */
 class BuildLessStopListener(
-    private val dockerHostBuildLessService: DockerHostBuildLessService
+    private val dockerHostBuildAgentLessService: DockerHostBuildAgentLessService
 ) {
 
     private val logger = LoggerFactory.getLogger(BuildLessStopListener::class.java)
 
     fun handleMessage(event: PipelineBuildLessDockerShutdownEvent) {
         logger.info("[${event.buildId}]| Stop container(${event.dockerContainerId})")
-        dockerHostBuildLessService.stopContainer(event.buildId, event.dockerContainerId)
+        dockerHostBuildAgentLessService.stopContainer(
+            containerId = event.dockerContainerId,
+            buildId = event.buildId
+        )
     }
 }

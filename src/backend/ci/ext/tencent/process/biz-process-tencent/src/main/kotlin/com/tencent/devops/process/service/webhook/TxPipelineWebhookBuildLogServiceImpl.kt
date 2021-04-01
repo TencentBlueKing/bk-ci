@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -26,6 +27,7 @@
 
 package com.tencent.devops.process.service.webhook
 
+import com.tencent.bkrepo.common.api.constant.DEFAULT_PAGE_SIZE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.PageUtil
@@ -38,7 +40,6 @@ import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.webhook.PipelineWebhookBuildLog
 import com.tencent.devops.process.pojo.webhook.PipelineWebhookBuildLogDetail
 import org.jooq.DSLContext
-import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
@@ -53,18 +54,11 @@ class TxPipelineWebhookBuildLogServiceImpl @Autowired constructor(
 ) : PipelineWebhookBuildLogService {
 
     override fun saveWebhookBuildLog(webhookBuildLog: PipelineWebhookBuildLog) {
-        dslContext.transaction { configuration ->
-            val context = DSL.using(configuration)
-            val logId = pipelineWebhookBuildLogDao.save(
-                dslContext = context,
-                webhookBuildLog = webhookBuildLog
-            )
-            pipelineWebhookBuildLogDetailDao.save(
-                dslContext = dslContext,
-                logId = logId,
-                webhookBuildLogDetails = webhookBuildLog.detail
-            )
-        }
+        pipelineWebhookBuildLogDetailDao.save(
+            dslContext = dslContext,
+            logId = 0L,
+            webhookBuildLogDetails = webhookBuildLog.detail
+        )
     }
 
     override fun listWebhookBuildLog(
@@ -74,7 +68,7 @@ class TxPipelineWebhookBuildLogServiceImpl @Autowired constructor(
         pageSize: Int?
     ): SQLPage<PipelineWebhookBuildLog> {
         val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: 20
+        val pageSizeNotNull = pageSize ?: DEFAULT_PAGE_SIZE
         val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         val count = pipelineWebhookBuildLogDao.countByPage(
             dslContext = dslContext, repoName = repoName, commitId = commitId
@@ -99,7 +93,7 @@ class TxPipelineWebhookBuildLogServiceImpl @Autowired constructor(
         pageSize: Int?
     ): SQLPage<PipelineWebhookBuildLogDetail> {
         val pageNotNull = page ?: 0
-        val pageSizeNotNull = pageSize ?: 20
+        val pageSizeNotNull = pageSize ?: DEFAULT_PAGE_SIZE
         val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         if (!pipelinePermissionService.checkPipelinePermission(
                 userId = userId,
