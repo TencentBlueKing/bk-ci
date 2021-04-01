@@ -170,20 +170,7 @@ class GitCIBuildService @Autowired constructor(
                 needReCreate(processClient, event, gitProjectConf, pipeline) -> {
                     // 先删除已有数据
                     logger.info("recreate gitBuildId:$gitBuildId, pipeline: $pipeline")
-                    try {
-                        gitPipelineResourceDao.deleteByPipelineId(dslContext, pipeline.pipelineId)
-                        processClient.delete(
-                            event.userId,
-                            gitProjectConf.projectCode!!,
-                            pipeline.pipelineId,
-                            channelCode
-                        )
-                    } catch (e: Exception) {
-                        logger.error(
-                            "failed to delete pipeline resource gitBuildId:$gitBuildId, pipeline: $pipeline",
-                            e
-                        )
-                    }
+                    deletePipeline(pipeline, processClient, event, gitProjectConf, gitBuildId)
                     // 再次新建
                     pipeline.pipelineId =
                         processClient.create(event.userId, gitProjectConf.projectCode!!, model, channelCode).data!!.id
@@ -206,13 +193,29 @@ class GitCIBuildService @Autowired constructor(
             }
 
             // 修改流水线并启动构建，需要加锁保证事务性
-
-            logger.info("GitCI Build start, gitProjectId[${gitProjectConf.gitProjectId}], pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]")
+            logger.info(
+                "GitCI Build start, gitProjectId[${gitProjectConf.gitProjectId}], " +
+                        "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]"
+            )
             val buildId =
                 startupPipelineBuild(processClient, gitBuildId, model, event, gitProjectConf, pipeline.pipelineId)
-            logger.info("GitCI Build success, gitProjectId[${gitProjectConf.gitProjectId}], pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId], buildId[$buildId]")
+            logger.info(
+                "GitCI Build success, gitProjectId[${gitProjectConf.gitProjectId}], " +
+                        "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId], buildId[$buildId]"
+            )
             gitPipelineResourceDao.updatePipelineBuildInfo(dslContext, pipeline, buildId)
             gitRequestEventBuildDao.update(dslContext, gitBuildId, pipeline.pipelineId, buildId)
+            // 锁定mr构建提交
+            if (event.objectKind == OBJECT_KIND_MERGE_REQUEST) {
+                scmClient.pushCommitCheckWithBlock(
+                    commitId = event.commitId,
+                    mergeRequestId = event.mergeRequestId ?: 0L,
+                    userId = event.userId,
+                    block = true,
+                    context = "${pipeline.pipelineId}($buildId)",
+                    gitProjectConf = gitProjectConf
+                )
+            }
             // 推送启动构建消息,当人工触发时不推送构建消息
             if (event.objectKind != OBJECT_KIND_MANUAL) {
                 scmClient.pushCommitCheck(
@@ -229,7 +232,8 @@ class GitCIBuildService @Autowired constructor(
             return BuildId(buildId)
         } catch (e: Exception) {
             logger.error(
-                "GitCI Build failed, gitProjectId[${gitProjectConf.gitProjectId}], pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]",
+                "GitCI Build failed, gitProjectId[${gitProjectConf.gitProjectId}], " +
+                        "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]",
                 e
             )
             val build = gitRequestEventBuildDao.getByGitBuildId(dslContext, gitBuildId)
@@ -244,9 +248,45 @@ class GitCIBuildService @Autowired constructor(
                 reasonDetail = e.message ?: TriggerReason.PIPELINE_RUN_ERROR.detail,
                 gitProjectId = event.gitProjectId
             )
-            if (build != null) gitRequestEventBuildDao.removeBuild(dslContext, gitBuildId)
+            if (build != null) {
+                gitRequestEventBuildDao.removeBuild(dslContext, gitBuildId)
+            }
+            // 构建出异常时接触锁定
+            if (event.objectKind == OBJECT_KIND_MERGE_REQUEST) {
+                scmClient.pushCommitCheckWithBlock(
+                    commitId = event.commitId,
+                    mergeRequestId = event.mergeRequestId ?: 0L,
+                    userId = event.userId,
+                    block = false,
+                    context = "${pipeline.pipelineId}($gitBuildId)",
+                    gitProjectConf = gitProjectConf
+                )
+            }
         }
         return null
+    }
+
+    private fun deletePipeline(
+        pipeline: GitProjectPipeline,
+        processClient: ServicePipelineResource,
+        event: GitRequestEvent,
+        gitProjectConf: GitRepositoryConf,
+        gitBuildId: Long
+    ) {
+        try {
+            gitPipelineResourceDao.deleteByPipelineId(dslContext, pipeline.pipelineId)
+            processClient.delete(
+                event.userId,
+                gitProjectConf.projectCode!!,
+                pipeline.pipelineId,
+                channelCode
+            )
+        } catch (e: Exception) {
+            logger.error(
+                "failed to delete pipeline resource gitBuildId:$gitBuildId, pipeline: $pipeline",
+                e
+            )
+        }
     }
 
     fun retry(userId: String, gitProjectId: Long, pipelineId: String, buildId: String, taskId: String?): BuildId {

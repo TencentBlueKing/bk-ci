@@ -33,6 +33,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
+import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -125,7 +126,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                     ?: throw OperationException("git ci projectCode not exist")
 
                 // 构建结束后取消mr锁定
-                if (mergeRequestId != 0L) {
+                if (objectKind == OBJECT_KIND_MERGE_REQUEST) {
                     scmClient.pushCommitCheckWithBlock(
                         commitId = commitId,
                         mergeRequestId = mergeRequestId,

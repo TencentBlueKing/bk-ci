@@ -120,7 +120,6 @@ class ScmClient @Autowired constructor(
         logger.error("user $userId pushCommitCheckWithBlock error.", e)
     }
 
-
     private fun getAccessToken(gitProjectId: Long): Pair<String, String?> {
         val gitOauthData = client.getScm(ServiceGitResource::class).getToken(gitProjectId).data
             ?: throw RuntimeException("cannot found oauth access token for user($gitProjectId)")

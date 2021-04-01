@@ -218,7 +218,6 @@ class GitCITriggerService @Autowired constructor(
             )
             return false
         }
-
     }
 
     private fun matchAndTriggerPipeline(
@@ -446,6 +445,7 @@ class GitCITriggerService @Autowired constructor(
                 return@forEach
             }
         }
+        // yml校验全部结束后，解除锁定
         blockCommitCheck(
             isMrEvent = isMrEvent,
             event = gitRequestEvent,
