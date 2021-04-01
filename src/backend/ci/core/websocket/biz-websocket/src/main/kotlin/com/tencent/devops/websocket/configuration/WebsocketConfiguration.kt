@@ -137,13 +137,13 @@ class WebsocketConfiguration {
         container.setQueueNames(pipelineWebSocketQueue.name)
         container.setConcurrentConsumers(webSocketQueueConcurrency!!)
         container.setMaxConcurrentConsumers(websocketMaxConsumerCount!!)
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
         container.setStartConsumerMinInterval(5000)
         container.setConsecutiveActiveTrigger(webSocketActiveTrigger!!)
         container.setMismatchedQueuesFatal(true)
         val adapter = MessageListenerAdapter(buildListener, buildListener::execute.name)
         adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
+        container.setMessageListener(adapter)
         return container
     }
 
@@ -159,13 +159,13 @@ class WebsocketConfiguration {
         container.setQueueNames(cacheClearWebSocketQueue.name)
         container.setConcurrentConsumers(webSocketQueueConcurrency!!)
         container.setMaxConcurrentConsumers(10)
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
         container.setStartConsumerMinInterval(5000)
         container.setConsecutiveActiveTrigger(webSocketActiveTrigger!!)
         container.setMismatchedQueuesFatal(true)
         val adapter = MessageListenerAdapter(buildListener, buildListener::execute.name)
         adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
+        container.setMessageListener(adapter)
         return container
     }
 

@@ -32,6 +32,17 @@ import com.tencent.devops.common.api.pojo.ErrorType
 
 object FastKillUtils {
 
+    private val terminateCodeSet = setOf(
+        ErrorCode.USER_STAGE_FASTKILL_TERMINATE, // FastKill(P0)
+        ErrorCode.THIRD_PARTY_BUILD_ENV_ERROR, // 环境问题需要终止(P1)
+        ErrorCode.USER_JOB_OUTTIME_LIMIT // 超时需要终止(P1)
+    )
+
+    /**
+     * 是否为需要终止的错误码
+     */
+    fun isTerminateCode(errorCode: Int) = terminateCodeSet.contains(errorCode)
+
     /**
      * fastKill
      */
