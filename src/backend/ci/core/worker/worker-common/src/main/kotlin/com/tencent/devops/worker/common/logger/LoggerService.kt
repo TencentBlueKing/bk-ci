@@ -48,6 +48,7 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
+import kotlin.math.log
 
 @Suppress("ALL")
 object LoggerService {
@@ -272,6 +273,20 @@ object LoggerService {
         addLog(logMessage)
     }
 
+    fun archiveLogFiles() {
+        if (LogMode.UPLOAD == AgentEnv.getLogMode()) return
+        logger.info("Start to archive log files because of LogMode[${AgentEnv.getLogMode()}]")
+        try {
+            taskId2LogFile.forEach { (elementId, logFile) ->
+                logger.info("Archive task[$elementId] build log file(${logFile.absolutePath})")
+                ArchiveUtils.archivePipelineFile(logFile, buildVariables!!)
+            }
+            logger.info("Finished archiving log ${taskId2LogFile.size} files")
+        } catch (e: Exception) {
+            logger.warn("Fail to finish the logs", e)
+        }
+    }
+
     private fun addLog(message: LogMessage) = queue.put(message)
 
     private fun sendMultiLog(logMessages: List<LogMessage>) {
@@ -334,13 +349,6 @@ object LoggerService {
             val result = logResourceApi.finishLog(tag, jobId, executeCount, subTag)
             if (result.isNotOk()) {
                 logger.error("Fail to send the log status ：${result.message}")
-            }
-            val finishedLogFile = taskId2LogFile[elementId] ?: return
-            if (LogMode.LOCAL == AgentEnv.getLogMode() &&
-                !tag.isNullOrBlank() &&
-                finishedLogFile.exists()
-            ) {
-                archiveService.execute { ArchiveUtils.archivePipelineFile(finishedLogFile, buildVariables!!) }
             }
         } catch (e: Exception) {
             logger.warn("Fail to finish the logs", e)

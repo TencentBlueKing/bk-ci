@@ -59,7 +59,7 @@ object Runner {
     @Suppress("ALL")
     fun run(workspaceInterface: WorkspaceInterface, systemExit: Boolean = true) {
         var workspacePathFile: File? = null
-        var buildLogPathFile: File?
+        val pipelineLogDir: File?
         var failed = false
         try {
             logger.info("Start the worker ...")
@@ -91,11 +91,11 @@ object Runner {
 
                 val variablesMap = buildVariables.variablesWithType.map { it.key to it.value.toString() }.toMap()
                 workspacePathFile = workspaceInterface.getWorkspaceAndLogDir(variablesMap, buildVariables.pipelineId).first
-                buildLogPathFile = workspaceInterface.getWorkspaceAndLogDir(variablesMap, buildVariables.pipelineId).second
+                pipelineLogDir = workspaceInterface.getWorkspaceAndLogDir(variablesMap, buildVariables.pipelineId).second
 
-                LoggerService.addNormalLine("Start the runner at workspace(${workspacePathFile.absolutePath}), buildLog(${buildLogPathFile.absolutePath})")
-                logger.info("Start the runner at workspace(${workspacePathFile.absolutePath}), buildLog(${buildLogPathFile.absolutePath})")
-                LoggerService.pipelineLogDir = buildLogPathFile
+                LoggerService.addNormalLine("Start the runner at workspace(${workspacePathFile.absolutePath}), buildLog(${pipelineLogDir.absolutePath})")
+                logger.info("Start the runner at workspace(${workspacePathFile.absolutePath}), buildLog(${pipelineLogDir.absolutePath})")
+                LoggerService.pipelineLogDir = pipelineLogDir
 
                 loop@ while (true) {
                     logger.info("Start to claim the task")
@@ -210,6 +210,7 @@ object Runner {
                 LoggerService.stop()
                 Heartbeat.stop()
                 ProcessService.endBuild()
+                LoggerService.archiveLogFiles()
             }
         } catch (e: Exception) {
             failed = true
