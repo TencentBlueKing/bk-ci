@@ -34,7 +34,7 @@ import org.slf4j.MDC
 /**
  * 流水线事件
  */
-abstract class IPipelineEvent(
+open class IPipelineEvent(
     open var actionType: ActionType,
     open val source: String,
     open val projectId: String,

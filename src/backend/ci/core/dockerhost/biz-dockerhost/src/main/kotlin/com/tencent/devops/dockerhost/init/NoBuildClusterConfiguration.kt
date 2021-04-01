@@ -187,12 +187,12 @@ class NoBuildClusterConfiguration @Autowired constructor(
         container.setMaxConcurrentConsumers(20)
         container.setStartConsumerMinInterval(1)
         container.setConsecutiveActiveTrigger(1)
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
         container.setMismatchedQueuesFatal(true)
         val messageListenerAdapter =
             MessageListenerAdapter(buildLessStopListener, buildLessStopListener::handleMessage.name)
         messageListenerAdapter.setMessageConverter(messageConverter)
-        container.messageListener = messageListenerAdapter
+        container.setMessageListener(messageListenerAdapter)
         return container
     }
 

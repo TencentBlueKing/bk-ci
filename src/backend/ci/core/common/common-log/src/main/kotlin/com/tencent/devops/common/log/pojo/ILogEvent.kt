@@ -27,7 +27,7 @@
 
 package com.tencent.devops.common.log.pojo
 
-abstract class ILogEvent(
+open class ILogEvent(
     open val buildId: String,
     open val retryTime: Int,
     open val delayMills: Int
