@@ -136,6 +136,22 @@ class ProjectTagService @Autowired constructor(
         if (projectIds == null || projectIds.isEmpty()) {
             throw ParamBlankException("Invalid projectIds")
         }
+
+        val projectInfos = projectDao.listByEnglishName(dslContext,
+            projectIds,
+            null,
+            null,
+            null
+        ).map { it.englishName }
+        if (projectIds.size > projectInfos.size) {
+            val notExistProjectList = mutableListOf<String>()
+            projectIds.forEach {
+                if (!projectInfos.contains(it)) {
+                    notExistProjectList.add(it)
+                }
+            }
+            throw ParamBlankException("project $notExistProjectList not exist")
+        }
     }
     private fun checkChannel(channel: String?) {
         if (channel == null || channel.isEmpty()) {
