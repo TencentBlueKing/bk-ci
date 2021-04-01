@@ -55,7 +55,12 @@ class PluginGitCheckDao {
                 RepositoryType.ID -> step.and(REPO_ID.eq(repositoryConfig.getRepositoryId()))
                 RepositoryType.NAME -> step.and(REPO_NAME.eq(repositoryConfig.getRepositoryId()))
             }
-            return step.fetchOne()
+            val result = step.orderBy(BUILD_NUMBER.desc()).fetch()
+            return if (result == null || result.isEmpty()) {
+                null
+            } else {
+                result.first()
+            }
         }
     }
 
