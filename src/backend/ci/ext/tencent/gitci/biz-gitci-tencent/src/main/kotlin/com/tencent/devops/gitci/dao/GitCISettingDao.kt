@@ -77,7 +77,8 @@ class GitCISettingDao {
                         NOTIFY_TYPE,
                         NOTIFY_RECEIVERS,
                         NOTIFY_RTX_GROUPS,
-                        IS_FAILED_NOTIFY
+                        IS_FAILED_NOTIFY,
+                        ENABLE_MR_BLOCK
                     )
                         .values(
                             conf.gitProjectId,
@@ -116,7 +117,8 @@ class GitCISettingDao {
                             } else {
                                 JsonUtil.toJson(conf.notifyRtxGroups!!)
                             },
-                            conf.isFailedNotify
+                            conf.isFailedNotify,
+                            conf.enableMrBlock
                         ).execute()
                 } else {
                     context.update(this)
@@ -159,6 +161,7 @@ class GitCISettingDao {
                             }
                         )
                         .set(IS_FAILED_NOTIFY, conf.isFailedNotify)
+                        .set(ENABLE_MR_BLOCK, conf.enableMrBlock)
                         .where(ID.eq(conf.gitProjectId))
                         .execute()
                 }
@@ -235,7 +238,8 @@ class GitCISettingDao {
                     } else {
                         JsonUtil.getObjectMapper().readValue(conf.notifyRtxGroups) as Set<String>
                     },
-                    isFailedNotify = conf.isFailedNotify
+                    isFailedNotify = conf.isFailedNotify,
+                    enableMrBlock = conf.enableMrBlock
                 )
             }
         }

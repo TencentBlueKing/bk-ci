@@ -43,6 +43,7 @@ import java.util.Collections
 class ScmClient @Autowired constructor(
     private val client: Client
 ) {
+    // 用来进行展示状态的CommitCheck
     fun pushCommitCheck(
         commitId: String,
         description: String,
@@ -80,6 +81,45 @@ class ScmClient @Autowired constructor(
     } catch (e: Exception) {
         logger.error("user $userId buildId $buildId pushCommitCheck error.", e)
     }
+
+    // 用来进行锁定提交的CommitCheck
+    // 有流水线前锁定的key为 noPipelineBuildEvent
+    // 有流水线后锁定的key为 pipelineId(buildId)
+    fun pushCommitCheckWithBlock(
+        commitId: String,
+        mergeRequestId: Long,
+        userId: String,
+        context: String,
+        block: Boolean,
+        gitProjectConf: GitRepositoryConf
+    ) = try {
+        val titleData = mutableListOf<String>()
+        val resultMap = mutableMapOf<String, MutableList<List<String>>>()
+
+        val token = getAccessToken(gitProjectConf.gitProjectId).first
+        val request = CommitCheckRequest(
+            projectName = gitProjectConf.gitProjectId.toString(),
+            url = gitProjectConf.gitHttpUrl,
+            type = ScmType.CODE_GIT,
+            privateKey = null,
+            passPhrase = null,
+            token = token,
+            region = null,
+            commitId = commitId,
+            state = "",
+            targetUrl = "",
+            context = context,
+            description = "",
+            block = block,
+            mrRequestId = mergeRequestId,
+            reportData = Pair(titleData, resultMap)
+        )
+        logger.info("user $userId pushCommitCheckWithBlock: $request")
+        client.getScm(ServiceGitResource::class).addCommitCheck(request)
+    } catch (e: Exception) {
+        logger.error("user $userId pushCommitCheckWithBlock error.", e)
+    }
+
 
     private fun getAccessToken(gitProjectId: Long): Pair<String, String?> {
         val gitOauthData = client.getScm(ServiceGitResource::class).getToken(gitProjectId).data

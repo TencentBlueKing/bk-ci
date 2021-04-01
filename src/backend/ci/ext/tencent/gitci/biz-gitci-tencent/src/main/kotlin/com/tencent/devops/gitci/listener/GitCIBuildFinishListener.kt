@@ -120,9 +120,24 @@ class GitCIBuildFinishListener @Autowired constructor(
                 if (record["MERGE_REQUEST_ID"] != null) {
                     mergeRequestId = record["MERGE_REQUEST_ID"] as Long
                 }
-                val description = record["DESCRIPTION"] as String
+
                 val gitProjectConf = gitCISettingDao.getSetting(dslContext, gitProjectId)
                     ?: throw OperationException("git ci projectCode not exist")
+
+                // 构建结束后取消mr锁定
+                if (mergeRequestId != 0L) {
+                    scmClient.pushCommitCheckWithBlock(
+                        commitId = commitId,
+                        mergeRequestId = mergeRequestId,
+                        userId = buildFinishEvent.userId,
+                        context = "${buildFinishEvent.pipelineId}(${buildFinishEvent.buildId})",
+                        block = false,
+                        gitProjectConf = gitProjectConf
+                    )
+                }
+
+                val description = record["DESCRIPTION"] as String
+
                 val pipeline = gitPipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId)
                     ?: throw OperationException("git ci pipeline not exist")
 

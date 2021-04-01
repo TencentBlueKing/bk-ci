@@ -74,5 +74,7 @@ data class GitRepositoryConf(
     @ApiModelProperty("通知的企业微信群")
     val notifyRtxGroups: Set<String>? = setOf(),
     @ApiModelProperty("是否只在失败时通知")
-    val isFailedNotify: Boolean? = true
+    val isFailedNotify: Boolean? = true,
+    @ApiModelProperty("是否开启Mr锁定")
+    val enableMrBlock: Boolean? = true
 ) : Repository(gitProjectId, name, url, homepage, gitHttpUrl, gitSshUrl)
