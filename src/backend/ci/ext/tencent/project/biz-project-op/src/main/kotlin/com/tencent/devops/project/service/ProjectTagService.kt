@@ -37,10 +37,10 @@ import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.project.api.op.pojo.OpProjectTagUpdateDTO
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectTagDao
-import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.concurrent.Executors
 
@@ -54,10 +54,14 @@ class ProjectTagService @Autowired constructor(
 
     private val executePool = Executors.newFixedThreadPool(1)
 
+    @Value("\${system.router}")
+    val routerTagList: String = ""
+
     fun updateTagByProject(
         opProjectTagUpdateDTO: OpProjectTagUpdateDTO
     ): Result<Boolean> {
         logger.info("updateTagByProject: $opProjectTagUpdateDTO")
+        checkRouteTag(opProjectTagUpdateDTO.routerTag)
         checkProject(opProjectTagUpdateDTO.projectCodeList)
         projectTagDao.updateProjectTags(
             dslContext = dslContext,
@@ -78,6 +82,7 @@ class ProjectTagService @Autowired constructor(
         opProjectTagUpdateDTO: OpProjectTagUpdateDTO
     ): Result<Boolean> {
         logger.info("updateTagByOrg: $opProjectTagUpdateDTO")
+        checkRouteTag(opProjectTagUpdateDTO.routerTag)
         checkOrg(opProjectTagUpdateDTO)
         projectTagDao.updateOrgTags(
             dslContext = dslContext,
@@ -108,6 +113,7 @@ class ProjectTagService @Autowired constructor(
         opProjectTagUpdateDTO: OpProjectTagUpdateDTO
     ): Result<Boolean> {
         logger.info("updateTagByChannel: $opProjectTagUpdateDTO")
+        checkRouteTag(opProjectTagUpdateDTO.routerTag)
         checkChannel(opProjectTagUpdateDTO.channel)
         projectTagDao.updateChannelTags(
             dslContext = dslContext,
@@ -179,6 +185,15 @@ class ProjectTagService @Autowired constructor(
             while (projectInfos.size == limit)
         } finally {
            logger.info("refreshRouterByChannel success")
+        }
+    }
+
+    private fun checkRouteTag(routerTag: String) {
+        if (routerTag.isNullOrBlank()) {
+            throw ParamBlankException("routerTag error:empty routerTag")
+        }
+        if (!routerTagList.contains(routerTag)) {
+            throw ParamBlankException("routerTag error:system unkown routerTag")
         }
     }
 
