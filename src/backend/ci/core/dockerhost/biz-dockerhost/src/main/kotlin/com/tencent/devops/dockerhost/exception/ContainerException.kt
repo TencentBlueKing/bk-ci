@@ -27,4 +27,9 @@
 
 package com.tencent.devops.dockerhost.exception
 
-class ContainerException(message: String) : RuntimeException(message)
+import com.tencent.devops.dockerhost.common.ErrorCodeEnum
+
+class ContainerException(
+    val errorCodeEnum: ErrorCodeEnum,
+    message: String
+) : RuntimeException(message)

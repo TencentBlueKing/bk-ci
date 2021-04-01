@@ -32,11 +32,9 @@ import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.DispatchType
 
 data class TStackDispatchType(@JsonProperty("value") val tstackAgentId: String) : DispatchType(tstackAgentId) {
-    override fun cleanDataBeforeSave() {
-    }
+    override fun cleanDataBeforeSave() = Unit
 
-    override fun replaceField(variables: Map<String, String>) {
-    }
+    override fun replaceField(variables: Map<String, String>) = Unit
 
     override fun buildType() = BuildType.valueOf(BuildType.TSTACK.name)
 }

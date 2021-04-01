@@ -50,7 +50,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import javax.ws.rs.NotFoundException
 
-@Service@Suppress("ALL")
+@Service
 class PipelineDispatchService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
@@ -82,95 +82,109 @@ class PipelineDispatchService @Autowired constructor(
         return dispatchers!!
     }
 
-    fun startUp(pipelineAgentStartupEvent: PipelineAgentStartupEvent) {
-        logger.info("${pipelineAgentStartupEvent.pipelineId}|${pipelineAgentStartupEvent.buildId}|VM_START" +
-            "|seq=${pipelineAgentStartupEvent.vmSeqId})")
+    fun startUp(startupEvent: PipelineAgentStartupEvent) {
+        logger.info("ENGINE|${startupEvent.buildId}|VM_START|j(${startupEvent.vmSeqId})|" +
+            "dispatchType=${startupEvent.dispatchType}")
         // Check if the pipeline is running
-        val record = client.get(ServicePipelineResource::class).isPipelineRunning(
-            pipelineAgentStartupEvent.projectId,
-            pipelineAgentStartupEvent.buildId,
-            ChannelCode.valueOf(pipelineAgentStartupEvent.channelCode)
+        val resource = client.get(ServicePipelineResource::class).isPipelineRunning(
+            projectId = startupEvent.projectId,
+            buildId = startupEvent.buildId,
+            channelCode = ChannelCode.valueOf(startupEvent.channelCode)
         )
-        if (record.isNotOk() || record.data == null) {
-            logger.warn("Fail to check if pipeline is running because of ${record.message}")
+        if (resource.isNotOk() || resource.data == null) {
+            logger.warn("ENGINE|${startupEvent.buildId}|VM_START|j(${startupEvent.vmSeqId})|msg=${resource.message}")
             return
         }
 
-        if (!record.data!!) {
-            logger.warn("The build($pipelineAgentStartupEvent) is not running")
+        if (!resource.data!!) {
+            logger.warn("ENGINE|${startupEvent.buildId}|VM_START|j(${startupEvent.vmSeqId})|ALREADY_FINISH")
             return
         }
 
-        if (pipelineAgentStartupEvent.retryTime == 0) {
+        if (startupEvent.retryTime == 0) {
             buildLogPrinter.addLine(
-                buildId = pipelineAgentStartupEvent.buildId,
+                buildId = startupEvent.buildId,
                 message = "构建环境准备中...",
-                tag = VMUtils.genStartVMTaskId(pipelineAgentStartupEvent.containerId),
-                jobId = pipelineAgentStartupEvent.containerHashId,
-                executeCount = pipelineAgentStartupEvent.executeCount ?: 1
+                tag = VMUtils.genStartVMTaskId(startupEvent.containerId),
+                jobId = startupEvent.containerHashId,
+                executeCount = startupEvent.executeCount ?: 1
             )
         }
 
-        logger.info("Get the dispatch ${pipelineAgentStartupEvent.dispatchType}")
-
-        getDispatchers().forEach {
-            if (it.canDispatch(pipelineAgentStartupEvent)) {
-                // JOB配额判断
-                if (!jobQuotaBusinessService.checkJobQuota(pipelineAgentStartupEvent, buildLogPrinter)) {
-                    it.onFailBuild(
-                        client = client,
-                        buildLogPrinter = buildLogPrinter,
-                        event = pipelineAgentStartupEvent,
-                        errorType = ErrorType.USER,
-                        errorCode = ErrorCodeEnum.JOB_QUOTA_EXCESS.errorCode,
-                        errorMsg = "系统JOB配额超限"
-                    )
-                    return
-                }
-                it.startUp(pipelineAgentStartupEvent)
+        val dispatcher = findDispatch(startupEvent) // 最少只有一个Dispatcher
+        if (dispatcher != null) {
+            // JOB配额判断
+            if (!jobQuotaBusinessService.checkJobQuota(startupEvent, buildLogPrinter)) {
+                dispatcher.onFailBuild(
+                    client = client,
+                    buildLogPrinter = buildLogPrinter,
+                    event = startupEvent,
+                    errorType = ErrorType.USER,
+                    errorCode = ErrorCodeEnum.JOB_QUOTA_EXCESS.errorCode,
+                    errorMsg = "系统JOB配额超限"
+                )
+            } else {
+                dispatcher.startUp(startupEvent)
                 // 到这里说明JOB已经启动成功(但是不代表Agent启动成功)，开始累加使用额度
-                val vmType = JobQuotaVmType.parse(pipelineAgentStartupEvent.dispatchType)
+                val vmType = JobQuotaVmType.parse(startupEvent.dispatchType)
                 if (null != vmType) {
                     jobQuotaBusinessService.insertRunningJob(
-                        projectId = pipelineAgentStartupEvent.projectId,
+                        projectId = startupEvent.projectId,
                         vmType = vmType,
-                        buildId = pipelineAgentStartupEvent.buildId,
-                        vmSeqId = pipelineAgentStartupEvent.vmSeqId
+                        buildId = startupEvent.buildId,
+                        vmSeqId = startupEvent.vmSeqId
                     )
                 }
-                return
+            }
+        } else {
+            logger.error("ENGINE|${startupEvent.buildId}|VM_START|j(${startupEvent.vmSeqId})|" +
+                "dispatchType=${startupEvent.dispatchType}")
+        }
+    }
+
+    /**
+     * 根据事件[startupEvent]参数，查找合适的[Dispatcher],如果没有则返回空。
+     */
+    private fun findDispatch(startupEvent: PipelineAgentStartupEvent): Dispatcher? {
+        getDispatchers().forEach {
+            if (it.canDispatch(startupEvent)) {
+                return it
             }
         }
-        throw InvalidParamException("Not Found dispatcher for the build ${pipelineAgentStartupEvent.dispatchType}")
+        return null
     }
 
     fun shutdown(pipelineAgentShutdownEvent: PipelineAgentShutdownEvent) {
-            logger.info("Start to finish the pipeline build($pipelineAgentShutdownEvent)")
-            getDispatchers().forEach {
-                try {
-                    it.shutdown(pipelineAgentShutdownEvent)
-                } finally {
-                    // 不管shutdown成功失败，都要回收配额；这里回收job，将自动累加agent执行时间
-                    jobQuotaBusinessService.deleteRunningJob(
-                        projectId = pipelineAgentShutdownEvent.projectId,
-                        buildId = pipelineAgentShutdownEvent.buildId,
-                        vmSeqId = pipelineAgentShutdownEvent.vmSeqId
-                    )
-                }
-            }
-    }
-
-    fun reDispatch(pipelineAgentStartupEvent: PipelineAgentStartupEvent) {
+        logger.info("Start to finish the pipeline build($pipelineAgentShutdownEvent)")
         getDispatchers().forEach {
-            if (it.canDispatch(pipelineAgentStartupEvent)) {
-                it.retry(client, buildLogPrinter, pipelineEventDispatcher, pipelineAgentStartupEvent)
-                return
+            try {
+                it.shutdown(pipelineAgentShutdownEvent)
+            } finally {
+                // 不管shutdown成功失败，都要回收配额；这里回收job，将自动累加agent执行时间
+                jobQuotaBusinessService.deleteRunningJob(
+                    projectId = pipelineAgentShutdownEvent.projectId,
+                    buildId = pipelineAgentShutdownEvent.buildId,
+                    vmSeqId = pipelineAgentShutdownEvent.vmSeqId
+                )
             }
         }
     }
 
+    fun reDispatch(pipelineAgentStartupEvent: PipelineAgentStartupEvent) {
+        findDispatch(pipelineAgentStartupEvent)?.retry(
+            client = client,
+            buildLogPrinter = buildLogPrinter,
+            pipelineEventDispatcher = pipelineEventDispatcher,
+            event = pipelineAgentStartupEvent
+        )
+    }
+
     fun queryPipelineByBuildAndSeqId(buildId: String, vmSeqId: String): PipelineBuild {
-        val list = dispatchPipelineBuildDao.getPipelineByBuildIdOrNull(dslContext, buildId, vmSeqId)
+        val list = dispatchPipelineBuildDao.getPipelineByBuildIdOrNull(
+            dslContext = dslContext,
+            buildId = buildId,
+            vmSeqId = vmSeqId
+        )
         if (list.isEmpty()) {
             throw throw NotFoundException("VM pipeline[$buildId,$vmSeqId] is not exist")
         }

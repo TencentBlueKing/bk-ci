@@ -27,7 +27,7 @@
 
 package com.tencent.devops.common.archive.util
 
-import org.springframework.boot.context.embedded.MimeMappings
+import org.springframework.boot.web.server.MimeMappings
 
 object MimeUtil {
     const val YAML_MIME_TYPE = "application/x-yaml"

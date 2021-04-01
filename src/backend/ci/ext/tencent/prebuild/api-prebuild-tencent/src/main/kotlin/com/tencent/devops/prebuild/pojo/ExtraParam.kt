@@ -34,5 +34,7 @@ import com.fasterxml.jackson.annotation.JsonInclude
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ExtraParam(
     val codeccScanPath: String? = null,
-    val incrementFileList: List<String>? = null
+    val incrementFileList: List<String>? = null,
+    val ideVersion: String? = null,
+    val pluginVersion: String? = null
 )

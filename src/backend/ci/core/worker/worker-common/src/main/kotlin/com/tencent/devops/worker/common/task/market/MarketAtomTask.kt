@@ -319,8 +319,8 @@ open class MarketAtomTask : ITask() {
                     }
                 }
                 throw TaskExecuteException(
-                    errorType = ErrorType.USER,
-                    errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
+                    errorType = ErrorType.SYSTEM,
+                    errorCode = ErrorCode.SYSTEM_INNER_TASK_ERROR,
                     errorMsg = defaultMessage.toString()
                 )
             }

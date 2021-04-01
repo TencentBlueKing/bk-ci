@@ -53,10 +53,6 @@ import org.junit.Test
 class ModelUtilsTest {
 
     @Test
-    fun getModelParamsByInput() {
-    }
-
-    @Test
     fun initContainerOldData() {
         NormalContainer(enableSkip = true, conditions = listOf(NameAndValue(key = "a", value = "1"))).let { container ->
             ModelUtils.initContainerOldData(container)
@@ -64,7 +60,6 @@ class ModelUtilsTest {
             assertNotNull(jobControlOption)
             assertTrue(jobControlOption?.enable!!)
             assertTrue(jobControlOption.runCondition == JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN)
-            assertTrue(jobControlOption.customVariables == container.conditions)
         }
 
         NormalContainer(enableSkip = true, conditions = listOf()).let { container ->
@@ -73,7 +68,6 @@ class ModelUtilsTest {
             assertNotNull(jobControlOption)
             assertTrue(jobControlOption?.enable!!)
             assertTrue(jobControlOption.runCondition == JobRunCondition.STAGE_RUNNING)
-            assertTrue(jobControlOption.customVariables == container.conditions)
         }
 
         VMBuildContainer(baseOS = VMBaseOS.MACOS).let { container ->
@@ -156,7 +150,9 @@ class ModelUtilsTest {
         ModelUtils.refreshCanRetry(model = model, canRetry = true, status = BuildStatus.SUCCEED)
         assertFalse(noRetryElement.canRetry!!)
 
-        val retryElement = LinuxScriptElement(script = "pwd", scriptType = BuildScriptType.SHELL, continueNoneZero = false)
+        val retryElement = LinuxScriptElement(script = "pwd",
+            scriptType = BuildScriptType.SHELL,
+            continueNoneZero = false)
         val elements = mutableListOf(retryElement)
         containers.add(VMBuildContainer(baseOS = VMBaseOS.MACOS, elements = elements))
         ModelUtils.refreshCanRetry(model = model, canRetry = true, status = BuildStatus.FAILED)
@@ -171,8 +167,12 @@ class ModelUtilsTest {
         ModelUtils.refreshCanRetry(model = model, canRetry = true, status = BuildStatus.FAILED)
         assertTrue(retryElement.canRetry!!)
 
-        val preTaskFailedRun = LinuxScriptElement(script = "cd ..", scriptType = BuildScriptType.SHELL, continueNoneZero = false)
-        preTaskFailedRun.additionalOptions = elementAdditionalOptions(enable = true, runCondition = RunCondition.PRE_TASK_FAILED_BUT_CANCEL, continueWhenFailed = false)
+        val preTaskFailedRun = LinuxScriptElement(script = "cd ..",
+            scriptType = BuildScriptType.SHELL,
+            continueNoneZero = false)
+        preTaskFailedRun.additionalOptions = elementAdditionalOptions(enable = true,
+            runCondition = RunCondition.PRE_TASK_FAILED_BUT_CANCEL,
+            continueWhenFailed = false)
         elements.add(preTaskFailedRun)
         // 通过前面插件即使失败也运行，让前置失败的插件不能重试
         ModelUtils.refreshCanRetry(model = model, canRetry = true, status = BuildStatus.FAILED)
@@ -180,7 +180,9 @@ class ModelUtilsTest {
         assertFalse(preTaskFailedRun.canRetry!!)
 
         // 通过设置失败继续，让该插件不能重试
-        preTaskFailedRun.additionalOptions = elementAdditionalOptions(enable = true, runCondition = RunCondition.PRE_TASK_FAILED_BUT_CANCEL, continueWhenFailed = true)
+        preTaskFailedRun.additionalOptions = elementAdditionalOptions(enable = true,
+            runCondition = RunCondition.PRE_TASK_FAILED_BUT_CANCEL,
+            continueWhenFailed = true)
 
         ModelUtils.refreshCanRetry(model = model, canRetry = true, status = BuildStatus.FAILED)
         assertFalse(retryElement.canRetry!!)

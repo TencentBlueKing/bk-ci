@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.pojo.atom.enums
 
+@Suppress("UNUSED")
 enum class AtomStatusEnum(val status: Int) {
     INIT(0), // 初始化
     COMMITTING(1), // 提交中
@@ -54,22 +55,28 @@ enum class AtomStatusEnum(val status: Int) {
         }
 
         fun getAtomStatus(status: Int): String {
-            return when (status) {
-                0 -> INIT.name
-                1 -> COMMITTING.name
-                2 -> BUILDING.name
-                3 -> BUILD_FAIL.name
-                4 -> TESTING.name
-                5 -> AUDITING.name
-                6 -> AUDIT_REJECT.name
-                7 -> RELEASED.name
-                8 -> GROUNDING_SUSPENSION.name
-                9 -> UNDERCARRIAGING.name
-                10 -> UNDERCARRIAGED.name
-                11 -> CODECCING.name
-                12 -> CODECC_FAIL.name
-                else -> INIT.name
+            values().forEach { enumObj ->
+                if (enumObj.status == status) {
+                    return enumObj.name
+                }
             }
+            return INIT.name
+//            return when (status) {
+//                0 -> INIT.name
+//                1 -> COMMITTING.name
+//                2 -> BUILDING.name
+//                3 -> BUILD_FAIL.name
+//                4 -> TESTING.name
+//                5 -> AUDITING.name
+//                6 -> AUDIT_REJECT.name
+//                7 -> RELEASED.name
+//                8 -> GROUNDING_SUSPENSION.name
+//                9 -> UNDERCARRIAGING.name
+//                10 -> UNDERCARRIAGED.name
+//                11 -> CODECCING.name
+//                12 -> CODECC_FAIL.name
+//                else -> INIT.name
+//            }
         }
     }
 }

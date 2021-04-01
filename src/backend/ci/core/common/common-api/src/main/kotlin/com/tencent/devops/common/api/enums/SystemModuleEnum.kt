@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.api.enums
 
+@Suppress("UNUSED")
 enum class SystemModuleEnum(val code: String) {
     COMMON("00"), // 公共模块
     PROCESS("01"), // 流水线
@@ -53,30 +54,12 @@ enum class SystemModuleEnum(val code: String) {
 
     companion object {
         fun getSystemModule(code: String): String {
-            return when (code) {
-                "00" -> COMMON.name
-                "01" -> PROCESS.name
-                "02" -> ARTIFACTORY.name
-                "03" -> DISPATCH.name
-                "04" -> DOCKERHOST.name
-                "05" -> ENVIRONMENT.name
-                "06" -> EXPERIENCE.name
-                "07" -> IMAGE.name
-                "08" -> LOG.name
-                "09" -> MEASURE.name
-                "10" -> MONITORING.name
-                "11" -> NOTIFY.name
-                "12" -> OPENAPI.name
-                "13" -> PLUGIN.name
-                "14" -> QUALITY.name
-                "15" -> REPOSITORY.name
-                "16" -> SCM.name
-                "17" -> SUPPORT.name
-                "18" -> TICKET.name
-                "19" -> PROJECT.name
-                "20" -> STORE.name
-                else -> COMMON.name
+            values().forEach {
+                if (it.code == code) {
+                    return it.name
+                }
             }
+            return COMMON.name
         }
     }
 }

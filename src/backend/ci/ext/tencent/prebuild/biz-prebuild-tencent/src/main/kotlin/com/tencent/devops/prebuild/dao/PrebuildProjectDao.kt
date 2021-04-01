@@ -43,41 +43,49 @@ class PrebuildProjectDao {
         owner: String,
         yaml: String,
         pipelineId: String,
-        workspace: String
+        workspace: String,
+        ideVersion: String?,
+        pluginVersion: String?
     ) {
         with(TPrebuildProject.T_PREBUILD_PROJECT) {
             dslContext.insertInto(
-                    this,
-                    PREBUILD_PROJECT_ID,
-                    PROJECT_ID,
-                    OWNER,
-                    DESC,
-                    CREATE_TIME,
-                    CREATOR,
-                    UPDATE_TIME,
-                    LAST_MODIFY_USER,
-                    YAML,
-                    PIPELINE_ID,
-                    WORKSPACE
+                this,
+                PREBUILD_PROJECT_ID,
+                PROJECT_ID,
+                OWNER,
+                DESC,
+                CREATE_TIME,
+                CREATOR,
+                UPDATE_TIME,
+                LAST_MODIFY_USER,
+                YAML,
+                PIPELINE_ID,
+                WORKSPACE,
+                IDE_VERSION,
+                PLUGIN_VERSION
             ).values(
-                    prebuildProjectId,
-                    projectId,
-                    owner,
-                    "",
-                    LocalDateTime.now(),
-                    owner,
-                    LocalDateTime.now(),
-                    owner,
-                    yaml,
-                    pipelineId,
-                    workspace
+                prebuildProjectId,
+                projectId,
+                owner,
+                "",
+                LocalDateTime.now(),
+                owner,
+                LocalDateTime.now(),
+                owner,
+                yaml,
+                pipelineId,
+                workspace,
+                ideVersion,
+                pluginVersion
             ).onDuplicateKeyUpdate()
-                    .set(UPDATE_TIME, LocalDateTime.now())
-                    .set(LAST_MODIFY_USER, owner)
-                    .set(YAML, yaml)
-                    .set(PIPELINE_ID, pipelineId)
-                    .set(WORKSPACE, workspace)
-                    .execute()
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .set(LAST_MODIFY_USER, owner)
+                .set(YAML, yaml)
+                .set(PIPELINE_ID, pipelineId)
+                .set(WORKSPACE, workspace)
+                .set(IDE_VERSION, ideVersion)
+                .set(PLUGIN_VERSION, pluginVersion)
+                .execute()
         }
     }
 
@@ -162,10 +170,10 @@ class PrebuildProjectDao {
     ): TPrebuildProjectRecord? {
         with(TPrebuildProject.T_PREBUILD_PROJECT) {
             return dslContext.selectFrom(this)
-                    .where(PREBUILD_PROJECT_ID.eq(prebuildProjectId))
-                    .and(OWNER.eq(userId))
-                    .and(WORKSPACE.eq(workspace))
-                    .fetchAny()
+                .where(PREBUILD_PROJECT_ID.eq(prebuildProjectId))
+                .and(OWNER.eq(userId))
+                .and(WORKSPACE.eq(workspace))
+                .fetchAny()
         }
     }
 
