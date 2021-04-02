@@ -49,7 +49,7 @@ class ExperienceBaseService @Autowired constructor(
     fun getRecordIdsByUserId(
         userId: String,
         groupIdType: GroupIdTypeEnum
-    ): MutableSet<Long> {
+    ): Set<Long> {
         val recordIds = mutableSetOf<Long>()
         // 把有自己的组的experience拿出来 && 把公开的experience拿出来
         val groupIds = mutableSetOf<Long>()
