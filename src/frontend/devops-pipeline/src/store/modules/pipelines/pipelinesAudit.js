@@ -3,7 +3,7 @@ import {
     AUDIT_API_URL_PREFIX
 } from '@/store/constants'
 
-const prefix = `/${AUDIT_API_URL_PREFIX}/user/audit`
+const prefix = `/${AUDIT_API_URL_PREFIX}/user/pipelines/audit`
 
 const state = {
 
