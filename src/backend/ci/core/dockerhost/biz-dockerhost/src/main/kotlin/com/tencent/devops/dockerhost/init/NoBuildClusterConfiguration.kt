@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -27,19 +28,15 @@
 package com.tencent.devops.dockerhost.init
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.dockerhost.config.DockerHostConfig
-import com.tencent.devops.dockerhost.dispatch.AlertApi
-import com.tencent.devops.dockerhost.dispatch.BuildResourceApi
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
 import com.tencent.devops.dockerhost.listener.BuildLessStartListener
 import com.tencent.devops.dockerhost.listener.BuildLessStopListener
-import com.tencent.devops.dockerhost.services.DockerHostBuildLessService
-import com.tencent.devops.dockerhost.services.DockerHostWorkSpaceService
+import com.tencent.devops.dockerhost.services.DockerHostBuildAgentLessService
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.Binding
@@ -70,46 +67,22 @@ import kotlin.system.exitProcess
 @Configuration
 @ConditionalOnProperty(prefix = "dockerhost", name = ["mode"], havingValue = "docker_no_build")
 @EnableScheduling
-class NoBuildClusterConfiguration : SchedulingConfigurer {
-
-    @Autowired
-    private lateinit var dockerHostBuildLessService: DockerHostBuildLessService
+@Suppress("ALL")
+class NoBuildClusterConfiguration @Autowired constructor(
+    val dockerHostBuildAgentLessService: DockerHostBuildAgentLessService
+) : SchedulingConfigurer {
 
     override fun configureTasks(scheduledTaskRegistrar: ScheduledTaskRegistrar) {
         // 5分钟清理一次已经退出的容器
         scheduledTaskRegistrar.addFixedRateTask(
             IntervalTask(
-                Runnable { dockerHostBuildLessService.clearContainers() }, 300 * 1000, 180 * 1000
+                Runnable { dockerHostBuildAgentLessService.clearContainers() }, 300 * 1000, 180 * 1000
             )
         )
-        /*scheduledTaskRegistrar.addFixedRateTask(
-            IntervalTask(
-                Runnable { dockerHostBuildLessService.endBuild() }, 20 * 1000, 120 * 1000
-            )
-        )*/
     }
 
     @Bean
     fun pipelineEventDispatcher(rabbitTemplate: RabbitTemplate) = MQEventDispatcher(rabbitTemplate)
-
-    @Bean
-    fun dockerHostBuildLessService(
-        dockerHostConfig: DockerHostConfig,
-        pipelineEventDispatcher: PipelineEventDispatcher,
-        dockerHostWorkSpaceService: DockerHostWorkSpaceService,
-        buildResourceApi: BuildResourceApi,
-        dockerHostBuildResourceApi: DockerHostBuildResourceApi,
-        alertApi: AlertApi
-    ): DockerHostBuildLessService {
-        return DockerHostBuildLessService(
-            dockerHostConfig,
-            pipelineEventDispatcher,
-            dockerHostWorkSpaceService,
-            buildResourceApi,
-            dockerHostBuildResourceApi,
-            alertApi
-        )
-    }
 
     @Bean
     fun rabbitAdmin(connectionFactory: ConnectionFactory): RabbitAdmin {
@@ -157,7 +130,10 @@ class NoBuildClusterConfiguration : SchedulingConfigurer {
         @Autowired buildLessStartListener: BuildLessStartListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-        val messageListenerAdapter = MessageListenerAdapter(buildLessStartListener, buildLessStartListener::handleMessage.name)
+        val messageListenerAdapter = MessageListenerAdapter(
+            buildLessStartListener,
+            buildLessStartListener::handleMessage.name
+        )
         messageListenerAdapter.setMessageConverter(messageConverter)
         return Tools.createSimpleMessageListenerContainerByAdapter(
             connectionFactory = connectionFactory,
@@ -172,8 +148,8 @@ class NoBuildClusterConfiguration : SchedulingConfigurer {
     }
 
     @Bean
-    fun buildLessStartListener(dockerHostBuildLessService: DockerHostBuildLessService, alertApi: AlertApi) =
-        BuildLessStartListener(dockerHostBuildLessService, alertApi)
+    fun buildLessStartListener(dockerHostBuildAgentLessService: DockerHostBuildAgentLessService) =
+        BuildLessStartListener(dockerHostBuildAgentLessService)
 
     @Bean
     fun buildStopQueue(dockerHostBuildResourceApi: DockerHostBuildResourceApi): Queue {
@@ -182,7 +158,7 @@ class NoBuildClusterConfiguration : SchedulingConfigurer {
         val result = dockerHostBuildResourceApi.getHost(hostTag)
         if (result == null) {
             logger.error("[Init]| hostTag=$hostTag fail exit!")
-            System.exit(199)
+            exitProcess(199)
         }
         val hostInfo = result!!.data
         if (hostInfo == null) {
@@ -211,18 +187,18 @@ class NoBuildClusterConfiguration : SchedulingConfigurer {
         container.setMaxConcurrentConsumers(20)
         container.setStartConsumerMinInterval(1)
         container.setConsecutiveActiveTrigger(1)
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
         container.setMismatchedQueuesFatal(true)
         val messageListenerAdapter =
             MessageListenerAdapter(buildLessStopListener, buildLessStopListener::handleMessage.name)
         messageListenerAdapter.setMessageConverter(messageConverter)
-        container.messageListener = messageListenerAdapter
+        container.setMessageListener(messageListenerAdapter)
         return container
     }
 
     @Bean
-    fun buildLessStopListener(dockerHostBuildLessService: DockerHostBuildLessService) =
-        BuildLessStopListener(dockerHostBuildLessService)
+    fun buildLessStopListener(dockerHostBuildAgentLessService: DockerHostBuildAgentLessService) =
+        BuildLessStopListener(dockerHostBuildAgentLessService)
 
     companion object {
         private val logger = LoggerFactory.getLogger(NoBuildClusterConfiguration::class.java)

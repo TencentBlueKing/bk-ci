@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -35,11 +36,11 @@ import com.tencent.devops.common.pipeline.enums.JobRunCondition
  * @version 1.0
  */
 data class JobControlOption(
-    val enable: Boolean, // 是否启用Job
-    val prepareTimeout: Int? = 10, // Job准备环境的超时时间
-    val timeout: Int?, // Job执行的超时时间
-    val runCondition: JobRunCondition, // 运行条件
-    val customVariables: List<NameAndValue>? = null, // 自定义变量
+    val enable: Boolean = true, // 是否启用Job
+    val prepareTimeout: Int? = 10, // Job准备环境的超时时间 分钟Minutes
+    val timeout: Int? = 900, // Job执行的超时时间 分钟Minutes
+    val runCondition: JobRunCondition = JobRunCondition.STAGE_RUNNING, // 运行条件
+    val customVariables: List<NameAndValue>? = emptyList(), // 自定义变量
     val customCondition: String? = null, // 自定义条件
     // job依赖
     val dependOnType: DependOnType? = null,

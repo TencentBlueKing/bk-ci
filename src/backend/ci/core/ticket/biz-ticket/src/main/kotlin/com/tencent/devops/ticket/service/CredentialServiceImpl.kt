@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -51,6 +52,7 @@ import org.springframework.stereotype.Service
 import java.util.Base64
 import javax.ws.rs.NotFoundException
 
+@Suppress("ALL")
 @Service
 class CredentialServiceImpl @Autowired constructor(
     private val credentialHelper: CredentialHelper,
@@ -74,7 +76,7 @@ class CredentialServiceImpl @Autowired constructor(
                 defaultMessage = "凭证格式不正确"
             )
         }
-        if (credential.credentialName != null) {
+        if (!credential.credentialName.isNullOrBlank()) {
             if (credential.credentialName!!.length > credentialIdMaxSize) {
                 throw ErrorCodeException(
                     errorCode = TicketMessageCode.CREDENTIAL_NAME_TOO_LONG,
@@ -148,7 +150,7 @@ class CredentialServiceImpl @Autowired constructor(
                 defaultMessage = "凭证标识必须是英文字母、数字或下划线(_)"
             )
         }
-        if (credential.credentialName != null) {
+        if (!credential.credentialName.isNullOrBlank()) {
             if (credential.credentialName!!.length > credentialIdMaxSize) {
                 throw ErrorCodeException(
                     errorCode = TicketMessageCode.CREDENTIAL_NAME_TOO_LONG,
@@ -531,7 +533,12 @@ class CredentialServiceImpl @Autowired constructor(
         }
     }
 
-    override fun searchByCredentialId(projectId: String, offset: Int, limit: Int, credentialId: String): SQLPage<Credential> {
+    override fun searchByCredentialId(
+        projectId: String,
+        offset: Int,
+        limit: Int,
+        credentialId: String
+    ): SQLPage<Credential> {
         val count = credentialDao.countByIdLike(dslContext, projectId, credentialId)
         val credentialRecords = credentialDao.searchByIdLike(
             dslContext = dslContext,
@@ -558,7 +565,7 @@ class CredentialServiceImpl @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(CredentialServiceImpl::class.java)
         private val CREDENTIAL_ID_REGEX = Regex("^[0-9a-zA-Z_]+$")
         private val CREDENTIAL_NAME_REGEX = Regex("^[a-zA-Z0-9_\u4e00-\u9fa5-]+$")
     }

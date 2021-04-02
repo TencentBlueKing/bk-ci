@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -51,9 +52,12 @@ class QualityPipelineService @Autowired constructor(
         with(request) {
             val pipelineElementsMap = client.get(ServicePipelineTaskResource::class).list(projectId, pipelineIds).data
                 ?: mapOf()
-            val pipelineNameMap = client.get(ServicePipelineResource::class).getPipelineNameByIds(projectId, pipelineIds).data
-                ?: mapOf()
-            val indicatorElements = indicatorService.serviceList(indicatorIds.map { HashUtil.decodeIdToLong(it) }).map { it.elementType }
+            val pipelineNameMap = client.get(ServicePipelineResource::class).getPipelineNameByIds(
+                projectId = projectId,
+                pipelineIds = pipelineIds
+            ).data ?: mapOf()
+            val indicatorElements = indicatorService.serviceList(indicatorIds.map { HashUtil.decodeIdToLong(it) })
+                .map { it.elementType }
 
             // 加入控制点的判断
             val checkElements = if (!controlPointType.isNullOrBlank()) {
@@ -63,17 +67,17 @@ class QualityPipelineService @Autowired constructor(
             }
 
             // 剔除已删除的流水线
-            return pipelineElementsMap.entries.filter { pipelineNameMap.containsKey(it.key) }.map {
-                val pipelineElement = it.value.map { CheckElement(it.atomCode, it.taskParams, it.taskName) }
+            return pipelineElementsMap.entries.filter { pipelineNameMap.containsKey(it.key) }.map { pipeline ->
+                val pipelineElement = pipeline.value.map { CheckElement(it.atomCode, it.taskParams, it.taskName) }
                 // 获取原子信息
                 val elementResult = getExistAndLackElements(projectId, checkElements, pipelineElement, gatewayId ?: "")
                 val existElements = elementResult.first
                 val lackElements = elementResult.second
 
                 RulePipelineRange(
-                    pipelineId = it.key,
-                    pipelineName = pipelineNameMap[it.key] ?: "",
-                    elementCount = it.value.size,
+                    pipelineId = pipeline.key,
+                    pipelineName = pipelineNameMap[pipeline.key] ?: "",
+                    elementCount = pipeline.value.size,
                     lackPointElement = lackElements.map { ElementUtils.getElementCnName(it, projectId) },
                     existElement = existElements
                 )
@@ -86,15 +90,16 @@ class QualityPipelineService @Autowired constructor(
             val templateMap = if (templateIds.isNotEmpty()) client.get(ServiceTemplateResource::class)
                 .listTemplateById(templateIds, null).data?.templates ?: mapOf()
             else mapOf()
-            val templateElementsMap = templateMap.map {
-                val model = it.value
+            val templateElementsMap = templateMap.map { template ->
+                val model = template.value
                 val elements = mutableListOf<Element>()
-                model.stages.map { it.containers.map { elements.addAll(it.elements) } }
-                it.value.templateId to elements
+                model.stages.map { stage -> stage.containers.map { elements.addAll(it.elements) } }
+                template.value.templateId to elements
             }.toMap()
             val templateNameMap = templateMap.map { it.value.templateId to it.value.name }.toMap()
 
-            val indicatorElements = indicatorService.serviceList(indicatorIds.map { HashUtil.decodeIdToLong(it) }).map { it.elementType }
+            val indicatorElements = indicatorService.serviceList(indicatorIds.map { HashUtil.decodeIdToLong(it) })
+                .map { it.elementType }
             val checkElements = if (!controlPointType.isNullOrBlank()) {
                 indicatorElements.plus(controlPointType!!)
             } else {
@@ -102,21 +107,30 @@ class QualityPipelineService @Autowired constructor(
             }
 
             // 剔除已删除的流水线
-            return templateElementsMap.entries.filter { templateNameMap.containsKey(it.key) }.filter { it.key in templateIds }.map { entry ->
-                val templateId = entry.key
-                val templateElements = entry.value.map { CheckElement(it.getAtomCode(), it.genTaskParams(), it.name) }
-                // 获取原子信息
-                val elementResult = getExistAndLackElements(projectId, checkElements, templateElements, gatewayId ?: "")
-                val existElements = elementResult.first
-                val lackElements = elementResult.second
-                RuleTemplateRange(
-                    templateId = templateId,
-                    templateName = templateNameMap[templateId] ?: "",
-                    elementCount = templateElements.size,
-                    lackPointElement = lackElements.map { ElementUtils.getElementCnName(it, projectId) },
-                    existElement = existElements
-                )
-            }
+            return templateElementsMap.entries.filter { templateNameMap.containsKey(it.key) }
+                .filter { it.key in templateIds }
+                .map { entry ->
+                    val templateId = entry.key
+                    val templateElements = entry.value.map {
+                        CheckElement(it.getAtomCode(), it.genTaskParams(), it.name)
+                    }
+                    // 获取原子信息
+                    val elementResult = getExistAndLackElements(
+                        projectId = projectId,
+                        checkElements = checkElements,
+                        originElementList = templateElements,
+                        gatewayId = gatewayId ?: ""
+                    )
+                    val existElements = elementResult.first
+                    val lackElements = elementResult.second
+                    RuleTemplateRange(
+                        templateId = templateId,
+                        templateName = templateNameMap[templateId] ?: "",
+                        elementCount = templateElements.size,
+                        lackPointElement = lackElements.map { ElementUtils.getElementCnName(it, projectId) },
+                        existElement = existElements
+                    )
+                }
         }
     }
 
@@ -132,8 +146,8 @@ class QualityPipelineService @Autowired constructor(
         // 1. 查找不存在的插件
         val lackElements = mutableSetOf<String>()
         checkElements.forEach { checkElement ->
-            val isExist = matchGatewayOriginElementList.any {
-                originElement -> getRealAtomCode(checkElement) == getRealAtomCode(originElement.atomCode)
+            val isExist = matchGatewayOriginElementList.any { originElement ->
+                getRealAtomCode(checkElement) == getRealAtomCode(originElement.atomCode)
             }
             if (!isExist) {
                 // 处理lack element中的codecc插件

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -34,14 +35,14 @@ import java.util.concurrent.Callable
 
 open class Ansi(private var builder: StringBuilder) {
     companion object {
-        private val FIRST_ESC_CHAR: Char = 27.toChar()
-        private val SECOND_ESC_CHAR = '['
+        private const val FIRST_ESC_CHAR: Char = 27.toChar()
+        private const val SECOND_ESC_CHAR = '['
         private val DISABLE = Ansi::class.java.name + ".disable"
         private var detector = Callable { !java.lang.Boolean.getBoolean(DISABLE) }
 
         fun newDetector(detector: Callable<Boolean>?) {
             if (detector == null) {
-                throw IllegalArgumentException()
+                throw IllegalArgumentException("detector is null")
             }
             this.detector = detector
         }
@@ -442,8 +443,9 @@ open class Ansi(private var builder: StringBuilder) {
     }
 
     private fun flushAttributes() {
-        if (attributeOptions.isEmpty())
+        if (attributeOptions.isEmpty()) {
             return
+        }
         if (attributeOptions.size == 1 && attributeOptions[0] == 0) {
             builder.append(FIRST_ESC_CHAR)
             builder.append(SECOND_ESC_CHAR)

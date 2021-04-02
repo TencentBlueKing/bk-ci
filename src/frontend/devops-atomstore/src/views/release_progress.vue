@@ -173,7 +173,7 @@
                 currentBuildNo: '',
                 currentPipelineId: '',
                 timer: -1,
-                docsLink: 'http://tempdocklink/pages/viewpage.action?pageId=15008942',
+                docsLink: `${DOCS_URL_PREFIX}/document/6.0/129/7515`,
                 showContent: false,
                 isOverflow: false,
                 isDropdownShow: false,
@@ -226,7 +226,7 @@
                 return str
             },
             postUrl () {
-                return `${GW_URL_PREFIX}/artifactory/api/user/artifactories/projects/${this.versionDetail.projectCode}/ids/${this.versionDetail.atomId}/codes/${this.versionDetail.atomCode}/versions/${this.versionDetail.version}/re/archive`
+                return `${API_URL_PREFIX}/artifactory/api/user/artifactories/projects/${this.versionDetail.projectCode}/ids/${this.versionDetail.atomId}/codes/${this.versionDetail.atomCode}/versions/${this.versionDetail.version}/re/archive`
             },
             navList () {
                 return [
