@@ -261,7 +261,7 @@
                 initJobType: '',
                 initReleaseType: '',
                 descTemplate: '',
-                docsLink: 'http://tempdocklink/pages/viewpage.action?pageId=15008942',
+                docsLink: `${DOCS_URL_PREFIX}/document/6.0/129/7515`,
                 showContent: false,
                 isUploading: false,
                 initOs: [],
@@ -349,7 +349,7 @@
                 return toolbars
             },
             releasePackageUrl () {
-                return `${GW_URL_PREFIX}/artifactory/api/user/artifactories/projects/${this.atomForm.projectCode}/atoms/${this.atomForm.atomCode}/versions/${this.curVersion || '1.0.0'}/types/${this.atomForm.releaseType}/archive`
+                return `${API_URL_PREFIX}/artifactory/api/user/artifactories/projects/${this.atomForm.projectCode}/atoms/${this.atomForm.atomCode}/versions/${this.curVersion || '1.0.0'}/types/${this.atomForm.releaseType}/archive`
             },
             navList () {
                 const name = `${this.curTitle}（${this.atomForm.atomCode}）`
@@ -357,6 +357,7 @@
                     { name: this.$t('store.工作台'), to: { name: 'atomWork' } },
                     { name }
                 ]
+
             }
         },
         watch: {

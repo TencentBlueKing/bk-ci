@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -41,7 +42,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Service
+@Service@Suppress("ALL")
 class QualityControlPointService @Autowired constructor(
     private val dslContext: DSLContext,
     private val controlPointDao: QualityControlPointDao
@@ -63,7 +64,11 @@ class QualityControlPointService @Autowired constructor(
             type = record.elementType ?: "",
             name = record.name ?: "",
             stage = record.stage ?: "",
-            availablePos = if (record.availablePosition.isNullOrBlank()) listOf() else record.availablePosition.split(",").map { name -> ControlPointPosition(name) },
+            availablePos = if (record.availablePosition.isNullOrBlank()) {
+                listOf()
+            } else {
+                record.availablePosition.split(",").map { name -> ControlPointPosition(name) }
+            },
             defaultPos = ControlPointPosition(record.defaultPosition ?: ""),
             enable = record.enable ?: true,
             atomVersion = record.atomVersion

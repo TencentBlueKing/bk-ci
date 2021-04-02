@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -26,6 +27,7 @@
 
 package com.tencent.devops.store.pojo.atom.enums
 
+@Suppress("UNUSED")
 enum class AtomStatusEnum(val status: Int) {
     INIT(0), // 初始化
     COMMITTING(1), // 提交中
@@ -53,22 +55,28 @@ enum class AtomStatusEnum(val status: Int) {
         }
 
         fun getAtomStatus(status: Int): String {
-            return when (status) {
-                0 -> INIT.name
-                1 -> COMMITTING.name
-                2 -> BUILDING.name
-                3 -> BUILD_FAIL.name
-                4 -> TESTING.name
-                5 -> AUDITING.name
-                6 -> AUDIT_REJECT.name
-                7 -> RELEASED.name
-                8 -> GROUNDING_SUSPENSION.name
-                9 -> UNDERCARRIAGING.name
-                10 -> UNDERCARRIAGED.name
-                11 -> CODECCING.name
-                12 -> CODECC_FAIL.name
-                else -> INIT.name
+            values().forEach { enumObj ->
+                if (enumObj.status == status) {
+                    return enumObj.name
+                }
             }
+            return INIT.name
+//            return when (status) {
+//                0 -> INIT.name
+//                1 -> COMMITTING.name
+//                2 -> BUILDING.name
+//                3 -> BUILD_FAIL.name
+//                4 -> TESTING.name
+//                5 -> AUDITING.name
+//                6 -> AUDIT_REJECT.name
+//                7 -> RELEASED.name
+//                8 -> GROUNDING_SUSPENSION.name
+//                9 -> UNDERCARRIAGING.name
+//                10 -> UNDERCARRIAGED.name
+//                11 -> CODECCING.name
+//                12 -> CODECC_FAIL.name
+//                else -> INIT.name
+//            }
         }
     }
 }

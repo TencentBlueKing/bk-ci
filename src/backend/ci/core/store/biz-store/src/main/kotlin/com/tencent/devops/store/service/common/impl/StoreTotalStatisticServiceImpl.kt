@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -39,6 +40,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 
+@Suppress("ALL")
 @Service
 class StoreTotalStatisticServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
@@ -124,8 +126,9 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
             val score = it.value3().toDouble()
             val code = it.value4().toString()
             // 评论均分
-            val scoreAverage: Double = if (score > 0 && comments > 0) score.div(comments) else 0.toDouble()
-            logger.info("$interfaceName:updateStatisticData(${StoreTypeEnum.getStoreType(storeType.toInt())},$code,$downloads,$comments,$score,$scoreAverage)")
+            val scoreAverage: Double = if (score > 0 && comments > 0) {
+                score.div(comments)
+            } else 0.toDouble()
             storeStatisticTotalDao.updateStatisticData(
                 dslContext = dslContext,
                 storeCode = code,

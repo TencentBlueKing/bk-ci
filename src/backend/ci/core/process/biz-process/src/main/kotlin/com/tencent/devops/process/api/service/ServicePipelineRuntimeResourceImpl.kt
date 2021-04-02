@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -35,7 +36,7 @@ import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_UPDATE_FAILED
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.process.engine.service.PipelineWebsocketService
+import com.tencent.devops.process.websocket.service.PipelineWebsocketService
 import com.tencent.devops.process.pojo.BuildHistory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -65,7 +66,7 @@ class ServicePipelineRuntimeResourceImpl @Autowired constructor(
             val list = pipelineRuntimeService.getBuildHistoryByIds(setOf(buildId))
             if (list.isEmpty()) {
                 throw ErrorCodeException(
-                    errorCode = ERROR_NO_BUILD_EXISTS_BY_ID.toString(),
+                    errorCode = ERROR_NO_BUILD_EXISTS_BY_ID,
                     defaultMessage = "要更新的构建 $buildId 不存在",
                     params = arrayOf(buildId)
                 )
@@ -84,7 +85,7 @@ class ServicePipelineRuntimeResourceImpl @Autowired constructor(
         }
 
         throw ErrorCodeException(
-            errorCode = ERROR_UPDATE_FAILED.toString(),
+            errorCode = ERROR_UPDATE_FAILED,
             defaultMessage = "更新失败的构建 $buildId",
             params = arrayOf(buildId)
         )

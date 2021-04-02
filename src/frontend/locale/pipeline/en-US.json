@@ -94,8 +94,8 @@
     "disableStageReviewRadioLabel": "Automation",
     "stageReviewDesc": "60-day unreviewed automatically ends the pipeline and marks it as STAGE_SUCCESS",
     "stageTimeoutLabel": "Timeout",
-    "stageTimeoutError": "Please specify an integer from 1 to 1440",
-    "stageTimeoutDesc": "All the integers between 1 and 1440 (Unit: hour)",
+    "stageTimeoutError": "Please specify an integer from 1 to 720",
+    "stageTimeoutDesc": "All the integers between 1 and 720 (Unit: hour)",
     "stageUserTriggers": "Stage Owner",
     "stageOptionLabel": "Run this Stage",
     "stageTriggerDesc": "Multiple people separated by commas",
@@ -140,15 +140,15 @@
     "group": {
         "labelInputTips": "Please input a name for this label and confirm it by pressing Enter",
         "addLabel": "New label",
-        "labelLimitTips": "No more than 10 labels under a group",
+        "labelLimitTips": "No more than 12 labels under a group",
         "addGroup": "New group",
         "groupName": "Group name",
         "groupInputTips": "Please enter a name for this group",
         "emptyTips": {
             "title": "Create a group for labels",
             "desc": "Using reasonable labels would be helpful for easier locating and better managing pipelines. Please be aware of the rules below: ",
-            "contentOne": "1. No more than 3 groups under a project",
-            "contentTwo": "2. No more than 10 labels under a group "
+            "contentOne": "1. No more than 10 groups under a project",
+            "contentTwo": "2. No more than 12 labels under a group "
         },
         "deleteReason": " Are you sure you want to delete this group?"
     },
@@ -552,6 +552,7 @@
     },
     "editPage": {
         "checkResultTip": "The audit result is required",
+        "checkParamTip": "The param is required",
         "manualReviewNameSpaceTip": "The user who actually performed the review",
         "manualReviewSuggestNameSpaceTip": "Audit suggest",
         "atomHelpDoc": "Help documentation",
@@ -648,7 +649,10 @@
         "customFileLabelTips": "Custom artifactory path + File name",
         "defaultValue": "Default value",
         "defaultValueDesc": "If value is the version number, then it should not contain symbols, such as \"\" ; \n if the type of parameters can be selected in the check box, when selecting serval values, they will be sent to pipelines in a (a,b) way.",
+        "selectDefaultValueTips": "Please select default values",
         "defaultValueTips": " Please enter default values",
+        "paramValueTips": "Please enter param values",
+        "selectParamValueTips": "Please select param values",
         "selectOptions": "Drop-down options",
         "optionsDesc": "Separate options with line breaks and there should not be an English comma contained in the options. Only one option will be shown if there are serval same options at the same time, format \"{id}={name} | {id} \"",
         "optionTips": " Please break your lines if there are serval things to be recorded",
