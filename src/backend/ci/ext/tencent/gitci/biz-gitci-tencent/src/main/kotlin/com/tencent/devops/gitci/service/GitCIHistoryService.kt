@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -26,6 +27,7 @@
 
 package com.tencent.devops.gitci.service
 
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -33,13 +35,16 @@ import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventDao
+import com.tencent.devops.gitci.pojo.GitCIBuildBranch
 import com.tencent.devops.gitci.pojo.GitCIBuildHistory
+import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import javax.ws.rs.core.Response
 
 @Service
 class GitCIHistoryService @Autowired constructor(
@@ -63,6 +68,7 @@ class GitCIHistoryService @Autowired constructor(
         page: Int?,
         pageSize: Int?,
         branch: String?,
+        sourceGitProjectId: Long?,
         triggerUser: String?,
         pipelineId: String?
     ): Page<GitCIBuildHistory> {
@@ -83,6 +89,7 @@ class GitCIHistoryService @Autowired constructor(
             dslContext = dslContext,
             gitProjectId = gitProjectId,
             branchName = branch,
+            sourceGitProjectId = sourceGitProjectId,
             triggerUser = triggerUser,
             pipelineId = pipelineId
         )
@@ -98,26 +105,17 @@ class GitCIHistoryService @Autowired constructor(
                 records = emptyList()
             )
         }
-
+        val firstIndex = (pageNotNull - 1) * pageSizeNotNull
+        val lastIndex = if (pageNotNull * pageSizeNotNull > gitRequestBuildList.size) {
+                            gitRequestBuildList.size
+                        } else {
+                            pageNotNull * pageSizeNotNull
+                        }
         val records = mutableListOf<GitCIBuildHistory>()
-        gitRequestBuildList.forEach {
+        gitRequestBuildList.subList(firstIndex, lastIndex).forEach {
             val gitRequestEvent = gitRequestEventDao.get(dslContext, it.eventId) ?: return@forEach
-            var realEvent = gitRequestEvent
-
             // 如果是来自fork库的分支，单独标识
-//            if (gitRequestEvent.sourceGitProjectId != null) {
-//                try {
-//                    val gitToken = client.getScm(ServiceGitResource::class).getToken(gitRequestEvent.sourceGitProjectId!!).data!!
-//                    logger.info("get token for gitProjectId[${gitRequestEvent.sourceGitProjectId!!}] form scm, token: $gitToken")
-//                    val sourceRepositoryConf = client.getScm(ServiceGitResource::class).getProjectInfo(gitToken.accessToken, gitRequestEvent.sourceGitProjectId!!).data
-//                    realEvent = gitRequestEvent.copy(
-//                        branch = if (sourceRepositoryConf != null) "${sourceRepositoryConf.name}:${gitRequestEvent.branch}"
-//                        else gitRequestEvent.branch)
-//                } catch (e: Exception) {
-//                    logger.error("Cannot get source GitProjectInfo: ", e)
-//                }
-//            }
-
+            val realEvent = GitCommonUtils.checkAndGetForkBranch(gitRequestEvent, client)
             val buildHistory = getBuildHistory(it.buildId, buildHistoryList) ?: return@forEach
             val pipeline = pipelineResourceDao.getPipelineById(dslContext, gitProjectId, it.pipelineId) ?: return@forEach
             records.add(GitCIBuildHistory(
@@ -127,13 +125,66 @@ class GitCIHistoryService @Autowired constructor(
                 buildHistory = buildHistory
             ))
         }
-        val firstIndex = (pageNotNull - 1) * pageSizeNotNull
-        val lastIndex = if (pageNotNull * pageSizeNotNull > records.size) records.size else pageNotNull * pageSizeNotNull
         return Page(
             page = pageNotNull,
             pageSize = pageSizeNotNull,
             count = records.size.toLong(),
-            records = records.subList(firstIndex, lastIndex)
+            records = records
+        )
+    }
+
+    fun getAllBuildBranchList(
+        userId: String,
+        gitProjectId: Long,
+        page: Int?,
+        pageSize: Int?,
+        keyword: String?
+    ): Page<GitCIBuildBranch> {
+        logger.info("get all branch build list, gitProjectId: $gitProjectId")
+        val pageNotNull = page ?: 1
+        val pageSizeNotNull = pageSize ?: 20
+        gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(Response.Status.FORBIDDEN, "项目未开启工蜂CI，无法查询")
+        val buildBranchList = gitRequestEventBuildDao.getAllBuildBranchList(
+            dslContext = dslContext,
+            gitProjectId = gitProjectId,
+            page = null,
+            pageSize = null,
+            keyword = keyword
+        )
+        if (buildBranchList.isEmpty()) {
+            logger.info("Get build branch list return empty, gitProjectId: $gitProjectId")
+            return Page(
+                page = pageNotNull,
+                pageSize = pageSizeNotNull,
+                count = 0,
+                records = emptyList()
+            )
+        }
+        // 因为涉及到分组，selectCount无法拿到具体条数，所以拿出来全部查询自己分页
+        val firstIndex = (pageNotNull - 1) * pageSizeNotNull
+        val lastIndex = if (pageNotNull * pageSizeNotNull > buildBranchList.size) {
+                            buildBranchList.size
+                        } else {
+                            pageNotNull * pageSizeNotNull
+                        }
+        // 如果是来自fork库的分支，单独标识
+        val records = buildBranchList.subList(firstIndex, lastIndex).map {
+            GitCIBuildBranch(
+                branchName = GitCommonUtils.checkAndGetForkBranchName(
+                    gitProjectId = it.gitProjectId,
+                    sourceGitProjectId = it.sourceGitProjectId,
+                    branch = it.branch,
+                    client = client
+                ),
+                gitProjectId = it.gitProjectId,
+                sourceGitProjectId = it.sourceGitProjectId
+            )
+        }
+        return Page(
+            page = pageNotNull,
+            pageSize = pageSizeNotNull,
+            count = buildBranchList.size.toLong(),
+            records = records
         )
     }
 

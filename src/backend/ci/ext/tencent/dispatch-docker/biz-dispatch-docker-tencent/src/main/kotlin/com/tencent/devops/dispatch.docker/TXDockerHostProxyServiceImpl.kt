@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -29,6 +30,7 @@ package com.tencent.devops.dispatch.docker
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
+import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import com.tencent.devops.dispatch.docker.service.DockerHostProxyService
 import okhttp3.Request
 import org.jooq.DSLContext
@@ -56,7 +58,8 @@ class TXDockerHostProxyServiceImpl @Autowired constructor(
     override fun getDockerHostProxyRequest(
         dockerHostUri: String,
         dockerHostIp: String,
-        dockerHostPort: Int
+        dockerHostPort: Int,
+        clusterType: DockerHostClusterType
     ): Request.Builder {
         val url = if (dockerHostPort == 0) {
             val dockerIpInfo = pipelineDockerIPInfoDao.getDockerIpInfo(dslContext, dockerHostIp) ?: throw DockerServiceException(
@@ -66,14 +69,20 @@ class TXDockerHostProxyServiceImpl @Autowired constructor(
             "http://$dockerHostIp:$dockerHostPort$dockerHostUri"
         }
 
-        val proxyUrl = smartProxyUrl + "/proxy-devnet?url=" + urlEncode(url)
-        val timestamp = (System.currentTimeMillis() / 1000).toString()
-        val signature = sha256("$timestamp$smartProxyToken$timestamp")
-        return Request.Builder().url(proxyUrl)
-            .addHeader("Accept", "application/json; charset=utf-8")
-            .addHeader("Content-Type", "application/json; charset=utf-8")
-            .addHeader("TIMESTAMP", timestamp)
-            .addHeader("SIGNATURE", signature)
+        return if (clusterType == DockerHostClusterType.AGENT_LESS) {
+            Request.Builder().url(url)
+                .addHeader("Accept", "application/json; charset=utf-8")
+                .addHeader("Content-Type", "application/json; charset=utf-8")
+        } else {
+            val proxyUrl = smartProxyUrl + "/proxy-devnet?url=" + urlEncode(url)
+            val timestamp = (System.currentTimeMillis() / 1000).toString()
+            val signature = sha256("$timestamp$smartProxyToken$timestamp")
+            Request.Builder().url(proxyUrl)
+                .addHeader("Accept", "application/json; charset=utf-8")
+                .addHeader("Content-Type", "application/json; charset=utf-8")
+                .addHeader("TIMESTAMP", timestamp)
+                .addHeader("SIGNATURE", signature)
+        }
     }
 
     private fun sha256(str: String): String {

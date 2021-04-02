@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -598,11 +599,24 @@ class GitService @Autowired constructor(
         }
     }
 
-    fun getGitFileContent(repoName: String, filePath: String, authType: RepoAuthType?, token: String, ref: String): String {
-        logger.info("[$repoName|$filePath|$authType|$ref] Start to get the git file content")
+    @Suppress("ALL")
+    fun getGitFileContent(
+        repoUrl: String? = null,
+        repoName: String,
+        filePath: String,
+        authType: RepoAuthType?,
+        token: String,
+        ref: String
+    ): String {
+        val apiUrl = if (repoUrl.isNullOrBlank()) {
+            gitConfig.gitApiUrl
+        } else {
+            GitUtils.getGitApiUrl(gitConfig.gitApiUrl, repoUrl!!)
+        }
+        logger.info("[$repoName|$filePath|$authType|$ref] Start to get the git file content from $apiUrl")
         val startEpoch = System.currentTimeMillis()
         try {
-            var url = "${gitConfig.gitApiUrl}/projects/${URLEncoder.encode(repoName, "UTF-8")}/repository/blobs/" +
+            var url = "$apiUrl/projects/${URLEncoder.encode(repoName, "UTF-8")}/repository/blobs/" +
                 "${URLEncoder.encode(ref, "UTF-8")}?filepath=${URLEncoder.encode(filePath, "UTF-8")}"
             val request = if (authType == RepoAuthType.OAUTH) {
                 url += "&access_token=$token"
@@ -627,8 +641,19 @@ class GitService @Autowired constructor(
         }
     }
 
-    fun getGitlabFileContent(repoName: String, filePath: String, ref: String, accessToken: String): String {
-        logger.info("[$repoName|$filePath|$ref|$accessToken] Start to get the gitlab file content")
+    fun getGitlabFileContent(
+        repoUrl: String?,
+        repoName: String,
+        filePath: String,
+        ref: String,
+        accessToken: String
+    ): String {
+        val apiUrl = if (repoUrl.isNullOrBlank()) {
+            gitConfig.gitlabApiUrl
+        } else {
+            GitUtils.getGitApiUrl(gitConfig.gitlabApiUrl, repoUrl!!)
+        }
+        logger.info("[$repoName|$filePath|$ref|$accessToken] Start to get the gitlab file content from $apiUrl")
         val startEpoch = System.currentTimeMillis()
         try {
             val headers = mapOf("PRIVATE-TOKEN" to accessToken)
@@ -636,7 +661,7 @@ class GitService @Autowired constructor(
             val encodeFilePath = URLEncoder.encode(filePath, "utf-8")
             val encodeRef = URLEncoder.encode(ref, "utf-8")
             val encodeProjectName = URLEncoder.encode(repoName, "utf-8")
-            val projectFileUrl = "${gitConfig.gitlabApiUrl}/projects/$encodeProjectName/repository/files/$encodeFilePath?ref=$encodeRef"
+            val projectFileUrl = "$apiUrl/projects/$encodeProjectName/repository/files/$encodeFilePath?ref=$encodeRef"
             logger.info(projectFileUrl)
             OkhttpUtils.doGet(projectFileUrl, headers).use { response ->
                 val body = response.body()!!.string()

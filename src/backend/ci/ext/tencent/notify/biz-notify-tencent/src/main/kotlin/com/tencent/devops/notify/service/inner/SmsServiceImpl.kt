@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -33,7 +34,7 @@ import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
 import com.tencent.devops.common.notify.pojo.SmsNotifyPost
 import com.tencent.devops.common.notify.utils.ChineseStringUtil
-import com.tencent.devops.common.notify.utils.CommonUtils
+import com.tencent.devops.common.notify.utils.NotifyDigestUtils
 import com.tencent.devops.common.notify.utils.TOFConfiguration
 import com.tencent.devops.common.notify.utils.TOFService
 import com.tencent.devops.model.notify.tables.records.TNotifySmsRecord
@@ -185,7 +186,7 @@ class SmsServiceImpl @Autowired constructor(
                 bodyList[i]
             }
 
-            val contentMd5 = CommonUtils.getMessageContentMD5("", body)
+            val contentMd5 = NotifyDigestUtils.getMessageContentMD5("", body)
             val receivers = Lists.newArrayList(
                 filterReceivers(
                     receivers = smsNotifyMessage.getReceivers(),

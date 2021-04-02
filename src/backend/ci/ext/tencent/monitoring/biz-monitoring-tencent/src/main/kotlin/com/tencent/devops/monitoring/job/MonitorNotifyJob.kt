@@ -1,3 +1,30 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.monitoring.job
 
 import com.tencent.devops.common.api.util.timestampmilli
@@ -191,8 +218,8 @@ class MonitorNotifyJob @Autowired constructor(
                 "log",
                 "environment"
             )) {
-                val errorCount = getHits(startTime, endTime, name, true)
-                val totalCount = getHits(startTime, endTime, name)
+                val errorCount = getHits(startTime, name, true)
+                val totalCount = getHits(startTime, name)
                 rowList.add(
                     Triple(
                         name,
@@ -423,15 +450,14 @@ class MonitorNotifyJob @Autowired constructor(
         return codeCCMap
     }
 
-    private fun getHits(startTime: Long, endTime: Long, name: String, error: Boolean = false): Long {
+    private fun getHits(startTime: Long, name: String, error: Boolean = false): Long {
         val sourceBuilder = SearchSourceBuilder()
         val query =
-            QueryBuilders.boolQuery().filter(QueryBuilders.rangeQuery("@timestamp").gte(startTime).lte(endTime))
-                .filter(QueryBuilders.queryStringQuery("beat.hostname:\"v2-gateway-idc\" AND service:\"$name\"" + (if (error) " AND status: \"500\"" else "")))
+            QueryBuilders.boolQuery().filter(QueryBuilders.queryStringQuery("beat.hostname:v2-service AND bkservice:$name" + (if (error) " AND (status:4* OR status:5*)" else "")))
         sourceBuilder.query(query).size(1)
 
         val searchRequest = SearchRequest()
-        searchRequest.indices("bkdevops-gateway-v2-access-${DateFormatUtils.format(startTime, "yyyy.MM.dd")}") // TODO
+        searchRequest.indices("bkdevops-access-prod-${DateFormatUtils.format(startTime, "yyyy.MM.dd")}")
         searchRequest.source(sourceBuilder)
         val hits = restHighLevelClient.search(searchRequest).hits.getTotalHits()
         logger.info("apiStatus:$name , hits:$hits")
