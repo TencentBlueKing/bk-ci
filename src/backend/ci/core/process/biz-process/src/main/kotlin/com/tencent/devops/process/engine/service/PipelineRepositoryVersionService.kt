@@ -74,10 +74,20 @@ class PipelineRepositoryVersionService constructor(
         )
     }
 
-    fun getPipelineInfoVersion(projectId: String?, pipelineId: String, version: Int, channelCode: ChannelCode? = null): PipelineInfo? {
+    fun getPipelineInfoVersion(
+        projectId: String?,
+        pipelineId: String,
+        version: Int,
+        channelCode: ChannelCode? = null
+    ): PipelineInfo? {
         val template = templatePipelineDao.get(dslContext, pipelineId)
         val templateId = template?.templateId
-        return pipelineInfoVersionDao.convert(pipelineInfoVersionDao.getPipelineInfo(dslContext, projectId, pipelineId, version, channelCode), templateId)
+        return pipelineInfoVersionDao.convert(pipelineInfoVersionDao.getPipelineInfo(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            version = version,
+            channelCode = channelCode), templateId)
     }
 
     fun getModel(pipelineId: String, version: Int? = null): Model? {
@@ -102,9 +112,15 @@ class PipelineRepositoryVersionService constructor(
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
 
-            val record =
-                (pipelineInfoVersionDao.getPipelineInfo(transactionContext, projectId, pipelineId, version, channelCode, delete)
-                    ?: throw NotFoundException("要删除的流水线版本不存在"))
+            val record = pipelineInfoVersionDao.getPipelineInfo(
+                dslContext = transactionContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version,
+                channelCode = channelCode,
+                delete = delete
+            ) ?: throw NotFoundException("要删除的流水线版本不存在")
+
             if (delete) {
                 pipelineInfoVersionDao.delete(transactionContext, projectId, pipelineId)
             } else {

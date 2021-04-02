@@ -27,8 +27,8 @@
 
 package com.tencent.devops.process.api
 
-import com.tencent.devops.audit.api.ServiceAuditResource
-import com.tencent.devops.audit.api.pojo.Audit
+import com.tencent.devops.process.api.audit.ServiceAuditResource
+import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
@@ -74,7 +74,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.NotFoundException
 import javax.ws.rs.core.Response
 
-@Suppress("ALL")
 @RestResource
 class UserPipelineResourceImpl @Autowired constructor(
     private val pipelineListFacadeService: PipelineListFacadeService,
@@ -144,8 +143,16 @@ class UserPipelineResourceImpl @Autowired constructor(
                 userId = userId, projectId = projectId, model = pipeline, channelCode = ChannelCode.BS
             )
         )
-        val audit = Audit(AuthResourceType.PIPELINE_DEFAULT.value, pipelineId.id, pipeline.name, userId, "create", "新增流水线", projectId)
-        client.get(ServiceAuditResource::class).create(audit)
+        client.get(ServiceAuditResource::class).create(
+            Audit(
+                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceId = pipelineId.id,
+                resourceName = pipeline.name,
+                userId = userId,
+                action = "create",
+                actionContent = "新增流水线",
+                projectId = projectId)
+        )
         return Result(pipelineId)
     }
 
@@ -282,12 +289,24 @@ class UserPipelineResourceImpl @Autowired constructor(
         pipelineInfoFacadeService.deletePipeline(userId, projectId, pipelineId, ChannelCode.BS)
         val pipeline = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId, ChannelCode.BS)
             ?: throw NotFoundException("指定的流水线不存在")
-        val audit = Audit(AuthResourceType.PIPELINE_DEFAULT.value, pipelineId, pipeline.pipelineName, userId, "delete", "删除流水线", projectId)
-        client.get(ServiceAuditResource::class).create(audit)
+        client.get(ServiceAuditResource::class).create(Audit(
+            resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+            resourceId = pipelineId,
+            resourceName = pipeline.pipelineName,
+            userId = userId,
+            action = "delete",
+            actionContent = "删除流水线",
+            projectId = projectId
+        ))
         return Result(true)
     }
 
-    override fun softDeleteVersion(userId: String, projectId: String, pipelineId: String, version: Int): Result<Boolean> {
+    override fun softDeleteVersion(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        version: Int
+    ): Result<Boolean> {
         checkParam(userId, projectId)
         checkPipelineId(pipelineId)
         pipelineVersionService.deletePipelineVersion(userId, projectId, pipelineId, version, ChannelCode.BS)

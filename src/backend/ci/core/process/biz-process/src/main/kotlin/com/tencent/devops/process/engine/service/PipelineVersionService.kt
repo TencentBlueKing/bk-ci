@@ -178,7 +178,14 @@ class PipelineVersionService @Autowired constructor(
             }
 
             watcher.start("s_r_pipeline_del")
-            pipelineRepositoryVersionService.deletePipeline(projectId = projectId, pipelineId = pipelineId, userId = userId, version = version, channelCode = channelCode, delete = delete)
+            pipelineRepositoryVersionService.deletePipeline(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId,
+                version = version,
+                channelCode = channelCode,
+                delete = delete
+            )
             templatePipelineDao.delete(dslContext = dslContext, pipelineId = pipelineId)
             watcher.stop()
 

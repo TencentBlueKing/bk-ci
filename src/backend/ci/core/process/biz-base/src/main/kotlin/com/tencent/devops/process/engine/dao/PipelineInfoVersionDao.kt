@@ -192,7 +192,11 @@ class PipelineInfoVersionDao {
         return version
     }
 
-    fun listPipelineVersion(dslContext: DSLContext, projectId: String, pipelineId: String): Result<TPipelineInfoVersionRecord>? {
+    fun listPipelineVersion(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ): Result<TPipelineInfoVersionRecord>? {
         return with(T_PIPELINE_INFO_VERSION) {
             dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))

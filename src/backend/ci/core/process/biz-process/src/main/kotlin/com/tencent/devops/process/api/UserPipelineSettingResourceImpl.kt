@@ -49,7 +49,12 @@ class UserPipelineSettingResourceImpl @Autowired constructor(
         return Result(pipelineSettingFacadeService.userGetSetting(userId, projectId, pipelineId))
     }
 
-    override fun getSettingVersion(userId: String, projectId: String, pipelineId: String, version: Int): Result<PipelineSettingVersion> {
+    override fun getSettingVersion(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        version: Int
+    ): Result<PipelineSettingVersion> {
         return Result(pipelineSettingService.userGetSettingVersion(userId, projectId, pipelineId, version))
     }
 }
