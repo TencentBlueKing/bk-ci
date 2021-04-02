@@ -165,8 +165,8 @@ class ExperiencePublicDao {
         endDate: LocalDateTime,
         size: Long,
         logoUrl: String,
-        type:Int = ExperiencePublicType.FROM_BKCI.id,
-        externalUrl:String = ""
+        type: Int = ExperiencePublicType.FROM_BKCI.id,
+        externalUrl: String = ""
     ) {
         val now = LocalDateTime.now()
         with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
