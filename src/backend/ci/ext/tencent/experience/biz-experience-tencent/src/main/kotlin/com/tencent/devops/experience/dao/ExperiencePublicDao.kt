@@ -27,6 +27,7 @@
 
 package com.tencent.devops.experience.dao
 
+import com.tencent.devops.experience.constant.ExperiencePublicType
 import com.tencent.devops.model.experience.tables.TExperiencePublic
 import com.tencent.devops.model.experience.tables.records.TExperiencePublicRecord
 import org.apache.commons.lang3.StringUtils
@@ -163,7 +164,9 @@ class ExperiencePublicDao {
         bundleIdentifier: String,
         endDate: LocalDateTime,
         size: Long,
-        logoUrl: String
+        logoUrl: String,
+        type:Int = ExperiencePublicType.FROM_BKCI.id,
+        externalUrl:String = ""
     ) {
         val now = LocalDateTime.now()
         with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
@@ -181,7 +184,9 @@ class ExperiencePublicDao {
                 UPDATE_TIME,
                 DOWNLOAD_TIME,
                 SIZE,
-                LOGO_URL
+                LOGO_URL,
+                TYPE,
+                EXTERNAL_LINK
             ).values(
                 recordId,
                 projectId,
@@ -195,7 +200,9 @@ class ExperiencePublicDao {
                 now,
                 0,
                 size,
-                logoUrl
+                logoUrl,
+                type,
+                externalUrl
             ).onDuplicateKeyUpdate()
                 .set(RECORD_ID, recordId)
                 .set(EXPERIENCE_NAME, experienceName)
