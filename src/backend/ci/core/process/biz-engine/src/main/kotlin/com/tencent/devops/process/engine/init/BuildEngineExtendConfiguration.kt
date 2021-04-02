@@ -61,6 +61,16 @@ class BuildEngineExtendConfiguration {
     }
 
     /**
+     * 构建排队广播交换机
+     */
+    @Bean
+    fun pipelineBuildQueueFanoutExchange(): FanoutExchange {
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_QUEUE_FANOUT, true, false)
+        fanoutExchange.isDelayed = true
+        return fanoutExchange
+    }
+
+    /**
      * 构建启动广播交换机
      */
     @Bean

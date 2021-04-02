@@ -41,8 +41,7 @@ class MockAuthResourceApi : AuthResourceApi {
         resourceCode: String,
         resourceName: String,
         authGroupList: List<BkAuthGroup>?
-    ) {
-    }
+    ) = Unit
 
     override fun batchCreateResource(
         principalId: String,
@@ -61,8 +60,7 @@ class MockAuthResourceApi : AuthResourceApi {
         resourceType: AuthResourceType,
         projectCode: String,
         resourceCode: String
-    ) {
-    }
+    ) = Unit
 
     override fun modifyResource(
         scopeType: String,
@@ -71,8 +69,7 @@ class MockAuthResourceApi : AuthResourceApi {
         projectCode: String,
         resourceCode: String,
         resourceName: String
-    ) {
-    }
+    ) = Unit
 
     override fun createResource(
         scopeType: String,
@@ -82,8 +79,7 @@ class MockAuthResourceApi : AuthResourceApi {
         projectCode: String,
         resourceCode: String,
         resourceName: String
-    ) {
-    }
+    ) = Unit
 
     override fun createResource(
         user: String,
@@ -92,8 +88,7 @@ class MockAuthResourceApi : AuthResourceApi {
         projectCode: String,
         resourceCode: String,
         resourceName: String
-    ) {
-    }
+    ) = Unit
 
     override fun modifyResource(
         serviceCode: AuthServiceCode,
@@ -101,16 +96,14 @@ class MockAuthResourceApi : AuthResourceApi {
         projectCode: String,
         resourceCode: String,
         resourceName: String
-    ) {
-    }
+    ) = Unit
 
     override fun deleteResource(
         serviceCode: AuthServiceCode,
         resourceType: AuthResourceType,
         projectCode: String,
         resourceCode: String
-    ) {
-    }
+    ) = Unit
 
     override fun batchCreateResource(
         serviceCode: AuthServiceCode,
@@ -118,6 +111,5 @@ class MockAuthResourceApi : AuthResourceApi {
         projectCode: String,
         user: String,
         resourceList: List<ResourceRegisterInfo>
-    ) {
-    }
+    ) = Unit
 }

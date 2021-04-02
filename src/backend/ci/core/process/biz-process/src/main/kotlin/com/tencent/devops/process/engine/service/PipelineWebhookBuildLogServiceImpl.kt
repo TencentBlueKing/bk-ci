@@ -34,8 +34,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class PipelineWebhookBuildLogServiceImpl : PipelineWebhookBuildLogService {
-    override fun saveWebhookBuildLog(webhookBuildLog: PipelineWebhookBuildLog) {
-    }
+    override fun saveWebhookBuildLog(webhookBuildLog: PipelineWebhookBuildLog) = Unit
 
     override fun listWebhookBuildLog(
         repoName: String,
