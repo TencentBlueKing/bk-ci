@@ -148,6 +148,10 @@ class BSAuthTokenApi @Autowired constructor(
         logger.info("auth.url: ${bkAuthProperties.url}")
     }
 
+    override fun checkToken(token: String): Boolean {
+        return true
+    }
+
     private fun getAppCodeAndSecret(serviceCode: AuthServiceCode): Pair<String, String> {
         return serviceCode.id() to secretMap[serviceCode.id()]!!
 //        val secret = when (serviceCode as BkAuthServiceCode) {
