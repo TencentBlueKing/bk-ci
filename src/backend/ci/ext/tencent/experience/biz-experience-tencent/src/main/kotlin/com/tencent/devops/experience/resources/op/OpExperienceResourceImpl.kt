@@ -136,7 +136,7 @@ class OpExperienceResourceImpl @Autowired constructor(
             category = externalAdd.category,
             platform = externalAdd.platform.name,
             bundleIdentifier = RandomStringUtils.randomAlphanumeric(10),
-            endDate = LocalDateTime.MAX,
+            endDate = LocalDateTime.of(2100, 1, 1, 1, 1),
             size = 0,
             logoUrl = externalAdd.logoUrl,
             type = ExperiencePublicType.FROM_EXTERNAL_URL.id,
