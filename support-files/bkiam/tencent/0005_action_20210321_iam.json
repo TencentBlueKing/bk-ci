@@ -1126,7 +1126,7 @@
         "id": "experience_task_update",
         "name": "修改版本体验任务",
         "name_en": "Experience Task Update",
-        "type": "update",
+        "type": "edit",
         "related_resource_types": [
           {
             "system_id": "bk_ci",
@@ -1176,7 +1176,7 @@
         "id": "experience_group_update",
         "name": "修改版本体验用户组",
         "name_en": "Experience Group Update",
-        "type": "update",
+        "type": "edit",
         "related_resource_types": [
           {
             "system_id": "bk_ci",
@@ -1205,7 +1205,7 @@
         "related_resource_types": [
           {
             "system_id": "bk_ci",
-            "id": "rule",
+            "id": "project",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci",
@@ -1253,7 +1253,7 @@
         "id": "rule_update",
         "name": "编辑质量红线规则",
         "name_en": "Rule Update",
-        "type": "update",
+        "type": "edit",
         "related_resource_types": [
           {
             "system_id": "bk_ci",
@@ -1278,7 +1278,7 @@
       "data": {
         "id": "rule_use",
         "name": "使用质量红线规则",
-        "name_en": "Rule Update",
+        "name_en": "Rule Use",
         "type": "execute",
         "related_resource_types": [
           {
@@ -1309,7 +1309,7 @@
         "related_resource_types": [
           {
             "system_id": "bk_ci",
-            "id": "group",
+            "id": "project",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci",
@@ -1356,7 +1356,7 @@
         "id": "group_update",
         "name": "编辑质量红线通知组",
         "name_en": "Group Update",
-        "type": "update",
+        "type": "edit",
         "related_resource_types": [
           {
             "system_id": "bk_ci",

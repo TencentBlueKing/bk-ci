@@ -9,7 +9,7 @@
         "name_en": "bkci",
         "clients": "bkci",
         "provider_config": {
-          "host": "http://ci-auth.service.consul:21936",
+          "host": "http://dev.devops.oa.com/ms/auth",
           "auth": "basic",
           "healthz": "/api/v1/healthz"
         }
