@@ -25,22 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.audit.resources
+package com.tencent.devops.process.api.audit
 
-import com.tencent.devops.audit.api.ServiceAuditResource
-import com.tencent.devops.audit.api.pojo.Audit
 import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-import com.tencent.devops.audit.service.AuditService
-import org.springframework.beans.factory.annotation.Autowired
-import com.tencent.devops.common.web.RestResource
-
-@RestResource
-class ServiceAuditResourceImpl @Autowired constructor(
-    private val auditService: AuditService
-) : ServiceAuditResource {
-
-    override fun create(audit: Audit): Result<Long> {
-        return Result((auditService.createAudit(audit)))
-    }
+@Api(tags = ["SERVICE_AUDIT"], description = "服务-审计资源")
+@Path("/service/audit")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceAuditResource {
+    @ApiOperation("新建审计记录")
+    @POST
+    @Path("/")
+    fun create(audit: com.tencent.devops.process.pojo.audit.Audit): Result<Long>
 }

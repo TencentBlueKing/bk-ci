@@ -25,16 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.audit.service
+package com.tencent.devops.process.audit.service
 
-import com.tencent.devops.audit.api.pojo.Audit
-import com.tencent.devops.audit.api.pojo.AuditInfo
-import com.tencent.devops.audit.dao.AuditDao
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLPage
-import com.tencent.devops.common.api.util.timestamp
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -44,7 +39,7 @@ class AuditService @Autowired constructor(
     private val dslContext: DSLContext
 ) {
 
-    fun createAudit(audit: Audit): Long {
+    fun createAudit(audit: com.tencent.devops.process.pojo.audit.Audit): Long {
         checkParam(audit)
         return auditDao.create(
             dslContext = dslContext,
@@ -69,7 +64,16 @@ class AuditService @Autowired constructor(
         offset: Int,
         limit: Int
     ): Pair<SQLPage<AuditInfo>, Boolean> {
-        val count = auditDao.countByResourceTye(dslContext, userId, projectId, resourceType, resourceName, status, startTime, endTime)
+        val count = auditDao.countByResourceTye(
+            dslContext = dslContext,
+            userId = userId,
+            projectId = projectId,
+            resourceType = resourceType,
+            resourceName = resourceName,
+            status = status,
+            startTime = startTime,
+            endTime = endTime
+        )
         val auditRecordList = auditDao.listByResourceTye(
             dslContext = dslContext,
             resourceType = resourceType,
@@ -103,7 +107,7 @@ class AuditService @Autowired constructor(
         return Pair(SQLPage(count, auditList), true)
     }
 
-    private fun checkParam(audit: Audit) {
+    private fun checkParam(audit: com.tencent.devops.process.pojo.audit.Audit) {
         if (audit.resourceType.isBlank()) {
             throw ParamBlankException("Invalid resourceType")
         }
@@ -122,9 +126,5 @@ class AuditService @Autowired constructor(
         if (audit.actionContent.isBlank()) {
             throw ParamBlankException("Invalid actionContent")
         }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(AuditService::class.java)
     }
 }

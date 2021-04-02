@@ -25,10 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.audit.dao
+package com.tencent.devops.process.audit.dao
 
-import com.tencent.devops.model.audit.tables.TAuditResource
-import com.tencent.devops.model.audit.tables.records.TAuditResourceRecord
+import com.tencent.devops.model.process.tables.TAuditResource
+import com.tencent.devops.model.process.tables.records.TAuditResourceRecord
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -114,10 +114,7 @@ class AuditDao {
                 val endTimeDateTime = LocalDateTime.parse(endTime, df)
                 query.and(CREATED_TIME.between(startTimeDateTime, endTimeDateTime))
             }
-            query.orderBy(ID.desc())
-                .offset(offset)
-                .limit(limit)
-                .fetch()
+            query.orderBy(ID.desc()).offset(offset).limit(limit).fetch()
         }
     }
 
@@ -152,7 +149,7 @@ class AuditDao {
                 val endTimeDateTime = LocalDateTime.parse(endTime, df)
                 query.and(CREATED_TIME.between(startTimeDateTime, endTimeDateTime))
             }
-            query.fetchOne(0, kotlin.Long::class.java)
+            query.fetchOne(0, Long::class.java)
         }
     }
 }

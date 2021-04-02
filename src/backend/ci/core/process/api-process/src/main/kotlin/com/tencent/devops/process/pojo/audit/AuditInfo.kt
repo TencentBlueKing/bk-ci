@@ -25,14 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.audit
+package com.tencent.devops.process.pojo.audit
 
-import com.tencent.devops.common.service.MicroService
-import com.tencent.devops.common.service.MicroServiceApplication
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@MicroService
-class Application
-
-fun main(args: Array<String>) {
-    MicroServiceApplication.run(Application::class, args)
+@ApiModel("审计模型-Audit")
+data class AuditInfo(
+    @ApiModelProperty("状态", required = true)
+    val status: String,
+    @ApiModelProperty("资源类型", required = true)
+    val resourceType: String,
+    @ApiModelProperty("资源ID", required = true)
+    val resourceId: String,
+    @ApiModelProperty("资源名称", required = true)
+    val resourceName: String,
+    @ApiModelProperty("操作人", required = true)
+    val userId: String,
+    @ApiModelProperty("操作时间", required = true)
+    val updatedTime: Long,
+    @ApiModelProperty("操作", required = true)
+    val action: String,
+    @ApiModelProperty("操作内容", required = true)
+    val actionContent: String
+) {
+    companion object {
+        const val classType = "audit"
+    }
 }

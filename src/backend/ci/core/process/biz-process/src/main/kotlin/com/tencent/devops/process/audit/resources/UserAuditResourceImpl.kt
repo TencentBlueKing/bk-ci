@@ -25,16 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.audit.resources
+package com.tencent.devops.process.audit.resources
 
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.util.PageUtil
-import com.tencent.devops.audit.api.UserAuditResource
-import com.tencent.devops.audit.api.pojo.AuditInfo
-import com.tencent.devops.audit.api.pojo.AuditPage
-import com.tencent.devops.audit.service.AuditService
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.api.audit.UserAuditResource
+import com.tencent.devops.process.audit.service.AuditService
+import com.tencent.devops.process.pojo.audit.AuditInfo
+import com.tencent.devops.process.pojo.audit.AuditPage
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

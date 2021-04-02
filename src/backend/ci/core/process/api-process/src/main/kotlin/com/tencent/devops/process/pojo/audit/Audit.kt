@@ -25,25 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.audit.api
+package com.tencent.devops.process.pojo.audit
 
-import com.tencent.devops.audit.api.pojo.Audit
-import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import javax.ws.rs.Consumes
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Api(tags = ["SERVICE_AUDIT"], description = "服务-审计资源")
-@Path("/service/audit")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ServiceAuditResource {
-    @ApiOperation("新建审计记录")
-    @POST
-    @Path("/")
-    fun create(audit: Audit): Result<Long>
+@ApiModel("审计模型-Audit")
+data class Audit(
+    @ApiModelProperty("资源类型", required = true)
+    val resourceType: String,
+    @ApiModelProperty("资源ID", required = true)
+    val resourceId: String,
+    @ApiModelProperty("资源名称", required = true)
+    val resourceName: String,
+    @ApiModelProperty("操作人", required = true)
+    val userId: String,
+    @ApiModelProperty("操作", required = true)
+    val action: String,
+    @ApiModelProperty("操作内容", required = true)
+    val actionContent: String,
+    @ApiModelProperty("项目id", required = true)
+    val projectId: String
+) {
+    companion object {
+        const val classType = "audit"
+    }
 }

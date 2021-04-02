@@ -25,12 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.audit.api
+package com.tencent.devops.process.api.audit
 
-import com.tencent.devops.audit.api.pojo.AuditInfo
-import com.tencent.devops.audit.api.pojo.AuditPage
 import com.tencent.devops.common.api.pojo.Result
-
+import com.tencent.devops.process.pojo.audit.AuditInfo
+import com.tencent.devops.process.pojo.audit.AuditPage
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -43,7 +42,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_AUDIT"], description = "用户-审计")
-@Path("/user/audit")
+@Path("/user/pipelines/audit/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserAuditResource {

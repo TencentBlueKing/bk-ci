@@ -25,4 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply from: "$rootDir/task_gen_jooq.gradle"
+package com.tencent.devops.process.audit.resources
+
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class ServiceAuditResourceImpl @Autowired constructor(
+    private val auditService: com.tencent.devops.audit.service.AuditService
+) : com.tencent.devops.process.api.audit.ServiceAuditResource {
+
+    override fun create(audit: com.tencent.devops.process.pojo.audit.Audit): Result<Long> {
+        return Result((auditService.createAudit(audit)))
+    }
+}
