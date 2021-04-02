@@ -270,6 +270,20 @@ class PipelineInfoFacadeService @Autowired constructor(
                 // 先进行模板关联操作
                 if (model.templateId != null) {
                     val templateId = model.templateId as String
+                    watcher.start("addLabel")
+                    if (useTemplateSettings == true) {
+                        val groups = pipelineGroupService.getGroups(userId, projectId, templateId)
+                        val labels = ArrayList<String>()
+                        groups.forEach {
+                            labels.addAll(it.labels)
+                        }
+                        pipelineGroupService.updatePipelineLabel(
+                            userId = userId,
+                            pipelineId = pipelineId,
+                            labelIds = labels
+                        )
+                    }
+                    watcher.stop()
                     watcher.start("createTemplate")
                     templateService.createRelationBtwTemplate(
                         userId = userId,
