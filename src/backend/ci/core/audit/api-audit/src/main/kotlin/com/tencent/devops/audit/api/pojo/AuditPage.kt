@@ -25,31 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api
+package com.tencent.devops.audit.api.pojo
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.user.UserPipelineSettingResource
-import com.tencent.devops.process.pojo.setting.PipelineSetting
-import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
-import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
-import com.tencent.devops.process.service.PipelineSettingService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@RestResource
-class UserPipelineSettingResourceImpl @Autowired constructor(
-    private val pipelineSettingFacadeService: PipelineSettingFacadeService,
-    private val pipelineSettingService: PipelineSettingService
-) : UserPipelineSettingResource {
-    override fun saveSetting(userId: String, setting: PipelineSetting): Result<String> {
-        return Result(pipelineSettingFacadeService.saveSetting(userId, setting))
-    }
-
-    override fun getSetting(userId: String, projectId: String, pipelineId: String): Result<PipelineSetting> {
-        return Result(pipelineSettingFacadeService.userGetSetting(userId, projectId, pipelineId))
-    }
-
-    override fun getSettingVersion(userId: String, projectId: String, pipelineId: String, version: Int): Result<PipelineSettingVersion> {
-        return Result(pipelineSettingService.userGetSettingVersion(userId, projectId, pipelineId, version))
-    }
+@ApiModel("Audit分页数据包装模型")
+data class AuditPage<out T>(
+    @ApiModelProperty("总记录行数", required = true)
+    val count: Long,
+    @ApiModelProperty("第几页", required = true)
+    val page: Int,
+    @ApiModelProperty("每页多少条", required = true)
+    val pageSize: Int,
+    @ApiModelProperty("总共多少页", required = true)
+    val totalPages: Int,
+    @ApiModelProperty("数据", required = true)
+    val records: List<T>,
+    @ApiModelProperty("是否拥有创建权限", required = true)
+    val hasCreatePermission: Boolean
+) {
+    constructor(page: Int, pageSize: Int, count: Long, records: List<T>, hasCreatePermission: Boolean) :
+        this(count, page, pageSize, Math.ceil(count * 1.0 / pageSize).toInt(), records, hasCreatePermission)
 }

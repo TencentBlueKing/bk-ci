@@ -36,6 +36,7 @@ import com.tencent.devops.process.dao.PipelineFavorDao
 import com.tencent.devops.process.dao.label.PipelineGroupDao
 import com.tencent.devops.process.dao.label.PipelineLabelDao
 import com.tencent.devops.process.dao.label.PipelineLabelPipelineDao
+import com.tencent.devops.process.dao.label.PipelineLabelPipelineVersionDao
 import com.tencent.devops.process.dao.label.PipelineViewLabelDao
 import com.tencent.devops.process.pojo.classify.PipelineGroup
 import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
@@ -61,7 +62,8 @@ class PipelineGroupService @Autowired constructor(
     private val pipelineLabelDao: PipelineLabelDao,
     private val pipelineViewLabelDao: PipelineViewLabelDao,
     private val pipelineFavorDao: PipelineFavorDao,
-    private val pipelineLabelPipelineDao: PipelineLabelPipelineDao
+    private val pipelineLabelPipelineDao: PipelineLabelPipelineDao,
+    private val pipelineLabelPipelineVersionDao: PipelineLabelPipelineVersionDao
 ) {
 
     fun getGroups(userId: String, projectId: String): List<PipelineGroup> {
@@ -197,6 +199,7 @@ class PipelineGroupService @Autowired constructor(
         }
         try {
             pipelineLabelPipelineDao.batchCreate(dslContext, pipelineId, labelIds.map { decode(it) }.toSet(), userId)
+            pipelineLabelPipelineVersionDao.batchCreate(dslContext, pipelineId, labelIds.map { decode(it) }.toSet(), userId)
         } catch (t: DuplicateKeyException) {
             logger.warn("Fail to add the pipeline $pipelineId label $labelIds by userId $userId")
             throw OperationException("The label is already exist")
