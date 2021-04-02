@@ -72,51 +72,55 @@ class PipelineSettingService @Autowired constructor(
                     val failType = it.get(FAIL_TYPE).split(",").filter { i -> i.isNotBlank() }
                         .map { type -> PipelineSubscriptionType.valueOf(type) }.toSet()
                     PipelineSettingVersion(
-                        projectId,
-                        pipelineId,
-                        it.get(NAME),
-                        it.get(DESC),
-                        PipelineRunLockType.valueOf(it.get(RUN_LOCK_TYPE)),
-                        Subscription(
-                            successType,
-                            it.get(SUCCESS_GROUP).split(",").toSet(),
-                            it.get(SUCCESS_RECEIVER),
-                            it.get(SUCCESS_WECHAT_GROUP_FLAG),
-                            it.get(SUCCESS_WECHAT_GROUP),
-                            it.get(SUCCESS_WECHAT_GROUP_MARKDOWN_FLAG),
-                            it.get(SUCCESS_DETAIL_FLAG),
-                            it.get(SUCCESS_CONTENT) ?: ""
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        pipelineName = it.get(NAME),
+                        desc = it.get(DESC),
+                        runLockType = PipelineRunLockType.valueOf(it.get(RUN_LOCK_TYPE)),
+                        successSubscription = Subscription(
+                            types = successType,
+                            groups = it.get(SUCCESS_GROUP).split(",").toSet(),
+                            users = it.get(SUCCESS_RECEIVER),
+                            wechatGroupFlag = it.get(SUCCESS_WECHAT_GROUP_FLAG),
+                            wechatGroup = it.get(SUCCESS_WECHAT_GROUP),
+                            wechatGroupMarkdownFlag = it.get(SUCCESS_WECHAT_GROUP_MARKDOWN_FLAG),
+                            detailFlag = it.get(SUCCESS_DETAIL_FLAG),
+                            content = it.get(SUCCESS_CONTENT) ?: ""
                         ),
-                        Subscription(
-                            failType,
-                            it.get(FAIL_GROUP).split(",").toSet(),
-                            it.get(FAIL_RECEIVER),
-                            it.get(FAIL_WECHAT_GROUP_FLAG),
-                            it.get(FAIL_WECHAT_GROUP),
-                            it.get(FAIL_WECHAT_GROUP_MARKDOWN_FLAG),
-                            it.get(FAIL_DETAIL_FLAG),
-                            it.get(FAIL_CONTENT) ?: ""
+                        failSubscription = Subscription(
+                            types = failType,
+                            groups = it.get(FAIL_GROUP).split(",").toSet(),
+                            users = it.get(FAIL_RECEIVER),
+                            wechatGroupFlag = it.get(FAIL_WECHAT_GROUP_FLAG),
+                            wechatGroup = it.get(FAIL_WECHAT_GROUP),
+                            wechatGroupMarkdownFlag = it.get(FAIL_WECHAT_GROUP_MARKDOWN_FLAG),
+                            detailFlag = it.get(FAIL_DETAIL_FLAG),
+                            content = it.get(FAIL_CONTENT) ?: ""
                         ),
-                        labels,
-                        DateTimeUtil.secondToMinute(it.get(WAIT_QUEUE_TIME_SECOND)),
-                        it.get(MAX_QUEUE_SIZE),
-                        it.get(VERSION)
+                        labels = labels,
+                        waitQueueTimeMinute = DateTimeUtil.secondToMinute(it.get(WAIT_QUEUE_TIME_SECOND)),
+                        maxQueueSize = it.get(MAX_QUEUE_SIZE),
+                        version = it.get(VERSION)
                     )
                 }
             }
         } else {
-            val model = client.get(ServicePipelineResource::class).get(userId, projectId, pipelineId, channelCode).data
+            val model = client.get(ServicePipelineResource::class).get(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                channelCode = channelCode).data
             val name = model?.name ?: "unknown pipeline name"
             val desc = model?.desc ?: ""
             PipelineSettingVersion(
-                projectId,
-                pipelineId,
-                name,
-                desc,
-                MULTIPLE,
-                Subscription(),
-                Subscription(),
-                labels
+                projectId = projectId,
+                pipelineId = pipelineId,
+                pipelineName = name,
+                desc = desc,
+                runLockType = MULTIPLE,
+                successSubscription = Subscription(),
+                failSubscription = Subscription(),
+                labels = labels
             )
         }
     }
