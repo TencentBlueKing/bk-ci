@@ -29,12 +29,14 @@ package com.tencent.devops.process.audit.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.api.audit.ServiceAuditResource
+import com.tencent.devops.process.audit.service.AuditService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceAuditResourceImpl @Autowired constructor(
-    private val auditService: com.tencent.devops.audit.service.AuditService
-) : com.tencent.devops.process.api.audit.ServiceAuditResource {
+    private val auditService: AuditService
+) : ServiceAuditResource {
 
     override fun create(audit: com.tencent.devops.process.pojo.audit.Audit): Result<Long> {
         return Result((auditService.createAudit(audit)))

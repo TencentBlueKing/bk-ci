@@ -48,7 +48,6 @@ dependencies {
     compile project(":core:plugin:codecc-plugin:common-codecc")
     compile project(":core:notify:api-notify")
     compile project(":core:process:biz-base")
-    compile project(":core:audit:api-audit")
 
     compile "com.zaxxer:HikariCP"
     compile "mysql:mysql-connector-java"

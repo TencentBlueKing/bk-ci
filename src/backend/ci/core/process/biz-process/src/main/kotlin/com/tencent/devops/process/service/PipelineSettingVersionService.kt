@@ -44,7 +44,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class PipelineSettingService @Autowired constructor(
+class PipelineSettingVersionService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val pipelineSettingVersionDao: PipelineSettingVersionDao,

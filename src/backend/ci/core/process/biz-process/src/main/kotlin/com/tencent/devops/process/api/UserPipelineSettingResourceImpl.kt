@@ -33,13 +33,13 @@ import com.tencent.devops.process.api.user.UserPipelineSettingResource
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
-import com.tencent.devops.process.service.PipelineSettingService
+import com.tencent.devops.process.service.PipelineSettingVersionService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserPipelineSettingResourceImpl @Autowired constructor(
     private val pipelineSettingFacadeService: PipelineSettingFacadeService,
-    private val pipelineSettingService: PipelineSettingService
+    private val pipelineSettingVersionService: PipelineSettingVersionService
 ) : UserPipelineSettingResource {
     override fun saveSetting(userId: String, setting: PipelineSetting): Result<String> {
         return Result(pipelineSettingFacadeService.saveSetting(userId, setting))
@@ -55,6 +55,6 @@ class UserPipelineSettingResourceImpl @Autowired constructor(
         pipelineId: String,
         version: Int
     ): Result<PipelineSettingVersion> {
-        return Result(pipelineSettingService.userGetSettingVersion(userId, projectId, pipelineId, version))
+        return Result(pipelineSettingVersionService.userGetSettingVersion(userId, projectId, pipelineId, version))
     }
 }
