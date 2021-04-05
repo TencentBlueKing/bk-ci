@@ -23,6 +23,7 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
 package com.tencent.devops.common.auth.api
@@ -47,7 +48,7 @@ class BluekingV3AuthPermissionApi @Autowired constructor(
     private val policyService: PolicyService,
     private val redisOperation: RedisOperation,
     private val iamConfiguration: IamConfiguration
-) : AuthPermissionApi {
+): AuthPermissionApi {
     override fun addResourcePermissionForUsers(
         userId: String,
         projectCode: String,
