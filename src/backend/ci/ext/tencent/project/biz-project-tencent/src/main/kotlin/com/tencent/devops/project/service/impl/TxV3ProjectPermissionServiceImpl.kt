@@ -30,20 +30,31 @@ package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
+import com.tencent.devops.common.auth.service.IamEsbService
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectPermissionService
 import org.springframework.beans.factory.annotation.Autowired
 
 class TxV3ProjectPermissionServiceImpl @Autowired constructor (
-
+    val iamEsbService: IamEsbService
 ): ProjectPermissionService {
+
+
 
     override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String): Boolean {
         TODO("Not yet implemented")
     }
 
     override fun createResources(userId: String, accessToken: String?, resourceRegisterInfo: ResourceRegisterInfo, userDeptDetail: UserDeptDetail?): String {
-        TODO("Not yet implemented")
+        /**
+         *  V3创建项目流程
+         *  1. 创建分级管理员，并记录iam分级管理员id
+         *  2. 添加创建人到该分级管理员
+         *  3. 添加默认用户组”CI管理员“
+         *  4. 分配”ALL action“权限到CI管理员
+         *  5. 添加创建人到分级管理员
+         */
+
     }
 
     override fun deleteResource(projectCode: String) {
