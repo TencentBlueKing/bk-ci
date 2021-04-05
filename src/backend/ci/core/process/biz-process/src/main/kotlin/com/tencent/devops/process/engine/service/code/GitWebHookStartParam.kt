@@ -199,7 +199,7 @@ class GitWebHookStartParam(
                 gitCommit.added?.forEachIndexed { innerIndex, file ->
                     startParams[BK_REPO_GIT_WEBHOOK_PUSH_ADD_FILE_PREFIX + curIndex + "_" + (innerIndex + 1)] = file
                     count++
-                    if (count > MAX_VARITABLE_COUNT) return@run
+                    if (count > MAX_VARIABLE_COUNT) return@run
                 }
             }
 
@@ -207,7 +207,7 @@ class GitWebHookStartParam(
                 gitCommit.modified?.forEachIndexed { innerIndex, file ->
                     startParams[BK_REPO_GIT_WEBHOOK_PUSH_MODIFY_FILE_PREFIX + curIndex + "_" + (innerIndex + 1)] = file
                     count++
-                    if (count > MAX_VARITABLE_COUNT) return@run
+                    if (count > MAX_VARIABLE_COUNT) return@run
                 }
             }
 
@@ -215,12 +215,13 @@ class GitWebHookStartParam(
                 gitCommit.removed?.forEachIndexed { innerIndex, file ->
                     startParams[BK_REPO_GIT_WEBHOOK_PUSH_DELETE_FILE_PREFIX + curIndex + "_" + (innerIndex + 1)] = file
                     count++
-                    if (count > MAX_VARITABLE_COUNT) return@run
+                    if (count > MAX_VARIABLE_COUNT) return@run
                 }
             }
         }
     }
 
+    @Suppress("ALL")
     private fun mrStartParam(startParams: MutableMap<String, Any>) {
         val mrRequestId = matcher.getMergeRequestId()
         // MR提交人
@@ -236,10 +237,8 @@ class GitWebHookStartParam(
         startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_URL] = matcher.getHookSourceUrl() ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIME] = mrInfo?.createTime ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME] = mrInfo?.updateTime ?: ""
-        startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIMESTAMP] =
-            DateTimeUtil.zoneDateToTimestamp(mrInfo?.createTime)
-        startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP] =
-            DateTimeUtil.zoneDateToTimestamp(mrInfo?.updateTime)
+        startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIMESTAMP] = DateTimeUtil.zoneDateToTimestamp(mrInfo?.createTime)
+        startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP] = DateTimeUtil.zoneDateToTimestamp(mrInfo?.updateTime)
         startParams[BK_REPO_GIT_WEBHOOK_MR_ID] = mrInfo?.mrId ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_NUMBER] = mrInfo?.mrNumber ?: ""
         startParams[BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION] = mrInfo?.description ?: ""
@@ -252,7 +251,7 @@ class GitWebHookStartParam(
     }
 
     companion object {
-        private const val MAX_VARITABLE_COUNT = 32
+        private const val MAX_VARIABLE_COUNT = 32
         private val logger = LoggerFactory.getLogger(GitWebHookStartParam::class.java)
     }
 }

@@ -43,8 +43,5 @@ jobs:
         restore-keys: |
           ${{ runner.os }}-gradle-
     - name: Gradle Build
-      uses: eskatos/gradle-command-action@v1
-      with:
-        gradle-version: 4.8.1
-        build-root-directory: src/backend/ci
-        arguments: test clean :boot-assembly:classes -DmavenRepoUrl="http://maven.aliyun.com/nexus/content/groups/public/"
+      working-directory: src/backend/ci
+      run: ./gradlew test clean :boot-assembly:classes -DmavenRepoUrl="http://maven.aliyun.com/nexus/content/groups/public/"

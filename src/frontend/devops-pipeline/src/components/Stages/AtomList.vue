@@ -159,7 +159,7 @@
                     atoms.forEach(atom => {
                         if (this.curMatchRules.some(rule => rule.taskId === atom.atomCode
                             && (rule.ruleList.every(val => !val.gatewayId)
-                                || rule.ruleList.some(val => atom.name.indexOf(val.gatewayId) > -1)))) {
+                            || rule.ruleList.some(val => atom.name.indexOf(val.gatewayId) > -1)))) {
                             atom.isQualityCheck = true
                         } else {
                             atom.isQualityCheck = false
@@ -307,7 +307,7 @@
                 const list = atom.reviewUsers || (atom.data && atom.data.input && atom.data.input.reviewers)
                 const reviewUsers = list.map(user => user.split(';').map(val => val.trim())).reduce((prev, curr) => {
                     return prev.concat(curr)
-                })
+                }, [])
                 return reviewUsers
             },
             showPropertyPanel (elementIndex) {
@@ -411,7 +411,7 @@
                             name: this.routerParams.pipelineId
                         }],
                         projectId: this.routerParams.projectId
-                    }])
+                    }], this.getPermUrlByRole(this.routerParams.projectId, this.routerParams.pipelineId, this.roleMap.executor))
                 } finally {
                     message && this.$showTips({
                         message,
@@ -644,7 +644,7 @@
 
         .quality-atom {
             margin-left: 84px;
-            width: 70px;
+            width: 55px;
             border-radius: 12px;
             z-index: 9;
             .atom-title {
@@ -664,8 +664,8 @@
                     width: 62px;
                 }
                 &:after {
-                    left: 154px;
-                    width: 85px;
+                    left: 138px;
+                    width: 100px;
                 }
             }
             &.is-success {
@@ -702,7 +702,7 @@
             }
             .handler-list {
                 position: absolute;
-                right: 10px;
+                right: 0;
                 span {
                     color: $primaryColor;
                     font-size: 12px;

@@ -39,26 +39,10 @@ import org.junit.Test
 class JsonUtilTest {
 
     @Test
-    fun getObjectMapper() {
-    }
-
-    @Test
-    fun toJson() {
-    }
-
-    @Test
     fun toMutableMapSkipEmpty() {
         val json = "{}"
         val map = JsonUtil.toMutableMapSkipEmpty(json)
         Assert.assertNotNull(map)
-    }
-
-    @Test
-    fun toMap() {
-    }
-
-    @Test
-    fun to() {
     }
 
     @Test

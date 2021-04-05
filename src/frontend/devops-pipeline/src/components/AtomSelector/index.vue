@@ -372,7 +372,7 @@
         width: 600px;
         height: calc(100% - 20px);
         background: white;
-        z-index: 2500;
+        z-index: 10000;
         border: 1px solid $borderColor;
         border-radius: 5px;
         top: 0;
