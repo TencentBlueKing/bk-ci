@@ -44,4 +44,6 @@ interface AuthTokenApi {
      * @return accessToken String
      */
     fun getAccessToken(serviceCode: AuthServiceCode): String
+
+    fun checkToken(token: String): Boolean
 }

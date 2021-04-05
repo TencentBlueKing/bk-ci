@@ -33,10 +33,10 @@ import com.tencent.bk.sdk.iam.service.impl.DefaultHttpClientServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.GrantServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.PolicyServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.TokenServiceImpl
-import com.tencent.devops.common.auth.api.BluekingV3AuthPermissionApi
 import com.tencent.devops.common.auth.api.BluekingV3AuthProjectApi
 import com.tencent.devops.common.auth.api.BluekingV3ResourceApi
 import com.tencent.devops.common.auth.api.BluekingV3AuthTokenApi
+import com.tencent.devops.common.auth.api.BluekingV3AuthPermissionApi
 import com.tencent.devops.common.auth.code.BluekingV3ArtifactoryAuthServiceCode
 import com.tencent.devops.common.auth.code.BluekingV3BcsAuthServiceCode
 import com.tencent.devops.common.auth.code.BluekingV3CodeAuthServiceCode
@@ -77,9 +77,15 @@ class BluekingV3AuthAutoConfiguration {
     @Value("\${auth.appSecret:}")
     val appSecret = ""
 
+    @Value("\${bk.paas.host:#{null}}")
+    val iamEsb = ""
+
     @Bean
     @Primary
-    fun authTokenApi() = BluekingV3AuthTokenApi()
+    fun authTokenApi(
+        redisOperation: RedisOperation,
+        tokenServiceImpl: TokenServiceImpl
+    ) = BluekingV3AuthTokenApi(redisOperation, tokenServiceImpl)
 
     @Bean
     @ConditionalOnMissingBean
@@ -96,9 +102,8 @@ class BluekingV3AuthAutoConfiguration {
 
     @Bean
     @Primary
-    fun authProjectApi(bkAuthPermissionApi: BluekingV3AuthPermissionApi) =
+    fun authProjectApi() =
         BluekingV3AuthProjectApi(
-            bkAuthPermissionApi = bkAuthPermissionApi,
             policyService = policyService(),
             authHelper = authHelper(),
             iamConfiguration = iamConfiguration(),
@@ -133,7 +138,7 @@ class BluekingV3AuthAutoConfiguration {
     fun artifactoryAuthServiceCode() = BluekingV3ArtifactoryAuthServiceCode()
 
     @Bean
-    fun iamConfiguration() = IamConfiguration(systemId, appCode, appSecret, iamBaseUrl)
+    fun iamConfiguration() = IamConfiguration(systemId, appCode, appSecret, iamBaseUrl, iamEsb)
 
     @Bean
     fun httpService() = DefaultHttpClientServiceImpl(iamConfiguration())

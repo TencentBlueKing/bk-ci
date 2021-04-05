@@ -30,6 +30,7 @@ package com.tencent.devops.environment.service
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
+import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
@@ -39,9 +40,11 @@ import org.springframework.stereotype.Service
 
 @Service
 class AuthEnvService @Autowired constructor(
-    private val envService: EnvService
+    private val envService: EnvService,
+    private val authTokenApi: AuthTokenApi
 ) {
-    fun getEnv(projectId: String, offset: Int, limit: Int): ListInstanceResponseDTO? {
+    fun getEnv(projectId: String, offset: Int, limit: Int, token: String): ListInstanceResponseDTO? {
+        authTokenApi.checkToken(token)
         val envInfos =
             envService.listEnvironmentByLimit(projectId, offset, limit)
         val result = ListInstanceInfo()
@@ -60,7 +63,8 @@ class AuthEnvService @Autowired constructor(
         return result.buildListInstanceResult(entityInfo, envInfos.count)
     }
 
-    fun getEnvInfo(hashId: List<Any>?): FetchInstanceInfoResponseDTO? {
+    fun getEnvInfo(hashId: List<Any>?, token: String): FetchInstanceInfoResponseDTO? {
+        authTokenApi.checkToken(token)
         val envInfos = envService.listRawEnvByHashIdsAllType(hashId as List<String>)
         val result = FetchInstanceInfo()
         if (envInfos == null || envInfos.isEmpty()) {
@@ -78,7 +82,14 @@ class AuthEnvService @Autowired constructor(
         return result.buildFetchInstanceResult(entityInfo)
     }
 
-    fun searchEnv(projectId: String, keyword: String, limit: Int, offset: Int): SearchInstanceInfo {
+    fun searchEnv(
+        projectId: String,
+        keyword: String,
+        limit: Int,
+        offset: Int,
+        token: String
+    ): SearchInstanceInfo {
+        authTokenApi.checkToken(token)
         val envInfos = envService.searchByName(
             projectId = projectId,
             offset = offset,

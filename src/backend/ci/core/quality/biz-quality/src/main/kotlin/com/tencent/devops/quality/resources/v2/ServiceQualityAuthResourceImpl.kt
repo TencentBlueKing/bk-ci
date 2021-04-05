@@ -23,39 +23,37 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.environment.resources
+package com.tencent.devops.quality.resources.v2
 
 import com.tencent.bk.sdk.iam.constants.CallbackMethodEnum
 import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.environment.api.ServiceEnvironmentAuthResource
-import com.tencent.devops.environment.service.AuthEnvService
-import com.tencent.devops.environment.service.AuthNodeService
+import com.tencent.devops.quality.api.v2.ServiceQualityAuthResource
+import com.tencent.devops.quality.service.v2.AuthQualityService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceEnvironmentAuthResourceImpl @Autowired constructor(
-    val authNodeService: AuthNodeService,
-    val authEnvService: AuthEnvService
-) : ServiceEnvironmentAuthResource {
-
-    override fun environmentInfo(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO? {
+class ServiceQualityAuthResourceImpl @Autowired constructor(
+    val authQualityService: AuthQualityService
+): ServiceQualityAuthResource {
+    override fun qualityRuleInfo(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO? {
         val method = callBackInfo.method
         val page = callBackInfo.page
         val projectId = callBackInfo.filter.parent.id
         when (method) {
             CallbackMethodEnum.LIST_INSTANCE -> {
-                return authEnvService.getEnv(projectId, page.offset.toInt(), page.limit.toInt(), token)
+                return authQualityService.getQualityRule(projectId, page.offset.toInt(), page.limit.toInt(), token)
             }
             CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
                 val ids = callBackInfo.filter.idList.map { it.toString() }
-                return authEnvService.getEnvInfo(ids, token)
+                return authQualityService.getQualityRuleInfoByIds(ids, token)
             }
             CallbackMethodEnum.SEARCH_INSTANCE -> {
-                return authEnvService.searchEnv(
+                return authQualityService.searchQualityRule(
                     projectId = projectId,
                     keyword = callBackInfo.filter.keyword,
                     limit = page.offset.toInt(),
@@ -67,20 +65,20 @@ class ServiceEnvironmentAuthResourceImpl @Autowired constructor(
         return null
     }
 
-    override fun nodeInfo(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO? {
+    override fun qualityGroupInfo(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO? {
         val method = callBackInfo.method
         val page = callBackInfo.page
         val projectId = callBackInfo.filter.parent.id
         when (method) {
             CallbackMethodEnum.LIST_INSTANCE -> {
-                return authNodeService.getNode(projectId, page.offset.toInt(), page.limit.toInt(), token)
+                return authQualityService.getQualityGroup(projectId, page.offset.toInt(), page.limit.toInt(), token)
             }
             CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
                 val ids = callBackInfo.filter.idList.map { it.toString() }
-                return authNodeService.getNodeInfo(ids, token)
+                return authQualityService.getQualityGroupInfoByIds(ids, token)
             }
             CallbackMethodEnum.SEARCH_INSTANCE -> {
-                return authNodeService.searchNode(
+                return authQualityService.searchQualityGroup(
                     projectId = projectId,
                     keyword = callBackInfo.filter.keyword,
                     limit = page.offset.toInt(),

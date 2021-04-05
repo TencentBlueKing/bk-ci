@@ -23,6 +23,7 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
 package com.tencent.devops.common.auth.api
@@ -36,8 +37,8 @@ import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.devops.common.api.util.OwnerUtils
 import com.tencent.devops.common.auth.code.AuthServiceCode
-import com.tencent.devops.common.auth.utlis.ActionUtils
-import com.tencent.devops.common.auth.utlis.AuthUtils
+import com.tencent.devops.common.auth.utils.ActionUtils
+import com.tencent.devops.common.auth.utils.AuthUtils
 import com.tencent.devops.common.redis.RedisOperation
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -47,7 +48,7 @@ class BluekingV3AuthPermissionApi @Autowired constructor(
     private val policyService: PolicyService,
     private val redisOperation: RedisOperation,
     private val iamConfiguration: IamConfiguration
-) : AuthPermissionApi {
+): AuthPermissionApi {
     override fun addResourcePermissionForUsers(
         userId: String,
         projectCode: String,

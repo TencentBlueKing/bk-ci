@@ -23,21 +23,27 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.auth.utils
+package com.tencent.devops.common.auth.api
 
-import java.nio.charset.Charset
-import java.util.Base64
+enum class AuthV3ResourceApi(val value: String, val oldType: AuthResourceType) {
+    PIPELINE("pipeline", AuthResourceType.PIPELINE_DEFAULT),
+    ENV_NODE("env_node", AuthResourceType.ENVIRONMENT_ENV_NODE),
+    EXPERIENCE_TASK("experience_task", AuthResourceType.EXPERIENCE_TASK),
+    EXPERIENCE_GROUP("experience_group", AuthResourceType.EXPERIENCE_GROUP),
+    QUALITY_RULE("quality_rule", AuthResourceType.QUALITY_RULE),
+    QUALITY_GROUP("quality_group", AuthResourceType.QUALITY_GROUP),
+    WETEST_TASK("wetest_task", AuthResourceType.WETEST_TASK),
+    WETEST_EMAIL_GROUP("wetest_group", AuthResourceType.WETEST_EMAIL_GROUP);
 
-object StringUtils {
-    fun decodeAuth(token: String): Pair<String, String> {
-        val str = if (token.contains("Basic ")) {
-            token.substringAfter("Basic ")
-        } else {
-            token
+    companion object {
+        fun get(value: String): AuthResourceType {
+            AuthV3ResourceApi.values().forEach {
+                if (value == it.value) return it.oldType
+            }
+            throw IllegalArgumentException("No enum for constant $value")
         }
-        val decodeStr = String(Base64.getDecoder().decode(str), Charset.forName("UTF-8"))
-        return Pair(decodeStr.substringBefore(":"), decodeStr.substringAfter(":"))
     }
 }

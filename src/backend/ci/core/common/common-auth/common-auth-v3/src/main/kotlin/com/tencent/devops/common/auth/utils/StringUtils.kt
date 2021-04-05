@@ -23,41 +23,31 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.auth.resources
+package com.tencent.devops.common.auth.utils
 
-import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
-import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
-import com.tencent.devops.auth.api.AuthResourceCallBackResource
-import com.tencent.devops.auth.service.ResourceService
-import com.tencent.devops.common.web.RestResource
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-
-@RestResource
-class AuthResourceCallBackResourceImpl @Autowired constructor(
-    val resourceService: ResourceService
-) : AuthResourceCallBackResource {
-    override fun projectInfo(
-        callBackInfo: CallbackRequestDTO,
-        token: String
-    ): CallbackBaseResponseDTO {
-        return resourceService.getProject(callBackInfo, token)
+object StringUtils {
+    fun obj2List(str: String): List<String> {
+        val list = str.substringBefore("]").substringAfter("[").split(",")
+        val newList = mutableListOf<String>()
+        list.map {
+            newList.add(it.trim())
+        }
+        return newList
     }
 
-    override fun resourceList(
-        callBackInfo: CallbackRequestDTO,
-        token: String
-    ): CallbackBaseResponseDTO? {
-        logger.info("resourceList: $callBackInfo, token: $token")
-        return resourceService.getInstanceByResource(
-                callBackInfo = callBackInfo,
-                token = token
-            )
-    }
-
-    companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+    fun removeAllElement(set: Set<String>): Set<String> {
+        if (set.contains("*")) {
+            val newSet = mutableSetOf<String>()
+            set.map {
+                if (it != "*") {
+                    newSet.add(it)
+                }
+                return newSet
+            }
+        }
+        return set
     }
 }
