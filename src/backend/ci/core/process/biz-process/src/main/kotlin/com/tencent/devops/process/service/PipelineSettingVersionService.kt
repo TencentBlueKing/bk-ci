@@ -36,9 +36,8 @@ import com.tencent.devops.process.dao.PipelineSettingVersionDao
 import com.tencent.devops.process.pojo.pipeline.PipelineSubscriptionType
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType.MULTIPLE
-import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
+import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.Subscription
-import com.tencent.devops.process.service.label.PipelineGroupVersionService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -47,8 +46,7 @@ import org.springframework.stereotype.Service
 class PipelineSettingVersionService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
-    private val pipelineSettingVersionDao: PipelineSettingVersionDao,
-    private val pipelineGroupVersionService: PipelineGroupVersionService
+    private val pipelineSettingVersionDao: PipelineSettingVersionDao
 ) {
 
     fun userGetSettingVersion(
@@ -57,13 +55,9 @@ class PipelineSettingVersionService @Autowired constructor(
         pipelineId: String,
         version: Int,
         channelCode: ChannelCode = ChannelCode.BS
-    ): PipelineSettingVersion {
+    ): PipelineSetting {
         val setting = pipelineSettingVersionDao.getSetting(dslContext, pipelineId, version)
-        val groups = pipelineGroupVersionService.getGroups(userId, projectId, pipelineId)
         val labels = ArrayList<String>()
-        groups.forEach {
-            labels.addAll(it.labels)
-        }
         return if (setting != null) {
             setting.map {
                 with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
@@ -71,7 +65,7 @@ class PipelineSettingVersionService @Autowired constructor(
                         .map { type -> PipelineSubscriptionType.valueOf(type) }.toSet()
                     val failType = it.get(FAIL_TYPE).split(",").filter { i -> i.isNotBlank() }
                         .map { type -> PipelineSubscriptionType.valueOf(type) }.toSet()
-                    PipelineSettingVersion(
+                    PipelineSetting(
                         projectId = projectId,
                         pipelineId = pipelineId,
                         pipelineName = it.get(NAME),
@@ -104,7 +98,7 @@ class PipelineSettingVersionService @Autowired constructor(
                     )
                 }
             }
-        } else {
+        } else { // 此类为异常情况，正常不应该缺失数据
             val model = client.get(ServicePipelineResource::class).get(
                 userId = userId,
                 projectId = projectId,
@@ -112,7 +106,7 @@ class PipelineSettingVersionService @Autowired constructor(
                 channelCode = channelCode).data
             val name = model?.name ?: "unknown pipeline name"
             val desc = model?.desc ?: ""
-            PipelineSettingVersion(
+            PipelineSetting(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 pipelineName = name,

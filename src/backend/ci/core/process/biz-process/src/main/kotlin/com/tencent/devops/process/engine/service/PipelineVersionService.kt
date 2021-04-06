@@ -45,7 +45,7 @@ import com.tencent.devops.process.jmx.pipeline.PipelineBean
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
-import com.tencent.devops.process.service.label.PipelineGroupVersionService
+import com.tencent.devops.process.service.label.PipelineGroupService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -59,7 +59,7 @@ class PipelineVersionService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineRepositoryVersionService: PipelineRepositoryVersionService,
     private val pipelinePermissionService: PipelinePermissionService,
-    private val pipelineGroupVersionService: PipelineGroupVersionService,
+    private val pipelineGroupService: PipelineGroupService,
     private val pipelineBean: PipelineBean,
     private val processJmxApi: ProcessJmxApi,
     private val dslContext: DSLContext,
@@ -128,7 +128,7 @@ class PipelineVersionService @Autowired constructor(
             // 获取流水线labels
             logger.info("start to get pipeline label for $projectId, $pipelineId)")
 //            val groups = pipelineGroupService.getGroups(userId, projectId, pipelineId)
-            val groups = pipelineGroupVersionService.getGroups(userId, projectId, pipelineId)
+            val groups = pipelineGroupService.getGroups(userId, projectId, pipelineId)
             val labels = mutableListOf<String>()
 
             logger.info("start to deal with pipeline model for $projectId, $pipelineId)")

@@ -68,7 +68,6 @@ import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineInfoVersionDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
-import com.tencent.devops.process.engine.dao.PipelineModelTaskVersionDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.dao.PipelineResVersionDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
@@ -112,8 +111,7 @@ class PipelineRepositoryService constructor(
     private val templatePipelineDao: TemplatePipelineDao,
     private val pipelineInfoVersionDao: PipelineInfoVersionDao,
     private val pipelineResVersionDao: PipelineResVersionDao,
-    private val pipelineSettingVersionDao: PipelineSettingVersionDao,
-    private val pipelineModelTaskVersionDao: PipelineModelTaskVersionDao
+    private val pipelineSettingVersionDao: PipelineSettingVersionDao
 ) {
 
     fun deployPipeline(
@@ -166,7 +164,6 @@ class PipelineRepositoryService constructor(
                 maxPipelineResNum = pipelineSetting?.maxPipelineResNum
             )
         } else {
-            val version = 1
             create(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -176,8 +173,7 @@ class PipelineRepositoryService constructor(
                 canManualStartup = canManualStartup,
                 canElementSkip = canElementSkip,
                 buildNo = buildNo,
-                modelTasks = modelTasks,
-                version = version
+                modelTasks = modelTasks
             )
         }
     }
@@ -510,8 +506,7 @@ class PipelineRepositoryService constructor(
         canManualStartup: Boolean,
         canElementSkip: Boolean,
         buildNo: BuildNo?,
-        modelTasks: Set<PipelineModelTask>,
-        version: Int
+        modelTasks: Set<PipelineModelTask>
     ): DeployPipelineResult {
 
         val taskCount: Int = model.taskCount()
@@ -533,7 +528,7 @@ class PipelineRepositoryService constructor(
                 dslContext = transactionContext,
                 pipelineId = pipelineId,
                 projectId = projectId,
-                version = version,
+                version = 1,
                 pipelineName = model.name,
                 userId = userId,
                 channelCode = channelCode,
@@ -552,12 +547,10 @@ class PipelineRepositoryService constructor(
                 dslContext = transactionContext,
                 pipelineId = pipelineId,
                 creator = userId,
-                version = version,
+                version = 1,
                 model = model
             )
-            if (model.instanceFromTemplate == null ||
-                !model.instanceFromTemplate!!
-            ) {
+            if (model.instanceFromTemplate != true) {
                 if (null == pipelineSettingDao.getSetting(transactionContext, pipelineId)) {
                     // #3311
                     // 蓝盾正常的BS渠道的默认没设置setting的，将发通知改成失败才发通知
@@ -592,13 +585,12 @@ class PipelineRepositoryService constructor(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     pipelineName = model.name,
-                    version = version
+                    version = 1
                 )
             }
             // 初始化流水线构建统计表
             pipelineBuildSummaryDao.create(dslContext, projectId, pipelineId, buildNo)
             pipelineModelTaskDao.batchSave(transactionContext, modelTasks)
-            pipelineModelTaskVersionDao.batchSave(transactionContext, modelTasks, version)
         }
 
         pipelineEventDispatcher.dispatch(
@@ -684,7 +676,6 @@ class PipelineRepositoryService constructor(
                 pipelineResDao.deleteEarlyVersion(transactionContext, pipelineId, maxPipelineResNum)
             }
             pipelineModelTaskDao.batchSave(transactionContext, modelTasks)
-            pipelineModelTaskVersionDao.batchSave(transactionContext, modelTasks, version)
         }
 
         pipelineEventDispatcher.dispatch(
@@ -725,11 +716,20 @@ class PipelineRepositoryService constructor(
         )
     }
 
-    fun getPipelineInfo(pipelineId: String, channelCode: ChannelCode? = null, delete: Boolean? = false): PipelineInfo? {
+    fun getPipelineInfo(
+        pipelineId: String,
+        channelCode: ChannelCode? = null,
+        delete: Boolean? = false
+    ): PipelineInfo? {
         return getPipelineInfo(projectId = null, pipelineId = pipelineId, channelCode = channelCode, delete = delete)
     }
 
-    fun getPipelineInfoVersion(projectId: String?, pipelineId: String, version: Int, channelCode: ChannelCode? = null): PipelineInfo? {
+    fun getPipelineInfoVersion(
+        projectId: String?,
+        pipelineId: String,
+        version: Int,
+        channelCode: ChannelCode? = null
+    ): PipelineInfo? {
         val template = templatePipelineDao.get(dslContext, pipelineId)
         val templateId = template?.templateId
         return pipelineInfoVersionDao.convert(
@@ -810,7 +810,6 @@ class PipelineRepositoryService constructor(
             }
 
             pipelineModelTaskDao.deletePipelineTasks(transactionContext, projectId, pipelineId)
-            pipelineModelTaskVersionDao.deletePipelineTasks(transactionContext, projectId, pipelineId)
 
             pipelineEventDispatcher.dispatch(
                 PipelineDeleteEvent(

@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.setting.PipelineSetting
-import com.tencent.devops.process.pojo.setting.PipelineSettingVersion
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -75,24 +74,9 @@ interface UserPipelineSettingResource {
         projectId: String,
         @ApiParam("流水线id")
         @QueryParam("pipelineId")
-        pipelineId: String
-    ): Result<PipelineSetting>
-
-    @ApiOperation("获取流水线版本设置")
-    @GET
-    @Path("/get/version")
-    fun getSettingVersion(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @QueryParam("projectId")
-        projectId: String,
-        @ApiParam("流水线id")
-        @QueryParam("pipelineId")
         pipelineId: String,
-        @ApiParam("流水线编排版本", required = true)
+        @ApiParam("流水线编排版本", required = false)
         @QueryParam("version")
-        version: Int
-    ): Result<PipelineSettingVersion>
+        version: Int = 0
+    ): Result<PipelineSetting>
 }

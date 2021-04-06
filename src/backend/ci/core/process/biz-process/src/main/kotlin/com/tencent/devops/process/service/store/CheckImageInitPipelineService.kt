@@ -221,21 +221,22 @@ class CheckImageInitPipelineService @Autowired constructor(
         if (false == checkImageInitPipelineReq.sendNotify) {
             // 不发送通知
             val settingRecord = pipelineSettingFacadeService.getSettingInfo(pipelineId)
-            val setting = if (settingRecord != null)
+            val setting = if (settingRecord != null) {
                 PipelineSetting(
-                projectId = projectCode,
-                pipelineId = settingRecord.pipelineId,
-                pipelineName = pipelineName,
-                desc = settingRecord.desc,
-                runLockType = settingRecord.runLockType,
-                successSubscription = Subscription(),
-                failSubscription = Subscription(),
-                labels = emptyList(),
-                waitQueueTimeMinute = settingRecord.waitQueueTimeMinute,
-                maxQueueSize = settingRecord.maxQueueSize,
-                maxPipelineResNum = settingRecord.maxPipelineResNum,
-                maxConRunningQueueSize = settingRecord.maxConRunningQueueSize
-            ) else {
+                    projectId = projectCode,
+                    pipelineId = settingRecord.pipelineId,
+                    pipelineName = pipelineName,
+                    desc = settingRecord.desc,
+                    runLockType = settingRecord.runLockType,
+                    successSubscription = Subscription(),
+                    failSubscription = Subscription(),
+                    labels = emptyList(),
+                    waitQueueTimeMinute = settingRecord.waitQueueTimeMinute,
+                    maxQueueSize = settingRecord.maxQueueSize,
+                    maxPipelineResNum = settingRecord.maxPipelineResNum,
+                    maxConRunningQueueSize = settingRecord.maxConRunningQueueSize
+                )
+            } else {
                 PipelineSetting(
                     projectId = projectCode,
                     pipelineId = pipelineId,
@@ -254,12 +255,15 @@ class CheckImageInitPipelineService @Autowired constructor(
         startParams["imageCode"] = imageCode
         startParams["imageName"] = imageName
         startParams["version"] = version
-        if (null != imageType)
+        if (null != imageType) {
             startParams["imageType"] = imageType
-        if (null != registryUser)
+        }
+        if (null != registryUser) {
             startParams["registryUser"] = registryUser
-        if (null != registryPwd)
+        }
+        if (null != registryPwd) {
             startParams["registryPwd"] = registryPwd
+        }
         var imageCheckStatus = ImageStatusEnum.CHECKING
         var buildId: String? = null
         try {

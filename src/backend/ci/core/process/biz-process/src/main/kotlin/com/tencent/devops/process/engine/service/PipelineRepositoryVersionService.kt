@@ -35,7 +35,6 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineInfoVersionDao
-import com.tencent.devops.process.engine.dao.PipelineModelTaskVersionDao
 import com.tencent.devops.process.engine.dao.PipelineResVersionDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
@@ -60,7 +59,6 @@ class PipelineRepositoryVersionService constructor(
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelineInfoVersionDao: PipelineInfoVersionDao,
     private val pipelineResVersionDao: PipelineResVersionDao,
-    private val pipelineModelTaskVersionDao: PipelineModelTaskVersionDao,
     private val pipelineSettingVersionDao: PipelineSettingVersionDao,
     private val templatePipelineDao: TemplatePipelineDao
 ) {
@@ -148,8 +146,6 @@ class PipelineRepositoryVersionService constructor(
                     "DELETE BY $userId in $deleteTime"
                 )
             }
-
-            pipelineModelTaskVersionDao.deletePipelineTasks(transactionContext, projectId, pipelineId, version)
 
             pipelineEventDispatcher.dispatch(
                 PipelineDeleteEvent(
