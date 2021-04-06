@@ -801,12 +801,6 @@ class PipelineRepositoryService constructor(
                 )
                 // 删除关联之模板
                 templatePipelineDao.delete(dslContext = transactionContext, pipelineId = pipelineId)
-                pipelineSettingVersionDao.updateSetting(
-                    dslContext = transactionContext,
-                    pipelineId = pipelineId,
-                    name = deleteName,
-                    desc = "DELETE BY $userId in $deleteTime"
-                )
             }
 
             pipelineModelTaskDao.deletePipelineTasks(transactionContext, projectId, pipelineId)
@@ -979,7 +973,7 @@ class PipelineRepositoryService constructor(
         } else null
     }
 
-    fun saveSetting(userId: String, setting: PipelineSetting): String {
+    fun saveSetting(userId: String, setting: PipelineSetting, version: Int) {
         setting.checkParam()
 
         if (isPipelineExist(
@@ -989,15 +983,20 @@ class PipelineRepositoryService constructor(
             )) {
             throw PipelineAlreadyExistException("流水线(${setting.pipelineName})已经存在")
         }
-        pipelineInfoDao.update(
-            dslContext = dslContext,
-            pipelineId = setting.pipelineId,
-            userId = userId,
-            updateVersion = false,
-            pipelineName = setting.pipelineName,
-            pipelineDesc = setting.desc
-        )
-        return pipelineSettingDao.saveSetting(dslContext, setting).toString()
+
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            pipelineInfoDao.update(
+                dslContext = context,
+                pipelineId = setting.pipelineId,
+                userId = userId,
+                updateVersion = false,
+                pipelineName = setting.pipelineName,
+                pipelineDesc = setting.desc
+            )
+            pipelineSettingVersionDao.saveSetting(context, setting, version = version)
+            pipelineSettingDao.saveSetting(context, setting).toString()
+        }
     }
 
     fun batchUpdatePipelineModel(
@@ -1085,16 +1084,6 @@ class PipelineRepositoryService constructor(
             projectId = projectId,
             channelCode = channelCode,
             pipelineIds = pipelineIds
-        )
-    }
-
-    fun updatePipelineName(userId: String, pipelineId: String, pipelineName: String) {
-        pipelineInfoDao.update(
-            dslContext = dslContext,
-            pipelineName = pipelineName,
-            pipelineId = pipelineId,
-            userId = userId,
-            updateVersion = false
         )
     }
 

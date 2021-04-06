@@ -164,14 +164,6 @@ class PipelineSettingVersionDao {
         }
     }
 
-    fun getSettings(dslContext: DSLContext, pipelineIds: Set<String>): Result<TPipelineSettingVersionRecord> {
-        with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
-            return dslContext.selectFrom(this)
-                .where(PIPELINE_ID.`in`(pipelineIds))
-                .fetch()
-        }
-    }
-
     fun getSetting(dslContext: DSLContext, pipelineIds: Collection<String>): Result<TPipelineSettingVersionRecord> {
         with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
             return dslContext.selectFrom(this)
@@ -198,18 +190,6 @@ class PipelineSettingVersionDao {
             return dslContext.selectFrom(this)
                 .where(conditions)
                 .fetch()
-        }
-    }
-
-    /**
-     * 更新模版引用的设置
-     */
-    fun updateSettingName(dslContext: DSLContext, pipelineIdList: List<String>, name: String) {
-        with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
-            dslContext.update(this)
-                .set(NAME, name)
-                .where(PIPELINE_ID.`in`(pipelineIdList))
-                .execute()
         }
     }
 

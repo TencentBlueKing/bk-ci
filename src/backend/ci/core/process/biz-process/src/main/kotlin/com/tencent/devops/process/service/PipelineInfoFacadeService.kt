@@ -57,6 +57,7 @@ import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.jmx.pipeline.PipelineBean
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.label.PipelineGroupService
@@ -487,7 +488,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         channelCode: ChannelCode,
         checkPermission: Boolean = true,
         checkTemplate: Boolean = true
-    ) {
+    ): DeployPipelineResult {
         if (checkTemplate && templateService.isTemplatePipeline(pipelineId)) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_TEMPLATE_CAN_NOT_EDIT,
@@ -552,7 +553,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 channelCode = channelCode
             )
             modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, model, param)
-            pipelineRepositoryService.deployPipeline(
+            val deployResult = pipelineRepositoryService.deployPipeline(
                 model = model,
                 projectId = projectId,
                 signPipelineId = pipelineId,
@@ -564,6 +565,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 pipelinePermissionService.modifyResource(projectId, pipelineId, model.name)
             }
             success = true
+            return deployResult
         } finally {
             pipelineBean.edit(success)
             processJmxApi.execute(ProcessJmxApi.NEW_PIPELINE_EDIT, System.currentTimeMillis() - apiStartEpoch)
@@ -609,7 +611,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         checkPermission: Boolean = true,
         checkTemplate: Boolean = true
     ) {
-        editPipeline(
+        val pipelineResult = editPipeline(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -618,7 +620,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             checkPermission = checkPermission,
             checkTemplate = checkTemplate
         )
-        pipelineSettingFacadeService.saveSetting(userId, setting, false)
+        pipelineSettingFacadeService.saveSetting(userId, setting, false, version = pipelineResult.version)
     }
 
     fun getPipeline(

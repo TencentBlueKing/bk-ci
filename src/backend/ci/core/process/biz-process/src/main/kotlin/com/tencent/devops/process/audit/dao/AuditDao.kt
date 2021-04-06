@@ -48,7 +48,6 @@ class AuditDao {
         actionContent: String,
         projectId: String
     ): Long {
-        val now = LocalDateTime.now()
         with(TAuditResource.T_AUDIT_RESOURCE) {
             val record = dslContext.insertInto(
                 this,
@@ -59,8 +58,6 @@ class AuditDao {
                 ACTION,
                 ACTION_CONTENT,
                 CREATED_TIME,
-                UPDATED_TIME,
-                IS_DELETED,
                 STATUS,
                 PROJECT_ID
             ).values(
@@ -70,9 +67,7 @@ class AuditDao {
                 userId,
                 action,
                 actionContent,
-                now,
-                now,
-                false,
+                LocalDateTime.now(),
                 "1",
                 projectId
             )
@@ -98,7 +93,6 @@ class AuditDao {
             val query = dslContext.selectFrom(this)
                 .where(RESOURCE_TYPE.eq(resourceType))
                 .and(PROJECT_ID.eq(projectId))
-                .and(IS_DELETED.eq(false))
             if (userId != null && userId.isNotBlank()) {
                 query.and(USER_ID.like("%$userId%"))
             }
@@ -133,7 +127,6 @@ class AuditDao {
                 .from(this)
                 .where(RESOURCE_TYPE.eq(resourceType))
                 .and(PROJECT_ID.eq(projectId))
-                .and(IS_DELETED.eq(false))
             if (userId != null && userId.isNotBlank()) {
                 query.and(USER_ID.like("%$userId%"))
             }

@@ -56,7 +56,12 @@ class PipelineSettingFacadeService @Autowired constructor(
     private val client: Client
 ) {
 
-    fun saveSetting(userId: String, setting: PipelineSetting, checkPermission: Boolean = true): String {
+    fun saveSetting(
+        userId: String,
+        setting: PipelineSetting,
+        checkPermission: Boolean = true,
+        version: Int = 0
+    ): String {
         if (checkPermission) {
             checkEditPermission(
                 userId = userId,
@@ -79,9 +84,7 @@ class PipelineSettingFacadeService @Autowired constructor(
             }
         }
 
-        pipelineRepositoryService.updatePipelineName(userId, setting.pipelineId, setting.pipelineName)
-
-        val id = pipelineRepositoryService.saveSetting(userId, setting)
+        pipelineRepositoryService.saveSetting(userId, setting, version)
 
         if (checkPermission) {
             pipelinePermissionService.modifyResource(
@@ -96,7 +99,7 @@ class PipelineSettingFacadeService @Autowired constructor(
             pipelineId = setting.pipelineId,
             labelIds = setting.labels
         )
-        return id
+        return setting.pipelineId
     }
 
     fun userGetSetting(
