@@ -28,6 +28,7 @@
 package com.tencent.devops.gitci.listener
 
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
@@ -65,6 +66,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.lang.Exception
+import java.util.Date
 
 @Service
 class GitCIBuildFinishListener @Autowired constructor(
@@ -277,7 +279,16 @@ class GitCIBuildFinishListener @Autowired constructor(
                 if (receivers.isEmpty()) {
                     receivers = mutableSetOf(build.userId)
                 }
-                val request = getEmailSendRequest(state, receivers, projectName, branchName, pipelineName, buildNum)
+                val request = getEmailSendRequest(
+                    state = state,
+                    receivers = receivers,
+                    projectName = projectName,
+                    branchName = branchName,
+                    pipelineName = pipelineName,
+                    build = build,
+                    commitId = commitId,
+                    pipelineId = pipeline.pipelineId
+                )
                 client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
             }
             GitCINotifyType.RTX_CUSTOM, GitCINotifyType.RTX_GROUP -> {
@@ -331,7 +342,9 @@ class GitCIBuildFinishListener @Autowired constructor(
         projectName: String,
         branchName: String,
         pipelineName: String,
-        buildNum: String
+        build: BuildHistory,
+        commitId: String,
+        pipelineId: String
     ): SendNotifyMessageTemplateRequest {
         val notifyTemplateEnum = if (state == "success") {
             GitCINotifyTemplateEnum.GITCI_BUILD_SUCCESS_TEMPLATE
@@ -342,10 +355,18 @@ class GitCIBuildFinishListener @Autowired constructor(
             "projectName" to projectName,
             "branchName" to branchName,
             "pipelineName" to pipelineName,
-            "buildNum" to buildNum
+            "buildNum" to build.buildNum.toString()
         )
         val bodyParams = mapOf(
-            "content" to "邮件通知测试"
+            "projectName" to projectName,
+            "branchName" to branchName,
+            "pipelineName" to pipelineName,
+            "buildNum" to build.buildNum.toString(),
+            "startTime" to DateTimeUtil.formatDate(Date(build.startTime), "yyyy-MM-dd HH:mm"),
+            "totalTime" to getTotalTime(build.totalTime),
+            "trigger" to build.userId,
+            "commitId" to commitId,
+            "webUrl" to "$gitUrl/$projectName/ci/pipelines#/detail/$pipelineId/?pipelineName=$pipelineName"
         )
         return SendNotifyMessageTemplateRequest(
             templateCode = notifyTemplateEnum.templateCode,
@@ -381,13 +402,7 @@ class GitCIBuildFinishListener @Autowired constructor(
             "Commit [[${requestId.subSequence(0, 7)}]]($gitUrl/$projectName/commit/$requestId)" +
                     "pushed by $openUser \n"
         }
-        val costTime = if (buildTime == null) {
-            ""
-        } else if (buildTime < 60) {
-            "Time cost ${buildTime}s.  \n   "
-        } else {
-            "Time cost ${buildTime / 60}m ${buildTime % 60}s.  \n   "
-        }
+        val costTime = "Time cost ${getTotalTime(buildTime)}.  \n   "
         return " <font color=\"${state.second}\"> ${state.first} </font> " +
                 "$projectName($branchName) - $pipelineName #$buildNum run ${state.third} \n " +
                 request +
@@ -441,6 +456,14 @@ class GitCIBuildFinishListener @Autowired constructor(
         return receivers.map { receiver ->
             EnvUtils.parseEnv(receiver, paramMap)
         }.toMutableSet()
+    }
+
+    private fun getTotalTime(totalTime: Long?): String {
+        return when (totalTime) {
+            null -> ""
+            in 0..60 -> "${totalTime}s"
+            else -> "${totalTime / 60}m ${totalTime % 60}s"
+        }
     }
 
     companion object {
