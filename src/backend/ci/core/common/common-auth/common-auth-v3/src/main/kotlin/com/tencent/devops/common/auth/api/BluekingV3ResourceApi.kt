@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -34,7 +35,6 @@ import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.pojo.AncestorsApiReq
 import com.tencent.devops.common.auth.pojo.IamCreateApiReq
 import com.tencent.devops.common.auth.service.IamEsbService
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 class BluekingV3ResourceApi @Autowired constructor(
@@ -53,12 +53,12 @@ class BluekingV3ResourceApi @Autowired constructor(
         authGroupList: List<BkAuthGroup>?
     ) {
         createResource(
-                user = user,
-                serviceCode = serviceCode,
-                resourceType = resourceType,
-                projectCode = projectCode,
-                resourceCode = resourceCode,
-                resourceName = resourceName
+            user = user,
+            serviceCode = serviceCode,
+            resourceType = resourceType,
+            projectCode = projectCode,
+            resourceCode = resourceCode,
+            resourceName = resourceName
         )
     }
 
@@ -79,8 +79,7 @@ class BluekingV3ResourceApi @Autowired constructor(
         resourceType: AuthResourceType,
         projectCode: String,
         resourceCode: String
-    ) {
-    }
+    ) = Unit
 
     override fun modifyResource(
         scopeType: String,
@@ -89,8 +88,7 @@ class BluekingV3ResourceApi @Autowired constructor(
         projectCode: String,
         resourceCode: String,
         resourceName: String
-    ) {
-    }
+    ) = Unit
 
     override fun createResource(
         scopeType: String,
@@ -102,12 +100,12 @@ class BluekingV3ResourceApi @Autowired constructor(
         resourceName: String
     ) {
         createResource(
-                user = user,
-                serviceCode = serviceCode,
-                resourceType = resourceType,
-                projectCode = projectCode,
-                resourceCode = resourceCode,
-                resourceName = resourceName
+            user = user,
+            serviceCode = serviceCode,
+            resourceType = resourceType,
+            projectCode = projectCode,
+            resourceCode = resourceCode,
+            resourceName = resourceName
         )
     }
 
@@ -119,18 +117,24 @@ class BluekingV3ResourceApi @Autowired constructor(
         resourceCode: String,
         resourceName: String
     ) {
-        logger.info("v3 createResource projectCode[$projectCode] resourceCode[$resourceCode] resourceName[$resourceName] resourceType[${resourceType.value}]")
         val ancestors = mutableListOf<AncestorsApiReq>()
         if (resourceType != AuthResourceType.PROJECT) {
             ancestors.add(AncestorsApiReq(
-                    system = iamConfiguration.systemId,
-                    id = projectCode,
-                    type = AuthResourceType.PROJECT.value
+                system = iamConfiguration.systemId,
+                id = projectCode,
+                type = AuthResourceType.PROJECT.value
             ))
         }
         val iamApiReq = IamCreateApiReq(
-                creator = user,
-                name = resourceName, id = resourceCode, type = resourceType.value, system = iamConfiguration.systemId, ancestors = ancestors, bk_app_code = "", bk_app_secret = "", bk_username = user
+            creator = user,
+            name = resourceName,
+            id = resourceCode,
+            type = resourceType.value,
+            system = iamConfiguration.systemId,
+            ancestors = ancestors,
+            bk_app_code = "",
+            bk_app_secret = "",
+            bk_username = user
         )
         iamEsbService.createRelationResource(iamApiReq)
     }
@@ -141,16 +145,14 @@ class BluekingV3ResourceApi @Autowired constructor(
         projectCode: String,
         resourceCode: String,
         resourceName: String
-    ) {
-    }
+    ) = Unit
 
     override fun deleteResource(
         serviceCode: AuthServiceCode,
         resourceType: AuthResourceType,
         projectCode: String,
         resourceCode: String
-    ) {
-    }
+    ) = Unit
 
     override fun batchCreateResource(
         serviceCode: AuthServiceCode,
@@ -158,10 +160,5 @@ class BluekingV3ResourceApi @Autowired constructor(
         projectCode: String,
         user: String,
         resourceList: List<ResourceRegisterInfo>
-    ) {
-    }
-
-    companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
-    }
+    ) = Unit
 }

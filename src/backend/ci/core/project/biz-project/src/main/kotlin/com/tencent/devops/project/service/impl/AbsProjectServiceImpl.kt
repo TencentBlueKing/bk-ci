@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -74,6 +75,7 @@ import java.io.InputStream
 import java.util.ArrayList
 import java.util.regex.Pattern
 
+@Suppress("ALL")
 abstract class AbsProjectServiceImpl @Autowired constructor(
     val projectPermissionService: ProjectPermissionService,
     private val dslContext: DSLContext,
@@ -120,7 +122,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 if (!Pattern.matches(ENGLISH_NAME_PATTERN, name)) {
                     logger.warn("Project English Name($name) is not match")
                     throw ErrorCodeException(
-                        defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.EN_NAME_COMBINATION_ERROR),
+                        defaultMessage = MessageCodeUtil.getCodeLanMessage(
+                            ProjectMessageCode.EN_NAME_COMBINATION_ERROR),
                         errorCode = ProjectMessageCode.EN_NAME_COMBINATION_ERROR
                     )
                 }
@@ -244,8 +247,17 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         return ProjectUtils.packagingBean(record, grayProjectSet())
     }
 
-    override fun update(userId: String, englishName: String, projectUpdateInfo: ProjectUpdateInfo, accessToken: String?): Boolean {
-        validate(ProjectValidateType.project_name, projectUpdateInfo.projectName, projectUpdateInfo.englishName)
+    override fun update(
+        userId: String,
+        englishName: String,
+        projectUpdateInfo: ProjectUpdateInfo,
+        accessToken: String?
+    ): Boolean {
+        validate(
+            validateType = ProjectValidateType.project_name,
+            name = projectUpdateInfo.projectName,
+            projectId = projectUpdateInfo.englishName
+        )
         val startEpoch = System.currentTimeMillis()
         var success = false
         validatePermission(projectUpdateInfo.englishName, userId, AuthPermission.EDIT)
@@ -254,15 +266,23 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             try {
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
-                    val projectId = projectDao.getByEnglishName(dslContext, englishName)?.projectId ?: throw RuntimeException("项目 -$englishName 不存在")
-                    projectDao.update(context, userId, projectId!!, projectUpdateInfo)
+                    val projectId = projectDao.getByEnglishName(
+                        dslContext = dslContext,
+                        englishName = englishName
+                    )?.projectId ?: throw RuntimeException("项目 -$englishName 不存在")
+                    projectDao.update(
+                        dslContext = context,
+                        userId = userId,
+                        projectId = projectId,
+                        projectUpdateInfo = projectUpdateInfo
+                    )
                     modifyProjectAuthResource(
                         projectUpdateInfo.englishName,
                         projectUpdateInfo.projectName
                     )
                     projectDispatcher.dispatch(ProjectUpdateBroadCastEvent(
                         userId = userId,
-                        projectId = englishName,
+                        projectId = projectId,
                         projectInfo = projectUpdateInfo
                     ))
                 }
@@ -286,7 +306,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         try {
 
             val projects = getProjectFromAuth(userId, accessToken)
-            if (projects == null || projects.isEmpty()) {
+            if (projects.isEmpty()) {
                 return emptyList()
             }
             logger.info("项目列表：$projects")
@@ -500,7 +520,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     override fun updateUsableStatus(userId: String, englishName: String, enabled: Boolean) {
         logger.info("updateUsableStatus userId[$userId], englishName[$englishName] , enabled[$enabled]")
 
-        val projectInfo = projectDao.getByEnglishName(dslContext, englishName) ?: throw RuntimeException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST))
+        val projectInfo = projectDao.getByEnglishName(dslContext, englishName)
+            ?: throw RuntimeException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST))
         val verify = validatePermission(
             userId = userId,
             projectCode = englishName,
@@ -574,7 +595,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         return list
     }
 
-    override fun verifyUserProjectPermission(userId: String, projectId: String, permission: AuthPermission, accessToken: String?): Boolean {
+    override fun verifyUserProjectPermission(
+        userId: String,
+        projectId: String,
+        permission: AuthPermission,
+        accessToken: String?
+    ): Boolean {
         return validatePermission(projectId, userId, permission)
     }
 
@@ -582,7 +608,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     abstract fun getDeptInfo(userId: String): UserDeptDetail
 
-    abstract fun createExtProjectInfo(userId: String, projectId: String, accessToken: String?, projectCreateInfo: ProjectCreateInfo, createExtInfo: ProjectCreateExtInfo)
+    abstract fun createExtProjectInfo(
+        userId: String,
+        projectId: String,
+        accessToken: String?,
+        projectCreateInfo: ProjectCreateInfo,
+        createExtInfo: ProjectCreateExtInfo
+    )
 
     abstract fun saveLogoAddress(userId: String, projectCode: String, file: File): String
 

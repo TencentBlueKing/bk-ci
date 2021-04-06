@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -42,6 +43,7 @@ import okhttp3.Request
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 
+@Suppress("ALL")
 class BkAuthProjectApi constructor(
     private val bkAuthPermissionApi: BkAuthPermissionApi,
     private val bkAuthProperties: BkAuthProperties,
@@ -106,7 +108,7 @@ class BkAuthProjectApi constructor(
         projectCode: String,
         role: String
     ): Boolean {
-        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented")
     }
 
     override fun getProjectRoles(
@@ -114,11 +116,11 @@ class BkAuthProjectApi constructor(
         projectCode: String,
         projectId: String
     ): List<BKAuthProjectRolesResources> {
-        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented")
     }
 
     override fun getProjectInfo(serviceCode: AuthServiceCode, projectId: String): BkAuthProjectInfoResources? {
-        TODO("not implemented") // To change body of created functions use File | Settings | File Templates.
+        TODO("not implemented")
     }
 
     override fun getProjectGroupAndUserList(

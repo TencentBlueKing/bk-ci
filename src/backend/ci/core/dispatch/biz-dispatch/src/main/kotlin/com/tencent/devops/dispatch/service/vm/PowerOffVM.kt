@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -36,7 +37,7 @@ import com.vmware.vim25.mo.VirtualMachineSnapshot
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
 
-@Component
+@Component@Suppress("ALL")
 class PowerOffVM(private val vmCache: VMCache) {
 
     fun shutdown(vmId: Long): Boolean {
@@ -71,16 +72,18 @@ class PowerOffVM(private val vmCache: VMCache) {
                     if (snapshot != null) {
                         // Create the backup snapshot before remove it
                         logger.info("Backup the snapshot $snapshotKey")
-                        if (!createSnapshot(vm, snapshotKey + ".bak")) {
+                        if (!createSnapshot(vm, "$snapshotKey.bak")) {
                             logger.error("Fail to create the backup snapshot($snapshotKey)")
-                            AlertUtils.doAlert(AlertLevel.HIGH, "DevOps Alert Notify", "Fail to create the backup snapshot $snapshotKey of vm $vmId")
+                            AlertUtils.doAlert(AlertLevel.HIGH, "DevOps Alert Notify",
+                                "Fail to create the backup snapshot $snapshotKey of vm $vmId")
                             return false
                         }
 
                         logger.info("Remove the old snapshot ${snapshot.name}")
                         if (!removeSnapshot(vm, snapshot.snapshot, vmId)) {
                             logger.error("ShutdownVM: Remove vm $vmId project $snapshotKey old snapshot fail")
-                            AlertUtils.doAlert(AlertLevel.HIGH, "DevOps Alert Notify", "Fail to remove the backup snapshot $snapshotKey of vm $vmId")
+                            AlertUtils.doAlert(AlertLevel.HIGH, "DevOps Alert Notify",
+                                "Fail to remove the backup snapshot $snapshotKey of vm $vmId")
                             return false
                         }
                     } else {
@@ -88,7 +91,7 @@ class PowerOffVM(private val vmCache: VMCache) {
                     }
                     val createSuccess = createSnapshot(vm, snapshotKey)
                     if (createSuccess) {
-                        while (removeBackupSnapshot(vm, snapshotKey + ".bak", vmId))
+                        while (removeBackupSnapshot(vm, "$snapshotKey.bak", vmId))
                         return shutdownVM(vm)
                     }
                     logger.warn("Fail to create the snapshot $snapshotKey")
@@ -129,22 +132,35 @@ class PowerOffVM(private val vmCache: VMCache) {
         return vm != null && shutdownVM(vm)
     }
 
-    private fun removeSnapshot(vm: VirtualMachine, snapshot: ManagedObjectReference, vmId: Long, removeChild: Boolean = true): Boolean {
+    private fun removeSnapshot(
+        vm: VirtualMachine,
+        snapshot: ManagedObjectReference,
+        vmId: Long,
+        removeChild: Boolean = true
+    ): Boolean {
         val task = VirtualMachineSnapshot(vm.serverConnection, snapshot).removeSnapshot_Task(removeChild)
         if (task.waitForTask() == Task.SUCCESS) {
             return true
         }
         logger.error("Removing Snapshot for VM - [$vmId] Failure")
-        AlertUtils.doAlert(AlertLevel.HIGH, "DevOps Alert Notify", "Fail to remove the snapshot ${snapshot.`val`} of vm $vmId")
+        AlertUtils.doAlert(AlertLevel.HIGH, "DevOps Alert Notify",
+            "Fail to remove the snapshot ${snapshot.`val`} of vm $vmId")
         return false
     }
 
     private fun createSnapshot(vm: VirtualMachine, snapshotKey: String): Boolean {
-        val result = vm.createSnapshot_Task("p_$snapshotKey", "", false, false).waitForTask()
+        val result = vm.createSnapshot_Task(
+            "p_$snapshotKey",
+            "",
+            false,
+            false).waitForTask()
         return result == Task.SUCCESS
     }
 
-    private fun getMatchedSnapShot(tree: Array<VirtualMachineSnapshotTree>, snapshotKey: String): VirtualMachineSnapshotTree? {
+    private fun getMatchedSnapShot(
+        tree: Array<VirtualMachineSnapshotTree>,
+        snapshotKey: String
+    ): VirtualMachineSnapshotTree? {
         tree.forEach foreach@{
             val snapshotName = it.getName()
             val matched = snapshotName == "p_$snapshotKey"

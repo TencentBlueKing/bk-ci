@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -31,7 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.engine.service.PipelineBuildService
+import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.engine.service.PipelineVMBuildService
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildTask
@@ -42,10 +43,11 @@ import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.service.SubPipelineStartUpService
 import org.springframework.beans.factory.annotation.Autowired
 
+@Suppress("ALL")
 @RestResource
 class BuildBuildResourceImpl @Autowired constructor(
     private val vmBuildService: PipelineVMBuildService,
-    private val buildService: PipelineBuildService,
+    private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val subPipelineStartUpService: SubPipelineStartUpService
 ) : BuildBuildResource {
 
@@ -104,7 +106,7 @@ class BuildBuildResourceImpl @Autowired constructor(
         channelCode: ChannelCode?
     ): Result<BuildHistory?> {
         return Result(
-            data = buildService.getSingleHistoryBuild(
+            data = pipelineBuildFacadeService.getSingleHistoryBuild(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildNum = buildNum.toInt(),
@@ -119,7 +121,7 @@ class BuildBuildResourceImpl @Autowired constructor(
         channelCode: ChannelCode?
     ): Result<BuildHistory?> {
         return Result(
-            data = buildService.getLatestSuccessBuild(
+            data = pipelineBuildFacadeService.getLatestSuccessBuild(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 channelCode = channelCode ?: ChannelCode.BS
@@ -137,12 +139,11 @@ class BuildBuildResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid buildId")
         }
         return Result(
-            data = buildService.getBuildDetail(
+            data = pipelineBuildFacadeService.getBuildDetail(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
-                channelCode = channelCode,
-                checkPermission = ChannelCode.isNeedAuth(channelCode)
+                channelCode = channelCode
             )
         )
     }
@@ -156,11 +157,13 @@ class BuildBuildResourceImpl @Autowired constructor(
         buildId: String,
         redisAtomsBuild: RedisAtomsBuild
     ): Result<Boolean> {
-        if (redisAtomsBuild.projectId.isBlank() || redisAtomsBuild.pipelineId.isBlank() || redisAtomsBuild.buildId.isBlank()) {
+        if (redisAtomsBuild.projectId.isBlank() ||
+            redisAtomsBuild.pipelineId.isBlank() ||
+            redisAtomsBuild.buildId.isBlank()) {
             throw ParamBlankException("Invalid params(projectId,pipelineId,buildId)")
         }
 
-        return Result(buildService.updateRedisAtoms(buildId, projectId, redisAtomsBuild))
+        return Result(pipelineBuildFacadeService.updateRedisAtoms(buildId, projectId, redisAtomsBuild))
     }
 
     companion object {

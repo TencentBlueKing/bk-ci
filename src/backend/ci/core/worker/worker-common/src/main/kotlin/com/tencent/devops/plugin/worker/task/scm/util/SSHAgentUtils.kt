@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -26,7 +27,6 @@
 
 package com.tencent.devops.plugin.worker.task.scm.util
 
-import com.tencent.devops.common.log.Ansi
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import org.apache.commons.exec.CommandLine
@@ -41,6 +41,7 @@ import java.nio.file.attribute.PosixFilePermissions
 import java.util.HashMap
 import java.util.concurrent.TimeUnit
 
+@Suppress("ALL")
 class SSHAgentUtils constructor(private val privateKey: String, private val passPhrase: String?) {
 
     companion object {
@@ -84,7 +85,7 @@ class SSHAgentUtils constructor(private val privateKey: String, private val pass
             }
         } catch (t: Throwable) {
             logger.warn("Fail to add the ssh key to ssh-agent", t)
-            LoggerService.addNormalLine(Ansi().fgYellow().a("Fail to add the ssh-key to ssh agent").reset().toString())
+            LoggerService.addYellowLine("Fail to add the ssh-key to ssh agent")
         }
     }
 
@@ -102,10 +103,10 @@ class SSHAgentUtils constructor(private val privateKey: String, private val pass
         try {
             val exitCode = executor.execute(cmdLine, env)
             if (exitCode != 0) {
-                logger.warn("Fail to execute the command($commandLine) because of exitCode($exitCode) and output($output)")
+                logger.warn("executeCommand|command($commandLine)|exitCode($exitCode)|output($output)")
             }
-        } catch (t: Throwable) {
-            logger.warn("Error message($output)", t)
+        } catch (ignore: Throwable) {
+            logger.warn("Error message($output)", ignore)
         }
         return output.toString()
     }
@@ -117,11 +118,11 @@ class SSHAgentUtils constructor(private val privateKey: String, private val pass
         val env = HashMap<String, String>()
 
         // get SSH_AUTH_SOCK
-        env.put(AUTH_SOCKET_VAR, getAgentValue(agentOutput, AUTH_SOCKET_VAR))
+        env[AUTH_SOCKET_VAR] = getAgentValue(agentOutput, AUTH_SOCKET_VAR)
         logger.info(AUTH_SOCKET_VAR + "=" + env[AUTH_SOCKET_VAR])
 
         // get SSH_AGENT_PID
-        env.put(AGENT_PID_VAR, getAgentValue(agentOutput, AGENT_PID_VAR))
+        env[AGENT_PID_VAR] = getAgentValue(agentOutput, AGENT_PID_VAR)
         logger.info(AGENT_PID_VAR + "=" + env[AGENT_PID_VAR])
 
         return env

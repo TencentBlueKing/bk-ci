@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -35,6 +36,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.CodeAuthServiceCode
 import com.tencent.devops.repository.service.RepositoryPermissionService
 
+@Suppress("ALL")
 abstract class AbstractRepositoryPermissionService constructor(
     private val authResourceApi: AuthResourceApi,
     private val authPermissionApi: AuthPermissionApi,
@@ -91,7 +93,7 @@ abstract class AbstractRepositoryPermissionService constructor(
         authPermission: AuthPermission,
         repositoryId: Long?
     ): Boolean {
-        if (repositoryId == null)
+        if (repositoryId == null) {
             return authPermissionApi.validateUserResourcePermission(
                 user = userId,
                 serviceCode = codeAuthServiceCode,
@@ -101,7 +103,7 @@ abstract class AbstractRepositoryPermissionService constructor(
                 resourceCode = projectId,
                 relationResourceType = AuthResourceType.PROJECT
             )
-        else
+        } else {
             return authPermissionApi.validateUserResourcePermission(
                 user = userId,
                 serviceCode = codeAuthServiceCode,
@@ -110,6 +112,7 @@ abstract class AbstractRepositoryPermissionService constructor(
                 resourceCode = HashUtil.encodeOtherLongId(repositoryId),
                 permission = authPermission
             )
+        }
     }
 
     override fun createResource(userId: String, projectId: String, repositoryId: Long, repositoryName: String) {

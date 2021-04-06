@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -55,19 +56,31 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.io.File
 
+@Suppress("ALL")
 @Service
 class SimpleProjectServiceImpl @Autowired constructor(
     projectPermissionService: ProjectPermissionService,
-    private val dslContext: DSLContext,
-    private val projectDao: ProjectDao,
+    dslContext: DSLContext,
+    projectDao: ProjectDao,
     projectJmxApi: ProjectJmxApi,
     redisOperation: RedisOperation,
     gray: Gray,
     client: Client,
     projectDispatcher: ProjectDispatcher,
-    private val authPermissionApi: AuthPermissionApi,
-    private val projectAuthServiceCode: ProjectAuthServiceCode
-) : AbsProjectServiceImpl(projectPermissionService, dslContext, projectDao, projectJmxApi, redisOperation, gray, client, projectDispatcher, authPermissionApi, projectAuthServiceCode) {
+    authPermissionApi: AuthPermissionApi,
+    projectAuthServiceCode: ProjectAuthServiceCode
+) : AbsProjectServiceImpl(
+    projectPermissionService,
+    dslContext,
+    projectDao,
+    projectJmxApi,
+    redisOperation,
+    gray,
+    client,
+    projectDispatcher,
+    authPermissionApi,
+    projectAuthServiceCode
+) {
 
     override fun getDeptInfo(userId: String): UserDeptDetail {
         return UserDeptDetail(
@@ -82,7 +95,13 @@ class SimpleProjectServiceImpl @Autowired constructor(
         )
     }
 
-    override fun createExtProjectInfo(userId: String, projectId: String, accessToken: String?, projectCreateInfo: ProjectCreateInfo, projectCreateExt: ProjectCreateExtInfo) {
+    override fun createExtProjectInfo(
+        userId: String,
+        projectId: String,
+        accessToken: String?,
+        projectCreateInfo: ProjectCreateInfo,
+        createExtInfo: ProjectCreateExtInfo
+    ) {
         client.get(ServiceBkRepoResource::class).createProjectResource(userId, projectCreateInfo.englishName)
     }
 

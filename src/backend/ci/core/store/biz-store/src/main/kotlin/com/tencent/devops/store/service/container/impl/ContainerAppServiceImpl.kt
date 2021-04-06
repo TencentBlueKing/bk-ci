@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -57,6 +58,7 @@ import javax.ws.rs.NotFoundException
  *
  * since: 2018-12-20
  */
+@Suppress("ALL")
 @Service
 class ContainerAppServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
@@ -89,15 +91,15 @@ class ContainerAppServiceImpl @Autowired constructor(
      * 根据操作系统查找环境变量列表及版本列表
      */
     override fun listAppsWithVersion(os: String): List<ContainerAppWithVersion> {
-        return listApps(os).map {
+        return listApps(os).map { a ->
             // 查找版本信息
-            val versions = listAppVersion(it.id).filter { it.version != null && !it.version!!.trim().isEmpty() }
+            val versions = listAppVersion(a.id).filter { it.version != null && it.version!!.trim().isNotEmpty() }
                 .map { v ->
                     v.version!!
                 }
             sortAppVersion(versions)
-            val envRecords = containerAppsEnvDao.listByAppId(dslContext, it.id)
-            ContainerAppWithVersion(it.name, versions, it.binPath, envRecords.map { env ->
+            val envRecords = containerAppsEnvDao.listByAppId(dslContext, a.id)
+            ContainerAppWithVersion(a.name, versions, a.binPath, envRecords.map { env ->
                 BuildEnvParameters(env.name, env.description, env.path)
             })
         }
@@ -110,7 +112,7 @@ class ContainerAppServiceImpl @Autowired constructor(
         val apps = listApps(os)
         val buildEnvList = mutableListOf<BuildEnv>()
         for (app in apps) {
-            val versions = listAppVersion(app.id).filter { it.version != null && !it.version!!.trim().isEmpty() }
+            val versions = listAppVersion(app.id).filter { it.version != null && it.version!!.trim().isNotEmpty() }
                 .map { v -> v.version!! }
             sortAppVersion(versions)
             for (version in versions) {
@@ -204,7 +206,9 @@ class ContainerAppServiceImpl @Autowired constructor(
         // 判断更新的编译环境名称和操作系统组合是否存在系统
         if (count > 0) {
             val containerAppInfoRecord = containerAppsDao.getContainerAppInfo(dslContext, id)
-            if (null != containerAppInfoRecord && name != containerAppInfoRecord.name && os != containerAppInfoRecord.os) {
+            if (null != containerAppInfoRecord &&
+                name != containerAppInfoRecord.name &&
+                os != containerAppInfoRecord.os) {
                 return MessageCodeUtil.generateResponseDataObject(
                     CommonMessageCode.PARAMETER_IS_EXIST,
                     arrayOf("$name+$os"),
@@ -304,6 +308,7 @@ class ContainerAppServiceImpl @Autowired constructor(
         }
     }
 
+    @Suppress("ALL")
     private fun compareVersion(version1: String, version2: String): Int {
         val arr1 = version1.split("\\.".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
         val arr2 = version2.split("\\.".toRegex()).dropLastWhile { it.isEmpty() }.toTypedArray()
@@ -314,10 +319,12 @@ class ContainerAppServiceImpl @Autowired constructor(
                 val v1 = arr1[i]
                 val v2 = arr2[i]
                 try {
-                    if (Integer.parseInt(v1) < Integer.parseInt(v2))
+                    if (Integer.parseInt(v1) < Integer.parseInt(v2)) {
                         return -1
-                    if (Integer.parseInt(v1) > Integer.parseInt(v2))
+                    }
+                    if (Integer.parseInt(v1) > Integer.parseInt(v2)) {
                         return 1
+                    }
                 } catch (e: Exception) {
                     val compare = v1.compareTo(v2)
                     if (compare != 0) {
@@ -331,10 +338,12 @@ class ContainerAppServiceImpl @Autowired constructor(
                 val v1 = arr1[i]
                 val v2 = arr2[i]
                 try {
-                    if (Integer.parseInt(v1) < Integer.parseInt(v2))
+                    if (Integer.parseInt(v1) < Integer.parseInt(v2)) {
                         return -1
-                    if (Integer.parseInt(v1) > Integer.parseInt(v2))
+                    }
+                    if (Integer.parseInt(v1) > Integer.parseInt(v2)) {
                         return 1
+                    }
                 } catch (e: Exception) {
                     val compare = v1.compareTo(v2)
                     if (compare != 0) {

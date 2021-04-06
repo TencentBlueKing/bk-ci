@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -53,11 +54,14 @@ class MarketImageStatisticService @Autowired constructor (
         return Result(statistic)
     }
 
+    @Suppress("ALL")
     private fun formatImageStatistic(record: Record4<BigDecimal, BigDecimal, BigDecimal, String>): ImageStatistic {
         val downloads = record.value1()?.toInt()
         val comments = record.value2()?.toInt()
         val score = record.value3()?.toDouble()
-        val averageScore: Double = if (score != null && comments != null && score > 0 && comments > 0) score.div(comments) else 0.toDouble()
+        val averageScore: Double = if (score != null && comments != null && score > 0 && comments > 0) {
+            score.div(comments)
+        } else 0.toDouble()
         logger.info("the averageScore is:$averageScore")
         return ImageStatistic(
             downloads = downloads ?: 0,
@@ -71,7 +75,11 @@ class MarketImageStatisticService @Autowired constructor (
      */
     fun getStatisticByCodeList(imageCodeList: List<String>): Result<HashMap<String, ImageStatistic>> {
         logger.info("the imageCodeList is:$imageCodeList")
-        val records = storeStatisticDao.batchGetStatisticByStoreCode(dslContext, imageCodeList, StoreTypeEnum.IMAGE.type.toByte())
+        val records = storeStatisticDao.batchGetStatisticByStoreCode(
+            dslContext = dslContext,
+            storeCodeList = imageCodeList,
+            storeType = StoreTypeEnum.IMAGE.type.toByte()
+        )
         val statistic = hashMapOf<String, ImageStatistic>()
         records.map {
             if (it.value4() != null) {

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -37,6 +38,7 @@ import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.ci.NORMAL_JOB
 import com.tencent.devops.common.ci.VM_JOB
 import com.tencent.devops.common.ci.image.PoolType
+import com.tencent.devops.common.ci.task.AbstractTask
 import com.tencent.devops.common.ci.task.CodeCCScanInContainerTask
 import com.tencent.devops.common.ci.task.MarketBuildInput
 import com.tencent.devops.common.ci.task.MarketBuildTask
@@ -75,12 +77,12 @@ import com.tencent.devops.plugin.api.UserCodeccResource
 import com.tencent.devops.prebuild.dao.PreBuildPluginVersionDao
 import com.tencent.devops.prebuild.dao.PrebuildPersonalMachineDao
 import com.tencent.devops.prebuild.dao.PrebuildProjectDao
-import com.tencent.devops.prebuild.pojo.PrePluginVersion
-import com.tencent.devops.prebuild.pojo.enums.PreBuildPluginType
 import com.tencent.devops.prebuild.pojo.HistoryResponse
+import com.tencent.devops.prebuild.pojo.PrePluginVersion
 import com.tencent.devops.prebuild.pojo.PreProject
 import com.tencent.devops.prebuild.pojo.StartUpReq
 import com.tencent.devops.prebuild.pojo.UserProject
+import com.tencent.devops.prebuild.pojo.enums.PreBuildPluginType
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildId
@@ -95,7 +97,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
-import java.lang.RuntimeException
 
 @Service
 class PreBuildService @Autowired constructor(
@@ -137,13 +138,15 @@ class PreBuildService @Autowired constructor(
             pipeline.pipelineId
         }
         prebuildProjectDao.createOrUpdate(
-            dslContext,
-            preProjectId,
-            userProject,
-            userId,
-            startUpReq.yaml.trim(),
-            pipelineId,
-            startUpReq.workspace
+            dslContext = dslContext,
+            prebuildProjectId = preProjectId,
+            projectId = userProject,
+            owner = userId,
+            yaml = startUpReq.yaml.trim(),
+            pipelineId = pipelineId,
+            workspace = startUpReq.workspace,
+            ideVersion = startUpReq.extraParam?.ideVersion,
+            pluginVersion = startUpReq.extraParam?.pluginVersion
         )
 
         logger.info("pipelineId: $pipelineId")
@@ -299,47 +302,9 @@ class PreBuildService @Autowired constructor(
         val vmType = job.job.resourceType
         job.job.steps.forEach {
             var step = it
-            if (startUpReq.extraParam != null && ((step is MarketBuildTask && step.inputs.atomCode == CodeCCScanInContainerTask.atomCode) ||
-                (step is CodeCCScanInContainerTask))) {
-                val whitePath = mutableListOf<String>()
-                // idea右键codecc扫描
-                if (!(startUpReq.extraParam!!.codeccScanPath.isNullOrBlank())) {
-                    whitePath.add(startUpReq.extraParam!!.codeccScanPath!!)
-                }
-                // push/commit前扫描的文件路径
-                if (startUpReq.extraParam!!.incrementFileList != null && startUpReq.extraParam!!.incrementFileList!!.isNotEmpty()) {
-                    whitePath.addAll(startUpReq.extraParam!!.incrementFileList!!)
-                }
-                // 使用容器路径替换本地路径
-                if (vmType == ResourceType.REMOTE && (job.job.pool?.type == PoolType.DockerOnDevCloud || job.job.pool?.type == PoolType.DockerOnVm)) {
-                    whitePath.forEachIndexed { index, path ->
-                        val filePath = path.removePrefix(startUpReq.workspace)
-                        // 路径开头不匹配则不替换
-                        if (filePath != path) {
-                            // 兼容workspace可能带'/'的情况
-                            if (startUpReq.workspace.last() == '/') {
-                                whitePath[index] = "/data/landun/workspace/$filePath"
-                            } else {
-                                whitePath[index] = "/data/landun/workspace$filePath"
-                            }
-                        }
-                    }
-                }
-                if (step is MarketBuildTask) {
-                    val data = step.inputs.data.toMutableMap()
-                    val input = (data["input"] as Map<*, *>).toMutableMap()
-                    input["path"] = whitePath
-                    data["input"] = input.toMap()
-                    step = step.copy(
-                        inputs = with(step.inputs) {
-                            MarketBuildInput(atomCode, name, version, data.toMap())
-                        }
-                    )
-                } else if (step is CodeCCScanInContainerTask) {
-                    step.inputs.path = whitePath
-                }
+            if (startUpReq.extraParam != null) {
+                step = codeCCAtomCheck(step, startUpReq, job)
             }
-
             // 启动子流水线将代码拉到远程构建机
             if (step is SyncLocalCodeTask) {
                 if (vmType != ResourceType.REMOTE) {
@@ -347,7 +312,9 @@ class PreBuildService @Autowired constructor(
                 }
                 step.inputs = SyncLocalCodeInput(
                     step.inputs?.agentId ?: agentInfo.agentId,
-                    step.inputs?.workspace ?: startUpReq.workspace
+                    step.inputs?.workspace ?: startUpReq.workspace,
+                    step.inputs?.useDelete ?: true,
+                    step.inputs?.syncGitRepository ?: false
                 )
 
                 installMarketAtom(userId, "syncCodeToRemote") // 确保同步代码插件安装
@@ -397,6 +364,63 @@ class PreBuildService @Autowired constructor(
             tstackAgentId = null,
             dispatchType = dispatchType
         )
+    }
+
+    private fun codeCCAtomCheck(oldStep: AbstractTask, startUpReq: StartUpReq, job: Job): AbstractTask {
+        var step = oldStep
+        if (step is MarketBuildTask && step.inputs.atomCode == CodeCCScanInContainerTask.atomCode) {
+            val whitePath = getWhitePath(startUpReq, job)
+            val data = step.inputs.data.toMutableMap()
+            val input = (data["input"] as Map<*, *>).toMutableMap()
+            if (whitePath.isNotEmpty()) {
+                input["path"] = whitePath
+            }
+            data["input"] = input.toMap()
+            step = step.copy(
+                inputs = with(step.inputs) {
+                    MarketBuildInput(atomCode, name, version, data.toMap())
+                }
+            )
+        } else if (step is CodeCCScanInContainerTask) {
+            val whitePath = getWhitePath(startUpReq, job)
+            if (whitePath.isNotEmpty()) {
+                step.inputs.path = whitePath
+            }
+        }
+        return step
+    }
+
+    private fun getWhitePath(startUpReq: StartUpReq, job: Job): List<String> {
+        val vmType = job.job.resourceType
+        val whitePath = mutableListOf<String>()
+        // idea右键codecc扫描
+        if (!(startUpReq.extraParam!!.codeccScanPath.isNullOrBlank())) {
+            whitePath.add(startUpReq.extraParam!!.codeccScanPath!!)
+        }
+        // push/commit前扫描的文件路径
+        if (startUpReq.extraParam!!.incrementFileList != null &&
+            startUpReq.extraParam!!.incrementFileList!!.isNotEmpty()
+        ) {
+            whitePath.addAll(startUpReq.extraParam!!.incrementFileList!!)
+        }
+        // 使用容器路径替换本地路径
+        if (vmType == ResourceType.REMOTE && (job.job.pool?.type == PoolType.DockerOnDevCloud ||
+                    job.job.pool?.type == PoolType.DockerOnVm)
+        ) {
+            whitePath.forEachIndexed { index, path ->
+                val filePath = path.removePrefix(startUpReq.workspace)
+                // 路径开头不匹配则不替换
+                if (filePath != path) {
+                    // 兼容workspace可能带'/'的情况
+                    if (startUpReq.workspace.last() == '/') {
+                        whitePath[index] = "/data/landun/workspace/$filePath"
+                    } else {
+                        whitePath[index] = "/data/landun/workspace$filePath"
+                    }
+                }
+            }
+        }
+        return whitePath
     }
 
     fun getDispatchType(job: Job, startUpReq: StartUpReq, agentInfo: ThirdPartyAgentStaticInfo): DispatchType {
@@ -554,7 +578,8 @@ class PreBuildService @Autowired constructor(
 
     fun getBuildLink(userId: String, preProjectId: String, buildId: String): String {
         val preProjectRecord = getPreProjectInfo(preProjectId, userId)
-        return HomeHostUtil.innerServerHost() + "/console/pipeline/${preProjectRecord.projectId}/${preProjectRecord.pipelineId}/detail/$buildId"
+        return HomeHostUtil.innerServerHost() +
+                "/console/pipeline/${preProjectRecord.projectId}/${preProjectRecord.pipelineId}/detail/$buildId"
     }
 
     fun getOrCreatePreAgent(userId: String, os: OS, ip: String, hostName: String): ThirdPartyAgentStaticInfo {
@@ -647,7 +672,8 @@ class PreBuildService @Autowired constructor(
 
     fun validateCIBuildYaml(yamlStr: String) = CiYamlUtils.validateYaml(yamlStr)
 
-    fun checkYml(yamlStr: String) = CiYamlUtils.checkYaml(YamlUtil.getObjectMapper().readValue(yamlStr, CIBuildYaml::class.java))
+    fun checkYml(yamlStr: String) =
+        CiYamlUtils.checkYaml(YamlUtil.getObjectMapper().readValue(yamlStr, CIBuildYaml::class.java))
 
     fun getPluginVersion(userId: String, pluginType: PreBuildPluginType): PrePluginVersion? {
         val record = preBuildVersionDao.getVersion(pluginType = pluginType.name, dslContext = dslContext) ?: return null
@@ -661,19 +687,20 @@ class PreBuildService @Autowired constructor(
     }
 
     fun creatPluginVersion(prePluginVersion: PrePluginVersion): Boolean {
-        val record = preBuildVersionDao.getVersion(pluginType = prePluginVersion.pluginType.name, dslContext = dslContext)
+        val record =
+            preBuildVersionDao.getVersion(pluginType = prePluginVersion.pluginType.name, dslContext = dslContext)
         if (record != null) {
             throw RuntimeException("已存在当前插件类型的版本信息，无法新增")
         }
         return with(prePluginVersion) {
-                preBuildVersionDao.create(
-                    version = version,
-                    modifyUser = modifyUser,
-                    desc = desc,
-                    pluginType = pluginType.name,
-                    dslContext = dslContext
-                ) > 0
-            }
+            preBuildVersionDao.create(
+                version = version,
+                modifyUser = modifyUser,
+                desc = desc,
+                pluginType = pluginType.name,
+                dslContext = dslContext
+            ) > 0
+        }
     }
 
     fun deletePluginVersion(version: String): Boolean {
@@ -682,14 +709,14 @@ class PreBuildService @Autowired constructor(
 
     fun updatePluginVersion(prePluginVersion: PrePluginVersion): Boolean {
         return with(prePluginVersion) {
-                preBuildVersionDao.update(
-                    version = version,
-                    modifyUser = modifyUser,
-                    desc = desc,
-                    pluginType = pluginType.name,
-                    dslContext = dslContext
-                ) > 0
-            }
+            preBuildVersionDao.update(
+                version = version,
+                modifyUser = modifyUser,
+                desc = desc,
+                pluginType = pluginType.name,
+                dslContext = dslContext
+            ) > 0
+        }
     }
 
     fun getPluginVersionList(): List<PrePluginVersion> {

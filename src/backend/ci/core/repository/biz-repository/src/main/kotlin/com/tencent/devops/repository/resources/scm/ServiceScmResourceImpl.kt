@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -39,6 +40,7 @@ import com.tencent.devops.scm.pojo.TokenCheckResult
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
+@Suppress("ALL")
 @RestResource
 class ServiceScmResourceImpl @Autowired constructor(private val scmService: IScmService) :
     ServiceScmResource {
@@ -54,10 +56,7 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: IScm
         region: CodeSvnRegion?,
         userName: String?
     ): Result<RevisionInfo> {
-        logger.info(
-            "Start to get the code latest version of " +
-                "(projectName=$projectName, url=$url, type=$type, branch=$branchName, additionalPath=$additionalPath, " +
-                "region=$region, username=$userName)"
+        logger.info("getLatestRevision|$projectName|$url|$type|$branchName|$additionalPath|$region|username=$userName)"
         )
         return Result(
             scmService.getLatestRevision(
@@ -84,7 +83,7 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: IScm
         region: CodeSvnRegion?,
         userName: String?
     ): Result<List<String>> {
-        logger.info("Start to list the branches of (projectName=$projectName, url=$url, type=$type, region=$region, username=$userName)")
+        logger.info("listBranches|(projectName=$projectName, url=$url, type=$type, region=$region, username=$userName)")
         return Result(scmService.listBranches(
             projectName = projectName,
             url = url,
@@ -104,7 +103,7 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: IScm
         token: String,
         userName: String
     ): Result<List<String>> {
-        logger.info("Start to list the branches of (projectName=$projectName, url=$url, type=$type, username=$userName)")
+        logger.info("listTags|projectName=$projectName, url=$url, type=$type, username=$userName")
         return Result(scmService.listTags(
             projectName = projectName,
             url = url,
@@ -124,7 +123,7 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: IScm
         region: CodeSvnRegion?,
         userName: String
     ): Result<TokenCheckResult> {
-        logger.info("Start to check the private key and token of (projectName=$projectName, url=$url, type=$type, region=$region, username=$userName)")
+        logger.info("checkPrivateKeyAndToken|$projectName|$url|$type|$region|$userName")
         return Result(
             scmService.checkPrivateKeyAndToken(
                 projectName = projectName,
@@ -149,7 +148,7 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: IScm
         region: CodeSvnRegion?,
         repoUsername: String
     ): Result<TokenCheckResult> {
-        logger.info("Start to check the username and password of (projectName=$projectName, url=$url, type=$type, username=$username, region=$region, repoUsername=$repoUsername)")
+        logger.info("checkUsernameAndPassword|$projectName|$url|$type|$username|$region|$repoUsername")
         return Result(
             scmService.checkUsernameAndPassword(
                 projectName = projectName,
@@ -176,7 +175,7 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: IScm
         event: String?,
         hookUrl: String?
     ): Result<Boolean> {
-        logger.info("Start to add the web hook of (projectName=$projectName, url=$url, type=$type, username=$userName, event=$event, hookUrl=$hookUrl)")
+        logger.info("addWebHook|$projectName|$url|$type|$userName|$region|$event|$hookUrl")
         scmService.addWebHook(
             projectName = projectName,
             url = url,

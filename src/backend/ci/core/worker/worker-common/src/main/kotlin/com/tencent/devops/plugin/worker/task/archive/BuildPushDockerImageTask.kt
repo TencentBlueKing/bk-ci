@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -53,6 +54,7 @@ import org.slf4j.LoggerFactory
 import java.io.File
 
 @TaskClassType(classTypes = [BuildPushDockerImageElement.classType])
+@Suppress("ALL")
 class BuildPushDockerImageTask : ITask() {
 
     private val api = ApiFactory.create(ArchiveSDKApi::class)
@@ -87,15 +89,23 @@ class BuildPushDockerImageTask : ITask() {
             // docker 则需要调用母机进行docker build
             logger.info("Start docker build, $imageName:$imageTag")
             LoggerService.addNormalLine("启动构建镜像，镜像名称：$imageName:$imageTag")
-            startDockerBuild(buildVariables, imageName, imageTag, buildDir, dockerFile, repoAddr, userName, password, buildTask.elementId)
+            startDockerBuild(buildVariables = buildVariables,
+                imageName = imageName,
+                imageTag = imageTag,
+                buildDir = buildDir,
+                dockerFile = dockerFile,
+                repoAddr = repoAddr,
+                userName = userName,
+                password = password,
+                elementId = buildTask.elementId)
 
-            Thread.sleep(2 * 1000)
+            Thread.sleep(2000)
             // 轮询状态
             LoggerService.addNormalLine("启动构建镜像成功，等待构建镜像结束，镜像名称：$imageName:$imageTag")
             var status = getDockerBuildStatus(buildVariables)
             while (status.first == Status.RUNNING.name) {
                 logger.info("Wait for docker build finish...")
-                Thread.sleep(2 * 1000)
+                Thread.sleep(2000)
                 status = getDockerBuildStatus(buildVariables)
             }
             if (status.first == Status.FAILURE.name) {
@@ -116,12 +126,27 @@ class BuildPushDockerImageTask : ITask() {
             logger.info("Start to build the docker images.")
             val command = CommandFactory.create(BuildScriptType.SHELL.name)
             val runtimeVariables = buildVariables.variablesWithType.map { it.key to it.value.toString() }.toMap()
-            command.execute(buildId, loginScript, taskParams, runtimeVariables, projectId, workspace, buildVariables.buildEnvs)
+            command.execute(
+                buildId = buildId,
+                script = loginScript,
+                taskParam = taskParams,
+                runtimeVariables = runtimeVariables,
+                projectId = projectId,
+                dir = workspace,
+                buildEnvs = buildVariables.buildEnvs)
 
             LoggerService.addNormalLine("Start to build the docker image. imageName:$imageName; imageTag:$imageTag")
-            val buildScript = "sudo docker build --pull -f $dockerFile -t $repoAddr/paas/$projectId/$imageName:$imageTag $buildDir"
+            val buildScript =
+                "sudo docker build --pull -f $dockerFile -t $repoAddr/paas/$projectId/$imageName:$imageTag $buildDir"
             try {
-                command.execute(buildId, buildScript, taskParams, runtimeVariables, projectId, workspace, buildVariables.buildEnvs)
+                command.execute(
+                    buildId = buildId,
+                    script = buildScript,
+                    taskParam = taskParams,
+                    runtimeVariables = runtimeVariables,
+                    projectId = projectId,
+                    dir = workspace,
+                    buildEnvs = buildVariables.buildEnvs)
             } catch (t: RuntimeException) {
                 LoggerService.addNormalLine(Ansi().fgRed().a("Dockerfile第一行请确认使用 $repoAddr").reset().toString())
                 throw TaskExecuteException(
@@ -133,7 +158,13 @@ class BuildPushDockerImageTask : ITask() {
 
             LoggerService.addNormalLine("Start to push the docker image. imageName:$imageName; imageTag:$imageTag")
             val pushScript = "sudo docker push $repoAddr/paas/$projectId/$imageName:$imageTag"
-            command.execute(buildId, pushScript, taskParams, runtimeVariables, projectId, workspace, buildVariables.buildEnvs)
+            command.execute(buildId = buildId,
+                script = pushScript,
+                taskParam = taskParams,
+                runtimeVariables = runtimeVariables,
+                projectId = projectId,
+                dir = workspace,
+                buildEnvs = buildVariables.buildEnvs)
         }
     }
 
@@ -141,7 +172,8 @@ class BuildPushDockerImageTask : ITask() {
     private fun getDockerBuildStatus(buildVariables: BuildVariables): Pair<String, Any?> {
         val dockerHostIp = System.getenv("docker_host_ip")
         val dockerHostPort = System.getenv("docker_host_port")
-        val url = "http://$dockerHostIp:$dockerHostPort/api/docker/build/${buildVariables.vmSeqId}/${buildVariables.buildId}"
+        val url = "http://$dockerHostIp:$dockerHostPort/api/docker/build" +
+            "/${buildVariables.vmSeqId}/${buildVariables.buildId}"
         logger.info("request url: $url")
 
         val request = Request.Builder().url(url)
@@ -172,11 +204,22 @@ class BuildPushDockerImageTask : ITask() {
         }
     }
 
-    private fun startDockerBuild(buildVariables: BuildVariables, imageName: String?, imageTag: String?, buildDir: String?, dockerFile: String?, repoAddr: String, userName: String, password: String, elementId: String?) {
+    private fun startDockerBuild(
+        buildVariables: BuildVariables,
+        imageName: String?,
+        imageTag: String?,
+        buildDir: String?,
+        dockerFile: String?,
+        repoAddr: String,
+        userName: String,
+        password: String,
+        elementId: String?
+    ) {
         val dockerHostIp = System.getenv("docker_host_ip")
         val dockerHostPort = System.getenv("docker_host_port")
         val poolNo = System.getenv("pool_no")
-        val url = "http://$dockerHostIp:$dockerHostPort/api/docker/build/${buildVariables.projectId}/${buildVariables.pipelineId}/${buildVariables.vmSeqId}/${buildVariables.buildId}/$elementId"
+        val url = "http://$dockerHostIp:$dockerHostPort/api/docker/build/${buildVariables.projectId}/" +
+            "${buildVariables.pipelineId}/${buildVariables.vmSeqId}/${buildVariables.buildId}/$elementId"
         val dockerbuildParam = DockerBuildParam(
             imageName = imageName!!,
             imageTag = imageTag!!,

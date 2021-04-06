@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -90,6 +91,7 @@ import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
 
+@Suppress("ALL")
 abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTemplateService {
 
     @Autowired
@@ -425,7 +427,10 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         val templateRecord = marketTemplateDao.getLatestTemplateByCode(dslContext, templateCode)
         logger.info("the templateRecord is :$templateRecord")
         if (null == templateRecord) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(templateCode))
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(templateCode)
+            )
         }
         return getTemplateDetail(templateRecord, userId)
     }
@@ -435,7 +440,10 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         val templateRecord = marketTemplateDao.getTemplate(dslContext, templateId)
         logger.info("the templateRecord is :$templateRecord")
         if (null == templateRecord) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(templateId))
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(templateId)
+            )
         }
         return getTemplateDetail(templateRecord, userId)
     }
@@ -451,11 +459,18 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         val downloads = templateStatisticRecord.value1()?.toInt()
         val comments = templateStatisticRecord.value2()?.toInt()
         val score = templateStatisticRecord.value3()?.toDouble()
-        val avgScore: Double = if (score != null && comments != null && score > 0 && comments > 0) score.div(comments) else 0.toDouble() // 计算平均分
+        val avgScore: Double = if (score != null && comments != null && score > 0 && comments > 0) {
+            score.div(comments)
+        } else 0.toDouble() // 计算平均分
         val categoryList = templateCategoryService.getCategorysByTemplateId(templateRecord.id).data // 查找范畴列表
         val labelList = templateLabelService.getLabelsByTemplateId(templateRecord.id).data // 查找标签列表
         val publicFlag = templateRecord.publicFlag // 是否为公共模板
-        val installFlag = storeUserService.isCanInstallStoreComponent(publicFlag, userId, templateCode, StoreTypeEnum.TEMPLATE) // 是否能安装
+        val installFlag = storeUserService.isCanInstallStoreComponent(
+            defaultFlag = publicFlag,
+            userId = userId,
+            storeCode = templateCode,
+            storeType = StoreTypeEnum.TEMPLATE
+        ) // 是否能安装
         var releaseFlag = false // 是否有处于上架状态的模板版本
         val count = marketTemplateDao.countReleaseTemplateByCode(dslContext, templateCode)
         if (count > 0) {
@@ -495,19 +510,28 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         val type = StoreTypeEnum.TEMPLATE.type.toByte()
         val isOwner = storeMemberDao.isStoreAdmin(dslContext, userId, templateCode, type)
         if (!isOwner) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED, arrayOf(templateCode))
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PERMISSION_DENIED,
+                params = arrayOf(templateCode)
+            )
         }
 
         val releasedCnt = marketTemplateDao.countReleaseTemplateByCode(dslContext, templateCode)
         if (releasedCnt > 0) {
-            return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_TEMPLATE_RELEASED, arrayOf(templateCode))
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_TEMPLATE_RELEASED,
+                params = arrayOf(templateCode)
+            )
         }
         logger.info("releasedCnt: $releasedCnt")
 
         // 如果已经被安装到其他项目下使用，不能删除关联
         val installedCnt = storeProjectRelDao.countInstalledProject(dslContext, templateCode, type)
         if (installedCnt > 0) {
-            return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_TEMPLATE_USED, arrayOf(templateCode))
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_TEMPLATE_USED,
+                params = arrayOf(templateCode)
+            )
         }
 
         dslContext.transaction { t ->
@@ -526,15 +550,21 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
     /**
      * 安装模板到项目
      */
-    override fun installTemplate(userId: String, channelCode: ChannelCode, installTemplateReq: InstallTemplateReq): Result<Boolean> {
+    override fun installTemplate(
+        userId: String,
+        channelCode: ChannelCode,
+        installTemplateReq: InstallTemplateReq
+    ): Result<Boolean> {
         logger.info("installTemplate userId is: $userId")
         logger.info("installTemplate channelCode is: $channelCode, installTemplateReq is: $installTemplateReq")
         val templateCode = installTemplateReq.templateCode
         val projectCodeList = installTemplateReq.projectCodeList
         val template = marketTemplateDao.getLatestTemplateByCode(dslContext, templateCode)
-        if (null == template) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(templateCode), false)
-        }
+            ?: return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(templateCode),
+                data = false
+            )
         // 校验用户是否在模板下插件的可见范围之内和模板的可见范围是否都在其下面的插件可见范围之内
         val validateResult = validateUserTemplateAtomVisibleDept(userId, templateCode, projectCodeList)
         if (validateResult.isNotOk()) {
@@ -568,7 +598,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             publicFlag = template.publicFlag,
             publisher = template.publisher
         )
-        val addMarketTemplateResult = client.get(ServiceTemplateResource::class).addMarketTemplate(userId, addMarketTemplateRequest)
+        val addMarketTemplateResult = client.get(ServiceTemplateResource::class)
+            .addMarketTemplate(userId = userId, addMarketTemplateRequest = addMarketTemplateRequest)
         logger.info("addMarketTemplateResult is $addMarketTemplateResult")
         if (addMarketTemplateResult.isNotOk()) {
             // 抛出错误提示
@@ -589,10 +620,12 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         )
     }
 
-    override fun validateUserTemplateAtomVisibleDept(userId: String, templateCode: String, projectCodeList: List<String>?): Result<Boolean> {
-        logger.info("validateUserTemplateAtomVisibleDept userId is :$userId,templateCode is :$templateCode,projectCodeList is :$projectCodeList")
+    override fun validateUserTemplateAtomVisibleDept(
+        userId: String,
+        templateCode: String,
+        projectCodeList: List<String>?
+    ): Result<Boolean> {
         val templateModelResult = templateModelService.getTemplateModel(templateCode)
-        logger.info("the templateModelResult is :$templateModelResult")
         if (templateModelResult.isNotOk()) {
             // 抛出错误提示
             return Result(templateModelResult.status, templateModelResult.message ?: "")
@@ -615,13 +648,19 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                     val atomVersion = element.version
                     logger.info("the atomCode is:$atomCode，atomVersion is:$atomVersion")
                     val atomRecord = if (atomVersion.isNotEmpty()) {
-                        val atomStatusList = listOf(AtomStatusEnum.RELEASED.status.toByte(), AtomStatusEnum.UNDERCARRIAGING.status.toByte())
+                        val atomStatusList = listOf(
+                            AtomStatusEnum.RELEASED.status.toByte(),
+                            AtomStatusEnum.UNDERCARRIAGING.status.toByte()
+                        )
                         atomDao.getPipelineAtom(dslContext, atomCode, atomVersion, atomStatusList)
                     } else {
                         marketAtomDao.getLatestAtomByCode(dslContext, atomCode) // 兼容历史存量原子插件的情况
                     }
                     if (null == atomRecord || atomRecord.deleteFlag) {
-                        return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_TEMPLATE_ATOM_IS_INVALID, arrayOf(atomCode))
+                        return MessageCodeUtil.generateResponseDataObject(
+                            messageCode = StoreMessageCode.USER_TEMPLATE_ATOM_IS_INVALID,
+                            params = arrayOf(atomCode)
+                        )
                     }
                     invalidAtomList = generateUserAtomInvalidVisibleAtom(atomCode, userId, atomRecord, element)
                     if (!atomRecord.defaultFlag) needInstallAtomMap[atomCode] = atomRecord
@@ -630,7 +669,11 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         }
         if (invalidAtomList.isNotEmpty()) {
             // 存在用户不在插件的可见范围内的插件，给出错误提示
-            return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_ATOM_VISIBLE_DEPT_IS_INVALID, arrayOf(JsonUtil.toJson(invalidAtomList)), false)
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_ATOM_VISIBLE_DEPT_IS_INVALID,
+                params = arrayOf(JsonUtil.toJson(invalidAtomList)),
+                data = false
+            )
         }
         val validateTempleAtomVisibleResult = validateTempleAtomVisible(templateCode, templateModel)
         if (validateTempleAtomVisibleResult.isNotOk()) {
@@ -675,7 +718,12 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
 
     abstract fun validateTempleAtomVisible(templateCode: String, templateModel: Model): Result<Boolean>
 
-    private fun copyQualityRule(userId: String, templateCode: String, projectCodeList: Collection<String>, projectTemplateMap: Map<String, String>) {
+    private fun copyQualityRule(
+        userId: String,
+        templateCode: String,
+        projectCodeList: Collection<String>,
+        projectTemplateMap: Map<String, String>
+    ) {
         try {
             logger.info("start to copy the quality rule for template: $templateCode")
             val sourceTemplate = client.get(ServiceTemplateResource::class).listTemplateById(
@@ -694,7 +742,12 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         }
     }
 
-    override fun getMyTemplates(userId: String, templateName: String?, page: Int, pageSize: Int): Result<Page<MyTemplateItem>?> {
+    override fun getMyTemplates(
+        userId: String,
+        templateName: String?,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<MyTemplateItem>?> {
         val records = marketTemplateDao.getMyTemplates(dslContext, userId, templateName, page, pageSize)
         // 获取项目代码对应的名称
         val projectCodeList = mutableListOf<String>()
@@ -728,7 +781,13 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         }
         val templateCount = marketTemplateDao.getMyTemplatesCount(dslContext, userId, templateName)
         val totalPages = PageUtil.calTotalPage(pageSize, templateCount)
-        return Result(Page(count = templateCount, page = page, pageSize = pageSize, totalPages = totalPages, records = templateList))
+        return Result(Page(
+            count = templateCount,
+            page = page,
+            pageSize = pageSize,
+            totalPages = totalPages,
+            records = templateList
+        ))
     }
 
     /**

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -37,7 +38,7 @@ import com.tencent.devops.process.dao.PipelineAtomReplaceBaseDao
 import com.tencent.devops.process.dao.PipelineAtomReplaceHistoryDao
 import com.tencent.devops.process.dao.PipelineAtomReplaceItemDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.engine.service.template.TemplateService
+import com.tencent.devops.process.service.template.TemplateFacadeService
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
@@ -45,6 +46,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 
+@Suppress("ALL")
 @Service
 class PipelineAtomRollBackCronService @Autowired constructor(
     private val dslContext: DSLContext,
@@ -52,7 +54,7 @@ class PipelineAtomRollBackCronService @Autowired constructor(
     private val pipelineAtomReplaceItemDao: PipelineAtomReplaceItemDao,
     private val pipelineAtomReplaceHistoryDao: PipelineAtomReplaceHistoryDao,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val templateService: TemplateService,
+    private val templateFacadeService: TemplateFacadeService,
     private val redisOperation: RedisOperation
 ) {
     companion object {
@@ -244,14 +246,14 @@ class PipelineAtomRollBackCronService @Autowired constructor(
         val historyId = templateReplaceHistory.id
         val templateId = templateReplaceHistory.busId
         val projectId = templateReplaceHistory.projectId
-        val template = templateService.getTemplate(
+        val template = templateFacadeService.getTemplate(
             projectId = templateReplaceHistory.projectId,
             userId = templateReplaceHistory.creator,
             templateId = templateId,
             version = templateReplaceHistory.sourceVersion.toLong()
         )
         try {
-            templateService.updateTemplate(
+            templateFacadeService.updateTemplate(
                 projectId = projectId,
                 userId = template.creator,
                 templateId = templateId,

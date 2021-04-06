@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -33,6 +34,7 @@ import com.tencent.devops.dispatch.docker.pojo.DockerHostLoadConfig
 import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
 import com.tencent.devops.dispatch.docker.pojo.DockerIpListPage
 import com.tencent.devops.dispatch.docker.pojo.DockerIpUpdateVO
+import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import com.tencent.devops.dispatch.docker.utils.CommonUtils
 import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
 import org.jooq.DSLContext
@@ -80,6 +82,7 @@ class DispatchDockerService @Autowired constructor(
                     enable = it.enable,
                     grayEnv = it.grayEnv,
                     specialOn = it.specialOn,
+                    clusterType = DockerHostClusterType.valueOf(it.clusterName),
                     createTime = it.gmtCreate.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
                 ))
             }
@@ -114,7 +117,8 @@ class DispatchDockerService @Autowired constructor(
                     diskIOLoad = it.averageDiskIOLoad,
                     enable = it.enable,
                     grayEnv = it.grayEnv ?: false,
-                    specialOn = it.specialOn ?: false
+                    specialOn = it.specialOn ?: false,
+                    clusterName = it.clusterType?.name ?: DockerHostClusterType.COMMON.name
                 )
             }
 
@@ -134,7 +138,8 @@ class DispatchDockerService @Autowired constructor(
                 dockerHostPort = dockerIpUpdateVO.dockerHostPort,
                 enable = dockerIpUpdateVO.enable,
                 grayEnv = dockerIpUpdateVO.grayEnv,
-                specialOn = dockerIpUpdateVO.specialOn
+                specialOn = dockerIpUpdateVO.specialOn,
+                clusterName = dockerIpUpdateVO.clusterType.name
             )
             return true
         } catch (e: Exception) {
@@ -208,7 +213,9 @@ class DispatchDockerService @Autowired constructor(
             return true
         } catch (e: Exception) {
             logger.error("OP $userId remove dockerBuildBinding pipelineId: $pipelineId vmSeqId: $vmSeqId error.", e)
-            throw RuntimeException("OP $userId remove dockerBuildBinding pipelineId: $pipelineId vmSeqId: $vmSeqId error.")
+            throw RuntimeException(
+                "OP $userId remove dockerBuildBinding pipelineId: $pipelineId vmSeqId: $vmSeqId error."
+            )
         }
     }
 

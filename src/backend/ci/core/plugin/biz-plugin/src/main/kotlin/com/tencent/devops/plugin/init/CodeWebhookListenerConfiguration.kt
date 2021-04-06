@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -28,7 +29,8 @@ package com.tencent.devops.plugin.init
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
-import com.tencent.devops.plugin.listener.CodeWebhookFinishListener
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
+import com.tencent.devops.plugin.listener.CodeWebhookListener
 import com.tencent.devops.plugin.listener.GitHubPullRequestListener
 import com.tencent.devops.plugin.listener.TGitCommitListener
 import org.springframework.amqp.core.Binding
@@ -51,7 +53,13 @@ import org.springframework.context.annotation.Configuration
  * 流水线监控配置
  */
 @Configuration
+@Suppress("TooManyFunctions")
 class CodeWebhookListenerConfiguration {
+
+    companion object {
+        private const val BUILD_MAX_CONCURRENT = 10
+        private const val CHECK_MAX_CONCURRENT = 5
+    }
 
     @Bean
     fun rabbitAdmin(connectionFactory: ConnectionFactory): RabbitAdmin {
@@ -64,6 +72,13 @@ class CodeWebhookListenerConfiguration {
     @Bean
     fun pipelineFanoutExchange(): FanoutExchange {
         val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_EXTENDS_FANOUT, true, false)
+        fanoutExchange.isDelayed = true
+        return fanoutExchange
+    }
+
+    @Bean
+    fun pipelineBuildQueueFanoutExchange(): FanoutExchange {
+        val fanoutExchange = FanoutExchange(MQ.EXCHANGE_PIPELINE_BUILD_QUEUE_FANOUT, true, false)
         fanoutExchange.isDelayed = true
         return fanoutExchange
     }
@@ -100,20 +115,54 @@ class CodeWebhookListenerConfiguration {
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired buildFinishCodeWebhookQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired listener: CodeWebhookFinishListener,
+        @Autowired listener: CodeWebhookListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(buildFinishCodeWebhookQueue.name)
-        val concurrency = webhookConcurrency!!
-        container.setConcurrentConsumers(concurrency)
-        container.setMaxConcurrentConsumers(Math.max(10, concurrency))
-        container.setRabbitAdmin(rabbitAdmin)
-
-        val adapter = MessageListenerAdapter(listener, listener::execute.name)
+        val adapter = MessageListenerAdapter(listener, CodeWebhookListener::onBuildFinished.name)
         adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
-        return container
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = buildFinishCodeWebhookQueue,
+            rabbitAdmin = rabbitAdmin,
+            adapter = adapter,
+            startConsumerMinInterval = 10000,
+            consecutiveActiveTrigger = 5,
+            concurrency = webhookConcurrency!!,
+            maxConcurrency = BUILD_MAX_CONCURRENT
+        )
+    }
+
+    @Bean
+    fun buildQueueCodeWebhookQueue() = Queue(MQ.QUEUE_PIPELINE_BUILD_QUEUE_CODE_WEBHOOK)
+
+    @Bean
+    fun buildQueueCodeWebhookQueueBind(
+        @Autowired buildQueueCodeWebhookQueue: Queue,
+        @Autowired pipelineBuildQueueFanoutExchange: FanoutExchange
+    ): Binding {
+        return BindingBuilder.bind(buildQueueCodeWebhookQueue).to(pipelineBuildQueueFanoutExchange)
+    }
+
+    @Bean
+    fun codeWebhookBuildQueueListenerContainer(
+        @Autowired connectionFactory: ConnectionFactory,
+        @Autowired buildQueueCodeWebhookQueue: Queue,
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired listener: CodeWebhookListener,
+        @Autowired messageConverter: Jackson2JsonMessageConverter
+    ): SimpleMessageListenerContainer {
+        val adapter = MessageListenerAdapter(listener, CodeWebhookListener::onBuildQueue.name)
+        adapter.setMessageConverter(messageConverter)
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = buildQueueCodeWebhookQueue,
+            rabbitAdmin = rabbitAdmin,
+            adapter = adapter,
+            startConsumerMinInterval = 10000,
+            consecutiveActiveTrigger = 5,
+            concurrency = webhookConcurrency!!,
+            maxConcurrency = BUILD_MAX_CONCURRENT
+        )
     }
 
     /**
@@ -156,12 +205,12 @@ class CodeWebhookListenerConfiguration {
         container.setQueueNames(gitCommitCheckQueue.name)
         val concurrency = gitCommitCheckConcurrency!!
         container.setConcurrentConsumers(concurrency)
-        container.setMaxConcurrentConsumers(Math.max(5, concurrency))
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setMaxConcurrentConsumers(Math.max(CHECK_MAX_CONCURRENT, concurrency))
+        container.setAmqpAdmin(rabbitAdmin)
 
         val adapter = MessageListenerAdapter(listener, listener::execute.name)
         adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
+        container.setMessageListener(adapter)
         return container
     }
 
@@ -195,12 +244,12 @@ class CodeWebhookListenerConfiguration {
         container.setQueueNames(githubPrQueue.name)
         val concurrency = githubPrConcurrency!!
         container.setConcurrentConsumers(concurrency)
-        container.setMaxConcurrentConsumers(Math.max(5, concurrency))
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setMaxConcurrentConsumers(Math.max(CHECK_MAX_CONCURRENT, concurrency))
+        container.setAmqpAdmin(rabbitAdmin)
 
         val adapter = MessageListenerAdapter(listener, listener::execute.name)
         adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
+        container.setMessageListener(adapter)
         return container
     }
 }

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -38,6 +39,7 @@ import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.gitci.pojo.GitCIBuildHistory
 import com.tencent.devops.gitci.pojo.GitRequestHistory
 import com.tencent.devops.gitci.pojo.enums.TriggerReason
+import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
 import org.jooq.DSLContext
@@ -86,20 +88,8 @@ class GitCIRequestService @Autowired constructor(
         }
         val resultList = mutableListOf<GitRequestHistory>()
         requestList.forEach { event ->
-            var realEvent = event
             // 如果是来自fork库的分支，单独标识
-//            if (event.sourceGitProjectId != null) {
-//                try {
-//                    val gitToken = client.getScm(ServiceGitResource::class).getToken(event.sourceGitProjectId!!).data!!
-//                    logger.info("get token for gitProjectId[${event.sourceGitProjectId!!}] form scm, token: $gitToken")
-//                    val sourceRepositoryConf = client.getScm(ServiceGitResource::class).getProjectInfo(gitToken.accessToken, event.sourceGitProjectId!!).data
-//                    realEvent = event.copy(
-//                        branch = if (sourceRepositoryConf != null) "${sourceRepositoryConf.name}:${event.branch}"
-//                        else event.branch)
-//                }catch (e: Exception) {
-//                    logger.error("Cannot get source GitProjectInfo: ", e)
-//                }
-//            }
+            val realEvent = GitCommonUtils.checkAndGetForkBranch(event, client)
 
             val requestHistory = GitRequestHistory(
                 id = realEvent.id ?: return@forEach,
@@ -120,7 +110,7 @@ class GitCIRequestService @Autowired constructor(
             )
 
             // 已触发的所有记录
-            val buildsList = gitRequestEventBuildDao.getRequestBuildsByEventId(dslContext, event.id!!)
+            val buildsList = gitRequestEventBuildDao.getRequestBuildsByEventId(dslContext, realEvent.id!!)
             logger.info("Get build list requestBuildsList: $buildsList, gitProjectId: $gitProjectId")
             val builds = buildsList.map { it.buildId }.toSet()
             val buildList = client.get(ServiceBuildResource::class).getBatchBuildStatus(conf.projectCode!!, builds, channelCode).data
@@ -134,7 +124,7 @@ class GitCIRequestService @Autowired constructor(
                         records.add(GitCIBuildHistory(
                             displayName = pipeline.displayName,
                             pipelineId = pipeline.pipelineId,
-                            gitRequestEvent = event,
+                            gitRequestEvent = realEvent,
                             buildHistory = history,
                             reason = TriggerReason.TRIGGER_SUCCESS.name,
                             reasonDetail = null

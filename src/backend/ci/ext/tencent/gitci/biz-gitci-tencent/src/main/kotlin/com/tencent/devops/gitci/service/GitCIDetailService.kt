@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -43,6 +44,7 @@ import com.tencent.devops.gitci.dao.GitRequestEventDao
 import com.tencent.devops.gitci.pojo.GitCIBuildHistory
 import com.tencent.devops.gitci.pojo.GitCIModelDetail
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
+import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.user.TXUserReportResource
 import com.tencent.devops.process.pojo.Report
@@ -79,7 +81,9 @@ class GitCIDetailService @Autowired constructor(
             "项目未开启工蜂CI，无法查询"
         )
         val eventBuildRecord = gitRequestEventBuildDao.getLatestBuild(dslContext, gitProjectId, pipelineId) ?: return null
-        val eventRecord = gitRequestEventDao.get(dslContext, eventBuildRecord.eventId)
+        val eventRecord = gitRequestEventDao.get(dslContext, eventBuildRecord.eventId) ?: return null
+        // 如果是来自fork库的分支，单独标识
+        val realEvent = GitCommonUtils.checkAndGetForkBranch(eventRecord, client)
         val modelDetail = client.get(ServiceBuildResource::class).getBuildDetail(
             userId = userId,
             projectId = conf.projectCode!!,
@@ -88,7 +92,7 @@ class GitCIDetailService @Autowired constructor(
             channelCode = channelCode
         ).data!!
         val pipeline = getPipelineWithId(userId, gitProjectId, eventBuildRecord.pipelineId)
-        return GitCIModelDetail(pipeline, eventRecord!!, modelDetail)
+        return GitCIModelDetail(pipeline, realEvent, modelDetail)
     }
 
     fun getBuildDetail(userId: String, gitProjectId: Long, buildId: String): GitCIModelDetail? {
@@ -97,7 +101,9 @@ class GitCIDetailService @Autowired constructor(
             "项目未开启工蜂CI，无法查询"
         )
         val eventBuildRecord = gitRequestEventBuildDao.getByBuildId(dslContext, buildId) ?: return null
-        val eventRecord = gitRequestEventDao.get(dslContext, eventBuildRecord.eventId)
+        val eventRecord = gitRequestEventDao.get(dslContext, eventBuildRecord.eventId) ?: return null
+        // 如果是来自fork库的分支，单独标识
+        val realEvent = GitCommonUtils.checkAndGetForkBranch(eventRecord, client)
         val modelDetail = client.get(ServiceBuildResource::class).getBuildDetail(
             userId = userId,
             projectId = conf.projectCode!!,
@@ -106,7 +112,7 @@ class GitCIDetailService @Autowired constructor(
             channelCode = channelCode
         ).data!!
         val pipeline = getPipelineWithId(userId, gitProjectId, eventBuildRecord.pipelineId)
-        return GitCIModelDetail(pipeline, eventRecord!!, modelDetail)
+        return GitCIModelDetail(pipeline, realEvent, modelDetail)
     }
 
     fun batchGetBuildDetail(userId: String, gitProjectId: Long, buildIds: List<String>): Map<String, GitCIBuildHistory> {
@@ -123,21 +129,8 @@ class GitCIDetailService @Autowired constructor(
         history.forEach {
             val buildRecord = gitRequestEventBuildDao.getByBuildId(dslContext, it.id) ?: return@forEach
             val eventRecord = gitRequestEventDao.get(dslContext, buildRecord.eventId) ?: return@forEach
-            var realEvent = eventRecord
             // 如果是来自fork库的分支，单独标识
-//            if (eventRecord.sourceGitProjectId != null) {
-//                try {
-//                    val gitToken = client.getScm(ServiceGitResource::class).getToken(eventRecord.sourceGitProjectId!!).data!!
-//                    logger.info("get token for gitProjectId[${eventRecord.sourceGitProjectId!!}] form scm, token: $gitToken")
-//                    val sourceRepositoryConf = client.getScm(ServiceGitResource::class).getProjectInfo(gitToken.accessToken, eventRecord.sourceGitProjectId!!).data
-//                    realEvent = eventRecord.copy(
-//                        branch = if (sourceRepositoryConf != null) "${sourceRepositoryConf.name}:${eventRecord.branch}"
-//                        else eventRecord.branch)
-//                } catch (e: Exception) {
-//                    logger.error("Cannot get source GitProjectInfo: ", e)
-//                }
-//            }
-
+            val realEvent = GitCommonUtils.checkAndGetForkBranch(eventRecord, client)
             val pipeline = pipelineResourceDao.getPipelineById(dslContext, gitProjectId, buildRecord.pipelineId) ?: return@forEach
             infoMap[it.id] = GitCIBuildHistory(
                 displayName = pipeline.displayName,

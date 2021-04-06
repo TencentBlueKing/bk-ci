@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -46,6 +47,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.math.BigDecimal
 
+@Suppress("ALL")
 @Service
 class MarketAtomStatisticServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
@@ -60,16 +62,24 @@ class MarketAtomStatisticServiceImpl @Autowired constructor(
      */
     override fun getStatisticByCode(userId: String, atomCode: String): Result<AtomStatistic> {
         val record = storeStatisticDao.getStatisticByStoreCode(dslContext, atomCode, StoreTypeEnum.ATOM.type.toByte())
-        val pipelineCnt = client.get(ServiceMeasurePipelineResource::class).getPipelineCountByAtomCode(atomCode, null).data ?: 0
+        val pipelineCnt = client.get(ServiceMeasurePipelineResource::class).getPipelineCountByAtomCode(
+            atomCode = atomCode,
+            projectCode = null
+        ).data ?: 0
         val atomStatistic = formatAtomStatistic(record, pipelineCnt)
         return Result(atomStatistic)
     }
 
-    private fun formatAtomStatistic(record: Record4<BigDecimal, BigDecimal, BigDecimal, String>, pipelineCnt: Int): AtomStatistic {
+    private fun formatAtomStatistic(
+        record: Record4<BigDecimal, BigDecimal, BigDecimal, String>,
+        pipelineCnt: Int
+    ): AtomStatistic {
         val downloads = record.value1()?.toInt()
         val comments = record.value2()?.toInt()
         val score = record.value3()?.toDouble()
-        val averageScore: Double = if (score != null && comments != null && score > 0 && comments > 0) score.div(comments) else 0.toDouble()
+        val averageScore: Double = if (score != null && comments != null && score > 0 && comments > 0) {
+            score.div(comments)
+        } else 0.toDouble()
 
         return AtomStatistic(
             downloads = downloads ?: 0,
@@ -82,8 +92,15 @@ class MarketAtomStatisticServiceImpl @Autowired constructor(
     /**
      * 根据批量原子标识获取统计数据
      */
-    override fun getStatisticByCodeList(atomCodeList: List<String>, statFiledList: List<String>): Result<HashMap<String, AtomStatistic>> {
-        val records = storeStatisticDao.batchGetStatisticByStoreCode(dslContext, atomCodeList, StoreTypeEnum.ATOM.type.toByte())
+    override fun getStatisticByCodeList(
+        atomCodeList: List<String>,
+        statFiledList: List<String>
+    ): Result<HashMap<String, AtomStatistic>> {
+        val records = storeStatisticDao.batchGetStatisticByStoreCode(
+            dslContext = dslContext,
+            storeCodeList = atomCodeList,
+            storeType = StoreTypeEnum.ATOM.type.toByte()
+        )
         val atomCodes = atomCodeList.joinToString(",")
         val isStatPipeline = statFiledList.contains("PIPELINE")
         val pipelineStat = if (isStatPipeline) {
@@ -104,21 +121,31 @@ class MarketAtomStatisticServiceImpl @Autowired constructor(
     /**
      * 根据插件标识获取插件关联的所有流水线列表（包括其他项目下）
      */
-    override fun getAtomPipelinesByCode(atomCode: String, username: String, page: Int?, pageSize: Int?): Result<Page<AtomPipeline>> {
+    override fun getAtomPipelinesByCode(
+        atomCode: String,
+        username: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<AtomPipeline>> {
         logger.info("getAtomPipelinesByCode: $atomCode | $username | $page | $pageSize")
 
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 100
 
         val pipelineTaskRet =
-            client.get(ServicePipelineTaskResource::class).listByAtomCode(atomCode, null, pageNotNull, pageSizeNotNull).data
+            client.get(ServicePipelineTaskResource::class).listByAtomCode(
+                atomCode = atomCode,
+                projectCode = null,
+                page = pageNotNull,
+                pageSize = pageSizeNotNull
+            ).data
         if (pipelineTaskRet == null) {
             return Result(Page(pageNotNull, pageSizeNotNull, 0.toLong(), listOf()))
         } else {
             val pipelines = pipelineTaskRet.records
             val projectCodeList = pipelines.map { it.projectCode }
-            val projects =
-                client.get(ServiceProjectResource::class).listByProjectCode(projectCodeList.toSet()).data?.associateBy { it.projectCode }
+            val projects = client.get(ServiceProjectResource::class)
+                .listByProjectCode(projectCodeList.toSet()).data?.associateBy { it.projectCode }
 
             val records = pipelines.map {
                 val projectCode = it.projectCode
@@ -153,15 +180,16 @@ class MarketAtomStatisticServiceImpl @Autowired constructor(
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 100
 
-        val pipelineTaskRet =
-            client.get(ServicePipelineTaskResource::class).listByAtomCode(atomCode, projectCode, pageNotNull, pageSizeNotNull).data
+        val pipelineTaskRet = client.get(ServicePipelineTaskResource::class)
+                .listByAtomCode(atomCode, projectCode, pageNotNull, pageSizeNotNull).data
         logger.info("pipelineTaskRet: $pipelineTaskRet")
         if (pipelineTaskRet == null) {
             return Result(Page(pageNotNull, pageSizeNotNull, 0.toLong(), listOf()))
         } else {
             val pipelines = pipelineTaskRet.records
             val pipelineIdList = pipelines.map { it.pipelineId }
-            val pipelineBuildInfo = client.get(ServiceBuildResource::class).getPipelineLatestBuildByIds(projectCode, pipelineIdList).data
+            val pipelineBuildInfo = client.get(ServiceBuildResource::class)
+                .getPipelineLatestBuildByIds(projectCode, pipelineIdList).data
             logger.info("pipelineBuildInfo: $pipelineBuildInfo")
 
             val records = pipelines.map {

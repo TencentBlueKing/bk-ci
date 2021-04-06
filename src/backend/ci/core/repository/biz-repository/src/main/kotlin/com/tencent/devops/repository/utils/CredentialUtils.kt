@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -33,6 +34,7 @@ import org.slf4j.LoggerFactory
 
 object CredentialUtils {
 
+    @Suppress("ALL")
     fun getCredential(repository: Repository, credentials: List<String>, credentialType: CredentialType): Credential {
         if (repository is CodeSvnRepository &&
                 repository.svnType == CodeSvnRepository.SVN_TYPE_HTTP) {
@@ -40,11 +42,12 @@ object CredentialUtils {
             return if (credentialType == CredentialType.USERNAME_PASSWORD) {
                 if (credentials.size <= 1) {
                     logger.warn("Fail to get the username($credentials) of the svn repo $repository")
-                    Credential(repository.userName, credentials[0], null)
-                } else
-                    Credential(credentials[0], credentials[1], null)
+                    Credential(username = repository.userName, privateKey = credentials[0], passPhrase = null)
+                } else {
+                    Credential(username = credentials[0], privateKey = credentials[1], passPhrase = null)
+                }
             } else {
-                Credential(repository.userName, credentials[0], null)
+                Credential(username = repository.userName, privateKey = credentials[0], passPhrase = null)
             }
         } else {
             val privateKey = credentials[0]
@@ -58,7 +61,7 @@ object CredentialUtils {
             } else {
                 null
             }
-            return Credential(repository.userName, privateKey, passPhrase)
+            return Credential(username = repository.userName, privateKey = privateKey, passPhrase = passPhrase)
         }
     }
 
