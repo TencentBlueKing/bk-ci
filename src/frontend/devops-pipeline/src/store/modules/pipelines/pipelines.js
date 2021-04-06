@@ -487,7 +487,7 @@ const actions = {
 
     // 流水线历史版本列表
     requestPipelineVersionList (_, { projectId, pipelineId, page = 1, pageSize = 15 }) {
-        return ajax.get(AJAX_URL_PIRFIX + `/process/api/user/pipelines/${projectId}/${pipelineId}/version`, {
+        return ajax.get(`${prefix}${projectId}/${pipelineId}/version`, {
             params: {
                 page,
                 pageSize
