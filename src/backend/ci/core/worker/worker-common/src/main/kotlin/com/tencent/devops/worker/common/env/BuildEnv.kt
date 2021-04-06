@@ -49,6 +49,6 @@ object BuildEnv {
     fun isThirdParty() = getBuildType() == BuildType.AGENT
 }
 
-fun main(args: Array<String>) {
+fun main() {
     println(BuildEnv.getBuildType())
 }

@@ -44,7 +44,7 @@ data class BkDeleteResourceAuthResponse(
     )
 }
 
-fun main(array: Array<String>) {
+fun main() {
     val d = BkDeleteResourceAuthResponse.Data(true)
     println(JsonUtil.toJson(d))
 }

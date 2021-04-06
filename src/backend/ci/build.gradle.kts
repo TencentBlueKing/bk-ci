@@ -1,9 +1,11 @@
 plugins {
-    id("org.jetbrains.kotlin.jvm") version "1.3.72"
+    kotlin("jvm") version Versions.Kotlin
 }
 
+apply("detekt.gradle.kts")
+
 buildscript {
-    //仓库
+    // 仓库
     var mavenRepoUrl = System.getProperty("mavenRepoUrl")
     if (mavenRepoUrl == null) {
         mavenRepoUrl = System.getenv("mavenRepoUrl")
@@ -40,10 +42,10 @@ ext {
 }
 
 allprojects {
-    //包路径
+    // 包路径
     group = "com.tencent.bk.devops.ci"
 
-    //版本
+    // 版本
     version = "1.3.0"
     val devopsVersion = System.getProperty("ci_version")
     if (devopsVersion != null) {
@@ -56,7 +58,7 @@ allprojects {
         version as String + "-RELEASE"
     }
 
-    //仓库
+    // 仓库
     var mavenRepoUrl = System.getProperty("mavenRepoUrl")
     if (mavenRepoUrl == null) {
         mavenRepoUrl = System.getenv("mavenRepoUrl")
@@ -72,7 +74,7 @@ allprojects {
         jcenter()
     }
 
-    //创建目录
+    // 创建目录
     task("createCodeDirs") {
         val paths = listOf(
             "src/main/java",
@@ -101,7 +103,7 @@ subprojects {
 
     tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
         kotlinOptions {
-            jvmTarget = "1.8"
+            jvmTarget = JavaVersion.VERSION_1_8.toString()
             javaParameters = true
         }
     }
@@ -109,11 +111,11 @@ subprojects {
     tasks.withType<JavaCompile> {
         options.encoding = "UTF-8"
         options.compilerArgs.add("-parameters")
-        sourceCompatibility = "1.8"
-        targetCompatibility = "1.8"
+        sourceCompatibility = JavaVersion.VERSION_1_8.toString()
+        targetCompatibility = JavaVersion.VERSION_1_8.toString()
     }
 
-    tasks.jar {
+    tasks.getByName("jar") {
         onlyIf {
             sourceSets.main.get().allSource.files.isNotEmpty()
         }
@@ -239,7 +241,6 @@ subprojects {
                 entry("poi")
                 entry("poi-ooxml")
             }
-
         }
     }
 }

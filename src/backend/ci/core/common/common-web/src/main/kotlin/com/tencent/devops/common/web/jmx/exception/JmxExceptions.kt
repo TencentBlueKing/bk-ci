@@ -73,7 +73,7 @@ object JmxExceptions {
     private val logger = LoggerFactory.getLogger(JmxExceptions::class.java)
 }
 
-fun main(argv: Array<String>) {
+fun main() {
     val throwable = Throwable("sss")
     println(throwable.javaClass.name)
 }
