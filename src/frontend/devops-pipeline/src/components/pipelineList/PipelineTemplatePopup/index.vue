@@ -218,7 +218,6 @@
                 let list = []
                 const { tempTypeIndex, pipelineTemplate, tempTypeList } = this
                 const type = tempTypeList[tempTypeIndex] && tempTypeList[tempTypeIndex].categoryCode
-                console.log(tempTypeIndex, pipelineTemplate, tempTypeList, 556)
                 if (type === 'store') {
                     list = (this.storeTemplate || []).map(item => {
                         return {
