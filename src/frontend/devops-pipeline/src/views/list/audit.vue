@@ -124,8 +124,8 @@
                     projectId: this.$route.params.projectId,
                     userId: this.parameters.userId,
                     resourceName: this.parameters.resourceName,
-                    startTime: this.convertTime(this.parameters.date[0]),
-                    endTime: this.convertTime(this.parameters.date[1]),
+                    startTime: this.parameters.date[0] && this.convertTime(this.parameters.date[0]),
+                    endTime: this.parameters.date[1] && this.convertTime(this.parameters.date[1]),
                     status: this.parameters.status,
                     current: this.pagination.current,
                     limit: this.pagination.limit

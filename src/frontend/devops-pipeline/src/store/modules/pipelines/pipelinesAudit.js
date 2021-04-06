@@ -1,9 +1,9 @@
 import ajax from '@/utils/request'
 import {
-    AUDIT_API_URL_PREFIX
+    PROCESS_API_URL_PREFIX
 } from '@/store/constants'
 
-const prefix = `/${AUDIT_API_URL_PREFIX}/user/pipelines/audit`
+const prefix = `/${PROCESS_API_URL_PREFIX}/user/pipelines/audit`
 
 const state = {
 
