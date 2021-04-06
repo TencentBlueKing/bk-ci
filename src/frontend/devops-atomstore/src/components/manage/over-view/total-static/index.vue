@@ -52,7 +52,7 @@
                         { name: 'install-num', label: this.$t('store.安装量'), value: res.downloads },
                         { name: 'pipeline-count', label: this.$t('store.流水线个数'), value: res.pipelineCnt },
                         { name: 'comment-num', label: this.$t('store.评论数'), value: res.commentCnt },
-                        { name: 'rate', label: this.$t('store.评分'), value: res.score },
+                        { name: 'rate', label: this.$t('store.评分'), value: res.score || '--' },
                         { name: 'icon-success-rate', label: this.$t('store.成功率'), value: ![undefined, null].includes(res.successRate) ? `${res.successRate}%` : '--', tips: this.$t('store.最近三个月内的执行成功率') }
                     ]
                 })
