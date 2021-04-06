@@ -63,6 +63,7 @@ import com.tencent.devops.process.dao.PipelineSettingVersionDao
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
+import com.tencent.devops.process.engine.cfg.VersionConfigure
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
@@ -83,7 +84,6 @@ import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.Subscription
-import com.tencent.devops.process.utils.PIPELINE_RES_NUM_MIN
 import org.joda.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -110,7 +110,8 @@ class PipelineRepositoryService constructor(
     private val modelCheckPlugin: ModelCheckPlugin,
     private val templatePipelineDao: TemplatePipelineDao,
     private val pipelineResVersionDao: PipelineResVersionDao,
-    private val pipelineSettingVersionDao: PipelineSettingVersionDao
+    private val pipelineSettingVersionDao: PipelineSettingVersionDao,
+    private val versionConfigure: VersionConfigure
 ) {
 
     fun deployPipeline(
@@ -550,7 +551,11 @@ class PipelineRepositoryService constructor(
 
                     // 渠道为工蜂或者开源扫描只需为流水线模型保留一个版本
                     val filterList = listOf(ChannelCode.GIT, ChannelCode.GONGFENGSCAN)
-                    val maxPipelineResNum = if (channelCode in filterList) 1 else PIPELINE_RES_NUM_MIN
+                    val maxPipelineResNum = if (channelCode in filterList) {
+                        1
+                    } else {
+                        versionConfigure.maxKeepNum
+                    }
                     pipelineSettingDao.insertNewSetting(
                         dslContext = transactionContext,
                         projectId = projectId,
@@ -558,6 +563,13 @@ class PipelineRepositoryService constructor(
                         pipelineName = model.name,
                         failNotifyTypes = notifyTypes,
                         maxPipelineResNum = maxPipelineResNum
+                    )
+                    pipelineSettingVersionDao.insertNewSetting(
+                        dslContext = transactionContext,
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        pipelineName = model.name,
+                        failNotifyTypes = notifyTypes
                     )
                 } else {
                     pipelineSettingDao.updateSetting(
@@ -567,13 +579,6 @@ class PipelineRepositoryService constructor(
                         desc = model.desc ?: ""
                     )
                 }
-                pipelineSettingVersionDao.insertNewSetting(
-                    dslContext = transactionContext,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    pipelineName = model.name,
-                    version = 1
-                )
             }
             // 初始化流水线构建统计表
             pipelineBuildSummaryDao.create(dslContext, projectId, pipelineId, buildNo)
@@ -973,6 +978,7 @@ class PipelineRepositoryService constructor(
 
         dslContext.transaction { t ->
             val context = DSL.using(t)
+            val old = pipelineSettingDao.getSetting(context, pipelineId = setting.pipelineId)
             pipelineInfoDao.update(
                 dslContext = context,
                 pipelineId = setting.pipelineId,
@@ -981,6 +987,14 @@ class PipelineRepositoryService constructor(
                 pipelineName = setting.pipelineName,
                 pipelineDesc = setting.desc
             )
+            if (old?.maxPipelineResNum != null) {
+                pipelineSettingVersionDao.deleteEarlyVersion(
+                    dslContext = context,
+                    pipelineId = setting.pipelineId,
+                    currentVersion = version,
+                    maxPipelineResNum = old.maxPipelineResNum
+                )
+            }
             pipelineSettingVersionDao.saveSetting(context, setting, version = version)
             pipelineSettingDao.saveSetting(context, setting).toString()
         }

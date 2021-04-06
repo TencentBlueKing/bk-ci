@@ -28,6 +28,7 @@
 package com.tencent.devops.process.dao
 
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.model.process.tables.TPipelineSettingVersion
 import com.tencent.devops.model.process.tables.records.TPipelineSettingVersionRecord
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
@@ -36,10 +37,7 @@ import com.tencent.devops.process.util.NotifyTemplateUtils
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
-import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Record1
-import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -51,8 +49,10 @@ class PipelineSettingVersionDao {
         projectId: String,
         pipelineId: String,
         pipelineName: String,
-        version: Int,
-        isTemplate: Boolean = false
+        version: Int = 1,
+        isTemplate: Boolean = false,
+        successNotifyTypes: String = "",
+        failNotifyTypes: String = "${NotifyType.EMAIL.name},${NotifyType.RTX.name}"
     ): Int {
         with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
             return dslContext.insertInto(
@@ -85,8 +85,8 @@ class PipelineSettingVersionDao {
                     "\${$PIPELINE_START_USER_NAME}",
                     "",
                     "",
-                    "EMAIL,RTX",
-                    "EMAIL,RTX",
+                    successNotifyTypes,
+                    failNotifyTypes,
                     NotifyTemplateUtils.COMMON_SHUTDOWN_SUCCESS_CONTENT,
                     NotifyTemplateUtils.COMMON_SHUTDOWN_FAILURE_CONTENT,
                     DateTimeUtil.minuteToSecond(PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT),
@@ -164,77 +164,6 @@ class PipelineSettingVersionDao {
         }
     }
 
-    fun getSetting(dslContext: DSLContext, pipelineIds: Collection<String>): Result<TPipelineSettingVersionRecord> {
-        with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
-            return dslContext.selectFrom(this)
-                .where(PIPELINE_ID.`in`(pipelineIds))
-                .fetch()
-        }
-    }
-
-    fun getSetting(
-        dslContext: DSLContext,
-        projectId: String,
-        name: String,
-        pipelineId: String?,
-        isTemplate: Boolean = false
-    ): Result<TPipelineSettingVersionRecord> {
-        with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
-            val conditions =
-                mutableListOf<Condition>(
-                    PROJECT_ID.eq(projectId),
-                    NAME.eq(name),
-                    IS_TEMPLATE.eq(isTemplate)
-                ) // 只比较非模板的设置
-            if (!pipelineId.isNullOrBlank()) conditions.add(PIPELINE_ID.ne(pipelineId))
-            return dslContext.selectFrom(this)
-                .where(conditions)
-                .fetch()
-        }
-    }
-
-    fun updateSetting(dslContext: DSLContext, pipelineId: String, name: String, desc: String) {
-        with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
-            dslContext.update(this)
-                .set(NAME, name)
-                .set(DESC, desc)
-                .where(PIPELINE_ID.eq(pipelineId))
-                .execute()
-        }
-    }
-
-    fun updateSetting(dslContext: DSLContext, pipelineId: String, version: Int, name: String, desc: String) {
-        with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
-            dslContext.update(this)
-                .set(NAME, name)
-                .set(DESC, desc)
-                .where(PIPELINE_ID.eq(pipelineId))
-                .and(VERSION.eq(version))
-                .execute()
-        }
-    }
-
-    fun getSettingByName(
-        dslContext: DSLContext,
-        name: String,
-        projectId: String,
-        pipelineId: String,
-        isTemplate: Boolean = false
-    ): Record1<Int>? {
-        with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
-            return dslContext.selectCount()
-                .from(this)
-                .where(
-                    PROJECT_ID.eq(projectId).and(NAME.eq(name)).and(PIPELINE_ID.ne(pipelineId)).and(
-                        IS_TEMPLATE.eq(
-                            isTemplate
-                        )
-                    )
-                )
-                .fetchOne()
-        }
-    }
-
     fun deleteAllVersion(dslContext: DSLContext, pipelineId: String): Int {
         with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
             return dslContext.deleteFrom(this)
@@ -248,6 +177,20 @@ class PipelineSettingVersionDao {
             return dslContext.deleteFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(VERSION.eq(version))
+                .execute()
+        }
+    }
+
+    fun deleteEarlyVersion(
+        dslContext: DSLContext,
+        pipelineId: String,
+        currentVersion: Int,
+        maxPipelineResNum: Int
+    ): Int {
+        return with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
+            dslContext.deleteFrom(this)
+                .where(PIPELINE_ID.eq(pipelineId))
+                .and(VERSION.le(currentVersion - maxPipelineResNum))
                 .execute()
         }
     }
