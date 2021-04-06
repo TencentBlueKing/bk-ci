@@ -272,13 +272,38 @@ class ImageDao {
         val d = TImageFeature.T_IMAGE_FEATURE.`as`("d")
         // 公共镜像查询条件组装
         val publicImageCondition =
-            queryPublicImageCondition(a, d, agentType, isContainAgentType, classifyId, recommendFlag)
+            queryPublicImageCondition(
+                a = a,
+                d = d,
+                agentType = agentType,
+                isContainAgentType = isContainAgentType,
+                classifyId = classifyId,
+                recommendFlag = recommendFlag
+            )
         // 普通镜像查询条件组装
         val normalImageConditions =
-            queryNormalImageCondition(a, c, d, projectCode, agentType, isContainAgentType, classifyId, recommendFlag)
+            queryNormalImageCondition(
+                a = a,
+                c = c,
+                d = d,
+                projectCode = projectCode,
+                agentType = agentType,
+                isContainAgentType = isContainAgentType,
+                classifyId = classifyId,
+                recommendFlag = recommendFlag
+            )
         // 开发者测试镜像查询条件组装
         val initTestImageCondition =
-            queryTestImageCondition(a, c, d, projectCode, agentType, isContainAgentType, classifyId, recommendFlag)
+            queryTestImageCondition(
+                a = a,
+                c = c,
+                d = d,
+                projectCode = projectCode,
+                agentType = agentType,
+                isContainAgentType = isContainAgentType,
+                classifyId = classifyId,
+                recommendFlag = recommendFlag
+            )
         // 公共镜像和普通镜像需排除初始化项目下面有处于测试中或者审核中的镜像
         publicImageCondition.add(
             a.IMAGE_CODE.notIn(
@@ -457,7 +482,14 @@ class ImageDao {
         classifyId: String?,
         recommendFlag: Boolean?
     ): MutableList<Condition> {
-        val conditions = setQueryImageBaseCondition(a, d, agentType, isContainAgentType, classifyId, recommendFlag)
+        val conditions = setQueryImageBaseCondition(
+            a = a,
+            d = d,
+            agentType = agentType,
+            isContainAgentType = isContainAgentType,
+            classifyId = classifyId,
+            recommendFlag = recommendFlag
+        )
         conditions.add(a.IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte())) // 只查已发布的
         conditions.add(d.PUBLIC_FLAG.eq(true)) // 查公共镜像（所有项目都可用）
         conditions.add(a.LATEST_FLAG.eq(true)) // 只查最新版本的镜像
@@ -474,7 +506,14 @@ class ImageDao {
         classifyId: String?,
         recommendFlag: Boolean?
     ): MutableList<Condition> {
-        val conditions = setQueryImageBaseCondition(a, d, agentType, isContainAgentType, classifyId, recommendFlag)
+        val conditions = setQueryImageBaseCondition(
+            a = a,
+            d = d,
+            agentType = agentType,
+            isContainAgentType = isContainAgentType,
+            classifyId = classifyId,
+            recommendFlag = recommendFlag
+        )
         conditions.add(a.IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte())) // 只查已发布的
         conditions.add(d.PUBLIC_FLAG.eq(false)) // 查普通镜像
         conditions.add(a.LATEST_FLAG.eq(true)) // 只查最新版本的镜像
@@ -493,7 +532,14 @@ class ImageDao {
         classifyId: String?,
         recommendFlag: Boolean?
     ): MutableList<Condition> {
-        val conditions = setQueryImageBaseCondition(a, d, agentType, isContainAgentType, classifyId, recommendFlag)
+        val conditions = setQueryImageBaseCondition(
+            a = a,
+            d = d,
+            agentType = agentType,
+            isContainAgentType = isContainAgentType,
+            classifyId = classifyId,
+            recommendFlag = recommendFlag
+        )
         // 只查测试中和审核中的插件
         conditions.add(
             a.IMAGE_STATUS.`in`(
