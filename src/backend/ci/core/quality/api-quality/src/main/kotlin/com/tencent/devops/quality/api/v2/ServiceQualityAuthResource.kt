@@ -20,7 +20,7 @@ import javax.ws.rs.core.MediaType
 interface ServiceQualityAuthResource {
     @POST
     @Path("/rule")
-    @ApiOperation("iam证书回调接口")
+    @ApiOperation("iam质量红线规则回调接口")
     fun qualityRuleInfo(
         @ApiParam(value = "回调信息")
         callBackInfo: CallbackRequestDTO,
@@ -31,7 +31,7 @@ interface ServiceQualityAuthResource {
 
     @POST
     @Path("/group")
-    @ApiOperation("iam凭证回调接口")
+    @ApiOperation("iam质量红线用户组回调接口")
     fun qualityGroupInfo(
         @ApiParam(value = "回调信息")
         callBackInfo: CallbackRequestDTO,
