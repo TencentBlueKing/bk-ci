@@ -1,6 +1,6 @@
 package com.tencent.devops.process.service
 
-import com.tencent.devops.process.dao.ReportDao
+import com.tencent.devops.process.report.dao.ReportDao
 import com.tencent.devops.process.pojo.Report
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import org.jooq.DSLContext
