@@ -426,6 +426,9 @@
                             templateId: currentTemplate.templateId,
                             curVersionId: currentTemplate.version,
                             pipelineName: pipeline.name
+                        },
+                        query: {
+                            useTemplateSettings: this.useTemplateSettings.toString()
                         }
                     })
                     return

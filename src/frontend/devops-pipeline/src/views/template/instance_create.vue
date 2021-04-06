@@ -227,6 +227,9 @@
             if (this.hashVal) {
                 this.requestPipelineParams(this.hashVal, this.curVersionId)
             }
+            if (this.$route.query.useTemplateSettings === 'true') {
+                this.isTemplateSetting = true
+            }
         },
         methods: {
             async requestTemplateDatail (versionId) {
