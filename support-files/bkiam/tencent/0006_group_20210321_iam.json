@@ -28,6 +28,9 @@
             },
             {
               "id": "project_views_manager"
+            },
+            {
+              "id": "all_action"
             }
           ]
         },
