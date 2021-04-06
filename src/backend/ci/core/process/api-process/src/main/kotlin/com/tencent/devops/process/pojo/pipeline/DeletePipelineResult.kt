@@ -25,24 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.audit
+package com.tencent.devops.process.pojo.pipeline
 
-import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import javax.ws.rs.Consumes
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Api(tags = ["SERVICE_AUDIT"], description = "服务-审计资源")
-@Path("/service/audit")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ServiceAuditResource {
-    @ApiOperation("新建审计记录")
-    @POST
-    @Path("/")
-    fun create(audit: com.tencent.devops.process.pojo.audit.Audit): Result<Long>
-}
+@ApiModel("删除流水线结果")
+data class DeletePipelineResult(
+    @ApiModelProperty("流水线ID", required = true)
+    val pipelineId: String,
+    @ApiModelProperty("流水线名称", required = true)
+    val pipelineName: String,
+    @ApiModelProperty("流水线版本号", required = true)
+    val version: Int
+)

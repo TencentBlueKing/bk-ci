@@ -102,7 +102,7 @@ class AuditService @Autowired constructor(
                 resourceId = it.resourceId,
                 resourceName = it.resourceName,
                 userId = it.userId,
-                updatedTime = it.updatedTime.timestamp(),
+                updatedTime = it.createdTime.timestamp(),
                 action = it.action,
                 actionContent = it.actionContent
             )

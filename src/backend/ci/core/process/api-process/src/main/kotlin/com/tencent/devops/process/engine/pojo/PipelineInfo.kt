@@ -43,5 +43,6 @@ data class PipelineInfo(
     val channelCode: ChannelCode,
     val canManualStartup: Boolean,
     val canElementSkip: Boolean,
-    val taskCount: Int
+    val taskCount: Int,
+    var versionName: String = "init"
 )

@@ -235,10 +235,19 @@ class PipelineSettingVersionDao {
         }
     }
 
-    fun delete(dslContext: DSLContext, pipelineId: String): Int {
+    fun deleteAllVersion(dslContext: DSLContext, pipelineId: String): Int {
         with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
             return dslContext.deleteFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
+                .execute()
+        }
+    }
+
+    fun deleteByVer(dslContext: DSLContext, pipelineId: String, version: Int): Int {
+        with(TPipelineSettingVersion.T_PIPELINE_SETTING_VERSION) {
+            return dslContext.deleteFrom(this)
+                .where(PIPELINE_ID.eq(pipelineId))
+                .and(VERSION.eq(version))
                 .execute()
         }
     }

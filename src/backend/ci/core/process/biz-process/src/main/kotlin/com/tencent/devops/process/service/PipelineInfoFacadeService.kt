@@ -57,6 +57,7 @@ import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.jmx.pipeline.PipelineBean
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import com.tencent.devops.process.pojo.setting.PipelineSetting
@@ -610,7 +611,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         channelCode: ChannelCode,
         checkPermission: Boolean = true,
         checkTemplate: Boolean = true
-    ) {
+    ): DeployPipelineResult {
         val pipelineResult = editPipeline(
             userId = userId,
             projectId = projectId,
@@ -620,7 +621,8 @@ class PipelineInfoFacadeService @Autowired constructor(
             checkPermission = checkPermission,
             checkTemplate = checkTemplate
         )
-        pipelineSettingFacadeService.saveSetting(userId, setting, false, version = pipelineResult.version)
+        pipelineSettingFacadeService.saveSetting(userId, setting, false, pipelineResult.version)
+        return pipelineResult
     }
 
     fun getPipeline(
@@ -628,6 +630,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         channelCode: ChannelCode,
+        version: Int? = null,
         checkPermission: Boolean = true
     ): Model {
 
@@ -657,7 +660,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             )
         }
 
-        val model = pipelineRepositoryService.getModel(pipelineId)
+        val model = pipelineRepositoryService.getModel(pipelineId, version)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
@@ -715,7 +718,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         channelCode: ChannelCode? = null,
         checkPermission: Boolean = true,
         delete: Boolean = false
-    ) {
+    ): DeletePipelineResult {
         val watcher = Watcher(id = "deletePipeline|$pipelineId|$userId")
         var success = false
         try {
@@ -728,8 +731,23 @@ class PipelineInfoFacadeService @Autowired constructor(
                 watcher.stop()
             }
 
+            val existModel = pipelineRepositoryService.getModel(pipelineId)
+                ?: throw ErrorCodeException(
+                    statusCode = Response.Status.NOT_FOUND.statusCode,
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
+                    defaultMessage = "指定要复制的流水线-模型不存在"
+                )
+            // 对已经存在的模型做删除前处理
+            val param = BeforeDeleteParam(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                channelCode = channelCode ?: ChannelCode.BS
+            )
+            modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, existModel, param)
+
             watcher.start("s_r_pipeline_del")
-            pipelineRepositoryService.deletePipeline(
+            val deletePipelineResult = pipelineRepositoryService.deletePipeline(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = userId,
@@ -744,6 +762,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 watcher.stop()
             }
             success = true
+            return deletePipelineResult
         } finally {
             watcher.stop()
             LogUtils.printCostTimeWE(watcher, warnThreshold = 2000)
@@ -765,6 +784,6 @@ class PipelineInfoFacadeService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(PipelineInfoFacadeService::class.java)
     }
 }

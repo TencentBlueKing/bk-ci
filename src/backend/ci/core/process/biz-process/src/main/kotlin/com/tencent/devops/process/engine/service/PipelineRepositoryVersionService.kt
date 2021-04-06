@@ -27,158 +27,52 @@
 
 package com.tencent.devops.process.engine.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.pojo.pipeline.PipelineModelAnalysisEvent
-import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
-import com.tencent.devops.process.engine.dao.PipelineInfoDao
-import com.tencent.devops.process.engine.dao.PipelineInfoVersionDao
 import com.tencent.devops.process.engine.dao.PipelineResVersionDao
-import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
 import com.tencent.devops.process.engine.pojo.PipelineInfo
-import com.tencent.devops.process.engine.pojo.event.PipelineDeleteEvent
-import org.joda.time.LocalDateTime
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import javax.ws.rs.NotFoundException
 
-/**
- *
- *
- * @version 1.0
- */
 @Service
 class PipelineRepositoryVersionService constructor(
-    private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val objectMapper: ObjectMapper,
     private val dslContext: DSLContext,
-    private val pipelineInfoDao: PipelineInfoDao,
-    private val pipelineInfoVersionDao: PipelineInfoVersionDao,
     private val pipelineResVersionDao: PipelineResVersionDao,
-    private val pipelineSettingVersionDao: PipelineSettingVersionDao,
-    private val templatePipelineDao: TemplatePipelineDao
+    private val pipelineSettingVersionDao: PipelineSettingVersionDao
 ) {
 
-    fun getPipelineInfo(projectId: String?, pipelineId: String, channelCode: ChannelCode? = null): PipelineInfo? {
-        val template = templatePipelineDao.get(dslContext, pipelineId)
-        val templateId = template?.templateId
-        return pipelineInfoDao.convert(
-            pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId, channelCode, false, null),
-            templateId
-        )
-    }
-
-    fun getPipelineInfoVersion(
-        projectId: String?,
-        pipelineId: String,
-        version: Int,
-        channelCode: ChannelCode? = null
-    ): PipelineInfo? {
-        val template = templatePipelineDao.get(dslContext, pipelineId)
-        val templateId = template?.templateId
-        return pipelineInfoVersionDao.convert(pipelineInfoVersionDao.getPipelineInfo(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            version = version,
-            channelCode = channelCode), templateId)
-    }
-
-    fun getModel(pipelineId: String, version: Int? = null): Model? {
-        val modelString = pipelineResVersionDao.getVersionModelString(dslContext, pipelineId, version)
-        return try {
-            objectMapper.readValue(modelString, Model::class.java)
-        } catch (e: Exception) {
-            logger.error("get process($pipelineId) model fail", e)
-            null
+    fun deletePipelineVer(pipelineId: String, version: Int) {
+        dslContext.transaction { t ->
+            val transactionContext = DSL.using(t)
+            pipelineResVersionDao.deleteByVer(transactionContext, pipelineId, version)
+            pipelineSettingVersionDao.deleteByVer(transactionContext, pipelineId, version)
         }
     }
 
-    fun deletePipeline(
-        projectId: String,
+    fun listPipelineVersion(
+        pipelineInfo: PipelineInfo?,
         pipelineId: String,
-        userId: String,
-        version: Int,
-        channelCode: ChannelCode?,
-        delete: Boolean
-    ) {
-
-        dslContext.transaction { configuration ->
-            val transactionContext = DSL.using(configuration)
-
-            val record = pipelineInfoVersionDao.getPipelineInfo(
-                dslContext = transactionContext,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                version = version,
-                channelCode = channelCode,
-                delete = delete
-            ) ?: throw NotFoundException("要删除的流水线版本不存在")
-
-            if (delete) {
-                pipelineInfoVersionDao.delete(transactionContext, projectId, pipelineId)
-            } else {
-                // 删除前改名，防止名称占用
-                val deleteTime = LocalDateTime.now().toString("yyyyMMddHHmm")
-                var deleteName = "${record.pipelineName}[$deleteTime]"
-                if (deleteName.length > MAX_LEN_FOR_NAME) { // 超过截断，且用且珍惜
-                    deleteName = deleteName.substring(0, MAX_LEN_FOR_NAME)
-                }
-
-                pipelineInfoVersionDao.softDelete(
-                    transactionContext,
-                    projectId,
-                    pipelineId,
-                    deleteName,
-                    userId,
-                    channelCode
-                )
-                // 同时要对Setting中的name做设置
-                pipelineSettingVersionDao.updateSetting(
-                    transactionContext,
-                    pipelineId,
-                    version,
-                    deleteName,
-                    "DELETE BY $userId in $deleteTime"
-                )
-            }
-
-            pipelineEventDispatcher.dispatch(
-                PipelineDeleteEvent(
-                    source = "delete_pipeline",
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    userId = userId,
-                    clearUpModel = delete
-                ),
-                PipelineModelAnalysisEvent(
-                    source = "delete_pipeline",
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    userId = userId,
-                    model = "",
-                    channelCode = record.channel
-                )
-            )
+        offset: Int,
+        limit: Int
+    ): Pair<Int, List<PipelineInfo>> {
+        if (pipelineInfo == null) {
+            return Pair(0, emptyList())
         }
-    }
 
-    fun listPipelineVersion(projectId: String, pipelineId: String): List<PipelineInfo> {
-        val result = pipelineInfoVersionDao.listPipelineVersion(dslContext, projectId, pipelineId)
+        val count = pipelineResVersionDao.count(dslContext, pipelineId)
+        val result = pipelineResVersionDao.listPipelineVersion(dslContext, pipelineId, offset, limit)
         val list = mutableListOf<PipelineInfo>()
 
-        result?.forEach {
-            if (it != null) {
-                val template = templatePipelineDao.get(dslContext, pipelineId)
-                val templateId = template?.templateId
-                list.add(pipelineInfoVersionDao.convert(it, templateId)!!)
-            }
+        result.forEach {
+            list.add(pipelineInfo.copy(
+                createTime = it.createTime,
+                creator = it.creator,
+                version = it.version,
+                versionName = it.versionName)
+            )
         }
-        return list
+        return count to list
     }
 
     companion object {

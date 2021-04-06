@@ -25,20 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.audit.resources
+package com.tencent.devops.process.pojo.setting
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.audit.ServiceAuditResource
-import com.tencent.devops.process.audit.service.AuditService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@RestResource
-class ServiceAuditResourceImpl @Autowired constructor(
-    private val auditService: AuditService
-) : ServiceAuditResource {
-
-    override fun create(audit: com.tencent.devops.process.pojo.audit.Audit): Result<Long> {
-        return Result((auditService.createAudit(audit)))
-    }
-}
+@ApiModel("流水线版本摘要")
+data class PipelineVersionSimple(
+    @ApiModelProperty("流水线ID", required = true)
+    val pipelineId: String,
+    @ApiModelProperty("流水线创建人", required = true)
+    val creator: String,
+    @ApiModelProperty("创建时间戳", required = true)
+    val createTime: Long,
+    @ApiModelProperty("流水线版本号", required = false)
+    val version: Int,
+    @ApiModelProperty("流水线版本名称", required = false)
+    val versionName: String
+)

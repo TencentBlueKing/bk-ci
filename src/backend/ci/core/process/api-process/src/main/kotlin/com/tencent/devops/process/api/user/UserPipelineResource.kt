@@ -296,10 +296,10 @@ interface UserPipelineResource {
         pipelineId: String
     ): Result<Boolean>
 
-    @ApiOperation("删除流水线编排版本")
+    @ApiOperation("删除流水线版本")
     @DELETE
     @Path("/{projectId}/{pipelineId}/{version}/")
-    fun softDeleteVersion(
+    fun deleteVersion(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -552,9 +552,6 @@ interface UserPipelineResource {
         page: Int?,
         @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
-        pageSize: Int?,
-        @ApiParam("流水线排序", required = false, defaultValue = "CREATE_TIME")
-        @QueryParam("sortType")
-        sortType: PipelineSortType? = PipelineSortType.CREATE_TIME
+        pageSize: Int?
     ): Result<PipelineViewPipelinePage<PipelineInfo>>
 }
