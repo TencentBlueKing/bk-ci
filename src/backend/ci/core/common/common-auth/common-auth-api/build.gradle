@@ -34,5 +34,5 @@ dependencies {
     compile "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base"
     compile "com.fasterxml.jackson.module:jackson-module-kotlin"
 
-    compile fileTree(dir: 'lib/iam-sdk-1.0.0.jar', includes: ['*.jar'])
+    compile fileTree(dir: 'lib/iam-sdk-1.0.1.jar', includes: ['*.jar'])
 }

@@ -40,47 +40,51 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceQualityAuthResourceImpl @Autowired constructor(
     val authQualityService: AuthQualityService
 ): ServiceQualityAuthResource {
-    override fun qualityRuleInfo(callBackInfo: CallbackRequestDTO): CallbackBaseResponseDTO? {
+    override fun qualityRuleInfo(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO? {
         val method = callBackInfo.method
         val page = callBackInfo.page
         val projectId = callBackInfo.filter.parent.id
         when (method) {
             CallbackMethodEnum.LIST_INSTANCE -> {
-                return authQualityService.getQualityRule(projectId, page.offset.toInt(), page.limit.toInt())
+                return authQualityService.getQualityRule(projectId, page.offset.toInt(), page.limit.toInt(), token)
             }
             CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
                 val ids = callBackInfo.filter.idList.map { it.toString() }
-                return authQualityService.getQualityRuleInfoByIds(ids)
+                return authQualityService.getQualityRuleInfoByIds(ids, token)
             }
             CallbackMethodEnum.SEARCH_INSTANCE -> {
                 return authQualityService.searchQualityRule(
                     projectId = projectId,
                     keyword = callBackInfo.filter.keyword,
                     limit = page.offset.toInt(),
-                    offset = page.limit.toInt())
+                    offset = page.limit.toInt(),
+                    token = token
+                )
             }
         }
         return null
     }
 
-    override fun qualityGroupInfo(callBackInfo: CallbackRequestDTO): CallbackBaseResponseDTO? {
+    override fun qualityGroupInfo(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO? {
         val method = callBackInfo.method
         val page = callBackInfo.page
         val projectId = callBackInfo.filter.parent.id
         when (method) {
             CallbackMethodEnum.LIST_INSTANCE -> {
-                return authQualityService.getQualityGroup(projectId, page.offset.toInt(), page.limit.toInt())
+                return authQualityService.getQualityGroup(projectId, page.offset.toInt(), page.limit.toInt(), token)
             }
             CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
                 val ids = callBackInfo.filter.idList.map { it.toString() }
-                return authQualityService.getQualityGroupInfoByIds(ids)
+                return authQualityService.getQualityGroupInfoByIds(ids, token)
             }
             CallbackMethodEnum.SEARCH_INSTANCE -> {
                 return authQualityService.searchQualityGroup(
                     projectId = projectId,
                     keyword = callBackInfo.filter.keyword,
                     limit = page.offset.toInt(),
-                    offset = page.limit.toInt())
+                    offset = page.limit.toInt(),
+                    token = token
+                )
             }
         }
         return null
