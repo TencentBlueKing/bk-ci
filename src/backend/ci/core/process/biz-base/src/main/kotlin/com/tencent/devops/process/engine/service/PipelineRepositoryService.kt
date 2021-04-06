@@ -170,7 +170,8 @@ class PipelineRepositoryService constructor(
                 canElementSkip = canElementSkip,
                 buildNo = buildNo,
                 modelTasks = modelTasks,
-                useTemplateSettings = useTemplateSettings
+                useTemplateSettings = useTemplateSettings,
+                templateId = templateId
             )
         }
     }
