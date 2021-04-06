@@ -58,6 +58,11 @@
                                 :class="{ 'selected-item': routeName === 'pipelinesRestore' }"
                                 @click="routerToManage('pipelinesRestore')">{{$t('restore.recycleBin')}}</a>
                         </li>
+                        <li>
+                            <a href="javascript:;" class="text-link" id="toggleAudit"
+                                :class="{ 'selected-item': routeName === 'pipelinesAudit' }"
+                                @click="routerToManage('pipelinesAudit')">{{$t('operatorAudit')}}</a>
+                        </li>
                     </ul>
                 </div>
             </div>
