@@ -1,7 +1,7 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.  
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -10,13 +10,23 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 package com.tencent.bkrepo.common.storage.core
@@ -34,22 +44,24 @@ import com.tencent.bkrepo.common.storage.pojo.FileInfo
  */
 interface StorageService {
     /**
-     * 存储文件
+     * 在存储实例[storageCredentials]上存储摘要为[digest]的构件[artifactFile]
+     * 返回文件影响数，如果文件已经存在则返回0，否则返回1
      */
-    fun store(digest: String, artifactFile: ArtifactFile, storageCredentials: StorageCredentials?)
+    fun store(digest: String, artifactFile: ArtifactFile, storageCredentials: StorageCredentials?): Int
 
     /**
-     * 加载文件
+     * 在存储实例[storageCredentials]上加载摘要为[digest]的文件
+     * 当文件未找到时，会尝试去默认存储实例上查找文件
      */
     fun load(digest: String, range: Range, storageCredentials: StorageCredentials?): ArtifactInputStream?
 
     /**
-     * 删除文件
+     * 在存储实例[storageCredentials]上删除摘要为[digest]的文件
      */
     fun delete(digest: String, storageCredentials: StorageCredentials?)
 
     /**
-     * 判断是否存在
+     * 判断摘要为[digest]的文件在存储实例[storageCredentials]上是否存在
      */
     fun exist(digest: String, storageCredentials: StorageCredentials?): Boolean
 
@@ -63,6 +75,8 @@ interface StorageService {
 
     /**
      * 创建可追加的文件, 返回文件追加Id
+     * 追加文件组织格式: 在temp目录下创建一个具有唯一id的文件，文件名称即追加Id
+     * 数据每次追加都写入到该文件中
      */
     fun createAppendId(storageCredentials: StorageCredentials?): String
 
@@ -80,6 +94,10 @@ interface StorageService {
 
     /**
      * 创建分块存储目录，返回分块存储Id
+     * 组织格式: 在temp目录下创建一个名称唯一的目录，所有分块存储在该目录下，目录名称即blockId
+     * 其中，每个分块对应两个文件，命名分别为$sequence.block和$sequence.sha256
+     * $sequence.block文件保存其数据，
+     * $sequence.sha256保存文件sha256，用于后续分块合并时校验
      */
     fun createBlockId(storageCredentials: StorageCredentials?): String
 
@@ -122,7 +140,7 @@ interface StorageService {
     fun mergeBlock(blockId: String, storageCredentials: StorageCredentials?): FileInfo
 
     /**
-     * 清理文件
+     * 清理temp目录文件，包括分块上传产生和追加上传产生的脏数据
      */
     fun cleanUp(storageCredentials: StorageCredentials? = null): CleanupResult
 

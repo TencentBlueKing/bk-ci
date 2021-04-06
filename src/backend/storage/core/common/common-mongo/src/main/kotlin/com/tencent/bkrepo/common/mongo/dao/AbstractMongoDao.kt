@@ -1,7 +1,7 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.  
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -10,28 +10,40 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 package com.tencent.bkrepo.common.mongo.dao
 
 import com.mongodb.client.result.DeleteResult
 import com.mongodb.client.result.UpdateResult
-import java.lang.reflect.ParameterizedType
+import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import org.springframework.data.mongodb.MongoCollectionUtils
+import org.springframework.dao.DuplicateKeyException
+import org.springframework.data.mongodb.MongoCollectionUtils.getPreferredCollectionName
 import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.data.mongodb.core.aggregation.Aggregation
 import org.springframework.data.mongodb.core.aggregation.AggregationResults
 import org.springframework.data.mongodb.core.mapping.Document
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.core.query.Update
+import java.lang.reflect.ParameterizedType
 
 /**
  * mongo db 数据访问层抽象类
@@ -42,7 +54,7 @@ abstract class AbstractMongoDao<E> : MongoDao<E> {
      * 实体类Class
      */
     @Suppress("UNCHECKED_CAST")
-    protected open val classType = (this.javaClass.genericSuperclass as ParameterizedType).actualTypeArguments[0] as Class<E>
+    protected open val classType = (javaClass.genericSuperclass as ParameterizedType).actualTypeArguments[0] as Class<E>
 
     /**
      * 集合名称
@@ -57,58 +69,99 @@ abstract class AbstractMongoDao<E> : MongoDao<E> {
         return find(query, classType)
     }
 
+    fun findAll(): List<E> {
+        return findAll(classType)
+    }
+
     override fun <T> findOne(query: Query, clazz: Class<T>): T? {
-        logger.debug("Mongo Dao findOne: [$query] [$clazz]")
+        if (logger.isDebugEnabled) {
+            logger.debug("Mongo Dao findOne: [$query] [$clazz]")
+        }
         return determineMongoTemplate().findOne(query, clazz, determineCollectionName(query))
     }
 
     override fun <T> find(query: Query, clazz: Class<T>): List<T> {
-        logger.debug("Mongo Dao find: [$query]")
+        if (logger.isDebugEnabled) {
+            logger.debug("Mongo Dao find: [$query]")
+        }
         return determineMongoTemplate().find(query, clazz, determineCollectionName(query))
     }
 
+    override fun <T> findAll(clazz: Class<T>): List<T> {
+        if (logger.isDebugEnabled) {
+            logger.debug("Mongo Dao find all")
+        }
+        return determineMongoTemplate().findAll(clazz, collectionName)
+    }
+
     override fun insert(entity: E): E {
-        logger.debug("Mongo Dao insert: [$entity]")
+        if (logger.isDebugEnabled) {
+            logger.debug("Mongo Dao insert: [$entity]")
+        }
         return determineMongoTemplate().insert(entity, determineCollectionName(entity))
     }
 
     override fun save(entity: E): E {
-        logger.debug("Mongo Dao save: [$entity]")
+        if (logger.isDebugEnabled) {
+            logger.debug("Mongo Dao save: [$entity]")
+        }
         return determineMongoTemplate().save(entity, determineCollectionName(entity))
     }
 
     override fun remove(query: Query): DeleteResult {
-        logger.debug("Mongo Dao delete: [$query]")
+        if (logger.isDebugEnabled) {
+            logger.debug("Mongo Dao remove: [$query]")
+        }
         return determineMongoTemplate().remove(query, classType, determineCollectionName(query))
     }
 
     override fun updateFirst(query: Query, update: Update): UpdateResult {
-        logger.debug("Mongo Dao updateFirst: [$query], [$update]")
+        if (logger.isDebugEnabled) {
+            logger.debug("Mongo Dao updateFirst: [$query], [$update]")
+        }
         return determineMongoTemplate().updateFirst(query, update, determineCollectionName(query))
     }
 
     override fun updateMulti(query: Query, update: Update): UpdateResult {
-        logger.debug("Mongo Dao updateMulti: [$query], [$update]")
+        if (logger.isDebugEnabled) {
+            logger.debug("Mongo Dao updateMulti: [$query], [$update]")
+        }
         return determineMongoTemplate().updateMulti(query, update, determineCollectionName(query))
     }
 
     override fun upsert(query: Query, update: Update): UpdateResult {
-        logger.debug("Mongo Dao upsert: [$query], [$update]")
-        return determineMongoTemplate().upsert(query, update, determineCollectionName(query))
+        if (logger.isDebugEnabled) {
+            logger.debug("Mongo Dao upsert: [$query], [$update]")
+        }
+        val mongoTemplate = determineMongoTemplate()
+        val collectionName = determineCollectionName(query)
+        return try {
+            mongoTemplate.upsert(query, update, collectionName)
+        } catch (exception: DuplicateKeyException) {
+            // retry because upsert operation is not atomic
+            logger.warn("Upsert error[DuplicateKeyException]: " + exception.message.orEmpty())
+            determineMongoTemplate().upsert(query, update, collectionName)
+        }
     }
 
     override fun count(query: Query): Long {
-        logger.debug("Mongo Dao count: [$query]")
+        if (logger.isDebugEnabled) {
+            logger.debug("Mongo Dao count: [$query]")
+        }
         return determineMongoTemplate().count(query, determineCollectionName(query))
     }
 
     override fun exists(query: Query): Boolean {
-        logger.debug("Mongo Dao exists: [$query]")
+        if (logger.isDebugEnabled) {
+            logger.debug("Mongo Dao exists: [$query]")
+        }
         return determineMongoTemplate().exists(query, determineCollectionName(query))
     }
 
     override fun <O> aggregate(aggregation: Aggregation, outputType: Class<O>): AggregationResults<O> {
-        logger.debug("Mongo Dao aggregate: [$aggregation], outputType: [$outputType]")
+        if (logger.isDebugEnabled) {
+            logger.debug("Mongo Dao aggregate: [$aggregation], outputType: [$outputType]")
+        }
         return determineMongoTemplate().aggregate(aggregation, determineCollectionName(aggregation), outputType)
     }
 
@@ -116,10 +169,10 @@ abstract class AbstractMongoDao<E> : MongoDao<E> {
         var collectionName: String? = null
         if (classType.isAnnotationPresent(Document::class.java)) {
             val document = classType.getAnnotation(Document::class.java)
-            collectionName = document.collection
+            collectionName = if (document.collection.isNotBlank()) document.collection else document.value
         }
 
-        return if (collectionName.isNullOrEmpty()) MongoCollectionUtils.getPreferredCollectionName(classType) else collectionName
+        return if (collectionName.isNullOrEmpty()) getPreferredCollectionName(classType) else collectionName
     }
 
     abstract fun determineMongoTemplate(): MongoTemplate
@@ -131,6 +184,11 @@ abstract class AbstractMongoDao<E> : MongoDao<E> {
     abstract fun determineCollectionName(aggregation: Aggregation): String
 
     companion object {
-        private val logger = LoggerFactory.getLogger(AbstractMongoDao::class.java)
+        val logger: Logger = LoggerFactory.getLogger(AbstractMongoDao::class.java)
+
+        /**
+         * mongodb 默认id字段
+         */
+        const val ID = "_id"
     }
 }

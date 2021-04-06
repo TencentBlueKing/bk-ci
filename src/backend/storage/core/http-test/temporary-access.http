@@ -1,0 +1,71 @@
+### 创建一次性下载临时token
+POST http://{{genericHost}}/temporary/token/create
+Authorization: Basic {{username}} {{password}}
+Content-Type: application/json
+
+{
+  "projectId": "{{project}}",
+  "repoName": "{{repo}}",
+  "fullPathSet": ["/"],
+  "expireSeconds": 3600,
+  "permits": 1,
+  "type": "ALL"
+}
+
+> {%
+    client.test('Request executed successfully', function() {
+        client.assert(response.status === 200, 'Response status is not 200');
+        client.global.set("token", response.body.data.token);
+    });
+%}
+
+### 使用token下载，下载后token失效
+GET http://{{genericHost}}/temporary/download/{{project}}/{{repo}}/test?token={{token}}
+Authorization: Basic {{username}} {{password}}
+
+> {%
+
+    client.test('Request executed successfully', function() {
+        client.assert(response.status === 200, 'Response status is not 200');
+        client.assert(response.body.length === 0, 'Response body is not empty');
+    });
+%}
+
+### 使用失效token下载，失败
+GET http://{{genericHost}}/temporary/download/{{project}}/{{repo}}/test?token={{token}}
+Authorization: Basic {{username}} {{password}}
+
+> {%
+    client.test('Request executed successfully', function() {
+        client.assert(response.status === 400, 'Response status is not 400');
+        client.assert(response.body.data.code === 251013, 'Response code is incorrect');
+    });
+%}
+
+### 创建一次性上传临时token
+POST http://{{genericHost}}/temporary/token/create
+Authorization: Basic {{username}} {{password}}
+Content-Type: application/json
+
+{
+  "projectId": "{{project}}",
+  "repoName": "{{repo}}",
+  "fullPathSet": ["/"],
+  "expireSeconds": 3600,
+  "permits": 1,
+  "type": "UPLOAD"
+}
+
+### 创建一次性下载临时url
+POST http://{{genericHost}}/temporary/url/create
+Authorization: Basic {{username}} {{password}}
+Content-Type: application/json
+
+{
+  "projectId": "{{project}}",
+  "repoName": "{{repo}}",
+  "fullPathSet": ["/test.txt"],
+  "expireSeconds": 3600,
+  "permits": 1,
+  "type": "DOWNLOAD"
+}

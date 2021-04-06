@@ -2,12 +2,12 @@
 
 <configuration debug="false" scan="false">
     <springProperty scope="context" name="logging.path" source="logging.path" defaultValue="logs"/>
-    <springProperty scope="context" name="application.name" source="spring.application.name" defaultValue="application"/>
+    <springProperty scope="context" name="service.name" source="service.name" defaultValue="application"/>
 
-    <property name="logging.app.file" value="${logging.path}/${application.name}.log"/>
-    <property name="logging.job.file" value="${logging.path}/${application.name}-job.log"/>
-    <property name="logging.error.file" value="${logging.path}/${application.name}-error.log"/>
-    <property name="logging.access.file" value="${logging.path}/${application.name}-access.log"/>
+    <property name="logging.app.file" value="${logging.path}/${service.name}.log"/>
+    <property name="logging.job.file" value="${logging.path}/${service.name}-job.log"/>
+    <property name="logging.error.file" value="${logging.path}/${service.name}-error.log"/>
+    <property name="logging.access.file" value="${logging.path}/${service.name}-access.log"/>
     <property name="logging.file.pattern" value="%d{yyyy-MM-dd HH:mm:ss.SSS}|%X{ip:--}|%F|%L|%level|%X{err_code:-0}|%tid||||[%t] %m%ex%n"/>
     <property name="logging.console.pattern" value="%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr(${LOG_LEVEL_PATTERN:-%5p}) %clr(${PID:- }){magenta} %clr(---){faint} %clr([%15.15t]){faint} %clr(%-40.40logger{39}){cyan} [%clr(%tid)] %clr(:){faint} %m%n${LOG_EXCEPTION_CONVERSION_WORD:-%wEx}"/>
 
@@ -19,7 +19,7 @@
     <appender name="app_log" class="ch.qos.logback.core.rolling.RollingFileAppender">
         <file>${logging.app.file}</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>${logging.app.file}.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <fileNamePattern>${logging.app.file}.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern> 
             <maxHistory>30</maxHistory>
             <maxFileSize>1GB</maxFileSize>
         </rollingPolicy>
@@ -116,7 +116,23 @@
         </root>
     </springProfile>
 
-    <springProfile name="dev, test, prod">
+    <springProfile name="dev">
+        <logger name="JobLogger" level="INFO" additivity="false">
+            <appender-ref ref="console"/>
+            <appender-ref ref="async_job_log"/>
+        </logger>
+        <logger name="AccessLogger" level="INFO" additivity="false">
+            <appender-ref ref="console"/>
+            <appender-ref ref="async_access_log"/>
+        </logger>
+        <root level="INFO">
+            <appender-ref ref="console"/>
+            <appender-ref ref="async_app_log"/>
+            <appender-ref ref="async_error_log"/>
+        </root>
+    </springProfile>
+
+    <springProfile name="test, prod">
         <logger name="JobLogger" level="INFO" additivity="false">
             <appender-ref ref="async_job_log"/>
         </logger>

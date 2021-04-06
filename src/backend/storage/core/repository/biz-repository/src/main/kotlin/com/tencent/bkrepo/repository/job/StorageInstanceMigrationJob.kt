@@ -1,7 +1,7 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.  
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -10,13 +10,23 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 package com.tencent.bkrepo.repository.job
@@ -31,64 +41,54 @@ import com.tencent.bkrepo.common.storage.innercos.client.CosClient
 import com.tencent.bkrepo.common.storage.innercos.request.CheckObjectExistRequest
 import com.tencent.bkrepo.common.storage.innercos.request.CopyObjectRequest
 import com.tencent.bkrepo.repository.dao.NodeDao
-import com.tencent.bkrepo.repository.dao.repository.RepoRepository
 import com.tencent.bkrepo.repository.model.TNode
 import com.tencent.bkrepo.repository.service.FileReferenceService
 import com.tencent.bkrepo.repository.service.RepositoryService
 import com.tencent.bkrepo.repository.service.StorageCredentialService
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.PageRequest
 import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
+import org.springframework.data.mongodb.core.query.and
+import org.springframework.data.mongodb.core.query.isEqualTo
+import org.springframework.data.mongodb.core.query.where
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
 import org.springframework.stereotype.Component
 import java.time.Duration
 import java.time.LocalDateTime
-import javax.annotation.Resource
 
 /**
  * 存储实例迁移任务
  */
+// TooGenericExceptionCaught: 迁移过程无法预知具体异常类型
+@Suppress("TooGenericExceptionCaught")
 @Component
-class StorageInstanceMigrationJob {
-
-    @Autowired
-    private lateinit var nodeDao: NodeDao
-
-    @Autowired
-    private lateinit var repositoryService: RepositoryService
-
-    @Autowired
-    private lateinit var repoRepository: RepoRepository
-
-    @Autowired
-    private lateinit var fileReferenceService: FileReferenceService
-
-    @Autowired
-    private lateinit var storageCredentialService: StorageCredentialService
-
-    @Autowired
-    private lateinit var storageProperties: StorageProperties
-
-    @Resource
-    lateinit var taskAsyncExecutor: ThreadPoolTaskExecutor
+class StorageInstanceMigrationJob(
+    private val nodeDao: NodeDao,
+    private val repositoryService: RepositoryService,
+    private val fileReferenceService: FileReferenceService,
+    private val storageCredentialService: StorageCredentialService,
+    private val storageProperties: StorageProperties,
+    private val taskAsyncExecutor: ThreadPoolTaskExecutor
+) {
 
     fun migrate(projectId: String, repoName: String, destStorageKey: String) {
-        logger.info("Start to migrate storage instance, projectId: $projectId, repoName: $repoName, dest key: $destStorageKey.")
-        val repository = repositoryService.queryRepository(projectId, repoName)
+        logger.info(
+            "Start to migrate storage instance, projectId: $projectId, repoName: $repoName, dest key: $destStorageKey."
+        )
+        val repository = repositoryService.getRepoDetail(projectId, repoName)
             ?: throw ErrorCodeException(ArtifactMessageCode.REPOSITORY_NOT_FOUND, repoName)
         // 限制只能由默认storage迁移
-        val srcStorageKey = repository.credentialsKey
+        val srcStorageKey = repository.storageCredentials?.key
         if (srcStorageKey != null) {
-            throw ErrorCodeException(CommonMessageCode.OPERATION_UNSUPPORTED)
+            throw ErrorCodeException(CommonMessageCode.METHOD_NOT_ALLOWED, "Only support migrate from default storage")
         }
         val srcStorageCredentials = storageProperties.defaultStorageCredentials()
         val destStorageCredentials = storageCredentialService.findByKey(destStorageKey)
             ?: throw ErrorCodeException(CommonMessageCode.RESOURCE_NOT_FOUND, destStorageKey)
         // 限制存储实例类型必须相同且为InnerCos
         if (srcStorageCredentials !is InnerCosCredentials || destStorageCredentials !is InnerCosCredentials) {
-            throw ErrorCodeException(CommonMessageCode.OPERATION_UNSUPPORTED)
+            throw ErrorCodeException(CommonMessageCode.METHOD_NOT_ALLOWED, "Only support inner cos storage")
         }
 
         val srcBucket = srcStorageCredentials.bucket
@@ -99,14 +99,31 @@ class StorageInstanceMigrationJob {
         taskAsyncExecutor.submit {
             try {
                 // 修改repository配置，保证之后上传的文件直接保存到新存储实例中，文件下载时，当前实例找不到的情况下会去默认存储找
-                repository.credentialsKey = destStorageKey
-                repoRepository.save(repository)
+                repositoryService.updateStorageCredentialsKey(projectId, repoName, destStorageKey)
 
                 // 迁移老文件
-                migrateOldFile(projectId, repoName, startTime, srcBucket, srcStorageKey, destStorageKey, srcCosClient, destCosClient)
+                migrateOldFile(
+                    projectId = projectId,
+                    repoName = repoName,
+                    startTime = startTime,
+                    srcBucket = srcBucket,
+                    srcStorageKey = srcStorageKey,
+                    destStorageKey = destStorageKey,
+                    srcCosClient = srcCosClient,
+                    destCosClient = destCosClient
+                )
 
                 // 校验新文件
-                checkNewFile(projectId, repoName, startTime, srcBucket, srcStorageKey, destStorageKey, srcCosClient, destCosClient)
+                checkNewFile(
+                    projectId = projectId,
+                    repoName = repoName,
+                    startTime = startTime,
+                    srcBucket = srcBucket,
+                    srcStorageKey = srcStorageKey,
+                    destStorageKey = destStorageKey,
+                    srcCosClient = srcCosClient,
+                    destCosClient = destCosClient
+                )
             } catch (exception: RuntimeException) {
                 logger.error("Migrate storage instance failed.", exception)
             }
@@ -129,14 +146,13 @@ class StorageInstanceMigrationJob {
         var failedCount = 0L
         var totalCount = 0L
         // 查询新上传文件
-        val newFileNodeQuery = Query.query(
-            Criteria.where(TNode::projectId.name).`is`(projectId)
-                .and(TNode::repoName.name).`is`(repoName)
-                .and(TNode::folder.name).`is`(false)
-                .and(TNode::createdDate.name).gt(startTime)
-        ).with(Sort.by(Sort.Direction.DESC, TNode::createdDate.name))
+        val criteria = where(TNode::projectId).isEqualTo(projectId)
+            .and(TNode::repoName).isEqualTo(repoName)
+            .and(TNode::folder).isEqualTo(false)
+            .and(TNode::createdDate).gt(startTime)
+        val newFileNodeQuery = Query(criteria).with(Sort.by(Sort.Direction.DESC, TNode::createdDate.name))
         val newFileNodeList = nodeDao.find(newFileNodeQuery)
-        logger.info("${newFileNodeList.size} new created file nodes to be checked.")
+        logger.info("[${newFileNodeList.size}] new created file nodes to be checked.")
         newFileNodeList.forEach { node ->
             val sha256 = node.sha256!!
             try {
@@ -173,8 +189,8 @@ class StorageInstanceMigrationJob {
         val durationSeconds = Duration.between(startTime, LocalDateTime.now()).seconds
         logger.info(
             "Complete check new created files, projectId: $projectId, repoName: $repoName, key: $destStorageKey, " +
-                "total: $totalCount, correct: $correctCount, migrate: $migrateCount, missing data: $dataMissingCount, " +
-                "failed: $failedCount, duration $durationSeconds s totally."
+                "total: $totalCount, correct: $correctCount, migrate: $migrateCount, " +
+                "missing data: $dataMissingCount, failed: $failedCount, duration $durationSeconds s totally."
         )
     }
 
@@ -194,7 +210,7 @@ class StorageInstanceMigrationJob {
 
         // 分页查询文件节点，只查询当前时间以前创建的文件节点，之后创建的是在新实例上
         var page = 0
-        val size = 10000
+        val size = PAGE_SIZE
         val query = Query.query(
             Criteria.where(TNode::projectId.name).`is`(projectId)
                 .and(TNode::repoName.name).`is`(repoName)
@@ -270,5 +286,6 @@ class StorageInstanceMigrationJob {
 
     companion object {
         private val logger = LoggerHolder.jobLogger
+        private const val PAGE_SIZE = 10000
     }
 }

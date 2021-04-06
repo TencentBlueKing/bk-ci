@@ -1,7 +1,7 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.  
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -10,13 +10,23 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 package com.tencent.bkrepo.npm.service
@@ -25,13 +35,12 @@ import com.tencent.bkrepo.auth.pojo.enums.PermissionAction
 import com.tencent.bkrepo.auth.pojo.enums.ResourceType
 import com.tencent.bkrepo.common.api.constant.StringPool
 import com.tencent.bkrepo.common.artifact.repository.context.ArtifactMigrateContext
-import com.tencent.bkrepo.common.artifact.repository.context.RepositoryHolder
-import com.tencent.bkrepo.common.artifact.util.http.HttpClientBuilderFactory
+import com.tencent.bkrepo.common.artifact.repository.context.ArtifactContextHolder
+import com.tencent.bkrepo.common.artifact.util.okhttp.HttpClientBuilderFactory
 import com.tencent.bkrepo.common.security.permission.Permission
 import com.tencent.bkrepo.npm.artifact.NpmArtifactInfo
-import com.tencent.bkrepo.npm.artifact.repository.NpmLocalRepository
 import com.tencent.bkrepo.npm.constants.NPM_FILE_FULL_PATH
-import com.tencent.bkrepo.npm.constants.NPM_PKG_FULL_PATH
+import com.tencent.bkrepo.npm.constants.NPM_PKG_METADATA_FULL_PATH
 import com.tencent.bkrepo.npm.constants.PKG_NAME
 import com.tencent.bkrepo.npm.pojo.migration.NpmPackageDependentMigrationResponse
 import com.tencent.bkrepo.npm.utils.GsonUtils
@@ -110,13 +119,16 @@ class PackageDependentService {
     @Permission(ResourceType.REPO, PermissionAction.READ)
     @Transactional(rollbackFor = [Throwable::class])
     fun dependentMigrationByFile(artifactInfo: NpmArtifactInfo): NpmPackageDependentMigrationResponse {
-        logger.info("dependent migraion by file request parameter:[fileName: $FILE_NAME]")
+        logger.info("dependent migration by file request parameter:[fileName: $FILE_NAME]")
         val totalDataSet = initTotalDataSetByFile()
         logger.info("dependent migration by file filter results: [$totalDataSet], size: ${totalDataSet.size}")
         return dependentMigration(artifactInfo, totalDataSet)
     }
 
-    fun dependentMigration(artifactInfo: NpmArtifactInfo, totalDataSet: Set<String>): NpmPackageDependentMigrationResponse {
+    fun dependentMigration(
+        artifactInfo: NpmArtifactInfo,
+        totalDataSet: Set<String>
+    ): NpmPackageDependentMigrationResponse {
         val attributes = RequestContextHolder.getRequestAttributes() as ServletRequestAttributes
         RequestContextHolder.setRequestAttributes(attributes, true)
         val start = System.currentTimeMillis()
@@ -135,8 +147,9 @@ class PackageDependentService {
         val resultList = ThreadPoolManager.submit(callableList)
         val elapseTimeMillis = System.currentTimeMillis() - start
         logger.info(
-            "npm package dependent migrate, total size[${totalDataSet.size}], success[${migrationDependentResult.first.size}], " +
-                "fail[${migrationDependentResult.second.size}], elapse [${millisToSecond(elapseTimeMillis)}] s totally."
+            "npm package dependent migrate, total size[${totalDataSet.size}], " +
+                "success[${migrationDependentResult.first.size}], fail[${migrationDependentResult.second.size}], " +
+                "elapse [${millisToSecond(elapseTimeMillis)}] s totally."
         )
         val collect = resultList.stream().flatMap { set -> set.stream() }.collect(Collectors.toSet())
         return NpmPackageDependentMigrationResponse(
@@ -149,7 +162,11 @@ class PackageDependentService {
         )
     }
 
-    fun doDependentMigration(artifactInfo: NpmArtifactInfo, data: Set<String>, totalDataSet: Set<String>): Pair<Set<String>, Set<String>> {
+    fun doDependentMigration(
+        artifactInfo: NpmArtifactInfo,
+        data: Set<String>,
+        totalDataSet: Set<String>
+    ): Pair<Set<String>, Set<String>> {
         val successSet = mutableSetOf<String>()
         val errorSet = mutableSetOf<String>()
         data.forEach { pkgName ->
@@ -176,10 +193,10 @@ class PackageDependentService {
 
     fun dependentMigrate(artifactInfo: NpmArtifactInfo, pkgName: String) {
         val context = ArtifactMigrateContext()
-        context.contextAttributes[NPM_FILE_FULL_PATH] = String.format(NPM_PKG_FULL_PATH, pkgName)
-        context.contextAttributes[PKG_NAME] = pkgName
-        val repository = RepositoryHolder.getRepository(context.repositoryInfo.category)
-        (repository as NpmLocalRepository).dependentMigrate(context)
+        context.putAttribute(NPM_FILE_FULL_PATH, String.format(NPM_PKG_METADATA_FULL_PATH, pkgName))
+        context.putAttribute(PKG_NAME, pkgName)
+        val repository = ArtifactContextHolder.getRepository(context.repositoryDetail.category)
+        // (repository as NpmLocalRepository).dependentMigrate(context)
     }
 
     fun checkResponse(response: Response): Boolean {

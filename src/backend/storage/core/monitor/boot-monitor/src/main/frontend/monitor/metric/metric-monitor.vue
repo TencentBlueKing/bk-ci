@@ -15,7 +15,7 @@
 </template>
 
 <script>
-import {metricsEventSource} from "../../service/stream"
+import { getMetricsEventSource } from "../../service/stream"
 import LineChart from "./line-chart";
 import GaugeChart from "./gauge-chart";
 import Loading from "vue-loading-overlay";
@@ -44,14 +44,13 @@ export default {
     };
   },
   mounted() {
-    
   },
   created() {
     this.currentNormalizedTimestamp = this.computeCurrentNormalizedTimestamp();
-    metricsEventSource.addEventListener(this.metric, message => {
+    getMetricsEventSource().addEventListener(this.metric, message => {
       this.loading = false;
       let data = JSON.parse(message.data);
-      this.proceseData(data);
+      this.processData(data);
     });
   },
   watch: {
@@ -62,7 +61,7 @@ export default {
     }
   },
   methods: {
-    proceseData(data) {
+    processData(data) {
       let application, instance;
       for (let tags of data.availableTags) {
         if (tags.tag == "service") application = tags.values[0];

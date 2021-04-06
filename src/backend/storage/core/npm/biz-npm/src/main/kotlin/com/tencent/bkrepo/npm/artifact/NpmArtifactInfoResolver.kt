@@ -1,7 +1,7 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.  
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -10,29 +10,35 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 package com.tencent.bkrepo.npm.artifact
 
-import com.tencent.bkrepo.common.api.constant.StringPool
 import com.tencent.bkrepo.common.artifact.resolve.path.ArtifactInfoResolver
 import com.tencent.bkrepo.common.artifact.resolve.path.Resolver
-import com.tencent.bkrepo.npm.constants.FILE_SEPARATOR
-import org.apache.commons.lang.StringUtils
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
-import java.net.URLDecoder
-import java.util.LinkedList
-import java.util.StringTokenizer
+import org.springframework.stereotype.Component
 import javax.servlet.http.HttpServletRequest
 
+@Component
 @Resolver(NpmArtifactInfo::class)
 class NpmArtifactInfoResolver : ArtifactInfoResolver {
     override fun resolve(
@@ -41,31 +47,10 @@ class NpmArtifactInfoResolver : ArtifactInfoResolver {
         artifactUri: String,
         request: HttpServletRequest
     ): NpmArtifactInfo {
-        val uri = URLDecoder.decode(request.requestURI, characterEncoding)
-
-        val pathElements = LinkedList<String>()
-        val stringTokenizer = StringTokenizer(uri.substringBefore(delimiter), FILE_SEPARATOR)
-        while (stringTokenizer.hasMoreTokens()) {
-            pathElements.add(stringTokenizer.nextToken())
-        }
-        if (pathElements.size < 2) {
-            logger.debug(
-                "Cannot build NpmArtifactInfo from '{}'. The pkgName are unreadable.",
-                uri
-            )
-            return NpmArtifactInfo("", "", "")
-        }
-        val scope = if (pathElements[2].contains(AT)) pathElements[2] else StringPool.EMPTY
-        val pkgName = if (scope.contains(AT)) pathElements[3] else pathElements[2]
-        val version =
-            if (pathElements.size > 4) pathElements[4] else (if (StringUtils.isBlank(scope) && pathElements.size == 4) pathElements[3] else StringPool.EMPTY)
-        return NpmArtifactInfo(projectId, repoName, artifactUri, scope, pkgName, version)
+        return NpmArtifactInfo(projectId, repoName, artifactUri)
     }
 
     companion object {
-        const val characterEncoding: String = "utf-8"
-        const val delimiter: String = "/-rev"
-        const val AT: Char = '@'
         val logger: Logger = LoggerFactory.getLogger(NpmArtifactInfo::class.java)
     }
 }

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<service xmlns="http://www.w3.org/2007/app" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:app="http://www.w3.org/2007/app" xml:base="$$baseUrl$$">
+    <workspace>
+        <atom:title>Default</atom:title>
+        <collection href="Packages">
+            <atom:title>Packages</atom:title>
+        </collection>
+    </workspace>
+</service>

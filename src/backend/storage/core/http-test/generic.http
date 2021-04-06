@@ -57,8 +57,22 @@ Authorization: Basic {{username}} {{password}}
     });
 %}
 
+### 上传文件
+PUT http://{{genericHost}}/{{project}}/{{repo}}/test1.txt
+Authorization: Basic {{username}} {{password}}
+X-BKREPO-OVERWRITE: true
+X-BKREPO-META-key: value
+
+Hello, World!!!!!
+
+> {%
+    client.test('Request executed successfully', function() {
+        client.assert(response.status === 200, 'Response status is not 200');
+    });
+%}
+
 ### 删除文件
-DELETE http://{{genericHost}}/{{project}}/{{repo}}/test.txt
+DELETE http://{{genericHost}}/{{project}}/{{repo}}/test1.txt
 Authorization: Basic {{username}} {{password}}
 
 > {%
@@ -68,7 +82,7 @@ Authorization: Basic {{username}} {{password}}
 %}
 
 ### 删除不存在文件
-DELETE http://{{genericHost}}/{{project}}/{{repo}}/test.txt
+DELETE http://{{genericHost}}/{{project}}/{{repo}}/test1.txt
 Authorization: Basic {{username}} {{password}}
 
 > {%

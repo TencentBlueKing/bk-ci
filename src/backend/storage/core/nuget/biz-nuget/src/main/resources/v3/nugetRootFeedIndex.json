@@ -1,0 +1,78 @@
+{
+  "version": "3.0.0",
+  "resources": [
+    {
+      "@id": "@NugetV3Url/flatcontainer",
+      "@type": "PackageBaseAddress/3.0.0",
+      "comment": "Base URL of where NuGet packages are stored, in the format @NugetV3Url/flatcontainer/{id-lower}/{version-lower}/{id-lower}.{version-lower}.nupkg"
+    },
+    {
+      "@id": "@NugetV3Url/query",
+      "@type": "SearchQueryService",
+      "comment": "Query endpoint of NuGet Search service (primary)"
+    },
+    {
+      "@id": "@NugetV3Url/registration/",
+      "@type": "RegistrationsBaseUrl",
+      "comment": "Base URL of Azure storage where NuGet package registration info is stored"
+    },
+    {
+      "@id": "@NugetV2Url",
+      "@type": "LegacyGallery"
+    },
+    {
+      "@id": "@NugetV2Url",
+      "@type": "LegacyGallery/2.0.0"
+    },
+    {
+      "@id": "@NugetV2Url",
+      "@type": "PackagePublish/2.0.0"
+    },
+    {
+      "@id": "@NugetV3Url/query",
+      "@type": "SearchQueryService/3.0.0-rc",
+      "comment": "Query endpoint of NuGet Search service (primary) used by RC clients"
+    },
+    {
+      "@id": "@NugetV3Url/registration/",
+      "@type": "RegistrationsBaseUrl/3.0.0-rc",
+      "comment": "Base URL of Azure storage where NuGet package registration info is stored used by RC clients. This base URL does not include SemVer 2.0.0 packages."
+    },
+    {
+      "@id": "@NugetV3Url/registration/{id-lower}/index.json",
+      "@type": "PackageDisplayMetadataUriTemplate/3.0.0-rc",
+      "comment": "URI template used by NuGet Client to construct display metadata for Packages using ID"
+    },
+    {
+      "@id": "@NugetV3Url/registration/{id-lower}/{version-lower}.json",
+      "@type": "PackageVersionDisplayMetadataUriTemplate/3.0.0-rc",
+      "comment": "URI template used by NuGet Client to construct display metadata for Packages using ID, Version"
+    },
+    {
+      "@id": "@NugetV3Url/query",
+      "@type": "SearchQueryService/3.0.0-beta",
+      "comment": "Query endpoint of NuGet Search service (primary) used by beta clients"
+    },
+    {
+      "@id": "@NugetV3Url/registration/",
+      "@type": "RegistrationsBaseUrl/3.0.0-beta",
+      "comment": "Base URL of Azure storage where NuGet package registration info is stored used by Beta clients. This base URL does not include SemVer 2.0.0 packages."
+    },
+    {
+      "@id": "@NugetV3Url/registration/",
+      "@type": "RegistrationsBaseUrl/3.4.0",
+      "comment": "Base URL of Azure storage where NuGet package registration info is stored in GZIP format. This base URL does not include SemVer 2.0.0 packages."
+    },
+    {
+      "@id": "@NugetV3Url/registration-semver2/",
+      "@type": "RegistrationsBaseUrl/3.6.0",
+      "comment": "Base URL of Azure storage where NuGet package registration info is stored in GZIP format. This base URL includes SemVer 2.0.0 packages."
+    },
+    {
+      "@id": "@NugetV3Url/registration-semver2/",
+      "@type": "RegistrationsBaseUrl/Versioned",
+      "clientVersion": "4.3.0-alpha",
+      "comment": "Base URL of Azure storage where NuGet package registration info is stored in GZIP format. This base URL includes SemVer 2.0.0 packages."
+    }
+  ]
+}

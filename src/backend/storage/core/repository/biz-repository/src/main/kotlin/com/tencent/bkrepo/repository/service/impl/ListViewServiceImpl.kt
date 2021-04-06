@@ -1,7 +1,7 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.  
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -10,37 +10,48 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 package com.tencent.bkrepo.repository.service.impl
 
 import com.tencent.bkrepo.common.api.constant.MediaTypes
-import com.tencent.bkrepo.common.api.constant.StringPool
 import com.tencent.bkrepo.common.api.exception.ErrorCodeException
 import com.tencent.bkrepo.common.artifact.api.ArtifactInfo
 import com.tencent.bkrepo.common.artifact.message.ArtifactMessageCode
+import com.tencent.bkrepo.common.artifact.path.PathUtils
+import com.tencent.bkrepo.common.artifact.path.PathUtils.UNIX_SEPARATOR
+import com.tencent.bkrepo.common.artifact.repository.context.ArtifactContextHolder
 import com.tencent.bkrepo.common.artifact.repository.context.ArtifactDownloadContext
-import com.tencent.bkrepo.common.artifact.repository.context.RepositoryHolder
 import com.tencent.bkrepo.common.service.util.HttpContextHolder
 import com.tencent.bkrepo.repository.pojo.list.HeaderItem
 import com.tencent.bkrepo.repository.pojo.list.ListViewObject
 import com.tencent.bkrepo.repository.pojo.list.RowItem
 import com.tencent.bkrepo.repository.pojo.node.NodeDetail
+import com.tencent.bkrepo.repository.pojo.node.NodeListOption
 import com.tencent.bkrepo.repository.pojo.node.NodeListViewItem
 import com.tencent.bkrepo.repository.pojo.project.ProjectListViewItem
 import com.tencent.bkrepo.repository.pojo.repo.RepoListViewItem
 import com.tencent.bkrepo.repository.service.ListViewService
-import com.tencent.bkrepo.repository.service.NodeService
+import com.tencent.bkrepo.repository.service.node.NodeService
 import com.tencent.bkrepo.repository.service.ProjectService
 import com.tencent.bkrepo.repository.service.RepositoryService
-import com.tencent.bkrepo.repository.util.NodeUtils
 import org.apache.commons.lang.StringEscapeUtils
 import org.springframework.stereotype.Service
 import java.io.PrintWriter
@@ -56,42 +67,38 @@ class ListViewServiceImpl(
 ) : ListViewService {
 
     override fun listNodeView(artifactInfo: ArtifactInfo) {
-        with(artifactInfo) {
-            val node = nodeService.detail(projectId, repoName, artifactUri)
-                ?: throw ErrorCodeException(ArtifactMessageCode.NODE_NOT_FOUND, artifactUri)
-            val response = HttpContextHolder.getResponse()
-            response.contentType = MediaTypes.TEXT_HTML
-            if (node.folder) {
-                trailingSlash()
-                val nodeList = nodeService.list(
-                    artifactInfo.projectId,
-                    artifactInfo.repoName,
-                    artifactUri,
-                    includeFolder = true,
-                    includeMetadata = false,
-                    deep = false
-                )
-                val currentPath = computeCurrentPath(node)
-                val headerList = listOf(
-                    HeaderItem("Name"),
-                    HeaderItem("Created by"),
-                    HeaderItem("Last modified"),
-                    HeaderItem("Size")
-                )
-                val itemList = nodeList.map { NodeListViewItem.from(it) }.sorted()
-                val rowList = itemList.map { RowItem(listOf(it.name, it.createdBy, it.lastModified, it.size)) }
-                writePageContent(ListViewObject(currentPath, headerList, rowList, FOOTER, true))
-            } else {
-                val context = ArtifactDownloadContext()
-                val repository = RepositoryHolder.getRepository(context.repositoryInfo.category)
-                repository.download(context)
-            }
+        val node = nodeService.getNodeDetail(artifactInfo)
+            ?: throw ErrorCodeException(ArtifactMessageCode.NODE_NOT_FOUND, artifactInfo.getArtifactFullPath())
+        val response = HttpContextHolder.getResponse()
+        response.contentType = MediaTypes.TEXT_HTML
+        if (node.folder) {
+            trailingSlash()
+            val listOption = NodeListOption(
+                includeFolder = true,
+                includeMetadata = false,
+                deep = false
+            )
+            val nodeList = nodeService.listNode(artifactInfo, listOption)
+            val currentPath = computeCurrentPath(node)
+            val headerList = listOf(
+                HeaderItem("Name"),
+                HeaderItem("Created by"),
+                HeaderItem("Last modified"),
+                HeaderItem("Size"),
+                HeaderItem("Sha256")
+            )
+            val itemList = nodeList.map { NodeListViewItem.from(it) }.sorted()
+            val rowList = itemList.map { RowItem(listOf(it.name, it.createdBy, it.lastModified, it.size, it.sha256)) }
+            writePageContent(ListViewObject(currentPath, headerList, rowList, FOOTER, true))
+        } else {
+            val context = ArtifactDownloadContext(useDisposition = false)
+            ArtifactContextHolder.getRepository().download(context)
         }
     }
 
     override fun listRepoView(projectId: String) {
         trailingSlash()
-        val itemList = repositoryService.list(projectId).map { RepoListViewItem.from(it) }
+        val itemList = repositoryService.listRepo(projectId).map { RepoListViewItem.from(it) }
         val title = "Repository[$projectId]"
         val headerList = listOf(
             HeaderItem("Name"),
@@ -99,10 +106,11 @@ class ListViewServiceImpl(
             HeaderItem("Last modified"),
             HeaderItem("Category"),
             HeaderItem("Type"),
-            HeaderItem("Public")
+            HeaderItem("Public"),
+            HeaderItem("Storage")
         )
         val rowList = itemList.sorted().map {
-            RowItem(listOf(it.name, it.createdBy, it.lastModified, it.category, it.type, it.public))
+            RowItem(listOf(it.name, it.createdBy, it.lastModified, it.category, it.type, it.public, it.storage))
         }
         val listViewObject = ListViewObject(title, headerList, rowList, FOOTER, true)
         writePageContent(listViewObject)
@@ -110,7 +118,7 @@ class ListViewServiceImpl(
 
     override fun listProjectView() {
         trailingSlash()
-        val itemList = projectService.list().map { ProjectListViewItem.from(it) }
+        val itemList = projectService.listProject().map { ProjectListViewItem.from(it) }
         val headerList = listOf(
             HeaderItem("Name"),
             HeaderItem("Created by"),
@@ -173,13 +181,13 @@ class ListViewServiceImpl(
 
     private fun computeCurrentPath(currentNode: NodeDetail): String {
         val builder = StringBuilder()
-        builder.append(NodeUtils.FILE_SEPARATOR)
+        builder.append(UNIX_SEPARATOR)
             .append(currentNode.projectId)
-            .append(NodeUtils.FILE_SEPARATOR)
+            .append(UNIX_SEPARATOR)
             .append(currentNode.repoName)
             .append(currentNode.fullPath)
-        if (!NodeUtils.isRootPath(currentNode.fullPath)) {
-            builder.append(NodeUtils.FILE_SEPARATOR)
+        if (!PathUtils.isRoot(currentNode.fullPath)) {
+            builder.append(UNIX_SEPARATOR)
         }
         return builder.toString()
     }
@@ -196,7 +204,7 @@ class ListViewServiceImpl(
 
     private fun trailingSlash() {
         val url = HttpContextHolder.getRequest().requestURL.toString()
-        if (!url.endsWith(StringPool.SLASH)) {
+        if (!url.endsWith(UNIX_SEPARATOR)) {
             HttpContextHolder.getResponse().sendRedirect("$url/")
         }
     }
