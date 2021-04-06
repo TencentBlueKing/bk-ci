@@ -1,4 +1,4 @@
-package com.tencent.devops.quality.api.v2
+package com.tencent.devops.experience.api.service
 
 import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
@@ -13,15 +13,15 @@ import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["AUTH_CALLBACK_QUALITY"], description = "iam回调quality接口")
-@Path("/open/quality/callback")
+@Api(tags = ["AUTH_CALLBACK_EXPERIENCE"], description = "experience")
+@Path("/open/experience/callback")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceQualityAuthResource {
+interface ServiceExperienceAuthResource {
     @POST
-    @Path("/rule")
-    @ApiOperation("iam质量红线规则回调接口")
-    fun qualityRuleInfo(
+    @Path("/task")
+    @ApiOperation("iam版本体验回调接口")
+    fun experienceTaskInfo(
         @ApiParam(value = "回调信息")
         callBackInfo: CallbackRequestDTO,
         @HeaderParam(AUTH_HEADER_IAM_TOKEN)
@@ -31,8 +31,8 @@ interface ServiceQualityAuthResource {
 
     @POST
     @Path("/group")
-    @ApiOperation("iam质量红线用户组回调接口")
-    fun qualityGroupInfo(
+    @ApiOperation("iam版本体验组回调接口")
+    fun experienceGroup(
         @ApiParam(value = "回调信息")
         callBackInfo: CallbackRequestDTO,
         @HeaderParam(AUTH_HEADER_IAM_TOKEN)
