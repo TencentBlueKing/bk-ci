@@ -29,6 +29,6 @@ class TXReportService @Autowired constructor(
     }
 
     private fun getRootUrlNoApiHost(projectId: String, pipelineId: String, buildId: String, taskId: String): String {
-        return "/?redirect=/web/generic/$projectId/report/$pipelineId/$buildId/$taskId/"
+        return "/$projectId/report/$pipelineId/$buildId/$taskId/"
     }
 }
