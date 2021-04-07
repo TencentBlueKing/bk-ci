@@ -162,18 +162,21 @@ export function isNewAtomTemplate (htmlTemplateVersion) {
 /**
  * 获取插件上一个版本的字段值
  */
-export function getAtomPreviousVal (preAtomVal = {}, preAtomProps = {}, atomProps = {}, isChangeAtom) {
-    let res = {}
+export function diffAtomVersions (preAtomVal = {}, preAtomProps = {}, atomProps = {}, isChangeAtom) {
+    let atomValue = {}
+    const atomVersionChangedKeys = []
     if (!isChangeAtom) {
-        res = Object.keys(atomProps).reduce((formProps, key) => {
+        atomValue = Object.keys(atomProps).reduce((formProps, key) => {
             const atomProp = atomProps[key] || {}
             const preAtomProp = preAtomProps[key] || {}
             const isSameMultiple = (atomProp.optionsConf || {}).multiple === (preAtomProp.optionsConf || {}).multiple
             if (atomProp.component === preAtomProp.component && atomProp.type === preAtomProp.type && isSameMultiple) {
                 formProps[key] = preAtomVal[key]
+            } else {
+                atomVersionChangedKeys.push(key)
             }
             return formProps
         }, {})
     }
-    return res
+    return { atomValue, atomVersionChangedKeys }
 }
