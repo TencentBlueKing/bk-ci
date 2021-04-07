@@ -48,6 +48,7 @@ import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.ApiPriority
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.IosUtils
+import com.tencent.devops.worker.common.utils.TaskUtil
 import net.dongliu.apk.parser.ApkFile
 import okhttp3.MediaType
 import okhttp3.MultipartBody
@@ -117,6 +118,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             header[bkrepoMetaDataPrefix + ARCHIVE_PROPS_USER_ID] = variables[PIPELINE_START_USER_ID] ?: ""
             header[bkrepoMetaDataPrefix + ARCHIVE_PROPS_BUILD_NO] = variables[PIPELINE_BUILD_NUM] ?: ""
             header[bkrepoMetaDataPrefix + ARCHIVE_PROPS_SOURCE] = "pipeline"
+            header[bkrepoMetaDataPrefix + ARCHIVE_PROPS_TASK_ID] = TaskUtil.getTaskId()
             header[bkrepoUid] = variables[PIPELINE_START_USER_ID] ?: ""
             header[bkrepoOverride] = "true"
         }
@@ -188,6 +190,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             header[bkrepoMetaDataPrefix + com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_NO] = variables[PIPELINE_BUILD_NUM]
                 ?: ""
             header[bkrepoMetaDataPrefix + com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_SOURCE] = "pipeline"
+            header[bkrepoMetaDataPrefix + ARCHIVE_PROPS_TASK_ID] = TaskUtil.getTaskId()
             header[bkrepoUid] = variables[PIPELINE_START_USER_ID] ?: ""
             header[bkrepoOverride] = "true"
         }
