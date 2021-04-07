@@ -111,24 +111,4 @@ interface UserPipelineFileResource {
         path: String
     ): Result<Url>
 
-    @ApiOperation("根据插件Id获取文件")
-    @Path("/{projectCode}/{pipelineId}/{buildId}/{taskId}")
-    @GET
-    fun getTaskFile(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目代码", required = true)
-        @PathParam("projectCode")
-        projectCode: String,
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("构建ID", required = true)
-        @PathParam("buildId")
-        buildId: String,
-        @ApiParam("插件Id", required = true)
-        @PathParam("taskId")
-        taskId: String
-    ): Result<FileDetail>
 }
