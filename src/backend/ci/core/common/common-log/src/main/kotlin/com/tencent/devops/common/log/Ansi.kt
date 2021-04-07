@@ -35,14 +35,14 @@ import java.util.concurrent.Callable
 
 open class Ansi(private var builder: StringBuilder) {
     companion object {
-        private val FIRST_ESC_CHAR: Char = 27.toChar()
-        private val SECOND_ESC_CHAR = '['
+        private const val FIRST_ESC_CHAR: Char = 27.toChar()
+        private const val SECOND_ESC_CHAR = '['
         private val DISABLE = Ansi::class.java.name + ".disable"
         private var detector = Callable { !java.lang.Boolean.getBoolean(DISABLE) }
 
         fun newDetector(detector: Callable<Boolean>?) {
             if (detector == null) {
-                throw IllegalArgumentException()
+                throw IllegalArgumentException("detector is null")
             }
             this.detector = detector
         }
@@ -443,8 +443,9 @@ open class Ansi(private var builder: StringBuilder) {
     }
 
     private fun flushAttributes() {
-        if (attributeOptions.isEmpty())
+        if (attributeOptions.isEmpty()) {
             return
+        }
         if (attributeOptions.size == 1 && attributeOptions[0] == 0) {
             builder.append(FIRST_ESC_CHAR)
             builder.append(SECOND_ESC_CHAR)

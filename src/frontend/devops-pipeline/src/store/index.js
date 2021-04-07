@@ -78,7 +78,7 @@ export default new Vuex.Store({
     // 公共 actions
     actions: {
         requestProjectDetail: async ({ commit }, { projectId }) => {
-            return ajax.get(AJAX_URL_PIRFIX + `/project/api/user/projects/${projectId}/`).then(response => {
+            return ajax.get(API_URL_PREFIX + `/project/api/user/projects/${projectId}/`).then(response => {
                 let data = {}
                 if (typeof response.data === 'object' && typeof response.data.data === 'object') {
                     data = response.data.data

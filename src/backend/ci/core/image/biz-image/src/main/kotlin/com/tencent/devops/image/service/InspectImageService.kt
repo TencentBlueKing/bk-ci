@@ -41,7 +41,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class InspectImageService @Autowired constructor(
-    private val dockerConfig: DockerConfig
+    dockerConfig: DockerConfig
 ) {
 
     companion object {
@@ -136,7 +136,7 @@ class InspectImageService @Autowired constructor(
         private val step = mutableMapOf<Int, Long>()
         override fun onNext(item: PullResponseItem?) {
             val text = item?.progressDetail
-            if (null != text && text.current != null && text.total != null && text.total != 0L) {
+            if (null != text && text.current != null && text.total != 0L) {
                 val lays = if (!totalList.contains(text.total!!)) {
                     totalList.add(text.total!!)
                     totalList.size + 1

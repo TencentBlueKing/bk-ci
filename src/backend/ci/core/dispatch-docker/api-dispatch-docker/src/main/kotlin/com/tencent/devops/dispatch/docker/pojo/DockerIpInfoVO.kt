@@ -27,6 +27,7 @@
 
 package com.tencent.devops.dispatch.docker.pojo
 
+import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -57,5 +58,7 @@ data class DockerIpInfoVO(
     @ApiModelProperty("是否为专用机独占", required = false)
     val specialOn: Boolean?,
     @ApiModelProperty("创建时间", required = false)
-    val createTime: String?
+    val createTime: String?,
+    @ApiModelProperty("构建集群", required = false)
+    val clusterType: DockerHostClusterType? = DockerHostClusterType.COMMON
 )

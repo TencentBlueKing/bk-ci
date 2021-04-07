@@ -37,11 +37,11 @@ import org.junit.Test
 
 class AuthUtilsTest {
 
-    val actionPolicys = mutableListOf<ActionPolicyDTO>()
+    private val actionPolicys = mutableListOf<ActionPolicyDTO>()
 
-    val expressionList = mutableListOf<ExpressionDTO>()
+    private val expressionList = mutableListOf<ExpressionDTO>()
 
-    val newExpressionList = mutableListOf<ExpressionDTO>()
+    private val newExpressionList = mutableListOf<ExpressionDTO>()
 
     @Before
     fun setUp() {
@@ -75,7 +75,7 @@ class AuthUtilsTest {
         buildNewExpression()
     }
 
-    fun buildNewExpression() {
+    private fun buildNewExpression() {
         // 单项目下任务 {"field":"pipeline._bk_iam_path_","op":"starts_with","value":"/project,test1/"}
         val expressionDTO1 = ExpressionDTO()
         expressionDTO1.field = "pipeline._bk_iam_path_"
@@ -83,7 +83,6 @@ class AuthUtilsTest {
         expressionDTO1.value = "/project,test1/"
         newExpressionList.add(expressionDTO1)
 
-        // {"content":[{"field":"pipeline.id","op":"in","value":["p-098b68a251ae4ec4b6f4fde87767387f","p-12b2c343109f43a58a79dcb9e3721c1b","p-54a8619d1f754d32b5b2bc249a74f26c"]},{"field":"pipeline._bk_iam_path_","op":"starts_with","value":"/project,demo/"}],"op":"AND"}
         val expressionDTO2 = ExpressionDTO()
         val childExpression1 = ExpressionDTO()
         val childExpression2 = ExpressionDTO()
@@ -105,7 +104,6 @@ class AuthUtilsTest {
 
         newExpressionList.add(expressionDTO2)
 
-        // {"content":[{"content":[{"field":"pipeline.id","op":"in","value":["p-0d1fff4dabca4fc282e5ff63644bd339","p-54fb8b6562584df4b3693f7c787c105a"]},{"field":"pipeline._bk_iam_path_","op":"starts_with","value":"/project,v3test/"}],"op":"AND"},{"content":[{"field":"pipeline.id","op":"in","value":["p-098b68a251ae4ec4b6f4fde87767387f","p-12b2c343109f43a58a79dcb9e3721c1b","p-54a8619d1f754d32b5b2bc249a74f26c"]},{"field":"pipeline._bk_iam_path_","op":"starts_with","value":"/project,demo/"}],"op":"AND"}],"op":"OR"}
         val expressionDTO3 = ExpressionDTO()
         expressionDTO3.content = mutableListOf()
         val childExpression3 = ExpressionDTO()
@@ -173,7 +171,7 @@ class AuthUtilsTest {
         newExpressionList.add(expressionDTO5)
     }
 
-    fun buildExpression() {
+    private fun buildExpression() {
         val expression1 = ExpressionDTO()
         expression1.field = "project._bk_iam_path_"
         expression1.operator = ExpressionOperationEnum.START_WITH
@@ -467,7 +465,7 @@ class AuthUtilsTest {
         print(AuthUtils.getResourceInstance(expression1, "jttest", resourceType))
     }
 
-    fun print(projectList: List<String>) {
+    private fun print(projectList: List<String>) {
         println(projectList)
         projectList.map {
             println(it)
