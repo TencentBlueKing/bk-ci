@@ -40,6 +40,7 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_REPORT"], description = "用户-自定义报告")
@@ -63,6 +64,9 @@ interface UserReportResource {
         pipelineId: String,
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
-        buildId: String
+        buildId: String,
+        @ApiParam("插件ID", required = false)
+        @QueryParam("taskId")
+        taskId: String?
     ): Result<List<Report>>
 }

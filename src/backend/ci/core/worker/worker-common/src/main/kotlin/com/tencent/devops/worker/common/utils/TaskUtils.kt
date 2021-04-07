@@ -23,43 +23,23 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.process.api.report
+package com.tencent.devops.worker.common.utils
 
-import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.user.UserReportResource
-import com.tencent.devops.process.pojo.Report
-import com.tencent.devops.process.report.service.ReportService
-import org.springframework.beans.factory.annotation.Autowired
+object TaskUtils {
+    private val threadLocal = ThreadLocal<String>()
 
-@Suppress("ALL")
-@RestResource
-class UserReportResourceImpl @Autowired constructor(
-    private val reportService: ReportService
-) : UserReportResource {
-    override fun get(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        taskId: String?
-    ): Result<List<Report>> {
-        if (userId.isBlank()) {
-            throw ParamBlankException("Invalid userId")
-        }
-        if (projectId.isBlank()) {
-            throw ParamBlankException("Invalid projectId")
-        }
-        if (pipelineId.isBlank()) {
-            throw ParamBlankException("Invalid pipelineId")
-        }
-        if (buildId.isBlank()) {
-            throw ParamBlankException("Invalid buildId")
-        }
-        val result = reportService.list(userId, projectId, pipelineId, buildId, taskId)
-        return Result(result)
+    fun setTaskId(taskId: String) {
+        threadLocal.set(taskId)
+    }
+
+    fun getTaskId(): String {
+        return threadLocal.get()
+    }
+
+    fun removeTaskId() {
+        threadLocal.remove()
     }
 }

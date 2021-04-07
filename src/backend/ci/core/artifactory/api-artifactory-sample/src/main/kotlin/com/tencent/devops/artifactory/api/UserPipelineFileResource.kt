@@ -110,4 +110,5 @@ interface UserPipelineFileResource {
         @QueryParam("path")
         path: String
     ): Result<Url>
+
 }

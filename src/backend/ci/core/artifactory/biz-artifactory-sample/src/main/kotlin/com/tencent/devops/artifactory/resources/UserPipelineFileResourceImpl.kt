@@ -41,7 +41,8 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
-@RestResource@Suppress("ALL")
+@RestResource
+@Suppress("ALL")
 class UserPipelineFileResourceImpl @Autowired constructor(
     private val archiveFileService: ArchiveFileService
 ) : UserPipelineFileResource {

@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.model.process.tables.records.TReportRecord
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -84,18 +85,26 @@ class ReportService @Autowired constructor(
         }
     }
 
-    fun list(userId: String, projectId: String, pipelineId: String, buildId: String): List<Report> {
+    fun list(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String? = null
+    ): List<Report> {
         val reportRecordList = reportDao.list(dslContext, projectId, pipelineId, buildId)
 
-        return reportRecordList.map {
-            if (it.type == ReportTypeEnum.INTERNAL.name) {
-                val indexFile = Paths.get(it.indexFile).normalize().toString()
-                val urlPrefix = getRootUrl(projectId, pipelineId, buildId, it.elementId)
-                Report(it.name, "$urlPrefix$indexFile", it.type)
+        val result = mutableListOf<Report>()
+        reportRecordList.forEach {
+            if (taskId.isNullOrBlank()) {
+                result.add(buildReport(projectId, pipelineId, buildId, it))
             } else {
-                Report(it.name, it.indexFile, it.type)
+                if (taskId == it.elementId) {
+                    result.add(buildReport(projectId, pipelineId, buildId, it))
+                }
             }
         }
+        return result
     }
 
     fun listContainTask(reportListDTO: ReportListDTO): List<TaskReport> {
@@ -165,5 +174,15 @@ class ReportService @Autowired constructor(
         emailNotifyMessage.title = title
         emailNotifyMessage.body = html
         client.get(ServiceNotifyResource::class).sendEmailNotify(emailNotifyMessage)
+    }
+
+    private fun buildReport(projectId: String, pipelineId: String, buildId: String, info: TReportRecord): Report {
+        return if (info.type == ReportTypeEnum.INTERNAL.name) {
+            val indexFile = Paths.get(info.indexFile).normalize().toString()
+            val urlPrefix = getRootUrl(projectId, pipelineId, buildId, info.elementId)
+            Report(info.name, "$urlPrefix$indexFile", info.type)
+        } else {
+            Report(info.name, info.indexFile, info.type)
+        }
     }
 }
