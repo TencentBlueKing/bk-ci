@@ -27,15 +27,11 @@
 
 package com.tencent.devops.process.dao
 
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.model.process.tables.TPipelineSettingVersion
 import com.tencent.devops.model.process.tables.records.TPipelineSettingVersionRecord
-import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.util.NotifyTemplateUtils
-import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT
-import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -48,7 +44,6 @@ class PipelineSettingVersionDao {
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
-        pipelineName: String,
         version: Int = 1,
         isTemplate: Boolean = false,
         successNotifyTypes: String = "",
@@ -59,9 +54,6 @@ class PipelineSettingVersionDao {
                 this,
                 PROJECT_ID,
                 PIPELINE_ID,
-                NAME,
-                RUN_LOCK_TYPE,
-                DESC,
                 SUCCESS_RECEIVER,
                 FAIL_RECEIVER,
                 SUCCESS_GROUP,
@@ -70,17 +62,12 @@ class PipelineSettingVersionDao {
                 FAIL_TYPE,
                 SUCCESS_CONTENT,
                 FAIL_CONTENT,
-                WAIT_QUEUE_TIME_SECOND,
-                MAX_QUEUE_SIZE,
                 IS_TEMPLATE,
                 VERSION
             )
                 .values(
                     projectId,
                     pipelineId,
-                    pipelineName,
-                    PipelineRunLockType.toValue(PipelineRunLockType.MULTIPLE),
-                    "",
                     "\${$PIPELINE_START_USER_NAME}",
                     "\${$PIPELINE_START_USER_NAME}",
                     "",
@@ -89,8 +76,6 @@ class PipelineSettingVersionDao {
                     failNotifyTypes,
                     NotifyTemplateUtils.COMMON_SHUTDOWN_SUCCESS_CONTENT,
                     NotifyTemplateUtils.COMMON_SHUTDOWN_FAILURE_CONTENT,
-                    DateTimeUtil.minuteToSecond(PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT),
-                    PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT,
                     isTemplate,
                     version
                 )
@@ -103,9 +88,6 @@ class PipelineSettingVersionDao {
             return dslContext.insertInto(
                 this,
                 PROJECT_ID,
-                NAME,
-                DESC,
-                RUN_LOCK_TYPE,
                 PIPELINE_ID,
                 SUCCESS_RECEIVER,
                 FAIL_RECEIVER,
@@ -121,16 +103,11 @@ class PipelineSettingVersionDao {
                 FAIL_DETAIL_FLAG,
                 SUCCESS_CONTENT,
                 FAIL_CONTENT,
-                WAIT_QUEUE_TIME_SECOND,
-                MAX_QUEUE_SIZE,
                 IS_TEMPLATE,
                 VERSION
             )
                 .values(
                     setting.projectId,
-                    setting.pipelineName,
-                    setting.desc,
-                    PipelineRunLockType.toValue(setting.runLockType),
                     setting.pipelineId,
                     setting.successSubscription.users,
                     setting.failSubscription.users,
@@ -146,8 +123,6 @@ class PipelineSettingVersionDao {
                     setting.failSubscription.detailFlag,
                     setting.successSubscription.content,
                     setting.failSubscription.content,
-                    DateTimeUtil.minuteToSecond(setting.waitQueueTimeMinute),
-                    setting.maxQueueSize,
                     isTemplate,
                     version
                 )

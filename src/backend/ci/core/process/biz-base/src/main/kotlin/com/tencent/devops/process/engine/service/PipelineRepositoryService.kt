@@ -31,7 +31,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.exception.PipelineAlreadyExistException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -568,7 +567,6 @@ class PipelineRepositoryService constructor(
                         dslContext = transactionContext,
                         projectId = projectId,
                         pipelineId = pipelineId,
-                        pipelineName = model.name,
                         failNotifyTypes = notifyTypes
                     )
                 } else {
@@ -973,7 +971,11 @@ class PipelineRepositoryService constructor(
                 excludePipelineId = setting.pipelineId,
                 pipelineName = setting.pipelineName
             )) {
-            throw PipelineAlreadyExistException("流水线(${setting.pipelineName})已经存在")
+            throw ErrorCodeException(
+                statusCode = Response.Status.CONFLICT.statusCode,
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_EXISTS,
+                defaultMessage = "流水线名称已被使用"
+            )
         }
 
         dslContext.transaction { t ->

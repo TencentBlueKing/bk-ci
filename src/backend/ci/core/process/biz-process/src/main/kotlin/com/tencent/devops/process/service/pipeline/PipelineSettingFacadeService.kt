@@ -27,13 +27,11 @@
 
 package com.tencent.devops.process.service.pipeline
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.api.service.ServicePipelineResource
-import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
@@ -44,7 +42,6 @@ import com.tencent.devops.process.service.PipelineSettingVersionService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -69,19 +66,6 @@ class PipelineSettingFacadeService @Autowired constructor(
                 pipelineId = setting.pipelineId,
                 message = "用户($userId)无权限在工程(${setting.projectId})下编辑流水线(${setting.pipelineId})"
             )
-        }
-
-        with(setting) {
-            if (pipelineRepositoryService.isPipelineExist(
-                    projectId = projectId, excludePipelineId = pipelineId, pipelineName = pipelineName
-                )
-            ) {
-                throw ErrorCodeException(
-                    statusCode = Response.Status.CONFLICT.statusCode,
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_EXISTS,
-                    defaultMessage = "流水线名称已被使用"
-                )
-            }
         }
 
         pipelineRepositoryService.saveSetting(userId, setting, version)
@@ -134,7 +118,7 @@ class PipelineSettingFacadeService @Autowired constructor(
         }
 
         if (version > 0) { // #671 目前只接受通知设置的版本管理, 其他属于公共设置不接受版本管理
-            val ve = pipelineSettingVersionService.userGetSettingVersion(userId, projectId, pipelineId, version)
+            val ve = pipelineSettingVersionService.getSubscriptionsVer(userId, projectId, pipelineId, version)
             settingInfo.successSubscription = ve.successSubscription
             settingInfo.failSubscription = ve.failSubscription
         }
