@@ -5,7 +5,7 @@
                 <vuex-input :placeholder="$t('pipelineNameInputTips')" name="pipelineName" :value="pipelineSetting.pipelineName" v-validate.initial="&quot;required|max:40&quot;" max-length="40" :handle-change="handleBaseInfoChange" />
             </bk-form-item>
 
-            <bk-form-item :required="false" :label="$t('settings.group')" v-if="tagGroupList.length">
+            <bk-form-item :required="false" :label="$t('settings.label')" v-if="tagGroupList.length">
                 <div class="tag-group-row">
                     <div class="group-col" v-for="(filter, index) in tagGroupList" :key="index">
                         <label class="group-title">{{filter.name}}</label>

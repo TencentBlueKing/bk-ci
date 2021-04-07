@@ -206,6 +206,7 @@
     "settings": {
         "baseInfo": "基本信息",
         "group": "分组",
+        "label": "标签",
         "runLock": "运行锁定",
         "namePlaceholder": "请输入流水线名称，长度不超过40个字符",
         "descPlaceholder": "请输入100字符以内的描述内容",
