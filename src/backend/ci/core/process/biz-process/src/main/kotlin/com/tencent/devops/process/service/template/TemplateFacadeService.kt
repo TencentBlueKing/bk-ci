@@ -1228,7 +1228,7 @@ class TemplateFacadeService @Autowired constructor(
     ): TemplateOperationRet {
         logger.info("Create the new template instance [$projectId|$userId|$templateId|$version|$useTemplateSettings]")
         val template = templateDao.getTemplate(dslContext, version)
-        val srcTemplateId = templateDao.getSrcTemplateId(dslContext, templateId, version)
+        val srcTemplateId = templateDao.getSrcTemplateId(dslContext, templateId)
         val successPipelines = ArrayList<String>()
         val failurePipelines = ArrayList<String>()
         val successPipelinesId = ArrayList<String>()

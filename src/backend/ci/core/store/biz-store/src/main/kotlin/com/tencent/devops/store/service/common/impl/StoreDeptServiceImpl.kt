@@ -30,7 +30,7 @@ package com.tencent.devops.store.service.common.impl
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
-import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import com.tencent.devops.common.pipeline.type.StoreDispatchType
 import com.tencent.devops.store.dao.common.StoreDeptRelDao
 import com.tencent.devops.store.pojo.common.DeptInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -60,8 +60,8 @@ class StoreDeptServiceImpl @Autowired constructor(
         container: Container,
         templateImageCodeSet: MutableSet<String>
     ) {
-        if (container is VMBuildContainer && container.dispatchType is DockerDispatchType) {
-            val imageCode = (container.dispatchType as DockerDispatchType).imageCode
+        if (container is VMBuildContainer && container.dispatchType is StoreDispatchType) {
+            val imageCode = (container.dispatchType as StoreDispatchType).imageCode
             if (!imageCode.isNullOrBlank()) templateImageCodeSet.add(imageCode!!)
         }
     }
