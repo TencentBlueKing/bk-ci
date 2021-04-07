@@ -25,29 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply plugin: "kotlin"
-apply plugin: "com.github.johnrengelman.shadow"
-apply plugin: "application"
-
-jar {
-    from("src/main/resources") {
-        include "*.*"
-    }
-    manifest {
-        attributes(
-           'WorkerAgent-Version':version
-        )
-    }
+dependencies {
+    api(project(":core:openapi:biz-openapi"))
+    api(group = "net.sf.json-lib", name = "json-lib", classifier = "jdk15")
+    api("org.springframework.boot:spring-boot-starter-aop")
+    api("io.jsonwebtoken:jjwt-api:0.10.8")
+    runtime("io.jsonwebtoken:jjwt-impl:0.10.8")
+    runtime("io.jsonwebtoken:jjwt-jackson:0.10.8")
 }
-
-shadowJar {
-
-    mergeServiceFiles()
-
-    destinationDirectory = file("${rootDir}/release")
-    archiveClassifier.set('')
-    archiveVersion.set('')
-    zip64 true
-}
-
-installDist.enabled = false
+apply("$rootDir/task_spring_boot_package.gradle")

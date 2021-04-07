@@ -25,29 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply plugin: "kotlin"
-apply plugin: "com.github.johnrengelman.shadow"
-apply plugin: "application"
+dependencies {
+    api(project(":core:common:common-api"))
+    api(project(":core:common:common-auth:common-auth-api"))
+    api(project(":core:common:common-redis"))
+    api(project(":core:common:common-web"))
+    api(project(":core:common:common-service"))
+    api(project(":core:common:common-redis"))
+    api("com.fasterxml.jackson.core:jackson-databind")
+    api("com.fasterxml.jackson.core:jackson-core")
+    api("com.fasterxml.jackson.core:jackson-annotations")
+    api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider")
+    api("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
+    api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-base")
+    api("com.fasterxml.jackson.module:jackson-module-kotlin")
+    implementation(group = "org.apache.commons", name = "commons-collections4", version = "4.4")
 
-jar {
-    from("src/main/resources") {
-        include "*.*"
-    }
-    manifest {
-        attributes(
-           'WorkerAgent-Version':version
-        )
-    }
+
+//    api(group="org.json", name="json", version="20180130"
 }
-
-shadowJar {
-
-    mergeServiceFiles()
-
-    destinationDirectory = file("${rootDir}/release")
-    archiveClassifier.set('')
-    archiveVersion.set('')
-    zip64 true
-}
-
-installDist.enabled = false

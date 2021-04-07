@@ -25,29 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply plugin: "kotlin"
-apply plugin: "com.github.johnrengelman.shadow"
-apply plugin: "application"
+dependencies {
+    api("com.fasterxml.jackson.core:jackson-databind")
+    api("com.fasterxml.jackson.core:jackson-core")
+    api("com.fasterxml.jackson.core:jackson-annotations")
+    api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider")
+    api("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
+    api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-base")
+    api("com.fasterxml.jackson.module:jackson-module-kotlin")
 
-jar {
-    from("src/main/resources") {
-        include "*.*"
-    }
-    manifest {
-        attributes(
-           'WorkerAgent-Version':version
-        )
-    }
+    api(fileTree(mapOf("dir" to "lib/iam-sdk-1.0.0.jar", "include" to listOf("*.jar"))))
 }
-
-shadowJar {
-
-    mergeServiceFiles()
-
-    destinationDirectory = file("${rootDir}/release")
-    archiveClassifier.set('')
-    archiveVersion.set('')
-    zip64 true
-}
-
-installDist.enabled = false

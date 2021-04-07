@@ -24,30 +24,10 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
-apply plugin: "kotlin"
-apply plugin: "com.github.johnrengelman.shadow"
-apply plugin: "application"
-
-jar {
-    from("src/main/resources") {
-        include "*.*"
-    }
-    manifest {
-        attributes(
-           'WorkerAgent-Version':version
-        )
-    }
+dependencies {
+    api(project(":core:common:common-api"))
+    api(project(":core:common:common-event"))
+    api("org.slf4j:slf4j-api")
+    api("com.squareup.okhttp3:okhttp")
+    api("com.cronutils:cron-utils")
 }
-
-shadowJar {
-
-    mergeServiceFiles()
-
-    destinationDirectory = file("${rootDir}/release")
-    archiveClassifier.set('')
-    archiveVersion.set('')
-    zip64 true
-}
-
-installDist.enabled = false

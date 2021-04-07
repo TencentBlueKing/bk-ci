@@ -25,29 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply plugin: "kotlin"
-apply plugin: "com.github.johnrengelman.shadow"
-apply plugin: "application"
-
-jar {
-    from("src/main/resources") {
-        include "*.*"
-    }
-    manifest {
-        attributes(
-           'WorkerAgent-Version':version
-        )
-    }
+dependencies {
+    api(project(":core:dockerhost:biz-dockerhost"))
+    //api(project(":dockerhost:plugin-dockerhost-distcc")
+    api(project(":core:dockerhost:plugin-dockerhost-codecc"))
+    api(("com.squareup.okhttp3:okhttp:3.14.4"))
 }
 
-shadowJar {
-
-    mergeServiceFiles()
-
-    destinationDirectory = file("${rootDir}/release")
-    archiveClassifier.set('')
-    archiveVersion.set('')
-    zip64 true
-}
-
-installDist.enabled = false
+apply("$rootDir/task_spring_boot_package.gradle")

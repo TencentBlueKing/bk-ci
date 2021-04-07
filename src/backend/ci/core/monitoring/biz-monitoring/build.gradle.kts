@@ -25,29 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply plugin: "kotlin"
-apply plugin: "com.github.johnrengelman.shadow"
-apply plugin: "application"
-
-jar {
-    from("src/main/resources") {
-        include "*.*"
-    }
-    manifest {
-        attributes(
-           'WorkerAgent-Version':version
-        )
-    }
+dependencies {
+    api(project(":core:monitoring:api-monitoring"))
+    api(project(":core:common:common-db"))
+    api(project(":core:common:common-notify"))
+    api("org.apache.commons:commons-compress:1.15")
+    api("org.json:json:20140107")
+    api("org.influxdb:influxdb-java:2.10")
 }
-
-shadowJar {
-
-    mergeServiceFiles()
-
-    destinationDirectory = file("${rootDir}/release")
-    archiveClassifier.set('')
-    archiveVersion.set('')
-    zip64 true
-}
-
-installDist.enabled = false

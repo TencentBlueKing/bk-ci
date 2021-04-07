@@ -1,6 +1,6 @@
 object Versions {
     const val Java = "1.8"
-    const val Kotlin = "1.4.10"
+    const val Kotlin = "1.3.72"
     const val SpringBoot = "2.3.7.RELEASE"
     const val DependencyManagement = "1.0.10.RELEASE"
     const val GradleJooq = "3.0.3"

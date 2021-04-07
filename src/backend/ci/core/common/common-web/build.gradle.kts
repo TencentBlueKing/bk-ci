@@ -25,29 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply plugin: "kotlin"
-apply plugin: "com.github.johnrengelman.shadow"
-apply plugin: "application"
-
-jar {
-    from("src/main/resources") {
-        include "*.*"
-    }
-    manifest {
-        attributes(
-           'WorkerAgent-Version':version
-        )
-    }
+dependencies {
+    api(project(":core:common:common-api"))
+    api(project(":core:common:common-service"))
+    api(project(":core:common:common-security"))
+    api("org.springframework.boot:spring-boot-starter-jersey")
+    api("org.springframework.boot:spring-boot-starter-undertow")
+    api("org.springframework.boot:spring-boot-starter-web")
+    api("io.swagger:swagger-jersey2-jaxrs")
+    api("com.github.ulisesbocchio:jasypt-spring-boot-starter")
+    api("org.springframework.boot:spring-boot-starter-amqp")
+    api("org.springframework.cloud:spring-cloud-starter-config")
 }
-
-shadowJar {
-
-    mergeServiceFiles()
-
-    destinationDirectory = file("${rootDir}/release")
-    archiveClassifier.set('')
-    archiveVersion.set('')
-    zip64 true
-}
-
-installDist.enabled = false

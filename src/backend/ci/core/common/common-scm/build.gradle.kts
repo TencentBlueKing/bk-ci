@@ -25,29 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply plugin: "kotlin"
-apply plugin: "com.github.johnrengelman.shadow"
-apply plugin: "application"
-
-jar {
-    from("src/main/resources") {
-        include "*.*"
-    }
-    manifest {
-        attributes(
-           'WorkerAgent-Version':version
-        )
-    }
+dependencies {
+    api(project(":core:common:common-service"))
+    api(project(":core:common:common-api"))
+    api("org.slf4j:slf4j-api")
+    api("org.tmatesoft.svnkit:svnkit:1.9.3")
+    api("com.squareup.okhttp3:okhttp")
+    api("org.eclipse.jgit:org.eclipse.jgit:5.0.2.201807311906-r")
 }
-
-shadowJar {
-
-    mergeServiceFiles()
-
-    destinationDirectory = file("${rootDir}/release")
-    archiveClassifier.set('')
-    archiveVersion.set('')
-    zip64 true
-}
-
-installDist.enabled = false

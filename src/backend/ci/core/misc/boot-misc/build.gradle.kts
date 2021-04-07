@@ -25,29 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply plugin: "kotlin"
-apply plugin: "com.github.johnrengelman.shadow"
-apply plugin: "application"
-
-jar {
-    from("src/main/resources") {
-        include "*.*"
-    }
-    manifest {
-        attributes(
-           'WorkerAgent-Version':version
-        )
-    }
+dependencies {
+    api(project(":core:misc:biz-misc-sample"))
+    // 无对接权限中心，根据common.yml配置文件项auth.idProvider=samle启用，会忽略下面蓝鲸权限中心实现
+    api(project(":core:common:common-auth:common-auth-mock"))
+    // 对接蓝鲸的权限中心实现, 根据common.yml配置项auth.idProvider=bk_login值来决定加载
+    api(project(":core:common:common-auth:common-auth-blueking"))
+    api(project(":core:common:common-auth:common-auth-v3"))
 }
 
-shadowJar {
-
-    mergeServiceFiles()
-
-    destinationDirectory = file("${rootDir}/release")
-    archiveClassifier.set('')
-    archiveVersion.set('')
-    zip64 true
-}
-
-installDist.enabled = false
+apply("$rootDir/task_spring_boot_package.gradle")

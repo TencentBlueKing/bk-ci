@@ -2,7 +2,7 @@ plugins {
     kotlin("jvm") version Versions.Kotlin
 }
 
-apply("detekt.gradle.kts")
+apply("$rootDir/detekt.gradle.kts")
 
 buildscript {
     // 仓库

@@ -25,29 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply plugin: "kotlin"
-apply plugin: "com.github.johnrengelman.shadow"
-apply plugin: "application"
-
-jar {
-    from("src/main/resources") {
-        include "*.*"
-    }
-    manifest {
-        attributes(
-           'WorkerAgent-Version':version
-        )
-    }
+dependencies {
+    api(project(":core:common:common-service"))
+    api(project(":core:common:common-web"))
+    api(project(":core:common:common-client"))
+    api(project(":core:common:common-archive"))
+    api(project(":core:common:common-db"))
+    api(project(":core:common:common-auth:common-auth-api"))
+    api(project(":core:artifactory:api-artifactory"))
+    api(project(":core:artifactory:model-artifactory"))
+    api(project(":core:project:api-project"))
+    api(project(":core:process:api-process"))
+    api("com.tencent.bkrepo:api-generic:1.0.0")
+    api("com.tencent.bkrepo:api-repository:1.0.0")
+    api("com.amazonaws:aws-java-sdk-s3")
+    api("net.coobird:thumbnailator:0.4.8")
 }
-
-shadowJar {
-
-    mergeServiceFiles()
-
-    destinationDirectory = file("${rootDir}/release")
-    archiveClassifier.set('')
-    archiveVersion.set('')
-    zip64 true
-}
-
-installDist.enabled = false

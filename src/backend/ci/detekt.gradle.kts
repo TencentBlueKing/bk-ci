@@ -16,3 +16,8 @@ tasks.register<JavaExec>("detektCheck") {
 dependencies {
     detekt("io.gitlab.arturbosch.detekt:detekt-cli:1.16.0")
 }
+
+// detekt1.16需要kotlin1.4的兼容方案
+configurations.all {
+    attributes.attribute(Usage.USAGE_ATTRIBUTE, objects.named(Usage::class, Usage.JAVA_RUNTIME))
+}

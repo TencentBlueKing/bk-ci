@@ -25,29 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply plugin: "kotlin"
-apply plugin: "com.github.johnrengelman.shadow"
-apply plugin: "application"
-
-jar {
-    from("src/main/resources") {
-        include "*.*"
+dependencies {
+    api("javax.ws.rs:javax.ws.rs-api")
+    api("io.swagger:swagger-annotations")
+    api("org.hashids:hashids")
+    api("com.fasterxml.jackson.module:jackson-module-kotlin")
+    api("com.fasterxml.jackson.core:jackson-databind")
+    api("com.fasterxml.jackson.core:jackson-core")
+    api("com.fasterxml.jackson.core:jackson-annotations")
+    api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider")
+    api("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
+    api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-base")
+    api("org.bouncycastle:bcprov-jdk16")
+    compile("com.github.fge:json-schema-validator") {
+        exclude(group = "javax.mail", module = "mailapi")
+        exclude(group = "com.google.guava", module = "guava")
     }
-    manifest {
-        attributes(
-           'WorkerAgent-Version':version
-        )
-    }
+    compile("com.google.guava:guava")
+    api("com.squareup.okhttp3:okhttp")
+    api("commons-codec:commons-codec:1.9")
+    api("org.springframework.boot:spring-boot-starter-data-redis")
+    api("org.apache.commons:commons-compress")
+    api("org.apache.commons:commons-exec")
+    api("javax.servlet:javax.servlet-api")
+    api("javax.validation:validation-api")
+    api("com.vdurmont:emoji-java:5.1.1")
+    api("org.apache.lucene:lucene-core")
 }
-
-shadowJar {
-
-    mergeServiceFiles()
-
-    destinationDirectory = file("${rootDir}/release")
-    archiveClassifier.set('')
-    archiveVersion.set('')
-    zip64 true
-}
-
-installDist.enabled = false

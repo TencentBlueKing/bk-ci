@@ -25,29 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply plugin: "kotlin"
-apply plugin: "com.github.johnrengelman.shadow"
-apply plugin: "application"
+apply("$rootDir/task_shadow_jar.gradle")
 
-jar {
-    from("src/main/resources") {
-        include "*.*"
-    }
-    manifest {
-        attributes(
-           'WorkerAgent-Version':version
-        )
-    }
+project.extra["mainClassName"] = "com.tencent.devops.agent.ApplicationKt"
+
+dependencies {
+    api(project(":core:worker:worker-common"))
+    api(project(":core:worker:worker-api-sdk"))
+
+    api(project(":core:plugin:codecc-plugin:worker-plugin-codecc"))
 }
-
-shadowJar {
-
-    mergeServiceFiles()
-
-    destinationDirectory = file("${rootDir}/release")
-    archiveClassifier.set('')
-    archiveVersion.set('')
-    zip64 true
-}
-
-installDist.enabled = false
