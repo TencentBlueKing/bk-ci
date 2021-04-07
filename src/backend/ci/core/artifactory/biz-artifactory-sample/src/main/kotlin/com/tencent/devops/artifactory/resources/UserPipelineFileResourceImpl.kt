@@ -41,7 +41,8 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
-@RestResource@Suppress("ALL")
+@RestResource
+@Suppress("ALL")
 class UserPipelineFileResourceImpl @Autowired constructor(
     private val archiveFileService: ArchiveFileService
 ) : UserPipelineFileResource {
@@ -77,6 +78,22 @@ class UserPipelineFileResourceImpl @Autowired constructor(
             fileChannelType = FileChannelTypeEnum.WEB_DOWNLOAD, filePath = path, artifactoryType = artifactoryType
         )
         return Result(Url(urls.fileUrlList[0], urls.fileUrlList[0]))
+    }
+
+    override fun getTaskFile(
+        userId: String,
+        projectCode: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String
+    ): Result<FileDetail> {
+        val path = archiveFileService.getReportRootUrl(
+            projectId = projectCode,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            taskId = taskId
+        )
+        return Result(archiveFileService.show(userId, projectCode, ArtifactoryType.PIPELINE, path))
     }
 
     private fun checkParameters(userId: String, projectId: String, path: String) {
