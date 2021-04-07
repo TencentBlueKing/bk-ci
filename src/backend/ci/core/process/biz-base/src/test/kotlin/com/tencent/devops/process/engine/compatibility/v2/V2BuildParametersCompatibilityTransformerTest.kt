@@ -191,7 +191,9 @@ class V2BuildParametersCompatibilityTransformerTest {
             "password" to "fake",
             "illegalStartParam" to "i will be delete after call it"
         )
-        val startBuildParameter = buildParametersCompatibilityTransformer.parseManualStartParam(paramProperties, paramValues)
+        val startBuildParameter = buildParametersCompatibilityTransformer.parseManualStartParam(
+            paramProperties = paramProperties, paramValues = paramValues
+        )
         assertEquals(3, startBuildParameter.size)
         val map = mutableMapOf<String, BuildParameters>()
         startBuildParameter.forEach {

@@ -29,7 +29,6 @@ package com.tencent.devops.sign.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.sign.api.constant.SignMessageCode
 import com.tencent.devops.sign.api.enums.EnumResignStatus
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
@@ -44,18 +43,16 @@ import org.springframework.stereotype.Service
 import java.io.File
 
 @Service
-@Suppress("ALL")
 class SignInfoService(
     private val dslContext: DSLContext,
     private val signIpaInfoDao: SignIpaInfoDao,
-    private val signHistoryDao: SignHistoryDao,
-    private val buildLogPrinter: BuildLogPrinter
+    private val signHistoryDao: SignHistoryDao
 ) {
 
     fun save(resignId: String, ipaSignInfoHeader: String, info: IpaSignInfo): Int {
         logger.info("[$resignId] save ipaSignInfo|header=$ipaSignInfoHeader|info=$info")
         signIpaInfoDao.saveSignInfo(dslContext, resignId, ipaSignInfoHeader, info)
-        val executeCount = signHistoryDao.initHistory(
+        return signHistoryDao.initHistory(
             dslContext = dslContext,
             resignId = resignId,
             userId = info.userId,
@@ -67,49 +64,20 @@ class SignInfoService(
             archivePath = info.archivePath,
             md5 = info.md5
         )
-        if (!info.buildId.isNullOrBlank() && !info.taskId.isNullOrBlank()) buildLogPrinter.addLine(
-            buildId = info.buildId!!,
-            message = "Start resign ipa package with info: $info",
-            tag = info.taskId!!,
-            jobId = null,
-            executeCount = executeCount
-        )
-        return executeCount
     }
 
     fun finishUpload(resignId: String, ipaFile: File, info: IpaSignInfo, executeCount: Int) {
         logger.info("[$resignId] finishUpload|ipaFile=${ipaFile.canonicalPath}|buildId=${info.buildId}")
-        if (!info.buildId.isNullOrBlank() && !info.taskId.isNullOrBlank()) buildLogPrinter.addLine(
-            buildId = info.buildId!!,
-            message = "Finished ipa package upload: ${ipaFile.name}",
-            tag = info.taskId!!,
-            jobId = null,
-            executeCount = executeCount
-        )
         signHistoryDao.finishUpload(dslContext, resignId)
     }
 
     fun finishUnzip(resignId: String, unzipDir: File, info: IpaSignInfo, executeCount: Int) {
         logger.info("[$resignId] finishUnzip|unzipDir=${unzipDir.canonicalPath}|buildId=${info.buildId}")
-        if (!info.buildId.isNullOrBlank() && !info.taskId.isNullOrBlank()) buildLogPrinter.addLine(
-            buildId = info.buildId!!,
-            message = "Finished unzip ipa package: ${unzipDir.name}",
-            tag = info.taskId!!,
-            jobId = null,
-            executeCount = executeCount
-        )
         signHistoryDao.finishUnzip(dslContext, resignId)
     }
 
     fun finishResign(resignId: String, info: IpaSignInfo, executeCount: Int) {
         logger.info("[$resignId] finishResign|buildId=${info.buildId}")
-        if (!info.buildId.isNullOrBlank() && !info.taskId.isNullOrBlank()) buildLogPrinter.addLine(
-            buildId = info.buildId!!,
-            message = "Finished resign!",
-            tag = info.taskId!!,
-            jobId = null,
-            executeCount = executeCount
-        )
         signHistoryDao.finishResign(dslContext, resignId)
     }
 
@@ -117,26 +85,11 @@ class SignInfoService(
         val resultFileMd5 = IpaFileUtil.getMD5(signedIpaFile)
         logger.info("[$resignId] finishZip|resultFileMd5=$resultFileMd5|" +
             "signedIpaFile=${signedIpaFile.canonicalPath}|buildId=${info.buildId}")
-        if (!info.buildId.isNullOrBlank() && !info.taskId.isNullOrBlank()) buildLogPrinter.addLine(
-            buildId = info.buildId!!,
-            message = "Finished zip the signed ipa file with result:${signedIpaFile.name}",
-            tag = info.taskId!!,
-            jobId = null,
-            executeCount = executeCount
-        )
         signHistoryDao.finishZip(dslContext, resignId, signedIpaFile.name, resultFileMd5)
     }
 
     fun finishArchive(resignId: String, info: IpaSignInfo, executeCount: Int) {
         logger.info("[$resignId] finishArchive|buildId=${info.buildId}")
-        if (!info.buildId.isNullOrBlank() && !info.taskId.isNullOrBlank()) buildLogPrinter.addLine(
-            buildId = info.buildId!!,
-            message = "Finished archive the signed ipa file. " +
-                "(archiveType=${info.archiveType},archivePath=${info.archivePath})",
-            tag = info.taskId!!,
-            jobId = null,
-            executeCount = executeCount
-        )
         signHistoryDao.finishArchive(
             dslContext = dslContext,
             resignId = resignId
@@ -145,13 +98,6 @@ class SignInfoService(
 
     fun successResign(resignId: String, info: IpaSignInfo, executeCount: Int) {
         logger.info("[$resignId] success resign|buildId=${info.buildId}")
-        if (!info.buildId.isNullOrBlank() && !info.taskId.isNullOrBlank()) buildLogPrinter.addLine(
-            buildId = info.buildId!!,
-            message = "End resign ipa file.",
-            tag = info.taskId!!,
-            jobId = null,
-            executeCount = executeCount
-        )
         signHistoryDao.successResign(
             dslContext = dslContext,
             resignId = resignId
@@ -160,13 +106,6 @@ class SignInfoService(
 
     fun failResign(resignId: String, info: IpaSignInfo, executeCount: Int = 1, message: String) {
         logger.info("[$resignId] fail resign|buildId=${info.buildId}")
-        if (!info.buildId.isNullOrBlank() && !info.taskId.isNullOrBlank()) buildLogPrinter.addLine(
-            buildId = info.buildId!!,
-            message = message,
-            tag = info.taskId!!,
-            jobId = null,
-            executeCount = executeCount
-        )
         signHistoryDao.failResign(
             dslContext = dslContext,
             resignId = resignId,

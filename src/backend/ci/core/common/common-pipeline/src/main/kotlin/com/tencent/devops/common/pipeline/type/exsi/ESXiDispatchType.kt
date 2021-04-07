@@ -32,11 +32,9 @@ import com.tencent.devops.common.pipeline.type.DispatchType
 
 // value is empty
 class ESXiDispatchType : DispatchType("") {
-    override fun cleanDataBeforeSave() {
-    }
+    override fun cleanDataBeforeSave() = Unit
 
-    override fun replaceField(variables: Map<String, String>) {
-    }
+    override fun replaceField(variables: Map<String, String>) = Unit
 
     override fun buildType() = BuildType.valueOf(BuildType.ESXi.name)
 }

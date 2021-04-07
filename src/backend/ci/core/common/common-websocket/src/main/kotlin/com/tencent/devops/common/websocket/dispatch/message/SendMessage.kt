@@ -29,7 +29,7 @@ package com.tencent.devops.common.websocket.dispatch.message
 
 import com.tencent.devops.common.websocket.pojo.NotifyPost
 
-abstract class SendMessage(
+open class SendMessage(
     open val userId: String,
     // 用于匹配redis中对应的sessionList
     open var page: String?,

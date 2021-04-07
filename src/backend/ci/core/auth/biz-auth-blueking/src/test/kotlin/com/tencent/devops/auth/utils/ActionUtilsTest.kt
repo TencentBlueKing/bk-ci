@@ -34,10 +34,6 @@ import org.junit.Test
 class ActionUtilsTest {
 
     @Test
-    fun buildAction() {
-    }
-
-    @Test
     fun actionType() {
         val actionType = "pipeline"
         assertEquals(actionType, ActionUtils.actionType(actionType))

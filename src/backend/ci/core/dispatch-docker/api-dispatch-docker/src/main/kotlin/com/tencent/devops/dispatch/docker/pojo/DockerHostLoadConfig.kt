@@ -31,5 +31,6 @@ data class DockerHostLoadConfig(
     val cpuLoadThreshold: Int,
     val memLoadThreshold: Int,
     val diskLoadThreshold: Int,
-    val diskIOLoadThreshold: Int
+    val diskIOLoadThreshold: Int,
+    val usedNum: Int = 50
 )

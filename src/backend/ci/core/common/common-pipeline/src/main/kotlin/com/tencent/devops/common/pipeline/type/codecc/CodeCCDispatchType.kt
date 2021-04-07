@@ -36,8 +36,7 @@ data class CodeCCDispatchType(
     val codeccTaskId: Long,
     val extraInfo: Map<String, Any>? = emptyMap()
 ) : DispatchType("", DispatchRouteKeySuffix.CODECC) {
-    override fun cleanDataBeforeSave() {
-    }
+    override fun cleanDataBeforeSave() = Unit
 
     override fun buildType(): BuildType {
         return BuildType.valueOf(BuildType.DOCKER.name)

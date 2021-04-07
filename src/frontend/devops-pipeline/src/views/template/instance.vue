@@ -183,6 +183,10 @@
             }
         },
         async mounted () {
+            // 初始化url中携带的分页信息
+            this.$route.query.limit > 0 && (this.pagination.limit = parseInt(this.$route.query.limit))
+            this.$route.query.page > 0 && (this.pagination.current = parseInt(this.$route.query.page))
+        
             this.renderData()
         },
         methods: {
@@ -254,6 +258,7 @@
                 }
                 if (pipeline) {
                     route.hash = type === 'single' ? `#${pipeline}` : `#${pipeline.join('&')}`
+                    route.query = type === 'single' ? {} : { page: this.pagination.current, limit: this.pagination.limit }
                 }
                 this.$router.push(route)
             },
@@ -267,9 +272,11 @@
                 }
             },
             async pageLimitChange (limit) {
-                this.pagination.current = 1
-                this.pagination.limit = limit
-                await this.requestInstanceList(this.pagination.current, this.pagination.limit)
+                if (limit !== this.pagination.limit) {
+                    this.pagination.current = 1
+                    this.pagination.limit = limit
+                    await this.requestInstanceList(this.pagination.current, this.pagination.limit)
+                }
             },
             async query () {
                 this.searchable = true
