@@ -89,6 +89,7 @@ object Tools {
         container.setConsecutiveActiveTrigger(consecutiveActiveTrigger)
         container.setMismatchedQueuesFatal(true)
         container.setMessageListener(adapter)
+        container.setPrefetchCount(1)
         return container
     }
 }
