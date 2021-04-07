@@ -38,7 +38,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import com.tencent.devops.common.pipeline.type.StoreDispatchType
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.api.template.ServiceTemplateResource
 import com.tencent.devops.project.api.service.ServiceProjectOrganizationResource
@@ -268,8 +268,8 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
         validImageCodes: List<String>?
     ) {
         val storeType = StoreTypeEnum.IMAGE.name
-        if (container is VMBuildContainer && container.dispatchType is DockerDispatchType) {
-            val dispatchType = container.dispatchType as DockerDispatchType
+        if (container is VMBuildContainer && container.dispatchType is StoreDispatchType) {
+            val dispatchType = container.dispatchType as StoreDispatchType
             val imageCode = dispatchType.imageCode
             val imageName = dispatchType.imageName
             if (!imageCode.isNullOrBlank()) {
