@@ -116,12 +116,14 @@ class CoreRabbitMQConfiguration {
         val factory = SimpleRabbitListenerContainerFactory()
         factory.setMessageConverter(messageConverter(objectMapper))
         factory.setConnectionFactory(connectionFactory)
-        factory.setPrefetchCount(preFetchCount)
         if (concurrency != null) {
             factory.setConcurrentConsumers(concurrency)
         }
         if (maxConcurrency != null) {
             factory.setMaxConcurrentConsumers(maxConcurrency)
+        }
+        if (preFetchCount != null) {
+            factory.setPrefetchCount(preFetchCount)
         }
         return factory
     }
