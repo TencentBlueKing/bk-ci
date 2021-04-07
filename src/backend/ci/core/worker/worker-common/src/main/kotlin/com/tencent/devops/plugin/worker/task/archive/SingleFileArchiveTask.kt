@@ -38,7 +38,7 @@ import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
 import com.tencent.devops.worker.common.utils.ArchiveUtils.archiveCustomFiles
 import com.tencent.devops.worker.common.utils.ArchiveUtils.archivePipelineFiles
-import com.tencent.devops.worker.common.utils.TaskUtils
+import com.tencent.devops.worker.common.utils.TaskUtil
 import java.io.File
 
 @TaskClassType(classTypes = [SingleArchiveElement.classType])
@@ -49,7 +49,7 @@ class SingleFileArchiveTask : ITask() {
         val filePath = taskParams["filePath"] ?: throw ParamBlankException("param [filePath] is empty")
         val isCustomize = taskParams["customize"] ?: throw ParamBlankException("param [isCustomize] is empty")
 
-        TaskUtils.setTaskId(buildTask.taskId ?: "")
+        TaskUtil.setTaskId(buildTask.taskId ?: "")
 
         try {
             val count = if (isCustomize.toBoolean()) {
@@ -66,7 +66,7 @@ class SingleFileArchiveTask : ITask() {
                 )
             }
         } finally {
-            TaskUtils.removeTaskId()
+            TaskUtil.removeTaskId()
         }
     }
 }
