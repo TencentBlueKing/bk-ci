@@ -13,5 +13,9 @@ build:
     clear:
       switch: false
       maxEveryProjectHandleNum: 5
-      monthRange: -2
+      monthRange: -1
       maxKeepNum: 10000  
+      codeccDayRange: -14
+      codeccMaxKeepNum: 14
+      otherMonthRange: -1
+      otherMaxKeepNum: 500
