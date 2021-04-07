@@ -259,10 +259,10 @@ class TemplateDao {
         }
     }
 
-    fun getSrcTemplateId(dslContext: DSLContext, templateId: String): String? {
+    fun getSrcTemplateId(dslContext: DSLContext, templateId: String, version: Long): String? {
         return with(TTemplate.T_TEMPLATE) {
             dslContext.select(SRC_TEMPLATE_ID).from(this)
-                .where(ID.eq(templateId))
+                .where(ID.eq(templateId).and(VERSION.eq(VERSION)))
                 .fetchOne(0, String::class.java)
         }
     }
