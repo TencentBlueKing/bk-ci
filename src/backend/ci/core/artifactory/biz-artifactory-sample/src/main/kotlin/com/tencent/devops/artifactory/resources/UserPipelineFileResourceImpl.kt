@@ -80,22 +80,6 @@ class UserPipelineFileResourceImpl @Autowired constructor(
         return Result(Url(urls.fileUrlList[0], urls.fileUrlList[0]))
     }
 
-    override fun getTaskFile(
-        userId: String,
-        projectCode: String,
-        pipelineId: String,
-        buildId: String,
-        taskId: String
-    ): Result<FileDetail> {
-        val path = archiveFileService.getReportRootUrl(
-            projectId = projectCode,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            taskId = taskId
-        )
-        return Result(archiveFileService.show(userId, projectCode, ArtifactoryType.PIPELINE, path))
-    }
-
     private fun checkParameters(userId: String, projectId: String, path: String) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
