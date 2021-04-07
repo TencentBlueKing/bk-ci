@@ -39,7 +39,6 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.api.template.ServiceTemplateResource
 import com.tencent.devops.project.api.service.ServiceProjectOrganizationResource
@@ -113,17 +112,16 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
     }
 
     private fun getTemplateModel(templateCode: String): Result<Model?> {
-        val templateRecord = marketTemplateDao.getUpToDateTemplateByCode(dslContext, templateCode)
-        logger.info("the templateRecord is :$templateRecord")
-        if (null == templateRecord) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(templateCode))
-        }
-        val result = client.get(ServiceTemplateResource::class).getTemplateDetailInfo(templateCode, templateRecord.publicFlag)
-        logger.info("the result is :$result")
-        if (result.isNotOk()) {
-            // 抛出错误提示
-            return Result(result.status, result.message ?: "")
-        }
+        val templateRecord =
+            marketTemplateDao.getUpToDateTemplateByCode(dslContext, templateCode) ?: throw ErrorCodeException(
+                statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(templateCode)
+            )
+        val result = client.get(ServiceTemplateResource::class).getTemplateDetailInfo(
+            templateCode = templateCode,
+            publicFlag = templateRecord.publicFlag
+        )
         val templateDetailInfo = result.data
         val templateModel = templateDetailInfo?.templateModel
         return Result(templateModel)
