@@ -43,7 +43,7 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import com.tencent.devops.common.pipeline.type.StoreDispatchType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.model.store.tables.records.TTemplateRecord
@@ -726,6 +726,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                     }
                 }
             }
+            logger.info("validateUserTemplateComponentVisibleDept invalidImageList:$invalidImageList")
             if (invalidImageList.isNotEmpty()) {
                 // 存在用户不在镜像的可见范围内的镜像，给出错误提示
                 throw ErrorCodeException(
@@ -733,6 +734,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                     params = arrayOf(JsonUtil.toJson(invalidImageList), projectCode)
                 )
             }
+            logger.info("validateUserTemplateComponentVisibleDept invalidAtomList:$invalidAtomList")
             if (invalidAtomList.isNotEmpty()) {
                 // 存在用户不在插件的可见范围内的插件，给出错误提示
                 throw ErrorCodeException(
@@ -767,8 +769,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         needInstallImageMap: MutableMap<String, StoreBaseInfo>
     ) {
         val storeType = StoreTypeEnum.IMAGE.name
-        if (container is VMBuildContainer && container.dispatchType is DockerDispatchType) {
-            val dispatchType = container.dispatchType as DockerDispatchType
+        if (container is VMBuildContainer && container.dispatchType is StoreDispatchType) {
+            val dispatchType = container.dispatchType as StoreDispatchType
             val imageCode = dispatchType.imageCode
             val imageName = dispatchType.imageName
             // 可用的镜像无需再检查
