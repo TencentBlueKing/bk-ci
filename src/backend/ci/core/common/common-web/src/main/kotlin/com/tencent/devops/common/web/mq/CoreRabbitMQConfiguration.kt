@@ -66,6 +66,8 @@ class CoreRabbitMQConfiguration {
     private var maxConcurrency: Int? = null
     @Value("\${spring.rabbitmq.core.cache.channel.size:#{null}}")
     private var channelCacheSize: Int? = null
+    @Value("\${spring.rabbitmq.listener.simple.prefetch:#{null}}")
+    private val preFetchCount: Int? = null
 
     @Bean(name = [CORE_CONNECTION_FACTORY_NAME])
     @Primary
@@ -114,6 +116,7 @@ class CoreRabbitMQConfiguration {
         val factory = SimpleRabbitListenerContainerFactory()
         factory.setMessageConverter(messageConverter(objectMapper))
         factory.setConnectionFactory(connectionFactory)
+        factory.setPrefetchCount(preFetchCount)
         if (concurrency != null) {
             factory.setConcurrentConsumers(concurrency)
         }
