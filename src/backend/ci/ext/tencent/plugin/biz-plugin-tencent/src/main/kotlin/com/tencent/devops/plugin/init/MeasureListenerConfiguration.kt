@@ -28,6 +28,7 @@
 package com.tencent.devops.plugin.init
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.plugin.listener.measure.MeasureListener
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
@@ -79,16 +80,18 @@ class MeasureListenerConfiguration {
         @Autowired listener: MeasureListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(measureQueue.name)
-        val concurrency = measureConcurrency!!
-        container.setConcurrentConsumers(concurrency)
-        container.setMaxConcurrentConsumers(Math.max(5, concurrency))
-        container.setAmqpAdmin(rabbitAdmin)
-
         val adapter = MessageListenerAdapter(listener, listener::execute.name)
         adapter.setMessageConverter(messageConverter)
-        container.setMessageListener(adapter)
-        return container
+        val concurrency = measureConcurrency!!
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = measureQueue,
+            rabbitAdmin = rabbitAdmin,
+            adapter = adapter,
+            startConsumerMinInterval = 5000,
+            consecutiveActiveTrigger = 5,
+            concurrency = concurrency,
+            maxConcurrency = Math.max(5, concurrency)
+        )
     }
 }
