@@ -132,6 +132,15 @@ class ExperienceDownloadService @Autowired constructor(
     }
 
     fun getExternalDownloadUrl(userId: String, experienceId: Long): DownloadUrl {
+        val canExperience = experienceBaseService.userCanExperience(userId, experienceId)
+        if (!canExperience) {
+            throw ErrorCodeException(
+                statusCode = 403,
+                defaultMessage = "没有权限下载资源",
+                errorCode = ExperienceMessageCode.USER_NEED_EXP_X_PERMISSION
+            )
+        }
+
         val experienceRecord = experienceDao.get(dslContext, experienceId)
         checkIfExpired(experienceRecord)
 
@@ -163,6 +172,15 @@ class ExperienceDownloadService @Autowired constructor(
     }
 
     fun getInnerDownloadUrl(userId: String, experienceId: Long): String {
+        val canExperience = experienceBaseService.userCanExperience(userId, experienceId)
+        if (!canExperience) {
+            throw ErrorCodeException(
+                statusCode = 403,
+                defaultMessage = "没有权限下载资源",
+                errorCode = ExperienceMessageCode.USER_NEED_EXP_X_PERMISSION
+            )
+        }
+
         val experienceRecord = experienceDao.get(dslContext, experienceId)
         val projectId = experienceRecord.projectId
         val path = experienceRecord.artifactoryPath

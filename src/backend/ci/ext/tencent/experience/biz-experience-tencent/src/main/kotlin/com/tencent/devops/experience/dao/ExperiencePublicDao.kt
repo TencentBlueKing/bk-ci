@@ -31,6 +31,7 @@ import com.tencent.devops.model.experience.tables.TExperiencePublic
 import com.tencent.devops.model.experience.tables.records.TExperiencePublicRecord
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
+import org.jooq.Record1
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -212,6 +213,16 @@ class ExperiencePublicDao {
         }
     }
 
+    fun countByRecordId(
+        dslContext: DSLContext,
+        recordId: Long
+    ): Record1<Int>? {
+        return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
+            dslContext.selectCount().from(this).where(RECORD_ID.eq(recordId)).fetchOne()
+        }
+    }
+
+    @SuppressWarnings("ALL")
     fun updateById(
         dslContext: DSLContext,
         id: Long,
