@@ -27,25 +27,24 @@
 
 package com.tencent.devops.experience.pojo.index
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.PathParam
+import javax.ws.rs.QueryParam
 
-@ApiModel("版本体验-首页-APP信息")
-data class IndexAppInfoVO(
-    @ApiModelProperty("类型", required = true)
-    val type: Int,
-    @ApiModelProperty("版本体验ID", required = false)
-    val experienceHashId: String,
-    @ApiModelProperty("体验名称", required = true)
-    val experienceName: String,
-    @ApiModelProperty("创建时间", required = true)
-    val createTime: Long,
-    @ApiModelProperty("大小(byte)", required = false)
-    val size: Long,
-    @ApiModelProperty("logo链接", required = true)
-    val logoUrl: String,
-    @ApiModelProperty("版本体验BundleIdentifier", required = true)
-    val bundleIdentifier: String,
-    @ApiModelProperty("外部链接", required = false)
-    val externalUrl: String
-)
+class NewCategoryParam {
+    @ApiParam("类别ID,1--游戏,2--工具,3--生活,4--社交", required = true)
+    @PathParam("categoryId")
+    var categoryId: Int = 0
+
+    @ApiParam("页目", required = false)
+    @QueryParam("page")
+    var page: Int = 0
+
+    @ApiParam("每页数目", required = false)
+    @QueryParam("pageSize")
+    var pageSize: Int = 0
+
+    @ApiParam("是否包含外部跳转", required = false)
+    @QueryParam("includeExternalUrl")
+    var includeExternalUrl: Boolean? = false
+}
