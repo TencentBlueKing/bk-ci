@@ -25,4 +25,4 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply ("$rootDir/task_gen_jooq.gradle")
+apply ("$rootDir/task_gen_jooq.gradle.kts")
