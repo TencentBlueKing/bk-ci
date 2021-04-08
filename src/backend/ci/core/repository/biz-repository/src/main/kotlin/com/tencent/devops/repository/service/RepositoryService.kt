@@ -962,7 +962,7 @@ class RepositoryService @Autowired constructor(
                     val gitRepo = gitAuthMap?.get(it.repositoryId)
                     val gitAuthType = gitRepo?.authType ?: RepoAuthType.SSH.name
                     val gitAuthIdentity = if (gitAuthType == RepoAuthType.OAUTH.name) {
-                        it.userId
+                        gitRepo?.userName
                     } else {
                         gitRepo?.credentialId
                     }
