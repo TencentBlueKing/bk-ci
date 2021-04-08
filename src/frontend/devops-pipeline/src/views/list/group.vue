@@ -62,7 +62,7 @@
                                     class="tag-input"
                                     v-model="tagValue"
                                     v-focus="isFocus(groupIndex, tagIndex)"
-                                    maxlength="10"
+                                    maxlength="20"
                                     @blur="tagInputBlur($event, groupIndex, tagIndex)"
                                     @keyup.enter="tagModify(groupIndex, tagIndex)"
                                     :placeholder="$t('group.labelLimitTips')">
