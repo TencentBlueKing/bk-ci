@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -26,21 +27,26 @@
 
 package com.tencent.devops.ticket.service
 
-import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.auth.service.ManagerService
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.TicketAuthServiceCode
+import com.tencent.devops.ticket.dao.CertDao
+import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @Service
 class CertPermissionServiceImpl @Autowired constructor(
     private val authResourceApi: AuthResourceApi,
     private val authPermissionApi: AuthPermissionApi,
-    private val ticketAuthServiceCode: TicketAuthServiceCode
+    private val ticketAuthServiceCode: TicketAuthServiceCode,
+    private val managerService: ManagerService,
+    private val certDao: CertDao,
+    private val dslContext: DSLContext
 ) : CertPermissionService {
 
     private val resourceType = AuthResourceType.TICKET_CERT
@@ -52,7 +58,7 @@ class CertPermissionServiceImpl @Autowired constructor(
         message: String
     ) {
         if (!validatePermission(userId, projectId, authPermission)) {
-            throw CustomException(Response.Status.FORBIDDEN, message)
+            throw PermissionForbiddenException(message)
         }
     }
 
@@ -64,17 +70,26 @@ class CertPermissionServiceImpl @Autowired constructor(
         message: String
     ) {
         if (!validatePermission(userId, projectId, resourceCode, authPermission)) {
-            throw CustomException(Response.Status.FORBIDDEN, message)
+            throw PermissionForbiddenException(message)
         }
     }
 
     override fun validatePermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
-        return authPermissionApi.validateUserResourcePermission(
+        val iamPermission = authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = ticketAuthServiceCode,
             resourceType = resourceType,
             projectCode = projectId,
             permission = authPermission
+        )
+        if (iamPermission) {
+            return iamPermission
+        }
+        return managerService.isManagerPermission(
+            userId = userId,
+            projectId = projectId,
+            authPermission = authPermission,
+            resourceType = resourceType
         )
     }
 
@@ -84,7 +99,7 @@ class CertPermissionServiceImpl @Autowired constructor(
         resourceCode: String,
         authPermission: AuthPermission
     ): Boolean {
-        return authPermissionApi.validateUserResourcePermission(
+        val iamPermission = authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = ticketAuthServiceCode,
             resourceType = resourceType,
@@ -92,9 +107,28 @@ class CertPermissionServiceImpl @Autowired constructor(
             resourceCode = resourceCode,
             permission = authPermission
         )
+        if (iamPermission) {
+            return iamPermission
+        }
+        return managerService.isManagerPermission(
+            userId = userId,
+            projectId = projectId,
+            authPermission = authPermission,
+            resourceType = resourceType
+        )
     }
 
     override fun filterCert(userId: String, projectId: String, authPermission: AuthPermission): List<String> {
+        if (managerService.isManagerPermission(
+                userId = userId,
+                projectId = projectId,
+                authPermission = authPermission,
+                resourceType = resourceType
+            )) {
+            val count = certDao.countByProject(dslContext, projectId, null)
+            return certDao.listIdByProject(dslContext, projectId, 0, count.toInt())
+        }
+
         return authPermissionApi.getUserResourceByPermission(
             user = userId,
             serviceCode = ticketAuthServiceCode,
@@ -110,7 +144,7 @@ class CertPermissionServiceImpl @Autowired constructor(
         projectId: String,
         authPermissions: Set<AuthPermission>
     ): Map<AuthPermission, List<String>> {
-        return authPermissionApi.getUserResourcesByPermissions(
+        val iamPermissionMap = authPermissionApi.getUserResourcesByPermissions(
             user = userId,
             serviceCode = ticketAuthServiceCode,
             resourceType = resourceType,
@@ -118,6 +152,38 @@ class CertPermissionServiceImpl @Autowired constructor(
             permissions = authPermissions,
             supplier = null
         )
+
+        val count = certDao.countByProject(dslContext, projectId, null)
+        val managerIds = certDao.listIdByProject(dslContext, projectId, 0, count.toInt())
+
+        val managerPermissionMap = mutableMapOf<AuthPermission, List<String>>()
+        var isManager = false
+        iamPermissionMap.keys.forEach {
+            if (managerService.isManagerPermission(
+                    userId = userId,
+                    projectId = projectId,
+                    resourceType = resourceType,
+                    authPermission = it
+                )) {
+                if (iamPermissionMap[it] == null) {
+                    managerPermissionMap[it] = managerIds
+                } else {
+                    val collectionSet = mutableSetOf<String>()
+                    collectionSet.addAll(managerIds.toSet())
+                    collectionSet.addAll(iamPermissionMap[it]!!.toSet())
+                    managerPermissionMap[it] = collectionSet.toList()
+                }
+
+                isManager = true
+            } else {
+                managerPermissionMap[it] = iamPermissionMap[it] ?: emptyList()
+            }
+        }
+
+        if (isManager) {
+            return managerPermissionMap
+        }
+        return iamPermissionMap
     }
 
     override fun createResource(userId: String, projectId: String, certId: String) {

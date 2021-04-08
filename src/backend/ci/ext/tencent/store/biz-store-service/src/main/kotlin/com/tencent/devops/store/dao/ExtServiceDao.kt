@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -44,6 +45,7 @@ import com.tencent.devops.store.pojo.dto.ServiceApproveReq
 import com.tencent.devops.store.pojo.enums.ExtServiceSortTypeEnum
 import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import com.tencent.devops.store.pojo.enums.ServiceTypeEnum
+import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -332,7 +334,7 @@ class ExtServiceDao {
     fun getExtService(dslContext: DSLContext, serviceCode: String, version: String): TExtensionServiceRecord? {
         return with(TExtensionService.T_EXTENSION_SERVICE) {
             dslContext.selectFrom(this)
-                .where(SERVICE_CODE.eq(serviceCode).and(VERSION.like("$version%")))
+                .where(SERVICE_CODE.eq(serviceCode).and(VERSION.like(VersionUtils.generateQueryVersion(version))))
                 .orderBy(CREATE_TIME.desc())
                 .limit(1)
                 .fetchOne()

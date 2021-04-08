@@ -629,11 +629,11 @@
                 return baseOS === 'LINUX' ? `export ${env.name}=/data/bkdevops/apps/${key}/${value}/${env.path}` : `export ${env.name}=/data/soda/apps/${key}/${value}/${env.path}`
             },
             addThridSlave () {
-                const url = `${WEB_URL_PIRFIX}/environment/${this.projectId}/nodeList?type=${this.container.baseOS}`
+                const url = `${WEB_URL_PREFIX}/environment/${this.projectId}/nodeList?type=${this.container.baseOS}`
                 window.open(url, '_blank')
             },
             addDockerImage () {
-                const url = `${WEB_URL_PIRFIX}/artifactory/${this.projectId}/depot/project-image`
+                const url = `${WEB_URL_PREFIX}/artifactory/${this.projectId}/depot/project-image`
                 window.open(url, '_blank')
             }
         }

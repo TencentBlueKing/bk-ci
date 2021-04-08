@@ -33,7 +33,7 @@
         },
         computed: {
             uploadAcrtifactUrl () {
-                return `${AJAX_URL_PIRFIX}/artifactory/api/user/artifactories/file/uploadToPath`
+                return `${API_URL_PREFIX}/artifactory/api/user/artifactories/file/uploadToPath`
             }
         },
         methods: {

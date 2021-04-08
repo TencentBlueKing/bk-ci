@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -49,7 +50,6 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElem
 import com.tencent.devops.common.pipeline.pojo.git.GitPullMode
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.plugin.codecc.pojo.coverity.ProjectLanguage
-import com.tencent.devops.process.engine.service.PipelineService
 import com.tencent.devops.process.pojo.AccessRepository
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.CodeGitRepository
@@ -65,7 +65,7 @@ import java.time.LocalDateTime
 @Service
 class AccessService @Autowired constructor(
     private val client: Client,
-    private val pipelineService: PipelineService
+    private val pipelineInfoFacadeService: PipelineInfoFacadeService
 ) {
 
     @Value("\${git.cmake}")
@@ -102,7 +102,16 @@ class AccessService @Autowired constructor(
                 throw exception
             }
             val credentialType = CredentialType.TOKEN_SSH_PRIVATEKEY
-            val credentialCreate = CredentialCreate(credentialId, credentialType, credentialRemark, GIT_TOKEN, GIT_SSH_KEY, null, null)
+            val credentialCreate = CredentialCreate(
+                credentialId = credentialId,
+                credentialName = credentialId,
+                credentialType = credentialType,
+                credentialRemark = credentialRemark,
+                v1 = GIT_TOKEN,
+                v2 = GIT_SSH_KEY,
+                v3 = null,
+                v4 = null
+            )
             client.get(ServiceCredentialResource::class).create(userId, projectId, credentialCreate)
         }
     }
@@ -126,7 +135,7 @@ class AccessService @Autowired constructor(
             script = "make clean\r\ncmake .\r\nmake",
             archivePath = "cmake"
         )
-        return pipelineService.createPipeline(userId, projectId, model, ChannelCode.BS)
+        return pipelineInfoFacadeService.createPipeline(userId, projectId, model, ChannelCode.BS)
     }
 
     private fun generateModel(name: String, desc: String, repositoryHashId: String, repositoryPath: String, codeCCScript: String, script: String, archivePath: String): Model {

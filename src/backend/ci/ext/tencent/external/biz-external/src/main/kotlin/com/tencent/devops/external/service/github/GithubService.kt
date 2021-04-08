@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -53,6 +54,7 @@ import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
 @Service
+@Suppress("ALL")
 class GithubService @Autowired constructor(
     private val client: Client,
     private val objectMapper: ObjectMapper
@@ -71,8 +73,9 @@ class GithubService @Autowired constructor(
                 logger.warn("signature($removePrefixSignature) and generate signature ($genSignature) not match")
                 return
             }
-
-            client.get(ServiceScmWebhookResource::class).webHookCodeGithubCommit(GithubWebhook(event, guid, removePrefixSignature, body))
+            client.get(ServiceScmWebhookResource::class).webHookCodeGithubCommit(
+                GithubWebhook(event, guid, removePrefixSignature, body)
+            )
         } catch (t: Throwable) {
             logger.info("Github webhook exception", t)
         }
@@ -99,7 +102,7 @@ class GithubService @Autowired constructor(
     fun updateCheckRuns(
         token: String,
         projectName: String,
-        checkRunId: Int,
+        checkRunId: Long,
         checkRuns: GithubCheckRuns
     ) {
         logger.info("Github add check [projectName=$projectName, checkRuns=$checkRuns]")
@@ -225,7 +228,7 @@ class GithubService @Autowired constructor(
 
             logger.info("getBody operation($operation). response code($code) message($message) body($body)")
             if (!response.isSuccessful) {
-                handException(operation, code, body)
+                handException(operation, code)
             }
             return body
         }
@@ -240,13 +243,13 @@ class GithubService @Autowired constructor(
 
             logger.info("callMethod operation($operation). response code($code) message($message) body($body)")
             if (!response.isSuccessful) {
-                handException(operation, code, body)
+                handException(operation, code)
             }
             return objectMapper.readValue(body, classOfT)
         }
     }
 
-    private fun handException(operation: String, code: Int, body: String) {
+    private fun handException(operation: String, code: Int) {
         when (code) {
             400 -> throw GithubApiException(code, "参数错误")
             401 -> throw GithubApiException(code, "GitHub认证失败")

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -30,6 +31,7 @@ import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.model.plugin.tables.TPluginGithubCheck
 import com.tencent.devops.model.plugin.tables.records.TPluginGithubCheckRecord
+import com.tencent.devops.plugin.api.pojo.GithubCheckRun
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -58,41 +60,42 @@ class PluginGithubCheckDao {
 
     fun create(
         dslContext: DSLContext,
-        pipelineId: String,
-        buildNumber: Int,
-        repositoryConfig: RepositoryConfig,
-        commitId: String,
-        checkRunId: Int
+        checkRun: GithubCheckRun
     ) {
         val now = LocalDateTime.now()
-        with(TPluginGithubCheck.T_PLUGIN_GITHUB_CHECK) {
-            dslContext.insertInto(
-                this,
-                PIPELINE_ID,
-                BUILD_NUMBER,
-                REPO_ID,
-                REPO_NAME,
-                COMMIT_ID,
-                CHECK_RUN_ID,
-                CREATE_TIME,
-                UPDATE_TIME
-            ).values(
-                pipelineId,
-                buildNumber,
-                repositoryConfig.repositoryHashId,
-                repositoryConfig.repositoryName,
-                commitId,
-                checkRunId,
-                now,
-                now
-            ).execute()
+        with(checkRun) {
+            with(TPluginGithubCheck.T_PLUGIN_GITHUB_CHECK) {
+                dslContext.insertInto(
+                    this,
+                    PIPELINE_ID,
+                    BUILD_NUMBER,
+                    REPO_ID,
+                    REPO_NAME,
+                    COMMIT_ID,
+                    CHECK_RUN_ID,
+                    CREATE_TIME,
+                    UPDATE_TIME,
+                    CHECK_RUN_NAME
+                ).values(
+                    pipelineId,
+                    buildNumber,
+                    repositoryConfig.repositoryHashId,
+                    repositoryConfig.repositoryName,
+                    commitId,
+                    checkRunId,
+                    now,
+                    now,
+                    checkRunName
+                ).execute()
+            }
         }
     }
 
-    fun update(dslContext: DSLContext, id: Long, buildNumber: Int) {
+    fun update(dslContext: DSLContext, id: Long, buildNumber: Int, checkRunId: Long) {
         with(TPluginGithubCheck.T_PLUGIN_GITHUB_CHECK) {
             dslContext.update(this)
                 .set(BUILD_NUMBER, buildNumber)
+                .set(CHECK_RUN_ID, checkRunId)
                 .where(ID.eq(id))
                 .execute()
         }

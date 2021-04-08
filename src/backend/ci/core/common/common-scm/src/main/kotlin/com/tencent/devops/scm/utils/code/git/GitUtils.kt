@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -33,6 +34,8 @@ import java.net.URLDecoder
 import java.net.URLEncoder
 
 object GitUtils {
+    // 工蜂pre-push虚拟分支
+    private const val PRE_PUSH_BRANCH_NAME_PREFIX = "refs/for/"
 
     fun urlDecode(s: String): String = URLDecoder.decode(s, "UTF-8")
 
@@ -75,5 +78,12 @@ object GitUtils {
         val groups = Regex("(http[s]?://)([-.a-z0-9A-Z]+)/(.*)").find(apiUrl)?.groups
             ?: return null
         return Triple(groups[1]!!.value, groups[2]!!.value, groups[3]!!.value) // http[s]//, xxx.com, api/v4
+    }
+
+    fun isPrePushBranch(branchName: String?): Boolean {
+        if (branchName == null) {
+            return false
+        }
+        return branchName.startsWith(PRE_PUSH_BRANCH_NAME_PREFIX)
     }
 }

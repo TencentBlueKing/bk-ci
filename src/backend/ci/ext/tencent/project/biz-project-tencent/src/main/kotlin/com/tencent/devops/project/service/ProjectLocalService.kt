@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -50,6 +51,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
+import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_USER_INFO_FAIL
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
@@ -59,9 +61,11 @@ import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.UserRole
 import com.tencent.devops.project.pojo.app.AppProjectVO
+import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectTypeEnum
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.pojo.tof.Response
+import com.tencent.devops.project.service.tof.TOFService
 import com.tencent.devops.project.util.ProjectUtils
 import okhttp3.MediaType
 import okhttp3.Request
@@ -89,7 +93,8 @@ class ProjectLocalService @Autowired constructor(
     private val projectPermissionService: ProjectPermissionService,
     private val gray: Gray,
     private val jmxApi: ProjectJmxApi,
-    private val projectService: ProjectService
+    private val projectService: ProjectService,
+    private val tofService: TOFService
 ) {
     private var authUrl: String = "${bkAuthProperties.url}/projects"
 
@@ -225,7 +230,8 @@ class ProjectLocalService @Autowired constructor(
                 projectCreateInfo = projectCreateInfo,
                 accessToken = accessToken,
                 createExt = createExt,
-                projectId = projectId
+                projectId = projectId,
+                channel = ProjectChannelCode.PREBUILD
             )
         } catch (e: Exception) {
             logger.warn("Fail to create the project ($projectCreateInfo)", e)
@@ -487,7 +493,8 @@ class ProjectLocalService @Autowired constructor(
                 projectCreateInfo = projectCreateInfo,
                 accessToken = null,
                 createExt = createExt,
-                projectId = projectCode
+                projectId = projectCode,
+                channel = ProjectChannelCode.GITCI
             )
         } catch (e: Throwable) {
             logger.error("Create project failed,", e)
@@ -735,12 +742,15 @@ class ProjectLocalService @Autowired constructor(
         }
         userIds.forEach {
             try {
+                tofService.getStaffInfo(it)
                 bkAuthProjectApi.createProjectUser(
                     user = it,
                     serviceCode = bsPipelineAuthServiceCode,
                     projectCode = projectInfo.projectId,
                     role = authRoleId!!
                 )
+            } catch (ope: OperationException) {
+                throw OperationException(MessageCodeUtil.getCodeLanMessage(QUERY_USER_INFO_FAIL))
             } catch (e: Exception) {
                 logger.warn("createUser2Project fail, userId[$it]", e)
                 return false

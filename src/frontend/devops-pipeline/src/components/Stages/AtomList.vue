@@ -24,7 +24,7 @@
                         <span :title="atom.name" :class="{ 'skip-name': useSkipStyle(atom) }">{{ atom.atomCode ? atom.name : $t('editPage.pendingAtom') }}</span>
                     </p>
                     <bk-popover placement="top" v-if="atom.isReviewing">
-                        <span @click.stop="checkAtom(atom)" :class="isCurrentUser(atom.computedReviewers) ? 'atom-reviewing-tips' : 'atom-review-diasbled-tips'">{{ $t('editPage.toCheck') }}</span>
+                        <span @click.stop="checkAtom(atom, index)" :class="isCurrentUser(atom.computedReviewers) ? 'atom-reviewing-tips' : 'atom-review-diasbled-tips'">{{ $t('editPage.toCheck') }}</span>
                         <template slot="content">
                             <p>{{ $t('editPage.checkUser') }}{{ atom.computedReviewers.join(';') }}</p>
                         </template>
@@ -80,7 +80,7 @@
                 <span v-if="atomList.length === 0">{{ $t('editPage.addAtom') }}</span>
             </span>
         </draggable>
-        <check-atom-dialog :is-show-check-dialog="isShowCheckDialog" :atom="currentAtom" :toggle-check="toggleCheckDialog"></check-atom-dialog>
+        <check-atom-dialog :is-show-check-dialog="isShowCheckDialog" :atom="currentAtom" :toggle-check="toggleCheckDialog" :element="element"></check-atom-dialog>
     </section>
 </template>
 
@@ -256,8 +256,9 @@
                     this.currentAtom = {}
                 }
             },
-            checkAtom (atom) {
+            checkAtom (atom, elementIndex) {
                 if (!this.isCurrentUser(atom.computedReviewers)) return
+                this.element = this.container.elements[elementIndex]
                 this.currentAtom = atom
                 this.toggleCheckDialog(true)
             },
@@ -306,7 +307,7 @@
                 const list = atom.reviewUsers || (atom.data && atom.data.input && atom.data.input.reviewers)
                 const reviewUsers = list.map(user => user.split(';').map(val => val.trim())).reduce((prev, curr) => {
                     return prev.concat(curr)
-                })
+                }, [])
                 return reviewUsers
             },
             showPropertyPanel (elementIndex) {
@@ -410,7 +411,7 @@
                             name: this.routerParams.pipelineId
                         }],
                         projectId: this.routerParams.projectId
-                    }])
+                    }], this.getPermUrlByRole(this.routerParams.projectId, this.routerParams.pipelineId, this.roleMap.executor))
                 } finally {
                     message && this.$showTips({
                         message,
@@ -643,7 +644,7 @@
 
         .quality-atom {
             margin-left: 84px;
-            width: 70px;
+            width: 55px;
             border-radius: 12px;
             z-index: 9;
             .atom-title {
@@ -663,8 +664,8 @@
                     width: 62px;
                 }
                 &:after {
-                    left: 154px;
-                    width: 85px;
+                    left: 138px;
+                    width: 100px;
                 }
             }
             &.is-success {
@@ -701,7 +702,7 @@
             }
             .handler-list {
                 position: absolute;
-                right: 10px;
+                right: 0;
                 span {
                     color: $primaryColor;
                     font-size: 12px;

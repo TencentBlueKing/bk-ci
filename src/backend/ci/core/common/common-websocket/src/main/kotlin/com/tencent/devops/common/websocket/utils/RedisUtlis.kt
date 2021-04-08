@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -27,18 +28,19 @@
 package com.tencent.devops.common.websocket.utils
 import com.tencent.devops.common.redis.RedisOperation
 
+@Suppress("ALL")
 object RedisUtlis {
 
     // 记录user-session映射。 user: session = 1:N 。同一个user，可以在不同端登录，可能产生多个session
-    val USER_SESSION_REDIS_KEY = "BK:webSocket:userId:sessionId:key:"
+    const val USER_SESSION_REDIS_KEY = "BK:webSocket:userId:sessionId:key:"
     // 记录session-page映射。 session: page = 1:1。 同一个session一次只能停留在一个页面。
-    val SESSION_PAGE_REDIS_KEY = "BK:webSocket:sessionId:page:key:"
+    const val SESSION_PAGE_REDIS_KEY = "BK:webSocket:sessionId:page:key:"
     // 记录session-user映射。 session: user = 1:1。 同一个session一次只能对应一个user。
-    val SESSION_USER_REDIS_KEY = "BK:webSocket:sessionId:user:key:"
+    const val SESSION_USER_REDIS_KEY = "BK:webSocket:sessionId:user:key:"
     // 记录page-session映射。  page : session = 1:N。 同一个页面，可能有多个session停留
-    val PAGE_SESSION_REDIS_KEY = "BK:webSocket:page:sessionIdList:key:"
+    const val PAGE_SESSION_REDIS_KEY = "BK:webSocket:page:sessionIdList:key:"
     // 记录session-timeout映射。  session : timeout = 1:1。 同一个session，超时于登录后5天。
-    val USER_TIMEOUT_REDIS_KEY = "BK:webSocket:sessionId:timeOut:key:"
+    const val USER_TIMEOUT_REDIS_KEY = "BK:webSocket:sessionId:timeOut:key:"
 
     // 写入user,session映射。并记录session超时时间。可能出现user:session 一对多的关系
     fun writeSessionIdByRedis(redisOperation: RedisOperation, userId: String, sessionId: String) {
@@ -216,12 +218,12 @@ object RedisUtlis {
 
     // 构建结束，清理所有再当前页面的websocket缓存。
     fun cleanBuildWebSocketCache(redisOperation: RedisOperation, page: String) {
-        val sessionList = RedisUtlis.getSessionListFormPageSessionByPage(redisOperation, page)
-        if (sessionList != null && sessionList.size > 0) {
+        val sessionList = getSessionListFormPageSessionByPage(redisOperation, page)
+        if (sessionList != null && sessionList.isNotEmpty()) {
             sessionList.forEach {
-                RedisUtlis.cleanSessionPageBySessionId(redisOperation, it)
+                cleanSessionPageBySessionId(redisOperation, it)
             }
         }
-        RedisUtlis.cleanPageSessionByPage(redisOperation, page)
+        cleanPageSessionByPage(redisOperation, page)
     }
 }

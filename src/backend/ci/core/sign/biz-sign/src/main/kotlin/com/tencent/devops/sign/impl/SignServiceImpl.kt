@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -49,11 +50,13 @@ import org.springframework.stereotype.Service
 import java.io.File
 import java.io.InputStream
 import com.tencent.devops.sign.utils.SignUtils
+import com.tencent.devops.sign.utils.SignUtils.APP_INFO_PLIST_FILENAME
 import com.tencent.devops.sign.utils.SignUtils.MAIN_APP_FILENAME
 import java.lang.RuntimeException
 import java.util.regex.Pattern
 
 @Service
+@Suppress("ALL")
 class SignServiceImpl @Autowired constructor(
     private val fileService: FileService,
     private val signInfoService: SignInfoService,
@@ -116,7 +119,9 @@ class SignServiceImpl @Autowired constructor(
         signInfoService.finishResign(resignId, ipaSignInfo, taskExecuteCount)
 
         val fileName = ipaSignInfo.fileName
-        val resultName = if (ipaSignInfo.resultSuffix.isNullOrBlank()) "_enterprise_sign" else ipaSignInfo.resultSuffix!!
+        val resultName = if (ipaSignInfo.resultSuffix.isNullOrBlank()) {
+            "_enterprise_sign"
+        } else ipaSignInfo.resultSuffix!!
         val uploadFileName = fileName.substring(0, fileName.lastIndexOf(".")) + resultName + ".ipa"
         // 压缩目录
         val signedIpaFile = SignUtils.zipIpaFile(ipaUnzipDir, ipaUnzipDir.parent + File.separator + uploadFileName)
@@ -149,7 +154,10 @@ class SignServiceImpl @Autowired constructor(
         return signInfoService.getSignDetail(resignId)
     }
 
-    private fun downloadMobileProvision(mobileProvisionDir: File, ipaSignInfo: IpaSignInfo): Map<String, MobileProvisionInfo> {
+    private fun downloadMobileProvision(
+        mobileProvisionDir: File,
+        ipaSignInfo: IpaSignInfo
+    ): Map<String, MobileProvisionInfo> {
         val mobileProvisionMap = mutableMapOf<String, MobileProvisionInfo>()
         if (ipaSignInfo.mobileProvisionId != null) {
             val mpFile = mobileProvisionService.downloadMobileProvision(
@@ -170,8 +178,14 @@ class SignServiceImpl @Autowired constructor(
         return mobileProvisionMap
     }
 
-    private fun downloadWildcardMobileProvision(mobileProvisionDir: File, ipaSignInfo: IpaSignInfo): MobileProvisionInfo? {
-        val wildcardMobileProvision = mobileProvisionService.downloadWildcardMobileProvision(mobileProvisionDir, ipaSignInfo)
+    private fun downloadWildcardMobileProvision(
+        mobileProvisionDir: File,
+        ipaSignInfo: IpaSignInfo
+    ): MobileProvisionInfo? {
+        val wildcardMobileProvision = mobileProvisionService.downloadWildcardMobileProvision(
+            mobileProvisionDir = mobileProvisionDir,
+            ipaSignInfo = ipaSignInfo
+        )
         return if (wildcardMobileProvision == null) null else parseMobileProvision(wildcardMobileProvision)
     }
 
@@ -189,7 +203,11 @@ class SignServiceImpl @Autowired constructor(
         // 从plist文件抽离出entitlement文件
         val plistToEntitlementCommand = "/usr/libexec/PlistBuddy -x -c 'Print:Entitlements' ${plistFile.canonicalPath}"
         // 将entitlment写入到文件
-        val entitlementResult = CommandLineUtils.execute(plistToEntitlementCommand, mobileProvisionFile.parentFile, true)
+        val entitlementResult = CommandLineUtils.execute(
+            command = plistToEntitlementCommand,
+            workspace = mobileProvisionFile.parentFile,
+            print2Logger = true
+        )
         entitlementFile.writeText(entitlementResult)
 
         // 解析bundleId
@@ -198,7 +216,9 @@ class SignServiceImpl @Autowired constructor(
         if (!rootDict.containsKey("Entitlements")) throw RuntimeException("no Entitlements find in plist")
         val entitlementDict = rootDict.objectForKey("Entitlements") as NSDictionary
         // application-identifier
-        if (!entitlementDict.containsKey("application-identifier")) throw RuntimeException("no Entitlements.application-identifier find in plist")
+        if (!entitlementDict.containsKey("application-identifier")) {
+            throw RuntimeException("no Entitlements.application-identifier find in plist")
+        }
         val bundleIdString = (entitlementDict.objectForKey("application-identifier") as NSString).toString()
         val bundleId = bundleIdString.substring(bundleIdString.indexOf(".") + 1)
         // 统一处理entitlement文件
@@ -296,27 +316,11 @@ class SignServiceImpl @Autowired constructor(
     private fun findInfoPlist(
         unzipDir: File
     ): File {
-        try {
-            val payloadFile = File(unzipDir, "payload")
-            if (payloadFile.exists() && payloadFile.isDirectory) {
-                val appPattern = Pattern.compile(".+\\.app")
-                payloadFile.listFiles().forEach {
-                    if (appPattern.matcher(it.name).matches()) {
-                        val infoPlistFile = File(it, "Info.plist")
-                        if (it.exists() && it.isDirectory && infoPlistFile.exists() && infoPlistFile.isFile) {
-                            return infoPlistFile
-                        } else {
-                            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_INFO_PLIST_NOT_EXIST, defaultMessage = "ipa文件解压并检查签名信息失败")
-                        }
-                    }
-                }
-                throw ErrorCodeException(errorCode = SignMessageCode.ERROR_INFO_PLIST_NOT_EXIST, defaultMessage = "ipa文件解压并检查签名信息失败")
-            } else {
-                throw ErrorCodeException(errorCode = SignMessageCode.ERROR_INFO_PLIST_NOT_EXIST, defaultMessage = "ipa文件解压并检查签名信息失败")
-            }
-        } catch (e: Exception) {
-            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_INFO_PLIST_NOT_EXIST, defaultMessage = "ipa文件解压并检查签名信息失败")
-        }
+        return fetchPlistFileInDir(File(unzipDir, "payload"))
+            ?: throw ErrorCodeException(
+                errorCode = SignMessageCode.ERROR_INFO_PLIST_NOT_EXIST,
+                defaultMessage = "ipa文件解压并检查签名信息失败"
+            )
     }
 
     /*
@@ -328,7 +332,9 @@ class SignServiceImpl @Autowired constructor(
         try {
             val rootDict = PropertyListParser.parse(infoPlist) as NSDictionary
             // 应用包名
-            if (!rootDict.containsKey("CFBundleIdentifier")) throw RuntimeException("no CFBundleIdentifier find in plist")
+            if (!rootDict.containsKey("CFBundleIdentifier")) {
+                throw RuntimeException("no CFBundleIdentifier find in plist")
+            }
             var parameters = rootDict.objectForKey("CFBundleIdentifier") as NSString
             val bundleIdentifier = parameters.toString()
             // 应用名称
@@ -336,7 +342,9 @@ class SignServiceImpl @Autowired constructor(
             parameters = rootDict.objectForKey("CFBundleName") as NSString
             val appTitle = parameters.toString()
             // 应用版本
-            if (!rootDict.containsKey("CFBundleShortVersionString")) throw RuntimeException("no CFBundleShortVersionString find in plist")
+            if (!rootDict.containsKey("CFBundleShortVersionString")) {
+                throw RuntimeException("no CFBundleShortVersionString find in plist")
+            }
             parameters = rootDict.objectForKey("CFBundleShortVersionString") as NSString
             val bundleVersion = parameters.toString()
             // 应用构建版本
@@ -350,7 +358,10 @@ class SignServiceImpl @Autowired constructor(
                 bundleVersionFull = bundleVersionFull
             )
         } catch (e: Exception) {
-            throw ErrorCodeException(errorCode = SignMessageCode.ERROR_PARS_INFO_PLIST, defaultMessage = "解析Info.plist失败")
+            throw ErrorCodeException(
+                errorCode = SignMessageCode.ERROR_PARS_INFO_PLIST,
+                defaultMessage = "解析Info.plist失败"
+            )
         }
     }
 
@@ -373,5 +384,22 @@ class SignServiceImpl @Autowired constructor(
         properties["source"] = "pipeline"
         properties["ipa.sign.status"] = "true"
         return properties
+    }
+
+    /*
+    * 寻找目录下的指定文件
+    * */
+    private fun fetchPlistFileInDir(dir: File): File? {
+        if (!dir.exists() || !dir.isDirectory) return null
+        val appPattern = Pattern.compile(".+\\.app")
+        dir.listFiles().forEach {
+            if (appPattern.matcher(it.name).matches()) {
+                val matchFile = File(it, APP_INFO_PLIST_FILENAME)
+                if (it.isDirectory && matchFile.isFile) {
+                    return matchFile
+                }
+            }
+        }
+        return null
     }
 }

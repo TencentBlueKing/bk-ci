@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -36,6 +37,7 @@ import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventDao
 import com.tencent.devops.gitci.pojo.GitCIBuildHistory
 import com.tencent.devops.gitci.pojo.GitMergeHistory
+import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
 import org.jooq.DSLContext
@@ -83,36 +85,24 @@ class GitCIMergeService @Autowired constructor(
         val mergeHistoryMap = mutableMapOf<Long, GitMergeHistory>()
         mergeList.forEach { event ->
             val mrId = event.mergeRequestId ?: return@forEach
-
-//            val sourceRepositoryConf = if (event.sourceGitProjectId != null) {
-//                try {
-//                    val gitToken = client.getScm(ServiceGitResource::class).getToken(event.sourceGitProjectId!!).data!!
-//                    logger.info("get token for gitProjectId[${event.sourceGitProjectId}] form scm, token: $gitToken")
-//                    client.getScm(ServiceGitResource::class).getProjectInfo(gitToken.accessToken, event.sourceGitProjectId!!).data
-//                } catch (e: Exception) {
-//                    logger.error("Cannot get source GitProjectInfo: ", e)
-//                    null
-//                }
-//            } else null
+            // 如果是来自fork库的分支，单独标识
+            val realEvent = GitCommonUtils.checkAndGetForkBranch(event, client)
 
             val mergeHistory = GitMergeHistory(
-                id = event.id ?: return@forEach,
+                id = realEvent.id ?: return@forEach,
                 gitProjectId = gitProjectId,
                 mergeRequestId = mrId,
-                mrTitle = event.mrTitle!!,
-                branch = event.branch,
-//                branch = if (sourceRepositoryConf != null) {
-//                    "${sourceRepositoryConf.name}:${event.branch}"
-//                } else event.branch,
-                targetBranch = event.targetBranch!!,
-                extensionAction = event.extensionAction,
-                operationKind = event.operationKind,
-                commitTimeStamp = event.commitTimeStamp,
-                totalCommitCount = event.totalCommitCount,
-                userId = event.userId,
-                description = event.description
+                mrTitle = realEvent.mrTitle!!,
+                branch = realEvent.branch,
+                targetBranch = realEvent.targetBranch!!,
+                extensionAction = realEvent.extensionAction,
+                operationKind = realEvent.operationKind,
+                commitTimeStamp = realEvent.commitTimeStamp,
+                totalCommitCount = realEvent.totalCommitCount,
+                userId = realEvent.userId,
+                description = realEvent.description
             )
-            val mergeBuildsList = gitRequestEventBuildDao.getRequestBuildsByEventId(dslContext, event.id!!)
+            val mergeBuildsList = gitRequestEventBuildDao.getRequestBuildsByEventId(dslContext, realEvent.id!!)
             logger.info("Get merge build list mergeBuildsList: $mergeBuildsList, gitProjectId: $gitProjectId")
             val builds = mergeBuildsList.map { it.buildId }.toSet()
             val buildList = client.get(ServiceBuildResource::class).getBatchBuildStatus(conf.projectCode!!, builds, channelCode).data
@@ -127,7 +117,7 @@ class GitCIMergeService @Autowired constructor(
                         records.add(GitCIBuildHistory(
                             displayName = pipeline.displayName,
                             pipelineId = pipeline.pipelineId,
-                            gitRequestEvent = event,
+                            gitRequestEvent = realEvent,
                             buildHistory = history
                         ))
                     } catch (e: Exception) {

@@ -716,6 +716,9 @@
                 flex-direction: column;
                 background-color: #fff;
                 .temp-info-detail {
+                    overflow: auto;
+                    padding-right: 30px;
+                    margin-bottom: 30px;
                     flex: 1;
                     .choose-tips {
                         padding: 20px 0;
@@ -803,6 +806,11 @@
                             color: #CCCCCC;
                         }
                     }
+                }
+                .temp-operation-bar {
+                    position: absolute;
+                    padding-top: 20px;
+                    bottom: 10px;
                 }
                 .bk-button.bk-button-small {
                     padding: 0 15px;

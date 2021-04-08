@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -656,6 +657,27 @@ class BkRepoService @Autowired constructor(
             timeoutInSeconds = ttl.toLong()
         )
         return "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}/bkrepo/api/external/repository$shareUri"
+    }
+
+    fun internalTemporaryAccessDownloadUrls(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        pathSet: Set<String>,
+        ttl: Int,
+        permits: Int?
+    ): List<String> {
+        logger.info("internalTemporaryAccessDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, pathSet: $pathSet, ttl: $ttl")
+        return bkRepoClient.createTemporaryAccessUrls(
+            userId = userId,
+            projectId = projectId,
+            repoName = RepoUtils.getRepoByType(artifactoryType),
+            fullPathSet = pathSet,
+            downloadUsersSet = setOf(),
+            downloadIpsSet = setOf(),
+            timeoutInSeconds = ttl.toLong(),
+            permits = permits
+        )
     }
 
     companion object {

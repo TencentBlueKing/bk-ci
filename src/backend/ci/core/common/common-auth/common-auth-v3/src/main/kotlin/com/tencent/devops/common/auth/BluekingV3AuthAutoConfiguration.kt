@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -57,11 +58,12 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
 
+@Suppress("ALL")
 @Configuration
 @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class BluekingV3AuthAutoConfiguration() {
+class BluekingV3AuthAutoConfiguration {
 
     @Value("\${auth.url:}")
     val iamBaseUrl = ""
@@ -85,11 +87,23 @@ class BluekingV3AuthAutoConfiguration() {
 
     @Bean
     @Primary
-    fun authResourceApi(authTokenApi: BluekingV3AuthTokenApi) = BluekingV3ResourceApi(grantService(), iamConfiguration(), iamEsbService())
+    fun authResourceApi(authTokenApi: BluekingV3AuthTokenApi) =
+        BluekingV3ResourceApi(
+            grantServiceImpl = grantService(),
+            iamConfiguration = iamConfiguration(),
+            iamEsbService = iamEsbService()
+        )
 
     @Bean
     @Primary
-    fun authProjectApi(bkAuthPermissionApi: BluekingV3AuthPermissionApi) = BluekingV3AuthProjectApi(bkAuthPermissionApi, policyService(), authHelper(), iamConfiguration(), iamEsbService())
+    fun authProjectApi(bkAuthPermissionApi: BluekingV3AuthPermissionApi) =
+        BluekingV3AuthProjectApi(
+            bkAuthPermissionApi = bkAuthPermissionApi,
+            policyService = policyService(),
+            authHelper = authHelper(),
+            iamConfiguration = iamConfiguration(),
+            iamEsbService = iamEsbService()
+        )
 
     @Bean
     fun bcsAuthServiceCode() = BluekingV3BcsAuthServiceCode()
@@ -138,5 +152,11 @@ class BluekingV3AuthAutoConfiguration() {
 
     @Bean
     @Primary
-    fun authPermissionApi(redisOperation: RedisOperation) = BluekingV3AuthPermissionApi(authHelper(), policyService(), redisOperation, iamConfiguration())
+    fun authPermissionApi(redisOperation: RedisOperation) =
+        BluekingV3AuthPermissionApi(
+            authHelper = authHelper(),
+            policyService = policyService(),
+            redisOperation = redisOperation,
+            iamConfiguration = iamConfiguration()
+        )
 }
