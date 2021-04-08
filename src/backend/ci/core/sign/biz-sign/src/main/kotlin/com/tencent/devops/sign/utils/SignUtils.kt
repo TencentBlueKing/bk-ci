@@ -30,7 +30,6 @@ package com.tencent.devops.sign.utils
 import com.dd.plist.NSDictionary
 import com.dd.plist.NSObject
 import com.dd.plist.PropertyListParser
-import com.tencent.devops.common.api.util.script.CommandLineUtils
 import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.sign.api.pojo.MobileProvisionInfo
 import org.slf4j.LoggerFactory
@@ -246,7 +245,7 @@ object SignUtils {
     fun unzipIpa(ipaFile: File, unzipIpaDir: File) {
         val cmd = "/usr/bin/unzip -o ${ipaFile.canonicalPath} -d ${unzipIpaDir.canonicalPath}"
         logger.info("[unzipIpa] $cmd")
-        CommandLineUtils.execute(cmd, null, true)
+        runtimeExec(cmd)
     }
 
     fun zipIpaFile(unzipDir: File, ipaPath: String): File? {
