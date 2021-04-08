@@ -25,24 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo
+package com.tencent.devops.process.pojo.pipeline
 
-import com.tencent.devops.common.pipeline.enums.ChannelCode
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-data class PipelineInfo(
-    val projectId: String,
+@ApiModel("删除流水线结果")
+data class DeletePipelineResult(
+    @ApiModelProperty("流水线ID", required = true)
     val pipelineId: String,
-    val templateId: String?,
+    @ApiModelProperty("流水线名称", required = true)
     val pipelineName: String,
-    val pipelineDesc: String,
-    var version: Int = 1,
-    val createTime: Long = 0,
-    val updateTime: Long = 0,
-    val creator: String,
-    val lastModifyUser: String,
-    val channelCode: ChannelCode,
-    val canManualStartup: Boolean,
-    val canElementSkip: Boolean,
-    val taskCount: Int,
-    var versionName: String = "init"
+    @ApiModelProperty("流水线版本号", required = true)
+    val version: Int
 )

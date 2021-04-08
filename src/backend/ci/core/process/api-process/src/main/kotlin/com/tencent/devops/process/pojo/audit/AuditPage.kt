@@ -25,24 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo
+package com.tencent.devops.process.pojo.audit
 
-import com.tencent.devops.common.pipeline.enums.ChannelCode
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-data class PipelineInfo(
-    val projectId: String,
-    val pipelineId: String,
-    val templateId: String?,
-    val pipelineName: String,
-    val pipelineDesc: String,
-    var version: Int = 1,
-    val createTime: Long = 0,
-    val updateTime: Long = 0,
-    val creator: String,
-    val lastModifyUser: String,
-    val channelCode: ChannelCode,
-    val canManualStartup: Boolean,
-    val canElementSkip: Boolean,
-    val taskCount: Int,
-    var versionName: String = "init"
-)
+@ApiModel("Audit分页数据包装模型")
+data class AuditPage<out T>(
+    @ApiModelProperty("总记录行数", required = true)
+    val count: Long,
+    @ApiModelProperty("第几页", required = true)
+    val page: Int,
+    @ApiModelProperty("每页多少条", required = true)
+    val pageSize: Int,
+    @ApiModelProperty("总共多少页", required = true)
+    val totalPages: Int,
+    @ApiModelProperty("数据", required = true)
+    val records: List<T>,
+    @ApiModelProperty("是否拥有创建权限", required = true)
+    val hasCreatePermission: Boolean
+) {
+    constructor(page: Int, pageSize: Int, count: Long, records: List<T>, hasCreatePermission: Boolean) :
+        this(count, page, pageSize, Math.ceil(count * 1.0 / pageSize).toInt(), records, hasCreatePermission)
+}

@@ -25,24 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo
+package com.tencent.devops.process.pojo.audit
 
-import com.tencent.devops.common.pipeline.enums.ChannelCode
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-data class PipelineInfo(
-    val projectId: String,
-    val pipelineId: String,
-    val templateId: String?,
-    val pipelineName: String,
-    val pipelineDesc: String,
-    var version: Int = 1,
-    val createTime: Long = 0,
-    val updateTime: Long = 0,
-    val creator: String,
-    val lastModifyUser: String,
-    val channelCode: ChannelCode,
-    val canManualStartup: Boolean,
-    val canElementSkip: Boolean,
-    val taskCount: Int,
-    var versionName: String = "init"
-)
+@ApiModel("审计模型-Audit")
+data class AuditInfo(
+    @ApiModelProperty("状态", required = true)
+    val status: String,
+    @ApiModelProperty("资源类型", required = true)
+    val resourceType: String,
+    @ApiModelProperty("资源ID", required = true)
+    val resourceId: String,
+    @ApiModelProperty("资源名称", required = true)
+    val resourceName: String,
+    @ApiModelProperty("操作人", required = true)
+    val userId: String,
+    @ApiModelProperty("操作时间", required = true)
+    val updatedTime: Long,
+    @ApiModelProperty("操作", required = true)
+    val action: String,
+    @ApiModelProperty("操作内容", required = true)
+    val actionContent: String
+) {
+    companion object {
+        const val classType = "audit"
+    }
+}

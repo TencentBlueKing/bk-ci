@@ -25,24 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo
+package com.tencent.devops.process.engine.cfg
 
-import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.process.utils.PIPELINE_RES_NUM_MIN
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 
-data class PipelineInfo(
-    val projectId: String,
-    val pipelineId: String,
-    val templateId: String?,
-    val pipelineName: String,
-    val pipelineDesc: String,
-    var version: Int = 1,
-    val createTime: Long = 0,
-    val updateTime: Long = 0,
-    val creator: String,
-    val lastModifyUser: String,
-    val channelCode: ChannelCode,
-    val canManualStartup: Boolean,
-    val canElementSkip: Boolean,
-    val taskCount: Int,
-    var versionName: String = "init"
-)
+@Component
+class VersionConfigure {
+
+    /**
+     * 流水线版本保存的最大记录数
+     */
+    @Value("\${pipeline.version.max_keep_num:50}")
+    val maxKeepNum: Int = PIPELINE_RES_NUM_MIN
+}
