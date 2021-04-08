@@ -29,6 +29,8 @@ package com.tencent.devops.store.dao.template
 
 import com.tencent.devops.model.store.tables.TTemplate
 import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
+import com.tencent.devops.store.pojo.common.StoreBaseInfo
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -79,5 +81,35 @@ class TemplateCommonDao : AbstractStoreCommonDao() {
 
     override fun getStoreDevLanguages(dslContext: DSLContext, storeCode: String): List<String>? {
         return null
+    }
+
+    override fun getNewestStoreBaseInfoByCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeStatus: Byte?
+    ): StoreBaseInfo? {
+        return with(TTemplate.T_TEMPLATE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(TEMPLATE_CODE.eq(storeCode))
+            if (storeStatus != null) {
+                conditions.add(TEMPLATE_STATUS.eq(storeStatus))
+            }
+            val templateRecord = dslContext.selectFrom(this)
+                .where(conditions)
+                .orderBy(CREATE_TIME.desc())
+                .limit(1)
+                .fetchOne()
+            if (templateRecord != null) {
+                StoreBaseInfo(
+                    storeId = templateRecord.id,
+                    storeCode = templateRecord.templateCode,
+                    storeName = templateRecord.templateName,
+                    version = templateRecord.version,
+                    publicFlag = templateRecord.publicFlag
+                )
+            } else {
+                null
+            }
+        }
     }
 }

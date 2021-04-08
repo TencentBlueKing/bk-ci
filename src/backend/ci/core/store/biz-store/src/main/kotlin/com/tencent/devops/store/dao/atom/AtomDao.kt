@@ -208,13 +208,15 @@ class AtomDao : AtomBaseDao() {
     fun getPipelineAtom(
         dslContext: DSLContext,
         atomCode: String,
-        version: String,
+        version: String? = null,
         atomStatusList: List<Byte>? = null
     ): TAtomRecord? {
         return with(TAtom.T_ATOM) {
             val conditions = mutableListOf<Condition>()
             conditions.add(ATOM_CODE.eq(atomCode))
-            conditions.add(VERSION.like(VersionUtils.generateQueryVersion(version)))
+            if (version != null) {
+                conditions.add(VERSION.like(VersionUtils.generateQueryVersion(version)))
+            }
             if (atomStatusList != null) {
                 conditions.add(ATOM_STATUS.`in`(atomStatusList))
             }

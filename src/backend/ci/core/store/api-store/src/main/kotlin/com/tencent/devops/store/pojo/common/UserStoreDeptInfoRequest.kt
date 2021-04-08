@@ -27,17 +27,22 @@
 
 package com.tencent.devops.store.pojo.common
 
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("机构信息报文体")
-data class DeptInfo(
-    @ApiModelProperty("机构ID", required = true)
-    val deptId: Int,
-    @ApiModelProperty("机构名称", required = true)
-    val deptName: String,
-    @ApiModelProperty("机构审核状态(0：待审核 1：审核通过 2：审核驳回)", required = false)
-    val status: String? = null,
-    @ApiModelProperty("批注", required = false)
-    val comment: String? = null
+@ApiModel("用户和组件可见范围校验请求报文")
+data class UserStoreDeptInfoRequest(
+    @ApiModelProperty("用户ID", required = true)
+    val userId: String,
+    @ApiModelProperty("用户机构ID列表", required = true)
+    val userDeptIdList: List<Int>,
+    @ApiModelProperty("store组件代码", required = true)
+    val storeCode: String,
+    @ApiModelProperty("store组件类型", required = true)
+    val storeType: StoreTypeEnum,
+    @ApiModelProperty("公共组件标识", required = true)
+    val publicFlag: Boolean,
+    @ApiModelProperty("store组件机构信息列表", required = true)
+    val storeDepInfoList: List<DeptInfo>?
 )
