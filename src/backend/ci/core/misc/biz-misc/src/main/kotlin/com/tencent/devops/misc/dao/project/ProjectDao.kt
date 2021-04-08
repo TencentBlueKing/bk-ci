@@ -76,7 +76,7 @@ class ProjectDao {
                 conditions.add(ENGLISH_NAME.`in`(projectIdList))
             }
             if (minId != null) {
-                conditions.add(ID.gt(minId))
+                conditions.add(ID.ge(minId))
             }
             if (maxId != null) {
                 conditions.add(ID.lt(maxId))

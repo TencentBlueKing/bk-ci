@@ -27,33 +27,54 @@
 
 package com.tencent.devops.misc.config
 
+import com.google.common.cache.CacheBuilder
+import com.google.common.cache.CacheLoader
+import com.google.common.cache.LoadingCache
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import java.util.concurrent.locks.ReentrantLock
+import java.util.concurrent.TimeUnit
 
 @Component
 class MiscPipelineTransferContext @Autowired constructor(private val redisOperation: RedisOperation) {
 
     companion object {
+        private const val SWITCH_KEY = "misc:pipeline:transfer:switch"
         private const val LOCK_KEY = "misc:pipeline:transfer:lock"
         private const val TRANSFER_PROJECT_CHANNELS_KEY = "misc:pipeline:transfer:channels"
         private const val TRANSFER_PROJECT_LIST_KEY = "misc:pipeline:transfer:project:list"
         private const val TRANSFER_PROJECT_ID_KEY = "misc:pipeline:transfer:project:id"
         private const val TRANSFER_PROJECT_BATCH_SIZE_KEY = "misc:pipeline:transfer:project:batchSize"
         private const val expiredTimeInSeconds: Long = 3000
-        private val channelSet = mutableSetOf<String>()
-        private val reentrantLock = ReentrantLock()
     }
 
     private val lock = RedisLock(redisOperation, LOCK_KEY, expiredTimeInSeconds)
 
-    fun switch(): Boolean = redisOperation.get("misc:pipeline:transfer:switch") == "1"
+    private val switchCache: LoadingCache<String, String> = CacheBuilder.newBuilder()
+        .expireAfterWrite(1, TimeUnit.MINUTES).maximumSize(100)
+        .build(object : CacheLoader<String, String>() {
+            override fun load(key: String): String {
+                return redisOperation.get(key) ?: ""
+            }
+        })
+
+    private val channelCache: LoadingCache<String, Boolean> = CacheBuilder.newBuilder()
+        .expireAfterWrite(10, TimeUnit.MINUTES).maximumSize(10)
+        .build(object : CacheLoader<String, Boolean>() {
+            override fun load(key: String): Boolean {
+                val channelSet = mutableSetOf<String>()
+                val channels = redisOperation.get(TRANSFER_PROJECT_CHANNELS_KEY) ?: "CODECC"
+                channelSet.addAll(channels.split(","))
+                return channelSet.contains(key)
+            }
+        })
+
+    fun switch(): Boolean = switchCache.get(SWITCH_KEY) == "1"
 
     fun tryLock(): Boolean = lock.tryLock()
 
-    fun unLock() = lock.unlock()
+    fun unLock(): Boolean = lock.unlock()
 
     /**
      * return p1,p2,p3
@@ -69,9 +90,7 @@ class MiscPipelineTransferContext @Autowired constructor(private val redisOperat
     /**
      * return Long
      */
-    fun getLastTransferProjectSeqId() = redisOperation.get(TRANSFER_PROJECT_ID_KEY)?.toLong()
-
-    fun clearLastTransferProjectId() = redisOperation.delete(TRANSFER_PROJECT_ID_KEY)
+    fun getLastTransferProjectSeqId(): Long? = redisOperation.get(TRANSFER_PROJECT_ID_KEY)?.toLong()
 
     fun dealProjectBatchSize(): Int = redisOperation.get(TRANSFER_PROJECT_BATCH_SIZE_KEY)?.toInt() ?: 500
 
@@ -79,18 +98,5 @@ class MiscPipelineTransferContext @Autowired constructor(private val redisOperat
         redisOperation.set(TRANSFER_PROJECT_ID_KEY, maxHandleProjectPrimaryId.toString())
     }
 
-    fun checkTransferChannel(channel: String): Boolean {
-        if (channelSet.isEmpty()) {
-            try {
-                reentrantLock.lock()
-                val channels = redisOperation.get(TRANSFER_PROJECT_CHANNELS_KEY) ?: "CODECC"
-                channelSet.addAll(channels.split(","))
-            } finally {
-                if (reentrantLock.isLocked) {
-                    reentrantLock.unlock()
-                }
-            }
-        }
-        return channelSet.contains(channel)
-    }
+    fun checkTransferChannel(channel: String): Boolean = channelCache.get(channel)
 }

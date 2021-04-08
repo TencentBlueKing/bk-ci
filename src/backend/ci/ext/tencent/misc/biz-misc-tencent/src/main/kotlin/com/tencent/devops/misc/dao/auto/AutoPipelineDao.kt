@@ -77,7 +77,9 @@ class AutoPipelineDao {
                 )
                 .execute()
         }
-        logger.info("savePipelineInfo|version=${record.version}|pipelineId=${record.pipelineId}|insert=$insert")
+        if (LOG.isDebugEnabled) {
+            LOG.debug("savePipelineInfo|version=${record.version}|pipelineId=${record.pipelineId}|insert=$insert")
+        }
     }
 
     fun savePipelineRes(dslContext: DSLContext, record: TPipelineResourceRecord) {
@@ -97,7 +99,10 @@ class AutoPipelineDao {
                 .set(CREATE_TIME, record.createTime)
                 .execute()
         }
-        logger.info("savePipelineRes|version=${record.version}|pipelineId=${record.pipelineId}|insert=$insert")
+
+        if (LOG.isDebugEnabled) {
+            LOG.debug("savePipelineRes|version=${record.version}|pipelineId=${record.pipelineId}|insert=$insert")
+        }
     }
 
     fun savePipelineBuildHistories(dslContext: DSLContext, histories: Collection<TPipelineBuildHistoryRecord>) {
@@ -130,7 +135,9 @@ class AutoPipelineDao {
         }
         val insert = dslContext.batch(records).execute().size
 
-        logger.info("saveBuildHistory|s=${histories.size}|pipelineId=${histories.first().pipelineId}|insert=$insert")
+        if (LOG.isDebugEnabled) {
+            LOG.debug("saveBuildHistory|s=${histories.size}|pipelineId=${histories.first().pipelineId}|insert=$insert")
+        }
     }
 
     fun savePipelineSummary(dslContext: DSLContext, record: TPipelineBuildSummaryRecord) {
@@ -170,7 +177,10 @@ class AutoPipelineDao {
                 record.queueCount
             ).execute()
         }
-        logger.info("savePipelineSummary|num=${record.buildNum}|pipelineId=${record.pipelineId}|insert=$insert")
+
+        if (LOG.isDebugEnabled) {
+            LOG.debug("savePipelineSummary|num=${record.buildNum}|pipelineId=${record.pipelineId}|insert=$insert")
+        }
     }
 
     fun savePipelineSetting(dslContext: DSLContext, record: TPipelineSettingRecord) {
@@ -216,10 +226,13 @@ class AutoPipelineDao {
                 )
                 .execute()
         }
-        logger.info("savePipelineSetting|pipelineId=${record.pipelineId}|insert=$insert")
+
+        if (LOG.isDebugEnabled) {
+            LOG.debug("savePipelineSetting|pipelineId=${record.pipelineId}|insert=$insert")
+        }
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(AutoPipelineDao::class.java)
+        private val LOG = LoggerFactory.getLogger(AutoPipelineDao::class.java)
     }
 }

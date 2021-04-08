@@ -73,8 +73,7 @@ class PipelineTransferJob @Autowired constructor(
             } else {
                 val maxProjectPrimaryId = projectService.getMaxId(needTransferProjectIdList) ?: 0L
                 if (handleProjectPrimaryId >= maxProjectPrimaryId) {
-                    miscPipelineTransferContext.clearLastTransferProjectId()
-                    logger.info("transfer|END|RE_START")
+                    logger.info("transfer|END|ALL_FINISH")
                     return
                 }
             }
@@ -150,7 +149,7 @@ class PipelineTransferJob @Autowired constructor(
                 }
             } while (listPipelineBuilds.size >= PIPELINE_BUILD_HISTORY_PAGE_SIZE)
         } catch (duplicate: Exception) {
-            logger.warn("transferPipelines|FAIL|${pipelineInfoRecord.pipelineId}|$duplicate", duplicate)
+            logger.warn("transferPipelines|FAIL|${pipelineInfoRecord.pipelineId}|$duplicate")
         }
     }
 }
