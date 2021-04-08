@@ -84,11 +84,11 @@ class MeasureListenerConfiguration {
         val concurrency = measureConcurrency!!
         container.setConcurrentConsumers(concurrency)
         container.setMaxConcurrentConsumers(Math.max(5, concurrency))
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
 
         val adapter = MessageListenerAdapter(listener, listener::execute.name)
         adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
+        container.setMessageListener(adapter)
         return container
     }
 }

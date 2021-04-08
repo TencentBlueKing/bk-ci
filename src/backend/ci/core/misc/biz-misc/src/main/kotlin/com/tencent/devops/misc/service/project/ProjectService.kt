@@ -70,7 +70,8 @@ class ProjectService @Autowired constructor(
                 projectInfoList.add(
                     ProjectInfo(
                         id = projectInfoRecord["ID"] as Long,
-                        projectId = projectInfoRecord["ENGLISH_NAME"] as String
+                        projectId = projectInfoRecord["ENGLISH_NAME"] as String,
+                        channel = projectInfoRecord["CHANNEL"] as String
                     )
                 )
             }

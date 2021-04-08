@@ -39,8 +39,6 @@ import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
-import com.tencent.devops.common.web.mq.alert.AlertLevel
-import com.tencent.devops.common.web.mq.alert.AlertUtils
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.docker.config.DefaultImageConfig
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerDebugDao
@@ -395,7 +393,7 @@ class DockerHostDebugService @Autowired constructor(
         )
     }
 
-    fun startDebug(hostTag: String): Result<ContainerInfo>? {
+/*    fun startDebug(hostTag: String): Result<ContainerInfo>? {
         val stopWatch = StopWatch()
         var message = ""
         val redisLock = DockerHostDebugLock(redisOperation)
@@ -613,7 +611,7 @@ class DockerHostDebugService @Autowired constructor(
             stopWatch.stop()
             LOG.info("[$hostTag]|endDebug| $message| watch=$stopWatch")
         }
-    }
+    }*/
 
     @Scheduled(initialDelay = 45 * 1000, fixedDelay = 600 * 1000)
     fun clearTimeoutDebugTask() {
@@ -650,7 +648,7 @@ class DockerHostDebugService @Autowired constructor(
         }
     }
 
-    // FIXME 需要记录如果是从某个构建ID启动的调试必须不允许漂移，另起issue处理
+/*    // FIXME 需要记录如果是从某个构建ID启动的调试必须不允许漂移，另起issue处理
     @Scheduled(initialDelay = 90 * 1000, fixedDelay = 60 * 1000)
     fun resetHostTag() {
         val stopWatch = StopWatch()
@@ -713,7 +711,7 @@ class DockerHostDebugService @Autowired constructor(
             stopWatch.stop()
             LOG.info("resetZone| $message| watch=$stopWatch")
         }
-    }
+    }*/
 
     fun cleanIp(projectId: String, pipelineId: String, vmSeqId: String): Result<Boolean> {
         LOG.info("clean pipeline docker build ip, projectId:$projectId, pipelineId:$pipelineId, vmSeqId:$vmSeqId")

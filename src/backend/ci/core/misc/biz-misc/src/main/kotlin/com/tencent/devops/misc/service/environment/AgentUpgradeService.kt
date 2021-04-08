@@ -32,6 +32,7 @@ import com.tencent.devops.common.environment.agent.AgentGrayUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.misc.dao.environment.EnvironmentThirdPartyAgentDao
+import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -61,6 +62,23 @@ class AgentUpgradeService @Autowired constructor(
             return
         }
 
+        val canUpgradeAgents = listCanUpdateAgents(
+            currentVersion = currentVersion,
+            currentMasterVersion = currentMasterVersion,
+            maxParallelCount = maxParallelCount
+        )
+
+        if (canUpgradeAgents.isNotEmpty()) {
+            agentGrayUtils.setCanUpgradeAgents(canUpgradeAgents.map { it.id })
+        }
+    }
+
+    private fun listCanUpdateAgents(
+        currentVersion: String?,
+        currentMasterVersion: String?,
+        maxParallelCount: Int
+    ): List<TEnvironmentThirdpartyAgentRecord> {
+
         val grayProjects = gray.grayProjectSet(redisOperation)
         val gray = gray.isGray()
         val importOKAgents = environmentThirdPartyAgentDao.listByStatus(
@@ -79,12 +97,12 @@ class AgentUpgradeService @Autowired constructor(
                 else -> false
             }
         }
-        val canUpgraderAgent = if (needUpgradeAgents.size > maxParallelCount) {
+
+        return if (needUpgradeAgents.size > maxParallelCount) {
             needUpgradeAgents.subList(0, maxParallelCount)
         } else {
             needUpgradeAgents
         }
-        agentGrayUtils.setCanUpgradeAgents(canUpgraderAgent.map { it.id })
     }
 
     fun setMaxParallelUpgradeCount(count: Int) {

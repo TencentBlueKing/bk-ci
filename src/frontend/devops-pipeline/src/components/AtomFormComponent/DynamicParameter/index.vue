@@ -88,23 +88,23 @@
             },
 
             addParams () {
-                let url = this.param.url || ''
-                let isErrorParam = false
-
-                this.queryKey = []
-                url = url.replace(/{([^\{\}]+)}/g, (str, key) => {
-                    const value = this.paramValues[key]
-                    this.queryKey.push(key)
-                    if (typeof value === 'undefined') isErrorParam = true
-                    return value
-                })
-
-                if (isErrorParam) return
-                this.isLoading = true
-                this.$ajax.get(url).then((res) => {
-                    this.parameters = this.getResponseData(res, this.param.dataPath || 'data.records')
-                    this.setValue()
-                }).catch(e => this.$showTips({ message: e.message, theme: 'error' })).finally(() => (this.isLoading = false))
+                // let url = this.param.url || ''
+                if (typeof this.param.url === 'string' && this.param.url !== '') {
+                    const [url, queryKey] = this.generateReqUrl(this.param.url, this.paramValues)
+                    this.queryKey = queryKey
+                    // url = url.replace(/{([^\{\}]+)}/g, (str, key) => {
+                    //     const value = this.paramValues[key]
+                    //     this.queryKey.push(key)
+                    //     if (typeof value === 'undefined') isErrorParam = true
+                    //     return value
+                    // })
+                    if (!url) return
+                    this.isLoading = true
+                    this.$ajax.get(url).then((res) => {
+                        this.parameters = this.getResponseData(res, this.param.dataPath || 'data.records')
+                        this.setValue()
+                    }).catch(e => this.$showTips({ message: e.message, theme: 'error' })).finally(() => (this.isLoading = false))
+                }
             },
 
             setValue () {

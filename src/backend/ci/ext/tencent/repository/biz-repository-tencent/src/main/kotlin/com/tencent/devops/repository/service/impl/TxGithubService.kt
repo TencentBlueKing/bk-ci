@@ -67,7 +67,7 @@ class TxGithubService @Autowired constructor(
         return result.data!!
     }
 
-    override fun updateCheckRuns(token: String, projectName: String, checkRunId: Int, checkRuns: GithubCheckRuns) {
+    override fun updateCheckRuns(token: String, projectName: String, checkRunId: Long, checkRuns: GithubCheckRuns) {
         client.get(ServiceGithubResource::class).updateCheckRuns(
             accessToken = token,
             projectName = projectName,

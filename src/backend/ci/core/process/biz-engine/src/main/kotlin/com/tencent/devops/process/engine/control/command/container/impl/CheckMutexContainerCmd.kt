@@ -76,14 +76,11 @@ class CheckMutexContainerCmd(
                     commandContext.cmdFlowState = CmdFlowState.FINALLY
                 }
                 ContainerMutexStatus.WAITING -> {
-//                    LOG.info("ENGINE|$buildId|${event.source}|MUTEX_DELAY|$stageId|j($containerId)")
                     commandContext.latestSummary = "j($containerId)_mutex_delay"
                     commandContext.cmdFlowState = CmdFlowState.LOOP // 循环消息命令 延时10秒钟
                 }
                 else -> { // 正常运行
-                    commandContext.latestSummary = "j($containerId)_mutex_ready"
                     commandContext.cmdFlowState = CmdFlowState.CONTINUE // 检查通过，继续向下执行
-//                    LOG.info("ENGINE|$buildId|${event.source}|MUTEX_READY|$stageId|j($containerId)")
                 }
             }
         }

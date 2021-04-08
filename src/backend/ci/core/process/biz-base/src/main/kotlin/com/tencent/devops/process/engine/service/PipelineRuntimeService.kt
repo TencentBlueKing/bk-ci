@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
@@ -865,7 +866,7 @@ class PipelineRuntimeService @Autowired constructor(
                 if (BuildStatus.parse(container.status).isFailure() &&
                     !retryStage && !retryStartTaskId.isNullOrBlank() &&
                     lastTimeBuildContainerRecords.isNotEmpty()) {
-                    if (null == findTaskRecord(lastTimeBuildTaskRecords, container, retryStartTaskId!!)) {
+                    if (null == findTaskRecord(lastTimeBuildTaskRecords, container, retryStartTaskId)) {
                         logger.info("[$buildId|RETRY_SKIP_JOB|j($containerId)|${container.name}")
                         containerSeq++
                         return@nextContainer
@@ -921,6 +922,7 @@ class PipelineRuntimeService @Autowired constructor(
                                 atomCode = atomElement.getAtomCode()
                             )
                         )
+                        needUpdateContainer = true
                     } else {
                         // 如果是失败的插件重试，并且当前插件不是要重试的插件，则检查其之前的状态，如果已经执行过，则跳过
                         if (!retryStage && !retryStartTaskId.isNullOrBlank() && retryStartTaskId != atomElement.id) {
@@ -994,8 +996,8 @@ class PipelineRuntimeService @Autowired constructor(
                     )
                 }
 
-                if (lastTimeBuildContainerRecords.isNotEmpty()) {
-                    if (needUpdateContainer) {
+                if (needUpdateContainer) {
+                    if (lastTimeBuildContainerRecords.isNotEmpty()) {
                         run findHistoryContainer@{
                             lastTimeBuildContainerRecords.forEach {
                                 if (it.containerId == containerId && it.status != BuildStatus.SKIP.ordinal) {
@@ -1006,35 +1008,33 @@ class PipelineRuntimeService @Autowired constructor(
                                 }
                             }
                         }
+                    } else {
+                        ModelUtils.initContainerOldData(container)
+                        val controlOption = when (container) {
+                            is NormalContainer -> PipelineBuildContainerControlOption(
+                                container.jobControlOption!!,
+                                container.mutexGroup
+                            )
+                            is VMBuildContainer -> PipelineBuildContainerControlOption(
+                                container.jobControlOption!!,
+                                container.mutexGroup
+                            )
+                            else -> null
+                        }
+                        buildContainers.add(
+                            PipelineBuildContainer(
+                                projectId = pipelineInfo.projectId,
+                                pipelineId = pipelineInfo.pipelineId,
+                                buildId = buildId,
+                                stageId = stageId,
+                                containerId = containerId,
+                                containerType = containerType,
+                                seq = containerSeq,
+                                status = BuildStatus.QUEUE,
+                                controlOption = controlOption
+                            )
+                        )
                     }
-                } else {
-                    ModelUtils.initContainerOldData(container)
-                    val controlOption = when (container) {
-                        is NormalContainer -> PipelineBuildContainerControlOption(
-                            container.jobControlOption!!,
-                            container.mutexGroup
-                        )
-                        is VMBuildContainer -> PipelineBuildContainerControlOption(
-                            container.jobControlOption!!,
-                            container.mutexGroup
-                        )
-                        else -> null
-                    }
-                    buildContainers.add(
-                        PipelineBuildContainer(
-                            projectId = pipelineInfo.projectId,
-                            pipelineId = pipelineInfo.pipelineId,
-                            buildId = buildId,
-                            stageId = stageId,
-                            containerId = containerId,
-                            containerType = containerType,
-                            seq = containerSeq,
-                            status = BuildStatus.QUEUE,
-                            controlOption = controlOption
-                        )
-                    )
-                }
-                if (needUpdateContainer) {
                     needUpdateStage = true
                 }
                 containerSeq++
@@ -1273,6 +1273,15 @@ class PipelineRuntimeService @Autowired constructor(
                 buildId = buildId,
                 // 刷新历史列表和详情页面
                 refreshTypes = RefreshType.DETAIL.binary
+            ), // 广播构建排队事件
+            PipelineBuildQueueBroadCastEvent(
+                source = "startQueue",
+                projectId = pipelineInfo.projectId,
+                pipelineId = pipelineInfo.pipelineId,
+                userId = userId,
+                buildId = buildId,
+                actionType = actionType,
+                triggerType = startType.name
             )
         )
 
@@ -1357,7 +1366,7 @@ class PipelineRuntimeService @Autowired constructor(
             return
         }
 
-        val executeCount = if (retryCount > 0) { retryCount } else { 1 }
+        val executeCount = retryCount.coerceAtLeast(1)
 
         if (lastTimeBuildTaskRecords.isEmpty()) {
             buildTaskList.add(
@@ -1628,6 +1637,10 @@ class PipelineRuntimeService @Autowired constructor(
         pipelineBuildSummaryDao.updateBuildNo(dslContext, pipelineId, buildNo)
     }
 
+    fun updateRecommendVersion(buildId: String, recommendVersion: String) {
+        pipelineBuildDao.updateRecommendVersion(dslContext, buildId, recommendVersion)
+    }
+
     /**
      * 开始最新一次构建
      */
@@ -1730,6 +1743,14 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     fun getRecommendVersion(buildParameters: List<BuildParameters>): String? {
+        val recommendVersionPrefix = getRecommendVersionPrefix(buildParameters) ?: return null
+        val buildNo = if (!buildParameters.none { it.key == BUILD_NO || it.key == "BuildNo" }) {
+            buildParameters.filter { it.key == BUILD_NO || it.key == "BuildNo" }[0].value.toString()
+        } else return null
+        return "$recommendVersionPrefix.$buildNo"
+    }
+
+    fun getRecommendVersionPrefix(buildParameters: List<BuildParameters>): String? {
         val majorVersion = if (!buildParameters.none { it.key == MAJORVERSION || it.key == "MajorVersion" }) {
             buildParameters.filter { it.key == MAJORVERSION || it.key == "MajorVersion" }[0].value.toString()
         } else return null
@@ -1742,11 +1763,7 @@ class PipelineRuntimeService @Autowired constructor(
             buildParameters.filter { it.key == FIXVERSION || it.key == "FixVersion" }[0].value.toString()
         } else return null
 
-        val buildNo = if (!buildParameters.none { it.key == BUILD_NO || it.key == "BuildNo" }) {
-            buildParameters.filter { it.key == BUILD_NO || it.key == "BuildNo" }[0].value.toString()
-        } else return null
-
-        return "$majorVersion.$minorVersion.$fixVersion.$buildNo"
+        return "$majorVersion.$minorVersion.$fixVersion"
     }
 
     fun initBuildParameters(buildId: String) {
@@ -1759,7 +1776,7 @@ class PipelineRuntimeService @Autowired constructor(
         pipelineBuildDao.updateBuildParameters(dslContext, buildId, JsonUtil.toJson(buildParameters))
     }
 
-    private fun getBuildParametersFromStartup(buildId: String): List<BuildParameters> {
+    fun getBuildParametersFromStartup(buildId: String): List<BuildParameters> {
         return try {
             val startupParam = buildStartupParamService.getParam(buildId)
             return getBuildParameters(startupParam)
