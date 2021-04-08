@@ -397,12 +397,12 @@ class TemplateDao {
     fun listTemplateByProjectIds(
         dslContext: DSLContext,
         projectIds: Set<String>,
-        includePublicFlag: Boolean?,
-        templateType: TemplateType?,
-        templateIdList: Collection<String>?,
-        storeFlag: Boolean?,
-        page: Int?,
-        pageSize: Int?
+        includePublicFlag: Boolean? = null,
+        templateType: TemplateType? = null,
+        templateIdList: Collection<String>? = null,
+        storeFlag: Boolean? = null,
+        page: Int? = null,
+        pageSize: Int? = null
     ): Result<out Record>? {
         val a = TTemplate.T_TEMPLATE.`as`("a")
 
