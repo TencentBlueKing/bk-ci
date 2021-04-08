@@ -10,7 +10,7 @@
                   
                     <div class="group-list-hint" v-if="tagGroupList.length > 0">
                         <logo size="12" name="warning-circle" />
-                        <span>注意：最多可添加 10 个标签组；同一分组下最多可添加 12 个标签</span>
+                        <span>{{ $t('group.groupNotice') }}</span>
                     </div>
                     <div class="group-list-cards"
                         v-for="(group, groupIndex) in tagGroupList" :key="groupIndex"
