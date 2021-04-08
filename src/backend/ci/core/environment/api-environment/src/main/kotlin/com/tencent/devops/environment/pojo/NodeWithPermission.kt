@@ -73,7 +73,7 @@ data class NodeWithPermission(
     @ApiModelProperty("所属业务, 默认-1表示没有绑定业务")
     val bizId: Long? = -1,
     @ApiModelProperty("流水线Job引用数")
-    val pipelineRefcount: Int? = 0,
+    val pipelineRefCount: Int? = 0,
     @ApiModelProperty("流水线Job引用数")
     val lastBuildTime: String? = ""
 )

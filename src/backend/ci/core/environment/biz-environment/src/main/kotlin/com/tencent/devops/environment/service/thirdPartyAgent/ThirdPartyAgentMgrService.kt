@@ -145,10 +145,11 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             osName = agentRecord.detectOs,
             ip = agentRecord.ip,
             createdUser = nodeRecord.createdUser,
-            createdTime = if (null == nodeRecord.createdTime) "" else DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-                .format(
-                    nodeRecord.createdTime
-                ),
+            createdTime = if (null == nodeRecord.createdTime) {
+                ""
+            } else {
+                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(nodeRecord.createdTime)
+            },
             agentVersion = agentRecord.masterVersion ?: "",
             slaveVersion = agentRecord.version ?: "",
             agentInstallPath = agentRecord.agentInstallPath ?: "",
@@ -340,14 +341,17 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             dslContext = dslContext,
             nodeId = id,
             projectId = projectId
-        )
-            ?: throw NotFoundException("The agent is not exist")
+        ) ?: throw NotFoundException("The agent is not exist")
 
-        return UsageMetrics.loadMetricsBean(UsageMetrics.MetricsType.CPU, OS.valueOf(agentRecord.os))
-            ?.loadQuery(
-                agentHashId = HashUtil.encodeLongId(agentRecord.id),
-                timeRange = timeRange
-            ) ?: emptyMap()
+        return try {
+            UsageMetrics.loadMetricsBean(UsageMetrics.MetricsType.CPU, OS.valueOf(agentRecord.os))
+                ?.loadQuery(
+                    agentHashId = HashUtil.encodeLongId(agentRecord.id),
+                    timeRange = timeRange
+                ) ?: emptyMap()
+        } catch (e: Exception) {
+            emptyMap()
+        }
     }
 
     fun queryMemoryUsageMetrix(
@@ -361,13 +365,16 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             dslContext = dslContext,
             nodeId = id,
             projectId = projectId
-        )
-            ?: throw NotFoundException("The agent is not exist")
-        return UsageMetrics.loadMetricsBean(UsageMetrics.MetricsType.MEMORY, OS.valueOf(agentRecord.os))
-            ?.loadQuery(
-                agentHashId = HashUtil.encodeLongId(agentRecord.id),
-                timeRange = timeRange
-            ) ?: emptyMap()
+        ) ?: throw NotFoundException("The agent is not exist")
+        return try {
+            return UsageMetrics.loadMetricsBean(UsageMetrics.MetricsType.MEMORY, OS.valueOf(agentRecord.os))
+                ?.loadQuery(
+                    agentHashId = HashUtil.encodeLongId(agentRecord.id),
+                    timeRange = timeRange
+                ) ?: emptyMap()
+        } catch (e: Exception) {
+            emptyMap()
+        }
     }
 
     fun queryDiskioMetrix(
@@ -381,14 +388,17 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             dslContext = dslContext,
             nodeId = id,
             projectId = projectId
-        )
-            ?: throw NotFoundException("The agent is not exist")
+        ) ?: throw NotFoundException("The agent is not exist")
 
-        return UsageMetrics.loadMetricsBean(UsageMetrics.MetricsType.DISK, OS.valueOf(agentRecord.os))
-            ?.loadQuery(
-                agentHashId = HashUtil.encodeLongId(agentRecord.id),
-                timeRange = timeRange
-            ) ?: emptyMap()
+        return try {
+            return UsageMetrics.loadMetricsBean(UsageMetrics.MetricsType.DISK, OS.valueOf(agentRecord.os))
+                ?.loadQuery(
+                    agentHashId = HashUtil.encodeLongId(agentRecord.id),
+                    timeRange = timeRange
+                ) ?: emptyMap()
+        } catch (e: Exception) {
+            emptyMap()
+        }
     }
 
     fun queryNetMetrix(
@@ -402,14 +412,17 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             dslContext = dslContext,
             nodeId = id,
             projectId = projectId
-        )
-            ?: throw NotFoundException("The agent is not exist")
+        ) ?: throw NotFoundException("The agent is not exist")
 
-        return UsageMetrics.loadMetricsBean(UsageMetrics.MetricsType.NET, OS.valueOf(agentRecord.os))
-            ?.loadQuery(
-                agentHashId = HashUtil.encodeLongId(agentRecord.id),
-                timeRange = timeRange
-            ) ?: emptyMap()
+        return try {
+            return UsageMetrics.loadMetricsBean(UsageMetrics.MetricsType.NET, OS.valueOf(agentRecord.os))
+                ?.loadQuery(
+                    agentHashId = HashUtil.encodeLongId(agentRecord.id),
+                    timeRange = timeRange
+                ) ?: emptyMap()
+        } catch (e: Exception) {
+            emptyMap()
+        }
     }
 
     fun generateAgent(

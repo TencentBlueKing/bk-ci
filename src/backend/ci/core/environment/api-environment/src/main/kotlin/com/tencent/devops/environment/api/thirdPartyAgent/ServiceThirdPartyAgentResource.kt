@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentPipelineRef
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineCreate
@@ -210,4 +211,19 @@ interface ServiceThirdPartyAgentResource {
         @PathParam("agentId")
         agentId: String
     ): Result<Boolean>
+
+    @ApiOperation("获取构建机流水线引用信息")
+    @GET
+    @Path("/projects/{projectId}/agents/{nodeHashId}/listPipelineRef")
+    fun listPipelineRef(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("Node Hash ID", required = true)
+        @PathParam("nodeHashId")
+        nodeHashId: String
+    ): Result<List<AgentPipelineRef>>
 }

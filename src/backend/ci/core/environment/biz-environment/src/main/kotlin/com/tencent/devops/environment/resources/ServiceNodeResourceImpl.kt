@@ -37,6 +37,7 @@ import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.service.EnvService
 import com.tencent.devops.environment.service.NodeService
+import com.tencent.devops.environment.utils.NodeUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -87,5 +88,9 @@ class ServiceNodeResourceImpl @Autowired constructor(
 
     override fun listNodeByType(userId: String, projectId: String, type: String): Result<List<NodeBaseInfo>> {
         return Result(nodeService.listByType(userId, projectId, type))
+    }
+
+    override fun extListNodes(userId: String, projectId: String): Result<List<NodeWithPermission>> {
+        return Result(NodeUtils.sortByUser(nodeService.extListNodes(userId, projectId), userId))
     }
 }
