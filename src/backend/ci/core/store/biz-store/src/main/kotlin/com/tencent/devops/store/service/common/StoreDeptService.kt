@@ -27,64 +27,18 @@
 
 package com.tencent.devops.store.service.common
 
-import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.store.pojo.common.DeptInfo
-import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
-import com.tencent.devops.store.pojo.common.VisibleApproveReq
-import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
-/**
- * store组件可见范围逻辑类
- * since: 2019-01-08
- */
-@Suppress("ALL")
-interface StoreVisibleDeptService {
+interface StoreDeptService {
 
     /**
-     * 查看store组件可见范围
+     * 获取stage下插件对应的机构信息
      */
-    fun getVisibleDept(
-        storeCode: String,
-        storeType: StoreTypeEnum,
-        deptStatus: DeptStatusEnum?
-    ): Result<StoreVisibleDeptResp?>
+    fun getStageAtomDeptMap(stageList: List<Stage>): MutableMap<String, Map<String, List<DeptInfo>?>>
 
     /**
-     * 批量获取已经审核通过的可见范围
+     * 获取模板下镜像对应的机构信息
      */
-    fun batchGetVisibleDept(
-        storeCodeList: List<String?>,
-        storeType: StoreTypeEnum
-    ): Result<HashMap<String, MutableList<Int>>>
-
-    /**
-     * 设置store组件可见范围
-     */
-    fun addVisibleDept(
-        userId: String,
-        storeCode: String,
-        deptInfos: List<DeptInfo>,
-        storeType: StoreTypeEnum
-    ): Result<Boolean>
-
-    /**
-     * 删除store组件可见范围
-     */
-    fun deleteVisibleDept(
-        userId: String,
-        storeCode: String,
-        deptIds: String,
-        storeType: StoreTypeEnum
-    ): Result<Boolean>
-
-    /**
-     * 审核可见范围
-     */
-    fun approveVisibleDept(
-        userId: String,
-        storeCode: String,
-        visibleApproveReq: VisibleApproveReq,
-        storeType: StoreTypeEnum
-    ): Result<Boolean>
+    fun getTemplateImageDeptMap(stageList: List<Stage>): Map<String, List<DeptInfo>?>
 }
