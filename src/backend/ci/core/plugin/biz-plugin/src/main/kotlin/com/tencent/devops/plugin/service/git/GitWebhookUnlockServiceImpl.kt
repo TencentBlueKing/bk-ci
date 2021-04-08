@@ -32,9 +32,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class GitWebhookUnlockServiceImpl : GitWebhookUnlockService {
-    override fun addUnlockHookLockEvent(projectId: String, variables: Map<String, String>) {
-    }
+    override fun addUnlockHookLockEvent(projectId: String, variables: Map<String, String>) = Unit
 
-    override fun consumeUnlockHookLock(event: GitWebhookUnlockEvent) {
-    }
+    override fun consumeUnlockHookLock(event: GitWebhookUnlockEvent) = Unit
 }

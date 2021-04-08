@@ -552,6 +552,7 @@
         }
     },
     "editPage": {
+        "atomPropChangedTip": "当前版本新增了参数或变更了参数类型，请仔细确认参数对应设置是否满足预期（变更字段已高亮）！",
         "checkResultTip": "审核结果是必填项",
         "checkParamTip": "该参数为必填项",
         "manualReviewNameSpaceTip": "实际进行审核操作的用户",

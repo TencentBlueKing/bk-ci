@@ -39,6 +39,7 @@ import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
 import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
@@ -46,6 +47,7 @@ import com.tencent.devops.worker.common.utils.ArchiveUtils
 import java.io.File
 import java.nio.file.Paths
 
+@Suppress("UNUSED")
 @TaskClassType(classTypes = [AtomBuildArchiveElement.classType])
 class AtomBuildArchiveTask : ITask() {
 
@@ -64,14 +66,7 @@ class AtomBuildArchiveTask : ITask() {
             errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
         )
 
-        val fileSha = atomApi.archiveAtom(filePath, destPath, workspace, buildVariables)
-        if (fileSha.isNullOrBlank()) {
-            throw TaskExecuteException(
-                errorMsg = "atom file check sha fail!",
-                errorType = ErrorType.USER,
-                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
-            )
-        }
+        val fileSha = downloadAtom(filePath, destPath, workspace, buildVariables)
 
         val frontendFilePath = taskParams["frontendFilePath"]
         // 判断是否是自定义UI类型的插件，如果是则需要把前端文件上传至仓库的路径
@@ -108,18 +103,16 @@ class AtomBuildArchiveTask : ITask() {
         )
         val preCmd = buildVariable["preCmd"]
         val target = buildVariable["target"]
-        val atomEnvResult = atomApi.getAtomEnv(buildVariables.projectId, atomCode, atomVersion)
+
+        val atomEnv = atomEnv(projectId = buildVariables.projectId, atomCode = atomCode, atomVersion = atomVersion)
+
         val userId = ParameterUtils.getListValueByKey(buildVariables.variablesWithType, PIPELINE_START_USER_ID)
             ?: throw TaskExecuteException(
                 errorMsg = "user basic info error, please check environment.",
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
             )
-        val atomEnv = atomEnvResult.data ?: throw TaskExecuteException(
-            errorMsg = "can not found any $atomCode env",
-            errorType = ErrorType.USER,
-            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
-        )
+
         val request = AtomEnvRequest(
             userId = userId,
             pkgPath = destPath,
@@ -140,5 +133,32 @@ class AtomBuildArchiveTask : ITask() {
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
             )
         }
+    }
+
+    private fun atomEnv(projectId: String, atomCode: String, atomVersion: String): AtomEnv {
+        val atomEnvResult = atomApi.getAtomEnv(projectId, atomCode, atomVersion)
+
+        return atomEnvResult.data ?: throw TaskExecuteException(
+            errorMsg = "can not found any $atomCode env",
+            errorType = ErrorType.USER,
+            errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
+        )
+    }
+
+    private fun downloadAtom(
+        filePath: String,
+        destPath: String,
+        workspace: File,
+        buildVariables: BuildVariables
+    ): String? {
+        val fileSha = atomApi.archiveAtom(filePath, destPath, workspace, buildVariables)
+        if (fileSha.isNullOrBlank()) {
+            throw TaskExecuteException(
+                errorMsg = "atom file check sha fail!",
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL
+            )
+        }
+        return fileSha
     }
 }

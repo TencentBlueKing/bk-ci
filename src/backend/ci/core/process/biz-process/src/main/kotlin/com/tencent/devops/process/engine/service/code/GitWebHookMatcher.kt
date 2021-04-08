@@ -300,28 +300,16 @@ open class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
 
         // 匹配
         val eventTag = getTag(gitTagPushEvent.ref)
-        val createFrom = gitTagPushEvent.create_from
         with(webHookParams) {
             if (doExcludeBranchMatch(excludeTagName, eventTag, pipelineId)) {
                 logger.warn("Do tag event match fail for exclude branch match for pipeline: $pipelineId")
                 return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = EXCLUDE_TAG_NAME_NOT_MATCH)
             }
 
-            if (doExcludeBranchMatch(excludeBranchName, createFrom, pipelineId)) {
-                logger.warn("Do tag event match fail for exclude create from branch match for pipeline: $pipelineId")
-                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = EXCLUDE_BRANCH_NAME_NOT_MATCH)
-            }
-
             val matchBranch = doIncludeBranchMatch(tagName, eventTag, pipelineId)
             if (matchBranch == null) {
                 logger.warn("Do tag event match fail for include branch not match for pipeline: $pipelineId")
                 return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = TAG_NAME_NOT_MATCH)
-            }
-
-            val matchFromBranch = doIncludeBranchMatch(branchName, createFrom, pipelineId)
-            if (matchFromBranch == null) {
-                logger.warn("Do tag event match fail for include create from branch not match for pipeline:$pipelineId")
-                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = BRANCH_NAME_NOT_MATCH)
             }
 
             logger.info("Do tag match success for pipeline: $pipelineId")

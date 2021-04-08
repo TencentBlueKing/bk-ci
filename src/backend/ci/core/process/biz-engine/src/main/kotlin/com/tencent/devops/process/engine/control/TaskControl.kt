@@ -192,7 +192,7 @@ class TaskControl @Autowired constructor(
      */
     private fun PipelineBuildAtomTaskEvent.finishTask(buildTask: PipelineBuildTask, buildStatus: BuildStatus) {
         var delayMillsNext = delayMills
-        if (buildStatus.isFailure() && !FastKillUtils.isFastKillCode(errorCode)) { // 失败的任务 并且不是FastKill
+        if (buildStatus.isFailure() && !FastKillUtils.isTerminateCode(errorCode)) { // 失败的任务 并且不是需要终止的错误码
             // 如果配置了失败重试，且重试次数上线未达上限，则将状态设置为重试，让其进入
             if (pipelineTaskService.isRetryWhenFail(taskId, buildId)) {
                 LOG.info("ENGINE|$buildId|$source|ATOM_FIN|$stageId|j($containerId)|t($taskId)|RetryFail")

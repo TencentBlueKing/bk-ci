@@ -32,7 +32,7 @@ import com.tencent.devops.auth.pojo.BkResult
 import com.tencent.devops.common.web.RestResource
 
 @RestResource
-class AuthCallBackResourceImpl() : AuthCallBackResource {
+class AuthCallBackResourceImpl : AuthCallBackResource {
 
     override fun healthz(): BkResult<Boolean> {
         return BkResult(true)

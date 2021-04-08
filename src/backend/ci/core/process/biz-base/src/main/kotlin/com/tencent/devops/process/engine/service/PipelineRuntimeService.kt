@@ -864,7 +864,7 @@ class PipelineRuntimeService @Autowired constructor(
                 if (BuildStatus.parse(container.status).isFailure() &&
                     !retryStage && !retryStartTaskId.isNullOrBlank() &&
                     lastTimeBuildContainerRecords.isNotEmpty()) {
-                    if (null == findTaskRecord(lastTimeBuildTaskRecords, container, retryStartTaskId!!)) {
+                    if (null == findTaskRecord(lastTimeBuildTaskRecords, container, retryStartTaskId)) {
                         logger.info("[$buildId|RETRY_SKIP_JOB|j($containerId)|${container.name}")
                         containerSeq++
                         return@nextContainer
@@ -920,6 +920,7 @@ class PipelineRuntimeService @Autowired constructor(
                                 atomCode = atomElement.getAtomCode()
                             )
                         )
+                        needUpdateContainer = true
                     } else {
                         // 如果是失败的插件重试，并且当前插件不是要重试的插件，则检查其之前的状态，如果已经执行过，则跳过
                         if (!retryStage && !retryStartTaskId.isNullOrBlank() && retryStartTaskId != atomElement.id) {
@@ -993,8 +994,8 @@ class PipelineRuntimeService @Autowired constructor(
                     )
                 }
 
-                if (lastTimeBuildContainerRecords.isNotEmpty()) {
-                    if (needUpdateContainer) {
+                if (needUpdateContainer) {
+                    if (lastTimeBuildContainerRecords.isNotEmpty()) {
                         run findHistoryContainer@{
                             lastTimeBuildContainerRecords.forEach {
                                 if (it.containerId == containerId && it.status != BuildStatus.SKIP.ordinal) {
@@ -1005,35 +1006,33 @@ class PipelineRuntimeService @Autowired constructor(
                                 }
                             }
                         }
+                    } else {
+                        ModelUtils.initContainerOldData(container)
+                        val controlOption = when (container) {
+                            is NormalContainer -> PipelineBuildContainerControlOption(
+                                container.jobControlOption!!,
+                                container.mutexGroup
+                            )
+                            is VMBuildContainer -> PipelineBuildContainerControlOption(
+                                container.jobControlOption!!,
+                                container.mutexGroup
+                            )
+                            else -> null
+                        }
+                        buildContainers.add(
+                            PipelineBuildContainer(
+                                projectId = pipelineInfo.projectId,
+                                pipelineId = pipelineInfo.pipelineId,
+                                buildId = buildId,
+                                stageId = stageId,
+                                containerId = containerId,
+                                containerType = containerType,
+                                seq = containerSeq,
+                                status = BuildStatus.QUEUE,
+                                controlOption = controlOption
+                            )
+                        )
                     }
-                } else {
-                    ModelUtils.initContainerOldData(container)
-                    val controlOption = when (container) {
-                        is NormalContainer -> PipelineBuildContainerControlOption(
-                            container.jobControlOption!!,
-                            container.mutexGroup
-                        )
-                        is VMBuildContainer -> PipelineBuildContainerControlOption(
-                            container.jobControlOption!!,
-                            container.mutexGroup
-                        )
-                        else -> null
-                    }
-                    buildContainers.add(
-                        PipelineBuildContainer(
-                            projectId = pipelineInfo.projectId,
-                            pipelineId = pipelineInfo.pipelineId,
-                            buildId = buildId,
-                            stageId = stageId,
-                            containerId = containerId,
-                            containerType = containerType,
-                            seq = containerSeq,
-                            status = BuildStatus.QUEUE,
-                            controlOption = controlOption
-                        )
-                    )
-                }
-                if (needUpdateContainer) {
                     needUpdateStage = true
                 }
                 containerSeq++
@@ -1310,7 +1309,7 @@ class PipelineRuntimeService @Autowired constructor(
             return
         }
 
-        val executeCount = if (retryCount > 0) { retryCount } else { 1 }
+        val executeCount = retryCount.coerceAtLeast(1)
 
         if (lastTimeBuildTaskRecords.isEmpty()) {
             buildTaskList.add(

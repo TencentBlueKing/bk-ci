@@ -163,6 +163,8 @@ allprojects {
     }
 }
 
+apply from: "$rootDir/detekt.gradle"
+
 subprojects {
     apply plugin: "idea"
     apply plugin: "java"
@@ -192,7 +194,6 @@ subprojects {
     install.onlyIf { !sourceSets.main.allSource.files.isEmpty() && !name.startsWith("model-") && !name.startsWith("boot-") && !name.startsWith("biz-") }
 
     configurations {
-        ktlint
         all*.exclude group: "org.springframework.boot", module: "spring-boot-starter-logging"
         all*.exclude group: "org.springframework.boot", module: "spring-boot-starter-tomcat"
         all*.exclude group: "org.apache.tomcat", module: "tomcat-jdbc"
@@ -202,29 +203,8 @@ subprojects {
     }
 
     dependencies {
-        ktlint "com.github.shyiko:ktlint:0.29.0"
-        // https://mvnrepository.com/artifact/com.github.shyiko/ktlint
-        testImplementation group: 'com.github.shyiko', name: 'ktlint', version: '0.29.0'
         testImplementation "junit:junit"
     }
-
-    task ktlint(type: JavaExec, group: "verification") {
-        description = "Check Kotlin code style."
-        classpath = configurations.ktlint
-        main = "com.github.shyiko.ktlint.Main"
-        args "src/**/*.kt"
-        // to generate report in checkstyle format prepend following args:
-        // "--reporter=plain", "--reporter=checkstyle,output=${buildDir}/ktlint.xml"
-        // see https://github.com/shyiko/ktlint#usage for more
-    }
-
-    task ktlintFormat(type: JavaExec, group: "formatting") {
-        description = "Fix Kotlin code style deviations."
-        classpath = configurations.ktlint
-        main = "com.github.shyiko.ktlint.Main"
-        args "-F", "src/**/*.kt"
-    }
-
 
     dependencyManagement {
         applyMavenExclusions = false
