@@ -30,17 +30,21 @@ package com.tencent.devops.experience.api.app
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PLATFORM
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.experience.pojo.download.CheckVersionParam
 import com.tencent.devops.experience.pojo.download.CheckVersionVO
+import com.tencent.devops.experience.pojo.download.DownloadRecordVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["APP_EXPERIENCE_DOWNLOAD"], description = "版本体验-下载管理")
@@ -61,4 +65,22 @@ interface AppExperienceDownloadResource {
         @ApiParam("检查更新参数", required = true)
         params: List<CheckVersionParam>
     ): Result<List<CheckVersionVO>>
+
+    @ApiOperation("下载记录")
+    @Path("/records")
+    @GET
+    fun records(
+        @ApiParam("用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("平台", required = true)
+        @HeaderParam(AUTH_HEADER_PLATFORM)
+        platform: Int,
+        @ApiParam("页目", required = false)
+        @QueryParam("page")
+        page: Int,
+        @ApiParam("每页数目", required = false)
+        @QueryParam("pageSize")
+        pageSize: Int
+    ): Result<Pagination<DownloadRecordVO>>
 }

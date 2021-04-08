@@ -34,6 +34,7 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.util.UrlUtil
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
@@ -50,10 +51,12 @@ import com.tencent.devops.experience.pojo.ExperienceCount
 import com.tencent.devops.experience.pojo.ExperienceUserCount
 import com.tencent.devops.experience.pojo.download.CheckVersionParam
 import com.tencent.devops.experience.pojo.download.CheckVersionVO
+import com.tencent.devops.experience.pojo.download.DownloadRecordVO
 import com.tencent.devops.experience.util.DateUtil
 import com.tencent.devops.experience.util.StringUtil
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -69,11 +72,12 @@ class ExperienceDownloadService @Autowired constructor(
     private val client: Client
 ) {
     fun checkVersion(userId: String, platform: Int, params: List<CheckVersionParam>): List<CheckVersionVO> {
-        if (params.isEmpty()) {
-            return emptyList()
-        }
-
-        val experienceRecordIds = experienceBaseService.getRecordIdsByUserId(userId, GroupIdTypeEnum.ALL)
+        val experienceRecordIds = if (params.isEmpty()) {
+            emptySet()
+        } else experienceBaseService.getRecordIdsByUserId(
+            userId,
+            GroupIdTypeEnum.ALL
+        )
         if (experienceRecordIds.isEmpty()) {
             return emptyList()
         }
@@ -160,7 +164,8 @@ class ExperienceDownloadService @Autowired constructor(
         val path = experienceRecord.artifactoryPath
         val platform = PlatformEnum.valueOf(experienceRecord.platform)
         val url = if (path.endsWith(".ipa", true)) {
-            "${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories/$projectId/$artifactoryType/filePlist?experienceHashId=$experienceHashId&path=$path"
+            "${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories" +
+                    "/$projectId/$artifactoryType/filePlist?experienceHashId=$experienceHashId&path=$path"
         } else {
             client.get(ServiceArtifactoryResource::class)
                 .externalUrl(projectId, artifactoryType, userId, path, 24 * 3600, false).data!!.url
@@ -203,7 +208,8 @@ class ExperienceDownloadService @Autowired constructor(
 
     fun getQrCodeUrl(experienceHashId: String): String {
         val url =
-            "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
+            "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html" +
+                    "?flag=experienceDetail&experienceId=$experienceHashId"
         return client.get(ServiceShortUrlResource::class)
             .createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 3)).data!!
     }
@@ -257,7 +263,12 @@ class ExperienceDownloadService @Autowired constructor(
         val count = experienceDownloadDao.count(dslContext, experienceId)
         val finalOffset = if (limit == -1) 0 else offset
         val finalLimit = if (limit == -1) count.toInt() else limit
-        val downloadRecordList = experienceDownloadDao.list(dslContext, experienceId, finalOffset, finalLimit)
+        val downloadRecordList = experienceDownloadDao.listByExperienceId(
+            dslContext,
+            experienceId,
+            finalOffset,
+            finalLimit
+        )
 
         val list = downloadRecordList.map {
             ExperienceUserCount(
@@ -267,5 +278,62 @@ class ExperienceDownloadService @Autowired constructor(
             )
         }
         return Pair(count, list)
+    }
+
+    fun records(userId: String, platform: Int, page: Int, pageSize: Int): Pagination<DownloadRecordVO> {
+        val isParamLegal = userId.isEmpty() || PlatformEnum.of(platform) == null || page < 1 || pageSize < 0
+        if (isParamLegal) {
+            logger.info("params is illegal , userId:$userId , platform:$platform , page:$page , pageSize:$pageSize")
+            return Pagination(false, emptyList())
+        }
+
+        val experienceIds =
+            experienceDownloadDao.distinctExperienceIdByUserId(
+                dslContext = dslContext,
+                userId = userId,
+                limit = 10000
+            )?.map { it.value1() }?.toSet()
+        return if (null == experienceIds || experienceIds.isEmpty()) {
+            Pagination(false, emptyList())
+        } else {
+            val experienceIdsByBundleId = experienceDao.listIdsGroupByBundleId(
+                dslContext = dslContext,
+                ids = experienceIds,
+                expireTime = LocalDateTime.now(),
+                online = true
+            ).map { it.value1() }.toSet()
+
+            val offset = (page - 1) * pageSize
+            val experiences = experienceDao.listByIds(
+                dslContext = dslContext,
+                ids = experienceIdsByBundleId,
+                platform = PlatformEnum.of(platform)?.name,
+                expireTime = LocalDateTime.now(),
+                online = true,
+                offset = offset,
+                limit = pageSize
+            ).map {
+                DownloadRecordVO(
+                    experienceHashId = HashUtil.encodeLongId(it.id),
+                    size = it.size,
+                    logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl),
+                    experienceName = it.experienceName,
+                    createTime = it.createTime.timestampmilli(),
+                    bundleIdentifier = it.bundleIdentifier
+                )
+            }.toList()
+            val hasNext = page * pageSize < experienceDao.countByIds(
+                dslContext = dslContext,
+                ids = experienceIdsByBundleId,
+                platform = PlatformEnum.of(platform)?.name,
+                expireTime = LocalDateTime.now(),
+                online = true
+            )
+            Pagination(hasNext, experiences)
+        }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ExperienceDownloadService::class.java)
     }
 }

@@ -54,7 +54,7 @@ class ExperienceBaseService @Autowired constructor(
     fun getRecordIdsByUserId(
         userId: String,
         groupIdType: GroupIdTypeEnum
-    ): MutableSet<Long> {
+    ): Set<Long> {
         val recordIds = mutableSetOf<Long>()
         val groupIds = mutableSetOf<Long>()
         if (groupIdType == GroupIdTypeEnum.JUST_PRIVATE || groupIdType == GroupIdTypeEnum.ALL) {
