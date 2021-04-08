@@ -105,25 +105,50 @@ class ProjectLocalService @Autowired constructor(
         searchName: String?
     ): Pagination<AppProjectVO> {
         val projectIds = bkAuthProjectApi.getUserProjects(bsPipelineAuthServiceCode, userId, null)
-        val records = projectDao.listByEnglishName(dslContext, projectIds, offset, limit, searchName).map {
-            AppProjectVO(
-                projectCode = it.englishName,
-                projectName = it.projectName,
-                logoUrl = if (it.logoAddr.startsWith("http://radosgw.open.oa.com")) {
-                    "https://dev-download.bkdevops.qq.com/images" + it.logoAddr.removePrefix("http://radosgw.open.oa.com")
-                } else {
-                    it.logoAddr
-                }
-            )
-        }
+        // 如果使用搜索 且 总数量少于1000 , 则全量获取
+        if (searchName != null &&
+            searchName.isNotEmpty() &&
+            projectDao.countByEnglishName(dslContext, projectIds) < 1000
+        ) {
+            val records = projectDao.listByEnglishName(dslContext, projectIds).asSequence().filter {
+                it.projectName.contains(searchName, true)
+            }.map {
+                AppProjectVO(
+                    projectCode = it.englishName,
+                    projectName = it.projectName,
+                    logoUrl = if (it.logoAddr.startsWith("http://radosgw.open.oa.com")) {
+                        "https://dev-download.bkdevops.qq.com/images" +
+                                it.logoAddr.removePrefix("http://radosgw.open.oa.com")
+                    } else {
+                        it.logoAddr
+                    }
+                )
+            }.toList()
 
-        val hasNext = if (records.size < limit) {
-            false
+            return Pagination(false, records)
         } else {
-            projectDao.countByEnglishName(dslContext, projectIds, searchName) > offset + limit
-        }
+            val records = projectDao.listByEnglishName(dslContext, projectIds, offset, limit, searchName).map {
+                AppProjectVO(
+                    projectCode = it.englishName,
+                    projectName = it.projectName,
+                    logoUrl = if (it.logoAddr.startsWith("http://radosgw.open.oa.com")) {
+                        "https://dev-download.bkdevops.qq.com/images" +
+                                it.logoAddr.removePrefix("http://radosgw.open.oa.com")
+                    } else {
+                        it.logoAddr
+                    }
+                )
+            }
 
-        return Pagination(hasNext, records)
+            val hasNext = if (records.size < limit) {
+                false
+            } else {
+                val countByEnglishName = projectDao.countByEnglishName(dslContext, projectIds, searchName)
+                countByEnglishName > offset + limit
+            }
+
+            return Pagination(hasNext, records)
+        }
     }
 
     fun getProjectEnNamesByOrganization(
@@ -323,7 +348,14 @@ class ProjectLocalService @Autowired constructor(
         return ProjectUtils.packagingBean(record, grayProjectSet())
     }
 
-    fun getByName(name: String, nameType: ProjectValidateType, organizationId: Long, organizationType: String, showSecrecy: Boolean? = false): ProjectVO? {
+    @SuppressWarnings("ALL")
+    fun getByName(
+        name: String,
+        nameType: ProjectValidateType,
+        organizationId: Long,
+        organizationType: String,
+        showSecrecy: Boolean? = false
+    ): ProjectVO? {
         logger.info("getProjectByName: $name| $nameType| $organizationId| $organizationType| $showSecrecy")
         val projectInfo = when (nameType) {
             ProjectValidateType.english_name -> projectDao.getByEnglishName(dslContext, name) ?: null
@@ -715,7 +747,12 @@ class ProjectLocalService @Autowired constructor(
         )
     }
 
-    private fun createUser2ProjectImpl(userIds: List<String>, projectId: String, roleId: Int?, roleName: String?): Boolean {
+    private fun createUser2ProjectImpl(
+        userIds: List<String>,
+        projectId: String,
+        roleId: Int?,
+        roleName: String?
+    ): Boolean {
         logger.info("[createUser2Project]  userId[$userIds] projectCode[$projectId], roleId[$roleId], roleName[$roleName]")
         val projectInfo = projectDao.getByEnglishName(dslContext, projectId) ?: throw RuntimeException()
         val roleList = bkAuthProjectApi.getProjectRoles(bsPipelineAuthServiceCode, projectId, projectInfo.englishName)
