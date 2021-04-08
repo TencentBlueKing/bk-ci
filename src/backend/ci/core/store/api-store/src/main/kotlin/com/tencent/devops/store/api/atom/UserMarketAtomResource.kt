@@ -30,10 +30,11 @@ package com.tencent.devops.store.api.atom
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TICKET
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.AtomDevLanguage
 import com.tencent.devops.store.pojo.atom.AtomVersion
-import com.tencent.devops.store.pojo.atom.AtomVersionListResp
+import com.tencent.devops.store.pojo.atom.AtomVersionListItem
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.MarketAtomResp
 import com.tencent.devops.store.pojo.atom.MarketMainItem
@@ -172,8 +173,14 @@ interface UserMarketAtomResource {
         userId: String,
         @ApiParam("atomCode", required = true)
         @QueryParam("atomCode")
-        atomCode: String
-    ): Result<AtomVersionListResp>
+        atomCode: String,
+        @ApiParam("页码", required = true)
+        @QueryParam("page")
+        page: Int = 1,
+        @ApiParam("每页数量", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int = 10
+    ): Result<Page<AtomVersionListItem>>
 
     @ApiOperation("安装插件到项目")
     @POST
