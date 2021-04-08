@@ -75,7 +75,7 @@ class ExtItemServiceService @Autowired constructor(
                 val serviceCode = service["serviceCode"] as String
                 val killGrayAppFlag = service["killGrayAppFlag"] as? Boolean
                 // 判断用户的项目是否是调试项目
-                val testProjectFlag = storeProjectRelDao.isTestProjectCode(
+                val testProjectFlag = storeProjectRelDao.isInitTestProjectCode(
                     dslContext = dslContext,
                     storeCode = serviceCode,
                     storeType = StoreTypeEnum.SERVICE,
