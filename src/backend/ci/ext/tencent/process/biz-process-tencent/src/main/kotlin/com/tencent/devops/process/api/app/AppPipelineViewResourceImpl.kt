@@ -53,7 +53,8 @@ class AppPipelineViewResourceImpl @Autowired constructor(
         filterByPipelineName: String?,
         filterByCreator: String?,
         filterByLabels: String?,
-        viewId: String
+        viewId: String,
+        filterInvalid: Boolean?
     ): Result<PipelineViewPipelinePage<Pipeline>> {
         return Result(
             pipelineListFacadeService.listViewPipelines(
@@ -67,7 +68,8 @@ class AppPipelineViewResourceImpl @Autowired constructor(
                 checkPermission = true,
                 filterByPipelineName = filterByPipelineName,
                 filterByCreator = filterByCreator,
-                filterByLabels = filterByLabels
+                filterByLabels = filterByLabels,
+                filterInvalid = filterInvalid ?: true
             )
         )
     }
@@ -81,7 +83,8 @@ class AppPipelineViewResourceImpl @Autowired constructor(
         filterByPipelineName: String?,
         filterByCreator: String?,
         filterByLabels: String?,
-        viewId: String
+        viewId: String,
+        filterInvalid: Boolean?
     ): Result<Pagination<Pipeline>> {
         val listViewPipelines = pipelineListFacadeService.listViewPipelines(
             userId = userId,
@@ -93,7 +96,8 @@ class AppPipelineViewResourceImpl @Autowired constructor(
             viewId = viewId,
             checkPermission = true,
             filterByPipelineName = filterByPipelineName,
-            filterByCreator = filterByCreator, filterByLabels = filterByLabels
+            filterByCreator = filterByCreator, filterByLabels = filterByLabels,
+            filterInvalid = filterInvalid ?: true
         )
 
         val hasNext = listViewPipelines.count > listViewPipelines.page * listViewPipelines.pageSize
