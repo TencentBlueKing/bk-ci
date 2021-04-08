@@ -44,11 +44,9 @@ class LinuxCodeCCScriptElementBizPlugin : ElementBizPlugin<LinuxCodeCCScriptElem
         userId: String,
         channelCode: ChannelCode,
         create: Boolean
-    ) {
-    }
+    ) = Unit
 
-    override fun beforeDelete(element: LinuxCodeCCScriptElement, param: BeforeDeleteParam) {
-    }
+    override fun beforeDelete(element: LinuxCodeCCScriptElement, param: BeforeDeleteParam) = Unit
 
     override fun elementClass(): Class<LinuxCodeCCScriptElement> {
         return LinuxCodeCCScriptElement::class.java

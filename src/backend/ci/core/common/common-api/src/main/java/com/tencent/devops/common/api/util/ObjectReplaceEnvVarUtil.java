@@ -27,8 +27,6 @@
 
 package com.tencent.devops.common.api.util;
 
-import org.jetbrains.annotations.NotNull;
-
 import java.util.Iterator;
 import java.util.HashSet;
 import java.util.List;
@@ -38,14 +36,16 @@ import java.util.Set;
 public class ObjectReplaceEnvVarUtil {
 
     /**
-     * 把占位符替换环境变量
+     * 把对象字段值中的占位符替换成环境变量
      *
-     * @param obj    需要把占位符替换环境变量的对象(对象如果是集合对象，注意要选择支持增加、删除等操作的集合类型，不要选择类似SingletonMap这种)
+     * @param obj 需要把占位符替换环境变量的对象(对象如果是集合对象，注意要选择支持增加、删除等操作的集合类型，不要选择类似SingletonMap这种)
      * @param envMap 环境变量Map
+     * @return 变量替换后的对象
      */
     @SuppressWarnings("all")
     public static Object replaceEnvVar(Object obj, Map<String, String> envMap) {
         if (obj instanceof Map) {
+            // 递归替换map对象中的变量
             Set<Map.Entry<String, Object>> entrySet = ((Map) obj).entrySet();
             for (Map.Entry entry : entrySet) {
                 Object value = entry.getValue();
@@ -56,6 +56,7 @@ public class ObjectReplaceEnvVarUtil {
                 }
             }
         } else if (obj instanceof List) {
+            // 递归替换list对象中的变量
             List dataList = (List) obj;
             for (int i = 0; i < dataList.size(); i++) {
                 Object value = dataList.get(i);
@@ -66,6 +67,7 @@ public class ObjectReplaceEnvVarUtil {
                 }
             }
         } else if (obj instanceof Set) {
+            // 递归替换set对象中的变量
             Set objSet = (Set) obj;
             Set replaceObjSet = new HashSet(objSet);
             Iterator it = replaceObjSet.iterator();
@@ -79,6 +81,7 @@ public class ObjectReplaceEnvVarUtil {
                 }
             }
         } else if (isNormalReplaceEnvVar(obj)) {
+            // 替换基本类型对象或字符串对象中的变量
             obj = handleNormalEnvVar(obj, envMap);
         } else {
             try {
@@ -94,12 +97,11 @@ public class ObjectReplaceEnvVarUtil {
         return obj;
     }
 
-    @NotNull
     private static Object handleNormalEnvVar(Object obj, Map<String, String> envMap) {
         // 只有字符串参数才需要进行变量替换，其它基本类型参数无需进行变量替换
         if (obj instanceof String) {
             String objStr = ((String) obj).trim();
-            if (objStr.startsWith("{") && objStr.endsWith("}")) {
+            if (objStr.startsWith("{") && objStr.endsWith("}") && JsonSchemaUtil.INSTANCE.validateJson(objStr)) {
                 try {
                     Object dataObj = JsonUtil.INSTANCE.to((String) obj, Map.class);
                     // string能正常转成map，说明是json串，把dataObj进行递归替换变量后再转成json串
@@ -109,7 +111,7 @@ public class ObjectReplaceEnvVarUtil {
                     // 转换不了map的字符串对象则直接替换
                     obj = EnvUtils.INSTANCE.parseEnv(JsonUtil.INSTANCE.toJson(obj), envMap, false, false);
                 }
-            } else if (objStr.startsWith("[") && objStr.endsWith("]")) {
+            } else if (objStr.startsWith("[") && objStr.endsWith("]") && JsonSchemaUtil.INSTANCE.validateJson(objStr)) {
                 try {
                     Object dataObj = JsonUtil.INSTANCE.to((String) obj, List.class);
                     // string能正常转成list，说明是json串，把dataObj进行递归替换变量后再转成json串
@@ -128,6 +130,6 @@ public class ObjectReplaceEnvVarUtil {
     }
 
     private static Boolean isNormalReplaceEnvVar(Object obj) {
-        return ReflectUtil.INSTANCE.isNativeType(obj) || obj instanceof String;
+        return obj == null || ReflectUtil.INSTANCE.isNativeType(obj) || obj instanceof String;
     }
 }

@@ -113,12 +113,12 @@ class AuthCoreConfiguration {
         container.setQueueNames(authRefreshQueue.name)
         container.setConcurrentConsumers(1)
         container.setMaxConcurrentConsumers(10)
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
         container.setStartConsumerMinInterval(5000)
         container.setConsecutiveActiveTrigger(5)
         val adapter = MessageListenerAdapter(refreshListener, refreshListener::execute.name)
         adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
+        container.setMessageListener(adapter)
         return container
     }
 }

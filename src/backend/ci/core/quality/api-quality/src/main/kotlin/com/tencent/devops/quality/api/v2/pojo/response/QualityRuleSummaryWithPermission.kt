@@ -55,7 +55,9 @@ data class QualityRuleSummaryWithPermission(
     @ApiModelProperty("是否启用", required = true)
     val enable: Boolean,
     @ApiModelProperty("规则权限", required = true)
-    val permissions: RulePermission
+    val permissions: RulePermission,
+    @ApiModelProperty("红线ID", required = true)
+    val gatewayId: String?
 ) {
         data class RuleSummaryControlPoint(
             val hashId: String,

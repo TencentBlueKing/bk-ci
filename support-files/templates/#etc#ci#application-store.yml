@@ -12,12 +12,12 @@ server:
 store:
   commentNotifyAdmin: admin
   profileUrlPrefix: __BK_CI_STORE_USER_AVATARS_URL__
-  atomDetailBaseUrl: __BK_CI_PUBLIC_URL__/console/store/atomStore/detail/atom/
-  templateDetailBaseUrl: __BK_CI_PUBLIC_URL__/console/store/atomStore/detail/template/
+  atomDetailBaseUrl: /console/store/atomStore/detail/atom/
+  templateDetailBaseUrl: /console/store/atomStore/detail/template/
   artifactoryServiceUrlPrefix: __BK_CI_PUBLIC_URL__/ms/artifactory/api
-  ideAtomDetailBaseUrl: __BK_CI_PUBLIC_URL__/console/store/atomStore/detail/ide/
-  imageDetailBaseUrl: __BK_CI_PUBLIC_URL__/console/store/atomStore/detail/image/
-  serviceDetailBaseUrl: __BK_CI_PUBLIC_URL__/console/store/atomStore/detail/service/
+  ideAtomDetailBaseUrl: /console/store/atomStore/detail/ide/
+  imageDetailBaseUrl: /console/store/atomStore/detail/image/
+  serviceDetailBaseUrl: /console/store/atomStore/detail/service/
   baseImageDocsLink: /console/store/atomStore/detail/image/
   imageAdminUsers: admin
   buildResultBaseUrl: __BK_CI_PUBLIC_URL__/console/pipeline

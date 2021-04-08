@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.engine.control.command.container.impl
 
-import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ContainerMutexStatus
 import com.tencent.devops.process.engine.control.MutexControl
@@ -55,7 +54,7 @@ class CheckMutexContainerCmd(
 
     override fun execute(commandContext: ContainerContext) {
         // 终止或者结束事件不做互斥判断
-        if (!ActionType.isEnd(commandContext.event.actionType)) {
+        if (!commandContext.event.actionType.isEnd()) {
             mutexCheck(commandContext)
         }
     }
@@ -77,14 +76,11 @@ class CheckMutexContainerCmd(
                     commandContext.cmdFlowState = CmdFlowState.FINALLY
                 }
                 ContainerMutexStatus.WAITING -> {
-//                    LOG.info("ENGINE|$buildId|${event.source}|MUTEX_DELAY|$stageId|j($containerId)")
                     commandContext.latestSummary = "j($containerId)_mutex_delay"
                     commandContext.cmdFlowState = CmdFlowState.LOOP // 循环消息命令 延时10秒钟
                 }
                 else -> { // 正常运行
-                    commandContext.latestSummary = "j($containerId)_mutex_ready"
                     commandContext.cmdFlowState = CmdFlowState.CONTINUE // 检查通过，继续向下执行
-//                    LOG.info("ENGINE|$buildId|${event.source}|MUTEX_READY|$stageId|j($containerId)")
                 }
             }
         }

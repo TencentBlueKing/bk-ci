@@ -22,11 +22,11 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <link rel="icon" href="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/favicon.ico" type="image/x-icon" />
-    <link rel="shortcut icon" href="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/favicon.ico" type="image/x-icon" />
-    <link rel='preload' as='script' href="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/vue.min.js" />
-    <link rel='preload' as='script' href="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/vuex.min.js" />
-    <link rel='preload' as='script' href="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/vue-router.min.js" />
+    <link rel="icon" href="/console/static/favicon.ico" type="image/x-icon" />
+    <link rel="shortcut icon" href="/console/static/favicon.ico" type="image/x-icon" />
+    <link rel='preload' as='script' href="/console/static/vue.min.js" />
+    <link rel='preload' as='script' href="/console/static/vuex.min.js" />
+    <link rel='preload' as='script' href="/console/static/vue-router.min.js" />
     
     <!-- devops:preload -->
     <% for (key in htmlWebpackPlugin.files.js) { %>
@@ -44,7 +44,7 @@
 <body>
     <script>
             var ajax = new XMLHttpRequest();
-            ajax.open("GET", "<%=htmlWebpackPlugin.options.urlPrefix %>/svg-sprites/devops_sprite.svg?t=" + Math.random(), true)
+            ajax.open("GET", "/svg-sprites/devops_sprite.svg?t=" + Math.random(), true)
             ajax.send();
             ajax.onload = function(e) {
                 var div = document.createElement('div');
@@ -66,26 +66,25 @@
         </div>
     </div>
     </div>
-    <script src="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/vue.min.js"></script>
-    <script src="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/vuex.min.js"></script>
-    <script src="<%=htmlWebpackPlugin.options.urlPrefix %>/console/static/vue-router.min.js"></script>
+    <script src="/console/static/vue.min.js"></script>
+    <script src="/console/static/vuex.min.js"></script>
+    <script src="/console/static/vue-router.min.js"></script>
     <!-- devops:assets -->
     <!-- end devops:assets -->
     
     <script>
-        var WEBSITE_URL = '__BK_CI_PUBLIC_URL__'
-        var GW_URL_PREFIX = '__BK_CI_PUBLIC_URL__/ms'     // api接口前缀
-        var WS_URL_PREFIX = '__BK_CI_PUBLIC_URL__/'
+
+        var API_URL_PREFIX = '/ms'     // api接口前缀
         var PERM_URL_PREFIX = '__BK_PAAS_PUBLIC_URL__/o/bk_iam_app' // EE PERM URL PREFIX
         var DOCS_URL_PREFIX = '__BK_CI_DOCS_URL__'  // 文档中心域名
         var LOGIN_SERVICE_URL = '__BK_CI_PAAS_LOGIN_URL__' // 蓝鲸PaaS登录入口
         var DEVOPS_LS_VERSION = '<%- htmlWebpackPlugin.options.DEVOPS_LS_VERSION%>'
+        var X_DEVOPS_PROJECT_ID = 'X-DEVOPS-PROJECT-ID'
         var ENTERPRISE_VERSION = false
     </script>
     
     
     <script>
-        var X_DEVOPS_PROJECT_ID = 'X-DEVOPS-PROJECT-ID'
         // 动态加载js
         function importScript (src, oHead, fOnload) {
             var oScript = document.createElement('script')
@@ -152,10 +151,10 @@
         }
         
         window.setProjectIdCookie = function (projectId) {
+          const topDomain = document.domain.split('.').slice(-2).join('.')
             try {
                 if (projectId) {
-                    setCookie(X_DEVOPS_PROJECT_ID, '', location.host)
-                    setCookie(X_DEVOPS_PROJECT_ID, projectId, location.host)
+                    setCookie(X_DEVOPS_PROJECT_ID, projectId, topDomain)
                     window.GLOBAL_PID = projectId
                 }
             } catch (e) {
@@ -238,7 +237,7 @@
         }
 
         function fetchAllServices () {
-            return asyncGet(GW_URL_PREFIX + '/project/api/user/services/', pathPid)
+            return asyncGet(API_URL_PREFIX + '/project/api/user/services/', pathPid)
         }
 
         function fetchAssetsJSON () {
@@ -246,15 +245,15 @@
         }
 
         function fetchAllProjects () {
-            return asyncGet(GW_URL_PREFIX + '/project/api/user/projects/')
+            return asyncGet(API_URL_PREFIX + '/project/api/user/projects/')
         }
 
         function fetchProjectById (projectId) {
-          return projectId ? asyncGet(GW_URL_PREFIX + '/project/api/user/projects/' + projectId +  '/containEmpty') : Promise.resolve();
+          return projectId ? asyncGet(API_URL_PREFIX + '/project/api/user/projects/' + projectId +  '/containEmpty') : Promise.resolve();
         }
 
         function requestUser () {
-            return asyncGet(GW_URL_PREFIX + '/project/api/user/users')
+            return asyncGet(API_URL_PREFIX + '/project/api/user/users')
         }
 
         function joinUrl (urlArr) {
@@ -278,12 +277,10 @@
                     var serviceTitle = children[j].name.replace(/\(\S+?\)/, '')
                     var assetMod = assetsJSON[mod]
                     if (children[j].inject_type === 'amd') {
-                        var jsUrl = assetMod ? joinUrl([ WEBSITE_URL, mod, assetMod.js ]) : children[j].js_url
-                        var cssUrl = assetMod ? joinUrl([ WEBSITE_URL, mod, assetMod.css ]) : children[j].css_url
+                        var jsUrl = assetMod ? joinUrl([ '', mod, assetMod.js ]) : children[j].js_url
+                        var cssUrl = assetMod ? joinUrl([ '', mod, assetMod.css ]) : children[j].css_url
                         children[j].js_url = jsUrl
                         children[j].css_url = cssUrl
-                    } else {
-                        children[j].iframe_url = joinUrl([ WEBSITE_URL, children[j].iframe_url ])
                     }
                     serviceMap[mod] = children[j]
                     if (children[j].inject_type === 'iframe') {

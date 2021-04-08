@@ -28,7 +28,7 @@ class BlueShieldWebSocket {
     }
 
     connect () {
-        const socket = new SockJS(`${WS_URL_PREFIX}websocket/ws/user?sessionId=${this.uuid}`)
+        const socket = new SockJS(`/websocket/ws/user?sessionId=${this.uuid}`)
         this.stompClient = Stomp.over(socket)
         this.stompClient.debug = null
         this.isConnecting = true
@@ -140,7 +140,7 @@ class BlueShieldWebSocket {
             const tagName = activeElement.tagName || ''
             // a标签也会触发这个事件，需要屏蔽
             if (tagName === 'A') return
-            navigator.sendBeacon(`${WS_URL_PREFIX}websocket/api/user/websocket/sessions/${this.uuid}/userIds/${this.userName}/clear`)
+            navigator.sendBeacon(`/websocket/api/user/websocket/sessions/${this.uuid}/userIds/${this.userName}/clear`)
             this.stompClient.disconnect()
             this.hasConnect = false
         })

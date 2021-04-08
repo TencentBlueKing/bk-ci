@@ -362,8 +362,8 @@ export const actions = {
     /**
      * 流水线插件版本列表
      */
-    requestVersionList ({ commit }, { atomCode }) {
-        return vue.$ajax.get(`${prefix}/user/market/atom/version/list?atomCode=${atomCode}`)
+    requestVersionList ({ commit }, params) {
+        return vue.$ajax.get(`${prefix}/user/market/atom/version/list`, { params })
     },
 
     /**
