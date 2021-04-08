@@ -50,6 +50,7 @@ import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.TEST_ENV_PREPARE
 import com.tencent.devops.common.api.constant.UNDO
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
@@ -114,7 +115,6 @@ import com.tencent.devops.store.pojo.enums.ExtServiceStatusEnum
 import com.tencent.devops.store.pojo.vo.ExtServiceRespItem
 import com.tencent.devops.store.pojo.vo.MyServiceVO
 import com.tencent.devops.store.pojo.vo.ServiceVersionListItem
-import com.tencent.devops.store.pojo.vo.ServiceVersionListResp
 import com.tencent.devops.store.pojo.vo.ServiceVersionVO
 import com.tencent.devops.store.service.common.StoreCommentService
 import com.tencent.devops.store.service.common.StoreCommonService
@@ -663,25 +663,43 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         })
     }
 
-    fun getServiceVersionListByCode(serviceCode: String, userId: String): Result<ServiceVersionListResp> {
+    fun getServiceVersionListByCode(
+        userId: String,
+        serviceCode: String,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<ServiceVersionListItem>> {
         logger.info("getServiceVersionListByCode serviceCode[$serviceCode]")
+        val totalCount = extServiceDao.countByCode(dslContext, serviceCode)
         val records = extServiceDao.listServiceByCode(dslContext, serviceCode)
-        val serviceVersions = mutableListOf<ServiceVersionListItem?>()
-        records?.forEach {
-            serviceVersions.add(
-                ServiceVersionListItem(
-                    serviceId = it!!.id,
-                    serviceCode = it.serviceCode,
-                    serviceName = it.serviceName,
-                    version = it.version,
-                    serviceStatus = ExtServiceStatusEnum.getServiceStatus((it.serviceStatus as Byte).toInt()),
-                    creator = it.creator,
-                    createTime = DateTimeUtil.toDateTime(it.createTime)
-                )
+        val atomVersions = mutableListOf<ServiceVersionListItem>()
+        if (records != null) {
+            val serviceIds = records.map { it.id }
+            // 批量获取版本内容
+            val versionRecords = extServiceVersionLogDao.getVersionLogsByServiceIds(
+                dslContext = dslContext,
+                serviceIds = serviceIds
             )
+            val versionMap = mutableMapOf<String, String>()
+            versionRecords?.forEach { versionRecord ->
+                versionMap[versionRecord.serviceId] = versionRecord.content
+            }
+            records.forEach {
+                atomVersions.add(
+                    ServiceVersionListItem(
+                        serviceId = it.id,
+                        serviceCode = it.serviceCode,
+                        serviceName = it.serviceName,
+                        version = it.version,
+                        versionContent = versionMap[it.id].toString(),
+                        serviceStatus = ExtServiceStatusEnum.getServiceStatus((it.serviceStatus as Byte).toInt()),
+                        creator = it.creator,
+                        createTime = DateTimeUtil.toDateTime(it.createTime)
+                    )
+                )
+            }
         }
-        logger.info("getServiceVersionListByCode serviceVersions[$serviceVersions]")
-        return Result(ServiceVersionListResp(serviceVersions.size, serviceVersions))
+        return Result(Page(page, pageSize, totalCount.toLong(), atomVersions))
     }
 
     /**
