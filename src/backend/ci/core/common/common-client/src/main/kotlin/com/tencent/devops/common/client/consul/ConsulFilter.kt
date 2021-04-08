@@ -28,7 +28,6 @@
 
 package com.tencent.devops.common.client.consul
 
-import com.tencent.devops.common.service.trace.TraceTag
 import org.springframework.stereotype.Component
 import javax.servlet.Filter
 import javax.servlet.FilterChain
