@@ -33,9 +33,9 @@ apply plugin: "kotlin-spring"
 apply plugin: "org.springframework.boot"
 
 dependencies {
-    compile project(":core:common:common-api")
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-service")
+    implementation project(":core:common:common-api")
+    implementation project(":core:common:common-web")
+    implementation project(":core:common:common-service")
 }
 bootRun {
     jvmArgs = ["-Dspring.output.ansi.enabled=ALWAYS",
@@ -60,7 +60,7 @@ task copyVersionInfo() {
 }
 copyVersionInfo.dependsOn build
 
-task copyToRelease(type: Copy, dependsOn: bootRepackage) {
+task copyToRelease(type: Copy, dependsOn: bootJar) {
     from("build/libs") {
         include("**/*.jar")
     }

@@ -80,8 +80,8 @@ class StartContainerStageCmd(
             }
 
             when {
-                ActionType.isStart(newActionType) -> stageStatus = BuildStatus.RUNNING // 要启动Stage
-                ActionType.isEnd(newActionType) -> stageStatus = BuildStatus.CANCELED // 若为终止命令，直接设置为取消
+                newActionType.isStart() -> stageStatus = BuildStatus.RUNNING // 要启动Stage
+                newActionType.isEnd() -> stageStatus = BuildStatus.CANCELED // 若为终止命令，直接设置为取消
                 newActionType == ActionType.SKIP -> stageStatus = BuildStatus.SKIP // 要跳过Stage
             }
         }
@@ -118,7 +118,7 @@ class StartContainerStageCmd(
 //            } else if (c.status.isReadyToRun() && !ActionType.isStart(actionType)) {
                 // 失败或可重试的容器，如果不是重试动作，则跳过
 //                stageStatus = BuildStatus.RUNNING
-            } else if (c.status.isRunning() && !ActionType.isTerminate(actionType)) {
+            } else if (c.status.isRunning() && !actionType.isTerminate()) {
                 // 已经在运行中的, 只接受强制终止
                 stageStatus = BuildStatus.RUNNING
             } else if (!c.status.isFinish()) {

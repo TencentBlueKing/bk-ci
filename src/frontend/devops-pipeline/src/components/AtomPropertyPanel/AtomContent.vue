@@ -37,6 +37,8 @@
                 </form-field>
             </div>
             <div class="atom-form-content">
+                <bk-alert class="atom-changed-prop" type="warning" :title="$t('editPage.atomPropChangedTip')" v-if="atomVersionChangedKeys.length"></bk-alert>
+
                 <div class="no-atom-tips" v-if="!atom && atomCode">
                     <div class="no-atom-tips-icon">
                         <i class="bk-icon icon-info-circle-shape" size="14" />
@@ -191,7 +193,8 @@
                 'getContainers',
                 'getStage',
                 'isTriggerContainer',
-                'isNewAtomTemplate'
+                'isNewAtomTemplate',
+                'atomVersionChangedKeys'
             ]),
             ...mapState('atom', [
                 'globalEnvs',
@@ -556,7 +559,7 @@
             },
             toSetRule () {
                 this.isSetted = true
-                const url = `${WEB_URL_PIRFIX}/quality/${this.projectId}/createRule/?${this.isTemplatePanel ? 'templateId' : 'pipelineId'}=${this.isTemplatePanel ? this.templateId : this.pipelineId}&element=${this.element.atomCode}`
+                const url = `${WEB_URL_PREFIX}/quality/${this.projectId}/createRule/?${this.isTemplatePanel ? 'templateId' : 'pipelineId'}=${this.isTemplatePanel ? this.templateId : this.pipelineId}&element=${this.element.atomCode}`
                 window.open(url, '_blank')
             },
             requestMatchTemplateRules () {
@@ -595,6 +598,9 @@
         button {
             margin-right: 6px;
         }
+    }
+    .atom-changed-prop {
+        margin-bottom: 8px;
     }
     .no-atom-tips {
         display: flex;

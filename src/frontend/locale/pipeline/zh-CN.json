@@ -94,8 +94,8 @@
     "disableStageReviewRadioLabel": "自动",
     "stageReviewDesc": "60天未审核自动结束该流水线并标记为Stage成功",
     "stageTimeoutLabel": "审核最长等待时间",
-    "stageTimeoutError": "请输入1-1440之间的整数",
-    "stageTimeoutDesc": "1-1440之间的整数（单位：小时）",
+    "stageTimeoutError": "请输入1-720之间的整数",
+    "stageTimeoutDesc": "1-720之间的整数（单位：小时）",
     "stageUserTriggers": "Stage审核人",
     "stageOptionLabel": "本Stage执行条件",
     "stageTriggerDesc": "多个人员用英文逗号分隔",
@@ -553,6 +553,7 @@
     },
     "editPage": {
         "tipError": "Tip组件返回值需要是字符串",
+        "atomPropChangedTip": "当前版本新增了参数或变更了参数类型，请仔细确认参数对应设置是否满足预期（变更字段已高亮）！",
         "checkResultTip": "审核结果是必填项",
         "checkParamTip": "该参数为必填项",
         "manualReviewNameSpaceTip": "实际进行审核操作的用户",

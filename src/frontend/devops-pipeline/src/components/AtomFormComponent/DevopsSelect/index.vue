@@ -233,12 +233,12 @@
                     const options = getResponseData(res, dataPath)
 
                     this.optionList = this.formatList(options, '', paramId, paramName)
-                    if (this.value) {
-                        this.displayName = this.getDisplayName(this.value)
-                    }
                 } catch (e) {
                     console.error(e)
                 } finally {
+                    if (this.value) {
+                        this.displayName = this.getDisplayName(this.value)
+                    }
                     this.loading = false
                 }
             }

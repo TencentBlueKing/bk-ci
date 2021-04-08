@@ -84,11 +84,11 @@ object Tools {
         container.setQueueNames(queue.name)
         container.setConcurrentConsumers(concurrency)
         container.setMaxConcurrentConsumers(max(maxConcurrency, concurrency))
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
         container.setStartConsumerMinInterval(startConsumerMinInterval)
         container.setConsecutiveActiveTrigger(consecutiveActiveTrigger)
         container.setMismatchedQueuesFatal(true)
-        container.messageListener = adapter
+        container.setMessageListener(adapter)
         return container
     }
 }

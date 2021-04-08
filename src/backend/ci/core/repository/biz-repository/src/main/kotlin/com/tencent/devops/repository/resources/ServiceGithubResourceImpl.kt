@@ -79,7 +79,7 @@ class ServiceGithubResourceImpl @Autowired constructor(
     override fun updateCheckRuns(
         accessToken: String,
         projectName: String,
-        checkRunId: Int,
+        checkRunId: Long,
         checkRuns: GithubCheckRuns
     ): Result<Boolean> {
         githubService.updateCheckRuns(accessToken, projectName, checkRunId, checkRuns)

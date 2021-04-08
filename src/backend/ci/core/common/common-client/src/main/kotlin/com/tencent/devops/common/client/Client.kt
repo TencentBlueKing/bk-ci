@@ -67,6 +67,7 @@ import kotlin.reflect.KClass
  *
  * Powered By Tencent
  */
+@Suppress("UNUSED")
 @Component
 @DependsOn("springContextUtil")
 class Client @Autowired constructor(
@@ -94,12 +95,10 @@ class Client @Autowired constructor(
     private val trustAllCerts: Array<TrustManager> = arrayOf(object :
         X509TrustManager {
         @Throws(CertificateException::class)
-        override fun checkClientTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) {
-        }
+        override fun checkClientTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) = Unit
 
         @Throws(CertificateException::class)
-        override fun checkServerTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) {
-        }
+        override fun checkServerTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) = Unit
 
         override fun getAcceptedIssuers(): Array<java.security.cert.X509Certificate> {
             return arrayOf()

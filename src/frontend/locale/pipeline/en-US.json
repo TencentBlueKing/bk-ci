@@ -94,8 +94,8 @@
     "disableStageReviewRadioLabel": "Automation",
     "stageReviewDesc": "60-day unreviewed automatically ends the pipeline and marks it as STAGE_SUCCESS",
     "stageTimeoutLabel": "Timeout",
-    "stageTimeoutError": "Please specify an integer from 1 to 1440",
-    "stageTimeoutDesc": "All the integers between 1 and 1440 (Unit: hour)",
+    "stageTimeoutError": "Please specify an integer from 1 to 720",
+    "stageTimeoutDesc": "All the integers between 1 and 720 (Unit: hour)",
     "stageUserTriggers": "Stage Owner",
     "stageOptionLabel": "Run this Stage",
     "stageTriggerDesc": "Multiple people separated by commas",
@@ -552,6 +552,7 @@
     },
     "editPage": {
         "tipError": "Tip component return value needs to be a string",
+        "atomPropChangedTip": "The current version has added new parameters or changed parameter types, please carefully confirm whether the corresponding settings of the parameters meet expectations (the changed fields have been highlighted)!",
         "checkResultTip": "The audit result is required",
         "checkParamTip": "The param is required",
         "manualReviewNameSpaceTip": "The user who actually performed the review",

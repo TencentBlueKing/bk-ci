@@ -78,7 +78,7 @@ class PipelineExtendsNotifyConfiguration {
     }
 
     @Bean
-    fun pipelineBuildCallBackListenerContainer(
+    fun pipelineBuildNotifyListenerContainer(
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired pipelineBuildNotifyQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,

@@ -36,6 +36,7 @@ dependencies {
     compile "io.github.openfeign:feign-okhttp"
     compile "org.jolokia:jolokia-core"
     compile "javax.servlet:javax.servlet-api"
+    compile "org.springframework:spring-web"
 
     testCompile "org.springframework.boot:spring-boot-starter-test"
 }

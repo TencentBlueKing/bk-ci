@@ -68,7 +68,6 @@ class GithubPullCodeSetting(
 ) {
 
     override fun pullCode(): Map<String, String>? {
-        setProxy()
         val repo = getRepository() as GithubRepository
 
         val workspace = getCodeSourceDir(path)
@@ -84,8 +83,5 @@ class GithubPullCodeSetting(
             workspace = workspace,
             credentialSetter = GitHubCredentialSetter(token)
         )
-    }
-
-    private fun setProxy() {
     }
 }
