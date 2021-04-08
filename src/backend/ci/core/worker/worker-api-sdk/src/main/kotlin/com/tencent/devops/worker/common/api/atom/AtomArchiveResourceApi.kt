@@ -62,7 +62,12 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
     /**
      * 获取插件信息
      */
-    override fun getAtomEnv(projectCode: String, atomCode: String, atomVersion: String, atomStatus: Byte?): Result<AtomEnv> {
+    override fun getAtomEnv(
+        projectCode: String,
+        atomCode: String,
+        atomVersion: String,
+        atomStatus: Byte?
+    ): Result<AtomEnv> {
         var path = "/ms/store/api/build/market/atom/env/$projectCode/$atomCode/$atomVersion"
         if (atomStatus != null) {
             path = "$path?atomStatus=$atomStatus"
