@@ -122,8 +122,6 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
                 data = false
             )
         }
-        // 判断模板和组件的合法性
-        validateTemplateVisibleDept(templateCode)
         dslContext.transaction { t ->
             val context = DSL.using(t)
             val templateId = UUIDUtil.generate()
