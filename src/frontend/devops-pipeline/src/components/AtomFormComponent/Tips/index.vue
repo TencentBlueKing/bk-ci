@@ -16,7 +16,9 @@
         props: {
             tipStr: {
                 type: String
-            }
+            },
+            url: String,
+            dataPath: String
         },
 
         data () {
@@ -45,13 +47,36 @@
             }
         },
 
-        created () {
+        mounted () {
             this.initData()
         },
 
         methods: {
             initData () {
-                const str = this.tipStr.replace(/\[([^\]]+)\]\(([^\)]+)\)/gim, (str, key, value) => {
+                if (this.url) {
+                    const url = this.handleDeepValue(/\$\{([^\}]+)\}/gim, this.url)
+                    this.$ajax.get(url).then((res) => {
+                        const tipStr = this.getResponseData(res, this.dataPath, '')
+                        this.handleData(tipStr)
+                    }).catch((err) => {
+                        console.error(err.message || err)
+                    })
+                } else {
+                    this.handleData(this.tipStr)
+                }
+            },
+
+            handleDeepValue (reg, str) {
+                return str.replace(reg, (str, key) => {
+                    const exisParamKey = this.paramValues.hasOwnProperty(key)
+                    const value = exisParamKey ? this.paramValues[key] : key
+                    if (exisParamKey) this.list.push(key)
+                    return value
+                })
+            },
+
+            handleData (tipStr) {
+                const str = tipStr.replace(/\[([^\]]+)\]\(([^\)]+)\)/gim, (str, key, value) => {
                     const isSafe = /^https?\:\/\//i.test(value)
                     let res = ''
                     if (isSafe) res = `<a class="text-link" href="${value}" target="_Blank">${key}</a>`
