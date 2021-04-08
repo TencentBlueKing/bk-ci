@@ -1,3 +1,5 @@
+import java.net.URI
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -31,12 +33,12 @@ apply(plugin = "kotlin-spring")
 apply(plugin = "maven-publish")
 apply(plugin = "signing")
 
-tasks.register<Jar>("sourceJar") {
+val sourceJar = tasks.register<Jar>("sourceJar") {
     archiveClassifier.set("source")
     from(project.the<SourceSetContainer>()["main"].java.srcDirs("src/main/java", "src/main/kotlin"))
 }
 
-tasks.register<Jar>("javadocJar") {
+val javadocJar = tasks.register<Jar>("javadocJar") {
     dependsOn("javadoc")
     archiveClassifier.set("javadoc")
     from(tasks["javadoc"])
@@ -58,235 +60,234 @@ tasks.withType<Javadoc> {
     options.charSet = "UTF-8"
 }
 
-//publishing {
-//    publications {
-//        mavenJava(MavenPublication) {
-//            from components.java
-//
-//            artifact sourceJar
-//            artifact javadocJar
-//
-//            pom {
-//                name = 'bk-ci'
-//                description = 'Tencent blueking ci project'
-//                url = 'https://github.com/Tencent/bk-ci'
-//                licenses {
-//                    license {
-//                        name = 'MIT'
-//                        url = 'https://github.com/Tencent/bk-ci/blob/master/LICENSE.txt'
-//                        distribution = 'repo'
-//                        comments = 'A business-friendly OSS license'
-//                    }
-//                }
-//
-//                developers {
-//                    developer {
-//                        name = 'bk-ci'
-//                        email = 'devops@tencent.com'
-//                        roles = ['Manager']
-//                        url = "https://bk.tencent.com"
-//                    }
-//                }
-//                scm {
-//                    url = 'https://github.com/Tencent/bk-ci'
-//                    connection = 'scm:git:https://github.com/Tencent/bk-ci.git'
-//                    developerConnection = 'scm:git:git@github.com:Tencent/bk-ci.git'
-//                }
-//            }
-//        }
-//    }
+configure<PublishingExtension> {
+    publications {
+        create("mavenJava", MavenPublication::class.java) {
+            from(components.findByName("java"))
 
+            artifact(sourceJar)
+            artifact(javadocJar)
 
-//
-//
-//publishing {
-//    publications {
-//        mavenJava(MavenPublication) {
-//            from components.java
-//
-//            artifact sourceJar
-//            artifact javadocJar
-//
-//            pom {
-//                name = 'bk-ci'
-//                description = 'Tencent blueking ci project'
-//                url = 'https://github.com/Tencent/bk-ci'
-//                licenses {
-//                    license {
-//                        name = 'MIT'
-//                        url = 'https://github.com/Tencent/bk-ci/blob/master/LICENSE.txt'
-//                        distribution = 'repo'
-//                        comments = 'A business-friendly OSS license'
-//                    }
-//                }
-//
-//                developers {
-//                    developer {
-//                        name = 'bk-ci'
-//                        email = 'devops@tencent.com'
-//                        roles = ['Manager']
-//                        url = "https://bk.tencent.com"
-//                    }
-//                }
-//                scm {
-//                    url = 'https://github.com/Tencent/bk-ci'
-//                    connection = 'scm:git:https://github.com/Tencent/bk-ci.git'
-//                    developerConnection = 'scm:git:git@github.com:Tencent/bk-ci.git'
-//                }
-//            }
-//        }
-//    }
-//
-//    repositories {
-//        maven {
-//            name "oss"
-//            def mavenRepoDeployUrl = System.getProperty("mavenRepoDeployUrl")
-//            def mavenRepoUsername = System.getProperty("mavenRepoUsername")
-//            def mavenRepoPassword = System.getProperty("mavenRepoPassword")
-//
-//            if (mavenRepoDeployUrl == null) {
-//                mavenRepoDeployUrl = System.getenv("build_mavenRepoDeployUrl")
-//            }
-//
-//            if (mavenRepoUsername == null) {
-//                mavenRepoUsername = System.getenv("build_mavenRepoUsername")
-//            }
-//
-//            if (mavenRepoPassword == null) {
-//                mavenRepoPassword = System.getenv("build_mavenRepoPassword")
-//            }
-//
-//            if (mavenRepoDeployUrl == null) {
-//                mavenRepoDeployUrl = MAVEN_REPO_DEPLOY_URL
-//            }
-//
-//            if (mavenRepoUsername == null) {
-//                mavenRepoUsername = MAVEN_REPO_USERNAME
-//            }
-//
-//            if (mavenRepoPassword == null) {
-//                mavenRepoPassword = MAVEN_REPO_PASSWORD
-//            }
-//
-//            def snapshotMavenRepoDeployUrl = System.getProperty("snapshotMavenRepoDeployUrl")
-//            def snapshotMavenRepoUsername = System.getProperty("snapshotMavenRepoUsername")
-//            def snapshotMavenRepoPassword = System.getProperty("snapshotMavenRepoPassword")
-//
-//            if (snapshotMavenRepoDeployUrl == null) {
-//                snapshotMavenRepoDeployUrl = System.getenv("build_snapshotMavenRepoDeployUrl")
-//            }
-//
-//            if (snapshotMavenRepoUsername == null) {
-//                snapshotMavenRepoUsername = System.getenv("build_snapshotMavenRepoUsername")
-//            }
-//
-//            if (snapshotMavenRepoPassword == null) {
-//                snapshotMavenRepoPassword = System.getenv("build_snapshotMavenRepoPassword")
-//            }
-//
-//            if (mavenRepoDeployUrl == null) {
-//                mavenRepoDeployUrl = MAVEN_REPO_SNAPSHOT_DEPLOY_URL
-//            }
-//
-//            if (snapshotMavenRepoUsername == null) {
-//                snapshotMavenRepoUsername = MAVEN_REPO_SNAPSHOT_USERNAME
-//            }
-//
-//            if (snapshotMavenRepoPassword == null) {
-//                snapshotMavenRepoPassword = MAVEN_REPO_SNAPSHOT_PASSWORD
-//            }
-//
-//            url = System.getProperty("snapshot") == "true" ? snapshotMavenRepoDeployUrl : mavenRepoDeployUrl
-//            credentials {
-//                username = System.getProperty("snapshot") == "true" ? snapshotMavenRepoUsername : mavenRepoUsername
-//                password = System.getProperty("snapshot") == "true" ? snapshotMavenRepoPassword : mavenRepoPassword
-//            }
-//        }
-//    }
-//}
-//
-//signing {
-//    sign publishing.publications.mavenJava
-//}
-//
-//publish.onlyIf { !sourceSets.main.allSource.files.isEmpty() }
-//generateMetadataFileForMavenJavaPublication.onlyIf { !sourceSets.main.allSource.files.isEmpty() }
-//generatePomFileForMavenJavaPublication.onlyIf { !sourceSets.main.allSource.files.isEmpty() }
-//publishMavenJavaPublicationToOssRepository.onlyIf { !sourceSets.main.allSource.files.isEmpty() }
-//publishMavenJavaPublicationToMavenLocal.onlyIf { !sourceSets.main.allSource.files.isEmpty() }
-//publishToMavenLocal.onlyIf { !sourceSets.main.allSource.files.isEmpty() }
-//signMavenJavaPublication.onlyIf { !sourceSets.main.allSource.files.isEmpty() }
-//
-//dependencies {
-//    compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
-//    compile "org.jetbrains.kotlin:kotlin-reflect"
-//}
-//
-//uploadArchives {
-//
-//    def mavenRepoDeployUrl = System.getProperty("mavenRepoDeployUrl")
-//    def mavenRepoUsername = System.getProperty("mavenRepoUsername")
-//    def mavenRepoPassword = System.getProperty("mavenRepoPassword")
-//
-//    if (mavenRepoDeployUrl == null) {
-//        mavenRepoDeployUrl = System.getenv("mavenRepoDeployUrl")
-//    }
-//
-//    if (mavenRepoUsername == null) {
-//        mavenRepoUsername = System.getenv("mavenRepoUsername")
-//    }
-//
-//    if (mavenRepoPassword == null) {
-//        mavenRepoPassword = System.getenv("mavenRepoPassword")
-//    }
-//
-//    if (mavenRepoDeployUrl == null) {
-//        mavenRepoDeployUrl = MAVEN_REPO_DEPLOY_URL
-//    }
-//
-//    if (mavenRepoUsername == null) {
-//        mavenRepoUsername = MAVEN_REPO_USERNAME
-//    }
-//
-//    if (mavenRepoPassword == null) {
-//        mavenRepoPassword = MAVEN_REPO_PASSWORD
-//    }
-//
-//    // if snapshot repository is null
-//    def snapshotRepositoryUrl = ""
-//    if (MAVEN_REPO_SNAPSHOT_DEPLOY_URL == null || MAVEN_REPO_SNAPSHOT_DEPLOY_URL.toString() == "") {
-//        snapshotRepositoryUrl = mavenRepoDeployUrl
-//    } else {
-//        snapshotRepositoryUrl = MAVEN_REPO_SNAPSHOT_DEPLOY_URL
-//    }
-//
-//    def snapshotRepositoryUsername = ""
-//    if (MAVEN_REPO_SNAPSHOT_USERNAME == null || MAVEN_REPO_SNAPSHOT_USERNAME.toString() == "") {
-//        snapshotRepositoryUsername = mavenRepoUsername
-//    } else {
-//        snapshotRepositoryUsername = MAVEN_REPO_SNAPSHOT_USERNAME
-//    }
-//
-//    def snapshotRepositoryPassword = ""
-//    if (MAVEN_REPO_SNAPSHOT_PASSWORD == null || MAVEN_REPO_SNAPSHOT_PASSWORD.toString() == "") {
-//        snapshotRepositoryPassword = mavenRepoPassword
-//    } else {
-//        snapshotRepositoryPassword = MAVEN_REPO_SNAPSHOT_PASSWORD
-//    }
-//
-//    repositories {
-//        mavenDeployer {
-//            repository(url: mavenRepoDeployUrl) {
-//                authentication(userName: mavenRepoUsername, password: mavenRepoPassword)
-//            }
-//
-//            snapshotRepository(url: snapshotRepositoryUrl) {
-//                authentication(userName: snapshotRepositoryUsername, password: snapshotRepositoryPassword)
-//            }
-//        }
-//
-//    }
-//}
-//
-//uploadArchives.onlyIf { !sourceSets.main.allSource.files.isEmpty() }
-//install.onlyIf { !sourceSets.main.allSource.files.isEmpty() }
+            pom {
+                name.set("bk-ci")
+                description.set("Tencent blueking ci project")
+                url.set("https://github.com/Tencent/bk-ci")
+                licenses {
+                    license {
+                        name.set("MIT")
+                        url.set("https://github.com/Tencent/bk-ci/blob/master/LICENSE.txt")
+                        distribution.set("repo")
+                        comments.set("A business-friendly OSS license")
+                    }
+                }
+
+                developers {
+                    developer {
+                        name.set("bk-ci")
+                        email.set("devops@tencent.com")
+                        roles.set(listOf("Manager"))
+                        url.set("https://bk.tencent.com")
+                    }
+                }
+
+                scm {
+                    url.set("https://github.com/Tencent/bk-ci")
+                    connection.set("scm:git:https://github.com/Tencent/bk-ci.git")
+                    developerConnection.set("scm:git:git@github.com:Tencent/bk-ci.git")
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            name = "oss"
+
+            // 正式包
+            var mavenRepoDeployUrl = System.getProperty("mavenRepoDeployUrl")
+            var mavenRepoUsername = System.getProperty("mavenRepoUsername")
+            var mavenRepoPassword = System.getProperty("mavenRepoPassword")
+
+            if (mavenRepoDeployUrl == null) {
+                mavenRepoDeployUrl = System.getenv("build_mavenRepoDeployUrl")
+            }
+
+            if (mavenRepoUsername == null) {
+                mavenRepoUsername = System.getenv("build_mavenRepoUsername")
+            }
+
+            if (mavenRepoPassword == null) {
+                mavenRepoPassword = System.getenv("build_mavenRepoPassword")
+            }
+
+            if (mavenRepoDeployUrl == null) {
+                mavenRepoDeployUrl = project.extra["MAVEN_REPO_DEPLOY_URL"]?.toString()
+            }
+
+            if (mavenRepoUsername == null) {
+                mavenRepoUsername = project.extra["MAVEN_REPO_USERNAME"]?.toString()
+            }
+
+            if (mavenRepoPassword == null) {
+                mavenRepoPassword = project.extra["MAVEN_REPO_PASSWORD"]?.toString()
+            }
+
+            // 快照包
+            var snapshotMavenRepoDeployUrl = System.getProperty("snapshotMavenRepoDeployUrl")
+            var snapshotMavenRepoUsername = System.getProperty("snapshotMavenRepoUsername")
+            var snapshotMavenRepoPassword = System.getProperty("snapshotMavenRepoPassword")
+
+            if (snapshotMavenRepoDeployUrl == null) {
+                snapshotMavenRepoDeployUrl = System.getenv("build_snapshotMavenRepoDeployUrl")
+            }
+
+            if (snapshotMavenRepoUsername == null) {
+                snapshotMavenRepoUsername = System.getenv("build_snapshotMavenRepoUsername")
+            }
+
+            if (snapshotMavenRepoPassword == null) {
+                snapshotMavenRepoPassword = System.getenv("build_snapshotMavenRepoPassword")
+            }
+
+            if (snapshotMavenRepoDeployUrl == null) {
+                snapshotMavenRepoDeployUrl = project.extra["MAVEN_REPO_SNAPSHOT_DEPLOY_URL"]?.toString()
+            }
+
+            if (snapshotMavenRepoUsername == null) {
+                snapshotMavenRepoUsername = project.extra["MAVEN_REPO_SNAPSHOT_USERNAME"]?.toString()
+            }
+
+            if (snapshotMavenRepoPassword == null) {
+                snapshotMavenRepoPassword = project.extra["MAVEN_REPO_SNAPSHOT_PASSWORD"]?.toString()
+            }
+
+            url = URI(if (System.getProperty("snapshot") == "true") snapshotMavenRepoDeployUrl else mavenRepoDeployUrl)
+            credentials {
+                username =
+                    if (System.getProperty("snapshot") == "true") snapshotMavenRepoUsername else mavenRepoUsername
+                password =
+                    if (System.getProperty("snapshot") == "true") snapshotMavenRepoPassword else mavenRepoPassword
+            }
+        }
+    }
+}
+
+configure<SigningExtension> {
+    sign(convention.getByType(PublishingExtension::class.java).publications.getByName("mavenJava"))
+}
+
+tasks.getByName("publish") {
+    onlyIf {
+        project.the<SourceSetContainer>()["main"].allSource.files.isNotEmpty()
+    }
+}
+
+tasks.getByName("generateMetadataFileForMavenJavaPublication") {
+    onlyIf {
+        project.the<SourceSetContainer>()["main"].allSource.files.isNotEmpty()
+    }
+}
+
+tasks.getByName("generatePomFileForMavenJavaPublication") {
+    onlyIf {
+        project.the<SourceSetContainer>()["main"].allSource.files.isNotEmpty()
+    }
+}
+
+tasks.getByName("publishMavenJavaPublicationToOssRepository") {
+    onlyIf {
+        project.the<SourceSetContainer>()["main"].allSource.files.isNotEmpty()
+    }
+}
+
+tasks.getByName("publishMavenJavaPublicationToMavenLocal") {
+    onlyIf {
+        project.the<SourceSetContainer>()["main"].allSource.files.isNotEmpty()
+    }
+}
+
+tasks.getByName("publishToMavenLocal") {
+    onlyIf {
+        project.the<SourceSetContainer>()["main"].allSource.files.isNotEmpty()
+    }
+}
+
+tasks.getByName("signMavenJavaPublication") {
+    onlyIf {
+        project.the<SourceSetContainer>()["main"].allSource.files.isNotEmpty()
+    }
+}
+
+dependencies {
+    "api"("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    "api"("org.jetbrains.kotlin:kotlin-reflect")
+}
+
+task<Upload>("uploadArchives") {
+    var mavenRepoDeployUrl: String? = System.getProperty("mavenRepoDeployUrl")
+    var mavenRepoUsername = System.getProperty("mavenRepoUsername")
+    var mavenRepoPassword = System.getProperty("mavenRepoPassword")
+
+    if (mavenRepoDeployUrl == null) {
+        mavenRepoDeployUrl = System.getenv("mavenRepoDeployUrl")
+    }
+
+    if (mavenRepoUsername == null) {
+        mavenRepoUsername = System.getenv("mavenRepoUsername")
+    }
+
+    if (mavenRepoPassword == null) {
+        mavenRepoPassword = System.getenv("mavenRepoPassword")
+    }
+
+    if (mavenRepoDeployUrl == null) {
+        mavenRepoDeployUrl = project.extra["MAVEN_REPO_DEPLOY_URL"]?.toString()
+    }
+
+    if (mavenRepoUsername == null) {
+        mavenRepoUsername = project.extra["MAVEN_REPO_USERNAME"]?.toString()
+    }
+
+    if (mavenRepoPassword == null) {
+        mavenRepoPassword = project.extra["MAVEN_REPO_PASSWORD"]?.toString()
+    }
+
+    // if snapshot repository is null
+    var snapshotRepositoryUrl = project.extra["MAVEN_REPO_SNAPSHOT_DEPLOY_URL"]?.toString()
+    var snapshotRepositoryUsername = project.extra["MAVEN_REPO_SNAPSHOT_USERNAME"]?.toString()
+    var snapshotRepositoryPassword = project.extra["MAVEN_REPO_SNAPSHOT_PASSWORD"]?.toString()
+
+    if (snapshotRepositoryUrl == null || snapshotRepositoryUrl.isEmpty()) {
+        snapshotRepositoryUrl = mavenRepoDeployUrl
+    }
+    if (snapshotRepositoryUsername == null || snapshotRepositoryUsername.isEmpty()) {
+        snapshotRepositoryUsername = mavenRepoUsername
+    }
+    if (snapshotRepositoryPassword == null || snapshotRepositoryPassword.isEmpty()) {
+        snapshotRepositoryPassword = mavenRepoPassword
+    }
+
+    repositories.withGroovyBuilder {
+        "mavenDeployer" {
+            "repository"("url" to mavenRepoDeployUrl) {
+                "authentication"("userName" to mavenRepoUsername, "password" to mavenRepoPassword)
+            }
+
+            "snapshotRepository"("url" to snapshotRepositoryUrl) {
+                "authentication"("userName" to snapshotRepositoryUsername, "password" to snapshotRepositoryPassword)
+            }
+        }
+    }
+}
+
+tasks.getByName("uploadArchives") {
+    onlyIf {
+        project.the<SourceSetContainer>()["main"].allSource.files.isNotEmpty()
+    }
+}
+
+tasks.getByName("install") {
+    onlyIf {
+        project.the<SourceSetContainer>()["main"].allSource.files.isNotEmpty()
+    }
+}
+
