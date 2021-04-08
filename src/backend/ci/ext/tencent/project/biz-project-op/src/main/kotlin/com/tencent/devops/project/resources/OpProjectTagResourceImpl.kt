@@ -38,7 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class OpProjectTagResourceImpl @Autowired constructor(
     val projectTagService: ProjectTagService
-): OpProjectTagResource {
+) : OpProjectTagResource {
     override fun setTagByProject(opProjectTagUpdateDTO: OpProjectTagUpdateDTO): Result<Boolean> {
         return projectTagService.updateTagByProject(opProjectTagUpdateDTO)
     }

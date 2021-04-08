@@ -153,6 +153,7 @@ class ProjectTagService @Autowired constructor(
             throw ParamBlankException("project $notExistProjectList not exist")
         }
     }
+
     private fun checkChannel(channel: String?) {
         if (channel == null || channel.isEmpty()) {
             throw ParamBlankException("Invalid projectIds")
@@ -160,9 +161,7 @@ class ProjectTagService @Autowired constructor(
     }
 
     private fun checkOrg(opProjectTagUpdateDTO: OpProjectTagUpdateDTO) {
-        if (opProjectTagUpdateDTO.bgId == null
-            && opProjectTagUpdateDTO.deptId == null
-            && opProjectTagUpdateDTO.centerId == null) {
+        if (opProjectTagUpdateDTO.bgId == null && opProjectTagUpdateDTO.deptId == null && opProjectTagUpdateDTO.centerId == null) {
             throw ParamBlankException("Invalid project org")
         }
     }
@@ -179,7 +178,6 @@ class ProjectTagService @Autowired constructor(
         }
         logger.info("ProjectTagRefresh success. $routerTag ${projectCodeIds.size}")
         LogUtils.printCostTimeWE(watcher)
-
     }
 
     fun refreshRouterByChannel(
@@ -197,10 +195,9 @@ class ProjectTagService @Autowired constructor(
                     redisOperation.hset(PROJECT_TAG_REDIS_KEY, it.englishName, routerTag)
                 }
                 offset += limit
-            }
-            while (projectInfos.size == limit)
+            } while (projectInfos.size == limit)
         } finally {
-           logger.info("refreshRouterByChannel success")
+            logger.info("refreshRouterByChannel success")
         }
     }
 

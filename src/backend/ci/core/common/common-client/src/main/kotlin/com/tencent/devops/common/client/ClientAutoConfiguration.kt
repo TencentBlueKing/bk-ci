@@ -31,7 +31,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.client.consul.ConsulFilter
 import com.tencent.devops.common.service.ServiceAutoConfiguration
 import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.common.service.trace.TraceFilter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureAfter
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
