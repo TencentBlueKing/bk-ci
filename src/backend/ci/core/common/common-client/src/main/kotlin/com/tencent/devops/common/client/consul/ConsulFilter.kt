@@ -40,6 +40,7 @@ import javax.servlet.http.HttpServletRequest
 class ConsulFilter : Filter {
 
     override fun init(p0: FilterConfig?) {
+        return
     }
 
     override fun doFilter(request: ServletRequest?, response: ServletResponse?, chain: FilterChain?) {
@@ -52,5 +53,6 @@ class ConsulFilter : Filter {
     }
 
     override fun destroy() {
+        return
     }
 }
