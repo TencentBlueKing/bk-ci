@@ -139,6 +139,7 @@
     },
     "group": {
         "labelInputTips": "请输入标签名称,按Enter键确定",
+        "groupNotice": "注意：最多可添加10个标签组；同一分组下最多可添加12个标签；一个标签最多输入20个字符",
         "addLabel": "新增标签",
         "labelLimitTips": "一个分组下最多可以添加12个标签",
         "addGroup": "新增标签组",

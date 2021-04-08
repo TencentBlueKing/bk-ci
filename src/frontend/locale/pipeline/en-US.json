@@ -139,6 +139,7 @@
     },
     "group": {
         "labelInputTips": "Please input a name for this label and confirm it by pressing Enter",
+        "groupNotice": "Note: At most 10 label groups under a project. No more than 12 labels under a label group. Label maximum length: 20 characters.",
         "addLabel": "New label",
         "labelLimitTips": "No more than 12 labels under a group",
         "addGroup": "New group",
