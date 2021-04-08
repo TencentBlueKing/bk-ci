@@ -28,15 +28,18 @@
 
 package com.tencent.devops.project.service.impl
 
+import com.tencent.bk.sdk.iam.config.IamConfiguration
+import com.tencent.bk.sdk.iam.dto.request.QueryPolicyRequestDTO
+import com.tencent.bk.sdk.iam.service.impl.ManagerServiceImpl
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
-import com.tencent.devops.common.auth.service.IamEsbService
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectPermissionService
 import org.springframework.beans.factory.annotation.Autowired
 
 class TxV3ProjectPermissionServiceImpl @Autowired constructor (
-    val iamEsbService: IamEsbService
+    val managerService: ManagerServiceImpl,
+    val iamConfiguration: IamConfiguration,
 ): ProjectPermissionService {
 
 
@@ -54,6 +57,8 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor (
          *  4. 分配”ALL action“权限到CI管理员
          *  5. 添加创建人到分级管理员
          */
+        val queryPolicyRequest = QueryPolicyRequestDTO.builder().system(iamConfiguration.systemId)
+        managerService.createManager()
 
     }
 
