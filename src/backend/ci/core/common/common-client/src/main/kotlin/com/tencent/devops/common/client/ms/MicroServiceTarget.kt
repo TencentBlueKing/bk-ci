@@ -68,10 +68,6 @@ class MicroServiceTarget<T> constructor(
         } else tag
 
         instances.forEach next@{ serviceInstance ->
-            if (serviceName == "project") {
-                logger.info("consul info: $serviceInstance, tags $tag")
-            }
-
             if (serviceInstance.metadata.isEmpty())
                 return@next
 
