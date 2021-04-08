@@ -28,7 +28,6 @@
 
 package com.tencent.devops.common.client.consul
 
-import com.tencent.devops.common.service.trace.TraceTag
 import org.springframework.stereotype.Component
 import javax.servlet.Filter
 import javax.servlet.FilterChain
@@ -41,6 +40,7 @@ import javax.servlet.http.HttpServletRequest
 class ConsulFilter : Filter {
 
     override fun init(p0: FilterConfig?) {
+        return
     }
 
     override fun doFilter(request: ServletRequest?, response: ServletResponse?, chain: FilterChain?) {
@@ -53,5 +53,6 @@ class ConsulFilter : Filter {
     }
 
     override fun destroy() {
+        return
     }
 }

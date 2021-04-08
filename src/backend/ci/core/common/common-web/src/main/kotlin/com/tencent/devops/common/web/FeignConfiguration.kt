@@ -82,7 +82,7 @@ class FeignConfiguration {
             }
 
             // 增加X-HEAD-CONSUL-TAG供下游服务获取相同的consul tag
-            if (ConsulContent.getConsulContent() != null) {
+            if (!ConsulContent.getConsulContent().isNullOrEmpty()) {
                 requestTemplate.header(ConsulConstants.HEAD_CONSUL_TAG, ConsulContent.getConsulContent())
             }
         }

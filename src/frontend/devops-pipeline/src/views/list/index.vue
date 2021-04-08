@@ -138,12 +138,6 @@
             projectId: async function () {
                 await this.initListPage()
                 this.$store.commit('pipelines/toggleShowViewManage', false)
-                this.$router.push({
-                    name: 'pipelinesList',
-                    params: {
-                        type: this.currentViewId
-                    }
-                })
             }
         },
         async created () {
@@ -209,7 +203,15 @@
                 try {
                     this.$store.commit('pipelines/showPageLoading', true)
                     const viewSetting = await this.requestViewSettingInfo({ projectId: this.projectId })
-                    viewSetting.currentViewId = currentViewId || viewSetting.currentViewId
+                    viewSetting.currentViewId = currentViewId || viewSetting.currentViewId || 'myPipeline'
+                    if (!currentViewId) {
+                        this.$router.replace({
+                            name: 'pipelinesList',
+                            params: {
+                                type: viewSetting.currentViewId
+                            }
+                        })
+                    }
                     if (viewSetting.currentViewId) {
                         this.updateViewSettingInfo(viewSetting)
                     }
