@@ -172,7 +172,7 @@ interface ApigwEnvironmentResourceV3 {
     ): Result<Map<String, List<NodeBaseInfo>>>
 
     @ApiOperation("获取构建节点信息（扩展接口）")
-    @POST
+    @GET
     @Path("/projects/{projectId}/nodes/extListNodes")
     fun extListNodes(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
@@ -190,7 +190,7 @@ interface ApigwEnvironmentResourceV3 {
     ): Result<List<NodeWithPermission>>
 
     @ApiOperation("获取构建节点信息（扩展接口）")
-    @POST
+    @GET
     @Path("/projects/{projectId}/nodes/{nodeHashId}/listPipelineRef")
     fun listPipelineRef(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)

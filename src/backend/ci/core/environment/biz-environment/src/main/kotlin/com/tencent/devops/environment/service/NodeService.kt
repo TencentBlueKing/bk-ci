@@ -469,7 +469,7 @@ class NodeService @Autowired constructor(
                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastModifyTime)
                 },
                 lastModifyUser = it.lastModifyUser ?: "",
-                pipelineRefcount = it.pipelineRefCount ?: 0,
+                pipelineRefCount = it.pipelineRefCount ?: 0,
                 lastBuildTime = if (null == it.lastBuildTime) {
                     ""
                 } else {
