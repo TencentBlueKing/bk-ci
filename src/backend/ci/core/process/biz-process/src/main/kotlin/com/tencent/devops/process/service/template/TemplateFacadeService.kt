@@ -1363,13 +1363,16 @@ class TemplateFacadeService @Autowired constructor(
         templateContent: String,
         templateInstanceUpdate: TemplateInstanceUpdate
     ) {
-        // 校验模板下组件可见范围
-        val validateRet = client.get(ServiceTemplateResource::class)
-            .validateUserTemplateComponentVisibleDept(
-                userId = userId,
-                templateCode = templateId,
-                projectCode = projectId
-            )
+        val srcTemplateId = templateDao.getSrcTemplateId(dslContext, templateId)
+        if (srcTemplateId != null) {
+            // 安装的研发商店模板需校验模板下组件可见范围
+            val validateRet = client.get(ServiceTemplateResource::class)
+                .validateUserTemplateComponentVisibleDept(
+                    userId = userId,
+                    templateCode = templateId,
+                    projectCode = projectId
+                )
+        }
         if (validateRet.isNotOk()) {
             throw ErrorCodeException(
                 errorCode = validateRet.status.toString(),
