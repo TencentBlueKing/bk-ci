@@ -81,6 +81,7 @@ import com.tencent.devops.store.dao.common.StoreBuildInfoDao
 import com.tencent.devops.store.dao.common.StoreMediaInfoDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
+import com.tencent.devops.store.dao.common.StoreStatisticTotalDao
 import com.tencent.devops.store.pojo.EditInfoDTO
 import com.tencent.devops.store.pojo.ExtServiceCreateInfo
 import com.tencent.devops.store.pojo.ExtServiceEnvCreateInfo
@@ -178,6 +179,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
     @Autowired
     lateinit var storeMediaInfoDao: StoreMediaInfoDao
     @Autowired
+    lateinit var storeStatisticTotalDao: StoreStatisticTotalDao
+    @Autowired
     lateinit var bsProjectServiceCodec: BSProjectServiceCodec
     @Autowired
     lateinit var redisOperation: RedisOperation
@@ -267,6 +270,12 @@ abstract class ExtServiceBaseService @Autowired constructor() {
                     visibilityLevel = extensionInfo.visibilityLevel!!.level
                 )
             )
+            // 初始化统计表数据
+            storeStatisticTotalDao.initStatisticData(
+                dslContext = context,
+                storeCode = serviceCode,
+                storeType = StoreTypeEnum.SERVICE.type.toByte()
+            )
             extensionInfo.extensionItemList.forEach {
                 // 添加扩展服务扩展点
                 extServiceItemRelDao.create(
@@ -298,15 +307,14 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         val version = submitDTO.version
 
         // 判断扩展服务是不是首次创建版本
-        val serviceRecords = extServiceDao.listServiceByCode(dslContext, serviceCode)
-        logger.info("the serviceRecords is :$serviceRecords")
-        if (serviceRecords == null || serviceRecords.size < 1) {
+        val serviceCount = extServiceDao.countByCode(dslContext, serviceCode)
+        if (serviceCount < 1) {
             return MessageCodeUtil.generateResponseDataObject(
                 CommonMessageCode.PARAMETER_IS_INVALID,
                 arrayOf(serviceCode)
             )
         }
-        val serviceRecord = serviceRecords[0]
+        val serviceRecord = extServiceDao.getNewestServiceByCode(dslContext, serviceCode)!!
         // 判断更新的扩展服务名称是否重复
         if (validateAddServiceReqByName(
                 submitDTO.serviceName,
@@ -318,7 +326,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         )
         // 校验前端传的版本号是否正确
         val releaseType = submitDTO.releaseType
-        val dbVersion = serviceRecord!!.version
+        val dbVersion = serviceRecord.version
         // 最近的版本处于上架中止状态，重新升级版本号不变
         val cancelFlag = serviceRecord.serviceStatus == ExtServiceStatusEnum.GROUNDING_SUSPENSION.status.toByte()
         val requireVersion =
@@ -342,7 +350,7 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             ExtServiceStatusEnum.UNDERCARRIAGED.status.toByte()
         )
 
-        if (serviceRecords.size == 1) {
+        if (serviceCount == 1) {
             // 如果是首次发布，处于初始化的扩展服务状态也允许添加新的版本
             serviceFinalStatusList.add(ExtServiceStatusEnum.INIT.status.toByte())
         }
@@ -1200,16 +1208,18 @@ abstract class ExtServiceBaseService @Autowired constructor() {
         return processInfo
     }
 
-    // TODO 此处需调整为： 同一个名称只支持在同一个服务内相同
     private fun validateAddServiceReqByName(serviceName: String, serviceCode: String): Boolean {
-        // 判断扩展服务是否存在
-        val nameInfo = extServiceDao.listServiceByName(dslContext, serviceName)
-        if (nameInfo != null) {
-            for (code in nameInfo) {
-                if (serviceCode != code!!.serviceCode) return true
-            }
+        var flag = false
+        val count = extServiceDao.countByName(dslContext, serviceName)
+        if (count > 0) {
+            // 判断微扩展名称是否重复（微扩展升级允许名称一样）
+            flag = extServiceDao.countByName(
+                dslContext = dslContext,
+                serviceName = serviceName,
+                serviceCode = serviceCode
+            ) < count
         }
-        return false
+        return flag
     }
 
     private fun getFileServiceProps(
