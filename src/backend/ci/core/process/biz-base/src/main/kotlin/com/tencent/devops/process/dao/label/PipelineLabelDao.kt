@@ -130,7 +130,7 @@ class PipelineLabelDao {
         groupId: Long
     ): Long {
         with(TPipelineLabel.T_PIPELINE_LABEL) {
-            return dslContext.selectFrom(this)
+            return dslContext.selectCount()
                 .where(GROUP_ID.eq(groupId))
                 .fetchOne(0, Long::class.java)
         }

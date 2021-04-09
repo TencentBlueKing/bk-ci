@@ -118,7 +118,7 @@ class PipelineGroupDao {
         projectId: String
     ): Long {
         with(TPipelineGroup.T_PIPELINE_GROUP) {
-            return dslContext.selectFrom(this)
+            return dslContext.selectCount()
                 .where(PROJECT_ID.eq(projectId))
                 .fetchOne(0, Long::class.java)
         }
