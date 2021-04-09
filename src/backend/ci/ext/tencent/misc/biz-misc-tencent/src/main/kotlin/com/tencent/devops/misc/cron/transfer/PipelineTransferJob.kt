@@ -88,7 +88,6 @@ class PipelineTransferJob @Autowired constructor(
                 val maxId = handleProjectPrimaryId + miscPipelineTransferContext.dealProjectBatchSize()
                 logger.info("transfer|startId=$handleProjectPrimaryId|maxId=$maxId")
                 projectService.getProjectInfoList(minId = handleProjectPrimaryId, maxId = maxId)
-
             } else {
 
                 projectService.getProjectInfoList(projectIdList = needTransferProjectIdList)
