@@ -7,6 +7,13 @@
     "viewManage": "Views",
     "templateManage": "Templates",
     "pluginManage": "Installed plugins",
+    "operatorAudit": "Operational Audit",
+    "audit": {
+        "operator": "Operator",
+        "operateTime": "Operation time",
+        "operateTimePlaceholder": "Please select a time range",
+        "enterPlaceholder": "Press Enter to search"
+    },
     "err503": "Serve is being deployed, please wait",
     "err400": "An error occurred in internal service",
     "err403": "Permission Deny",
@@ -19,6 +26,7 @@
     "add": "Add",
     "copy": "Duplicate",
     "save": "Save",
+    "at": "At",
     "rename": "Rename",
     "delete": "Delete",
     "confirm": "Confirm",
@@ -402,7 +410,8 @@
         "rebuildSuc": "Rebuild successfully",
         "rebuildFail": "Rebuild failed",
         "stopSuc": "cancel successfully",
-        "stopFail": "cancel failed"
+        "stopFail": "cancel failed",
+        "loadPipelineVersionSuccess": "load version {version} successed，please confirm pipeline content"
     },
     "history": {
         "logEmpty": "Log is empty",

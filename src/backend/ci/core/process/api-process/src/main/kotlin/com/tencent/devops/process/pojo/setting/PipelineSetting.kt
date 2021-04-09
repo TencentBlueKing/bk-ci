@@ -44,14 +44,15 @@ data class PipelineSetting(
     val pipelineName: String = "",
     val desc: String = "",
     val runLockType: PipelineRunLockType = PipelineRunLockType.SINGLE_LOCK,
-    val successSubscription: Subscription = Subscription(),
-    val failSubscription: Subscription = Subscription(),
+    var successSubscription: Subscription = Subscription(),
+    var failSubscription: Subscription = Subscription(),
     var labels: List<String> = emptyList(),
     val waitQueueTimeMinute: Int = PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT,
     val maxQueueSize: Int = PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT,
     var hasPermission: Boolean? = null,
     val maxPipelineResNum: Int = PIPELINE_RES_NUM_MIN, // 保存流水线编排的最大个数
-    val maxConRunningQueueSize: Int = PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT // MULTIPLE类型时，并发构建数量限制
+    val maxConRunningQueueSize: Int = PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT, // MULTIPLE类型时，并发构建数量限制
+    var version: Int = 0
 ) {
 
     @Suppress("ALL")
