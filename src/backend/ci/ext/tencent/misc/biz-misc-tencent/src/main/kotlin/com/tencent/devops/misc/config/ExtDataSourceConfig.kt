@@ -50,20 +50,20 @@ import javax.sql.DataSource
 class ExtDataSourceConfig {
 
     @Bean
-    fun autoDataSource(
-        @Value("\${spring.datasource.auto.url}")
+    fun ttargetDataSource(
+        @Value("\${spring.datasource.ttarget.url}")
         datasourceUrl: String,
-        @Value("\${spring.datasource.auto.username}")
+        @Value("\${spring.datasource.ttarget.username}")
         datasourceUsername: String,
-        @Value("\${spring.datasource.auto.password}")
+        @Value("\${spring.datasource.ttarget.password}")
         datasourcePassword: String,
-        @Value("\${spring.datasource.auto.initSql:#{null}}")
+        @Value("\${spring.datasource.ttarget.initSql:#{null}}")
         datasourceInitSql: String? = null,
-        @Value("\${spring.datasource.auto.leakDetectionThreshold:#{0}}")
+        @Value("\${spring.datasource.ttarget.leakDetectionThreshold:#{0}}")
         datasourceLeakDetectionThreshold: Long = 0
     ): DataSource {
         return HikariDataSource().apply {
-            poolName = "DBPool-Process-Auto"
+            poolName = "DBPool-Process-ttarget"
             jdbcUrl = datasourceUrl
             username = datasourceUsername
             password = datasourcePassword
@@ -77,13 +77,52 @@ class ExtDataSourceConfig {
     }
 
     @Bean
-    fun autoJooqConfiguration(
-        @Qualifier("autoDataSource")
-        autoDataSource: DataSource
+    fun ttargetJooqConfiguration(
+        @Qualifier("ttargetDataSource")
+        ttargetDataSource: DataSource
     ): DefaultConfiguration {
         val configuration = DefaultConfiguration()
         configuration.set(SQLDialect.MYSQL)
-        configuration.set(autoDataSource)
+        configuration.set(ttargetDataSource)
+        configuration.settings().isRenderSchema = false
+        return configuration
+    }
+
+    @Bean
+    fun tsourceDataSource(
+        @Value("\${spring.datasource.tsource.url}")
+        datasourceUrl: String,
+        @Value("\${spring.datasource.tsource.username}")
+        datasourceUsername: String,
+        @Value("\${spring.datasource.tsource.password}")
+        datasourcePassword: String,
+        @Value("\${spring.datasource.tsource.initSql:#{null}}")
+        datasourceInitSql: String? = null,
+        @Value("\${spring.datasource.tsource.leakDetectionThreshold:#{0}}")
+        datasourceLeakDetectionThreshold: Long = 0
+    ): DataSource {
+        return HikariDataSource().apply {
+            poolName = "DBPool-Process-tsource"
+            jdbcUrl = datasourceUrl
+            username = datasourceUsername
+            password = datasourcePassword
+            driverClassName = Driver::class.java.name
+            minimumIdle = 1
+            maximumPoolSize = 5
+            idleTimeout = 60000
+            connectionInitSql = datasourceInitSql
+            leakDetectionThreshold = datasourceLeakDetectionThreshold
+        }
+    }
+
+    @Bean
+    fun tsourceJooqConfiguration(
+        @Qualifier("tsourceDataSource")
+        tsourceDataSource: DataSource
+    ): DefaultConfiguration {
+        val configuration = DefaultConfiguration()
+        configuration.set(SQLDialect.MYSQL)
+        configuration.set(tsourceDataSource)
         configuration.settings().isRenderSchema = false
         return configuration
     }
