@@ -274,7 +274,8 @@ class PipelineListFacadeService @Autowired constructor(
                 } else {
                     watcher.start("checkPerm")
                     val validateUserResourcePermission = pipelinePermissionService.checkPipelinePermission(
-                        userId = userId, projectId = projectId, permission = AuthPermission.CREATE)
+                        userId = userId, projectId = projectId, permission = AuthPermission.CREATE
+                    )
                     watcher.stop()
                     validateUserResourcePermission
                 }
@@ -431,7 +432,7 @@ class PipelineListFacadeService @Autowired constructor(
         filterByPipelineName: String? = null,
         filterByCreator: String? = null,
         filterByLabels: String? = null,
-        callByApp: Boolean? = false,
+        filterInvalid: Boolean = false,
         authPipelineIds: List<String> = emptyList(),
         skipPipelineIds: List<String> = emptyList()
     ): PipelineViewPipelinePage<Pipeline> {
@@ -499,16 +500,17 @@ class PipelineListFacadeService @Autowired constructor(
             )
 
             // 查询无权限查看的流水线总数
-            val totalInvalidPipelineSize = pipelineBuildSummaryDao.listPipelineInfoBuildSummaryCount(
-                dslContext = dslContext,
-                projectId = projectId,
-                channelCode = channelCode,
-                favorPipelines = favorPipelines,
-                authPipelines = authPipelines,
-                viewId = viewId,
-                pipelineFilterParamList = pipelineFilterParamList,
-                permissionFlag = false
-            )
+            val totalInvalidPipelineSize =
+                if (filterInvalid) 0 else pipelineBuildSummaryDao.listPipelineInfoBuildSummaryCount(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    channelCode = channelCode,
+                    favorPipelines = favorPipelines,
+                    authPipelines = authPipelines,
+                    viewId = viewId,
+                    pipelineFilterParamList = pipelineFilterParamList,
+                    permissionFlag = false
+                )
             val pipelineList = mutableListOf<Pipeline>()
             val totalSize = totalAvailablePipelineSize + totalInvalidPipelineSize
             if ((null != page && null != pageSize) && !(page == 1 && pageSize == -1)) {
@@ -561,7 +563,7 @@ class PipelineListFacadeService @Autowired constructor(
                             pageSize = lastPageRemainNum.toInt()
                         )
                     }
-                } else {
+                } else if (totalInvalidPipelineSize > 0) {
                     // 当前页大于可用流水线最后一页，需要排除掉可用流水线最后一页不满页的数量用不可用的流水线填充的情况
                     val lastPageRemainNum =
                         if (totalAvailablePipelineSize > 0) pageSize - totalAvailablePipelineSize % pageSize else 0
@@ -595,19 +597,22 @@ class PipelineListFacadeService @Autowired constructor(
                     page = page,
                     pageSize = pageSize
                 )
-                handlePipelineQueryList(
-                    pipelineList = pipelineList,
-                    projectId = projectId,
-                    channelCode = channelCode,
-                    sortType = sortType,
-                    favorPipelines = favorPipelines,
-                    authPipelines = authPipelines,
-                    viewId = viewId,
-                    pipelineFilterParamList = pipelineFilterParamList,
-                    permissionFlag = false,
-                    page = page,
-                    pageSize = pageSize
-                )
+
+                if (filterInvalid) {
+                    handlePipelineQueryList(
+                        pipelineList = pipelineList,
+                        projectId = projectId,
+                        channelCode = channelCode,
+                        sortType = sortType,
+                        favorPipelines = favorPipelines,
+                        authPipelines = authPipelines,
+                        viewId = viewId,
+                        pipelineFilterParamList = pipelineFilterParamList,
+                        permissionFlag = false,
+                        page = page,
+                        pageSize = pageSize
+                    )
+                }
             }
             watcher.stop()
 

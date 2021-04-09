@@ -91,17 +91,18 @@ interface ServiceStoreResource {
         storeBuildResultRequest: StoreBuildResultRequest
     ): Result<Boolean>
 
+    @ApiOperation("判断用户是否是该组件的成员")
     @GET
-    @Path("/{templateCode}/validate")
-    fun validateUserTemplateAtomVisibleDept(
-        @ApiParam("用户", required = true)
-        @QueryParam("userId")
-        userId: String,
+    @Path("/codes/{storeCode}/user/validate")
+    fun isStoreMember(
         @ApiParam("标识", required = true)
-        @PathParam("templateCode")
-        templateCode: String,
-        @ApiParam("项目", required = true)
-        @QueryParam("projectCode")
-        projectCode: String?
+        @PathParam("storeCode")
+        storeCode: String,
+        @ApiParam("类型", required = true)
+        @QueryParam("storeType")
+        storeType: StoreTypeEnum,
+        @ApiParam("用户ID", required = true)
+        @QueryParam("userId")
+        userId: String
     ): Result<Boolean>
 }

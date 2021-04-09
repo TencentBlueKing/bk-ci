@@ -133,7 +133,6 @@ config = {
   externalHost = "__BKCI_EXTERNAL_HOST__",
   logoHost = "__BKCI_LOGO_HOST__",
   dcloudHost = "__BKCI_DCLOUD_HOST__",
-  mirrorsHost = "__BKCI_MIRRORS_FQDN__",
   buglyHost = "__BKCI_BULGY_HOST__",
   buglyLandunHost = "__BKCI_BULGY_LANDUN_HOST__",
   buglyQcloudHost = "__BKCI_BULGY_QCLOUD_HOST__",

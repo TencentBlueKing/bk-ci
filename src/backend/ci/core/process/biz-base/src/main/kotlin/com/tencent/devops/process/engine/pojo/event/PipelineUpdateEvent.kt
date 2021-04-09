@@ -43,6 +43,7 @@ data class PipelineUpdateEvent(
     override val source: String,
     override val projectId: String,
     override val pipelineId: String,
+    val version: Int,
     override val userId: String,
     val buildNo: BuildNo? = null,
     override var actionType: ActionType = ActionType.START,
