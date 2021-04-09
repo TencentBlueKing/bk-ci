@@ -50,7 +50,7 @@ class PipelineTransferJob @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineTransferJob::class.java)
-        private const val PIPELINE_BUILD_HISTORY_PAGE_SIZE = 100
+        private const val PIPELINE_BUILD_HISTORY_PAGE_SIZE = 14
     }
 
     @Scheduled(initialDelay = 12000, fixedDelay = 30000)
@@ -96,16 +96,16 @@ class PipelineTransferJob @Autowired constructor(
 
             transferProjectList?.forEach nextOne@{ projectInfo ->
 
+                if (projectInfo.id > maxHandleProjectPrimaryId) {
+                    maxHandleProjectPrimaryId = projectInfo.id
+                }
+
                 if (!miscPipelineTransferContext.isFinishProject(projectInfo.projectId)) {
                     return@nextOne
                 }
 
                 if (!miscPipelineTransferContext.checkTransferChannel(projectInfo.channel)) {
                     return@nextOne
-                }
-
-                if (projectInfo.id > maxHandleProjectPrimaryId) {
-                    maxHandleProjectPrimaryId = projectInfo.id
                 }
 
                 logger.info("transfer|RUN|projectId=${projectInfo.projectId}|channel=${projectInfo.channel}")
@@ -132,7 +132,7 @@ class PipelineTransferJob @Autowired constructor(
 
             targetPipelineService.addPipelineInfo(pipelineInfoRecord)
 
-            val resourceRecord = sourcePipelineService.getPipelineRes(pipelineInfoRecord.pipelineId)
+            val resourceRecord = sourcePipelineService.getPipelineLatestRes(pipelineInfoRecord.pipelineId)
             targetPipelineService.addResourceRecord(resourceRecord)
 
             val settingRecord = sourcePipelineService.getPipelineSetting(pipelineInfoRecord.pipelineId)

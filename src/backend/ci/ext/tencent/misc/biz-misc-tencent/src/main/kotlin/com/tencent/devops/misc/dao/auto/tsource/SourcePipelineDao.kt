@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.dao.process
+package com.tencent.devops.misc.dao.auto.tsource
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.model.process.Tables
@@ -42,7 +42,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 
 @Repository
-class OldPipelineDao @Autowired constructor(private val objectMapper: ObjectMapper) {
+class SourcePipelineDao @Autowired constructor(private val objectMapper: ObjectMapper) {
 
     fun listPipelineInfos(dslContext: DSLContext, projectId: String): Collection<TPipelineInfoRecord> {
         with(TPipelineInfo.T_PIPELINE_INFO) {

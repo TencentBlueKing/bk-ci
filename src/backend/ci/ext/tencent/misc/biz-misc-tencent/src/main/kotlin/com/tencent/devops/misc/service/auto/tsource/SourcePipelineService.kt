@@ -27,7 +27,7 @@
 
 package com.tencent.devops.misc.service.auto.tsource
 
-import com.tencent.devops.misc.dao.process.OldPipelineDao
+import com.tencent.devops.misc.dao.auto.tsource.SourcePipelineDao
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
@@ -40,11 +40,11 @@ import org.springframework.stereotype.Service
 @Service
 class SourcePipelineService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val oldPipelineDao: OldPipelineDao
+    private val sourcePipelineDao: SourcePipelineDao
 ) {
 
     fun listPipelineInfos(projectId: String): Collection<TPipelineInfoRecord> {
-        return oldPipelineDao.listPipelineInfos(dslContext, projectId)
+        return sourcePipelineDao.listPipelineInfos(dslContext, projectId)
     }
 
     fun listPipelineBuilds(
@@ -53,18 +53,18 @@ class SourcePipelineService @Autowired constructor(
         offset: Long,
         limit: Int
     ): Collection<TPipelineBuildHistoryRecord> {
-        return oldPipelineDao.listPipelineBuilds(dslContext, projectId, pipelineId, offset, limit)
+        return sourcePipelineDao.listPipelineBuilds(dslContext, projectId, pipelineId, offset, limit)
     }
 
-    fun getPipelineRes(pipelineId: String): TPipelineResourceRecord? {
-        return oldPipelineDao.getPipelineRes(dslContext, pipelineId)
+    fun getPipelineLatestRes(pipelineId: String): TPipelineResourceRecord? {
+        return sourcePipelineDao.getPipelineRes(dslContext, pipelineId)
     }
 
     fun getPipelineSetting(pipelineId: String): TPipelineSettingRecord? {
-        return oldPipelineDao.getPipelineSetting(dslContext, pipelineId)
+        return sourcePipelineDao.getPipelineSetting(dslContext, pipelineId)
     }
 
     fun getPipelineSummary(pipelineId: String): TPipelineBuildSummaryRecord? {
-        return oldPipelineDao.getPipelineSummary(dslContext, pipelineId)
+        return sourcePipelineDao.getPipelineSummary(dslContext, pipelineId)
     }
 }

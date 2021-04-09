@@ -27,7 +27,7 @@
 
 package com.tencent.devops.misc.service.auto.ttarget
 
-import com.tencent.devops.misc.dao.auto.AutoPipelineDao
+import com.tencent.devops.misc.dao.auto.ttarget.TargetPipelineDao
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
@@ -40,33 +40,33 @@ import org.springframework.stereotype.Component
 @Component
 class TargetPipelineService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val autoPipelineDao: AutoPipelineDao
+    private val targetPipelineDao: TargetPipelineDao
 ) {
     fun addPipelineInfo(pipelineInfoRecord: TPipelineInfoRecord) {
-        autoPipelineDao.savePipelineInfo(dslContext, pipelineInfoRecord)
+        targetPipelineDao.savePipelineInfo(dslContext, pipelineInfoRecord)
     }
 
     fun addResourceRecord(resourceRecord: TPipelineResourceRecord?) {
         if (resourceRecord != null) {
-            autoPipelineDao.savePipelineRes(dslContext, resourceRecord)
+            targetPipelineDao.savePipelineRes(dslContext, resourceRecord)
         }
     }
 
     fun addSettingRecord(settingRecord: TPipelineSettingRecord?) {
         if (settingRecord != null) {
-            autoPipelineDao.savePipelineSetting(dslContext, settingRecord)
+            targetPipelineDao.savePipelineSetting(dslContext, settingRecord)
         }
     }
 
     fun addSummaryRecord(summaryRecord: TPipelineBuildSummaryRecord?) {
         if (summaryRecord != null) {
-            autoPipelineDao.savePipelineSummary(dslContext, summaryRecord)
+            targetPipelineDao.savePipelineSummary(dslContext, summaryRecord)
         }
     }
 
     fun addPipelineBuilds(listPipelineBuilds: Collection<TPipelineBuildHistoryRecord>) {
         if (listPipelineBuilds.isNotEmpty()) {
-            autoPipelineDao.savePipelineBuildHistories(dslContext, listPipelineBuilds)
+            targetPipelineDao.savePipelineBuildHistories(dslContext, listPipelineBuilds)
         }
     }
 }

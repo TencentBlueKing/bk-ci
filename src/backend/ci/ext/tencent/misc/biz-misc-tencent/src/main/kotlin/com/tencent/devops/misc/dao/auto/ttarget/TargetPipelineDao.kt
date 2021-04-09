@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.dao.auto
+package com.tencent.devops.misc.dao.auto.ttarget
 
 import com.tencent.devops.model.process.Tables
 import com.tencent.devops.model.process.tables.TPipelineSetting
@@ -35,12 +35,12 @@ import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineResourceRecord
 import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
 import org.jooq.DSLContext
-import org.jooq.InsertSetMoreStep
+import org.jooq.InsertReturningStep
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 
 @Repository
-class AutoPipelineDao {
+class TargetPipelineDao {
 
     fun savePipelineInfo(dslContext: DSLContext, record: TPipelineInfoRecord) {
         val insert = with(Tables.T_PIPELINE_INFO) {
@@ -106,11 +106,31 @@ class AutoPipelineDao {
     }
 
     fun savePipelineBuildHistories(dslContext: DSLContext, histories: Collection<TPipelineBuildHistoryRecord>) {
-        val records = mutableListOf<InsertSetMoreStep<TPipelineBuildHistoryRecord>>()
+        val records = mutableListOf<InsertReturningStep<TPipelineBuildHistoryRecord>>()
         with(Tables.T_PIPELINE_BUILD_HISTORY) {
             histories.forEach {
                 records.add(
                     dslContext.insertInto(this)
+                        .set(BUILD_ID, it.buildId)
+                        .set(BUILD_NUM, it.buildNum)
+                        .set(PROJECT_ID, it.projectId)
+                        .set(PIPELINE_ID, it.pipelineId)
+                        .set(PARENT_BUILD_ID, it.parentBuildId)
+                        .set(PARENT_TASK_ID, it.parentTaskId)
+                        .set(START_TIME, it.startTime)
+                        .set(START_USER, it.startUser)
+                        .set(TRIGGER_USER, it.triggerUser)
+                        .set(STATUS, it.status)
+                        .set(TRIGGER, it.trigger)
+                        .set(TASK_COUNT, it.taskCount)
+                        .set(FIRST_TASK_ID, it.firstTaskId)
+                        .set(CHANNEL, it.channel)
+                        .set(VERSION, it.version)
+                        .set(QUEUE_TIME, it.queueTime)
+                        .set(WEBHOOK_TYPE, it.webhookType)
+                        .set(WEBHOOK_INFO, it.webhookInfo)
+                        .set(BUILD_MSG, it.buildMsg)
+                        .onDuplicateKeyUpdate()
                         .set(BUILD_ID, it.buildId)
                         .set(BUILD_NUM, it.buildNum)
                         .set(PROJECT_ID, it.projectId)
@@ -175,7 +195,8 @@ class AutoPipelineDao {
                 record.finishCount,
                 record.runningCount,
                 record.queueCount
-            ).execute()
+            )
+                .onDuplicateKeyIgnore().execute()
         }
 
         if (LOG.isDebugEnabled) {
@@ -204,27 +225,26 @@ class AutoPipelineDao {
                 MAX_QUEUE_SIZE,
                 IS_TEMPLATE,
                 MAX_PIPELINE_RES_NUM
+            ).values(
+                record.projectId,
+                record.pipelineId,
+                record.name,
+                record.runLockType,
+                record.desc,
+                record.successReceiver,
+                record.failReceiver,
+                record.successGroup,
+                record.failGroup,
+                record.successType,
+                record.failType,
+                record.successContent,
+                record.failContent,
+                record.waitQueueTimeSecond,
+                record.maxQueueSize,
+                record.isTemplate,
+                record.maxPipelineResNum
             )
-                .values(
-                    record.projectId,
-                    record.pipelineId,
-                    record.name,
-                    record.runLockType,
-                    record.desc,
-                    record.successReceiver,
-                    record.failReceiver,
-                    record.successGroup,
-                    record.failGroup,
-                    record.successType,
-                    record.failType,
-                    record.successContent,
-                    record.failContent,
-                    record.waitQueueTimeSecond,
-                    record.maxQueueSize,
-                    record.isTemplate,
-                    record.maxPipelineResNum
-                )
-                .execute()
+                .onDuplicateKeyIgnore().execute()
         }
 
         if (LOG.isDebugEnabled) {
@@ -233,6 +253,6 @@ class AutoPipelineDao {
     }
 
     companion object {
-        private val LOG = LoggerFactory.getLogger(AutoPipelineDao::class.java)
+        private val LOG = LoggerFactory.getLogger(TargetPipelineDao::class.java)
     }
 }
