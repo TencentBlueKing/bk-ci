@@ -158,7 +158,7 @@ class ExperienceDownloadService @Autowired constructor(
         }
         val fileDetail = client.get(ServiceArtifactoryResource::class).show(projectId, artifactoryType, path).data!!
 
-        addDownloadRecord(experienceId, userId)
+        addDownloadRecord(experienceRecord, userId)
         return DownloadUrl(StringUtil.chineseUrlEncode(url), platform, fileDetail.size)
     }
 
@@ -178,7 +178,7 @@ class ExperienceDownloadService @Autowired constructor(
             )
         }
 
-        addDownloadRecord(experienceId, userId)
+        addDownloadRecord(experienceRecord, userId)
         return client.get(ServiceArtifactoryResource::class)
             .downloadUrl(projectId, artifactoryType, userId, path, 24 * 3600, false).data!!.url
     }
@@ -206,15 +206,17 @@ class ExperienceDownloadService @Autowired constructor(
         }
     }
 
-    fun addDownloadRecord(experienceId: Long, userId: String) {
-        val experienceDownloadRecord = experienceDownloadDao.getOrNull(dslContext, experienceId, userId)
+    fun addDownloadRecord(experienceRecord: TExperienceRecord, userId: String) {
+        // 新增下载次数
+        val experienceDownloadRecord = experienceDownloadDao.getOrNull(dslContext, experienceRecord.id, userId)
         if (experienceDownloadRecord == null) {
-            experienceDownloadDao.create(dslContext, experienceId, userId)
+            experienceDownloadDao.create(dslContext, experienceRecord.id, userId)
         } else {
             experienceDownloadDao.plusTimes(dslContext, experienceDownloadRecord.id)
         }
+        experiencePublicDao.addDownloadTimeByRecordId(dslContext, experienceRecord.id)
 
-        experiencePublicDao.addDownloadTimeByRecordId(dslContext, experienceId)
+        //更新最近下载记录
     }
 
     fun downloadCount(userId: String, projectId: String, experienceHashId: String): ExperienceCount {

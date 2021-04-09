@@ -39,6 +39,7 @@ import com.tencent.devops.common.api.util.VersionUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.experience.constant.ExperienceAppStatusEnum
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.constant.ProductCategoryEnum
@@ -57,6 +58,7 @@ import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 import java.util.concurrent.Executors
 
 @Service
@@ -224,18 +226,22 @@ class ExperienceAppService(
         userId: String,
         experienceHashId: String,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        installedId: String?,
+        downloadIds: Set<String>?
     ): Pagination<ExperienceChangeLog> {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
         val experience = experienceDao.get(dslContext, experienceId)
         val changeLog =
             getChangeLog(
-                experience.projectId,
-                experience.bundleIdentifier,
-                experience.platform,
-                if (page <= 0) 1 else page,
-                if (pageSize <= 0) 10 else pageSize,
-                false
+                projectId = experience.projectId,
+                bundleIdentifier = experience.bundleIdentifier,
+                platform = experience.platform,
+                page = if (page <= 0) 1 else page,
+                pageSize = if (pageSize <= 0) 10 else pageSize,
+                isOldVersion = false,
+                installedId = installedId,
+                downloadIds = downloadIds
             )
         val hasNext = if (changeLog.size < pageSize) {
             false
@@ -257,8 +263,14 @@ class ExperienceAppService(
         platform: String?,
         page: Int,
         pageSize: Int,
-        isOldVersion: Boolean
+        isOldVersion: Boolean,
+        installedId: String? = null,
+        downloadIds: Set<String>? = null
     ): List<ExperienceChangeLog> {
+        val installedIdLong = installedId?.let { HashUtil.decodeIdToLong(installedId) } ?: -1
+        val downloadIdLongs = downloadIds?.map { id -> HashUtil.decodeIdToLong(id) }?.toSet() ?: emptySet()
+        val now = LocalDateTime.now()
+
         val experienceList = experienceDao.listByBundleIdentifier(
             dslContext,
             projectId,
@@ -267,6 +279,7 @@ class ExperienceAppService(
             (page - 1) * pageSize,
             pageSize
         )
+
         return experienceList.map {
             ExperienceChangeLog(
                 experienceHashId = HashUtil.encodeLongId(it.id),
@@ -275,8 +288,56 @@ class ExperienceAppService(
                 createDate = it.createTime.run { if (isOldVersion) timestamp() else timestampmilli() },
                 changelog = it.remark ?: "",
                 experienceName = it.experienceName,
-                size = it.size
+                size = it.size,
+                appStatus = getAppStatus(platform, installedIdLong, downloadIdLongs, it, now)
             )
+        }.toList()
+    }
+
+    private fun getAppStatus(
+        platform: String?,
+        installedIdLong: Long,
+        downloadIdLongs: Set<Long>,
+        record: TExperienceRecord,
+        now: LocalDateTime?
+    ): ExperienceAppStatusEnum {
+        return if ("ANDROID" == platform) {
+            if (installedIdLong > 0) {
+                when {
+                    record.id == installedIdLong -> {
+                        ExperienceAppStatusEnum.OPEN
+                    }
+                    downloadIdLongs.contains(record.id) -> {
+                        ExperienceAppStatusEnum.INSTALL
+                    }
+                    record.endDate.isBefore(now) -> {
+                        ExperienceAppStatusEnum.EXPIRE
+                    }
+                    record.id > installedIdLong -> {
+                        ExperienceAppStatusEnum.UPGRADE
+                    }
+                    record.id < installedIdLong -> {
+                        ExperienceAppStatusEnum.DOWNLOAD
+                    }
+                    else -> {
+                        ExperienceAppStatusEnum.UNKNOWN
+                    }
+                }
+            } else {
+                when {
+                    downloadIdLongs.contains(record.id) -> {
+                        ExperienceAppStatusEnum.INSTALL
+                    }
+                    record.endDate.isBefore(now) -> {
+                        ExperienceAppStatusEnum.EXPIRE
+                    }
+                    else -> {
+                        ExperienceAppStatusEnum.DOWNLOAD
+                    }
+                }
+            }
+        } else {
+            ExperienceAppStatusEnum.DOWNLOAD
         }
     }
 

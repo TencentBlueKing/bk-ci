@@ -27,6 +27,7 @@
 
 package com.tencent.devops.experience.pojo
 
+import com.tencent.devops.experience.constant.ExperienceAppStatusEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -45,5 +46,7 @@ data class ExperienceChangeLog(
     @ApiModelProperty("体验名称", required = true)
     val experienceName: String,
     @ApiModelProperty("文件大小(byte)", required = true)
-    val size: Long
+    val size: Long,
+    @ApiModelProperty("状态", required = true)
+    val appStatus: ExperienceAppStatusEnum
 )
