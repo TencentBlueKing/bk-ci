@@ -27,18 +27,23 @@
 
 package com.tencent.devops.dispatch.docker.service
 
-import com.tencent.devops.common.api.exception.InvalidParamException
+import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
-import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.dispatch.docker.service.dispatcher.BuildLessDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.dispatch.docker.client.DockerHostClient
+import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
+import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
+import com.tencent.devops.dispatch.docker.utils.DockerHostUtils
+import com.tencent.devops.dispatch.docker.utils.RedisUtils
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
+import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
+import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerBuildRecord
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
-import org.reflections.Reflections
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -47,35 +52,18 @@ import org.springframework.stereotype.Service
 class PipelineAgentLessDispatchService @Autowired constructor(
     private val client: Client,
     private val buildLogPrinter: BuildLogPrinter,
-    private val jobQuotaService: JobQuotaService
+    private val jobQuotaService: JobQuotaService,
+    private val dockerHostClient: DockerHostClient,
+    private val dockerHostUtils: DockerHostUtils,
+    private val pipelineDockerBuildDao: PipelineDockerBuildDao,
+    private val redisUtils: RedisUtils,
+    private val dslContext: DSLContext
 ) {
-    private var dispatchers: Set<BuildLessDispatcher>? = null
-
-    private fun getDispatchers(): Set<BuildLessDispatcher> {
-        if (dispatchers == null) {
-            synchronized(this) {
-                if (dispatchers == null) {
-                    val reflections = Reflections("com.tencent.devops.dispatch.docker.service.dispatcher")
-                    val dispatcherClasses = reflections.getSubTypesOf(BuildLessDispatcher::class.java)
-                    if (dispatcherClasses == null || dispatcherClasses.isEmpty()) {
-                        logger.error("The dispatcher is empty $dispatcherClasses")
-                        throw InvalidParamException("Dispatcher is empty")
-                    }
-                    logger.info("Get the dispatch classes $dispatcherClasses")
-                    dispatchers = dispatcherClasses.map {
-                        SpringContextUtil.getBean(it)
-                    }.toSet()
-                }
-            }
-        }
-        return dispatchers!!
-    }
-
     fun startUpBuildLess(event: PipelineBuildLessStartupDispatchEvent) {
         val pipelineId = event.pipelineId
         val buildId = event.buildId
         val vmSeqId = event.vmSeqId
-        logger.info("[$buildId]|BUILD_LESS| pipelineId=$pipelineId, seq($vmSeqId)")
+        LOG.info("[$buildId]|BUILD_LESS| pipelineId=$pipelineId, seq($vmSeqId)")
         // Check if the pipeline is running
         val record = client.get(ServicePipelineResource::class).isPipelineRunning(
             projectId = event.projectId,
@@ -83,12 +71,12 @@ class PipelineAgentLessDispatchService @Autowired constructor(
             channelCode = ChannelCode.valueOf(event.channelCode)
         )
         if (record.isNotOk() || record.data == null) {
-            logger.warn("[$buildId]|BUILD_LESS| Fail to check if pipeline is running because of ${record.message}")
+            LOG.warn("[$buildId]|BUILD_LESS| Fail to check if pipeline is running because of ${record.message}")
             return
         }
 
         if (!record.data!!) {
-            logger.warn("[$buildId]|BUILD_LESS| The build is not running")
+            LOG.warn("[$buildId]|BUILD_LESS| The build is not running")
             return
         }
 
@@ -102,29 +90,40 @@ class PipelineAgentLessDispatchService @Autowired constructor(
             )
         }
 
-        val dispatchType = event.dispatchType
-        logger.info("[$buildId]|BUILD_LESS| Get the dispatch $dispatchType")
-
-        getDispatchers().forEach {
-            if (it.canDispatch(event)) {
-                if (!jobQuotaService.checkJobQuotaAgentLess(event, JobQuotaVmType.AGENTLESS)) {
-                    logger.error("[$buildId]|BUILD_LESS| AgentLess Job quota exceed quota.")
-                    return
-                }
-                it.startUp(event)
-                // 到这里说明JOB已经启动成功，开始累加使用额度
-                jobQuotaService.addRunningJob(event.projectId, JobQuotaVmType.AGENTLESS, event.buildId, event.vmSeqId)
-                return
-            }
+        if (!jobQuotaService.checkJobQuotaAgentLess(event, JobQuotaVmType.AGENTLESS)) {
+            LOG.error("[$buildId]|BUILD_LESS| AgentLess Job quota exceed quota.")
+            return
         }
-        throw InvalidParamException("Fail to find the right buildLessDispatcher for the build $dispatchType")
+
+        val agentLessDockerIp = dockerHostUtils.getAvailableDockerIpWithSpecialIps(
+            projectId = event.projectId,
+            pipelineId = event.pipelineId,
+            vmSeqId = event.vmSeqId,
+            specialIpSet = emptySet(),
+            unAvailableIpList = emptySet(),
+            clusterName = DockerHostClusterType.AGENT_LESS
+        )
+        dockerHostClient.startAgentLessBuild(agentLessDockerIp.first, agentLessDockerIp.second, event)
+
+        // 启动成功，增加构建次数
+        jobQuotaService.addRunningJob(event.projectId, JobQuotaVmType.AGENTLESS, event.buildId, event.vmSeqId)
     }
 
     fun shutdown(event: PipelineBuildLessShutdownDispatchEvent) {
         try {
-            logger.info("[${event.buildId}]| Start to finish the pipeline build($event)")
-            getDispatchers().forEach {
-                it.shutdown(event)
+            LOG.info("[${event.buildId}]| Start to finish the pipeline build($event)")
+            if (event.vmSeqId.isNullOrBlank()) {
+                val records = pipelineDockerBuildDao
+                    .listBuilds(dslContext, event.buildId)
+                records.forEach {
+                    finishBuild(it, event.buildResult)
+                }
+            } else {
+                val record = pipelineDockerBuildDao
+                    .getBuild(dslContext, event.buildId, event.vmSeqId!!.toInt())
+                if (record != null) {
+                    finishBuild(record, event.buildResult)
+                }
             }
         } finally {
             buildLogPrinter.stopLog(buildId = event.buildId, tag = "", jobId = null)
@@ -133,7 +132,39 @@ class PipelineAgentLessDispatchService @Autowired constructor(
         }
     }
 
+    private fun finishBuild(
+        record: TDispatchPipelineDockerBuildRecord,
+        success: Boolean
+    ) {
+        LOG.info("Finish the docker buildless (${record.buildId}) with result($success)")
+        try {
+            if (record.dockerIp.isNotEmpty()) {
+                dockerHostClient.endBuild(
+                    projectId = record.projectId,
+                    pipelineId = record.pipelineId,
+                    buildId = record.buildId,
+                    vmSeqId = record.vmSeqId?.toInt() ?: 0,
+                    containerId = record.containerId,
+                    dockerIp = record.dockerIp,
+                    clusterType = DockerHostClusterType.AGENT_LESS
+                )
+            }
+
+            pipelineDockerBuildDao.updateStatus(dslContext,
+                record.buildId,
+                record.vmSeqId,
+                if (success) PipelineTaskStatus.DONE else PipelineTaskStatus.FAILURE)
+
+            redisUtils.deleteHeartBeat(record.buildId, record.vmSeqId.toString())
+
+            // 无编译环境清除redisAuth
+            redisUtils.deleteDockerBuild(record.id, SecurityUtil.decrypt(record.secretKey))
+        } catch (e: Exception) {
+            LOG.warn("Finish the docker buildless (${record.buildId}) error.", e)
+        }
+    }
+
     companion object {
-        private val logger = LoggerFactory.getLogger(PipelineAgentLessDispatchService::class.java)
+        private val LOG = LoggerFactory.getLogger(PipelineAgentLessDispatchService::class.java)
     }
 }

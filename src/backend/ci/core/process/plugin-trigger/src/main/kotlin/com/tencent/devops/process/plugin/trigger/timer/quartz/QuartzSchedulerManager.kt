@@ -40,6 +40,7 @@ class QuartzSchedulerManager : SchedulerManager() {
     private val jobGroup = "bkJobGroup"
 
     init {
+        scheduler.listenerManager.addJobListener(QuartzTraceJobListener())
         scheduler.start()
     }
 

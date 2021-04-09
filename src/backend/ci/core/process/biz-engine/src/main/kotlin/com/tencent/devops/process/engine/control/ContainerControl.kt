@@ -133,7 +133,7 @@ class ContainerControl @Autowired constructor(
             mutexGroup = mutexGroup,
             event = this,
             container = container,
-            latestSummary = "init",
+            latestSummary = reason ?: "init",
             watcher = watcher,
             containerTasks = containerTasks,
             variables = variables,
@@ -142,9 +142,9 @@ class ContainerControl @Autowired constructor(
         watcher.stop()
 
         val commandList = listOf<ContainerCmd>(
+            commandCache.get(CheckDependOnContainerCmd::class.java), // 检查DependOn依赖处理
             commandCache.get(CheckConditionalSkipContainerCmd::class.java), // 检查条件跳过处理
             commandCache.get(CheckPauseContainerCmd::class.java), // 检查暂停处理
-            commandCache.get(CheckDependOnContainerCmd::class.java), // 检查DependOn依赖处理
             commandCache.get(CheckMutexContainerCmd::class.java), // 检查Job互斥组处理
             commandCache.get(StartActionTaskContainerCmd::class.java), // 检查启动事件消息
             commandCache.get(ContainerCmdLoop::class.java), // 发送本事件的循环消息

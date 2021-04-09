@@ -93,11 +93,11 @@ class MQConfiguration @Autowired constructor() {
         container.setQueueNames(pipelineBuildStartQueue.name)
         container.setConcurrentConsumers(10)
         container.setMaxConcurrentConsumers(10)
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
 
         val adapter = MessageListenerAdapter(buildListener, buildListener::onPipelineStartup.name)
         adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
+        container.setMessageListener(adapter)
         return container
     }
 
@@ -135,11 +135,11 @@ class MQConfiguration @Autowired constructor() {
         container.setQueueNames(pipelineBuildFinishQueue.name)
         container.setConcurrentConsumers(10)
         container.setMaxConcurrentConsumers(10)
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
 
         val adapter = MessageListenerAdapter(buildListener, buildListener::onPipelineShutdown.name)
         adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
+        container.setMessageListener(adapter)
         return container
     }
 
@@ -177,11 +177,11 @@ class MQConfiguration @Autowired constructor() {
         container.setQueueNames(buildStartQueue.name)
         container.setConcurrentConsumers(60)
         container.setMaxConcurrentConsumers(100)
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
         container.setMismatchedQueuesFatal(true)
         val messageListenerAdapter = MessageListenerAdapter(buildListener, buildListener::handleStartMessage.name)
         messageListenerAdapter.setMessageConverter(messageConverter)
-        container.messageListener = messageListenerAdapter
+        container.setMessageListener(messageListenerAdapter)
         logger.info("Start listener")
         return container
     }
@@ -208,11 +208,11 @@ class MQConfiguration @Autowired constructor() {
         container.setQueueNames(buildShutdownQueue.name)
         container.setConcurrentConsumers(60)
         container.setMaxConcurrentConsumers(100)
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
         container.setMismatchedQueuesFatal(true)
         val messageListenerAdapter = MessageListenerAdapter(buildListener, buildListener::handleShutdownMessage.name)
         messageListenerAdapter.setMessageConverter(messageConverter)
-        container.messageListener = messageListenerAdapter
+        container.setMessageListener(messageListenerAdapter)
         logger.info("Start shutdown listener")
         return container
     }

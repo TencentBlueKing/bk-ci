@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.constant.DEFAULT
 import com.tencent.devops.common.api.constant.REQUIRED
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
@@ -66,7 +67,6 @@ import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.atom.AtomPostResp
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.AtomVersionListItem
-import com.tencent.devops.store.pojo.atom.AtomVersionListResp
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.MarketAtomResp
 import com.tencent.devops.store.pojo.atom.MarketMainItem
@@ -677,24 +677,40 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     /**
      * 根据插件标识获取插件版本列表
      */
-    override fun getAtomVersionsByCode(userId: String, atomCode: String): Result<AtomVersionListResp> {
-        val records = marketAtomDao.getAtomsByAtomCode(dslContext, atomCode)
-        val atomVersions = mutableListOf<AtomVersionListItem?>()
-        records?.forEach {
-            atomVersions.add(
-                AtomVersionListItem(
-                    atomId = it.id,
-                    atomCode = it.atomCode,
-                    name = it.name,
-                    category = AtomCategoryEnum.getAtomCategory((it.categroy as Byte).toInt()),
-                    version = it.version,
-                    atomStatus = AtomStatusEnum.getAtomStatus((it.atomStatus as Byte).toInt()),
-                    creator = it.creator,
-                    createTime = DateTimeUtil.toDateTime(it.createTime)
+    override fun getAtomVersionsByCode(
+        userId: String,
+        atomCode: String,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<AtomVersionListItem>> {
+        val totalCount = atomDao.countByCode(dslContext, atomCode)
+        val records = marketAtomDao.getAtomsByAtomCode(dslContext, atomCode, page, pageSize)
+        val atomVersions = mutableListOf<AtomVersionListItem>()
+        if (records != null) {
+            val atomIds = records.map { it.id }
+            // 批量获取版本内容
+            val versionRecords = marketAtomVersionLogDao.getAtomVersions(dslContext, atomIds)
+            val versionMap = mutableMapOf<String, String>()
+            versionRecords?.forEach { versionRecord ->
+                versionMap[versionRecord.atomId] = versionRecord.content
+            }
+            records.forEach {
+                atomVersions.add(
+                    AtomVersionListItem(
+                        atomId = it.id,
+                        atomCode = it.atomCode,
+                        name = it.name,
+                        category = AtomCategoryEnum.getAtomCategory((it.categroy as Byte).toInt()),
+                        version = it.version,
+                        versionContent = versionMap[it.id].toString(),
+                        atomStatus = AtomStatusEnum.getAtomStatus((it.atomStatus as Byte).toInt()),
+                        creator = it.creator,
+                        createTime = DateTimeUtil.toDateTime(it.createTime)
+                    )
                 )
-            )
+            }
         }
-        return Result(AtomVersionListResp(atomVersions.size, atomVersions))
+        return Result(Page(page, pageSize, totalCount.toLong(), atomVersions))
     }
 
     /**

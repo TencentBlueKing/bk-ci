@@ -22,7 +22,7 @@ import Vue from 'vue'
 import { bus } from './bus'
 
 const request = axios.create({
-    baseURL: `${AJAX_URL_PIRFIX}`,
+    baseURL: API_URL_PREFIX,
     validateStatus: status => {
         if (status > 400) {
             console.warn(`HTTP 请求出错 status: ${status}`)

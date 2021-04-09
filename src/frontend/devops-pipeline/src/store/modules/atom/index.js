@@ -58,7 +58,8 @@ export default {
         showReviewDialog: false,
         reviewInfo: null,
         showStageReviewPanel: false,
-        importedPipelineJson: null
+        importedPipelineJson: null,
+        atomVersionChangedKeys: []
     },
     mutations,
     actions,

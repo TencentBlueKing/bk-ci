@@ -34,7 +34,6 @@ import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
-import com.tencent.devops.dispatch.docker.common.Constants
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerHostDao
@@ -44,13 +43,14 @@ import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskDriftDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerTaskSimpleDao
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
 import com.tencent.devops.dispatch.docker.pojo.DockerHostLoadConfig
+import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerIpInfoRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
-import java.net.URLEncoder
 import java.util.Random
 
 @Component
@@ -69,18 +69,21 @@ class DockerHostUtils @Autowired constructor(
     companion object {
         private const val LOAD_CONFIG_KEY = "dockerhost-load-config"
         private const val DOCKER_DRIFT_THRESHOLD_KEY = "docker-drift-threshold-spKyQ86qdYhAkDDR"
-        private const val DOCKER_IP_COUNT_MAX = 100
         private const val BUILD_POOL_SIZE = 100 // 单个流水线可同时执行的任务数量
 
         private val logger = LoggerFactory.getLogger(DockerHostUtils::class.java)
     }
+
+    @Value("\${dispatch.defaultAgentLessIp:127.0.0.1}")
+    val defaultAgentLessIp: String = ""
 
     fun getAvailableDockerIpWithSpecialIps(
         projectId: String,
         pipelineId: String,
         vmSeqId: String,
         specialIpSet: Set<String>,
-        unAvailableIpList: Set<String> = setOf()
+        unAvailableIpList: Set<String> = setOf(),
+        clusterName: DockerHostClusterType = DockerHostClusterType.COMMON
     ): Pair<String, Int> {
         val grayEnv = gray.isGray()
 
@@ -89,19 +92,30 @@ class DockerHostUtils @Autowired constructor(
         logger.info("Docker host load config: ${JsonUtil.toJson(dockerHostLoadConfigTriple)}")
 
         // 先取容量负载比较小的，同时满足负载条件的（负载阈值具体由OP平台配置)，从满足的节点中随机选择一个
-        val firstPair = dockerLoadCheck(dockerHostLoadConfigTriple.first, grayEnv, specialIpSet, unAvailableIpList)
+        val firstPair = dockerLoadCheck(
+            dockerHostLoadConfig = dockerHostLoadConfigTriple.first,
+            grayEnv = grayEnv,
+            clusterName = clusterName,
+            specialIpSet = specialIpSet,
+            unAvailableIpList = unAvailableIpList
+        )
         val dockerPair = if (firstPair.first.isEmpty()) {
-            val secondPair = dockerLoadCheck(dockerHostLoadConfig = dockerHostLoadConfigTriple.second,
+            val secondPair = dockerLoadCheck(
+                dockerHostLoadConfig = dockerHostLoadConfigTriple.second,
                 grayEnv = grayEnv,
+                clusterName = clusterName,
                 specialIpSet = specialIpSet,
-                unAvailableIpList = unAvailableIpList)
+                unAvailableIpList = unAvailableIpList
+            )
             if (secondPair.first.isEmpty()) {
                 dockerLoadCheck(
                     dockerHostLoadConfig = dockerHostLoadConfigTriple.third,
                     grayEnv = grayEnv,
+                    clusterName = clusterName,
                     specialIpSet = specialIpSet,
                     unAvailableIpList = unAvailableIpList,
-                    finalCheck = true)
+                    finalCheck = true
+                )
             } else {
                 secondPair
             }
@@ -110,6 +124,13 @@ class DockerHostUtils @Autowired constructor(
         }
 
         if (dockerPair.first.isEmpty()) {
+            // agentless方案升级兼容
+            logger.info("defaultAgentLessIp: $defaultAgentLessIp")
+            if (clusterName == DockerHostClusterType.AGENT_LESS && defaultAgentLessIp.isNotEmpty()) {
+                val defaultAgentLessIpList = defaultAgentLessIp.split(",")
+                return Pair(defaultAgentLessIpList[Random().nextInt(defaultAgentLessIpList.size)], 80)
+            }
+
             if (specialIpSet.isNotEmpty()) {
                 throw DockerServiceException(errorType = ErrorCodeEnum.NO_SPECIAL_VM_ERROR.errorType,
                     errorCode = ErrorCodeEnum.NO_SPECIAL_VM_ERROR.errorCode,
@@ -127,12 +148,19 @@ class DockerHostUtils @Autowired constructor(
         projectId: String,
         pipelineId: String,
         vmSeqId: String,
-        unAvailableIpList: Set<String>
+        unAvailableIpList: Set<String>,
+        clusterType: DockerHostClusterType = DockerHostClusterType.COMMON
     ): Pair<String, Int> {
         // 先判断是否OP已配置专机，若配置了专机，从专机列表中选择一个容量最小的
         val specialIpSet = pipelineDockerHostDao.getHostIps(dslContext, projectId).toSet()
         logger.info("getAvailableDockerIp projectId: $projectId | specialIpSet: $specialIpSet")
-        return getAvailableDockerIpWithSpecialIps(projectId, pipelineId, vmSeqId, specialIpSet, unAvailableIpList)
+        return getAvailableDockerIpWithSpecialIps(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            vmSeqId = vmSeqId,
+            specialIpSet = specialIpSet,
+            unAvailableIpList = unAvailableIpList,
+            clusterName = clusterType)
     }
 
     fun getIdlePoolNo(pipelineId: String, vmSeq: String): Int {
@@ -239,19 +267,7 @@ class DockerHostUtils @Autowired constructor(
             return Triple(pair.first, pair.second, "")
         }
 
-        // IP当前可用，还要检测当前IP限流是否已达上限
-        val dockerIpCount = redisOperation.get("${Constants.DOCKER_IP_COUNT_KEY_PREFIX}$dockerIp")
-        logger.info("${dispatchMessage.buildId}|${dispatchMessage.vmSeqId} $dockerIp dockerIpCount: $dockerIpCount")
-        return if (dockerIpCount != null && dockerIpCount.toInt() > DOCKER_IP_COUNT_MAX) {
-            val pair = getAvailableDockerIpWithSpecialIps(projectId = dispatchMessage.projectId,
-                pipelineId = dispatchMessage.pipelineId,
-                vmSeqId = dispatchMessage.vmSeqId,
-                specialIpSet = specialIpSet,
-                unAvailableIpList = setOf(dockerIp))
-            Triple(pair.first, pair.second, "IP限流漂移")
-        } else {
-            Triple(dockerIp, dockerIpInfo.dockerHostPort, "")
-        }
+        return Triple(dockerIp, dockerIpInfo.dockerHostPort, "")
     }
 
     fun updateDockerDriftThreshold(threshold: Int) {
@@ -281,19 +297,22 @@ class DockerHostUtils @Autowired constructor(
                         cpuLoadThreshold = 80,
                         memLoadThreshold = 50,
                         diskLoadThreshold = 80,
-                        diskIOLoadThreshold = 80
+                        diskIOLoadThreshold = 50,
+                        usedNum = 40
                     ),
                     dockerHostLoadConfig["second"] ?: DockerHostLoadConfig(
                         cpuLoadThreshold = 90,
                         memLoadThreshold = 70,
                         diskLoadThreshold = 90,
-                        diskIOLoadThreshold = 85
+                        diskIOLoadThreshold = 70,
+                        usedNum = 50
                     ),
                     dockerHostLoadConfig["third"] ?: DockerHostLoadConfig(
                         cpuLoadThreshold = 100,
                         memLoadThreshold = 80,
                         diskLoadThreshold = 95,
-                        diskIOLoadThreshold = 85
+                        diskIOLoadThreshold = 85,
+                        usedNum = 50
                     )
                 )
             } catch (e: Exception) {
@@ -302,24 +321,34 @@ class DockerHostUtils @Autowired constructor(
         }
 
         return Triple(
-            first = DockerHostLoadConfig(cpuLoadThreshold = 80,
+            first = DockerHostLoadConfig(
+                cpuLoadThreshold = 80,
                 memLoadThreshold = 50,
                 diskLoadThreshold = 80,
-                diskIOLoadThreshold = 80),
-            second = DockerHostLoadConfig(cpuLoadThreshold = 90,
+                diskIOLoadThreshold = 50,
+                usedNum = 40
+            ),
+            second = DockerHostLoadConfig(
+                cpuLoadThreshold = 90,
                 memLoadThreshold = 70,
                 diskLoadThreshold = 90,
-                diskIOLoadThreshold = 85),
-            third = DockerHostLoadConfig(cpuLoadThreshold = 100,
+                diskIOLoadThreshold = 70,
+                usedNum = 50
+            ),
+            third = DockerHostLoadConfig(
+                cpuLoadThreshold = 100,
                 memLoadThreshold = 80,
                 diskLoadThreshold = 95,
-                diskIOLoadThreshold = 85)
+                diskIOLoadThreshold = 85,
+                usedNum = 50
+            )
         )
     }
 
     private fun dockerLoadCheck(
         dockerHostLoadConfig: DockerHostLoadConfig,
         grayEnv: Boolean,
+        clusterName: DockerHostClusterType,
         specialIpSet: Set<String>,
         unAvailableIpList: Set<String>,
         finalCheck: Boolean = false
@@ -328,11 +357,13 @@ class DockerHostUtils @Autowired constructor(
             pipelineDockerIpInfoDao.getAvailableDockerIpList(
                 dslContext = dslContext,
                 grayEnv = grayEnv,
+                clusterName = clusterName,
                 cpuLoad = dockerHostLoadConfig.cpuLoadThreshold,
                 memLoad = dockerHostLoadConfig.memLoadThreshold,
                 diskLoad = dockerHostLoadConfig.diskLoadThreshold,
                 diskIOLoad = dockerHostLoadConfig.diskIOLoadThreshold,
-                specialIpSet = specialIpSet
+                specialIpSet = specialIpSet,
+                usedNum = dockerHostLoadConfig.usedNum
             )
 
         return if (dockerIpList.isNotEmpty && sufficientResources(finalCheck, dockerIpList.size, grayEnv)) {
@@ -367,7 +398,7 @@ class DockerHostUtils @Autowired constructor(
             if (dockerIpList.size > 0) {
                 val index = random.nextInt(dockerIpList.size)
                 val dockerInfo = dockerIpList[index]
-                if (!unAvailableIpList.contains(dockerInfo.dockerIp) && !exceedIpLimiting(dockerInfo.dockerIp)) {
+                if (!unAvailableIpList.contains(dockerInfo.dockerIp)) {
                     return Pair(dockerInfo.dockerIp, dockerInfo.dockerHostPort)
                 } else {
                     dockerIpList.removeAt(index)
@@ -377,17 +408,4 @@ class DockerHostUtils @Autowired constructor(
 
         return Pair("", 0)
     }
-
-    private fun exceedIpLimiting(dockerIp: String): Boolean {
-        // 查看当前IP是否已达限流
-        val dockerIpCount = redisOperation.get("${Constants.DOCKER_IP_COUNT_KEY_PREFIX}$dockerIp")
-        logger.info("$dockerIp dockerIpCount: $dockerIpCount")
-        if (dockerIpCount != null && dockerIpCount.toInt() > DOCKER_IP_COUNT_MAX) {
-            return true
-        }
-
-        return false
-    }
-
-    private fun urlEncode(s: String) = URLEncoder.encode(s, "UTF-8")
 }

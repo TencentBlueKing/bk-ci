@@ -90,7 +90,7 @@
 
         methods: {
             goToStore () {
-                window.open(`${WEB_URL_PIRFIX}/store/atomStore/detail/image/${this.card.code}`, '_blank')
+                window.open(`${WEB_URL_PREFIX}/store/atomStore/detail/image/${this.card.code}`, '_blank')
             },
 
             convertTime (val) {

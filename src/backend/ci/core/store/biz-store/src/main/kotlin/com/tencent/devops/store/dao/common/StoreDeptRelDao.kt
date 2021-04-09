@@ -46,8 +46,8 @@ class StoreDeptRelDao {
         dslContext: DSLContext,
         storeCode: String,
         storeType: Byte,
-        deptStatus: DeptStatusEnum?,
-        deptIdList: List<Int>?
+        deptStatus: DeptStatusEnum? = null,
+        deptIdList: List<Int>? = null
     ): Result<TStoreDeptRelRecord>? {
         with(TStoreDeptRel.T_STORE_DEPT_REL) {
             val conditions = mutableListOf<Condition>()
@@ -61,7 +61,7 @@ class StoreDeptRelDao {
         }
     }
 
-    fun batchList(dslContext: DSLContext, storeCodeList: List<String?>, storeType: Byte): Result<TStoreDeptRelRecord>? {
+    fun batchList(dslContext: DSLContext, storeCodeList: Collection<String?>, storeType: Byte): Result<TStoreDeptRelRecord>? {
         with(TStoreDeptRel.T_STORE_DEPT_REL) {
             return dslContext.selectFrom(this)
                 .where(STORE_CODE.`in`(storeCodeList))

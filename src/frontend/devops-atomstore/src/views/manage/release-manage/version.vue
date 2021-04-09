@@ -78,9 +78,12 @@
 
             getAtomVersion () {
                 return this.$store.dispatch('store/requestVersionList', {
-                    atomCode: this.detail.atomCode
+                    atomCode: this.detail.atomCode,
+                    page: this.pagination.current,
+                    pageSize: this.pagination.limit
                 }).then((res) => {
                     this.versionList = res.records || []
+                    this.pagination.count = res.count
                     const lastestVersion = this.versionList[0] || {}
                     const lastestStatus = lastestVersion.atomStatus
                     this.showEdit = ['AUDIT_REJECT', 'RELEASED', 'GROUNDING_SUSPENSION', 'UNDERCARRIAGED'].includes(lastestStatus)

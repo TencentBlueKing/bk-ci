@@ -110,6 +110,7 @@ import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.util.TempNotifyTemplateUtils
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
+import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -1185,7 +1186,7 @@ class TemplateFacadeService @Autowired constructor(
     ): TemplateOperationRet {
         logger.info("Create the new template instance [$projectId|$userId|$templateId|$version|$useTemplateSettings]")
         val template = templateDao.getTemplate(dslContext, version)
-
+        val srcTemplateId = templateDao.getSrcTemplateId(dslContext, templateId)
         val successPipelines = ArrayList<String>()
         val failurePipelines = ArrayList<String>()
         val successPipelinesId = ArrayList<String>()
@@ -1207,6 +1208,7 @@ class TemplateFacadeService @Autowired constructor(
                         defaultStageTagId = defaultStageTagId
                     )
                 instanceModel.templateId = templateId
+                instanceModel.srcTemplateId = srcTemplateId
                 val pipelineId = pipelineInfoFacadeService.createPipeline(
                     userId = userId,
                     projectId = projectId,
@@ -1319,6 +1321,19 @@ class TemplateFacadeService @Autowired constructor(
         templateContent: String,
         templateInstanceUpdate: TemplateInstanceUpdate
     ) {
+        // 校验模板下组件可见范围
+        val validateRet = client.get(ServiceTemplateResource::class)
+            .validateUserTemplateComponentVisibleDept(
+                userId = userId,
+                templateCode = templateId,
+                projectCode = projectId
+            )
+        if (validateRet.isNotOk()) {
+            throw ErrorCodeException(
+                errorCode = validateRet.status.toString(),
+                defaultMessage = validateRet.message
+            )
+        }
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             templatePipelineDao.update(

@@ -78,7 +78,7 @@
         },
         methods: {
             toLinkRule (id) {
-                const url = `${WEB_URL_PIRFIX}/quality/${
+                const url = `${WEB_URL_PREFIX}/quality/${
                     this.$route.params.projectId
                 }/ruleList?linkId=${id}`
                 window.open(url, '_blank')

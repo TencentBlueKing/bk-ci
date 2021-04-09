@@ -31,7 +31,6 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.process.engine.common.BS_CONTAINER_END_SOURCE_PREIX
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.MutexControl
 import com.tencent.devops.process.engine.control.command.CmdFlowState
@@ -138,7 +137,7 @@ class UpdateStateContainerCmdFinally(
             val executeCount = commandContext.executeCount
             pipelineEventDispatcher.dispatch(
                 PipelineBuildStageEvent(
-                    source = "$BS_CONTAINER_END_SOURCE_PREIX${commandContext.buildStatus}", // Fast Kill 依赖
+                    source = "From_j($containerId)",
                     projectId = projectId,
                     pipelineId = pipelineId,
                     userId = userId,
@@ -150,7 +149,7 @@ class UpdateStateContainerCmdFinally(
 
             buildLogPrinter.addLine(
                 buildId = buildId,
-                message = "[$executeCount]| Finish Job#${this.containerId}| summary: ${commandContext.latestSummary}",
+                message = "[$executeCount]| Finish Job#${this.containerId}| ${commandContext.latestSummary}",
                 tag = VMUtils.genStartVMTaskId(containerId),
                 jobId = containerId,
                 executeCount = executeCount

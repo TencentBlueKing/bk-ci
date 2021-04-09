@@ -133,7 +133,19 @@
                         </div>
                         <div class="detail-form-item">
                             <div class="info-label"> {{ $t('store.发布描述：') }} </div>
-                            <div class="info-value">{{ versionDetail.versionContent }}</div>
+                            <div class="info-value">
+                                <mavon-editor
+                                    :editable="false"
+                                    default-open="preview"
+                                    :subfield="false"
+                                    :toolbars-flag="false"
+                                    :external-link="false"
+                                    :box-shadow="false"
+                                    preview-background="#fafbfd"
+                                    v-model="versionDetail.versionContent"
+                                >
+                                </mavon-editor>
+                            </div>
                         </div>
                     </div>
                     <div class="atom-logo-box">
@@ -226,7 +238,7 @@
                 return str
             },
             postUrl () {
-                return `${GW_URL_PREFIX}/artifactory/api/user/artifactories/projects/${this.versionDetail.projectCode}/ids/${this.versionDetail.atomId}/codes/${this.versionDetail.atomCode}/versions/${this.versionDetail.version}/re/archive`
+                return `${API_URL_PREFIX}/artifactory/api/user/artifactories/projects/${this.versionDetail.projectCode}/ids/${this.versionDetail.atomId}/codes/${this.versionDetail.atomCode}/versions/${this.versionDetail.version}/re/archive`
             },
             navList () {
                 return [
