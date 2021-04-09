@@ -53,7 +53,7 @@ class PipelineTransferJob @Autowired constructor(
         private const val PIPELINE_BUILD_HISTORY_PAGE_SIZE = 14
     }
 
-    @Scheduled(initialDelay = 12000, fixedDelay = 30000)
+    @Scheduled(initialDelay = 12000, fixedDelay = 150000)
     fun transfer() {
         if (!miscPipelineTransferContext.enable()) {
             return
@@ -100,7 +100,7 @@ class PipelineTransferJob @Autowired constructor(
                     maxHandleProjectPrimaryId = projectInfo.id
                 }
 
-                if (!miscPipelineTransferContext.isFinishProject(projectInfo.projectId)) {
+                if (miscPipelineTransferContext.isFinishProject(projectInfo.projectId)) {
                     return@nextOne
                 }
 
@@ -114,6 +114,8 @@ class PipelineTransferJob @Autowired constructor(
                 pipelineInfoList.forEach { pipelineInfoRecord ->
                     transferPipelines(pipelineInfoRecord)
                 }
+
+                miscPipelineTransferContext.addFinishProject(projectInfo.projectId)
             }
 
             // 将当前已处理完的最大项目Id存入redis
@@ -154,8 +156,6 @@ class PipelineTransferJob @Autowired constructor(
                     offset += PIPELINE_BUILD_HISTORY_PAGE_SIZE
                 }
             } while (listPipelineBuilds.size >= PIPELINE_BUILD_HISTORY_PAGE_SIZE)
-
-            miscPipelineTransferContext.addFinishProject(pipelineInfoRecord.projectId)
         } catch (duplicate: Exception) {
             logger.warn("transferPipelines|DUPLICATE|${pipelineInfoRecord.pipelineId}|$duplicate")
         }

@@ -78,14 +78,6 @@ class MiscPipelineTransferContext @Autowired constructor(private val redisOperat
             }
         })
 
-    private val finishProjectCache: LoadingCache<String, Boolean> = CacheBuilder.newBuilder()
-        .expireAfterWrite(10, TimeUnit.MINUTES).maximumSize(10000)
-        .build(object : CacheLoader<String, Boolean>() {
-            override fun load(key: String): Boolean {
-                return redisOperation.isMember(FINISH_PROJECT_SET_KEY, key)
-            }
-        })
-
     fun enable(): Boolean = enable.toBoolean()
 
     fun tryLock(): Boolean = lock.tryLock()
@@ -118,8 +110,7 @@ class MiscPipelineTransferContext @Autowired constructor(private val redisOperat
 
     fun addFinishProject(projectId: String) {
         redisOperation.sadd(FINISH_PROJECT_SET_KEY, projectId)
-        finishProjectCache.put(projectId, true)
     }
 
-    fun isFinishProject(projectId: String): Boolean = finishProjectCache.get(projectId)
+    fun isFinishProject(projectId: String): Boolean = redisOperation.isMember(FINISH_PROJECT_SET_KEY, projectId)
 }
