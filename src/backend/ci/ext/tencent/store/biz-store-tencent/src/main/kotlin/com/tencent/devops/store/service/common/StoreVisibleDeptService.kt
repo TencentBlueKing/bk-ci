@@ -25,49 +25,74 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.template
+package com.tencent.devops.store.service.common
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.store.pojo.common.DeptInfo
+import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
+import com.tencent.devops.store.pojo.common.UserStoreDeptInfoRequest
+import com.tencent.devops.store.pojo.common.VisibleApproveReq
+import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
 /**
- * 模板可见范围逻辑类
+ * store组件可见范围逻辑类
  * since: 2019-01-08
  */
-interface TemplateVisibleDeptService {
+@Suppress("ALL")
+interface StoreVisibleDeptService {
 
     /**
-     * 设置模板可见范围
+     * 查看store组件可见范围
      */
-    fun addVisibleDept(userId: String, templateCode: String, deptInfos: List<DeptInfo>): Result<Boolean>
+    fun getVisibleDept(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        deptStatus: DeptStatusEnum?
+    ): Result<StoreVisibleDeptResp?>
 
     /**
-     * 校验模板和插件的可见范围
+     * 批量获取已经审核通过的可见范围
      */
-    fun validateTemplateVisibleDept(
-        templateCode: String,
-        validImageCodes: List<String>? = null,
-        validAtomCodes: List<String>? = null
+    fun batchGetVisibleDept(
+        storeCodeList: List<String?>,
+        storeType: StoreTypeEnum
+    ): Result<HashMap<String, MutableList<Int>>>
+
+    /**
+     * 设置store组件可见范围
+     */
+    fun addVisibleDept(
+        userId: String,
+        storeCode: String,
+        deptInfos: List<DeptInfo>,
+        storeType: StoreTypeEnum
     ): Result<Boolean>
 
     /**
-     * 校验模板和插件的可见范围
+     * 删除store组件可见范围
      */
-    fun validateTemplateVisibleDept(
-        templateCode: String,
-        deptInfos: List<DeptInfo>?,
-        validImageCodes: List<String>? = null,
-        validAtomCodes: List<String>? = null
+    fun deleteVisibleDept(
+        userId: String,
+        storeCode: String,
+        deptIds: String,
+        storeType: StoreTypeEnum
     ): Result<Boolean>
 
     /**
-     * 校验模板和插件的可见范围
+     * 审核可见范围
      */
-    fun validateTemplateVisibleDept(
-        templateModel: Model,
-        deptInfos: List<DeptInfo>?,
-        validImageCodes: List<String>? = null,
-        validAtomCodes: List<String>? = null
+    fun approveVisibleDept(
+        userId: String,
+        storeCode: String,
+        visibleApproveReq: VisibleApproveReq,
+        storeType: StoreTypeEnum
     ): Result<Boolean>
+
+    /**
+     * 判断用户是否有组件的权限
+     */
+    fun checkUserInvalidVisibleStoreInfo(
+        userStoreDeptInfoRequest: UserStoreDeptInfoRequest
+    ): Boolean
 }
