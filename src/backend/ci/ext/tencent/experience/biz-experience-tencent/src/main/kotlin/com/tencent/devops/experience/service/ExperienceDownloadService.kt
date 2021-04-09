@@ -188,8 +188,8 @@ class ExperienceDownloadService @Autowired constructor(
 
     fun getQrCodeUrl(experienceHashId: String): String {
         val url =
-            "${HomeHostUtil.outerServerHost()}/app/download/" +
-                    "devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
+            "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html" +
+                    "?flag=experienceDetail&experienceId=$experienceHashId"
         return client.get(ServiceShortUrlResource::class)
             .createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 3)).data!!
     }
