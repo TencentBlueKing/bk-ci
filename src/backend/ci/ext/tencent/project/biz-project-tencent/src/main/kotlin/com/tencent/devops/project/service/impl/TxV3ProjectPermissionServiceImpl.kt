@@ -29,20 +29,28 @@
 package com.tencent.devops.project.service.impl
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.bk.sdk.iam.dto.request.QueryPolicyRequestDTO
+import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
+import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
+import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
+import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
+import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
+import com.tencent.bk.sdk.iam.dto.manager.dto.CreateManagerDTO
+import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
+import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
 import com.tencent.bk.sdk.iam.service.impl.ManagerServiceImpl
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectPermissionService
+import com.tencent.devops.project.service.iam.AuthorizationUtils
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.util.concurrent.TimeUnit
 
-class TxV3ProjectPermissionServiceImpl @Autowired constructor (
-    val managerService: ManagerServiceImpl,
-    val iamConfiguration: IamConfiguration,
-): ProjectPermissionService {
-
-
+class TxV3ProjectPermissionServiceImpl @Autowired constructor(
+    val iamManagerService: ManagerServiceImpl,
+    val iamConfiguration: IamConfiguration
+) : ProjectPermissionService {
 
     override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String): Boolean {
         TODO("Not yet implemented")
@@ -52,14 +60,14 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor (
         /**
          *  V3创建项目流程
          *  1. 创建分级管理员，并记录iam分级管理员id
-         *  2. 添加创建人到该分级管理员
-         *  3. 添加默认用户组”CI管理员“
-         *  4. 分配”ALL action“权限到CI管理员
-         *  5. 添加创建人到分级管理员
+         *  2. 添加默认用户组”CI管理员“
+         *  3. 分配”ALL action“权限到CI管理员
+         *  4. 添加创建人到分级管理员
          */
-        val queryPolicyRequest = QueryPolicyRequestDTO.builder().system(iamConfiguration.systemId)
-        managerService.createManager()
-
+        val iamProjectId = createIamProject(userId, resourceRegisterInfo)
+        // TODO: 暂时iam未提供用户组分配权限的接口
+        createRole(userId, iamProjectId.toInt())
+        return iamProjectId
     }
 
     override fun deleteResource(projectCode: String) {
@@ -80,5 +88,47 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor (
 
     override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String, permission: AuthPermission): Boolean {
         TODO("Not yet implemented")
+    }
+
+    private fun createIamProject(userId: String, resourceRegisterInfo: ResourceRegisterInfo): String {
+        val subjectScopes = ManagerScopes()
+        subjectScopes.type = ManagerScopesEnum.ALL
+        subjectScopes.id = "*"
+        val authorizationScopes = AuthorizationUtils.buildManagerResources(
+            projectId = resourceRegisterInfo.resourceCode,
+            projectName = resourceRegisterInfo.resourceName,
+            iamConfiguration = iamConfiguration
+        )
+        val createManagerDTO = CreateManagerDTO.builder().system(iamConfiguration.systemId)
+            .name(resourceRegisterInfo.resourceName)
+            .description(resourceRegisterInfo.resourceName)
+
+            .authorization_scopes(authorizationScopes)
+            .subject_scopes(subjectScopes).build()
+        return iamManagerService.createManager(createManagerDTO)
+    }
+
+    private fun createRole(userId: String, iamProjectId: Int) {
+        val defaultGroup = ManagerRoleGroup()
+        defaultGroup.name = "管理员"
+        defaultGroup.description = "项目管理员默认分组"
+        val defaultGroups = mutableListOf<ManagerRoleGroup>()
+        defaultGroups.add(defaultGroup)
+        val managerRoleGroup = ManagerRoleGroupDTO.builder().groups(defaultGroups).build()
+        val groupId = iamManagerService.createManagerRoleGroup(iamProjectId, managerRoleGroup)
+        val groupMember = ManagerMember()
+        groupMember.id = userId
+        groupMember.type = ManagerScopesEnum.USER
+        val groupMembers = mutableListOf<ManagerMember>()
+        groupMembers.add(groupMember)
+        // TODO: 确定管理员默认的超时时间
+        val expired = System.currentTimeMillis() + TimeUnit.DAYS.toMillis(DEFAULT_EXPIRED_AT)
+        val managerMemberGroup = ManagerMemberGroupDTO.builder().members(groupMembers).expiredAt(expired).build()
+        iamManagerService.createRoleGroupMember(groupId, managerMemberGroup)
+    }
+
+    companion object {
+        private const val DEFAULT_EXPIRED_AT = 365L // 用户组默认一年有效期
+        val logger = LoggerFactory.getLogger(TxV3ProjectPermissionServiceImpl::class.java)
     }
 }
