@@ -27,17 +27,21 @@
 
 package com.tencent.devops.store.service.atom
 
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomOfflineDao
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import java.util.Calendar
+import java.util.Date
 
 /**
  * 插件市场定时任务
@@ -48,10 +52,15 @@ import org.springframework.stereotype.Service
 class AtomCrontabService @Autowired constructor(
     private val marketAtomDao: MarketAtomDao,
     private val marketAtomOfflineDao: MarketAtomOfflineDao,
+    private val marketAtomStatisticService: MarketAtomStatisticService,
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation
 ) {
-    private val logger = LoggerFactory.getLogger(AtomCrontabService::class.java)
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(AtomCrontabService::class.java)
+        private const val DEFAULT_PAGE_SIZE = 50
+    }
 
     /**
      * 执行下架插件操作
@@ -87,6 +96,32 @@ class AtomCrontabService @Autowired constructor(
             }
         } catch (ignored: Throwable) {
             logger.warn("Fail to offline atom: {}", ignored)
+        } finally {
+            lock.unlock()
+        }
+    }
+
+    @Scheduled(cron = "0 10 0 * * ?") // 每天零点十分执行一次
+    fun syncAtomDailyStatisticInfo() {
+        val format = DateTimeUtil.YYYY_MM_DD
+        val endTime = DateTimeUtil.convertDateToFormatLocalDateTime(
+            date = Date(),
+            format = format
+        )
+        val startTime = DateTimeUtil.convertDateToFormatLocalDateTime(
+            date = DateTimeUtil.getFutureDateFromNow(Calendar.DAY_OF_MONTH, -1),
+            format = format
+        )
+        val storeType = StoreTypeEnum.ATOM.type.toByte()
+        val lock = RedisLock(redisOperation, "atomDailyStatistic", 36000L)
+        try {
+            if (!lock.tryLock()) {
+                logger.info("get lock failed, skip")
+                return
+            }
+            marketAtomStatisticService.syncAtomDailyStatisticInfo(storeType, startTime, endTime)
+        } catch (ignored: Throwable) {
+            logger.warn("atomDailyStatistic failed", ignored)
         } finally {
             lock.unlock()
         }

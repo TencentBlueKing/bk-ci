@@ -1309,7 +1309,7 @@ class PipelineRuntimeService @Autowired constructor(
             return
         }
 
-        val executeCount = retryCount.coerceAtMost(1)
+        val executeCount = retryCount.coerceAtLeast(1)
 
         if (lastTimeBuildTaskRecords.isEmpty()) {
             buildTaskList.add(

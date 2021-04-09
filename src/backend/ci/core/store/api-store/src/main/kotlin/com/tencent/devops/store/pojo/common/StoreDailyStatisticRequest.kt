@@ -25,15 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.atom
+package com.tencent.devops.store.pojo.common
 
+import com.tencent.devops.common.api.util.DateTimeUtil
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
+import java.time.LocalDateTime
+import java.util.Date
 
-@ApiModel("获取插件版本列表返回报文")
-data class AtomVersionListResp(
-    @ApiModelProperty("总记录数", required = true)
-    val count: Int,
-    @ApiModelProperty("数据集合", required = false)
-    val records: List<AtomVersionListItem?>
+@ApiModel("每日统计信息请求报文")
+data class StoreDailyStatisticRequest(
+    @ApiModelProperty("总下载量")
+    var totalDownloads: Int? = null,
+    @ApiModelProperty("每日下载量")
+    var dailyDownloads: Int? = null,
+    @ApiModelProperty("每日执行成功数")
+    val dailySuccessNum: Int? = null,
+    @ApiModelProperty("每日执行失败数")
+    val dailyFailNum: Int? = null,
+    @ApiModelProperty("每日执行失败详情")
+    val dailyFailDetail: Map<String, Any>? = null,
+    @ApiModelProperty("统计时间")
+    val statisticsTime: LocalDateTime? = DateTimeUtil.convertDateToFormatLocalDateTime(Date(), "yyyy-MM-dd")
 )

@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.store.pojo.atom.AtomStatistic
+import com.tencent.devops.store.pojo.common.StoreStatistic
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.AtomPipeline
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
@@ -91,7 +91,7 @@ interface ApigwAtomResourceV3 {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String
-    ): Result<AtomStatistic>
+    ): Result<StoreStatistic>
 
     @ApiOperation("根据插件代码获取使用的流水线详情")
     @GET

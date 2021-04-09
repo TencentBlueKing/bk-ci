@@ -24,17 +24,21 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.store.pojo.image.response
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+package com.tencent.devops.store.service.common
 
-@ApiModel("镜像统计信息")
-data class ImageStatistic(
-    @ApiModelProperty("下载量")
-    val downloads: Int,
-    @ApiModelProperty("评论量")
-    val commentCnt: Int,
-    @ApiModelProperty("星级评分")
-    val score: Double?
-)
+import com.tencent.devops.common.pipeline.container.Stage
+import com.tencent.devops.store.pojo.common.DeptInfo
+
+interface StoreDeptService {
+
+    /**
+     * 获取stage下插件对应的机构信息
+     */
+    fun getStageAtomDeptMap(stageList: List<Stage>): MutableMap<String, Map<String, List<DeptInfo>?>>
+
+    /**
+     * 获取模板下镜像对应的机构信息
+     */
+    fun getTemplateImageDeptMap(stageList: List<Stage>): Map<String, List<DeptInfo>?>
+}

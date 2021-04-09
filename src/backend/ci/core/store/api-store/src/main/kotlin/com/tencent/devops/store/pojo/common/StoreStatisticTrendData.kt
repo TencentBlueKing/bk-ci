@@ -25,25 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.template
+package com.tencent.devops.store.pojo.common
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.template.TemplateStatistic
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-interface MarketTemplateStatisticService {
-
-    /**
-     * 根据标识获取统计数据
-     */
-    fun getStatisticByCode(
-        userId: String,
-        templateCode: String
-    ): Result<TemplateStatistic>
-
-    /**
-     * 根据批量标识获取统计数据
-     */
-    fun getStatisticByCodeList(
-        templateCodeList: List<String>
-    ): Result<HashMap<String, TemplateStatistic>>
-}
+@ApiModel("统计趋势数据")
+data class StoreStatisticTrendData(
+    @ApiModelProperty("执行失败总数")
+    val totalFailNum: Int,
+    @ApiModelProperty("执行失败总数详情")
+    val totalFailDetail: Map<String, Any>?,
+    @ApiModelProperty("每日统计信息列表")
+    val dailyStatisticList: List<StoreDailyStatistic>?
+)

@@ -70,6 +70,7 @@ buildscript {
         poiVersion = "3.17"
         commonCodecVersion = "1.15"
         luceneVersion = "8.6.0"
+        commonCsvVersion = "1.8"
     }
 
     def mavenRepoUrl = System.getProperty("mavenRepoUrl")
@@ -238,6 +239,7 @@ subprojects {
             dependency("commons-codec:commons-codec:${commonCodecVersion}")
             dependency("org.jooq:jooq:$jooqVersion")
             dependency("org.apache.lucene:lucene-core:$luceneVersion")
+            dependency("org.apache.commons:commons-csv:$commonCsvVersion")
 
             dependencySet(group: "org.springframework.cloud", version: "$springConsulVersion") {
                 entry "spring-cloud-starter-consul-discovery"

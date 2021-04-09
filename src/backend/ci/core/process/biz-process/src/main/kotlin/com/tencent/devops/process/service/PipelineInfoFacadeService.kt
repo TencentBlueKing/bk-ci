@@ -52,17 +52,21 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ILLEGAL_PIPELINE_MODEL_JSON
 import com.tencent.devops.process.constant.ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
+import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.jmx.pipeline.PipelineBean
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
+import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.template.service.TemplateService
-import com.tencent.devops.store.api.common.ServiceStoreResource
+import com.tencent.devops.store.api.template.ServiceTemplateResource
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -76,6 +80,8 @@ import javax.ws.rs.core.StreamingOutput
 @Suppress("ALL")
 @Service
 class PipelineInfoFacadeService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val templateDao: TemplateDao,
     private val projectCacheService: ProjectCacheService,
     private val pipelineSettingFacadeService: PipelineSettingFacadeService,
     private val pipelineRepositoryService: PipelineRepositoryService,
@@ -176,7 +182,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         instanceType: String? = PipelineInstanceTypeEnum.FREEDOM.type,
         buildNo: BuildNo? = null,
         param: List<BuildFormProperty>? = null,
-        fixTemplateVersion: Long? = null
+        fixTemplateVersion: Long? = null,
+        useTemplateSettings: Boolean? = false
     ): String {
         val watcher =
             Watcher(id = "createPipeline|$projectId|$userId|$channelCode|$checkPermission|$instanceType|$fixPipelineId")
@@ -209,14 +216,20 @@ class PipelineInfoFacadeService @Autowired constructor(
                 )
             }
 
+            val templateId = model.templateId
+            val srcTemplateId = model.srcTemplateId
+            if (srcTemplateId == null && templateId != null) {
+                // 如果是根据模板创建的流水线需为model设置srcTemplateId
+                model.srcTemplateId = templateDao.getSrcTemplateId(dslContext, templateId)
+            }
+
             // 检查用户是否有插件的使用权限
             if (model.srcTemplateId != null) {
                 watcher.start("store_template_perm")
-                val srcTemplateId = model.srcTemplateId as String
-                val validateRet = client.get(ServiceStoreResource::class)
-                    .validateUserTemplateAtomVisibleDept(
+                val validateRet = client.get(ServiceTemplateResource::class)
+                    .validateUserTemplateComponentVisibleDept(
                         userId = userId,
-                        templateCode = srcTemplateId,
+                        templateCode = model.srcTemplateId as String,
                         projectCode = projectId
                     )
                 if (validateRet.isNotOk()) {
@@ -260,13 +273,28 @@ class PipelineInfoFacadeService @Autowired constructor(
                     signPipelineId = fixPipelineId,
                     userId = userId,
                     channelCode = channelCode,
-                    create = true
+                    create = true,
+                    useTemplateSettings = useTemplateSettings,
+                    templateId = model.templateId
                 ).pipelineId
                 watcher.stop()
 
                 // 先进行模板关联操作
-                if (model.templateId != null) {
-                    val templateId = model.templateId as String
+                if (templateId != null) {
+                    watcher.start("addLabel")
+                    if (useTemplateSettings == true) {
+                        val groups = pipelineGroupService.getGroups(userId, projectId, templateId)
+                        val labels = ArrayList<String>()
+                        groups.forEach {
+                            labels.addAll(it.labels)
+                        }
+                        pipelineGroupService.updatePipelineLabel(
+                            userId = userId,
+                            pipelineId = pipelineId,
+                            labelIds = labels
+                        )
+                    }
+                    watcher.stop()
                     watcher.start("createTemplate")
                     templateService.createRelationBtwTemplate(
                         userId = userId,
@@ -487,7 +515,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         channelCode: ChannelCode,
         checkPermission: Boolean = true,
         checkTemplate: Boolean = true
-    ) {
+    ): DeployPipelineResult {
         if (checkTemplate && templateService.isTemplatePipeline(pipelineId)) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_TEMPLATE_CAN_NOT_EDIT,
@@ -552,7 +580,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 channelCode = channelCode
             )
             modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, model, param)
-            pipelineRepositoryService.deployPipeline(
+            val deployResult = pipelineRepositoryService.deployPipeline(
                 model = model,
                 projectId = projectId,
                 signPipelineId = pipelineId,
@@ -564,6 +592,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 pipelinePermissionService.modifyResource(projectId, pipelineId, model.name)
             }
             success = true
+            return deployResult
         } finally {
             pipelineBean.edit(success)
             processJmxApi.execute(ProcessJmxApi.NEW_PIPELINE_EDIT, System.currentTimeMillis() - apiStartEpoch)
@@ -608,8 +637,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         channelCode: ChannelCode,
         checkPermission: Boolean = true,
         checkTemplate: Boolean = true
-    ) {
-        editPipeline(
+    ): DeployPipelineResult {
+        val pipelineResult = editPipeline(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -618,7 +647,8 @@ class PipelineInfoFacadeService @Autowired constructor(
             checkPermission = checkPermission,
             checkTemplate = checkTemplate
         )
-        pipelineSettingFacadeService.saveSetting(userId, setting, false)
+        pipelineSettingFacadeService.saveSetting(userId, setting, false, pipelineResult.version)
+        return pipelineResult
     }
 
     fun getPipeline(
@@ -626,6 +656,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         projectId: String,
         pipelineId: String,
         channelCode: ChannelCode,
+        version: Int? = null,
         checkPermission: Boolean = true
     ): Model {
 
@@ -655,7 +686,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             )
         }
 
-        val model = pipelineRepositoryService.getModel(pipelineId)
+        val model = pipelineRepositoryService.getModel(pipelineId, version)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
@@ -713,7 +744,7 @@ class PipelineInfoFacadeService @Autowired constructor(
         channelCode: ChannelCode? = null,
         checkPermission: Boolean = true,
         delete: Boolean = false
-    ) {
+    ): DeletePipelineResult {
         val watcher = Watcher(id = "deletePipeline|$pipelineId|$userId")
         var success = false
         try {
@@ -726,8 +757,23 @@ class PipelineInfoFacadeService @Autowired constructor(
                 watcher.stop()
             }
 
+            val existModel = pipelineRepositoryService.getModel(pipelineId)
+                ?: throw ErrorCodeException(
+                    statusCode = Response.Status.NOT_FOUND.statusCode,
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
+                    defaultMessage = "指定要复制的流水线-模型不存在"
+                )
+            // 对已经存在的模型做删除前处理
+            val param = BeforeDeleteParam(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                channelCode = channelCode ?: ChannelCode.BS
+            )
+            modelCheckPlugin.beforeDeleteElementInExistsModel(existModel, existModel, param)
+
             watcher.start("s_r_pipeline_del")
-            pipelineRepositoryService.deletePipeline(
+            val deletePipelineResult = pipelineRepositoryService.deletePipeline(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = userId,
@@ -742,6 +788,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 watcher.stop()
             }
             success = true
+            return deletePipelineResult
         } finally {
             watcher.stop()
             LogUtils.printCostTimeWE(watcher, warnThreshold = 2000)
@@ -763,6 +810,6 @@ class PipelineInfoFacadeService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(PipelineInfoFacadeService::class.java)
     }
 }

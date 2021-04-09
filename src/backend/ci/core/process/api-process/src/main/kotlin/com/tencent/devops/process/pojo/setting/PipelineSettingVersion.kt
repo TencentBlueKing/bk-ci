@@ -25,19 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.atom
+package com.tencent.devops.process.pojo.setting
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-
-@ApiModel("插件统计信息")
-data class AtomStatistic(
-    @ApiModelProperty("下载量")
-    val downloads: Int,
-    @ApiModelProperty("评论量")
-    val commentCnt: Int,
-    @ApiModelProperty("星级评分")
-    val score: Double?,
-    @ApiModelProperty("流水线个数")
-    val pipelineCnt: Int
+data class PipelineSettingVersion(
+    val projectId: String = "",
+    val pipelineId: String = "",
+    var successSubscription: Subscription = Subscription(),
+    var failSubscription: Subscription = Subscription(),
+    var version: Int = 0
 )

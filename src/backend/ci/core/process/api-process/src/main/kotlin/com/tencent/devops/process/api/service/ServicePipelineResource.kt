@@ -74,9 +74,12 @@ interface ServicePipelineResource {
         projectId: String,
         @ApiParam(value = "流水线模型", required = true)
         pipeline: Model,
-        @ApiParam("渠道号，默认为BS", required = false)
+        @ApiParam("渠道号，默认为BS", required = true)
         @QueryParam("channelCode")
-        channelCode: ChannelCode
+        channelCode: ChannelCode,
+        @ApiParam("是否使用模板配置", required = false)
+        @QueryParam("useTemplateSettings")
+        useTemplateSettings: Boolean? = false
     ): Result<PipelineId>
 
     @ApiOperation("编辑流水线编排")
