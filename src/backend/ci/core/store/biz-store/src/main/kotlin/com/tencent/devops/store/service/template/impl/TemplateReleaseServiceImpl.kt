@@ -192,7 +192,6 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
                         arrayOf(templateRecord.templateName, templateRecord.version)
                 )
             }
-            // todo 检查源模板模型的合法性
             val isNormalUpgrade = getNormalUpgradeFlag(
                 templateCode = templateRecord.templateCode,
                 status = templateRecord.templateStatus.toInt()
@@ -350,6 +349,8 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
         val latestFlag = approveResult == PASS
         var pubTime: LocalDateTime? = null
         if (latestFlag) {
+            // 判断模板和组件的合法性
+            validateTemplateVisibleDept(template.templateCode)
             // 清空旧版本LATEST_FLAG
             marketTemplateDao.cleanLatestFlag(context, template.templateCode)
             pubTime = LocalDateTime.now()
@@ -401,6 +402,8 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
             logger.info("updateMarketTemplateReferenceResult is $updateMarketTemplateReferenceResult")
         }
     }
+
+    abstract fun validateTemplateVisibleDept(templateCode: String)
 
     private fun validateNameIsExist(
         templateCode: String,

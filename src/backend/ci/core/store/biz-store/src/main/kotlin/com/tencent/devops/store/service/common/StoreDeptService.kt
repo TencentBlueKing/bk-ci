@@ -25,15 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.atom
+package com.tencent.devops.store.service.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.pipeline.container.Stage
+import com.tencent.devops.store.pojo.common.DeptInfo
 
-@ApiModel("获取插件版本列表返回报文")
-data class AtomVersionListResp(
-    @ApiModelProperty("总记录数", required = true)
-    val count: Int,
-    @ApiModelProperty("数据集合", required = false)
-    val records: List<AtomVersionListItem?>
-)
+interface StoreDeptService {
+
+    /**
+     * 获取stage下插件对应的机构信息
+     */
+    fun getStageAtomDeptMap(stageList: List<Stage>): MutableMap<String, Map<String, List<DeptInfo>?>>
+
+    /**
+     * 获取模板下镜像对应的机构信息
+     */
+    fun getTemplateImageDeptMap(stageList: List<Stage>): Map<String, List<DeptInfo>?>
+}

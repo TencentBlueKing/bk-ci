@@ -196,7 +196,6 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
         sourceModel: Model?,
         param: BeforeDeleteParam
     ) {
-        logger.info("before delete element source model: $sourceModel")
 
         existModel.stages.forEach { s ->
             s.containers.forEach { c ->

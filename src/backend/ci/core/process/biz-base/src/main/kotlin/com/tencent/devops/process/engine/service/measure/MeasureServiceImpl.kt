@@ -61,7 +61,7 @@ import org.apache.lucene.util.RamUsageEstimator
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 
-@Suppress("ALL")
+@Suppress("ALL", "UNUSED")
 class MeasureServiceImpl constructor(
     private val projectCacheService: ProjectCacheService,
     private val pipelineRuntimeService: PipelineRuntimeService,
@@ -90,7 +90,6 @@ class MeasureServiceImpl constructor(
     ) {
         try {
             if (model == null) {
-                logger.warn("The pipeline.json is not exist of pipeline($pipelineId)")
                 return
             }
 
@@ -129,7 +128,7 @@ class MeasureServiceImpl constructor(
                 )
             )
         } catch (ignored: Throwable) {
-            logger.warn("Fail to post the pipeline measure data of build($buildId)")
+            logger.warn("MK_postPipelineData|$buildId|message: ${ignored.message}")
         }
     }
 
@@ -148,7 +147,7 @@ class MeasureServiceImpl constructor(
                 }
             }
         } catch (ignored: Exception) {
-            logger.warn("[$buildId]| Fail to post the cancel measure event", ignored)
+            logger.warn("MK_postCancelData|$buildId|message: ${ignored.message}")
         }
     }
 
@@ -191,7 +190,7 @@ class MeasureServiceImpl constructor(
             )
 
             val requestBody = ObjectMapper().writeValueAsString(elementMeasureData)
-            logger.info("[$buildId]| add the element data, request data: $elementMeasureData")
+
             measureEventDispatcher.dispatch(
                 MeasureRequest(
                     projectId = projectId,
@@ -272,8 +271,8 @@ class MeasureServiceImpl constructor(
                 extData = extData
             )
             atomMonitorEventDispatcher.dispatch(AtomMonitorReportBroadCastEvent(atomMonitorData))
-        } catch (ignored: Throwable) {
-            logger.error("Fail to add the element data, $ignored")
+        } catch (ignored: Throwable) { // MK = Monitor Key
+            logger.warn("MK_postTaskData|${task.buildId}|message: ${ignored.message}")
         }
     }
 

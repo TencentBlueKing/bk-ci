@@ -119,11 +119,9 @@ class CodeGitlabScmImpl constructor(
         context: String,
         description: String,
         block: Boolean
-    ) {
-    }
+    ) = Unit
 
-    override fun addMRComment(mrId: Long, comment: String) {
-    }
+    override fun addMRComment(mrId: Long, comment: String) = Unit
 
     override fun lock(repoName: String, applicant: String, subpath: String) {
         logger.info("gitlab can not lock")

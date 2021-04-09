@@ -712,6 +712,15 @@ class PipelineBuildDao {
         }
     }
 
+    fun updateRecommendVersion(dslContext: DSLContext, buildId: String, recommendVersion: String) {
+        with(T_PIPELINE_BUILD_HISTORY) {
+            dslContext.update(this)
+                .set(RECOMMEND_VERSION, recommendVersion)
+                .where(BUILD_ID.eq(buildId))
+                .execute()
+        }
+    }
+
     fun countAllByStatus(dslContext: DSLContext, status: BuildStatus): Int {
         return with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.selectCount().from(this)

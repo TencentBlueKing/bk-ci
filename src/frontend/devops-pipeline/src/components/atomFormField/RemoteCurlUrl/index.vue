@@ -19,7 +19,7 @@
         },
         computed: {
             baseUrl () {
-                return `${API_URL_PREFIX}/${PROCESS_API_URL_PREFIX}`
+                return `${location.host}${API_URL_PREFIX}/${PROCESS_API_URL_PREFIX}`
             },
             stringifyParmas () {
                 const { params } = this.container

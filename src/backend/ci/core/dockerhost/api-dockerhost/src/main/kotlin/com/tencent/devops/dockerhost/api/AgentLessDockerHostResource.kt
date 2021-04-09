@@ -25,66 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.common
+package com.tencent.devops.dockerhost.api
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.DeptInfo
-import com.tencent.devops.store.pojo.common.StoreVisibleDeptResp
-import com.tencent.devops.store.pojo.common.VisibleApproveReq
-import com.tencent.devops.store.pojo.common.enums.DeptStatusEnum
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-/**
- * store组件可见范围逻辑类
- * since: 2019-01-08
- */
-@Suppress("ALL")
-interface StoreVisibleDeptService {
+@Api(tags = ["DOCKER_HOST"], description = "DockerHost")
+@Path("/docker-agentless")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface AgentLessDockerHostResource {
 
-    /**
-     * 查看store组件可见范围
-     */
-    fun getVisibleDept(
-        storeCode: String,
-        storeType: StoreTypeEnum,
-        deptStatus: DeptStatusEnum?
-    ): Result<StoreVisibleDeptResp?>
+    @ApiOperation("启动无编译流水线容器构建")
+    @POST
+    @Path("/build/start")
+    fun startBuild(
+        @ApiParam("构建任务", required = true)
+        dockerHostBuildInfo: DockerHostBuildInfo
+    ): Result<String>
 
-    /**
-     * 批量获取已经审核通过的可见范围
-     */
-    fun batchGetVisibleDept(
-        storeCodeList: List<String?>,
-        storeType: StoreTypeEnum
-    ): Result<HashMap<String, MutableList<Int>>>
-
-    /**
-     * 设置store组件可见范围
-     */
-    fun addVisibleDept(
-        userId: String,
-        storeCode: String,
-        deptInfos: List<DeptInfo>,
-        storeType: StoreTypeEnum
-    ): Result<Boolean>
-
-    /**
-     * 删除store组件可见范围
-     */
-    fun deleteVisibleDept(
-        userId: String,
-        storeCode: String,
-        deptIds: String,
-        storeType: StoreTypeEnum
-    ): Result<Boolean>
-
-    /**
-     * 审核可见范围
-     */
-    fun approveVisibleDept(
-        userId: String,
-        storeCode: String,
-        visibleApproveReq: VisibleApproveReq,
-        storeType: StoreTypeEnum
+    @ApiOperation("终止无编译流水线容器构建")
+    @DELETE
+    @Path("/build/end")
+    fun endBuild(
+        @ApiParam("构建任务", required = true)
+        dockerHostBuildInfo: DockerHostBuildInfo
     ): Result<Boolean>
 }

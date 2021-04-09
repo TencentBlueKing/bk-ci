@@ -82,7 +82,7 @@ class StartActionTaskContainerCmd(
                     if (!fastKill && actionType.isTerminate() && !commandContext.buildStatus.isFailure()) {
                         commandContext.buildStatus = BuildStatus.FAILED
                     }
-                    commandContext.latestSummary = "status=${commandContext.buildStatus}"
+                    commandContext.latestSummary += "| status=${commandContext.buildStatus}"
                 } else {
                     sendTask(event = commandContext.event, task = waitToDoTask)
                 }
@@ -154,7 +154,7 @@ class StartActionTaskContainerCmd(
 
     private fun isTerminate(containerContext: ContainerContext): Boolean {
         return containerContext.event.actionType.isTerminate() ||
-            FastKillUtils.isFastKillCode(containerContext.event.errorCode)
+            FastKillUtils.isTerminateCode(containerContext.event.errorCode)
     }
 
     private fun findRunningTask(
