@@ -235,17 +235,6 @@ class DockerHostBuildAgentLessService(
         }
     }
 
-    fun reportContainerId(buildId: String, vmSeqId: String, containerId: String): Boolean {
-        val result = buildResourceApi.reportContainerId(buildId, vmSeqId, containerId, CommonUtils.getInnerIP())
-        if (result != null) {
-            if (result.isNotOk()) {
-                logger.info("reportContainerId return msg: ${result.message}")
-                return false
-            }
-        }
-        return result!!.data!!
-    }
-
     private fun getWorkspace(pipelineId: String, vmSeqId: String): String {
         return "${dockerHostConfig.hostPathWorkspace}/$pipelineId/$vmSeqId/"
     }

@@ -111,7 +111,12 @@ abstract class AbstractDockerHostBuildService constructor(
         return log(buildId, false, message, tag, containerHashId)
     }
 
-    fun log(buildId: String, red: Boolean, message: String, tag: String?, containerHashId: String?) {
+    fun log(
+        buildId: String,
+        red: Boolean,
+        message: String,
+        tag: String?,
+        containerHashId: String?) {
         logger.info("write log to dispatch, buildId: $buildId, message: $message")
         try {
             dockerHostBuildApi.postLog(
