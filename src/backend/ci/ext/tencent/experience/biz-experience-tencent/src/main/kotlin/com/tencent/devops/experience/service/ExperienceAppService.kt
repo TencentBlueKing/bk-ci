@@ -45,6 +45,7 @@ import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.constant.ProductCategoryEnum
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceGroupDao
+import com.tencent.devops.experience.dao.ExperienceLastDownloadDao
 import com.tencent.devops.experience.pojo.AppExperience
 import com.tencent.devops.experience.pojo.AppExperienceDetail
 import com.tencent.devops.experience.pojo.AppExperienceSummary
@@ -69,6 +70,7 @@ class ExperienceAppService(
     private val experienceBaseService: ExperienceBaseService,
     private val experienceDownloadService: ExperienceDownloadService,
     private val experienceGroupDao: ExperienceGroupDao,
+    private val experienceLastDownloadDao: ExperienceLastDownloadDao,
     private val client: Client
 ) {
 
@@ -189,7 +191,15 @@ class ExperienceAppService(
 
         val isOldVersion = VersionUtil.compare(appVersion, "2.0.0") < 0
         val changeLog = if (isOldVersion) {
-            getChangeLog(projectId, bundleIdentifier, null, 1, 1000, true)
+            getChangeLog(
+                userId = userId,
+                projectId = projectId,
+                bundleIdentifier = bundleIdentifier,
+                platform = null,
+                page = 1,
+                pageSize = 1000,
+                isOldVersion = true
+            )
         } else {
             emptyList() // 新版本使用changeLog接口
         }
@@ -234,6 +244,7 @@ class ExperienceAppService(
         val experience = experienceDao.get(dslContext, experienceId)
         val changeLog =
             getChangeLog(
+                userId = userId,
                 projectId = experience.projectId,
                 bundleIdentifier = experience.bundleIdentifier,
                 platform = experience.platform,
@@ -258,6 +269,7 @@ class ExperienceAppService(
     }
 
     private fun getChangeLog(
+        userId: String,
         projectId: String,
         bundleIdentifier: String,
         platform: String?,
@@ -270,7 +282,15 @@ class ExperienceAppService(
         val installedIdLong = installedId?.let { HashUtil.decodeIdToLong(installedId) } ?: -1
         val downloadIdLongs = downloadIds?.map { id -> HashUtil.decodeIdToLong(id) }?.toSet() ?: emptySet()
         val now = LocalDateTime.now()
-
+        val lastDownloadRecord = platform?.let {
+            experienceLastDownloadDao.get(
+                dslContext,
+                userId = userId,
+                bundleId = bundleIdentifier,
+                projectId = projectId,
+                platform = it
+            )
+        }
         val experienceList = experienceDao.listByBundleIdentifier(
             dslContext,
             projectId,
@@ -289,7 +309,8 @@ class ExperienceAppService(
                 changelog = it.remark ?: "",
                 experienceName = it.experienceName,
                 size = it.size,
-                appStatus = getAppStatus(platform, installedIdLong, downloadIdLongs, it, now)
+                appStatus = getAppStatus(platform, installedIdLong, downloadIdLongs, it, now),
+                lastDownload = lastDownloadRecord?.lastDonwloadRecordId == it.id
             )
         }.toList()
     }

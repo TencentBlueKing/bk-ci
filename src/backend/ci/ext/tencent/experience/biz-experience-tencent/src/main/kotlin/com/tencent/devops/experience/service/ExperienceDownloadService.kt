@@ -43,6 +43,7 @@ import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceDownloadDao
+import com.tencent.devops.experience.dao.ExperienceLastDownloadDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.dao.TokenDao
 import com.tencent.devops.experience.pojo.DownloadUrl
@@ -64,6 +65,7 @@ class ExperienceDownloadService @Autowired constructor(
     private val tokenDao: TokenDao,
     private val experienceDao: ExperienceDao,
     private val experienceDownloadDao: ExperienceDownloadDao,
+    private val experienceLastDownloadDao: ExperienceLastDownloadDao,
     private val experiencePublicDao: ExperiencePublicDao,
     private val experienceBaseService: ExperienceBaseService,
     private val client: Client
@@ -151,7 +153,8 @@ class ExperienceDownloadService @Autowired constructor(
         val path = experienceRecord.artifactoryPath
         val platform = PlatformEnum.valueOf(experienceRecord.platform)
         val url = if (path.endsWith(".ipa", true)) {
-            "${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories/$projectId/$artifactoryType/filePlist?experienceHashId=$experienceHashId&path=$path"
+            "${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories" +
+                    "/$projectId/$artifactoryType/filePlist?experienceHashId=$experienceHashId&path=$path"
         } else {
             client.get(ServiceArtifactoryResource::class)
                 .externalUrl(projectId, artifactoryType, userId, path, 24 * 3600, false).data!!.url
@@ -185,7 +188,8 @@ class ExperienceDownloadService @Autowired constructor(
 
     fun getQrCodeUrl(experienceHashId: String): String {
         val url =
-            "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
+            "${HomeHostUtil.outerServerHost()}/app/download/" +
+                    "devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
         return client.get(ServiceShortUrlResource::class)
             .createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 3)).data!!
     }
@@ -216,7 +220,15 @@ class ExperienceDownloadService @Autowired constructor(
         }
         experiencePublicDao.addDownloadTimeByRecordId(dslContext, experienceRecord.id)
 
-        //更新最近下载记录
+        // 更新最近下载记录
+        experienceLastDownloadDao.upset(
+            dslContext = dslContext,
+            userId = userId,
+            bundleId = experienceRecord.bundleIdentifier,
+            projectId = experienceRecord.projectId,
+            platform = experienceRecord.platform,
+            recordId = experienceRecord.id
+        )
     }
 
     fun downloadCount(userId: String, projectId: String, experienceHashId: String): ExperienceCount {

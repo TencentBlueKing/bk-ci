@@ -48,5 +48,7 @@ data class ExperienceChangeLog(
     @ApiModelProperty("文件大小(byte)", required = true)
     val size: Long,
     @ApiModelProperty("状态", required = true)
-    val appStatus: ExperienceAppStatusEnum
+    val appStatus: ExperienceAppStatusEnum,
+    @ApiModelProperty("是否上次下载", required = true)
+    val lastDownload: Boolean
 )

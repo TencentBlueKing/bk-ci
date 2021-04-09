@@ -1,6 +1,7 @@
 package com.tencent.devops.experience.dao
 
 import com.tencent.devops.model.experience.tables.TExperienceLastDownload
+import com.tencent.devops.model.experience.tables.records.TExperienceLastDownloadRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -42,6 +43,23 @@ class ExperienceLastDownloadDao {
                 .and(PROJECT_ID.eq(projectId))
                 .and(PLATFORM.eq(platform))
                 .execute()
+        }
+    }
+
+    fun get(
+        dslContext: DSLContext,
+        userId: String,
+        bundleId: String,
+        projectId: String,
+        platform: String
+    ): TExperienceLastDownloadRecord? {
+        with(TExperienceLastDownload.T_EXPERIENCE_LAST_DOWNLOAD) {
+            return dslContext.selectFrom(this)
+                .where(USER_ID.eq(userId))
+                .and(BUNDLE_IDENTIFIER.eq(bundleId))
+                .and(PROJECT_ID.eq(projectId))
+                .and(PLATFORM.eq(platform))
+                .fetchOne()
         }
     }
 }
