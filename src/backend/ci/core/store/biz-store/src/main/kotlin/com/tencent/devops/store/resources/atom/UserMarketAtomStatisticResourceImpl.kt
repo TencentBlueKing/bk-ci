@@ -33,7 +33,6 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.UserMarketAtomStatisticResource
 import com.tencent.devops.store.pojo.atom.AtomPipeline
 import com.tencent.devops.store.pojo.atom.AtomPipelineExecInfo
-import com.tencent.devops.store.pojo.atom.AtomStatistic
 import com.tencent.devops.store.service.atom.MarketAtomStatisticService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -41,10 +40,6 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserMarketAtomStatisticResourceImpl @Autowired constructor(
     private val marketAtomStatisticService: MarketAtomStatisticService
 ) : UserMarketAtomStatisticResource {
-
-    override fun getStatisticByCode(userId: String, atomCode: String): Result<AtomStatistic> {
-        return marketAtomStatisticService.getStatisticByCode(userId, atomCode)
-    }
 
     override fun getAtomPipelinesByCode(
         userId: String,

@@ -41,6 +41,7 @@ data class PipelineModelTask(
     val taskSeq: Int,
     val taskName: String,
     val atomCode: String,
+    val atomVersion: String,
     val classType: String,
     val taskAtom: String,
     val taskParams: MutableMap<String, Any>,
