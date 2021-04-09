@@ -1372,12 +1372,12 @@ class TemplateFacadeService @Autowired constructor(
                     templateCode = templateId,
                     projectCode = projectId
                 )
-        }
-        if (validateRet.isNotOk()) {
-            throw ErrorCodeException(
-                errorCode = validateRet.status.toString(),
-                defaultMessage = validateRet.message
-            )
+            if (validateRet.isNotOk()) {
+                throw ErrorCodeException(
+                    errorCode = validateRet.status.toString(),
+                    defaultMessage = validateRet.message
+                )
+            }
         }
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
