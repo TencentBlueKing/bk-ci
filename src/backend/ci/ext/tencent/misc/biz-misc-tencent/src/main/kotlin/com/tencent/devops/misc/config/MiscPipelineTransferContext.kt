@@ -33,6 +33,7 @@ import com.google.common.cache.LoadingCache
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import java.util.concurrent.TimeUnit
 
@@ -40,7 +41,6 @@ import java.util.concurrent.TimeUnit
 class MiscPipelineTransferContext @Autowired constructor(private val redisOperation: RedisOperation) {
 
     companion object {
-        private const val SWITCH_KEY = "misc:pipeline:transfer:switch"
         private const val LOCK_KEY = "misc:pipeline:transfer:lock"
         private const val FINISH_PROJECT_SET_KEY = "misc:pipeline:transfer:finishSet"
         private const val TRANSFER_PROJECT_CHANNELS_KEY = "misc:pipeline:transfer:channels"
@@ -49,6 +49,9 @@ class MiscPipelineTransferContext @Autowired constructor(private val redisOperat
         private const val TRANSFER_PROJECT_BATCH_SIZE_KEY = "misc:pipeline:transfer:project:batchSize"
         private const val expiredTimeInSeconds: Long = 3000
     }
+
+    @Value("\${misc.pipeline.transfer.enable:false}")
+    private val enable: String = "false"
 
     private val lock = RedisLock(redisOperation, LOCK_KEY, expiredTimeInSeconds)
 
@@ -83,7 +86,7 @@ class MiscPipelineTransferContext @Autowired constructor(private val redisOperat
             }
         })
 
-    fun switch(): Boolean = intCache.get(SWITCH_KEY) == 1
+    fun enable(): Boolean = enable.toBoolean()
 
     fun tryLock(): Boolean = lock.tryLock()
 

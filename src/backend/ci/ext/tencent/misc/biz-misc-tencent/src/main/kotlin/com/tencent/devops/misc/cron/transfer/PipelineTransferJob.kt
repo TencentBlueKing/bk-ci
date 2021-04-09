@@ -25,11 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.cron.process
+package com.tencent.devops.misc.cron.transfer
 
 import com.tencent.devops.misc.config.MiscPipelineTransferContext
-import com.tencent.devops.misc.service.auto.PipelineTransferService
-import com.tencent.devops.misc.service.process.OldPipelineService
+import com.tencent.devops.misc.service.auto.tsource.SourcePipelineService
+import com.tencent.devops.misc.service.auto.ttarget.TargetPipelineService
 import com.tencent.devops.misc.service.project.ProjectService
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import org.slf4j.LoggerFactory
@@ -37,12 +37,15 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
+/**
+ * 迁移PROD集群上的Auto流水线定时任务
+ */
 @Component
 @Suppress("UNUSED")
 class PipelineTransferJob @Autowired constructor(
     private val projectService: ProjectService,
-    private val oldPipelineService: OldPipelineService,
-    private val pipelineTransferService: PipelineTransferService,
+    private val sourcePipelineService: SourcePipelineService,
+    private val targetPipelineService: TargetPipelineService,
     private val miscPipelineTransferContext: MiscPipelineTransferContext
 ) {
     companion object {
@@ -50,9 +53,9 @@ class PipelineTransferJob @Autowired constructor(
         private const val PIPELINE_BUILD_HISTORY_PAGE_SIZE = 100
     }
 
-    @Scheduled(initialDelay = 12000, fixedDelay = 10000)
+    @Scheduled(initialDelay = 12000, fixedDelay = 30000)
     fun transfer() {
-        if (!miscPipelineTransferContext.switch()) {
+        if (!miscPipelineTransferContext.enable()) {
             return
         }
 
@@ -107,7 +110,7 @@ class PipelineTransferJob @Autowired constructor(
 
                 logger.info("transfer|RUN|projectId=${projectInfo.projectId}|channel=${projectInfo.channel}")
 
-                val pipelineInfoList = oldPipelineService.listPipelineInfos(projectInfo.projectId)
+                val pipelineInfoList = sourcePipelineService.listPipelineInfos(projectInfo.projectId)
                 pipelineInfoList.forEach { pipelineInfoRecord ->
                     transferPipelines(pipelineInfoRecord)
                 }
@@ -127,33 +130,32 @@ class PipelineTransferJob @Autowired constructor(
     private fun transferPipelines(pipelineInfoRecord: TPipelineInfoRecord) {
         try {
 
-            pipelineTransferService.addPipelineInfo(pipelineInfoRecord)
+            targetPipelineService.addPipelineInfo(pipelineInfoRecord)
 
-            val resourceRecord = oldPipelineService.getPipelineRes(pipelineInfoRecord.pipelineId)
-            pipelineTransferService.addResourceRecord(resourceRecord)
+            val resourceRecord = sourcePipelineService.getPipelineRes(pipelineInfoRecord.pipelineId)
+            targetPipelineService.addResourceRecord(resourceRecord)
 
-            val settingRecord = oldPipelineService.getPipelineSetting(pipelineInfoRecord.pipelineId)
-            pipelineTransferService.addSettingRecord(settingRecord)
+            val settingRecord = sourcePipelineService.getPipelineSetting(pipelineInfoRecord.pipelineId)
+            targetPipelineService.addSettingRecord(settingRecord)
 
-            val summaryRecord = oldPipelineService.getPipelineSummary(pipelineInfoRecord.pipelineId)
-            pipelineTransferService.addSummaryRecord(summaryRecord)
+            val summaryRecord = sourcePipelineService.getPipelineSummary(pipelineInfoRecord.pipelineId)
+            targetPipelineService.addSummaryRecord(summaryRecord)
 
             var offset = 0L
             do {
-                val listPipelineBuilds = oldPipelineService.listPipelineBuilds(
+                val listPipelineBuilds = sourcePipelineService.listPipelineBuilds(
                     projectId = pipelineInfoRecord.projectId,
                     pipelineId = pipelineInfoRecord.pipelineId,
                     offset = offset,
                     limit = PIPELINE_BUILD_HISTORY_PAGE_SIZE
                 )
                 if (listPipelineBuilds.isNotEmpty()) {
-                    pipelineTransferService.addPipelineBuilds(listPipelineBuilds)
+                    targetPipelineService.addPipelineBuilds(listPipelineBuilds)
                     offset += PIPELINE_BUILD_HISTORY_PAGE_SIZE
                 }
             } while (listPipelineBuilds.size >= PIPELINE_BUILD_HISTORY_PAGE_SIZE)
 
             miscPipelineTransferContext.addFinishProject(pipelineInfoRecord.projectId)
-
         } catch (duplicate: Exception) {
             logger.warn("transferPipelines|DUPLICATE|${pipelineInfoRecord.pipelineId}|$duplicate")
         }

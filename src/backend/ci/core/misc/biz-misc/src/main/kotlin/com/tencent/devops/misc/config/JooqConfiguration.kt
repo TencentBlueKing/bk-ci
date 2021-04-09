@@ -54,7 +54,7 @@ import javax.sql.DataSource
 class JooqConfiguration {
 
     private val regex =
-        "\\.(auto|process|project|repository|dispatch|plugin|quality|artifactory|environment)".toRegex()
+        "\\.(tsource|ttarget|process|project|repository|dispatch|plugin|quality|artifactory|environment)".toRegex()
 
     companion object {
         private val LOG = LoggerFactory.getLogger(JooqConfiguration::class.java)

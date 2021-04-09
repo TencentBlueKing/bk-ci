@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.misc.service.auto
+package com.tencent.devops.misc.service.auto.ttarget
 
 import com.tencent.devops.misc.dao.auto.AutoPipelineDao
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
@@ -38,7 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 @Component
-class PipelineTransferService @Autowired constructor(
+class TargetPipelineService @Autowired constructor(
     private val dslContext: DSLContext,
     private val autoPipelineDao: AutoPipelineDao
 ) {
