@@ -40,8 +40,8 @@ import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_
 
 data class PipelineSetting(
     val projectId: String = "",
-    val pipelineId: String = "",
-    val pipelineName: String = "",
+    var pipelineId: String = "",
+    var pipelineName: String = "",
     val desc: String = "",
     val runLockType: PipelineRunLockType = PipelineRunLockType.SINGLE_LOCK,
     var successSubscription: Subscription = Subscription(),

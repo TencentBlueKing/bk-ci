@@ -32,3 +32,10 @@ build:
     report:
       switch: false
       maxMonitorDataSize: 1677216
+ 
+# 使用插件的流水线查询导出配置 
+pipeline:
+  editPath: "console/pipeline/{0}/{1}/edit" # 流水线编辑路径
+  atom:
+    maxRelQueryNum: 2000  # 最大查询数量
+    maxRelQueryRangeTime: 30  # 最大查询时间跨度

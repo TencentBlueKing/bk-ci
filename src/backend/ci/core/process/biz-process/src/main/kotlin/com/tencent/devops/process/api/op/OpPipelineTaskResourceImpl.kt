@@ -25,17 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.template
+package com.tencent.devops.process.api.op
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.service.PipelineTaskService
+import org.springframework.beans.factory.annotation.Autowired
 
-@ApiModel("模版统计信息")
-data class TemplateStatistic(
-    @ApiModelProperty("下载量")
-    val downloads: Int,
-    @ApiModelProperty("评论量")
-    val commentCnt: Int,
-    @ApiModelProperty("星级评分")
-    val score: Double?
-)
+@RestResource
+class OpPipelineTaskResourceImpl @Autowired constructor(
+    private val pipelineTaskService: PipelineTaskService
+) : OpPipelineTaskResource {
+
+    override fun asyncUpdateTaskAtomVersion(): Result<Boolean> {
+        return Result(pipelineTaskService.asyncUpdateTaskAtomVersion())
+    }
+}

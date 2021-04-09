@@ -33,56 +33,13 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record4
 import org.jooq.Result
-import org.jooq.conf.ParamType
 import org.jooq.impl.DSL
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
 
 @Suppress("ALL")
 @Repository
 class StoreStatisticDao {
-    private val logger = LoggerFactory.getLogger(StoreStatisticDao::class.java)
-    /**
-     * 根据storeId与storeType获取组件统计数据
-     */
-    fun getStatisticByStoreId(
-        dslContext: DSLContext,
-        storeId: String,
-        storeType: Byte
-    ): Record4<BigDecimal, BigDecimal, BigDecimal, String>? {
-        with(TStoreStatistics.T_STORE_STATISTICS) {
-            return dslContext.select(
-                DSL.sum(DOWNLOADS),
-                DSL.sum(COMMITS),
-                DSL.sum(SCORE),
-                STORE_CODE)
-                .from(this)
-                .where(STORE_ID.eq(storeId).and(STORE_TYPE.eq(storeType)))
-                .fetchOne()
-        }
-    }
-
-    /**
-     * 根据storeCode获取组件统计数据
-     */
-    fun getStatisticByStoreCode(
-        dslContext: DSLContext,
-        storeCode: String,
-        storeType: Byte
-    ): Record4<BigDecimal, BigDecimal, BigDecimal, String> {
-        with(TStoreStatistics.T_STORE_STATISTICS) {
-            return dslContext.select(
-                DSL.sum(DOWNLOADS),
-                DSL.sum(COMMITS),
-                DSL.sum(SCORE),
-                STORE_CODE
-            )
-                .from(this)
-                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)))
-                .fetchOne()
-        }
-    }
 
     /**
      * 批量获取统计数据oo
@@ -90,7 +47,9 @@ class StoreStatisticDao {
     fun batchGetStatisticByStoreCode(
         dslContext: DSLContext,
         storeCodeList: List<String?>,
-        storeType: Byte
+        storeType: Byte,
+        limit: Int? = null,
+        offset: Int? = null
     ): Result<Record4<BigDecimal, BigDecimal, BigDecimal, String>> {
         with(TStoreStatistics.T_STORE_STATISTICS) {
             val baseStep = dslContext.select(
@@ -108,8 +67,11 @@ class StoreStatisticDao {
             }
             val finalStep = baseStep.where(conditions)
                 .groupBy(STORE_CODE)
-            logger.info(finalStep.getSQL(ParamType.INLINED))
-            return finalStep.fetch()
+            return if (null != offset && null != limit) {
+                finalStep.limit(limit).offset(offset).fetch()
+            } else {
+                finalStep.fetch()
+            }
         }
     }
 

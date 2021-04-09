@@ -31,22 +31,9 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.AtomPipeline
 import com.tencent.devops.store.pojo.atom.AtomPipelineExecInfo
-import com.tencent.devops.store.pojo.atom.AtomStatistic
+import java.time.LocalDateTime
 
 interface MarketAtomStatisticService {
-
-    /**
-     * 根据插件标识获取统计数据
-     */
-    fun getStatisticByCode(userId: String, atomCode: String): Result<AtomStatistic>
-
-    /**
-     * 根据批量插件标识获取统计数据
-     */
-    fun getStatisticByCodeList(
-        atomCodeList: List<String>,
-        statFiledList: List<String>
-    ): Result<HashMap<String, AtomStatistic>>
 
     /**
      * 根据插件标识获取插件关联的所有流水线列表（包括其他项目下）
@@ -68,4 +55,21 @@ interface MarketAtomStatisticService {
         page: Int?,
         pageSize: Int?
     ): Result<Page<AtomPipelineExecInfo>>
+
+    /**
+     * 同步使用插件流水线数量到汇总数据统计表
+     */
+    fun asyncUpdateStorePipelineNum(): Boolean
+
+    /**
+     * 同步组件每日统计信息
+     * @param storeType 组件类型
+     * @param startTime 查询开始时间
+     * @param endTime 查询结束时间
+     */
+    fun syncAtomDailyStatisticInfo(
+        storeType: Byte,
+        startTime: LocalDateTime,
+        endTime: LocalDateTime
+    ): Boolean
 }
