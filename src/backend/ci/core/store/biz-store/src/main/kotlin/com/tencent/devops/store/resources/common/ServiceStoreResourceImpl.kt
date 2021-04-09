@@ -38,15 +38,13 @@ import com.tencent.devops.store.service.common.StoreBuildService
 import com.tencent.devops.store.service.common.StoreMemberService
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.UserSensitiveConfService
-import com.tencent.devops.store.service.template.MarketTemplateService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceStoreResourceImpl @Autowired constructor(
     private val storeProjectService: StoreProjectService,
     private val sensitiveConfService: UserSensitiveConfService,
-    private val storeBuildService: StoreBuildService,
-    private val marketTemplateService: MarketTemplateService
+    private val storeBuildService: StoreBuildService
 ) : ServiceStoreResource {
 
     override fun uninstall(storeCode: String, storeType: StoreTypeEnum, projectCode: String): Result<Boolean> {

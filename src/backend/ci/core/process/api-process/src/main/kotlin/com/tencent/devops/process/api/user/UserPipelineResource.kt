@@ -246,6 +246,24 @@ interface UserPipelineResource {
         pipelineId: String
     ): Result<Model>
 
+    @ApiOperation("获取流水线编排版本")
+    @GET
+    @Path("/{projectId}/{pipelineId}/{version}")
+    fun getVersion(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("流水线编排版本", required = true)
+        @PathParam("version")
+        version: Int
+    ): Result<Model>
+
     @ApiOperation("生成远程执行token")
     @PUT
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/remoteToken")
@@ -276,6 +294,24 @@ interface UserPipelineResource {
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String
+    ): Result<Boolean>
+
+    @ApiOperation("删除流水线版本")
+    @DELETE
+    @Path("/{projectId}/{pipelineId}/{version}/")
+    fun deleteVersion(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("流水线编排版本", required = true)
+        @PathParam("version")
+        version: Int
     ): Result<Boolean>
 
     @ApiOperation("用户获取视图设置和流水线编排列表")
@@ -497,4 +533,25 @@ interface UserPipelineResource {
         @PathParam("projectId")
         projectId: String
     ): Result<String?>
+
+    @ApiOperation("流水线编排版本列表")
+    @GET
+    @Path("/{projectId}/{pipelineId}/version")
+    fun versionList(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("第几页", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<PipelineViewPipelinePage<PipelineInfo>>
 }
