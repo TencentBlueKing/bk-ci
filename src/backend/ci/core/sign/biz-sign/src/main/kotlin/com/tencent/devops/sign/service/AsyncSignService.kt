@@ -45,8 +45,8 @@ class AsyncSignService(
 
     // 线程池队列和线程上限保持一致，并保持有一个活跃线程
     private val signExecutorService = ThreadPoolExecutor(
-        1,
-        100,
+        10,
+        10,
         0L,
         TimeUnit.MILLISECONDS,
         LinkedBlockingQueue(100)
