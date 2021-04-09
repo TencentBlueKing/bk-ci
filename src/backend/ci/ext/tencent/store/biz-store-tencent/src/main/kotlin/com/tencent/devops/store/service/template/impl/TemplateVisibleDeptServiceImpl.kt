@@ -45,7 +45,6 @@ import com.tencent.devops.project.api.service.ServiceProjectOrganizationResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
-import com.tencent.devops.store.dao.template.MarketTemplateDao
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.common.DeptInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -69,7 +68,6 @@ import javax.ws.rs.core.Response
 class TemplateVisibleDeptServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
-    private val marketTemplateDao: MarketTemplateDao,
     private val atomDao: AtomDao,
     private val storeDeptService: StoreDeptService,
     private val storeVisibleDeptService: StoreVisibleDeptService
@@ -112,16 +110,7 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
     }
 
     private fun getTemplateModel(templateCode: String): Result<Model?> {
-        val templateRecord =
-            marketTemplateDao.getUpToDateTemplateByCode(dslContext, templateCode) ?: throw ErrorCodeException(
-                statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(templateCode)
-            )
-        val result = client.get(ServiceTemplateResource::class).getTemplateDetailInfo(
-            templateCode = templateCode,
-            publicFlag = templateRecord.publicFlag
-        )
+        val result = client.get(ServiceTemplateResource::class).getTemplateDetailInfo(templateCode)
         val templateDetailInfo = result.data
         val templateModel = templateDetailInfo?.templateModel
         return Result(templateModel)
@@ -148,7 +137,6 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
     ): Result<Boolean> {
         logger.info("validateTemplateVisibleDept templateCode:$templateCode,deptInfos:$deptInfos")
         val templateModelResult = getTemplateModel(templateCode)
-        logger.info("the templateModelResult is :$templateModelResult")
         if (templateModelResult.isNotOk()) {
             // 抛出错误提示
             throw ErrorCodeException(
