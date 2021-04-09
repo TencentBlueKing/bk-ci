@@ -42,6 +42,7 @@ class MiscPipelineTransferContext @Autowired constructor(private val redisOperat
     companion object {
         private const val SWITCH_KEY = "misc:pipeline:transfer:switch"
         private const val LOCK_KEY = "misc:pipeline:transfer:lock"
+        private const val FINISH_PROJECT_SET_KEY = "misc:pipeline:transfer:finishSet"
         private const val TRANSFER_PROJECT_CHANNELS_KEY = "misc:pipeline:transfer:channels"
         private const val TRANSFER_PROJECT_LIST_KEY = "misc:pipeline:transfer:project:list"
         private const val TRANSFER_PROJECT_ID_KEY = "misc:pipeline:transfer:project:id"
@@ -51,11 +52,15 @@ class MiscPipelineTransferContext @Autowired constructor(private val redisOperat
 
     private val lock = RedisLock(redisOperation, LOCK_KEY, expiredTimeInSeconds)
 
-    private val switchCache: LoadingCache<String, String> = CacheBuilder.newBuilder()
+    private val intCache: LoadingCache<String, Int> = CacheBuilder.newBuilder()
         .expireAfterWrite(1, TimeUnit.MINUTES).maximumSize(100)
-        .build(object : CacheLoader<String, String>() {
-            override fun load(key: String): String {
-                return redisOperation.get(key) ?: ""
+        .build(object : CacheLoader<String, Int>() {
+            override fun load(key: String): Int {
+                val str = redisOperation.get(key) ?: "0"
+                if (!str.matches("^[0-9]+$".toRegex())) {
+                    return 0
+                }
+                return str.toInt()
             }
         })
 
@@ -70,7 +75,15 @@ class MiscPipelineTransferContext @Autowired constructor(private val redisOperat
             }
         })
 
-    fun switch(): Boolean = switchCache.get(SWITCH_KEY) == "1"
+    private val finishProjectCache: LoadingCache<String, Boolean> = CacheBuilder.newBuilder()
+        .expireAfterWrite(10, TimeUnit.MINUTES).maximumSize(10000)
+        .build(object : CacheLoader<String, Boolean>() {
+            override fun load(key: String): Boolean {
+                return redisOperation.isMember(FINISH_PROJECT_SET_KEY, key)
+            }
+        })
+
+    fun switch(): Boolean = intCache.get(SWITCH_KEY) == 1
 
     fun tryLock(): Boolean = lock.tryLock()
 
@@ -92,11 +105,18 @@ class MiscPipelineTransferContext @Autowired constructor(private val redisOperat
      */
     fun getLastTransferProjectSeqId(): Long? = redisOperation.get(TRANSFER_PROJECT_ID_KEY)?.toLong()
 
-    fun dealProjectBatchSize(): Int = redisOperation.get(TRANSFER_PROJECT_BATCH_SIZE_KEY)?.toInt() ?: 500
+    fun dealProjectBatchSize(): Int = intCache.get(TRANSFER_PROJECT_BATCH_SIZE_KEY).coerceAtLeast(1)
 
     fun setLastProjectSeqId(maxHandleProjectPrimaryId: Long) {
         redisOperation.set(TRANSFER_PROJECT_ID_KEY, maxHandleProjectPrimaryId.toString())
     }
 
     fun checkTransferChannel(channel: String): Boolean = channelCache.get(channel)
+
+    fun addFinishProject(projectId: String) {
+        redisOperation.sadd(FINISH_PROJECT_SET_KEY, projectId)
+        finishProjectCache.put(projectId, true)
+    }
+
+    fun isFinishProject(projectId: String): Boolean = finishProjectCache.get(projectId)
 }

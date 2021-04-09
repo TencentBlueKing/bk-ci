@@ -57,7 +57,7 @@ class PipelineTransferJob @Autowired constructor(
         }
 
         var fail = false
-        logger.info("transfer|START|")
+        logger.info("transfer|START")
         var maxHandleProjectPrimaryId = 0L
         try {
             if (!miscPipelineTransferContext.tryLock()) {
@@ -82,17 +82,20 @@ class PipelineTransferJob @Autowired constructor(
 
                 val dealProjectBatchSize = miscPipelineTransferContext.dealProjectBatchSize()
 
-                maxHandleProjectPrimaryId = handleProjectPrimaryId + dealProjectBatchSize
-
-                projectService.getProjectInfoList(minId = handleProjectPrimaryId, maxId = maxHandleProjectPrimaryId)
+                projectService.getProjectInfoList(
+                    minId = handleProjectPrimaryId,
+                    maxId = handleProjectPrimaryId + dealProjectBatchSize
+                )
             } else {
-
-                maxHandleProjectPrimaryId = handleProjectPrimaryId.toLong()
 
                 projectService.getProjectInfoList(projectIdList = needTransferProjectIdList)
             }
 
             transferProjectList?.forEach nextOne@{ projectInfo ->
+
+                if (!miscPipelineTransferContext.isFinishProject(projectInfo.projectId)) {
+                    return@nextOne
+                }
 
                 if (!miscPipelineTransferContext.checkTransferChannel(projectInfo.channel)) {
                     return@nextOne
@@ -114,10 +117,10 @@ class PipelineTransferJob @Autowired constructor(
             miscPipelineTransferContext.setLastProjectSeqId(maxHandleProjectPrimaryId)
         } catch (ignored: Throwable) {
             fail = true
-            logger.error("transfer|FAIL|$ignored", ignored)
+            logger.error("transfer|FAILED|$ignored", ignored)
         } finally {
             miscPipelineTransferContext.unLock()
-            logger.info("transfer|END|fail=$fail|setLastProjectSeqId=$maxHandleProjectPrimaryId")
+            logger.info("transfer|END|fail=$fail|maxHandleProjectPrimaryId=$maxHandleProjectPrimaryId")
         }
     }
 
@@ -148,8 +151,11 @@ class PipelineTransferJob @Autowired constructor(
                     offset += PIPELINE_BUILD_HISTORY_PAGE_SIZE
                 }
             } while (listPipelineBuilds.size >= PIPELINE_BUILD_HISTORY_PAGE_SIZE)
+
+            miscPipelineTransferContext.addFinishProject(pipelineInfoRecord.projectId)
+
         } catch (duplicate: Exception) {
-            logger.warn("transferPipelines|FAIL|${pipelineInfoRecord.pipelineId}|$duplicate")
+            logger.warn("transferPipelines|DUPLICATE|${pipelineInfoRecord.pipelineId}|$duplicate")
         }
     }
 }
