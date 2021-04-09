@@ -31,4 +31,4 @@ dependencies {
     api("org.springframework:spring-core")
 }
 
-apply("$rootDir/task_deploy_to_maven.gradle.kts")
+//apply("$rootDir/task_deploy_to_maven.gradle.kts")

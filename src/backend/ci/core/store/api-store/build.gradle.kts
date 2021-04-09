@@ -35,4 +35,4 @@ dependencies {
     api(project(":core:log:api-log"))
 }
 
-apply("$rootDir/task_deploy_to_maven.gradle.kts")
+//apply("$rootDir/task_deploy_to_maven.gradle.kts")

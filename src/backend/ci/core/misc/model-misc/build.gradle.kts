@@ -25,4 +25,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply("task_misc_gen_jooq.gradle")
+plugins {
+    `task-gen-jooq`
+}

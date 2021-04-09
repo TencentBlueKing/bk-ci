@@ -30,4 +30,4 @@ dependencies {
     api(project(":core:common:common-auth:common-auth-api"))
 }
 
-apply("$rootDir/task_deploy_to_maven.gradle.kts")
+//apply("$rootDir/task_deploy_to_maven.gradle.kts")

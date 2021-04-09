@@ -31,4 +31,4 @@ dependencies {
     api(project(":core:common:common-event"))
 }
 
-apply("$rootDir/task_deploy_to_maven.gradle.kts")
+//apply("$rootDir/task_deploy_to_maven.gradle.kts")

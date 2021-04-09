@@ -30,4 +30,4 @@ dependencies {
     api(project(":core:dispatch-docker:api-dispatch-docker"))
 }
 
-apply("$rootDir/task_deploy_to_maven.gradle.kts")
+//apply("$rootDir/task_deploy_to_maven.gradle.kts")

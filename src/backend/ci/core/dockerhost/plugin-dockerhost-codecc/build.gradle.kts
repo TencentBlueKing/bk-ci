@@ -29,4 +29,4 @@ dependencies {
     api(project(":core:dockerhost:biz-dockerhost"))
 }
 
-apply("$rootDir/task_deploy_to_maven.gradle.kts")
+//apply("$rootDir/task_deploy_to_maven.gradle.kts")

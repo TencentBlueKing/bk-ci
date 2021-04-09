@@ -30,4 +30,4 @@ dependencies {
     api(project(":core:worker:worker-common"))
 }
 
-apply("$rootDir/task_deploy_to_maven.gradle.kts")
+//apply("$rootDir/task_deploy_to_maven.gradle.kts")

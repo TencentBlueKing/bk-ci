@@ -1,36 +1,9 @@
 plugins {
-    kotlin("jvm") version Versions.Kotlin
+    kotlin("jvm")
 }
 
 apply("$rootDir/detekt.gradle.kts")
 
-buildscript {
-    // 仓库
-    var mavenRepoUrl = System.getProperty("mavenRepoUrl")
-    if (mavenRepoUrl == null) {
-        mavenRepoUrl = System.getenv("mavenRepoUrl")
-    }
-    if (mavenRepoUrl == null) {
-        mavenRepoUrl = extra["MAVEN_REPO_URL"] as String
-    }
-    repositories {
-        mavenLocal()
-        maven(url = mavenRepoUrl)
-        maven(url = "https://repo.spring.io/libs-milestone")
-        mavenCentral()
-        jcenter()
-    }
-
-    dependencies {
-        classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:${Versions.Kotlin}")
-        classpath("org.jetbrains.kotlin:kotlin-allopen:${Versions.Kotlin}")
-        classpath("nu.studer:gradle-jooq-plugin:${Versions.GradleJooq}")
-        classpath("org.springframework.boot:spring-boot-gradle-plugin:${Versions.SpringBoot}")
-        classpath("io.spring.gradle:dependency-management-plugin:${Versions.DependencyManagement}")
-        classpath("com.github.jengelman.gradle.plugins:shadow:${Versions.GradleShadow}")
-        classpath("org.ajoberstar:grgit:${Versions.Grgit}")
-    }
-}
 ext {
     var gitDir = file("../../../.git")
     project.extra["commit"] = if (gitDir.exists()) {
@@ -98,7 +71,7 @@ subprojects {
     apply(plugin = "java")
     apply(plugin = "kotlin")
     apply(plugin = "maven")
-    apply(plugin = "kotlin-spring")
+    apply(plugin = "org.jetbrains.kotlin.plugin.spring")
     apply(plugin = "io.spring.dependency-management")
 
     tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {

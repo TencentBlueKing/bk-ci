@@ -30,4 +30,4 @@ dependencies {
     api("org.glassfish.jersey.media:jersey-media-multipart")
 }
 
-apply("$rootDir/task_deploy_to_maven.gradle.kts")
+//apply("$rootDir/task_deploy_to_maven.gradle.kts")
