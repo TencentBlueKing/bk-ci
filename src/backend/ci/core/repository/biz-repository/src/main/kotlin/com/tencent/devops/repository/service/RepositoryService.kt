@@ -953,7 +953,7 @@ class RepositoryService @Autowired constructor(
                     RepoAuthType.OAUTH.name to it.userId
                 ScmType.CODE_SVN.name -> {
                     val svnRepo = svnRepoRecords[it.repositoryId]
-                    (svnRepo?.svnType ?: RepoAuthType.SSH.name) to svnRepo?.credentialId
+                    (svnRepo?.svnType?.toUpperCase() ?: RepoAuthType.SSH.name) to svnRepo?.credentialId
                 }
                 ScmType.CODE_GITLAB.name -> {
                     RepoAuthType.HTTP.name to gitlabAuthMap?.get(it.repositoryId)?.credentialId
