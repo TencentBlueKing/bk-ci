@@ -119,7 +119,9 @@ class PipelineRepositoryService constructor(
         signPipelineId: String?,
         userId: String,
         channelCode: ChannelCode,
-        create: Boolean
+        create: Boolean,
+        useTemplateSettings: Boolean? = false,
+        templateId: String? = null
     ): DeployPipelineResult {
 
         // 生成流水线ID,新流水线以p-开头，以区分以前旧数据
@@ -172,7 +174,9 @@ class PipelineRepositoryService constructor(
                 canManualStartup = canManualStartup,
                 canElementSkip = canElementSkip,
                 buildNo = buildNo,
-                modelTasks = modelTasks
+                modelTasks = modelTasks,
+                useTemplateSettings = useTemplateSettings,
+                templateId = templateId
             )
         }
     }
@@ -507,7 +511,9 @@ class PipelineRepositoryService constructor(
         canManualStartup: Boolean,
         canElementSkip: Boolean,
         buildNo: BuildNo?,
-        modelTasks: Set<PipelineModelTask>
+        modelTasks: Set<PipelineModelTask>,
+        useTemplateSettings: Boolean? = false,
+        templateId: String? = null
     ): DeployPipelineResult {
 
         val taskCount: Int = model.taskCount()
@@ -541,36 +547,45 @@ class PipelineRepositoryService constructor(
             )
             if (model.instanceFromTemplate != true) {
                 if (null == pipelineSettingDao.getSetting(transactionContext, pipelineId)) {
-                    // #3311
-                    // 蓝盾正常的BS渠道的默认没设置setting的，将发通知改成失败才发通知
-                    // 而其他渠道的默认没设置则什么通知都设置为不发
-                    val notifyTypes = if (channelCode == ChannelCode.BS) {
-                        "${NotifyType.EMAIL.name},${NotifyType.RTX.name}"
+                    if (templateId != null && useTemplateSettings == true) {
+                        // 沿用模板的配置
+                        val setting = getSetting(templateId)
+                            ?: throw ErrorCodeException(errorCode = ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS)
+                        setting.pipelineId = pipelineId
+                        setting.pipelineName = model.name
+                        pipelineSettingDao.saveSetting(dslContext, setting)
                     } else {
-                        ""
-                    }
+                        // #3311
+                        // 蓝盾正常的BS渠道的默认没设置setting的，将发通知改成失败才发通知
+                        // 而其他渠道的默认没设置则什么通知都设置为不发
+                        val notifyTypes = if (channelCode == ChannelCode.BS) {
+                            "${NotifyType.EMAIL.name},${NotifyType.RTX.name}"
+                        } else {
+                            ""
+                        }
 
-                    // 渠道为工蜂或者开源扫描只需为流水线模型保留一个版本
-                    val filterList = listOf(ChannelCode.GIT, ChannelCode.GONGFENGSCAN)
-                    val maxPipelineResNum = if (channelCode in filterList) {
-                        1
-                    } else {
-                        versionConfigure.maxKeepNum
+                        // 渠道为工蜂或者开源扫描只需为流水线模型保留一个版本
+                        val filterList = listOf(ChannelCode.GIT, ChannelCode.GONGFENGSCAN)
+                        val maxPipelineResNum = if (channelCode in filterList) {
+                            1
+                        } else {
+                            versionConfigure.maxKeepNum
+                        }
+                        pipelineSettingDao.insertNewSetting(
+                            dslContext = transactionContext,
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            pipelineName = model.name,
+                            failNotifyTypes = notifyTypes,
+                            maxPipelineResNum = maxPipelineResNum
+                        )
+                        pipelineSettingVersionDao.insertNewSetting(
+                            dslContext = transactionContext,
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            failNotifyTypes = notifyTypes
+                        )
                     }
-                    pipelineSettingDao.insertNewSetting(
-                        dslContext = transactionContext,
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        pipelineName = model.name,
-                        failNotifyTypes = notifyTypes,
-                        maxPipelineResNum = maxPipelineResNum
-                    )
-                    pipelineSettingVersionDao.insertNewSetting(
-                        dslContext = transactionContext,
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        failNotifyTypes = notifyTypes
-                    )
                 } else {
                     pipelineSettingDao.updateSetting(
                         dslContext = transactionContext,

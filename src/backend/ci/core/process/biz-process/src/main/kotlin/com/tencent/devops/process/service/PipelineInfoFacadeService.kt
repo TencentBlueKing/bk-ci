@@ -182,7 +182,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         instanceType: String? = PipelineInstanceTypeEnum.FREEDOM.type,
         buildNo: BuildNo? = null,
         param: List<BuildFormProperty>? = null,
-        fixTemplateVersion: Long? = null
+        fixTemplateVersion: Long? = null,
+        useTemplateSettings: Boolean? = false
     ): String {
         val watcher =
             Watcher(id = "createPipeline|$projectId|$userId|$channelCode|$checkPermission|$instanceType|$fixPipelineId")
@@ -272,12 +273,28 @@ class PipelineInfoFacadeService @Autowired constructor(
                     signPipelineId = fixPipelineId,
                     userId = userId,
                     channelCode = channelCode,
-                    create = true
+                    create = true,
+                    useTemplateSettings = useTemplateSettings,
+                    templateId = model.templateId
                 ).pipelineId
                 watcher.stop()
 
                 // 先进行模板关联操作
                 if (templateId != null) {
+                    watcher.start("addLabel")
+                    if (useTemplateSettings == true) {
+                        val groups = pipelineGroupService.getGroups(userId, projectId, templateId)
+                        val labels = ArrayList<String>()
+                        groups.forEach {
+                            labels.addAll(it.labels)
+                        }
+                        pipelineGroupService.updatePipelineLabel(
+                            userId = userId,
+                            pipelineId = pipelineId,
+                            labelIds = labels
+                        )
+                    }
+                    watcher.stop()
                     watcher.start("createTemplate")
                     templateService.createRelationBtwTemplate(
                         userId = userId,

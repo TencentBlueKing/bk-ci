@@ -132,11 +132,20 @@ class UserPipelineResourceImpl @Autowired constructor(
         return Result(Page(page ?: 0, pageSize ?: -1, result.count, result.records))
     }
 
-    override fun create(userId: String, projectId: String, pipeline: Model): Result<PipelineId> {
+    override fun create(
+        userId: String,
+        projectId: String,
+        useTemplateSettings: Boolean?,
+        pipeline: Model
+    ): Result<PipelineId> {
         checkParam(userId, projectId)
         val pipelineId = PipelineId(
             id = pipelineInfoFacadeService.createPipeline(
-                userId = userId, projectId = projectId, model = pipeline, channelCode = ChannelCode.BS
+                userId = userId,
+                projectId = projectId,
+                model = pipeline,
+                channelCode = ChannelCode.BS,
+                useTemplateSettings = useTemplateSettings
             )
         )
         auditService.createAudit(

@@ -135,6 +135,9 @@ interface UserPipelineResource {
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
+        @ApiParam("是否使用模板配置", required = false)
+        @QueryParam("useTemplateSettings")
+        useTemplateSettings: Boolean? = false,
         @ApiParam(value = "流水线模型", required = true)
         pipeline: Model
     ): Result<PipelineId>
