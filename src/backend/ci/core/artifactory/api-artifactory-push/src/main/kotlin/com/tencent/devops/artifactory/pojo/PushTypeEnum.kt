@@ -27,7 +27,7 @@
 
 package com.tencent.devops.artifactory.pojo
 
-enum class PushTypeEnum() {
+enum class PushTypeEnum {
 //    NodeName,
     NodeId,
     ENVName,

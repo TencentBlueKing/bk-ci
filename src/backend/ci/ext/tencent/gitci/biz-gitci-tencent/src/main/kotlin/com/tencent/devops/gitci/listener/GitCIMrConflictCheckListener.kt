@@ -48,7 +48,8 @@ constructor(
 
     @RabbitListener(
         bindings = [(QueueBinding(
-            key = MQ.ROUTE_GITCI_MR_CONFLICT_CHECK_EVENT, value = Queue(value = MQ.QUEUE_GITCI_MR_CONFLICT_CHECK_EVENT, durable = "true"),
+            key = [MQ.ROUTE_GITCI_MR_CONFLICT_CHECK_EVENT],
+            value = Queue(value = MQ.QUEUE_GITCI_MR_CONFLICT_CHECK_EVENT, durable = "true"),
             exchange = Exchange(
                 value = MQ.EXCHANGE_GITCI_MR_CONFLICT_CHECK_EVENT,
                 durable = "true",

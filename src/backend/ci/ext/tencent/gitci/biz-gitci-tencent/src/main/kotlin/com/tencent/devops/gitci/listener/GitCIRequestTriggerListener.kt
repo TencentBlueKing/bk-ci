@@ -44,7 +44,7 @@ constructor(private val gitCIBuildService: GitCIBuildService) {
 
     @RabbitListener(
         bindings = [(QueueBinding(
-            key = MQ.ROUTE_GITCI_REQUEST_TRIGGER_EVENT, value = Queue(value = MQ.QUEUE_GITCI_REQUEST_TRIGGER_EVENT, durable = "true"),
+            key = [MQ.ROUTE_GITCI_REQUEST_TRIGGER_EVENT], value = Queue(value = MQ.QUEUE_GITCI_REQUEST_TRIGGER_EVENT, durable = "true"),
             exchange = Exchange(
                 value = MQ.EXCHANGE_GITCI_REQUEST_TRIGGER_EVENT,
                 durable = "true",

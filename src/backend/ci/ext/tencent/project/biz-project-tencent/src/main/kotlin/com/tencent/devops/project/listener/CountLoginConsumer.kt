@@ -45,7 +45,7 @@ class CountLoginConsumer @Autowired constructor(
 ) {
     @RabbitListener(
         bindings = [(QueueBinding(
-            key = ROUTE_PROJECT_COUNT_LOGIN, value = Queue(value = ROUTE_PROJECT_COUNT_LOGIN, durable = "true"),
+            key = [ROUTE_PROJECT_COUNT_LOGIN], value = Queue(value = ROUTE_PROJECT_COUNT_LOGIN, durable = "true"),
             exchange = Exchange(value = EXCHANGE_PROJECT_COUNT_LOGIN, durable = "true", delayed = "true", type = "topic")
         ))]
     )

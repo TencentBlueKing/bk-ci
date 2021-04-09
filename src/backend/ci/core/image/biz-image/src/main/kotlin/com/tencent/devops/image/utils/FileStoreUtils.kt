@@ -42,7 +42,7 @@ import java.util.UUID
 
 object FileStoreUtils {
     private val logger = LoggerFactory.getLogger(FileStoreUtils::class.java)
-    private val FILE_STORE_DIR = "/data/image-upload-fileStore"
+    private const val FILE_STORE_DIR = "/data/image-upload-fileStore"
 
     fun getFullFileName(fileName: String): String {
         return "$FILE_STORE_DIR/$fileName"

@@ -25,22 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.listener
+package com.tencent.devops.process.pojo.code.github
 
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.listener.pipeline.BaseListener
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
-import com.tencent.devops.plugin.service.git.CodeWebhookService
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+import com.fasterxml.jackson.annotation.JsonProperty
 
-@Component
-class CodeWebhookFinishListener @Autowired constructor(
-    private val codeWebhookService: CodeWebhookService,
-    pipelineEventDispatcher: PipelineEventDispatcher
-) : BaseListener<PipelineBuildFinishBroadCastEvent>(pipelineEventDispatcher) {
-
-    override fun run(event: PipelineBuildFinishBroadCastEvent) {
-        codeWebhookService.onFinish(event)
+data class GithubCheckRunEvent(
+    val action: String,
+    @JsonProperty("check_run")
+    val checkRun: CheckRun,
+    val repository: GithubRepository,
+    override val sender: GithubSender
+) : GithubEvent(sender) {
+    companion object {
+        const val classType = "check_run"
     }
 }
+
+data class CheckRun(
+    val id: String,
+    @JsonProperty("external_id")
+    val externalId: String? = null,
+    @JsonProperty("details_url")
+    val detailsUrl: String? = null,
+    val status: String
+)

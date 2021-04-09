@@ -35,9 +35,9 @@ import java.util.Random
  * Powered By Tencent
  */
 object ApiUtil {
-    private val HASH_SALT = "soda3:com.tencent.soda.open.api.access.key.salt"
+    private const val HASH_SALT = "soda3:com.tencent.soda.open.api.access.key.salt"
     private val hashids = Hashids(HASH_SALT, 8, "abcdefghjkmnpqrstuvwxyzABCDEFGHJKLMNPQRSTUVWXYZ23456789")
-    private val secretSeed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    private const val secretSeed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
     fun accessKey(projectId: Long): String {
         return hashids.encode(projectId)

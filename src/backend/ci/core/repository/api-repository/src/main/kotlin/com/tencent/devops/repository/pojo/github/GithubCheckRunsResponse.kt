@@ -28,5 +28,5 @@
 package com.tencent.devops.repository.pojo
 
 data class GithubCheckRunsResponse(
-    val id: Int
+    val id: Long
 )

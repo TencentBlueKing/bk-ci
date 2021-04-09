@@ -73,7 +73,6 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             event.dispatchType is ThirdPartyDevCloudDispatchType
 
     override fun startUp(event: PipelineAgentStartupEvent) {
-
         when (event.dispatchType) {
             is ThirdPartyAgentIDDispatchType -> {
                 val dispatchType = event.dispatchType as ThirdPartyAgentIDDispatchType
@@ -143,24 +142,25 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 .getAgentByDisplayName(event.projectId, dispatchType.displayName)
         }
 
-        if (agentResult.agentStatus != AgentStatus.IMPORT_OK) {
-            onFailBuild(
-                client = client,
-                buildLogPrinter = buildLogPrinter,
-                event = event,
-                errorCodeEnum = ErrorCodeEnum.VM_STATUS_ERROR,
-                errorMsg = "第三方构建机状态异常/Bad build agent status (${agentResult.agentStatus?.name})"
-            )
-            return
-        }
-
         if (agentResult.isNotOk()) {
             onFailBuild(
                 client = client,
                 buildLogPrinter = buildLogPrinter,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.GET_BUILD_AGENT_ERROR,
-                errorMsg = "获取第三方构建机失败/Fail to get build agent($dispatchType) because of ${agentResult.message}"
+                errorMsg = "获取第三方构建机信息失败 - ${agentResult.message}"
+            )
+            return
+        }
+
+        if (agentResult.agentStatus != AgentStatus.IMPORT_OK) {
+            onFailBuild(
+                client = client,
+                buildLogPrinter = buildLogPrinter,
+                event = event,
+                errorCodeEnum = ErrorCodeEnum.VM_STATUS_ERROR,
+                errorMsg = "第三方构建机状态异常，请在环境管理中检查第三方构建机状态 - ${dispatchType.displayName}" +
+                        "| status: (${agentResult.agentStatus?.name})"
             )
             return
         }
@@ -171,7 +171,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 buildLogPrinter = buildLogPrinter,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.FOUND_AGENT_ERROR,
-                errorMsg = "获取第三方构建机失败/Can not found agent by type($dispatchType)"
+                errorMsg = "获取第三方构建机信息失败 - $dispatchType agent为空"
             )
             return
         }
@@ -183,7 +183,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL,
-                errorMessage = "获取第三方构建机失败/Load build agent（${dispatchType.displayName}）fail!"
+                errorMessage = "第三方构建机Agent正在升级中 或 排队重试超时，请检查agent（${dispatchType.displayName}）并发任务数设置并稍后重试."
             )
         } else {
             // 上报monitor数据
@@ -221,6 +221,14 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             if (redisLock.tryLock()) {
                 if (redisUtils.isThirdPartyAgentUpgrading(event.projectId, agentId)) {
                     logger.warn("The agent($agentId) of project(${event.projectId}) is upgrading")
+                    buildLogPrinter.addLine(
+                        buildId = event.buildId,
+                        message = "The agent($agentId) of project(${event.projectId}) is upgrading",
+                        tag = VMUtils.genStartVMTaskId(event.containerId),
+                        jobId = event.containerHashId,
+                        executeCount = event.executeCount ?: 1
+                    )
+
                     return false
                 }
 
@@ -308,7 +316,6 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             }
         }
 
-        val errorMessage = "获取第三方构建机环境（${dispatchType.envName}）失败/Load build agent（${dispatchType.envName}）fail!"
         if (agentsResult.isNotOk()) {
             logger.warn("${event.buildId}|START_AGENT_FAILED|" +
                 "j(${event.vmSeqId})|dispatchType=$dispatchType|err=${agentsResult.message}")
@@ -317,8 +324,9 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 buildLogPrinter = buildLogPrinter,
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = event,
-                errorCodeEnum = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL,
-                errorMessage = errorMessage
+                errorCodeEnum = ErrorCodeEnum.FOUND_AGENT_ERROR,
+                errorMessage = "获取第三方构建机信息失败 - " +
+                        "${dispatchType.envName}: ${agentsResult.message}"
             )
             return
         }
@@ -331,8 +339,9 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 buildLogPrinter = buildLogPrinter,
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = event,
-                errorCodeEnum = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL,
-                errorMessage = errorMessage
+                errorCodeEnum = ErrorCodeEnum.FOUND_AGENT_ERROR,
+                errorMessage = "获取第三方构建机信息失败 - " +
+                        "${dispatchType.envName}: agent为空"
             )
             return
         }
@@ -346,7 +355,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.VM_NODE_NULL,
-                errorMessage = "第三方构建机环境（${dispatchType.envName}）的节点为空/Not Found ${dispatchType.envName}"
+                errorMessage = "第三方构建机环境（${dispatchType.envName}）的节点为空，请检查环境管理配置，" +
+                        "构建集群： ${dispatchType.envName}"
             )
             return
         }
@@ -401,6 +411,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             /**
              * 根据哪些agent没有任何任务并且是在最近构建中使用到的Agent
              */
+            log(buildLogPrinter, event, "retry: ${event.retryTime} | " +
+                    "开始查找最近构建使用过并且当前没有任何任务的空闲构建机...")
             if (startEmptyAgents(
                     event = event,
                     dispatchType = dispatchType,
@@ -419,6 +431,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                     "${event.buildId}|${event.vmSeqId}]" +
                     " Start to check the available task agents of pre build agents"
             )
+            log(buildLogPrinter, event, "retry: ${event.retryTime} | " +
+                    "开始查找最近构建使用过的并且当前构建任务没有达到最大构建数的空闲构建机...")
             /**
              * 根据哪些agent有任务并且是在最近构建中使用到的Agent，同时当前构建任务还没到达该Agent最大并行数
              */
@@ -435,6 +449,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 return
             }
 
+            log(buildLogPrinter, event, "retry: ${event.retryTime} | " +
+                    "开始查找没有任何任务的空闲构建机...")
             /**
              * 根据哪些agent没有任何任务
              */
@@ -451,6 +467,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 return
             }
 
+            log(buildLogPrinter, event, "retry: ${event.retryTime} | " +
+                    "开始查找当前构建任务还没到达最大并行数构建机...")
             /**
              * 根据哪些agent有任务，同时当前构建任务还没到达该Agent最大并行数
              */
@@ -468,13 +486,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             }
 
             if (event.retryTime == 1) {
-                buildLogPrinter.addLine(
-                    buildId = event.buildId,
-                    message = "All eligible agents are disabled or offline, Waiting for an available agent...",
-                    tag = VMUtils.genStartVMTaskId(event.vmSeqId),
-                    jobId = event.containerHashId,
-                    executeCount = event.executeCount ?: 1
-                )
+                log(buildLogPrinter, event, "当前没有任何可用的agent，继续等待agent释放...")
             }
 
             logger.info("${event.buildId}|START_AGENT|" +
@@ -485,7 +497,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL,
-                errorMessage = "Fail to find the fix agents for the build(${event.buildId})")
+                errorMessage = "${event.buildId}|${event.vmSeqId} " +
+                        "构建集群中没有合适的构建机可以使用，请检查环境管理配置.")
         } finally {
             redisLock.unlock()
         }

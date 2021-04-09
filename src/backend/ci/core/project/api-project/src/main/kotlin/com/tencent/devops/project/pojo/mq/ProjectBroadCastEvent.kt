@@ -27,7 +27,7 @@
 
 package com.tencent.devops.project.pojo.mq
 
-abstract class ProjectBroadCastEvent(
+open class ProjectBroadCastEvent(
     open val userId: String,
     open val projectId: String,
     open var retryCount: Int,

@@ -76,7 +76,7 @@ class CredentialServiceImpl @Autowired constructor(
                 defaultMessage = "凭证格式不正确"
             )
         }
-        if (credential.credentialName != null) {
+        if (!credential.credentialName.isNullOrBlank()) {
             if (credential.credentialName!!.length > credentialIdMaxSize) {
                 throw ErrorCodeException(
                     errorCode = TicketMessageCode.CREDENTIAL_NAME_TOO_LONG,
@@ -150,7 +150,7 @@ class CredentialServiceImpl @Autowired constructor(
                 defaultMessage = "凭证标识必须是英文字母、数字或下划线(_)"
             )
         }
-        if (credential.credentialName != null) {
+        if (!credential.credentialName.isNullOrBlank()) {
             if (credential.credentialName!!.length > credentialIdMaxSize) {
                 throw ErrorCodeException(
                     errorCode = TicketMessageCode.CREDENTIAL_NAME_TOO_LONG,

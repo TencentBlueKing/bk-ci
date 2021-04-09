@@ -133,6 +133,20 @@ interface Dispatcher {
         }
     }
 
+    fun log(
+        buildLogPrinter: BuildLogPrinter,
+        event: PipelineAgentStartupEvent,
+        message: String
+    ) {
+        buildLogPrinter.addLine(
+            buildId = event.buildId,
+            message = message,
+            tag = VMUtils.genStartVMTaskId(event.vmSeqId),
+            jobId = event.containerHashId,
+            executeCount = event.executeCount ?: 1
+        )
+    }
+
     fun sendDispatchMonitoring(
         client: Client,
         projectId: String,

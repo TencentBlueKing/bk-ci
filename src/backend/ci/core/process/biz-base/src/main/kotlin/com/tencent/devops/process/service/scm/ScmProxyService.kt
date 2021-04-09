@@ -514,7 +514,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
     }
 
     fun updateGithubCheckRuns(
-        checkRunId: Int,
+        checkRunId: Long,
         projectId: String,
         repositoryConfig: RepositoryConfig,
         name: String,
