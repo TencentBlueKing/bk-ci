@@ -81,18 +81,20 @@ class PipelineTransferJob @Autowired constructor(
                 }
             }
 
+            maxHandleProjectPrimaryId = handleProjectPrimaryId
+
             val transferProjectList = if (needTransferProjectIdList.isNullOrEmpty()) {
 
-                val dealProjectBatchSize = miscPipelineTransferContext.dealProjectBatchSize()
+                val maxId = handleProjectPrimaryId + miscPipelineTransferContext.dealProjectBatchSize()
+                logger.info("transfer|startId=$handleProjectPrimaryId|maxId=$maxId")
+                projectService.getProjectInfoList(minId = handleProjectPrimaryId, maxId = maxId)
 
-                projectService.getProjectInfoList(
-                    minId = handleProjectPrimaryId,
-                    maxId = handleProjectPrimaryId + dealProjectBatchSize
-                )
             } else {
 
                 projectService.getProjectInfoList(projectIdList = needTransferProjectIdList)
             }
+
+            logger.info("transfer|projectSize=${transferProjectList?.size}")
 
             transferProjectList?.forEach nextOne@{ projectInfo ->
 
