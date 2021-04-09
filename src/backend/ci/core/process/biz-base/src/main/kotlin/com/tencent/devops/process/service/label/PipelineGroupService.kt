@@ -129,7 +129,7 @@ class PipelineGroupService @Autowired constructor(
     fun addGroup(userId: String, pipelineGroup: PipelineGroupCreate): Boolean {
         try {
             val groupCount = pipelineGroupDao.count(dslContext = dslContext, projectId = pipelineGroup.projectId)
-            if (groupCount > MAX_GROUP_UNDER_PROJECT) {
+            if (groupCount >= MAX_GROUP_UNDER_PROJECT) {
                 throw ErrorCodeException(
                     errorCode = ERROR_GROUP_COUNT_EXCEEDS_LIMIT,
                     defaultMessage = "At most $MAX_GROUP_UNDER_PROJECT label groups under a project"
@@ -169,7 +169,7 @@ class PipelineGroupService @Autowired constructor(
                 dslContext = dslContext,
                 groupId = groupId
             )
-            if (labelCount > MAX_LABEL_UNDER_GROUP) {
+            if (labelCount >= MAX_LABEL_UNDER_GROUP) {
                 throw ErrorCodeException(
                     errorCode = ERROR_LABEL_COUNT_EXCEEDS_LIMIT,
                     defaultMessage = "No more than $MAX_LABEL_UNDER_GROUP labels under a label group"
