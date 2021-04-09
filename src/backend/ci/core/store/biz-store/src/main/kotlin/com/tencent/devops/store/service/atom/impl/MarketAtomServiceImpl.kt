@@ -81,17 +81,19 @@ import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PR
 import com.tencent.devops.store.pojo.common.HOTTEST
 import com.tencent.devops.store.pojo.common.LATEST
 import com.tencent.devops.store.pojo.common.MarketItem
+import com.tencent.devops.store.pojo.common.StoreDailyStatistic
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomLabelService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.atom.MarketAtomEnvService
 import com.tencent.devops.store.service.atom.MarketAtomService
-import com.tencent.devops.store.service.atom.MarketAtomStatisticService
 import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreCommentService
 import com.tencent.devops.store.service.common.StoreCommonService
+import com.tencent.devops.store.service.common.StoreDailyStatisticService
 import com.tencent.devops.store.service.common.StoreProjectService
+import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.service.websocket.StoreWebsocketService
 import org.jooq.DSLContext
@@ -100,6 +102,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.util.StringUtils
 import java.time.LocalDateTime
+import java.util.Calendar
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
@@ -132,7 +135,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     @Autowired
     lateinit var atomLabelRelDao: AtomLabelRelDao
     @Autowired
-    lateinit var marketAtomStatisticService: MarketAtomStatisticService
+    lateinit var storeTotalStatisticService: StoreTotalStatisticService
     @Autowired
     lateinit var atomLabelService: AtomLabelService
     @Autowired
@@ -153,6 +156,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     lateinit var marketAtomCommonService: MarketAtomCommonService
     @Autowired
     lateinit var marketAtomEnvService: MarketAtomEnvService
+    @Autowired
+    lateinit var storeDailyStatisticService: StoreDailyStatisticService
     @Autowired
     lateinit var redisOperation: RedisOperation
     @Autowired
@@ -208,24 +213,22 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 pageSize = pageSize
             )
                 ?: return@Callable MarketAtomResp(0, page, pageSize, results)
-            logger.info("[list]get atoms: $atoms")
 
             val atomCodeList = atoms.map {
                 it["ATOM_CODE"] as String
             }.toList()
             // 获取可见范围
-            val atomVisibleData = generateAtomVisibleData(atomCodeList, StoreTypeEnum.ATOM).data
-            logger.info("[list]get atomVisibleData:$atomVisibleData")
-            // 获取热度
-            val statField = mutableListOf<String>()
-            statField.add("DOWNLOAD")
-            val atomStatisticData = marketAtomStatisticService.getStatisticByCodeList(atomCodeList, statField).data
-            logger.info("[list]get atomStatisticData:$atomStatisticData")
+            val storeType = StoreTypeEnum.ATOM
+            val atomVisibleData = generateAtomVisibleData(atomCodeList, storeType).data
+            val atomStatisticData = storeTotalStatisticService.getStatisticByCodeList(
+                storeType = storeType.type.toByte(),
+                storeCodeList = atomCodeList
+            )
             // 获取用户
-            val memberData = atomMemberService.batchListMember(atomCodeList, StoreTypeEnum.ATOM).data
+            val memberData = atomMemberService.batchListMember(atomCodeList, storeType).data
 
             // 获取分类
-            val classifyList = classifyService.getAllClassify(StoreTypeEnum.ATOM.type.toByte()).data
+            val classifyList = classifyService.getAllClassify(storeType.type.toByte()).data
             val classifyMap = mutableMapOf<String, String>()
             classifyList?.forEach {
                 classifyMap[it.id] = it.classifyCode
@@ -234,7 +237,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             atoms.forEach {
                 val atomCode = it["ATOM_CODE"] as String
                 val visibleList = atomVisibleData?.get(atomCode)
-                val statistic = atomStatisticData?.get(atomCode)
+                val statistic = atomStatisticData[atomCode]
                 val members = memberData?.get(atomCode)
                 val defaultFlag = it["DEFAULT_FLAG"] as Boolean
                 val flag = generateInstallFlag(defaultFlag, members, userId, visibleList, userDeptList)
@@ -263,13 +266,16 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                             false
                         } else it["BUILD_LESS_RUN_FLAG"] as Boolean,
                         docsLink = if (it["DOCS_LINK"] == null) "" else it["DOCS_LINK"] as String,
+                        modifier = it["MODIFIER"] as String,
+                        updateTime = DateTimeUtil.toDateTime(it["UPDATE_TIME"] as LocalDateTime),
                         recommendFlag = it["RECOMMEND_FLAG"] as? Boolean,
-                        yamlFlag = it["YAML_FLAG"] as? Boolean
+                        yamlFlag = it["YAML_FLAG"] as? Boolean,
+                        dailyStatisticList = getRecentDailyStatisticList(atomCode),
+                        recentExecuteNum = statistic?.recentExecuteNum ?: 0
                     )
                 )
             }
 
-            logger.info("[list]end")
             return@Callable MarketAtomResp(count, page, pageSize, results)
         })
     }
@@ -331,7 +337,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 rdType = null,
                 yamlFlag = null,
                 recommendFlag = null,
-                sortType = MarketAtomSortTypeEnum.DOWNLOAD_COUNT,
+                sortType = MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM,
                 desc = true,
                 page = page,
                 pageSize = pageSize
@@ -359,7 +365,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         rdType = null,
                         yamlFlag = null,
                         recommendFlag = null,
-                        sortType = MarketAtomSortTypeEnum.DOWNLOAD_COUNT,
+                        sortType = MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM,
                         desc = true,
                         page = page,
                         pageSize = pageSize
@@ -433,7 +439,6 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         // 获取有权限的插件代码列表
         val records = marketAtomDao.getMyAtoms(dslContext, userId, atomName, page, pageSize)
         val count = marketAtomDao.countMyAtoms(dslContext, userId, atomName)
-        logger.info("the getMyAtoms userId is :$userId,records is :$records,count is :$count")
         // 获取项目ID对应的名称
         val projectCodeList = mutableListOf<String>()
         records?.forEach {
@@ -445,9 +450,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             )
             if (null != testProjectCode) projectCodeList.add(testProjectCode)
         }
-        logger.info("the getMyAtoms userId is :$userId,projectCodeList is :$projectCodeList")
         val projectMap = client.get(ServiceProjectResource::class).getNameByCode(projectCodeList.joinToString(",")).data
-        logger.info("the getMyAtoms userId is :$userId,projectMap is :$projectMap")
         val myAtoms = mutableListOf<MyAtomRespItem?>()
         records?.forEach {
             val atomCode = it["atomCode"] as String
@@ -577,10 +580,33 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     recommendFlag = feature?.recommendFlag,
                     frontendType = FrontendTypeEnum.getFrontendTypeObj(htmlTemplateVersion),
                     yamlFlag = feature?.yamlFlag,
-                    editFlag = marketAtomCommonService.checkEditCondition(atomCode)
+                    editFlag = marketAtomCommonService.checkEditCondition(atomCode),
+                    dailyStatisticList = getRecentDailyStatisticList(atomCode)
                 )
             )
         }
+    }
+
+    private fun getRecentDailyStatisticList(
+        atomCode: String
+    ): List<StoreDailyStatistic>? {
+        // 统计昨天为截止日期的最近一周的数据
+        val endTime = DateTimeUtil.convertDateToFormatLocalDateTime(
+            date = DateTimeUtil.getFutureDateFromNow(Calendar.DAY_OF_MONTH, -1),
+            format = "yyyy-MM-dd"
+        )
+        return storeDailyStatisticService.getDailyStatisticListByCode(
+            storeCode = atomCode,
+            storeType = StoreTypeEnum.ATOM.type.toByte(),
+            startTime = DateTimeUtil.convertDateToLocalDateTime(
+                DateTimeUtil.getFutureDate(
+                    localDateTime = endTime,
+                    unit = Calendar.DAY_OF_MONTH,
+                    timeSpan = -6
+                )
+            ),
+            endTime = endTime
+        )
     }
 
     abstract fun getRepositoryInfo(projectCode: String?, repositoryHashId: String?): Result<Repository?>
@@ -942,7 +968,6 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             }
         }
         val atomPostResp = AtomPostResp(postAtoms)
-        logger.info("getPostAtoms atomPostResp:$atomPostResp")
         return Result(atomPostResp)
     }
 

@@ -24,17 +24,27 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.store.pojo.image.response
 
+package com.tencent.devops.store.pojo.common
+
+import com.tencent.devops.common.api.util.DateTimeUtil
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
+import java.time.LocalDateTime
+import java.util.Date
 
-@ApiModel("镜像统计信息")
-data class ImageStatistic(
-    @ApiModelProperty("下载量")
-    val downloads: Int,
-    @ApiModelProperty("评论量")
-    val commentCnt: Int,
-    @ApiModelProperty("星级评分")
-    val score: Double?
+@ApiModel("每日统计信息请求报文")
+data class StoreDailyStatisticRequest(
+    @ApiModelProperty("总下载量")
+    var totalDownloads: Int? = null,
+    @ApiModelProperty("每日下载量")
+    var dailyDownloads: Int? = null,
+    @ApiModelProperty("每日执行成功数")
+    val dailySuccessNum: Int? = null,
+    @ApiModelProperty("每日执行失败数")
+    val dailyFailNum: Int? = null,
+    @ApiModelProperty("每日执行失败详情")
+    val dailyFailDetail: Map<String, Any>? = null,
+    @ApiModelProperty("统计时间")
+    val statisticsTime: LocalDateTime? = DateTimeUtil.convertDateToFormatLocalDateTime(Date(), "yyyy-MM-dd")
 )

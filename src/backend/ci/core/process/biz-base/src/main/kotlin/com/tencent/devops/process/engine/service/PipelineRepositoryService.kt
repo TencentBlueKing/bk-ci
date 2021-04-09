@@ -280,6 +280,7 @@ class PipelineRepositoryService constructor(
                     taskSeq = ++taskSeq,
                     taskName = e.name,
                     atomCode = e.getAtomCode(),
+                    atomVersion = e.version,
                     classType = e.getClassType(),
                     taskAtom = e.getTaskAtom(),
                     taskParams = e.genTaskParams(),
@@ -486,6 +487,7 @@ class PipelineRepositoryService constructor(
                         taskSeq = ++taskSeq,
                         taskName = e.name,
                         atomCode = e.getAtomCode(),
+                        atomVersion = e.version,
                         classType = e.getClassType(),
                         taskAtom = e.getTaskAtom(),
                         taskParams = e.genTaskParams(),
@@ -667,6 +669,7 @@ class PipelineRepositoryService constructor(
                 source = "update_pipeline",
                 projectId = projectId,
                 pipelineId = pipelineId,
+                version = version,
                 userId = userId,
                 buildNo = buildNo
             ),

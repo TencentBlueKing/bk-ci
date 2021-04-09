@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -60,7 +61,6 @@ import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
 import com.tencent.devops.store.dao.common.ClassifyDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
-import com.tencent.devops.store.dao.common.StoreStatisticDao
 import com.tencent.devops.store.dao.template.MarketTemplateDao
 import com.tencent.devops.store.dao.template.TemplateCategoryRelDao
 import com.tencent.devops.store.pojo.atom.MarketMainItemLabel
@@ -87,9 +87,9 @@ import com.tencent.devops.store.service.common.StoreCommentService
 import com.tencent.devops.store.service.common.StoreDeptService
 import com.tencent.devops.store.service.common.StoreMemberService
 import com.tencent.devops.store.service.common.StoreProjectService
+import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.service.template.MarketTemplateService
-import com.tencent.devops.store.service.template.MarketTemplateStatisticService
 import com.tencent.devops.store.service.template.TemplateCategoryService
 import com.tencent.devops.store.service.template.TemplateLabelService
 import com.tencent.devops.store.service.template.TemplateModelService
@@ -121,8 +121,6 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
     @Autowired
     lateinit var atomDao: AtomDao
     @Autowired
-    lateinit var storeStatisticDao: StoreStatisticDao
-    @Autowired
     lateinit var storeProjectRelDao: StoreProjectRelDao
     @Autowired
     lateinit var storeMemberDao: StoreMemberDao
@@ -131,7 +129,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
     @Autowired
     lateinit var templateLabelService: TemplateLabelService
     @Autowired
-    lateinit var marketTemplateStatisticService: MarketTemplateStatisticService
+    lateinit var storeTotalStatisticService: StoreTotalStatisticService
     @Autowired
     lateinit var storeUserService: StoreUserService
     @Autowired
@@ -233,25 +231,25 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 pageSize = pageSize
             )
                 ?: return@Callable MarketTemplateResp(0, page, pageSize, canInstallTemplates)
-            logger.info("[list]get templates: $templates")
 
             val templateCodeList = templates.map {
                 it["TEMPLATE_CODE"] as String
             }.toList()
-
+            val storeType = StoreTypeEnum.TEMPLATE
             // 获取可见范围
-            val templateVisibleData = generateTemplateVisibleData(templateCodeList, StoreTypeEnum.TEMPLATE).data
-            logger.info("[list]get templateVisibleData")
+            val templateVisibleData = generateTemplateVisibleData(templateCodeList, storeType).data
 
             // 获取统计数据
-            val templateStatisticData = marketTemplateStatisticService.getStatisticByCodeList(templateCodeList).data
-            logger.info("[list]get statisticData")
+            val templateStatisticData = storeTotalStatisticService.getStatisticByCodeList(
+                storeType = storeType.type.toByte(),
+                storeCodeList = templateCodeList
+            )
 
             // 获取成员
-            val memberData = storeMemberService.batchListMember(templateCodeList, StoreTypeEnum.TEMPLATE).data
+            val memberData = storeMemberService.batchListMember(templateCodeList, storeType).data
 
             // 获取分类
-            val classifyList = classifyService.getAllClassify(StoreTypeEnum.TEMPLATE.type.toByte()).data
+            val classifyList = classifyService.getAllClassify(storeType.type.toByte()).data
             val classifyMap = mutableMapOf<String, String>()
             classifyList?.forEach {
                 classifyMap[it.id] = it.classifyCode
@@ -260,7 +258,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             templates.forEach {
                 val code = it["TEMPLATE_CODE"] as String
                 val visibleList = templateVisibleData?.get(code)
-                val statistic = templateStatisticData?.get(code)
+                val statistic = templateStatisticData[code]
                 val members = memberData?.get(code)
                 val publicFlag = it["PUBLIC_FLAG"] as Boolean
                 val canInstall = generateInstallFlag(
@@ -291,6 +289,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                     publicFlag = it["PUBLIC_FLAG"] as Boolean,
                     buildLessRunFlag = false,
                     docsLink = "",
+                    modifier = it["MODIFIER"] as String,
+                    updateTime = DateTimeUtil.toDateTime(it["UPDATE_TIME"] as LocalDateTime),
                     installed = installed
                 )
                 when {
@@ -300,7 +300,6 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 }
             }
 
-            logger.info("[list]end")
             return@Callable MarketTemplateResp(
                 count = count,
                 page = page,
@@ -491,18 +490,13 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
     private fun getTemplateDetail(templateRecord: TTemplateRecord, userId: String): Result<TemplateDetail?> {
         val templateCode = templateRecord.templateCode
         val templateClassify = classifyService.getClassify(templateRecord.classifyId).data
-        val templateStatisticRecord = storeStatisticDao.getStatisticByStoreCode(
-            dslContext = dslContext,
+        val storeStatistic = storeTotalStatisticService.getStatisticByCode(
+            userId = userId,
             storeCode = templateCode,
             storeType = StoreTypeEnum.TEMPLATE.type.toByte()
         )
-        val downloads = templateStatisticRecord.value1()?.toInt()
-        val comments = templateStatisticRecord.value2()?.toInt()
-        val score = templateStatisticRecord.value3()?.toDouble()
-        val avgScore: Double = if (score != null && comments != null && score > 0 && comments > 0) {
-            score.div(comments)
-        } else 0.toDouble() // 计算平均分
-        val categoryList = templateCategoryService.getCategorysByTemplateId(templateRecord.id).data // 查找范畴列表
+        // 查找范畴列表
+        val categoryList = templateCategoryService.getCategorysByTemplateId(templateRecord.id).data
         val labelList = templateLabelService.getLabelsByTemplateId(templateRecord.id).data // 查找标签列表
         val publicFlag = templateRecord.publicFlag // 是否为公共模板
         val installFlag = storeUserService.isCanInstallStoreComponent(
@@ -516,7 +510,11 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         if (count > 0) {
             releaseFlag = true
         }
-        val userCommentInfo = storeCommentService.getStoreUserCommentInfo(userId, templateCode, StoreTypeEnum.TEMPLATE)
+        val userCommentInfo = storeCommentService.getStoreUserCommentInfo(
+            userId = userId,
+            storeCode = templateCode,
+            storeType = StoreTypeEnum.TEMPLATE
+        )
         return Result(TemplateDetail(
             templateId = templateRecord.id,
             templateCode = templateCode,
@@ -524,8 +522,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             logoUrl = templateRecord.logoUrl,
             classifyCode = templateClassify?.classifyCode,
             classifyName = templateClassify?.classifyName,
-            downloads = downloads ?: 0,
-            score = String.format("%.1f", avgScore).toDouble(),
+            downloads = storeStatistic.downloads,
+            score = storeStatistic.score,
             summary = templateRecord.summary,
             templateStatus = TemplateStatusEnum.getTemplateStatus(templateRecord.templateStatus.toInt()),
             description = templateRecord.description,

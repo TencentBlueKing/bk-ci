@@ -53,6 +53,7 @@ import com.tencent.devops.common.websocket.pojo.WebSocketType
 import com.tencent.devops.process.engine.control.CallBackControl
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.engine.pojo.event.PipelineCreateEvent
+import com.tencent.devops.process.engine.service.PipelineAtomStatisticsService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.engine.utils.RepositoryUtils
 import com.tencent.devops.process.websocket.page.EditPageBuild
@@ -69,6 +70,7 @@ import org.springframework.stereotype.Component
 @Component
 class MQPipelineCreateListener @Autowired constructor(
     private val pipelineWebhookService: PipelineWebhookService,
+    private val pipelineAtomStatisticsService: PipelineAtomStatisticsService,
     private val webSocketDispatcher: WebSocketDispatcher,
     private val redisOperation: RedisOperation,
     private val callBackControl: CallBackControl,
@@ -83,6 +85,9 @@ class MQPipelineCreateListener @Autowired constructor(
             if (event.source == ("create_pipeline")) {
                 watcher.start("callback")
                 callBackControl.pipelineCreateEvent(projectId = event.projectId, pipelineId = event.pipelineId)
+                watcher.stop()
+                watcher.start("updateAtomPipelineNum")
+                pipelineAtomStatisticsService.updateAtomPipelineNum(event.pipelineId, event.version ?: 1)
                 watcher.stop()
             }
             if (event.source == "createWebhook") {
