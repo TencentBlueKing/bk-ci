@@ -161,25 +161,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             val logoAddress = saveLogoAddress(userId, projectCreateInfo.englishName, logoFile)
             val userDeptDetail = getDeptInfo(userId)
             var projectId = defaultProjectId
-            try {
-                if (createExtInfo.needAuth!!) {
-                    // 注册项目到权限中心
-                    projectId = projectPermissionService.createResources(
-                        userId = userId,
-                        accessToken = accessToken,
-                        resourceRegisterInfo = ResourceRegisterInfo(
-                            resourceCode = projectCreateInfo.englishName,
-                            resourceName = projectCreateInfo.projectName
-                        ),
-                        userDeptDetail = userDeptDetail
-                    )
-                }
-            } catch (e: PermissionForbiddenException) {
-                throw e
-            } catch (e: Exception) {
-                logger.warn("权限中心创建项目信息： $projectCreateInfo", e)
-                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL))
-            }
             if (projectId.isNullOrEmpty()) {
                 projectId = UUIDUtil.generate()
             }
@@ -210,6 +191,32 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         logger.warn("fail to create the project[$projectId] ext info $projectCreateInfo", e)
                         projectDao.delete(dslContext, projectId!!)
                         throw e
+                    }
+
+                    try {
+                        if (createExtInfo.needAuth!!) {
+                            // 注册项目到权限中心
+                            projectId = projectPermissionService.createResources(
+                                userId = userId,
+                                accessToken = accessToken,
+                                resourceRegisterInfo = ResourceRegisterInfo(
+                                    resourceCode = projectCreateInfo.englishName,
+                                    resourceName = projectCreateInfo.projectName
+                                ),
+                                userDeptDetail = userDeptDetail
+                            )
+
+                            projectDao.updateProjectId(
+                                dslContext = dslContext,
+                                projectId = projectId!!,
+                                projectCode = projectCreateInfo.projectName
+                            )
+                        }
+                    } catch (e: PermissionForbiddenException) {
+                        throw e
+                    } catch (e: Exception) {
+                        logger.warn("权限中心创建项目信息： $projectCreateInfo", e)
+                        throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL))
                     }
                 }
             } catch (e: DuplicateKeyException) {
