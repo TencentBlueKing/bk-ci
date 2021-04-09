@@ -63,18 +63,6 @@ class ServiceStoreResourceImpl @Autowired constructor(
         return storeBuildService.handleStoreBuildResult(pipelineId, buildId, storeBuildResultRequest)
     }
 
-    override fun validateUserTemplateAtomVisibleDept(
-        userId: String,
-        templateCode: String,
-        projectCode: String?
-    ): Result<Boolean> {
-        return marketTemplateService.validateUserTemplateAtomVisibleDept(
-            userId = userId,
-            templateCode = templateCode,
-            projectCodeList = if (null != projectCode) listOf(projectCode) else null
-        )
-    }
-
     override fun isStoreMember(storeCode: String, storeType: StoreTypeEnum, userId: String): Result<Boolean> {
         return Result(
             SpringContextUtil.getBean(
