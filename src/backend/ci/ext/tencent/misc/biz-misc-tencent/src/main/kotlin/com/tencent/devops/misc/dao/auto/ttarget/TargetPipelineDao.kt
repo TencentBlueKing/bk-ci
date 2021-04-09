@@ -59,22 +59,32 @@ class TargetPipelineDao {
                 MANUAL_STARTUP,
                 ELEMENT_SKIP,
                 TASK_COUNT
-            )
-                .values(
-                    record.pipelineId,
-                    record.projectId,
-                    record.version,
-                    record.pipelineName,
-                    record.pipelineName,
-                    record.createTime,
-                    record.updateTime,
-                    record.channel,
-                    record.creator,
-                    record.lastModifyUser,
-                    record.manualStartup,
-                    record.elementSkip,
-                    record.taskCount
-                )
+            ).values(
+                record.pipelineId,
+                record.projectId,
+                record.version,
+                record.pipelineName,
+                record.pipelineName,
+                record.createTime,
+                record.updateTime,
+                record.channel,
+                record.creator,
+                record.lastModifyUser,
+                record.manualStartup,
+                record.elementSkip,
+                record.taskCount
+            ).onDuplicateKeyUpdate()
+                .set(VERSION, record.version)
+                .set(PIPELINE_NAME, record.pipelineName)
+                .set(PIPELINE_DESC, record.pipelineName)
+                .set(CREATE_TIME, record.createTime)
+                .set(UPDATE_TIME, record.updateTime)
+                .set(CHANNEL, record.channel)
+                .set(CREATOR, record.creator)
+                .set(LAST_MODIFY_USER, record.lastModifyUser)
+                .set(MANUAL_STARTUP, record.manualStartup)
+                .set(ELEMENT_SKIP, record.elementSkip)
+                .set(TASK_COUNT, record.taskCount)
                 .execute()
         }
         if (LOG.isDebugEnabled) {
@@ -131,10 +141,7 @@ class TargetPipelineDao {
                         .set(WEBHOOK_INFO, it.webhookInfo)
                         .set(BUILD_MSG, it.buildMsg)
                         .onDuplicateKeyUpdate()
-                        .set(BUILD_ID, it.buildId)
                         .set(BUILD_NUM, it.buildNum)
-                        .set(PROJECT_ID, it.projectId)
-                        .set(PIPELINE_ID, it.pipelineId)
                         .set(PARENT_BUILD_ID, it.parentBuildId)
                         .set(PARENT_TASK_ID, it.parentTaskId)
                         .set(START_TIME, it.startTime)
@@ -195,8 +202,21 @@ class TargetPipelineDao {
                 record.finishCount,
                 record.runningCount,
                 record.queueCount
-            )
-                .onDuplicateKeyIgnore().execute()
+            ).onDuplicateKeyUpdate()
+                .set(BUILD_NO, record.buildNo)
+                .set(BUILD_NUM, record.buildNum)
+                .set(LATEST_BUILD_ID, record.latestBuildId)
+                .set(LATEST_START_TIME, record.latestStartTime)
+                .set(LATEST_END_TIME, record.latestEndTime)
+                .set(LATEST_START_USER, record.latestStartUser)
+                .set(LATEST_STATUS, record.latestStatus)
+                .set(LATEST_TASK_COUNT, record.latestTaskCount)
+                .set(LATEST_TASK_ID, record.latestTaskId)
+                .set(LATEST_TASK_NAME, record.latestTaskName)
+                .set(FINISH_COUNT, record.finishCount)
+                .set(RUNNING_COUNT, record.runningCount)
+                .set(QUEUE_COUNT, record.queueCount)
+                .execute()
         }
 
         if (LOG.isDebugEnabled) {
