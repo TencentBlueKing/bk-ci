@@ -106,7 +106,8 @@ class ScmClient @Autowired constructor(
             token = token,
             region = null,
             commitId = commitId,
-            state = "",
+            // 加锁的都为正在检测中
+            state = "pending",
             targetUrl = "",
             context = context,
             description = "",
