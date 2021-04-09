@@ -57,6 +57,7 @@ import com.tencent.devops.gitci.pojo.GitRepositoryConf
 import com.tencent.devops.gitci.utils.GitCIWebHookMatcher
 import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.gitci.pojo.TriggerBuildReq
+import com.tencent.devops.gitci.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.gitci.pojo.enums.GitCiMergeStatus
 import com.tencent.devops.gitci.pojo.enums.TriggerReason
 import com.tencent.devops.gitci.pojo.git.GitCommit
@@ -214,6 +215,7 @@ class GitCITriggerService @Autowired constructor(
                 event = gitRequestEvent,
                 gitProjectConf = gitProjectConf,
                 block = false,
+                state = GitCICommitCheckState.FAILURE,
                 context = noPipelineBuildEvent
             )
             return false
@@ -233,7 +235,8 @@ class GitCITriggerService @Autowired constructor(
             event = gitRequestEvent,
             gitProjectConf = gitProjectConf,
             context = noPipelineBuildEvent,
-            block = true
+            block = true,
+            state = GitCICommitCheckState.PENDING
         )
 
         val gitToken = client.getScm(ServiceGitResource::class).getToken(gitRequestEvent.gitProjectId).data!!
@@ -290,7 +293,8 @@ class GitCITriggerService @Autowired constructor(
                 event = gitRequestEvent,
                 gitProjectConf = gitProjectConf,
                 context = noPipelineBuildEvent,
-                block = false
+                block = false,
+                state = GitCICommitCheckState.SUCCESS
             )
             return false
         }
@@ -451,7 +455,8 @@ class GitCITriggerService @Autowired constructor(
             event = gitRequestEvent,
             gitProjectConf = gitProjectConf,
             context = noPipelineBuildEvent,
-            block = false
+            block = false,
+            state = GitCICommitCheckState.SUCCESS
         )
         return true
     }
@@ -816,6 +821,7 @@ class GitCITriggerService @Autowired constructor(
         event: GitRequestEvent,
         gitProjectConf: GitRepositoryConf,
         block: Boolean,
+        state: GitCICommitCheckState,
         context: String
     ) {
         if (!isMrEvent) {
@@ -827,6 +833,7 @@ class GitCITriggerService @Autowired constructor(
                 mergeRequestId = event.mergeRequestId ?: 0L,
                 userId = event.userId,
                 block = block,
+                state = state,
                 context = context,
                 gitProjectConf = gitProjectConf
             )

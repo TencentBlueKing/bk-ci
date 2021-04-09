@@ -44,6 +44,7 @@ import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.pojo.GitRepositoryConf
+import com.tencent.devops.gitci.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.gitci.pojo.enums.GitCINotifyTemplateEnum
 import com.tencent.devops.gitci.pojo.enums.GitCINotifyType
 import com.tencent.devops.gitci.pojo.rtxCustom.MessageType
@@ -112,9 +113,9 @@ class GitCIBuildFinishListener @Autowired constructor(
 
                 // 检测状态
                 val state = if (BuildStatus.isFailure(BuildStatus.valueOf(buildFinishEvent.status))) {
-                    "failure"
+                    GitCICommitCheckState.FAILURE
                 } else {
-                    "success"
+                    GitCICommitCheckState.SUCCESS
                 }
 
                 val commitId = record["COMMIT_ID"] as String
@@ -135,6 +136,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                         userId = buildFinishEvent.userId,
                         context = "${buildFinishEvent.pipelineId}(${buildFinishEvent.buildId})",
                         block = false,
+                        state = state,
                         gitProjectConf = gitProjectConf
                     )
                 }
@@ -158,7 +160,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                     )
                 }
 
-                if (!checkIsSendNotify(conf = gitProjectConf, state = state)) {
+                if (!checkIsSendNotify(conf = gitProjectConf, state = state.value)) {
                     return
                 }
 
@@ -185,7 +187,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                     sourceProjectId = sourceProjectId,
                     mergeRequestId = mergeRequestId,
                     commitId = commitId,
-                    state = state,
+                    state = state.value,
                     conf = gitProjectConf,
                     event = event,
                     pipeline = pipeline,

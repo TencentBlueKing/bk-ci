@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.gitci.pojo.GitRepositoryConf
+import com.tencent.devops.gitci.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.CommitCheckRequest
@@ -50,7 +51,7 @@ class ScmClient @Autowired constructor(
         mergeRequestId: Long,
         buildId: String,
         userId: String,
-        status: String,
+        status: GitCICommitCheckState,
         context: String,
         gitProjectConf: GitRepositoryConf
     ) = try {
@@ -68,7 +69,7 @@ class ScmClient @Autowired constructor(
             token = token,
             region = null,
             commitId = commitId,
-            state = status,
+            state = status.value,
             targetUrl = gitProjectConf.homepage + "/ci/pipelines#/build/" + buildId + "?buildNum=" + buildNum,
             context = context,
             description = description,
@@ -90,6 +91,7 @@ class ScmClient @Autowired constructor(
         mergeRequestId: Long,
         userId: String,
         context: String,
+        state: GitCICommitCheckState,
         block: Boolean,
         gitProjectConf: GitRepositoryConf
     ) = try {
@@ -106,8 +108,7 @@ class ScmClient @Autowired constructor(
             token = token,
             region = null,
             commitId = commitId,
-            // 加锁的都为正在检测中
-            state = "pending",
+            state = state.value,
             targetUrl = "",
             context = context,
             description = "",

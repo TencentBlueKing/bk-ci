@@ -79,6 +79,7 @@ import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.gitci.pojo.BuildConfig
 import com.tencent.devops.gitci.pojo.GitCITriggerLock
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
+import com.tencent.devops.gitci.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.gitci.pojo.enums.TriggerReason
 import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
@@ -212,6 +213,7 @@ class GitCIBuildService @Autowired constructor(
                     mergeRequestId = event.mergeRequestId ?: 0L,
                     userId = event.userId,
                     block = true,
+                    state = GitCICommitCheckState.PENDING,
                     context = "${pipeline.pipelineId}($buildId)",
                     gitProjectConf = gitProjectConf
                 )
@@ -224,7 +226,7 @@ class GitCIBuildService @Autowired constructor(
                     mergeRequestId = event.mergeRequestId ?: 0L,
                     buildId = buildId,
                     userId = event.userId,
-                    status = "pending",
+                    status = GitCICommitCheckState.PENDING,
                     context = "${pipeline.displayName}(${pipeline.filePath})",
                     gitProjectConf = gitProjectConf
                 )
@@ -258,6 +260,7 @@ class GitCIBuildService @Autowired constructor(
                     mergeRequestId = event.mergeRequestId ?: 0L,
                     userId = event.userId,
                     block = false,
+                    state = GitCICommitCheckState.FAILURE,
                     context = "${pipeline.pipelineId}($gitBuildId)",
                     gitProjectConf = gitProjectConf
                 )
