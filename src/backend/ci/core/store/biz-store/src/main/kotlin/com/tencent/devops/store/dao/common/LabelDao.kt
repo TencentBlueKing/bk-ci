@@ -64,14 +64,14 @@ class LabelDao {
     fun countByName(dslContext: DSLContext, labelName: String, type: Byte): Int {
         with(TLabel.T_LABEL) {
             return dslContext.selectCount().from(this).where(LABEL_NAME.eq(labelName).and(TYPE.eq(type)))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
     fun countByCode(dslContext: DSLContext, labelCode: String, type: Byte): Int {
         with(TLabel.T_LABEL) {
             return dslContext.selectCount().from(this).where(LABEL_CODE.eq(labelCode).and(TYPE.eq(type)))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 

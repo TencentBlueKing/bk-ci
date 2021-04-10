@@ -89,7 +89,7 @@ class ManagerUserHistoryDao {
     fun count(dslContext: DSLContext, managerId: Int): Int {
         with(TAuthManagerUserHistory.T_AUTH_MANAGER_USER_HISTORY) {
             return dslContext.selectCount().from(this).where(MANAGER_ID.eq(managerId)
-                .and(END_TIME.le(LocalDateTime.now()))).fetchOne(0, Int::class.java)
+                .and(END_TIME.le(LocalDateTime.now()))).fetchOne(0, Int::class.java)!!
         }
     }
 }

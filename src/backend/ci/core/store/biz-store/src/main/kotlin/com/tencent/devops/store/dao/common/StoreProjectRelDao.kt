@@ -109,7 +109,7 @@ class StoreProjectRelDao {
                     .and(STORE_CODE.eq(storeCode))
                     .and(STORE_TYPE.eq(storeType))
                 )
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -120,7 +120,7 @@ class StoreProjectRelDao {
                     .and(STORE_TYPE.eq(storeType))
                     .and(TYPE.eq(1))
                 )
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -158,7 +158,7 @@ class StoreProjectRelDao {
                     grayFlag = grayFlag,
                     grayProjectCodeList = grayProjectCodeList
                 )
-            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Long::class.java)
+            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Long::class.java)!!
         }
     }
 

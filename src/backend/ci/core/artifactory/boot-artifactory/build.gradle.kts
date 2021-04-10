@@ -34,4 +34,6 @@ dependencies {
     api(project(":core:artifactory:biz-artifactory-sample")) // sample 是开源版实现
 }
 
-apply("$rootDir/task_spring_boot_package.gradle")
+plugins {
+   `task-spring-boot-package`
+}

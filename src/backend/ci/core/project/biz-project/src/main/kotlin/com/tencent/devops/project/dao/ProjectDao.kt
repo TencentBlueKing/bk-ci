@@ -123,7 +123,7 @@ class ProjectDao {
 
     fun getCount(dslContext: DSLContext): Long {
         return with(TProject.T_PROJECT) {
-            dslContext.selectCount().from(this).where(ENABLED.eq(true)).fetchOne(0, Long::class.java)
+            dslContext.selectCount().from(this).where(ENABLED.eq(true)).fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -676,7 +676,7 @@ class ProjectDao {
                 macosGrayNames = repoGrayNames,
                 codeCCGrayNames = codeCCGrayNames
             )
-            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)
+            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -691,19 +691,19 @@ class ProjectDao {
                 .and(ENGLISH_NAME.`in`(englishNameList))
                 .and(IS_OFFLINED.eq(false))
                 .let { if (null == searchName) it else it.and(PROJECT_NAME.like("%$searchName%")) }
-                .fetchOne().value1()
+                .fetchOne()!!.value1()
         }
     }
 
     fun getMinId(dslContext: DSLContext): Long {
         with(TProject.T_PROJECT) {
-            return dslContext.select(DSL.min(ID)).from(this).fetchOne(0, Long::class.java)
+            return dslContext.select(DSL.min(ID)).from(this).fetchOne(0, Long::class.java)!!
         }
     }
 
     fun getMaxId(dslContext: DSLContext): Long {
         with(TProject.T_PROJECT) {
-            return dslContext.select(DSL.max(ID)).from(this).fetchOne(0, Long::class.java)
+            return dslContext.select(DSL.max(ID)).from(this).fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -737,7 +737,7 @@ class ProjectDao {
         with(TProject.T_PROJECT) {
             return dslContext.selectCount().from(this)
                 .where(PROJECT_NAME.like("%$projectName%"))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 }

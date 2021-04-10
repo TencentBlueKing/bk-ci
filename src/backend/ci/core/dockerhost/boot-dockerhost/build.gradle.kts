@@ -32,4 +32,6 @@ dependencies {
     api(("com.squareup.okhttp3:okhttp:3.14.4"))
 }
 
-apply("$rootDir/task_spring_boot_package.gradle")
+plugins {
+   `task-spring-boot-package`
+}

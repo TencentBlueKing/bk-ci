@@ -72,7 +72,7 @@ class ReportDao {
                 now
             )
                 .returning(ID)
-                .fetchOne()
+                .fetchOne()!!
             return record.id
         }
     }

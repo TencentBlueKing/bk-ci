@@ -33,4 +33,6 @@ dependencies {
     api(project(":core:quality:biz-quality-sample"))
 }
 
-apply("$rootDir/task_spring_boot_package.gradle")
+plugins {
+   `task-spring-boot-package`
+}

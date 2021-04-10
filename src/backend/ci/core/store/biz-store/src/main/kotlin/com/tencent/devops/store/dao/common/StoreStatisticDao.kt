@@ -80,7 +80,7 @@ class StoreStatisticDao {
             )
                 .from(this)
                 .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)))
-                .fetchOne()
+                .fetchOne()!!
         }
     }
 

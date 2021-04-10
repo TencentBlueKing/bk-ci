@@ -26,6 +26,7 @@
  */
 
 dependencies {
+    api(project(":core:misc:model-misc"))
     api(project(":core:common:common-web"))
     api(project(":core:common:common-environment-thirdpartyagent"))
     api(project(":core:common:common-client"))
@@ -35,9 +36,8 @@ dependencies {
     api(project(":core:notify:api-notify"))
     api(project(":core:project:api-project"))
     api(project(":core:misc:api-misc"))
-    api(project(":core:misc:model-misc"))
     api(project(":core:common:common-websocket"))
-    api(("org.json:json"))
+    api("org.json:json")
     api("org.springframework.boot:spring-boot-starter-jooq")
     api("com.zaxxer:HikariCP")
     api("org.jooq:jooq")

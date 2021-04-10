@@ -30,4 +30,6 @@ dependencies {
     api(project(":core:notify:biz-notify-blueking")) // 对接蓝鲸实现
 }
 
-apply("$rootDir/task_spring_boot_package.gradle")
+plugins {
+   `task-spring-boot-package`
+}

@@ -110,7 +110,7 @@ class PipelineModelTaskDao {
             .join(b)
             .on(a.PIPELINE_ID.eq(b.PIPELINE_ID))
             .where(condition)
-            .fetchOne(0, Int::class.java)
+            .fetchOne(0, Int::class.java)!!
     }
 
     /**

@@ -1,3 +1,5 @@
+import nu.studer.gradle.jooq.JooqGenerate
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -32,76 +34,105 @@ plugins {
 }
 
 val jooqGenerator by project.configurations
+val api by project.configurations
 
 dependencies {
+    api("org.jooq:jooq")
     jooqGenerator("mysql:mysql-connector-java:8.0.22")
 }
 
 val moduleName = name.split("-")[1]
-var databaseName = moduleName
+val moduleNames = if (moduleName == "misc") listOf(
+    "process",
+    "project",
+    "repository",
+    "dispatch",
+    "plugin",
+    "quality",
+    "artifactory",
+    "environment"
+) else listOf(moduleName)
 val mysqlPrefix: String? = System.getProperty("mysqlPrefix") ?: System.getenv("mysqlPrefix")
-databaseName = if (mysqlPrefix != null && mysqlPrefix != "") {
-    println("jooq build env : $mysqlPrefix")
-    mysqlPrefix + databaseName
-} else {
-    "${project.extra["DB_PREFIX"]}$databaseName"
-}
+
 
 jooq {
     configurations {
-        create("genenrate") {
-            jooqConfiguration.apply {
-                jdbc.apply {
-                    var mysqlURL = System.getProperty("mysqlURL")
-                    var mysqlUser = System.getProperty("mysqlUser")
-                    var mysqlPasswd = System.getProperty("mysqlPasswd")
+        moduleNames.forEach { moduleNames ->
+            val databaseName = if (mysqlPrefix != null && mysqlPrefix != "") {
+                println("jooq build env : $mysqlPrefix")
+                mysqlPrefix + moduleNames
+            } else {
+                "${project.extra["DB_PREFIX"]}$moduleNames"
+            }
 
-                    if (mysqlURL == null) {
-                        mysqlURL = System.getenv("mysqlURL")
-                        mysqlUser = System.getenv("mysqlUser")
-                        mysqlPasswd = System.getenv("mysqlPasswd")
+            val taskName = if (moduleNames.length == 1) "genenrate" else "${moduleNames}Genenrate"
+
+            project.the<SourceSetContainer>()["main"].java {
+                srcDir("build/generated-src/jooq/$taskName")
+            }
+
+            create(taskName) {
+                jooqConfiguration.apply {
+                    jdbc.apply {
+                        var mysqlURL = System.getProperty("mysqlURL")
+                        var mysqlUser = System.getProperty("mysqlUser")
+                        var mysqlPasswd = System.getProperty("mysqlPasswd")
+
+                        if (mysqlURL == null) {
+                            mysqlURL = System.getenv("mysqlURL")
+                            mysqlUser = System.getenv("mysqlUser")
+                            mysqlPasswd = System.getenv("mysqlPasswd")
+                        }
+
+                        if (mysqlURL == null) {
+                            println("use default mysql database.")
+                            mysqlURL = project.extra["DB_HOST"]?.toString()
+                            mysqlUser = project.extra["DB_USERNAME"]?.toString()
+                            mysqlPasswd = project.extra["DB_PASSWORD"]?.toString()
+                        }
+
+                        driver = "com.mysql.jdbc.Driver"
+                        url = "jdbc:mysql://$mysqlURL/$databaseName?useSSL=false"
+                        user = mysqlUser
+                        password = mysqlPasswd
                     }
+                    generator.apply {
+                        name = "org.jooq.codegen.DefaultGenerator"
+                        database.apply {
+                            name = "org.jooq.meta.mysql.MySQLDatabase"
+                            inputSchema = databaseName
+                        }
 
-                    if (mysqlURL == null) {
-                        println("use default mysql database.")
-                        mysqlURL = project.extra["DB_HOST"]?.toString()
-                        mysqlUser = project.extra["DB_USERNAME"]?.toString()
-                        mysqlPasswd = project.extra["DB_PASSWORD"]?.toString()
+                        strategy.name = "org.jooq.codegen.DefaultGeneratorStrategy"
+
+                        generate.apply {
+                            isRelations = false
+                            isDeprecated = false
+                            isFluentSetters = true
+                            isGeneratedAnnotation = false
+                            isJavaTimeTypes = true
+                        }
+
+                        target.apply {
+                            packageName = "com.tencent.devops.model.$moduleNames"
+                        }
                     }
-
-                    driver = "com.mysql.jdbc.Driver"
-                    url = "jdbc:mysql://$mysqlURL/$databaseName?useSSL=false"
-                    user = mysqlUser
-                    password = mysqlPasswd
                 }
-                generator.apply {
-                    name = "org.jooq.codegen.DefaultGenerator"
-                    database.apply {
-                        name = "org.jooq.meta.mysql.MySQLDatabase"
-                        inputSchema = databaseName
-                    }
-
-                    strategy.name = "org.jooq.codegen.DefaultGeneratorStrategy"
-
-                    generate.apply {
-                        isRelations = false
-                        isDeprecated = false
-                        isFluentSetters = true
-                        isGeneratedAnnotation = false
-                        isJavaTimeTypes = true
-                    }
-
-                    target.packageName = "com.tencent.devops.model.$moduleName"
-                }
-//                tasks.getByName("generateGenenrateJooqSchemaSource").outputs.upToDateWhen {
-//                    false
-//                }
             }
         }
     }
 
+//    tasks.getByName<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>("compileKotlin") {
+//        destinationDir = File("build/generated-src")
+//    }
+
     tasks.getByName<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>("compileKotlin") {
         destinationDir = File("build/generated-src")
+        tasks.matching { it is JooqGenerate }.forEach {
+            println("#task: ${it.name} , group: ${it.group}")
+            dependsOn(it.name)
+        }
     }
+
 }
 

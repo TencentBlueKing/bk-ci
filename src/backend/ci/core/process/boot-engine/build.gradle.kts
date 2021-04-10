@@ -29,4 +29,6 @@ dependencies {
     api(project(":core:process:biz-engine"))
 }
 
-// apply from: "$rootDir/task_spring_boot_package.gradle"
+//plugins {
+//    `task-spring-boot-package`
+//}

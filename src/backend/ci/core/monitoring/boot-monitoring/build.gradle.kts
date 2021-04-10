@@ -29,4 +29,6 @@ dependencies {
     api(project(":core:monitoring:biz-monitoring-sample")) // 开源版实现
 }
 
-apply("$rootDir/task_spring_boot_package.gradle")
+plugins {
+   `task-spring-boot-package`
+}

@@ -73,7 +73,7 @@ class MarketImageVersionLogDao {
         with(TImageVersionLog.T_IMAGE_VERSION_LOG) {
             return dslContext.selectFrom(this)
                 .where(IMAGE_ID.eq(imageId))
-                .fetchOne()
+                .fetchOne()!!
         }
     }
 }

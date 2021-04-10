@@ -32,4 +32,6 @@ dependencies {
     api(project(":core:common:common-auth:common-auth-v3"))
 }
 
-apply("$rootDir/task_spring_boot_package.gradle")
+plugins {
+   `task-spring-boot-package`
+}

@@ -4,16 +4,6 @@ plugins {
 
 apply("$rootDir/detekt.gradle.kts")
 
-ext {
-    var gitDir = file("../../../.git")
-    project.extra["commit"] = if (gitDir.exists()) {
-        gitDir = file("../../../")
-        org.ajoberstar.grgit.Grgit.open(gitDir).head()
-    } else {
-        null
-    }
-}
-
 allprojects {
     // 包路径
     group = "com.tencent.bk.devops.ci"

@@ -74,7 +74,7 @@ class TemplateDao {
                     storeFlag
                 )
                 .returning(VERSION)
-                .fetchOne().version
+                .fetchOne()!!.version
         }
     }
 
@@ -126,7 +126,7 @@ class TemplateDao {
                     weight
                 )
                 .returning(VERSION)
-                .fetchOne().version
+                .fetchOne()!!.version
         }
     }
 
@@ -310,7 +310,7 @@ class TemplateDao {
                 .select(ID.countDistinct())
                 .from(this)
                 .where(conditions)
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -345,7 +345,7 @@ class TemplateDao {
                 .select(ID.countDistinct())
                 .from(this)
                 .where(conditions)
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -550,7 +550,7 @@ class TemplateDao {
                 .from(this)
                 .where(TYPE.eq(TemplateType.CONSTRAINT.name))
                 .and(SRC_TEMPLATE_ID.eq(templateId))
-                .fetchOne(0, Long::class.java) > 0
+                .fetchOne(0, Long::class.java)!! > 0
         }
     }
 
