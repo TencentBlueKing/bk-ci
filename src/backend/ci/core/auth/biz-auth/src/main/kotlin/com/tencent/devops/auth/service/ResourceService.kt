@@ -1,3 +1,31 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
+ */
+
 package com.tencent.devops.auth.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -7,13 +35,10 @@ import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
 import com.tencent.devops.auth.constant.AuthMessageCode
-import com.tencent.devops.auth.utils.ActionUtils
-import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.callback.AuthConstants.KEYWORD_MIN_SIZE
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -22,15 +47,18 @@ import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO as C
 @Service
 class ResourceService @Autowired constructor(
     val objectMapper: ObjectMapper,
-    val remoteAuthService: RemoteAuthService,
     val callbackService: CallBackService,
     val authHttpClientService: AuthHttpClientService
 ) {
 
     fun getProject(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO1 {
-        checkToken(token)
         val projectInfo = callbackService.getResource(AuthResourceType.PROJECT.value)
-        val request = authHttpClientService.buildPost(projectInfo!!.path, authHttpClientService.getJsonRequest(callBackInfo), projectInfo!!.gateway)
+        val request = authHttpClientService.buildPost(
+            path = projectInfo!!.path,
+            requestBody = authHttpClientService.getJsonRequest(callBackInfo),
+            gateway = projectInfo!!.gateway,
+            token = token
+        )
         val response = authHttpClientService.request(request, "调用回调接口失败")
         return buildResult(callBackInfo.method, response)
     }
@@ -39,7 +67,6 @@ class ResourceService @Autowired constructor(
         callBackInfo: CallbackRequestDTO,
         token: String
     ): CallbackBaseResponseDTO1? {
-        checkToken(token)
         checkoutParentType(callBackInfo.filter.parent.type)
         if (callBackInfo.method == CallbackMethodEnum.SEARCH_INSTANCE) {
             if (!checkKeyword(callBackInfo.filter.keyword)) {
@@ -49,7 +76,7 @@ class ResourceService @Autowired constructor(
         }
 
         val actionType = callBackInfo.type
-        val resourceType = findEnvNode(actionType)
+        val resourceType = actionType
 
         val resourceInfo = callbackService.getResource(resourceType)
         if (resourceInfo == null) {
@@ -57,19 +84,17 @@ class ResourceService @Autowired constructor(
             return null
         }
 
-        val request = authHttpClientService.buildPost(resourceInfo!!.path, authHttpClientService.getJsonRequest(callBackInfo), resourceInfo!!.gateway)
+        val request = authHttpClientService.buildPost(
+            path = resourceInfo!!.path,
+            requestBody = authHttpClientService.getJsonRequest(callBackInfo),
+            gateway = resourceInfo!!.gateway,
+            token = token
+        )
         val response = authHttpClientService.request(request, "调用回调接口失败")
 
         logger.info("getInstanceByResource response: $response")
 
         return buildResult(callBackInfo.method, response)
-    }
-
-    private fun checkToken(token: String) {
-        if (!remoteAuthService.checkToken(token)) {
-            logger.warn("auth callBack checkToken is fail $token")
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.TOKEN_TICKET_FAIL))
-        }
     }
 
     private fun checkoutParentType(type: String): Boolean {
@@ -84,14 +109,6 @@ class ResourceService @Autowired constructor(
             return false
         }
         return true
-    }
-
-    private fun findEnvNode(actionType: String): String {
-        return if (actionType.contains("env_node")) {
-            AuthResourceType.ENVIRONMENT_ENV_NODE.value
-        } else {
-            ActionUtils.actionType(actionType)
-        }
     }
 
     private fun buildResult(method: CallbackMethodEnum, response: String): CallbackBaseResponseDTO1 {
@@ -112,5 +129,6 @@ class ResourceService @Autowired constructor(
 
     companion object {
         val logger = LoggerFactory.getLogger(this::class.java)
+        const val DEFAULTSYSTEM = "ci"
     }
 }

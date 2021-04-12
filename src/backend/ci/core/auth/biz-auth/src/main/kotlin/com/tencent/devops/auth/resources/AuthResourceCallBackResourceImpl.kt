@@ -23,23 +23,42 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.auth
+package com.tencent.devops.auth.resources
 
-import com.tencent.devops.common.auth.service.IamEsbService
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
+import com.tencent.devops.auth.api.callback.AuthResourceCallBackResource
+import com.tencent.devops.auth.service.ResourceService
+import com.tencent.devops.common.web.RestResource
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
-@Suppress("ALL")
-@Configuration
-@ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class AuthConfiguration {
+@RestResource
+class AuthResourceCallBackResourceImpl @Autowired constructor(
+    val resourceService: ResourceService
+) : AuthResourceCallBackResource {
+    override fun projectInfo(
+        callBackInfo: CallbackRequestDTO,
+        token: String
+    ): CallbackBaseResponseDTO {
+        return resourceService.getProject(callBackInfo, token)
+    }
 
-    @Bean
-    fun iamEsbService() = IamEsbService()
+    override fun resourceList(
+        callBackInfo: CallbackRequestDTO,
+        token: String
+    ): CallbackBaseResponseDTO? {
+        logger.info("resourceList: $callBackInfo, token: $token")
+        return resourceService.getInstanceByResource(
+                callBackInfo = callBackInfo,
+                token = token
+            )
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(this::class.java)
+    }
 }

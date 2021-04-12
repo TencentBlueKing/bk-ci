@@ -1,13 +1,3 @@
-package com.tencent.devops.process.api
-
-import com.tencent.bk.sdk.iam.constants.CallbackMethodEnum
-import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
-import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.auth.ServiceProcessAuthResource
-import com.tencent.devops.process.service.AuthPipelineService
-import org.springframework.beans.factory.annotation.Autowired
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -20,12 +10,13 @@ import org.springframework.beans.factory.annotation.Autowired
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -34,25 +25,44 @@ import org.springframework.beans.factory.annotation.Autowired
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+package com.tencent.devops.process.api
+
+import com.tencent.bk.sdk.iam.constants.CallbackMethodEnum
+import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.api.auth.ServiceProcessAuthResource
+import com.tencent.devops.process.service.AuthPipelineService
+import org.springframework.beans.factory.annotation.Autowired
+
 @RestResource
 class ServiceProcessAuthResourceImpl @Autowired constructor(
     val authPipelineService: AuthPipelineService
 ) : ServiceProcessAuthResource {
 
-    override fun pipelineInfo(callBackInfo: CallbackRequestDTO): CallbackBaseResponseDTO? {
+    override fun pipelineInfo(
+        callBackInfo: CallbackRequestDTO,
+        token: String
+    ): CallbackBaseResponseDTO? {
         val method = callBackInfo.method
         val page = callBackInfo.page
         val projectId = callBackInfo.filter.parent.id
         when (method) {
             CallbackMethodEnum.LIST_INSTANCE -> {
-                return authPipelineService.getPipeline(projectId, page.offset.toInt(), page.limit.toInt())
+                return authPipelineService.getPipeline(projectId, page.offset.toInt(), page.limit.toInt(), token)
             }
             CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
                 val ids = callBackInfo.filter.idList.map { it.toString() }
-                return authPipelineService.getPipelineInfo(ids)
+                return authPipelineService.getPipelineInfo(ids, token)
             }
             CallbackMethodEnum.SEARCH_INSTANCE -> {
-                return authPipelineService.searchPipeline(projectId, callBackInfo.filter.keyword, page.offset.toInt(), page.limit.toInt())
+                return authPipelineService.searchPipeline(
+                    projectId = projectId,
+                    keyword = callBackInfo.filter.keyword,
+                    limit = page.offset.toInt(),
+                    offset = page.limit.toInt(),
+                    token = token
+                )
             }
         }
         return null

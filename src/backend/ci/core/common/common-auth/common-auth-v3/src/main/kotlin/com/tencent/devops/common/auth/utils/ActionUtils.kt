@@ -23,23 +23,21 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.auth
+package com.tencent.devops.common.auth.utils
 
-import com.tencent.devops.common.auth.service.IamEsbService
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 
-@Suppress("ALL")
-@Configuration
-@ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class AuthConfiguration {
+object ActionUtils {
 
-    @Bean
-    fun iamEsbService() = IamEsbService()
+    fun buildAction(authResourceType: AuthResourceType, permission: AuthPermission): String {
+        return if (permission == AuthPermission.LIST) {
+            "${authResourceType.value}_${AuthPermission.VIEW.value}"
+        } else {
+            "${authResourceType.value}_${permission.value}"
+        }
+    }
 }

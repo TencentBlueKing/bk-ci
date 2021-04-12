@@ -23,23 +23,31 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.auth
+package com.tencent.devops.common.auth.utils
 
-import com.tencent.devops.common.auth.service.IamEsbService
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+object StringUtils {
+    fun obj2List(str: String): List<String> {
+        val list = str.substringBefore("]").substringAfter("[").split(",")
+        val newList = mutableListOf<String>()
+        list.map {
+            newList.add(it.trim())
+        }
+        return newList
+    }
 
-@Suppress("ALL")
-@Configuration
-@ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class AuthConfiguration {
-
-    @Bean
-    fun iamEsbService() = IamEsbService()
+    fun removeAllElement(set: Set<String>): Set<String> {
+        if (set.contains("*")) {
+            val newSet = mutableSetOf<String>()
+            set.map {
+                if (it != "*") {
+                    newSet.add(it)
+                }
+                return newSet
+            }
+        }
+        return set
+    }
 }
