@@ -615,7 +615,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     override fun listSecrecyProject(): Set<String>? {
         var projectIds = redisOperation.getSetMembers(SECRECY_PROJECT_REDIS_KEY)
-        if (!projectIds.isNullOrEmpty()) {
+        if (projectIds.isNullOrEmpty()) {
             projectIds = projectDao.listSecrecyProject(dslContext)?.map { it.value1() }?.toSet()
             if (projectIds != null) {
                 redisOperation.sadd(SECRECY_PROJECT_REDIS_KEY, *projectIds.toTypedArray())
