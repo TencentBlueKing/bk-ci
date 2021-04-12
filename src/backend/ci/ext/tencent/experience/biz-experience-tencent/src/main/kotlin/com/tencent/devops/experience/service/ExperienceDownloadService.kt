@@ -287,18 +287,18 @@ class ExperienceDownloadService @Autowired constructor(
             return Pagination(false, emptyList())
         }
 
-        val experienceIds =
+        val experienceIdDownloadTimeMap =
             experienceDownloadDao.distinctExperienceIdByUserId(
                 dslContext = dslContext,
                 userId = userId,
                 limit = 10000
-            )?.map { it.value1() }?.toSet()
-        return if (null == experienceIds || experienceIds.isEmpty()) {
+            )?.map { it.value1() to it.value2() }?.toMap()
+        return if (null == experienceIdDownloadTimeMap || experienceIdDownloadTimeMap.isEmpty()) {
             Pagination(false, emptyList())
         } else {
             val experienceIdsByBundleId = experienceDao.listIdsGroupByBundleId(
                 dslContext = dslContext,
-                ids = experienceIds,
+                ids = experienceIdDownloadTimeMap.keys,
                 expireTime = LocalDateTime.now(),
                 online = true
             ).map { it.value1() }.toSet()
@@ -318,7 +318,9 @@ class ExperienceDownloadService @Autowired constructor(
                     size = it.size,
                     logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl),
                     experienceName = it.experienceName,
+                    versionTitle = it.versionTitle,
                     createTime = it.createTime.timestampmilli(),
+                    downloadTime = experienceIdDownloadTimeMap[it.id]?.timestampmilli() ?: 0,
                     bundleIdentifier = it.bundleIdentifier
                 )
             }.toList()
