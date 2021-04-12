@@ -32,7 +32,9 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.BusTypeEnum
 import com.tencent.devops.common.api.enums.TaskStatusEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
@@ -63,6 +65,7 @@ import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.atom.AtomParamReplaceInfo
+import com.tencent.devops.store.pojo.atom.AtomReplaceParamConvertRequest
 import com.tencent.devops.store.pojo.atom.AtomVersionReplaceInfo
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.PipelineAtom
@@ -657,13 +660,15 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                             (toAtomPropMap?.get(ATOM_INPUT) as? Map<String, Any>)?.map { it.key }
                         val fromAtomInputParamMap = generateFromAtomInputParamMap(element)
                         // 生成目标替换插件的输入参数
+                        val toAtomVersion = atomVersionReplaceInfo.toAtomVersion
                         val toAtomInputParamMap = generateToAtomInputParamMap(
+                            toAtomCode = toAtomCode,
+                            toAtomVersion = toAtomVersion,
                             toAtomInputParamNameList = toAtomInputParamNameList,
                             fromAtomInputParamMap = fromAtomInputParamMap,
                             paramReplaceInfoList = atomVersionReplaceInfo.paramReplaceInfoList
                         )
                         // 判断生成的目标插件参数集合是否符合要求
-                        val toAtomVersion = atomVersionReplaceInfo.toAtomVersion
                         if (toAtomInputParamNameList?.size != toAtomInputParamMap.size) {
                             val message =
                                 "bus[$busId] plugin: $fromAtomCode: ${atomVersionReplaceInfo.fromAtomVersion} " +
@@ -736,7 +741,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
     }
 
     private fun generateAtomDataMap(
-        toAtomInputParamMap: MutableMap<String, Any>,
+        toAtomInputParamMap: MutableMap<String, Any?>,
         toAtomPropMap: Map<String, Any>,
         element: Element
     ): MutableMap<String, Any> {
@@ -786,11 +791,13 @@ class PipelineAtomReplaceCronService @Autowired constructor(
     }
 
     private fun generateToAtomInputParamMap(
+        toAtomCode: String,
+        toAtomVersion: String,
         toAtomInputParamNameList: List<String>?,
         fromAtomInputParamMap: Map<String, Any>?,
         paramReplaceInfoList: List<AtomParamReplaceInfo>?
-    ): MutableMap<String, Any> {
-        val toAtomInputParamMap = mutableMapOf<String, Any>()
+    ): MutableMap<String, Any?> {
+        val toAtomInputParamMap = mutableMapOf<String, Any?>()
         toAtomInputParamNameList?.forEach { inputParamName ->
             // 如果参数名一样则从被替换插件取值
             if (fromAtomInputParamMap != null) {
@@ -802,22 +809,71 @@ class PipelineAtomReplaceCronService @Autowired constructor(
             // 如果有插件参数替换映射信息则根据映射关系替换
             run handleParamReplace@{
                 paramReplaceInfoList?.forEach { paramReplaceInfo ->
-                    val toParamName = paramReplaceInfo.toParamName
-                    if (inputParamName == toParamName) {
-                        val inputParamValue = if (paramReplaceInfo.toParamValue != null) {
-                            paramReplaceInfo.toParamValue
-                        } else {
-                            fromAtomInputParamMap?.get(paramReplaceInfo.fromParamName)
-                        }
-                        if (inputParamValue != null) {
-                            toAtomInputParamMap[inputParamName] = inputParamValue
-                        }
-                        return@handleParamReplace
-                    }
+                    if (generateToAtomInputParam(
+                            paramReplaceInfo = paramReplaceInfo,
+                            inputParamName = inputParamName,
+                            toAtomCode = toAtomCode,
+                            toAtomVersion = toAtomVersion,
+                            fromAtomInputParamMap = fromAtomInputParamMap,
+                            toAtomInputParamMap = toAtomInputParamMap
+                        )
+                    ) return@handleParamReplace
                 }
             }
         }
         return toAtomInputParamMap
+    }
+
+    private fun generateToAtomInputParam(
+        paramReplaceInfo: AtomParamReplaceInfo,
+        inputParamName: String,
+        toAtomCode: String,
+        toAtomVersion: String,
+        fromAtomInputParamMap: Map<String, Any>?,
+        toAtomInputParamMap: MutableMap<String, Any?>
+    ): Boolean {
+        val toParamName = paramReplaceInfo.toParamName
+        // 获取参数自定义转换接口路径
+        val paramConvertUrl = paramReplaceInfo.paramConvertUrl
+        if (!paramConvertUrl.isNullOrBlank() && inputParamName == paramReplaceInfo.fromParamName) {
+            // 参数自定义转换
+            val atomReplaceParamConvertRequest = AtomReplaceParamConvertRequest(
+                toAtomCode = toAtomCode,
+                toAtomVersion = toAtomVersion,
+                fromField = inputParamName,
+                fromFieldValue = fromAtomInputParamMap?.get(inputParamName),
+                toField = toParamName,
+                toFieldDefaultValue = paramReplaceInfo.toParamValue
+            )
+            val response = OkhttpUtils.doPost(paramConvertUrl, JsonUtil.toJson(atomReplaceParamConvertRequest))
+            val responseContent = response.body()!!.string()
+            if (!response.isSuccessful) {
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
+                    params = arrayOf("$inputParamName convert $toParamName fail")
+                )
+            }
+            val result = JsonUtil.to(responseContent, object : TypeReference<Result<Any?>>() {})
+            if (result.isNotOk()) {
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
+                    params = arrayOf("$inputParamName convert $toParamName fail")
+                )
+            }
+            toAtomInputParamMap[inputParamName] = result.data
+            return true
+        } else if (inputParamName == toParamName) {
+            val inputParamValue = if (paramReplaceInfo.toParamValue != null) {
+                paramReplaceInfo.toParamValue
+            } else {
+                fromAtomInputParamMap?.get(paramReplaceInfo.fromParamName)
+            }
+            if (inputParamValue != null) {
+                toAtomInputParamMap[inputParamName] = inputParamValue
+            }
+            return true
+        }
+        return false
     }
 
     private fun generateMarketBuildLessAtomElement(
