@@ -23,29 +23,19 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.dockerhost.listener
+package com.tencent.devops.common.client.consul
 
-import com.tencent.devops.dockerhost.services.DockerHostBuildAgentLessService
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessDockerShutdownEvent
-import org.slf4j.LoggerFactory
+object ConsulContent {
+    private val consulContent = ThreadLocal<String>()
 
-/**
- * 无构建环境的容器停止消息
- * @version 1.0
- */
-class BuildLessStopListener(
-    private val dockerHostBuildAgentLessService: DockerHostBuildAgentLessService
-) {
+    fun getConsulContent(): String? {
+        return consulContent.get()
+    }
 
-    private val logger = LoggerFactory.getLogger(BuildLessStopListener::class.java)
-
-    fun handleMessage(event: PipelineBuildLessDockerShutdownEvent) {
-        logger.info("[${event.buildId}]| Stop container(${event.dockerContainerId})")
-        dockerHostBuildAgentLessService.stopContainer(
-            containerId = event.dockerContainerId,
-            buildId = event.buildId
-        )
+    fun setConsulContent(consulTag: String) {
+        consulContent.set(consulTag)
     }
 }
