@@ -27,6 +27,7 @@
 package com.tencent.devops.openapi.resources.apigw.v3
 
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.consul.ConsulContent
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwProjectResourceV3
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -37,12 +38,16 @@ import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 
 @RestResource
 class ApigwProjectResourceV3Impl @Autowired constructor(private val client: Client) : ApigwProjectResourceV3 {
     companion object {
         private val logger = LoggerFactory.getLogger(ApigwProjectResourceV3Impl::class.java)
     }
+
+    @Value("\${project.route.tag:#{null}}")
+    private val projectRouteTag: String? = ""
 
     override fun create(
         appCode: String?,
@@ -52,6 +57,12 @@ class ApigwProjectResourceV3Impl @Autowired constructor(private val client: Clie
         accessToken: String?
     ): Result<Boolean> {
         logger.info("create project projectCreateInfo($projectCreateInfo) by user $userId")
+
+        // 创建项目需要指定对接的主集群。 不同集群可能共用同一个套集群
+        if (!projectRouteTag.isNullOrEmpty()) {
+            ConsulContent.setConsulContent(projectRouteTag!!)
+        }
+
         return client.get(ServiceProjectResource::class).create(
             userId = userId,
             projectCreateInfo = projectCreateInfo,
