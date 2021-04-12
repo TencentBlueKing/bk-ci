@@ -161,7 +161,10 @@ class ProjectTagService @Autowired constructor(
     }
 
     private fun checkOrg(opProjectTagUpdateDTO: OpProjectTagUpdateDTO) {
-        if (opProjectTagUpdateDTO.bgId == null && opProjectTagUpdateDTO.deptId == null && opProjectTagUpdateDTO.centerId == null) {
+        if (opProjectTagUpdateDTO.bgId == null &&
+            opProjectTagUpdateDTO.deptId == null &&
+            opProjectTagUpdateDTO.centerId == null
+        ) {
             throw ParamBlankException("Invalid project org")
         }
     }
