@@ -30,7 +30,7 @@ subprojects {
     dependencies {
         api("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
         api("org.jetbrains.kotlin:kotlin-reflect")
-        testCompile("junit:junit")
-        testCompile("org.springframework.boot:spring-boot-starter-test")
+        testImplementation("junit:junit")
+        testImplementation("org.springframework.boot:spring-boot-starter-test")
     }
 }

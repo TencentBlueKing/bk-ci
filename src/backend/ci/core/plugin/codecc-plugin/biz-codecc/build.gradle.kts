@@ -39,5 +39,5 @@ dependencies {
     api(project(":core:process:plugin-sdk"))
     api(project(":core:process:api-process"))
 
-    testCompile(project(":core:common:common-test"))
+    testImplementation(project(":core:common:common-test"))
 }

@@ -30,5 +30,5 @@ dependencies {
     api(project(":core:project:api-project-sample"))
     api(project(":core:auth:api-auth"))
     api(project(":core:artifactory:api-artifactory"))
-    testCompile(project(":core:common:common-test"))
+    testImplementation(project(":core:common:common-test"))
 }

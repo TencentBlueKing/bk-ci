@@ -28,7 +28,7 @@
 dependencies {
     api(project(":core:common:common-pipeline"))
     api(project(":core:process:plugin-sdk"))
-    testCompile(project(":core:common:common-test"))
+    testImplementation(project(":core:common:common-test"))
 }
 
 plugins {

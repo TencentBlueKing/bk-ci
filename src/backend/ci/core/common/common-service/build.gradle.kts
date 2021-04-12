@@ -36,7 +36,7 @@ dependencies {
     api("javax.servlet:javax.servlet-api")
     api("org.springframework:spring-web")
 
-    testCompile("org.springframework.boot:spring-boot-starter-test")
+    testImplementation("org.springframework.boot:spring-boot-starter-test")
 }
 
 

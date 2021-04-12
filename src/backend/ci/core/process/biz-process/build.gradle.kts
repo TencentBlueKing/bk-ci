@@ -55,5 +55,5 @@ dependencies {
     api(group = "javax.websocket", name = "javax.websocket-api", version = "1.1")
     api("io.undertow:undertow-servlet")
     api("io.undertow:undertow-websockets-jsr")
-    testCompile(project(":core:common:common-test"))
+    testImplementation(project(":core:common:common-test"))
 }
