@@ -122,10 +122,6 @@ jooq {
         }
     }
 
-//    tasks.getByName<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>("compileKotlin") {
-//        destinationDir = File("build/generated-src")
-//    }
-
     tasks.getByName<org.jetbrains.kotlin.gradle.tasks.KotlinCompile>("compileKotlin") {
         destinationDir = File("build/generated-src")
         tasks.matching { it is JooqGenerate }.forEach {
@@ -133,6 +129,4 @@ jooq {
             dependsOn(it.name)
         }
     }
-
 }
-
