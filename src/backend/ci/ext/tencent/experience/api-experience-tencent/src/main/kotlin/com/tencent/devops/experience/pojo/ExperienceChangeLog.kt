@@ -27,7 +27,6 @@
 
 package com.tencent.devops.experience.pojo
 
-import com.tencent.devops.experience.constant.ExperienceAppStatusEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -48,7 +47,7 @@ data class ExperienceChangeLog(
     @ApiModelProperty("文件大小(byte)", required = true)
     val size: Long,
     @ApiModelProperty("状态", required = true)
-    val appStatus: ExperienceAppStatusEnum,
+    val appStatus: Int,
     @ApiModelProperty("是否上次下载", required = true)
     val lastDownload: Boolean
 )

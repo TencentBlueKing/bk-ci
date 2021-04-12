@@ -309,7 +309,7 @@ class ExperienceAppService(
                 changelog = it.remark ?: "",
                 experienceName = it.experienceName,
                 size = it.size,
-                appStatus = getAppStatus(platform, installedIdLong, downloadIdLongs, it, now),
+                appStatus = getAppStatus(platform, installedIdLong, downloadIdLongs, it, now).id,
                 lastDownload = lastDownloadRecord?.lastDonwloadRecordId == it.id
             )
         }.toList()

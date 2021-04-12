@@ -1,16 +1,19 @@
 package com.tencent.devops.experience.constant
 
-enum class ExperienceAppStatusEnum {
-    UNKNOWN,
+enum class ExperienceAppStatusEnum(
+    val id: Int
+) {
+    UNKNOWN(0),
 
-    UPGRADE,
+    UPGRADE(1),
 
-    OPEN,
+    OPEN(2),
 
-    DOWNLOAD,
+    DOWNLOAD(3),
 
-    INSTALL,
+    INSTALL(4),
 
-    EXPIRE,
+    EXPIRE(5),
+
     ;
 }
