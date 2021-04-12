@@ -150,12 +150,14 @@ abstract class AbstractBuildResourceApi constructor(
     }
 
     private fun getAllHeaders(headers: Map<String, String>): Map<String, String> {
-        return when (dockerHostConfig.dockerhostGatewayProject) {
-            GRAY_PROJECT -> {
-                logger.info("Now is gray environment, request with the x-devops-project-id header.")
-                buildArgs.plus(headers).plus(mapOf(AUTH_HEADER_DEVOPS_PROJECT_ID to GRAY_PROJECT))
-            }
-            AUTO_PROJECT -> {
+
+        if (gray.isGray()) {
+            logger.info("Now is gray environment, request with the x-devops-project-id header.")
+            return buildArgs.plus(headers).plus(mapOf("x-devops-project-id" to GRAY_PROJECT))
+        }
+
+        return when (dockerHostConfig.dockerhostMode) {
+            CODECC_BUILD -> {
                 logger.info("Now is auto environment, request with the x-devops-project-id header.")
                 buildArgs.plus(headers).plus(mapOf(AUTH_HEADER_DEVOPS_PROJECT_ID to AUTO_PROJECT))
             }
