@@ -28,7 +28,6 @@
 package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.gray.MacOSGray
@@ -104,28 +103,10 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
     }
 
     override fun setRepoGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean {
-        logger.info("Set bkrepo gray project:the projectCodeList is: $projectCodeList,operateFlag is:$operateFlag")
-        for (item in projectCodeList) {
-            if (1 == operateFlag) {
-                repoGray.addGrayProject(item, redisOperation)
-//                redisOperation.addSetValue(repoGray.getRepoGrayRedisKey(), item)
-            } else if (2 == operateFlag) {
-                repoGray.removeGrayProject(item, redisOperation)
-//                redisOperation.removeSetMember(repoGray.getRepoGrayRedisKey(), item)
-            }
-        }
         return true
     }
 
     override fun setRepoNotGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean {
-        logger.info("setRepoNotGrayProject, projectCodeList: $projectCodeList, operateFlag: $operateFlag")
-        for (item in projectCodeList) {
-            if (1 == operateFlag) {
-                repoGray.addNotGrayProject(item, redisOperation)
-            } else if (2 == operateFlag) {
-                repoGray.removeNotGrayProject(item, redisOperation)
-            }
-        }
         return true
     }
 
@@ -405,7 +386,7 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
 
     private fun macosGrayProjectSet() = macosGray.grayProjectSet(redisOperation)
 
-    private fun repoGrayProjectSet() = repoGray.grayProjectSet(redisOperation)
+    private fun repoGrayProjectSet() = setOf<String>()
 
     private fun getProjectInfoResponse(projectData: TProjectRecord, grayProjectSet: Set<String>): ProjectInfoResponse {
         return ProjectInfoResponse(
