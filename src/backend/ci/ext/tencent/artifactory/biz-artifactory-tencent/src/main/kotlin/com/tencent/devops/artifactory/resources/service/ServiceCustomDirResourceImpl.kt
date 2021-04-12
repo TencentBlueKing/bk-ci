@@ -40,10 +40,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceCustomDirResourceImpl @Autowired constructor(
-    private val artifactoryCustomDirGsService: ArtifactoryCustomDirGsService,
-    private val bkRepoCustomDirGsService: BkRepoCustomDirGsService,
-    private val redisOperation: RedisOperation,
-    private val repoGray: RepoGray
+    private val bkRepoCustomDirGsService: BkRepoCustomDirGsService
 ) : ServiceCustomDirResource {
 
     override fun getGsDownloadUrl(projectId: String, fileName: String, userId: String): Result<Url> {
@@ -57,10 +54,6 @@ class ServiceCustomDirResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid userId")
         }
 
-        return if (repoGray.isGray(projectId, redisOperation)) {
-            Result(Url(bkRepoCustomDirGsService.getDownloadUrl(projectId, fileName, userId)))
-        } else {
-            Result(Url(artifactoryCustomDirGsService.getDownloadUrl(projectId, fileName, userId)))
-        }
+        return Result(Url(bkRepoCustomDirGsService.getDownloadUrl(projectId, fileName, userId)))
     }
 }

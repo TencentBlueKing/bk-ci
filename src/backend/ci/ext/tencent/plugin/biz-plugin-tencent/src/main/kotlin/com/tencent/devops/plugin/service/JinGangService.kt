@@ -30,14 +30,12 @@ package com.tencent.devops.plugin.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
-
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
@@ -54,10 +52,8 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.auth.code.VSAuthServiceCode
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.RepoGray
-import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.model.plugin.tables.TPluginJingang
 import com.tencent.devops.model.plugin.tables.TPluginJingangResult
 import com.tencent.devops.plugin.dao.JinGangAppDao
@@ -68,7 +64,6 @@ import com.tencent.devops.plugin.pojo.JinGangAppResultReponse
 import com.tencent.devops.plugin.pojo.JinGangBugCount
 import com.tencent.devops.process.api.service.ServiceJfrogResource
 import com.tencent.devops.process.api.service.ServiceMetadataResource
-import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.Property
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import okhttp3.MediaType
@@ -96,8 +91,6 @@ class JinGangService @Autowired constructor(
     private val authProjectApi: AuthProjectApi,
     private val pipelineServiceCode: PipelineAuthServiceCode,
     private val vsServiceCode: VSAuthServiceCode,
-    private val redisOperation: RedisOperation,
-    private val repoGray: RepoGray,
     private val bkRepoClient: BkRepoClient
 ) {
 
@@ -240,35 +233,18 @@ class JinGangService @Autowired constructor(
         val version = jfrogFile.meta[ARCHIVE_PROPS_APP_VERSION] ?: throw RuntimeException("no appVersion found")
         val bundleIdentifier = jfrogFile.meta[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER]
             ?: throw RuntimeException("no bundleIdentifier found")
-        val pipelineName =
-            client.get(ServiceJfrogResource::class).getPipelineNameByIds(projectId, setOf(pipelineId)).data?.get(
-                pipelineId
-            )
-                ?: throw RuntimeException("no pipeline name found for $pipelineId")
-
-        val isRepoGray = repoGray.isGray(projectId, redisOperation)
-        buildLogPrinter.addLine(
-            buildId = buildId,
-            message = "use bkrepo: $isRepoGray",
-            tag = elementId,
-            jobId = "",
-            executeCount = 1
+        val pipelineName = client.get(ServiceJfrogResource::class).getPipelineNameByIds(projectId, setOf(pipelineId))
+            .data?.get(pipelineId) ?: throw RuntimeException("no pipeline name found for $pipelineId")
+        val shareUri = bkRepoClient.createShareUri(
+            userId,
+            projectId,
+            if (isCustom) "custom" else "pipeline",
+            jfrogFile.fullPath,
+            listOf(),
+            listOf(),
+            3600 * 24
         )
-
-        val fileUrl = if (isRepoGray) {
-            val shareUri = bkRepoClient.createShareUri(
-                userId,
-                projectId,
-                if (isCustom) "custom" else "pipeline",
-                jfrogFile.fullPath,
-                listOf(),
-                listOf(),
-                3600 * 24
-            )
-            "http://$gatewayUrl/bkrepo/api/user/repository$shareUri"
-        } else {
-            getUrl(projectId, jfrogFile.path, isCustom)
-        }
+        val fileUrl = "http://$gatewayUrl/bkrepo/api/user/repository$shareUri"
         val projectInfo =
             client.get(ServiceProjectResource::class).listByProjectCode(setOf(projectId)).data?.firstOrNull()
         val ccId = projectInfo?.ccAppId ?: throw RuntimeException("no ccid found for project: $projectId")
@@ -317,7 +293,8 @@ class JinGangService @Autowired constructor(
             params.put("submituser", userId) // 邮件抄送人
             params.put("taskId", taskId.toString()) // 任务id
             params.put("is_run_kingkong_v2", if (type == 1) "3" else runType) // ios只有静态扫描
-            params.put("responseUrl", HomeHostUtil.innerApiHost() + "/plugin/api/external/jingang/app/callback") // 任务id
+            // 任务id
+            params.put("responseUrl", HomeHostUtil.innerApiHost() + "/plugin/api/external/jingang/app/callback")
             params.put("bg", getBgName(projectInfo.bgId?.toLong()))
             val json = objectMapper.writeValueAsString(params)
             logger.info("jin gang request json:>>>> $json")

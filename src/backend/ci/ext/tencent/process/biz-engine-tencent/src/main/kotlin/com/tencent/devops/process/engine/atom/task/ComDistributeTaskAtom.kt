@@ -29,17 +29,14 @@ package com.tencent.devops.process.engine.atom.task
 
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.element.ComDistributionElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.bkjob.ClearJobTempFileEvent
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
@@ -53,9 +50,6 @@ import com.tencent.devops.process.esb.JobFastPushFile
 import com.tencent.devops.process.esb.SourceIp
 import com.tencent.devops.process.util.CommonUtils
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import okhttp3.MediaType
-import okhttp3.Request
-import okhttp3.RequestBody
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang.StringUtils
 import org.slf4j.LoggerFactory
@@ -75,8 +69,6 @@ class ComDistributeTaskAtom @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val client: Client,
     private val commonConfig: CommonConfig,
-    private val redisOperation: RedisOperation,
-    private val repoGray: RepoGray,
     private val bkRepoClient: BkRepoClient
 ) : IAtomTask<ComDistributionElement> {
 
@@ -183,9 +175,6 @@ class ComDistributeTaskAtom @Autowired constructor(
         val containerId = task.containerHashId
         val executeCount = task.executeCount ?: 1
         val workspace = java.nio.file.Files.createTempDirectory("${DigestUtils.md5Hex("$buildId-$taskId")}_").toFile()
-        val isRepoGray = repoGray.isGray(projectId, redisOperation)
-        buildLogPrinter.addLine(buildId, "use bkrepo: $isRepoGray", taskId, containerId, executeCount)
-
         val localFileList = mutableListOf<String>()
         val appId = client.get(ServiceProjectResource::class).get(task.projectId).data?.ccAppId?.toInt()
             ?: run {
@@ -203,53 +192,21 @@ class ComDistributeTaskAtom @Autowired constructor(
             val targetPathStr = parseVariable(param.targetPath, runVariables)
 
             regexPathsStr.split(",").forEach { regex ->
-                if (isRepoGray) {
-                    val fileList = bkRepoClient.matchBkRepoFile(userId, regex, projectId, pipelineId, buildId, isCustom)
-                    val repoName = if (isCustom) "custom" else "pipeline"
-                    fileList.forEach { bkrepoFile ->
-                        buildLogPrinter.addLine(buildId, "匹配到文件：(${bkrepoFile.displayPath})", taskId, containerId, executeCount)
-                        count++
-                        val destFile = File(workspace, File(bkrepoFile.displayPath).name)
-                        bkRepoClient.downloadFile(userId, projectId, repoName, bkrepoFile.fullPath, destFile)
-                        localFileList.add(destFile.absolutePath)
-                        logger.info("save file : ${destFile.canonicalPath} (${destFile.length()})")
-                    }
-                } else {
-                    val requestBody = getRequestBody(regex.trim(), isCustom)
-                    buildLogPrinter.addLine(
-                        buildId,
-                        "requestBody:" + requestBody.removePrefix("items.find(").removeSuffix(")"),
-                        taskId,
-                        containerId,
-                        executeCount
-                    )
-
-                    val searchUrl = "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}/jfrog/api/service/search/aql"
-                    val request = Request.Builder()
-                        .url(searchUrl)
-                        .post(RequestBody.create(MediaType.parse("text/plain; charset=utf-8"), requestBody))
-                        .build()
-
-                    OkhttpUtils.doHttp(request).use { response ->
-                        val body = response.body()!!.string()
-
-                        val results = praser.parse(body).asJsonObject["results"].asJsonArray
-                        for (i in 0 until results.size()) {
-                            count++
-                            val obj = results[i].asJsonObject
-                            val path = getPath(obj["path"].asString, obj["name"].asString, isCustom)
-                            val url = getUrl(path, isCustom)
-
-                            val destFile = File(workspace, obj["name"].asString)
-                            OkhttpUtils.downloadFile(url, destFile)
-                            localFileList.add(destFile.absolutePath)
-                            logger.info("save file : ${destFile.canonicalPath} (${destFile.length()})")
-                        }
-                    }
+                val fileList = bkRepoClient.matchBkRepoFile(userId, regex, projectId, pipelineId, buildId, isCustom)
+                val repoName = if (isCustom) "custom" else "pipeline"
+                fileList.forEach { bkrepoFile ->
+                    buildLogPrinter.addLine(buildId, "匹配到文件：(${bkrepoFile.displayPath})", taskId, containerId,
+                        executeCount)
+                    count++
+                    val destFile = File(workspace, File(bkrepoFile.displayPath).name)
+                    bkRepoClient.downloadFile(userId, projectId, repoName, bkrepoFile.fullPath, destFile)
+                    localFileList.add(destFile.absolutePath)
+                    logger.info("save file : ${destFile.canonicalPath} (${destFile.length()})")
                 }
             }
 
-            buildLogPrinter.addLine(buildId, "$count 个文件将被分发/$count file(s) will be distribute...", taskId, containerId, executeCount)
+            buildLogPrinter.addLine(buildId, "$count 个文件将被分发/$count file(s) will be distribute...", taskId,
+                containerId, executeCount)
             if (count == 0) {
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
@@ -342,27 +299,6 @@ class ComDistributeTaskAtom @Autowired constructor(
         }
     }
 
-    private fun getRequestBody(regex: String, isCustom: Boolean): String {
-        val pathPair = getPathPair(regex)
-        val parent = pathPair["parent"]
-        val child = pathPair["child"]
-        return if (isCustom) {
-            val path = Paths.get("bk-custom/$projectId$parent").normalize().toString()
-            "items.find(\n" +
-                "    {\n" +
-                "        \"repo\":{\"\$eq\":\"generic-local\"}, \"path\":{\"\$eq\":\"$path\"}, \"name\":{\"\$match\":\"$child\"}\n" +
-                "    }\n" +
-                ")"
-        } else {
-            val path = Paths.get("bk-archive/$projectId/$pipelineId/$buildId$parent").normalize().toString()
-            "items.find(\n" +
-                "    {\n" +
-                "        \"repo\":{\"\$eq\":\"generic-local\"}, \"path\":{\"\$eq\":\"$path\"}, \"name\":{\"\$match\":\"$child\"}\n" +
-                "    }\n" +
-                ")"
-        }
-    }
-
     private fun clearTempFile(task: PipelineBuildTask) {
         val starter = task.starter
         val buildId = task.buildId
@@ -400,24 +336,6 @@ class ComDistributeTaskAtom @Autowired constructor(
         val f = File(regex)
         return if (f.parent.isNullOrBlank()) mapOf("parent" to "", "child" to regex)
         else mapOf("parent" to "/" + f.parent, "child" to f.name)
-    }
-
-    // 处理jfrog传回的路径
-    private fun getPath(path: String, name: String, isCustom: Boolean): String {
-        return if (isCustom) {
-            path.substring(path.indexOf("/") + 1).removePrefix("/$projectId") + "/" + name
-        } else {
-            path.substring(path.indexOf("/") + 1).removePrefix("/$projectId/$pipelineId/$buildId") + "/" + name
-        }
-    }
-
-    // 获取jfrog传回的url
-    private fun getUrl(realPath: String, isCustom: Boolean): String {
-        return if (isCustom) {
-            "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}/jfrog/storage/service/custom/$realPath"
-        } else {
-            "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}/jfrog/storage/service/archive/$realPath"
-        }
     }
 
     companion object {

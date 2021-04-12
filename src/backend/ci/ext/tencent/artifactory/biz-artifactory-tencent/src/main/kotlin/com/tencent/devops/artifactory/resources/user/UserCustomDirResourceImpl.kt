@@ -45,69 +45,41 @@ import java.io.InputStream
 
 @RestResource
 class UserCustomDirResourceImpl @Autowired constructor(
-    val artifactoryCustomDirService: ArtifactoryCustomDirService,
     val bkRepoCustomDirService: BkRepoCustomDirService,
-    val redisOperation: RedisOperation,
-    val repoGray: RepoGray
 ) : UserCustomDirResource {
     override fun deploy(userId: String, projectId: String, path: String, inputStream: InputStream, disposition: FormDataContentDisposition): Result<Boolean> {
         checkParam(userId, projectId, path)
-        if (repoGray.isGray(projectId, redisOperation)) {
-            bkRepoCustomDirService.deploy(userId, projectId, path, inputStream, disposition)
-        } else {
-            artifactoryCustomDirService.deploy(userId, projectId, path, inputStream, disposition)
-        }
-
+        bkRepoCustomDirService.deploy(userId, projectId, path, inputStream, disposition)
         return Result(true)
     }
 
     override fun mkdir(userId: String, projectId: String, path: String): Result<Boolean> {
         checkParam(userId, projectId, path)
-        if (repoGray.isGray(projectId, redisOperation)) {
-            bkRepoCustomDirService.mkdir(userId, projectId, path)
-        } else {
-            artifactoryCustomDirService.mkdir(userId, projectId, path)
-        }
+        bkRepoCustomDirService.mkdir(userId, projectId, path)
         return Result(true)
     }
 
     override fun rename(userId: String, projectId: String, pathPair: PathPair): Result<Boolean> {
         checkParam(userId, projectId)
-        if (repoGray.isGray(projectId, redisOperation)) {
-            bkRepoCustomDirService.rename(userId, projectId, pathPair.srcPath, pathPair.destPath)
-        } else {
-            artifactoryCustomDirService.rename(userId, projectId, pathPair.srcPath, pathPair.destPath)
-        }
+        bkRepoCustomDirService.rename(userId, projectId, pathPair.srcPath, pathPair.destPath)
         return Result(true)
     }
 
     override fun copy(userId: String, projectId: String, combinationPath: CombinationPath): Result<Boolean> {
         checkParam(userId, projectId)
-        if (repoGray.isGray(projectId, redisOperation)) {
-            bkRepoCustomDirService.copy(userId, projectId, combinationPath)
-        } else {
-            artifactoryCustomDirService.copy(userId, projectId, combinationPath)
-        }
+        bkRepoCustomDirService.copy(userId, projectId, combinationPath)
         return Result(true)
     }
 
     override fun move(userId: String, projectId: String, combinationPath: CombinationPath): Result<Boolean> {
         checkParam(userId, projectId)
-        if (repoGray.isGray(projectId, redisOperation)) {
-            bkRepoCustomDirService.move(userId, projectId, combinationPath)
-        } else {
-            artifactoryCustomDirService.move(userId, projectId, combinationPath)
-        }
+        bkRepoCustomDirService.move(userId, projectId, combinationPath)
         return Result(true)
     }
 
     override fun delete(userId: String, projectId: String, pathList: PathList): Result<Boolean> {
         checkParam(userId, projectId)
-        if (repoGray.isGray(projectId, redisOperation)) {
-            bkRepoCustomDirService.delete(userId, projectId, pathList)
-        } else {
-            artifactoryCustomDirService.delete(userId, projectId, pathList)
-        }
+        bkRepoCustomDirService.delete(userId, projectId, pathList)
         return Result(true)
     }
 
