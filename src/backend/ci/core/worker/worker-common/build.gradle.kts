@@ -52,4 +52,6 @@ configurations.forEach {
     it.exclude("org.springframework.boot", "spring-boot-starter-log4j2")
 }
 
-//apply("$rootDir/task_deploy_to_maven.gradle.kts")
+plugins {
+    `task-deploy-to-maven`
+}

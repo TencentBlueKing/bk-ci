@@ -1,5 +1,3 @@
-import java.net.URI
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -27,24 +25,29 @@ import java.net.URI
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-apply(plugin = "kotlin")
-apply(plugin = "maven")
-apply(plugin = "kotlin-spring")
-apply(plugin = "maven-publish")
-apply(plugin = "signing")
+import java.net.URI
+
+plugins {
+    kotlin
+    maven
+    `kotlin-spring`
+    `maven-publish`
+    signing
+}
 
 val sourceJar = tasks.register<Jar>("sourceJar") {
-    archiveClassifier.set("source")
-    from(project.the<SourceSetContainer>()["main"].java.srcDirs("src/main/java", "src/main/kotlin"))
+    archiveClassifier.set("sources")
+    from(project.the<SourceSetContainer>()["main"].allSource)
 }
 
 val javadocJar = tasks.register<Jar>("javadocJar") {
-    dependsOn("javadoc")
+    val javadoc = tasks.getByName("javadoc")
+    dependsOn(javadoc)
     archiveClassifier.set("javadoc")
-    from(tasks["javadoc"])
+    from(javadoc)
 }
 
-tasks.withType<Javadoc> {
+tasks.getByName<Javadoc>("javadoc") {
     description = "javadoc for bk-ci"
     val options: StandardJavadocDocletOptions = options as StandardJavadocDocletOptions
     options.memberLevel = JavadocMemberLevel.PROTECTED
@@ -60,10 +63,10 @@ tasks.withType<Javadoc> {
     options.charSet = "UTF-8"
 }
 
-configure<PublishingExtension> {
+publishing {
     publications {
-        create("mavenJava", MavenPublication::class.java) {
-            from(components.findByName("java"))
+        create<MavenPublication>("mavenJava") {
+            from(components["java"])
 
             artifact(sourceJar)
             artifact(javadocJar)
@@ -171,8 +174,8 @@ configure<PublishingExtension> {
     }
 }
 
-configure<SigningExtension> {
-    sign(convention.getByType(PublishingExtension::class.java).publications.getByName("mavenJava"))
+signing {
+    sign(publishing.publications["mavenJava"])
 }
 
 tasks.getByName("publish") {
@@ -217,12 +220,13 @@ tasks.getByName("signMavenJavaPublication") {
     }
 }
 
+val api by project.configurations
 dependencies {
-    "api"("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
-    "api"("org.jetbrains.kotlin:kotlin-reflect")
+    api("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+    api("org.jetbrains.kotlin:kotlin-reflect")
 }
 
-task<Upload>("uploadArchives") {
+tasks.getByName<Upload>("uploadArchives") {
     var mavenRepoDeployUrl: String? = System.getProperty("mavenRepoDeployUrl")
     var mavenRepoUsername = System.getProperty("mavenRepoUsername")
     var mavenRepoPassword = System.getProperty("mavenRepoPassword")
@@ -277,9 +281,7 @@ task<Upload>("uploadArchives") {
             }
         }
     }
-}
 
-tasks.getByName("uploadArchives") {
     onlyIf {
         project.the<SourceSetContainer>()["main"].allSource.files.isNotEmpty()
     }
@@ -290,4 +292,3 @@ tasks.getByName("install") {
         project.the<SourceSetContainer>()["main"].allSource.files.isNotEmpty()
     }
 }
-

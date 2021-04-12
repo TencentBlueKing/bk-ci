@@ -27,5 +27,5 @@
 
 subprojects {
     group = "com.tencent.bk.devops.ci.common"
-    //apply("$rootDir/task_deploy_to_maven.gradle.kts")
+    apply(plugin = "task-deploy-to-maven")
 }

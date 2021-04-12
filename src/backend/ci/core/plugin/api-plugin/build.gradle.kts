@@ -31,4 +31,6 @@ dependencies {
     api(project(":core:common:common-event"))
 }
 
-//apply("$rootDir/task_deploy_to_maven.gradle.kts")
+plugins {
+    `task-deploy-to-maven`
+}

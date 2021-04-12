@@ -29,4 +29,6 @@ dependencies {
     api(project(":core:plugin:codecc-plugin:common-codecc"))
 }
 
-//apply("$rootDir/task_deploy_to_maven.gradle.kts")
+plugins {
+    `task-deploy-to-maven`
+}

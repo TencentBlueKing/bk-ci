@@ -1,3 +1,5 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -26,14 +28,59 @@
  */
 
 plugins {
-    `task-shadow-jar`
+    kotlin
+    id("com.github.johnrengelman.shadow")
+    application
 }
 
-application.mainClassName = "com.tencent.devops.agent.ApplicationKt"
+tasks {
+    getByName<Jar>("jar") {
+        from("src/main/resources") {
+            include("*.*")
+        }
 
-dependencies {
-    api(project(":core:worker:worker-common"))
-    api(project(":core:worker:worker-api-sdk"))
+        manifest {
+            "WorkerAgent-Version" to project.version
+        }
+    }
 
-    api(project(":core:plugin:codecc-plugin:worker-plugin-codecc"))
+    named<ShadowJar>("shadowJar") {
+        mergeServiceFiles()
+        destinationDirectory.set(File("${rootDir}/release"))
+        archiveClassifier.set("")
+        archiveVersion.set("")
+        isZip64 = true
+    }
+
+    getByName("installDist") {
+        enabled = false
+    }
 }
+
+
+//apply plugin: "kotlin"
+//apply plugin: "com.github.johnrengelman.shadow"
+//apply plugin: "application"
+//
+//jar {
+//    from("src/main/resources") {
+//        include "*.*"
+//    }
+//    manifest {
+//        attributes(
+//           'WorkerAgent-Version':version
+//        )
+//    }
+//}
+//
+//shadowJar {
+//
+//    mergeServiceFiles()
+//
+//    destinationDirectory = file("${rootDir}/release")
+//    archiveClassifier.set('')
+//    archiveVersion.set('')
+//    zip64 true
+//}
+//
+//installDist.enabled = false

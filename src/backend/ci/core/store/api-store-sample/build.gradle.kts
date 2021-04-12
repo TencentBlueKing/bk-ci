@@ -29,4 +29,6 @@ dependencies {
     api(project(":core:store:api-store"))
 }
 
-//apply("$rootDir/task_deploy_to_maven.gradle.kts")
+plugins {
+    `task-deploy-to-maven`
+}
