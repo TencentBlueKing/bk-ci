@@ -162,7 +162,6 @@ abstract class AbstractBuildResourceApi constructor(
                 buildArgs.plus(headers).plus(mapOf(AUTH_HEADER_DEVOPS_PROJECT_ID to AUTO_PROJECT))
             }
             else -> {
-                logger.info("============= buildArgs: $buildArgs")
                 buildArgs.plus(headers)
             }
         }
