@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.gray.Gray
-import com.tencent.devops.dispatch.docker.pojo.DockerHostInfo
 import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.utils.CommonUtils
@@ -53,98 +52,17 @@ class DockerHostBuildResourceApi constructor(
 ) : AbstractBuildResourceApi(dockerHostConfig, gray) {
     private val logger = LoggerFactory.getLogger(DockerHostBuildResourceApi::class.java)
 
-/*    fun startBuild(hostTag: String): Result<DockerHostBuildInfo>? {
-        val path = "/${getUrlPrefix()}/api/dockerhost/startBuild?hostTag=$hostTag"
-        val request = buildPost(path)
-
-        OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
-            if (!response.isSuccessful) {
-                logger.error("DockerHostBuildResourceApi $path fail. $responseContent")
-                throw TaskExecuteException(
-                    errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
-                    errorType = ErrorType.SYSTEM,
-                    errorMsg = "DockerHostBuildResourceApi $path fail"
-                )
-            }
-            return objectMapper.readValue(responseContent)
-        }
-    }
-
-    fun reportContainerId(buildId: String, vmSeqId: Int, containerId: String): Result<Boolean>? {
-        val path = "/${getUrlPrefix()}/api/dockerhost/containerId" +
-            "?buildId=$buildId&vmSeqId=$vmSeqId&containerId=$containerId"
-        val request = buildPost(path)
-
-        OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
-            if (!response.isSuccessful) {
-                logger.error("AgentThirdPartyAgentResourceApi $path fail. $responseContent")
-                throw TaskExecuteException(
-                    errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
-                    errorType = ErrorType.SYSTEM,
-                    errorMsg = "AgentThirdPartyAgentResourceApi $path fail")
-            }
-            return objectMapper.readValue(responseContent)
-        }
-    }
-
-    fun endBuild(hostTag: String): Result<DockerHostBuildInfo>? {
-        val path = "/${getUrlPrefix()}/api/dockerhost/endBuild?hostTag=$hostTag"
-        val request = buildPost(path)
-
-        OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
-            if (!response.isSuccessful) {
-                logger.error("DockerHostBuildResourceApi $path fail. $responseContent")
-                throw TaskExecuteException(
-                    errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
-                    errorType = ErrorType.SYSTEM,
-                    errorMsg = "DockerHostBuildResourceApi $path fail")
-            }
-            return objectMapper.readValue(responseContent)
-        }
-    }
-
-    fun rollbackBuild(buildId: String, vmSeqId: Int, shutdown: Boolean): Result<Boolean>? {
-        val path = "/${getUrlPrefix()}/api/dockerhost/rollbackBuild" +
-            "?buildId=$buildId&vmSeqId=$vmSeqId&shutdown=$shutdown"
-        val request = buildPost(path)
-
-        OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
-            if (!response.isSuccessful) {
-                logger.error("DockerHostBuildResourceApi $path fail. $responseContent")
-                throw TaskExecuteException(
-                    errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
-                    errorType = ErrorType.SYSTEM,
-                    errorMsg = "DockerHostBuildResourceApi $path fail")
-            }
-            return objectMapper.readValue(responseContent)
-        }
-    }
-*/
-    fun getHost(hostTag: String): Result<DockerHostInfo>? {
-        val path = "/${getUrlPrefix()}/api/dockerhost/host?hostTag=$hostTag"
-        val request = buildGet(path)
-
-        OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
-            if (!response.isSuccessful) {
-                logger.error("DockerHostBuildResourceApi $path fail. $responseContent")
-                throw TaskExecuteException(
-                    errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
-                    errorType = ErrorType.SYSTEM,
-                    errorMsg = "DockerHostBuildResourceApi $path fail")
-            }
-            return objectMapper.readValue(responseContent)
-        }
-    }
-
-    fun postLog(buildId: String, red: Boolean, message: String, tag: String? = "", jobId: String? = "") {
+    fun postLog(
+        buildId: String,
+        red: Boolean,
+        message: String,
+        tag: String? = "",
+        jobId: String? = ""
+    ) {
         try {
             val path = "/${getUrlPrefix()}/api/dockerhost/postlog?buildId=$buildId&red=$red&tag=$tag&jobId=$jobId"
-            val request = buildPost(path = path,
+            val request = buildPost(
+                path = path,
                 requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), message)
             )
 

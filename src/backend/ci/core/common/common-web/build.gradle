@@ -31,6 +31,7 @@ dependencies {
     compile project(":core:common:common-api")
     compile project(":core:common:common-service")
     compile project(":core:common:common-security")
+    compile project(":core:common:common-client")
     compile "org.springframework.boot:spring-boot-starter-jersey"
     compile "org.springframework.boot:spring-boot-starter-undertow"
     compile "org.springframework.boot:spring-boot-starter-web"

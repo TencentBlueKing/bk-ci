@@ -23,35 +23,36 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.dockerhost.listener
+package com.tencent.devops.common.client.consul
 
-import com.tencent.devops.dockerhost.exception.ContainerException
-import com.tencent.devops.dockerhost.services.DockerHostBuildAgentLessService
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessDockerStartupEvent
-import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Component
+import javax.servlet.Filter
+import javax.servlet.FilterChain
+import javax.servlet.FilterConfig
+import javax.servlet.ServletRequest
+import javax.servlet.ServletResponse
+import javax.servlet.http.HttpServletRequest
 
-/**
- * 无构建环境的容器启动消息
- * @version 1.0
- */
-class BuildLessStartListener(
-    private val dockerHostBuildAgentLessService: DockerHostBuildAgentLessService
-) {
-    private val logger = LoggerFactory.getLogger(BuildLessStartListener::class.java)
+@Component
+class ConsulFilter : Filter {
 
-    fun handleMessage(event: PipelineBuildLessDockerStartupEvent) {
+    override fun init(p0: FilterConfig?) {
+        return
+    }
 
-        logger.info("[${event.buildId}]|Create container, event: $event")
-
-        val containerId = try {
-            dockerHostBuildAgentLessService.createContainer(event)
-        } catch (e: ContainerException) {
-            logger.error("[${event.buildId}]|Create_container_failed|rollback_build|vmSeqId=${event.vmSeqId}")
-            return
+    override fun doFilter(request: ServletRequest?, response: ServletResponse?, chain: FilterChain?) {
+        val httpServletRequest = request as HttpServletRequest
+        val consulTag = httpServletRequest?.getHeader(ConsulConstants.HEAD_CONSUL_TAG)
+        if (consulTag != null) {
+            ConsulContent.setConsulContent(consulTag)
         }
-        logger.info("[${event.buildId}]|Create container=$containerId")
-        dockerHostBuildAgentLessService.reportContainerId(event.buildId, event.vmSeqId, containerId)
+        chain?.doFilter(request, response)
+    }
+
+    override fun destroy() {
+        return
     }
 }
