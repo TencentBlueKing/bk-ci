@@ -123,7 +123,7 @@
                                     <a class="view-pipeline disabled" v-if="!showPreview && (activeTemp.isInstall || isActiveTempEmpty)">{{ $t('newlist.tempDetail') }}</a>
                                 </div></template>
 
-                            <section v-if="isActiveTempEmpty" class="choose-tips">
+                            <section v-show="isActiveTempEmpty" class="choose-tips">
                                 <logo size="20" name="finger-left" style="fill:#3c96ff" />
                                 <span>{{ $t('newlist.tempDetail') }}</span>
                             </section>
