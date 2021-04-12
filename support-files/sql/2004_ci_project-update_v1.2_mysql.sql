@@ -26,7 +26,7 @@ BEGIN
                       WHERE TABLE_SCHEMA = db
                         AND TABLE_NAME = 'T_PROJECT'
                         AND COLUMN_NAME = 'router_tag') THEN
-        ALTER TABLE T_PIPELINE_BUILD_HISTORY
+        ALTER TABLE T_PROJECT
             ADD COLUMN `router_tag` VARCHAR(32);
     END IF;
 
