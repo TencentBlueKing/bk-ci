@@ -187,12 +187,6 @@ class DockerHostConfig {
     @Value("\${dockerhost.mode:#{null}}")
     var dockerhostMode: String? = null
 
-    /**
-     * dockerhost部署环境网关路由，目前有gray，auto，prod
-     */
-    @Value("\${dockerhost.dockerhostGatewayProject:}")
-    var dockerhostGatewayProject: String = ""
-
     @Value("\${dockerhost.localIp:#{null}}")
     var dockerhostLocalIp: String? = null
 
