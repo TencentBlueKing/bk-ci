@@ -28,6 +28,7 @@
 
 package com.tencent.devops.auth.resources
 
+import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
 import com.tencent.devops.auth.api.user.UserProjectRoleResource
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.common.api.pojo.Result
@@ -42,7 +43,7 @@ class UserProjectRoleResourceImpl @Autowired constructor(
         TODO("Not yet implemented")
     }
 
-    override fun updateProjectRole(userId: String, projectCode: String, roleId: String): Result<Boolean> {
+    override fun updateProjectRole(userId: String, projectCode: String, roleId: String, groupInfo: ManagerRoleGroup): Result<Boolean> {
         TODO("Not yet implemented")
     }
 

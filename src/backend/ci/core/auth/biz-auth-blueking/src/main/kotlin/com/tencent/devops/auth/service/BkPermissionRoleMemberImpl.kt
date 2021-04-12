@@ -26,10 +26,18 @@
  *
  */
 
-package com.tencent.devops.auth.pojo.dto
+package com.tencent.devops.auth.service
 
-data class ProjectRoleDTO(
-    val name: String,
-    val description: String,
-    val defaultGroup: Boolean ?= true
-)
+class BkPermissionRoleMemberImpl: PermissionRoleMemberService {
+    override fun createRoleMember(userId: String, projectCode: String, roleId: String, members: List<String>) {
+        return
+    }
+
+    override fun deleteRoleMember(userId: String, projectCode: String, roleId: String, members: List<String>) {
+        return
+    }
+
+    override fun getRoleMember(projectCode: String, roleId: String): List<String> {
+        return emptyList()
+    }
+}

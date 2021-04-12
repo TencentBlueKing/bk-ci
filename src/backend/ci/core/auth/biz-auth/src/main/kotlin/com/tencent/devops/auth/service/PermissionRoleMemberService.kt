@@ -26,10 +26,12 @@
  *
  */
 
-package com.tencent.devops.auth.pojo.dto
+package com.tencent.devops.auth.service
 
-data class ProjectRoleDTO(
-    val name: String,
-    val description: String,
-    val defaultGroup: Boolean ?= true
-)
+interface PermissionRoleMemberService {
+    fun createRoleMember(userId: String, projectCode: String, roleId: String, members: List<String>)
+
+    fun deleteRoleMember(userId: String, projectCode: String, roleId: String, members: List<String>)
+
+    fun getRoleMember(projectCode: String, roleId: String): List<String>
+}

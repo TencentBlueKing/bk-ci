@@ -26,10 +26,15 @@
  *
  */
 
-package com.tencent.devops.auth.pojo.dto
+package com.tencent.devops.auth.service
 
-data class ProjectRoleDTO(
-    val name: String,
-    val description: String,
-    val defaultGroup: Boolean ?= true
-)
+import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
+import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
+
+interface PermissionRoleService {
+    fun createPermissionRole(userId: String, projectCode: String, groupInfo: ProjectRoleDTO): Boolean
+
+    fun renamePermissionRole(userId: String, projectCode: String, roleId: String, groupInfo: ManagerRoleGroup)
+
+    fun getPermissionRole(projectCode: String): List<ManagerRoleGroup>
+}
