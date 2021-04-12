@@ -53,7 +53,7 @@ class DefaultOpProjectServiceImpl @Autowired constructor(
     private val projectDao: ProjectDao,
     private val projectLabelRelDao: ProjectLabelRelDao,
     private val projectDispatcher: ProjectDispatcher,
-    redisOperation: RedisOperation,
+    private val redisOperation: RedisOperation,
     gray: Gray,
     repoGray: RepoGray,
     macosGray: MacOSGray

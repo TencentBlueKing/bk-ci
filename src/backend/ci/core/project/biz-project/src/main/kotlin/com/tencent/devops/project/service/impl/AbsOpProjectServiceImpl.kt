@@ -60,7 +60,7 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectDao: ProjectDao,
     private val projectLabelRelDao: ProjectLabelRelDao,
-    val redisOperation: RedisOperation,
+    private val redisOperation: RedisOperation,
     private val gray: Gray,
     private val repoGray: RepoGray,
     private val macosGray: MacOSGray,
