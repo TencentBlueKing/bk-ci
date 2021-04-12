@@ -92,8 +92,10 @@ abstract class AbstractDockerHostBuildService constructor(
         } catch (e: NotModifiedException) {
             logger.error("[$buildId]| Stop the container failed, containerId: $containerId already stopped.")
         } catch (ignored: Throwable) {
-            logger.error("[$buildId]| Stop the container failed, containerId: $containerId, " +
-                    "error msg: $ignored", ignored)
+            logger.error(
+                "[$buildId]| Stop the container failed, containerId: $containerId, " +
+                        "error msg: $ignored", ignored
+            )
         }
 
         try {
@@ -116,7 +118,8 @@ abstract class AbstractDockerHostBuildService constructor(
         red: Boolean,
         message: String,
         tag: String?,
-        containerHashId: String?) {
+        containerHashId: String?
+    ) {
         logger.info("write log to dispatch, buildId: $buildId, message: $message")
         try {
             dockerHostBuildApi.postLog(
