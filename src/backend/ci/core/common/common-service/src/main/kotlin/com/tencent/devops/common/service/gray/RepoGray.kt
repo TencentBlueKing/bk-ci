@@ -27,56 +27,16 @@
 
 package com.tencent.devops.common.service.gray
 
-import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.redis.RedisOperation
-import org.slf4j.LoggerFactory
-import java.util.concurrent.TimeUnit
 
 class RepoGray {
-    companion object {
-        private val logger = LoggerFactory.getLogger(RepoGray::class.java)
+    fun addGrayProject(projectId: String, redisOperation: RedisOperation) {}
 
-        private const val REPO_GREY_KEY = "project:setting:repoGray"
-        private const val REPO_NOT_GRAY_KEY = "project:setting:repoNotGray"
-        private const val REPO_DEFAULT_GREY_KEY = "project:setting:repoGrayDefault"
-    }
+    fun removeGrayProject(projectId: String, redisOperation: RedisOperation) {}
 
-    private val cache = CacheBuilder.newBuilder()
-        .maximumSize(10)
-        .expireAfterWrite(30, TimeUnit.SECONDS)
-        .build<String/*Redis Keys*/, Set<String>/*Project Names*/>()
+    fun addNotGrayProject(projectId: String, redisOperation: RedisOperation) {}
 
-    fun addGrayProject(projectId: String, redisOperation: RedisOperation) {
-        redisOperation.addSetValue(REPO_GREY_KEY, projectId)
-        try {
-            cache.invalidate(REPO_GREY_KEY)
-        } catch (ignored: Exception) {
-        }
-    }
-
-    fun removeGrayProject(projectId: String, redisOperation: RedisOperation) {
-        redisOperation.removeSetMember(REPO_GREY_KEY, projectId)
-        try {
-            cache.invalidate(REPO_GREY_KEY)
-        } catch (ignored: Exception) {
-        }
-    }
-
-    fun addNotGrayProject(projectId: String, redisOperation: RedisOperation) {
-        redisOperation.addSetValue(REPO_NOT_GRAY_KEY, projectId)
-        try {
-            cache.invalidate(REPO_NOT_GRAY_KEY)
-        } catch (ignored: Exception) {
-        }
-    }
-
-    fun removeNotGrayProject(projectId: String, redisOperation: RedisOperation) {
-        redisOperation.removeSetMember(REPO_NOT_GRAY_KEY, projectId)
-        try {
-            cache.invalidate(REPO_NOT_GRAY_KEY)
-        } catch (ignored: Exception) {
-        }
-    }
+    fun removeNotGrayProject(projectId: String, redisOperation: RedisOperation) {}
 
     fun isGray(projectId: String, redisOperation: RedisOperation): Boolean {
         return when {
@@ -86,27 +46,5 @@ class RepoGray {
         }
     }
 
-    fun grayProjectSet(redisOperation: RedisOperation) =
-        (redisOperation.getSetMembers(REPO_GREY_KEY) ?: emptySet()).filter { !it.isBlank() }.toSet()
-
-    private fun defaultGray(redisOperation: RedisOperation): Boolean {
-        return redisOperation.get(REPO_DEFAULT_GREY_KEY) == "true"
-    }
-
-    private fun getProjects(redisKey: String, redisOperation: RedisOperation): Set<String> {
-        var value = cache.getIfPresent(redisKey)
-        if (value != null) {
-            return value
-        }
-        synchronized(this) {
-            value = cache.getIfPresent(redisKey)
-            if (value != null) {
-                return value!!
-            }
-            logger.info("refresh $redisKey from redis")
-            value = redisOperation.getSetMembers(redisKey) ?: emptySet()
-            cache.put(redisKey, value)
-        }
-        return value!!
-    }
+    fun grayProjectSet(redisOperation: RedisOperation) = setOf<String>()
 }
