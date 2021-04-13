@@ -135,5 +135,6 @@ class OpThirdPartyAgentResourceImpl @Autowired constructor(
 
     override fun updatePipelineRef(userId: String, projectId: String, pipelineId: String): Result<Boolean> {
         agentPipelineService.updatePipelineRef(userId, projectId, pipelineId)
+        return Result(true)
     }
 }
