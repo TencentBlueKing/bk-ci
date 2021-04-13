@@ -358,7 +358,17 @@ class ExperienceAppService(
                 }
             }
         } else {
-            ExperienceAppStatusEnum.DOWNLOAD
+            when {
+                record.endDate.isBefore(now) -> {
+                    ExperienceAppStatusEnum.EXPIRE
+                }
+                record.id > installedIdLong -> {
+                    ExperienceAppStatusEnum.UPGRADE
+                }
+                else -> {
+                    ExperienceAppStatusEnum.DOWNLOAD
+                }
+            }
         }
     }
 
