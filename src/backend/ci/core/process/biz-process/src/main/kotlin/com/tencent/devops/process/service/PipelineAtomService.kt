@@ -55,7 +55,6 @@ import com.tencent.devops.process.pojo.PipelineAtomRel
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.KEY_PROJECT_ID
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.pojo.atom.AtomReplaceRequest
 import com.tencent.devops.store.pojo.atom.AtomReplaceRollBack
