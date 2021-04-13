@@ -28,6 +28,8 @@
 package com.tencent.devops.common.web
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_JWT_TOKEN
+import com.tencent.devops.common.client.consul.ConsulConstants
+import com.tencent.devops.common.client.consul.ConsulContent
 import com.tencent.devops.common.security.jwt.JwtManager
 import com.tencent.devops.common.service.trace.TraceTag
 import feign.RequestInterceptor
@@ -77,6 +79,11 @@ class FeignConfiguration {
                 if (jwtManager.isSendEnable()) {
                     requestTemplate.header(AUTH_HEADER_DEVOPS_JWT_TOKEN, jwtManager.getToken() ?: "")
                 }
+            }
+
+            // 增加X-HEAD-CONSUL-TAG供下游服务获取相同的consul tag
+            if (!ConsulContent.getConsulContent().isNullOrEmpty()) {
+                requestTemplate.header(ConsulConstants.HEAD_CONSUL_TAG, ConsulContent.getConsulContent())
             }
         }
     }

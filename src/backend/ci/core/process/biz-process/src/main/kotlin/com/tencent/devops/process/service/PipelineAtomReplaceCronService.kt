@@ -633,7 +633,8 @@ class PipelineAtomReplaceCronService @Autowired constructor(
             stage.containers.forEach { container ->
                 val finalElements = mutableListOf<Element>()
                 container.elements.forEach nextElement@{ element ->
-                    if (element.getAtomCode() == fromAtomCode) {
+                    val fromAtomVersion = atomVersionReplaceInfo.fromAtomVersion
+                    if (element.getAtomCode() == fromAtomCode && element.version == fromAtomVersion) {
                         replaceAtomFlag = true
                         // 默认插件无需安装
                         if (toAtomInfo.defaultFlag != true) {

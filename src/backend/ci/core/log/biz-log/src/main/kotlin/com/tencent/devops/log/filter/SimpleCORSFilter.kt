@@ -47,7 +47,7 @@ class SimpleCORSFilter : Filter {
         chain.doFilter(req, res)
     }
 
-    override fun init(filterConfig: FilterConfig) {}
+    override fun init(filterConfig: FilterConfig) = Unit
 
-    override fun destroy() {}
+    override fun destroy() = Unit
 }

@@ -48,8 +48,4 @@ class WatcherTest {
         assertFalse(watcher.isRunning)
         watcher.stop() // 即使running = false 也不会有异常
     }
-
-    @Test
-    fun testStart() {
-    }
 }

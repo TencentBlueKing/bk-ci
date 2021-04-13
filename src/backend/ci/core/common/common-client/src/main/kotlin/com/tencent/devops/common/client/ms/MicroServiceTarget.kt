@@ -29,9 +29,11 @@ package com.tencent.devops.common.client.ms
 
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_SERVICE_NO_FOUND
 import com.tencent.devops.common.api.exception.ClientException
+import com.tencent.devops.common.client.consul.ConsulContent
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import feign.Request
 import feign.RequestTemplate
+import org.slf4j.LoggerFactory
 import org.springframework.cloud.client.ServiceInstance
 import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
 import java.util.concurrent.ConcurrentHashMap
@@ -59,10 +61,17 @@ class MicroServiceTarget<T> constructor(
 
         val matchTagInstances = ArrayList<ServiceInstance>()
 
+        // 若前文中有指定过consul tag则用指定的，否则用本地的consul tag
+        val consulContentTag = ConsulContent.getConsulContent()
+        val useConsulTag = if (!consulContentTag.isNullOrEmpty()) {
+            consulContentTag
+        } else tag
+
         instances.forEach next@{ serviceInstance ->
             if (serviceInstance.metadata.isEmpty())
                 return@next
-            if (serviceInstance.metadata.values.contains(tag)) {
+
+            if (serviceInstance.metadata.values.contains(useConsulTag)) {
                 // 已经用过的不选择
                 if (!usedInstance.contains(serviceInstance.url())) {
                     matchTagInstances.add(serviceInstance)
@@ -76,7 +85,7 @@ class MicroServiceTarget<T> constructor(
         }
 
         if (matchTagInstances.isEmpty()) {
-            throw ClientException(errorInfo.message ?: "找不到任何有效的[$serviceName]服务提供者")
+            throw ClientException(errorInfo.message ?: "找不到任何有效的[$serviceName]-[$useConsulTag]服务提供者")
         } else if (matchTagInstances.size > 1) {
             matchTagInstances.shuffle()
         }
@@ -99,4 +108,8 @@ class MicroServiceTarget<T> constructor(
     override fun name() = serviceName
 
     private fun ServiceInstance.url() = "${if (isSecure) "https" else "http"}://$host:$port/api"
+
+    companion object {
+        val logger = LoggerFactory.getLogger(MicroServiceTarget::class.java)
+    }
 }

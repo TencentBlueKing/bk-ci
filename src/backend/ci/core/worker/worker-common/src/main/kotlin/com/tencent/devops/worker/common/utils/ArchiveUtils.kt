@@ -50,7 +50,7 @@ object ArchiveUtils {
     private const val MAX_FILE_COUNT = 100
 
     fun archiveCustomFiles(filePath: String, destPath: String, workspace: File, buildVariables: BuildVariables): Int {
-        var fileList = mutableSetOf<String>()
+        val fileList = mutableSetOf<String>()
         filePath.split(",").map { it.removePrefix("./") }.filterNot { it.isBlank() }.forEach { path ->
             fileList.addAll(matchFiles(workspace, path).map { it.absolutePath })
         }
@@ -72,7 +72,7 @@ object ArchiveUtils {
     }
 
     fun archivePipelineFiles(filePath: String, workspace: File, buildVariables: BuildVariables): Int {
-        var fileList = mutableSetOf<String>()
+        val fileList = mutableSetOf<String>()
         filePath.split(",").map { it.removePrefix("./") }.filterNot { it.isBlank() }.forEach { path ->
             fileList.addAll(matchFiles(workspace, path).map { it.absolutePath })
         }
@@ -95,12 +95,22 @@ object ArchiveUtils {
 
     fun matchFiles(workspace: File, path: String): List<File> {
         val isAbsPath = isAbsPath(path)
-        var fullFile = if (!isAbsPath) File(workspace.absolutePath + File.separator + path) else File(path)
-        if (fullFile.isDirectory) throw RuntimeException("invalid path, path is a directory(${fullFile.absolutePath})")
+        val fullFile = if (!isAbsPath) {
+            File(workspace.absolutePath + File.separator + path)
+        } else {
+            File(path)
+        }
+        if (fullFile.isDirectory) {
+            throw TaskExecuteException(
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_INPUT_INVAILD,
+                errorMsg = "invalid path: ${fullFile.absolutePath}"
+            )
+        }
         val fullPath = fullFile.absolutePath.replace("\\", "/")
         val fileList = if (fullPath.contains("**")) {
             val startPath = File("${fullPath.substring(0, fullPath.indexOf("**"))}a").parent.toString()
-            globMatch("glob:$fullPath", startPath)
+            globMatch(glob = "glob:$fullPath", location = startPath)
         } else {
             fileMatch(fullPath)
         }
@@ -115,49 +125,57 @@ object ArchiveUtils {
     }
 
     private fun fileMatch(fullPath: String): List<File> {
-        var resultList = ArrayList<File>()
+        val resultList = ArrayList<File>()
         val dirPath = fullPath.substring(0, fullPath.lastIndexOf("/") + 1)
         val glob = "glob:$fullPath"
-        if (!dirPath.contains("*")) {
-            val pathMatcher = FileSystems.getDefault().getPathMatcher(glob)
-            val regex = Regex(pattern = "\\]|\\[|\\}|\\{|\\?")
-            if (!fullPath.contains(regex) && File(fullPath).exists() && !File(fullPath).isDirectory) {
-                resultList.add(File(fullPath))
-                return resultList
+        if (!dirPath.contains("*")) { // 没有模糊匹配
+            noneFuzzyMatch(glob, fullPath, resultList)
+        } else {
+            if (dirPath.indexOf("*") != dirPath.lastIndexOf("*")) { // 多个不连续的*模糊匹配
+                val location = File("${fullPath.substring(0, fullPath.indexOf("*"))}a").parent!!
+                return globMatch(glob = glob, location = location.replace("\\", "/"))
+            } else {
+                fuzzyMatch(dirPath, glob, resultList)
             }
+        }
+        return resultList
+    }
+
+    private fun fuzzyMatch(dirPath: String, glob: String, resultList: ArrayList<File>) {
+        val secondIndex = dirPath.indexOf("/", dirPath.indexOf("*"))
+        val secondPath = dirPath.substring(0, secondIndex)
+        val thirdPath = dirPath.substring(secondIndex)
+        val globSecond = "glob:$secondPath"
+        var pathMatcher = FileSystems.getDefault().getPathMatcher(globSecond)
+        val dirMatchFile = mutableListOf<File>()
+        File(secondPath.substring(0, secondPath.lastIndexOf("/") + 1)).listFiles()?.forEach { f ->
+            if (pathMatcher.matches(f.toPath())) {
+                dirMatchFile.add(File(f, thirdPath))
+            }
+        }
+        dirMatchFile.forEach { f ->
+            pathMatcher = FileSystems.getDefault().getPathMatcher(glob)
+            f.listFiles()?.forEach { file ->
+                if (pathMatcher.matches(file.toPath()) && !file.isDirectory) {
+                    resultList.add(file)
+                }
+            }
+        }
+    }
+
+    private fun noneFuzzyMatch(glob: String, fullPath: String, resultList: ArrayList<File>) {
+        val pathMatcher = FileSystems.getDefault().getPathMatcher(glob)
+        val regex = Regex(pattern = "\\]|\\[|\\}|\\{|\\?")
+        if (!fullPath.contains(regex) && File(fullPath).exists() && !File(fullPath).isDirectory) {
+            resultList.add(File(fullPath))
+        } else {
             val parentFile = File(fullPath).parentFile
             parentFile.listFiles()?.forEach { f ->
                 if (pathMatcher.matches(f.toPath()) && !f.isDirectory) {
                     resultList.add(f)
                 }
             }
-        } else {
-            val location = File("${fullPath.substring(0, fullPath.indexOf("*"))}a").parent.toString()
-            if (dirPath.indexOf("*") != dirPath.lastIndexOf("*")) {
-                return globMatch(glob, location.replace("\\", "/"))
-            } else {
-                val secondIndex = dirPath.indexOf("/", dirPath.indexOf("*"))
-                val secondPath = dirPath.substring(0, secondIndex)
-                val thirdPath = dirPath.substring(secondIndex)
-                val globSecond = "glob:$secondPath"
-                var pathMatcher = FileSystems.getDefault().getPathMatcher(globSecond)
-                val dirMatchFile = mutableListOf<File>()
-                File(secondPath.substring(0, secondPath.lastIndexOf("/") + 1)).listFiles()?.forEach { f ->
-                    if (pathMatcher.matches(f.toPath())) {
-                        dirMatchFile.add(File(f, thirdPath))
-                    }
-                }
-                dirMatchFile.forEach { f ->
-                    pathMatcher = FileSystems.getDefault().getPathMatcher(glob)
-                    f.listFiles()?.forEach { file ->
-                        if (pathMatcher.matches(file.toPath()) && !file.isDirectory) {
-                            resultList.add(file)
-                        }
-                    }
-                }
-            }
         }
-        return resultList
     }
 
     private fun globMatch(glob: String, location: String): List<File> {
