@@ -70,7 +70,7 @@ buildscript {
         poiVersion = "3.17"
         commonCodecVersion = "1.15"
         luceneVersion = "8.6.0"
-        luceneVersion = "8.6.0"
+        commonCsvVersion = "1.8"
     }
 
     def mavenRepoUrl = System.getProperty("mavenRepoUrl")
@@ -84,7 +84,6 @@ buildscript {
     repositories {
         mavenLocal()
         maven { url mavenRepoUrl }
-        maven { url "https://mirrors.tencent.com/repository/maven/tencent_public_snapshots" }
         maven { url "https://repo.spring.io/libs-milestone" }
         mavenCentral()
         jcenter()
@@ -144,7 +143,6 @@ allprojects {
     repositories {
         mavenLocal()
         maven { url mavenRepoUrl }
-        maven { url "https://mirrors.tencent.com/repository/maven/tencent_public_snapshots" }
         maven { url "https://repo.spring.io/libs-milestone" }
         mavenCentral()
         jcenter()
@@ -207,8 +205,6 @@ subprojects {
 
     dependencies {
         testImplementation "junit:junit"
-
-        runtime("org.springframework.boot:spring-boot-properties-migrator")
     }
 
     dependencyManagement {
@@ -243,6 +239,7 @@ subprojects {
             dependency("commons-codec:commons-codec:${commonCodecVersion}")
             dependency("org.jooq:jooq:$jooqVersion")
             dependency("org.apache.lucene:lucene-core:$luceneVersion")
+            dependency("org.apache.commons:commons-csv:$commonCsvVersion")
 
             dependencySet(group: "org.springframework.cloud", version: "$springConsulVersion") {
                 entry "spring-cloud-starter-consul-discovery"

@@ -28,16 +28,16 @@
 
 package com.tencent.devops.auth.service
 
-class BkPermissionRoleMemberImpl: PermissionRoleMemberService {
-    override fun createRoleMember(userId: String, projectCode: String, roleId: String, members: List<String>) {
-        return
-    }
+import com.tencent.bk.sdk.iam.service.ManagerService
+import com.tencent.devops.auth.service.iam.PermissionGradeService
+import com.tencent.devops.auth.service.iam.impl.AbsPermissionRoleMemberImpl
+import org.jvnet.hk2.annotations.Service
+import org.springframework.beans.factory.annotation.Autowired
 
-    override fun deleteRoleMember(userId: String, projectCode: String, roleId: String, members: List<String>) {
-        return
-    }
-
-    override fun getRoleMember(projectCode: String, roleId: String): List<String> {
-        return emptyList()
-    }
+@Service
+class BkPermissionRoleMemberImpl @Autowired constructor(
+    override val iamManagerService: ManagerService,
+    private val permissionGradeService: PermissionGradeService
+): AbsPermissionRoleMemberImpl(iamManagerService, permissionGradeService) {
+    override fun checkUser(userId: String) { return }
 }

@@ -28,6 +28,7 @@
 
 package com.tencent.devops.auth.api.user
 
+import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerGroupMemberVo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
@@ -41,6 +42,7 @@ import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_PROJECT_MEMBER"], description = "用户组—用户")
@@ -49,48 +51,54 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserProjectMemberResource {
     @POST
-    @Path("/projectCodes/{projectCode}/roleIds/{roleId}")
+    @Path("/projectIds/{projectId}/roleIds/{roleId}")
     @ApiOperation("项目下添加指定组组员")
     fun createRoleMember(
         @ApiParam(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam(name = "项目标识", required = true)
-        @PathParam("projectCode")
-        projectCode: String,
+        @PathParam("projectId")
+        projectId: Int,
         @ApiParam(name = "角色Id", required = true)
         @PathParam("roleId")
-        roleId: String,
+        roleId: Int,
+        @ApiParam(name = "是否为管理员分组", required = true)
+        @QueryParam("managerGroup")
+        managerGroup: Boolean,
         @ApiParam("添加用户", required = true)
         members: List<String>
     ): Result<Boolean>
 
     @GET
-    @Path("/projectCodes/{projectCode}/roleIds/{roleId}")
+    @Path("/projectIds/{projectId}/roleIds/{roleId}")
     @ApiOperation("查询项目下指定用户组用户")
     fun getRoleMember(
         @ApiParam(name = "项目标识", required = true)
-        @PathParam("projectCode")
-        projectCode: String,
+        @PathParam("projectId")
+        projectId: Int,
         @ApiParam(name = "角色Id", required = true)
         @PathParam("roleId")
-        roleId: String
-    ): Result<String>
+        roleId: Int
+    ): Result<ManagerGroupMemberVo>
 
     @DELETE
-    @Path("/projectCodes/{projectCode}/roleIds/{roleId}")
+    @Path("/projectIds/{projectId}/roleIds/{roleId}")
     @ApiOperation("删除项目下指定用户组用户")
     fun deleteRoleMember(
         @ApiParam(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam(name = "项目标识", required = true)
-        @PathParam("projectCode")
-        projectCode: String,
+        @PathParam("projectId")
+        projectId: Int,
         @ApiParam(name = "角色Id", required = true)
         @PathParam("roleId")
-        roleId: String,
+        roleId: Int,
+        @ApiParam(name = "是否为管理员分组", required = true)
+        @QueryParam("managerGroup")
+        managerGroup: Boolean,
         @ApiParam("待删除用户", required = true)
         members: List<String>
-    ): Result<String>
+    ): Result<Boolean>
 }

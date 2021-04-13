@@ -29,13 +29,38 @@ package com.tencent.devops.store.dao.common
 
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
+import com.tencent.devops.store.pojo.common.StoreStatisticPipelineNumUpdate
+import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Query
+import org.jooq.Record1
+import org.jooq.Record6
+import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.math.BigDecimal
 import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
 class StoreStatisticTotalDao {
+
+    fun initStatisticData(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: Byte
+    ) {
+        with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
+            dslContext.insertInto(this).columns(
+                ID,
+                STORE_CODE,
+                STORE_TYPE
+            ).values(
+                UUIDUtil.generate(),
+                storeCode,
+                storeType
+            ).execute()
+        }
+    }
 
     fun updateStatisticData(
         dslContext: DSLContext,
@@ -44,40 +69,68 @@ class StoreStatisticTotalDao {
         downloads: Int,
         comments: Int,
         score: Int,
-        scoreAverage: Double
+        scoreAverage: Double,
+        recentExecuteNum: Int
     ) {
         with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
-            val record =
-                dslContext.selectFrom(this).where(STORE_CODE.eq(storeCode)).and(STORE_TYPE.eq(storeType)).fetchOne()
-            if (null == record) {
-                dslContext.insertInto(this).columns(
-                    ID,
-                    STORE_CODE,
-                    STORE_TYPE,
-                    DOWNLOADS,
-                    COMMITS,
-                    SCORE,
-                    SCORE_AVERAGE
-                ).values(
-                    UUIDUtil.generate(),
-                    storeCode,
-                    storeType,
-                    downloads,
-                    comments,
-                    score,
-                    scoreAverage.toBigDecimal()
-                ).execute()
-            } else {
-                dslContext.update(this)
-                    .set(DOWNLOADS, downloads)
-                    .set(COMMITS, comments)
-                    .set(SCORE, score)
-                    .set(SCORE_AVERAGE, scoreAverage.toBigDecimal())
+            dslContext.insertInto(this).columns(
+                ID,
+                STORE_CODE,
+                STORE_TYPE,
+                DOWNLOADS,
+                COMMITS,
+                SCORE,
+                SCORE_AVERAGE,
+                RECENT_EXECUTE_NUM
+            ).values(
+                UUIDUtil.generate(),
+                storeCode,
+                storeType,
+                downloads,
+                comments,
+                score,
+                scoreAverage.toBigDecimal(),
+                recentExecuteNum
+            )
+                .onDuplicateKeyUpdate()
+                .set(DOWNLOADS, downloads)
+                .set(COMMITS, comments)
+                .set(SCORE, score)
+                .set(SCORE_AVERAGE, scoreAverage.toBigDecimal())
+                .set(RECENT_EXECUTE_NUM, recentExecuteNum)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(STORE_CODE.eq(storeCode))
+                .and(STORE_TYPE.eq(storeType))
+                .execute()
+        }
+    }
+
+    fun batchUpdatePipelineNum(
+        dslContext: DSLContext,
+        pipelineNumUpdateList: List<StoreStatisticPipelineNumUpdate>,
+        storeType: Byte
+    ) {
+        with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
+            val list = mutableListOf<Query>()
+            pipelineNumUpdateList.forEach { pipelineNumUpdate ->
+                val baseStep = dslContext.update(this)
                     .set(UPDATE_TIME, LocalDateTime.now())
-                    .where(STORE_CODE.eq(storeCode))
-                    .and(STORE_TYPE.eq(storeType))
-                    .execute()
+                val incrementFlag = pipelineNumUpdate.incrementFlag
+                if (incrementFlag != null) {
+                    if (incrementFlag) {
+                        baseStep.set(PIPELINE_NUM, PIPELINE_NUM + 1)
+                    } else {
+                        baseStep.set(PIPELINE_NUM, PIPELINE_NUM - 1)
+                    }
+                }
+                val num = pipelineNumUpdate.num
+                if (num != null) {
+                    baseStep.set(PIPELINE_NUM, num)
+                }
+                baseStep.where(STORE_CODE.eq(pipelineNumUpdate.storeCode).and(STORE_TYPE.eq(storeType)))
+                list.add(baseStep)
             }
+            dslContext.batch(list).execute()
         }
     }
 
@@ -87,6 +140,73 @@ class StoreStatisticTotalDao {
                 .where(STORE_CODE.eq(storeCode))
                 .and(STORE_TYPE.eq(storeType))
                 .execute()
+        }
+    }
+
+    fun getStatisticByStoreCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: Byte
+    ): Record6<Int, Int, BigDecimal, Int, Int, String>? {
+        with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
+            return dslContext.select(
+                DOWNLOADS,
+                COMMITS,
+                SCORE_AVERAGE,
+                PIPELINE_NUM,
+                RECENT_EXECUTE_NUM,
+                STORE_CODE
+            )
+                .from(this)
+                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)))
+                .fetchOne()
+        }
+    }
+
+    /**
+     * 批量获取统计数据oo
+     */
+    fun batchGetStatisticByStoreCode(
+        dslContext: DSLContext,
+        storeCodeList: List<String?>,
+        storeType: Byte
+    ): Result<Record6<Int, Int, BigDecimal, Int, Int, String>>? {
+        with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
+            val baseStep = dslContext.select(
+                DOWNLOADS,
+                COMMITS,
+                SCORE_AVERAGE,
+                PIPELINE_NUM,
+                RECENT_EXECUTE_NUM,
+                STORE_CODE
+            )
+                .from(this)
+
+            val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_TYPE.eq(storeType))
+            if (storeCodeList.isNotEmpty()) {
+                conditions.add(STORE_CODE.`in`(storeCodeList))
+            }
+            return baseStep.where(conditions).fetch()
+        }
+    }
+
+    fun getStatisticList(
+        dslContext: DSLContext,
+        storeType: Byte,
+        timeDescFlag: Boolean = true,
+        page: Int,
+        pageSize: Int
+    ): Result<Record1<String>>? {
+        with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
+            val baseStep = dslContext.select(STORE_CODE)
+                .from(this).where(STORE_TYPE.eq(storeType))
+            if (timeDescFlag) {
+                baseStep.orderBy(CREATE_TIME.desc())
+            } else {
+                baseStep.orderBy(CREATE_TIME.asc())
+            }
+            return baseStep.limit((page - 1) * pageSize, pageSize).fetch()
         }
     }
 }

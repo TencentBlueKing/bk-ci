@@ -64,7 +64,7 @@ export default {
         }
     },
     methods: {
-        getResponseData (response, dataPath = 'data.records') {
+        getResponseData (response, dataPath = 'data.records', defaultVal = []) {
             try {
                 switch (true) {
                     case Array.isArray(response.data):
@@ -80,7 +80,7 @@ export default {
                             result = result[key]
                             pos++
                         }
-                        if (pos === path.length && Array.isArray(result)) {
+                        if (pos === path.length && Object.prototype.toString.call(result) === Object.prototype.toString.call(defaultVal)) {
                             return result
                         } else {
                             throw Error(this.$t('editPage.failToGetData'))
@@ -88,7 +88,7 @@ export default {
                 }
             } catch (e) {
                 console.error(e)
-                return []
+                return defaultVal
             }
         },
         generateReqUrl (url, query) {

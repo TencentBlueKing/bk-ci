@@ -29,25 +29,44 @@
 package com.tencent.devops.auth.resources
 
 import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
+import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerRoleGroupVO
 import com.tencent.devops.auth.api.user.UserProjectRoleResource
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
+import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
+import com.tencent.devops.auth.service.iam.PermissionRoleService
 import com.tencent.devops.common.api.pojo.Result
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
 class UserProjectRoleResourceImpl @Autowired constructor(
-
+    val permissionRoleService: PermissionRoleService
 ) : UserProjectRoleResource {
-    override fun createProjectRole(userId: String, projectCode: String, groupInfo: ProjectRoleDTO): Result<String> {
-        TODO("Not yet implemented")
+    override fun createProjectRole(
+        userId: String,
+        projectId: Int,
+        projectCode: String,
+        groupInfo: ProjectRoleDTO
+    ): Result<String> {
+        return Result(permissionRoleService.createPermissionRole(
+            userId = userId,
+            projectId = projectId,
+            projectCode = projectCode,
+            groupInfo = groupInfo
+        ))
     }
 
-    override fun updateProjectRole(userId: String, projectCode: String, roleId: String, groupInfo: ManagerRoleGroup): Result<Boolean> {
-        TODO("Not yet implemented")
+    override fun updateProjectRole(userId: String, projectId: Int, roleId: String, groupInfo: ManagerRoleGroup): Result<Boolean> {
+        permissionRoleService.renamePermissionRole(
+            userId = userId,
+            projectId = projectId,
+            roleId = roleId,
+            groupInfo = groupInfo
+        )
+        return Result(true)
     }
 
-    override fun getProjectRoles(userId: String, projectCode: String): Result<Boolean> {
-        TODO("Not yet implemented")
+    override fun getProjectRoles(userId: String, projectId: Int): Result<ManagerRoleGroupVO> {
+        return Result(permissionRoleService.getPermissionRole(projectId))
     }
 }

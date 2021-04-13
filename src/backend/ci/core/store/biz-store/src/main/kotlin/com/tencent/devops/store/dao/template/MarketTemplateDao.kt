@@ -175,7 +175,9 @@ class MarketTemplateDao {
             tt.LOGO_URL,
             tt.PUBLISHER,
             tt.SUMMARY,
-            tt.PUBLIC_FLAG
+            tt.PUBLIC_FLAG,
+            tt.MODIFIER,
+            tt.UPDATE_TIME
         ).from(tt)
         val storeType = StoreTypeEnum.TEMPLATE.type.toByte()
 
@@ -216,9 +218,10 @@ class MarketTemplateDao {
         if (null != sortType) {
             if (sortType == MarketTemplateSortTypeEnum.DOWNLOAD_COUNT && score == null) {
                 val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL.`as`("tas")
-                val t = dslContext
-                    .select(tas.STORE_CODE, tas.DOWNLOADS.`as`(MarketTemplateSortTypeEnum.DOWNLOAD_COUNT.name))
-                    .from(tas).asTable("t")
+                val t = dslContext.select(
+                    tas.STORE_CODE,
+                    tas.DOWNLOADS.`as`(MarketTemplateSortTypeEnum.DOWNLOAD_COUNT.name)
+                ).from(tas).asTable("t")
                 baseStep.leftJoin(t).on(tt.TEMPLATE_CODE.eq(t.field("STORE_CODE", String::class.java)))
             }
 
@@ -372,11 +375,16 @@ class MarketTemplateDao {
         }
     }
 
-    fun countByName(dslContext: DSLContext, templateName: String): Int {
+    fun countByName(dslContext: DSLContext, templateName: String, templateCode: String? = null): Int {
         with(TTemplate.T_TEMPLATE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(TEMPLATE_NAME.eq(templateName))
+            if (templateCode != null) {
+                conditions.add(TEMPLATE_CODE.eq(templateCode))
+            }
             return dslContext.selectCount()
                 .from(this)
-                .where(TEMPLATE_NAME.eq(templateName))
+                .where(conditions)
                 .fetchOne(0, Int::class.java)
         }
     }
@@ -519,8 +527,12 @@ class MarketTemplateDao {
         val a = TTemplate.T_TEMPLATE.`as`("a")
         val b = TStoreMember.T_STORE_MEMBER.`as`("b")
         val c = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("c")
-        val t = dslContext.select(a.TEMPLATE_CODE.`as`("templateCode"), DSL.max(a.CREATE_TIME).`as`("createTime"))
-            .from(a).groupBy(a.TEMPLATE_CODE) // 查找每组templateCode最新的记录
+        val t = dslContext.select(
+            a.TEMPLATE_CODE.`as`("templateCode"),
+            DSL.max(a.CREATE_TIME).`as`("createTime")
+        )
+            .from(a)
+            .groupBy(a.TEMPLATE_CODE) // 查找每组templateCode最新的记录
         val conditions = generateGetMyTemplatesConditions(a, userId, b, c, templateName)
         return dslContext.select(
             a.ID.`as`("templateId"),

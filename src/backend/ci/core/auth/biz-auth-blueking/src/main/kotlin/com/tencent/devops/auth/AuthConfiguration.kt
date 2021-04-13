@@ -27,8 +27,13 @@
 
 package com.tencent.devops.auth
 
+import com.tencent.bk.sdk.iam.config.IamConfiguration
+import com.tencent.bk.sdk.iam.service.impl.EsbHttpClientServiceImpl
+import com.tencent.bk.sdk.iam.service.impl.ManagerServiceImpl
 import com.tencent.devops.common.auth.service.IamEsbService
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -39,7 +44,31 @@ import org.springframework.core.Ordered
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class AuthConfiguration {
+    @Value("\${auth.url:}")
+    val iamBaseUrl = ""
+
+    @Value("\${auth.appCode:}")
+    val systemId = ""
+
+    @Value("\${auth.appCode:}")
+    val appCode = ""
+
+    @Value("\${auth.appSecret:}")
+    val appSecret = ""
+
+    @Value("\${bk.paas.host:#{null}}")
+    val iamEsb = ""
 
     @Bean
     fun iamEsbService() = IamEsbService()
+
+    @Bean
+    @ConditionalOnMissingBean
+    fun iamConfiguration() = IamConfiguration(systemId, appCode, appSecret, iamBaseUrl, iamEsb)
+
+    @Bean
+    fun esbHttpClientServiceImpl() = EsbHttpClientServiceImpl(iamConfiguration())
+
+    @Bean
+    fun iamManagerService() = ManagerServiceImpl(esbHttpClientServiceImpl(), iamConfiguration())
 }

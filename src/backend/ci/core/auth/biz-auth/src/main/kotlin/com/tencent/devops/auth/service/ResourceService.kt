@@ -23,7 +23,6 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
 package com.tencent.devops.auth.service
@@ -35,10 +34,13 @@ import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
 import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.utils.ActionUtils
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.callback.AuthConstants.KEYWORD_MIN_SIZE
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -47,17 +49,18 @@ import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO as C
 @Service
 class ResourceService @Autowired constructor(
     val objectMapper: ObjectMapper,
+    val remoteAuthService: RemoteAuthService,
     val callbackService: CallBackService,
     val authHttpClientService: AuthHttpClientService
 ) {
 
     fun getProject(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO1 {
+        checkToken(token)
         val projectInfo = callbackService.getResource(AuthResourceType.PROJECT.value)
         val request = authHttpClientService.buildPost(
             path = projectInfo!!.path,
             requestBody = authHttpClientService.getJsonRequest(callBackInfo),
-            gateway = projectInfo!!.gateway,
-            token = token
+            gateway = projectInfo.gateway
         )
         val response = authHttpClientService.request(request, "调用回调接口失败")
         return buildResult(callBackInfo.method, response)
@@ -67,6 +70,7 @@ class ResourceService @Autowired constructor(
         callBackInfo: CallbackRequestDTO,
         token: String
     ): CallbackBaseResponseDTO1? {
+        checkToken(token)
         checkoutParentType(callBackInfo.filter.parent.type)
         if (callBackInfo.method == CallbackMethodEnum.SEARCH_INSTANCE) {
             if (!checkKeyword(callBackInfo.filter.keyword)) {
@@ -76,7 +80,7 @@ class ResourceService @Autowired constructor(
         }
 
         val actionType = callBackInfo.type
-        val resourceType = actionType
+        val resourceType = findEnvNode(actionType)
 
         val resourceInfo = callbackService.getResource(resourceType)
         if (resourceInfo == null) {
@@ -87,14 +91,20 @@ class ResourceService @Autowired constructor(
         val request = authHttpClientService.buildPost(
             path = resourceInfo.path,
             requestBody = authHttpClientService.getJsonRequest(callBackInfo),
-            gateway = resourceInfo.gateway,
-            token = token
+            gateway = resourceInfo.gateway
         )
         val response = authHttpClientService.request(request, "调用回调接口失败")
 
         logger.info("getInstanceByResource response: $response")
 
         return buildResult(callBackInfo.method, response)
+    }
+
+    private fun checkToken(token: String) {
+        if (!remoteAuthService.checkToken(token)) {
+            logger.warn("auth callBack checkToken is fail $token")
+            throw OperationException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.TOKEN_TICKET_FAIL))
+        }
     }
 
     private fun checkoutParentType(type: String): Boolean {
@@ -109,6 +119,14 @@ class ResourceService @Autowired constructor(
             return false
         }
         return true
+    }
+
+    private fun findEnvNode(actionType: String): String {
+        return if (actionType.contains("env_node")) {
+            AuthResourceType.ENVIRONMENT_ENV_NODE.value
+        } else {
+            ActionUtils.actionType(actionType)
+        }
     }
 
     private fun buildResult(method: CallbackMethodEnum, response: String): CallbackBaseResponseDTO1 {
@@ -129,6 +147,5 @@ class ResourceService @Autowired constructor(
 
     companion object {
         val logger = LoggerFactory.getLogger(this::class.java)
-        const val DEFAULTSYSTEM = "ci"
     }
 }

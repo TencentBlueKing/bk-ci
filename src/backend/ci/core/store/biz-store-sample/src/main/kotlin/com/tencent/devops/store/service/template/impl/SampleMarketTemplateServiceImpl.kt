@@ -29,24 +29,23 @@ package com.tencent.devops.store.service.template.impl
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.model.store.tables.records.TAtomRecord
+import com.tencent.devops.store.pojo.common.UserStoreDeptInfoRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.template.SampleMarketTemplateService
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
 class SampleMarketTemplateServiceImpl : SampleMarketTemplateService, MarketTemplateServiceImpl() {
 
-    private val logger = LoggerFactory.getLogger(SampleMarketTemplateServiceImpl::class.java)
-
     override fun generateTemplateVisibleData(
         storeCodeList: List<String?>,
         storeType: StoreTypeEnum
     ): Result<HashMap<String, MutableList<Int>>?> {
-        logger.info("generateTemplateVisibleData storeCodeList is:$storeCodeList,storeType is:$storeType")
         return Result(data = null)
+    }
+
+    override fun checkUserInvalidVisibleStoreInfo(userStoreDeptInfoRequest: UserStoreDeptInfoRequest): Boolean {
+        return true
     }
 
     override fun generateInstallFlag(
@@ -56,8 +55,6 @@ class SampleMarketTemplateServiceImpl : SampleMarketTemplateService, MarketTempl
         visibleList: MutableList<Int>?,
         userDeptList: List<Int>
     ): Boolean {
-        logger.info("generateInstallFlag defaultFlag is:$defaultFlag,members is:$members,userId is:$userId")
-        logger.info("generateInstallFlag visibleList is:$visibleList,userDeptList is:$userDeptList")
         return if (defaultFlag || (members != null && members.contains(userId))) {
             true
         } else {
@@ -65,18 +62,13 @@ class SampleMarketTemplateServiceImpl : SampleMarketTemplateService, MarketTempl
         }
     }
 
-    override fun generateUserAtomInvalidVisibleAtom(
-        atomCode: String,
-        userId: String,
-        atomRecord: TAtomRecord,
-        element: Element
-    ): List<String> {
-        // 开源版没有可见范围的概念，没有因为可见范围而无效的插件
-        return emptyList()
-    }
-
-    override fun validateTempleAtomVisible(templateCode: String, templateModel: Model): Result<Boolean> {
-        // 开源版没有可见范围的概念，没有因为可见范围而无效的插件
+    override fun validateTemplateVisibleDept(
+        templateCode: String,
+        templateModel: Model,
+        validImageCodes: List<String>?,
+        validAtomCodes: List<String>?
+    ): Result<Boolean> {
+        // 开源版没有可见范围的概念，没有因为可见范围而无效的组件
         return Result(true)
     }
 }
