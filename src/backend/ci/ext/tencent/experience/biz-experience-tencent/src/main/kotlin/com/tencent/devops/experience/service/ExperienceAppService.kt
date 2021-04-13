@@ -238,7 +238,7 @@ class ExperienceAppService(
         page: Int,
         pageSize: Int,
         installedId: String?,
-        downloadIds: Set<String>?
+        downloadIds: String?
     ): Pagination<ExperienceChangeLog> {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
         val experience = experienceDao.get(dslContext, experienceId)
@@ -277,10 +277,10 @@ class ExperienceAppService(
         pageSize: Int,
         isOldVersion: Boolean,
         installedId: String? = null,
-        downloadIds: Set<String>? = null
+        downloadIds: String? = null
     ): List<ExperienceChangeLog> {
         val installedIdLong = installedId?.let { HashUtil.decodeIdToLong(installedId) } ?: -1
-        val downloadIdLongs = downloadIds?.map { id -> HashUtil.decodeIdToLong(id) }?.toSet() ?: emptySet()
+        val downloadIdLongs = downloadIds?.split(",")?.map { id -> HashUtil.decodeIdToLong(id) }?.toSet() ?: emptySet()
         val now = LocalDateTime.now()
         val lastDownloadRecord = platform?.let {
             experienceLastDownloadDao.get(

@@ -132,7 +132,7 @@ interface AppExperienceResource {
         installedId: String? = null,
         @ApiParam("已下载的体验ID列表", required = false)
         @QueryParam("downloadIds")
-        downloadIds: Set<String>? = null
+        downloadIds: String? = null
     ): Result<Pagination<ExperienceChangeLog>>
 
     @ApiOperation("创建外部直接下载链接")
