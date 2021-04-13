@@ -210,9 +210,9 @@ class PipelineInfoDao {
             conditions.add(DELETE.eq(deleteFlag))
             val baseQuery = dslContext.selectFrom(this).where(conditions)
             if (timeDescFlag) {
-                baseQuery.orderBy(CREATE_TIME.desc())
+                baseQuery.orderBy(CREATE_TIME.desc(), PIPELINE_ID)
             } else {
-                baseQuery.orderBy(CREATE_TIME.asc())
+                baseQuery.orderBy(CREATE_TIME.asc(), PIPELINE_ID)
             }
             baseQuery.limit(limit).offset(offset).fetch()
         }

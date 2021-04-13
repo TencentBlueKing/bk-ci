@@ -37,7 +37,7 @@
                         class="w220"
                         @change="handlepPaginationChange">
                         <bk-option :id="1" :name="$t('success')"></bk-option>
-                        <bk-option :id="0" :name="$t('fail')"></bk-option>
+                        <!-- <bk-option :id="0" :name="$t('fail')"></bk-option> -->
                     </bk-select>
                 </bk-form-item>
             </bk-form>

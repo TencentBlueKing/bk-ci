@@ -32,8 +32,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.redis.RedisLock
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.monitoring.api.service.ServiceAtomMonitorResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineTaskResource
@@ -61,8 +59,7 @@ class MarketAtomStatisticServiceImpl @Autowired constructor(
     private val storeProjectRelDao: StoreProjectRelDao,
     private val storeStatisticTotalDao: StoreStatisticTotalDao,
     private val storeStatisticDailyDao: StoreStatisticDailyDao,
-    private val client: Client,
-    private val redisOperation: RedisOperation
+    private val client: Client
 ) : MarketAtomStatisticService {
 
     companion object {
@@ -163,30 +160,32 @@ class MarketAtomStatisticServiceImpl @Autowired constructor(
      * 同步使用插件流水线数量到汇总数据统计表
      */
     override fun asyncUpdateStorePipelineNum(): Boolean {
-        val lock = RedisLock(redisOperation, "asyncUpdateStorePipelineNum", 6000L)
-        try {
-            if (!lock.tryLock()) {
-                logger.info("get lock failed, skip")
-                return false
-            }
-            Executors.newFixedThreadPool(1).submit {
-                logger.info("begin asyncUpdateStorePipelineNum!!")
-                batchUpdatePipelineNum()
-                logger.info("end asyncUpdateStorePipelineNum!!")
-            }
-        } catch (ignored: Throwable) {
-            logger.warn("asyncUpdateStorePipelineNum failed", ignored)
-        } finally {
-            lock.unlock()
+        Executors.newFixedThreadPool(1).submit {
+            logger.info("begin asyncUpdateStorePipelineNum!!")
+            batchUpdatePipelineNum()
+            logger.info("end asyncUpdateStorePipelineNum!!")
         }
         return true
     }
 
-    override fun syncAtomDailyStatisticInfo(
+    override fun asyncAtomDailyStatisticInfo(
         storeType: Byte,
         startTime: LocalDateTime,
         endTime: LocalDateTime
     ): Boolean {
+        Executors.newFixedThreadPool(1).submit {
+            logger.info("begin asyncAtomDailyStatisticInfo!!")
+            batchUpdateAtomDailyStatisticInfo(storeType, startTime, endTime)
+            logger.info("end asyncAtomDailyStatisticInfo!!")
+        }
+        return true
+    }
+
+    private fun batchUpdateAtomDailyStatisticInfo(
+        storeType: Byte,
+        startTime: LocalDateTime,
+        endTime: LocalDateTime
+    ) {
         var page = 1
         do {
             val storeStatistics = storeStatisticTotalDao.getStatisticList(
@@ -252,7 +251,6 @@ class MarketAtomStatisticServiceImpl @Autowired constructor(
             }
             page++
         } while (storeStatistics?.size == DEFAULT_PAGE_SIZE)
-        return true
     }
 
     private fun batchUpdatePipelineNum() {

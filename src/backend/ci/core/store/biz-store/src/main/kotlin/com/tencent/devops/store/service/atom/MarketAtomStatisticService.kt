@@ -67,7 +67,7 @@ interface MarketAtomStatisticService {
      * @param startTime 查询开始时间
      * @param endTime 查询结束时间
      */
-    fun syncAtomDailyStatisticInfo(
+    fun asyncAtomDailyStatisticInfo(
         storeType: Byte,
         startTime: LocalDateTime,
         endTime: LocalDateTime

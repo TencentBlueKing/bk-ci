@@ -23,35 +23,14 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.dockerhost.listener
+package com.tencent.devops.common.client.consul
 
-import com.tencent.devops.dockerhost.exception.ContainerException
-import com.tencent.devops.dockerhost.services.DockerHostBuildAgentLessService
-import com.tencent.devops.process.pojo.mq.PipelineBuildLessDockerStartupEvent
-import org.slf4j.LoggerFactory
+object ConsulConstants {
 
-/**
- * 无构建环境的容器启动消息
- * @version 1.0
- */
-class BuildLessStartListener(
-    private val dockerHostBuildAgentLessService: DockerHostBuildAgentLessService
-) {
-    private val logger = LoggerFactory.getLogger(BuildLessStartListener::class.java)
+    const val PROJECT_TAG_REDIS_KEY = "project:setting:tag:v2"
 
-    fun handleMessage(event: PipelineBuildLessDockerStartupEvent) {
-
-        logger.info("[${event.buildId}]|Create container, event: $event")
-
-        val containerId = try {
-            dockerHostBuildAgentLessService.createContainer(event)
-        } catch (e: ContainerException) {
-            logger.error("[${event.buildId}]|Create_container_failed|rollback_build|vmSeqId=${event.vmSeqId}")
-            return
-        }
-        logger.info("[${event.buildId}]|Create container=$containerId")
-        dockerHostBuildAgentLessService.reportContainerId(event.buildId, event.vmSeqId, containerId)
-    }
+    const val HEAD_CONSUL_TAG = "X-HEAD-CONSUL-TAG"
 }

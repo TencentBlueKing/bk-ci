@@ -23,38 +23,33 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.dockerhost.dispatch
+package com.tencent.devops.project.api.op.pojo
 
-import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.service.gray.Gray
-import com.tencent.devops.dockerhost.config.DockerHostConfig
-import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Service
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Service
-class BuildResourceApi constructor(
-    dockerHostConfig: DockerHostConfig,
-    gray: Gray
-) : AbstractBuildResourceApi(dockerHostConfig, gray) {
-    private val logger = LoggerFactory.getLogger(BuildResourceApi::class.java)
-
-    fun reportContainerId(buildId: String, vmSeqId: String, containerId: String, hostTag: String): Result<Boolean>? {
-        val path =
-            "/${getUrlPrefix()}/api/dockerhost/containerId" +
-                "?buildId=$buildId&vmSeqId=$vmSeqId&containerId=$containerId&hostTag=$hostTag"
-        val request = buildPost(path)
-        OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
-            if (!response.isSuccessful) {
-                logger.error("AgentThirdPartyAgentResourceApi $path fail. $responseContent")
-                throw RemoteServiceException("AgentThirdPartyAgentResourceApi $path fail")
-            }
-            return objectMapper.readValue(responseContent)
-        }
-    }
-}
+@ApiModel("项目consul tag修改入参")
+data class OpProjectTagUpdateDTO(
+    @JsonProperty(value = "routerTag", required = true)
+    @ApiModelProperty("项目对应的router tags")
+    val routerTag: String,
+    @JsonProperty(value = "projectCodeList", required = false)
+    @ApiModelProperty("项目编码集合")
+    val projectCodeList: List<String>?,
+    @JsonProperty(value = "bgId", required = false)
+    @ApiModelProperty("BgId")
+    val bgId: Long?,
+    @JsonProperty(value = "centerId", required = false)
+    @ApiModelProperty("centerId")
+    val centerId: Long?,
+    @JsonProperty(value = "deptId", required = false)
+    @ApiModelProperty("deptId")
+    val deptId: Long?,
+    @JsonProperty(value = "channel", required = false)
+    @ApiModelProperty("channel")
+    val channel: String?
+)
