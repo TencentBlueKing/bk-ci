@@ -51,7 +51,6 @@ import org.springframework.context.annotation.Configuration
  */
 @Configuration
 class EnvironmentMQConfiguration {
-
     @Bean
     fun pipelineEventDispatcher(rabbitTemplate: RabbitTemplate) = MQEventDispatcher(rabbitTemplate)
 
@@ -63,7 +62,7 @@ class EnvironmentMQConfiguration {
     @Bean
     fun messageConverter(objectMapper: ObjectMapper) = Jackson2JsonMessageConverter(objectMapper)
 
-    @Value("\${queueConcurrency.modelAnalysis:2}")
+    @Value("\${queueConcurrency.modelAnalysis:4}")
     private val modelAnalysisConcurrency: Int? = null
 
     /**
@@ -80,7 +79,7 @@ class EnvironmentMQConfiguration {
      * 监控队列--- 并发可小
      */
     @Bean
-    fun pipelineModelAnalysisQueue() = Queue(MQ.QUEUE_PIPELINE_EXTENDS_MODEL)
+    fun pipelineModelAnalysisQueue() = Queue(QUEUE_PIPELINE_EXTENDS_MODEL)
 
     @Bean
     fun pipelineModelAnalysisQueueBind(
@@ -109,5 +108,9 @@ class EnvironmentMQConfiguration {
         adapter.setMessageConverter(messageConverter)
         container.setMessageListener(adapter)
         return container
+    }
+
+    companion object {
+        const val QUEUE_PIPELINE_EXTENDS_MODEL = "environemnt.q.engine.pipeline.extends.model"
     }
 }
