@@ -29,7 +29,6 @@ package com.tencent.devops.environment.dao.thirdPartyAgent
 
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentPipelineRef
 import com.tencent.devops.model.environment.tables.TAgentPipelineRef
-import com.tencent.devops.model.environment.tables.TNode
 import com.tencent.devops.model.environment.tables.records.TAgentPipelineRefRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -108,8 +107,14 @@ class AgentPipelineRefDao {
         }
     }
 
-    fun updateLastBuildTime(dslContext: DSLContext, projectId: String, pipelineId: String, vmSeqId: String,
-                            agentLongId: Long, time: LocalDateTime) {
+    fun updateLastBuildTime(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        vmSeqId: String,
+        agentLongId: Long,
+        time: LocalDateTime
+    ) {
         with(TAgentPipelineRef.T_AGENT_PIPELINE_REF) {
             dslContext.update(this)
                 .set(LAST_BUILD_TIME, time)

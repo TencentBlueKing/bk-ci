@@ -168,7 +168,6 @@ class AgentPipelineService @Autowired constructor(
                 }
             )
         }
-
     }
 
     fun updatePipelineRef(userId: String, projectId: String, pipelineId: String) {

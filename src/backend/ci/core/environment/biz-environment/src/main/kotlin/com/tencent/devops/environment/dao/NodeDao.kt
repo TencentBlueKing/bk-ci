@@ -161,9 +161,9 @@ class NodeDao {
     fun listServerNodesByIds(dslContext: DSLContext, nodeIds: Collection<Long>): List<TNodeRecord> {
         with(TNode.T_NODE) {
             return dslContext.selectFrom(this)
-                    .where(NODE_ID.`in`(nodeIds))
-                    .orderBy(NODE_ID.desc())
-                    .fetch()
+                .where(NODE_ID.`in`(nodeIds))
+                .orderBy(NODE_ID.desc())
+                .fetch()
         }
     }
 
@@ -536,19 +536,19 @@ class NodeDao {
     ): List<TNodeRecord> {
         with(TNode.T_NODE) {
             return dslContext.selectFrom(this)
-                        .where(PROJECT_ID.eq(projectId).and(DISPLAY_NAME.like("$%$displayName%")))
-                    .orderBy(CREATED_TIME.desc())
-                    .limit(limit).offset(offset)
-                        .fetch()
+                .where(PROJECT_ID.eq(projectId).and(DISPLAY_NAME.like("$%$displayName%")))
+                .orderBy(CREATED_TIME.desc())
+                .limit(limit).offset(offset)
+                .fetch()
         }
     }
 
     fun countByDisplayName(dslContext: DSLContext, project: String?, displayName: String): Int {
         with(TNode.T_NODE) {
             return dslContext.selectCount()
-                        .from(TNode.T_NODE)
-                        .where(PROJECT_ID.eq(project).and(DISPLAY_NAME.like("%$displayName%")))
-                        .fetchOne(0, Int::class.java)
+                .from(TNode.T_NODE)
+                .where(PROJECT_ID.eq(project).and(DISPLAY_NAME.like("%$displayName%")))
+                .fetchOne(0, Int::class.java)
         }
     }
 
@@ -556,7 +556,7 @@ class NodeDao {
         dslContext.executeUpdate(nodeRecord)
     }
 
-    fun updateLastBuildTime(dslContext: DSLContext, nodeId: Long, time: LocalDateTime){
+    fun updateLastBuildTime(dslContext: DSLContext, nodeId: Long, time: LocalDateTime) {
         with(TNode.T_NODE) {
             dslContext.update(this)
                 .set(LAST_BUILD_TIME, time)
@@ -565,7 +565,7 @@ class NodeDao {
         }
     }
 
-    fun updatePipelineRefCount(dslContext: DSLContext, nodeId: Long, count: Int){
+    fun updatePipelineRefCount(dslContext: DSLContext, nodeId: Long, count: Int) {
         with(TNode.T_NODE) {
             dslContext.update(this)
                 .set(PIPELINE_REF_COUNT, count)

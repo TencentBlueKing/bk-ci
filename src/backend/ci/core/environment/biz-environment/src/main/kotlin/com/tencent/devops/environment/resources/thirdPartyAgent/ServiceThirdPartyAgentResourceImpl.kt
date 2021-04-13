@@ -97,8 +97,13 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         return Result(thirdPartyAgentService.listAgents(userId, projectId, os))
     }
 
-    override fun agentTaskStarted(projectId: String, pipelineId: String, buildId: String, vmSeqId: String,
-                                  agentId: String): Result<Boolean> {
+    override fun agentTaskStarted(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        vmSeqId: String,
+        agentId: String
+    ): Result<Boolean> {
         thirdPartyAgentService.agentTaskStarted(projectId, pipelineId, buildId, vmSeqId, agentId)
         return Result(true)
     }
