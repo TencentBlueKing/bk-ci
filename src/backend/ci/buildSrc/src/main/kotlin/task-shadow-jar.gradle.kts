@@ -40,7 +40,7 @@ tasks {
         }
 
         manifest {
-            "WorkerAgent-Version" to project.version
+            attributes(mapOf("WorkerAgent-Version" to project.version))
         }
     }
 

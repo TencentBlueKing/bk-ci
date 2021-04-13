@@ -57,15 +57,15 @@ val mysqlPrefix: String? = System.getProperty("mysqlPrefix") ?: System.getenv("m
 
 jooq {
     configurations {
-        moduleNames.forEach { moduleNames ->
+        moduleNames.forEach { moduleName ->
             val databaseName = if (mysqlPrefix != null && mysqlPrefix != "") {
                 println("jooq build env : $mysqlPrefix")
-                mysqlPrefix + moduleNames
+                mysqlPrefix + moduleName
             } else {
-                "${project.extra["DB_PREFIX"]}$moduleNames"
+                "${project.extra["DB_PREFIX"]}$moduleName"
             }
 
-            val taskName = if (moduleNames.length == 1) "genenrate" else "${moduleNames}Genenrate"
+            val taskName = if (moduleNames.size == 1) "genenrate" else "${moduleName}Genenrate"
 
             project.the<SourceSetContainer>()["main"].java {
                 srcDir("build/generated-src/jooq/$taskName")
@@ -114,7 +114,7 @@ jooq {
                         }
 
                         target.apply {
-                            packageName = "com.tencent.devops.model.$moduleNames"
+                            packageName = "com.tencent.devops.model.$moduleName"
                         }
                     }
                 }
