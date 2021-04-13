@@ -25,21 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:environment:api-environment")
-    compile project(":core:dispatch:api-dispatch")
-    compile project(":core:project:api-project")
-    compile project(":core:process:api-process")
-    compile project(":core:environment:model-environment")
-    compile project(":core:notify:api-notify")
-    compile project(":core:common:common-client")
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-environment-thirdpartyagent")
-    compile project(":core:common:common-auth:common-auth-api")
-    compile project(":core:common:common-db")
-    compile project(":core:common:common-websocket")
-    compile("org.apache.commons:commons-compress:1.15")
-    compile("org.json:json:20140107")
-    compile("org.influxdb:influxdb-java:2.10")
+package com.tencent.devops.environment.utils
+
+import com.tencent.devops.environment.pojo.NodeWithPermission
+
+object NodeUtils {
+    fun sortByUser(nodes: List<NodeWithPermission>, userId: String): List<NodeWithPermission> {
+        if (nodes.isEmpty()) {
+            return nodes
+        }
+        val userNodes = nodes.filter { it.createdUser == userId }
+        val notUserNodes = nodes.filterNot { it.createdUser == userId }
+        val resultNodes = mutableListOf<NodeWithPermission>()
+        resultNodes.addAll(userNodes)
+        resultNodes.addAll(notUserNodes)
+        return resultNodes
+    }
 }

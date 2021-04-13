@@ -58,6 +58,7 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.NodeDao
+import com.tencent.devops.environment.dao.thirdPartyAgent.AgentPipelineRefDao
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentEnableProjectsDao
 import com.tencent.devops.environment.exception.AgentPermissionUnAuthorizedException
@@ -89,6 +90,7 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.Date
 import javax.ws.rs.NotFoundException
@@ -102,6 +104,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     private val nodeDao: NodeDao,
     private val envNodeDao: EnvNodeDao,
     private val envDao: EnvDao,
+    private val agentPipelineRefDao: AgentPipelineRefDao,
     @Autowired(required = false)
     private val agentDisconnectNotifyService: IAgentDisconnectNotifyService?,
     private val slaveGatewayService: SlaveGatewayService,
@@ -142,10 +145,11 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             osName = agentRecord.detectOs,
             ip = agentRecord.ip,
             createdUser = nodeRecord.createdUser,
-            createdTime = if (null == nodeRecord.createdTime) "" else DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-                .format(
-                    nodeRecord.createdTime
-                ),
+            createdTime = if (null == nodeRecord.createdTime) {
+                ""
+            } else {
+                DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(nodeRecord.createdTime)
+            },
             agentVersion = agentRecord.masterVersion ?: "",
             slaveVersion = agentRecord.version ?: "",
             agentInstallPath = agentRecord.agentInstallPath ?: "",
@@ -337,14 +341,17 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             dslContext = dslContext,
             nodeId = id,
             projectId = projectId
-        )
-            ?: throw NotFoundException("The agent is not exist")
+        ) ?: throw NotFoundException("The agent is not exist")
 
-        return UsageMetrics.loadMetricsBean(UsageMetrics.MetricsType.CPU, OS.valueOf(agentRecord.os))
-            ?.loadQuery(
-                agentHashId = HashUtil.encodeLongId(agentRecord.id),
-                timeRange = timeRange
-            ) ?: emptyMap()
+        return try {
+            UsageMetrics.loadMetricsBean(UsageMetrics.MetricsType.CPU, OS.valueOf(agentRecord.os))
+                ?.loadQuery(
+                    agentHashId = HashUtil.encodeLongId(agentRecord.id),
+                    timeRange = timeRange
+                ) ?: emptyMap()
+        } catch (e: Exception) {
+            emptyMap()
+        }
     }
 
     fun queryMemoryUsageMetrix(
@@ -358,13 +365,16 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             dslContext = dslContext,
             nodeId = id,
             projectId = projectId
-        )
-            ?: throw NotFoundException("The agent is not exist")
-        return UsageMetrics.loadMetricsBean(UsageMetrics.MetricsType.MEMORY, OS.valueOf(agentRecord.os))
-            ?.loadQuery(
-                agentHashId = HashUtil.encodeLongId(agentRecord.id),
-                timeRange = timeRange
-            ) ?: emptyMap()
+        ) ?: throw NotFoundException("The agent is not exist")
+        return try {
+            return UsageMetrics.loadMetricsBean(UsageMetrics.MetricsType.MEMORY, OS.valueOf(agentRecord.os))
+                ?.loadQuery(
+                    agentHashId = HashUtil.encodeLongId(agentRecord.id),
+                    timeRange = timeRange
+                ) ?: emptyMap()
+        } catch (e: Exception) {
+            emptyMap()
+        }
     }
 
     fun queryDiskioMetrix(
@@ -378,14 +388,17 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             dslContext = dslContext,
             nodeId = id,
             projectId = projectId
-        )
-            ?: throw NotFoundException("The agent is not exist")
+        ) ?: throw NotFoundException("The agent is not exist")
 
-        return UsageMetrics.loadMetricsBean(UsageMetrics.MetricsType.DISK, OS.valueOf(agentRecord.os))
-            ?.loadQuery(
-                agentHashId = HashUtil.encodeLongId(agentRecord.id),
-                timeRange = timeRange
-            ) ?: emptyMap()
+        return try {
+            return UsageMetrics.loadMetricsBean(UsageMetrics.MetricsType.DISK, OS.valueOf(agentRecord.os))
+                ?.loadQuery(
+                    agentHashId = HashUtil.encodeLongId(agentRecord.id),
+                    timeRange = timeRange
+                ) ?: emptyMap()
+        } catch (e: Exception) {
+            emptyMap()
+        }
     }
 
     fun queryNetMetrix(
@@ -399,14 +412,17 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             dslContext = dslContext,
             nodeId = id,
             projectId = projectId
-        )
-            ?: throw NotFoundException("The agent is not exist")
+        ) ?: throw NotFoundException("The agent is not exist")
 
-        return UsageMetrics.loadMetricsBean(UsageMetrics.MetricsType.NET, OS.valueOf(agentRecord.os))
-            ?.loadQuery(
-                agentHashId = HashUtil.encodeLongId(agentRecord.id),
-                timeRange = timeRange
-            ) ?: emptyMap()
+        return try {
+            return UsageMetrics.loadMetricsBean(UsageMetrics.MetricsType.NET, OS.valueOf(agentRecord.os))
+                ?.loadQuery(
+                    agentHashId = HashUtil.encodeLongId(agentRecord.id),
+                    timeRange = timeRange
+                ) ?: emptyMap()
+        } catch (e: Exception) {
+            emptyMap()
+        }
     }
 
     fun generateAgent(
@@ -1255,6 +1271,21 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     }
 
     fun generateSecretKey() = ApiUtil.randomSecretKey()
+
+    fun agentTaskStarted(projectId: String, pipelineId: String, buildId: String, vmSeqId: String, agentId: String) {
+        val agentLongId = HashUtil.decodeIdToLong(agentId)
+        val agent = thirdPartyAgentDao.getAgent(dslContext, agentLongId)
+        if (agent == null) {
+            logger.warn("agent no found")
+            return
+        }
+        val now = LocalDateTime.now()
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            nodeDao.updateLastBuildTime(context, agent.nodeId, now)
+            agentPipelineRefDao.updateLastBuildTime(context, projectId, pipelineId, vmSeqId, agentLongId, now)
+        }
+    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(ThirdPartyAgentMgrService::class.java)

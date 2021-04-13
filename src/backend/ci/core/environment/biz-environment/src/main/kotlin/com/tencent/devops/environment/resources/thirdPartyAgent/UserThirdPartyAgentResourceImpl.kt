@@ -37,19 +37,22 @@ import com.tencent.devops.environment.api.thirdPartyAgent.UserThirdPartyAgentRes
 import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
+import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentPipelineRef
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentAction
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentDetail
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentLink
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStatusWithInfo
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
+import com.tencent.devops.environment.service.thirdPartyAgent.AgentPipelineService
 import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentMgrService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserThirdPartyAgentResourceImpl @Autowired constructor(
     private val thirdPartyAgentService: ThirdPartyAgentMgrService,
-    private val slaveGatewayService: SlaveGatewayService
+    private val slaveGatewayService: SlaveGatewayService,
+    private val agentPipelineService: AgentPipelineService
 ) : UserThirdPartyAgentResource {
     override fun isProjectEnable(userId: String, projectId: String): Result<Boolean> {
         checkUserId(userId)
@@ -162,6 +165,17 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
         checkProjectId(projectId)
         checkNodeId(nodeHashId)
         return Result(thirdPartyAgentService.getAgentDetail(userId, projectId, nodeHashId))
+    }
+
+    override fun listPipelineRef(
+        userId: String,
+        projectId: String,
+        nodeHashId: String
+    ): Result<List<AgentPipelineRef>> {
+        checkUserId(userId)
+        checkProjectId(projectId)
+        checkNodeId(nodeHashId)
+        return Result(agentPipelineService.listPipelineRef(userId, projectId, nodeHashId))
     }
 
     override fun listAgentBuilds(

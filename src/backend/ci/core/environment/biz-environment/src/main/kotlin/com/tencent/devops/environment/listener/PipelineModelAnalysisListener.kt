@@ -25,21 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:environment:api-environment")
-    compile project(":core:dispatch:api-dispatch")
-    compile project(":core:project:api-project")
-    compile project(":core:process:api-process")
-    compile project(":core:environment:model-environment")
-    compile project(":core:notify:api-notify")
-    compile project(":core:common:common-client")
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-environment-thirdpartyagent")
-    compile project(":core:common:common-auth:common-auth-api")
-    compile project(":core:common:common-db")
-    compile project(":core:common:common-websocket")
-    compile("org.apache.commons:commons-compress:1.15")
-    compile("org.json:json:20140107")
-    compile("org.influxdb:influxdb-java:2.10")
+package com.tencent.devops.environment.listener
+
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.event.pojo.pipeline.PipelineModelAnalysisEvent
+import com.tencent.devops.environment.service.thirdPartyAgent.AgentPipelineService
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
+
+@Component
+class PipelineModelAnalysisListener @Autowired constructor(
+    private val agentPipelineService: AgentPipelineService,
+    pipelineEventDispatcher: PipelineEventDispatcher
+) : BaseListener<PipelineModelAnalysisEvent>(pipelineEventDispatcher) {
+    override fun run(event: PipelineModelAnalysisEvent) {
+        try {
+            agentPipelineService.analysisPipelineRefAndSave(event)
+        } catch (ex: Exception) {
+            logger.error("analysisPipelineRefAndSave failed[${event.source}|${event.projectId}|${event.pipelineId}]",
+                ex)
+        }
+    }
 }

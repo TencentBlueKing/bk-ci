@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentBuildDetail
+import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentPipelineRef
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentAction
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentDetail
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentInfo
@@ -256,6 +257,21 @@ interface UserThirdPartyAgentResource {
         @PathParam("nodeHashId")
         nodeHashId: String
     ): Result<ThirdPartyAgentDetail?>
+
+    @ApiOperation("获取构建机详情")
+    @GET
+    @Path("/projects/{projectId}/nodes/{nodeHashId}/listPipelineRef")
+    fun listPipelineRef(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("Node Hash ID", required = true)
+        @PathParam("nodeHashId")
+        nodeHashId: String
+    ): Result<List<AgentPipelineRef>>
 
     @ApiOperation("获取第三方构建机任务")
     @GET

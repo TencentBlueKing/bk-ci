@@ -25,21 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:environment:api-environment")
-    compile project(":core:dispatch:api-dispatch")
-    compile project(":core:project:api-project")
-    compile project(":core:process:api-process")
-    compile project(":core:environment:model-environment")
-    compile project(":core:notify:api-notify")
-    compile project(":core:common:common-client")
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-environment-thirdpartyagent")
-    compile project(":core:common:common-auth:common-auth-api")
-    compile project(":core:common:common-db")
-    compile project(":core:common:common-websocket")
-    compile("org.apache.commons:commons-compress:1.15")
-    compile("org.json:json:20140107")
-    compile("org.influxdb:influxdb-java:2.10")
-}
+package com.tencent.devops.environment.pojo.thirdPartyAgent
+
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("第三方构建机流水线引用信息")
+data class AgentPipelineRef(
+    @ApiModelProperty("Node ID", required = true)
+    val nodeId: Long? = null,
+    @ApiModelProperty("Node Hash ID", required = true)
+    val nodeHashId: String? = null,
+    @ApiModelProperty("Agent ID", required = true)
+    val agentId: Long? = null,
+    @ApiModelProperty("Agent Hash ID", required = true)
+    val agentHashId: String? = null,
+    @ApiModelProperty("项目ID", required = true)
+    val projectId: String,
+    @ApiModelProperty("流水线ID", required = true)
+    val pipelineId: String,
+    @ApiModelProperty("流水线名称", required = true)
+    val pipelineName: String,
+    @ApiModelProperty("Vm Seq ID", required = true)
+    val vmSeqId: String?,
+    @ApiModelProperty("Job ID", required = true)
+    val jobId: String?,
+    @ApiModelProperty("Job Name", required = true)
+    val jobName: String,
+    @ApiModelProperty("上次构建时间", required = false)
+    val lastBuildTime: String? = ""
+)

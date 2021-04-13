@@ -131,4 +131,16 @@ interface UserNodeResource {
         @ApiParam("显示名称", required = true)
         displayName: DisplayName
     ): Result<Boolean>
+
+    @ApiOperation("获取项目构建节点列表")
+    @GET
+    @Path("/{projectId}/extListNodes")
+    fun extListNodes(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<List<NodeWithPermission>>
 }

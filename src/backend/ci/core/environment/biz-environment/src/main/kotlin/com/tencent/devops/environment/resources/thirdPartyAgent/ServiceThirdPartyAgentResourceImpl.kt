@@ -34,13 +34,15 @@ import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentPipelineRef
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineCreate
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineResponse
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineSeqId
-import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentPipelineService
+import com.tencent.devops.environment.service.thirdPartyAgent.AgentPipelineService
 import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentMgrService
+import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentPipelineService
 import com.tencent.devops.environment.service.thirdPartyAgent.UpgradeService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -48,7 +50,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
     private val thirdPartyAgentService: ThirdPartyAgentMgrService,
     private val upgradeService: UpgradeService,
-    private val thirdPartyAgentPipelineService: ThirdPartyAgentPipelineService
+    private val thirdPartyAgentPipelineService: ThirdPartyAgentPipelineService,
+    private val agentPipelineService: AgentPipelineService
 ) : ServiceThirdPartyAgentResource {
     override fun getAgentById(projectId: String, agentId: String): AgentResult<ThirdPartyAgent?> {
         return thirdPartyAgentService.getAgent(projectId, agentId)
@@ -94,6 +97,28 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         return Result(thirdPartyAgentService.listAgents(userId, projectId, os))
     }
 
+    override fun agentTaskStarted(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        vmSeqId: String,
+        agentId: String
+    ): Result<Boolean> {
+        thirdPartyAgentService.agentTaskStarted(projectId, pipelineId, buildId, vmSeqId, agentId)
+        return Result(true)
+    }
+
+    override fun listPipelineRef(
+        userId: String,
+        projectId: String,
+        nodeHashId: String
+    ): Result<List<AgentPipelineRef>> {
+        checkUserId(userId)
+        checkProjectId(projectId)
+        checkNodeId(nodeHashId)
+        return Result(agentPipelineService.listPipelineRef(userId, projectId, nodeHashId))
+    }
+
     private fun checkUserId(userId: String) {
         if (userId.isBlank()) {
             throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_, params = arrayOf("userId"))
@@ -103,6 +128,12 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
     private fun checkProjectId(projectId: String) {
         if (projectId.isBlank()) {
             throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_, params = arrayOf("projectId"))
+        }
+    }
+
+    private fun checkNodeId(nodeHashId: String) {
+        if (nodeHashId.isBlank()) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_, params = arrayOf("nodeId"))
         }
     }
 }
