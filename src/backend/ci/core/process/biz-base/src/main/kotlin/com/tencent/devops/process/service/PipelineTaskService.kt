@@ -38,6 +38,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
+import com.tencent.devops.model.process.tables.records.TPipelineModelTaskRecord
 import com.tencent.devops.process.dao.PipelineTaskDao
 import com.tencent.devops.process.engine.common.Timeout.MAX_MINUTES
 import com.tencent.devops.process.engine.control.ControlUtils
@@ -378,7 +379,6 @@ class PipelineTaskService @Autowired constructor(
         return true
     }
 
-    @Suppress("UNCHECKED_CAST")
     private fun updatePipelineTaskAtomVersion(pipelineInfoRecords: Result<TPipelineInfoRecord>?) {
         if (pipelineInfoRecords?.isNotEmpty == true) {
             pipelineInfoRecords.forEach { pipelineInfoRecord ->
@@ -388,23 +388,37 @@ class PipelineTaskService @Autowired constructor(
                     isAtomVersionNull = true
                 )
                 modelTasks?.forEach { modelTask ->
-                    val taskParamsStr = modelTask.taskParams
-                    val taskParams = if (!taskParamsStr.isNullOrBlank()) JsonUtil.getObjectMapper()
-                        .readValue(taskParamsStr, Map::class.java) as Map<String, Any> else mapOf()
-                    val atomVersion = taskParams[KEY_VERSION].toString()
-                    pipelineModelTaskDao.updateTaskAtomVersion(
-                        dslContext = dslContext,
-                        atomVersion = atomVersion,
-                        createTime = pipelineInfoRecord.createTime,
-                        updateTime = pipelineInfoRecord.updateTime,
-                        projectId = modelTask.projectId,
-                        pipelineId = modelTask.pipelineId,
-                        stageId = modelTask.stageId,
-                        containerId = modelTask.containerId,
-                        taskId = modelTask.taskId
-                    )
+                    updateModelTaskVersion(modelTask, pipelineInfoRecord)
                 }
             }
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun updateModelTaskVersion(
+        modelTask: TPipelineModelTaskRecord,
+        pipelineInfoRecord: TPipelineInfoRecord
+    ) {
+        val pipelineId = modelTask.pipelineId
+        val taskParamsStr = modelTask.taskParams
+        val taskParams = if (!taskParamsStr.isNullOrBlank()) JsonUtil.getObjectMapper()
+            .readValue(taskParamsStr, Map::class.java) as Map<String, Any?> else mapOf()
+        val atomVersion = taskParams[KEY_VERSION]?.toString()
+        try {
+            pipelineModelTaskDao.updateTaskAtomVersion(
+                dslContext = dslContext,
+                atomVersion = atomVersion ?: "",
+                createTime = pipelineInfoRecord.createTime,
+                updateTime = pipelineInfoRecord.updateTime,
+                projectId = modelTask.projectId,
+                pipelineId = pipelineId,
+                stageId = modelTask.stageId,
+                containerId = modelTask.containerId,
+                taskId = modelTask.taskId
+            )
+        } catch (ignored: Exception) {
+            val taskName = modelTask.taskName
+            logger.warn("update pipelineId:$pipelineId,taskName:$taskName version fail:", ignored)
         }
     }
 

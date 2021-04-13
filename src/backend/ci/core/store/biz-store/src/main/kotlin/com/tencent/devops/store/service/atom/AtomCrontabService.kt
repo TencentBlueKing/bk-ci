@@ -119,7 +119,7 @@ class AtomCrontabService @Autowired constructor(
                 logger.info("get lock failed, skip")
                 return
             }
-            marketAtomStatisticService.syncAtomDailyStatisticInfo(storeType, startTime, endTime)
+            marketAtomStatisticService.asyncAtomDailyStatisticInfo(storeType, startTime, endTime)
         } catch (ignored: Throwable) {
             logger.warn("atomDailyStatistic failed", ignored)
         } finally {
