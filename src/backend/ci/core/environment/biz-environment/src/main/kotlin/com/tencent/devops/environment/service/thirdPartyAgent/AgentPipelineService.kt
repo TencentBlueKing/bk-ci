@@ -82,7 +82,8 @@ class AgentPipelineService @Autowired constructor(
         pipelineModel.stages.forEach { stage ->
             stage.containers.forEach { container ->
                 if (container is VMBuildContainer && container.dispatchType is ThirdPartyAgentIDDispatchType) {
-                    val agentId = HashUtil.decodeIdToLong(container.thirdPartyAgentId!!)
+                    val agentHashId = (container.dispatchType!! as ThirdPartyAgentIDDispatchType).displayName
+                    val agentId = HashUtil.decodeIdToLong(agentHashId)
                     val agent = agentBuffer[agentId] ?: thirdPartyAgentDao.getAgent(dslContext, agentId)!!
                     agentPipelineRefs.add(
                         AgentPipelineRef(
@@ -115,14 +116,14 @@ class AgentPipelineService @Autowired constructor(
 
             val toDeleteRef = toDeleteRefMap.values
             val toAddRef = toAddRefMap.values
+
             agentPipelineRefDao.batchDelete(transactionContext, toDeleteRef.map { it.id })
             agentPipelineRefDao.batchAdd(transactionContext, toAddRef)
-
-            val modifiedAgentIds = mutableSetOf<Long>()
-            toDeleteRef.forEach { modifiedAgentIds.add(it.agentId) }
-            toAddRef.forEach { modifiedAgentIds.add(it.agentId!!) }
+            modifiedAgentIds.addAll(toDeleteRef.map { it.agentId })
+            modifiedAgentIds.addAll(toAddRef.map { it.agentId!! })
         }
 
+        logger.info("savePipelineRef, modifiedAgentIds: $modifiedAgentIds")
         modifiedAgentIds.forEach {
             updateRefCount(it)
         }
