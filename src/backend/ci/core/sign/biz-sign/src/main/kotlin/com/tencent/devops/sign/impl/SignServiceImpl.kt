@@ -132,7 +132,8 @@ class SignServiceImpl @Autowired constructor(
         signInfoService.finishZip(resignId, signedIpaFile, ipaSignInfo, taskExecuteCount)
 
         // 生产元数据
-        val properties = getProperties(ipaSignInfo, ipaInfoPlist)
+        val newInfoPlist = parsInfoPlist(findInfoPlist(ipaUnzipDir))
+        val properties = getProperties(ipaSignInfo, newInfoPlist)
 
         // 归档IPA包
         val archiveResult = archiveService.archive(signedIpaFile, ipaSignInfo, properties)
