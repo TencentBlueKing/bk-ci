@@ -29,6 +29,7 @@ package com.tencent.devops.misc.dao.process
 
 import com.tencent.devops.model.process.tables.TPipelineBuildHisDataClear
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
+import com.tencent.devops.model.process.tables.TPipelineDataClear
 import com.tencent.devops.model.process.tables.TPipelineInfo
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -59,6 +60,27 @@ class ProcessDao {
                 ).onDuplicateKeyUpdate()
                 .set(PROJECT_ID, projectId)
                 .set(BUILD_ID, buildId)
+                .execute()
+        }
+    }
+
+    fun addPipelineDataClear(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String
+    ) {
+        with(TPipelineDataClear.T_PIPELINE_DATA_CLEAR) {
+            dslContext.insertInto(
+                this,
+                PROJECT_ID,
+                PIPELINE_ID
+            )
+                .values(
+                    projectId,
+                    pipelineId
+                ).onDuplicateKeyUpdate()
+                .set(PROJECT_ID, projectId)
+                .set(PIPELINE_ID, pipelineId)
                 .execute()
         }
     }

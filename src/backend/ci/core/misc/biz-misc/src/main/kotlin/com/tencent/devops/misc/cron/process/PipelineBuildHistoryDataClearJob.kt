@@ -41,6 +41,7 @@ import com.tencent.devops.misc.service.quality.QualityDataClearService
 import com.tencent.devops.misc.service.repository.RepositoryDataClearService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
@@ -68,6 +69,9 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
         private const val PIPELINE_BUILD_HISTORY_DATA_CLEAR_PROJECT_LIST_KEY =
             "pipeline:build:history:data:clear:project:list"
     }
+
+    @Value("\${process.deletedPipelineStoreDays:30}")
+    private val deletedPipelineStoreDays: Int = 30 // 回收站已删除流水线保存天数
 
     @Scheduled(initialDelay = 10000, fixedDelay = 12000)
     fun pipelineBuildHistoryDataClear() {
