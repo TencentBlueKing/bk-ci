@@ -34,12 +34,14 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.pojo.pipeline.PipelineModelAnalysisEvent
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.thirdPartyAgent.AgentPipelineRefDao
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentPipelineRef
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -61,7 +63,8 @@ class AgentPipelineService @Autowired constructor(
             logger.info("analysisAndSave, [$source|$projectId|$pipelineId]")
             when (source) {
                 "create_pipeline", "update_pipeline", "restore_pipeline" -> {
-                    analysisPipelineRefAndSave(projectId, pipelineId, model)
+                    val pipelineModel = objectMapper.readValue<Model>(model)
+                    analysisPipelineRefAndSave(projectId, pipelineId, pipelineModel)
                 }
                 "delete_pipeline" -> {
                     cleanPipelineRef(projectId, pipelineId)
@@ -73,8 +76,7 @@ class AgentPipelineService @Autowired constructor(
         }
     }
 
-    private fun analysisPipelineRefAndSave(projectId: String, pipelineId: String, model: String) {
-        val pipelineModel = objectMapper.readValue<Model>(model)
+    private fun analysisPipelineRefAndSave(projectId: String, pipelineId: String, pipelineModel: Model) {
         val agentBuffer = mutableMapOf<Long, TEnvironmentThirdpartyAgentRecord>()
         val agentPipelineRefs = mutableListOf<AgentPipelineRef>()
         pipelineModel.stages.forEach { stage ->
@@ -167,6 +169,11 @@ class AgentPipelineService @Autowired constructor(
             )
         }
 
+    }
+
+    fun updatePipelineRef(userId: String, projectId: String, pipelineId: String) {
+        val model = client.get(ServicePipelineResource::class).get(userId, projectId, pipelineId, ChannelCode.BS).data
+        analysisPipelineRefAndSave(projectId, pipelineId, model!!)
     }
 
     companion object {

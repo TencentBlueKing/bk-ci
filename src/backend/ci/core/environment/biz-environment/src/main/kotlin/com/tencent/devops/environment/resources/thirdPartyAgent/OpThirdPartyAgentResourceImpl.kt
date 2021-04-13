@@ -35,6 +35,7 @@ import com.tencent.devops.environment.pojo.thirdPartyAgent.UpdateAgentRequest
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineCreate
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineResponse
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineSeqId
+import com.tencent.devops.environment.service.thirdPartyAgent.AgentPipelineService
 import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentMgrService
 import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentPipelineService
 import com.tencent.devops.environment.service.thirdPartyAgent.UpgradeService
@@ -45,6 +46,7 @@ class OpThirdPartyAgentResourceImpl @Autowired constructor(
     private val thirdPartyAgentService: ThirdPartyAgentMgrService,
     private val upgradeService: UpgradeService,
     private val thirdPartyAgentPipelineService: ThirdPartyAgentPipelineService,
+    private val agentPipelineService: AgentPipelineService,
     private val agentGrayUtils: AgentGrayUtils
 ) : OpThirdPartyAgentResource {
 
@@ -129,5 +131,9 @@ class OpThirdPartyAgentResourceImpl @Autowired constructor(
     override fun updateAgentGateway(updateAgentRequest: UpdateAgentRequest): Result<Boolean> {
         thirdPartyAgentService.updateAgentGateway(updateAgentRequest)
         return Result(true)
+    }
+
+    override fun updatePipelineRef(userId: String, projectId: String, pipelineId: String): Result<Boolean> {
+        agentPipelineService.updatePipelineRef(userId, projectId, pipelineId)
     }
 }
