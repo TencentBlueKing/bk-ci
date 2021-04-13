@@ -144,7 +144,7 @@ class SignServiceImpl @Autowired constructor(
             signInfoService.successResign(resignId, ipaSignInfo, taskExecuteCount)
         } catch (t: Throwable) {
             logger.error("[$resignId] sign failed with error.", t)
-            signInfoService.failResign(resignId, ipaSignInfo, taskExecuteCount, t.message ?: "Unknown error: ${t.printStackTrace()}")
+            signInfoService.failResign(resignId, ipaSignInfo, taskExecuteCount, t.message ?: "Unknown error")
         }
     }
 
