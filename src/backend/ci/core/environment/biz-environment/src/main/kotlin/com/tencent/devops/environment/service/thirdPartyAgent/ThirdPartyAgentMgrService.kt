@@ -140,7 +140,6 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             logger.warn("influx query error: ", e)
             AgentHostInfo("0", "0", "0")
         }
-        influxdbClient.queryHostInfo(agentHashId)
         return ThirdPartyAgentDetail(
             agentId = HashUtil.encodeLongId(agentRecord.id),
             nodeId = nodeHashId,
