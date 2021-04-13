@@ -114,7 +114,9 @@ class BcsClusterService @Autowired constructor(
                 "",
                 null,
                 now,
-                userId
+                userId,
+                0,
+                null
             )
         }
 

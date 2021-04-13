@@ -148,7 +148,9 @@ class DevCloudService @Autowired constructor(
                         devCloudVmParam.imageId,
                         taskId,
                         now,
-                        userId
+                        userId,
+                        0,
+                        null
                     )
                 )
             }

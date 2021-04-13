@@ -143,7 +143,9 @@ class OpNodeService @Autowired constructor(
                 "",
                 null,
                 now,
-                userId
+                userId,
+                0,
+                null
             )
         }
 

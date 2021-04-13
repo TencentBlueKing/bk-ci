@@ -176,7 +176,9 @@ class CmdbNodeService @Autowired constructor(
                 "",
                 null,
                 now,
-                userId
+                userId,
+                0,
+                null
             )
         }
 
@@ -242,7 +244,9 @@ class CmdbNodeService @Autowired constructor(
                 "",
                 null,
                 now,
-                userId
+                userId,
+                0,
+                null
             )
         }
 

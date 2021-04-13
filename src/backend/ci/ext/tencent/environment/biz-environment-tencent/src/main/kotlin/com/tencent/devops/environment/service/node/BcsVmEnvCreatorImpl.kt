@@ -106,7 +106,9 @@ class BcsVmEnvCreatorImpl @Autowired constructor(
                 "",
                 null,
                 now,
-                userId
+                userId,
+                0,
+                null
             )
         }
 
