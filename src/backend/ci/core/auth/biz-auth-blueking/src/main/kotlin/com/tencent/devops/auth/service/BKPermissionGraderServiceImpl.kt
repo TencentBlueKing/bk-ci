@@ -29,15 +29,15 @@
 package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.service.ManagerService
-import com.tencent.devops.auth.service.iam.PermissionGradeService
-import com.tencent.devops.auth.service.iam.impl.AbsPermissionRoleMemberImpl
+import com.tencent.devops.auth.service.iam.impl.AbsPermissionGradeServiceImpl
 import org.jvnet.hk2.annotations.Service
 import org.springframework.beans.factory.annotation.Autowired
 
 @Service
-class BkPermissionRoleMemberImpl @Autowired constructor(
-    override val iamManagerService: ManagerService,
-    private val permissionGradeService: PermissionGradeService
-): AbsPermissionRoleMemberImpl(iamManagerService, permissionGradeService) {
-    override fun checkUser(userId: String) { return }
+class BKPermissionGraderServiceImpl @Autowired constructor(
+    override val iamManagerService: ManagerService
+): AbsPermissionGradeServiceImpl(iamManagerService) {
+    override fun checkGradeManagerUser(userId: String, projectId: Int) {
+        super.checkGradeManagerUser(userId, projectId)
+    }
 }

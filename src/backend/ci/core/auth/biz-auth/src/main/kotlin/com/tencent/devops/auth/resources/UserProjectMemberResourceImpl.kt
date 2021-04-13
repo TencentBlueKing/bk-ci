@@ -28,24 +28,56 @@
 
 package com.tencent.devops.auth.resources
 
+import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerGroupMemberVo
 import com.tencent.devops.auth.api.user.UserProjectMemberResource
+import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.common.api.pojo.Result
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.RestController
 
 @RestController
 class UserProjectMemberResourceImpl @Autowired constructor(
-
+    val permissionRoleMemberService: PermissionRoleMemberService
 ) : UserProjectMemberResource {
-    override fun createRoleMember(userId: String, projectCode: String, roleId: String, members: List<String>): Result<Boolean> {
-        TODO("Not yet implemented")
+    override fun createRoleMember(
+        userId: String,
+        projectId: Int,
+        roleId: Int,
+        managerGroup: Boolean,
+        members: List<String>
+    ): Result<Boolean> {
+        permissionRoleMemberService.createRoleMember(
+            userId = userId,
+            projectId = projectId,
+            roleId = roleId,
+            members = members,
+            managerGroup = managerGroup
+        )
+        return Result(true)
     }
 
-    override fun getRoleMember(projectCode: String, roleId: String): Result<String> {
-        TODO("Not yet implemented")
+    override fun getRoleMember(projectId: Int, roleId: Int): Result<ManagerGroupMemberVo> {
+        return Result(
+            permissionRoleMemberService.getRoleMember(
+            projectId = projectId,
+            roleId = roleId
+        ))
     }
 
-    override fun deleteRoleMember(userId: String, projectCode: String, roleId: String, members: List<String>): Result<String> {
-        TODO("Not yet implemented")
+    override fun deleteRoleMember(
+        userId: String,
+        projectId: Int,
+        roleId: Int,
+        managerGroup: Boolean,
+        members: List<String>
+    ): Result<Boolean> {
+        Result(permissionRoleMemberService.deleteRoleMember(
+            userId = userId,
+            projectId = projectId,
+            roleId = roleId,
+            members = members,
+            managerGroup = managerGroup
+        ))
+        return Result(true)
     }
 }

@@ -26,15 +26,29 @@
  *
  */
 
-package com.tencent.devops.auth.service
+package com.tencent.devops.auth.service.iam.impl
 
-import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
-import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
+import com.tencent.bk.sdk.iam.dto.PageInfoDTO
+import com.tencent.bk.sdk.iam.service.ManagerService
+import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.service.iam.PermissionGradeService
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import org.springframework.beans.factory.annotation.Autowired
 
-interface PermissionRoleService {
-    fun createPermissionRole(userId: String, projectCode: String, groupInfo: ProjectRoleDTO): Boolean
+open class AbsPermissionGradeServiceImpl @Autowired constructor(
+    open val iamManagerService: ManagerService
+) : PermissionGradeService {
 
-    fun renamePermissionRole(userId: String, projectCode: String, roleId: String, groupInfo: ManagerRoleGroup)
+    override fun checkGradeManagerUser(userId: String, projectId: Int) {
+        val pageInfoDTO = PageInfoDTO()
+        pageInfoDTO.limit = 0
+        pageInfoDTO.offset = 500 // 一个用户最多可以加入500个项目
+        val managerProject = iamManagerService.getUserRole(userId, pageInfoDTO)
 
-    fun getPermissionRole(projectCode: String): List<ManagerRoleGroup>
+        if (!managerProject.contains(projectId)) {
+            AbsPermissionRoleMemberImpl.logger.warn("createRoleMem")
+            throw PermissionForbiddenException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.GRADE_CHECK_FAIL))
+        }
+    }
 }

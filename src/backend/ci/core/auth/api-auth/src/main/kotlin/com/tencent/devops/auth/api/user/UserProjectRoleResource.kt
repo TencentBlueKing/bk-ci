@@ -29,6 +29,7 @@
 package com.tencent.devops.auth.api.user
 
 import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
+import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerRoleGroupVO
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
@@ -43,6 +44,7 @@ import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_PROJECT_ROLE"], description = "项目-用户组")
@@ -51,29 +53,32 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserProjectRoleResource {
     @POST
-    @Path("/projectCodes/{projectCode}/")
+    @Path("/projectIds/{projectId}/")
     @ApiOperation("项目下添加指定组")
     fun createProjectRole(
         @ApiParam(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam(name = "项目标识", required = true)
-        @PathParam("projectCode")
+        @PathParam("projectId")
+        projectId: Int,
+        @ApiParam(name = "项目标识", required = true)
+        @QueryParam("projectCode")
         projectCode: String,
         @ApiParam("用户组信息", required = true)
         groupInfo: ProjectRoleDTO
     ): Result<String>
 
     @PUT
-    @Path("/projectCodes/{projectCode}/roleIds/{roleId}")
+    @Path("/projectIds/{projectId}/roleIds/{roleId}")
     @ApiOperation("用户组重命名")
     fun updateProjectRole(
         @ApiParam(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam(name = "项目标识", required = true)
-        @PathParam("projectCode")
-        projectCode: String,
+        @PathParam("projectId")
+        projectId: Int,
         @ApiParam(name = "角色Id", required = true)
         @PathParam("roleId")
         roleId: String,
@@ -82,14 +87,14 @@ interface UserProjectRoleResource {
     ): Result<Boolean>
 
     @GET
-    @Path("/projectCodes/{projectCode}")
+    @Path("/projectIds/{projectId}")
     @ApiOperation("用户组重命名")
     fun getProjectRoles(
         @ApiParam(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam(name = "项目标识", required = true)
-        @PathParam("projectCode")
-        projectCode: String
-    ): Result<Boolean>
+        @PathParam("projectId")
+        projectId: Int
+    ): Result<ManagerRoleGroupVO>
 }

@@ -26,18 +26,16 @@
  *
  */
 
-package com.tencent.devops.auth.service
+package com.tencent.devops.auth.service.iam
 
-import com.tencent.bk.sdk.iam.service.ManagerService
-import com.tencent.devops.auth.service.iam.PermissionGradeService
-import com.tencent.devops.auth.service.iam.impl.AbsPermissionRoleMemberImpl
-import org.jvnet.hk2.annotations.Service
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
+import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerRoleGroupVO
+import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 
-@Service
-class BkPermissionRoleMemberImpl @Autowired constructor(
-    override val iamManagerService: ManagerService,
-    private val permissionGradeService: PermissionGradeService
-): AbsPermissionRoleMemberImpl(iamManagerService, permissionGradeService) {
-    override fun checkUser(userId: String) { return }
+interface PermissionRoleService {
+    fun createPermissionRole(userId: String, projectId: Int, projectCode: String, groupInfo: ProjectRoleDTO): Int
+
+    fun renamePermissionRole(userId: String, projectId: Int, roleId: String, groupInfo: ManagerRoleGroup)
+
+    fun getPermissionRole(projectId: Int): ManagerRoleGroupVO
 }

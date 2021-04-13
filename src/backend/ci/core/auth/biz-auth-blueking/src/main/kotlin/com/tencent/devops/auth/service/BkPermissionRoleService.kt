@@ -28,16 +28,32 @@
 
 package com.tencent.devops.auth.service
 
+import com.tencent.bk.sdk.iam.config.IamConfiguration
+import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
+import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerRoleGroupVO
 import com.tencent.bk.sdk.iam.service.ManagerService
+import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.auth.service.iam.PermissionGradeService
-import com.tencent.devops.auth.service.iam.impl.AbsPermissionRoleMemberImpl
+import com.tencent.devops.auth.service.iam.impl.AbsPermissionRoleServiceImpl
 import org.jvnet.hk2.annotations.Service
 import org.springframework.beans.factory.annotation.Autowired
 
 @Service
-class BkPermissionRoleMemberImpl @Autowired constructor(
+class BkPermissionRoleService @Autowired constructor(
     override val iamManagerService: ManagerService,
-    private val permissionGradeService: PermissionGradeService
-): AbsPermissionRoleMemberImpl(iamManagerService, permissionGradeService) {
-    override fun checkUser(userId: String) { return }
+    private val permissionGradeService: PermissionGradeService,
+    private val iamConfiguration: IamConfiguration
+) : AbsPermissionRoleServiceImpl(iamManagerService, permissionGradeService, iamConfiguration) {
+
+    override fun createPermissionRole(userId: String, projectId: Int, projectCode: String, groupInfo: ProjectRoleDTO): Int {
+        return super.createPermissionRole(userId, projectId, projectCode, groupInfo)
+    }
+
+    override fun renamePermissionRole(userId: String, projectId: Int, roleId: String, groupInfo: ManagerRoleGroup) {
+        super.renamePermissionRole(userId, projectId, roleId, groupInfo)
+    }
+
+    override fun getPermissionRole(projectId: Int): ManagerRoleGroupVO {
+        return super.getPermissionRole(projectId)
+    }
 }

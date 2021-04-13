@@ -26,12 +26,14 @@
  *
  */
 
-package com.tencent.devops.auth.service
+package com.tencent.devops.auth.service.iam
+
+import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerGroupMemberVo
 
 interface PermissionRoleMemberService {
-    fun createRoleMember(userId: String, projectCode: String, roleId: String, members: List<String>)
+    fun createRoleMember(userId: String, projectId: Int, roleId: Int, members: List<String>, managerGroup: Boolean)
 
-    fun deleteRoleMember(userId: String, projectCode: String, roleId: String, members: List<String>)
+    fun deleteRoleMember(userId: String, projectId: Int, roleId: Int, members: List<String>, managerGroup: Boolean)
 
-    fun getRoleMember(projectCode: String, roleId: String): List<String>
+    fun getRoleMember(projectId: Int, roleId: Int): ManagerGroupMemberVo
 }
