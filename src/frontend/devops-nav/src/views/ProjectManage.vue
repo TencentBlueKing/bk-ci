@@ -72,19 +72,19 @@
                                 <div class="info">
                                     <p class="title">
                                         <template v-if="props.row.approvalStatus !== 2">
-                                            <a
+                                            <span
                                                 v-bk-tooltips="{ content: $t('accessDeny.noOperateAccessTip') }"
                                                 href="javascript:void(0)"
-                                                class="bk-text-button is-disabled"
+                                                class="is-disabled"
                                                 :title="$t('accessDeny.noOperateAccess')"
-                                            >{{ props.row.projectName }}</a>
+                                            >{{ props.row.projectName }}</span>
                                         </template>
                                         <template v-else>
-                                            <a
+                                            <span
                                                 href="javascript:void(0)"
-                                                :class="['bk-text-button', { 'is-disabled': !props.row.enabled }]"
+                                                :class="['title-text', { 'is-disabled': !props.row.enabled }]"
                                                 :title="props.row.projectName"
-                                            >{{ props.row.projectName }}</a>
+                                            >{{ props.row.projectName }}</span>
                                         </template>
                                     </p>
                                     <time class="time">{{ props.row.created_at }}</time>
@@ -615,6 +615,13 @@
                 > .title {
                     @include ellipsis();
                     display: block;
+                }
+                .title-text {
+                    color: #333948;
+                }
+                .is-disabled {
+                    color: #e6e6e6 !important;
+                    cursor: not-allowed;
                 }
             }
 
