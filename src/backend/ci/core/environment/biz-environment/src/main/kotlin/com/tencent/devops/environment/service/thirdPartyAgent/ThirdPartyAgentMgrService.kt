@@ -62,6 +62,7 @@ import com.tencent.devops.environment.dao.thirdPartyAgent.AgentPipelineRefDao
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentEnableProjectsDao
 import com.tencent.devops.environment.exception.AgentPermissionUnAuthorizedException
+import com.tencent.devops.environment.model.AgentHostInfo
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.enums.NodeStatus
@@ -133,7 +134,13 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         val displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, nodeRecord.displayName)
         val lastHeartbeatTime = thirdPartyAgentHeartbeatUtils.getHeartbeatTime(agentRecord.id, agentRecord.projectId)
         val parallelTaskCount = (agentRecord.parallelTaskCount ?: "").toString()
-        val agentHostInfo = influxdbClient.queryHostInfo(agentHashId)
+        val agentHostInfo = try {
+            influxdbClient.queryHostInfo(agentHashId)
+        } catch (e: Throwable) {
+            logger.warn("influx query error: ", e)
+            AgentHostInfo("0", "0", "0")
+        }
+        influxdbClient.queryHostInfo(agentHashId)
         return ThirdPartyAgentDetail(
             agentId = HashUtil.encodeLongId(agentRecord.id),
             nodeId = nodeHashId,
@@ -349,7 +356,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     agentHashId = HashUtil.encodeLongId(agentRecord.id),
                     timeRange = timeRange
                 ) ?: emptyMap()
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
+            logger.warn("influx query error: ", e)
             emptyMap()
         }
     }
@@ -367,12 +375,13 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             projectId = projectId
         ) ?: throw NotFoundException("The agent is not exist")
         return try {
-            return UsageMetrics.loadMetricsBean(UsageMetrics.MetricsType.MEMORY, OS.valueOf(agentRecord.os))
+            UsageMetrics.loadMetricsBean(UsageMetrics.MetricsType.MEMORY, OS.valueOf(agentRecord.os))
                 ?.loadQuery(
                     agentHashId = HashUtil.encodeLongId(agentRecord.id),
                     timeRange = timeRange
                 ) ?: emptyMap()
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
+            logger.warn("influx query error: ", e)
             emptyMap()
         }
     }
@@ -391,12 +400,13 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         ) ?: throw NotFoundException("The agent is not exist")
 
         return try {
-            return UsageMetrics.loadMetricsBean(UsageMetrics.MetricsType.DISK, OS.valueOf(agentRecord.os))
+            UsageMetrics.loadMetricsBean(UsageMetrics.MetricsType.DISK, OS.valueOf(agentRecord.os))
                 ?.loadQuery(
                     agentHashId = HashUtil.encodeLongId(agentRecord.id),
                     timeRange = timeRange
                 ) ?: emptyMap()
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
+            logger.warn("influx query error: ", e)
             emptyMap()
         }
     }
@@ -415,12 +425,13 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         ) ?: throw NotFoundException("The agent is not exist")
 
         return try {
-            return UsageMetrics.loadMetricsBean(UsageMetrics.MetricsType.NET, OS.valueOf(agentRecord.os))
+            UsageMetrics.loadMetricsBean(UsageMetrics.MetricsType.NET, OS.valueOf(agentRecord.os))
                 ?.loadQuery(
                     agentHashId = HashUtil.encodeLongId(agentRecord.id),
                     timeRange = timeRange
                 ) ?: emptyMap()
-        } catch (e: Exception) {
+        } catch (e: Throwable) {
+            logger.warn("influx query error: ", e)
             emptyMap()
         }
     }
