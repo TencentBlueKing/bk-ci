@@ -130,7 +130,7 @@ interface AppExperienceResource {
         @ApiParam("已安装的体验ID", required = false)
         @QueryParam("installedId")
         installedId: String? = null,
-        @ApiParam("已下载的体验ID列表", required = false)
+        @ApiParam("已下载的体验ID列表,逗号分隔", required = false)
         @QueryParam("downloadIds")
         downloadIds: String? = null
     ): Result<Pagination<ExperienceChangeLog>>
