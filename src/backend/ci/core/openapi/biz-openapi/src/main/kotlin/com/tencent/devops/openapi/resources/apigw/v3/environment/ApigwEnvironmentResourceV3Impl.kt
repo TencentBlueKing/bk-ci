@@ -119,7 +119,13 @@ class ApigwEnvironmentResourceV3Impl @Autowired constructor(
         return client.get(ServiceNodeResource::class).extListNodes(userId, projectId)
     }
 
-    override fun listPipelineRef(appCode: String?, apigwType: String?, userId: String, projectId: String, nodeHashId: String): Result<List<AgentPipelineRef>> {
+    override fun listPipelineRef(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        nodeHashId: String
+    ): Result<List<AgentPipelineRef>> {
         logger.info("listPipelineRef, userId: $userId, projectId: $projectId, nodeHashId: $nodeHashId")
         return client.get(ServiceThirdPartyAgentResource::class).listPipelineRef(userId, projectId, nodeHashId)
     }

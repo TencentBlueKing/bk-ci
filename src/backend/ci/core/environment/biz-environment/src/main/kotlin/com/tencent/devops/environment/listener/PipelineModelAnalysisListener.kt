@@ -43,7 +43,8 @@ class PipelineModelAnalysisListener @Autowired constructor(
         try {
             agentPipelineService.analysisPipelineRefAndSave(event)
         } catch (ex: Exception) {
-            logger.error("analysisPipelineRefAndSave failed[${event.source}|${event.projectId}|${event.pipelineId}]", ex)
+            logger.error("analysisPipelineRefAndSave failed[${event.source}|${event.projectId}|${event.pipelineId}]",
+                ex)
         }
     }
 }
