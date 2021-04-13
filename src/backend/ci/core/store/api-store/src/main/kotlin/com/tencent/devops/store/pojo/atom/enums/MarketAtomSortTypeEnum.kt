@@ -32,5 +32,6 @@ enum class MarketAtomSortTypeEnum {
     CREATE_TIME,
     UPDATE_TIME,
     PUBLISHER,
-    DOWNLOAD_COUNT
+    DOWNLOAD_COUNT,
+    RECENT_EXECUTE_NUM
 }

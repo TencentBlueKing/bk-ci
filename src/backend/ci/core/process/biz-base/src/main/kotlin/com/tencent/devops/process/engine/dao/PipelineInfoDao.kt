@@ -35,8 +35,11 @@ import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Field
 import org.jooq.Record1
 import org.jooq.Result
+import org.jooq.impl.DSL
+import org.jooq.impl.SQLDataType
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -191,12 +194,27 @@ class PipelineInfoDao {
         }
     }
 
-    fun listPipelineInfoByProject(dslContext: DSLContext, projectId: String, limit: Int, offset: Int): Result<TPipelineInfoRecord>? {
+    fun listPipelineInfoByProject(
+        dslContext: DSLContext,
+        projectId: String? = null,
+        limit: Int,
+        offset: Int,
+        deleteFlag: Boolean = false,
+        timeDescFlag: Boolean = true
+    ): Result<TPipelineInfoRecord>? {
         return with(T_PIPELINE_INFO) {
-            dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(DELETE.eq(false)).limit(limit).offset(offset)
-                .fetch()
+            val conditions = mutableListOf<Condition>()
+            if (projectId != null) {
+                conditions.add(PROJECT_ID.eq(projectId))
+            }
+            conditions.add(DELETE.eq(deleteFlag))
+            val baseQuery = dslContext.selectFrom(this).where(conditions)
+            if (timeDescFlag) {
+                baseQuery.orderBy(CREATE_TIME.desc())
+            } else {
+                baseQuery.orderBy(CREATE_TIME.asc())
+            }
+            baseQuery.limit(limit).offset(offset).fetch()
         }
     }
 
@@ -379,6 +397,23 @@ class PipelineInfoDao {
                     dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId)).and(PIPELINE_ID.`in`(pipelineIds))
                 }
             if (filterDelete) query.and(DELETE.eq(false))
+            query.fetch()
+        }
+    }
+
+    fun listOrderInfoByPipelineIds(
+        dslContext: DSLContext,
+        pipelineIds: List<String>
+    ): Result<TPipelineInfoRecord> {
+        return with(T_PIPELINE_INFO) {
+            val query = dslContext.selectFrom(this).where(PIPELINE_ID.`in`(pipelineIds))
+            val args = arrayOfNulls<Field<out Any>?>(pipelineIds.size + 1)
+            args[0] = DSL.field("PIPELINE_ID")
+            var index = 1
+            pipelineIds.forEach { pipelineId ->
+                args[index++] = DSL.`val`(pipelineId)
+            }
+            query.orderBy(DSL.function("field", SQLDataType.VARCHAR, *args))
             query.fetch()
         }
     }

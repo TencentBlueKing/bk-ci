@@ -34,7 +34,6 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.store.pojo.atom.AtomPipeline
 import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.atom.AtomPostResp
-import com.tencent.devops.store.pojo.atom.AtomStatistic
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
@@ -99,18 +98,6 @@ interface ServiceMarketAtomResource {
         @QueryParam("username")
         username: String
     ): Result<AtomVersion?>
-
-    @ApiOperation("根据插件代码获取插件统计信息")
-    @GET
-    @Path("/{atomCode}/statistic")
-    fun getAtomStatisticByCode(
-        @ApiParam("插件代码", required = true)
-        @PathParam("atomCode")
-        atomCode: String,
-        @ApiParam("用户名", required = true)
-        @QueryParam("username")
-        username: String
-    ): Result<AtomStatistic>
 
     @ApiOperation("根据插件代码获取使用的流水线详情")
     @GET

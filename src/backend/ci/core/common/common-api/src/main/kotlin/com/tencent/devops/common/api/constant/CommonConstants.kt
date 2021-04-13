@@ -72,6 +72,14 @@ const val JS = "js" // js
 const val PATTERN_STYLE = "patternStyle" // 正则表达式规则
 const val MESSAGE = "message" // 提示信息
 const val STATIC = "static" // 静态资源
+const val NAME = "name" // 名称
+const val FAIL_NUM = "failNum" // 失败数量
+const val VERSION = "version" // 版本号
+const val PIPELINE_URL = "pipelineUrl" // 流水线链接
+const val LATEST_MODIFIER = "latestModifier" // 最近修改人
+const val LATEST_UPDATE_TIME = "latestUpdateTime" // 最近修改时间
+const val LATEST_EXECUTOR = "latestExecutor" // 最近执行人
+const val LATEST_EXECUTE_TIME = "latestExecuteTime" // 最近执行时间
 
 const val KEY_START_TIME = "startTime"
 const val KEY_END_TIME = "endTime"

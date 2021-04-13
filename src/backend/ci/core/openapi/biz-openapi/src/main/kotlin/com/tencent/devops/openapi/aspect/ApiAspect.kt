@@ -27,6 +27,9 @@
 package com.tencent.devops.openapi.aspect
 
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_REDIS_KEY
+import com.tencent.devops.common.client.consul.ConsulContent
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.openapi.filter.ApiFilter
 import com.tencent.devops.openapi.service.op.AppCodeService
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
@@ -43,7 +46,8 @@ import org.springframework.stereotype.Component
 @Suppress("ALL")
 class ApiAspect(
     private val appCodeService: AppCodeService,
-    private val apiGatewayUtil: ApiGatewayUtil
+    private val apiGatewayUtil: ApiGatewayUtil,
+    private val redisOperation: RedisOperation
 ) {
 
     companion object {
@@ -104,6 +108,12 @@ class ApiAspect(
                 throw PermissionForbiddenException(
                     message = "Permission denied: apigwType[$apigwType],appCode[$appCode],ProjectId[$projectId]"
                 )
+            }
+
+            // openAPI 网关无法判别项目信息, 切面捕获project信息。 剩余一种URI内无${projectId}的情况,接口自行处理
+            val projectConsulTag = redisOperation.hget(PROJECT_TAG_REDIS_KEY, projectId)
+            if (!projectConsulTag.isNullOrEmpty()) {
+                ConsulContent.setConsulContent(projectConsulTag)
             }
         }
     }

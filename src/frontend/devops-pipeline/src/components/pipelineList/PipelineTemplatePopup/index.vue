@@ -224,7 +224,9 @@
                             ...item,
                             isInstall: !item.installed,
                             isFlag: item.flag,
-                            stages: (pipelineTemplate[item.code] && pipelineTemplate[item.code].stages) || []
+                            stages: (pipelineTemplate[item.code] && pipelineTemplate[item.code].stages) || [],
+                            templateId: (pipelineTemplate[item.code] && pipelineTemplate[item.code].templateId) || undefined,
+                            version: (pipelineTemplate[item.code] && pipelineTemplate[item.code].version) || undefined
                         }
                     })
                 } else {

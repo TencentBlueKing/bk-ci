@@ -55,7 +55,7 @@ class PluginGitCheckDao {
                 RepositoryType.ID -> step.and(REPO_ID.eq(repositoryConfig.getRepositoryId()))
                 RepositoryType.NAME -> step.and(REPO_NAME.eq(repositoryConfig.getRepositoryId()))
             }
-            return step.fetchOne()
+            return step.fetchAny()
         }
     }
 
