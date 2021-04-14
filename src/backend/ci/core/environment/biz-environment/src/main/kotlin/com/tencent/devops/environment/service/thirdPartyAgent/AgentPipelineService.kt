@@ -34,14 +34,14 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.pojo.pipeline.PipelineModelAnalysisEvent
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
-import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.thirdPartyAgent.AgentPipelineRefDao
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
+import com.tencent.devops.environment.pojo.AgentPipelineRefInfo
+import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentPipelineRef
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
-import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -51,56 +51,60 @@ import java.time.format.DateTimeFormatter
 
 @Service
 class AgentPipelineService @Autowired constructor(
-    private val client: Client,
     private val dslContext: DSLContext,
     private val agentPipelineRefDao: AgentPipelineRefDao,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
     private val nodeDao: NodeDao,
     private val objectMapper: ObjectMapper
 ) {
-    fun analysisPipelineRefAndSave(event: PipelineModelAnalysisEvent) {
-        with(event) {
-            logger.info("analysisAndSave, [$source|$projectId|$pipelineId]")
-            when (source) {
-                "create_pipeline", "update_pipeline", "restore_pipeline" -> {
-                    val pipelineModel = objectMapper.readValue<Model>(model)
-                    analysisPipelineRefAndSave(projectId, pipelineId, pipelineModel)
+    fun updatePipelineRef(
+        userId: String,
+        projectId: String,
+        request: AgentPipelineRefRequest
+    ) {
+        logger.info("updatePipelineRef: [$userId|$projectId|${request.action}|${request.pipelineId}}]")
+        val agentBuffer = mutableMapOf<Long, TEnvironmentThirdpartyAgentRecord>()
+        val agentPipelineRefs = mutableListOf<AgentPipelineRef>()
+        when (request.action) {
+            "create_pipeline", "update_pipeline", "restore_pipeline", "op" -> {
+                if (request.pipelineRefInfos.isEmpty()) {
+                    logger.warn("")
+                    return
                 }
-                "delete_pipeline" -> {
-                    cleanPipelineRef(projectId, pipelineId)
-                }
-                else -> {
-                    logger.warn("source($source) not supported")
-                }
+                savePipelineRefInfo(projectId, request.pipelineId, request.pipelineRefInfos)
+            }
+            "delete_pipeline" -> {
+                cleanPipelineRef(projectId, request.pipelineId)
+            }
+            else -> {
+                logger.warn("action(${request.action}) not supported")
             }
         }
     }
 
-    private fun analysisPipelineRefAndSave(projectId: String, pipelineId: String, pipelineModel: Model) {
+    private fun savePipelineRefInfo(
+        projectId: String,
+        pipelineId: String,
+        agentPipelineRefInfos: List<AgentPipelineRefInfo>
+    ) {
         val agentBuffer = mutableMapOf<Long, TEnvironmentThirdpartyAgentRecord>()
         val agentPipelineRefs = mutableListOf<AgentPipelineRef>()
-        pipelineModel.stages.forEach { stage ->
-            stage.containers.forEach { container ->
-                if (container is VMBuildContainer && container.dispatchType is ThirdPartyAgentIDDispatchType) {
-                    val agentHashId = (container.dispatchType!! as ThirdPartyAgentIDDispatchType).displayName
-                    val agentId = HashUtil.decodeIdToLong(agentHashId)
-                    val agent = agentBuffer[agentId] ?: thirdPartyAgentDao.getAgent(dslContext, agentId)!!
-                    agentPipelineRefs.add(
-                        AgentPipelineRef(
-                            agentId = agent.id,
-                            nodeId = agent.nodeId,
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            pipelineName = pipelineModel.name,
-                            vmSeqId = container.id,
-                            jobId = container.containerId,
-                            jobName = container.name
-                        )
-                    )
-                }
-            }
+        agentPipelineRefInfos.forEach { refInfo ->
+            val agentId = HashUtil.decodeIdToLong(refInfo.agentHashId)
+            val agent = agentBuffer[agentId] ?: thirdPartyAgentDao.getAgent(dslContext, agentId)!!
+            agentPipelineRefs.add(
+                AgentPipelineRef(
+                    agentId = agent.id,
+                    nodeId = agent.nodeId,
+                    projectId = projectId,
+                    pipelineId = refInfo.pipelineId,
+                    pipelineName = refInfo.pipelineName,
+                    vmSeqId = refInfo.vmSeqId,
+                    jobId = refInfo.jobId,
+                    jobName = refInfo.jobName
+                )
+            )
         }
-
         savePipelineRef(projectId, pipelineId, agentPipelineRefs)
     }
 
@@ -169,11 +173,6 @@ class AgentPipelineService @Autowired constructor(
                 }
             )
         }
-    }
-
-    fun updatePipelineRef(userId: String, projectId: String, pipelineId: String) {
-        val model = client.get(ServicePipelineResource::class).get(userId, projectId, pipelineId, ChannelCode.BS).data
-        analysisPipelineRefAndSave(projectId, pipelineId, model!!)
     }
 
     companion object {

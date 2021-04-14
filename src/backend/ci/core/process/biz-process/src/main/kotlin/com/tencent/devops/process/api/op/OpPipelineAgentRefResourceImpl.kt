@@ -25,20 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:environment:api-environment")
-    compile project(":core:dispatch:api-dispatch")
-    compile project(":core:project:api-project")
-    compile project(":core:environment:model-environment")
-    compile project(":core:notify:api-notify")
-    compile project(":core:common:common-client")
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-web")
-    compile project(":core:common:common-environment-thirdpartyagent")
-    compile project(":core:common:common-auth:common-auth-api")
-    compile project(":core:common:common-db")
-    compile project(":core:common:common-websocket")
-    compile("org.apache.commons:commons-compress:1.15")
-    compile("org.json:json:20140107")
-    compile("org.influxdb:influxdb-java:2.10")
+package com.tencent.devops.process.api.op
+
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.engine.service.AgentPipelineRefService
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class OpPipelineAgentRefResourceImpl @Autowired constructor(
+    private val agentPipelineRefService: AgentPipelineRefService
+) : OpPipelineAgentRefResource {
+    override fun updateAgentPipelineRef(userId: String, projectId: String, pipelineId: String): Result<Boolean> {
+        agentPipelineRefService.updatePipelineRef(userId, projectId, pipelineId)
+        return Result(true)
+    }
 }
