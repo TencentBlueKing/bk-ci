@@ -157,7 +157,8 @@ class ExperiencePublicDao {
         bundleIdentifier: String,
         endDate: LocalDateTime,
         size: Long,
-        logoUrl: String
+        logoUrl: String,
+        scheme: String
     ) {
         val now = LocalDateTime.now()
         with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
@@ -175,7 +176,8 @@ class ExperiencePublicDao {
                 UPDATE_TIME,
                 DOWNLOAD_TIME,
                 SIZE,
-                LOGO_URL
+                LOGO_URL,
+                SCHEME
             ).values(
                 recordId,
                 projectId,
@@ -189,7 +191,8 @@ class ExperiencePublicDao {
                 now,
                 0,
                 size,
-                logoUrl
+                logoUrl,
+                scheme
             ).onDuplicateKeyUpdate()
                 .set(RECORD_ID, recordId)
                 .set(EXPERIENCE_NAME, experienceName)

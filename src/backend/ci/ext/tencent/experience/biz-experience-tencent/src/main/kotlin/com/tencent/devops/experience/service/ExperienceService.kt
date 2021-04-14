@@ -412,7 +412,8 @@ class ExperienceService @Autowired constructor(
                 experienceId,
                 platform,
                 appBundleIdentifier,
-                logoUrl
+                logoUrl,
+                scheme
             )
         } else {
             offlinePublicExperience(projectId, platform, appBundleIdentifier)
@@ -441,7 +442,8 @@ class ExperienceService @Autowired constructor(
         experienceId: Long,
         platform: PlatformEnum,
         appBundleIdentifier: String,
-        logoUrl: String
+        logoUrl: String,
+        scheme: String
     ) {
 
         experiencePublicDao.create(
@@ -454,7 +456,8 @@ class ExperienceService @Autowired constructor(
             bundleIdentifier = appBundleIdentifier,
             endDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(experience.expireDate), ZoneId.systemDefault()),
             size = size,
-            logoUrl = logoUrl
+            logoUrl = logoUrl,
+            scheme = scheme
         )
     }
 

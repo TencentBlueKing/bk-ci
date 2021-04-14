@@ -82,12 +82,10 @@ class AppExperienceResourceImpl @Autowired constructor(
         userId: String,
         experienceHashId: String,
         page: Int,
-        pageSize: Int,
-        installedId: String?,
-        downloadIds: String?
+        pageSize: Int
     ): Result<Pagination<ExperienceChangeLog>> {
         checkParam(userId, experienceHashId)
-        val result = experienceAppService.changeLog(userId, experienceHashId, page, pageSize, installedId, downloadIds)
+        val result = experienceAppService.changeLog(userId, experienceHashId, page, pageSize)
         return Result(result)
     }
 

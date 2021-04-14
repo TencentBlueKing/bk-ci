@@ -126,13 +126,7 @@ interface AppExperienceResource {
         page: Int,
         @ApiParam("每页数目", required = true)
         @QueryParam("pageSize")
-        pageSize: Int,
-        @ApiParam("已安装的体验ID", required = false)
-        @QueryParam("installedId")
-        installedId: String? = null,
-        @ApiParam("已下载的体验ID列表,逗号分隔", required = false)
-        @QueryParam("downloadIds")
-        downloadIds: String? = null
+        pageSize: Int
     ): Result<Pagination<ExperienceChangeLog>>
 
     @ApiOperation("创建外部直接下载链接")

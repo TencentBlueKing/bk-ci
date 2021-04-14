@@ -1,13 +1,20 @@
 package com.tencent.devops.experience.dao
 
+import com.google.common.cache.CacheBuilder
 import com.tencent.devops.model.experience.tables.TExperienceLastDownload
 import com.tencent.devops.model.experience.tables.records.TExperienceLastDownloadRecord
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
 @Repository
 class ExperienceLastDownloadDao {
+    private val USER_DOWNLOAD_CACHE =
+        CacheBuilder.newBuilder().expireAfterWrite(10, TimeUnit.SECONDS).maximumSize(50000)
+            .build<String, Result<TExperienceLastDownloadRecord>?>()
+
     fun upset(
         dslContext: DSLContext,
         userId: String,
@@ -62,4 +69,18 @@ class ExperienceLastDownloadDao {
                 .fetchOne()
         }
     }
+
+    fun listByUserId(
+        dslContext: DSLContext,
+        userId: String
+    ): Result<TExperienceLastDownloadRecord>? {
+        return USER_DOWNLOAD_CACHE.get(userId) {
+            with(TExperienceLastDownload.T_EXPERIENCE_LAST_DOWNLOAD) {
+                dslContext.selectFrom(this)
+                    .where(USER_ID.eq(userId))
+                    .fetch()
+            }
+        }
+    }
+
 }

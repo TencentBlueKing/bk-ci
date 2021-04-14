@@ -46,14 +46,14 @@ data class ExperienceChangeLog(
     val experienceName: String,
     @ApiModelProperty("文件大小(byte)", required = true)
     val size: Long,
-    @ApiModelProperty("状态", required = true)
-    val appStatus: Int,
-    @ApiModelProperty("是否上次下载", required = true)
-    val lastDownload: Boolean,
-    @ApiModelProperty("应用Scheme", required = false)
-    val appScheme: String,
+    @ApiModelProperty("logo链接", required = true)
+    val logoUrl: String,
     @ApiModelProperty("版本体验BundleIdentifier", required = true)
     val bundleIdentifier: String,
-    @ApiModelProperty("logo链接", required = true)
-    val logoUrl: String
+    @ApiModelProperty("应用Scheme", required = false)
+    val appScheme: String,
+    @ApiModelProperty("是否过期", required = true)
+    val expired: Boolean,
+    @ApiModelProperty("上次下载的体验ID", required = true)
+    val lastDownloadHashId: String
 )
