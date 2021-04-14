@@ -94,7 +94,7 @@ interface ProjectService {
     /**
      * 获取所有项目信息
      */
-    fun list(userId: String, accessToken: String?, enabled: Boolean?): List<ProjectVO>
+    fun list(userId: String, accessToken: String?, enabled: Boolean? = null): List<ProjectVO>
 
     fun list(userId: String): List<ProjectVO>
 
@@ -138,4 +138,6 @@ interface ProjectService {
         permission: AuthPermission,
         accessToken: String?
     ): Boolean
+
+    fun listSecrecyProject(): Set<String>?
 }

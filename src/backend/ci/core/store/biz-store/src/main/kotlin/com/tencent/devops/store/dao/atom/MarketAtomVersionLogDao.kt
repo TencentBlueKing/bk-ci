@@ -32,6 +32,7 @@ import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.TAtomVersionLog
 import com.tencent.devops.model.store.tables.records.TAtomVersionLogRecord
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -71,6 +72,14 @@ class MarketAtomVersionLogDao {
             return dslContext.selectFrom(this)
                 .where(ATOM_ID.eq(atomId))
                 .fetchOne()
+        }
+    }
+
+    fun getAtomVersions(dslContext: DSLContext, atomIds: List<String>): Result<TAtomVersionLogRecord>? {
+        with(TAtomVersionLog.T_ATOM_VERSION_LOG) {
+            return dslContext.selectFrom(this)
+                .where(ATOM_ID.`in`(atomIds))
+                .fetch()
         }
     }
 
