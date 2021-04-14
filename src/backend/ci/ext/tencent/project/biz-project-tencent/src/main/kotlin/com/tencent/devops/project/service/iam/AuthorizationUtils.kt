@@ -123,19 +123,16 @@ object AuthorizationUtils {
     ): AuthorizationScopes {
         val actions = projectAction.split(",")
         // TODO: 添加project相关action
-        val managerPath = ManagerPath()
-        managerPath.id = projectId
-        managerPath.name = projectName
-        managerPath.system = iamConfiguration.systemId
-        managerPath.type = AuthResourceType.PROJECT.value
+        val managerPath = ManagerPath(iamConfiguration.systemId, AuthResourceType.PROJECT.value, projectId, projectName)
         val managerPaths = mutableListOf<ManagerPath>()
         managerPaths.add(managerPath)
         val paths = mutableListOf<List<ManagerPath>>()
         paths.add(managerPaths)
-        val resource = ManagerResources()
-        resource.type = AuthResourceType.PROJECT.value
-        resource.system = iamConfiguration.systemId
-        resource.paths = paths
+        val resource = ManagerResources.builder()
+            .system(iamConfiguration.systemId)
+            .paths(paths)
+            .type(AuthResourceType.PROJECT.value)
+            .build()
         val resources = mutableListOf<ManagerResources>()
         resources.add(resource)
         return AuthorizationScopes
@@ -153,24 +150,14 @@ object AuthorizationUtils {
         actions: List<String>,
         resourceType: String
     ): AuthorizationScopes {
-        val projectManagerPath = ManagerPath()
-        projectManagerPath.id = projectId
-        projectManagerPath.name = projectName
-        projectManagerPath.system = iamConfiguration.systemId
-        projectManagerPath.type = AuthResourceType.PROJECT.value
-        val resourceManagerPath = ManagerPath()
-        resourceManagerPath.id = "*"
-        resourceManagerPath.system = iamConfiguration.systemId
-        resourceManagerPath.type = resourceType
+        val projectManagerPath = ManagerPath(iamConfiguration.systemId, AuthResourceType.PROJECT.value, projectId, projectName)
+        val resourceManagerPath = ManagerPath(iamConfiguration.systemId, resourceType, "*", "")
         val managerPaths = mutableListOf<ManagerPath>()
         managerPaths.add(projectManagerPath)
         managerPaths.add(resourceManagerPath)
         val paths = mutableListOf<List<ManagerPath>>()
         paths.add(managerPaths)
-        val resource = ManagerResources()
-        resource.type = resourceType
-        resource.system = iamConfiguration.systemId
-        resource.paths = paths
+        val resource = ManagerResources.builder().system(iamConfiguration.systemId).type(resourceType).paths(paths).build()
         val resources = mutableListOf<ManagerResources>()
         resources.add(resource)
         return AuthorizationScopes
