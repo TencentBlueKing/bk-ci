@@ -588,7 +588,8 @@ class ProjectDao {
         englishNameList: List<String>,
         offset: Int? = null,
         limit: Int? = null,
-        searchName: String? = null
+        searchName: String? = null,
+        enabled: Boolean? = null
     ): Result<TProjectRecord> {
         with(TProject.T_PROJECT) {
             return dslContext.selectFrom(this)
@@ -596,6 +597,7 @@ class ProjectDao {
                 .and(ENGLISH_NAME.`in`(englishNameList))
                 .and(IS_OFFLINED.eq(false))
                 .let { if (null == searchName) it else it.and(PROJECT_NAME.like("%$searchName%")) }
+                .let { if (null == enabled) it else it.and(ENABLED.eq(enabled)) }
                 .let { if (null == offset || null == limit) it else it.limit(offset, limit) }
                 .fetch()
         }
