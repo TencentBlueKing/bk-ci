@@ -142,4 +142,8 @@ class ServiceProjectResourceImpl @Autowired constructor(
     override fun getProjectListById(minId: Long, maxId: Long): Result<List<ProjectBaseInfo>> {
         return Result(projectService.getProjectListById(minId, maxId))
     }
+
+    override fun listSecrecyProject(): Result<Set<String>?> {
+        return Result(projectService.listSecrecyProject())
+    }
 }

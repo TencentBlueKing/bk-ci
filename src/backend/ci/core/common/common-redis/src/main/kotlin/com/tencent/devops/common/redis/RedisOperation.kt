@@ -132,8 +132,8 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>) {
         return redisTemplate.opsForHash<String, String>().entries(key)
     }
 
-    fun sadd(key: String, values: String): Long? {
-        return redisTemplate.opsForSet().add(key, values)
+    fun sadd(key: String, vararg values: String): Long? {
+        return redisTemplate.opsForSet().add(key, *values)
     }
 
     fun sremove(key: String, values: String): Long? {
