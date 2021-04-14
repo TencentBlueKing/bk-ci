@@ -14,7 +14,6 @@
 </template>
 
 <script>
-import {healthEventSource} from './service/stream';
 import MonitorContainer from "./components/monitor-container";
 import MonitorPanel from "./components/monitor-panel";
 import MetricMonitor from "./monitor/metric/metric-monitor";
@@ -46,13 +45,9 @@ export default {
     };
   },
   mounted() {
-    window.onbeforeunload = () => healthEventSource.close();
   },
 
   created() {
-    console.log(this.applications[0].instances[0].id)
-    console.log("id: ", this.applications[0].instances[0].id)
-    console.log(this.applications[0].instances[0].id.value)
     this.getConfig().then(response => {
       this.metricList = Object.keys(response.data.metrics)
       this.healthList = Object.keys(response.data.health)
