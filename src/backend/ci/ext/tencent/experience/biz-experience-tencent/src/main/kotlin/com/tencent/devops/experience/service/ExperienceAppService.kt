@@ -33,6 +33,7 @@ import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.util.UrlUtil
 import com.tencent.devops.common.api.enums.PlatformEnum
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.VersionUtil
@@ -40,6 +41,7 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.experience.constant.ExperienceConstant
+import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.constant.ProductCategoryEnum
 import com.tencent.devops.experience.dao.ExperienceDao
@@ -165,13 +167,22 @@ class ExperienceAppService(
 
     fun detail(userId: String, experienceHashId: String, platform: Int, appVersion: String?): AppExperienceDetail {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
+        val isOldVersion = VersionUtil.compare(appVersion, "2.0.0") < 0
+        val canExperience = experienceBaseService.userCanExperience(userId, experienceId)
+
+        // 新版本直接抛异常
+        if (!isOldVersion && !canExperience) {
+            throw ErrorCodeException(
+                statusCode = 403,
+                defaultMessage = "没有权限访问资源",
+                errorCode = ExperienceMessageCode.USER_NEED_EXP_X_PERMISSION
+            )
+        }
+
         val experience = experienceDao.get(dslContext, experienceId)
         val projectId = experience.projectId
         val bundleIdentifier = experience.bundleIdentifier
-
         val isExpired = DateUtil.isExpired(experience.endDate)
-        val canExperience = experienceBaseService.userCanExperience(userId, experienceId)
-
         val logoUrl = UrlUtil.toOuterPhotoAddr(experience.logoUrl)
         val projectName = experience.projectId
         val version = experience.version
@@ -185,7 +196,6 @@ class ExperienceAppService(
         val categoryId = if (experience.category < 0) ProductCategoryEnum.LIFE.id else experience.category
         val publicExperience = experienceGroupDao.count(dslContext, experience.id, ExperienceConstant.PUBLIC_GROUP) > 0
 
-        val isOldVersion = VersionUtil.compare(appVersion, "2.0.0") < 0
         val changeLog = if (isOldVersion) {
             getChangeLog(projectId, bundleIdentifier, null, 1, 1000, true)
         } else {

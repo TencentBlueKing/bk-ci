@@ -28,6 +28,9 @@ package com.tencent.devops.openapi.service.apigw
 
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.consul.ConsulConstants
+import com.tencent.devops.common.client.consul.ConsulContent
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.project.api.pojo.PipelinePermissionInfo
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.pojo.ProjectCreateUserDTO
@@ -44,7 +47,8 @@ import org.springframework.stereotype.Service
 @Service
 class ApigwProjectService(
     private val client: Client,
-    private val organizationProjectService: OrganizationProjectService
+    private val organizationProjectService: OrganizationProjectService,
+    private val redisOperation: RedisOperation
 ) {
 
     companion object {
@@ -143,5 +147,14 @@ class ApigwProjectService(
     ): List<BKAuthProjectRolesResources>? {
         logger.info("createPipelinePermission:organizationType[$organizationType],organizationId[$organizationId],projectCode[$projectCode]")
         return client.get(ServiceTxProjectResource::class).getProjectRoles(projectCode, organizationType, organizationId).data
+    }
+
+    fun setProjectRouteType(
+        projectCode: String
+    ) {
+        val projectRouteTag = redisOperation.hget(ConsulConstants.PROJECT_TAG_REDIS_KEY, projectCode)
+        if (!projectRouteTag.isNullOrEmpty()) {
+            ConsulContent.setConsulContent(projectRouteTag!!)
+        }
     }
 }

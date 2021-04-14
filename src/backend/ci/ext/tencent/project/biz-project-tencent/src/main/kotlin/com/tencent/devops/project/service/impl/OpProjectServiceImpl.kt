@@ -38,6 +38,7 @@ import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.gray.MacOSGray
 import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectLabelRelDao
@@ -132,7 +133,11 @@ class OpProjectServiceImpl @Autowired constructor(
                 projectId = projectId,
                 labelIdList = labelIdList!!
             )
-
+            if (!projectInfoRequest.secrecyFlag) {
+                redisOperation.removeSetMember(SECRECY_PROJECT_REDIS_KEY, dbProjectRecord.englishName)
+            } else {
+                redisOperation.addSetValue(SECRECY_PROJECT_REDIS_KEY, dbProjectRecord.englishName)
+            }
             projectDispatcher.dispatch(
                 ProjectUpdateBroadCastEvent(
                     userId = userId,

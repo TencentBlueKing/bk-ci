@@ -37,12 +37,15 @@ import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.artifactory.service.PipelineService
 import com.tencent.devops.artifactory.service.artifactory.ArtifactoryAppService
 import com.tencent.devops.artifactory.service.artifactory.ArtifactorySearchService
 import com.tencent.devops.artifactory.service.artifactory.ArtifactoryService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoAppService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoSearchService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoService
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
@@ -50,6 +53,7 @@ import com.tencent.devops.common.api.util.VersionUtil
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_ICON
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_USER_ID
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.RepoGray
@@ -57,6 +61,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.apache.commons.lang3.StringUtils
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.BadRequestException
 
@@ -68,6 +73,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
     private val bkRepoSearchService: BkRepoSearchService,
     private val artifactoryAppService: ArtifactoryAppService,
     private val bkRepoAppService: BkRepoAppService,
+    private val pipelineService: PipelineService,
     private val redisOperation: RedisOperation,
     private val repoGray: RepoGray,
     private val client: Client
@@ -202,6 +208,16 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         }
 
         val pipelineId = fileDetail.meta["pipelineId"] ?: StringUtils.EMPTY
+
+        if (!pipelineService.hasPermission(userId, projectId, pipelineId, AuthPermission.VIEW)) {
+            logger.error("no permission , user:$userId , project:$projectId , pipeline:$pipelineId")
+            throw ErrorCodeException(
+                statusCode = 403,
+                errorCode = CommonMessageCode.PERMISSION_DENIED,
+                defaultMessage = "用户没有权限访问流水线"
+            )
+        }
+
         val pipelineInfo = if (pipelineId != StringUtils.EMPTY) {
             client.get(ServicePipelineResource::class).getPipelineInfo(projectId, pipelineId, null).data
         } else {
@@ -350,5 +366,9 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         if (path.isBlank()) {
             throw ParamBlankException("Invalid path")
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(AppArtifactoryResourceImpl::class.java)
     }
 }
