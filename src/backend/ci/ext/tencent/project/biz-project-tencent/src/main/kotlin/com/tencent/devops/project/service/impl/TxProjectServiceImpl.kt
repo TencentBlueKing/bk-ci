@@ -53,11 +53,13 @@ import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.pojo.AuthProjectForList
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectCreateUserDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.tof.Response
 import com.tencent.devops.project.pojo.user.UserDeptDetail
+import com.tencent.devops.project.service.ProjectLocalService
 import com.tencent.devops.project.service.ProjectPaasCCService
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.s3.S3Service
@@ -92,7 +94,8 @@ class TxProjectServiceImpl @Autowired constructor(
     projectDispatcher: ProjectDispatcher,
     private val authPermissionApi: AuthPermissionApi,
     private val projectAuthServiceCode: ProjectAuthServiceCode,
-    private val managerService: ManagerService
+    private val managerService: ManagerService,
+    private val projectLocalService: ProjectLocalService
 ) : AbsProjectServiceImpl(projectPermissionService, dslContext, projectDao, projectJmxApi, redisOperation, gray, client, projectDispatcher, authPermissionApi, projectAuthServiceCode) {
 
     private var authUrl: String = "${bkAuthProperties.url}/projects"
@@ -276,6 +279,17 @@ class TxProjectServiceImpl @Autowired constructor(
             deptName = deptName,
             englishName = projectCreateInfo.englishName
         )
+    }
+
+    override fun createProjectUser(createUser: String, createInfo: ProjectCreateUserDTO): Boolean {
+        projectLocalService.createUser2Project(
+            userIds = createInfo.userIds!!,
+            createUser = createUser,
+            projectCode = createInfo.projectId,
+            roleId = createInfo.roleId,
+            roleName = createInfo.roleName
+        )
+        return true
     }
 
     companion object {
