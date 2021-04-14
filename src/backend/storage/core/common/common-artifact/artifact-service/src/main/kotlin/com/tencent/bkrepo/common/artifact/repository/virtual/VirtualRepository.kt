@@ -1,7 +1,7 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.  
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -10,95 +10,98 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 package com.tencent.bkrepo.common.artifact.repository.virtual
 
 import com.tencent.bkrepo.common.artifact.constant.TRAVERSED_LIST
 import com.tencent.bkrepo.common.artifact.pojo.RepositoryIdentify
-import com.tencent.bkrepo.common.artifact.pojo.configuration.virtual.VirtualConfiguration
+import com.tencent.bkrepo.common.artifact.repository.context.ArtifactContext
+import com.tencent.bkrepo.common.artifact.repository.context.ArtifactContextHolder
 import com.tencent.bkrepo.common.artifact.repository.context.ArtifactDownloadContext
+import com.tencent.bkrepo.common.artifact.repository.context.ArtifactQueryContext
 import com.tencent.bkrepo.common.artifact.repository.context.ArtifactSearchContext
-import com.tencent.bkrepo.common.artifact.repository.context.ArtifactTransferContext
-import com.tencent.bkrepo.common.artifact.repository.context.RepositoryHolder
 import com.tencent.bkrepo.common.artifact.repository.core.AbstractArtifactRepository
+import com.tencent.bkrepo.common.artifact.repository.core.ArtifactRepository
 import com.tencent.bkrepo.common.artifact.resolve.response.ArtifactResource
-import com.tencent.bkrepo.repository.api.RepositoryClient
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 
+/**
+ * 虚拟仓库抽象逻辑
+ */
 abstract class VirtualRepository : AbstractArtifactRepository() {
 
-    @Autowired
-    lateinit var repositoryClient: RepositoryClient
-
-    override fun search(context: ArtifactSearchContext): Any? {
-        val artifactInfo = context.artifactInfo
-        val virtualConfiguration = context.repositoryConfiguration as VirtualConfiguration
-        val repoList = virtualConfiguration.repositoryList
-        val traversedList = getTraversedList(context)
-        for (repoIdentify in repoList) {
-            if (repoIdentify in traversedList) {
-                logger.debug("Repository[$repoIdentify] has been traversed, skip it.")
-                continue
-            }
-            traversedList.add(repoIdentify)
-            try {
-                val subRepoInfo = repositoryClient.detail(repoIdentify.projectId, repoIdentify.name).data!!
-                val repository = RepositoryHolder.getRepository(subRepoInfo.category) as AbstractArtifactRepository
-                val subContext = context.copy(repositoryInfo = subRepoInfo) as ArtifactSearchContext
-                repository.search(subContext)?.let { jsonObj ->
-                    logger.debug("Artifact[$artifactInfo] is found it Repository[$repoIdentify].")
-                    return jsonObj
-                } ?: logger.debug("Artifact[$artifactInfo] is not found in Repository[$repoIdentify], skipped.")
-            } catch (ignored: Exception) {
-                logger.warn("Search Artifact[$artifactInfo] from Repository[$repoIdentify] failed: ${ignored.message}")
-            }
+    override fun query(context: ArtifactQueryContext): Any? {
+        return mapFirstRepo(context) { sub, repository ->
+            require(sub is ArtifactQueryContext)
+            repository.query(sub)
         }
-        return null
+    }
+
+    override fun search(context: ArtifactSearchContext): List<Any> {
+        return mapFirstRepo(context) { sub, repository ->
+            require(sub is ArtifactSearchContext)
+            repository.search(sub)
+        }.orEmpty()
     }
 
     override fun onDownload(context: ArtifactDownloadContext): ArtifactResource? {
-        val artifactInfo = context.artifactInfo
-        val virtualConfiguration = context.repositoryConfiguration as VirtualConfiguration
+        return mapFirstRepo(context) { sub, repository ->
+            require(sub is ArtifactDownloadContext)
+            require(repository is AbstractArtifactRepository)
+            repository.onDownload(sub)
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    protected fun getTraversedList(context: ArtifactContext): MutableList<RepositoryIdentify> {
+        return context.getAttribute(TRAVERSED_LIST) as? MutableList<RepositoryIdentify> ?: let {
+            val selfRepoInfo = context.repositoryDetail
+            val traversedList = mutableListOf(RepositoryIdentify(selfRepoInfo.projectId, selfRepoInfo.name))
+            context.putAttribute(TRAVERSED_LIST, traversedList)
+            return traversedList
+        }
+    }
+
+    /**
+     * 遍历虚拟仓库，直到第一个仓库返回数据
+     */
+    private fun <R> mapFirstRepo(context: ArtifactContext, action: (ArtifactContext, ArtifactRepository) -> R?): R? {
+        val virtualConfiguration = context.getVirtualConfiguration()
         val repoList = virtualConfiguration.repositoryList
         val traversedList = getTraversedList(context)
         for (repoIdentify in repoList) {
             if (repoIdentify in traversedList) {
-                logger.debug("Repository[$repoIdentify] has been traversed, skip it.")
                 continue
             }
             traversedList.add(repoIdentify)
             try {
-                val subRepoInfo = repositoryClient.detail(repoIdentify.projectId, repoIdentify.name).data!!
-                val repository = RepositoryHolder.getRepository(subRepoInfo.category) as AbstractArtifactRepository
-                val subContext = context.copy(repositoryInfo = subRepoInfo) as ArtifactDownloadContext
-                repository.onDownload(subContext)?.let {
-                    logger.debug("Artifact[$artifactInfo] is found it Repository[$repoIdentify].")
-                    return it
-                } ?: logger.debug("Artifact[$artifactInfo] is not found in Repository[$repoIdentify], skipped.")
+                val subRepoDetail = repositoryClient.getRepoDetail(repoIdentify.projectId, repoIdentify.name).data!!
+                val repository = ArtifactContextHolder.getRepository(subRepoDetail.category)
+                val subContext = context.copy(subRepoDetail)
+                action(subContext, repository)?.let { return it }
             } catch (ignored: Exception) {
-                logger.warn("Download Artifact[$artifactInfo] from Repository[$repoIdentify] failed: ${ignored.message}")
+                logger.warn("Failed to execute map with repo[$repoIdentify]: ${ignored.message}")
             }
         }
         return null
-    }
-
-    @Suppress("UNCHECKED_CAST")
-    protected fun getTraversedList(context: ArtifactTransferContext): MutableList<RepositoryIdentify> {
-        return context.contextAttributes[TRAVERSED_LIST] as? MutableList<RepositoryIdentify> ?: let {
-            val selfRepoInfo = context.repositoryInfo
-            val traversedList = mutableListOf(RepositoryIdentify(selfRepoInfo.projectId, selfRepoInfo.name))
-            context.contextAttributes[TRAVERSED_LIST] = traversedList
-            return traversedList
-        }
     }
 
     companion object {

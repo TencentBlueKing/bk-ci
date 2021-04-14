@@ -1,7 +1,7 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.  
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -10,13 +10,23 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 package com.tencent.bkrepo.auth.service.local
@@ -25,12 +35,13 @@ import com.mongodb.BasicDBObject
 import com.tencent.bkrepo.auth.message.AuthMessageCode
 import com.tencent.bkrepo.auth.model.TPermission
 import com.tencent.bkrepo.auth.model.TUser
-import com.tencent.bkrepo.auth.pojo.CreateUserRequest
-import com.tencent.bkrepo.auth.pojo.CreateUserToProjectRequest
-import com.tencent.bkrepo.auth.pojo.Permission
-import com.tencent.bkrepo.auth.pojo.PermissionSet
-import com.tencent.bkrepo.auth.pojo.User
 import com.tencent.bkrepo.auth.pojo.enums.PermissionAction
+import com.tencent.bkrepo.auth.pojo.permission.Permission
+import com.tencent.bkrepo.auth.pojo.permission.PermissionSet
+import com.tencent.bkrepo.auth.pojo.user.CreateUserRequest
+import com.tencent.bkrepo.auth.pojo.user.CreateUserToProjectRequest
+import com.tencent.bkrepo.auth.pojo.user.CreateUserToRepoRequest
+import com.tencent.bkrepo.auth.pojo.user.User
 import com.tencent.bkrepo.auth.repository.RoleRepository
 import com.tencent.bkrepo.auth.repository.UserRepository
 import com.tencent.bkrepo.common.api.exception.ErrorCodeException
@@ -40,7 +51,7 @@ import org.springframework.data.mongodb.core.query.Criteria
 import org.springframework.data.mongodb.core.query.Query
 import org.springframework.data.mongodb.core.query.Update
 
-abstract class AbstractServiceImpl constructor(
+open class AbstractServiceImpl constructor(
     private val mongoTemplate: MongoTemplate,
     private val userRepository: UserRepository,
     private val roleRepository: RoleRepository
@@ -51,6 +62,14 @@ abstract class AbstractServiceImpl constructor(
             logger.warn("user [$userId]  not exist.")
             throw ErrorCodeException(AuthMessageCode.AUTH_USER_NOT_EXIST)
         }
+    }
+
+    fun checkUserRoleBind(userId: String, roleId: String): Boolean {
+        userRepository.findFirstByUserIdAndRoles(userId, roleId) ?: run {
+            logger.warn("user [$userId,$roleId]  not exist.")
+            return false
+        }
+        return true
     }
 
     // check user is exist
@@ -71,7 +90,18 @@ abstract class AbstractServiceImpl constructor(
         }
     }
 
-    fun convCreateUserRequest(request: CreateUserToProjectRequest): CreateUserRequest {
+    fun convCreateProjectUserRequest(request: CreateUserToProjectRequest): CreateUserRequest {
+        return CreateUserRequest(
+            request.userId,
+            request.name,
+            request.pwd,
+            request.admin,
+            request.asstUsers,
+            request.group
+        )
+    }
+
+    fun convCreateRepoUserRequest(request: CreateUserToRepoRequest): CreateUserRequest {
         return CreateUserRequest(
             request.userId,
             request.name,
@@ -92,7 +122,8 @@ abstract class AbstractServiceImpl constructor(
 
     fun updatePermissionAction(pId: String, urId: String, actions: List<PermissionAction>, filed: String): Boolean {
         val update = Update()
-        var userAction = PermissionSet(id = urId, action = actions)
+        var userAction =
+            PermissionSet(id = urId, action = actions)
         update.addToSet(filed, userAction)
         val result = mongoTemplate.updateFirst(buildIdQuery(pId), update, TPermission::class.java)
         if (result.matchedCount == 1L) return true
@@ -124,6 +155,7 @@ abstract class AbstractServiceImpl constructor(
             excludePattern = tPermission.excludePattern,
             users = tPermission.users,
             roles = tPermission.roles,
+            actions = tPermission.actions,
             createBy = tPermission.createBy,
             createAt = tPermission.createAt,
             updatedBy = tPermission.updatedBy,
@@ -141,6 +173,11 @@ abstract class AbstractServiceImpl constructor(
             tokens = tUser.tokens,
             roles = tUser.roles
         )
+    }
+
+    fun filterRepos(repos: List<String>, originRepoNames: List<String>): List<String> {
+        (repos as MutableList).retainAll(originRepoNames)
+        return repos
     }
 
     companion object {

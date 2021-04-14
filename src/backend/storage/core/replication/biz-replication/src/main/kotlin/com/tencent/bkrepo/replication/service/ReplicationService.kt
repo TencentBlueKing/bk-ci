@@ -1,7 +1,7 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.  
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -10,27 +10,39 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 package com.tencent.bkrepo.replication.service
 
 import com.tencent.bkrepo.common.api.constant.MediaTypes
 import com.tencent.bkrepo.common.api.constant.StringPool.UNKNOWN
+import com.tencent.bkrepo.common.artifact.stream.rateLimit
+import com.tencent.bkrepo.replication.config.ReplicationProperties
+import com.tencent.bkrepo.replication.exception.ReplicaFileFailedException
 import com.tencent.bkrepo.replication.job.ReplicationContext
 import com.tencent.bkrepo.replication.pojo.request.RequestBodyUtil
 import com.tencent.bkrepo.repository.pojo.metadata.MetadataDeleteRequest
 import com.tencent.bkrepo.repository.pojo.metadata.MetadataSaveRequest
-import com.tencent.bkrepo.repository.pojo.node.service.NodeCopyRequest
 import com.tencent.bkrepo.repository.pojo.node.service.NodeCreateRequest
 import com.tencent.bkrepo.repository.pojo.node.service.NodeDeleteRequest
-import com.tencent.bkrepo.repository.pojo.node.service.NodeMoveRequest
+import com.tencent.bkrepo.repository.pojo.node.service.NodeMoveCopyRequest
 import com.tencent.bkrepo.repository.pojo.node.service.NodeRenameRequest
 import com.tencent.bkrepo.repository.pojo.node.service.NodeUpdateRequest
 import com.tencent.bkrepo.repository.pojo.project.ProjectCreateRequest
@@ -41,26 +53,33 @@ import okhttp3.MediaType
 import okhttp3.MultipartBody
 import okhttp3.Request
 import org.springframework.stereotype.Service
+import java.net.URLEncoder.encode
 
 @Service
-class ReplicationService(val repoDataService: RepoDataService) {
+class ReplicationService(
+    private val repoDataService: RepoDataService,
+    private val replicationProperties: ReplicationProperties
+) {
 
     fun replicaFile(context: ReplicationContext, request: NodeCreateRequest) {
         with(context) {
             // 查询文件
-            val inputStream = repoDataService.getFile(request.sha256!!, request.size!!, currentRepoDetail.localRepoInfo)
-            val fileRequestBody = RequestBodyUtil.create(MEDIA_TYPE_STREAM, inputStream, request.size!!)
+            val localRepoDetail = currentRepoDetail.localRepoDetail
+            val inputStream = repoDataService.getFile(request.sha256!!, request.size!!, localRepoDetail)
+            val rateLimitInputStream = inputStream.rateLimit(replicationProperties.rateLimit.toBytes())
+            val fileRequestBody = RequestBodyUtil.create(MEDIA_TYPE_STREAM, rateLimitInputStream, request.size!!)
+            val fullPath = encode(request.fullPath, "utf-8")
             val builder = MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
-                .addFormDataPart("file", request.fullPath, fileRequestBody)
+                .addFormDataPart("file", fullPath, fileRequestBody)
                 .addFormDataPart("size", request.size.toString())
                 .addFormDataPart("sha256", request.sha256!!)
                 .addFormDataPart("md5", request.md5!!)
                 .addFormDataPart("userId", request.operator)
             request.metadata?.forEach { (key, value) ->
-                builder.addFormDataPart("metadata[$key]", value)
+                builder.addFormDataPart("metadata[$key]", value as String)
             }
-            val url = "$normalizedUrl/replica/file/${request.projectId}/${request.repoName}${request.fullPath}"
+            val url = "$normalizedUrl/replica/file/${request.projectId}/${request.repoName}/${request.fullPath}"
             val requestBody = builder.build()
             val httpRequest = Request.Builder()
                 .url(url)
@@ -70,7 +89,7 @@ class ReplicationService(val repoDataService: RepoDataService) {
             response.use {
                 if (!response.isSuccessful) {
                     val responseString = response.body()?.string() ?: UNKNOWN
-                    throw RuntimeException("Failed to replica node, response message: $responseString")
+                    throw ReplicaFileFailedException("Failed to replica node, response message: $responseString")
                 }
             }
         }
@@ -86,6 +105,17 @@ class ReplicationService(val repoDataService: RepoDataService) {
         }
     }
 
+    fun checkNodeExistRequest(
+        context: ReplicationContext,
+        projectId: String,
+        repoName: String,
+        fullPath: String
+    ): Boolean {
+        with(context) {
+            return replicationClient.checkNodeExist(authToken, projectId, repoName, fullPath).data ?: false
+        }
+    }
+
     fun replicaNodeRenameRequest(context: ReplicationContext, request: NodeRenameRequest) {
         with(context) {
             replicationClient.replicaNodeRenameRequest(authToken, request)
@@ -98,13 +128,13 @@ class ReplicationService(val repoDataService: RepoDataService) {
         }
     }
 
-    fun replicaNodeCopyRequest(context: ReplicationContext, request: NodeCopyRequest) {
+    fun replicaNodeCopyRequest(context: ReplicationContext, request: NodeMoveCopyRequest) {
         with(context) {
             replicationClient.replicaNodeCopyRequest(authToken, request)
         }
     }
 
-    fun replicaNodeMoveRequest(context: ReplicationContext, request: NodeMoveRequest) {
+    fun replicaNodeMoveRequest(context: ReplicationContext, request: NodeMoveCopyRequest) {
         with(context) {
             replicationClient.replicaNodeMoveRequest(authToken, request)
         }
