@@ -69,8 +69,4 @@ class UserNodeResourceImpl @Autowired constructor(private val nodeService: NodeS
         nodeService.updateDisplayName(userId, projectId, nodeHashId, displayName.displayName)
         return Result(true)
     }
-
-    override fun extListNodes(userId: String, projectId: String): Result<List<NodeWithPermission>> {
-        return Result(NodeUtils.sortByUser(nodeService.extListNodes(userId, projectId), userId))
-    }
 }

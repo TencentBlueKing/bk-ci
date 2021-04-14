@@ -167,17 +167,6 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
         return Result(thirdPartyAgentService.getAgentDetail(userId, projectId, nodeHashId))
     }
 
-    override fun listPipelineRef(
-        userId: String,
-        projectId: String,
-        nodeHashId: String
-    ): Result<List<AgentPipelineRef>> {
-        checkUserId(userId)
-        checkProjectId(projectId)
-        checkNodeId(nodeHashId)
-        return Result(agentPipelineService.listPipelineRef(userId, projectId, nodeHashId))
-    }
-
     override fun listAgentBuilds(
         userId: String,
         projectId: String,

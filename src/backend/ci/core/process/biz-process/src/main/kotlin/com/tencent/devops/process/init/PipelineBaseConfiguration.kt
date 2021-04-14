@@ -31,6 +31,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.process.engine.listener.pipeline.MQPipelineCreateListener
 import com.tencent.devops.process.engine.listener.pipeline.MQPipelineDeleteListener
+import com.tencent.devops.process.engine.listener.pipeline.MQPipelineRestoreListener
 import com.tencent.devops.process.engine.listener.pipeline.MQPipelineUpdateListener
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
@@ -181,6 +182,45 @@ class PipelineBaseConfiguration {
             startConsumerMinInterval = 5000,
             consecutiveActiveTrigger = 5,
             concurrency = pipelineUpdateConcurrency!!,
+            maxConcurrency = 50
+        )
+    }
+
+    @Value("\${queueConcurrency.pipelineRestoreUpdate:2}")
+    private val pipelineRestoreConcurrency: Int? = null
+
+    /**
+     * 流水线恢复队列--- 并发一般
+     */
+    @Bean
+    fun pipelineRestoreQueue() = Queue(MQ.QUEUE_PIPELINE_RESTORE)
+
+    @Bean
+    fun pipelineRestoreQueueBind(
+        @Autowired pipelineRestoreQueue: Queue,
+        @Autowired pipelineCoreExchange: DirectExchange
+    ): Binding {
+        return BindingBuilder.bind(pipelineRestoreQueue).to(pipelineCoreExchange).with(MQ.ROUTE_PIPELINE_RESTORE)
+    }
+
+    @Bean
+    fun pipelineRestoreListenerContainer(
+        @Autowired connectionFactory: ConnectionFactory,
+        @Autowired pipelineRestoreQueue: Queue,
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired restoreListener: MQPipelineRestoreListener,
+        @Autowired messageConverter: Jackson2JsonMessageConverter
+    ): SimpleMessageListenerContainer {
+
+        return Tools.createSimpleMessageListenerContainer(
+            connectionFactory = connectionFactory,
+            queue = pipelineRestoreQueue,
+            rabbitAdmin = rabbitAdmin,
+            buildListener = restoreListener,
+            messageConverter = messageConverter,
+            startConsumerMinInterval = 5000,
+            consecutiveActiveTrigger = 5,
+            concurrency = pipelineRestoreConcurrency!!,
             maxConcurrency = 50
         )
     }

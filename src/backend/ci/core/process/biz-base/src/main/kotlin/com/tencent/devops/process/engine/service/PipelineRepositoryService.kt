@@ -74,6 +74,7 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.engine.pojo.event.PipelineCreateEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineDeleteEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineRestoreEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
 import com.tencent.devops.process.plugin.load.ElementBizRegistrar
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
@@ -1098,13 +1099,11 @@ class PipelineRepositoryService constructor(
         }
 
         pipelineEventDispatcher.dispatch(
-            PipelineModelAnalysisEvent(
+            PipelineRestoreEvent(
                 source = "restore_pipeline",
                 projectId = projectId,
                 pipelineId = pipelineId,
-                userId = userId,
-                model = JsonUtil.toJson(existModel),
-                channelCode = channelCode.name
+                userId = userId
             )
         )
 

@@ -189,19 +189,4 @@ interface OpThirdPartyAgentResource {
         @ApiParam("内容", required = false)
         updateAgentRequest: UpdateAgentRequest
     ): Result<Boolean>
-
-    @ApiOperation("")
-    @POST
-    @Path("/agents/updatePipelineRef")
-    fun updatePipelineRef(
-        @ApiParam("user id", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("projectId", required = true)
-        @QueryParam("projectId")
-        projectId: String,
-        @ApiParam("pipelineId", required = true)
-        @QueryParam("pipelineId")
-        pipelineId: String
-    ): Result<Boolean>
 }

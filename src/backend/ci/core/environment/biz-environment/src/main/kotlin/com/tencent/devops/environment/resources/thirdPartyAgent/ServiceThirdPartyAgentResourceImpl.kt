@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentPipelineRef
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentInfo
@@ -117,6 +118,15 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         checkProjectId(projectId)
         checkNodeId(nodeHashId)
         return Result(agentPipelineService.listPipelineRef(userId, projectId, nodeHashId))
+    }
+
+    override fun updatePipelineRef(
+        userId: String,
+        projectId: String,
+        request: AgentPipelineRefRequest
+    ): Result<Boolean> {
+        agentPipelineService.updatePipelineRef(userId, projectId, request)
+        return Result(true)
     }
 
     private fun checkUserId(userId: String) {
