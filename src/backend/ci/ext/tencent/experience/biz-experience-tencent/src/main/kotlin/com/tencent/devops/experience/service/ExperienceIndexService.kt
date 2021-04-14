@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.experience.constant.ExperiencePublicType
-import com.tencent.devops.experience.dao.ExperienceLastDownloadDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.pojo.index.HotCategoryParam
 import com.tencent.devops.experience.pojo.index.IndexAppInfoVO
@@ -49,8 +48,8 @@ import org.springframework.stereotype.Service
 
 @Service
 class ExperienceIndexService @Autowired constructor(
+    val experienceBaseService: ExperienceBaseService,
     val experiencePublicDao: ExperiencePublicDao,
-    val experienceLastDownloadDao: ExperienceLastDownloadDao,
     val dslContext: DSLContext
 ) {
     fun banners(userId: String, page: Int, pageSize: Int, platform: Int): Result<Pagination<IndexBannerVO>> {
@@ -91,7 +90,7 @@ class ExperienceIndexService @Autowired constructor(
     ): Result<Pagination<IndexAppInfoVO>> {
         val offset = (page - 1) * pageSize
         val platformStr = PlatformEnum.of(platform)?.name
-        val lastDownloadMap = getLastDownloadMap(userId)
+        val lastDownloadMap = experienceBaseService.getLastDownloadMap(userId)
         val types = ExperiencePublicType.getIds(includeExternalUrl)
 
         val records = experiencePublicDao.listHot(
@@ -123,7 +122,7 @@ class ExperienceIndexService @Autowired constructor(
     ): Result<Pagination<IndexAppInfoVO>> {
         val offset = (page - 1) * pageSize
         val platformStr = PlatformEnum.of(platform)?.name
-        val lastDownloadMap = getLastDownloadMap(userId)
+        val lastDownloadMap = experienceBaseService.getLastDownloadMap(userId)
         val types = ExperiencePublicType.getIds(includeExternalUrl)
 
         val records = experiencePublicDao.listNecessary(
@@ -156,7 +155,7 @@ class ExperienceIndexService @Autowired constructor(
     ): Result<Pagination<IndexAppInfoVO>> {
         val offset = (page - 1) * pageSize
         val platformStr = PlatformEnum.of(platform)?.name
-        val lastDownloadMap = getLastDownloadMap(userId)
+        val lastDownloadMap = experienceBaseService.getLastDownloadMap(userId)
         val types = ExperiencePublicType.getIds(includeExternalUrl)
 
         val records = experiencePublicDao.listNew(
@@ -186,7 +185,7 @@ class ExperienceIndexService @Autowired constructor(
     ): Result<Pagination<IndexAppInfoVO>> {
         val offset = (hotCategoryParam.page - 1) * hotCategoryParam.pageSize
         val platformStr = PlatformEnum.of(platform)?.name
-        val lastDownloadMap = getLastDownloadMap(userId)
+        val lastDownloadMap = experienceBaseService.getLastDownloadMap(userId)
         val types = ExperiencePublicType.getIds(hotCategoryParam.includeExternalUrl)
 
         val records = experiencePublicDao.listHot(
@@ -218,7 +217,7 @@ class ExperienceIndexService @Autowired constructor(
     ): Result<Pagination<IndexAppInfoVO>> {
         val offset = (newCategoryParam.page - 1) * newCategoryParam.pageSize
         val platformStr = PlatformEnum.of(platform)?.name
-        val lastDownloadMap = getLastDownloadMap(userId)
+        val lastDownloadMap = experienceBaseService.getLastDownloadMap(userId)
         val types = ExperiencePublicType.getIds(newCategoryParam.includeExternalUrl)
 
         val records = experiencePublicDao.listNew(
@@ -260,10 +259,4 @@ class ExperienceIndexService @Autowired constructor(
             ?.let { l -> HashUtil.encodeLongId(l) } ?: "",
         type = it.type
     )
-
-    private fun getLastDownloadMap(userId: String): Map<String, Long> {
-        return experienceLastDownloadDao.listByUserId(dslContext, userId)?.map {
-            it.projectId + it.bundleIdentifier + it.platform to it.lastDonwloadRecordId
-        }?.toMap() ?: emptyMap()
-    }
 }

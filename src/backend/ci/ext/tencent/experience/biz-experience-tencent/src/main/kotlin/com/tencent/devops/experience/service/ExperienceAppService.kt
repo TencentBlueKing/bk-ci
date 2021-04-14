@@ -198,6 +198,7 @@ class ExperienceAppService(
             if (StringUtils.isBlank(experience.versionTitle)) experience.name else experience.versionTitle
         val categoryId = if (experience.category < 0) ProductCategoryEnum.LIFE.id else experience.category
         val publicExperience = experienceGroupDao.count(dslContext, experience.id, ExperienceConstant.PUBLIC_GROUP) > 0
+        val lastDownloadMap = experienceBaseService.getLastDownloadMap(userId)
 
         val changeLog = if (isOldVersion) {
             getChangeLog(
@@ -237,7 +238,10 @@ class ExperienceAppService(
             endDate = experience.endDate.let { if (isOldVersion) it.timestamp() else it.timestampmilli() },
             publicExperience = publicExperience,
             remark = experience.remark,
-            bundleIdentifier = experience.bundleIdentifier
+            bundleIdentifier = experience.bundleIdentifier,
+            appScheme = experience.scheme,
+            lastDownloadHashId = lastDownloadMap[experience.projectId + experience.bundleIdentifier + experience.platform]
+                ?.let { l -> HashUtil.encodeLongId(l) } ?: ""
         )
     }
 

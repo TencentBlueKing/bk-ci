@@ -33,6 +33,7 @@ import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceGroupDao
 import com.tencent.devops.experience.dao.ExperienceGroupInnerDao
 import com.tencent.devops.experience.dao.ExperienceInnerDao
+import com.tencent.devops.experience.dao.ExperienceLastDownloadDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -46,6 +47,7 @@ class ExperienceBaseService @Autowired constructor(
     private val experienceInnerDao: ExperienceInnerDao,
     private val experienceDao: ExperienceDao,
     private val experiencePublicDao: ExperiencePublicDao,
+    private val experienceLastDownloadDao: ExperienceLastDownloadDao,
     private val dslContext: DSLContext
 ) {
     /**
@@ -112,5 +114,14 @@ class ExperienceBaseService @Autowired constructor(
             groupIdToUserIds[ExperienceConstant.PUBLIC_GROUP] = ExperienceConstant.PUBLIC_INNER_USERS
         }
         return groupIdToUserIds
+    }
+
+    /**
+     * 获取上次下载的 map<projectId+bundleId+platform , experienceId>
+     */
+    fun getLastDownloadMap(userId: String): Map<String, Long> {
+        return experienceLastDownloadDao.listByUserId(dslContext, userId)?.map {
+            it.projectId + it.bundleIdentifier + it.platform to it.lastDonwloadRecordId
+        }?.toMap() ?: emptyMap()
     }
 }
