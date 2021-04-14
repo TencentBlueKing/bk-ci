@@ -71,6 +71,7 @@ buildscript {
         commonCodecVersion = "1.15"
         luceneVersion = "8.6.0"
         commonCsvVersion = "1.8"
+        influxDBVersion = "2.10"
     }
 
     def mavenRepoUrl = System.getProperty("mavenRepoUrl")
@@ -225,6 +226,7 @@ subprojects {
             dependency "org.hashids:hashids:$hashidsVersion"
             dependency "javax.ws.rs:javax.ws.rs-api:$jaxrsVersion"
             dependency "com.squareup.okhttp3:okhttp:$okHttpVersion"
+            dependency "org.influxdb:influxdb-java:$influxDBVersion"
             dependency "org.apache.httpcomponents:httpclient:$httpclientVersion"
             dependency "org.apache.commons:commons-exec:$commonExecVersion"
             dependency "com.vmware:vijava:$vmwareVersion"
