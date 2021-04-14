@@ -216,6 +216,7 @@ class ExperiencePublicDao {
                 .set(UPDATE_TIME, now)
                 .set(SIZE, size)
                 .set(LOGO_URL, logoUrl)
+                .set(SCHEME, scheme)
                 .execute()
         }
     }
