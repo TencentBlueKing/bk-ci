@@ -37,6 +37,7 @@ import com.tencent.devops.common.auth.api.BSAuthResourceApi
 import com.tencent.devops.common.auth.api.BSAuthTokenApi
 import com.tencent.devops.common.auth.api.BSCCProjectApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
+import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.auth.jmx.JmxAuthApi
 import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.beans.factory.annotation.Value
@@ -117,4 +118,7 @@ class TxV3AuthAutoConfiguration {
         bsCCProjectApi: BSCCProjectApi
     ) =
         BSAuthProjectApi(bkAuthProperties, objectMapper, bsAuthTokenApi, bsCCProjectApi)
+
+    @Bean
+    fun bsPipelineAuthServiceCode() = BSPipelineAuthServiceCode()
 }
