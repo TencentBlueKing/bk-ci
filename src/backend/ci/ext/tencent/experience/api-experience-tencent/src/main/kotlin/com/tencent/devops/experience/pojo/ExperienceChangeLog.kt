@@ -51,5 +51,9 @@ data class ExperienceChangeLog(
     @ApiModelProperty("是否上次下载", required = true)
     val lastDownload: Boolean,
     @ApiModelProperty("应用Scheme", required = false)
-    val appScheme: String
+    val appScheme: String,
+    @ApiModelProperty("版本体验BundleIdentifier", required = true)
+    val bundleIdentifier: String,
+    @ApiModelProperty("logo链接", required = true)
+    val logoUrl: String
 )

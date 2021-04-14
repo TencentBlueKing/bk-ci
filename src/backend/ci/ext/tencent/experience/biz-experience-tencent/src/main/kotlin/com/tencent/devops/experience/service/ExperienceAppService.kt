@@ -311,7 +311,9 @@ class ExperienceAppService(
                 size = it.size,
                 appStatus = getAppStatus(platform, installedIdLong, downloadIdLongs, it, now).id,
                 lastDownload = lastDownloadRecord?.lastDonwloadRecordId == it.id,
-                appScheme = it.scheme
+                appScheme = it.scheme,
+                bundleIdentifier = it.bundleIdentifier,
+                logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl)
             )
         }.toList()
     }
