@@ -49,5 +49,7 @@ data class ExperienceChangeLog(
     @ApiModelProperty("状态", required = true)
     val appStatus: Int,
     @ApiModelProperty("是否上次下载", required = true)
-    val lastDownload: Boolean
+    val lastDownload: Boolean,
+    @ApiModelProperty("应用Scheme", required = false)
+    val appScheme: String
 )
