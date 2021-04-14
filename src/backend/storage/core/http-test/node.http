@@ -60,7 +60,7 @@ Authorization: Basic {{username}} {{password}}
 %}
 
 ### 列表查询，深度查询
-http://{{repositoryHost}}/api/node/list/{{project}}/{{repo}}/?deep=true
+http://{{repositoryHost}}/api/node/page/{{project}}/{{repo}}/?deep=true
 Authorization: Basic {{username}} {{password}}
 
 > {%
