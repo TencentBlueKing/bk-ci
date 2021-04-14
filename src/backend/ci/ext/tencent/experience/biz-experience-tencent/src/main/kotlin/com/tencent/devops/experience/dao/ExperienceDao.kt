@@ -351,7 +351,7 @@ class ExperienceDao {
 
     fun countByIds(
         dslContext: DSLContext,
-        ids: MutableSet<Long>,
+        ids: Set<Long>,
         platform: String?,
         expireTime: LocalDateTime,
         online: Boolean

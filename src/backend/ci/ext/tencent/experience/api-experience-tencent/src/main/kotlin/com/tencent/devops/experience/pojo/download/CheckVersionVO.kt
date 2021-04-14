@@ -27,8 +27,10 @@
 
 package com.tencent.devops.experience.pojo.download
 
+import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
+@ApiModel("版本体验-检查更新出参")
 data class CheckVersionVO(
     @ApiModelProperty("版本体验ID", required = true)
     val experienceHashId: String,

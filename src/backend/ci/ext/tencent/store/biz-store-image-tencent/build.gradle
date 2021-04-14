@@ -28,8 +28,8 @@
 dependencies {
     compile project(":core:image:api-image")
     compile project(":core:notify:api-notify")
-    compile project(":core:store:biz-store")
     compile project(":core:store:biz-store-image")
     compile project(":ext:tencent:store:api-store-image-tencent")
     compile project(":ext:tencent:repository:api-repository-tencent")
+    compile project(":ext:tencent:store:biz-store-tencent")
 }

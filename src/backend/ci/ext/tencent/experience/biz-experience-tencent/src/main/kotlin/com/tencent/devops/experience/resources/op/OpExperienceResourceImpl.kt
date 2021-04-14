@@ -27,19 +27,23 @@
 
 package com.tencent.devops.experience.resources.op
 
+import ExperiencePublicExternalAdd
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.op.OpExperienceResource
+import com.tencent.devops.experience.constant.ExperiencePublicType
 import com.tencent.devops.experience.dao.ExperienceGroupDao
 import com.tencent.devops.experience.dao.ExperienceGroupInnerDao
 import com.tencent.devops.experience.dao.ExperienceInnerDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.dao.ExperienceSearchRecommendDao
+import org.apache.commons.lang3.RandomStringUtils
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
+import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
 
 @RestResource
@@ -121,5 +125,24 @@ class OpExperienceResourceImpl @Autowired constructor(
     override fun removeRecommend(userId: String, id: Long): Result<String> {
         experienceSearchRecommendDao.remove(dslContext, id)
         return Result("删除搜索推荐成功")
+    }
+
+    override fun addExternal(userId: String, externalAdd: ExperiencePublicExternalAdd): Result<String> {
+        experiencePublicDao.create(
+            dslContext = dslContext,
+            recordId = 0,
+            projectId = "",
+            experienceName = externalAdd.experienceName,
+            category = externalAdd.category,
+            platform = externalAdd.platform.name,
+            bundleIdentifier = RandomStringUtils.randomAlphanumeric(10),
+            endDate = LocalDateTime.of(2100, 1, 1, 1, 1),
+            size = 0,
+            logoUrl = externalAdd.logoUrl,
+            type = ExperiencePublicType.FROM_EXTERNAL_URL.id,
+            externalUrl = externalAdd.externalLink
+        )
+
+        return Result("创建成功")
     }
 }

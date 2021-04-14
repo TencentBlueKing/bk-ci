@@ -53,6 +53,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface AppPipelineViewResource {
 
+    @SuppressWarnings("ALL")
     @ApiOperation("app获取视图流水线编排列表")
     @GET
     @Path("/projects/{projectId}/listViewPipelines")
@@ -83,9 +84,13 @@ interface AppPipelineViewResource {
         filterByLabels: String?,
         @ApiParam("用户视图ID", required = false)
         @QueryParam("viewId")
-        viewId: String
+        viewId: String,
+        @ApiParam("是否过滤没权限流水线", required = false)
+        @QueryParam("filterInvalid")
+        filterInvalid: Boolean?
     ): Result<PipelineViewPipelinePage<Pipeline>>
 
+    @SuppressWarnings("ALL")
     @ApiOperation("app获取视图流水线编排列表--V2")
     @GET
     @Path("/projects/{projectId}/listViewPipelines/v2")
@@ -116,7 +121,10 @@ interface AppPipelineViewResource {
         filterByLabels: String?,
         @ApiParam("用户视图ID", required = false)
         @QueryParam("viewId")
-        viewId: String
+        viewId: String,
+        @ApiParam("是否过滤没权限流水线", required = false)
+        @QueryParam("filterInvalid")
+        filterInvalid: Boolean?
     ): Result<Pagination<Pipeline>>
 
     @ApiOperation("获取视图设置")

@@ -21,5 +21,9 @@ export default {
 
     requestChangeProject (params) {
         return vue.$ajax.put(`${prefix}/user/market/desk/store/member/test/project/change?projectCode=${params.projectCode}&storeCode=${params.storeCode}&storeType=${params.storeType}&storeMember=${params.storeMember}`)
+    },
+
+    requestStaticChartData (storeType, storeCode, params) {
+        return vue.$ajax.get(`${prefix}/user/store/statistic/types/${storeType}/codes/${storeCode}/trend/data`, { params })
     }
 }

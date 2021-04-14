@@ -27,20 +27,25 @@
 
 package com.tencent.devops.experience.service
 
+
 import com.tencent.devops.artifactory.util.UrlUtil
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.experience.constant.ExperiencePublicType
 import com.tencent.devops.experience.dao.ExperienceLastDownloadDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
+import com.tencent.devops.experience.pojo.index.HotCategoryParam
 import com.tencent.devops.experience.pojo.index.IndexAppInfoVO
 import com.tencent.devops.experience.pojo.index.IndexBannerVO
+import com.tencent.devops.experience.pojo.index.NewCategoryParam
 import com.tencent.devops.model.experience.tables.records.TExperiencePublicRecord
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+
 
 @Service
 class ExperienceIndexService @Autowired constructor(
@@ -84,16 +89,24 @@ class ExperienceIndexService @Autowired constructor(
         return Result(Pagination(hasNext, banners))
     }
 
-    fun hots(userId: String, page: Int, pageSize: Int, platform: Int): Result<Pagination<IndexAppInfoVO>> {
+    fun hots(
+        userId: String,
+        page: Int,
+        pageSize: Int,
+        platform: Int,
+        includeExternalUrl: Boolean?
+    ): Result<Pagination<IndexAppInfoVO>> {
         val offset = (page - 1) * pageSize
         val platformStr = PlatformEnum.of(platform)?.name
         val lastDownloadMap = getLastDownloadMap(userId)
+        val types = ExperiencePublicType.getIds(includeExternalUrl)
 
         val records = experiencePublicDao.listHot(
             dslContext = dslContext,
             offset = offset,
             limit = pageSize,
-            platform = platformStr
+            platform = platformStr,
+            types = types
         ).map { toIndexAppInfoVO(it, lastDownloadMap) }.toList()
 
         val hasNext = if (records.size < pageSize) {
@@ -108,16 +121,24 @@ class ExperienceIndexService @Autowired constructor(
         return Result(Pagination(hasNext, records))
     }
 
-    fun necessary(userId: String, page: Int, pageSize: Int, platform: Int): Result<Pagination<IndexAppInfoVO>> {
+    fun necessary(
+        userId: String,
+        page: Int,
+        pageSize: Int,
+        platform: Int,
+        includeExternalUrl: Boolean?
+    ): Result<Pagination<IndexAppInfoVO>> {
         val offset = (page - 1) * pageSize
         val platformStr = PlatformEnum.of(platform)?.name
         val lastDownloadMap = getLastDownloadMap(userId)
+        val types = ExperiencePublicType.getIds(includeExternalUrl)
 
         val records = experiencePublicDao.listNecessary(
             dslContext = dslContext,
             offset = offset,
             limit = pageSize,
-            platform = platformStr
+            platform = platformStr,
+            types = types
         ).map { toIndexAppInfoVO(it, lastDownloadMap) }.toList()
 
         val hasNext = if (records.size < pageSize) {
@@ -133,16 +154,24 @@ class ExperienceIndexService @Autowired constructor(
         return Result(Pagination(hasNext, records))
     }
 
-    fun newest(userId: String, page: Int, pageSize: Int, platform: Int): Result<Pagination<IndexAppInfoVO>> {
+    fun newest(
+        userId: String,
+        page: Int,
+        pageSize: Int,
+        platform: Int,
+        includeExternalUrl: Boolean?
+    ): Result<Pagination<IndexAppInfoVO>> {
         val offset = (page - 1) * pageSize
         val platformStr = PlatformEnum.of(platform)?.name
         val lastDownloadMap = getLastDownloadMap(userId)
+        val types = ExperiencePublicType.getIds(includeExternalUrl)
 
         val records = experiencePublicDao.listNew(
             dslContext = dslContext,
             offset = offset,
             limit = pageSize,
-            platform = platformStr
+            platform = platformStr,
+            types = types
         ).map { toIndexAppInfoVO(it, lastDownloadMap) }.toList()
 
         val hasNext = if (records.size < pageSize) {
@@ -159,31 +188,31 @@ class ExperienceIndexService @Autowired constructor(
 
     fun hotCategory(
         userId: String,
-        categoryId: Int,
-        page: Int,
-        pageSize: Int,
-        platform: Int
+        platform: Int,
+        hotCategoryParam: HotCategoryParam
     ): Result<Pagination<IndexAppInfoVO>> {
-        val offset = (page - 1) * pageSize
+        val offset = (hotCategoryParam.page - 1) * hotCategoryParam.pageSize
         val platformStr = PlatformEnum.of(platform)?.name
         val lastDownloadMap = getLastDownloadMap(userId)
+        val types = ExperiencePublicType.getIds(hotCategoryParam.includeExternalUrl)
 
         val records = experiencePublicDao.listHot(
             dslContext = dslContext,
             offset = offset,
-            limit = pageSize,
-            category = categoryId,
-            platform = platformStr
+            limit = hotCategoryParam.pageSize,
+            category = hotCategoryParam.categoryId,
+            platform = platformStr,
+            types = types
         ).map { toIndexAppInfoVO(it, lastDownloadMap) }.toList()
 
-        val hasNext = if (records.size < pageSize) {
+        val hasNext = if (records.size < hotCategoryParam.pageSize) {
             false
         } else {
             experiencePublicDao.count(
                 dslContext = dslContext,
                 platform = platformStr,
-                category = categoryId
-            ) > (offset + pageSize)
+                category = hotCategoryParam.categoryId
+            ) > (offset + hotCategoryParam.pageSize)
         }
 
         return Result(Pagination(hasNext, records))
@@ -191,31 +220,31 @@ class ExperienceIndexService @Autowired constructor(
 
     fun newCategory(
         userId: String,
-        categoryId: Int,
-        page: Int,
-        pageSize: Int,
-        platform: Int
+        platform: Int,
+        newCategoryParam: NewCategoryParam
     ): Result<Pagination<IndexAppInfoVO>> {
-        val offset = (page - 1) * pageSize
+        val offset = (newCategoryParam.page - 1) * newCategoryParam.pageSize
         val platformStr = PlatformEnum.of(platform)?.name
         val lastDownloadMap = getLastDownloadMap(userId)
+        val types = ExperiencePublicType.getIds(newCategoryParam.includeExternalUrl)
 
         val records = experiencePublicDao.listNew(
             dslContext = dslContext,
             offset = offset,
-            limit = pageSize,
-            category = categoryId,
-            platform = platformStr
+            limit = newCategoryParam.pageSize,
+            category = newCategoryParam.categoryId,
+            platform = platformStr,
+            types = types
         ).map { toIndexAppInfoVO(it, lastDownloadMap) }.toList()
 
-        val hasNext = if (records.size < pageSize) {
+        val hasNext = if (records.size < newCategoryParam.pageSize) {
             false
         } else {
             experiencePublicDao.count(
                 dslContext = dslContext,
                 platform = platformStr,
-                category = categoryId
-            ) > (offset + pageSize)
+                category = newCategoryParam.categoryId
+            ) > (offset + newCategoryParam.pageSize)
         }
 
         return Result(Pagination(hasNext, records))
@@ -230,10 +259,12 @@ class ExperienceIndexService @Autowired constructor(
         createTime = it.updateTime.timestampmilli(),
         size = it.size,
         logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl),
+        externalUrl = it.externalLink,
         bundleIdentifier = it.bundleIdentifier,
         appScheme = it.scheme,
         expired = false,
         lastDownloadHashId = lastDownloadMap[it.projectId + it.bundleIdentifier + it.platform]
-            ?.let { l -> HashUtil.encodeLongId(l) } ?: ""
+            ?.let { l -> HashUtil.encodeLongId(l) } ?: "",
+        type = it.type
     )
 }

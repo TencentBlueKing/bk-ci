@@ -1,18 +1,10 @@
-spring:
-  application:
-    name: auth
-  cloud:
-    consul:
-      discovery:
-        heartbeat:
-          enabled: true
-        query-passing: true
-        prefer-ip-address: true
-      config:
-        prefix: bkrepo-config
-        format: YAML
-        data-key: data
-        profileSeparator: '::'
+service.name: auth
+server.port: 25902
 
 auth:
   realm: local
+  iam:
+    callbackUser: bk_iam
+  devops:
+    authEnabled: false
+    allowAnonymous: false

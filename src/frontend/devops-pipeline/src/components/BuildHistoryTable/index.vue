@@ -87,6 +87,10 @@
                         </bk-popover>
                     </div>
                 </template>
+                <template v-else-if="col.prop === 'pipelineVersion'" v-slot="props">
+                    {{ props.row[col.prop] }}
+                    <span v-if="isNotLatest(props)" class="version-tips"></span>
+                </template>
                 <template v-else-if="col.prop === 'errorCode'" v-slot="props">
                     <template v-if="Array.isArray(props.row.errorInfoList) && props.row.errorInfoList.length > 0">
                         <div @click.stop="" class="error-code-item" :style="`max-width: ${col.width - 30}px`" v-for="item in props.row.errorInfoList" :key="item.taskId">
@@ -290,6 +294,14 @@
             }
         },
         methods: {
+            isNotLatest ({ $index }) {
+                const length = this.data.length
+                // table最后一条记录必不变化
+                if ($index === length - 1) return false
+                const current = this.data[$index]
+                const before = this.data[$index + 1]
+                return current.pipelineVersion !== before.pipelineVersion
+            },
             getStageTooltip (stage) {
                 switch (true) {
                     case !!stage.elapsed:
@@ -679,6 +691,17 @@
                 min-width: 12px;
                 min-height: 12px;
             }
+        }
+        .version-tips {
+            display: inline-block;
+            vertical-align: top;
+            width: 4px;
+            height: 2px;
+            margin-left: 5px;
+            font-size: 0;
+            box-sizing: content-box;
+            border: solid #fde92e;
+            border-width: 10px 0 4px;
         }
     }
     .artifact-list-popup {
