@@ -201,10 +201,11 @@ class StoreStatisticTotalDao {
         with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
             val baseStep = dslContext.select(STORE_CODE)
                 .from(this).where(STORE_TYPE.eq(storeType))
+            // 因为数据库表的CREATE_TIME字段类型为datetime（精度不够）,当时间间隔很近排序会出问题，故把时间和ID一起排序
             if (timeDescFlag) {
-                baseStep.orderBy(CREATE_TIME.desc())
+                baseStep.orderBy(CREATE_TIME.desc(), ID)
             } else {
-                baseStep.orderBy(CREATE_TIME.asc())
+                baseStep.orderBy(CREATE_TIME.asc(), ID)
             }
             return baseStep.limit((page - 1) * pageSize, pageSize).fetch()
         }
