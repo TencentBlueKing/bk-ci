@@ -171,6 +171,7 @@ class ProcessDao {
             return dslContext.select(PIPELINE_ID).from(this)
                 .where(
                     PROJECT_ID.eq(projectId)
+                        .and(DELETE.eq(true))
                         .and(UPDATE_TIME.lt(LocalDateTime.now().minusDays(gapDays)))
                         .and(PIPELINE_ID.`in`(pipelineIdList))
                 )
