@@ -86,7 +86,8 @@ class SignServiceImpl @Autowired constructor(
         ipaSignInfo: IpaSignInfo,
         ipaFile: File,
         taskExecuteCount: Int
-    ) {
+    ): Boolean {
+        var success = false
         try {
             // ipa解压后的目录
             val ipaUnzipDir = fileService.getIpaUnzipDir(ipaSignInfo, resignId)
@@ -142,10 +143,14 @@ class SignServiceImpl @Autowired constructor(
 
             // 成功结束签名逻辑
             signInfoService.successResign(resignId, ipaSignInfo, taskExecuteCount)
+            success = true
         } catch (t: Throwable) {
             logger.error("[$resignId] sign failed with error.", t)
             signInfoService.failResign(resignId, ipaSignInfo, taskExecuteCount, t.message ?: "Unknown error")
+        } finally {
+            if (!success) signInfoService.failResign(resignId, ipaSignInfo, taskExecuteCount, "Failed with unknown error")
         }
+        return success
     }
 
     override fun getSignStatus(resignId: String): EnumResignStatus {
