@@ -103,8 +103,13 @@ class ProjectDao {
         }
     }
 
-    fun list(dslContext: DSLContext, projectIdList: Set<String>): Result<TProjectRecord> {
+    fun list(dslContext: DSLContext, projectIdList: Set<String>, enabled: Boolean? = null): Result<TProjectRecord> {
         return with(TProject.T_PROJECT) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.`in`(projectIdList))
+            if (enabled != null) {
+                conditions.add(ENABLED.eq(enabled))
+            }
             dslContext.selectFrom(this).where(PROJECT_ID.`in`(projectIdList)).fetch()
         }
     }
