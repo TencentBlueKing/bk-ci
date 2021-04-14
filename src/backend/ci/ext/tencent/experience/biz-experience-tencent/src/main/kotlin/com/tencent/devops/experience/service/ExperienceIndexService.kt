@@ -53,13 +53,6 @@ class ExperienceIndexService @Autowired constructor(
     val experienceLastDownloadDao: ExperienceLastDownloadDao,
     val dslContext: DSLContext
 ) {
-    private fun getLastDownloadMap(userId: String): Map<String, Long> {
-        return experienceLastDownloadDao.listByUserId(dslContext, userId)?.map {
-            it.projectId + it.bundleIdentifier + it.platform to it.lastDonwloadRecordId
-        }?.toMap() ?: emptyMap()
-    }
-
-
     fun banners(userId: String, page: Int, pageSize: Int, platform: Int): Result<Pagination<IndexBannerVO>> {
         val offset = (page - 1) * pageSize
         val platformStr = PlatformEnum.of(platform)?.name
@@ -267,4 +260,10 @@ class ExperienceIndexService @Autowired constructor(
             ?.let { l -> HashUtil.encodeLongId(l) } ?: "",
         type = it.type
     )
+
+    private fun getLastDownloadMap(userId: String): Map<String, Long> {
+        return experienceLastDownloadDao.listByUserId(dslContext, userId)?.map {
+            it.projectId + it.bundleIdentifier + it.platform to it.lastDonwloadRecordId
+        }?.toMap() ?: emptyMap()
+    }
 }

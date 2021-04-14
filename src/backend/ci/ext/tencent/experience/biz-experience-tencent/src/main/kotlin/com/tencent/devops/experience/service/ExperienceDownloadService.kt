@@ -315,6 +315,8 @@ class ExperienceDownloadService @Autowired constructor(
                 online = true
             ).map { it.value1() }.toSet()
 
+            val lastDownloadMap = getLastDownloadMap(userId)
+
             val offset = (page - 1) * pageSize
             val experiences = experienceDao.listByIds(
                 dslContext = dslContext,
@@ -331,7 +333,11 @@ class ExperienceDownloadService @Autowired constructor(
                     logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl),
                     experienceName = it.experienceName,
                     createTime = it.createTime.timestampmilli(),
-                    bundleIdentifier = it.bundleIdentifier
+                    bundleIdentifier = it.bundleIdentifier,
+                    appScheme = it.scheme,
+                    expired = false,
+                    lastDownloadHashId = lastDownloadMap[it.projectId + it.bundleIdentifier + it.platform]
+                        ?.let { l -> HashUtil.encodeLongId(l) } ?: ""
                 )
             }.toList()
             val hasNext = page * pageSize < experienceDao.countByIds(
@@ -343,6 +349,12 @@ class ExperienceDownloadService @Autowired constructor(
             )
             Pagination(hasNext, experiences)
         }
+    }
+
+    private fun getLastDownloadMap(userId: String): Map<String, Long> {
+        return experienceLastDownloadDao.listByUserId(dslContext, userId)?.map {
+            it.projectId + it.bundleIdentifier + it.platform to it.lastDonwloadRecordId
+        }?.toMap() ?: emptyMap()
     }
 
     companion object {
