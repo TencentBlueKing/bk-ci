@@ -23,12 +23,21 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-dependencies {
-    compile project(":core:auth:biz-auth")
-    compile project(":core:project:api-project")
-    compile project(":ext:tencent:project:api-project-tencent")
-    compile project(":ext:tencent:common:common-auth:common-auth-tencent")
+package com.tencent.devops.auth.service
 
+import com.tencent.bk.sdk.iam.service.ManagerService
+import com.tencent.devops.auth.service.iam.impl.AbsPermissionGradeServiceImpl
+import org.jvnet.hk2.annotations.Service
+import org.springframework.beans.factory.annotation.Autowired
+
+@Service
+class TxPermissionGradeServiceImpl @Autowired constructor(
+    override val iamManagerService: ManagerService
+): AbsPermissionGradeServiceImpl(iamManagerService) {
+    override fun checkGradeManagerUser(userId: String, projectId: Int) {
+        super.checkGradeManagerUser(userId, projectId)
+    }
 }

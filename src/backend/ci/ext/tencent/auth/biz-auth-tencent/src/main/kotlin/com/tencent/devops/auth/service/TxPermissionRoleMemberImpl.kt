@@ -23,12 +23,50 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-dependencies {
-    compile project(":core:auth:biz-auth")
-    compile project(":core:project:api-project")
-    compile project(":ext:tencent:project:api-project-tencent")
-    compile project(":ext:tencent:common:common-auth:common-auth-tencent")
+package com.tencent.devops.auth.service
 
+import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerGroupMemberVo
+import com.tencent.bk.sdk.iam.service.ManagerService
+import com.tencent.devops.auth.service.iam.PermissionGradeService
+import com.tencent.devops.auth.service.iam.impl.AbsPermissionRoleMemberImpl
+import com.tencent.devops.common.client.Client
+import org.jvnet.hk2.annotations.Service
+import org.springframework.beans.factory.annotation.Autowired
+
+@Service
+class TxPermissionRoleMemberImpl @Autowired constructor(
+    override val iamManagerService: ManagerService,
+    private val permissionGradeService: PermissionGradeService,
+    private val client: Client
+) : AbsPermissionRoleMemberImpl(iamManagerService, permissionGradeService) {
+    override fun createRoleMember(
+        userId: String,
+        projectId: Int,
+        roleId: Int,
+        members: List<String>,
+        managerGroup: Boolean
+    ) {
+        super.createRoleMember(userId, projectId, roleId, members, managerGroup)
+    }
+
+    override fun deleteRoleMember(
+        userId: String,
+        projectId: Int,
+        roleId: Int,
+        members: List<String>,
+        managerGroup: Boolean
+    ) {
+        super.deleteRoleMember(userId, projectId, roleId, members, managerGroup)
+    }
+
+    override fun getRoleMember(projectId: Int, roleId: Int): ManagerGroupMemberVo {
+        return super.getRoleMember(projectId, roleId)
+    }
+
+    override fun checkUser(userId: String) {
+        return
+    }
 }

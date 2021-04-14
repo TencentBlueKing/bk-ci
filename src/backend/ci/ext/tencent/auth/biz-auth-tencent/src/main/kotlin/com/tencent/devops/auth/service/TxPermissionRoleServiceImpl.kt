@@ -23,31 +23,47 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.project.resources
+package com.tencent.devops.auth.service
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.BSAuthProjectApi
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
-import com.tencent.devops.common.auth.code.BSProjectServiceCodec
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.service.service.ServiceTxUserResource
-import com.tencent.devops.project.service.tof.TOFService
+import com.tencent.bk.sdk.iam.config.IamConfiguration
+import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
+import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerRoleGroupVO
+import com.tencent.bk.sdk.iam.service.ManagerService
+import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
+import com.tencent.devops.auth.service.iam.PermissionGradeService
+import com.tencent.devops.auth.service.iam.impl.AbsPermissionRoleServiceImpl
+import org.jvnet.hk2.annotations.Service
 import org.springframework.beans.factory.annotation.Autowired
 
-@RestResource
-class ServiceTxUserResourceImpl @Autowired constructor(
-    val projectServiceCode: BSProjectServiceCodec,
-    val bkAuthProjectApi: BSAuthProjectApi,
-    val tofService: TOFService
-) : ServiceTxUserResource {
-    override fun getProjectUserRoles(projectCode: String, roleId: BkAuthGroup): Result<List<String>> {
-        return Result(bkAuthProjectApi.getProjectUsers(projectServiceCode, projectCode, roleId))
+@Service
+class TxPermissionRoleServiceImpl @Autowired constructor(
+    iamManagerService: ManagerService,
+    private val permissionGradeService: PermissionGradeService,
+    private val iamConfiguration: IamConfiguration
+): AbsPermissionRoleServiceImpl(iamManagerService, permissionGradeService, iamConfiguration) {
+
+    override fun createPermissionRole(
+        userId: String,
+        projectId: Int,
+        projectCode: String,
+        groupInfo: ProjectRoleDTO
+    ): Int {
+        return super.createPermissionRole(userId, projectId, projectCode, groupInfo)
     }
 
-    override fun getUser(userId: String): Result<Boolean> {
-        tofService.getStaffInfo(userId)
-        return Result(true)
+    override fun renamePermissionRole(
+        userId: String,
+        projectId: Int,
+        roleId: String,
+        groupInfo: ManagerRoleGroup
+    ) {
+        super.renamePermissionRole(userId, projectId, roleId, groupInfo)
+    }
+
+    override fun getPermissionRole(projectId: Int): ManagerRoleGroupVO {
+        return super.getPermissionRole(projectId)
     }
 }

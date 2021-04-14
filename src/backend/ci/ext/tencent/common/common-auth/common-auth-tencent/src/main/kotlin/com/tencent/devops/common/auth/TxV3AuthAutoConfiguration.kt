@@ -28,6 +28,9 @@
 package com.tencent.devops.common.auth
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.bk.sdk.iam.config.IamConfiguration
+import com.tencent.bk.sdk.iam.service.impl.EsbHttpClientServiceImpl
+import com.tencent.bk.sdk.iam.service.impl.ManagerServiceImpl
 import com.tencent.devops.common.auth.api.BSAuthPermissionApi
 import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.api.BSAuthResourceApi
@@ -36,7 +39,9 @@ import com.tencent.devops.common.auth.api.BSCCProjectApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.jmx.JmxAuthApi
 import com.tencent.devops.common.redis.RedisOperation
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
@@ -51,6 +56,30 @@ import org.springframework.core.Ordered
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class TxV3AuthAutoConfiguration {
 
+    @Value("\${auth.url:}")
+    val iamBaseUrl = ""
+
+    @Value("\${auth.appCode:}")
+    val systemId = ""
+
+    @Value("\${auth.appCode:}")
+    val appCode = ""
+
+    @Value("\${auth.appSecret:}")
+    val appSecret = ""
+
+    @Value("\${auth.esbUrl:#{null}}")
+    val iamEsb = ""
+
+    @Bean
+    @ConditionalOnMissingBean
+    fun iamConfiguration() = IamConfiguration(systemId, appCode, appSecret, iamBaseUrl, iamEsb)
+
+    @Bean
+    fun esbHttpClientServiceImpl() = EsbHttpClientServiceImpl(iamConfiguration())
+
+    @Bean
+    fun iamManagerService() = ManagerServiceImpl(esbHttpClientServiceImpl(), iamConfiguration())
     @Bean
     @Primary
     fun bkAuthProperties() = BkAuthProperties()
