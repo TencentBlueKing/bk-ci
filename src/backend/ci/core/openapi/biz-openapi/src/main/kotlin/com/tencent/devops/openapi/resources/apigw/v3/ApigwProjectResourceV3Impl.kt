@@ -32,6 +32,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwProjectResourceV3
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectCreateUserDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
@@ -96,7 +97,7 @@ class ApigwProjectResourceV3Impl @Autowired constructor(private val client: Clie
     ): com.tencent.devops.project.pojo.Result<ProjectVO?> {
         logger.info("get project projectId($projectId) by user $userId")
         return client.get(ServiceProjectResource::class).get(
-                englishName = projectId
+            englishName = projectId
         )
     }
 
@@ -125,6 +126,18 @@ class ApigwProjectResourceV3Impl @Autowired constructor(private val client: Clie
             validateType = validateType,
             name = name,
             projectId = projectId
+        )
+    }
+
+    override fun createProjectUser(
+        appCode: String?,
+        apigwType: String?,
+        createUserId: String,
+        createInfo: ProjectCreateUserDTO
+    ): Result<Boolean?> {
+        return client.get(ServiceProjectResource::class).createProjectUser(
+            createUser = createUserId,
+            createInfo = createInfo
         )
     }
 }

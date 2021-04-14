@@ -46,6 +46,7 @@ import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectCreateUserDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.impl.AbsProjectServiceImpl
@@ -160,6 +161,10 @@ class SimpleProjectServiceImpl @Autowired constructor(
             projectCode = projectCode,
             projectName = projectName
         )
+    }
+
+    override fun createProjectUser(createUser: String, createInfo: ProjectCreateUserDTO): Boolean {
+        return true
     }
 
     companion object {
