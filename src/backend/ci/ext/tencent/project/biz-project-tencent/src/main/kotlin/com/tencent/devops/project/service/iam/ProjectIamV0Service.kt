@@ -28,15 +28,11 @@
 
 package com.tencent.devops.project.service.iam
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_BG
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.BSAuthProjectApi
-import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
@@ -81,6 +77,7 @@ class ProjectIamV0Service @Autowired constructor(
         )
     }
 
+    @Suppress("ALL")
     fun createPipelinePermission(
         createUser: String,
         projectId: String,
@@ -89,16 +86,16 @@ class ProjectIamV0Service @Autowired constructor(
         resourceType: String,
         resourceTypeCode: String
     ): Boolean {
-        logger.info("createPipelinePermission createUser[$createUser] projectId[$projectId] userId[$userId] permissionList[$permission]")
+        logger.info("createPipelinePermission [$createUser] [$projectId] [$userId] [$permission]")
         if (!bkAuthProjectApi.isProjectUser(createUser, bsPipelineAuthServiceCode, projectId, BkAuthGroup.MANAGER)) {
-            logger.info("createPipelinePermission createUser is not project manager,createUser[$createUser] projectId[$projectId]")
+            logger.info("createPipelinePermission createUser not project manager[$createUser] [$projectId]")
             throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.NOT_MANAGER)))
         }
         val createUserList = userId.split(",")
 
         createUserList?.forEach {
             if (!bkAuthProjectApi.isProjectUser(it, bsPipelineAuthServiceCode, projectId, null)) {
-                logger.info("createPipelinePermission userId is not project manager,userId[$userId] projectId[$projectId]")
+                logger.info("createPipelinePermission userId not project manager [$userId] projectId[$projectId]")
                 throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.USER_NOT_PROJECT_USER)))
             }
         }
@@ -114,6 +111,7 @@ class ProjectIamV0Service @Autowired constructor(
         )
     }
 
+    @Suppress("ALL")
     fun createPermission(
         userId: String,
         userList: List<String>?,
@@ -141,13 +139,13 @@ class ProjectIamV0Service @Autowired constructor(
         )
     }
 
-    public fun createUser2ProjectImpl(
+    fun createUser2ProjectImpl(
         userIds: List<String>,
         projectId: String,
         roleId: Int?,
         roleName: String?
     ): Boolean {
-        ProjectLocalService.logger.info("[createUser2Project]  userId[$userIds] projectCode[$projectId], roleId[$roleId], roleName[$roleName]")
+        logger.info("[createUser2Project] [$userIds] [$projectId] [$roleId] [$roleName]")
         val projectInfo = projectDao.getByEnglishName(dslContext, projectId) ?: throw RuntimeException()
         val roleList = bkAuthProjectApi.getProjectRoles(bsPipelineAuthServiceCode, projectId, projectInfo.englishName)
         var authRoleId: String? = BkAuthGroup.DEVELOPER.value

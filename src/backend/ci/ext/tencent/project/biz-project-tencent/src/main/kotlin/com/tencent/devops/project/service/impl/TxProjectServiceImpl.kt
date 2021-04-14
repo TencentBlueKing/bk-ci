@@ -53,7 +53,7 @@ import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.pojo.AuthProjectForList
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
-import com.tencent.devops.project.pojo.ProjectCreateUserDTO
+import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
@@ -74,6 +74,7 @@ import org.springframework.stereotype.Service
 import java.io.File
 import java.util.ArrayList
 
+@Suppress("ALL")
 @Service
 class TxProjectServiceImpl @Autowired constructor(
     projectPermissionService: ProjectPermissionService,
@@ -281,10 +282,10 @@ class TxProjectServiceImpl @Autowired constructor(
         )
     }
 
-    override fun createProjectUser(createUser: String, createInfo: ProjectCreateUserDTO): Boolean {
+    override fun createProjectUser(projectId: String, createInfo: ProjectCreateUserInfo): Boolean {
         projectIamV0Service.createUser2Project(
-            createUser = createUser,
-            projectCode = createInfo.projectId,
+            createUser = createInfo.createUserId,
+            projectCode = projectId,
             roleName = createInfo.roleName,
             roleId = createInfo.roleId,
             userIds = createInfo.userIds!!
