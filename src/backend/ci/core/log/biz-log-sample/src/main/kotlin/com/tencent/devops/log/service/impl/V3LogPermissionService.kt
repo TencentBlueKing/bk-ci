@@ -57,7 +57,7 @@ class V3LogPermissionService @Autowired constructor(
             projectCode = projectCode,
             resourceCode = pipelineId,
             permission = AuthPermission.VIEW,
-            relationResourceType = AuthResourceType.PROJECT
+            relationResourceType = null
         )
     }
 
