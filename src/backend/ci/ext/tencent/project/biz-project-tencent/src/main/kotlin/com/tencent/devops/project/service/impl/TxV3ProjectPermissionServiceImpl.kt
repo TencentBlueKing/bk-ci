@@ -39,7 +39,7 @@ import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
 import com.tencent.bk.sdk.iam.dto.manager.dto.CreateManagerDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
-import com.tencent.bk.sdk.iam.service.impl.ManagerServiceImpl
+import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
@@ -51,7 +51,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.TimeUnit
 
 class TxV3ProjectPermissionServiceImpl @Autowired constructor(
-    val iamManagerService: ManagerServiceImpl,
+    val iamManagerService: ManagerService,
     val iamConfiguration: IamConfiguration
 ) : ProjectPermissionService {
 

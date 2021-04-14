@@ -27,19 +27,10 @@
 
 package com.tencent.devops.project.config
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.auth.service.ManagerService
-import com.tencent.devops.common.auth.api.AuthPermissionApi
-import com.tencent.devops.common.auth.api.AuthProjectApi
-import com.tencent.devops.common.auth.api.AuthResourceApi
-import com.tencent.devops.common.auth.api.AuthTokenApi
-import com.tencent.devops.common.auth.api.BSAuthProjectApi
-import com.tencent.devops.common.auth.api.BkAuthProperties
-import com.tencent.devops.common.auth.code.BSProjectServiceCodec
-import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
-import com.tencent.devops.common.client.Client
+import com.tencent.bk.sdk.iam.config.IamConfiguration
+import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.project.service.ProjectPermissionService
-import com.tencent.devops.project.service.impl.V0ProjectPermissionServiceImpl
+import com.tencent.devops.project.service.impl.TxV3ProjectPermissionServiceImpl
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
@@ -50,30 +41,15 @@ import org.springframework.core.Ordered
 @Configuration
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class TxProjectInitConfiguration {
+class TxV3ProjectInitConfiguration {
 
     @Bean
-    fun managerService(client: Client) = ManagerService(client)
-
-    @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
     fun projectPermissionService(
-        objectMapper: ObjectMapper,
-        authProperties: BkAuthProperties,
-        authProjectApi: BSAuthProjectApi,
-        authTokenApi: AuthTokenApi,
-        bsProjectAuthServiceCode: BSProjectServiceCodec,
-        authResourceApi: AuthResourceApi,
-        authPermissionApi: AuthPermissionApi,
-        managerService: ManagerService
-    ): ProjectPermissionService = V0ProjectPermissionServiceImpl(
-        authProjectApi = authProjectApi,
-        authResourceApi = authResourceApi,
-        objectMapper = objectMapper,
-        authProperties = authProperties,
-        authTokenApi = authTokenApi,
-        bsProjectAuthServiceCode = bsProjectAuthServiceCode,
-        managerService = managerService,
-        authPermissionApi = authPermissionApi
+        iamConfiguration: IamConfiguration,
+        iamManagerService: ManagerService
+    ): ProjectPermissionService = TxV3ProjectPermissionServiceImpl(
+        iamConfiguration = iamConfiguration,
+        iamManagerService = iamManagerService
     )
 }
