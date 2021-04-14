@@ -1,7 +1,7 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.  
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -10,13 +10,23 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 package com.tencent.bkrepo.common.storage.filesystem
@@ -36,34 +46,34 @@ import java.nio.file.Paths
  */
 open class FileSystemStorage : AbstractFileStorage<FileSystemCredentials, FileSystemClient>() {
 
-    override fun store(path: String, filename: String, file: File, client: FileSystemClient) {
+    override fun store(path: String, name: String, file: File, client: FileSystemClient) {
         file.inputStream().use {
-            client.store(path, filename, it, file.length())
+            client.store(path, name, it, file.length())
         }
     }
 
-    override fun store(path: String, filename: String, inputStream: InputStream, size: Long, client: FileSystemClient) {
+    override fun store(path: String, name: String, inputStream: InputStream, size: Long, client: FileSystemClient) {
         inputStream.use {
-            client.store(path, filename, it, size)
+            client.store(path, name, it, size)
         }
     }
 
-    override fun load(path: String, filename: String, range: Range, client: FileSystemClient): InputStream? {
-        return client.load(path, filename)?.bound(range)
+    override fun load(path: String, name: String, range: Range, client: FileSystemClient): InputStream? {
+        return client.load(path, name)?.bound(range)
     }
 
-    override fun delete(path: String, filename: String, client: FileSystemClient) {
-        client.delete(path, filename)
+    override fun delete(path: String, name: String, client: FileSystemClient) {
+        client.delete(path, name)
     }
 
-    override fun exist(path: String, filename: String, client: FileSystemClient): Boolean {
-        return client.exist(path, filename)
+    override fun exist(path: String, name: String, client: FileSystemClient): Boolean {
+        return client.exist(path, name)
     }
 
     override fun onCreateClient(credentials: FileSystemCredentials) = FileSystemClient(credentials.path)
 
     override fun getTempPath(storageCredentials: StorageCredentials): String {
-        storageCredentials as FileSystemCredentials
+        require(storageCredentials is FileSystemCredentials)
         return Paths.get(storageCredentials.path, TEMP).toString()
     }
 }
