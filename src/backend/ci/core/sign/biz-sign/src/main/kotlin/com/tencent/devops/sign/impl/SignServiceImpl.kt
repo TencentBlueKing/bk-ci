@@ -400,7 +400,7 @@ class SignServiceImpl @Autowired constructor(
         properties["buildNo"] = if (ipaSignInfo.buildNum == null) "" else ipaSignInfo.buildNum.toString()
         properties["source"] = "pipeline"
         properties["ipa.sign.status"] = "true"
-        properties["scheme"] = ipaInfoPlist.scheme
+        properties["appScheme"] = ipaInfoPlist.scheme
         return properties
     }
 
