@@ -22,6 +22,6 @@ public class CommonBatchMarkDefectBizServiceImpl extends AbstractCommonBatchDefe
     @Override
     protected void doBiz(List defectList, BatchDefectProcessReqVO batchDefectProcessReqVO)
     {
-        defectDao.batchMarkDefect(defectList, batchDefectProcessReqVO.getMarkFlag());
+        defectDao.batchMarkDefect(batchDefectProcessReqVO.getTaskId(), defectList, batchDefectProcessReqVO.getMarkFlag());
     }
 }

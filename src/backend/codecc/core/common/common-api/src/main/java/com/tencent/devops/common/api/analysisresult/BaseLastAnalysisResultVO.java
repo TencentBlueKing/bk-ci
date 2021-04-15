@@ -44,7 +44,8 @@ import lombok.Data;
 @JsonSubTypes({@JsonSubTypes.Type(value = LintLastAnalysisResultVO.class, name = "LINT"),
         @JsonSubTypes.Type(value = CCNLastAnalysisResultVO.class, name = "CCN"),
         @JsonSubTypes.Type(value = DUPCLastAnalysisResultVO.class, name = "DUPC"),
-        @JsonSubTypes.Type(value = CommonLastAnalysisResultVO.class, name = "COVERITY")
+        @JsonSubTypes.Type(value = CommonLastAnalysisResultVO.class, name = "COVERITY"),
+        @JsonSubTypes.Type(value = CLOCLastAnalysisResultVO.class, name = "CLOC")
 })
 public class BaseLastAnalysisResultVO
 {

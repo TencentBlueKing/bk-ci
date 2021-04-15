@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -34,21 +35,27 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserBuildResource
-import com.tencent.devops.process.engine.service.PipelineBuildService
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryRemark
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
+import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
+import com.tencent.devops.process.service.builds.PipelinePauseBuildFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
 @RestResource
-class UserBuildResourceImpl @Autowired constructor(private val buildService: PipelineBuildService) :
-    UserBuildResource {
+@Suppress("ALL")
+class UserBuildResourceImpl @Autowired constructor(
+    private val pipelineBuildFacadeService: PipelineBuildFacadeService,
+    private val pipelinePauseBuildFacadeService: PipelinePauseBuildFacadeService
+) : UserBuildResource {
 
     override fun manualStartupInfo(
         userId: String,
@@ -56,7 +63,7 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
         pipelineId: String
     ): Result<BuildManualStartupInfo> {
         checkParam(userId, projectId, pipelineId)
-        return Result(buildService.buildManualStartupInfo(userId, projectId, pipelineId, ChannelCode.BS))
+        return Result(pipelineBuildFacadeService.buildManualStartupInfo(userId, projectId, pipelineId, ChannelCode.BS))
     }
 
     override fun getBuildParameters(
@@ -69,7 +76,7 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        return Result(buildService.getBuildParameters(userId, projectId, pipelineId, buildId))
+        return Result(pipelineBuildFacadeService.getBuildParameters(userId, projectId, pipelineId, buildId))
     }
 
     override fun manualStartup(
@@ -80,15 +87,19 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
         buildNo: Int?
     ): Result<BuildId> {
         checkParam(userId, projectId, pipelineId)
-        return Result(BuildId(buildService.buildManualStartup(
-            userId = userId,
-            startType = StartType.MANUAL,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            values = values,
-            channelCode = ChannelCode.BS,
-            buildNo = buildNo
-        )))
+        return Result(
+            BuildId(
+                pipelineBuildFacadeService.buildManualStartup(
+                    userId = userId,
+                    startType = StartType.MANUAL,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    values = values,
+                    channelCode = ChannelCode.BS,
+                    buildNo = buildNo
+                )
+            )
+        )
     }
 
     override fun retry(
@@ -102,7 +113,7 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        return Result(BuildId(buildService.retry(userId, projectId, pipelineId, buildId, taskId)))
+        return Result(BuildId(pipelineBuildFacadeService.retry(userId, projectId, pipelineId, buildId, taskId)))
     }
 
     override fun manualShutdown(
@@ -115,7 +126,7 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        buildService.buildManualShutdown(userId, projectId, pipelineId, buildId, ChannelCode.BS)
+        pipelineBuildFacadeService.buildManualShutdown(userId, projectId, pipelineId, buildId, ChannelCode.BS)
         return Result(true)
     }
 
@@ -134,7 +145,7 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
         if (elementId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        buildService.buildManualReview(
+        pipelineBuildFacadeService.buildManualReview(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -153,7 +164,8 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
         pipelineId: String,
         buildId: String,
         stageId: String,
-        cancel: Boolean?
+        cancel: Boolean?,
+        reviewRequest: StageReviewRequest?
     ): Result<Boolean> {
         checkParam(userId, projectId, pipelineId)
         if (buildId.isBlank()) {
@@ -163,13 +175,14 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
             throw ParamBlankException("Invalid stageId")
         }
 
-        buildService.buildManualStartStage(
+        pipelineBuildFacadeService.buildManualStartStage(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
             stageId = stageId,
-            isCancel = cancel ?: false
+            isCancel = cancel ?: false,
+            reviewRequest = reviewRequest
         )
         return Result(true)
     }
@@ -189,7 +202,7 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
             throw ParamBlankException("Invalid buildId")
         }
 
-        return Result(buildService.goToReview(userId, projectId, pipelineId, buildId, elementId))
+        return Result(pipelineBuildFacadeService.goToReview(userId, projectId, pipelineId, buildId, elementId))
     }
 
     override fun getBuildDetail(
@@ -203,7 +216,7 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
             throw ParamBlankException("Invalid buildId")
         }
         return Result(
-            buildService.getBuildDetail(
+            pipelineBuildFacadeService.getBuildDetail(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -223,12 +236,24 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
         if (buildNo <= 0) {
             throw ParamBlankException("Invalid buildNo")
         }
-        return Result(buildService.getBuildDetailByBuildNo(userId, projectId, pipelineId, buildNo, ChannelCode.BS))
+        return Result(pipelineBuildFacadeService.getBuildDetailByBuildNo(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildNo = buildNo,
+            channelCode = ChannelCode.BS)
+        )
     }
 
     override fun goToLatestFinishedBuild(userId: String, projectId: String, pipelineId: String): Response {
-        checkParam(userId, projectId, pipelineId)
-        return buildService.goToLatestFinishedBuild(userId, projectId, pipelineId, ChannelCode.BS, false)
+        checkParam(userId = userId, projectId = projectId, pipelineId = pipelineId)
+        return pipelineBuildFacadeService.goToLatestFinishedBuild(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            channelCode = ChannelCode.BS,
+            checkPermission = false
+        )
     }
 
     override fun getHistoryBuild(
@@ -241,7 +266,7 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkParam(userId, projectId, pipelineId)
         val check = checkPermission ?: true
-        val result = buildService.getHistoryBuild(
+        val result = pipelineBuildFacadeService.getHistoryBuild(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -276,10 +301,11 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
         totalTimeMax: Long?,
         remark: String?,
         buildNoStart: Int?,
-        buildNoEnd: Int?
+        buildNoEnd: Int?,
+        buildMsg: String?
     ): Result<BuildHistoryPage<BuildHistory>> {
         checkParam(userId, projectId, pipelineId)
-        val result = buildService.getHistoryBuild(
+        val result = pipelineBuildFacadeService.getHistoryBuild(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -302,7 +328,8 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
             totalTimeMax = totalTimeMax,
             remark = remark,
             buildNoStart = buildNoStart,
-            buildNoEnd = buildNoEnd
+            buildNoEnd = buildNoEnd,
+            buildMsg = buildMsg
         )
         return Result(result)
     }
@@ -315,7 +342,7 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
         remark: BuildHistoryRemark?
     ): Result<Boolean> {
         checkParam(userId, projectId, pipelineId)
-        buildService.updateRemark(
+        pipelineBuildFacadeService.updateRemark(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -331,7 +358,7 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
         pipelineId: String
     ): Result<List<IdValue>> {
         checkParam(userId, projectId, pipelineId)
-        return Result(buildService.getHistoryConditionStatus(userId, projectId, pipelineId))
+        return Result(pipelineBuildFacadeService.getHistoryConditionStatus(userId, projectId, pipelineId))
     }
 
     override fun getHistoryConditionTrigger(
@@ -340,12 +367,12 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
         pipelineId: String
     ): Result<List<IdValue>> {
         checkParam(userId, projectId, pipelineId)
-        return Result(buildService.getHistoryConditionTrigger(userId, projectId, pipelineId))
+        return Result(pipelineBuildFacadeService.getHistoryConditionTrigger(userId, projectId, pipelineId))
     }
 
     override fun getHistoryConditionRepo(userId: String, projectId: String, pipelineId: String): Result<List<String>> {
         checkParam(userId, projectId, pipelineId)
-        return Result(buildService.getHistoryConditionRepo(userId, projectId, pipelineId))
+        return Result(pipelineBuildFacadeService.getHistoryConditionRepo(userId, projectId, pipelineId))
     }
 
     override fun getHistoryConditionBranch(
@@ -355,12 +382,41 @@ class UserBuildResourceImpl @Autowired constructor(private val buildService: Pip
         alias: List<String>?
     ): Result<List<String>> {
         checkParam(userId, projectId, pipelineId)
-        return Result(buildService.getHistoryConditionBranch(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            alias = alias
-        ))
+        return Result(
+            pipelineBuildFacadeService.getHistoryConditionBranch(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                alias = alias
+            )
+        )
+    }
+
+    override fun executionPauseAtom(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String,
+        element: Element,
+        isContinue: Boolean,
+        stageId: String,
+        containerId: String
+    ): Result<Boolean> {
+        checkParam(userId, projectId, pipelineId)
+        return Result(
+            pipelinePauseBuildFacadeService.executePauseAtom(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                isContinue = isContinue,
+                taskId = taskId,
+                element = element,
+                stageId = stageId,
+                containerId = containerId
+            )
+        )
     }
 
     private fun checkParam(userId: String, projectId: String, pipelineId: String) {

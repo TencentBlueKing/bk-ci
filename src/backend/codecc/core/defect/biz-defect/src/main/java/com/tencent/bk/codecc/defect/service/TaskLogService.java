@@ -26,6 +26,8 @@
 
 package com.tencent.bk.codecc.defect.service;
 
+import com.tencent.bk.codecc.defect.model.TaskLogEntity;
+import com.tencent.bk.codecc.defect.vo.TaskLogRepoInfoVO;
 import com.tencent.bk.codecc.defect.vo.TaskLogVO;
 import com.tencent.bk.codecc.defect.vo.UploadTaskLogStepVO;
 import com.tencent.bk.codecc.defect.vo.common.BuildVO;
@@ -34,6 +36,7 @@ import com.tencent.devops.common.api.analysisresult.ToolLastAnalysisResultVO;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -158,5 +161,20 @@ public interface TaskLogService
      * @return list
      */
     List<TaskLogVO> batchTaskLogListByTime(Set<Long> taskIdSet, Long startTime, Long endTime);
+
+    /**
+     * 获取最新构建的代码库信息
+     *
+     * @param taskId
+     */
+    Map<String, TaskLogRepoInfoVO> getLastAnalyzeRepoInfo(long taskId);
+
+    /**
+     * 通过任务id查询最近一次分析记录信息，不分工具
+     *
+     * @param taskId
+     * @return
+     */
+    List<TaskLogVO> findLastBuildInfo(long taskId);
 
 }

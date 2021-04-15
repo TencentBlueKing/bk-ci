@@ -1,0 +1,119 @@
+spring:
+  profiles: prod
+  application:
+    name: asyncreport
+    desc: Asyncreport Service
+    version: 4.0.0
+    packageName: com.tencent.bk.codecc.defect
+  redis:
+    database: 1
+    host: __REDIS_IP__
+    port: __REDIS_PORT__
+    password: __REDIS_PASS__
+    pool:
+      maxActive: 64
+      maxWait: -1
+      maxIdle: 64
+      minIdle: 0
+  rabbitmq:
+    virtual-host: __RABBITMQ_CODECC_VHOST__
+    username: __RABBITMQ_USERNAME__
+    password: __RABBITMQ_PASSWORD__
+    addresses: __RABBITMQ_HOST__:__RABBITMQ__PORT__
+    listener:
+      simple:
+        concurrency: 10
+        acknowledge-mode: auto
+  cloud:
+    consul:
+      discovery:
+        tags: __DEVOPS_CONSUL_TAG__
+        health-check-path: /management/health
+        heartbeat:
+          enabled: true
+        query-passing: true
+        preferIpAddress: true
+  http:
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+  data:
+    mongodb:
+      uri: mongodb://__MONGODB_USER__:__MONGODB_PASS__@__MONGODB_IP__:__MONGODB_PRT__/db_defect?maxPoolSize=200&w=1
+  kafka:
+    producer:
+      bootstrap-servers: __KAFKA_BOOTSTRAP_SERVER__:__KAFKA_BOOTSTRAP_SERVER_PORT__
+      batch-size: 16384
+      retries: 3
+      acks: 1
+    listener:
+      concurrency: 3
+    properties:
+      sasl:
+        mechanism: SCRAM-SHA-512
+        jaas:
+          config: org.apache.kafka.common.security.scram.ScramLoginModule required username="__KAFKA_SASL_JAAS_USERNAME__" password="__KAFKA_SASL_JAAS_PASS__";
+      security:
+        protocol: SASL_PLAINTEXT
+
+# 服务器端口配置，在同一台机器上部署多个微服务，端口号要不同 23910
+server:
+  port: __CODECC_ASYNCREPORT_PORT__ # 服务端口
+  servlet-path: /
+  undertow:
+    worker-threads: 200
+
+# monitor path config
+management:
+  security:
+    enabled: false
+  context-path: /management
+
+auth:
+  envName: prod
+  url: __CODECC_AUTH_URL__
+  codeccCode: __APP_CODE__
+  codeccSecret: __APP_TOKEN__
+  systemId: __CODECC_SYSTEM_ID__
+  codeccResourceType: __CODECC_RESOURCE_TYPE__
+  pipelineResourceType: __PIPELINE_RESOURCE_TYPE__
+  codeccServiceCode: __CODECC_SERVICE_CODE__
+  pipelineServiceCode: __PIPELINE_SERVICE_CODE__
+
+bkAuth:
+  envName: prod
+  url: __CODECC_BK_AUTH_URL__
+  codeccCode: __APP_CODE__
+  codeccSecret: __APP_TOKEN__
+  systemId: __CODECC_SYSTEM_ID__
+  codeccResourceType: __CODECC_RESOURCE_TYPE__
+  pipelineResourceType: __PIPELINE_RESOURCE_TYPE__
+  codeccServiceCode: __CODECC_SERVICE_CODE__
+  pipelineServiceCode: __PIPELINE_SERVICE_CODE__
+
+
+devopsGateway:
+  host: __DEVOPS_GATEWAY_HOST__
+  idchost: __DEVOPS_GATEWAY_IDC_HOST__
+
+
+codecc:
+  encryptor:
+    password: __CODECC_ENCRYPTOR_PASS__
+  env: internal
+  privatetoken: __CODECC_PRIVATE_TOKEN__
+  classurl: __CODECC_CLASS_URL__:__CODECC_CLASS_PORT__/downloadFile?fileName=
+  public:
+    account: __CODECC_PUBLIC_ACCOUNT__
+    password: __CODECC_PUBLIC_PASS__
+  gateway:
+    host: __CODECC_GATEWAY_HOST__
+  dockernizedTools: HORUSPY;WOODPECKER_SENSITIVE;RIPS
+  paramJsonRelateCheckerSetTools: ESLINT;PHPCS
+  codeLangRelateCheckerSetTools: COVERITY;KLOCWORK;PINPOINT
+
+jasypt:
+  encryptor:
+    password: __JASYPT_ENCRYPTOR_PASS__
+

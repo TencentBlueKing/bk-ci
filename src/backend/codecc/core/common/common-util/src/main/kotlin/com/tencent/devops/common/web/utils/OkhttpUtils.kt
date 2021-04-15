@@ -97,7 +97,7 @@ object OkhttpUtils {
         client.newCall(request).execute().use { response ->
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
-                logger.warn("request failed, url: $url requestBody: $body message: ${response.message()}")
+                logger.warn("request failed, url: $url requestBody: $body message: ${response.message()}, content: $responseContent")
                 throw CodeCCException(CommonMessageCode.THIRD_PARTY_SYSTEM_FAIL)
             }
             return responseContent

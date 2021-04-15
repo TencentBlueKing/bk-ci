@@ -17,8 +17,8 @@
                         <bk-table-column :label="$t('desc')" prop="creator"></bk-table-column>
                         <bk-table-column :label="$t('operate')" width="150">
                             <template slot-scope="props">
-                                <bk-button theme="primary" text :disabled="!isManagerUser && props.row.projected" @click="editView(props.row)">{{ $t('edit') }}</bk-button>
-                                <bk-button theme="primary" text :disabled="!isManagerUser && props.row.projected" @click="deleteView(props.row)">{{ $t('delete') }}</bk-button>
+                                <bk-button theme="primary" text :disabled="!viewManageAuth && props.row.projected" @click="editView(props.row)">{{ $t('edit') }}</bk-button>
+                                <bk-button theme="primary" text :disabled="!viewManageAuth && props.row.projected" @click="deleteView(props.row)">{{ $t('delete') }}</bk-button>
                             </template>
                         </bk-table-column>
                     </bk-table>
@@ -69,15 +69,10 @@
         },
         computed: {
             ...mapGetters({
-                'userInfo': 'pipelines/getUserInfo'
+                'viewManageAuth': 'pipelines/getViewManageAuth'
             }),
             projectId () {
                 return this.$route.params.projectId
-            },
-            isManagerUser () {
-                return this.userInfo.find(val => {
-                    return val.roleName === 'manager'
-                })
             }
         },
         async mounted () {
@@ -94,7 +89,7 @@
              *  初始化页面数据
              */
             async init () {
-                await this.requestUserInfo()
+                await this.checkViewManageAuth()
                 await this.requestGrouptLists()
                 await this.requestViewList()
             },
@@ -115,13 +110,13 @@
                     })
                 }
             },
-            async requestUserInfo () {
+            async checkViewManageAuth () {
                 const { $store } = this
                 try {
-                    const res = await $store.dispatch('pipelines/requestUserInfo', {
+                    const res = await $store.dispatch('pipelines/checkViewManageAuth', {
                         projectId: this.projectId
                     })
-                    this.$store.commit('pipelines/setUserInfo', res)
+                    this.$store.commit('pipelines/setViewManageAuth', res)
                 } catch (err) {
                     this.$showTips({
                         message: err.message || err,
@@ -175,7 +170,7 @@
              * 编辑视图
              */
             editView (row) {
-                if ((this.isManagerUser && row.projected) || !row.projected) {
+                if ((this.viewManageAuth && row.projected) || !row.projected) {
                     const obj = {
                         id: row.id,
                         projected: false,
@@ -220,7 +215,7 @@
              *  删除视图
              */
             deleteView (view) {
-                if ((this.isManagerUser && view.projected) || !view.projected) {
+                if ((this.viewManageAuth && view.projected) || !view.projected) {
                     const content = `${this.$t('view.deleteViewTips', [view.name])}`
 
                     navConfirm({ type: 'warning', content })

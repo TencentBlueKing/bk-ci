@@ -16,6 +16,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.tencent.bk.codecc.apiquery.utils.EntityIdDeserializer;
 import lombok.Data;
+import org.springframework.data.annotation.Id;
 
 import java.util.List;
 import java.util.Map;
@@ -30,8 +31,9 @@ import java.util.Set;
 @Data
 public class DefectModel extends CommonModel
 {
-    public final static String classType = "DefectModel";
+    public static final String CLASS_TYPE = "DefectModel";
 
+    @Id
     @JsonProperty("_id")
     @JsonDeserialize(using = EntityIdDeserializer.class)
     private String entityId;

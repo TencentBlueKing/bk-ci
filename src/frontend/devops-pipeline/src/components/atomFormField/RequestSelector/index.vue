@@ -68,7 +68,7 @@
             return {
                 isLoading: false,
                 list: [],
-                webUrl: WEB_URL_PIRFIX
+                webUrl: WEB_URL_PREFIX
             }
         },
         computed: {
@@ -85,20 +85,15 @@
                 const type = this.list[index].type || ''
                 const groupId = this.list[index].groupHashId || ''
                 if (hashId) {
-                    const href = `${WEB_URL_PIRFIX}/codelib/${this.projectId}/${hashId}/${type}`
+                    const href = `${WEB_URL_PREFIX}/codelib/${this.projectId}/${hashId}/${type}`
                     window.open(href, '_blank')
                 } else if (groupId) {
-                    const groupHref = `${WEB_URL_PIRFIX}/experience/${this.projectId}/setting/?groupId=${groupId}`
+                    const groupHref = `${WEB_URL_PREFIX}/experience/${this.projectId}/setting/?groupId=${groupId}`
                     window.open(groupHref, '_blank')
                 }
             },
             toggleVisible (open) {
                 open && this.freshList()
-            },
-            urlParse (originUrl, query) {
-                /* eslint-disable */
-                return new Function('ctx', `return '${originUrl.replace(/\{(.*?)\}/g, '\'\+ ctx.$1 \+\'')}'`)(query)
-                /* eslint-enable */
             },
             async freshList () {
                 try {

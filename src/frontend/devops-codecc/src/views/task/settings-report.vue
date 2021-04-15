@@ -132,8 +132,8 @@
                             <custom-receiver ref="emailMember" :target-list="formData.emailReceiverList" :list="taskMemberData" :visiable="isEmailRecieverShow"></custom-receiver>
                         </bk-dialog>
                         <bk-form-item :label="$t('抄送人')">
-                            <!-- <bk-member-selector v-model="formData.emailCCReceiverList" type="all"></bk-member-selector> -->
                             <bk-input v-model="formData.emailCCReceiverList" type="all"></bk-input>
+                            <!-- <bk-member-selector v-model="formData.emailCCReceiverList" type="all"></bk-member-selector> -->
                         </bk-form-item>
                         <divider></divider>
                         <bk-form-item :label="$t('定时报告')">
@@ -171,7 +171,7 @@
                                 {{$t('工具分析完成后立即发送一封相关工具的分析结果邮件')}}
                             </span>
                             <div class="switcher">
-                                <bk-switcher :value="instantReportStatus" @click.native="instantReport" size="min" theme="primary"></bk-switcher>{{$t('所有工具')}}
+                                <bk-switcher :value="!!instantReportStatus" @click.native="instantReport" size="min" theme="primary"></bk-switcher>{{$t('所有工具')}}
                             </div>
                         </bk-form-item>
                         <!-- <divider></divider>
@@ -321,9 +321,11 @@
                 const list = []
                 enableToolList.forEach(tool => {
                     const id = tool.toolName
-                    const name = tool.toolDisplayName
-                    const logo = this.toolMap[id] ? this.toolMap[id].logo : ''
-                    list.push({ id, name, logo })
+                    if (id !== 'CLOC') {
+                        const name = tool.toolDisplayName
+                        const logo = this.toolMap[id] ? this.toolMap[id].logo : ''
+                        list.push({ id, name, logo })
+                    }
                 })
                 return list
             },
@@ -471,7 +473,7 @@
                 }
             },
             hanldeToPipeline () {
-                window.open(`${window.DEVOPS_SITE_URL}/console/pipeline/${this.taskDetail.projectId}/${this.taskDetail.pipelineId}/edit#codecc`, '_blank')
+                window.open(`${window.DEVOPS_SITE_URL}/console/pipeline/${this.taskDetail.projectId}/${this.taskDetail.pipelineId}/edit#${this.taskDetail.atomCode}`, '_blank')
             }
         }
     }

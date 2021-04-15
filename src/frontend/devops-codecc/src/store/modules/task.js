@@ -272,6 +272,11 @@ export default {
             return http.put(`${window.AJAX_URL_PREFIX}/task/api/user/task/member/taskId/${data.taskId}`, data).then(res => {
                 return res.data || {}
             })
+        },
+        getYml ({ commit }, taskId) {
+            return http.get(`${window.AJAX_URL_PREFIX}/task/api/user/task/code//yml/filter/taskId/${taskId}/list`).then(res => {
+                return res.data || {}
+            })
         }
     }
 }

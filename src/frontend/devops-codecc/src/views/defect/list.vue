@@ -12,6 +12,10 @@
                         </bk-tab-panel>
                     </bk-tab>
                 </div>
+                <div>
+                    <bk-button style="border: none" v-if="exportLoading" icon="loading" :disabled="true" :title="$t('导出Excel')"></bk-button>
+                    <span v-else class="codecc-icon icon-export-excel excel-download" @click="downloadExcel" v-bk-tooltips="$t('导出Excel')"></span>
+                </div>
             </div>
 
             <div class="main-container" ref="mainContainer">
@@ -24,6 +28,7 @@
                                         <bk-option-group
                                             v-for="group in toolList"
                                             :name="group.name"
+                                            :show-count="false"
                                             :key="group.key">
                                             <bk-option v-for="option in group.toolList"
                                                 :key="option.toolName"
@@ -36,14 +41,15 @@
                             </div>
                             <div class="cc-col">
                                 <bk-form-item :label="$t('规则')">
-                                    <bk-select v-model="searchParams.checker" searchable>
+                                    <bk-select v-model="searchParams.checker" searchable :loading="selectLoading.otherParamsLoading">
                                         <bk-option-group
-                                            v-for="(group, index) in searchFormData.checkerList"
+                                            v-for="group in searchFormData.checkerList"
                                             :name="group.typeName"
-                                            :key="index">
+                                            :show-count="false"
+                                            :key="group">
                                             <bk-option
-                                                v-for="(checker, checkIndex) in group.checkers"
-                                                :key="checkIndex"
+                                                v-for="checker in group.checkers"
+                                                :key="checker"
                                                 :id="checker"
                                                 :name="checker">
                                             </bk-option>
@@ -51,43 +57,12 @@
                                     </bk-select>
                                 </bk-form-item>
                             </div>
-                            <div class="cc-col" v-show="lineAverageOpt >= 3 || isSearchDropdown">
-                                <bk-form-item :label="$t('级别')">
-                                    <bk-checkbox-group v-model="searchParams.severity" class="checkbox-group">
-                                        <bk-checkbox
-                                            v-for="(value, key, index) in defectSeverityMap"
-                                            :value="Number(key)"
-                                            :key="index">
-                                            {{value}}(<em :class="['count', `count-${['major', 'minor', 'info'][index]}`]">{{getDefectCountBySeverity(key)}}</em>)
-                                        </bk-checkbox>
-                                    </bk-checkbox-group>
-                                </bk-form-item>
-                            </div>
-                            <div class="cc-col" v-show="lineAverageOpt >= 4 || isSearchDropdown">
-                                <bk-form-item :label="$t('时期')">
-                                    <bk-checkbox-group v-model="searchParams.defectType" class="checkbox-group">
-                                        <bk-checkbox
-                                            v-for="(value, key, index) in defectTypeMap"
-                                            :value="Number(key)"
-                                            :key="index">
-                                            {{value}}({{getDefectCountByType(key)}})
-                                        </bk-checkbox>
-                                        <bk-popover placement="top" width="220" class="popover">
-                                            <i class="codecc-icon icon-tips"></i>
-                                            <div slot="content">
-                                                {{typeTips}}
-                                                <a href="javascript:;" @click="toLogs">{{$t('前往设置')}}>></a>
-                                            </div>
-                                        </bk-popover>
-                                    </bk-checkbox-group>
-                                </bk-form-item>
-                            </div>
                             <div class="cc-col" v-show="lineAverageOpt >= 5 || isSearchDropdown">
                                 <bk-form-item :label="$t('处理人')">
-                                    <bk-select v-model="searchParams.author" searchable>
+                                    <bk-select v-model="searchParams.author" searchable :loading="selectLoading.otherParamsLoading">
                                         <bk-option
-                                            v-for="(author, index) in searchFormData.authorList"
-                                            :key="index"
+                                            v-for="author in searchFormData.authorList"
+                                            :key="author"
                                             :id="author"
                                             :name="author">
                                         </bk-option>
@@ -97,26 +72,18 @@
                                     </bk-button>
                                 </bk-form-item>
                             </div>
-                            <div class="cc-col" v-show="lineAverageOpt >= 6 || isSearchDropdown">
-                                <bk-form-item :label="$t('状态')">
-                                    <bk-select multiple v-model="searchParams.status" :clearable="false" searchable>
-                                        <bk-option
-                                            v-for="(value, key) in statusTypeMap"
-                                            :key="Number(key)"
-                                            :id="Number(key)"
-                                            :disabled="searchParams.clusterType === 'file' && Number(key) !== 1"
-                                            :name="value">
-                                            <span v-bk-tooltips="searchParams.clusterType === 'file' && Number(key) !== 1 ? '仅支持按问题聚类方式查看' : ''">{{value}}</span>
-                                        </bk-option>
-                                    </bk-select>
+                            <div class="cc-col" v-show="lineAverageOpt >= 8 || isSearchDropdown">
+                                <bk-form-item :label="$t('日期')">
+                                    <bk-date-picker v-model="searchParams.daterange" type="daterange"></bk-date-picker>
                                 </bk-form-item>
                             </div>
                             <div class="cc-col" v-show="lineAverageOpt >= 7 || isSearchDropdown">
                                 <bk-form-item :label="$t('路径')" class="fixed-width">
-                                    <bk-dropdown-menu @show="isFilePathDropdownShow = true" @hide="isFilePathDropdownShow = false" align="left" trigger="click" ref="filePathDropdown">
+                                    <bk-select v-if="selectLoading.otherParamsLoading" :loading="true"></bk-select>
+                                    <bk-dropdown-menu v-else @show="isFilePathDropdownShow = true" @hide="isFilePathDropdownShow = false" align="left" trigger="click" ref="filePathDropdown">
                                         <bk-button type="primary" slot="dropdown-trigger">
                                             <div style="font-size: 12px" class="filepath-name" :class="{ 'unselect': !searchFormData.filePathShow }" :title="searchFormData.filePathShow">{{searchFormData.filePathShow ? searchFormData.filePathShow : $t('请选择')}}</div>
-                                            <i :class="['bk-icon icon-angle-down', { 'icon-flip': isFilePathDropdownShow }]"></i>
+                                            <i :class="['bk-icon icon-angle-down', { 'icon-flip': isFilePathDropdownShow }]" style="color: #979ba5; position: absolute; right: -2px"></i>
                                         </bk-button>
                                         <div class="filepath-dropdown-content" slot="dropdown-content" @click="e => e.stopPropagation()">
                                             <bk-tab type="unborder-card" class="create-tab" @tab-change="changeTab">
@@ -133,6 +100,7 @@
                                                         <div class="content-bd" v-if="treeList.length">
                                                             <bk-big-tree
                                                                 ref="filePathTree"
+                                                                height="340"
                                                                 :options="{ 'idKey': 'treeId' }"
                                                                 :show-checkbox="true"
                                                                 :data="treeList"
@@ -175,14 +143,9 @@
                                     </bk-dropdown-menu>
                                 </bk-form-item>
                             </div>
-                            <div class="cc-col" v-show="lineAverageOpt >= 8 || isSearchDropdown">
-                                <bk-form-item :label="$t('日期')">
-                                    <bk-date-picker v-model="searchParams.daterange" type="daterange"></bk-date-picker>
-                                </bk-form-item>
-                            </div>
                             <div class="cc-col" v-show="lineAverageOpt >= 9 || isSearchDropdown">
                                 <bk-form-item :label="$t('快照')">
-                                    <bk-select v-model="searchParams.buildId" :clearable="true" searchable>
+                                    <bk-select v-model="searchParams.buildId" :clearable="true" searchable :loading="selectLoading.buildListLoading">
                                         <bk-option
                                             v-for="item in buildList"
                                             :key="item.buildId"
@@ -190,6 +153,51 @@
                                             :name="`#${item.buildNum}构建 ${formatDate(item.buildTime) || ''} ${item.buildUser || ''}`">
                                         </bk-option>
                                     </bk-select>
+                                </bk-form-item>
+                            </div>
+                            <div class="cc-col" v-show="lineAverageOpt >= 6 || isSearchDropdown">
+                                <bk-form-item :label="$t('状态')">
+                                    <bk-select multiple v-model="searchParams.status" :clearable="false" searchable :loading="selectLoading.statusLoading">
+                                        <bk-option
+                                            v-for="(value, key) in statusTypeMap"
+                                            :key="Number(key)"
+                                            :id="Number(key)"
+                                            :disabled="searchParams.clusterType === 'file' && Number(key) !== 1"
+                                            :name="value">
+                                            <span v-bk-tooltips="searchParams.clusterType === 'file' && Number(key) !== 1 ? '仅支持按问题聚类方式查看' : ''">{{value}}</span>
+                                        </bk-option>
+                                    </bk-select>
+                                </bk-form-item>
+                            </div>
+                            <div class="cc-col" v-show="lineAverageOpt >= 3 || isSearchDropdown">
+                                <bk-form-item :label="$t('级别')">
+                                    <bk-checkbox-group v-model="searchParams.severity" class="checkbox-group">
+                                        <bk-checkbox
+                                            v-for="(value, key, index) in defectSeverityMap"
+                                            :value="Number(key)"
+                                            :key="index">
+                                            {{value}}(<em :class="['count', `count-${['major', 'minor', 'info'][index]}`]">{{getDefectCountBySeverity(key)}}</em>)
+                                        </bk-checkbox>
+                                    </bk-checkbox-group>
+                                </bk-form-item>
+                            </div>
+                            <div class="cc-col" v-show="lineAverageOpt >= 4 || isSearchDropdown">
+                                <bk-form-item :label="$t('时期')">
+                                    <bk-checkbox-group v-model="searchParams.defectType" class="checkbox-group">
+                                        <bk-checkbox
+                                            v-for="(value, key, index) in defectTypeMap"
+                                            :value="Number(key)"
+                                            :key="index">
+                                            {{value}}({{getDefectCountByType(key)}})
+                                        </bk-checkbox>
+                                        <bk-popover placement="top" width="220" class="popover">
+                                            <i class="codecc-icon icon-tips"></i>
+                                            <div slot="content">
+                                                {{typeTips}}
+                                                <a href="javascript:;" @click="toLogs">{{$t('前往设置')}}>></a>
+                                            </div>
+                                        </bk-popover>
+                                    </bk-checkbox-group>
                                 </bk-form-item>
                             </div>
                             <div class="cc-col" v-show="lineAverageOpt >= 10 || isSearchDropdown">
@@ -230,25 +238,27 @@
                             </i>
                         </p>
                         <div v-if="isBatchOperationShow" class="cc-operate pb10">
-                            <bk-dropdown-menu v-if="searchParams.clusterType === 'defect'" @show="isDropdownShow = true" @hide="isDropdownShow = false">
-                                <bk-button size="small" slot="dropdown-trigger" ext-cls="cc-operate-button">
-                                    <span>{{$t('标记')}}</span>
-                                    <i :class="['bk-icon icon-angle-down', { 'icon-flip': isDropdownShow }]"></i>
+                            <div class="cc-operate-buttons">
+                                <bk-dropdown-menu v-if="searchParams.clusterType === 'defect'" @show="isDropdownShow = true" @hide="isDropdownShow = false">
+                                    <bk-button size="small" slot="dropdown-trigger">
+                                        <span>{{$t('标记')}}</span>
+                                        <i :class="['bk-icon icon-angle-down', { 'icon-flip': isDropdownShow }]"></i>
+                                    </bk-button>
+                                    <div class="handle-menu-tips" slot="dropdown-content">
+                                        <p class="entry-link" @click.stop="handleMark(1, true)">
+                                            {{$t('标记处理')}}
+                                        </p>
+                                        <p class="entry-link" @click.stop="handleMark(0, true)">
+                                            {{$t('取消标记')}}
+                                        </p>
+                                    </div>
+                                </bk-dropdown-menu>
+                                <bk-button size="small" ext-cls="cc-operate-button" v-if="searchParams.clusterType === 'defect'" @click="handleAuthor(2)" theme="primary">{{$t('分配')}}</bk-button>
+                                <bk-button size="small" ext-cls="cc-operate-button" @click="handleIgnore('IgnoreDefect', true)" theme="primary">{{$t('忽略')}}</bk-button>
+                                <bk-button size="small" ext-cls="cc-operate-button" @click="handleIgnore('RevertIgnore', true)" v-if="!searchParams.status.length || searchParams.status.includes(4)" theme="primary">
+                                    {{$t('恢复忽略')}}
                                 </bk-button>
-                                <div class="handle-menu-tips" slot="dropdown-content">
-                                    <p class="entry-link" @click.stop="handleMark(1, true)">
-                                        {{$t('标记处理')}}
-                                    </p>
-                                    <p class="entry-link" @click.stop="handleMark(0, true)">
-                                        {{$t('取消标记')}}
-                                    </p>
-                                </div>
-                            </bk-dropdown-menu>
-                            <bk-button size="small" v-if="searchParams.clusterType === 'defect'" @click="handleAuthor(2)" theme="primary">{{$t('分配')}}</bk-button>
-                            <bk-button size="small" @click="handleIgnore('IgnoreDefect', true)" theme="primary">{{$t('忽略')}}</bk-button>
-                            <bk-button size="small" @click="handleIgnore('RevertIgnore', true)" v-if="!searchParams.status.length || searchParams.status.includes(4)" theme="primary">
-                                {{$t('恢复忽略')}}
-                            </bk-button>
+                            </div>
                         </div>
                         <div class="cc-keyboard">
                             <span>{{$t('当前已支持键盘操作')}}</span>
@@ -334,8 +344,8 @@
                             <!-- <bk-member-selector v-model="operateParams.sourceAuthor" :disabled="operateParams.changeAuthorType === 1" style="width: 290px;"></bk-member-selector> -->
                         </bk-form-item>
                         <bk-form-item :label="$t('新处理人')">
+                            <bk-input v-model="operateParams.targetAuthor" style="width: 290px;"></bk-input>
                             <!-- <bk-member-selector :max-data="1" v-model="operateParams.targetAuthor" style="width: 290px;"></bk-member-selector> -->
-                            <bk-input :max-data="1" v-model="operateParams.targetAuthor" style="width: 290px;"></bk-input>
                         </bk-form-item>
                     </bk-form>
                 </div>
@@ -472,7 +482,7 @@
                 <div class="no-task">
                     <empty title="" :desc="$t('CodeCC集成了十余款工具，支持检查代码缺陷、安全漏洞、代码规范等问题')">
                         <template v-slot:action>
-                            <bk-button size="large" theme="primary" @click="addTool">{{$t('配置规则集')}}</bk-button>
+                            <bk-button size="large" theme="primary" @click="addTool({ from: 'lint' })">{{$t('配置规则集')}}</bk-button>
                         </template>
                     </empty>
                 </div>
@@ -494,6 +504,8 @@
     import tableFile from './table-file'
     import tableDefect from './table-defect'
     import detail from './detail'
+    // eslint-disable-next-line
+    import { export_json_to_excel } from 'vendor/export2Excel'
 
     export default {
         components: {
@@ -540,16 +552,25 @@
                 toolId: toolId,
                 listData: {
                     defectList: {
-                        content: [],
-                        totalElements: 0
+                        records: [],
+                        count: 0
                     }
                 },
                 lintDetail: {
                     lintDefectList: []
                 },
                 searchFormData: {
+                    authorList: [],
+                    checkerList: [],
                     filePathTree: {},
-                    filePathShow: ''
+                    existCount: 0, // 待修复
+                    fixCount: 0, // 已修复
+                    ignoreCount: 0, // 已忽略
+                    newCount: 0,
+                    historyCount: 0,
+                    seriousCount: 0,
+                    normalCount: 0,
+                    promptCount: 0
                 },
                 searchParams: {
                     taskId: this.$route.params.taskId,
@@ -619,7 +640,6 @@
                 isFullScreen: false,
                 isFetched: false,
                 commentParams: {
-                    fileId: '',
                     toolName: toolId,
                     defectId: '',
                     commentId: '',
@@ -627,7 +647,13 @@
                     userName: this.$store.state.user.username,
                     comment: ''
                 },
-                gatherFile: {}
+                gatherFile: {},
+                exportLoading: false,
+                selectLoading: {
+                    otherParamsLoading: false,
+                    statusLoading: false,
+                    buildListLoading: false
+                }
             }
         },
         computed: {
@@ -653,13 +679,13 @@
                 return { name: names.join(' / ') }
             },
             defectList () {
-                return this.listData.defectList.content
+                return this.listData.defectList.records
             },
             currentFile () {
                 return this.lintDetail.lintDefectList && this.lintDetail.lintDefectList[0]
             },
             statusTypeMap () {
-                const { existCount, fixCount, ignoreCount } = this.listData
+                const { existCount, fixCount, ignoreCount } = this.searchFormData
                 return {
                     1: `${this.$t('待修复')}（${existCount || 0}）`,
                     2: `${this.$t('已修复')}（${fixCount || 0}）`,
@@ -690,14 +716,20 @@
             cacheConfig () {
                 const cacheKey = this.searchParams.clusterType === 'file' ? 'entityId' : 'defectId'
                 return { cacheKey }
+            },
+            statusRelevantParams () {
+                const { checker, author, fileList, buildId, daterange } = this.searchParams
+                return { checker, author, fileList, buildId, daterange }
+            },
+            severityRelevantParams () {
+                const { status } = this.searchParams
+                return { ...this.statusRelevantParams, status }
             }
         },
         watch: {
             // 监听查询参数变化，则获取列表
             searchParamsWatch: {
                 handler (newVal, oldVal) {
-                    console.log('handler -> newVal, oldVal', newVal, oldVal)
-                    console.log('handler -> oldVal', newVal === oldVal)
                     // 比如在第二页，筛选条件发生变化，要回到第一页
                     if (newVal.pageNum !== 1 && newVal.pageNum === oldVal.pageNum) {
                         this.searchParams.pageNum = 1
@@ -710,10 +742,11 @@
                     }
                     if (this.isSearch) {
                         this.tableLoading = true
+                        // this.fetchSearchList()
                         this.fetchLintList().then(list => {
                             if (this.pageChange) {
                                 // 将一页的数据追加到列表
-                                this.listData.defectList.content = this.listData.defectList.content.concat(list.defectList.content)
+                                this.listData.defectList.records = this.listData.defectList.records.concat(list.defectList.records)
 
                                 // 隐藏加载条
                                 this.isFileListLoadMore = false
@@ -722,8 +755,7 @@
                                 this.pageChange = false
                             } else {
                                 this.listData = { ...this.listData, ...list }
-                                this.totalCount = this.pagination.count = this.listData.defectList.totalElements
-                                this.getDefectCount(list)
+                                this.totalCount = this.pagination.count = this.listData.defectList.count
                                 // 重置文件下的问题详情
                                 this.lintDetail = {}
                             }
@@ -786,7 +818,12 @@
             'searchParams.clusterType' (newVal) {
                 this.isSelectAll = 'N'
                 this.isBatchOperationShow = false
-                this.searchParams.status = [1]
+                if (newVal === 'file' && !(this.searchParams.status.length === 1 && this.searchParams.status[0] === 1)) {
+                    this.searchParams.status = [1]
+                }
+                if (newVal === 'file') {
+                    this.searchParams.sortField = 'fileName'
+                }
                 this.fileIndex = 0
                 this.selectedLen = 0
                 this.selectedDefectCount = 0
@@ -797,12 +834,23 @@
                 if (val.length < this.fileIndex) {
                     this.fileIndex = 0
                 }
+            },
+            'searchParams.status' (val, oldVal) {
+                this.fetchOtherParams()
+            },
+            statusRelevantParams (val, oldVal) {
+                this.fetchStatusParams()
+            },
+            severityRelevantParams (val, oldVal) {
+                this.fetchSeverityParams()
+                this.fetchDefectTypeParams()
             }
         },
         created () {
             if (!this.taskDetail.nameEn || this.taskDetail.enableToolList.find(item => item.toolName !== 'CCN' && item.toolName !== 'DUPC')) {
                 this.init(true)
-                this.initSearchList()
+                this.fetchBuildList()
+                this.fetchOtherParams()
             }
         },
         mounted () {
@@ -827,15 +875,74 @@
             document.onkeydown = null
         },
         methods: {
+            downloadExcel () {
+                const params = this.getSearchParams()
+                params.pageSize = 300000
+                if (this.totalCount > 300000) {
+                    this.$bkMessage({
+                        message: this.$t('当前问题数已超过30万个，无法直接导出excel，请筛选后再尝试导出。')
+                    })
+                    return
+                }
+                this.exportLoading = true
+                this.$store.dispatch('defect/lintList', params).then(res => {
+                    const list = res && res.defectList && res.defectList.records
+                    this.generateExcel(list)
+                }).finally(() => {
+                    this.exportLoading = false
+                })
+            },
+            generateExcel (list = []) {
+                const tHeader = [this.$t('序号'), this.$t('entityId'), this.$t('位置'), this.$t('路径'), this.$t('规则'), this.$t('规则描述'), this.$t('处理人'), this.$t('级别'), this.$t('提交日期'), this.$t('首次发现'), this.$t('最新状态')]
+                const filterVal = ['index', 'entityId', 'fileName', 'filePath', 'checker', 'message', 'author', 'severity', 'lineUpdateTime', 'createBuildNumber', 'status']
+                const data = this.formatJson(filterVal, list)
+                const title = `${this.taskDetail.nameCn}-${this.taskDetail.taskId}-${this.toolId}-${this.$t('问题')}-${new Date().toISOString()}`
+                export_json_to_excel(tHeader, data, title)
+            },
+            // 处理状态
+            handleStatus (status) {
+                let key = 1
+                if (status === 1) {
+                    key = 1
+                } else if (status & 2) {
+                    key = 2
+                } else if (status & 4) {
+                    key = 4
+                }
+                const statusMap = {
+                    1: this.$t('待修复'),
+                    2: this.$t('已修复'),
+                    4: this.$t('已忽略')
+                }
+                return statusMap[key]
+            },
+            // 处理表格数据
+            formatJson (filterVal, list) {
+                let index = 1
+                return list.map(item => filterVal.map(j => {
+                    if (j === 'index') {
+                        return index++
+                    } else if (j === 'fileName') {
+                        return `${item.fileName}:${item.lineNum}`
+                    } else if (j === 'severity') {
+                        return this.defectSeverityMap[item.severity]
+                    } else if (j === 'lineUpdateTime') {
+                        return this.formatTime(item.lineUpdateTime, 'YYYY-MM-DD HH:mm:ss')
+                    } else if (j === 'createBuildNumber') {
+                        return `#${item.createBuildNumber}`
+                    } else if (j === 'status') {
+                        return this.handleStatus(item.status)
+                    } else {
+                        return item[j]
+                    }
+                }))
+            },
             async init (isInit) {
                 isInit ? this.contentLoading = true : this.fileLoading = true
                 const list = await this.fetchLintList()
-                this.buildList = await this.$store.dispatch('defect/getBuildList', { taskId: this.$route.params.taskId })
                 this.handleGatherFile()
-                this.newDefectJudgeTime = list.newDefectJudgeTime ? this.formatTime(list.newDefectJudgeTime, 'YYYY-MM-DD') : ''
                 this.listData = { ...this.listData, ...list }
-                this.totalCount = this.pagination.count = this.listData.defectList.totalElements
-                this.getDefectCount(list)
+                this.totalCount = this.pagination.count = this.listData.defectList.count
                 this.isSearch = true
                 this.addTableScrollEvent()
                 if (isInit) {
@@ -850,12 +957,27 @@
                     this.dialogAnalyseVisible = !this.neverShow
                 }
             },
-            async fetchLintList () {
+            initParams () {
+                this.fetchSeverityParams()
+                this.fetchDefectTypeParams()
+                this.fetchStatusParams()
+                this.fetchOtherParams()
+            },
+            async fetchBuildList () {
+                this.selectLoading.buildListLoading = true
+                this.buildList = await this.$store.dispatch('defect/getBuildList', { taskId: this.$route.params.taskId })
+                this.selectLoading.buildListLoading = false
+            },
+            getSearchParams () {
                 const daterange = this.searchParams.daterange
                 const startCreateTime = this.formatTime(daterange[0], 'YYYY-MM-DD')
                 const endCreateTime = this.formatTime(daterange[1], 'YYYY-MM-DD')
                 const isSelectAll = this.isSelectAll
                 const params = { ...this.searchParams, startCreateTime, endCreateTime, isSelectAll }
+                return params
+            },
+            async fetchLintList () {
+                const params = this.getSearchParams()
                 const res = await this.$store.dispatch('defect/lintList', params)
                 if (!res) return []
                 if (res.fileList) {
@@ -864,10 +986,46 @@
                 }
                 return res
             },
-            async initSearchList () {
-                const params = this.$route.params
-                const res = await this.$store.dispatch('defect/lintParams', params)
-                this.searchFormData = Object.assign({}, this.searchFormData, res)
+            // async fetchSearchList () {
+            //     const params = this.getSearchParams()
+            //     const res = await this.$store.dispatch('defect/lintSearchParams', params)
+            //     this.newDefectJudgeTime = res.newDefectJudgeTime ? this.formatTime(res.newDefectJudgeTime, 'YYYY-MM-DD') : ''
+            //     this.searchFormData = Object.assign(this.searchFormData, res)
+            //     this.getDefectCount(res)
+            // },
+            async fetchSeverityParams () {
+                const params = this.getSearchParams()
+                params.statisticType = 'SEVERITY'
+                const res = await this.$store.dispatch('defect/lintSearchParams', params)
+                const { newDefectJudgeTime, seriousCount, normalCount, promptCount } = res
+                this.newDefectJudgeTime = newDefectJudgeTime ? this.formatTime(newDefectJudgeTime, 'YYYY-MM-DD') : ''
+                this.searchFormData = Object.assign(this.searchFormData, { seriousCount, normalCount, promptCount })
+                this.getDefectCount(res)
+            },
+            async fetchDefectTypeParams () {
+                const params = this.getSearchParams()
+                params.statisticType = 'DEFECT_TYPE'
+                const res = await this.$store.dispatch('defect/lintSearchParams', params)
+                const { newCount, historyCount } = res
+                this.searchFormData = Object.assign(this.searchFormData, { newCount, historyCount })
+            },
+            async fetchStatusParams () {
+                this.selectLoading.statusLoading = true
+                const params = this.getSearchParams()
+                params.statisticType = 'STATUS'
+                const res = await this.$store.dispatch('defect/lintSearchParams', params)
+                const { existCount, fixCount, ignoreCount } = res
+                this.searchFormData = Object.assign(this.searchFormData, { existCount, fixCount, ignoreCount })
+                this.selectLoading.statusLoading = false
+            },
+            async fetchOtherParams () {
+                this.selectLoading.otherParamsLoading = true
+                const status = this.searchParams.status
+                const params = { toolId: this.toolId, status }
+                const res = await this.$store.dispatch('defect/lintOtherParams', params)
+                const { authorList, checkerList, filePathTree } = res
+                this.searchFormData = Object.assign(this.searchFormData, { authorList, checkerList, filePathTree })
+                this.selectLoading.otherParamsLoading = false
             },
             async handleGatherFile () {
                 const taskId = this.$route.params.taskId
@@ -877,6 +1035,7 @@
             fetchLintDetail (type, extraParams = {}) {
                 const pattern = this.toolMap[this.toolId]['pattern']
                 const params = { ...this.searchParams, ...this.defectDetailSearchParams, pattern, ...extraParams }
+                params.fileList = [params.filePath]
                 this.$store.dispatch('defect/lintDetail', params).then(detail => {
                     if (detail.fileName) {
                         if (!extraParams.entityId) {
@@ -892,6 +1051,23 @@
                     } else if (detail.response) {
                         this.cacheConfig.length = 0
                         this.preloadCache(this.defectList, this.cacheConfig)
+                    } else if (detail.code === '2300005') {
+                        this.defectDetailDialogVisiable = false
+                        setTimeout(() => {
+                            this.$bkInfo({
+                                subHeader: this.$createElement('p', {
+                                    style: {
+                                        fontSize: '20px',
+                                        lineHeight: '40px'
+                                    }
+                                }, this.$t('无法获取问题的代码片段。请先将工蜂OAuth授权给蓝盾。')),
+                                confirmFn: () => {
+                                    this.$store.dispatch('defect/oauthUrl', { toolName: this.toolId }).then(res => {
+                                        window.open(res, '_blank')
+                                    })
+                                }
+                            })
+                        }, 500)
                     }
                 }).finally(() => {
                     this.detailLoading = false
@@ -902,6 +1078,7 @@
                 document.onkeydown = keyDown
                 function keyDown (event) {
                     const e = event || window.event
+                    if (e.target.nodeName !== 'BODY') return
                     switch (e.code) {
                         case 'Enter': // enter
                             // e.path.length < 5 防止规则等搜索条件里面的回车触发打开详情
@@ -956,7 +1133,7 @@
             addTableScrollEvent () {
                 this.$nextTick(() => {
                     // 滚动加载
-                    if (this.$refs.table.$refs.fileListTable) {
+                    if (this.$refs.table && this.$refs.table.$refs.fileListTable) {
                         const tableBodyWrapper = this.$refs.table.$refs.fileListTable.$refs.bodyWrapper
 
                         // 问题文件列表滚动加载
@@ -988,7 +1165,7 @@
                     2: 'normalCount',
                     4: 'promptCount'
                 }
-                const count = this.listData[severityFieldMap[severity]] || 0
+                const count = this.searchFormData[severityFieldMap[severity]] || 0
                 return count > 100000 ? this.$t('10万+') : count
             },
             getDefectCountByType (type) {
@@ -996,7 +1173,7 @@
                     1: 'newCount',
                     2: 'historyCount'
                 }
-                const count = this.listData[tpyeFieldMap[type]] || 0
+                const count = this.searchFormData[tpyeFieldMap[type]] || 0
                 return count > 100000 ? this.$t('10万+') : count
             },
             handleSortChange ({ column, prop, order }) {
@@ -1091,19 +1268,19 @@
             handleSelectable (row, index) {
                 return !(row.status & 2)
             },
-            handleMark (markFlag, batchFlag, entityId, defectId) {
+            handleMark (markFlag, batchFlag, entityId) {
                 // markFlag 0: 取消标记, 1: 标记修改
                 // batchFlag true: 批量操作
-                let fileDefects = []
+                let defectKeySet = []
                 if (batchFlag) {
                     this.$refs.table.$refs.fileListTable.selection.map(item => {
-                        fileDefects.push({ fileEntityId: item.entityId, defectId: item.defectId })
+                        defectKeySet.push(item.entityId)
                     })
                 } else {
-                    fileDefects = [{ fileEntityId: entityId, defectId }]
+                    defectKeySet = [entityId]
                 }
                 const bizType = 'MarkDefect'
-                let data = { ...this.operateParams, bizType, fileDefects, markFlag }
+                let data = { ...this.operateParams, bizType, defectKeySet, markFlag }
                 if (this.isSelectAll === 'Y') {
                     data = { ...data, isSelectAll: 'Y', queryDefectCondition: JSON.stringify(this.searchParams) }
                 }
@@ -1115,7 +1292,16 @@
                             message: markFlag
                                 ? this.$t('标记为已处理成功。若下次检查仍为问题将突出显示。') : this.$t('取消标记成功')
                         })
-                        this.init()
+                        if (batchFlag) {
+                            this.init()
+                        } else {
+                            this.listData.defectList.records.forEach(item => {
+                                if (item.entityId === entityId) {
+                                    item.mark = markFlag
+                                }
+                            })
+                            this.listData.defectList.records = this.listData.defectList.records.slice()
+                        }
                         if (this.defectDetailDialogVisiable) {
                             this.fetchLintDetail('scroll')
                         }
@@ -1126,8 +1312,8 @@
                     this.tableLoading = false
                 })
             },
-            handleComent (entityId, defectId, commentId) {
-                this.commentParams = { ...this.commentParams, fileId: entityId, defectId: defectId, comment: '' }
+            handleComent (entityId, commentId) {
+                this.commentParams = { ...this.commentParams, defectId: entityId, comment: '' }
                 if (commentId) {
                     this.commentParams.commentId = commentId
                 } else if (this.searchParams.clusterType === 'defect') {
@@ -1172,22 +1358,22 @@
                     }
                 })
             },
-            handleAuthor (changeAuthorType, entityId, author, defectId) {
+            handleAuthor (changeAuthorType, entityId, author) {
                 this.authorEditDialogVisiable = true
                 this.operateParams.changeAuthorType = changeAuthorType
                 this.operateParams.sourceAuthor = author
-                this.operateParams.fileDefects = [{ fileEntityId: entityId, defectId }]
+                this.operateParams.defectKeySet = [entityId]
             },
             // 处理人修改
             handleAuthorEditConfirm () {
                 let data = this.operateParams
                 if (data.changeAuthorType === 2) {
-                    const fileDefects = []
+                    const defectKeySet = []
                     this.$refs.table.$refs.fileListTable.selection.map(item => {
-                        fileDefects.push({ fileEntityId: item.entityId, defectId: item.defectId })
+                        defectKeySet.push(item.entityId)
                     })
-                    this.operateParams.fileDefects = fileDefects
-                    data.fileDefects = fileDefects
+                    this.operateParams.defectKeySet = defectKeySet
+                    data.defectKeySet = defectKeySet
                 }
                 data.bizType = 'AssignDefect'
                 // data.sourceAuthor = data.sourceAuthor
@@ -1205,7 +1391,17 @@
                             message: this.$t('修改处理人成功')
                         })
                         this.operateParams.targetAuthor = []
-                        this.init()
+                        if (data.changeAuthorType === 1) {
+                            this.listData.defectList.records.forEach(item => {
+                                if (item.entityId === data.defectKeySet[0]) {
+                                    item.author = data.newAuthor.join()
+                                }
+                            })
+                            this.listData.defectList.records = this.listData.defectList.records.slice()
+                        } else {
+                            this.init()
+                        }
+                        this.initParams()
                         if (this.defectDetailDialogVisiable) {
                             this.fetchLintDetail('scroll')
                         }
@@ -1216,17 +1412,21 @@
                     this.tableLoading = false
                 })
             },
-            handleIgnore (ignoreType, batchFlag, entityId, defectId) {
+            handleIgnore (ignoreType, batchFlag, entityId, filePath) {
+                this.operateParams.fileList = [filePath]
                 this.operateParams.bizType = ignoreType
                 this.operateParams.batchFlag = batchFlag
                 if (batchFlag) {
-                    const fileDefects = []
+                    const defectKeySet = []
+                    const fileList = []
                     this.$refs.table.$refs.fileListTable.selection.map(item => {
-                        fileDefects.push({ fileEntityId: item.entityId, defectId: item.defectId })
+                        defectKeySet.push(item.entityId)
+                        fileList.push(item.filePath)
                     })
-                    this.operateParams.fileDefects = fileDefects
+                    this.operateParams.defectKeySet = defectKeySet
+                    this.operateParams.fileList = fileList
                 } else {
-                    this.operateParams.fileDefects = [{ fileEntityId: entityId, defectId }]
+                    this.operateParams.defectKeySet = [entityId]
                 }
                 if (ignoreType === 'RevertIgnore') {
                     this.handleIgnoreConfirm()
@@ -1240,6 +1440,12 @@
                 this.ignoreReasonDialogVisiable = false
                 if (this.isSelectAll === 'Y') {
                     data = { ...data, isSelectAll: 'Y', queryDefectCondition: JSON.stringify(this.searchParams) }
+                } else if (this.searchParams.clusterType === 'file' && !this.operateParams.defectKeySet[0]) {
+                    const searchParams = JSON.parse(JSON.stringify(this.searchParams))
+                    searchParams.clusterType = 'defect'
+                    searchParams.pattern = 'LINT'
+                    searchParams.fileList = this.operateParams.fileList
+                    data = { ...data, isSelectAll: 'Y', queryDefectCondition: JSON.stringify(searchParams) }
                 }
                 this.$store.dispatch('defect/batchEdit', data).then(res => {
                     if (res.code === '0') {
@@ -1248,7 +1454,14 @@
                             message: this.operateParams.bizType === 'IgnoreDefect'
                                 ? this.$t('忽略问题成功。该问题将不会在待修复列表中显示。') : this.$t('恢复问题成功。该问题将重新在待修复列表中显示。')
                         })
-                        this.init()
+                        if (data.batchFlag) {
+                            this.init()
+                        } else {
+                            const index = this.listData.defectList.records.findIndex(item => item.entityId === data.defectKeySet[0])
+                            this.listData.defectList.records.splice(index, 1)
+                        }
+                        this.initParams()
+
                         this.operateParams.ignoreReason = ''
                         if (this.defectDetailDialogVisiable) {
                             if (this.searchParams.clusterType === 'file' && this.lintDetail.lintDefectList.length > 1) {
@@ -1272,7 +1485,7 @@
             },
             screenScroll () {
                 this.$nextTick(() => {
-                    if (this.$refs.table.$refs.fileListTable.$refs.bodyWrapper) {
+                    if (this.$refs.table && this.$refs.table.$refs.fileListTable && this.$refs.table.$refs.fileListTable.$refs.bodyWrapper) {
                         const childrens = this.$refs.table.$refs.fileListTable.$refs.bodyWrapper
                         const height = this.fileIndex > 3 ? (this.fileIndex - 3) * 42 : 0
                         childrens.scrollTo({
@@ -1327,15 +1540,18 @@
             },
             // 根据ID打开详情
             openDetail () {
-                const id = this.$route.query.entityId
-                const defectId = this.$route.query.defectId
-                if (id) {
+                const entityId = this.$route.query.entityId
+                const filePath = this.$route.query.filePath
+                if (entityId || filePath) {
                     setTimeout(() => {
                         if (!this.toolMap[this.toolId]) {
-                            this.openDetail(id)
+                            this.openDetail()
+                        } else if (filePath) {
+                            this.searchParams.clusterType = 'file'
+                            this.defectDetailSearchParams.clusterType = 'file'
+                            this.defectDetailSearchParams.filePath = filePath
                         } else {
-                            this.defectDetailSearchParams.entityId = id
-                            this.defectDetailSearchParams.defectId = defectId
+                            this.defectDetailSearchParams.entityId = entityId
                         }
                     }, 500)
                 }
@@ -1345,16 +1561,16 @@
                     let smallHeight = 0
                     let largeHeight = 0
                     let tableHeight = 0
-                    const i = this.listData.defectList.content.length || 0
+                    const i = this.listData.defectList.records.length || 0
                     if (this.$refs.table && this.$refs.table.$refs.fileListTable) {
                         const $main = document.getElementsByClassName('main-form')
                         smallHeight = $main.length > 0 ? $main[0].clientHeight : 0
                         largeHeight = this.$refs.mainContainer ? this.$refs.mainContainer.clientHeight : 0
                         tableHeight = this.$refs.table.$refs.fileListTable.$el.scrollHeight
+                        this.screenHeight = i * 42 > tableHeight ? largeHeight - smallHeight - 73 : i * 42 + 43
+                        this.screenHeight = this.screenHeight === 43 ? 336 : this.screenHeight
                     }
-                    this.screenHeight = i * 42 > tableHeight ? largeHeight - smallHeight - 73 : i * 42 + 43
-                    this.screenHeight = this.screenHeight === 43 ? 336 : this.screenHeight
-                }, 100)
+                }, 0)
             },
             getDefectCount (list) {
                 this.totalDefectCount = 0
@@ -1433,6 +1649,12 @@
         background: #fff;
         .cc-operate {
             display: inline-block;
+            .cc-operate-buttons {
+                display: flex;
+                .cc-operate-button {
+                    margin-left: 10px;
+                }
+            }
         }
         .cc-selected {
             float: left;
@@ -1582,6 +1804,19 @@
     }
     .main-container::-webkit-scrollbar {
         width: 0;
+    }
+    .excel-download {
+        line-height: 32px;
+        cursor: pointer;
+        padding-right: 10px;
+        &:hover {
+            color: #3a84ff;
+        }
+    }
+    >>>.bk-button .bk-icon {
+        .loading {
+            color: #3a92ff;
+        }
     }
 </style>
 <style lang="postcss">

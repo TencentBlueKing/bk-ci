@@ -28,19 +28,10 @@ package com.tencent.bk.codecc.defect.service
 
 import com.tencent.bk.codecc.defect.model.BuildEntity
 import com.tencent.bk.codecc.defect.model.TaskLogEntity
-import com.tencent.bk.codecc.defect.vo.coderepository.CodeRepoVO
+import com.tencent.devops.common.api.CodeRepoVO
 import com.tencent.bk.codecc.task.vo.TaskDetailVO
 
 interface PipelineService {
-
-    /**
-     * 获取文件详情
-     *
-     * @date 2019/6/27
-     * @version V4.0
-     */
-    fun getFileContent(taskId: Long, repoId: String?, filePath: String,
-        reversion: String?, branch: String?, subModule: String?): String?
 
     /**
      * 获取构建信息
@@ -60,11 +51,4 @@ interface PipelineService {
      * 停止流水线运行
      */
     fun stopRunningTask(projectId: String, pipelineId: String, taskId: Long?, buildId: String, userName: String, nameEn: String)
-
-    /**
-     * 获取任务id和代码仓库的映射信息
-     * @param taskIds
-     * @return
-     */
-    fun getCodeRepoListByTaskIds(taskIds: Set<Long>, projectId: String): Map<Long, Set<CodeRepoVO>>
 }

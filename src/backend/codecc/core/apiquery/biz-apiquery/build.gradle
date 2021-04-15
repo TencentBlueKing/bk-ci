@@ -4,6 +4,7 @@ dependencies {
     compile project(":core:common:common-web")
     compile project(":core:common:common-client")
     compile project(":core:common:common-redis")
+    compile project(":core:common:common-util")
     compile project(":core:apiquery:model-apiquery")
     compile project(":core:apiquery:api-apiquery")
     compile project(":core:defect:api-defect")

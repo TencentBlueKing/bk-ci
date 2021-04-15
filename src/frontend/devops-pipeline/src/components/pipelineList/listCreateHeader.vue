@@ -2,7 +2,9 @@
     <section>
         <create-header
             :create-text="$t('newlist.addPipeline')"
-            @createPipeline="toggleTemplatePopup(true)">
+            button-type="menu"
+            trigger-type="click"
+            :dropdown-menu-config="createPipelineDropMenuConf">
             <div slot="addon">
                 <span class="pipeline-num">（{{ $t('newlist.sumPipelinesTips', [num]) }}）</span>
                 <i @click.stop="showSlide" class="layout-icon devops-icon icon-filter-shape" :class="{ 'active-icon': hasFilter }" :title="$t('newlist.filter')"></i>
@@ -57,6 +59,26 @@
                 ]
             }
         },
+        computed: {
+            createPipelineDropMenuConf () {
+                return {
+                    showHandler: () => {},
+                    hideHandler: () => {},
+                    align: 'center',
+                    list: [{
+                        text: this.$t('newPipelineFromTemplateLabel'),
+                        handler: () => {
+                            this.$emit('showCreate', true)
+                        }
+                    }, {
+                        text: this.$t('newPipelineFromJSONLabel'),
+                        handler: () => {
+                            this.$emit('showImport', true)
+                        }
+                    }]
+                }
+            }
+        },
         methods: {
             hideFeedBackMenu () {
                 this.showOrderType = false
@@ -70,9 +92,6 @@
             changeOrderType (val) {
                 this.showOrderType = false
                 this.$emit('changeOrder', val)
-            },
-            toggleTemplatePopup (val) {
-                this.$emit('showCreate', val)
             },
             showSlide () {
                 this.$emit('showSlide', true)

@@ -45,10 +45,10 @@ public interface CLOCDefectRepository extends MongoRepository<CLOCDefectEntity, 
     List<CLOCDefectEntity> findByTaskIdIn(Collection<Long> taskIdSet);
 
     /**
-     * 根据任务id进行删除
-     * @param taskId
+     * 获取当前任务下所有生效告警记录
+     *
+     *
      */
-    void deleteByTaskId(Long taskId);
-
+    List<CLOCDefectEntity> findByTaskIdAndStatusIsNot(Long taskId, String status);
 
 }

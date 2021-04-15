@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -28,8 +29,10 @@ package com.tencent.devops.process.pojo.code.git
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
+@Suppress("ALL")
 data class GitMergeRequestEvent(
     val user: GitUser,
+    val manual_unlock: Boolean? = false,
     val object_attributes: GitMRAttributes
 ) : GitEvent() {
     companion object {
@@ -37,6 +40,7 @@ data class GitMergeRequestEvent(
     }
 }
 
+@Suppress("ALL")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitMRAttributes(
     val id: Long,
@@ -50,6 +54,7 @@ data class GitMRAttributes(
     val state: String,
     val merge_status: String,
     val target_project_id: String,
+    val source_project_id: String,
     val iid: Long,
     val description: String?,
     val source: GitProject,

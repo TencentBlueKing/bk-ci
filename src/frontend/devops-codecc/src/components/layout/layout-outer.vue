@@ -16,6 +16,10 @@
                     v-for="(panel, index) in panels"
                     v-bind="panel"
                     :key="index">
+                    <span slot="label" @click="handleRedPoint(panel.name)">
+                        <span>{{panel.label}}</span>
+                        <i v-if="panel.name === 'checker' && !hasRedPointStore" class="red-point"></i>
+                    </span>
                 </bk-tab-panel>
             </bk-tab>
             <div @click="handlerVersionChange" class="app-version">
@@ -23,7 +27,7 @@
             </div>
             <!-- <div class="breadcrumb">{{title}}</div> -->
         </header>
-        <main class="page-main">
+        <main class="page-main" :class="{ 'has-banner': !isBannerClose }">
             <div class="page-content">
                 <div class="main-container">
                     <slot />
@@ -35,6 +39,7 @@
 
 <script>
     import logo from '@/images/logo.svg'
+    import { mapGetters } from 'vuex'
     // import NavTop from './nav-top'
 
     export default {
@@ -54,10 +59,12 @@
                     { name: 'checkerset', label: '规则集' },
                     { name: 'checker', label: '规则' }
                 ],
-                iwikiCodeccHome: window.IWIKI_CODECC_HOME
+                iwikiCodeccHome: window.IWIKI_CODECC_HOME,
+                hasRedPointStore: window.localStorage.getItem('redtips-tab-cloc-20200704')
             }
         },
         computed: {
+            ...mapGetters(['isBannerClose']),
             title () {
                 const title = this.$route.meta.title
                 return this.$t(`${title}`)
@@ -85,6 +92,12 @@
                     this.$router.push({ name: 'task-list' })
                 } else if (name === 'checkerset') {
                     this.$router.push({ name: 'checkerset-list' })
+                }
+            },
+            handleRedPoint (name) {
+                if (name === 'checker') {
+                    window.localStorage.setItem('redtips-tab-cloc-20200704', '1')
+                    this.hasRedPointStore = true
                 }
             }
         }
@@ -158,6 +171,9 @@
         .page-main {
             height: calc(100vh - var(--navTopHeight));
             overflow: auto;
+            &.has-banner {
+                height: calc(100vh - var(--navTopHeight) - var(--bannerHeight));
+            }
 
             .page-content,
             .main-container,
@@ -168,6 +184,10 @@
             .main-container {
                 padding: 20px 0;
             }
+        }
+        .red-point {
+            margin-bottom: 10px;
+            margin-left: -3px;
         }
     }
 </style>

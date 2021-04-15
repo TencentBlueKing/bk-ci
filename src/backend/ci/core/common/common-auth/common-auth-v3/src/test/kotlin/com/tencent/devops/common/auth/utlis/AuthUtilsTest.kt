@@ -1,3 +1,30 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.common.auth.utlis
 
 import com.tencent.bk.sdk.iam.constants.ExpressionOperationEnum
@@ -10,11 +37,11 @@ import org.junit.Test
 
 class AuthUtilsTest {
 
-    val actionPolicys = mutableListOf<ActionPolicyDTO>()
+    private val actionPolicys = mutableListOf<ActionPolicyDTO>()
 
-    val expressionList = mutableListOf<ExpressionDTO>()
+    private val expressionList = mutableListOf<ExpressionDTO>()
 
-    val newExpressionList = mutableListOf<ExpressionDTO>()
+    private val newExpressionList = mutableListOf<ExpressionDTO>()
 
     @Before
     fun setUp() {
@@ -48,7 +75,7 @@ class AuthUtilsTest {
         buildNewExpression()
     }
 
-    fun buildNewExpression() {
+    private fun buildNewExpression() {
         // 单项目下任务 {"field":"pipeline._bk_iam_path_","op":"starts_with","value":"/project,test1/"}
         val expressionDTO1 = ExpressionDTO()
         expressionDTO1.field = "pipeline._bk_iam_path_"
@@ -56,7 +83,6 @@ class AuthUtilsTest {
         expressionDTO1.value = "/project,test1/"
         newExpressionList.add(expressionDTO1)
 
-        // {"content":[{"field":"pipeline.id","op":"in","value":["p-098b68a251ae4ec4b6f4fde87767387f","p-12b2c343109f43a58a79dcb9e3721c1b","p-54a8619d1f754d32b5b2bc249a74f26c"]},{"field":"pipeline._bk_iam_path_","op":"starts_with","value":"/project,demo/"}],"op":"AND"}
         val expressionDTO2 = ExpressionDTO()
         val childExpression1 = ExpressionDTO()
         val childExpression2 = ExpressionDTO()
@@ -78,7 +104,6 @@ class AuthUtilsTest {
 
         newExpressionList.add(expressionDTO2)
 
-        // {"content":[{"content":[{"field":"pipeline.id","op":"in","value":["p-0d1fff4dabca4fc282e5ff63644bd339","p-54fb8b6562584df4b3693f7c787c105a"]},{"field":"pipeline._bk_iam_path_","op":"starts_with","value":"/project,v3test/"}],"op":"AND"},{"content":[{"field":"pipeline.id","op":"in","value":["p-098b68a251ae4ec4b6f4fde87767387f","p-12b2c343109f43a58a79dcb9e3721c1b","p-54a8619d1f754d32b5b2bc249a74f26c"]},{"field":"pipeline._bk_iam_path_","op":"starts_with","value":"/project,demo/"}],"op":"AND"}],"op":"OR"}
         val expressionDTO3 = ExpressionDTO()
         expressionDTO3.content = mutableListOf()
         val childExpression3 = ExpressionDTO()
@@ -116,9 +141,37 @@ class AuthUtilsTest {
         childExpression4.value = "/project,demo/"
         expressionDTO4.content.add(childExpression4)
         newExpressionList.add(expressionDTO4)
+
+        val expressionDTO5 = ExpressionDTO()
+        expressionDTO5.content = mutableListOf()
+        expressionDTO5.operator = ExpressionOperationEnum.OR
+        val childExpression5 = ExpressionDTO()
+        childExpression5.field = "credential.id"
+        childExpression5.operator = ExpressionOperationEnum.EQUAL
+        childExpression5.value = "test_3"
+
+        val childExpression6 = ExpressionDTO()
+        val childExpression7 = ExpressionDTO()
+        val childExpression8 = ExpressionDTO()
+        childExpression5.content = mutableListOf()
+        childExpression6.content = mutableListOf()
+        childExpression7.operator = ExpressionOperationEnum.EQUAL
+        childExpression7.value = "test"
+        childExpression7.field = "credential.id"
+
+        childExpression8.operator = ExpressionOperationEnum.START_WITH
+        childExpression8.value = "/project,v3test/"
+        childExpression8.field = "credential._bk_iam_path_"
+
+        childExpression6.content.add(childExpression7)
+        childExpression6.content.add(childExpression8)
+        childExpression6.operator = ExpressionOperationEnum.AND
+        expressionDTO5.content.add(childExpression5)
+        expressionDTO5.content.add(childExpression6)
+        newExpressionList.add(expressionDTO5)
     }
 
-    fun buildExpression() {
+    private fun buildExpression() {
         val expression1 = ExpressionDTO()
         expression1.field = "project._bk_iam_path_"
         expression1.operator = ExpressionOperationEnum.START_WITH
@@ -245,7 +298,174 @@ class AuthUtilsTest {
         Assert.assertEquals(mockList1, AuthUtils.getResourceInstance(newExpressionList[3], "v3test", resourceType))
     }
 
-    fun print(projectList: List<String>) {
+    @Test
+    fun getResourceInstanceTest5() {
+        val resourceType = AuthResourceType.TICKET_CREDENTIAL
+        val mockList = mutableSetOf<String>()
+        mockList.add("test_3")
+        val mockList1 = mutableSetOf<String>()
+        mockList1.add("test")
+        mockList1.add("test_3")
+        Assert.assertEquals(mockList, AuthUtils.getResourceInstance(newExpressionList[4], "", resourceType))
+        Assert.assertEquals(mockList1, AuthUtils.getResourceInstance(newExpressionList[4], "v3test", resourceType))
+    }
+
+    @Test
+    fun getResourceInstanceTest6() {
+        val resourceType = AuthResourceType.TICKET_CREDENTIAL
+        val mockList = mutableSetOf<String>()
+        mockList.add("test_3")
+        mockList.add("test")
+        val mockList1 = mutableSetOf<String>()
+        mockList1.add("test")
+        mockList1.add("test_3")
+        Assert.assertEquals(mockList, AuthUtils.getResourceInstance(newExpressionList[4], "v3test", resourceType))
+        Assert.assertEquals(mockList1, AuthUtils.getResourceInstance(newExpressionList[4], "v3test", resourceType))
+    }
+
+    @Test
+    fun getResourceInstanceTest7() {
+        val expression1 = ExpressionDTO()
+        expression1.operator = ExpressionOperationEnum.OR
+        expression1.value = null
+        expression1.field = null
+        val childExpression1 = ExpressionDTO()
+        childExpression1.operator = ExpressionOperationEnum.START_WITH
+        childExpression1.field = "credential._bk_iam_path"
+        childExpression1.value = "/project,fitztest/,"
+        childExpression1.content = null
+        val childExpression2 = ExpressionDTO()
+        childExpression2.operator = ExpressionOperationEnum.START_WITH
+        childExpression2.field = "credential._bk_iam_path"
+        childExpression2.value = "/project,testaaa/,"
+        childExpression2.content = null
+        val expression1Content = mutableListOf<ExpressionDTO>()
+        expression1Content.add(childExpression1)
+        expression1Content.add(childExpression2)
+        expression1.content = expression1Content
+        val resourceType = AuthResourceType.TICKET_CREDENTIAL
+        val mockList = mutableSetOf<String>()
+        mockList.add("*")
+        Assert.assertEquals(mockList, AuthUtils.getResourceInstance(expression1, "fitztest", resourceType))
+        print(AuthUtils.getResourceInstance(expression1, "fitztest", resourceType))
+    }
+
+    @Test
+    fun getResourceInstanceTest8() {
+        val e1 = ExpressionDTO()
+        e1.operator = ExpressionOperationEnum.OR
+        e1.value = null
+        e1.field = null
+        val e21 = ExpressionDTO()
+        e21.operator = ExpressionOperationEnum.START_WITH
+        e21.field = "credential._bk_iam_path"
+        e21.value = "/project,testaaa/,"
+        e21.content = null
+        val e22 = ExpressionDTO()
+        e22.operator = ExpressionOperationEnum.OR
+        e22.field = null
+        e22.value = null
+
+        val e31 = ExpressionDTO()
+        e31.operator = ExpressionOperationEnum.AND
+        e31.field = null
+        e31.value = null
+        val e32 = ExpressionDTO()
+        e32.operator = ExpressionOperationEnum.AND
+        e32.field = null
+        e32.value = null
+
+        val e41 = ExpressionDTO()
+        e41.operator = ExpressionOperationEnum.IN
+        e41.field = "credential.id"
+        e41.value = listOf("fabio", "dsahs")
+        e41.content = null
+        val e42 = ExpressionDTO()
+        e42.operator = ExpressionOperationEnum.START_WITH
+        e42.field = "credential._bk_iam_path"
+        e42.value = "/project,testaaa/"
+        e42.content = null
+
+        val e43 = ExpressionDTO()
+        e43.operator = ExpressionOperationEnum.IN
+        e43.field = "credential.id"
+        e43.value = listOf("001", "002", "003")
+        e43.content = null
+        val e44 = ExpressionDTO()
+        e44.operator = ExpressionOperationEnum.START_WITH
+        e44.field = "credential._bk_iam_path"
+        e44.value = "/project,aa20200908"
+        e44.content = null
+        val e31content = mutableListOf<ExpressionDTO>()
+        e31content.add(e41)
+        e31content.add(e42)
+        e31.content = e31content
+        val e32Content = mutableListOf<ExpressionDTO>()
+        e32Content.add(e43)
+        e32Content.add(e44)
+        e32.content = e32Content
+        val e22content = mutableListOf<ExpressionDTO>()
+        e22content.add(e31)
+        e22content.add(e32)
+        e22.content = e22content
+        val e1Content = mutableListOf<ExpressionDTO>()
+        e1Content.add(e21)
+        e1Content.add(e22)
+        e1.content = e1Content
+        val resourceType = AuthResourceType.TICKET_CREDENTIAL
+        val mockList = mutableSetOf<String>()
+        mockList.add("001")
+        mockList.add("002")
+        mockList.add("003")
+        Assert.assertEquals(mockList, AuthUtils.getResourceInstance(e1, "aa20200908", resourceType))
+        print(AuthUtils.getResourceInstance(e1, "aa20200908", resourceType))
+    }
+
+    @Test
+    fun getResourceInstanceTest9() {
+        val expression1 = ExpressionDTO()
+        expression1.operator = ExpressionOperationEnum.OR
+        expression1.value = null
+        expression1.field = null
+        val childExpression1 = ExpressionDTO()
+        childExpression1.operator = ExpressionOperationEnum.ANY
+        childExpression1.field = "credential.id"
+        childExpression1.value = null
+        childExpression1.content = null
+
+        val childExpression2 = ExpressionDTO()
+        childExpression2.operator = ExpressionOperationEnum.AND
+        childExpression2.field = null
+        childExpression2.value = null
+
+        val childExpression2Child1 = ExpressionDTO()
+        childExpression2Child1.operator = ExpressionOperationEnum.EQUAL
+        childExpression2Child1.field = "credential.id"
+        childExpression2Child1.value = "jvtest"
+        childExpression2Child1.content = null
+        val childExpression2Child2 = ExpressionDTO()
+        childExpression2Child2.operator = ExpressionOperationEnum.START_WITH
+        childExpression2Child2.field = "credential._bk_iam_path_"
+        childExpression2Child2.value = "/project,jttest/"
+        childExpression2Child2.content = null
+        val expressionChild2Content = mutableListOf<ExpressionDTO>()
+        expressionChild2Content.add(childExpression2Child1)
+        expressionChild2Content.add(childExpression2Child2)
+        childExpression2.content = expressionChild2Content
+
+        val expression1Content = mutableListOf<ExpressionDTO>()
+        expression1Content.add(childExpression1)
+        expression1Content.add(childExpression2)
+        expression1.content = expression1Content
+
+        val resourceType = AuthResourceType.TICKET_CREDENTIAL
+        val mockList = mutableSetOf<String>()
+        mockList.add("*")
+        Assert.assertEquals(mockList, AuthUtils.getResourceInstance(expression1, "jttest", resourceType))
+        print(AuthUtils.getResourceInstance(expression1, "jttest", resourceType))
+    }
+
+    private fun print(projectList: List<String>) {
         println(projectList)
         projectList.map {
             println(it)

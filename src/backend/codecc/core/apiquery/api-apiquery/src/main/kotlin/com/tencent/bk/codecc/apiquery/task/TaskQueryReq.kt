@@ -11,6 +11,8 @@ data class TaskQueryReq(
     val toolName : String?,
     // 流水线ID列表
     val pipelineIdList: List<String>?,
+    // codecc构建id
+    val codeccbuildId: String?,
     /**
      * 以下为查询告警时的过滤条件
      */
@@ -25,6 +27,10 @@ data class TaskQueryReq(
     //过滤规则
     val notChecker : String?,
     //过滤字段
-    val filterFields: List<String>?
+    val filterFields: List<String>?,
+    //流水线id
+    val pipelineId : String?,
+    // 构建id
+    val buildId : String?
 
 )

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -26,9 +27,11 @@
 
 package com.tencent.devops.environment.service.slave
 
+import com.tencent.devops.common.environment.agent.AgentGrayUtils
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.environment.dao.slave.SlaveGatewayDao
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
+import com.tencent.devops.environment.service.AgentUrlService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -39,20 +42,13 @@ import java.util.concurrent.TimeUnit
 class SlaveGatewayService @Autowired constructor(
     private val dslContext: DSLContext,
     private val slaveGatewayDao: SlaveGatewayDao,
-    private val commonConfig: CommonConfig
+    private val commonConfig: CommonConfig,
+    private val agentGrayUtils: AgentGrayUtils,
+    private val agentUrlService: AgentUrlService
 ) {
 
     private val cache = ArrayList<SlaveGateway>()
     private var lastUpdate: Long = 0
-
-    fun fixGateway(gateway: String?): String {
-        val gw = if (gateway.isNullOrBlank()) commonConfig.devopsBuildGateway else gateway
-        return if (gw!!.startsWith("http")) {
-            gw.removeSuffix("/")
-        } else {
-            "http://$gw"
-        }
-    }
 
     fun getShowName(gateway: String): String {
         val gatewayList = if (cache.isEmpty()) {
@@ -68,21 +64,33 @@ class SlaveGatewayService @Autowired constructor(
         return "深圳"
     }
 
-    fun getGateway(zoneName: String?): String? {
-
-        if (zoneName.isNullOrBlank()) {
-            return commonConfig.devopsBuildGateway
+    fun getFileGateway(zoneName: String?): String? {
+        if (agentGrayUtils.useDefaultFileGateway()) {
+            val defaultFileGateway = agentGrayUtils.getDefaultFileGateway()
+            if (!defaultFileGateway.isNullOrBlank()) return defaultFileGateway!!
         }
+        return getConfigGateway(zoneName)
+    }
 
+    fun getGateway(zoneName: String?): String? {
+        if (agentGrayUtils.useDefaultGateway()) {
+            val defaultGateway = agentGrayUtils.getDefaultGateway()
+            if (!defaultGateway.isNullOrBlank()) return defaultGateway!!
+        }
+        return getConfigGateway(zoneName)
+    }
+
+    private fun getConfigGateway(zoneName: String?): String? {
+        if (zoneName.isNullOrBlank()) {
+            return agentUrlService.fixGateway(commonConfig.devopsBuildGateway!!)
+        }
         val gateways = getGateway()
-
         gateways.forEach {
             if (it.zoneName == zoneName) {
-                return it.gateway
+                return agentUrlService.fixGateway(it.gateway)
             }
         }
-
-        return commonConfig.devopsBuildGateway
+        return agentUrlService.fixGateway(commonConfig.devopsBuildGateway!!)
     }
 
     fun getGateway(): List<SlaveGateway> {

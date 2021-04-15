@@ -27,6 +27,8 @@
 package com.tencent.bk.codecc.codeccjob.dao.mongorepository;
 
 import com.tencent.bk.codecc.defect.model.CCNDefectEntity;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -62,5 +64,5 @@ public interface CCNDefectRepository extends MongoRepository<CCNDefectEntity, St
      */
     List<CCNDefectEntity> findByTaskId(long taskId);
 
-
+    List<CCNDefectEntity> findByTaskIdAndStatus(Long taskId, int status);
 }

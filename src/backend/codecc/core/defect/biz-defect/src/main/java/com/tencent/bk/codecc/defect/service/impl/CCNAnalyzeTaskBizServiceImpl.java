@@ -27,12 +27,8 @@
 package com.tencent.bk.codecc.defect.service.impl;
 
 import com.tencent.bk.codecc.defect.service.AbstractAnalyzeTaskBizService;
-import com.tencent.bk.codecc.defect.service.file.ScmFileInfoService;
-import com.tencent.bk.codecc.defect.vo.UploadTaskLogStepVO;
-import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.devops.common.constant.ComConstants;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
@@ -45,56 +41,6 @@ import org.springframework.stereotype.Service;
 @Service("CCNAnalyzeTaskBizService")
 public class CCNAnalyzeTaskBizServiceImpl extends AbstractAnalyzeTaskBizService
 {
-    @Autowired
-    private ScmFileInfoService scmFileInfoService;
-
-    @Override
-    protected void preHandleDefectsAndStatistic(UploadTaskLogStepVO uploadTaskLogStepVO, String analysisVersion)
-    {
-        // 暂不需要做提前处理
-    }
-
-    /**
-     * 分析成功时告警数据及告警统计数据后处理
-     *
-     * @param uploadTaskLogStepVO
-     */
-    @Override
-    protected void postHandleDefectsAndStatistic(UploadTaskLogStepVO uploadTaskLogStepVO, TaskDetailVO taskVO)
-    {
-        // 代码扫描步骤结束，则开始变更告警的状态并统计本次分析的告警信息
-        if (uploadTaskLogStepVO.getStepNum() == ComConstants.Step4MutliTool.SCAN.value()
-                && uploadTaskLogStepVO.getFlag() == ComConstants.StepFlag.SUCC.value())
-        {
-            log.info("begin commit defect.");
-            asyncCommitDefect(uploadTaskLogStepVO, taskVO);
-        }
-        else if (uploadTaskLogStepVO.getStepNum() == getSubmitStepNum()
-                && uploadTaskLogStepVO.getFlag() == ComConstants.StepFlag.SUCC.value())
-        {
-            log.info("begin statistic defect count.");
-            handleSubmitSuccess(uploadTaskLogStepVO, taskVO);
-        }
-    }
-
-    private void handleSubmitSuccess(UploadTaskLogStepVO uploadTaskLogStepVO, TaskDetailVO taskVO)
-    {
-        long taskId = uploadTaskLogStepVO.getTaskId();
-        String toolName = uploadTaskLogStepVO.getToolName();
-
-        // 保存首次分析成功时间
-        saveFirstSuccessAnalyszeTime(taskId, toolName);
-
-        // 清除强制全量扫描标志
-        clearForceFullScan(taskId, toolName);
-
-        // 处理md5.json
-        scmFileInfoService.parseFileInfo(uploadTaskLogStepVO.getTaskId(),
-            uploadTaskLogStepVO.getStreamName(),
-            uploadTaskLogStepVO.getToolName(),
-            uploadTaskLogStepVO.getPipelineBuildId());
-    }
-
     @Override
     public int getSubmitStepNum()
     {

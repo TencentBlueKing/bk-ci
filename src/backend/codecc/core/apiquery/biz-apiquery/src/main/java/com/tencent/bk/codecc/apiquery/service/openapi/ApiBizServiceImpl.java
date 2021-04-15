@@ -23,6 +23,7 @@ import com.tencent.bk.codecc.apiquery.defect.dao.mongotemplate.LintDefectDao;
 import com.tencent.bk.codecc.apiquery.defect.model.CCNStatisticModel;
 import com.tencent.bk.codecc.apiquery.defect.model.DUPCStatisticModel;
 import com.tencent.bk.codecc.apiquery.defect.model.DefectStatModel;
+import com.tencent.bk.codecc.apiquery.defect.model.LintDefectV2Model;
 import com.tencent.bk.codecc.apiquery.defect.model.LintStatisticModel;
 import com.tencent.bk.codecc.apiquery.service.MetaDataService;
 import com.tencent.bk.codecc.apiquery.task.dao.TaskDao;
@@ -33,6 +34,7 @@ import com.tencent.bk.codecc.apiquery.task.model.ToolConfigInfoModel;
 import com.tencent.bk.codecc.apiquery.utils.ConvertUtil;
 import com.tencent.bk.codecc.apiquery.utils.PageUtils;
 import com.tencent.bk.codecc.apiquery.vo.TaskToolInfoReqVO;
+import com.tencent.bk.codecc.apiquery.vo.openapi.CheckerDefectStatVO;
 import com.tencent.bk.codecc.apiquery.vo.openapi.TaskOverviewDetailRspVO;
 import com.tencent.bk.codecc.apiquery.vo.openapi.TaskOverviewDetailVO;
 import com.tencent.bk.codecc.apiquery.vo.report.CommonChartAuthorVO;
@@ -69,8 +71,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-public class ApiBizServiceImpl implements ApiBizService
-{
+public class ApiBizServiceImpl implements ApiBizService {
     @Autowired
     private RedisTemplate<String, String> redisTemplate;
 
@@ -104,20 +105,17 @@ public class ApiBizServiceImpl implements ApiBizService
 
     @Override
     public TaskOverviewDetailRspVO statisticsTaskOverview(TaskToolInfoReqVO reqVO, Integer pageNum, Integer pageSize,
-            String sortType)
-    {
+            String sortType) {
         log.info("statisticsTaskOverview req content: {}", reqVO);
         TaskOverviewDetailRspVO rspVO = new TaskOverviewDetailRspVO();
         List<TaskOverviewDetailVO> taskOverviewList = Lists.newArrayList();
 
         // 如果没传默认不查工蜂扫描
-        if (CollectionUtils.isEmpty(reqVO.getCreateFrom()))
-        {
+        if (CollectionUtils.isEmpty(reqVO.getCreateFrom())) {
             reqVO.setCreateFrom(Sets.newHashSet(ComConstants.BsTaskCreateFrom.BS_CODECC.value(),
                     ComConstants.BsTaskCreateFrom.BS_PIPELINE.value()));
         }
-        if (reqVO.getStatus() == null)
-        {
+        if (reqVO.getStatus() == null) {
             reqVO.setStatus(ComConstants.Status.ENABLE.value());
         }
 
@@ -126,8 +124,7 @@ public class ApiBizServiceImpl implements ApiBizService
 
         Page<TaskInfoModel> taskInfoPage = taskDao.findTaskInfoPage(reqVO, pageable);
         List<TaskInfoModel> taskInfoModels = taskInfoPage.getRecords();
-        if (CollectionUtils.isNotEmpty(taskInfoModels))
-        {
+        if (CollectionUtils.isNotEmpty(taskInfoModels)) {
             Set<Long> taskIdSet = taskInfoModels.stream().map(TaskInfoModel::getTaskId).collect(Collectors.toSet());
 
             // 获取指定任务的工具配置列表
@@ -142,8 +139,7 @@ public class ApiBizServiceImpl implements ApiBizService
             Map<Object, Object> deptInfo = redisTemplate.opsForHash().entries(RedisKeyConstants.KEY_DEPT_INFOS);
 
             Map<Long, List<String>> afterFilterIdMap = Maps.newHashMap();
-            for (TaskInfoModel taskInfoModel : taskInfoModels)
-            {
+            for (TaskInfoModel taskInfoModel : taskInfoModels) {
                 TaskOverviewDetailVO taskOverviewVO = new TaskOverviewDetailVO();
                 BeanUtils.copyProperties(taskInfoModel, taskOverviewVO);
                 taskOverviewVO
@@ -157,16 +153,13 @@ public class ApiBizServiceImpl implements ApiBizService
                 taskOverviewList.add(taskOverviewVO);
                 long taskId = taskInfoModel.getTaskId();
                 List<ToolConfigInfoModel> toolInfoList = taskToolConfigMap.get(taskId);
-                if (CollectionUtils.isEmpty(toolInfoList))
-                {
+                if (CollectionUtils.isEmpty(toolInfoList)) {
                     log.info("noToolsRegistered task {}", taskId);
                     continue;
                 }
 
-                for (ToolConfigInfoModel toolConfigInfo : toolInfoList)
-                {
-                    if (ComConstants.FOLLOW_STATUS.WITHDRAW.value() == toolConfigInfo.getFollowStatus())
-                    {
+                for (ToolConfigInfoModel toolConfigInfo : toolInfoList) {
+                    if (ComConstants.FOLLOW_STATUS.WITHDRAW.value() == toolConfigInfo.getFollowStatus()) {
                         continue;
                     }
 
@@ -190,6 +183,49 @@ public class ApiBizServiceImpl implements ApiBizService
         return rspVO;
     }
 
+    @Override
+    public Page<CheckerDefectStatVO> statCheckerDefect(TaskToolInfoReqVO reqVO, Integer pageNum, Integer pageSize) {
+        log.info("statisticsTaskOverview req content: pageNum[{}] pageSize[{}], {}", pageNum, pageSize, reqVO);
+        List<CheckerDefectStatVO> data = Lists.newArrayList();
+
+        pageSize = pageSize == null ? 100 : pageSize >= 500 ? 500 : pageSize;
+        Pageable pageable = PageUtils.INSTANCE.convertPageSizeToPageable(pageNum, pageSize, "task_id", "ASC");
+
+        // 设置默认查询条件：默认查工蜂扫描
+        if (CollectionUtils.isEmpty(reqVO.getCreateFrom())) {
+            reqVO.setCreateFrom(Sets.newHashSet(ComConstants.BsTaskCreateFrom.GONGFENG_SCAN.value()));
+        }
+        // 默认查询有效任务
+        if (reqVO.getStatus() == null) {
+            reqVO.setStatus(ComConstants.Status.ENABLE.value());
+        }
+        // 默认查待修复告警
+        int defectStatus =
+                reqVO.getDefectStatus() == null ? ComConstants.DefectStatus.NEW.value() : reqVO.getDefectStatus();
+
+        Page<TaskInfoModel> taskInfoPage = taskDao.findTaskIdListByCondition(reqVO, pageable);
+        List<TaskInfoModel> taskInfoModels = taskInfoPage.getRecords();
+        if (CollectionUtils.isNotEmpty(taskInfoModels)) {
+
+            List<Long> taskIdSet = taskInfoModels.stream().map(TaskInfoModel::getTaskId).collect(Collectors.toList());
+            List<LintDefectV2Model> defectByGroupChecker =
+                    lintDefectDao.findDefectByGroupChecker(taskIdSet, reqVO.getToolName(), defectStatus);
+            log.info("findDefectByGroupChecker size: {}", defectByGroupChecker.size());
+
+            if (CollectionUtils.isNotEmpty(defectByGroupChecker)) {
+                data = defectByGroupChecker.stream().map(model -> {
+                    CheckerDefectStatVO defectStatVO = new CheckerDefectStatVO();
+                    BeanUtils.copyProperties(model, defectStatVO);
+                    defectStatVO.setCount(model.getLineNum());
+                    return defectStatVO;
+                }).collect(Collectors.toList());
+            }
+        }
+
+        return new Page<>(taskInfoPage.getCount(), taskInfoPage.getPage(), taskInfoPage.getPageSize(),
+                taskInfoPage.getTotalPages(), data);
+    }
+
 
     /**
      * 按工具维度批量查询分析结果
@@ -198,30 +234,24 @@ public class ApiBizServiceImpl implements ApiBizService
      * @return 项目ID 工具告警对象列表
      */
     private Map<Long, List<TaskOverviewDetailVO.ToolDefectVO>> batchQueryToolResult(
-            Map<Long, List<String>> afterFilterIdMap)
-    {
+            Map<Long, List<String>> afterFilterIdMap) {
         Map<Long, List<TaskOverviewDetailVO.ToolDefectVO>> allToolsDefectMap = Maps.newHashMap();
-        if (MapUtils.isEmpty(afterFilterIdMap))
-        {
+        if (MapUtils.isEmpty(afterFilterIdMap)) {
             return allToolsDefectMap;
         }
 
         // 按工具维度归类(哪些任务注册了这个工具)
         Map<String, Set<Long>> toolTaskIdMap = Maps.newHashMap();
-        for (Map.Entry<Long, List<String>> entry : afterFilterIdMap.entrySet())
-        {
+        for (Map.Entry<Long, List<String>> entry : afterFilterIdMap.entrySet()) {
             Long taskId = entry.getKey();
             List<String> toolList = entry.getValue();
 
-            if (CollectionUtils.isEmpty(toolList))
-            {
+            if (CollectionUtils.isEmpty(toolList)) {
                 log.info("batchQueryToolResult task unregistered tool: {}", taskId);
                 continue;
             }
-            for (String tool : toolList)
-            {
-                if (Tool.CLOC.name().equals(tool))
-                {
+            for (String tool : toolList) {
+                if (Tool.CLOC.name().equals(tool)) {
                     continue;
                 }
                 Set<Long> taskIdSet = toolTaskIdMap.computeIfAbsent(tool, k -> Sets.newHashSet());
@@ -230,14 +260,12 @@ public class ApiBizServiceImpl implements ApiBizService
         }
 
         // 按工具分别批量查询
-        for (Map.Entry<String, Set<Long>> entry : toolTaskIdMap.entrySet())
-        {
+        for (Map.Entry<String, Set<Long>> entry : toolTaskIdMap.entrySet()) {
             String tool = entry.getKey();
             Set<Long> taskIdList = entry.getValue();
 
             /* 修复ConcurrentMap不允许Null的问题 */
-            if (StringUtils.isBlank(tool))
-            {
+            if (StringUtils.isBlank(tool)) {
                 log.error("batchQueryToolResult tool is blank: {}", tool);
                 continue;
             }
@@ -245,26 +273,21 @@ public class ApiBizServiceImpl implements ApiBizService
             String toolDisplayName = toolMetaBaseVO.getDisplayName();
             String pattern = toolMetaBaseVO.getPattern();
 
-            if (CollectionUtils.isEmpty(taskIdList))
-            {
+            if (CollectionUtils.isEmpty(taskIdList)) {
                 log.info("taskIdList isEmpty tool: {}", tool);
                 continue;
             }
 
-            if (ComConstants.ToolPattern.LINT.name().equals(pattern))
-            {
+            if (ComConstants.ToolPattern.LINT.name().equals(pattern)) {
                 batchGetLintAnalyzeStat(tool, taskIdList, allToolsDefectMap, toolDisplayName);
             }
-            else if (ComConstants.ToolPattern.CCN.name().equals(pattern))
-            {
+            else if (ComConstants.ToolPattern.CCN.name().equals(pattern)) {
                 batchGetCcnAnalyzeStat(tool, taskIdList, allToolsDefectMap, toolDisplayName);
             }
-            else if (ComConstants.ToolPattern.DUPC.name().equals(pattern))
-            {
+            else if (ComConstants.ToolPattern.DUPC.name().equals(pattern)) {
                 batchGetDupcAnalyzeStat(tool, taskIdList, allToolsDefectMap, toolDisplayName);
             }
-            else
-            {
+            else {
                 batchGetCommonDefectStat(tool, taskIdList, allToolsDefectMap, toolDisplayName);
             }
         }
@@ -280,18 +303,15 @@ public class ApiBizServiceImpl implements ApiBizService
      * @param toolDisplayName   工具展示名称
      */
     private void batchGetLintAnalyzeStat(String toolName, Set<Long> taskIdList,
-            Map<Long, List<TaskOverviewDetailVO.ToolDefectVO>> allToolsDefectMap, String toolDisplayName)
-    {
+            Map<Long, List<TaskOverviewDetailVO.ToolDefectVO>> allToolsDefectMap, String toolDisplayName) {
         List<LintStatisticModel> lintStatisticModels = lintDefectDao.findStatByTaskIdInAndToolIs(taskIdList, toolName);
-        if (CollectionUtils.isEmpty(lintStatisticModels))
-        {
+        if (CollectionUtils.isEmpty(lintStatisticModels)) {
             log.info("lintStatisticModelList isEmpty tool: {}", toolName);
         }
         Map<Long, LintStatisticModel> statisticModelMap = lintStatisticModels.stream()
                 .collect(Collectors.toMap(LintStatisticModel::getTaskId, Function.identity(), (k, v) -> v));
 
-        for (Long taskId : taskIdList)
-        {
+        for (Long taskId : taskIdList) {
             TaskOverviewDetailVO.ToolDefectVO toolDefectVO = new TaskOverviewDetailVO.ToolDefectVO();
             toolDefectVO.setToolName(toolName);
             toolDefectVO.setDisplayName(toolDisplayName);
@@ -300,8 +320,7 @@ public class ApiBizServiceImpl implements ApiBizService
             CommonChartAuthorVO historyDefect = new CommonChartAuthorVO();
 
             LintStatisticModel statModel = statisticModelMap.get(taskId);
-            if (statModel == null)
-            {
+            if (statModel == null) {
                 toolDefectVO.setExist(0);
                 toolDefectVO.setNewDefect(newDefect);
                 toolDefectVO.setHistoryDefect(historyDefect);
@@ -343,26 +362,22 @@ public class ApiBizServiceImpl implements ApiBizService
      * @param toolDisplayName   工具展示名称
      */
     private void batchGetCommonDefectStat(String toolName, Set<Long> taskIdList,
-            Map<Long, List<TaskOverviewDetailVO.ToolDefectVO>> allToolsDefectMap, String toolDisplayName)
-    {
-        if (CollectionUtils.isEmpty(taskIdList))
-        {
+            Map<Long, List<TaskOverviewDetailVO.ToolDefectVO>> allToolsDefectMap, String toolDisplayName) {
+        if (CollectionUtils.isEmpty(taskIdList)) {
             log.info("taskIdList isEmpty tool: {}", toolName);
             return;
         }
 
         // 获取告警汇总列表
         List<DefectStatModel> defectModels = defectDao.findDefectByTaskIdInAndToolName(taskIdList, toolName);
-        if (CollectionUtils.isEmpty(defectModels))
-        {
+        if (CollectionUtils.isEmpty(defectModels)) {
             log.info("defectModels isEmpty tool: {}", toolName);
         }
 
         Map<Long, List<DefectStatModel>> taskStatMap =
                 defectModels.stream().collect(Collectors.groupingBy(DefectStatModel::getTaskId));
 
-        for (Long taskId : taskIdList)
-        {
+        for (Long taskId : taskIdList) {
             TaskOverviewDetailVO.ToolDefectVO toolDefectVO = new TaskOverviewDetailVO.ToolDefectVO();
             toolDefectVO.setToolName(toolName);
             toolDefectVO.setDisplayName(toolDisplayName);
@@ -371,8 +386,7 @@ public class ApiBizServiceImpl implements ApiBizService
             CommonChartAuthorVO closedCount = new CommonChartAuthorVO();
 
             List<DefectStatModel> defectStatModels = taskStatMap.get(taskId);
-            if (CollectionUtils.isEmpty(defectStatModels))
-            {
+            if (CollectionUtils.isEmpty(defectStatModels)) {
                 toolDefectVO.setExistCount(existCount);
                 toolDefectVO.setClosedCount(closedCount);
                 List<TaskOverviewDetailVO.ToolDefectVO> toolDefectVoList =
@@ -382,40 +396,31 @@ public class ApiBizServiceImpl implements ApiBizService
             }
 
             // 统计修复和遗留告警数
-            for (DefectStatModel defect : defectStatModels)
-            {
+            for (DefectStatModel defect : defectStatModels) {
                 int count = defect.getCount();
                 int status = defect.getStatus();
                 int severity = defect.getSeverity();
 
-                if ((ComConstants.DefectStatus.FIXED.value() & status) > 0)
-                {
-                    if (severity == ComConstants.SERIOUS)
-                    {
+                if ((ComConstants.DefectStatus.FIXED.value() & status) > 0) {
+                    if (severity == ComConstants.SERIOUS) {
                         closedCount.setSerious(count);
                     }
-                    else if (severity == ComConstants.NORMAL)
-                    {
+                    else if (severity == ComConstants.NORMAL) {
                         closedCount.setNormal(count);
                     }
-                    else if (severity == ComConstants.PROMPT || severity == ComConstants.PROMPT_IN_DB)
-                    {
+                    else if (severity == ComConstants.PROMPT || severity == ComConstants.PROMPT_IN_DB) {
                         closedCount.setPrompt(count);
                     }
                 }
 
-                if (ComConstants.DefectStatus.NEW.value() == status)
-                {
-                    if (severity == ComConstants.SERIOUS)
-                    {
+                if (ComConstants.DefectStatus.NEW.value() == status) {
+                    if (severity == ComConstants.SERIOUS) {
                         existCount.setSerious(count);
                     }
-                    else if (severity == ComConstants.NORMAL)
-                    {
+                    else if (severity == ComConstants.NORMAL) {
                         existCount.setNormal(count);
                     }
-                    else if (severity == ComConstants.PROMPT || severity == ComConstants.PROMPT_IN_DB)
-                    {
+                    else if (severity == ComConstants.PROMPT || severity == ComConstants.PROMPT_IN_DB) {
                         existCount.setPrompt(count);
                     }
                 }
@@ -440,19 +445,16 @@ public class ApiBizServiceImpl implements ApiBizService
      * @param toolDisplayName   工具展示名称
      */
     private void batchGetCcnAnalyzeStat(String toolName, Set<Long> taskIdList,
-            Map<Long, List<TaskOverviewDetailVO.ToolDefectVO>> allToolsDefectMap, String toolDisplayName)
-    {
+            Map<Long, List<TaskOverviewDetailVO.ToolDefectVO>> allToolsDefectMap, String toolDisplayName) {
         List<CCNStatisticModel> ccnStatEntities = ccnDefectDao.batchFindByTaskIdInAndTool(taskIdList, toolName);
-        if (CollectionUtils.isEmpty(ccnStatEntities))
-        {
+        if (CollectionUtils.isEmpty(ccnStatEntities)) {
             log.info("ccnStatEntityList isEmpty tool: {}", toolName);
         }
 
         Map<Long, List<CCNStatisticModel>> defectMap =
                 ccnStatEntities.stream().collect(Collectors.groupingBy(CCNStatisticModel::getTaskId));
 
-        for (Long taskId : taskIdList)
-        {
+        for (Long taskId : taskIdList) {
             TaskOverviewDetailVO.ToolDefectVO toolDefectVO = new TaskOverviewDetailVO.ToolDefectVO();
             toolDefectVO.setToolName(toolName);
             toolDefectVO.setDisplayName(toolDisplayName);
@@ -463,8 +465,7 @@ public class ApiBizServiceImpl implements ApiBizService
             int mediumCount = 0;
             int lowCount = 0;
             float averageCcn = 0;
-            if (CollectionUtils.isNotEmpty(ccnStatisticModels))
-            {
+            if (CollectionUtils.isNotEmpty(ccnStatisticModels)) {
                 CCNStatisticModel model = ccnStatisticModels.iterator().next();
                 superHighCount = model.getSuperHighCount() == null ? 0 : model.getSuperHighCount();
                 highCount = model.getHighCount() == null ? 0 : model.getHighCount();
@@ -496,19 +497,16 @@ public class ApiBizServiceImpl implements ApiBizService
      * @param toolDisplayName   工具展示名称
      */
     private void batchGetDupcAnalyzeStat(String toolName, Set<Long> taskIdList,
-            Map<Long, List<TaskOverviewDetailVO.ToolDefectVO>> allToolsDefectMap, String toolDisplayName)
-    {
+            Map<Long, List<TaskOverviewDetailVO.ToolDefectVO>> allToolsDefectMap, String toolDisplayName) {
         List<DUPCStatisticModel> dupcStatEntities = dupcDefectDao.batchFindByTaskIdInAndTool(taskIdList, toolName);
-        if (CollectionUtils.isEmpty(dupcStatEntities))
-        {
+        if (CollectionUtils.isEmpty(dupcStatEntities)) {
             log.info("dupcStatEntityList isEmpty tool: {}", toolName);
         }
 
         Map<Long, List<DUPCStatisticModel>> defectMap =
                 dupcStatEntities.stream().collect(Collectors.groupingBy(DUPCStatisticModel::getTaskId));
 
-        for (Long taskId : taskIdList)
-        {
+        for (Long taskId : taskIdList) {
             TaskOverviewDetailVO.ToolDefectVO toolDefectVO = new TaskOverviewDetailVO.ToolDefectVO();
             toolDefectVO.setToolName(toolName);
             toolDefectVO.setDisplayName(toolDisplayName);
@@ -519,8 +517,7 @@ public class ApiBizServiceImpl implements ApiBizService
             int highCount = 0;
             int mediumCount = 0;
             float dupRate = 0;
-            if (CollectionUtils.isNotEmpty(dupcStatisticModels))
-            {
+            if (CollectionUtils.isNotEmpty(dupcStatisticModels)) {
                 DUPCStatisticModel model = dupcStatisticModels.iterator().next();
                 defectCount = model.getDefectCount();
                 superHighCount = model.getSuperHighCount() == null ? 0 : model.getSuperHighCount();
@@ -549,20 +546,16 @@ public class ApiBizServiceImpl implements ApiBizService
      * @param allToolsDefectMap 每个任务对应的工具告警对象列表
      */
     private void assignTaskToolDefectInfo(List<TaskOverviewDetailVO> taskOverviewList,
-            Map<Long, List<TaskOverviewDetailVO.ToolDefectVO>> allToolsDefectMap)
-    {
-        if (CollectionUtils.isEmpty(taskOverviewList) || MapUtils.isEmpty(allToolsDefectMap))
-        {
+            Map<Long, List<TaskOverviewDetailVO.ToolDefectVO>> allToolsDefectMap) {
+        if (CollectionUtils.isEmpty(taskOverviewList) || MapUtils.isEmpty(allToolsDefectMap)) {
             log.error("no data for assignTaskToolDefectInfo!");
             return;
         }
 
-        for (TaskOverviewDetailVO detailVO : taskOverviewList)
-        {
+        for (TaskOverviewDetailVO detailVO : taskOverviewList) {
             List<TaskOverviewDetailVO.ToolDefectVO> toolDefectVoList = allToolsDefectMap.get(detailVO.getTaskId());
 
-            if (CollectionUtils.isEmpty(toolDefectVoList))
-            {
+            if (CollectionUtils.isEmpty(toolDefectVoList)) {
                 toolDefectVoList = Lists.newArrayList();
             }
             detailVO.setToolDefectInfo(toolDefectVoList);

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -80,3 +81,8 @@ const val AUTH_HEADER_DEVOPS_USER_PAAS_ID = "X-DEVOPS-PAAS-USER-ID"
 const val AUTH_HEADER_DEVOPS_ORIGINAL_HOST = "X-DEVOPS-ORIGINAL-HOST"
 
 const val AUTH_HEADER_DEVOPS_JWT_TOKEN = "X-DEVOPS-JWT-TOKEN"
+
+const val AUTH_HEADER_DEVOPS_SIGN_INFO = "X-DEVOPS-SIGN-INFO"
+
+const val AUTH_HEADER_PLATFORM = "X-DEVOPS-PLATFORM"
+const val AUTH_HEADER_APP_VERSION = "X-DEVOPS-APP-VERSION"

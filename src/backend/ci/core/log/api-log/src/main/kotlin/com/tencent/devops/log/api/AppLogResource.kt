@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -29,9 +30,9 @@ package com.tencent.devops.log.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.log.model.pojo.EndPageQueryLogs
-import com.tencent.devops.log.model.pojo.PageQueryLogs
-import com.tencent.devops.log.model.pojo.QueryLogs
+import com.tencent.devops.common.log.pojo.EndPageQueryLogs
+import com.tencent.devops.common.log.pojo.PageQueryLogs
+import com.tencent.devops.common.log.pojo.QueryLogs
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -53,6 +54,7 @@ import javax.ws.rs.core.Response
 @Path("/app/logs")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface AppLogResource {
 
     @ApiOperation("根据构建ID获取初始化所有日志")
@@ -80,6 +82,9 @@ interface AppLogResource {
         @ApiParam("对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
+        @ApiParam("指定subTag", required = false)
+        @QueryParam("subTag")
+        subTag: String?,
         @ApiParam("对应jobId", required = false)
         @QueryParam("jobId")
         jobId: String?,
@@ -125,6 +130,9 @@ interface AppLogResource {
         @ApiParam("对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
+        @ApiParam("指定subTag", required = false)
+        @QueryParam("subTag")
+        subTag: String?,
         @ApiParam("对应jobId", required = false)
         @QueryParam("jobId")
         jobId: String?,
@@ -161,6 +169,45 @@ interface AppLogResource {
         @ApiParam("对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
+        @ApiParam("指定subTag", required = false)
+        @QueryParam("subTag")
+        subTag: String?,
+        @ApiParam("对应jobId", required = false)
+        @QueryParam("jobId")
+        jobId: String?,
+        @ApiParam("执行次数", required = false)
+        @QueryParam("executeCount")
+        executeCount: Int?
+    ): Result<QueryLogs>
+
+    @ApiOperation("获取某行前指定行数的日志")
+    @GET
+    @Path("/{projectId}/{pipelineId}/{buildId}/before")
+    fun getBeforeLogs(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @ApiParam("结束行号", required = true)
+        @QueryParam("end")
+        end: Long,
+        @ApiParam("返回日志条数", required = false)
+        @QueryParam("size")
+        size: Int?,
+        @ApiParam("对应elementId", required = false)
+        @QueryParam("tag")
+        tag: String?,
+        @ApiParam("指定subTag", required = false)
+        @QueryParam("subTag")
+        subTag: String?,
         @ApiParam("对应jobId", required = false)
         @QueryParam("jobId")
         jobId: String?,
@@ -189,6 +236,9 @@ interface AppLogResource {
         @ApiParam("对应element ID", required = false)
         @QueryParam("tag")
         tag: String?,
+        @ApiParam("指定subTag", required = false)
+        @QueryParam("subTag")
+        subTag: String?,
         @ApiParam("对应jobId", required = false)
         @QueryParam("jobId")
         jobId: String?,
@@ -200,7 +250,7 @@ interface AppLogResource {
     @ApiOperation("根据构建ID获取初始化最后日志")
     @GET
     @Path("/{projectId}/{pipelineId}/{buildId}/end")
-    fun getEndLogs(
+    fun getEndLogsPage(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -219,6 +269,9 @@ interface AppLogResource {
         @ApiParam("对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
+        @ApiParam("指定subTag", required = false)
+        @QueryParam("subTag")
+        subTag: String?,
         @ApiParam("对应jobId", required = false)
         @QueryParam("jobId")
         jobId: String?,
@@ -226,4 +279,37 @@ interface AppLogResource {
         @QueryParam("executeCount")
         executeCount: Int?
     ): Result<EndPageQueryLogs>
+
+    @ApiOperation("根据构建ID获取初始化底部指定行数的日志")
+    @GET
+    @Path("/{projectId}/{pipelineId}/{buildId}/bottom")
+    fun getBottomLogs(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @ApiParam("返回日志条数", required = false)
+        @QueryParam("size")
+        size: Int?,
+        @ApiParam("对应elementId", required = false)
+        @QueryParam("tag")
+        tag: String?,
+        @ApiParam("指定subTag", required = false)
+        @QueryParam("subTag")
+        subTag: String?,
+        @ApiParam("对应jobId", required = false)
+        @QueryParam("jobId")
+        jobId: String?,
+        @ApiParam("执行次数", required = false)
+        @QueryParam("executeCount")
+        executeCount: Int?
+    ): Result<QueryLogs>
 }

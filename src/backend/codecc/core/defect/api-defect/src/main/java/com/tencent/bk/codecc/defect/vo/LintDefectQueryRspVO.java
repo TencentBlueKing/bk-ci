@@ -27,13 +27,11 @@
 package com.tencent.bk.codecc.defect.vo;
 
 import com.tencent.bk.codecc.defect.vo.common.CommonDefectQueryRspVO;
+import com.tencent.devops.common.api.pojo.Page;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-import org.springframework.data.domain.Page;
-
-import java.util.List;
 
 /**
  * lint类告警查询返回视图

@@ -164,17 +164,17 @@
                         })
                         const obj = {}
                         this.selectedRuleList = this.selectedRuleList.reduce((cur, next) => {
-                            if (!obj[`${next.checkerKey}-${next.tooltName}`]) {
-                                obj[`${next.checkerKey}-${next.tooltName}`] = true
+                            if (!obj[`${next.checkerKey}-${next.toolName}`]) {
+                                obj[`${next.checkerKey}-${next.toolName}`] = true
                                 cur.push(next)
                             }
                             return cur
                         }, [])
-                    } else validArr.forEach(val => this.selectedRuleList.splice(this.selectedRuleList.findIndex(item => item.checkerKey === val.checkerKey && item.tooltName === val.tooltName), 1))
+                    } else validArr.forEach(val => this.selectedRuleList.splice(this.selectedRuleList.findIndex(item => item.checkerKey === val.checkerKey && item.toolName === val.toolName), 1))
                 } else {
                     if (isChecked) {
                         this.selectedRuleList.push(data)
-                    } else this.selectedRuleList.splice(this.selectedRuleList.findIndex(item => item.checkerKey === data.checkerKey && item.tooltName === data.tooltName), 1)
+                    } else this.selectedRuleList.splice(this.selectedRuleList.findIndex(item => item.checkerKey === data.checkerKey && item.toolName === data.toolName), 1)
                 }
             },
             async submit () {
@@ -186,15 +186,11 @@
                         toolName: checker.toolName,
                         checkerKey: checker.checkerKey
                     }
-                    if (checker.props) {
-                        const matchItem = this.localRuleParam.findIndex(item => item.checkerKey === checker.checkerKey)
-                        if (matchItem > -1) {
-                            temp.props = this.localRuleParam[matchItem].props
-                        } else {
-                            temp.props = checker.props
-                        }
+                    const matchItem = this.localRuleParam.findIndex(item => item.checkerKey === checker.checkerKey)
+                    if (matchItem > -1) {
+                        temp.props = this.localRuleParam[matchItem].props
                     } else {
-                        temp.props = ''
+                        temp.props = checker.props
                     }
                     return temp
                 })

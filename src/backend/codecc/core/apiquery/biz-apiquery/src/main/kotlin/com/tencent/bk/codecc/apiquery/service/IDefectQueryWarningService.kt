@@ -28,7 +28,10 @@ interface IDefectQueryWarningService<T : CommonModel, E : StatisticModel> {
     fun queryLintDefectStatistic(
         taskIdList: List<Long>,
         toolName: String?,
+        startTime: Long?,
+        endTime: Long?,
         filterFields : List<String>?,
+        buildId: String?,
         pageNum: Int?,
         pageSize: Int?,
         sortField: String?,

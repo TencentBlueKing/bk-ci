@@ -10,7 +10,6 @@ import com.tencent.bk.codecc.apiquery.task.model.TaskInfoModel;
 import com.tencent.bk.codecc.apiquery.task.model.ToolConfigInfoModel;
 import com.tencent.bk.codecc.apiquery.utils.PageUtils;
 import com.tencent.bk.codecc.apiquery.vo.ToolConfigPlatformVO;
-
 import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.api.pojo.Page;
 import com.tencent.devops.common.constant.CommonMessageCode;
@@ -121,19 +120,35 @@ public class ToolServiceImpl implements ToolService
             log.error("findByTaskIdAndTool data is not found,task [{}] or tool [{}] is invalid!", taskId, toolName);
             throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, new String[]{"taskId or toolName"}, null);
         }
-        String platformIp = toolConfigInfoModel.getPlatformIp();
-
-        PlatformInfoModel platformVO = platformInfoDao.findByToolNameAndIp(toolName, platformIp);
-        TaskInfoModel taskInfoModel = taskDao.findTaskById(taskId);
-
         ToolConfigPlatformVO toolConfigPlatformVO = new ToolConfigPlatformVO();
         BeanUtils.copyProperties(toolConfigInfoModel, toolConfigPlatformVO);
 
+        String platformIp = toolConfigInfoModel.getPlatformIp();
+        String port = "";
+        String userName = "";
+        String passwd = "";
+        if (StringUtils.isNotBlank(platformIp))
+        {
+            List<PlatformInfoModel> platformInfoModelList = platformInfoDao.findByToolNameAndIp(toolName, platformIp);
+            if (CollectionUtils.isNotEmpty(platformInfoModelList))
+            {
+                PlatformInfoModel platformVO = platformInfoModelList.iterator().next();
+                port = platformVO.getPort();
+                userName = platformVO.getUserName();
+                passwd = platformVO.getPasswd();
+            }
+        }
         toolConfigPlatformVO.setIp(platformIp);
-        toolConfigPlatformVO.setPort(platformVO.getPort());
-        toolConfigPlatformVO.setUserName(platformVO.getUserName());
-        toolConfigPlatformVO.setPassword(platformVO.getPasswd());
-        toolConfigPlatformVO.setNameEn(taskInfoModel.getNameEn());
+        toolConfigPlatformVO.setPort(port);
+        toolConfigPlatformVO.setUserName(userName);
+        toolConfigPlatformVO.setPassword(passwd);
+
+        TaskInfoModel taskInfoModel = taskDao.findTaskById(taskId);
+        if (taskInfoModel != null)
+        {
+            toolConfigPlatformVO.setNameEn(taskInfoModel.getNameEn());
+            toolConfigPlatformVO.setNameCn(taskInfoModel.getNameCn());
+        }
 
         return toolConfigPlatformVO;
     }

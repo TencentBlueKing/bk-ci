@@ -1,0 +1,2 @@
+service.name: replication
+server.port: 25903

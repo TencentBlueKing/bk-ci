@@ -16,41 +16,27 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.Lists;
 import com.tencent.bk.codecc.defect.component.NewCCNDefectTracingComponent;
 import com.tencent.bk.codecc.defect.dao.mongorepository.CCNDefectRepository;
-import com.tencent.bk.codecc.defect.dao.mongorepository.CCNStatisticRepository;
 import com.tencent.bk.codecc.defect.dao.mongorepository.FileCCNRepository;
 import com.tencent.bk.codecc.defect.dao.mongotemplate.FileCCNDao;
 import com.tencent.bk.codecc.defect.model.*;
 import com.tencent.bk.codecc.defect.model.incremental.ToolBuildStackEntity;
 import com.tencent.bk.codecc.defect.service.BuildDefectService;
-import com.tencent.bk.codecc.defect.service.CheckerService;
-import com.tencent.bk.codecc.defect.service.IDataReportBizService;
-import com.tencent.bk.codecc.defect.vo.CCNDataReportRspVO;
-import com.tencent.bk.codecc.defect.vo.ChartAverageVO;
+import com.tencent.bk.codecc.defect.service.git.GitRepoApiService;
+import com.tencent.bk.codecc.defect.service.statistic.CCNDefectStatisticService;
 import com.tencent.bk.codecc.defect.vo.CommitDefectVO;
 import com.tencent.bk.codecc.defect.vo.customtool.RepoSubModuleVO;
 import com.tencent.bk.codecc.defect.vo.customtool.ScmBlameChangeRecordVO;
 import com.tencent.bk.codecc.defect.vo.customtool.ScmBlameVO;
-import com.tencent.bk.codecc.task.vo.AnalyzeConfigInfoVO;
-import com.tencent.bk.codecc.task.vo.OpenCheckerVO;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
-import com.tencent.bk.codecc.task.vo.ToolConfigInfoVO;
-import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.constant.ComConstants;
-import com.tencent.devops.common.constant.CommonMessageCode;
-import com.tencent.devops.common.service.BizServiceFactory;
 import com.tencent.devops.common.util.JsonUtil;
-import com.tencent.devops.common.web.mq.ConstantsKt;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
-import org.json.JSONObject;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -75,13 +61,11 @@ public class CCNDefectCommitConsumer extends AbstractDefectCommitConsumer
     @Autowired
     private NewCCNDefectTracingComponent newCCNDefectTracingComponent;
     @Autowired
-    private BizServiceFactory<IDataReportBizService> dataReportBizServiceBizServiceFactory;
-    @Autowired
-    private CCNStatisticRepository ccnStatisticRepository;
-    @Autowired
     private BuildDefectService buildDefectService;
     @Autowired
-    private CheckerService checkerService;
+    private GitRepoApiService gitRepoApiService;
+    @Autowired
+    private CCNDefectStatisticService ccnDefectStatisticService;
 
     @Override
     protected void uploadDefects(CommitDefectVO commitDefectVO, Map<String, ScmBlameVO> fileChangeRecordsMap, Map<String, RepoSubModuleVO> codeRepoIdMap)
@@ -129,191 +113,28 @@ public class CCNDefectCommitConsumer extends AbstractDefectCommitConsumer
         // 2.更新告警状态
         updateDefectEntityStatus(allNewDefectList, currentFileSet, deleteFiles, isFullScan, buildEntity);
 
-        String baseBuildId = toolBuildStackEntity != null && StringUtils.isNotEmpty(toolBuildStackEntity.getBaseBuildId()) ? toolBuildStackEntity.getBaseBuildId() : "";
-
         // 3.计算总平均圈复杂度
         float averageCCN = calculateAverageCCN(taskId, defectJsonFileEntity, isFullScan, deleteFiles);
 
         // 4.统计本次扫描的告警
         beginTime = System.currentTimeMillis();
-        statistic(taskVO, toolName, averageCCN, buildId, baseBuildId, allNewDefectList);
+        ccnDefectStatisticService.statistic(taskVO, toolName, averageCCN, buildId, toolBuildStackEntity, allNewDefectList);
         log.info("statistic cost: {}, {}, {}, {}", System.currentTimeMillis() - beginTime, taskId, toolName, buildId);
 
         // 5.更新构建告警快照
         beginTime = System.currentTimeMillis();
-        buildDefectService.updateBaseBuildDefects(taskId, toolName, baseBuildId, buildId, isFullScan, deleteFiles, currentFileSet);
+        buildDefectService.saveCCNBuildDefect(taskId, toolName, buildEntity, allNewDefectList);
         log.info("buildDefectService.updateBaseBuildDefectsAndClearTemp cost: {}, {}, {}, {}", System.currentTimeMillis() - beginTime, taskId, toolName, buildId);
 
         // 6.保存质量红线数据
+        beginTime = System.currentTimeMillis();
         redLineReportService.saveRedLineData(taskVO, ComConstants.Tool.CCN.name(), buildId);
-    }
+        log.info("redLineReportService.saveRedLineData cost: {}, {}, {}, {}", System.currentTimeMillis() - beginTime, taskId, toolName, buildId);
 
-    /**
-     * 统计本次扫描的告警
-     * @param taskVO
-     * @param toolName
-     * @param averageCCN
-     * @param buildId
-     * @param baseBuildId
-     * @param allNewDefectList
-     */
-    private void statistic(TaskDetailVO taskVO, String toolName, float averageCCN, String buildId, String baseBuildId, List<CCNDefectEntity> allNewDefectList)
-    {
-        long taskId = taskVO.getTaskId();
-        // 获取各严重级别定义
-        Map<String, String> riskConfigMap = thirdPartySystemCaller.getRiskFactorConfig(ComConstants.Tool.CCN.name());
-        if (riskConfigMap == null)
-        {
-            log.error("Has not init risk factor config!");
-            throw new CodeCCException(CommonMessageCode.PARAMETER_IS_NULL, new String[]{"风险系数"}, null);
-        }
-        int sh = Integer.valueOf(riskConfigMap.get(ComConstants.RiskFactor.SH.name()));
-        int h = Integer.valueOf(riskConfigMap.get(ComConstants.RiskFactor.H.name()));
-        int m = Integer.valueOf(riskConfigMap.get(ComConstants.RiskFactor.M.name()));
-
-        // 获取超标圈复杂度阈值，优先从规则里面取，取不到从个性化参数里面取，再取不到就是用默认值
-        int ccnThreshold = getCcnThreshold(taskVO, toolName);
-
-        int ccnBeyondThresholdSum = 0;
-        int existCount = 0;
-        int superHighCount = 0;
-        int highCount = 0;
-        int mediumCount = 0;
-        int lowCount = 0;
-        if (CollectionUtils.isNotEmpty(allNewDefectList))
-        {
-            // 更新告警状态，并统计告警数量
-            Iterator<CCNDefectEntity> it = allNewDefectList.iterator();
-            while (it.hasNext())
-            {
-                CCNDefectEntity defectEntity = it.next();
-
-                // 统计遗留告警数
-                if (defectEntity.getStatus() == ComConstants.DefectStatus.NEW.value())
-                {
-                    existCount++;
-
-                    int ccn = defectEntity.getCcn();
-                    if (ccn >= m && ccn < h)
-                    {
-                        mediumCount++;
-                    }
-                    else if (ccn >= h && ccn < sh)
-                    {
-                        highCount++;
-                    }
-                    else if (ccn >= sh)
-                    {
-                        superHighCount++;
-                    }
-                    else if (ccn < m)
-                    {
-                        lowCount++;
-                    }
-
-                    // 计算超标复杂度
-                    int diff = ccn - ccnThreshold;
-                    if (diff > 0)
-                    {
-                        ccnBeyondThresholdSum += diff;
-                    }
-                }
-            }
-        }
-        log.info("existCount-->{}", existCount);
-
-        CCNStatisticEntity baseBuildCcnStatistic = ccnStatisticRepository.findByTaskIdAndBuildId(taskVO.getTaskId(), baseBuildId);
-
-        CCNStatisticEntity newCcnStatistic = new CCNStatisticEntity();
-        if (baseBuildCcnStatistic != null)
-        {
-            newCcnStatistic.setDefectChange(existCount - (baseBuildCcnStatistic.getDefectCount() == null ? 0 : baseBuildCcnStatistic.getDefectCount()));
-            newCcnStatistic.setAverageCCNChange(averageCCN - (baseBuildCcnStatistic.getAverageCCN() == null ? 0 : baseBuildCcnStatistic.getAverageCCN()));
-            newCcnStatistic.setLastDefectCount(baseBuildCcnStatistic.getDefectCount());
-            newCcnStatistic.setLastAverageCCN(baseBuildCcnStatistic.getAverageCCN());
-        }
-        else
-        {
-            newCcnStatistic.setDefectChange(existCount);
-            newCcnStatistic.setAverageCCNChange(averageCCN);
-            newCcnStatistic.setLastDefectCount(0);
-            newCcnStatistic.setLastAverageCCN(0.0F);
-        }
-        newCcnStatistic.setDefectCount(existCount);
-        newCcnStatistic.setAverageCCN(averageCCN);
-        newCcnStatistic.setTime(System.currentTimeMillis());
-        newCcnStatistic.setTaskId(taskId);
-        newCcnStatistic.setToolName(toolName);
-        newCcnStatistic.setBuildId(buildId);
-        newCcnStatistic.setSuperHighCount(superHighCount);
-        newCcnStatistic.setHighCount(highCount);
-        newCcnStatistic.setMediumCount(mediumCount);
-        newCcnStatistic.setLowCount(lowCount);
-        newCcnStatistic.setCcnBeyondThresholdSum(ccnBeyondThresholdSum);
-        ccnStatisticRepository.save(newCcnStatistic);
-
-        // 获取最近5日平均圈复杂度趋势数据，由于需要使用最新统计结果，所以先保存再获取趋势数据然后再次保存
-        List<ChartAverageEntity> averageList = Lists.newArrayList();
-        IDataReportBizService dataReportBizService = dataReportBizServiceBizServiceFactory.createBizService(toolName,
-                ComConstants.BusinessType.DATA_REPORT.value(), IDataReportBizService.class);
-        CCNDataReportRspVO ccnDataReportRspVO = (CCNDataReportRspVO) dataReportBizService
-                .getDataReport(taskId, toolName, 5, null, null);
-        if (ccnDataReportRspVO != null)
-        {
-            //平均圈复杂度按日期从早到晚排序
-            ccnDataReportRspVO.getChartAverageList().getAverageList().sort(Comparator.comparing(ChartAverageVO::getDate));
-
-            //平均圈复杂度图表数值保留两位小数
-            ccnDataReportRspVO.getChartAverageList().getAverageList().forEach(chartAverageVO ->
-            {
-                BigDecimal averageCcnBd = new BigDecimal(chartAverageVO.getAverageCCN());
-                chartAverageVO.setAverageCCN(averageCcnBd.setScale(2, BigDecimal.ROUND_HALF_DOWN).floatValue());
-            });
-
-            averageList.addAll(ccnDataReportRspVO.getChartAverageList().getAverageList().stream().map(chartAverageVO ->
-            {
-                ChartAverageEntity chartAverageEntity = new ChartAverageEntity();
-                BeanUtils.copyProperties(chartAverageVO, chartAverageEntity);
-                return chartAverageEntity;
-            }).collect(Collectors.toList()));
-        }
-        newCcnStatistic.setAverageList(averageList);
-        ccnStatisticRepository.save(newCcnStatistic);
-
-    }
-
-    private int getCcnThreshold(TaskDetailVO taskVO, String toolName)
-    {
-        long taskId = taskVO.getTaskId();
-        int ccnThreshold = ComConstants.DEFAULT_CCN_THRESHOLD;
-        AnalyzeConfigInfoVO analyzeConfigInfoVO = new AnalyzeConfigInfoVO();
-        analyzeConfigInfoVO.setTaskId(taskId);
-        analyzeConfigInfoVO.setMultiToolType(toolName);
-        analyzeConfigInfoVO = checkerService.getTaskCheckerConfig(analyzeConfigInfoVO);
-        List<OpenCheckerVO> openCheckers = analyzeConfigInfoVO.getOpenCheckers();
-        if (CollectionUtils.isNotEmpty(openCheckers) && CollectionUtils.isNotEmpty(openCheckers.get(0).getCheckerOptions()))
-        {
-            String ccnThresholdStr = openCheckers.get(0).getCheckerOptions().get(0).getCheckerOptionValue();
-            ccnThreshold = StringUtils.isEmpty(ccnThresholdStr) ? ComConstants.DEFAULT_CCN_THRESHOLD : Integer.valueOf(ccnThresholdStr.trim());
-        }
-        else
-        {
-            List<ToolConfigInfoVO> toolConfigInfoList = taskVO.getToolConfigInfoList();
-            for (ToolConfigInfoVO toolConfigInfoVO : toolConfigInfoList)
-            {
-                if (ComConstants.Tool.CCN.name().equals(toolConfigInfoVO.getToolName()) && StringUtils.isNotEmpty(toolConfigInfoVO.getParamJson()))
-                {
-                    JSONObject paramJson = new JSONObject(toolConfigInfoVO.getParamJson());
-                    if (paramJson.has(ComConstants.KEY_CCN_THRESHOLD))
-                    {
-                        String ccnThresholdStr = paramJson.getString(ComConstants.KEY_CCN_THRESHOLD);
-                        ccnThreshold = StringUtils.isEmpty(ccnThresholdStr) ? ComConstants.DEFAULT_CCN_THRESHOLD : Integer.valueOf(ccnThresholdStr.trim());
-                    }
-                    break;
-                }
-            }
-        }
-        return ccnThreshold;
+        // 7.回写工蜂mr信息
+        beginTime = System.currentTimeMillis();
+        gitRepoApiService.addCcnGitCodeAnalyzeComment(taskVO, buildEntity.getBuildId(), buildEntity.getBuildNo(), toolName, currentFileSet);
+        log.info("gitRepoApiService.addCcnGitCodeAnalyzeComment cost: {}, {}, {}, {}", System.currentTimeMillis() - beginTime, taskId, toolName, buildId);
     }
 
     /**
@@ -394,7 +215,7 @@ public class CCNDefectCommitConsumer extends AbstractDefectCommitConsumer
         Set<String> filterPaths = getFilterPaths(taskVO);
 
         List<CCNDefectEntity> currentDefectList = defectJsonFileEntity.getDefects();
-        log.info("current all defect list:{}", currentDefectList.size());
+        log.info("current all defect list: {}, {}", taskVO.getTaskId(), currentDefectList.size());
 
         // 填充告警的代码仓库信息
         currentDefectList.forEach(ccnDefectEntity -> fillDefectInfo(ccnDefectEntity, fileChangeRecordsMap, codeRepoIdMap));

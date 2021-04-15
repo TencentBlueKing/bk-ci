@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -30,12 +31,18 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventTy
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.EXCLUDE_PATHS_NOT_MATCH
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.EXCLUDE_USERS_NOT_MATCH
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.INCLUDE_USERS_NOT_MATCH
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.RELATIVEPATH_NOT_MATCH
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.REPOSITORY_TYPE_NOT_MATCH
 import com.tencent.devops.process.pojo.code.svn.SvnCommitEvent
 import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.repository.pojo.Repository
 import org.slf4j.LoggerFactory
 import java.util.regex.Pattern
 
+@Suppress("ALL")
 class SvnWebHookMatcher(
     val event: SvnCommitEvent,
     private val pipelineWebhookService: PipelineWebhookService
@@ -56,7 +63,7 @@ class SvnWebHookMatcher(
             logger.info("Code svn $repository")
             if (repository !is CodeSvnRepository) {
                 logger.warn("The repo($repository) is not code svn repo for svn web hook")
-                return ScmWebhookMatcher.MatchResult(false)
+                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = REPOSITORY_TYPE_NOT_MATCH)
             }
 
             // check project match
@@ -73,7 +80,7 @@ class SvnWebHookMatcher(
                 excludeUserSet.forEach {
                     if (it == getUsername()) {
                         logger.info("The exclude user($excludeUsers) exclude the svn update on pipeline($pipelineId)")
-                        return ScmWebhookMatcher.MatchResult(false)
+                        return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = EXCLUDE_USERS_NOT_MATCH)
                     }
                 }
                 logger.info("exclude user do not match: ${excludeUserSet.joinToString(",")}")
@@ -84,30 +91,14 @@ class SvnWebHookMatcher(
                 val includeUserSet = regex.split(includeUsers)
                 if (!includeUserSet.any { it == getUsername() }) {
                     logger.info("include user do not match: ${includeUserSet.joinToString(",")}")
-                    return ScmWebhookMatcher.MatchResult(false)
+                    return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = INCLUDE_USERS_NOT_MATCH)
                 }
             }
 
-            val projectRelativePath = pipelineWebhookService.getRelativePath(repository.url)
+            val projectRelativePath = getRelativePath(repository.url)
 
-            // exclude path of commits
-            if (!excludePaths.isNullOrEmpty()) {
-                val excludePathSet = regex.split(excludePaths).filter { it.isNotEmpty() }
-                logger.info("Exclude path set($excludePathSet)")
-                event.paths.forEach { path ->
-                    excludePathSet.forEach { excludePath ->
-                        val finalRelativePath =
-                            ("${projectRelativePath.removeSuffix("/")}/" +
-                                excludePath.removePrefix("/")).removePrefix("/")
-
-                        if (path.startsWith(finalRelativePath)) {
-                            logger.info("Svn exclude path $path match $finalRelativePath")
-                            return ScmWebhookMatcher.MatchResult(false)
-                        } else {
-                            logger.info("Svn exclude path $path not match $finalRelativePath")
-                        }
-                    }
-                }
+            if (doExcludePathMatch(excludePaths, projectRelativePath, pipelineId)) {
+                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = EXCLUDE_PATHS_NOT_MATCH)
             }
 
             // include path of commits
@@ -126,11 +117,54 @@ class SvnWebHookMatcher(
                         }
                     }
                 }
-                return ScmWebhookMatcher.MatchResult(false)
+                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = RELATIVEPATH_NOT_MATCH)
             }
 
             return ScmWebhookMatcher.MatchResult(true)
         }
+    }
+
+    private fun doExcludePathMatch(excludePaths: String?, projectRelativePath: String, pipelineId: String): Boolean {
+        logger.info("Do Svn exclude path match for pipeline: $pipelineId, ${event.paths}")
+        // 排除的话，为空则为不包含，闭区间
+        if (excludePaths.isNullOrBlank()) return false
+
+        val excludePathSet = regex.split(excludePaths).filter { it.isNotEmpty() }
+        logger.info("Svn Exclude path set($excludePathSet)")
+
+        event.paths.forEach eventPath@{ eventPath ->
+            excludePathSet.forEach userPath@{ userPath ->
+                val finalRelativePath =
+                    ("${projectRelativePath.removeSuffix("/")}/" +
+                        userPath.removePrefix("/")).removePrefix("/")
+
+                if (isPathMatch(eventPath, finalRelativePath)) {
+                    return@eventPath
+                }
+            }
+            logger.warn("Svn Event path not match the user path for pipeline: $pipelineId")
+            return false
+        }
+        logger.info("Do Svn exclude path match success for pipeline: $pipelineId")
+        return true
+    }
+
+    private fun getRelativePath(url: String): String {
+        val urlArray = url.split("//")
+        if (urlArray.size < 2) {
+            return ""
+        }
+
+        val path = urlArray[1]
+        val repoSplit = path.split("/")
+        if (repoSplit.size < 4) {
+            return ""
+        }
+        val domain = repoSplit[0]
+        val first = repoSplit[1]
+        val second = repoSplit[2]
+
+        return path.removePrefix("$domain/$first/$second").removePrefix("/")
     }
 
     override fun getUsername() = event.userName

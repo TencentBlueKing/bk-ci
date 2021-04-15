@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -34,9 +35,10 @@ import com.tencent.devops.worker.common.utils.WorkspaceUtils.getLandun
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileInputStream
-import java.util.Properties
 import java.util.Locale
+import java.util.Properties
 
+@Suppress("ALL")
 object AgentEnv {
 
     private val logger = LoggerFactory.getLogger(AgentEnv::class.java)
@@ -48,7 +50,9 @@ object AgentEnv {
     private const val AGENT_SECRET_KEY = "devops.agent.secret.key"
     private const val DOCKER_AGENT_SECRET_KEY = "devops_agent_secret_key"
     private const val AGENT_GATEWAY = "landun.gateway"
+    private const val AGENT_FILE_GATEWAY = "landun.fileGateway"
     private const val DOCKER_GATEWAY = "devops_gateway"
+    private const val DOCKER_FILE_GATEWAY = "devops_file_gateway"
     private const val AGENT_ENV = "landun.env"
     private const val AGENT_LOG_SAVE_MODE = "devops_log_save_mode"
 
@@ -56,6 +60,7 @@ object AgentEnv {
     private var agentId: String? = null
     private var secretKey: String? = null
     private var gateway: String? = null
+    private var fileGateway: String? = null
     private var os: OSType? = null
     private var env: Env? = null
     private var logMode: LogMode? = null
@@ -138,6 +143,25 @@ object AgentEnv {
         return secretKey!!
     }
 
+    fun getFileGateway(): String {
+        if (fileGateway.isNullOrBlank()) {
+            synchronized(this) {
+                if (fileGateway.isNullOrBlank()) {
+                    try {
+                        fileGateway = getProperty(if (isDockerEnv()) DOCKER_FILE_GATEWAY else AGENT_FILE_GATEWAY)
+                        if (gateway.isNullOrBlank()) {
+                            return getGateway()
+                        }
+                    } catch (t: Throwable) {
+                        gateway = System.getProperty("devops.gateway", "")
+                    }
+                    logger.info("file gateway: $fileGateway")
+                }
+            }
+        }
+        return if (fileGateway.isNullOrBlank()) getGateway() else fileGateway!!
+    }
+
     fun getGateway(): String {
         if (gateway.isNullOrBlank()) {
             synchronized(this) {
@@ -150,7 +174,7 @@ object AgentEnv {
                     } catch (t: Throwable) {
                         gateway = System.getProperty("devops.gateway", "")
                     }
-                    logger.info("Get the gateway($gateway)")
+                    logger.info("gateway: $gateway")
                 }
             }
         }
@@ -216,7 +240,7 @@ object AgentEnv {
                 if (null == logMode) {
                     logMode = try {
                         LogMode.valueOf(System.getenv(AGENT_LOG_SAVE_MODE)
-                                ?: throw PropertyNotExistException(AGENT_LOG_SAVE_MODE, "Empty log mode"))
+                            ?: throw PropertyNotExistException(AGENT_LOG_SAVE_MODE, "Empty log mode"))
                     } catch (t: Throwable) {
                         logger.warn("not system variable named log mode!")
                         LogMode.UPLOAD

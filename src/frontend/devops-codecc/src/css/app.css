@@ -4,6 +4,7 @@
 :root {
     --siderWidth: 220px;
     --navTopHeight: 60px;
+    --bannerHeight: 30px;
 }
 
 body {
@@ -122,6 +123,12 @@ a:hover {
 }
 .disb {
     display: block!important;
+}
+.disib {
+    display: inline-block;
+}
+.disf {
+    display: flex;
 }
 .curpt {
     cursor: pointer;
@@ -284,6 +291,13 @@ a:hover {
         color: #3a84ff;
     }
 }
+.cc-link-primary {
+    cursor: pointer; 
+    color: #3a84ff;
+    &:hover {
+        color: #699df4;
+    }
+}
 .cc-click {
     cursor: pointer;
     color: #3c96ff;
@@ -293,4 +307,13 @@ a:hover {
     text-overflow: ellipsis;
     white-space: nowrap;
     word-break: break-all;
+}
+.red-point {
+    width: 6px;
+    height: 6px;
+    background: #f44343;
+    border-radius: 3px;
+    display: inline-block;
+    margin-bottom: 8px;
+    margin-left: 0;
 }

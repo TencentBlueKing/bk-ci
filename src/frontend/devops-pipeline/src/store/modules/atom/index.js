@@ -42,6 +42,7 @@ export default {
         containerTypeList: [],
         editingElementPos: null,
         isPropertyPanelVisible: false,
+        showPanelType: '',
         isShowCompleteLog: false,
         isStagePopupShow: false,
         isAddParallelContainer: false,
@@ -56,7 +57,9 @@ export default {
         defaultStageTags: [],
         showReviewDialog: false,
         reviewInfo: null,
-        showStageReviewPanel: false
+        showStageReviewPanel: false,
+        importedPipelineJson: null,
+        atomVersionChangedKeys: []
     },
     mutations,
     actions,

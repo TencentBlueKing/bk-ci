@@ -71,9 +71,26 @@ public class CLOCDefectDao
         mongoTemplate.updateMulti(query, update, CLOCDefectEntity.class);
     }
 
-    public void batchUpsertClocInfo(List<CLOCDefectEntity> clocDefectEntityList)
-    {
-        if(CollectionUtils.isNotEmpty(clocDefectEntityList))
+    /**
+     * 批量失效指定文件告警
+     *
+     * @param taskId 任务ID
+     * @param fileNames 文件全路径
+     * */
+    public void batchDisableClocInfoByFileName(Long taskId, List<String> fileNames) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("task_id").is(taskId).and("file_name").in(fileNames));
+        Update update = new Update();
+        update.set("status", "DISABLED");
+        mongoTemplate.updateMulti(query, update, CLOCDefectEntity.class);
+    }
+
+    /**
+     * 批量更新写入指定文件告警
+     * @param clocDefectEntityList 告警列表
+     * */
+    public void batchUpsertClocInfo(List<CLOCDefectEntity> clocDefectEntityList) {
+        if (CollectionUtils.isNotEmpty(clocDefectEntityList))
         {
             BulkOperations operations = mongoTemplate.bulkOps(BulkOperations.BulkMode.UNORDERED, CLOCDefectEntity.class);
             clocDefectEntityList.forEach(clocDefectEntity -> {

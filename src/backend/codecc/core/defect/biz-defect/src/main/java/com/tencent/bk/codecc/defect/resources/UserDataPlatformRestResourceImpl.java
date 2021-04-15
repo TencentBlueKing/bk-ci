@@ -27,7 +27,6 @@
 package com.tencent.bk.codecc.defect.resources;
 
 import com.tencent.bk.codecc.defect.api.UserDataPlatformRestResource;
-import com.tencent.bk.codecc.defect.component.LintDefectTracingComponent;
 import com.tencent.bk.codecc.defect.service.DataPlatformService;
 import com.tencent.bk.codecc.task.api.ServiceTaskRestResource;
 import com.tencent.devops.common.api.CommonPageVO;
@@ -54,9 +53,6 @@ public class UserDataPlatformRestResourceImpl implements UserDataPlatformRestRes
 
     @Autowired
     private DataPlatformService dataPlatformService;
-
-    @Autowired
-    private LintDefectTracingComponent lintDefectTracingComponent;
 
     @Override
     public CodeCCResult<String> push(int pageNum, int pageSize, String dataSource) throws InterruptedException {

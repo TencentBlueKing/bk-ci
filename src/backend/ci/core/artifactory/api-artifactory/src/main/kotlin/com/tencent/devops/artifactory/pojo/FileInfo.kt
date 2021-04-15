@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -53,10 +54,31 @@ data class FileInfo(
     @ApiModelProperty("app版本", required = true)
     val appVersion: String? = null,
     @ApiModelProperty("下载短链接", required = true)
-    val shortUrl: String? = null
+    val shortUrl: String? = null,
+    @ApiModelProperty("下载链接", required = false)
+    var downloadUrl: String? = null,
+    @ApiModelProperty("MD5", required = false)
+    var md5: String? = null
 ) : Comparable<FileInfo> {
-    constructor(name: String, fullName: String, path: String, fullPath: String, size: Long, folder: Boolean, modifiedTime: Long, artifactoryType: ArtifactoryType) :
-        this(name, fullName, path, fullPath, size, folder, modifiedTime, artifactoryType, null)
+    constructor(
+        name: String,
+        fullName: String,
+        path: String,
+        fullPath: String,
+        size: Long,
+        folder: Boolean,
+        modifiedTime: Long,
+        artifactoryType: ArtifactoryType
+    ) :
+        this(name = name,
+            fullName = fullName,
+            path = path,
+            fullPath = fullPath,
+            size = size,
+            folder = folder,
+            modifiedTime = modifiedTime,
+            artifactoryType = artifactoryType,
+            properties = null)
 
     override fun compareTo(other: FileInfo): Int {
         val thisLevel = level(this.name)

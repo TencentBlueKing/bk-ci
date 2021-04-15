@@ -39,8 +39,7 @@ import lombok.EqualsAndHashCode;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class CLOCStatisticModel extends StatisticModel
-{
+public class CLOCStatisticModel extends StatisticModel {
     @JsonProperty("sum_blank")
     private Long sumBlank;
 

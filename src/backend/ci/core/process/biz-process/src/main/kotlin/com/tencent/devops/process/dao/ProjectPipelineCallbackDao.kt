@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -33,6 +34,7 @@ import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
+@Suppress("ALL")
 @Repository
 class ProjectPipelineCallbackDao {
 
@@ -69,7 +71,6 @@ class ProjectPipelineCallbackDao {
                 callbackUrl,
                 secretToken
             ).onDuplicateKeyUpdate()
-                .set(EVENTS, events)
                 .set(UPDATED_TIME, now)
                 .set(UPDATOR, userId)
                 .set(CALLBACK_URL, callbackUrl)
@@ -79,12 +80,52 @@ class ProjectPipelineCallbackDao {
 
     fun listProjectCallback(
         dslContext: DSLContext,
-        projectId: String
+        projectId: String,
+        events: String
     ): Result<TProjectPipelineCallbackRecord> {
         with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
+                .and(EVENTS.eq(events))
                 .fetch()
+        }
+    }
+
+    fun listByPage(
+        dslContext: DSLContext,
+        projectId: String,
+        offset: Int,
+        limit: Int
+    ): Result<TProjectPipelineCallbackRecord> {
+        with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .orderBy(CREATED_TIME.desc())
+                .limit(offset, limit)
+                .fetch()
+        }
+    }
+
+    fun countByPage(
+        dslContext: DSLContext,
+        projectId: String
+    ): Long {
+        with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .fetchOne(0, Long::class.java)
+        }
+    }
+
+    fun get(
+        dslContext: DSLContext,
+        id: Long
+    ): TProjectPipelineCallbackRecord? {
+        with(TProjectPipelineCallback.T_PROJECT_PIPELINE_CALLBACK) {
+            return dslContext.selectFrom(this)
+                .where(ID.eq(id))
+                .fetchOne()
         }
     }
 

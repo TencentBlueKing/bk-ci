@@ -26,10 +26,12 @@
         </script>
         <script>
             (function(){
-                var script = document.createElement('script')
-                script.type = 'text/javascript'
-                script.src = DEVOPS_SITE_URL + '/console/static/devops-utils.js'
-                document.getElementsByTagName('head')[0].appendChild(script)
+                if (window.self !== window.top) { // iframe嵌入
+                    var script = document.createElement('script')
+                    script.type = 'text/javascript'
+                    script.src = DEVOPS_SITE_URL + '/console/static/devops-utils.js'
+                    document.getElementsByTagName('head')[0].appendChild(script)
+                }
             })()
         </script>
     </body>

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -37,6 +38,7 @@ import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
+@Suppress("ALL")
 @Repository
 class StoreAuditConfDao {
     /**
@@ -58,7 +60,12 @@ class StoreAuditConfDao {
      * @param id 审核记录的ID
      * @param storeApproveRequest 审核信息
      */
-    fun approveVisibleDept(dslContext: DSLContext, userId: String, id: String, storeApproveRequest: StoreApproveRequest): Int {
+    fun approveVisibleDept(
+        dslContext: DSLContext,
+        userId: String,
+        id: String,
+        storeApproveRequest: StoreApproveRequest
+    ): Int {
         val status = when (storeApproveRequest.approveStatus) {
             ApproveStatusEnum.WAIT -> 0
             ApproveStatusEnum.PASS -> 1
@@ -81,7 +88,12 @@ class StoreAuditConfDao {
      * @param storeType 组件类型
      * @param status 组件可见范围的审核状态
      */
-    fun getDeptRel(dslContext: DSLContext, storeCodeList: List<String>?, storeType: StoreTypeEnum?, status: DeptStatusEnum?): Result<TStoreDeptRelRecord>? {
+    fun getDeptRel(
+        dslContext: DSLContext,
+        storeCodeList: List<String>?,
+        storeType: StoreTypeEnum?,
+        status: DeptStatusEnum?
+    ): Result<TStoreDeptRelRecord>? {
         with(TStoreDeptRel.T_STORE_DEPT_REL) {
             val condition = getCondition(storeCodeList, storeType, status)
             return dslContext.selectFrom(this)
@@ -102,14 +114,21 @@ class StoreAuditConfDao {
         }
     }
 
-    private fun TStoreDeptRel.getCondition(storeCodeList: List<String>?, storeType: StoreTypeEnum?, status: DeptStatusEnum?): MutableList<Condition> {
+    private fun TStoreDeptRel.getCondition(
+        storeCodeList: List<String>?,
+        storeType: StoreTypeEnum?,
+        status: DeptStatusEnum?
+    ): MutableList<Condition> {
         val condition = mutableListOf<Condition>()
-        if (storeType != null)
+        if (storeType != null) {
             condition.add(STORE_TYPE.eq(storeType.type.toByte()))
-        if (status != null)
+        }
+        if (status != null) {
             condition.add(STATUS.eq(status.status.toByte()))
-        if (storeCodeList != null)
+        }
+        if (storeCodeList != null) {
             condition.add(STORE_CODE.`in`(storeCodeList))
+        }
         return condition
     }
 }

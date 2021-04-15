@@ -245,10 +245,10 @@
             async confirmDeleteVersion (row) {
                 this.isLoading = true
                 try {
-                    await this.$store.dispatch('pipelines/deleteTemplateVersion', {
+                    await this.$store.dispatch('pipelines/deleteTemplateVersionByName', {
                         projectId: this.projectId,
                         templateId: this.templateId,
-                        versionId: row.version
+                        versionName: row.versionName
                     })
 
                     // this.requestTemplateList()

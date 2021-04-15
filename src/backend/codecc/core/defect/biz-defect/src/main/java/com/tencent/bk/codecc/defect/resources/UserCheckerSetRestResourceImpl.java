@@ -92,6 +92,19 @@ public class UserCheckerSetRestResourceImpl implements UserCheckerSetRestResourc
     }
 
     @Override
+    public CodeCCResult<Page<CheckerSetVO>> getCheckerSetsPageable(CheckerSetListQueryReq queryCheckerSetReq)
+    {
+        if (queryCheckerSetReq.getTaskId() != null)
+        {
+            return new CodeCCResult<>(checkerSetBizService.getCheckerSetsOfTaskPage(queryCheckerSetReq));
+        }
+        else
+        {
+            return new CodeCCResult<>(checkerSetBizService.getCheckerSetsOfProjectPage(queryCheckerSetReq));
+        }
+    }
+
+    @Override
     public CodeCCResult<Page<CheckerSetVO>> getOtherCheckerSets(String projectId, OtherCheckerSetListQueryReq queryCheckerSetReq)
     {
         return new CodeCCResult<>(checkerSetBizService.getOtherCheckerSets(projectId, queryCheckerSetReq));

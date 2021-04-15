@@ -3,8 +3,6 @@ package com.tencent.bk.codecc.defect.service.impl;
 import com.tencent.bk.codecc.defect.pojo.AggregateDispatchFileName;
 import com.tencent.bk.codecc.defect.service.IMessageQueueBizService;
 import com.tencent.bk.codecc.defect.vo.CommitDefectVO;
-import com.tencent.devops.common.service.utils.SpringContextUtil;
-import com.tencent.devops.common.web.mq.ConstantsKt;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.AsyncRabbitTemplate;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -16,7 +14,6 @@ import java.util.HashMap;
 import java.util.Map;
 
 import static com.tencent.devops.common.web.mq.ConstantsKt.*;
-import static com.tencent.devops.common.web.mq.ConstantsKt.ROUTE_CLUSTER_ALLOCATION;
 
 @Slf4j
 @Service("CommonMessageQueueBizService")
@@ -42,11 +39,12 @@ public class CommonMessageQueueBizServiceImpl implements IMessageQueueBizService
             routingKey = ROUTE_DEFECT_COMMIT_SUPER_LARGE;
         }
         // 告警文件大于200M，小于1G，走大项目专用提单消息队列
-         else if (fileSize > 1024 * 1024 * 200 && fileSize < 1024 * 1024 * 1024) {
+        else if (fileSize > 1024 * 1024 * 200 && fileSize < 1024 * 1024 * 1024) {
             log.warn("告警文件大于200M小于1G: {}", fileSize);
             exchange = String.format("%s%s.large", PREFIX_EXCHANGE_DEFECT_COMMIT, toolPattern.toLowerCase());
             routingKey = String.format("%s%s.large", PREFIX_ROUTE_DEFECT_COMMIT, toolPattern.toLowerCase());
-        } else {
+        }
+        else {
             log.info("告警文件小于200M: {}", fileSize);
             exchange = String.format("%s%s.new", PREFIX_EXCHANGE_DEFECT_COMMIT, toolPattern.toLowerCase());
             routingKey = String.format("%s%s.new", PREFIX_ROUTE_DEFECT_COMMIT, toolPattern.toLowerCase());
@@ -65,10 +63,9 @@ public class CommonMessageQueueBizServiceImpl implements IMessageQueueBizService
     }
 
     @Override
-    public AsyncRabbitTemplate.RabbitConverterFuture<Boolean> MessageAsyncMsgFuture(AggregateDispatchFileName aggregateFileName) {
-
-        AsyncRabbitTemplate.RabbitConverterFuture<Boolean> asyncMsgFuture;
-        asyncMsgFuture = asyncRabbitTemplate.convertSendAndReceive(EXCHANGE_CLUSTER_ALLOCATION, ROUTE_CLUSTER_ALLOCATION, aggregateFileName);
+    public AsyncRabbitTemplate.RabbitConverterFuture<Boolean> messageAsyncMsgFuture(AggregateDispatchFileName aggregateFileName) {
+        AsyncRabbitTemplate.RabbitConverterFuture<Boolean> asyncMsgFuture =
+                asyncRabbitTemplate.convertSendAndReceive(EXCHANGE_CLUSTER_ALLOCATION, ROUTE_CLUSTER_ALLOCATION, aggregateFileName);
 
         return asyncMsgFuture;
     }

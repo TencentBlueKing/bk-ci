@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -45,8 +46,11 @@ import com.tencent.devops.common.auth.code.BluekingV3ProjectAuthServiceCode
 import com.tencent.devops.common.auth.code.BluekingV3QualityAuthServiceCode
 import com.tencent.devops.common.auth.code.BluekingV3RepoAuthServiceCode
 import com.tencent.devops.common.auth.code.BluekingV3TicketAuthServiceCode
+import com.tencent.devops.common.auth.service.IamEsbService
+import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
@@ -54,6 +58,7 @@ import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
 
+@Suppress("ALL")
 @Configuration
 @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
 @ConditionalOnWebApplication
@@ -77,12 +82,28 @@ class BluekingV3AuthAutoConfiguration {
     fun authTokenApi() = BluekingV3AuthTokenApi()
 
     @Bean
-    @Primary
-    fun authResourceApi(authTokenApi: BluekingV3AuthTokenApi) = BluekingV3ResourceApi(grantService(), iamConfiguration())
+    @ConditionalOnMissingBean
+    fun iamEsbService() = IamEsbService()
 
     @Bean
     @Primary
-    fun authProjectApi(bkAuthPermissionApi: BluekingV3AuthPermissionApi) = BluekingV3AuthProjectApi(bkAuthPermissionApi, policyService(), authHelper(), iamConfiguration())
+    fun authResourceApi(authTokenApi: BluekingV3AuthTokenApi) =
+        BluekingV3ResourceApi(
+            grantServiceImpl = grantService(),
+            iamConfiguration = iamConfiguration(),
+            iamEsbService = iamEsbService()
+        )
+
+    @Bean
+    @Primary
+    fun authProjectApi(bkAuthPermissionApi: BluekingV3AuthPermissionApi) =
+        BluekingV3AuthProjectApi(
+            bkAuthPermissionApi = bkAuthPermissionApi,
+            policyService = policyService(),
+            authHelper = authHelper(),
+            iamConfiguration = iamConfiguration(),
+            iamEsbService = iamEsbService()
+        )
 
     @Bean
     fun bcsAuthServiceCode() = BluekingV3BcsAuthServiceCode()
@@ -131,5 +152,11 @@ class BluekingV3AuthAutoConfiguration {
 
     @Bean
     @Primary
-    fun authPermissionApi() = BluekingV3AuthPermissionApi(authHelper(), policyService(), iamConfiguration())
+    fun authPermissionApi(redisOperation: RedisOperation) =
+        BluekingV3AuthPermissionApi(
+            authHelper = authHelper(),
+            policyService = policyService(),
+            redisOperation = redisOperation,
+            iamConfiguration = iamConfiguration()
+        )
 }

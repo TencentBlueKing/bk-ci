@@ -5,19 +5,9 @@
             title: loading.title
         }">
 
-        <h3 class="market-home-title">
-            <icon class="title-icon" name="color-logo-store" size="25" />
-            <p class="title-name">
-                <span class="back-home" @click="toAtomStore()"> {{ $t('store.研发商店') }} </span>
-                <i class="right-arrow banner-arrow"></i>
-                <span class="banner-des back-home" @click="toAtomList()"> {{ $t('store.工作台') }} </span>
-                <i class="right-arrow banner-arrow"></i>
-                <span class="banner-des back-home" @click="toTemplateDetail"> {{ templateDetail.templateName }} </span>
-                <i class="right-arrow banner-arrow"></i>
-                <span class="banner-des"> {{ $t('store.上架模板') }} </span>
-            </p>
-            <a class="title-work" target="_blank" :href="docsLink"> {{ $t('store.模板指引') }} </a>
-        </h3>
+        <bread-crumbs :bread-crumbs="navList" type="template">
+            <a class="g-title-work" target="_blank" :href="docsLink"> {{ $t('store.模板指引') }} </a>
+        </bread-crumbs>
 
         <div class="upgrade-template-content" v-show="showContent">
             <div class="template-release-msg">
@@ -119,7 +109,13 @@
 </template>
 
 <script>
+    import breadCrumbs from '@/components/bread-crumbs.vue'
+
     export default {
+        components: {
+            breadCrumbs
+        },
+
         data () {
             return {
                 showContent: false,
@@ -163,6 +159,14 @@
             },
             isOver () {
                 return this.progressStatus.length && this.progressStatus[2].status === 'success'
+            },
+            navList () {
+                return [
+                    { name: this.$t('store.工作台') },
+                    { name: this.$t('store.流水线模板'), to: { name: 'templateWork' } },
+                    { name: this.templateDetail.templateName, to: { name: 'setting', params: { code: this.templateDetail.templateCode, type: 'template' } } },
+                    { name: this.$t('store.上架模板') }
+                ]
             }
         },
         created () {
@@ -173,15 +177,6 @@
             clearTimeout(this.timer)
         },
         methods: {
-            toTemplateDetail () {
-                this.$router.push({
-                    name: 'tplOverview',
-                    params: {
-                        templateCode: this.templateDetail.templateCode
-                    }
-                })
-            },
-
             async requestTemplateDetail (atomId) {
                 this.loading.isLoading = true
 
@@ -288,10 +283,7 @@
             },
             toAtomList () {
                 this.$router.push({
-                    name: 'workList',
-                    params: {
-                        type: 'template'
-                    }
+                    name: 'templateWork'
                 })
             },
             toAtomStore (val) {
@@ -312,67 +304,9 @@
 
     .upgrade-template-wrapper {
         height: 100%;
-        .info-header {
-            display: flex;
-            justify-content: space-between;
-            width: 100%;
-            height: 50px;
-            border-bottom: 1px solid #DDE4EB;
-            background-color: #fff;
-            box-shadow:0px 2px 5px 0px rgba(51,60,72,0.03);
-            .sub_header_left {
-                display: flex;
-                padding: 14px 24px;
-                .title {
-                    display: flex;
-                    align-items: center;
-                }
-                .first-level,
-                .secondary {
-                    color: $primaryColor;
-                    cursor: pointer;
-                }
-                .third-leve {
-                    color: $fontWeightColor;
-                }
-                .nav-icon {
-                    width: 24px;
-                    height: 24px;
-                    margin-right: 10px;
-                }
-                .right-arrow {
-                    display :inline-block;
-                    position: relative;
-                    width: 19px;
-                    height: 36px;
-                    margin-right: 4px;
-                }
-                .right-arrow::after {
-                    display: inline-block;
-                    content: " ";
-                    height: 4px;
-                    width: 4px;
-                    border-width: 1px 1px 0 0;
-                    border-color: $lineColor;
-                    border-style: solid;
-                    transform: matrix(0.71, 0.71, -0.71, 0.71, 0, 0);
-                    position: absolute;
-                    top: 50%;
-                    right: 6px;
-                    margin-top: -9px;
-                }
-            }
-            .develop-guide-link {
-                position: absolute;
-                right: 36px;
-                margin-top: 14px;
-                color: $primaryColor;
-                cursor: pointer;
-            }
-        }
         .upgrade-template-content {
             padding: 20px 0 40px;
-            height: calc(100% - 50px);
+            height: calc(100% - 5.6vh);
             overflow: auto;
         }
         .template-release-msg {

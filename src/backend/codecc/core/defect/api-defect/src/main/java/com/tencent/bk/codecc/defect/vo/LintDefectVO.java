@@ -43,50 +43,31 @@ import java.time.LocalDate;
 @ApiModel("lint类告警视图")
 public class LintDefectVO
 {
-    @ApiModelProperty("告警ID")
-    private String defectId;
-
     @ApiModelProperty(value = "所属文件的主键id")
     private String entityId;
+
+    @ApiModelProperty("告警ID")
+    private String id;
 
     @ApiModelProperty(value = "所属文件名")
     private String fileName;
 
-    /**
-     * 告警行号
-     */
     @ApiModelProperty("告警行号")
     private int lineNum;
 
-    /**
-     * 告警作者
-     */
     @ApiModelProperty("告警作者")
     private String author;
 
-    /**
-     * 告警规则
-     */
     @ApiModelProperty("告警规则")
     private String checker;
 
-
-    /**
-     * 告警规则名
-     */
     @ApiModelProperty("告警规则名")
     private String checkerName;
 
-    /**
-     * 严重程度
-     */
     @ApiModelProperty("严重程度")
     private int severity;
 
-    /**
-     * 备注
-     */
-    @ApiModelProperty("备注")
+    @ApiModelProperty("告警描述")
     private String message;
 
     /**
@@ -102,16 +83,10 @@ public class LintDefectVO
     private int status;
 
     /**
-     * 告警行的变更时间，用于跟工具接入时间对比，早于接入时间则判断告警是历史告警，晚于等于接入时间则为新告警
+     * 告警行的变更时间，用于跟新旧告警的判断时间做对比
      */
     @ApiModelProperty("告警行的变更时间")
     private long lineUpdateTime;
-
-    /**
-     * 最后更新日期
-     */
-    @ApiModelProperty("最后更新日期")
-    private LocalDate lineUpdateDate;
 
     @ApiModelProperty("pinpoint的hash值")
     private String pinpointHash;
@@ -125,51 +100,27 @@ public class LintDefectVO
     @ApiModelProperty("文件全路径")
     private String filePath;
 
-    /**
-     * 告警规则详情
-     */
     @ApiModelProperty("告警规则详情")
     private String checkerDetail;
 
-    /**
-     * 告警创建时间
-     */
     @ApiModelProperty("告警创建时间")
     private Long createTime;
 
-    /**
-     * 告警修复时间
-     */
     @ApiModelProperty("告警修复时间")
     private Long fixedTime;
 
-    /**
-     * 告警忽略时间
-     */
     @ApiModelProperty("告警忽略时间")
     private Long ignoreTime;
 
-    /**
-     * 告警忽略原因类型
-     */
     @ApiModelProperty("告警忽略原因类型")
     private Integer ignoreReasonType;
 
-    /**
-     * 告警忽略原因
-     */
     @ApiModelProperty("告警忽略原因")
     private String ignoreReason;
 
-    /**
-     * 告警忽略操作人
-     */
     @ApiModelProperty("告警忽略操作人")
     private String ignoreAuthor;
 
-    /**
-     * 告警屏蔽时间
-     */
     @ApiModelProperty("告警屏蔽时间")
     private Long excludeTime;
 
@@ -182,51 +133,18 @@ public class LintDefectVO
     @ApiModelProperty(value = "告警被标记为已修改的时间")
     private Long markTime;
 
-    /**
-     * 创建时的构建号
-     */
     @ApiModelProperty("创建时的构建号")
     private String createBuildNumber;
 
-    /**
-     * 修复时的构建号
-     */
     @ApiModelProperty("修复时的构建号")
     private String fixedBuildNumber;
 
-    /**
-     * 修复时的版本号
-     */
-    @ApiModelProperty("修复时的版本号")
-    private String fixedRevision;
-
-    /**
-     * 修复的代码库id
-     */
-    @ApiModelProperty("修复的代码库id")
-    private String fixedRepoId;
-
-    /**
-     * 修复的分支
-     */
-    @ApiModelProperty("修复的分支")
-    private String fixedBranch;
-
-    /**
-     * 告警规则类型
-     */
     @ApiModelProperty("告警规则类型")
     private String checkerType;
 
-    /**
-     * 告警详情链接
-     */
     @ApiModelProperty("告警详情链接")
     private String defectDetailUrl;
 
-    /**
-     * 告警评论
-     */
     @ApiModelProperty("告警评论")
     private CodeCommentVO codeComment;
 

@@ -92,18 +92,10 @@
                     limit: 10,
                     align: 'right'
                 }
-                const postData = {
-                    taskId: this.$route.params.taskId,
-                    funcId: this.funcId
+                for (const i in this.operateRecords) {
+                    this.operateRecords[i].time = format(this.operateRecords[i].time, 'YYYY-MM-DD HH:mm:ss')
+                    this.pagination.count = this.operateRecords.length
                 }
-                this.$store.dispatch('defect/getOperatreRecords', postData).then(res => {
-                    if (res) {
-                        for (const i in this.operateRecords) {
-                            this.operateRecords[i].time = format(this.operateRecords[i].time, 'YYYY-MM-DD HH:mm:ss')
-                            this.pagination.count = this.operateRecords.length
-                        }
-                    }
-                })
             },
             handlePageChange (page) {
                 this.pagination.current = page

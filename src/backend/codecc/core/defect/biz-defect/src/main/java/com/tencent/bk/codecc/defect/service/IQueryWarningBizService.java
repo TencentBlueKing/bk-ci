@@ -28,12 +28,9 @@ package com.tencent.bk.codecc.defect.service;
 
 import com.tencent.bk.codecc.defect.vo.GetFileContentSegmentReqVO;
 import com.tencent.bk.codecc.defect.vo.ToolDefectRspVO;
-import com.tencent.bk.codecc.defect.vo.admin.DeptTaskDefectExtReqVO;
 import com.tencent.bk.codecc.defect.vo.admin.DeptTaskDefectReqVO;
 import com.tencent.bk.codecc.defect.vo.admin.DeptTaskDefectRspVO;
 import com.tencent.bk.codecc.defect.vo.common.*;
-import com.tencent.bk.codecc.defect.vo.openapi.CheckerPkgDefectRespVO;
-import com.tencent.bk.codecc.defect.vo.openapi.CheckerPkgDefectVO;
 import org.springframework.data.domain.Sort;
 
 import java.util.List;
@@ -62,7 +59,7 @@ public interface IQueryWarningBizService
      * @param queryWarningDetailReq
      * @return
      */
-    CommonDefectDetailQueryRspVO processQueryWarningDetailRequest(long taskId, CommonDefectDetailQueryReqVO queryWarningDetailReq,
+    CommonDefectDetailQueryRspVO processQueryWarningDetailRequest(long taskId, String userId, CommonDefectDetailQueryReqVO queryWarningDetailReq,
                                                                   String sortField, Sort.Direction sortType);
 
     /**
@@ -70,9 +67,18 @@ public interface IQueryWarningBizService
      *
      * @param taskId
      * @param toolName
+     * @param statusSet
      * @return
      */
-    QueryWarningPageInitRspVO processQueryWarningPageInitRequest(Long taskId, String toolName);
+    QueryWarningPageInitRspVO processQueryWarningPageInitRequest(Long taskId, String toolName, Set<String> statusSet);
+
+    /**
+     * 告警管理页面初始化
+     * @param taskId
+     * @param defectQueryReqVO
+     * @return
+     */
+    QueryWarningPageInitRspVO pageInit(long taskId, DefectQueryReqVO defectQueryReqVO);
 
     /**
      * 获取文件内容片段接口
@@ -81,29 +87,7 @@ public interface IQueryWarningBizService
      * @param reqModel
      * @return
      */
-    CommonDefectDetailQueryRspVO processGetFileContentSegmentRequest(long taskId, GetFileContentSegmentReqVO reqModel);
-
-    /**
-     * 查询指定规则包的告警列表信息
-     * @param toolName
-     * @param pkgId
-     * @param bgId
-     * @param taskId
-     * @return
-     */
-    CheckerPkgDefectVO getPkgDefectList(String toolName, String pkgId, Integer bgId, Long taskId,
-                                    Integer pageNum, Integer pageSize, String sortField, Sort.Direction sortType);
-
-    /**
-     * 统计工具规则包的告警数
-     *
-     * @param toolName 工具名称
-     * @param pkgId    规则包ID
-     * @param bgId   任务所属事业群
-     * @return resp
-     */
-    CheckerPkgDefectRespVO processCheckerPkgDefectRequest(String toolName, String pkgId, Integer bgId, Integer deptId,
-            Integer pageNum, Integer pageSize, Sort.Direction sortType);
+    CommonDefectDetailQueryRspVO processGetFileContentSegmentRequest(long taskId, String userId, GetFileContentSegmentReqVO reqModel);
 
     /**
      * 根据前端传入的条件过滤告警
@@ -129,16 +113,6 @@ public interface IQueryWarningBizService
                                                      Integer pageNum, Integer pageSize, String sortField, Sort.Direction sortType);
 
     /**
-     * 统计开源扫描各工具的告警数
-     *
-     * @param toolName 工具名称
-     * @param reqVO    复合条件筛选请求体
-     * @return resp
-     */
-    CheckerPkgDefectRespVO processOverallDefectRequest(String toolName, DeptTaskDefectExtReqVO reqVO, Integer pageNum,
-            Integer pageSize, Sort.Direction sortType);
-
-    /**
      * 按组织架构查询任务告警
      *
      * @param deptTaskDefectReqVO 请求体
@@ -154,6 +128,5 @@ public interface IQueryWarningBizService
      */
     ToolDefectRspVO processDeptDefectList(DeptTaskDefectReqVO deptTaskDefectReqVO, Integer pageNum, Integer pageSize,
             String sortField, Sort.Direction sortType);
-
 
 }

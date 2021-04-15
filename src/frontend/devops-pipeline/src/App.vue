@@ -31,7 +31,7 @@
                     message: error.message,
                     theme: 'error'
                 })
-                if (error.code === 404) {
+                if ((error.code === 404 || error.httpStatus === 404) && this.$route.name !== 'pipelinesList') {
                     this.$router.push({
                         name: 'pipelinesList'
                     })

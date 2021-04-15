@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -26,14 +27,18 @@
 package com.tencent.devops.openapi.resources.apigw.v3
 
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.consul.ConsulContent
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwProjectResourceV3
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
+import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 
 @RestResource
 class ApigwProjectResourceV3Impl @Autowired constructor(private val client: Client) : ApigwProjectResourceV3 {
@@ -41,17 +46,27 @@ class ApigwProjectResourceV3Impl @Autowired constructor(private val client: Clie
         private val logger = LoggerFactory.getLogger(ApigwProjectResourceV3Impl::class.java)
     }
 
+    @Value("\${project.route.tag:#{null}}")
+    private val projectRouteTag: String? = ""
+
     override fun create(
         appCode: String?,
         apigwType: String?,
         userId: String,
         projectCreateInfo: ProjectCreateInfo,
         accessToken: String?
-    ): com.tencent.devops.project.pojo.Result<Boolean> {
+    ): Result<Boolean> {
         logger.info("create project projectCreateInfo($projectCreateInfo) by user $userId")
+
+        // 创建项目需要指定对接的主集群。 不同集群可能共用同一个套集群
+        if (!projectRouteTag.isNullOrEmpty()) {
+            ConsulContent.setConsulContent(projectRouteTag!!)
+        }
+
         return client.get(ServiceProjectResource::class).create(
             userId = userId,
-            projectCreateInfo = projectCreateInfo
+            projectCreateInfo = projectCreateInfo,
+            accessToken = accessToken
         )
     }
 
@@ -62,12 +77,13 @@ class ApigwProjectResourceV3Impl @Autowired constructor(private val client: Clie
         projectId: String,
         projectUpdateInfo: ProjectUpdateInfo,
         accessToken: String?
-    ): com.tencent.devops.project.pojo.Result<Boolean> {
+    ): Result<Boolean> {
         logger.info("update project projectId($projectId) projectCreateInfo($projectUpdateInfo) by user $userId")
         return client.get(ServiceProjectResource::class).update(
             userId = userId,
             projectId = projectId,
-            projectUpdateInfo = projectUpdateInfo
+            projectUpdateInfo = projectUpdateInfo,
+            accessToken = accessToken
         )
     }
 
@@ -89,10 +105,26 @@ class ApigwProjectResourceV3Impl @Autowired constructor(private val client: Clie
         apigwType: String?,
         userId: String,
         accessToken: String?
-    ): com.tencent.devops.project.pojo.Result<List<ProjectVO>> {
+    ): Result<List<ProjectVO>> {
         logger.info("list project by user $userId")
         return client.get(ServiceProjectResource::class).list(
             userId = userId
+        )
+    }
+
+    override fun validate(
+        appCode: String?,
+        apigwType: String?,
+        userId: String?,
+        validateType: ProjectValidateType,
+        name: String,
+        projectId: String?
+    ): Result<Boolean> {
+        logger.info("validate project by user $userId| ${validateType.name}| $name| $projectId")
+        return client.get(ServiceProjectResource::class).validate(
+            validateType = validateType,
+            name = name,
+            projectId = projectId
         )
     }
 }

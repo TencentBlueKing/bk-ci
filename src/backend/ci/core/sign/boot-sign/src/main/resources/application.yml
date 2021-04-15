@@ -1,0 +1,9 @@
+spring:
+  application:
+    name: sign${service-suffix}
+    desc: DevOps Sign Service
+    version: 4.0.0
+    packageName: com.tencent.devops.sign
+
+server:
+  port: 21950

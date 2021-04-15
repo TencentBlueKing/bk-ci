@@ -148,6 +148,11 @@ public class ServiceTaskRestResourceImpl implements ServiceTaskRestResource
     }
 
     @Override
+    public CodeCCResult<Boolean> stopTaskByPipeline(String pipelineId, String disabledReason, String userName) {
+        return new CodeCCResult<>(taskService.stopTask(pipelineId, disabledReason, userName));
+    }
+
+    @Override
     public CodeCCResult<Boolean> checkTaskExists(Long taskId)
     {
         return new CodeCCResult<>(taskService.checkTaskExists(taskId));
@@ -281,5 +286,10 @@ public class ServiceTaskRestResourceImpl implements ServiceTaskRestResource
     {
         taskService.authorTransferForApi(taskId, transferAuthorPairs, userId);
         return new CodeCCResult<>(true);
+    }
+
+    @Override
+    public CodeCCResult<List<Long>> getBkPluginTaskIds() {
+        return new CodeCCResult<>(taskService.getBkPluginTaskIds());
     }
 }

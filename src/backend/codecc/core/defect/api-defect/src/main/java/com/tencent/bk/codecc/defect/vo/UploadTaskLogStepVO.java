@@ -88,4 +88,11 @@ public class UploadTaskLogStepVO
 
     @ApiModelProperty(value = "流水线运行失败")
     private Boolean pipelineFail;
+
+    /**
+     * 是否是快速增量, 用于判断是否需要执行提单等操作
+     * true: 是快速增量扫描，不需要做提单等操作
+     * false:不是快速增量扫描，需要做提单等操作
+     */
+    private boolean fastIncrement;
 }

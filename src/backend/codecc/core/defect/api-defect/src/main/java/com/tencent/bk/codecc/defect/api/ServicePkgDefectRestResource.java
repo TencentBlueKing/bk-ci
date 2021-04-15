@@ -44,65 +44,6 @@ import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEAD
 @Consumes(MediaType.APPLICATION_JSON)
 public interface ServicePkgDefectRestResource
 {
-
-    @ApiOperation("根据规则包获取规则清单")
-    @Path("/list/toolName/{toolName}/pkgId/{pkgId}")
-    @GET
-    CodeCCResult<CheckerPkgDefectVO> getPkgDefectList(
-                    @ApiParam(value = "工具名", required = true)
-                    @PathParam(value = "toolName")
-                    String toolName,
-                    @ApiParam(value = "规则包id", required = true)
-                    @PathParam(value = "pkgId")
-                    String pkgId,
-                    @ApiParam(value = "事业群id")
-                    @QueryParam(value = "bgId")
-                    Integer bgId,
-                    @ApiParam(value = "代码扫描任务id")
-                    @QueryParam(value = "taskId")
-                    Long taskId,
-                    @ApiParam(value = "页数")
-                    @QueryParam(value = "pageNum")
-                    Integer pageNum,
-                    @ApiParam(value = "每页多少条")
-                    @QueryParam(value = "pageSize")
-                    Integer pageSize,
-                    @ApiParam(value = "排序字段")
-                    @QueryParam(value = "sortField")
-                    String sortField,
-                    @ApiParam(value = "排序类型")
-                    @QueryParam(value = "sortType")
-                    Sort.Direction sortType);
-
-
-    @ApiOperation("统计工具规则包各规则的告警情况")
-    @Path("/statistics/toolName/{toolName}/pkgId/{pkgId}")
-    @GET
-    CodeCCResult<CheckerPkgDefectRespVO> queryCheckerPkgDefect(
-            @ApiParam(value = "工具名称", required = true)
-            @PathParam(value = "toolName")
-                    String toolName,
-            @ApiParam(value = "规则包ID", required = true)
-            @PathParam(value = "pkgId")
-                    String pkgId,
-            @ApiParam(value = "事业群ID", required = true)
-            @QueryParam(value = "bgId")
-                    Integer bgId,
-            @ApiParam(value = "部门ID")
-            @QueryParam(value = "deptId")
-                    Integer deptId,
-            @ApiParam(value = "页数")
-            @QueryParam(value = "pageNum")
-                    Integer pageNum,
-            @ApiParam(value = "每页多少条")
-            @QueryParam(value = "pageSize")
-                    Integer pageSize,
-            @ApiParam(value = "排序类型")
-            @QueryParam(value = "sortType")
-                    Sort.Direction sortType
-    );
-
-
     @ApiOperation("查询工具告警清单")
     @Path("/list")
     @POST
@@ -133,24 +74,6 @@ public interface ServicePkgDefectRestResource
             @ApiParam(value = "任务id", required = true)
             @PathParam(value = "taskId")
             Long taskId);
-
-    @ApiOperation("统计工具规则包各规则的告警情况")
-    @Path("/statistics/overall")
-    @POST
-    CodeCCResult<CheckerPkgDefectRespVO> queryOverallDefect(
-            @ApiParam(value = "复合条件请求体")
-            @Valid
-                    DeptTaskDefectExtReqVO reqVO,
-            @ApiParam(value = "页数")
-            @QueryParam(value = "pageNum")
-                    Integer pageNum,
-            @ApiParam(value = "每页多少条")
-            @QueryParam(value = "pageSize")
-                    Integer pageSize,
-            @ApiParam(value = "排序类型")
-            @QueryParam(value = "sortType")
-                    Sort.Direction sortType
-    );
 
     @ApiOperation("批量统计任务告警概览情况")
     @Path("/statistics/overview")

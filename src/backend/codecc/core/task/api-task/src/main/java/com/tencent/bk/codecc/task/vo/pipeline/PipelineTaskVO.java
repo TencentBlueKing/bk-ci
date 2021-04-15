@@ -23,6 +23,10 @@ public class PipelineTaskVO extends CommonVO
 
     private Long taskId;
 
+    private String enName;
+
+    private String cnName;
+
     private List<ProjectLanguage> codeLanguages;
 
     private List<PipelineToolVO> tools;

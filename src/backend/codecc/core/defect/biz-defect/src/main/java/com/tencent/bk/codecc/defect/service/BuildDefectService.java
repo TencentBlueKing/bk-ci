@@ -1,11 +1,8 @@
 package com.tencent.bk.codecc.defect.service;
 
-import com.tencent.bk.codecc.defect.model.CCNDefectEntity;
-import com.tencent.bk.codecc.defect.model.DUPCDefectEntity;
-import com.tencent.bk.codecc.defect.model.LintFileEntity;
+import com.tencent.bk.codecc.defect.model.*;
 
 import java.util.List;
-import java.util.Set;
 
 /**
  * 构建与告警快照服务接口
@@ -16,44 +13,29 @@ import java.util.Set;
 public interface BuildDefectService
 {
     /**
-     * 更新基准构建ID，并清除临时告警和文件
-     *
-     * @param taskId
+     * 保存Lint类工具的构建告警快照
+     *  @param taskId
      * @param toolName
-     * @param baseBuildId
-     * @param buildId
-     * @param isFullScan
-     * @param deleteFiles
-     * @param currentBuildRelPaths
+     * @param buildEntity
+     * @param allNewDefectList
      */
-    void updateBaseBuildDefectsAndClearTemp(long taskId, String toolName, String baseBuildId, String buildId, boolean isFullScan,
-            List<String> deleteFiles, Set<String> currentBuildRelPaths);
+    void saveLintBuildDefect(long taskId, String toolName, BuildEntity buildEntity, List<LintDefectV2Entity> allNewDefectList);
 
     /**
-     * 基于基准快照同步增量扫描时无变更的文件的告警到当前快照
+     * 保存圈复杂度的构建告警快照
      * @param taskId
      * @param toolName
-     * @param baseBuildId
-     * @param buildId
-     * @param isFullScan
-     * @param deleteFiles
-     * @param currentBuildRelPaths
+     * @param buildEntity
+     * @param allNewDefectList
      */
-    void updateBaseBuildDefects(long taskId, String toolName, String baseBuildId, String buildId, boolean isFullScan,
-                                List<String> deleteFiles, Set<String> currentBuildRelPaths);
+    void saveCCNBuildDefect(long taskId, String toolName, BuildEntity buildEntity, List<CCNDefectEntity> allNewDefectList);
 
     /**
-     * 新增构建与告警快照以及临时告警和文件
-     *
+     * 保存圈复杂度的构建告警快照
      * @param taskId
      * @param toolName
-     * @param buildId
-     * @param tempDefectFile
-     * @param tempCcnDefect
-     * @param tempDupcDefectFile
-     * @param relPath
-     * @param filePath
+     * @param buildEntity
+     * @param allNewDefectList
      */
-    void addBuildDefectsAndTemp(long taskId, String toolName, String buildId, LintFileEntity tempDefectFile, CCNDefectEntity tempCcnDefect,
-            DUPCDefectEntity tempDupcDefectFile, String relPath, String filePath);
+    void saveCommonBuildDefect(long taskId, String toolName, BuildEntity buildEntity, List<DefectEntity> allNewDefectList);
 }

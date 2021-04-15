@@ -1,9 +1,5 @@
 dependencies {
-    compile project(":ext:tencent:defect:biz-defect-cov")
     compile project(":core:defect:biz-defect-migration")
-    compile project(":ext:tencent:defect:biz-defect-kw")
-    compile project(":ext:tencent:defect:biz-defect-pinpoint")
-    compile project(":ext:tencent:defect:biz-defect-opensource")
     compile "org.springframework.boot:spring-boot-starter-test"
     compile "org.springframework.kafka:spring-kafka:1.3.10.RELEASE"
 }

@@ -1,9 +1,37 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.common.auth.utlis
 
 import com.tencent.bk.sdk.iam.constants.ExpressionOperationEnum
 import com.tencent.bk.sdk.iam.dto.expression.ExpressionDTO
 import com.tencent.devops.common.auth.api.AuthResourceType
 
+@Suppress("ALL")
 object AuthUtils {
 
     fun getProjects(content: ExpressionDTO): List<String> {
@@ -17,6 +45,7 @@ object AuthUtils {
             ExpressionOperationEnum.ANY -> projectList.add("*")
             ExpressionOperationEnum.EQUAL -> projectList.add(content.value.toString())
             ExpressionOperationEnum.IN -> projectList.addAll(StringUtils.obj2List(content.value.toString()))
+            else -> {}
         }
         return projectList
     }
@@ -73,13 +102,24 @@ object AuthUtils {
         }
 
         // 单个项目下有特定资源若干实例
-        // [{"field":"pipeline.id","op":"in","value":["p-098b68a251ae4ec4b6f4fde87767387f","p-12b2c343109f43a58a79dcb9e3721c1b","p-54a8619d1f754d32b5b2bc249a74f26c"]},{"field":"pipeline._bk_iam_path_","op":"starts_with","value":"/project,demo/"}]
+        // [{"field":"pipeline.id","op":"in","value":["p-098b68a251ae4ec4b6f4fde87767387f",
+        // "p-12b2c343109f43a58a79dcb9e3721c1b",
+        // "p-54a8619d1f754d32b5b2bc249a74f26c"]},{"field":"pipeline._bk_iam_path_","op":"starts_with",
+        // "value":"/project,demo/"}]
 
         // 多个项目下有特定资源若干实例
-        // [{"content":[{"field":"pipeline.id","op":"in","value":["p-0d1fff4dabca4fc282e5ff63644bd339","p-54fb8b6562584df4b3693f7c787c105a"]},{"field":"pipeline._bk_iam_path_","op":"starts_with","value":"/project,v3test/"}],"op":"AND"},{"content":[{"field":"pipeline.id","op":"in","value":["p-098b68a251ae4ec4b6f4fde87767387f","p-12b2c343109f43a58a79dcb9e3721c1b","p-54a8619d1f754d32b5b2bc249a74f26c"]},{"field":"pipeline._bk_iam_path_","op":"starts_with","value":"/project,demo/"}],"op":"AND"}]
+        // [{"content":[{"field":"pipeline.id","op":"in","value":["p-0d1fff4dabca4fc282e5ff63644bd339",
+        // "p-54fb8b6562584df4b3693f7c787c105a"]},{"field":"pipeline._bk_iam_path_","op":"starts_with",
+        // "value":"/project,v3test/"}],"op":"AND"},{"content":[{"field":"pipeline.id","op":"in",
+        // "value":["p-098b68a251ae4ec4b6f4fde87767387f","p-12b2c343109f43a58a79dcb9e3721c1b",
+        // "p-54a8619d1f754d32b5b2bc249a74f26c"]},{"field":"pipeline._bk_iam_path_",
+        // "op":"starts_with","value":"/project,demo/"}],"op":"AND"}]
 
         // 多个项目下有特定资源权限,且有项目勾选任意
-        // [{"field":"pipeline._bk_iam_path_","op":"starts_with","value":"/project,demo/"},{"content":[{"field":"pipeline.id","op":"in","value":["p-0d1fff4dabca4fc282e5ff63644bd339","p-54fb8b6562584df4b3693f7c787c105a"]},{"field":"pipeline._bk_iam_path_","op":"starts_with","value":"/project,v3test/"}],"op":"AND"}]
+        // [{"field":"pipeline._bk_iam_path_","op":"starts_with","value":"/project,demo/"},
+        // {"content":[{"field":"pipeline.id","op":"in","value":["p-0d1fff4dabca4fc282e5ff63644bd339",
+        // "p-54fb8b6562584df4b3693f7c787c105a"]},{"field":"pipeline._bk_iam_path_","op":"starts_with",
+        // "value":"/project,v3test/"}],"op":"AND"}]
         return instantList
     }
 
@@ -95,16 +135,19 @@ object AuthUtils {
                 getInstanceByContent(
                     childExpression,
                     projectId,
-                    resourceType
+                    resourceType,
+                    parentExpression.operator
                 )
             )
             ExpressionOperationEnum.OR -> instantList.addAll(
                 getInstanceByContent(
                     childExpression,
                     projectId,
-                    resourceType
+                    resourceType,
+                    parentExpression.operator
                 )
             )
+            else -> {}
         }
         return instantList
     }
@@ -112,42 +155,72 @@ object AuthUtils {
     private fun getInstanceByContent(
         childExpression: List<ExpressionDTO>,
         projectId: String,
-        resourceType: AuthResourceType
+        resourceType: AuthResourceType,
+        type: ExpressionOperationEnum
     ): Set<String> {
         var cacheList = mutableSetOf<String>()
         var isReturn = false
         var successCount = 0
-        childExpression.map {
-            if (it.content != null && it.content.isNotEmpty()) {
-                val childInstanceList = getInstanceByContent(it.content, projectId, resourceType)
-                if (childInstanceList.isNotEmpty()) {
-                    cacheList.addAll(childInstanceList)
-                    isReturn = true
-                    successCount += 1
-                }
-                return@map
-            }
-
-            if (!checkField(it.field, resourceType)) {
-                return@map
-            }
-            when (it.operator) {
-                ExpressionOperationEnum.IN -> {
-                    cacheList.addAll(StringUtils.obj2List(it.value.toString()))
-                    StringUtils.removeAllElement(cacheList)
-                }
-                ExpressionOperationEnum.EQUAL -> {
-                    cacheList.add(it.value.toString())
-                    StringUtils.removeAllElement(cacheList)
-                }
-                ExpressionOperationEnum.START_WITH -> {
-                    val startWithPair = checkProject(projectId, it)
-                    isReturn = startWithPair.first
-                    if (isReturn && cacheList.size == 0) {
-                        cacheList.addAll(startWithPair.second)
+        run content@{
+            childExpression.map {
+                if (it.content != null && it.content.isNotEmpty()) {
+                    val childInstanceList = getInstanceByContent(it.content, projectId, resourceType, it.operator)
+                    if (childInstanceList.isNotEmpty()) {
+                        cacheList.addAll(childInstanceList)
+                        isReturn = true
+                        successCount += 1
+                    } else {
+                        if (!andCheck(cacheList, type)) {
+                            return emptySet()
+                        }
                     }
+                    return@map
                 }
-                else -> cacheList = emptySet<String>() as MutableSet<String>
+
+                if (!checkField(it.field, resourceType) && !checkField(it.value.toString(), resourceType)) {
+                    if (!andCheck(cacheList, type)) {
+                        return emptySet()
+                    }
+                    return@map
+                }
+                when (it.operator) {
+                    ExpressionOperationEnum.ANY -> {
+                        cacheList.add("*")
+                        isReturn = true
+                        successCount += 1
+                        return@content
+                    }
+                    ExpressionOperationEnum.IN -> {
+                        cacheList.addAll(StringUtils.obj2List(it.value.toString()))
+                        StringUtils.removeAllElement(cacheList)
+                        isReturn = true
+                        successCount += 1
+                    }
+                    ExpressionOperationEnum.EQUAL -> {
+                        cacheList.add(it.value.toString())
+                        StringUtils.removeAllElement(cacheList)
+                        isReturn = true
+                        successCount += 1
+                    }
+                    ExpressionOperationEnum.START_WITH -> {
+                        val startWithPair = checkProject(projectId, it)
+                        if (!startWithPair.first && type == ExpressionOperationEnum.AND) {
+                            cacheList.clear()
+                            if (!andCheck(cacheList, type)) {
+                                return emptySet()
+                            }
+                        }
+                        isReturn = startWithPair.first
+                        if (isReturn && cacheList.size == 0) {
+                            cacheList.addAll(startWithPair.second)
+                            successCount += 1
+                        }
+                    }
+                    else -> cacheList = emptySet<String>() as MutableSet<String>
+                }
+                if (!andCheck(cacheList, type)) {
+                    return emptySet()
+                }
             }
         }
 
@@ -179,6 +252,7 @@ object AuthUtils {
             ExpressionOperationEnum.START_WITH -> {
                 instanceList.addAll(checkProject(projectId, expression).second)
             }
+            else -> { }
         }
 
         return instanceList
@@ -202,5 +276,15 @@ object AuthUtils {
             return true
         }
         return false
+    }
+
+    private fun andCheck(instanceList: Set<String>, op: ExpressionOperationEnum): Boolean {
+        if (op == ExpressionOperationEnum.AND) {
+            if (instanceList.isEmpty()) {
+                return false
+            }
+            return true
+        }
+        return true
     }
 }

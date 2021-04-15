@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -26,11 +27,25 @@
 
 package com.tencent.devops.process.utils
 
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotEquals
 import org.junit.Test
 
 class PipelineVarUtilTest {
+
+    @Test
+    fun fillOldVarWithType() {
+        val vars = mutableMapOf(
+            PIPELINE_START_USER_NAME to Pair("admin", BuildFormPropertyType.STRING),
+            "userName" to Pair("hello", BuildFormPropertyType.STRING),
+            "$PIPELINE_MATERIAL_URL.rep/a1" to Pair("http://git.xxx.com/group/repo.git", BuildFormPropertyType.STRING)
+        )
+        PipelineVarUtil.fillOldVarWithType(vars)
+        vars.forEach {
+            println(it)
+        }
+    }
 
     @Test
     fun fillOldVar() {
@@ -48,9 +63,9 @@ class PipelineVarUtilTest {
     @Test
     fun replaceOldByNewVar() {
         val vars = mutableMapOf(
-            "pipeline.start.user.name" to "admin",
-            "userName" to "hello",
-            "pipeline.material.url.rep/a1" to "http://git.xxx.com/group/repo.git"
+            "pipeline.start.user.name" to Pair("admin", BuildFormPropertyType.STRING),
+            "userName" to Pair("hello", BuildFormPropertyType.STRING),
+            "pipeline.material.url.rep/a1" to Pair("http://git.xxx.com/group/repo.git", BuildFormPropertyType.STRING)
         )
         PipelineVarUtil.replaceOldByNewVar(vars)
         vars.forEach {

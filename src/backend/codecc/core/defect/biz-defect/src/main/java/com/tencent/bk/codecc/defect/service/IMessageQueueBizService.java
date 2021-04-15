@@ -12,5 +12,5 @@ public interface IMessageQueueBizService {
 
     void messageQueueConvertAndSend(String toolName, CommitDefectVO commitDefectVO);
 
-    AsyncRabbitTemplate.RabbitConverterFuture<Boolean> MessageAsyncMsgFuture(AggregateDispatchFileName aggregateFileName);
+    AsyncRabbitTemplate.RabbitConverterFuture<Boolean> messageAsyncMsgFuture(AggregateDispatchFileName aggregateFileName);
 }

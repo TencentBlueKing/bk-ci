@@ -28,3 +28,24 @@ tof:
   codecc:
     appcode: __TOF_CODECC_APP_CODE__
     appsecret: __TOF_CODECC_APP_SECRET__
+
+custom:
+  projectName:
+    svnName: __CUSTOM_PROJECT_NAME__
+    svnPassword: ENC(__CUSTOM_SVN_PASS__)
+    pcgName: __CUSTOM_PCG_NAME__
+    pcgPassword: ENC(__CUSTOM_PCG_PASS__)
+    tegName: __CUSTOM_PROJECT_NAME__
+    tegPassword: ENC(__CUSTOM_TEG_PASS__)
+    proxy: __CUSTOM_PROJECT_NAME_PROXY__
+
+enc:
+  key: __ENC_KEY__
+
+jasypt:
+  encryptor:
+    password: __JASYPT_ENCRYPTOR__
+
+dockerImage:
+  account: __DOCKER_IMAGE__ACCOUNT__
+  passwd: __DOCKER_IMAGE__PASSWD__

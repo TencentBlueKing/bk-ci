@@ -62,6 +62,9 @@ public class TaskDefectVO
     @ApiModelProperty("蓝盾项目ID")
     private String projectId;
 
+    @ApiModelProperty("蓝盾项目名称")
+    private String projectName;
+
     @ApiModelProperty("事业群名称")
     private String bgName;
 

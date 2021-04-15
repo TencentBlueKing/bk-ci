@@ -20,12 +20,15 @@ export default {
         ...mapState('tool', {
             toolMap: 'mapList'
         }),
+        ...mapState('defect', {
+            defaultCheckset: 'defaultCheckset'
+        }),
         toolList () {
             const toolType = this.toolMeta['TOOL_TYPE'].filter(item => {
-                return item.key !== 'CCN' && item.key !== 'DUPC'
+                return item.key !== 'CCN' && item.key !== 'DUPC' && item.key !== 'CLOC'
             })
             const enTooList = this.taskDetail.enableToolList.filter(item => {
-                return item.toolName !== 'CCN' && item.toolName !== 'DUPC'
+                return item.toolName !== 'CCN' && item.toolName !== 'DUPC' && item.toolName !== 'CLOC'
             })
             if (this.toolMap) {
                 toolType.forEach(item => {
@@ -136,11 +139,41 @@ export default {
                     subTitle: this.$t('此代码检查任务为流水线创建，规则集需前往相应流水线配置。'),
                     maskClose: true,
                     confirmFn (name) {
-                        window.open(`${window.DEVOPS_SITE_URL}/console/pipeline/${that.taskDetail.projectId}/${that.taskDetail.pipelineId}/edit#codecc`, '_blank')
+                        window.open(`${window.DEVOPS_SITE_URL}/console/pipeline/${that.taskDetail.projectId}/${that.taskDetail.pipelineId}/edit#${that.taskDetail.atomCode}`, '_blank')
                     }
                 })
             } else {
                 this.$router.push({ name: 'task-settings-checkerset', query })
+                // const from = query.from
+                // if (from === 'cov' || from === 'lint') {
+                //     this.$router.push({ name: 'task-settings-checkerset', query })
+                //     return
+                // }
+                // const codeLang = this.taskDetail.codeLang
+                // const codeLangKeys = this.toolMeta.LANG.map(lang => {
+                //     if (lang.key & codeLang) {
+                //         return lang.key
+                //     }
+                // }).filter(name => name)
+                // const installList = codeLangKeys.map(key => {
+                //     const checkerSetId = this.defaultCheckset[key] && this.defaultCheckset[key][from]
+                //     if (checkerSetId) {
+                //         const params = {
+                //             type: 'TASK',
+                //             projectId: this.projectId,
+                //             taskId: this.taskId,
+                //             checkerSetId
+                //         }
+                //         return this.$store.dispatch('checkerset/install', params)
+                //     }
+                // }).filter(item => item)
+                // if (installList.length) {
+                //     Promise.all(installList).then(() => {
+                //         window.location.reload()
+                //     })
+                // } else {
+                //     this.$bkMessage({ theme: 'warning', message: this.$t('该任务语言暂无合适规则集') })
+                // }
             }
         },
         handleDateChange (date, type) {

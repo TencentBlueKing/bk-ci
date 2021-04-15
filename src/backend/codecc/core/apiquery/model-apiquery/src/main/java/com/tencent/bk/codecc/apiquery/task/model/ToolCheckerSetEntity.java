@@ -26,8 +26,8 @@
 
 package com.tencent.bk.codecc.apiquery.task.model;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
-import org.springframework.data.mongodb.core.mapping.Field;
 
 /**
  * 工具配置的规则集实体类
@@ -41,13 +41,13 @@ public class ToolCheckerSetEntity
     /**
      * 工具名称
      */
-    @Field("tool_name")
+    @JsonProperty("tool_name")
     private String toolName;
 
     /**
      * 规则集ID
      */
-    @Field("checker_set_id")
+    @JsonProperty("checker_set_id")
     private String checkerSetId;
 
     /**

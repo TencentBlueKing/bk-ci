@@ -1,24 +1,27 @@
 <template>
-    <section class="parameter-input">
-        <p v-if="label" class="input-label" :title="label">{{ label }}：</p>
-        <bk-input class="input-main" :clearable="!disabled" :value="value" @change="(newValue) => $emit('update-value', newValue)" v-if="type === 'input'" :disabled="disabled"></bk-input>
-        <section v-else class="parameter-select input-main" v-bk-clickoutside="toggleShowList">
-            <bk-input ref="inputItem"
-                :clearable="!disabled"
-                :value="displayValue"
-                :disabled="disabled"
-                @clear="$emit('update-value', '')"
-                @blur="handleBlur"
-                @change="handleInput"
-                @focus="toggleShowList(true)">
-            </bk-input>
-            <ul v-if="showList && paramList.length" class="parameter-list">
-                <li v-for="(option, index) in paramList"
-                    :key="index"
-                    @click="chooseOption(option)"
-                    :class="{ 'is-active': isActive(option.id) }"
-                >{{option.name}}</li>
-            </ul>
+    <section class="param-input-home">
+        <span v-if="hyphen && hyphen.trim()" class="param-hyphen">{{hyphen}}</span>
+        <section class="parameter-input">
+            <p v-if="label && label.trim()" class="input-label" :title="label">{{ label }}：</p>
+            <bk-input class="input-main" :clearable="!disabled" :value="value" @change="(newValue) => $emit('update-value', newValue)" v-if="type === 'input'" :disabled="disabled"></bk-input>
+            <section v-else class="parameter-select input-main" v-bk-clickoutside="toggleShowList">
+                <bk-input ref="inputItem"
+                    :clearable="!disabled"
+                    :value="displayValue"
+                    :disabled="disabled"
+                    @clear="$emit('update-value', '')"
+                    @blur="handleBlur"
+                    @change="handleInput"
+                    @focus="toggleShowList(true)">
+                </bk-input>
+                <ul v-if="showList && paramList.length" class="parameter-list">
+                    <li v-for="(option, index) in paramList"
+                        :key="index"
+                        @click="chooseOption(option)"
+                        :class="{ 'is-active': isActive(option.id) }"
+                    >{{option.name}}</li>
+                </ul>
+            </section>
         </section>
     </section>
 </template>
@@ -72,6 +75,9 @@
             dataPath: {
                 type: String,
                 default: 'data.records'
+            },
+            hyphen: {
+                type: String
             }
         },
 
@@ -192,17 +198,10 @@
                 }
 
                 if (typeof this.url === 'string' && this.url !== '') { // 只有存在url字段时才去请求
-                    let url = this.url
-                    let isErrorParam = false
-                    this.queryKey = []
-                    url = url.replace(/{([^\{\}]+)}/g, (str, key) => {
-                        this.queryKey.push(key)
-                        const value = this.paramValues[key]
-                        if (typeof value === 'undefined') isErrorParam = true
-                        return value
-                    })
+                    const [url, queryKey] = this.generateReqUrl(this.url, this.paramValues)
+                    this.queryKey = queryKey
 
-                    if (isErrorParam) return
+                    if (!url) return
                     this.loading = true
                     this.$ajax.get(url).then((res) => {
                         const list = this.getResponseData(res, this.dataPath)
@@ -217,7 +216,16 @@
 </script>
 
 <style lang="scss" scoped>
+    .param-input-home {
+        display: flex;
+        align-items: flex-end;
+        flex: 1;
+        .param-hyphen {
+            margin-right: 11px;
+        }
+    }
     .parameter-input {
+        flex: 1;
         .input-label {
             max-width: 100%;
             overflow: hidden;

@@ -17,7 +17,7 @@ import com.tencent.bk.codecc.defect.vo.enums.CheckerSetSource;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Set;
 
@@ -63,4 +63,10 @@ public class CheckerSetListQueryReq
 
     @ApiModelProperty("排序字段")
     private String sortType;
+
+    @ApiModelProperty("分页配置")
+    private Integer pageNum;
+
+    @ApiModelProperty("分页大小配置")
+    private Integer pageSize;
 }

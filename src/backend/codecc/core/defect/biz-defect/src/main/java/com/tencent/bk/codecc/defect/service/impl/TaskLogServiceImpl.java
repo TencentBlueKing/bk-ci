@@ -37,6 +37,7 @@ import com.tencent.bk.codecc.defect.model.TaskLogGroupEntity;
 import com.tencent.bk.codecc.defect.service.IQueryStatisticBizService;
 import com.tencent.bk.codecc.defect.service.PipelineTaskService;
 import com.tencent.bk.codecc.defect.service.TaskLogService;
+import com.tencent.bk.codecc.defect.vo.TaskLogRepoInfoVO;
 import com.tencent.bk.codecc.defect.vo.TaskLogVO;
 import com.tencent.bk.codecc.defect.vo.UploadTaskLogStepVO;
 import com.tencent.bk.codecc.defect.vo.common.BuildVO;
@@ -47,6 +48,7 @@ import com.tencent.devops.common.api.analysisresult.ToolLastAnalysisResultVO;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.ComConstants;
+import com.tencent.devops.common.constant.ComConstants.StepFlag;
 import com.tencent.devops.common.service.BizServiceFactory;
 import com.tencent.devops.common.service.IBizService;
 import org.apache.commons.collections.CollectionUtils;
@@ -180,6 +182,8 @@ public class TaskLogServiceImpl implements TaskLogService
     @Override
     public BaseLastAnalysisResultVO getLastAnalysisResult(ToolLastAnalysisResultVO toolLastAnalysisResultVO, String toolName)
     {
+        logger.info("begin to query last analysis result, task id: {}, tool name : {}", toolLastAnalysisResultVO.getTaskId(),
+                toolLastAnalysisResultVO.getToolName());
         IQueryStatisticBizService queryStatisticBizService = taskLogAndDefectFactory.createBizService(toolLastAnalysisResultVO.getToolName(),
                 ComConstants.BusinessType.QUERY_STATISTIC.value(), IQueryStatisticBizService.class);
         return queryStatisticBizService.processBiz(toolLastAnalysisResultVO);
@@ -417,6 +421,72 @@ public class TaskLogServiceImpl implements TaskLogService
     {
         List<TaskLogEntity> taskLogEntityList = taskLogDao.findTaskLogByTime(taskIdSet, startTime, endTime);
         return entity2TaskLogVos(taskLogEntityList);
+    }
+
+    @Override
+    public Map<String, TaskLogRepoInfoVO> getLastAnalyzeRepoInfo(long taskId) {
+        TaskLogEntity lastAnalyze = taskLogRepository.findFirstByTaskIdAndFlagOrderByStartTimeDesc(taskId,
+                StepFlag.SUCC.value());
+        if (lastAnalyze == null) {
+            logger.warn("this task has been not ran, taskId: {}", taskId);
+            return Collections.emptyMap();
+        }
+
+        Map<String, TaskLogRepoInfoVO> repoInfo = new HashMap<>();
+        String buildId = lastAnalyze.getBuildId();
+        List<TaskLogEntity> lastAnalyzeList = taskLogRepository.findByTaskIdAndBuildId(taskId, buildId);
+        lastAnalyzeList.forEach(taskLogEntity -> {
+            List<TaskLogEntity.TaskUnit> steps = taskLogEntity.getStepArray();
+            steps.forEach(taskUnit -> {
+                String msg = taskUnit.getMsg();
+                if (StringUtils.isNotBlank(msg) && msg.contains("代码库：")) {
+                    String[] msgs = msg.split("\n");
+                    List<String> msgList = Arrays.asList(msgs);
+                    msgList.stream()
+                        .filter(StringUtils::isNotBlank)
+                        .forEach(s -> {
+                            try {
+                                String repoUrl = s.substring(s.indexOf("代码库：") + 4, s.indexOf("，版本号："));
+                                String revision = s.substring(s.indexOf("版本号：") + 4, s.indexOf("，提交时间"));
+                                String commitTime = s.substring(s.indexOf("提交时间：") + 5, s.indexOf("，提交人"));
+                                String commitUser = s.substring(s.indexOf("提交人：") + 4, s.indexOf("，分支"));
+                                String branch = s.substring(s.indexOf("分支：") + 3);
+                                TaskLogRepoInfoVO taskLogRepoInfoVO =
+                                        new TaskLogRepoInfoVO(repoUrl, revision, commitTime, commitUser, branch);
+                                repoInfo.put(repoUrl, taskLogRepoInfoVO);
+                            } catch (Throwable e) {
+                                logger.error("代码库信息截取失败: {}", msg);
+                                logger.error("", e);
+                            }
+                    });
+                }
+            });
+        });
+        return repoInfo;
+    }
+
+    @Override
+    public List<TaskLogVO> findLastBuildInfo(long taskId) {
+        TaskLogEntity lastTaskLog =
+                taskLogRepository.findFirstByTaskIdAndFlagOrderByStartTimeDesc(taskId, StepFlag.SUCC.value());
+        List<TaskLogEntity> lastTaskLogList =
+                taskLogRepository.findByTaskIdAndBuildId(taskId, lastTaskLog.getBuildId());
+        List<TaskLogEntity> failTaskLogList = Lists.newLinkedList();
+        for (TaskLogEntity taskLogEntity : lastTaskLogList) {
+            if (taskLogEntity.getFlag() != StepFlag.SUCC.value()) {
+                TaskLogEntity entity =
+                        taskLogRepository.findFirstByTaskIdAndToolNameAndFlagOrderByStartTimeDesc(taskId,
+                                taskLogEntity.getToolName(),
+                                StepFlag.SUCC.value());
+                failTaskLogList.add(entity);
+            }
+        }
+
+        lastTaskLogList.addAll(failTaskLogList);
+        lastTaskLogList = lastTaskLogList.stream()
+                .filter(taskLogEntity -> taskLogEntity != null && taskLogEntity.getFlag() == StepFlag.SUCC.value())
+                .collect(Collectors.toList());
+        return entity2TaskLogVos(lastTaskLogList);
     }
 
     @NotNull

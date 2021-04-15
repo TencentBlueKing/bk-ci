@@ -9,10 +9,10 @@
             <div class="info-header">
                 <span>{{$t('更多规则集')}}<i class="bk-icon icon-refresh checkerset-fresh" :class="fetchingList ? 'spin-icon' : ''" @click="refresh" /></span>
                 <bk-select class="search-select" v-model="language" multiple style="width: 120px;" :placeholder="$t('请选择语言')">
-                    <bk-option v-for="option in languageList"
-                        :key="option.key"
-                        :id="option.key"
-                        :name="option.key">
+                    <bk-option v-for="option in codeLangs"
+                        :key="option.displayName"
+                        :id="option.displayName"
+                        :name="option.displayName">
                     </bk-option>
                 </bk-select>
                 <bk-input
@@ -90,10 +90,6 @@
                 type: Boolean,
                 default: false
             },
-            languageList: {
-                type: Array,
-                default: []
-            },
             refreshList: Function
         },
         data () {
@@ -116,7 +112,8 @@
                 },
                 classifyCode: 'all',
                 classifyCodeList: [{ cnName: '所有', enName: 'all' }],
-                checkerSetList: []
+                checkerSetList: [],
+                codeLangs: []
             }
         },
         computed: {
@@ -194,6 +191,7 @@
             async getFormParams () {
                 const res = await this.$store.dispatch('checkerset/params')
                 this.classifyCodeList = [...this.classifyCodeList, ...res.catatories]
+                this.codeLangs = res.codeLangs
             },
             async requestList (isInit, params = this.params) {
                 this.loading = true
@@ -209,7 +207,7 @@
                 this.isLoadingMore = false
             },
             getIconColorClass (checkerSetId) {
-                return `c${(checkerSetId[0].charCodeAt() % 6) + 1}`
+                return checkerSetId ? `c${(checkerSetId[0].charCodeAt() % 6) + 1}` : 'c1'
             },
             getCodeLang (codeLang) {
                 const names = this.toolMeta.LANG.map(lang => {
@@ -319,7 +317,6 @@
             padding: 4px;
             margin-left: 3px;
             position: relative;
-            top: 2px;
             color: #3c96ff;;
             &.spin-icon {
                 color: #c3cdd7;

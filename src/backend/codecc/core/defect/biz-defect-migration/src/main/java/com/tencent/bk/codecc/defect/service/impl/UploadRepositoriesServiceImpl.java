@@ -10,7 +10,7 @@ import com.tencent.bk.codecc.defect.model.incremental.CodeRepoInfoEntity;
 import com.tencent.bk.codecc.defect.model.incremental.ToolBuildInfoEntity;
 import com.tencent.bk.codecc.defect.model.incremental.ToolBuildStackEntity;
 import com.tencent.bk.codecc.defect.service.UploadRepositoriesService;
-import com.tencent.bk.codecc.defect.vo.coderepository.CodeRepoVO;
+import com.tencent.devops.common.api.CodeRepoVO;
 import com.tencent.bk.codecc.defect.vo.coderepository.UploadRepositoriesVO;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.devops.common.constant.CommonMessageCode;

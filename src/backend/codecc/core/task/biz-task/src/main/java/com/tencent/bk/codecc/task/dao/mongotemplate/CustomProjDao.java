@@ -41,19 +41,24 @@ public class CustomProjDao
      * @param branch
      * @return
      */
-    public CustomProjEntity findByGongfengIdAndUrlAndBranch(String customProjSource, Integer gongfengProjectId, String url, String branch){
+    public CustomProjEntity findByGongfengIdAndUrlAndBranch(String customProjSource, Integer gongfengProjectId,
+                                                            String url, String branch, String logicRepo){
         BasicDBObject fieldsObj = new BasicDBObject();
         Query query = new BasicQuery(new BasicDBObject(), fieldsObj);
+        query.addCriteria(Criteria.where("custom_proj_source").is(customProjSource));
         if(null != gongfengProjectId){
-            query.addCriteria(Criteria.where("custom_proj_source").is(customProjSource).and("gongfeng_project_id").is(gongfengProjectId));
+            query.addCriteria(Criteria.where("gongfeng_project_id").is(gongfengProjectId));
         }
         else
         {
-            query.addCriteria(Criteria.where("custom_proj_source").is(customProjSource).and("url").is(url));
+            query.addCriteria(Criteria.where("url").is(url));
         }
         if(StringUtils.isNotBlank(branch))
         {
             query.addCriteria(Criteria.where("branch").is(branch));
+        }
+        if(StringUtils.isNotBlank(logicRepo)){
+            query.addCriteria(Criteria.where("logic_repo").is(logicRepo));
         }
         return mongoTemplate.findOne(query, CustomProjEntity.class, "t_customized_project");
     }

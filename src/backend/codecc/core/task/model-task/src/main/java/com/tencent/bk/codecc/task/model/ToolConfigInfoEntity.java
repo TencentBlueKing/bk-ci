@@ -84,6 +84,7 @@ public class ToolConfigInfoEntity extends CommonEntity
     /**
      * 跟进状态 对照PREFIX_FOLLOW_STATUS
      */
+    @Indexed(background = true)
     @Field("follow_status")
     private int followStatus;
 
@@ -113,4 +114,16 @@ public class ToolConfigInfoEntity extends CommonEntity
 
     @Field("current_build_id")
     private String currentBuildId;
+
+    /**
+     * 对于开源扫描项目，需要重新注册platform，此字段为标志位
+     */
+    @Field("open_source_refresh")
+    private Boolean openSourceRefresh;
+
+    /**
+     * 最近一次扫描使用的工具镜像版本，用于判断是否需要全量扫描
+     */
+    @Field("tool_image_revision")
+    private String toolImageRevision;
 }

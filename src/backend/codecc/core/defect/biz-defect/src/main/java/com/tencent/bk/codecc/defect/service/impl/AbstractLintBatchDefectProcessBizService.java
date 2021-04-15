@@ -1,20 +1,23 @@
 package com.tencent.bk.codecc.defect.service.impl;
 
-import com.google.common.collect.Maps;
 import com.google.common.collect.Sets;
-import com.tencent.bk.codecc.defect.dao.mongorepository.LintDefectRepository;
-import com.tencent.bk.codecc.defect.dao.mongotemplate.LintDefectDao;
-import com.tencent.bk.codecc.defect.model.LintDefectEntity;
-import com.tencent.bk.codecc.defect.model.LintFileEntity;
+import com.tencent.bk.codecc.defect.dao.mongorepository.BuildDefectRepository;
+import com.tencent.bk.codecc.defect.dao.mongorepository.LintDefectV2Repository;
+import com.tencent.bk.codecc.defect.dao.mongotemplate.LintDefectV2Dao;
+import com.tencent.bk.codecc.defect.model.BuildDefectEntity;
+import com.tencent.bk.codecc.defect.model.LintDefectV2Entity;
 import com.tencent.bk.codecc.defect.service.AbstractBatchDefectProcessBizService;
-import com.tencent.bk.codecc.defect.service.IQueryWarningBizService;
-import com.tencent.bk.codecc.defect.vo.*;
+import com.tencent.bk.codecc.defect.service.CheckerService;
+import com.tencent.bk.codecc.defect.service.TaskLogService;
+import com.tencent.bk.codecc.defect.service.newdefectjudge.NewDefectJudgeService;
+import com.tencent.bk.codecc.defect.vo.BatchDefectProcessReqVO;
+import com.tencent.bk.codecc.defect.vo.TaskLogVO;
 import com.tencent.bk.codecc.defect.vo.common.DefectQueryReqVO;
-import com.tencent.devops.common.api.exception.CodeCCException;
+import com.tencent.bk.codecc.task.api.ServiceTaskRestResource;
+import com.tencent.bk.codecc.task.vo.TaskDetailVO;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.ComConstants;
-import com.tencent.devops.common.constant.CommonMessageCode;
-import com.tencent.devops.common.service.BizServiceFactory;
-import com.tencent.devops.common.util.JsonUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -32,17 +35,22 @@ import java.util.*;
 public abstract class AbstractLintBatchDefectProcessBizService extends AbstractBatchDefectProcessBizService
 {
     @Autowired
-    private LintDefectRepository lintDefectRepository;
-
+    private Client client;
     @Autowired
-    private LintDefectDao lintDefectDao;
-
+    private LintDefectV2Repository lintDefectV2Repository;
     @Autowired
-    private BizServiceFactory<IQueryWarningBizService> fileAndDefectQueryFactory;
+    private LintDefectV2Dao lintDefectV2Dao;
+    @Autowired
+    private BuildDefectRepository buildDefectRepository;
+    @Autowired
+    private TaskLogService taskLogService;
+    @Autowired
+    private NewDefectJudgeService newDefectJudgeService;
+    @Autowired
+    private CheckerService multitoolCheckerService;
 
     /**
      * 根据前端传入的条件查询告警键值
-     *
      *
      * @param taskId
      * @param defectQueryReqVO
@@ -53,97 +61,90 @@ public abstract class AbstractLintBatchDefectProcessBizService extends AbstractB
     {
         String toolName = defectQueryReqVO.getToolName();
 
-        LintDefectQueryRspVO lintFileQueryRsp = new LintDefectQueryRspVO();
+        String buildId = defectQueryReqVO.getBuildId();
+        Set<String> conditionDefectType = defectQueryReqVO.getDefectType();
 
-        Set<String> fileList = defectQueryReqVO.getFileList();
-        String checker = defectQueryReqVO.getChecker();
-        String author = defectQueryReqVO.getAuthor();
+        //获取任务信息
+        CodeCCResult<TaskDetailVO> taskInfoResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
+        TaskDetailVO taskDetailVO = taskInfoResult.getData();
 
-        // 根据任务ID和工具名查询所有的告警
-        List<LintFileEntity> originalFileInfoEntityList = lintDefectDao.findFileListByParams(taskId, toolName, fileList, checker, author);
+        //1.获取相同包id下的规则集合
+        Set<String> pkgChecker = multitoolCheckerService.queryPkgRealCheckers(defectQueryReqVO.getPkgId(), toolName, taskDetailVO);
 
-        // 按过滤条件过滤告警
-        IQueryWarningBizService queryWarningBizService = fileAndDefectQueryFactory.createBizService(toolName,
-                ComConstants.BusinessType.QUERY_WARNING.value(), IQueryWarningBizService.class);
-        queryWarningBizService.filterDefectByCondition(taskId, originalFileInfoEntityList, defectQueryReqVO, lintFileQueryRsp);
+        Set<String> defectIdSet = new HashSet<>();
+        if (StringUtils.isNotEmpty(buildId) && defectCommitSuccess(taskId, toolName, buildId))
+        {
+            List<BuildDefectEntity> buildFiles = buildDefectRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
+            if (CollectionUtils.isNotEmpty(buildFiles))
+            {
+                for (BuildDefectEntity buildDefectEntity : buildFiles)
+                {
+                    defectIdSet.addAll(buildDefectEntity.getFileDefectIds());
+                }
+            }
+        }
 
-        return originalFileInfoEntityList;
+        long newDefectJudgeTime = 0;
+        if (CollectionUtils.isNotEmpty(conditionDefectType)
+                && !conditionDefectType.containsAll(Sets.newHashSet(ComConstants.DefectType.NEW.stringValue(), ComConstants.DefectType.HISTORY.stringValue())))
+        {
+            // 查询新老告警判定时间
+            newDefectJudgeTime = newDefectJudgeService.getNewDefectJudgeTime(taskId, toolName, taskDetailVO);
+        }
+
+        Map<String, Boolean> filedMap = new HashMap<>();
+        filedMap.put("_id", true);
+        filedMap.put("status", true);
+        List<LintDefectV2Entity> defectEntityList = lintDefectV2Dao.findDefectByCondition(taskId, defectQueryReqVO, defectIdSet, pkgChecker, newDefectJudgeTime, filedMap);
+
+        return defectEntityList;
     }
 
+    /**
+     * 根据前端传入的告警key，查询有效的告警
+     * 过滤规则是：忽略告警、告警处理人分配、告警标志修改针对的都是待修复告警，而恢复忽略针对的是已忽略告警
+     * @param batchDefectProcessReqVO
+     */
     @Override
-    protected List getEffectiveDefectByDefectKeySet(BatchDefectProcessReqVO batchDefectProcessReqVO)
+    protected List<LintDefectV2Entity> getEffectiveDefectByDefectKeySet(BatchDefectProcessReqVO batchDefectProcessReqVO)
     {
-        List<QueryFileDefectVO> fileDefectVOS = batchDefectProcessReqVO.getFileDefects();
-        Map<String, Set<String>> fileDefectMap = Maps.newHashMap();
-        if (CollectionUtils.isNotEmpty(fileDefectVOS))
+        List<LintDefectV2Entity> defecEntityList = lintDefectV2Repository.findStatusByEntityIdIn(batchDefectProcessReqVO.getDefectKeySet());
+        if (CollectionUtils.isEmpty(defecEntityList))
         {
-            for (QueryFileDefectVO fileDefectVO : fileDefectVOS)
-            {
-                if (fileDefectMap.get(fileDefectVO.getFileEntityId()) == null)
-                {
-                    fileDefectMap.put(fileDefectVO.getFileEntityId(), Sets.newHashSet());
-                }
+            return new ArrayList<>();
+        }
 
-                if (StringUtils.isNotEmpty(fileDefectVO.getDefectId()))
-                {
-                    fileDefectMap.get(fileDefectVO.getFileEntityId()).add(fileDefectVO.getDefectId());
-                }
+        Iterator<LintDefectV2Entity> it = defecEntityList.iterator();
+        while (it.hasNext())
+        {
+            LintDefectV2Entity defectEntity = it.next();
+            int status = defectEntity.getStatus();
+            int statusCond = getStatusCondition();
+            boolean notMatchNewStatus = statusCond == ComConstants.DefectStatus.NEW.value() && status != ComConstants.DefectStatus.NEW.value();
+            boolean notMatchIgnoreStatus = statusCond > ComConstants.DefectStatus.NEW.value() && (status & statusCond) == 0;
+            if (notMatchNewStatus || notMatchIgnoreStatus)
+            {
+                it.remove();
             }
         }
-        List<LintFileEntity> fileEntities = lintDefectRepository.findByEntityIdIn(fileDefectMap.keySet());
-        if (CollectionUtils.isNotEmpty(fileEntities))
-        {
-            Iterator<LintFileEntity> it = fileEntities.iterator();
-            while (it.hasNext())
-            {
-                LintFileEntity fileEntity = it.next();
-                if (CollectionUtils.isNotEmpty(fileEntity.getDefectList()))
-                {
-                    Set<String> fileDefectIds = fileDefectMap.get(fileEntity.getEntityId());
-
-                    if (CollectionUtils.isNotEmpty(fileDefectIds))
-                    {
-                        Iterator<LintDefectEntity> defectEntityIt = fileEntity.getDefectList().iterator();
-                        while (defectEntityIt.hasNext())
-                        {
-                            LintDefectEntity defectEntity = defectEntityIt.next();
-                            if (!fileDefectIds.contains(defectEntity.getDefectId()))
-                            {
-                                defectEntityIt.remove();
-                            }
-                        }
-                        if (fileEntity.getDefectList().size() == 0)
-                        {
-                            it.remove();
-                        }
-                    }
-                }
-            }
-        }
-        return fileEntities;
+        return defecEntityList;
     }
 
-    protected Map<String, Set<String>> getFileDefectMap(List defectList)
+    public boolean defectCommitSuccess(long taskId, String toolName, String buildId)
     {
-        Map<String, Set<String>> fileDefectMap = Maps.newHashMap();
-        if (CollectionUtils.isNotEmpty(defectList))
+        boolean result = false;
+        TaskLogVO taskLogVO = taskLogService.getBuildTaskLog(taskId, toolName, buildId);
+        if (taskLogVO != null && CollectionUtils.isNotEmpty(taskLogVO.getStepArray()))
         {
-            for (Object fileDefectObj : defectList)
+            for (TaskLogVO.TaskUnit taskUnit : taskLogVO.getStepArray())
             {
-                LintFileEntity lintFileEntity = (LintFileEntity)fileDefectObj;
-                if (fileDefectMap.get(lintFileEntity.getEntityId()) == null)
+                if (ComConstants.Step4MutliTool.COMMIT.value() == taskUnit.getStepNum() && ComConstants.StepFlag.SUCC.value() == taskUnit.getFlag())
                 {
-                    fileDefectMap.put(lintFileEntity.getEntityId(), Sets.newHashSet());
-                }
-                if (CollectionUtils.isNotEmpty(lintFileEntity.getDefectList()))
-                {
-                    for (LintDefectEntity lintDefectEntity : lintFileEntity.getDefectList())
-                    {
-                        fileDefectMap.get(lintFileEntity.getEntityId()).add(lintDefectEntity.getDefectId());
-                    }
+                    result = true;
+                    break;
                 }
             }
         }
-        return fileDefectMap;
+        return result;
     }
 }

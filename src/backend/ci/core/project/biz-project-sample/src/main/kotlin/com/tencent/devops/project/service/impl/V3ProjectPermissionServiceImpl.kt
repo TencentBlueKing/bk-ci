@@ -1,19 +1,52 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.project.service.impl
 
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.api.AuthResourceApi
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
-import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
+import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectPermissionService
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
+@Suppress("ALL")
 class V3ProjectPermissionServiceImpl @Autowired constructor(
-    val client: Client,
     private val authProjectApi: AuthProjectApi,
+    private val authResourceApi: AuthResourceApi,
     private val authPermissionApi: AuthPermissionApi,
     private val projectAuthServiceCode: ProjectAuthServiceCode,
     private val projectDao: ProjectDao,
@@ -33,26 +66,29 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
     override fun createResources(
         userId: String,
         accessToken: String?,
-        resourceRegisterInfo: ResourceRegisterInfo
+        resourceRegisterInfo: ResourceRegisterInfo,
+        userDeptDetail: UserDeptDetail?
     ): String {
-//        // 创建从属于该项目的默认内置用户组CI管理员,用户拉入用户组
-//        val initProjectGroup = client.get(ServiceGroupResource::class).createGroup(
-//            userId = userId,
-//            projectCode = resourceRegisterInfo.resourceCode,
-//            groupInfo = GroupDTO(
-//                groupCode = BkAuthGroup.CIADMIN.value,
-//                groupType = GroupType.DEFAULT,
-//                groupName = BkAuthGroup.CIADMIN.name,
-//                authPermissionList = emptyList()
-//            )
-//        )
-//        if (initProjectGroup.isNotOk() || initProjectGroup.data.isNullOrEmpty()) {
-//            // 添加用户组失败抛异常
-//            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL))
-//        }
-//        val groupId = initProjectGroup.data
-//        client.get(ServiceUserGroupResource::class).addUser2Group(userId, groupId!!)
-
+        val validateCreatePermission = authPermissionApi.validateUserResourcePermission(
+            user = userId,
+            serviceCode = projectAuthServiceCode,
+            resourceType = AuthResourceType.PROJECT,
+            projectCode = "",
+            permission = AuthPermission.CREATE
+        )
+        if (!validateCreatePermission) {
+            throw PermissionForbiddenException(
+                MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.USER_NOT_CREATE_PERM)
+            )
+        }
+        authResourceApi.createResource(
+            user = userId,
+            serviceCode = projectAuthServiceCode,
+            resourceType = AuthResourceType.PROJECT,
+            projectCode = resourceRegisterInfo.resourceCode,
+            resourceCode = resourceRegisterInfo.resourceCode,
+            resourceName = resourceRegisterInfo.resourceName
+        )
         return ""
     }
 
@@ -71,7 +107,7 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
             supplier = null
         )
 
-        if (projects == null || projects.isEmpty()) {
+        if (projects.isEmpty()) {
             return emptyList()
         }
 
@@ -95,7 +131,23 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
         )
     }
 
+    override fun verifyUserProjectPermission(
+        accessToken: String?,
+        projectCode: String,
+        userId: String,
+        permission: AuthPermission
+    ): Boolean {
+        return authPermissionApi.validateUserResourcePermission(
+                user = userId,
+                serviceCode = projectAuthServiceCode,
+                resourceType = projectResourceType,
+                resourceCode = projectCode,
+                projectCode = projectCode,
+                permission = permission
+        )
+    }
+
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        private val projectResourceType = AuthResourceType.PROJECT
     }
 }

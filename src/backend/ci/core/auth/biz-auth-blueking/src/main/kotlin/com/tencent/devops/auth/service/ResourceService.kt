@@ -1,238 +1,147 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
 package com.tencent.devops.auth.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bk.sdk.iam.constants.CallbackMethodEnum
-import com.tencent.bk.sdk.iam.dto.PageInfoDTO
+import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
 import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.utils.ActionUtils
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.auth.callback.AuthConstants.KEYWORD_MIN_SIZE
+import com.tencent.devops.common.auth.callback.SearchInstanceInfo
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.lang.RuntimeException
-import com.tencent.bk.sdk.iam.dto.callback.response.BaseDataResponseDTO
-import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
-import com.tencent.devops.auth.utils.ActionUtils
-import com.tencent.devops.environment.api.RemoteEnvResource
-import com.tencent.devops.environment.api.RemoteNodeResource
-import com.tencent.devops.process.api.service.ServiceAuthPipelineResource
-import com.tencent.devops.project.api.service.ServiceAuthResource
-import com.tencent.devops.repository.api.ServiceAuthRepositoryResource
-import com.tencent.devops.ticket.api.ServiceAuthCredentialResource
+import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO as CallbackBaseResponseDTO1
 
 @Service
 class ResourceService @Autowired constructor(
-    val client: Client,
-    val remoteAuthService: RemoteAuthService
+    val objectMapper: ObjectMapper,
+    val remoteAuthService: RemoteAuthService,
+    val callbackService: CallBackService,
+    val authHttpClientService: AuthHttpClientService
 ) {
 
-    fun getProjectList(page: PageInfoDTO, method: CallbackMethodEnum, token: String): ListInstanceResponseDTO {
-        logger.info("getProjectList method $method, page $page token $token")
+    fun getProject(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO1 {
         checkToken(token)
-        val projectRecords =
-            client.get(ServiceAuthResource::class).list(page.offset!!.toInt(), page.limit!!.toInt()).data
-        logger.info("projectRecords $projectRecords")
-        val count = projectRecords?.count ?: 0L
-        val projectInfo = mutableListOf<InstanceInfoDTO>()
-        projectRecords?.records?.map {
-            val entity = InstanceInfoDTO()
-            entity.id = it.englishName
-            entity.displayName = it.englishName
-            projectInfo.add(entity)
-        }
-        logger.info("projectInfo $projectInfo")
-        val result = ListInstanceResponseDTO()
-        val data = BaseDataResponseDTO<InstanceInfoDTO>()
-        data.count = count
-        data.result = projectInfo
-        result.code = 0L
-        result.message = ""
-        result.data = data
-        logger.info("result $result")
-        return result
+        val projectInfo = callbackService.getResource(AuthResourceType.PROJECT.value)
+        val request = authHttpClientService.buildPost(
+            path = projectInfo!!.path,
+            requestBody = authHttpClientService.getJsonRequest(callBackInfo),
+            gateway = projectInfo.gateway
+        )
+        val response = authHttpClientService.request(request, "调用回调接口失败")
+        return buildResult(callBackInfo.method, response)
     }
 
-    fun getResourceList(
-        projectId: String,
-        actionType: String,
-        method: CallbackMethodEnum,
-        page: PageInfoDTO,
+    fun getInstanceByResource(
+        callBackInfo: CallbackRequestDTO,
         token: String
-    ): ListInstanceResponseDTO? {
-        logger.info("getResourceList project[$projectId] method[$method], page[$page],token[$token],actionType[$actionType]")
+    ): CallbackBaseResponseDTO1? {
         checkToken(token)
-        val resourceType = if (actionType.contains("env_node")) {
-            AuthResourceType.ENVIRONMENT_ENV_NODE.value
-        } else {
-            ActionUtils.actionType(actionType)
+        checkoutParentType(callBackInfo.filter.parent.type)
+        if (callBackInfo.method == CallbackMethodEnum.SEARCH_INSTANCE) {
+            if (!checkKeyword(callBackInfo.filter.keyword)) {
+                val result = SearchInstanceInfo()
+                return result.buildSearchInstanceKeywordFailResult()
+            }
         }
-        if (AuthResourceType.get(resourceType) == null) {
-            logger.warn("getResourceList actionType is not exits,actionType $actionType, resourceType $resourceType")
-            throw RuntimeException("资源类型不存在")
-        }
-        var result: ListInstanceResponseDTO? = null
-        when (resourceType) {
-            AuthResourceType.PIPELINE_DEFAULT.value -> result = getPipeline(projectId, page)
-            AuthResourceType.CODE_REPERTORY.value -> result = getRepository(projectId, page)
-            AuthResourceType.ENVIRONMENT_ENVIRONMENT.value -> result = getEnv(projectId, page)
-            AuthResourceType.ENVIRONMENT_ENV_NODE.value -> result = getNode(projectId, page)
-            AuthResourceType.TICKET_CREDENTIAL.value -> result = getCredential(projectId, page)
-            else -> null
-        }
-        return result
-    }
 
-    private fun getPipeline(projectId: String, page: PageInfoDTO): ListInstanceResponseDTO? {
-        val pipelineInfos =
-            client.get(ServiceAuthPipelineResource::class)
-                .pipelineList(projectId, page.offset.toInt(), page.limit.toInt()).data
-        val result = ListInstanceResponseDTO()
-        val data = BaseDataResponseDTO<InstanceInfoDTO>()
-        if (pipelineInfos?.records == null) {
-            logger.info("$projectId 项目下无流水线")
-            result.code = 0
-            result.message = "无数据"
-            result.data = data
-            return result
-        }
-        val entityInfo = mutableListOf<InstanceInfoDTO>()
-        pipelineInfos?.records?.map {
-            val entity = InstanceInfoDTO()
-            entity.id = it.pipelineId
-            entity.displayName = it.pipelineName
-            entityInfo.add(entity)
-        }
-        logger.info("entityInfo $entityInfo, count ${pipelineInfos?.count}")
-        data.count = pipelineInfos?.count
-        data.result = entityInfo
-        result.code = 0L
-        result.message = ""
-        result.data = data
-        return result
-    }
+        val actionType = callBackInfo.type
+        val resourceType = findEnvNode(actionType)
 
-    private fun getRepository(projectId: String, page: PageInfoDTO): ListInstanceResponseDTO? {
-        val repositoryInfos =
-            client.get(ServiceAuthRepositoryResource::class)
-                .listByProjects(setOf(projectId), page.offset.toInt(), page.limit.toInt()).data
-        val result = ListInstanceResponseDTO()
-        val data = BaseDataResponseDTO<InstanceInfoDTO>()
-        if (repositoryInfos?.records == null) {
-            logger.info("$projectId 项目下无代码库")
-            result.code = 0
-            result.message = "无数据"
-            result.data = data
-            return result
+        val resourceInfo = callbackService.getResource(resourceType)
+        if (resourceInfo == null) {
+            logger.warn("action $actionType not find resourceInfo, resourceType: $resourceType")
+            return null
         }
-        val entityInfo = mutableListOf<InstanceInfoDTO>()
-        repositoryInfos?.records?.map {
-            val entity = InstanceInfoDTO()
-            entity.id = it.repositoryHashId
-            entity.displayName = it.aliasName
-            entityInfo.add(entity)
-        }
-        logger.info("entityInfo $entityInfo, count ${repositoryInfos?.count}")
-        data.count = repositoryInfos?.count
-        data.result = entityInfo
-        result.code = 0L
-        result.message = ""
-        result.data = data
-        return result
-    }
 
-    private fun getCredential(projectId: String, page: PageInfoDTO): ListInstanceResponseDTO? {
-        val credentialInfos =
-            client.get(ServiceAuthCredentialResource::class)
-                .list(projectId, page.offset.toInt(), page.limit.toInt()).data
-        val result = ListInstanceResponseDTO()
-        val data = BaseDataResponseDTO<InstanceInfoDTO>()
-        if (credentialInfos?.records == null) {
-            logger.info("$projectId 项目下无凭证")
-            result.code = 0
-            result.message = "无数据"
-            result.data = data
-            return result
-        }
-        val entityInfo = mutableListOf<InstanceInfoDTO>()
-        credentialInfos?.records?.map {
-            val entity = InstanceInfoDTO()
-            entity.id = it.credentialId
-            entity.displayName = it.credentialRemark
-            entityInfo.add(entity)
-        }
-        logger.info("entityInfo $entityInfo, count ${credentialInfos?.count}")
-        data.count = credentialInfos?.count
-        data.result = entityInfo
-        result.code = 0L
-        result.message = ""
-        result.data = data
-        return result
-    }
+        val request = authHttpClientService.buildPost(
+            path = resourceInfo.path,
+            requestBody = authHttpClientService.getJsonRequest(callBackInfo),
+            gateway = resourceInfo.gateway
+        )
+        val response = authHttpClientService.request(request, "调用回调接口失败")
 
-    private fun getNode(projectId: String, page: PageInfoDTO): ListInstanceResponseDTO? {
-        val nodeInfos =
-            client.get(RemoteNodeResource::class)
-                .listNodeByPage(projectId, page.offset.toInt(), page.limit.toInt()).data
-        val result = ListInstanceResponseDTO()
-        val data = BaseDataResponseDTO<InstanceInfoDTO>()
-        if (nodeInfos?.records == null) {
-            logger.info("$projectId 项目下无节点")
-            result.code = 0
-            result.message = "无数据"
-            result.data = data
-            return result
-        }
-        val entityInfo = mutableListOf<InstanceInfoDTO>()
-        nodeInfos?.records?.map {
-            val entity = InstanceInfoDTO()
-            entity.id = it.nodeHashId
-            entity.displayName = it.name
-            entityInfo.add(entity)
-        }
-        logger.info("entityInfo $entityInfo, count ${nodeInfos?.count}")
-        data.count = nodeInfos?.count
-        data.result = entityInfo
-        result.code = 0L
-        result.message = ""
-        result.data = data
-        return result
-    }
+        logger.info("getInstanceByResource response: $response")
 
-    private fun getEnv(projectId: String, page: PageInfoDTO): ListInstanceResponseDTO? {
-        val envInfos =
-            client.get(RemoteEnvResource::class)
-                .listEnvByPage(projectId, page.offset.toInt(), page.limit.toInt()).data
-        val result = ListInstanceResponseDTO()
-        val data = BaseDataResponseDTO<InstanceInfoDTO>()
-        if (envInfos?.records == null) {
-            logger.info("$projectId 项目下无环境")
-            result.code = 0
-            result.message = "无数据"
-            result.data = data
-            return result
-        }
-        val entityInfo = mutableListOf<InstanceInfoDTO>()
-        envInfos?.records?.map {
-            val entity = InstanceInfoDTO()
-            entity.id = it.envHashId
-            entity.displayName = it.name
-            entityInfo.add(entity)
-        }
-        logger.info("entityInfo $entityInfo, count ${envInfos?.count}")
-        data.count = envInfos?.count
-        data.result = entityInfo
-        result.code = 0L
-        result.message = ""
-        result.data = data
-        return result
+        return buildResult(callBackInfo.method, response)
     }
 
     private fun checkToken(token: String) {
         if (!remoteAuthService.checkToken(token)) {
             logger.warn("auth callBack checkToken is fail $token")
             throw OperationException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.TOKEN_TICKET_FAIL))
+        }
+    }
+
+    private fun checkoutParentType(type: String): Boolean {
+        if (type != AuthResourceType.PROJECT.value) {
+            throw ParamBlankException(AuthMessageCode.PARENT_TYPE_FAIL)
+        }
+        return true
+    }
+
+    private fun checkKeyword(keyword: String): Boolean {
+        if (keyword.length < KEYWORD_MIN_SIZE) {
+            return false
+        }
+        return true
+    }
+
+    private fun findEnvNode(actionType: String): String {
+        return if (actionType.contains("env_node")) {
+            AuthResourceType.ENVIRONMENT_ENV_NODE.value
+        } else {
+            ActionUtils.actionType(actionType)
+        }
+    }
+
+    private fun buildResult(method: CallbackMethodEnum, response: String): CallbackBaseResponseDTO1 {
+        return when (method) {
+            CallbackMethodEnum.SEARCH_INSTANCE -> {
+                val searchResult = objectMapper.readValue<SearchInstanceInfo>(response)
+                if (searchResult.data?.count!! > 100L) {
+                    searchResult.buildSearchInstanceResultFailResult()
+                } else {
+                    searchResult
+                }
+            }
+            CallbackMethodEnum.FETCH_INSTANCE_INFO -> objectMapper.readValue<FetchInstanceInfoResponseDTO>(response)
+            CallbackMethodEnum.LIST_INSTANCE -> objectMapper.readValue<ListInstanceResponseDTO>(response)
+            else -> objectMapper.readValue(response)
         }
     }
 

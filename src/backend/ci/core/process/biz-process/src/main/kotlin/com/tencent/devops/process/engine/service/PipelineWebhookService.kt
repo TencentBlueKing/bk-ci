@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -31,8 +32,11 @@ import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.TriggerContainer
@@ -41,33 +45,37 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTri
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.WebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.dao.PipelineWebhookDao
-import com.tencent.devops.process.engine.pojo.PipelineWebhook
+import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.service.scm.ScmProxyService
-import com.tencent.devops.process.util.WebhookRedisUtils
 import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.repository.pojo.Repository
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 /**
  * 流水线webhook存储服务
  * @version 1.0
  */
+@Suppress("ALL")
 @Service
 class PipelineWebhookService @Autowired constructor(
-    private val webhookRedisUtils: WebhookRedisUtils,
     private val scmProxyService: ScmProxyService,
     private val dslContext: DSLContext,
     private val pipelineWebhookDao: PipelineWebhookDao,
     private val pipelineResDao: PipelineResDao,
     private val objectMapper: ObjectMapper,
-    private val client: Client
+    private val client: Client,
+    private val pipelinePermissionService: PipelinePermissionService
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)!!
@@ -109,44 +117,44 @@ class PipelineWebhookService @Autowired constructor(
                     repo.projectName
                 }
                 ScmType.CODE_TGIT -> {
-                    // do nothing
+                    scmProxyService.addTGitWebhook(pipelineWebhook.projectId, repositoryConfig, codeEventType)
+                }
+                else -> {
                     null
                 }
             }
-            pipelineWebhook.projectName = projectName
             logger.info("add $projectName webhook to [$pipelineWebhook]")
             if (!projectName.isNullOrBlank()) {
-                saveOrUpdateWebhook(pipelineWebhook)
-                webhookRedisUtils.addWebhook2Redis(
-                    pipelineWebhook.pipelineId,
-                    projectName!!,
-                    pipelineWebhook.repositoryType,
-                    ::getExistWebhookPipelineByType
+                pipelineWebhook.projectName = getProjectName(projectName!!)
+                pipelineWebhookDao.save(
+                    dslContext = dslContext,
+                    pipelineWebhook = pipelineWebhook
                 )
             }
         }
         return Result(true)
     }
 
-    fun saveOrUpdateWebhook(
-        pipelineWebhook: PipelineWebhook
+    fun saveWebhook(
+        pipelineWebhook: PipelineWebhook,
+        repo: Repository,
+        codeEventType: CodeEventType? = null,
+        hookUrl: String? = null,
+        token: String? = null
     ) {
-        val record = pipelineWebhookDao.getByPipelineAndTaskId(
-            dslContext = dslContext,
-            pipelineId = pipelineWebhook.pipelineId,
-            taskId = pipelineWebhook.taskId!!
+        logger.info("save generic Webhook[$pipelineWebhook]")
+        scmProxyService.addGenericWebhook(
+            projectId = pipelineWebhook.projectId,
+            repo = repo,
+            scmType = pipelineWebhook.repositoryType,
+            codeEventType = codeEventType,
+            hookUrl = hookUrl,
+            token = token
         )
-        if (record == null) {
-            pipelineWebhookDao.save(
-                dslContext = dslContext,
-                pipelineWebhook = pipelineWebhook
-            )
-        } else {
-            pipelineWebhookDao.update(
-                dslContext = dslContext,
-                pipelineWebhook = pipelineWebhook
-            )
-        }
+        pipelineWebhookDao.save(
+            dslContext = dslContext,
+            pipelineWebhook = pipelineWebhook
+        )
     }
 
     fun deleteWebhook(pipelineId: String, userId: String): Result<Boolean> {
@@ -165,80 +173,6 @@ class PipelineWebhookService @Autowired constructor(
         return Result(true)
     }
 
-    fun listRepositoryTypeWebhooks(
-        repositoryType: ScmType,
-        start: Int,
-        limit: Int
-    ): Result<Collection<PipelineWebhook>> {
-        if (start < 0) {
-            return Result(emptyList())
-        }
-        val list = pipelineWebhookDao.getPipelineWebHooksByRepositoryType(dslContext, repositoryType.name, start, limit)
-        val pipelineWebhookList = mutableListOf<PipelineWebhook>()
-        list.forEach {
-            pipelineWebhookList.add(pipelineWebhookDao.convert(it))
-        }
-        return Result(pipelineWebhookList)
-    }
-
-    private fun getExistWebhookPipelineByType(
-        type: ScmType
-    ): HashMap<String, Set<String>> {
-        val map = HashMap<String, Set<String>>()
-
-        val pipelineVariables = HashMap<String, Map<String, String>>()
-        var start = 0
-        loop@ while (true) { // 新款
-            val typeWebhooksResp = listRepositoryTypeWebhooks(type, start, 100)
-            if (typeWebhooksResp.isNotOk() || typeWebhooksResp.data == null || typeWebhooksResp.data!!.isEmpty()) {
-                break@loop
-            }
-            typeWebhooksResp.data!!.forEach {
-                try {
-                    var variables = pipelineVariables[it.pipelineId]
-                    if (variables == null) {
-                        variables = getStartupParam(it.pipelineId)
-                        pipelineVariables[it.pipelineId] = variables
-                    }
-                    val repositoryConfig = getRepositoryConfig(it, variables)
-                    val repo = client.get(ServiceRepositoryResource::class)
-                        .get(it.projectId, repositoryConfig.getURLEncodeRepositoryId(), repositoryConfig.repositoryType)
-                        .data
-                    if (repo == null) {
-                        logger.warn("repo[${it.repoHashId}] does not exist")
-                        return@forEach
-                    }
-                    val projectName = getProjectName(repo.projectName)
-                    val pipelineId = it.pipelineId
-                    map.compute(projectName) { _, u -> u?.plus(pipelineId) ?: setOf(pipelineId) }
-                } catch (t: Throwable) {
-                    logger.warn("Fail to get repository - ($it), ignore", t)
-                }
-            }
-            start += 100
-        }
-
-        return map
-    }
-
-    private fun getStartupParam(pipelineId: String): Map<String, String> {
-        val result = HashMap<String, String>()
-        val model = getModel(pipelineId)
-            ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                defaultMessage = "流水线不存在"
-            )
-
-        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-
-        triggerContainer.params.forEach {
-            result[it.id] = it.defaultValue.toString()
-        }
-        logger.info("[$pipelineId] Get the pipeline startup param - ($result)")
-        return result
-    }
-
     fun getModel(pipelineId: String, version: Int? = null): Model? {
         val modelString = pipelineResDao.getVersionModelString(dslContext, pipelineId, version) ?: return null
         return try {
@@ -250,26 +184,34 @@ class PipelineWebhookService @Autowired constructor(
     }
 
     fun getWebhookPipelines(name: String, type: String): Set<String> {
-        return webhookRedisUtils.getWebhookPipelines(name, type, ::getExistWebhookPipelineByType)
+        return pipelineWebhookDao.getByProjectNameAndType(
+            dslContext = dslContext,
+            projectName = getProjectName(name),
+            repositoryType = getWebhookScmType(type).name
+        )?.map { it.pipelineId }?.toSet() ?: setOf()
     }
 
-    fun getRelativePath(url: String): String {
-        val urlArray = url.split("//")
-        if (urlArray.size < 2) {
-            return ""
+    fun getWebhookScmType(type: String) =
+        when (type) {
+            CodeGitWebHookTriggerElement.classType -> {
+                ScmType.CODE_GIT
+            }
+            CodeSVNWebHookTriggerElement.classType -> {
+                ScmType.CODE_SVN
+            }
+            CodeGitlabWebHookTriggerElement.classType -> {
+                ScmType.CODE_GITLAB
+            }
+            CodeGithubWebHookTriggerElement.classType -> {
+                ScmType.GITHUB
+            }
+            CodeTGitWebHookTriggerElement.classType -> {
+                ScmType.CODE_TGIT
+            }
+            else -> {
+                throw RuntimeException("Unknown web hook type($type)")
+            }
         }
-
-        val path = urlArray[1]
-        val repoSplit = path.split("/")
-        if (repoSplit.size < 4) {
-            return ""
-        }
-        val domain = repoSplit[0]
-        val first = repoSplit[1]
-        val second = repoSplit[2]
-
-        return path.removePrefix("$domain/$first/$second").removePrefix("/")
-    }
 
     fun getProjectName(projectName: String): String {
         // 如果项目名是三层的，比如a/b/c，那对应的rep_name是b
@@ -329,112 +271,265 @@ class PipelineWebhookService @Autowired constructor(
         }
     }
 
+    fun listRepositoryTypeWebhooks(
+        repositoryType: ScmType,
+        start: Int,
+        limit: Int
+    ): Result<Collection<PipelineWebhook>> {
+        if (start < 0) {
+            return Result(emptyList())
+        }
+        val list = pipelineWebhookDao.getPipelineWebHooksByRepositoryType(dslContext, repositoryType.name, start, limit)
+        val pipelineWebhookList = mutableListOf<PipelineWebhook>()
+        list.forEach {
+            pipelineWebhookList.add(pipelineWebhookDao.convert(it))
+        }
+        return Result(pipelineWebhookList)
+    }
+
+    fun updateProjectNameAndTaskId() {
+        ScmType.values().forEach {
+            doUpdateProjectNameAndTaskId(it)
+        }
+    }
+
     /**
      * 批量更新TASK_ID和PROJECT_NAME
      */
-    fun updateProjectNameAndTaskId() {
+    private fun doUpdateProjectNameAndTaskId(type: ScmType) {
+        val pipelines = mutableMapOf<String/*pipelineId*/, List<Element>/*trigger element*/>()
+        val pipelineVariables = HashMap<String, Map<String, String>>()
+        val usedTask = mutableListOf<String/*pipelineId_taskId*/>()
         var start = 0
         loop@ while (true) {
-            val pipelineIds = pipelineWebhookDao.groupByPipelineId(
-                dslContext = dslContext,
-                offset = start,
-                limit = 100
-            )
-            if (pipelineIds == null || pipelineIds.isEmpty()) {
+            val typeWebhooksResp = listRepositoryTypeWebhooks(type, start, 100)
+            if (typeWebhooksResp.isNotOk() || typeWebhooksResp.data == null || typeWebhooksResp.data!!.isEmpty()) {
                 break@loop
             }
-
-            pipelineIds.forEach { (projectId, pipelineId) ->
-                val model = getModel(pipelineId = pipelineId) ?: return@forEach
-                val triggerContainer = model.stages[0].containers[0] as TriggerContainer
-                val variable = triggerContainer.params.associate { it.id to it.defaultValue.toString() }
-                val pipelineWebhooks = mutableListOf<PipelineWebhook>()
-                triggerContainer.elements.forEach element@{ element ->
-                    val (repositoryConfig, repositoryType) = getRepositoryConfig(element, variable)
-                        ?: return@element
+            typeWebhooksResp.data!!.forEach webhook@{
+                with(it) {
                     try {
-                        val repo = client.get(ServiceRepositoryResource::class)
-                            .get(
-                                projectId,
-                                repositoryConfig.getURLEncodeRepositoryId(),
-                                repositoryConfig.repositoryType
-                            ).data
-                        if (repo == null) {
-                            logger.warn("pipelineId:[$pipelineId],repo[$repositoryConfig] does not exist")
-                            return@element
-                        }
-                        pipelineWebhooks.add(
-                            PipelineWebhook(
-                                projectId = projectId,
-                                pipelineId = pipelineId,
-                                repositoryType = repositoryType,
-                                repoType = repositoryConfig.repositoryType,
-                                repoHashId = repositoryConfig.repositoryHashId,
-                                repoName = repositoryConfig.repositoryName,
-                                projectName = getProjectName(repo.projectName),
-                                taskId = element.id
-                            )
+                        val (elements, params) = getElementsAndParams(
+                            pipelineId = pipelineId,
+                            pipelines = pipelines,
+                            pipelineVariables = pipelineVariables
                         )
+
+                        val result = matchElement(elements = elements, params = params, usedTask = usedTask)
+                        if (!result) {
+                            logger.warn("$id|$pipelineId|$taskId|not match element, delete webhook $it")
+                            pipelineWebhookDao.deleteById(dslContext = dslContext, id = id!!)
+                        }
                     } catch (t: Throwable) {
-                        logger.warn("pipelineId:[$pipelineId], Fail to get repository - repositoryConfig:($repositoryConfig), repositoryType:($repositoryType), ignore")
+                        logger.warn("update projectName and taskId $it exception ignore", t)
                     }
                 }
-                pipelineWebhookDao.updateProjectNameAndTaskId(
-                    dslContext = dslContext,
-                    pipelinewebhooks = pipelineWebhooks
-                )
             }
             start += 100
         }
     }
 
-    private fun getRepositoryConfig(
+    private fun getElementsAndParams(
+        pipelineId: String,
+        pipelines: MutableMap<String/*pipelineId*/, List<Element>/*trigger element*/>,
+        pipelineVariables: MutableMap<String, Map<String, String>>
+    ): Pair<List<Element>, Map<String, String>> {
+        return if (pipelines[pipelineId] == null) {
+            val model = getModel(pipelineId)
+            // 如果model为空,缓存空值
+            val (elements, params) = if (model == null) {
+                Pair(emptyList(), emptyMap())
+            } else {
+                val triggerContainer = model.stages[0].containers[0] as TriggerContainer
+                val params = triggerContainer.params.associate { param ->
+                    param.id to param.defaultValue.toString()
+                }
+                Pair(triggerContainer.elements.filterIsInstance<WebHookTriggerElement>(), params)
+            }
+            pipelines[pipelineId] = elements
+            pipelineVariables[pipelineId] = params
+            Pair(elements, params)
+        } else {
+            Pair(pipelines[pipelineId]!!, pipelineVariables[pipelineId]!!)
+        }
+    }
+
+    private fun PipelineWebhook.matchElement(
+        elements: List<Element>,
+        params: Map<String, String>,
+        usedTask: MutableList<String>
+    ): Boolean {
+        val webhookRepositoryConfig = getRepositoryConfig(this, params)
+        if (elements.isEmpty()) {
+            logger.warn("$id|$pipelineId|$taskId|pipeline does not exist")
+            return false
+        }
+        val repo = try {
+            client.get(ServiceRepositoryResource::class).get(
+                projectId = projectId,
+                repositoryId = webhookRepositoryConfig.getURLEncodeRepositoryId(),
+                repositoryType = webhookRepositoryConfig.repositoryType
+            ).data
+        } catch (e: Exception) {
+            null
+        }
+        if (repo == null) {
+            logger.warn("$id|$pipelineId|$taskId|repo[$webhookRepositoryConfig] does not exist")
+            return false
+        }
+        var findResult = false
+        for (element in elements) {
+            val (elementRepositoryConfig, elementScmType) = getElementRepositoryConfig(element, params) ?: continue
+            val usedKey = "${pipelineId}_${element.id!!}"
+            if (webhookRepositoryConfig.getRepositoryId() == elementRepositoryConfig.getRepositoryId() &&
+                elementScmType == repositoryType &&
+                !usedTask.contains(usedKey)
+            ) {
+                /*
+                * 配置相同并且没有使用过才进行更新和标记
+                * 1. 如果taskId为空,则表示没有更新过，直接更新
+                * 2. 如果taskId不为空,taskId和插件ID相同,则标记已使用
+                * */
+                if (taskId == null) {
+                    pipelineWebhookDao.updateProjectNameAndTaskId(
+                        dslContext = dslContext,
+                        projectName = getProjectName(repo.projectName),
+                        taskId = element.id!!,
+                        id = id!!
+                    )
+                    usedTask.add(usedKey)
+                    findResult = true
+                    break
+                } else if (taskId == element.id) {
+                    usedTask.add(usedKey)
+                    findResult = true
+                    break
+                }
+            }
+        }
+        return findResult
+    }
+
+    private fun getElementRepositoryConfig(
         element: Element,
         variable: Map<String, String>
     ): Pair<RepositoryConfig, ScmType>? {
-        return when (element) {
+        if (element !is WebHookTriggerElement) {
+            return null
+        }
+        val scmType = when (element) {
             is CodeGitWebHookTriggerElement ->
-                Pair(
-                    getRepositoryConfig(
-                        repoHashId = element.repositoryHashId,
-                        repoName = element.repositoryName,
-                        repoType = element.repositoryType,
-                        variable = variable
-                    ),
-                    ScmType.CODE_GIT
-                )
+                ScmType.CODE_GIT
             is CodeGithubWebHookTriggerElement ->
-                Pair(
-                    getRepositoryConfig(
-                        repoHashId = element.repositoryHashId,
-                        repoName = element.repositoryName,
-                        repoType = element.repositoryType,
-                        variable = variable
-                    ),
-                    ScmType.GITHUB
-                )
+                ScmType.GITHUB
             is CodeGitlabWebHookTriggerElement ->
-                Pair(
-                    getRepositoryConfig(
-                        repoHashId = element.repositoryHashId,
-                        repoName = element.repositoryName,
-                        repoType = element.repositoryType,
-                        variable = variable
-                    ),
-                    ScmType.CODE_GITLAB
-                )
+                ScmType.CODE_GITLAB
             is CodeSVNWebHookTriggerElement ->
-                Pair(
-                    getRepositoryConfig(
-                        repoHashId = element.repositoryHashId,
-                        repoName = element.repositoryName,
-                        repoType = element.repositoryType,
-                        variable = variable
-                    ),
-                    ScmType.CODE_SVN
+                ScmType.CODE_SVN
+            is CodeTGitWebHookTriggerElement ->
+                ScmType.CODE_TGIT
+            else ->
+                throw InvalidParamException("Unknown code element -> $element")
+        }
+        val repositoryConfig = RepositoryConfigUtils.buildConfig(element)
+        return Pair(
+            with(repositoryConfig) {
+                getRepositoryConfig(
+                    repoHashId = repositoryHashId,
+                    repoName = repositoryName,
+                    repoType = repositoryType,
+                    variable = variable
                 )
+            },
+            scmType
+        )
+    }
 
-            else -> null
+    fun listWebhook(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        page: Int?,
+        pageSize: Int?
+    ): List<PipelineWebhook> {
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: 20
+        val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        if (!pipelinePermissionService.checkPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.VIEW
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.USER_NEED_PROJECT_X_PERMISSION,
+                params = arrayOf(userId, projectId)
+            )
+        }
+        return pipelineWebhookDao.listWebhook(
+            dslContext = dslContext,
+            pipelineId = pipelineId,
+            offset = limit.offset,
+            limit = limit.limit
+        ) ?: emptyList()
+    }
+
+    fun updateWebhookSecret(type: ScmType) {
+        val pipelines = mutableMapOf<String/*pipelineId*/, List<Element>/*trigger element*/>()
+        val pipelineVariables = HashMap<String, Map<String, String>>()
+        var start = 0
+        loop@ while (true) {
+            logger.info("update webhook secret|start=$start")
+            val typeWebhooksResp = listRepositoryTypeWebhooks(type, start, 100)
+            if (typeWebhooksResp.isNotOk() || typeWebhooksResp.data == null || typeWebhooksResp.data!!.isEmpty()) {
+                break@loop
+            }
+            typeWebhooksResp.data!!.forEach webhook@{
+                it.doUpdateWebhookSecret(pipelines, pipelineVariables)
+            }
+            start += 100
+        }
+    }
+
+    private fun PipelineWebhook.doUpdateWebhookSecret(
+        pipelines: MutableMap<String, List<Element>>,
+        pipelineVariables: HashMap<String, Map<String, String>>
+    ) {
+        try {
+            val (elements, params) = getElementsAndParams(
+                pipelineId = pipelineId,
+                pipelines = pipelines,
+                pipelineVariables = pipelineVariables
+            )
+
+            val repositoryConfig = getRepositoryConfig(this, params)
+            for (element in elements) {
+                if (element.id == taskId) {
+                    when (element) {
+                        is CodeGitWebHookTriggerElement ->
+                            scmProxyService.addGitWebhook(
+                                projectId,
+                                repositoryConfig = repositoryConfig,
+                                codeEventType = element.eventType
+                            )
+                        is CodeTGitWebHookTriggerElement ->
+                            scmProxyService.addTGitWebhook(
+                                projectId,
+                                repositoryConfig = repositoryConfig,
+                                codeEventType = element.data.input.eventType
+                            )
+                        is CodeGitlabWebHookTriggerElement ->
+                            scmProxyService.addGitlabWebhook(
+                                projectId,
+                                repositoryConfig = repositoryConfig
+                            )
+                    }
+                    break
+                }
+            }
+        } catch (t: Throwable) {
+            logger.warn("$id|$pipelineId|update webhook secret exception ignore", t)
         }
     }
 }

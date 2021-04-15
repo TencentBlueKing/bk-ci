@@ -25,8 +25,7 @@ import java.util.Set;
  * @version V1.0
  */
 @Data
-public class NotifyCustomModel
-{
+public class NotifyCustomModel {
     /**
      * rtx接收人类型：0-所有项目成员；1-接口人；2-自定义
      */

@@ -1,9 +1,9 @@
 package com.tencent.bk.codecc.task.vo.pipeline;
 
-import com.tencent.devops.common.api.CommonVO;
+import com.tencent.devops.common.api.CodeRepoVO;
 import io.swagger.annotations.ApiModel;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import java.util.List;
 
@@ -14,17 +14,15 @@ import java.util.List;
  * @date 2019/11/18
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
 @ApiModel("流水线CodeCC原子视图")
-public class PipelineBuildInfoVO extends CommonVO
+public class PipelineBuildInfoVO
 {
-    /**
-     * 代码仓库列表
-     */
+    @ApiModelProperty(value = "代码仓库repoId列表，V2插件使用")
     private List<String> repoIds;
 
-    /**
-     * 扫描白名单列表
-     */
+    @ApiModelProperty(value = "本次扫描的代码仓库列表，V3插件使用")
+    private List<CodeRepoVO> codeRepos;
+
+    @ApiModelProperty(value = "扫描白名单列表")
     private List<String> repoWhiteList;
 }

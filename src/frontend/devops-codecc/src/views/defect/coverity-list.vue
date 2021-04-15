@@ -12,6 +12,10 @@
                         </bk-tab-panel>
                     </bk-tab>
                 </div>
+                <div>
+                    <bk-button style="border: none" v-if="exportLoading" icon="loading" :disabled="true" :title="$t('导出Excel')"></bk-button>
+                    <span v-else class="codecc-icon icon-export-excel excel-download" @click="downloadExcel" v-bk-tooltips="$t('导出Excel')"></span>
+                </div>
                 <!-- <div class="breadcrumb-extra">
                     <a @click="openSlider"><i class="bk-icon icon-order"></i>{{$t('操作记录')}}</a>
                 </div> -->
@@ -27,6 +31,7 @@
                                         <bk-option-group
                                             v-for="group in toolList"
                                             :name="group.name"
+                                            :show-count="false"
                                             :key="group.key">
                                             <bk-option v-for="option in group.toolList"
                                                 :key="option.toolName"
@@ -39,7 +44,7 @@
                             </div>
                             <div class="cc-col">
                                 <bk-form-item :label="$t('规则')">
-                                    <bk-select v-model="searchParams.checker" searchable>
+                                    <bk-select v-model="searchParams.checker" searchable :loading="selectLoading.otherParamsLoading">
                                         <bk-option
                                             v-for="(value, key) in listData.checkerMap"
                                             :key="key"
@@ -52,7 +57,7 @@
                             </div>
                             <div class="cc-col" v-show="lineAverageOpt >= 3 || isSearchDropdown">
                                 <bk-form-item :label="$t('处理人')">
-                                    <bk-select v-model="searchParams.author" searchable>
+                                    <bk-select v-model="searchParams.author" searchable :loading="selectLoading.otherParamsLoading">
                                         <bk-option
                                             v-for="(value, key) in listData.authorMap"
                                             :key="key"
@@ -73,7 +78,9 @@
                             </div>
                             <div class="cc-col" v-show="lineAverageOpt >= 5 || isSearchDropdown">
                                 <bk-form-item :label="$t('路径')">
+                                    <bk-select v-if="selectLoading.otherParamsLoading" :loading="true"></bk-select>
                                     <bk-dropdown-menu
+                                        v-else
                                         trigger="click"
                                         ref="filePathDropdown"
                                         @show="isFilePathDropdownShow = true"
@@ -87,7 +94,7 @@
                                             >
                                                 {{searchFormData.filePathShow ? searchFormData.filePathShow : $t('请选择')}}
                                             </div>
-                                            <i :class="['bk-icon icon-angle-down', { 'icon-flip': isFilePathDropdownShow }]"></i>
+                                            <i :class="['bk-icon icon-angle-down', { 'icon-flip': isFilePathDropdownShow }]" style="color: #979ba5; position: absolute; right: -2px"></i>
                                         </bk-button>
                                         <div class="filepath-dropdown-content" slot="dropdown-content" @click.stop>
                                             <bk-tab type="unborder-card" class="create-tab" @tab-change="changeTab">
@@ -104,6 +111,7 @@
                                                         <div class="content-bd" v-if="treeList.length">
                                                             <bk-big-tree
                                                                 ref="filePathTree"
+                                                                height="340"
                                                                 :options="{ 'idKey': 'treeId' }"
                                                                 :show-checkbox="true"
                                                                 :data="treeList"
@@ -148,7 +156,7 @@
                             </div>
                             <div class="cc-col" v-show="lineAverageOpt >= 6 || isSearchDropdown">
                                 <bk-form-item :label="$t('快照')">
-                                    <bk-select v-model="searchParams.buildId" :clearable="true" searchable>
+                                    <bk-select v-model="searchParams.buildId" :clearable="true" searchable :loading="selectLoading.buildListLoading">
                                         <bk-option
                                             v-for="item in buildList"
                                             :key="item.buildId"
@@ -161,7 +169,7 @@
                             </div>
                             <div class="cc-col" v-show="lineAverageOpt >= 7 || isSearchDropdown">
                                 <bk-form-item :label="$t('状态')">
-                                    <bk-select multiple v-model="searchParams.status" :clearable="false" searchable>
+                                    <bk-select multiple v-model="searchParams.status" :clearable="false" searchable :loading="selectLoading.otherParamsLoading">
                                         <bk-option
                                             v-for="(value, key) in statusTypeMap"
                                             :key="Number(key)"
@@ -219,25 +227,27 @@
                             </i>
                         </p>
                         <div v-if="isBatchOperationShow" class="cc-operate pb10">
-                            <bk-dropdown-menu @show="isDropdownShow = true" @hide="isDropdownShow = false">
-                                <bk-button size="small" slot="dropdown-trigger" ext-cls="cc-operate-button">
-                                    <span>{{$t('标记')}}</span>
-                                    <i :class="['bk-icon icon-angle-down', { 'icon-flip': isDropdownShow }]"></i>
+                            <div class="cc-operate-buttons">
+                                <bk-dropdown-menu @show="isDropdownShow = true" @hide="isDropdownShow = false">
+                                    <bk-button size="small" slot="dropdown-trigger">
+                                        <span>{{$t('标记')}}</span>
+                                        <i :class="['bk-icon icon-angle-down', { 'icon-flip': isDropdownShow }]"></i>
+                                    </bk-button>
+                                    <div class="handle-menu-tips" slot="dropdown-content">
+                                        <p class="entry-link" @click.stop="handleMark(1, true)">
+                                            {{$t('标记处理')}}
+                                        </p>
+                                        <p class="entry-link" @click.stop="handleMark(0, true)">
+                                            {{$t('取消标记')}}
+                                        </p>
+                                    </div>
+                                </bk-dropdown-menu>
+                                <bk-button size="small" ext-cls="cc-operate-button" @click="handleAuthor(2)" theme="primary">{{$t('分配')}}</bk-button>
+                                <bk-button size="small" ext-cls="cc-operate-button" @click="handleIgnore('IgnoreDefect', true)" theme="primary">{{$t('忽略')}}</bk-button>
+                                <bk-button size="small" ext-cls="cc-operate-button" @click="handleIgnore('RevertIgnore', true)" v-if="!searchParams.status.length || searchParams.status.includes(4)" theme="primary">
+                                    {{$t('恢复忽略')}}
                                 </bk-button>
-                                <div class="handle-menu-tips" slot="dropdown-content">
-                                    <p class="entry-link" @click.stop="handleMark(1, true)">
-                                        {{$t('标记处理')}}
-                                    </p>
-                                    <p class="entry-link" @click.stop="handleMark(0, true)">
-                                        {{$t('取消标记')}}
-                                    </p>
-                                </div>
-                            </bk-dropdown-menu>
-                            <bk-button size="small" @click="handleAuthor(2)" theme="primary">{{$t('分配')}}</bk-button>
-                            <bk-button size="small" @click="handleIgnore('IgnoreDefect', true)" theme="primary">{{$t('忽略')}}</bk-button>
-                            <bk-button size="small" @click="handleIgnore('RevertIgnore', true)" v-if="!searchParams.status.length || searchParams.status.includes(4)" theme="primary">
-                                {{$t('恢复忽略')}}
-                            </bk-button>
+                            </div>
                         </div>
                         <div class="cc-keyboard">
                             <span>{{$t('当前已支持键盘操作')}}</span>
@@ -259,7 +269,7 @@
                             </bk-table-column>
                             <bk-table-column width="15" class-name="mark-row">
                                 <template slot-scope="props">
-                                    <span v-if="props.row.mark" class="cc-icon-mark"></span>
+                                    <span v-if="props.row.status === 1 && props.row.mark" class="cc-icon-mark"></span>
                                 </template>
                             </bk-table-column>
                             <bk-table-column :label="$t('ID')" prop="id" sortable="custom" width="70"></bk-table-column>
@@ -459,7 +469,7 @@
                                         <div class="block">
                                             <div class="item disb">
                                                 <dt>{{$t('代码库路径')}}</dt>
-                                                <dd>{{currentFile.filePathname}}</dd>
+                                                <a target="_blank" :href="currentFile.filePathname">{{currentFile.filePathname}}</a>
                                             </div>
                                         </div>
                                     </div>
@@ -488,12 +498,12 @@
                         <bk-form-item v-if="operateParams.changeAuthorType !== 2"
                             property="sourceAuthor"
                             :label="$t('原处理人')">
-                            <!-- <bk-member-selector v-model="operateParams.sourceAuthor" :disabled="operateParams.changeAuthorType === 1" style="width: 290px;"></bk-member-selector> -->
                             <bk-input v-model="operateParams.sourceAuthor" :disabled="operateParams.changeAuthorType === 1" style="width: 290px;"></bk-input>
+                            <!-- <bk-member-selector v-model="operateParams.sourceAuthor" :disabled="operateParams.changeAuthorType === 1" style="width: 290px;"></bk-member-selector> -->
                         </bk-form-item>
                         <bk-form-item :label="$t('新处理人')">
-                            <!-- <bk-member-selector v-model="operateParams.targetAuthor" style="width: 290px;"></bk-member-selector> -->
                             <bk-input v-model="operateParams.targetAuthor" style="width: 290px;"></bk-input>
+                            <!-- <bk-member-selector v-model="operateParams.targetAuthor" style="width: 290px;"></bk-member-selector> -->
                         </bk-form-item>
                     </bk-form>
                 </div>
@@ -606,7 +616,7 @@
                 <div class="no-task">
                     <empty title="" :desc="$t('CodeCC集成了十余款工具，支持检查代码缺陷、安全漏洞、代码规范等问题')">
                         <template v-slot:action>
-                            <bk-button size="large" theme="primary" @click="addTool">{{$t('配置规则集')}}</bk-button>
+                            <bk-button size="large" theme="primary" @click="addTool({ from: 'cov' })">{{$t('配置规则集')}}</bk-button>
                         </template>
                     </empty>
                 </div>
@@ -627,6 +637,7 @@
     import Empty from '@/components/empty'
     import DatePicker from '@/components/date-picker/index'
     import { format } from 'date-fns'
+    import { export_json_to_excel } from 'vendor/export2Excel'
 
     export default {
         components: {
@@ -743,14 +754,19 @@
                 newDefectJudgeTime: '',
                 buildList: [],
                 isSelectAll: '',
-                dateType: query.dateType,
+                dateType: query.dateType || 'createTime',
                 cacheConfig: {
                     length: 0
                 },
                 isFetched: false,
                 lineAverageOpt: 10,
                 isSearchDropdown: false,
-                isFullScreen: false
+                isFullScreen: false,
+                exportLoading: false,
+                selectLoading: {
+                    otherParamsLoading: false,
+                    buildListLoading: false
+                }
             }
         },
         computed: {
@@ -846,8 +862,8 @@
                             }
                         }).finally(() => {
                             // this.fileIndex = 0
+                            this.addTableScrollEvent()
                             this.tableLoading = false
-                            this.addCurrentRowClass()
                         })
                     }
                 },
@@ -860,6 +876,7 @@
                     this.defectDetailDialogVisiable = true
                     const entityId = val.entityId
                     if (this.defectCache[entityId]) {
+                        this.detailContent = this.checkerContentCache && this.checkerContentCache[this.checkerKey] && this.checkerContentCache[this.checkerKey].codeExample
                         this.lintDetail = this.defectCache[entityId]
                         this.handleCodeFullScreen()
                         this.fetchLintDetail()
@@ -939,8 +956,13 @@
         methods: {
             async init (isInit) {
                 isInit ? this.contentLoading = true : this.fileLoading = true
+                this.selectLoading.otherParamsLoading = true
                 const list = await this.fetchLintList()
+
+                this.selectLoading.buildListLoading = true
                 this.buildList = await this.$store.dispatch('defect/getBuildList', { taskId: this.$route.params.taskId })
+                this.selectLoading.buildListLoading = false
+
                 this.newDefectJudgeTime = list.newDefectJudgeTime ? this.formatTime(list.newDefectJudgeTime, 'YYYY-MM-DD') : ''
                 this.listData = { ...this.listData, ...list }
                 this.totalCount = this.pagination.count = this.listData.defectList.totalElements
@@ -951,35 +973,7 @@
                     this.tableLoading = false
                 }
                 this.isSearch = true
-                this.$nextTick(() => {
-                    // 滚动加载
-                    this.addCurrentRowClass()
-                    this.fileLoading = false
-                    if (this.$refs.fileListTable) {
-                        const tableBodyWrapper = this.$refs.fileListTable.$refs.bodyWrapper
-
-                        // 问题文件列表滚动加载
-                        tableBodyWrapper.addEventListener('scroll', (event) => {
-                            const dom = event.target
-                            // 总页数
-                            const totalPages = this.listData.defectList.totalPages
-                            // 当前页码
-                            const currentPageNum = this.searchParams.pageNum
-                            // 是否滚动到底部
-                            const hasScrolledToBottom = dom.scrollTop + dom.offsetHeight + 100 > dom.scrollHeight
-
-                            // 触发翻页加载
-                            if (hasScrolledToBottom && currentPageNum + 1 <= totalPages && this.isFileListLoadMore === false) {
-                                // 显示加载条
-                                this.isFileListLoadMore = true
-                                // 变更页码触发查询
-                                this.searchParams.pageNum += 1
-                                // 标记为页面变更查询
-                                this.pageChange = true
-                            }
-                        })
-                    }
-                })
+                this.addTableScrollEvent()
                 const { filePathTree } = list
 
                 // 判断是否为切换到v2环境
@@ -988,22 +982,22 @@
                 }
 
                 this.searchFormData = { ...this.searchFormData, filePathTree }
+                this.selectLoading.otherParamsLoading = false
             },
             fetchLintList () {
-                const daterange = this.searchParams.daterange
-                const isSelectAll = this.isSelectAll
-                const params = { ...this.searchParams, isSelectAll }
-                const startTime = this.dateType === 'createTime' ? 'startCreateTime' : 'startFixTime'
-                const endTime = this.dateType === 'createTime' ? 'endCreateTime' : 'endFixTime'
-
-                params[startTime] = daterange[0] || ''
-                params[endTime] = daterange[1] || ''
+                const params = this.getSearchParams()
 
                 return this.$store.dispatch('defect/lintList', params)
             },
-            fetchLintDetail (type, extraParams = {}) {
+            async fetchLintDetail (type, extraParams = {}) {
                 const pattern = this.toolMap[this.toolId]['pattern']
                 const params = { ...this.searchParams, ...this.defectDetailSearchParams, pattern, ...extraParams }
+                const checkerContent = await this.getWarnContent()
+                if (!this.checkerContentCache) {
+                    this.checkerContentCache = {}
+                }
+                this.checkerContentCache[this.checkerKey] = checkerContent
+                this.detailContent = checkerContent.codeExample
                 this.$store.dispatch('defect/lintDetail', params).then(detail => {
                     if (detail.defectDetailVO) {
                         if (!extraParams.entityId) {
@@ -1018,6 +1012,23 @@
                         }
                         const updateCacheKey = params['entityId']
                         this.updateCache(updateCacheKey, detail)
+                    } else if (detail.code === '2300005') {
+                        this.defectDetailDialogVisiable = false
+                        setTimeout(() => {
+                            this.$bkInfo({
+                                subHeader: this.$createElement('p', {
+                                    style: {
+                                        fontSize: '20px',
+                                        lineHeight: '40px'
+                                    }
+                                }, this.$t('无法获取问题的代码片段。请先将工蜂OAuth授权给蓝盾。')),
+                                confirmFn: () => {
+                                    this.$store.dispatch('defect/oauthUrl', { toolName: this.toolId }).then(res => {
+                                        window.open(res, '_blank')
+                                    })
+                                }
+                            })
+                        }, 500)
                     } else if (detail.response) {
                         this.cacheConfig.length = 0
                         this.preloadCache(this.defectList, this.cacheConfig)
@@ -1027,11 +1038,16 @@
                     bus.$emit('hide-app-loading')
                 })
             },
+            getWarnContent () {
+                if (this.checkerContentCache && this.checkerContentCache[this.checkerKey]) return this.checkerContentCache[this.checkerKey]
+                return this.$store.dispatch('defect/getWarnContent', { toolName: this.toolId, checkerKey: this.checkerKey })
+            },
             keyOperate () {
                 const vm = this
                 document.onkeydown = keyDown
                 function keyDown (event) {
                     const e = event || window.event
+                    if (e.target.nodeName !== 'BODY') return
                     switch (e.code) {
                         case 'Enter': // enter
                             // e.path.length < 5 防止规则等搜索条件里面的回车触发打开详情
@@ -1087,6 +1103,37 @@
                     }
                 }
             },
+            addTableScrollEvent () {
+                this.$nextTick(() => {
+                    // 滚动加载
+                    this.fileLoading = false
+                    this.addCurrentRowClass()
+                    if (this.$refs.fileListTable) {
+                        const tableBodyWrapper = this.$refs.fileListTable.$refs.bodyWrapper
+
+                        // 问题文件列表滚动加载
+                        tableBodyWrapper.addEventListener('scroll', (event) => {
+                            const dom = event.target
+                            // 总页数
+                            const totalPages = this.listData.defectList.totalPages
+                            // 当前页码
+                            const currentPageNum = this.searchParams.pageNum
+                            // 是否滚动到底部
+                            const hasScrolledToBottom = dom.scrollTop + dom.offsetHeight + 100 > dom.scrollHeight
+
+                            // 触发翻页加载
+                            if (hasScrolledToBottom && currentPageNum + 1 <= totalPages && this.isFileListLoadMore === false) {
+                                // 显示加载条
+                                this.isFileListLoadMore = true
+                                // 变更页码触发查询
+                                this.searchParams.pageNum += 1
+                                // 标记为页面变更查询
+                                this.pageChange = true
+                            }
+                        })
+                    }
+                })
+            },
             getDefectCountBySeverity (severity) {
                 const severityFieldMap = {
                     1: 'seriousCount',
@@ -1131,9 +1178,10 @@
                 this.isSelectAll = this.selectedLen === this.defectList.length ? 'Y' : 'N'
             },
             handleFileListRowClick (row, event, column) {
-                this.$store.dispatch('defect/getWarnContent', { toolName: this.toolId, checkerKey: row.checkerName }).then(res => {
-                    this.detailContent = res.codeExample
-                })
+                this.checkerKey = row.checkerName
+                // this.$store.dispatch('defect/getWarnContent', { toolName: this.toolId, checkerKey: row.checkerName }).then(res => {
+                //     this.detailContent = res.codeExample
+                // })
                 this.fileIndex = this.defectList.findIndex(file => file.entityId === row.entityId)
                 // 筛选后，问题详情为空，此时要把参数强制置空，不然点击文件不能触发请求
                 if (!this.lintDetail.lintDefectList) {
@@ -1145,9 +1193,11 @@
                 this.screenScroll()
             },
             keyEnter () {
-                this.$store.dispatch('defect/getWarnContent', { toolName: this.toolId, checkerKey: this.defectList[this.fileIndex].checkerName }).then(res => {
-                    this.detailContent = res.codeExample
-                })
+                this.checkerKey = this.defectList[this.fileIndex].checkerName
+                // this.checkerContentCache
+                // this.$store.dispatch('defect/getWarnContent', { toolName: this.toolId, checkerKey: this.defectList[this.fileIndex].checkerName }).then(res => {
+                //     this.detailContent = res.codeExample
+                // })
                 const row = this.defectList[this.fileIndex]
                 if (!this.lintDetail.lintDefectList) {
                     this.defectDetailSearchParams.entityId = ''
@@ -1162,7 +1212,7 @@
                     const defectListTableBodyWrapper = defectListTable.$refs.bodyWrapper
                     const rows = defectListTableBodyWrapper.querySelectorAll('tr')
                     const currentRow = rows[this.fileIndex]
-                    if (rows.length) {
+                    if (rows.length && currentRow) {
                         rows.forEach(el => el.classList.remove('current-row'))
                         addClass(currentRow, 'current-row')
                     }
@@ -1359,7 +1409,16 @@
                             theme: 'success',
                             message: this.$t('修改成功')
                         })
-                        this.init()
+                        if (batchFlag) {
+                            this.init()
+                        } else {
+                            this.listData.defectList.content.forEach(item => {
+                                if (item.entityId === entityId) {
+                                    item.mark = markFlag
+                                }
+                            })
+                            this.listData.defectList.content = this.listData.defectList.content.slice()
+                        }
                         if (this.defectDetailDialogVisiable) this.fetchLintDetail()
                     }
                 }).catch(e => {
@@ -1396,7 +1455,16 @@
                             message: this.$t('修改成功')
                         })
                         this.operateParams.targetAuthor = []
-                        this.init()
+                        if (data.changeAuthorType === 1) {
+                            this.listData.defectList.content.forEach(item => {
+                                if (item.entityId === data.defectKeySet[0]) {
+                                    item.authorList = data.newAuthor
+                                }
+                            })
+                            this.listData.defectList.content = this.listData.defectList.content.slice()
+                        } else {
+                            this.init()
+                        }
                         if (this.defectDetailDialogVisiable) this.fetchLintDetail()
                     }
                 }).catch(e => {
@@ -1427,7 +1495,12 @@
                             theme: 'success',
                             message: this.$t('修改成功')
                         })
-                        this.init()
+                        if (this.operateParams.batchFlag) {
+                            this.init()
+                        } else {
+                            const index = this.listData.defectList.content.findIndex(item => item.entityId === this.operateParams.defectKeySet[0])
+                            this.listData.defectList.content.splice(index, 1)
+                        }
                         this.operateParams.ignoreReason = ''
                         this.defectDetailDialogVisiable = false
                     }
@@ -1528,6 +1601,63 @@
             },
             setFullScreen () {
                 this.isFullScreen = !this.isFullScreen
+            },
+            getSearchParams () {
+                const daterange = this.searchParams.daterange
+                const isSelectAll = this.isSelectAll
+                const params = { ...this.searchParams, isSelectAll }
+                const startTime = this.dateType === 'createTime' ? 'startCreateTime' : 'startFixTime'
+                const endTime = this.dateType === 'createTime' ? 'endCreateTime' : 'endFixTime'
+
+                params[startTime] = daterange[0] || ''
+                params[endTime] = daterange[1] || ''
+
+                return params
+            },
+            downloadExcel () {
+                const params = this.getSearchParams()
+                params.pageSize = 300000
+                if (this.totalCount > 300000) {
+                    this.$bkMessage({
+                        message: this.$t('当前问题数已超过30万个，暂时不支持导出excel，请筛选后再尝试导出。')
+                    })
+                    return
+                }
+                this.exportLoading = true
+                this.$store.dispatch('defect/lintList', params).then(res => {
+                    const list = res && res.defectList && res.defectList.content
+                    this.generateExcel(list)
+                }).finally(() => {
+                    this.exportLoading = false
+                })
+            },
+            generateExcel (list = []) {
+                const tHeader = [this.$t('序号'), this.$t('entityId'), this.$t('ID'), this.$t('文件名称'), this.$t('路径'), this.$t('规则'), this.$t('规则类型'), this.$t('类型子类'), this.$t('处理人'), this.$t('级别'), this.$t('创建日期'), this.$t('最新状态'), this.$t('首次发现')]
+                const filterVal = ['index', 'entityId', 'id', 'fileName', 'filePathname', 'checkerName', 'displayCategory', 'displayType', 'authorList', 'severity', 'createTime', 'status', 'createBuildNumber']
+                const data = this.formatJson(filterVal, list)
+                const title = `${this.taskDetail.nameCn}-${this.taskDetail.taskId}-${this.toolId}-${this.$t('问题')}-${new Date().toISOString()}`
+                export_json_to_excel(tHeader, data, title)
+            },
+            // 处理表格数据
+            formatJson (filterVal, list) {
+                let index = 1
+                return list.map(item => filterVal.map(j => {
+                    if (j === 'index') {
+                        return index++
+                    } else if (j === 'severity') {
+                        return this.defectSeverityMap[item.severity]
+                    } else if (j === 'authorList') {
+                        return item.authorList.toString()
+                    } else if (j === 'createTime') {
+                        return this.formatTime(item.createTime, 'YYYY-MM-DD HH:mm:ss')
+                    } else if (j === 'createBuildNumber') {
+                        return `#${item.createBuildNumber}`
+                    } else if (j === 'status') {
+                        return this.handleStatus(item.status)
+                    } else {
+                        return item[j]
+                    }
+                }))
             }
         }
     }
@@ -1591,6 +1721,12 @@
         background: #fff;
         .cc-operate {
             display: inline-block;
+            .cc-operate-buttons {
+                display: flex;
+                .cc-operate-button {
+                    margin-left: 10px;
+                }
+            }
         }
         .cc-selected {
             float: left;
@@ -1744,6 +1880,10 @@
                         color: #313238;
                         word-break: break-all;
                     }
+                    a {
+                        color: #313238;
+                        word-break: break-all;
+                    }
                     .item-button {
                         width: 200px;
                     }
@@ -1853,6 +1993,19 @@
         cursor: pointer;
         &.icon-un-full-screen {
             top: 10px;
+        }
+    }
+    .excel-download {
+        line-height: 32px;
+        cursor: pointer;
+        padding-right: 10px;
+        &:hover {
+            color: #3a84ff;
+        }
+    }
+    >>>.bk-button .bk-icon {
+        .loading {
+            color: #3a92ff;
         }
     }
 </style>

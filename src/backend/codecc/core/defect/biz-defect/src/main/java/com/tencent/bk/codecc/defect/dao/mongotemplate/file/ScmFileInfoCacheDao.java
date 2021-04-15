@@ -35,7 +35,7 @@ public class ScmFileInfoCacheDao
 
                 Update update = new Update();
                 update.set("file_md5", fileInfo.getMd5())
-                        .set("create_time", fileInfo.getFileUpdateTime())
+                        .set("file_update_time", fileInfo.getFileUpdateTime())
                         .set("branch", fileInfo.getBranch())
                         .set("file_path", fileInfo.getFilePath())
                         .set("file_rel_path", fileInfo.getFileRelPath())

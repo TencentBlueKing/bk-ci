@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -31,21 +32,21 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.dispatch.service.dispatcher.BuildLessDispatcher
-import com.tencent.devops.log.utils.LogUtils
+import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
 import org.reflections.Reflections
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Service
+@Service@Suppress("ALL")
 class PipelineBuildLessDispatchService @Autowired constructor(
     private val client: Client,
-    private val logService: LogService,
-    private val rabbitTemplate: RabbitTemplate
+    private val buildLogPrinter: BuildLogPrinter,
+    private val jobQuotaBusinessService: JobQuotaBusinessService
 ) {
 
     private var dispatchers: Set<BuildLessDispatcher>? = null
@@ -92,8 +93,7 @@ class PipelineBuildLessDispatchService @Autowired constructor(
         }
 
         if (pipelineBuildLessAgentStartupEvent.retryTime == 0) {
-            LogUtils.addLine(
-                rabbitTemplate,
+            buildLogPrinter.addLine(
                 buildId,
                 "Prepare BuildLess Job(#$vmSeqId)...",
                 "",
@@ -107,7 +107,16 @@ class PipelineBuildLessDispatchService @Autowired constructor(
 
         getDispatchers().forEach {
             if (it.canDispatch(pipelineBuildLessAgentStartupEvent)) {
+                if (!jobQuotaBusinessService.checkJobQuota(pipelineBuildLessAgentStartupEvent, buildLogPrinter)) {
+                    logger.error("[$buildId]|BUILD_LESS| AgentLess Job quota exceed quota.")
+                    return
+                }
                 it.startUp(pipelineBuildLessAgentStartupEvent)
+                // 到这里说明JOB已经启动成功，开始累加使用额度
+                jobQuotaBusinessService.insertRunningJob(projectId = pipelineBuildLessAgentStartupEvent.projectId,
+                    vmType = JobQuotaVmType.AGENTLESS,
+                    buildId = pipelineBuildLessAgentStartupEvent.buildId,
+                    vmSeqId = pipelineBuildLessAgentStartupEvent.vmSeqId)
                 return
             }
         }
@@ -121,7 +130,8 @@ class PipelineBuildLessDispatchService @Autowired constructor(
                 it.shutdown(event)
             }
         } finally {
-            logService.stopLog(event.buildId)
+            // 不管shutdown成功失败，都要回收配额；这里回收job，将自动累加agent执行时间
+            jobQuotaBusinessService.deleteRunningJob(event.projectId, event.buildId, event.vmSeqId)
         }
     }
 

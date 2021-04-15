@@ -19,6 +19,8 @@ import org.slf4j.LoggerFactory;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.text.NumberFormat;
+import java.text.ParseException;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -141,6 +143,10 @@ public class ListSortUtil
                 {
                     ret = (new Double(method1.invoke(o1).toString())).compareTo(new Double(method2.invoke(o2).toString()));
                 }
+                else if (getPercentage(String.valueOf(field1.get(o1))) != null && getPercentage(String.valueOf(field1.get(o2))) != null)
+                {
+                    ret = Double.compare(getPercentage(String.valueOf(field1.get(o1))), getPercentage(String.valueOf(field1.get(o2))));
+                }
                 else
                 {
                     ret = String.valueOf(field1.get(o1)).compareToIgnoreCase(String.valueOf(field1.get(o2)));
@@ -163,6 +169,16 @@ public class ListSortUtil
         });
         return list;
     }
+
+    private static Double getPercentage(String str)
+    {
+        try {
+            return NumberFormat.getPercentInstance().parse(str).doubleValue();
+        } catch (ParseException e) {
+            return null;
+        }
+    }
+
 
     private static boolean isDouble(String str)
     {

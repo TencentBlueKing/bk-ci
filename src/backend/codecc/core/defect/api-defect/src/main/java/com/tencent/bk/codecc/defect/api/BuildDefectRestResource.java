@@ -26,14 +26,16 @@
 
 package com.tencent.bk.codecc.defect.api;
 
-import com.tencent.bk.codecc.defect.vo.*;
 import com.tencent.bk.codecc.defect.vo.coderepository.UploadRepositoriesVO;
 import com.tencent.devops.common.api.pojo.CodeCCResult;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 /**
@@ -48,43 +50,6 @@ import javax.ws.rs.core.MediaType;
 @Consumes(MediaType.APPLICATION_JSON)
 public interface BuildDefectRestResource
 {
-
-    @ApiOperation("工具侧上报告警")
-    @Path("/")
-    @POST
-    CodeCCResult reportDefects(
-            @ApiParam(value = "告警详细信息", required = true)
-                    UploadDefectVO uploadDefectVO);
-
-
-    @ApiOperation("工具侧上报告警")
-    @Path("/async")
-    @POST
-    CodeCCResult asyncReportDefects(
-            @ApiParam(value = "告警详细信息", required = true)
-                    UploadDefectVO uploadDefectVO);
-
-    @ApiOperation("工具侧上报圈复杂度分析的结果统计数据，每次分析完成时调用")
-    @Path("/statistic/ccn")
-    @POST
-    CodeCCResult uploadCCNStatistic(
-            @ApiParam(value = "圈复杂度统计结果", required = true)
-                    CCNUploadStatisticVO uploadStatisticVO);
-
-    @ApiOperation("工具侧上报重复率分析的结果统计数据，每次分析完成时调用")
-    @Path("/statistic/dupc")
-    @POST
-    CodeCCResult uploadDUPCStatistic(
-            @ApiParam(value = "重复率统计结果", required = true)
-                    UploadDUPCStatisticVO uploadStatisticVO);
-
-    @ApiOperation("工具侧上报CLOC分析结果统计数据，每次分析完成时调用")
-    @Path("/statistic/cloc")
-    @POST
-    CodeCCResult uploadCLOCStatistic(
-            @ApiParam(value = "CLOC工具统计结果", required = true)
-                    UploadCLOCStatisticVO uploadCLOCStatisticVO);
-
     @ApiOperation("工具侧上报代码仓库信息")
     @Path("/repositories")
     @POST

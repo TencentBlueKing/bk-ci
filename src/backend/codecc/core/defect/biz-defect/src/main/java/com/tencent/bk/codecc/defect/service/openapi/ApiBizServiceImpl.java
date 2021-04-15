@@ -71,8 +71,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @Service
-public class ApiBizServiceImpl implements ApiBizService
-{
+public class ApiBizServiceImpl implements ApiBizService {
     @Autowired
     protected Client client;
 
@@ -100,8 +99,7 @@ public class ApiBizServiceImpl implements ApiBizService
 
     @Override
     public TaskOverviewDetailRspVO statisticsTaskOverview(DeptTaskDefectReqVO reqVO, Integer pageNum, Integer pageSize,
-            Sort.Direction sortType)
-    {
+            Sort.Direction sortType) {
         log.info("statisticsTaskOverview req content: {}", reqVO);
         TaskOverviewDetailRspVO rspVO = new TaskOverviewDetailRspVO();
         List<TaskOverviewDetailVO> taskOverviewList = Lists.newArrayList();
@@ -109,13 +107,11 @@ public class ApiBizServiceImpl implements ApiBizService
         QueryTaskListReqVO queryTaskListReqVO = new QueryTaskListReqVO();
         BeanUtils.copyProperties(reqVO, queryTaskListReqVO);
         // 如果没传默认不查工蜂扫描
-        if (CollectionUtils.isEmpty(queryTaskListReqVO.getCreateFrom()))
-        {
+        if (CollectionUtils.isEmpty(queryTaskListReqVO.getCreateFrom())) {
             queryTaskListReqVO.setCreateFrom(Lists.newArrayList(ComConstants.BsTaskCreateFrom.BS_CODECC.value(),
                     ComConstants.BsTaskCreateFrom.BS_PIPELINE.value()));
         }
-        if (queryTaskListReqVO.getStatus() == null)
-        {
+        if (queryTaskListReqVO.getStatus() == null) {
             queryTaskListReqVO.setStatus(ComConstants.Status.ENABLE.value());
         }
 
@@ -125,27 +121,22 @@ public class ApiBizServiceImpl implements ApiBizService
         int total = 0;
         pageNum = pageNum == null || pageNum - 1 < 0 ? 0 : pageNum - 1;
         pageSize = pageSize == null ? 10 : pageSize >= 500 ? 500 : pageSize;
-        if (CollectionUtils.isNotEmpty(taskDetailVoList))
-        {
+        if (CollectionUtils.isNotEmpty(taskDetailVoList)) {
             // 排序
-            if (Sort.Direction.DESC.equals(sortType))
-            {
+            if (Sort.Direction.DESC.equals(sortType)) {
                 taskDetailVoList.sort((obj1, obj2) -> Long.compare(obj2.getTaskId(), obj1.getTaskId()));
             }
-            else
-            {
+            else {
                 taskDetailVoList.sort(Comparator.comparingLong(TaskDetailVO::getTaskId));
             }
 
             total = taskDetailVoList.size();
-            if (total > 0)
-            {
+            if (total > 0) {
                 totalPageNum = (total + pageSize - 1) / pageSize;
             }
             int subListBeginIdx = pageNum * pageSize;
             int subListEndIdx = subListBeginIdx + pageSize;
-            if (subListBeginIdx > total)
-            {
+            if (subListBeginIdx > total) {
                 subListBeginIdx = 0;
             }
             taskDetailVoList = taskDetailVoList.subList(subListBeginIdx, Math.min(subListEndIdx, total));
@@ -163,8 +154,7 @@ public class ApiBizServiceImpl implements ApiBizService
                     (Map<String, String>) redisTemplate.opsForHash().entries(RedisKeyConstants.KEY_DEPT_INFOS);
 
             Map<Long, List<String>> afterFilterIdMap = Maps.newHashMap();
-            for (TaskDetailVO taskDetailVO : taskDetailVoList)
-            {
+            for (TaskDetailVO taskDetailVO : taskDetailVoList) {
                 TaskOverviewDetailVO taskOverviewVO = new TaskOverviewDetailVO();
                 BeanUtils.copyProperties(taskDetailVO, taskOverviewVO);
                 taskOverviewVO.setBgName(deptInfo.get(String.valueOf(taskDetailVO.getBgId())));
@@ -175,16 +165,13 @@ public class ApiBizServiceImpl implements ApiBizService
 
                 long taskId = taskDetailVO.getTaskId();
                 List<ToolConfigInfoVO> toolInfoList = taskToolConfigMap.get(taskId);
-                if (CollectionUtils.isEmpty(toolInfoList))
-                {
+                if (CollectionUtils.isEmpty(toolInfoList)) {
                     log.info("noToolsRegistered task {}", taskId);
                     continue;
                 }
 
-                for (ToolConfigInfoVO toolConfigInfoVO : toolInfoList)
-                {
-                    if (ComConstants.FOLLOW_STATUS.WITHDRAW.value() == toolConfigInfoVO.getFollowStatus())
-                    {
+                for (ToolConfigInfoVO toolConfigInfoVO : toolInfoList) {
+                    if (ComConstants.FOLLOW_STATUS.WITHDRAW.value() == toolConfigInfoVO.getFollowStatus()) {
                         continue;
                     }
 
@@ -212,12 +199,10 @@ public class ApiBizServiceImpl implements ApiBizService
      * @param queryTaskListReqVO reqVoO
      * @return list
      */
-    private List<TaskDetailVO> batchGetTaskDetailVoList(QueryTaskListReqVO queryTaskListReqVO)
-    {
+    private List<TaskDetailVO> batchGetTaskDetailVoList(QueryTaskListReqVO queryTaskListReqVO) {
         CodeCCResult<List<TaskDetailVO>> batchGetTaskList =
                 client.get(ServiceTaskRestResource.class).batchGetTaskList(queryTaskListReqVO);
-        if (batchGetTaskList.isNotOk() || batchGetTaskList.getData() == null)
-        {
+        if (batchGetTaskList.isNotOk() || batchGetTaskList.getData() == null) {
             log.error("queryTaskListReqVO taskList isEmpty! req content: {}", queryTaskListReqVO);
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
         }
@@ -226,8 +211,7 @@ public class ApiBizServiceImpl implements ApiBizService
 
     @Override
     public TaskOverviewDetailRspVO statCustomTaskOverview(String customProjSource, Integer pageNum, Integer pageSize,
-            Sort.Direction sortType)
-    {
+            Sort.Direction sortType) {
         TaskOverviewDetailRspVO rspVO = new TaskOverviewDetailRspVO();
         List<CustomTaskOverviewVO> customTaskOverviewVoList = Lists.newArrayList();
 
@@ -241,22 +225,21 @@ public class ApiBizServiceImpl implements ApiBizService
         reqVO.setPageSize(pageSize);
         reqVO.setSortField("task_id");
         reqVO.setSortType(sortType != null ? sortType.name() : Sort.Direction.ASC.name());
-        CodeCCResult<Page<CustomProjVO>> pageCodeCCResult = client.get(ServiceTaskRestResource.class).batchGetCustomTaskList(reqVO);
-        if (pageCodeCCResult.isNotOk())
-        {
+        CodeCCResult<Page<CustomProjVO>> pageResult = client.get(ServiceTaskRestResource.class).batchGetCustomTaskList(reqVO);
+        if (pageResult.isNotOk()) {
             log.error("batchGetCustomTaskList req is fail!");
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
         }
 
-        Page<CustomProjVO> customProjVoPage = pageCodeCCResult.getData();
-        if (customProjVoPage != null)
-        {
-            count = customProjVoPage.getCount();totalPages = customProjVoPage.getTotalPages();
-            pageNum = customProjVoPage.getPage();pageSize = customProjVoPage.getPageSize();
+        Page<CustomProjVO> customProjVoPage = pageResult.getData();
+        if (customProjVoPage != null) {
+            count = customProjVoPage.getCount();
+            totalPages = customProjVoPage.getTotalPages();
+            pageNum = customProjVoPage.getPage();
+            pageSize = customProjVoPage.getPageSize();
 
             List<CustomProjVO> customProjVoList = customProjVoPage.getRecords();
-            if (CollectionUtils.isNotEmpty(customProjVoList))
-            {
+            if (CollectionUtils.isNotEmpty(customProjVoList)) {
                 // 根据个性化任务ID集合获取任务信息
                 Map<Long, String> taskUrlMap = customProjVoList.stream()
                         .collect(Collectors.toMap(CustomProjVO::getTaskId, CustomProjVO::getUrl));
@@ -278,8 +261,7 @@ public class ApiBizServiceImpl implements ApiBizService
                 List<MetadataVO> metadataVoList = getCodeLangMetadataVoList();
 
                 Map<Long, List<String>> afterFilterIdMap = Maps.newHashMap();
-                for (TaskDetailVO taskDetailVO : taskDetailVoList)
-                {
+                for (TaskDetailVO taskDetailVO : taskDetailVoList) {
                     CustomTaskOverviewVO taskOverviewVO = new CustomTaskOverviewVO();
                     BeanUtils.copyProperties(taskDetailVO, taskOverviewVO);
                     taskOverviewVO.setBgName(deptInfo.get(String.valueOf(taskDetailVO.getBgId())));
@@ -292,16 +274,13 @@ public class ApiBizServiceImpl implements ApiBizService
                     customTaskOverviewVoList.add(taskOverviewVO);
 
                     List<ToolConfigInfoVO> toolInfoList = taskToolConfigMap.get(taskId);
-                    if (CollectionUtils.isEmpty(toolInfoList))
-                    {
+                    if (CollectionUtils.isEmpty(toolInfoList)) {
                         log.info("noToolsRegistered task {}", taskId);
                         continue;
                     }
                     // 统计任务都注册了哪些工具
-                    for (ToolConfigInfoVO toolConfigInfoVO : toolInfoList)
-                    {
-                        if (ComConstants.FOLLOW_STATUS.WITHDRAW.value() == toolConfigInfoVO.getFollowStatus())
-                        {
+                    for (ToolConfigInfoVO toolConfigInfoVO : toolInfoList) {
+                        if (ComConstants.FOLLOW_STATUS.WITHDRAW.value() == toolConfigInfoVO.getFollowStatus()) {
                             continue;
                         }
 
@@ -317,8 +296,7 @@ public class ApiBizServiceImpl implements ApiBizService
                 assignCustomTaskToolDefectInfo(customTaskOverviewVoList, allTaskToolStat);
             }
         }
-        else
-        {
+        else {
             pageNum = pageNum == null || pageNum - 1 < 0 ? 0 : pageNum;
             pageSize = pageSize == null ? 10 : pageSize;
         }
@@ -336,20 +314,16 @@ public class ApiBizServiceImpl implements ApiBizService
      * @param allToolsDefectMap 每个任务对应的工具告警对象列表
      */
     private void assignCustomTaskToolDefectInfo(List<CustomTaskOverviewVO> taskOverviewList,
-            Map<Long, List<CustomTaskOverviewVO.ToolDefectVO>> allToolsDefectMap)
-    {
-        if (CollectionUtils.isEmpty(taskOverviewList) || MapUtils.isEmpty(allToolsDefectMap))
-        {
+            Map<Long, List<CustomTaskOverviewVO.ToolDefectVO>> allToolsDefectMap) {
+        if (CollectionUtils.isEmpty(taskOverviewList) || MapUtils.isEmpty(allToolsDefectMap)) {
             log.error("no data for assignTaskToolDefectInfo!");
             return;
         }
 
-        for (CustomTaskOverviewVO detailVO : taskOverviewList)
-        {
+        for (CustomTaskOverviewVO detailVO : taskOverviewList) {
             List<CustomTaskOverviewVO.ToolDefectVO> toolDefectVoList = allToolsDefectMap.get(detailVO.getTaskId());
 
-            if (CollectionUtils.isEmpty(toolDefectVoList))
-            {
+            if (CollectionUtils.isEmpty(toolDefectVoList)) {
                 toolDefectVoList = Lists.newArrayList();
             }
 
@@ -364,12 +338,10 @@ public class ApiBizServiceImpl implements ApiBizService
      * @param queryTaskListReqVO taskIds
      * @return list
      */
-    private List<ToolConfigInfoVO> batchGetToolConfigInfoVoList(QueryTaskListReqVO queryTaskListReqVO)
-    {
+    private List<ToolConfigInfoVO> batchGetToolConfigInfoVoList(QueryTaskListReqVO queryTaskListReqVO) {
         CodeCCResult<List<ToolConfigInfoVO>> toolConfigListRes =
                 client.get(ServiceToolRestResource.class).batchGetToolConfigList(queryTaskListReqVO);
-        if (toolConfigListRes.isNotOk() || CollectionUtils.isEmpty(toolConfigListRes.getData()))
-        {
+        if (toolConfigListRes.isNotOk() || CollectionUtils.isEmpty(toolConfigListRes.getData())) {
             log.error("toolConfigInfo result is empty! {}", queryTaskListReqVO);
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
         }
@@ -382,16 +354,14 @@ public class ApiBizServiceImpl implements ApiBizService
      *
      * @return metaVO
      */
-    private List<MetadataVO> getCodeLangMetadataVoList()
-    {
-        CodeCCResult<Map<String, List<MetadataVO>>> metaDataCodeCCResult =
+    private List<MetadataVO> getCodeLangMetadataVoList() {
+        CodeCCResult<Map<String, List<MetadataVO>>> metaDataResult =
                 client.get(UserMetaRestResource.class).metadatas(ComConstants.KEY_CODE_LANG);
-        if (metaDataCodeCCResult.isNotOk() || metaDataCodeCCResult.getData() == null)
-        {
+        if (metaDataResult.isNotOk() || metaDataResult.getData() == null) {
             log.error("meta data result is empty! meta data type {}", ComConstants.KEY_CODE_LANG);
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
         }
-        return metaDataCodeCCResult.getData().get(ComConstants.KEY_CODE_LANG);
+        return metaDataResult.getData().get(ComConstants.KEY_CODE_LANG);
     }
 
     /**
@@ -400,31 +370,26 @@ public class ApiBizServiceImpl implements ApiBizService
      * @param afterFilterIdMap 项目ID, 工具列表
      * @return 项目ID 工具告警对象列表
      */
-    private Map<Long, List<TaskOverviewDetailVO.ToolDefectVO>> batchQueryToolResult(Map<Long, List<String>> afterFilterIdMap)
-    {
+    private Map<Long, List<TaskOverviewDetailVO.ToolDefectVO>> batchQueryToolResult(
+            Map<Long, List<String>> afterFilterIdMap) {
         Map<Long, List<TaskOverviewDetailVO.ToolDefectVO>> allToolsDefectMap = Maps.newHashMap();
-        if (MapUtils.isEmpty(afterFilterIdMap))
-        {
+        if (MapUtils.isEmpty(afterFilterIdMap)) {
             return allToolsDefectMap;
         }
 
         // 按工具维度归类(哪些任务注册了这个工具)
         Map<String, Set<Long>> toolTaskIdMap = Maps.newHashMap();
-        for (Map.Entry<Long, List<String>> entry : afterFilterIdMap.entrySet())
-        {
+        for (Map.Entry<Long, List<String>> entry : afterFilterIdMap.entrySet()) {
             Long taskId = entry.getKey();
             List<String> toolList = entry.getValue();
 
-            if (CollectionUtils.isEmpty(toolList))
-            {
+            if (CollectionUtils.isEmpty(toolList)) {
                 log.info("batchQueryToolResult task unregistered tool: {}", taskId);
                 continue;
             }
-            for (String tool : toolList)
-            {
+            for (String tool : toolList) {
                 Set<Long> taskIdSet = toolTaskIdMap.computeIfAbsent(tool, k -> Sets.newHashSet());
-                if (Tool.CLOC.name().equals(tool))
-                {
+                if (Tool.CLOC.name().equals(tool)) {
                     continue;
                 }
                 taskIdSet.add(taskId);
@@ -432,14 +397,12 @@ public class ApiBizServiceImpl implements ApiBizService
         }
 
         // 按工具分别批量查询
-        for (Map.Entry<String, Set<Long>> entry : toolTaskIdMap.entrySet())
-        {
+        for (Map.Entry<String, Set<Long>> entry : toolTaskIdMap.entrySet()) {
             String tool = entry.getKey();
             Set<Long> taskIdList = entry.getValue();
 
             /* 修复ConcurrentMap不允许Null的问题 */
-            if (StringUtils.isBlank(tool) || Tool.SPOTBUGS.name().equalsIgnoreCase(tool))
-            {
+            if (StringUtils.isBlank(tool) || Tool.SPOTBUGS.name().equalsIgnoreCase(tool)) {
                 log.error("batchQueryToolResult tool is blank: {}", tool);
                 continue;
             }
@@ -447,27 +410,22 @@ public class ApiBizServiceImpl implements ApiBizService
             String toolDisplayName = toolMetaBaseVO.getDisplayName();
             String pattern = toolMetaBaseVO.getPattern();
 
-            if (CollectionUtils.isEmpty(taskIdList))
-            {
+            if (CollectionUtils.isEmpty(taskIdList)) {
                 log.info("taskIdList isEmpty tool: {}", tool);
                 continue;
             }
 
-            if (ComConstants.ToolPattern.LINT.name().equals(pattern))
-            {
+            if (ComConstants.ToolPattern.LINT.name().equals(pattern)) {
 //                batchGetLintAnalyzeStat(tool, taskIdList, allToolsDefectMap, toolDisplayName);
                 batchGetLintDefectStat(tool, taskIdList, allToolsDefectMap, toolDisplayName);
             }
-            else if (ComConstants.ToolPattern.CCN.name().equals(pattern))
-            {
+            else if (ComConstants.ToolPattern.CCN.name().equals(pattern)) {
                 batchGetCcnAnalyzeStat(tool, taskIdList, allToolsDefectMap, toolDisplayName);
             }
-            else if (ComConstants.ToolPattern.DUPC.name().equals(pattern))
-            {
+            else if (ComConstants.ToolPattern.DUPC.name().equals(pattern)) {
                 batchGetDupcAnalyzeStat(tool, taskIdList, allToolsDefectMap, toolDisplayName);
             }
-            else
-            {
+            else {
                 batchGetCommonDefectStat(tool, taskIdList, allToolsDefectMap, toolDisplayName);
             }
         }
@@ -485,17 +443,14 @@ public class ApiBizServiceImpl implements ApiBizService
      * @param toolDisplayName   工具展示名称
      */
     private void batchGetLintAnalyzeStat(String toolName, List<Long> taskIdList,
-            Map<Long, List<TaskOverviewDetailVO.ToolDefectVO>> allToolsDefectMap, String toolDisplayName)
-    {
+            Map<Long, List<TaskOverviewDetailVO.ToolDefectVO>> allToolsDefectMap, String toolDisplayName) {
         List<LintStatisticEntity> lintStatEntities = lintDefectDao.findStatByTaskIdInAndToolIs(taskIdList, toolName);
-        if (CollectionUtils.isEmpty(lintStatEntities))
-        {
+        if (CollectionUtils.isEmpty(lintStatEntities)) {
             log.info("lintStatEntityList isEmpty tool: {}", toolName);
             return;
         }
 
-        for (LintStatisticEntity statEntity : lintStatEntities)
-        {
+        for (LintStatisticEntity statEntity : lintStatEntities) {
             TaskOverviewDetailVO.ToolDefectVO toolDefectVO = new TaskOverviewDetailVO.ToolDefectVO();
             toolDefectVO.setToolName(toolName);
             toolDefectVO.setDisplayName(toolDisplayName);
@@ -517,17 +472,14 @@ public class ApiBizServiceImpl implements ApiBizService
      * @param toolDisplayName   工具展示名称
      */
     private void batchGetLintDefectStat(String toolName, Set<Long> taskIdList,
-            Map<Long, List<TaskOverviewDetailVO.ToolDefectVO>> allToolsDefectMap, String toolDisplayName)
-    {
-        if (CollectionUtils.isEmpty(taskIdList))
-        {
+            Map<Long, List<TaskOverviewDetailVO.ToolDefectVO>> allToolsDefectMap, String toolDisplayName) {
+        if (CollectionUtils.isEmpty(taskIdList)) {
             log.info("taskIdList isEmpty tool: {}", toolName);
             return;
         }
 
         List<LintFileEntity> lintDefectEntities = lintDefectDao.findByTaskIdInAndToolIs(taskIdList, toolName);
-        if (CollectionUtils.isEmpty(lintDefectEntities))
-        {
+        if (CollectionUtils.isEmpty(lintDefectEntities)) {
             log.info("lintDefectEntities isEmpty tool: {}", toolName);
         }
 
@@ -537,8 +489,7 @@ public class ApiBizServiceImpl implements ApiBizService
         // 批量获取任务新老告警的分界时间
         Map<Long, Long> newDefectJudgeTimeMap = newDefectJudgeService.batchGetNewDefectJudgeTime(taskIdList, toolName);
 
-        for (Long taskId : taskIdList)
-        {
+        for (Long taskId : taskIdList) {
             TaskOverviewDetailVO.ToolDefectVO toolDefectVO = new TaskOverviewDetailVO.ToolDefectVO();
             toolDefectVO.setToolName(toolName);
             toolDefectVO.setDisplayName(toolDisplayName);
@@ -547,8 +498,7 @@ public class ApiBizServiceImpl implements ApiBizService
             CommonChartAuthorVO historyDefect = new CommonChartAuthorVO();
 
             List<LintFileEntity> lintFileEntities = defectMap.get(taskId);
-            if (CollectionUtils.isEmpty(lintFileEntities))
-            {
+            if (CollectionUtils.isEmpty(lintFileEntities)) {
                 toolDefectVO.setExist(0);
                 toolDefectVO.setNewDefect(newDefect);
                 toolDefectVO.setHistoryDefect(historyDefect);
@@ -559,35 +509,27 @@ public class ApiBizServiceImpl implements ApiBizService
             }
             // 判断新老告警的时间
             Long time = newDefectJudgeTimeMap.get(taskId);
-            if (time == null)
-            {
+            if (time == null) {
                 time = 0L;
             }
             int defectCount = 0;
-            for (LintFileEntity lintFileEntity : lintFileEntities)
-            {
+            for (LintFileEntity lintFileEntity : lintFileEntities) {
                 List<LintDefectEntity> defectList = lintFileEntity.getDefectList();
-                if (CollectionUtils.isEmpty(defectList))
-                {
+                if (CollectionUtils.isEmpty(defectList)) {
                     continue;
                 }
 
-                for (LintDefectEntity defectEntity : defectList)
-                {
-                    if (ComConstants.DefectStatus.NEW.value() == defectEntity.getStatus())
-                    {
+                for (LintDefectEntity defectEntity : defectList) {
+                    if (ComConstants.DefectStatus.NEW.value() == defectEntity.getStatus()) {
                         int severity = defectEntity.getSeverity();
-                        Long lineUpdateTime = defectEntity.getLineUpdateTime();
-                        if (lineUpdateTime == null || lineUpdateTime == 0)
-                        {
+                        long lineUpdateTime = defectEntity.getLineUpdateTime();
+                        if (lineUpdateTime == 0) {
                             lineUpdateTime = lintFileEntity.getCreateTime();
                         }
-                        if (lineUpdateTime > time)
-                        {
+                        if (lineUpdateTime > time) {
                             newDefect.count(severity);
                         }
-                        else
-                        {
+                        else {
                             historyDefect.count(severity);
                         }
 
@@ -615,31 +557,26 @@ public class ApiBizServiceImpl implements ApiBizService
      * @param toolDisplayName   工具展示名称
      */
     private void batchGetCommonDefectStat(String toolName, Set<Long> taskIdList,
-            Map<Long, List<TaskOverviewDetailVO.ToolDefectVO>> allToolsDefectMap, String toolDisplayName)
-    {
-        if (CollectionUtils.isEmpty(taskIdList))
-        {
+            Map<Long, List<TaskOverviewDetailVO.ToolDefectVO>> allToolsDefectMap, String toolDisplayName) {
+        if (CollectionUtils.isEmpty(taskIdList)) {
             log.info("taskIdList isEmpty tool: {}", toolName);
             return;
         }
 
         // 获取告警列表
         List<DefectEntity> defectEntityList = defectDao.batchQueryDefect(toolName, taskIdList, null, null);
-        if (CollectionUtils.isEmpty(defectEntityList))
-        {
+        if (CollectionUtils.isEmpty(defectEntityList)) {
             log.info("commonStatEntityList isEmpty tool: {}", toolName);
         }
 
         Map<Long, List<DefectEntity>> defectMap = Maps.newHashMap();
-        for (DefectEntity defectEntity : defectEntityList)
-        {
+        for (DefectEntity defectEntity : defectEntityList) {
             long taskId = defectEntity.getTaskId();
             List<DefectEntity> defectList = defectMap.computeIfAbsent(taskId, val -> Lists.newArrayList());
             defectList.add(defectEntity);
         }
 
-        for (Long taskId : taskIdList)
-        {
+        for (Long taskId : taskIdList) {
             TaskOverviewDetailVO.ToolDefectVO toolDefectVO = new TaskOverviewDetailVO.ToolDefectVO();
             toolDefectVO.setToolName(toolName);
             toolDefectVO.setDisplayName(toolDisplayName);
@@ -648,8 +585,7 @@ public class ApiBizServiceImpl implements ApiBizService
             CommonChartAuthorVO closedCount = new CommonChartAuthorVO();
 
             List<DefectEntity> defectEntities = defectMap.get(taskId);
-            if (CollectionUtils.isEmpty(defectEntities))
-            {
+            if (CollectionUtils.isEmpty(defectEntities)) {
                 toolDefectVO.setExistCount(existCount);
                 toolDefectVO.setClosedCount(closedCount);
                 List<TaskOverviewDetailVO.ToolDefectVO> toolDefectVoList =
@@ -659,18 +595,15 @@ public class ApiBizServiceImpl implements ApiBizService
             }
 
             // 统计修复和遗留告警数
-            for (DefectEntity defect : defectEntities)
-            {
+            for (DefectEntity defect : defectEntities) {
                 int status = defect.getStatus();
                 int severity = defect.getSeverity();
 
-                if ((ComConstants.DefectStatus.FIXED.value() & status) > 0)
-                {
+                if ((ComConstants.DefectStatus.FIXED.value() & status) > 0) {
                     closedCount.count(severity);
                 }
 
-                if (ComConstants.DefectStatus.NEW.value() == status)
-                {
+                if (ComConstants.DefectStatus.NEW.value() == status) {
                     existCount.count(severity);
                 }
             }
@@ -693,20 +626,16 @@ public class ApiBizServiceImpl implements ApiBizService
      * @param toolDisplayName   工具展示名称
      */
     private void batchGetCcnAnalyzeStat(String toolName, Set<Long> taskIdList,
-            Map<Long, List<TaskOverviewDetailVO.ToolDefectVO>> allToolsDefectMap, String toolDisplayName)
-    {
+            Map<Long, List<TaskOverviewDetailVO.ToolDefectVO>> allToolsDefectMap, String toolDisplayName) {
         List<CCNStatisticEntity> ccnStatEntities = ccnDefectDao.batchFindByTaskIdInAndTool(taskIdList, toolName);
-        if (CollectionUtils.isEmpty(ccnStatEntities))
-        {
+        if (CollectionUtils.isEmpty(ccnStatEntities)) {
             log.info("ccnStatEntityList isEmpty tool: {}", toolName);
         }
 
         Map<Long, List<CCNStatisticEntity>> defectMap =
                 ccnStatEntities.stream().collect(Collectors.groupingBy(CCNStatisticEntity::getTaskId));
 
-        for (Long taskId : taskIdList)
-        {
-
+        for (Long taskId : taskIdList) {
             TaskOverviewDetailVO.ToolDefectVO toolDefectVO = new TaskOverviewDetailVO.ToolDefectVO();
             toolDefectVO.setToolName(toolName);
             toolDefectVO.setDisplayName(toolDisplayName);
@@ -717,8 +646,7 @@ public class ApiBizServiceImpl implements ApiBizService
             int mediumCount = 0;
             int lowCount = 0;
             float averageCcn = 0;
-            if (CollectionUtils.isNotEmpty(ccnStatisticEntities))
-            {
+            if (CollectionUtils.isNotEmpty(ccnStatisticEntities)) {
                 CCNStatisticEntity entity = ccnStatisticEntities.iterator().next();
                 superHighCount = entity.getSuperHighCount() == null ? 0 : entity.getSuperHighCount();
                 highCount = entity.getHighCount() == null ? 0 : entity.getHighCount();
@@ -750,19 +678,16 @@ public class ApiBizServiceImpl implements ApiBizService
      * @param toolDisplayName   工具展示名称
      */
     private void batchGetDupcAnalyzeStat(String toolName, Set<Long> taskIdList,
-            Map<Long, List<TaskOverviewDetailVO.ToolDefectVO>> allToolsDefectMap, String toolDisplayName)
-    {
+            Map<Long, List<TaskOverviewDetailVO.ToolDefectVO>> allToolsDefectMap, String toolDisplayName) {
         List<DUPCStatisticEntity> dupcStatEntities = dupcDefectDao.batchFindByTaskIdInAndTool(taskIdList, toolName);
-        if (CollectionUtils.isEmpty(dupcStatEntities))
-        {
+        if (CollectionUtils.isEmpty(dupcStatEntities)) {
             log.info("dupcStatEntityList isEmpty tool: {}", toolName);
         }
 
         Map<Long, List<DUPCStatisticEntity>> defectMap =
                 dupcStatEntities.stream().collect(Collectors.groupingBy(DUPCStatisticEntity::getTaskId));
 
-        for (Long taskId : taskIdList)
-        {
+        for (Long taskId : taskIdList) {
             TaskOverviewDetailVO.ToolDefectVO toolDefectVO = new TaskOverviewDetailVO.ToolDefectVO();
             toolDefectVO.setToolName(toolName);
             toolDefectVO.setDisplayName(toolDisplayName);
@@ -773,8 +698,7 @@ public class ApiBizServiceImpl implements ApiBizService
             int highCount = 0;
             int mediumCount = 0;
             float dupRate = 0;
-            if (CollectionUtils.isNotEmpty(dupcStatisticEntities))
-            {
+            if (CollectionUtils.isNotEmpty(dupcStatisticEntities)) {
                 DUPCStatisticEntity entity = dupcStatisticEntities.iterator().next();
                 defectCount = entity.getDefectCount();
                 superHighCount = entity.getSuperHighCount() == null ? 0 : entity.getSuperHighCount();
@@ -803,20 +727,16 @@ public class ApiBizServiceImpl implements ApiBizService
      * @param allToolsDefectMap 每个任务对应的工具告警对象列表
      */
     private void assignTaskToolDefectInfo(List<TaskOverviewDetailVO> taskOverviewList,
-            Map<Long, List<TaskOverviewDetailVO.ToolDefectVO>> allToolsDefectMap)
-    {
-        if (CollectionUtils.isEmpty(taskOverviewList) || MapUtils.isEmpty(allToolsDefectMap))
-        {
+            Map<Long, List<TaskOverviewDetailVO.ToolDefectVO>> allToolsDefectMap) {
+        if (CollectionUtils.isEmpty(taskOverviewList) || MapUtils.isEmpty(allToolsDefectMap)) {
             log.error("no data for assignTaskToolDefectInfo!");
             return;
         }
 
-        for (TaskOverviewDetailVO detailVO : taskOverviewList)
-        {
+        for (TaskOverviewDetailVO detailVO : taskOverviewList) {
             List<TaskOverviewDetailVO.ToolDefectVO> toolDefectVoList = allToolsDefectMap.get(detailVO.getTaskId());
 
-            if (CollectionUtils.isEmpty(toolDefectVoList))
-            {
+            if (CollectionUtils.isEmpty(toolDefectVoList)) {
                 toolDefectVoList = Lists.newArrayList();
             }
             detailVO.setToolDefectInfo(toolDefectVoList);

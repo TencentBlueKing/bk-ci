@@ -14,7 +14,9 @@ package com.tencent.bk.codecc.apiquery.service.openapi;
 
 
 import com.tencent.bk.codecc.apiquery.vo.TaskToolInfoReqVO;
+import com.tencent.bk.codecc.apiquery.vo.openapi.CheckerDefectStatVO;
 import com.tencent.bk.codecc.apiquery.vo.openapi.TaskOverviewDetailRspVO;
+import com.tencent.devops.common.api.pojo.Page;
 import org.springframework.data.domain.Sort;
 
 /**
@@ -37,12 +39,12 @@ public interface ApiBizService
 
 
     /**
-     * 查询个性化扫描任务的各工具分析统计概览
+     * 按规则分页统计告警数
      *
-     * @return rsp
+     * @param reqVO 请求体
+     * @return page
      */
-//    TaskOverviewDetailRspVO statCustomTaskOverview(String customProjSource, Integer pageNum, Integer pageSize,
-//            Sort.Direction sortType);
+    Page<CheckerDefectStatVO> statCheckerDefect(TaskToolInfoReqVO reqVO, Integer pageNum, Integer pageSize);
 
 
 }

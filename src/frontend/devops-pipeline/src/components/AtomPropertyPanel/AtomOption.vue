@@ -1,5 +1,5 @@
 <template>
-    <accordion show-checkbox show-content key="otherChoice">
+    <accordion show-checkbox show-content key="otherChoice" v-if="showPanelType !== 'PAUSE'">
         <header class="var-header" slot="header">
             <span>{{ $t('editPage.atomOption') }}</span>
             <i class="devops-icon icon-angle-down" style="display:block"></i>
@@ -16,7 +16,7 @@
 
 <script>
     import Vue from 'vue'
-    import { mapActions } from 'vuex'
+    import { mapActions, mapState } from 'vuex'
     import atomMixin from './atomMixin'
     import validMixins from '../validMixins'
     import optionConfigMixin from '@/store/modules/soda/optionConfigMixin'
@@ -28,6 +28,9 @@
         name: 'atom-config',
         mixins: [atomMixin, validMixins, optionConfigMixin],
         computed: {
+            ...mapState('atom', [
+                'showPanelType'
+            ]),
             atomOption () {
                 return this.element.additionalOptions || {}
             },

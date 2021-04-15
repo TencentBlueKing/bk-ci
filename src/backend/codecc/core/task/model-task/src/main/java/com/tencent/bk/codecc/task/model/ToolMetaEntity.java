@@ -192,4 +192,10 @@ public class ToolMetaEntity extends CommonEntity
      */
     @Field("tool_history_version")
     private List<String> toolHistoryVersion;
+
+    /**
+     * 最新的工具镜像版本（hash值）
+     */
+    @Field("tool_image_revision")
+    private String toolImageRevision;
 }

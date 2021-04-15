@@ -24,12 +24,11 @@ public interface IDefectOperateBizService
 {
     /**
      * 添加代码评论
-     * @param fileId
      * @param defectId
      * @param commentId
      * @param singleCommentVO
      */
-    void addCodeComment(String fileId, String defectId, String commentId, String userName, SingleCommentVO singleCommentVO);
+    void addCodeComment(String defectId, String commentId, String userName, SingleCommentVO singleCommentVO);
 
     /**
      * 更新代码评论

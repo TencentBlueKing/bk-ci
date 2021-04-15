@@ -11,6 +11,10 @@
                         </bk-tab-panel>
                     </bk-tab>
                 </div>
+                <div>
+                    <bk-button style="border: none" v-if="exportLoading" icon="loading" :disabled="true" :title="$t('导出Excel')"></bk-button>
+                    <span v-else class="codecc-icon icon-export-excel excel-download" @click="downloadExcel" v-bk-tooltips="$t('导出Excel')"></span>
+                </div>
             </div>
             <div class="main-container" ref="mainContainer">
                 <div class="main-content-inner main-content-list">
@@ -51,6 +55,7 @@
                                                         <div class="content-bd" v-if="treeList.length">
                                                             <bk-big-tree
                                                                 ref="filePathTree"
+                                                                height="340"
                                                                 :options="{ 'idKey': 'treeId' }"
                                                                 :show-checkbox="true"
                                                                 :data="treeList"
@@ -158,7 +163,7 @@
                                                 <p>{{$t('高风险：复杂度40-59')}}</p>
                                                 <p>{{$t('中风险：复杂度20-39')}}</p>
                                                 <p>{{$t('低风险：复杂度1-19')}}</p>
-                                                <p>{{$t('列表中仅展示大于等于该阈值的函数')}}</p>
+                                                <p>{{$t('阈值被设置为20，列表中仅展示大于等于该阈值的函数', { ccnThreshold: ccnThreshold })}}</p>
                                             </div>
                                         </bk-popover>
                                     </bk-checkbox-group>
@@ -178,25 +183,28 @@
                             </i>
                         </p>
                         <div v-if="isBatchOperationShow" class="cc-operate pb10">
-                            <bk-dropdown-menu @show="isDropdownShow = true" @hide="isDropdownShow = false">
-                                <bk-button slot="dropdown-trigger" ext-cls="cc-operate-button">
+                            <div class="cc-operate-buttons">
+                                <bk-dropdown-menu @show="isDropdownShow = true" @hide="isDropdownShow = false">
+                                <bk-button size="small" slot="dropdown-trigger">
                                     <span>{{$t('标记')}}</span>
-                                    <i :class="['bk-icon icon-angle-down', { 'icon-flip': isDropdownShow }]"></i>
+                                        <i :class="['bk-icon icon-angle-down', { 'icon-flip': isDropdownShow }]"></i>
+                                    </bk-button>
+                                    <div class="handle-menu-tips" slot="dropdown-content">
+                                        <p class="entry-link" @click.stop="handleMark(1, true)">
+                                            {{$t('标记处理')}}
+                                        </p>
+                                        <p class="entry-link" @click.stop="handleMark(0, true)">
+                                            {{$t('取消标记')}}
+                                        </p>
+                                    </div>
+                                </bk-dropdown-menu>
+                                <bk-button size="small" ext-cls="cc-operate-button" @click="handleAuthor(2)" theme="primary">{{$t('分配')}}</bk-button>
+                                <bk-button size="small" ext-cls="cc-operate-button" @click="handleIgnore('IgnoreDefect', true)" theme="primary">{{$t('忽略')}}</bk-button>
+                                <bk-button size="small" ext-cls="cc-operate-button" @click="handleIgnore('RevertIgnore', true)" v-if="!searchParams.status.length || searchParams.status.includes(4)" theme="primary">
+                                    {{$t('恢复忽略')}}
                                 </bk-button>
-                                <div class="handle-menu-tips" slot="dropdown-content">
-                                    <p class="entry-link" @click.stop="handleMark(1, true)">
-                                        {{$t('标记处理')}}
-                                    </p>
-                                    <p class="entry-link" @click.stop="handleMark(0, true)">
-                                        {{$t('取消标记')}}
-                                    </p>
-                                </div>
-                            </bk-dropdown-menu>
-                            <bk-button @click="handleAuthor(2)" theme="primary">{{$t('分配')}}</bk-button>
-                            <bk-button @click="handleIgnore('IgnoreDefect', true)" theme="primary">{{$t('忽略')}}</bk-button>
-                            <bk-button @click="handleIgnore('RevertIgnore', true)" v-if="!searchParams.status.length || searchParams.status.includes(4)" theme="primary">
-                                {{$t('恢复忽略')}}
-                            </bk-button>
+                            </div>
+                            
                         </div>
                     
                         <div class="cc-keyboard">
@@ -219,13 +227,13 @@
                             <bk-table-column :selectable="handleSelectable" type="selection" width="50" align="center"></bk-table-column>
                             <bk-table-column width="15" class-name="mark-row">
                                 <template slot-scope="props">
-                                    <span v-if="props.row.mark === 1" v-bk-tooltips="'已标记处理'" class="codecc-icon icon-mark"></span>
-                                    <span v-if="props.row.mark === 2" v-bk-tooltips="'标记处理后重新扫描仍为问题'" class="codecc-icon icon-mark re-mark"></span>
+                                    <span v-if="props.row.mark === 1" v-bk-tooltips="$t('已标记处理')" class="codecc-icon icon-mark"></span>
+                                    <span v-if="props.row.mark === 2" v-bk-tooltips="$t('标记处理后重新扫描仍为问题')" class="codecc-icon icon-mark re-mark"></span>
                                 </template>
                             </bk-table-column>
                             <bk-table-column :label="$t('位置')" min-width="100" prop="filePath">
                                 <template slot-scope="props">
-                                    <span :title="`${getFileName(props.row.filePath)}:${props.row.startLines}`">{{`${getFileName(props.row.filePath)}:${props.row.startLines}`}}</span>
+                                    <span :title="`${props.row.filePath}:${props.row.startLines}`">{{`${getFileName(props.row.filePath)}:${props.row.startLines}`}}</span>
                                 </template>
                             </bk-table-column>
                             <bk-table-column :label="$t('函数名')" min-width="100" prop="functionName">
@@ -347,11 +355,11 @@
                                                 <span class="warn" v-else-if="currentLintFile.status & 4"><span class="cc-dot"></span>{{$t('已忽略')}}</span>
                                                 <span v-if="currentLintFile.status === 1 && currentLintFile.mark" class="cc-mark">
                                                     <template v-if="currentLintFile.mark === 1">
-                                                        <span v-bk-tooltips="'已标记处理'" class="codecc-icon icon-mark"></span>
+                                                        <span v-bk-tooltips="$t('已标记处理')" class="codecc-icon icon-mark"></span>
                                                         <span>{{$t('已标记处理')}}</span>
                                                     </template>
                                                     <template v-if="currentLintFile.mark === 2">
-                                                        <span v-bk-tooltips="'标记处理后重新扫描仍为问题'" class="codecc-icon icon-mark re-mark"></span>
+                                                        <span v-bk-tooltips="$t('标记处理后重新扫描仍为问题')" class="codecc-icon icon-mark re-mark"></span>
                                                         <span>{{$t('已标记处理')}}</span>
                                                     </template>
                                                 </span>
@@ -455,7 +463,7 @@
                                         <div class="block">
                                             <div class="item ignore">
                                                 <dt>{{$t('代码库路径')}}</dt>
-                                                <dd>{{lintDetail.filePath}}</dd>
+                                                <a target="_blank" :href="lintDetail.filePath">{{lintDetail.filePath}}</a>
                                             </div>
                                         </div>
                                         <!-- <div class="block">
@@ -497,8 +505,8 @@
                             <!-- <bk-member-selector v-model="operateParams.sourceAuthor" :disabled="operateParams.changeAuthorType === 1" style="width: 290px;"></bk-member-selector> -->
                         </bk-form-item>
                         <bk-form-item :label="$t('新处理人')">
-                            <!-- <bk-member-selector :max-data="1" v-model="operateParams.targetAuthor" style="width: 290px;"></bk-member-selector> -->
                             <bk-input v-model="operateParams.targetAuthor" style="width: 290px;"></bk-input>
+                            <!-- <bk-member-selector :max-data="1" v-model="operateParams.targetAuthor" style="width: 290px;"></bk-member-selector> -->
                         </bk-form-item>
                     </bk-form>
                 </div>
@@ -619,7 +627,7 @@
                 <div class="no-task">
                     <empty title="" :desc="$t('CodeCC集成了圈复杂度工具，可以检测过于复杂的代码，复杂度越高代码存在缺陷的风险越大')">
                         <template v-slot:action>
-                            <bk-button size="large" theme="primary" @click="addTool({ from: 'ccndupc' })">{{$t('配置规则集')}}</bk-button>
+                            <bk-button size="large" theme="primary" @click="addTool({ from: 'ccn' })">{{$t('配置规则集')}}</bk-button>
                         </template>
                     </empty>
                 </div>
@@ -637,6 +645,8 @@
     import newAnalyse from '@/components/new-analyse'
     import Empty from '@/components/empty'
     import { format } from 'date-fns'
+    // eslint-disable-next-line
+    import { export_json_to_excel } from 'vendor/export2Excel'
 
     export default {
         components: {
@@ -757,7 +767,10 @@
                     comment: ''
                 },
                 operateDialogVisiable: false,
-                isFetched: false
+                isFetched: false,
+                currentLintFile: {},
+                exportLoading: false,
+                ccnThreshold: 20
             }
         },
         computed: {
@@ -767,6 +780,12 @@
             ...mapState('task', {
                 taskDetail: 'detail'
             }),
+            projectId () {
+                return this.$route.params.projectId
+            },
+            taskId () {
+                return this.$route.params.taskId
+            },
             userName () {
                 return this.$store.state.user.username
             },
@@ -787,9 +806,9 @@
             lintFileList () {
                 return this.lintListData.defectList.content
             },
-            currentLintFile () {
-                return this.lintFileList[this.fileIndex]
-            },
+            // currentLintFile () {
+            //     return this.lintFileList[this.fileIndex]
+            // },
             defectList () {
                 this.setScreenHeight()
                 return this.lintListData.defectList.content
@@ -853,6 +872,7 @@
                                 this.lintDetail = {}
                             }
                         }).finally(() => {
+                            this.addTableScrollEvent()
                             this.tableLoading = false
                         })
                     }
@@ -863,14 +883,7 @@
                 handler () {
                     this.emptyText = this.$t('未选择文件')
                     this.defectDetailDialogVisiable = true
-                    this.fetchLintDetail().then(detail => {
-                        this.lintDetail = { ...this.lintDetail, ...detail, codeComment: detail.codeComment }
-
-                        // 查询详情后，全屏显示问题
-                        this.handleCodeFullScreen()
-                    }).finally(() => {
-                        bus.$emit('hide-app-loading')
-                    })
+                    this.fetchLintDetail()
                 },
                 deep: true
             },
@@ -943,6 +956,7 @@
                     this.fetchLintList(),
                     this.fetchLintParams()
                 ]).then(([list, params]) => {
+                    this.ccnThreshold = list.ccnThreshold
                     this.isSearch = true
                     if (isInit) {
                         this.contentLoading = false
@@ -953,33 +967,7 @@
                     this.lintListData = { ...this.lintListData, ...list }
                     this.totalCount = this.pagination.count = this.lintListData.defectList.totalElements
                     this.newDefectJudgeTime = list.newDefectJudgeTime ? this.formatTime(list.newDefectJudgeTime, 'YYYY-MM-DD') : ''
-                    this.$nextTick(() => {
-                        // 滚动加载
-                        if (this.$refs.fileListTable) {
-                            const tableBodyWrapper = this.$refs.fileListTable.$refs.bodyWrapper
-
-                            // 列表滚动加载
-                            tableBodyWrapper.addEventListener('scroll', (event) => {
-                                const dom = event.target
-                                // 总页数
-                                const totalPages = this.lintListData.defectList.totalPages
-                                // 当前页码
-                                const currentPageNum = this.searchParams.pageNum
-                                // 是否滚动到底部
-                                const hasScrolledToBottom = dom.scrollTop + dom.offsetHeight + 100 > dom.scrollHeight
-
-                                // 触发翻页加载
-                                if (hasScrolledToBottom && currentPageNum + 1 <= totalPages && this.isFileListLoadMore === false) {
-                                    // 显示加载条
-                                    this.isFileListLoadMore = true
-                                    // 变更页码触发查询
-                                    this.searchParams.pageNum += 1
-                                    // 标记为页面变更查询
-                                    this.pageChange = true
-                                }
-                            })
-                        }
-                    })
+                    this.addTableScrollEvent()
 
                     // todo 给文件路径树加上icon
                     function formatFilePath (filepath = {}) {
@@ -1021,7 +1009,34 @@
                 const pattern = this.toolMap[this.$route.params.toolId]['pattern']
                 const params = { ...this.searchParams, ...this.defectDetailSearchParams, pattern }
                 bus.$emit('show-app-loading')
-                return this.$store.dispatch('defect/lintDetail', params)
+                this.$store.dispatch('defect/lintDetail', params).then(detail => {
+                    if (detail.code === '2300005') {
+                        this.defectDetailDialogVisiable = false
+                        setTimeout(() => {
+                        this.$bkInfo({
+                            subHeader: this.$createElement('p', {
+                                style: {
+                                    fontSize: '20px',
+                                    lineHeight: '40px'
+                                }
+                            }, this.$t('无法获取问题的代码片段。请先将工蜂OAuth授权给蓝盾。')),
+                            confirmFn: () => {
+                                this.$store.dispatch('defect/oauthUrl', { toolName: this.toolId }).then(res => {
+                                    window.open(res, '_blank')
+                                })
+                            }
+                        })
+                        }, 500)
+                    } else {
+                        this.lintDetail = { ...this.lintDetail, ...detail, codeComment: detail.codeComment }
+
+                        this.currentLintFile = detail.defectVO || {}
+                        // 查询详情后，全屏显示问题
+                        this.handleCodeFullScreen()
+                    }
+                }).finally(() => {
+                    bus.$emit('hide-app-loading')
+                })
             },
             getDefectCountBySeverity (severity) {
                 const severityFieldMap = {
@@ -1097,7 +1112,17 @@
                             theme: 'success',
                             message: this.$t('修改成功')
                         })
-                        this.init()
+                        if (batchFlag) {
+                            this.init()
+                        } else {
+                            this.lintListData.defectList.content.forEach(item => {
+                                if (item.entityId === entityId) {
+                                    item.mark = markFlag
+                                }
+                            })
+                            this.lintListData.defectList.content = this.lintListData.defectList.content.slice()
+                        }
+                        if (this.defectDetailDialogVisiable) this.fetchLintDetail()
                     }
                 }).catch(e => {
                     console.error(e)
@@ -1136,7 +1161,13 @@
                             theme: 'success',
                             message: this.$t('修改成功')
                         })
-                        this.init()
+                        if (data.batchFlag) {
+                            this.init()
+                        } else {
+                            const index = this.lintListData.defectList.content.findIndex(item => item.entityId === data.defectKeySet[0])
+                            this.lintListData.defectList.content.splice(index, 1)
+                        }
+                        if (this.defectDetailDialogVisiable) this.fetchLintDetail()
                         this.operateParams.ignoreReason = ''
                         this.defectDetailDialogVisiable = false
                     }
@@ -1219,6 +1250,7 @@
                 let checkerComment = ''
                 const { trimBeginLine } = this.lintDetail
                 const { ccn, startLines, endLines } = this.currentLintFile
+                const ccnThreshold = this.ccnThreshold
                 const hints = document.createElement('div')
                 const checkerDetail = `
                     <div>
@@ -1270,7 +1302,7 @@
                 hints.innerHTML = `
                     <i class="lint-icon bk-icon icon-right-shape"></i>
                     <div class="lint-info">
-                        <p>${this.$t('圈复杂度为，超过19的建议值，请进行函数功能拆分降低代码复杂度。', { ccn: ccn })}</p>
+                        <p>${this.$t('圈复杂度为，超过圈复杂度规则的阈值xx，请进行函数功能拆分降低代码复杂度。', { ccn: ccn, ccnThreshold: ccnThreshold })}</p>
                         <div class="checker-detail">${checkerDetail}</div>
                         ${checkerComment ? `<div class="checker-comment">${checkerComment}</div>` : ''}
                     </div>
@@ -1311,8 +1343,8 @@
                 if (delHandle) {
                     const that = this
                     this.$bkInfo({
-                        title: '删除评论',
-                        subTitle: '确定要删除该条评论吗？',
+                        title: this.$t('删除评论'),
+                        subTitle: this.$t('确定要删除该条评论吗？'),
                         maskClose: true,
                         confirmFn () {
                             const delData = delHandle.getAttribute('data-type')
@@ -1336,12 +1368,7 @@
                             message: this.$t('删除成功')
                         })
                         this.commentParams.comment = ''
-                        this.fetchLintDetail().then(detail => {
-                            this.lintDetail = { ...this.lintDetail, ...detail, codeComment: detail.codeComment }
-                            this.handleCodeFullScreen()
-                        }).finally(() => {
-                            bus.$emit('hide-app-loading')
-                        })
+                        this.fetchLintDetail()
                     }
                 })
             },
@@ -1392,6 +1419,7 @@
                 document.onkeydown = keyDown
                 function keyDown (event) {
                     const e = event || window.event
+                    if (e.target.nodeName !== 'BODY') return
                     switch (e.keyCode) {
                         case 13: // enter
                             // e.path.length < 5 防止规则等搜索条件里面的回车触发打开详情
@@ -1432,6 +1460,35 @@
                             break
                     }
                 }
+            },
+            addTableScrollEvent () {
+                this.$nextTick(() => {
+                    // 滚动加载
+                    if (this.$refs.fileListTable) {
+                        const tableBodyWrapper = this.$refs.fileListTable.$refs.bodyWrapper
+
+                        // 列表滚动加载
+                        tableBodyWrapper.addEventListener('scroll', (event) => {
+                            const dom = event.target
+                            // 总页数
+                            const totalPages = this.lintListData.defectList.totalPages
+                            // 当前页码
+                            const currentPageNum = this.searchParams.pageNum
+                            // 是否滚动到底部
+                            const hasScrolledToBottom = dom.scrollTop + dom.offsetHeight + 100 > dom.scrollHeight
+
+                            // 触发翻页加载
+                            if (hasScrolledToBottom && currentPageNum + 1 <= totalPages && this.isFileListLoadMore === false) {
+                                // 显示加载条
+                                this.isFileListLoadMore = true
+                                // 变更页码触发查询
+                                this.searchParams.pageNum += 1
+                                // 标记为页面变更查询
+                                this.pageChange = true
+                            }
+                        })
+                    }
+                })
             },
             keyEnter () {
                 const row = this.defectList[this.fileIndex]
@@ -1511,8 +1568,18 @@
                             theme: 'success',
                             message: this.$t('修改成功')
                         })
+                        if (data.changeAuthorType === 1) {
+                            this.lintListData.defectList.content.forEach(item => {
+                                if (item.entityId === data.defectKeySet[0]) {
+                                    item.author = data.newAuthor.join()
+                                }
+                            })
+                            this.lintListData.defectList.content = this.lintListData.defectList.content.slice()
+                        } else {
+                            this.init()
+                        }
+                        if (this.defectDetailDialogVisiable) this.fetchLintDetail()
                         this.operateParams.targetAuthor = []
-                        this.init()
                     }
                 }).catch(e => {
                     console.error(e)
@@ -1534,12 +1601,7 @@
                             message: this.$t('评论成功')
                         })
                         this.commentParams.comment = ''
-                        this.fetchLintDetail().then(detail => {
-                            this.lintDetail = { ...this.lintDetail, ...detail, codeComment: detail.codeComment }
-                            this.handleCodeFullScreen()
-                        }).finally(() => {
-                            bus.$emit('hide-app-loading')
-                        })
+                        this.fetchLintDetail()
                     }
                 })
             },
@@ -1571,6 +1633,53 @@
                         }
                     }, 500)
                 }
+            },
+            getSearchParams () {
+                const params = { ...this.searchParams }
+                return params
+            },
+            downloadExcel () {
+                const params = this.getSearchParams()
+                params.pageSize = 300000
+                if (this.totalCount > 300000) {
+                    this.$bkMessage({
+                        message: this.$t('当前问题数已超过30万个，无法直接导出excel，请筛选后再尝试导出。')
+                    })
+                    return
+                }
+                this.exportLoading = true
+                this.$store.dispatch('defect/lintList', params).then(res => {
+                    const list = res && res.defectList && res.defectList.content
+                    this.generateExcel(list)
+                }).finally(() => {
+                    this.exportLoading = false
+                })
+            },
+            generateExcel (list = []) {
+                const tHeader = [this.$t('位置'), this.$t('路径'), this.$t('函数名'), this.$t('圈复杂度'), this.$t('处理人'), this.$t('风险'), this.$t('提交日期'), this.$t('首次发现'), this.$t('最新状态')]
+                const filterVal = ['fileName', 'filePath', 'functionName', 'ccn', 'author', 'riskFactor', 'latestDateTime', 'createBuildNumber', 'status', 'startLines']
+                const data = this.formatJson(filterVal, list)
+                const title = `${this.taskDetail.nameCn}-${this.taskDetail.taskId}-${this.toolId}-${this.$t('风险函数')}-${new Date().toISOString()}`
+                export_json_to_excel(tHeader, data, title)
+            },
+            formatJson (filterVal, list) {
+                return list.map(item => filterVal.map(j => {
+                    if (j === 'fileName') {
+                        return `${this.getFileName(item.filePath)}:${item.startLines}`
+                    } else if (j === 'riskFactor') {
+                        return this.defectSeverityMap[item.riskFactor]
+                    } else if (j === 'latestDateTime') {
+                        return this.formatTime(item.latestDateTime, 'YYYY-MM-DD')
+                    } else if (j === 'createBuildNumber') {
+                        return `#${item.createBuildNumber}`
+                    } else if (j === 'status') {
+                        return this.handleStatus(item.status)
+                    } else if (j === 'startLines') {
+                        return ''
+                    } else {
+                        return item[j]
+                    }
+                }))
             }
         }
     }
@@ -1787,6 +1896,10 @@
                             width: 80px;
                         }
                     }
+                    a {
+                        color: #313238;
+                        word-break: break-all;
+                    }
 
                     &.ignore {
                         display: block;
@@ -1874,6 +1987,12 @@
         position: relative;
         .cc-operate {
             display: inline-block;
+            .cc-operate-buttons {
+                display: flex;
+                .cc-operate-button {
+                    margin-left: 10px;
+                }
+            }
         }
     }
     .operate-footer {
@@ -1881,6 +2000,19 @@
     }
     .main-container::-webkit-scrollbar {
         width: 0;
+    }
+    .excel-download {
+        line-height: 32px;
+        cursor: pointer;
+        padding-right: 10px;
+        &:hover {
+            color: #3a84ff;
+        }
+    }
+    >>>.bk-button .bk-icon {
+        .loading {
+            color: #3a92ff;
+        }
     }
 </style>
 <style lang="postcss">

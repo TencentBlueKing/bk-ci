@@ -1,8 +1,13 @@
 <template>
     <div>
         <bk-form :label-width="130" ref="checkerset">
-            <bk-form-item v-for="(value, key) in data" :key="key" :label="key" :property="key">
-                <bk-select class="checker-select"
+            <bk-form-item v-for="(value, key) in data" :key="key" :required="true" :label="key" :property="key">
+                <div class="rule-set-input" @click="openSelect(key)">
+                    <p class="rule-set-value" :title="getValueShow(renderList[key])">{{ getValueShow(renderList[key]) }}</p>
+                    <span class="placeholder" v-if="!selectSets[key] || !selectSets[key].length">请选择</span>
+                    <span class="bk-select-clear bk-icon icon-close-circle-shape" @click.stop="handleClear(selectSets[key], key)"></span>
+                </div>
+                <!-- <bk-select class="checker-select"
                     multiple
                     searchable
                     v-model="selectSets[key]"
@@ -35,16 +40,25 @@
                             {{$t('更多规则集')}}
                         </a>
                     </div>
-                </bk-select>
+                </bk-select> -->
             </bk-form-item>
         </bk-form>
+        <rule-set-dialog
+            :visiable.sync="dialogVisiable"
+            :cur-lang="dialogKey"
+            :selected-list="renderList[dialogKey]"
+            :default-lang="[dialogKey]"
+            :handle-select="handleSelect"
+        ></rule-set-dialog>
     </div>
 </template>
 
 <script>
+    import RuleSetDialog from './RuleSetDialog'
     export default {
         name: 'checkerset-select',
         components: {
+            RuleSetDialog
         },
         props: {
             data: {
@@ -54,7 +68,10 @@
         },
         data () {
             return {
-                selectSets: {}
+                selectSets: {},
+                dialogVisiable: false,
+                renderList: {},
+                dialogKey: ''
             }
         },
         watch: {
@@ -64,10 +81,12 @@
                 for (const key in data) {
                     if (!selectSets[key] || !selectSets[key].length) {
                         const list = []
+                        this.renderList[key] = []
                         for (const k in data[key]) {
                             data[key][k].map(item => {
                                 if (item.defaultCheckerSet) {
                                     list.push(item.checkerSetId)
+                                    this.renderList[key].push(item)
                                     toolList = toolList.concat(item.toolList)
                                 }
                             })
@@ -88,11 +107,15 @@
             },
             getCheckerset () {
                 let checkerset = []
-                for (const key in this.selectSets) {
-                    for (const k in this.data[key]) {
-                        const value = this.data[key][k].filter(item => this.selectSets[key].includes(item.checkerSetId))
-                        checkerset = checkerset.concat(value)
-                    }
+                // for (const key in this.selectSets) {
+                //     for (const k in this.data[key]) {
+                //         const value = this.data[key][k].filter(item => this.selectSets[key].includes(item.checkerSetId))
+                //         checkerset = checkerset.concat(value)
+                //     }
+                // }
+                for (const key in this.data) {
+                    const value = this.renderList[key].filter(item => this.selectSets[key].includes(item.checkerSetId))
+                    checkerset = checkerset.concat(value)
                 }
                 return checkerset
             },
@@ -113,6 +136,35 @@
             hanldeToCheckset () {
                 const projectId = this.$route.params.projectId
                 window.open(`${window.JUMP_SITE_URL}/codecc/${projectId}/checkerset/list`, '_blank')
+            },
+            openSelect (key) {
+                this.$refs.checkerset.formItems.find(item => item.label === key).clearError()
+                this.dialogKey = key
+                this.dialogVisiable = true
+            },
+            handleClear (val, key) {
+                this.$refs.checkerset.formItems.find(item => item.label === key).clearError()
+                this.selectSets[key] = []
+                this.renderList[key] = []
+                // this.$emit('input', [])
+                this.handleChange()
+            },
+            getValueShow (list = []) {
+                const nameList = list.map(val => val.checkerSetName)
+                return nameList.join(',')
+            },
+            handleSelect (checkerSet, isCancel, key) {
+                if (isCancel) {
+                    this.renderList[key] = this.renderList[key].filter(item => item.checkerSetId !== checkerSet.checkerSetId)
+                } else {
+                    this.renderList[key].push(checkerSet)
+                    this.renderList[key] = this.renderList[key].filter(item => item)
+                }
+
+                const newVal = this.renderList[key].map(item => item.checkerSetId)
+                // this.$emit('input', newVal)
+                this.selectSets[key] = newVal
+                this.handleChange()
             }
         }
     }
@@ -161,5 +213,45 @@
     }
     .bk-selector-create-item {
         cursor: pointer;
+    }
+
+    .rule-set-input {
+        position: relative;
+        padding: 0 20px 0 10px;
+        border: 1px solid #c4c6cc;
+        border-radius: 2px;
+        height: 32px;
+        line-height: 30px;
+        color: #63656e;
+        cursor: pointer;
+        font-size: 12px;
+        overflow: hidden;
+        .rule-set-value {
+            margin: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .placeholder {
+            color: #c9d2db;
+        }
+        .bk-select-clear {
+            display: none;
+            position: absolute;
+            right: 6px;
+            top: 8px;
+            text-align: center;
+            font-size: 14px;
+            z-index: 100;
+            color: #c4c6cc;
+            &:hover {
+                color: #979ba5;
+            }
+        }
+        &:hover {
+            .bk-select-clear {
+                display: inline-block;
+            }
+        }
     }
 </style>

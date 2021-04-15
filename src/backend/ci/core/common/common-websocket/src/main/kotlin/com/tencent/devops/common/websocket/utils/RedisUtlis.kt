@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -27,16 +28,19 @@
 package com.tencent.devops.common.websocket.utils
 import com.tencent.devops.common.redis.RedisOperation
 
+@Suppress("ALL")
 object RedisUtlis {
 
     // 记录user-session映射。 user: session = 1:N 。同一个user，可以在不同端登录，可能产生多个session
-    val USER_SESSION_REDIS_KEY = "BK:webSocket:userId:sessionId:key:"
+    const val USER_SESSION_REDIS_KEY = "BK:webSocket:userId:sessionId:key:"
     // 记录session-page映射。 session: page = 1:1。 同一个session一次只能停留在一个页面。
-    val SESSION_PAGE_REDIS_KEY = "BK:webSocket:sessionId:page:key:"
+    const val SESSION_PAGE_REDIS_KEY = "BK:webSocket:sessionId:page:key:"
+    // 记录session-user映射。 session: user = 1:1。 同一个session一次只能对应一个user。
+    const val SESSION_USER_REDIS_KEY = "BK:webSocket:sessionId:user:key:"
     // 记录page-session映射。  page : session = 1:N。 同一个页面，可能有多个session停留
-    val PAGE_SESSION_REDIS_KEY = "BK:webSocket:page:sessionIdList:key:"
+    const val PAGE_SESSION_REDIS_KEY = "BK:webSocket:page:sessionIdList:key:"
     // 记录session-timeout映射。  session : timeout = 1:1。 同一个session，超时于登录后5天。
-    val USER_TIMEOUT_REDIS_KEY = "BK:webSocket:sessionId:timeOut:key:"
+    const val USER_TIMEOUT_REDIS_KEY = "BK:webSocket:sessionId:timeOut:key:"
 
     // 写入user,session映射。并记录session超时时间。可能出现user:session 一对多的关系
     fun writeSessionIdByRedis(redisOperation: RedisOperation, userId: String, sessionId: String) {
@@ -51,6 +55,8 @@ object RedisUtlis {
                 redisOperation.set(USER_SESSION_REDIS_KEY + userId, newSessionList, null, true)
             }
         }
+
+        redisOperation.getAndSet(SESSION_USER_REDIS_KEY + sessionId, userId)
     }
 
     // 获取userId对应的session集合。多个session以“,”隔开，用于做切割
@@ -85,6 +91,16 @@ object RedisUtlis {
     // 根据session获取session-page记录，只能获取到一个page
     fun getPageFromSessionPageBySession(redisOperation: RedisOperation, sessionId: String): String? {
         return redisOperation.get(SESSION_PAGE_REDIS_KEY + sessionId)
+    }
+
+    // 根据session获取user记录，只能获取到一个user
+    fun getUserBySession(redisOperation: RedisOperation, sessionId: String): String? {
+        return redisOperation.get(SESSION_USER_REDIS_KEY + sessionId)
+    }
+
+    // 删除该session对应的User记录
+    fun deleteUserSessionBySession(redisOperation: RedisOperation, sessionId: String) {
+        return redisOperation.delete(SESSION_USER_REDIS_KEY + sessionId)
     }
 
     // 判断一个session是否有登录页面，用于判断pipeline系列dispatch是否需要push消息到mq
@@ -168,6 +184,7 @@ object RedisUtlis {
         redisOperation.delete(USER_SESSION_REDIS_KEY + userId)
     }
 
+    // 清除USER-SESSION 映射内的sessionId
     fun deleteSigelSessionByUser(redisOperation: RedisOperation, userId: String, sessionId: String) {
         val sessionList = redisOperation.get(USER_SESSION_REDIS_KEY + userId)
         if (!sessionList.isNullOrBlank()) {
@@ -199,54 +216,14 @@ object RedisUtlis {
         redisOperation.delete(PAGE_SESSION_REDIS_KEY + page)
     }
 
-//    // 存储session对应的超时时间。所有session统一放到一个大的map内。默认超时时间是5天。此处可以做成可配置。
-//    fun saveSessionTimeOutBySessionId(redisOperation: RedisOperation, sessionId: String, userId: String) {
-//        // 默认超时时间，有清理线程定时清理已经超时的sessionId记录，防止在变更时调用loginOut失败。
-//        val timeout = System.currentTimeMillis() + TimeUnit.DAYS.toMillis(5)
-//        val objectMapper = JsonUtil.getObjectMapper()
-//        // 此处有一个内存隐患，get出来的map若很大，可能会导致频繁的gc
-//        val cacheStr = redisOperation.get(USER_TIMEOUT_REDIS_KEY)
-//        if (cacheStr != null) {
-//            val cacheMap: MutableMap<String, String> = objectMapper.readValue(cacheStr)
-//            cacheMap[sessionId] = "$timeout#$userId"
-//            saveSessionTimeOutAll(redisOperation, objectMapper.writeValueAsString(cacheMap))
-//        } else {
-//            val map = mutableMapOf<String, String>()
-//            map[sessionId] = "$timeout#$userId"
-//            saveSessionTimeOutAll(redisOperation, objectMapper.writeValueAsString(map))
-//        }
-//    }
-
-//    // 保存session-timeout数据
-//    fun saveSessionTimeOutAll(redisOperation: RedisOperation, sessionMap: String) {
-//        redisOperation.getAndSet(USER_TIMEOUT_REDIS_KEY, sessionMap)
-//    }
-
-//    fun getSessionTimeOutFromRedis(redisOperation: RedisOperation): String? {
-//        return redisOperation.get(USER_TIMEOUT_REDIS_KEY)
-//    }
-
-    // 清理超时map内的sessionId，用于loginOut，清理session
-//    fun cleanSessionTimeOutBySession(redisOperation: RedisOperation, sessionId: String) {
-//        val allSessionMap = getSessionTimeOutFromRedis(redisOperation)
-//        if (allSessionMap != null) {
-//            val objectMapper = JsonUtil.getObjectMapper()
-//            var sessionMap: MutableMap<String, String> = objectMapper.readValue(allSessionMap)
-//            if (sessionMap.containsKey(sessionId)) {
-//                sessionMap.remove(sessionId)
-//            }
-//            saveSessionTimeOutAll(redisOperation, objectMapper.writeValueAsString(sessionMap))
-//        }
-//    }
-
     // 构建结束，清理所有再当前页面的websocket缓存。
     fun cleanBuildWebSocketCache(redisOperation: RedisOperation, page: String) {
-        val sessionList = RedisUtlis.getSessionListFormPageSessionByPage(redisOperation, page)
-        if (sessionList != null && sessionList.size > 0) {
+        val sessionList = getSessionListFormPageSessionByPage(redisOperation, page)
+        if (sessionList != null && sessionList.isNotEmpty()) {
             sessionList.forEach {
-                RedisUtlis.cleanSessionPageBySessionId(redisOperation, it)
+                cleanSessionPageBySessionId(redisOperation, it)
             }
         }
-        RedisUtlis.cleanPageSessionByPage(redisOperation, page)
+        cleanPageSessionByPage(redisOperation, page)
     }
 }

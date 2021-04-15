@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -55,21 +56,11 @@ data class CodeTGitRepository(
     //    override fun getStartPrefix() = "git@git.tencent.com"
     override fun getStartPrefix(): String {
         return when (authType) {
-            RepoAuthType.SSH -> "git@git.tencent.com"
-            RepoAuthType.OAUTH -> "http://git.tencent.com"
-            RepoAuthType.HTTP -> ("http://git.tencent.com")
-            RepoAuthType.HTTPS -> ("https://git.tencent.com")
-            else -> "git@git.tencent.com"
-        }
-    }
-
-    override fun isLegal(): Boolean {
-        return when (authType) {
-            RepoAuthType.SSH -> url.startsWith("git@git.tencent.com")
-            RepoAuthType.OAUTH -> url.startsWith("http://git.tencent.com")
-            RepoAuthType.HTTP -> url.startsWith("http://git.tencent.com")
-            RepoAuthType.HTTPS -> url.startsWith("https://git.tencent.com")
-            else -> false
+            RepoAuthType.SSH -> "git@"
+            RepoAuthType.OAUTH -> "http://"
+            RepoAuthType.HTTP -> "http://"
+            RepoAuthType.HTTPS -> "https://"
+            else -> "git@"
         }
     }
 }

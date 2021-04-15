@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -50,7 +51,10 @@ import okhttp3.Response
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileOutputStream
+import java.net.ConnectException
+import java.net.SocketTimeoutException
 import java.net.URLEncoder
+import java.net.UnknownHostException
 import java.nio.file.Paths
 import java.security.cert.CertificateException
 import java.util.concurrent.TimeUnit
@@ -59,6 +63,7 @@ import javax.net.ssl.SSLSocketFactory
 import javax.net.ssl.TrustManager
 import javax.net.ssl.X509TrustManager
 
+@Suppress("ALL")
 abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
 
     protected fun requestForResponse(
@@ -79,22 +84,42 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
             builder.writeTimeout(writeTimeoutInSec, TimeUnit.SECONDS)
         }
         val httpClient = builder.build()
-        val response = try {
-            httpClient.newCall(request).execute()
-        } catch (e: Exception) {
-            logger.error("Fail to request($request),error is :$e", e)
-            throw ClientException("Fail to request($request),error is:${e.message}")
+        val retryFlag = try {
+            val response = httpClient.newCall(request).execute()
+            logger.warn(
+                "Request($request) with code ${response.code()}"
+            )
+            if (retryCodes.contains(response.code())) { // 网关502,503，可重试
+                true
+            } else {
+                return response
+            }
+        } catch (e: UnknownHostException) { // DNS问题导致请求未到达目标，可重试
+            logger.warn("UnknownHostException|request($request),error is :$e, try to retry $retryCount")
+            true
+        } catch (e: ConnectException) {
+            logger.warn("ConnectException|request($request),error is :$e, try to retry $retryCount")
+            true
+        } catch (ignore: Exception) {
+            if (ignore is SocketTimeoutException && ignore.message == "connect timed out") {
+                logger.warn("SocketTimeoutException(${ignore.message})|request($request), try to retry $retryCount")
+                true
+            } else {
+                logger.error("Fail to request($request),error is :$ignore", ignore)
+                throw ClientException("Fail to request($request),error is:${ignore.message}")
+            }
         }
 
-        if (retryCodes.contains(response.code()) && retryCount > 0) {
+        if (retryFlag && retryCount > 0) {
             logger.warn(
-                "Fail to request($request) with code ${response.code()} ," +
-                    " message ${response.message()} and response (${response.body()?.string()}), retry after 3 seconds"
+                "Fail to request($request), retry after $sleepTimeMills ms"
             )
             Thread.sleep(sleepTimeMills)
             return requestForResponse(request, connectTimeoutInSec, readTimeoutInSec, writeTimeoutInSec, retryCount - 1)
+        } else {
+            logger.error("Fail to request($request), try to retry $DEFAULT_RETRY_TIME")
+            throw ClientException("Fail to request($request), try to retry $DEFAULT_RETRY_TIME")
         }
-        return response
     }
 
     protected fun request(
@@ -163,9 +188,10 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         private const val CONNECT_TIMEOUT = 5L
         private const val READ_TIMEOUT = 1500L
         private const val WRITE_TIMEOUT = 60L
-        private val retryCodes = arrayOf(502, 503)
-        val logger = LoggerFactory.getLogger(AbstractBuildResourceApi::class.java)
+        private val retryCodes = arrayOf(502, 503, 504)
+        val logger = LoggerFactory.getLogger(AbstractBuildResourceApi::class.java)!!
         private val gateway = AgentEnv.getGateway()
+        private val fileGateway = AgentEnv.getFileGateway()
 
         private val buildArgs: Map<String, String> by lazy {
             initBuildArgs()
@@ -190,6 +216,7 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
                     map[AUTH_HEADER_DEVOPS_AGENT_ID] = AgentEnv.getAgentId()
                     map[AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY] = AgentEnv.getAgentSecretKey()
                 }
+                else -> Unit
             }
             logger.info("Get the request header - $map")
             return map
@@ -201,19 +228,17 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
             val sslContext = SSLContext.getInstance("SSL")
             sslContext.init(null, trustAllCerts, java.security.SecureRandom())
             return sslContext.socketFactory
-        } catch (ingored: Exception) {
-            throw RemoteServiceException(ingored.message!!)
+        } catch (ignore: Exception) {
+            throw RemoteServiceException(ignore.message!!)
         }
     }
 
     private val trustAllCerts = arrayOf<TrustManager>(object : X509TrustManager {
         @Throws(CertificateException::class)
-        override fun checkClientTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) {
-        }
+        override fun checkClientTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) = Unit
 
         @Throws(CertificateException::class)
-        override fun checkServerTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) {
-        }
+        override fun checkServerTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) = Unit
 
         override fun getAcceptedIssuers(): Array<java.security.cert.X509Certificate> {
             return arrayOf()
@@ -230,32 +255,43 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
 
     protected val objectMapper = JsonUtil.getObjectMapper()
 
-    fun buildGet(path: String, headers: Map<String, String> = emptyMap()): Request {
-        val url = buildUrl(path)
+    fun buildGet(path: String, headers: Map<String, String> = emptyMap(), useFileGateway: Boolean = false): Request {
+        val url = buildUrl(path, useFileGateway)
         return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).get().build()
     }
 
-    fun buildPost(path: String, headers: Map<String, String> = emptyMap()): Request {
+    fun buildPost(path: String, headers: Map<String, String> = emptyMap(), useFileGateway: Boolean = false): Request {
         val requestBody = RequestBody.create(JsonMediaType, EMPTY)
-        return buildPost(path, requestBody, headers)
+        return buildPost(path, requestBody, headers, useFileGateway)
     }
 
-    fun buildPost(path: String, requestBody: RequestBody, headers: Map<String, String> = emptyMap()): Request {
-        val url = buildUrl(path)
+    fun buildPost(
+        path: String,
+        requestBody: RequestBody,
+        headers: Map<String, String> = emptyMap(),
+        useFileGateway: Boolean = false
+    ): Request {
+        val url = buildUrl(path, useFileGateway)
         return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).post(requestBody).build()
     }
 
-    fun buildPut(path: String, headers: Map<String, String> = emptyMap()): Request {
+    fun buildPut(path: String, headers: Map<String, String> = emptyMap(), useFileGateway: Boolean = false): Request {
         val requestBody = RequestBody.create(JsonMediaType, EMPTY)
-        return buildPut(path, requestBody, headers)
+        return buildPut(path, requestBody, headers, useFileGateway)
     }
 
-    fun buildPut(path: String, requestBody: RequestBody, headers: Map<String, String> = emptyMap()): Request {
-        val url = buildUrl(path)
+    fun buildPut(
+        path: String,
+        requestBody: RequestBody,
+        headers: Map<String, String> = emptyMap(),
+        useFileGateway: Boolean = false
+    ): Request {
+        val url = buildUrl(path, useFileGateway)
         logger.info("the url is $url")
         return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).put(requestBody).build()
     }
 
+    @Suppress("UNUSED")
     fun buildDelete(path: String, headers: Map<String, String> = emptyMap()): Request {
         val url = buildUrl(path)
         return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).delete().build()
@@ -269,15 +305,21 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         return URLEncoder.encode(parameter, "UTF-8")
     }
 
-    private fun buildUrl(path: String): String {
+    private fun buildUrl(path: String, useFileGateway: Boolean = false): String {
         return if (path.startsWith("http://") || path.startsWith("https://")) {
             path
+        } else if (useFileGateway) {
+            fixUrl(fileGateway, path)
         } else {
-            if (gateway.startsWith("http://") || gateway.startsWith("https://")) {
-                "$gateway/${path.removePrefix("/")}"
-            } else {
-                "http://$gateway/${path.removePrefix("/")}"
-            }
+            fixUrl(gateway, path)
+        }
+    }
+
+    private fun fixUrl(server: String, path: String): String {
+        return if (server.startsWith("http://") || server.startsWith("https://")) {
+            "$server/${path.removePrefix("/")}"
+        } else {
+            "http://$server/${path.removePrefix("/")}"
         }
     }
 

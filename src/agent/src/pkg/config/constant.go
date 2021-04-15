@@ -32,6 +32,7 @@ import (
 
 const ActionUpgrade = "upgrade"
 const ActionUninstall = "uninstall"
+const CertFilePath = ".cert"
 
 const (
 	ScriptFileInstallWindows   = "install.bat"

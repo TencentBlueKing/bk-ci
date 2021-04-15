@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -52,20 +53,13 @@ object CronExpressionUtils {
     /**
      * 为了防止流水线执行太频繁，需要控制cron表达式执行时间间隔，不能秒级执行
      */
-    fun isValidTimeInterval(
-        cron: String
-    ): Boolean {
+    fun isValidTimeInterval(cron: String): Boolean {
         val recentTriggerTimes = getRecentTriggerTime(cron)
         // 如果最近2次执行时间为空，表示表达式已经不会运行
-        if (recentTriggerTimes.isEmpty() ||
-            recentTriggerTimes.size == 1
-        ) {
+        if (recentTriggerTimes.isEmpty() || recentTriggerTimes.size == 1) {
             return true
         }
         val interval = recentTriggerTimes[1].time - recentTriggerTimes[0].time
-        if (interval < VALID_TIME_INTERVAL) {
-            return false
-        }
-        return true
+        return interval >= VALID_TIME_INTERVAL
     }
 }

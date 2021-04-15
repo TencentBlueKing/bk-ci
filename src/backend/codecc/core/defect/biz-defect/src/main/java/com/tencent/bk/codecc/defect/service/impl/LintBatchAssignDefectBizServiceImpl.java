@@ -2,6 +2,7 @@ package com.tencent.bk.codecc.defect.service.impl;
 
 import com.google.common.collect.Lists;
 import com.tencent.bk.codecc.defect.dao.mongorepository.LintDefectRepository;
+import com.tencent.bk.codecc.defect.dao.mongotemplate.LintDefectV2Dao;
 import com.tencent.bk.codecc.defect.model.LintDefectEntity;
 import com.tencent.bk.codecc.defect.model.LintFileEntity;
 import com.tencent.bk.codecc.defect.vo.BatchDefectProcessReqVO;
@@ -30,7 +31,7 @@ import java.util.TreeSet;
 public class LintBatchAssignDefectBizServiceImpl extends AbstractLintBatchDefectProcessBizService
 {
     @Autowired
-    private LintDefectRepository lintDefectRepository;
+    private LintDefectV2Dao defectDao;
 
     @Override
     protected void doBiz(List defectList, BatchDefectProcessReqVO batchDefectProcessReqVO)
@@ -43,41 +44,8 @@ public class LintBatchAssignDefectBizServiceImpl extends AbstractLintBatchDefect
         }
 
         String newAuthorStr = List2StrUtil.toString(newAuthor, ComConstants.SEMICOLON);
-        Map<String, Set<String>> fileDefectMap = getFileDefectMap(defectList);
 
-        List<LintFileEntity> updateFileEntities = Lists.newArrayList();
-        List<LintFileEntity> fileEntities = lintDefectRepository.findByEntityIdIn(fileDefectMap.keySet());
-        if (CollectionUtils.isNotEmpty(fileEntities))
-        {
-            for (LintFileEntity fileEntity : fileEntities)
-            {
-                Set<String> authorList = new TreeSet<>();
-                Set<String> fileDefectIds = fileDefectMap.get(fileEntity.getEntityId());
-                boolean needupdate = false;
-                if (CollectionUtils.isNotEmpty(fileEntity.getDefectList()) && CollectionUtils.isNotEmpty(fileDefectIds))
-                {
-                    for (LintDefectEntity defectEntity : fileEntity.getDefectList())
-                    {
-                        if (fileDefectIds.contains(defectEntity.getDefectId()))
-                        {
-                            defectEntity.setAuthor(newAuthorStr);
-                            needupdate = true;
-                        }
-                        authorList.add(defectEntity.getAuthor());
-                    }
-                }
-                if (needupdate)
-                {
-                    fileEntity.setAuthorList(authorList);
-                    updateFileEntities.add(fileEntity);
-                }
-            }
-        }
-
-        if (CollectionUtils.isNotEmpty(updateFileEntities))
-        {
-            lintDefectRepository.save(updateFileEntities);
-        }
+        defectDao.batchUpdateDefectAuthor(batchDefectProcessReqVO.getTaskId(), defectList, newAuthorStr);
     }
 
 }

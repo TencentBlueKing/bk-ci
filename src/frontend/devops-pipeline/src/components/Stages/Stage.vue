@@ -70,7 +70,7 @@
     import Vue from 'vue'
     import { mapActions, mapState, mapGetters } from 'vuex'
     import StageContainer from './StageContainer'
-    import { getOuterHeight, hashID } from '@/utils/util'
+    import { getOuterHeight, hashID, randomString } from '@/utils/util'
     import Logo from '@/components/Logo'
     import CruveLine from '@/components/Stages/CruveLine'
 
@@ -302,24 +302,21 @@
                     })
                     if (res.id) {
                         message = this.$t('subpage.retrySuc')
+                        theme = 'success'
                     } else {
                         message = this.$t('subpage.retryFail')
                         theme = 'error'
                     }
                 } catch (err) {
-                    if (err.code === 403) { // 没有权限执行
-                        this.$showAskPermissionDialog({
-                            noPermissionList: [{
-                                resource: this.$t('pipeline'),
-                                option: this.$t('exec')
-                            }],
-                            applyPermissionUrl: `${PERM_URL_PREFIX}`
-                        })
-                        return
-                    } else {
-                        message = err.message || err
-                        theme = 'error'
-                    }
+                    this.handleError(err, [{
+                        actionId: this.$permissionActionMap.execute,
+                        resourceId: this.$permissionResourceMap.pipeline,
+                        instanceId: [{
+                            id: this.$route.params.pipelineId,
+                            name: this.$route.params.pipelineId
+                        }],
+                        projectId: this.$route.params.projectId
+                    }])
                 } finally {
                     message && this.$showTips({
                         message,
@@ -417,11 +414,17 @@
                         id: `s-${hashID(32)}`,
                         containers: copyStage.containers.map(container => ({
                             ...container,
+                            jobId: `job_${randomString(3)}`,
                             containerId: `c-${hashID(32)}`,
                             elements: container.elements.map(element => ({
                                 ...element,
                                 id: `e-${hashID(32)}`
-                            }))
+                            })),
+                            jobControlOption: container.jobControlOption ? {
+                                ...container.jobControlOption,
+                                dependOnType: 'ID',
+                                dependOnId: []
+                            } : undefined
                         }))
 
                     }

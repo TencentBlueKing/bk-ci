@@ -2,10 +2,9 @@ apply plugin: "maven"
 
 dependencies {
     compile project(":core:common:common-service")
-//    compile project(":common:common-basic")
-//    compile project(":common:common-redis")
     compile project(":core:common:common-api")
     compile project(":core:common:common-util")
+    compile project(":core:common:common-client")
     compile "com.fasterxml.jackson.core:jackson-databind"
     compile "com.fasterxml.jackson.core:jackson-core"
     compile "com.fasterxml.jackson.core:jackson-annotations"

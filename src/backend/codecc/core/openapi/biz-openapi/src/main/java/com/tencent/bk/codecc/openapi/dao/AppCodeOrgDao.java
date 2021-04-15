@@ -12,7 +12,7 @@
 
 package com.tencent.bk.codecc.openapi.dao;
 
-import com.tencent.bk.codecc.apiquery.op.model.AppCodeOrgEntity;
+import com.tencent.bk.codecc.openapi.op.model.AppCodeOrgEntity;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 

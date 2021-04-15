@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -47,6 +48,8 @@ const val BK_REPO_GIT_WEBHOOK_INCLUDE_PATHS = "BK_CI_REPO_GIT_WEBHOOK_INCLUDE_PA
 const val BK_REPO_GIT_WEBHOOK_EXCLUDE_PATHS = "BK_CI_REPO_GIT_WEBHOOK_EXCLUDE_PATHS"
 const val BK_REPO_GIT_WEBHOOK_EXCLUDE_USERS = "BK_CI_REPO_GIT_WEBHOOK_EXCLUDE_USERS"
 const val BK_REPO_GIT_WEBHOOK_BRANCH = "BK_CI_REPO_GIT_WEBHOOK_BRANCH"
+const val BK_REPO_GIT_MANUAL_UNLOCK = "BK_CI_REPO_GIT_MANUAL_UNLOCK"
+
 const val BK_REPO_GIT_WEBHOOK_PUSH_USERNAME = "BK_CI_REPO_GIT_WEBHOOK_PUSH_USERNAME"
 const val BK_REPO_GIT_WEBHOOK_PUSH_BEFORE_COMMIT = "BK_REPO_GIT_WEBHOOK_PUSH_BEFORE_COMMIT"
 const val BK_REPO_GIT_WEBHOOK_PUSH_AFTER_COMMIT = "BK_REPO_GIT_WEBHOOK_PUSH_AFTER_COMMIT"

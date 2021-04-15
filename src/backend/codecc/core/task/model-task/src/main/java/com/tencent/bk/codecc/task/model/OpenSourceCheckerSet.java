@@ -34,4 +34,7 @@ public class OpenSourceCheckerSet
 
     @Field("checker_set_type")
     private String checkerSetType;
+
+    @Field("version")
+    private Integer version;
 }

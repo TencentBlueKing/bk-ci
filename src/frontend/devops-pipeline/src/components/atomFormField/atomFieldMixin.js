@@ -16,7 +16,7 @@
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
+import { pluginUrlParse } from '@/utils/pipelineConst'
 const atomFieldMixin = {
     props: {
         type: {
@@ -60,6 +60,13 @@ const atomFieldMixin = {
         hidden: {
             type: Boolean,
             default: false
+        },
+        clickUnfold: {
+            type: Boolean
+        },
+        descTooltips: {
+            type: String,
+            default: ''
         }
     },
     data () {
@@ -75,10 +82,16 @@ const atomFieldMixin = {
     },
     mounted () {
         const ele = document.querySelector('.atom-form-box')
-        if ((ele && ele.classList.contains('readonly')) || this.disabled) {
+        if (this.descTooltips.length && this.disabled) {
+            this.title = this.descTooltips
+            this.readOnly = true
+        } else if ((ele && ele.classList.contains('readonly')) || this.disabled) {
             this.title = this.value
             this.readOnly = true
         }
+    },
+    methods: {
+        urlParse: pluginUrlParse
     }
 }
 

@@ -32,6 +32,7 @@ import com.tencent.bk.codecc.defect.vo.CheckerListQueryReq;
 import com.tencent.bk.codecc.defect.vo.enums.CheckerListSortType;
 import com.tencent.bk.codecc.task.vo.AnalyzeConfigInfoVO;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
+import com.tencent.bk.codecc.task.vo.ToolConfigInfoVO;
 import org.springframework.data.domain.Sort;
 
 import java.util.List;
@@ -147,4 +148,11 @@ public interface CheckerService
      * @return
      */
     AnalyzeConfigInfoVO getTaskCheckerConfig(AnalyzeConfigInfoVO analyzeConfigInfoVO);
+
+    /**
+     * 查询任务配置的圈复杂度阀值
+     *
+     * @param toolConfigInfoVO 工具配置信息
+     */
+    int getCcnThreshold(ToolConfigInfoVO toolConfigInfoVO);
 }

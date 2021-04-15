@@ -21,12 +21,15 @@ import com.tencent.bk.codecc.defect.vo.CodeRepoVO;
 import com.tencent.bk.codecc.quartz.pojo.JobExternalDto;
 import com.tencent.bk.codecc.quartz.pojo.OperationType;
 import com.tencent.bk.codecc.task.dao.CommonDao;
+import com.tencent.bk.codecc.task.dao.mongorepository.EmailNotifyMessageTemplateRepository;
 import com.tencent.bk.codecc.task.dao.mongorepository.TaskRepository;
 import com.tencent.bk.codecc.task.enums.EmailType;
+import com.tencent.bk.codecc.task.model.EmailNotifyMessageTemplateEntity;
 import com.tencent.bk.codecc.task.model.NotifyCustomEntity;
 import com.tencent.bk.codecc.task.model.TaskInfoEntity;
 import com.tencent.bk.codecc.task.model.ToolConfigInfoEntity;
 import com.tencent.bk.codecc.task.pojo.DailyDataReportReqModel;
+import com.tencent.bk.codecc.task.pojo.EmailMessageModel;
 import com.tencent.bk.codecc.task.pojo.EmailNotifyModel;
 import com.tencent.bk.codecc.task.pojo.NodeDataReportReqModel;
 import com.tencent.bk.codecc.task.pojo.NodeServerRespModel;
@@ -83,8 +86,10 @@ import java.util.stream.Collectors;
 
 import static com.tencent.devops.common.web.mq.ConstantsKt.EXCHANGE_CODECC_GENERAL_NOTIFY;
 import static com.tencent.devops.common.web.mq.ConstantsKt.EXCHANGE_EXTERNAL_JOB;
+import static com.tencent.devops.common.web.mq.ConstantsKt.QUEUE_CODECC_BKPLUGINEMAIL_NOTIFY;
 import static com.tencent.devops.common.web.mq.ConstantsKt.QUEUE_CODECC_EMAIL_NOTIFY;
 import static com.tencent.devops.common.web.mq.ConstantsKt.QUEUE_CODECC_RTX_NOTIFY;
+import static com.tencent.devops.common.web.mq.ConstantsKt.ROUTE_CODECC_BKPLUGINEMAIL_NOTIFY;
 import static com.tencent.devops.common.web.mq.ConstantsKt.ROUTE_CODECC_EMAIL_NOTIFY;
 import static com.tencent.devops.common.web.mq.ConstantsKt.ROUTE_CODECC_RTX_NOTIFY;
 
@@ -100,6 +105,9 @@ public class EmailNotifyServiceImpl implements EmailNotifyService {
 
     @Autowired
     private TaskRepository taskRepository;
+
+    @Autowired
+    private EmailNotifyMessageTemplateRepository emailNotifyMessageTemplateRepository;
 
     @Autowired
     private ToolMetaCacheService toolMetaCacheService;
@@ -469,8 +477,44 @@ public class EmailNotifyServiceImpl implements EmailNotifyService {
         return finalJobName;
     }
 
+    @Override
+    @RabbitListener(
+      bindings =
+          @QueueBinding(
+              key = ROUTE_CODECC_BKPLUGINEMAIL_NOTIFY,
+              value = @Queue(value = QUEUE_CODECC_BKPLUGINEMAIL_NOTIFY, durable = "true"),
+              exchange =
+                  @Exchange(
+                      value = EXCHANGE_CODECC_GENERAL_NOTIFY,
+                      durable = "true",
+                      delayed = "true",
+                      type = "topic")))
+    public void sendEmail(EmailMessageModel emailMessageModel) {
+        EmailNotifyMessageTemplateEntity template =
+                emailNotifyMessageTemplateRepository.findByTemplateId(
+                        emailMessageModel.getTemplate().value());
 
-    private DailyDataReportReqModel getReportDataForAll(Long taskId, TaskInfoEntity taskInfoEntity) {
+        if (template == null) {
+            log.error("get null email notify template, template code: {}", emailMessageModel.getTemplate());
+            return;
+        }
+
+        log.info("start to send bkplugin email");
+        devopsNotifyService.sendMail(template.getSender(),
+                emailMessageModel.getReceivers(),
+                emailMessageModel.getCc(),
+                emailMessageModel.getBcc(),
+                template.getTitle(),
+                replaceContentParams(emailMessageModel.getContentParam(), template.getBody()),
+                emailMessageModel.getPriority(),
+                template.getBodyFormat(),
+                Collections.emptyMap());
+    }
+
+
+
+
+        private DailyDataReportReqModel getReportDataForAll(Long taskId, TaskInfoEntity taskInfoEntity) {
         DailyDataReportReqModel dailyDataReportReqModel = new DailyDataReportReqModel();
         dailyDataReportReqModel.setTaskId(taskId);
         dailyDataReportReqModel.setProjectId(taskInfoEntity.getProjectId());
@@ -595,5 +639,18 @@ public class EmailNotifyServiceImpl implements EmailNotifyService {
             strElapseTime = String.format("%d 分 %d 秒", minutes, seconds);
         }
         return strElapseTime;
+    }
+
+    private String replaceContentParams(Map<String, String> params, String content) {
+        if (params == null || params.isEmpty()) {
+            log.error("email content can not be null");
+            return content;
+        }
+        String content1 = content;
+        for (String paramName : params.keySet()) {
+            String paramValue = params.get(paramName);
+            content1 = content1.replace("#{" + paramName + "}", paramValue);
+        }
+        return content1;
     }
 }

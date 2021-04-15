@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -29,6 +30,9 @@ package com.tencent.devops.process.engine.service.code
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.BRANCH_NAME_NOT_MATCH
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.REPOSITORY_TYPE_NOT_MATCH
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher.Companion.REPOSITORY_URL_NOT_MATCH
 import com.tencent.devops.process.pojo.scm.code.GitlabCommitEvent
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.Repository
@@ -40,6 +44,7 @@ class GitlabWebHookMatcher(private val event: GitlabCommitEvent) : ScmWebhookMat
         private val logger = LoggerFactory.getLogger(GitlabWebHookMatcher::class.java)
     }
 
+    @Suppress("ALL")
     override fun isMatch(
         projectId: String,
         pipelineId: String,
@@ -49,10 +54,10 @@ class GitlabWebHookMatcher(private val event: GitlabCommitEvent) : ScmWebhookMat
         with(webHookParams) {
             if (repository !is CodeGitlabRepository) {
                 logger.warn("The repo($repository) is not code git repo for git web hook")
-                return ScmWebhookMatcher.MatchResult(false)
+                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = REPOSITORY_TYPE_NOT_MATCH)
             }
             if (repository.url != event.repository.git_http_url) {
-                return ScmWebhookMatcher.MatchResult(false)
+                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = REPOSITORY_URL_NOT_MATCH)
             }
 
             if (branchName.isNullOrEmpty()) {
@@ -62,6 +67,7 @@ class GitlabWebHookMatcher(private val event: GitlabCommitEvent) : ScmWebhookMat
             val match = isBranchMatch(branchName!!, event.ref)
             if (!match) {
                 logger.info("The branch($branchName) is not match the git update one(${event.ref})")
+                return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = BRANCH_NAME_NOT_MATCH)
             }
             return ScmWebhookMatcher.MatchResult(match)
         }

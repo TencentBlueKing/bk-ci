@@ -35,8 +35,17 @@ public interface CLOCStatisticRepository extends MongoRepository<CLOCStatisticEn
     List<CLOCStatisticEntity> findByTaskId(Long taskId);
 
     /**
-     * 根据任务id删除
-     * @param taskId
+     * 根据 task_id 查询当前任务下最近一次
+     * 构建的记录
+     * @param taskId 任务ID
      */
-    void deleteByTaskId(Long taskId);
+    CLOCStatisticEntity findFirstByTaskIdOrderByUpdatedDateDesc(Long taskId);
+
+    /**
+     * 根据 task_id 和 build_id 查询单个记录
+     * @param taskId 任务ID
+     * @param buildId 构建ID
+     */
+    List<CLOCStatisticEntity> findByTaskIdAndBuildId(Long taskId, String buildId);
+
 }

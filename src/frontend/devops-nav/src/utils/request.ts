@@ -2,7 +2,7 @@ import axios from 'axios'
 import Vue from 'vue'
 
 const request = axios.create({
-    baseURL: GW_URL_PREFIX,
+    baseURL: API_URL_PREFIX,
     validateStatus: status => {
         if (status > 400) {
             console.warn(`HTTP 请求出错 status: ${status}`)
@@ -30,6 +30,9 @@ request.interceptors.response.use(response => {
         })
     } else if (httpStatus === 418) {
         console.log('no permission')
+    } else if (httpStatus === 403) {
+        const errorMsg = { httpStatus, code: httpStatus, message }
+        return Promise.reject(errorMsg)
     } else if ((typeof code !== 'undefined' && code !== 0) || (typeof status !== 'undefined' && status !== 0)) {
         let msg = message
         if (Object.prototype.toString.call(message) === '[object Object]') {

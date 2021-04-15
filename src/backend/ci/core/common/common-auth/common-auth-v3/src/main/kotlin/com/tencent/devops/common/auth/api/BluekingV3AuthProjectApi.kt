@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -37,6 +38,7 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.auth.api.pojo.BkAuthProjectInfoResources
 import com.tencent.devops.common.auth.code.AuthServiceCode
+import com.tencent.devops.common.auth.service.IamEsbService
 import com.tencent.devops.common.auth.utlis.ActionUtils
 import com.tencent.devops.common.auth.utlis.AuthUtils
 import org.slf4j.LoggerFactory
@@ -45,7 +47,8 @@ class BluekingV3AuthProjectApi constructor(
     private val bkAuthPermissionApi: BluekingV3AuthPermissionApi,
     private val policyService: PolicyService,
     private val authHelper: AuthHelper,
-    private val iamConfiguration: IamConfiguration
+    private val iamConfiguration: IamConfiguration,
+    private val iamEsbService: IamEsbService
 ) : AuthProjectApi {
 
     override fun getProjectUsers(serviceCode: AuthServiceCode, projectCode: String, group: BkAuthGroup?): List<String> {
@@ -59,7 +62,6 @@ class BluekingV3AuthProjectApi constructor(
         projectCode: String,
         group: BkAuthGroup?
     ): Boolean {
-        logger.info("v3 isProjectUser user[$user] serviceCode[${serviceCode.id()}] projectCode[$projectCode] group[$group]")
         val actionType = if (group != null && group == BkAuthGroup.MANAGER) {
             ActionUtils.buildAction(AuthResourceType.PROJECT, AuthPermission.MANAGE)
         } else {

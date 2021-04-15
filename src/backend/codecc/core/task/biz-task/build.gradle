@@ -12,7 +12,8 @@ dependencies {
     compile project(":core:quartz:api-quartz")
     compile "org.json:json:20180130"
     compile "org.springframework.boot:spring-boot-starter-test"
-//    compile group: 'com.tencent.bk.devops', name: 'common-pipeline', version: '0.0.5', changing: true
+    compile group: "com.tencent.bk.devops.ci.common", name: "common-kafka-tencent", version: version, changing: true
+    compile group: 'com.tencent.bk.devops.ci.image', name: 'api-image', version: version, changing: true
 }
 
 version = null

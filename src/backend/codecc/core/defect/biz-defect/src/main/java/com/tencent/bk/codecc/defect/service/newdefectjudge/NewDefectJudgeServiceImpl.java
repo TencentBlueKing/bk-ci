@@ -53,13 +53,13 @@ public class NewDefectJudgeServiceImpl implements NewDefectJudgeService
         if(null == taskDetailVO)
         {
             // 获取告警转为历史的时间
-            CodeCCResult<TaskDetailVO> taskInfoCodeCCResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
-            if (taskInfoCodeCCResult.isNotOk() || null == taskInfoCodeCCResult.getData())
+            CodeCCResult<TaskDetailVO> taskInfoResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
+            if (taskInfoResult.isNotOk() || null == taskInfoResult.getData())
             {
-                log.error("get task info fail! task id is: {}, msg: {}", taskId, taskInfoCodeCCResult.getMessage());
+                log.error("get task info fail! task id is: {}, msg: {}", taskId, taskInfoResult.getMessage());
                 throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
             }
-            newDefectJudge = taskInfoCodeCCResult.getData().getNewDefectJudge();
+            newDefectJudge = taskInfoResult.getData().getNewDefectJudge();
         }
         else
         {

@@ -130,20 +130,7 @@ public abstract class AbstractPlatformUploadDefectBizService extends AbstractUpl
 
     private Set<String> getFilterPaths(TaskDetailVO taskDetailVO)
     {
-        Set<String> filterPathSet = new HashSet<>();
-        List<String> defaultFilterPathList = taskDetailVO.getDefaultFilterPath();
-        List<String> filterPath = taskDetailVO.getFilterPath();
-
-        if (defaultFilterPathList != null)
-        {
-            filterPathSet.addAll(defaultFilterPathList);
-        }
-
-        if (filterPath != null)
-        {
-            filterPathSet.addAll(filterPath);
-        }
-        return filterPathSet;
+        return new HashSet<>(taskDetailVO.getAllFilterPaths());
     }
 
 

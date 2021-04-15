@@ -13,6 +13,7 @@
                 <template v-if="hasProjectList">
                     <empty-tips
                         v-if="!hasProject"
+                        :show-lock="true"
                         :title="$t('accessDeny.title')"
                         :desc="$t('accessDeny.desc')"
                     >

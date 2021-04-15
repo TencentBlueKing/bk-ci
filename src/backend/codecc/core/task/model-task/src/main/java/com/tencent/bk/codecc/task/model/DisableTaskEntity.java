@@ -38,8 +38,7 @@ import java.util.List;
  * @date 2019/7/8
  */
 @Data
-public class DisableTaskEntity
-{
+public class DisableTaskEntity {
 
     /**
      * 最后定时任务执行时间

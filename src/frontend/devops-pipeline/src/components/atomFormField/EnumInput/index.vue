@@ -3,7 +3,7 @@
         <bk-radio-group @change="handleSelect" :value="value" :name="name">
             <template v-for="item in list">
                 <bk-popover v-if="!item.hidden" :style="`width: calc(${100 / lineNumber}% - 10px)`" :disabled="!item.tips" :key="item.id" :content="item.tips" placement="bottom">
-                    <bk-radio class="bkdevops-radio" :value="item.value" :disabled="disabled || item.disabled">
+                    <bk-radio :class="['bkdevops-radio', { mr15: lineNumber <= 0 }]" :value="item.value" :disabled="disabled || item.disabled">
                         <span class="overflow" v-bk-overflow-tips>{{ item.label }}</span>
                     </bk-radio>
                 </bk-popover>
@@ -57,12 +57,10 @@
             display: inline-block;
         }
     }
-    .enum-input-main {
-        /deep/ .bk-tooltip {
-            margin-right: 10px;
-        }
-        /deep/ .bk-tooltip-ref {
-            width: 100%;
-        }
+    .mr15 {
+        margin-right: 15px;
+    }
+    .bkdevops-running-lock-setting-tab .bkdevops-radio {
+        margin-right: 20px;
     }
 </style>

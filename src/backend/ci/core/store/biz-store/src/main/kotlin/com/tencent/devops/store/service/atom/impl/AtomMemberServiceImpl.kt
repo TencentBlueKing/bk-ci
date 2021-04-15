@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -36,6 +37,7 @@ import com.tencent.devops.store.service.common.impl.StoreMemberServiceImpl
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
+@Suppress("ALL")
 abstract class AtomMemberServiceImpl : StoreMemberServiceImpl() {
 
     @Autowired
@@ -46,7 +48,15 @@ abstract class AtomMemberServiceImpl : StoreMemberServiceImpl() {
     /**
      * 添加插件成员
      */
-    override fun add(userId: String, storeMemberReq: StoreMemberReq, storeType: StoreTypeEnum, collaborationFlag: Boolean?, sendNotify: Boolean): Result<Boolean> {
+    override fun add(
+        userId: String,
+        storeMemberReq: StoreMemberReq,
+        storeType: StoreTypeEnum,
+        collaborationFlag: Boolean?,
+        sendNotify: Boolean,
+        checkPermissionFlag: Boolean,
+        testProjectCode: String?
+    ): Result<Boolean> {
         logger.info("addAtomMember userId is:$userId,storeMemberReq is:$storeMemberReq,storeType is:$storeType")
         val atomCode = storeMemberReq.storeCode
         val atomRecord = marketAtomDao.getLatestAtomByCode(dslContext, atomCode)
@@ -54,7 +64,13 @@ abstract class AtomMemberServiceImpl : StoreMemberServiceImpl() {
         if (null == atomRecord) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomCode))
         }
-        if (!storeMemberDao.isStoreAdmin(dslContext, userId, atomCode, storeType.type.toByte())) {
+        if (checkPermissionFlag && !storeMemberDao.isStoreAdmin(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = atomCode,
+                storeType = storeType.type.toByte()
+            )
+        ) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
         val repositoryHashId = atomRecord.repositoryHashId
@@ -63,20 +79,41 @@ abstract class AtomMemberServiceImpl : StoreMemberServiceImpl() {
         if (addRepoMemberResult.isNotOk()) {
             return Result(status = addRepoMemberResult.status, message = addRepoMemberResult.message, data = false)
         }
-        return super.add(userId, storeMemberReq, storeType, collaborationFlag, sendNotify)
+        return super.add(
+            userId = userId,
+            storeMemberReq = storeMemberReq,
+            storeType = storeType,
+            collaborationFlag = collaborationFlag,
+            sendNotify = sendNotify,
+            checkPermissionFlag = checkPermissionFlag,
+            testProjectCode = testProjectCode
+        )
     }
 
-    abstract fun addRepoMember(storeMemberReq: StoreMemberReq, userId: String, repositoryHashId: String): Result<Boolean>
+    abstract fun addRepoMember(
+        storeMemberReq: StoreMemberReq,
+        userId: String,
+        repositoryHashId: String
+    ): Result<Boolean>
 
     /**
      * 删除插件成员
      */
-    override fun delete(userId: String, id: String, storeCode: String, storeType: StoreTypeEnum): Result<Boolean> {
+    override fun delete(
+        userId: String,
+        id: String,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        checkPermissionFlag: Boolean
+    ): Result<Boolean> {
         logger.info("deleteAtomMember userId is:$userId,id is:$id,storeCode is:$storeCode,storeType is:$storeType")
         val atomRecord = marketAtomDao.getLatestAtomByCode(dslContext, storeCode)
         logger.info("addAtomMember atomRecord is:$atomRecord")
         if (null == atomRecord) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(storeCode))
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(storeCode)
+            )
         }
         val memberRecord = storeMemberDao.getById(dslContext, id)
             ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(id))
@@ -92,9 +129,19 @@ abstract class AtomMemberServiceImpl : StoreMemberServiceImpl() {
         val deleteRepoMemberResult = deleteRepoMember(userId, username, repositoryHashId)
         logger.info("deleteRepoMemberResult is:$deleteRepoMemberResult")
         if (deleteRepoMemberResult.isNotOk()) {
-            return Result(status = deleteRepoMemberResult.status, message = deleteRepoMemberResult.message, data = false)
+            return Result(
+                status = deleteRepoMemberResult.status,
+                message = deleteRepoMemberResult.message,
+                data = false
+            )
         }
-        return super.delete(userId, id, storeCode, storeType)
+        return super.delete(
+            userId = userId,
+            id = id,
+            storeCode = storeCode,
+            storeType = storeType,
+            checkPermissionFlag = checkPermissionFlag
+        )
     }
 
     abstract fun deleteRepoMember(userId: String, username: String, repositoryHashId: String): Result<Boolean>

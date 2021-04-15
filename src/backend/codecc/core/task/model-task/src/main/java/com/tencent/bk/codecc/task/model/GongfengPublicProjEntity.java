@@ -164,4 +164,7 @@ public class GongfengPublicProjEntity extends CommonEntity
     @Field("statistics")
     private StatisticsInfoEntity statistics;
 
+    @Field("synchronize_time")
+    private Long synchronizeTime;
+
 }

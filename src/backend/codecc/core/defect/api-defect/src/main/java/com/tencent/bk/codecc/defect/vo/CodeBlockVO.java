@@ -55,7 +55,7 @@ public class CodeBlockVO
     private String author;
 
     @ApiModelProperty("最后执行时间")
-    private long latestDatetime;
+    private Long latestDatetime;
 
     @ApiModelProperty("代码块的签名")
     private String fingerPrint;

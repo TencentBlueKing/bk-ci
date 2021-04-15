@@ -480,8 +480,13 @@ public class DateTimeUtils
      * @param time
      * @return
      */
-    public static long getThirteenTimestamp(long time)
+    public static long getThirteenTimestamp(Long time)
     {
+        if (time == null)
+        {
+            time = 0L;
+        }
+
         if (time >> TIMESTAMP_SHIFT_SPACE_NUM > 0)
         {
             return time;

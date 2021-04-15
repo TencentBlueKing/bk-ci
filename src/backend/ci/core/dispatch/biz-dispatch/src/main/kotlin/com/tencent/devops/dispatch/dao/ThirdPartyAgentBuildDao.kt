@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -34,7 +35,7 @@ import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
-@Repository
+@Repository@Suppress("ALL")
 class ThirdPartyAgentBuildDao {
 
     fun get(dslContext: DSLContext, buildId: String, vmSeqId: String): TDispatchThirdpartyAgentBuildRecord? {
@@ -177,7 +178,7 @@ class ThirdPartyAgentBuildDao {
         agentId: String
     ): Result<TDispatchThirdpartyAgentBuildRecord> {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            return dslContext.selectFrom(this)
+            return dslContext.selectFrom(this.forceIndex("IDX_AGENTID_STATUS_UPDATE"))
                 .where(AGENT_ID.eq(agentId))
                 .and(STATUS.eq(PipelineTaskStatus.QUEUE.status))
                 .orderBy(UPDATED_TIME.asc())
@@ -190,7 +191,7 @@ class ThirdPartyAgentBuildDao {
         agentId: String
     ): Result<TDispatchThirdpartyAgentBuildRecord> {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            return dslContext.selectFrom(this)
+            return dslContext.selectFrom(this.forceIndex("IDX_AGENTID_STATUS_UPDATE"))
                 .where(AGENT_ID.eq(agentId))
                 .and(STATUS.`in`(PipelineTaskStatus.RUNNING.status, PipelineTaskStatus.QUEUE.status))
                 .fetch()
@@ -202,7 +203,7 @@ class ThirdPartyAgentBuildDao {
         agentId: String
     ): List<TDispatchThirdpartyAgentBuildRecord> {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            return dslContext.selectFrom(this)
+            return dslContext.selectFrom(this.forceIndex("IDX_AGENTID_STATUS_UPDATE"))
                 .where(AGENT_ID.eq(agentId))
                 .and(STATUS.eq(PipelineTaskStatus.RUNNING.status))
                 .fetch()
@@ -228,7 +229,6 @@ class ThirdPartyAgentBuildDao {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             return dslContext.selectCount().from(this)
                 .where(AGENT_ID.eq(agentId))
-                .orderBy(CREATED_TIME.desc())
                 .fetchOne(0, Long::class.java)
         }
     }

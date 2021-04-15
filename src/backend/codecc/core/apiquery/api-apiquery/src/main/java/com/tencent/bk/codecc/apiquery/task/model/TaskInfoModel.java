@@ -362,4 +362,10 @@ public class TaskInfoModel
     @JsonProperty("opensource_disable_reason")
     private Integer opensourceDisableReason;
 
+    /**
+     * 错误原因
+     */
+    @JsonProperty("latest_scan_result")
+    private TaskFailRecordModel taskFailRecordModel;
+
 }

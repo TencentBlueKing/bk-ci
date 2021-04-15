@@ -32,7 +32,9 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.apache.commons.collections.CollectionUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -81,6 +83,9 @@ public class TaskDetailVO extends TaskBaseVO
     @ApiModelProperty("蓝盾项目ID")
     private String projectId;
 
+    @ApiModelProperty("蓝盾项目名称")
+    private String projectName;
+
     @ApiModelProperty(value = "事业群id")
     private int bgId;
 
@@ -116,6 +121,15 @@ public class TaskDetailVO extends TaskBaseVO
 
     @ApiModelProperty(value = "已添加的自定义过滤路径")
     private List<String> filterPath;
+
+    @ApiModelProperty(value = "code.yml自定义过滤路径")
+    private List<String> testSourceFilterPath;
+
+    @ApiModelProperty(value = "code.yml自定义过滤路径")
+    private List<String> autoGenFilterPath;
+
+    @ApiModelProperty(value = "code.yml自定义过滤路径")
+    private List<String> thirdPartyFilterPath;
 
     @ApiModelProperty(value = "持续集成传递代码语言信息")
     private String devopsCodeLang;
@@ -175,6 +189,9 @@ public class TaskDetailVO extends TaskBaseVO
     @ApiModelProperty("显示工具信息")
     private String displayName;
 
+    @ApiModelProperty("是否回写工蜂")
+    private Boolean mrCommentEnable;
+
     /**
      * 是否是老插件切换为新插件，不对外接口暴露，仅用于内部逻辑参数传递
      */
@@ -190,4 +207,29 @@ public class TaskDetailVO extends TaskBaseVO
      */
     private ComConstants.OpenSourceCheckerSetType openSourceCheckerSetType;
 
+    public List<String> getAllFilterPaths()
+    {
+        List<String> filterPath = new ArrayList<>();
+        if(CollectionUtils.isNotEmpty(getFilterPath()))
+        {
+            filterPath.addAll(getFilterPath());
+        }
+        if(CollectionUtils.isNotEmpty(getDefaultFilterPath()))
+        {
+            filterPath.addAll(getDefaultFilterPath());
+        }
+        if(CollectionUtils.isNotEmpty(getTestSourceFilterPath()))
+        {
+            filterPath.addAll(getTestSourceFilterPath());
+        }
+        if(CollectionUtils.isNotEmpty(getAutoGenFilterPath()))
+        {
+            filterPath.addAll(getAutoGenFilterPath());
+        }
+        if(CollectionUtils.isNotEmpty(getThirdPartyFilterPath()))
+        {
+            filterPath.addAll(getThirdPartyFilterPath());
+        }
+        return filterPath;
+    }
 }

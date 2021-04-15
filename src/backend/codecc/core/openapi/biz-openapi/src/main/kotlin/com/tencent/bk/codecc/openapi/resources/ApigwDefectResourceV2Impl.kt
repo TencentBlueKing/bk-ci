@@ -37,36 +37,6 @@ open class ApigwDefectResourceV2Impl @Autowired constructor(
         private val logger = LoggerFactory.getLogger(ApigwDefectResourceV2Impl::class.java)
     }
 
-    override fun getPkgDefectList(
-        toolName: String,
-        pkgId: String,
-        bgId: Int,
-        taskId: Long,
-        pageNum: Int?,
-        pageSize: Int?,
-        sortField: String?,
-        sortType: Sort.Direction?
-    ): CodeCCResult<CheckerPkgDefectVO> {
-        return client.getWithoutRetry(ServicePkgDefectRestResource::class).getPkgDefectList(
-            toolName, pkgId,
-            bgId, taskId, pageNum, pageSize, sortField, sortType
-        )
-    }
-
-    override fun queryCheckerPkgDefect(
-        toolName: String,
-        pkgId: String,
-        bgId: Int,
-        deptId: Int?,
-        pageNum: Int?,
-        pageSize: Int?,
-        sortType: Sort.Direction?
-    ): CodeCCResult<CheckerPkgDefectRespVO> {
-        return client.getWithoutRetry(ServicePkgDefectRestResource::class).queryCheckerPkgDefect(
-            toolName, pkgId, bgId, deptId, pageNum, pageSize, sortType
-        )
-    }
-
     override fun getTasksByAuthor(
         reqVO: QueryMyTasksReqVO
     ): CodeCCResult<Page<TaskInfoVO>> {

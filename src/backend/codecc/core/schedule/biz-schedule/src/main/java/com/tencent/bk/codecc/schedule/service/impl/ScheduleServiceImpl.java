@@ -13,6 +13,8 @@
 package com.tencent.bk.codecc.schedule.service.impl;
 
 import com.fasterxml.jackson.core.type.TypeReference;
+import com.tencent.bk.codecc.defect.api.ServiceReportTaskLogRestResource;
+import com.tencent.bk.codecc.defect.vo.UploadTaskLogStepVO;
 import com.tencent.bk.codecc.schedule.constant.ScheduleConstants;
 import com.tencent.bk.codecc.schedule.dao.redis.AnalyzeHostPoolDao;
 import com.tencent.bk.codecc.schedule.model.AnalyzeHostPoolModel;
@@ -20,7 +22,11 @@ import com.tencent.bk.codecc.schedule.service.ScheduleService;
 import com.tencent.bk.codecc.schedule.vo.FreeVO;
 import com.tencent.bk.codecc.schedule.vo.PushVO;
 import com.tencent.bk.codecc.schedule.vo.TailLogRspVO;
+import com.tencent.devops.common.api.exception.CodeCCException;
+import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.ComConstants;
+import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.util.JsonUtil;
 import com.tencent.devops.common.web.RpcClient;
 import com.tencent.devops.common.web.mq.ConstantsKt;
@@ -53,7 +59,8 @@ public class ScheduleServiceImpl implements ScheduleService
 {
     @Autowired
     private RabbitTemplate rabbitTemplate;
-
+    @Autowired
+    private Client client;
     @Autowired
     private AnalyzeHostPoolDao analyzeHostPoolDao;
 
@@ -115,6 +122,9 @@ public class ScheduleServiceImpl implements ScheduleService
                             log.error("abort analyze job fail, serverURL:{}, params:{}", serverURL, params);
                         }
                         analyzeHostPoolDao.freeHostThread(pushVO.getToolName(), pushVO.getStreamName(), host.getIp(), analyzeJob.getBuildId());
+
+                        // 中断后需要同步更新分析记录
+                        uploadAbortTaskLog(pushVO.getStreamName(), pushVO.getToolName(), analyzeJob.getBuildId(), String.format("当前任务被新构建%s中断", pushVO.getBuildId()));
                         return;
                     }
                 });
@@ -141,6 +151,7 @@ public class ScheduleServiceImpl implements ScheduleService
                 Object[] params = new Object[]{JsonUtil.INSTANCE.toJson(jobList)};
                 String serverURL = String.format("http://%s:%s/", analyzeHost.getIp(), analyzeHost.getPort());
                 RpcClient<?> rpcClient = new RpcClient();
+                log.info("{} request: {}", ScheduleConstants.RpcMethod.CHECK.methodName(), params);
                 Object responseObj = rpcClient.doRequest(serverURL, ScheduleConstants.RpcMethod.CHECK.methodName(), params);
                 log.info("{} response: {}", ScheduleConstants.RpcMethod.CHECK.methodName(), JsonUtil.INSTANCE.toJson(responseObj));
                 List<Boolean> response = JsonUtil.INSTANCE.to(JsonUtil.INSTANCE.toJson(responseObj), new TypeReference<List<Boolean>>()
@@ -171,7 +182,17 @@ public class ScheduleServiceImpl implements ScheduleService
 
         if (needFreeHostMap.size() > 0)
         {
+            log.info("batch free host thread: {}", ScheduleConstants.RpcMethod.CHECK.methodName(), JsonUtil.INSTANCE.toJson(needFreeHostMap));
             analyzeHostPoolDao.batchFreeHostThread(needFreeHostMap);
+
+            // 中断后需要同步更新分析记录
+            needFreeHostMap.forEach((ip, jobList) ->
+            {
+                jobList.forEach(analyzeJob ->
+                {
+                    uploadAbortTaskLog(analyzeJob.getStreamName(), analyzeJob.getToolName(), analyzeJob.getBuildId(), String.format("当前任务由于分析服务器[%s]异常而中断", ip));
+                });
+            });
         }
     }
 
@@ -246,6 +267,35 @@ public class ScheduleServiceImpl implements ScheduleService
 //        }
         log.info("end tail log cost: {}, {}", System.currentTimeMillis() - beginTime, buildId);
         return tailLogRspVO;
+    }
+
+
+    public void uploadAbortTaskLog(String streamName, String toolName, String buildId, String msg)
+    {
+        try
+        {
+            UploadTaskLogStepVO uploadTaskLogStepVO = new UploadTaskLogStepVO();
+            uploadTaskLogStepVO.setStreamName(streamName);
+            uploadTaskLogStepVO.setToolName(toolName);
+            uploadTaskLogStepVO.setStartTime(0L);
+            uploadTaskLogStepVO.setEndTime(System.currentTimeMillis());
+            uploadTaskLogStepVO.setMsg(msg);
+            uploadTaskLogStepVO.setPipelineBuildId(buildId);
+            uploadTaskLogStepVO.setPipelineFail(true);
+            CodeCCResult result = client.get(ServiceReportTaskLogRestResource.class).uploadTaskLog(uploadTaskLogStepVO);
+
+            if (result.isNotOk())
+            {
+                log.error("upload TaskLog fail! streamName: {}, toolName: {}, buildId: {}, msg: {}, message: {}",
+                        streamName, toolName, buildId, msg, result.getMessage());
+            }
+        }
+        catch (Throwable t)
+        {
+            log.error("upload TaskLog fail! streamName: {}, toolName: {}, buildId: {}, msg: {}, message: {}",
+                    streamName, toolName, buildId, msg, t.getMessage());
+        }
+
     }
 
 }
