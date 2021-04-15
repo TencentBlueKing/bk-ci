@@ -2,10 +2,10 @@
     <article class="detail-report-home" v-bkloading="{ isLoading }">
         <template v-if="reportList.length">
             <ul class="report-list">
-                <li v-for="report in reportList"
-                    :key="report.name"
-                    :class="{ 'text-overflow': true, active: reportName === report.name }"
-                    @click="reportName = report.name"
+                <li v-for="(report, index) in reportList"
+                    :key="index"
+                    :class="{ 'text-overflow': true, active: reportIndex === index }"
+                    @click="reportIndex = index"
                     v-bk-overflow-tips
                 >
                     {{ report.name }}
@@ -15,7 +15,7 @@
             <iframe :src="reportUrl" frameborder="0" class="report-file"></iframe>
         </template>
 
-        <span class="bk-table-empty-text">
+        <span class="bk-table-empty-text" v-if="!isLoading && reportList.length <= 0">
             <i class="bk-table-empty-icon bk-icon icon-empty"></i>
             <div>{{ $t('empty') }}</div>
         </span>
@@ -32,13 +32,13 @@
             return {
                 isLoading: true,
                 reportList: [],
-                reportName: ''
+                reportIndex: 0
             }
         },
 
         computed: {
             reportUrl () {
-                const report = this.reportList.find((report) => (report.name === this.reportName)) || {}
+                const report = this.reportList.find((report, index) => (index === this.reportIndex)) || {}
                 return report.indexFileUrl
             }
         },
@@ -57,8 +57,7 @@
                     taskId: this.taskId
                 }
                 this.$store.dispatch('soda/requestReportList', postData).then((res) => {
-                    this.reportList = res.data || []
-                    this.reportName = (this.reportList[0] || {}).name
+                    this.reportList = res || []
                 }).catch((err) => {
                     this.$bkMessage({ theme: 'error', message: err.message || err })
                 }).finally(() => {

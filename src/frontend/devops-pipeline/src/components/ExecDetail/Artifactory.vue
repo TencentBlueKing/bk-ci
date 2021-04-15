@@ -50,8 +50,7 @@
                 }
                 this.isLoading = true
                 this.$store.dispatch('soda/requestPartFile', postData).then((res) => {
-                    const data = res.data || {}
-                    this.artifactories = data.records || []
+                    this.artifactories = res.records || []
                 }).catch((err) => {
                     this.$bkMessage({ theme: 'error', message: err.message || err })
                 }).finally(() => {
