@@ -1,7 +1,7 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.  
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -10,13 +10,23 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 package com.tencent.bkrepo.replication.controller
@@ -24,13 +34,12 @@ package com.tencent.bkrepo.replication.controller
 import com.tencent.bkrepo.auth.api.ServicePermissionResource
 import com.tencent.bkrepo.auth.api.ServiceRoleResource
 import com.tencent.bkrepo.auth.api.ServiceUserResource
-import com.tencent.bkrepo.auth.pojo.CreatePermissionRequest
-import com.tencent.bkrepo.auth.pojo.CreateRoleRequest
-import com.tencent.bkrepo.auth.pojo.CreateUserRequest
-import com.tencent.bkrepo.auth.pojo.Permission
-import com.tencent.bkrepo.auth.pojo.Role
-import com.tencent.bkrepo.auth.pojo.User
-import com.tencent.bkrepo.auth.pojo.enums.ResourceType
+import com.tencent.bkrepo.auth.pojo.permission.CreatePermissionRequest
+import com.tencent.bkrepo.auth.pojo.permission.Permission
+import com.tencent.bkrepo.auth.pojo.role.CreateRoleRequest
+import com.tencent.bkrepo.auth.pojo.role.Role
+import com.tencent.bkrepo.auth.pojo.user.CreateUserRequest
+import com.tencent.bkrepo.auth.pojo.user.User
 import com.tencent.bkrepo.common.api.exception.ErrorCodeException
 import com.tencent.bkrepo.common.api.message.CommonMessageCode
 import com.tencent.bkrepo.common.api.pojo.Response
@@ -54,10 +63,9 @@ import com.tencent.bkrepo.repository.api.RepositoryClient
 import com.tencent.bkrepo.repository.pojo.metadata.MetadataDeleteRequest
 import com.tencent.bkrepo.repository.pojo.metadata.MetadataSaveRequest
 import com.tencent.bkrepo.repository.pojo.node.NodeDetail
-import com.tencent.bkrepo.repository.pojo.node.service.NodeCopyRequest
 import com.tencent.bkrepo.repository.pojo.node.service.NodeCreateRequest
 import com.tencent.bkrepo.repository.pojo.node.service.NodeDeleteRequest
-import com.tencent.bkrepo.repository.pojo.node.service.NodeMoveRequest
+import com.tencent.bkrepo.repository.pojo.node.service.NodeMoveCopyRequest
 import com.tencent.bkrepo.repository.pojo.node.service.NodeRenameRequest
 import com.tencent.bkrepo.repository.pojo.node.service.NodeUpdateRequest
 import com.tencent.bkrepo.repository.pojo.project.ProjectCreateRequest
@@ -65,40 +73,25 @@ import com.tencent.bkrepo.repository.pojo.project.ProjectInfo
 import com.tencent.bkrepo.repository.pojo.repo.RepoCreateRequest
 import com.tencent.bkrepo.repository.pojo.repo.RepoDeleteRequest
 import com.tencent.bkrepo.repository.pojo.repo.RepoUpdateRequest
-import com.tencent.bkrepo.repository.pojo.repo.RepositoryInfo
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.bkrepo.repository.pojo.repo.RepositoryDetail
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.http.MediaType
 import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.RestController
+import java.time.format.DateTimeFormatter
 
 @Principal(type = PrincipalType.ADMIN)
 @RestController
-class ReplicationController : ReplicationClient {
-
-    @Autowired
-    private lateinit var projectClient: ProjectClient
-
-    @Autowired
-    private lateinit var repositoryClient: RepositoryClient
-
-    @Autowired
-    private lateinit var nodeClient: NodeClient
-
-    @Autowired
-    private lateinit var metadataClient: MetadataClient
-
-    @Autowired
-    private lateinit var permissionResource: ServicePermissionResource
-
-    @Autowired
-    private lateinit var userResource: ServiceUserResource
-
-    @Autowired
-    private lateinit var roleResource: ServiceRoleResource
-
-    @Autowired
-    private lateinit var storageService: StorageService
+class ReplicationController(
+    private val projectClient: ProjectClient,
+    private val repositoryClient: RepositoryClient,
+    private val nodeClient: NodeClient,
+    private val metadataClient: MetadataClient,
+    private val permissionResource: ServicePermissionResource,
+    private val userResource: ServiceUserResource,
+    private val roleResource: ServiceRoleResource,
+    private val storageService: StorageService
+) : ReplicationClient {
 
     @Value("\${spring.application.version}")
     private var version: String = DEFAULT_VERSION
@@ -113,7 +106,7 @@ class ReplicationController : ReplicationClient {
         repoName: String,
         fullPath: String
     ): Response<Boolean> {
-        return nodeClient.exist(projectId, repoName, fullPath)
+        return nodeClient.checkExist(projectId, repoName, fullPath)
     }
 
     override fun checkNodeExistList(
@@ -134,11 +127,15 @@ class ReplicationController : ReplicationClient {
                 userResource.createUser(request)
                 userResource.detail(userId).data!!
             }
-            val remoteTokenStringList = this.tokens.map { it.id }
             val selfTokenStringList = userInfo.tokens.map { it.id }
-            remoteTokenStringList.forEach {
-                if (!selfTokenStringList.contains(it)) {
-                    userResource.addUserToken(userId, token)
+            this.tokens.forEach {
+                if (!selfTokenStringList.contains(it.id)) {
+                    userResource.addUserToken(
+                        userId,
+                        token,
+                        it.expiredAt!!.format(DateTimeFormatter.ISO_DATE_TIME),
+                        null
+                    )
                 }
             }
             return ResponseBuilder.success(userInfo)
@@ -153,7 +150,14 @@ class ReplicationController : ReplicationClient {
                 roleResource.detailByRidAndProjectIdAndRepoName(roleId, projectId, repoName!!).data
             }
             val roleInfo = existRole ?: run {
-                val request = CreateRoleRequest(roleId, name, type, projectId, repoName, admin)
+                val request = CreateRoleRequest(
+                    roleId,
+                    name,
+                    type,
+                    projectId,
+                    repoName,
+                    admin
+                )
                 val id = roleResource.createRole(request).data!!
                 roleResource.detail(id).data!!
             }
@@ -172,13 +176,8 @@ class ReplicationController : ReplicationClient {
         return ResponseBuilder.success()
     }
 
-    override fun listPermission(
-        token: String,
-        resourceType: ResourceType,
-        projectId: String,
-        repoName: String?
-    ): Response<List<Permission>> {
-        return permissionResource.listPermission(resourceType, projectId, repoName)
+    override fun listPermission(token: String, projectId: String, repoName: String?): Response<List<Permission>> {
+        return permissionResource.listPermission(projectId, repoName)
     }
 
     @PostMapping(FILE_MAPPING_URI, consumes = [MediaType.MULTIPART_FORM_DATA_VALUE])
@@ -203,8 +202,8 @@ class ReplicationController : ReplicationClient {
             // 保存文件
             val projectId = artifactInfo.projectId
             val repoName = artifactInfo.repoName
-            val fullPath = artifactInfo.artifactUri
-            val repoInfo = repositoryClient.detail(projectId, repoName).data!!
+            val fullPath = artifactInfo.getArtifactFullPath()
+            val repoInfo = repositoryClient.getRepoDetail(projectId, repoName).data!!
             storageService.store(sha256, file, repoInfo.storageCredentials)
             // 保存节点
             val request = NodeCreateRequest(
@@ -220,58 +219,58 @@ class ReplicationController : ReplicationClient {
                 metadata = metadata,
                 operator = userId
             )
-            return nodeClient.create(request)
+            return nodeClient.createNode(request)
         }
     }
 
     override fun replicaNodeCreateRequest(token: String, nodeCreateRequest: NodeCreateRequest): Response<NodeDetail> {
-        return nodeClient.create(nodeCreateRequest)
+        return nodeClient.createNode(nodeCreateRequest)
     }
 
     override fun replicaNodeRenameRequest(token: String, nodeRenameRequest: NodeRenameRequest): Response<Void> {
-        return nodeClient.rename(nodeRenameRequest)
+        return nodeClient.renameNode(nodeRenameRequest)
     }
 
     override fun replicaNodeUpdateRequest(token: String, nodeUpdateRequest: NodeUpdateRequest): Response<Void> {
-        return nodeClient.update(nodeUpdateRequest)
+        return nodeClient.updateNode(nodeUpdateRequest)
     }
 
-    override fun replicaNodeCopyRequest(token: String, nodeCopyRequest: NodeCopyRequest): Response<Void> {
-        return nodeClient.copy(nodeCopyRequest)
+    override fun replicaNodeCopyRequest(token: String, nodeCopyRequest: NodeMoveCopyRequest): Response<Void> {
+        return nodeClient.copyNode(nodeCopyRequest)
     }
 
-    override fun replicaNodeMoveRequest(token: String, nodeMoveRequest: NodeMoveRequest): Response<Void> {
-        return nodeClient.move(nodeMoveRequest)
+    override fun replicaNodeMoveRequest(token: String, nodeMoveRequest: NodeMoveCopyRequest): Response<Void> {
+        return nodeClient.moveNode(nodeMoveRequest)
     }
 
     override fun replicaNodeDeleteRequest(token: String, nodeDeleteRequest: NodeDeleteRequest): Response<Void> {
-        return nodeClient.delete(nodeDeleteRequest)
+        return nodeClient.deleteNode(nodeDeleteRequest)
     }
 
-    override fun replicaRepoCreateRequest(token: String, request: RepoCreateRequest): Response<RepositoryInfo> {
-        return repositoryClient.detail(request.projectId, request.name).data?.let { ResponseBuilder.success(it) }
-            ?: repositoryClient.create(request)
+    override fun replicaRepoCreateRequest(token: String, request: RepoCreateRequest): Response<RepositoryDetail> {
+        return repositoryClient.getRepoDetail(request.projectId, request.name).data?.let { ResponseBuilder.success(it) }
+            ?: repositoryClient.createRepo(request)
     }
 
     override fun replicaRepoUpdateRequest(token: String, request: RepoUpdateRequest): Response<Void> {
-        return repositoryClient.update(request)
+        return repositoryClient.updateRepo(request)
     }
 
     override fun replicaRepoDeleteRequest(token: String, request: RepoDeleteRequest): Response<Void> {
-        return repositoryClient.delete(request)
+        return repositoryClient.deleteRepo(request)
     }
 
     override fun replicaProjectCreateRequest(token: String, request: ProjectCreateRequest): Response<ProjectInfo> {
-        return projectClient.query(request.name).data?.let { ResponseBuilder.success(it) }
-            ?: projectClient.create(request)
+        return projectClient.getProjectInfo(request.name).data?.let { ResponseBuilder.success(it) }
+            ?: projectClient.createProject(request)
     }
 
     override fun replicaMetadataSaveRequest(token: String, request: MetadataSaveRequest): Response<Void> {
-        return metadataClient.save(request)
+        return metadataClient.saveMetadata(request)
     }
 
     override fun replicaMetadataDeleteRequest(token: String, request: MetadataDeleteRequest): Response<Void> {
-        return metadataClient.delete(request)
+        return metadataClient.deleteMetadata(request)
     }
 
     companion object {

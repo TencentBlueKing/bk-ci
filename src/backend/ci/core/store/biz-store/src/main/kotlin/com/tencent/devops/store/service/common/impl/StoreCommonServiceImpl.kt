@@ -47,6 +47,7 @@ import com.tencent.devops.store.dao.common.StorePipelineBuildRelDao
 import com.tencent.devops.store.dao.common.StorePipelineRelDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreReleaseDao
+import com.tencent.devops.store.dao.common.StoreStatisticDailyDao
 import com.tencent.devops.store.dao.common.StoreStatisticDao
 import com.tencent.devops.store.dao.common.StoreStatisticTotalDao
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
@@ -86,6 +87,7 @@ class StoreCommonServiceImpl @Autowired constructor(
     private val storeReleaseDao: StoreReleaseDao,
     private val storeStatisticDao: StoreStatisticDao,
     private val storeStatisticTotalDao: StoreStatisticTotalDao,
+    private val storeStatisticDailyDao: StoreStatisticDailyDao,
     private val storeDetailUrlConfig: StoreDetailUrlConfig
 ) : StoreCommonService {
 
@@ -227,6 +229,7 @@ class StoreCommonServiceImpl @Autowired constructor(
             storeReleaseDao.deleteStoreReleaseInfo(context, storeCode, storeType)
             storeStatisticDao.deleteStoreStatistic(context, storeCode, storeType)
             storeStatisticTotalDao.deleteStoreStatisticTotal(context, storeCode, storeType)
+            storeStatisticDailyDao.deleteDailyStatisticData(context, storeCode, storeType)
         }
         return true
     }

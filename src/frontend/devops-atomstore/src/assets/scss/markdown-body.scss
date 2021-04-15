@@ -87,4 +87,7 @@
      ul ul ul li {
          list-style-type: square;
      }
+     &.v-note-wrapper .v-note-panel .v-note-show.single-show .v-show-content {
+         padding: 0;
+     }
  }

@@ -60,8 +60,8 @@ class ServicePTemplateResourceImpl @Autowired constructor(
         return templateFacadeService.updateMarketTemplateReference(userId, updateMarketTemplateRequest)
     }
 
-    override fun getTemplateDetailInfo(templateCode: String, publicFlag: Boolean): Result<TemplateDetailInfo?> {
-        return pipelineTemplateService.getTemplateDetailInfo(templateCode, publicFlag)
+    override fun getTemplateDetailInfo(templateCode: String): Result<TemplateDetailInfo?> {
+        return pipelineTemplateService.getTemplateDetailInfo(templateCode)
     }
 
     override fun getSrcTemplateCodes(projectId: String): Result<List<String>> {

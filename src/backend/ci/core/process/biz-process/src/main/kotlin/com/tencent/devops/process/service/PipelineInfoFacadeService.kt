@@ -52,6 +52,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ILLEGAL_PIPELINE_MODEL_JSON
 import com.tencent.devops.process.constant.ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
+import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
@@ -64,7 +65,8 @@ import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.template.service.TemplateService
-import com.tencent.devops.store.api.common.ServiceStoreResource
+import com.tencent.devops.store.api.template.ServiceTemplateResource
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -78,6 +80,8 @@ import javax.ws.rs.core.StreamingOutput
 @Suppress("ALL")
 @Service
 class PipelineInfoFacadeService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val templateDao: TemplateDao,
     private val projectCacheService: ProjectCacheService,
     private val pipelineSettingFacadeService: PipelineSettingFacadeService,
     private val pipelineRepositoryService: PipelineRepositoryService,
@@ -178,7 +182,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         instanceType: String? = PipelineInstanceTypeEnum.FREEDOM.type,
         buildNo: BuildNo? = null,
         param: List<BuildFormProperty>? = null,
-        fixTemplateVersion: Long? = null
+        fixTemplateVersion: Long? = null,
+        useTemplateSettings: Boolean? = false
     ): String {
         val watcher =
             Watcher(id = "createPipeline|$projectId|$userId|$channelCode|$checkPermission|$instanceType|$fixPipelineId")
@@ -211,14 +216,20 @@ class PipelineInfoFacadeService @Autowired constructor(
                 )
             }
 
+            val templateId = model.templateId
+            val srcTemplateId = model.srcTemplateId
+            if (srcTemplateId == null && templateId != null) {
+                // 如果是根据模板创建的流水线需为model设置srcTemplateId
+                model.srcTemplateId = templateDao.getSrcTemplateId(dslContext, templateId)
+            }
+
             // 检查用户是否有插件的使用权限
             if (model.srcTemplateId != null) {
                 watcher.start("store_template_perm")
-                val srcTemplateId = model.srcTemplateId as String
-                val validateRet = client.get(ServiceStoreResource::class)
-                    .validateUserTemplateAtomVisibleDept(
+                val validateRet = client.get(ServiceTemplateResource::class)
+                    .validateUserTemplateComponentVisibleDept(
                         userId = userId,
-                        templateCode = srcTemplateId,
+                        templateCode = model.srcTemplateId as String,
                         projectCode = projectId
                     )
                 if (validateRet.isNotOk()) {
@@ -262,13 +273,28 @@ class PipelineInfoFacadeService @Autowired constructor(
                     signPipelineId = fixPipelineId,
                     userId = userId,
                     channelCode = channelCode,
-                    create = true
+                    create = true,
+                    useTemplateSettings = useTemplateSettings,
+                    templateId = model.templateId
                 ).pipelineId
                 watcher.stop()
 
                 // 先进行模板关联操作
-                if (model.templateId != null) {
-                    val templateId = model.templateId as String
+                if (templateId != null) {
+                    watcher.start("addLabel")
+                    if (useTemplateSettings == true) {
+                        val groups = pipelineGroupService.getGroups(userId, projectId, templateId)
+                        val labels = ArrayList<String>()
+                        groups.forEach {
+                            labels.addAll(it.labels)
+                        }
+                        pipelineGroupService.updatePipelineLabel(
+                            userId = userId,
+                            pipelineId = pipelineId,
+                            labelIds = labels
+                        )
+                    }
+                    watcher.stop()
                     watcher.start("createTemplate")
                     templateService.createRelationBtwTemplate(
                         userId = userId,
