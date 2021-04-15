@@ -49,8 +49,11 @@ import java.util.stream.Collectors;
 @Slf4j
 public class GitRepoApiServiceImpl implements GitRepoApiService {
 
-    @Value("${scm.git.host:http://git.code.oa.com}")
+    @Value("${git.host:}")
     private String gitHost;
+
+    @Value("${git.sshHost:}")
+    private String gitSSHHost;
 
     @Value("${scm.git.file.token:1719ff6db1b1afb00e4f01c839260eab}")
     private String gitFileToken;
@@ -305,7 +308,7 @@ public class GitRepoApiServiceImpl implements GitRepoApiService {
             filePath = StringUtils.removeStart(filePath, "/");
         }
 
-        request.setProjectPath(GitUtil.INSTANCE.getProjectName(url));
+        request.setProjectPath(GitUtil.INSTANCE.getProjectName(url, gitSSHHost));
         request.setFilePath(filePath);
         request.setBranch(branch);
         request.setType(GIT_CODECC_TYPE);
