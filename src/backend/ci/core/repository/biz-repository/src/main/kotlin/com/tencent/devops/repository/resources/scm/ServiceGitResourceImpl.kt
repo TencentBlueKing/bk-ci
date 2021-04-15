@@ -28,6 +28,7 @@
 package com.tencent.devops.repository.resources.scm
 
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.scm.ServiceGitResource
@@ -206,7 +207,8 @@ class ServiceGitResourceImpl @Autowired constructor(
         mrId: Long,
         tokenType: TokenTypeEnum,
         token: String,
-        repoUrl: String?
+        repoUrl: String?,
+        scmType: ScmType?
     ): Result<GitMrInfo> {
         return Result(
             gitService.getMrInfo(
@@ -214,7 +216,8 @@ class ServiceGitResourceImpl @Autowired constructor(
                 mrId = mrId,
                 tokenType = tokenType,
                 token = token,
-                repoUrl = repoUrl
+                repoUrl = repoUrl,
+                scmType = scmType
             )
         )
     }
@@ -234,7 +237,8 @@ class ServiceGitResourceImpl @Autowired constructor(
         mrId: Long,
         tokenType: TokenTypeEnum,
         token: String,
-        repoUrl: String?
+        repoUrl: String?,
+        scmType: ScmType?
     ): Result<GitMrReviewInfo> {
         return Result(
             gitService.getMrReviewInfo(
@@ -242,7 +246,8 @@ class ServiceGitResourceImpl @Autowired constructor(
                 mrId = mrId,
                 tokenType = tokenType,
                 token = token,
-                repoUrl = repoUrl
+                repoUrl = repoUrl,
+                scmType = scmType
             )
         )
     }
@@ -252,7 +257,8 @@ class ServiceGitResourceImpl @Autowired constructor(
         mrId: Long,
         tokenType: TokenTypeEnum,
         token: String,
-        repoUrl: String?
+        repoUrl: String?,
+        scmType: ScmType?
     ): Result<GitMrChangeInfo> {
         return Result(
             gitService.getMrChangeInfo(
@@ -260,7 +266,8 @@ class ServiceGitResourceImpl @Autowired constructor(
                 mrId = mrId,
                 tokenType = tokenType,
                 token = token,
-                repoUrl = repoUrl
+                repoUrl = repoUrl,
+                scmType = scmType
             )
         )
     }

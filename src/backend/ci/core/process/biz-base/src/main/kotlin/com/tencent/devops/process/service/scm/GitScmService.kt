@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.service.scm
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.api.ServiceOauthResource
@@ -62,13 +63,13 @@ class GitScmService @Autowired constructor(
         repo: Repository
     ): GitMrReviewInfo? {
         if (mrId == null) return null
-        val authType = when (repo) {
+        val (authType, scmType) = when (repo) {
             is CodeGitRepository ->
-                repo.authType
+                Pair(repo.authType, ScmType.CODE_GIT)
             is CodeTGitRepository ->
-                repo.authType
+                Pair(repo.authType, ScmType.CODE_TGIT)
             is CodeGitlabRepository ->
-                RepoAuthType.HTTP
+                Pair(RepoAuthType.HTTP, ScmType.CODE_GITLAB)
             else ->
                 return null
         }
@@ -86,7 +87,8 @@ class GitScmService @Autowired constructor(
                 mrId = mrId,
                 tokenType = tokenType,
                 token = token,
-                repoUrl = repo.url
+                repoUrl = repo.url,
+                scmType = scmType
             ).data!!
         } catch (e: Exception) {
             logger.error("fail to get mr reviews info", e)
@@ -100,13 +102,13 @@ class GitScmService @Autowired constructor(
         repo: Repository
     ): GitMrInfo? {
         if (mrId == null) return null
-        val authType = when (repo) {
+        val (authType, scmType) = when (repo) {
             is CodeGitRepository ->
-                repo.authType
+                Pair(repo.authType, ScmType.CODE_GIT)
             is CodeTGitRepository ->
-                repo.authType
+                Pair(repo.authType, ScmType.CODE_TGIT)
             is CodeGitlabRepository ->
-                RepoAuthType.HTTP
+                Pair(RepoAuthType.HTTP, ScmType.CODE_GITLAB)
             else ->
                 return null
         }
@@ -124,7 +126,8 @@ class GitScmService @Autowired constructor(
                 mrId = mrId,
                 tokenType = tokenType,
                 token = token,
-                repoUrl = repo.url
+                repoUrl = repo.url,
+                scmType = scmType
             ).data!!
         } catch (e: Exception) {
             logger.error("fail to get mr info", e)
@@ -138,13 +141,13 @@ class GitScmService @Autowired constructor(
         repo: Repository
     ): GitMrChangeInfo? {
         if (mrId == null) return null
-        val authType = when (repo) {
+        val (authType, scmType) = when (repo) {
             is CodeGitRepository ->
-                repo.authType
+                Pair(repo.authType, ScmType.CODE_GIT)
             is CodeTGitRepository ->
-                repo.authType
+                Pair(repo.authType, ScmType.CODE_TGIT)
             is CodeGitlabRepository ->
-                RepoAuthType.HTTP
+                Pair(RepoAuthType.HTTP, ScmType.CODE_GITLAB)
             else ->
                 return null
         }
@@ -162,7 +165,8 @@ class GitScmService @Autowired constructor(
                 mrId = mrId,
                 tokenType = tokenType,
                 token = token,
-                repoUrl = repo.url
+                repoUrl = repo.url,
+                scmType = scmType
             ).data!!
         } catch (e: Exception) {
             logger.error("fail to get mr info", e)

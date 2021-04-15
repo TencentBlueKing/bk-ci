@@ -33,6 +33,7 @@ import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
@@ -945,9 +946,10 @@ class GitService @Autowired constructor(
         mrId: Long,
         tokenType: TokenTypeEnum,
         token: String,
-        repoUrl: String?
+        repoUrl: String?,
+        scmType: ScmType?
     ): GitMrInfo {
-        val url = StringBuilder("${getApiUrl(repoUrl)}/projects/${URLEncoder.encode(repoName, "UTF-8")}" +
+        val url = StringBuilder("${getApiUrl(repoUrl, scmType)}/projects/${URLEncoder.encode(repoName, "UTF-8")}" +
             "/merge_request/$mrId")
         logger.info("get mr info url: $url")
         setToken(tokenType, url, token)
@@ -967,14 +969,16 @@ class GitService @Autowired constructor(
 
     // id = 项目唯一标识或NAMESPACE_PATH/PROJECT_PATH
     override fun getMrReviewInfo(
-        id: String,
+        repoName: String,
         mrId: Long,
         tokenType: TokenTypeEnum,
         token: String,
-        repoUrl: String?
+        repoUrl: String?,
+        scmType: ScmType?
     ): GitMrReviewInfo {
         val url = StringBuilder(
-            "${getApiUrl(repoUrl)}/projects/${URLEncoder.encode(id, "UTF-8")}/merge_request/$mrId/review"
+            "${getApiUrl(repoUrl, scmType)}/projects/${URLEncoder.encode(repoName, "UTF-8")}/" +
+                "merge_request/$mrId/review"
         )
         logger.info("get mr review info url: $url")
         setToken(tokenType, url, token)
@@ -984,7 +988,9 @@ class GitService @Autowired constructor(
             .build()
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
-                throw RuntimeException("get merge reviewers info error for $id, $mrId(${it.code()}): ${it.message()}")
+                throw RuntimeException(
+                    "get merge reviewers info error for $repoName, $mrId(${it.code()}): ${it.message()}"
+                )
             }
             val data = it.body()!!.string()
             return JsonUtil.to(data, GitMrReviewInfo::class.java)
@@ -993,16 +999,17 @@ class GitService @Autowired constructor(
 
     // id = 项目唯一标识或NAMESPACE_PATH/PROJECT_PATH
     override fun getMrChangeInfo(
-        id: String,
+        repoName: String,
         mrId: Long,
         tokenType: TokenTypeEnum,
         token: String,
-        repoUrl: String?
+        repoUrl: String?,
+        scmType: ScmType?
     ): GitMrChangeInfo {
         val url = StringBuilder(
-            "${getApiUrl(repoUrl)}/projects/${
+            "${getApiUrl(repoUrl, scmType)}/projects/${
                 URLEncoder.encode(
-                    id,
+                    repoName,
                     "UTF-8"
                 )
             }/merge_request/$mrId/changes"
@@ -1013,10 +1020,11 @@ class GitService @Autowired constructor(
             .url(url.toString())
             .get()
             .build()
+
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
                 throw RuntimeException(
-                    "get merge changes request info error for $id, $mrId(${it.code()}): ${it.message()}"
+                    "get merge changes request info error for $repoName, $mrId(${it.code()}): ${it.message()}"
                 )
             }
             val data = it.body()!!.string()
@@ -1024,11 +1032,15 @@ class GitService @Autowired constructor(
         }
     }
 
-    private fun getApiUrl(repoUrl: String?): String {
+    private fun getApiUrl(repoUrl: String?, scmType: ScmType?): String {
         return if (repoUrl.isNullOrBlank()) {
             gitConfig.gitApiUrl
         } else {
-            GitUtils.getGitApiUrl(gitConfig.gitApiUrl, repoUrl!!)
+            if (scmType == ScmType.CODE_GITLAB) {
+                GitUtils.getGitApiUrl(gitConfig.gitlabApiUrl, repoUrl!!)
+            } else {
+                GitUtils.getGitApiUrl(gitConfig.gitApiUrl, repoUrl!!)
+            }
         }
     }
 
