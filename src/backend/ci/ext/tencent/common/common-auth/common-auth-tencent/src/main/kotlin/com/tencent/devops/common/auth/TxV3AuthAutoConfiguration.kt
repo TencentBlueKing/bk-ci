@@ -81,12 +81,12 @@ class TxV3AuthAutoConfiguration {
     @Value("\${auth.appSecret:}")
     val appSecret = ""
 
-    @Value("\${auth.esbUrl:#{null}}")
-    val iamEsb = ""
+    @Value("\${auth.apigwUrl:#{null}}")
+    val iamApigw = ""
 
     @Bean
     @ConditionalOnMissingBean
-    fun iamConfiguration() = IamConfiguration(systemId, appCode, appSecret, iamBaseUrl, iamEsb)
+    fun iamConfiguration() = IamConfiguration(systemId, appCode, appSecret, iamBaseUrl, iamApigw)
 
     @Bean
     fun esbHttpClientServiceImpl() = EsbHttpClientServiceImpl(iamConfiguration())
