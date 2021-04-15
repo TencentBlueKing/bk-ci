@@ -77,8 +77,8 @@ class BluekingV3AuthAutoConfiguration {
     @Value("\${auth.appSecret:}")
     val appSecret = ""
 
-    @Value("\${bk.paas.host:#{null}}")
-    val iamEsb = ""
+    @Value("\${auth.apigwUrl:#{null}}")
+    val iamApigw = ""
 
     @Bean
     @Primary
@@ -138,7 +138,7 @@ class BluekingV3AuthAutoConfiguration {
     fun artifactoryAuthServiceCode() = BluekingV3ArtifactoryAuthServiceCode()
 
     @Bean
-    fun iamConfiguration() = IamConfiguration(systemId, appCode, appSecret, iamBaseUrl, iamEsb)
+    fun iamConfiguration() = IamConfiguration(systemId, appCode, appSecret, iamBaseUrl, iamApigw)
 
     @Bean
     fun httpService() = DefaultHttpClientServiceImpl(iamConfiguration())
