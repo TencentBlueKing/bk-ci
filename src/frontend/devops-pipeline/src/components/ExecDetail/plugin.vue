@@ -6,7 +6,11 @@
         :is-hook="((currentElement.additionalOptions || {}).elementPostInfo || false)"
     >
         <span class="head-tab" slot="tab">
-            <span @click="currentTab = 'log'" :class="{ active: currentTab === 'log' }">{{ $t('execDetail.log') }}</span><span @click="currentTab = 'setting'" :class="{ active: currentTab === 'setting' }">{{ $t('execDetail.setting') }}</span>
+            <span v-for="tab in tabList"
+                :key="tab"
+                :class="{ active: currentTab === tab }"
+                @click="currentTab = tab"
+            >{{ $t(`execDetail.${tab}`) }}</span>
         </span>
         <reference-variable slot="tool" class="head-tool" :global-envs="globalEnvs" :stages="stages" :container="container" v-if="currentTab === 'setting'" />
         <template v-slot:content>
@@ -17,15 +21,7 @@
                 ref="log"
                 v-show="currentTab === 'log'"
             />
-            <atom-content v-show="currentTab === 'setting'"
-                :element-index="editingElementPos.elementIndex"
-                :container-index="editingElementPos.containerIndex"
-                :stage-index="editingElementPos.stageIndex"
-                :stages="stages"
-                :editable="false"
-                :is-instance-template="false"
-            >
-            </atom-content>
+            <component :is="(componentList[currentTab] || {}).component" v-bind="(componentList[currentTab] || {}).bindData"></component>
         </template>
     </detail-container>
 </template>
@@ -36,18 +32,20 @@
     import AtomContent from '@/components/AtomPropertyPanel/AtomContent.vue'
     import ReferenceVariable from '@/components/AtomPropertyPanel/ReferenceVariable'
     import pluginLog from './log/pluginLog'
+    import Report from './Report'
+    import Artifactory from './Artifactory'
 
     export default {
         components: {
             detailContainer,
-            AtomContent,
             ReferenceVariable,
             pluginLog
         },
 
         data () {
             return {
-                currentTab: 'log'
+                currentTab: 'log',
+                tabList: ['log', 'artifactory', 'report', 'setting']
             }
         },
 
@@ -76,6 +74,34 @@
                     execDetail: { model: { stages } }
                 } = this
                 return stages[stageIndex].containers[containerIndex].elements[elementIndex]
+            },
+
+            componentList () {
+                return {
+                    artifactory: {
+                        component: Artifactory,
+                        bindData: {
+                            taskId: this.currentElement.id
+                        }
+                    },
+                    report: {
+                        component: Report,
+                        bindData: {
+                            taskId: this.currentElement.id
+                        }
+                    },
+                    setting: {
+                        component: AtomContent,
+                        bindData: {
+                            elementIndex: this.editingElementPos.elementIndex,
+                            containerIndex: this.editingElementPos.containerIndex,
+                            stageIndex: this.editingElementPos.stageIndex,
+                            stages: this.stages,
+                            editable: false,
+                            isInstanceTemplate: false
+                        }
+                    }
+                }
             }
         }
     }

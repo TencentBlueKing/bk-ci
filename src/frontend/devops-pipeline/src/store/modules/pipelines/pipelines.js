@@ -22,7 +22,8 @@ import {
     FETCH_ERROR,
     PROCESS_API_URL_PREFIX,
     BACKEND_API_URL_PREFIX,
-    STORE_API_URL_PREFIX
+    STORE_API_URL_PREFIX,
+    ARTIFACTORY_API_URL_PREFIX
 } from '@/store/constants'
 
 // import axios from 'axios'
@@ -511,6 +512,11 @@ const actions = {
     // 删除流水线历史版本
     deletePipelineVersion (_, { projectId, pipelineId, version }) {
         return ajax.delete(`${prefix}${projectId}/${pipelineId}/${version}`)
+    },
+
+    // 获取构件列表
+    getArtifactories (_, { projectId, params }) {
+        return ajax.post(`${ARTIFACTORY_API_URL_PREFIX}/service/artifactories/${projectId}/search`, params)
     }
 }
 
