@@ -70,7 +70,7 @@ class CodeGitlabScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the gitlab token", ignored)
             throw ScmException(
-                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_ACCESS_CHECK_FAIL),
+                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_ACCESS_CHECK_FAIL),
                 ScmType.CODE_GITLAB.name
             )
         }
@@ -82,7 +82,7 @@ class CodeGitlabScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the gitlab token", ignored)
             throw ScmException(
-                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_ACCESS_CHECK_FAIL),
+                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_ACCESS_CHECK_FAIL),
                 ScmType.CODE_GITLAB.name
             )
         }
@@ -104,9 +104,9 @@ class CodeGitlabScmImpl constructor(
         try {
             logger.info("[HOOK_API]|$apiUrl")
             gitApi.addWebhook(apiUrl, token, projectName, hookUrl, null)
-        } catch (e: ScmException) {
+        } catch (ignored: Throwable) {
             throw ScmException(
-                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITLAB_TOKEN_FAIL),
+                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITLAB_TOKEN_FAIL),
                 ScmType.CODE_GITLAB.name
             )
         }

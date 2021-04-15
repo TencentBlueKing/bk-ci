@@ -88,7 +88,7 @@ class CodeTGitScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to list all branches", ignored)
             throw ScmException(
-                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.TGIT_TOKEN_EMPTY),
+                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.TGIT_TOKEN_EMPTY),
                 ScmType.CODE_TGIT.name
             )
         }
@@ -102,7 +102,7 @@ class CodeTGitScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the private key of git", ignored)
             throw ScmException(
-                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.TGIT_SECRET_WRONG),
+                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.TGIT_SECRET_WRONG),
                 ScmType.CODE_TGIT.name
             )
         }
@@ -135,7 +135,7 @@ class CodeTGitScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the username and password of git", ignored)
             throw ScmException(
-                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.TGIT_LOGIN_FAIL),
+                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.TGIT_LOGIN_FAIL),
                 ScmType.CODE_TGIT.name
             )
         }
@@ -156,9 +156,9 @@ class CodeTGitScmImpl constructor(
         }
         try {
             gitApi.addWebhook(apiUrl, token, projectName, hookUrl, event, gitConfig.tGitHookSecret)
-        } catch (e: ScmException) {
+        } catch (ignored: Throwable) {
             throw ScmException(
-                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_FAIL),
+                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_FAIL),
                 ScmType.CODE_TGIT.name
             )
         }
@@ -173,10 +173,10 @@ class CodeTGitScmImpl constructor(
         block: Boolean
     ) {
         if (token.isEmpty()) {
-            throw ScmException(scmType = ScmType.CODE_TGIT.name,
-                message = MessageCodeUtil.getCodeLanMessage(
-                    messageCode = RepositoryMessageCode.GIT_TOKEN_EMPTY,
-                    defaultMessage = RepositoryMessageCode.GIT_TOKEN_EMPTY))
+            throw ScmException(
+                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_EMPTY),
+                ScmType.CODE_TGIT.name
+            )
         }
         try {
             gitApi.addCommitCheck(
@@ -190,11 +190,11 @@ class CodeTGitScmImpl constructor(
                 description = description,
                 block = block
             )
-        } catch (e: ScmException) {
-            throw ScmException(scmType = ScmType.CODE_TGIT.name,
-                message = MessageCodeUtil.getCodeLanMessage(
-                    messageCode = RepositoryMessageCode.GIT_TOKEN_FAIL,
-                    defaultMessage = RepositoryMessageCode.GIT_TOKEN_FAIL))
+        } catch (ignored: Throwable) {
+            throw ScmException(
+                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_FAIL),
+                ScmType.CODE_TGIT.name
+            )
         }
     }
 

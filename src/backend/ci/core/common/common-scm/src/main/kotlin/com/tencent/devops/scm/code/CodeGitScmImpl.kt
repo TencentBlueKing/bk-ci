@@ -41,6 +41,7 @@ import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
 import org.slf4j.LoggerFactory
 
+@Suppress("ALL")
 class CodeGitScmImpl constructor(
     override val projectName: String,
     override val branchName: String?,
@@ -48,7 +49,7 @@ class CodeGitScmImpl constructor(
     private val privateKey: String?,
     private val passPhrase: String?,
     private val token: String,
-    private val gitConfig: GitConfig,
+    gitConfig: GitConfig,
     private val event: String? = null
 ) : IScm {
 
@@ -88,7 +89,7 @@ class CodeGitScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to list all branches", ignored)
             throw ScmException(
-                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_FAIL),
+                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_FAIL),
                 ScmType.CODE_GIT.name
             )
         }
@@ -102,7 +103,7 @@ class CodeGitScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the private key of git", ignored)
             throw ScmException(
-                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_SERCRT_WRONG),
+                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_SERCRT_WRONG),
                 ScmType.CODE_GIT.name
             )
         }
@@ -122,7 +123,7 @@ class CodeGitScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to list all branches", ignored)
             throw ScmException(
-                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_FAIL),
+                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_FAIL),
                 ScmType.CODE_GIT.name
             )
         }
@@ -135,7 +136,7 @@ class CodeGitScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the username and password of git", ignored)
             throw ScmException(
-                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_LOGIN_FAIL),
+                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_LOGIN_FAIL),
                 ScmType.CODE_GIT.name
             )
         }
@@ -156,9 +157,9 @@ class CodeGitScmImpl constructor(
         }
         try {
             gitApi.addWebhook(apiUrl, token, projectName, hookUrl, event)
-        } catch (e: ScmException) {
+        } catch (ignored: Throwable) {
             throw ScmException(
-                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_FAIL),
+                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_FAIL),
                 ScmType.CODE_GIT.name
             )
         }
@@ -173,10 +174,10 @@ class CodeGitScmImpl constructor(
         block: Boolean
     ) {
         if (token.isEmpty()) {
-            throw ScmException(scmType = ScmType.CODE_GIT.name,
-                message = MessageCodeUtil.getCodeLanMessage(
-                    messageCode = RepositoryMessageCode.GIT_TOKEN_EMPTY,
-                    defaultMessage = RepositoryMessageCode.GIT_TOKEN_EMPTY))
+            throw ScmException(
+                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_EMPTY),
+                ScmType.CODE_GIT.name
+            )
         }
         try {
             gitApi.addCommitCheck(
@@ -190,11 +191,11 @@ class CodeGitScmImpl constructor(
                 description = description,
                 block = block
             )
-        } catch (e: ScmException) {
-            throw ScmException(scmType = ScmType.CODE_GIT.name,
-                message = MessageCodeUtil.getCodeLanMessage(
-                    messageCode = RepositoryMessageCode.GIT_TOKEN_FAIL,
-                    defaultMessage = RepositoryMessageCode.GIT_TOKEN_FAIL))
+        } catch (ignored: Throwable) {
+            throw ScmException(
+                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_FAIL),
+                ScmType.CODE_GIT.name
+            )
         }
     }
 
