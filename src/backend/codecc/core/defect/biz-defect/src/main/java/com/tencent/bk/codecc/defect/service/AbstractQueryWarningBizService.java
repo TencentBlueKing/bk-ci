@@ -129,10 +129,6 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
     @Value("${git.host:}")
     private String gitHost;
 
-    @Value("${git.sshHost:}")
-    private String gitSSHHost;
-
-
     @Override
     public CommonDefectDetailQueryRspVO processGetFileContentSegmentRequest(long taskId, String userId, GetFileContentSegmentReqVO reqModel)
     {
@@ -704,7 +700,7 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
         String createFrom = pair.getKey();
         String realProjectId = pair.getValue();
 
-        if (StringUtils.isNotBlank(url) && url.contains(URI.create(gitHost).getHost()) && !branch.equals("devops-virtual-branch")) {
+        if (StringUtils.isNotBlank(url) && !gitHost.isEmpty() && url.contains(URI.create(gitHost).getHost()) && !branch.equals("devops-virtual-branch")) {
             if (!ComConstants.BsTaskCreateFrom.GONGFENG_SCAN.value().equalsIgnoreCase(createFrom)
                 || realProjectId.startsWith("CUSTOMPROJ_"))
             {
@@ -723,7 +719,7 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
                 oauthUserId = result.getData().getUpdatedBy();
             }
 
-            content = pipelineScmService.getFileContentOauth(oauthUserId, GitUtil.INSTANCE.getProjectName(url, gitSSHHost),
+            content = pipelineScmService.getFileContentOauth(oauthUserId, GitUtil.INSTANCE.getProjectName(url),
                 relPath, (revision != null ? revision : branch));
         }
         else

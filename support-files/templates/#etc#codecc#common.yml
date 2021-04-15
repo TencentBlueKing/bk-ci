@@ -55,16 +55,8 @@ auth:
   systemId: __CODECC_SYSTEM_ID__
   resourceType: __CODECC_RESOURCE_TYPE__
 
-devopsGateway:
-  host: __DEVOPS_GATEWAY_HOST__:__DEVOPS_GATEWAY_PORT__
-
-codeccGateway:
-  host: __CODECC_GATEWAY_HOST__:__CODECC_GATEWAY_PORT__
-  api: __CODECC_GATEWAY_HOST__:__CODECC_GATEWAY_PORT__
-
 git:
-  path:
-  sshPath:
+  path: __BK_CI_REPOSITORY_GIT_URL__
 
 service-suffix: "-__BKCI_CONSUL_TAG__"
 

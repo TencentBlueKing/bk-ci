@@ -13,11 +13,11 @@ object GitUtil {
     fun getUrl(projectName: String, sshHost: String) =
         "$sshHost:$projectName.git"
 
-    fun getProjectName(gitUrl: String, sshHost: String): String {
+    fun getProjectName(gitUrl: String): String {
         return if (gitUrl.startsWith("http")) {
             URL(gitUrl).path.removeSuffix(".git").removePrefix("/")
         } else {
-            gitUrl.removePrefix("$sshHost:").removeSuffix(".git")
+            gitUrl.split(":").last().removeSuffix(".git")
         }
     }
 }
