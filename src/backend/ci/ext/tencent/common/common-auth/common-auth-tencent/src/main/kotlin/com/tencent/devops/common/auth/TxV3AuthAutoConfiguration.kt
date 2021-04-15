@@ -29,7 +29,7 @@ package com.tencent.devops.common.auth
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.bk.sdk.iam.service.impl.EsbHttpClientServiceImpl
+import com.tencent.bk.sdk.iam.service.impl.ApigwHttpClientServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.ManagerServiceImpl
 import com.tencent.devops.common.auth.api.BSAuthPermissionApi
 import com.tencent.devops.common.auth.api.BSAuthProjectApi
@@ -89,10 +89,10 @@ class TxV3AuthAutoConfiguration {
     fun iamConfiguration() = IamConfiguration(systemId, appCode, appSecret, iamBaseUrl, iamApigw)
 
     @Bean
-    fun esbHttpClientServiceImpl() = EsbHttpClientServiceImpl(iamConfiguration())
+    fun apigwHttpClientServiceImpl() = ApigwHttpClientServiceImpl(iamConfiguration())
 
     @Bean
-    fun iamManagerService() = ManagerServiceImpl(esbHttpClientServiceImpl(), iamConfiguration())
+    fun iamManagerService() = ManagerServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
     @Bean
     @Primary
     fun bkAuthProperties() = BkAuthProperties()
