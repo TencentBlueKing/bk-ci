@@ -209,8 +209,8 @@ interface ApigwEnvironmentResourceV3 {
         @ApiParam("节点 hashId", required = true)
         @PathParam("nodeHashId")
         nodeHashId: String,
-        @ApiParam("排序字段", required = true)
-        @QueryParam("sortBy, pipelineName|lastBuildTime")
+        @ApiParam("排序字段, pipelineName|lastBuildTime", required = true)
+        @QueryParam("sortBy")
         sortBy: String? = null,
         @ApiParam("排序方向, ASC|DESC", required = true)
         @QueryParam("sortDirection")
