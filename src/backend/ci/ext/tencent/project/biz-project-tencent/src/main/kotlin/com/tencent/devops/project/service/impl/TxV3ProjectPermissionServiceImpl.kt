@@ -116,6 +116,7 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
 
             .authorization_scopes(authorizationScopes)
             .subject_scopes(subjectScopes).build()
+        logger.info("createIamProject: $createManagerDTO")
         return iamManagerService.createManager(createManagerDTO)
     }
 
