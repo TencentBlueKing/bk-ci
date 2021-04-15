@@ -62,7 +62,7 @@ class AgentPipelineService @Autowired constructor(
         when (request.action) {
             "create_pipeline", "update_pipeline", "restore_pipeline", "op" -> {
                 if (request.pipelineRefInfos.isEmpty()) {
-                    logger.warn("")
+                    logger.warn("no reference to handle")
                     return
                 }
                 savePipelineRefInfo(projectId, request.pipelineId, request.pipelineRefInfos)
