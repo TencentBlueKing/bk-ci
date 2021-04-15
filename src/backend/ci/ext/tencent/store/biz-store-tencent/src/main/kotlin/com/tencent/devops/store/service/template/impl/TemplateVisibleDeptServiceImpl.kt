@@ -237,7 +237,7 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
             )
         }
         // 如果插件是默认插件或者在可用插件列表，则无需校验与模板的可见范围
-        if (!defaultFlag || validAtomCodes?.contains(atomCode) == true) {
+        if (!defaultFlag || validAtomCodes?.contains(atomCode) == false) {
             handleInvalidStoreList(
                 storeDeptMap = currentStageAtomDeptMap,
                 storeCode = atomCode,
