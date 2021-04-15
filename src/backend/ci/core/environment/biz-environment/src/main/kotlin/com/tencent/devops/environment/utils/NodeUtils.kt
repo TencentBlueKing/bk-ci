@@ -41,4 +41,8 @@ object NodeUtils {
         resultNodes.addAll(notUserNodes)
         return resultNodes
     }
+
+    fun sortByDisplayName(nodes: List<NodeWithPermission>): List<NodeWithPermission> {
+        return nodes.sortedBy { it.displayName }
+    }
 }
