@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineRestoreEvent
 import com.tencent.devops.process.engine.service.AgentPipelineRefService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -45,9 +45,9 @@ import org.springframework.stereotype.Component
 class MQPipelineRestoreListener @Autowired constructor(
     private val agentPipelineRefService: AgentPipelineRefService,
     pipelineEventDispatcher: PipelineEventDispatcher
-) : BaseListener<PipelineUpdateEvent>(pipelineEventDispatcher) {
+) : BaseListener<PipelineRestoreEvent>(pipelineEventDispatcher) {
 
-    override fun run(event: PipelineUpdateEvent) {
+    override fun run(event: PipelineRestoreEvent) {
         val watcher = Watcher(id = "${event.traceId}|RestorePipeline#${event.pipelineId}|${event.userId}")
         try {
             watcher.start("updateAgentPipelineRef")

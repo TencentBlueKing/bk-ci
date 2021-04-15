@@ -61,18 +61,18 @@ class MQPipelineUpdateListener @Autowired constructor(
                 pipelineRuntimeService.updateBuildNo(event.pipelineId, event.buildNo!!.buildNo)
                 watcher.stop()
             }
-
             watcher.start("callback")
             callBackControl.pipelineUpdateEvent(projectId = event.projectId, pipelineId = event.pipelineId)
-            watcher.stop()
-            watcher.start("updateAtomPipelineNum")
-            pipelineAtomStatisticsService.updateAtomPipelineNum(event.pipelineId, event.version ?: 1)
             watcher.stop()
             watcher.start("updateAgentPipelineRef")
             with(event) {
                 agentPipelineRefService.updateAgentPipelineRef(userId, "update_pipeline", projectId, pipelineId)
             }
             watcher.stop()
+            watcher.start("updateAtomPipelineNum")
+            pipelineAtomStatisticsService.updateAtomPipelineNum(event.pipelineId, event.version ?: 1)
+            watcher.stop()
+
         } finally {
             watcher.stop()
             LogUtils.printCostTimeWE(watcher)

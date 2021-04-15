@@ -57,14 +57,18 @@ class AgentPipelineRefService @Autowired constructor(
                 logger.warn("model not found: [$userId|$action|$projectId|$pipelineId]")
                 return
             }
-            model = try {
-                objectMapper.readValue(modelString, Model::class.java)
+            try {
+                model = objectMapper.readValue(modelString, Model::class.java)
             } catch (ignored: Exception) {
                 logger.error("parse process($pipelineId) model fail", ignored)
                 return
             }
         }
-        analysisPipelineRefAndSave(userId, action, projectId, pipelineId, model)
+        try {
+            analysisPipelineRefAndSave(userId, action, projectId, pipelineId, model)
+        } catch (e: Exception) {
+            logger.error("analysisPipelineRefAndSave failed", e)
+        }
     }
 
     fun analysisPipelineRefAndSave(
