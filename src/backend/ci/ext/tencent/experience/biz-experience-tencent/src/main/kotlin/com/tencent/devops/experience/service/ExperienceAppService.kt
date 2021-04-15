@@ -112,6 +112,9 @@ class ExperienceAppService(
         // 同步图片
         syncIcon(records)
 
+        val lastDownloadMap = experienceBaseService.getLastDownloadMap(userId)
+        val now = LocalDateTime.now()
+
         val result = records.map {
             AppExperience(
                 experienceHashId = HashUtil.encodeLongId(it.id),
@@ -126,7 +129,11 @@ class ExperienceAppService(
                 categoryId = if (it.category == null || it.category < 0) ProductCategoryEnum.LIFE.id else it.category,
                 productOwner = objectMapper.readValue(it.productOwner),
                 size = it.size,
-                createDate = it.createTime.timestampmilli()
+                createDate = it.createTime.timestampmilli(),
+                appScheme = it.scheme,
+                lastDownloadHashId = lastDownloadMap[it.projectId + it.bundleIdentifier + it.platform]
+                    ?.let { l -> HashUtil.encodeLongId(l) } ?: "",
+                expired = now.isAfter(it.endDate)
             )
         }
 
