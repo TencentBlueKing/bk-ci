@@ -28,7 +28,7 @@
 package com.tencent.devops.auth
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.bk.sdk.iam.service.impl.EsbHttpClientServiceImpl
+import com.tencent.bk.sdk.iam.service.impl.ApigwHttpClientServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.ManagerServiceImpl
 import com.tencent.devops.common.auth.service.IamEsbService
 import org.springframework.beans.factory.annotation.Value
@@ -56,19 +56,19 @@ class AuthConfiguration {
     @Value("\${auth.appSecret:}")
     val appSecret = ""
 
-    @Value("\${bk.paas.host:#{null}}")
-    val iamEsb = ""
+    @Value("\${auth.apigwUrl:#{null}}")
+    val iamApigw = ""
 
     @Bean
     fun iamEsbService() = IamEsbService()
 
     @Bean
     @ConditionalOnMissingBean
-    fun iamConfiguration() = IamConfiguration(systemId, appCode, appSecret, iamBaseUrl, iamEsb)
+    fun iamConfiguration() = IamConfiguration(systemId, appCode, appSecret, iamBaseUrl, iamApigw)
 
     @Bean
-    fun esbHttpClientServiceImpl() = EsbHttpClientServiceImpl(iamConfiguration())
+    fun apigwHttpClientServiceImpl() = ApigwHttpClientServiceImpl(iamConfiguration())
 
     @Bean
-    fun iamManagerService() = ManagerServiceImpl(esbHttpClientServiceImpl(), iamConfiguration())
+    fun iamManagerService() = ManagerServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
 }
