@@ -30,8 +30,11 @@ package com.tencent.devops.gitci.dao
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.gitci.pojo.EmailProperty
 import com.tencent.devops.gitci.pojo.EnvironmentVariables
 import com.tencent.devops.gitci.pojo.GitRepositoryConf
+import com.tencent.devops.gitci.pojo.RtxCustomProperty
+import com.tencent.devops.gitci.pojo.RtxGroupProperty
 import com.tencent.devops.gitci.pojo.enums.GitCINotifyType
 import com.tencent.devops.model.gitci.tables.TRepositoryConf
 import org.jooq.DSLContext
@@ -73,10 +76,9 @@ class GitCISettingDao {
                         CREATE_TIME,
                         UPDATE_TIME,
                         PROJECT_CODE,
-                        ENABLE_NOTIFY,
-                        NOTIFY_TYPE,
-                        NOTIFY_RECEIVERS,
-                        NOTIFY_RTX_GROUPS,
+                        RTX_CUSTOM_PROPERTY,
+                        RTX_GROUP_PROPERTY,
+                        EMAIL_PROPERTY,
                         IS_FAILED_NOTIFY,
                         ENABLE_MR_BLOCK
                     )
@@ -101,21 +103,20 @@ class GitCISettingDao {
                             LocalDateTime.now(),
                             LocalDateTime.now(),
                             projectCode,
-                            conf.enableNotify,
-                            if (conf.notifyType == null) {
+                            if (conf.rtxCustomProperty == null) {
                                 ""
                             } else {
-                                JsonUtil.toJson(conf.notifyType!!)
+                                JsonUtil.toJson(conf.rtxCustomProperty!!)
                             },
-                            if (conf.notifyReceivers == null) {
+                            if (conf.rtxGroupProperty == null) {
                                 ""
                             } else {
-                                JsonUtil.toJson(conf.notifyReceivers!!)
+                                JsonUtil.toJson(conf.rtxGroupProperty!!)
                             },
-                            if (conf.notifyRtxGroups == null) {
+                            if (conf.emailProperty == null) {
                                 ""
                             } else {
-                                JsonUtil.toJson(conf.notifyRtxGroups!!)
+                                JsonUtil.toJson(conf.emailProperty!!)
                             },
                             conf.isFailedNotify,
                             conf.enableMrBlock
@@ -137,27 +138,26 @@ class GitCISettingDao {
                         )
                         .set(UPDATE_TIME, now)
                         .set(PROJECT_CODE, projectCode)
-                        .set(ENABLE_NOTIFY, conf.enableNotify)
                         .set(
-                            NOTIFY_TYPE, if (conf.notifyType == null) {
+                            RTX_CUSTOM_PROPERTY, if (conf.rtxCustomProperty == null) {
                                 ""
                             } else {
-                                JsonUtil.toJson(conf.notifyType!!)
+                                JsonUtil.toJson(conf.rtxCustomProperty!!)
                             }
                         )
                         .set(
-                            NOTIFY_RECEIVERS,
-                            if (conf.notifyReceivers == null) {
+                            RTX_GROUP_PROPERTY,
+                            if (conf.rtxGroupProperty == null) {
                                 ""
                             } else {
-                                JsonUtil.toJson(conf.notifyReceivers!!)
+                                JsonUtil.toJson(conf.rtxGroupProperty!!)
                             }
                         )
                         .set(
-                            NOTIFY_RTX_GROUPS, if (conf.notifyRtxGroups == null) {
+                            EMAIL_PROPERTY, if (conf.emailProperty == null) {
                                 ""
                             } else {
-                                JsonUtil.toJson(conf.notifyRtxGroups!!)
+                                JsonUtil.toJson(conf.emailProperty!!)
                             }
                         )
                         .set(IS_FAILED_NOTIFY, conf.isFailedNotify)
@@ -201,6 +201,30 @@ class GitCISettingDao {
             if (conf == null) {
                 return null
             } else {
+                val rtxCustomProperty = try {
+                    if (conf.rtxCustomProperty.isNullOrBlank()) {
+                        JsonUtil.getObjectMapper().readValue(conf.rtxCustomProperty) as RtxCustomProperty
+                    } else null
+                } catch (e: Exception) {
+                    null
+                }
+
+                val emailProperty = try {
+                    if (conf.emailProperty.isNullOrBlank()) {
+                        JsonUtil.getObjectMapper().readValue(conf.emailProperty) as EmailProperty
+                    } else null
+                } catch (e: Exception) {
+                    null
+                }
+
+                val rtxGroupProperty = try {
+                    if (conf.rtxGroupProperty.isNullOrBlank()) {
+                        JsonUtil.getObjectMapper().readValue(conf.rtxGroupProperty) as RtxGroupProperty
+                    } else null
+                } catch (e: Exception) {
+                    null
+                }
+
                 return GitRepositoryConf(
                     gitProjectId = conf.id,
                     name = conf.name,
@@ -222,22 +246,9 @@ class GitCISettingDao {
                     createTime = conf.createTime.timestampmilli(),
                     updateTime = conf.updateTime.timestampmilli(),
                     projectCode = conf.projectCode,
-                    enableNotify = conf.enableNotify,
-                    notifyType = if (conf.notifyType.isNullOrBlank()) {
-                        null
-                    } else {
-                        JsonUtil.getObjectMapper().readValue(conf.notifyType) as Set<GitCINotifyType>
-                    },
-                    notifyReceivers = if (conf.notifyReceivers.isNullOrBlank()) {
-                        null
-                    } else {
-                        JsonUtil.getObjectMapper().readValue(conf.notifyReceivers) as Set<String>
-                    },
-                    notifyRtxGroups = if (conf.notifyRtxGroups.isNullOrBlank()) {
-                        null
-                    } else {
-                        JsonUtil.getObjectMapper().readValue(conf.notifyRtxGroups) as Set<String>
-                    },
+                    rtxCustomProperty = rtxCustomProperty,
+                    emailProperty = emailProperty,
+                    rtxGroupProperty = rtxGroupProperty,
                     isFailedNotify = conf.isFailedNotify,
                     enableMrBlock = conf.enableMrBlock
                 )

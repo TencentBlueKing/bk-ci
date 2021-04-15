@@ -30,6 +30,7 @@ package com.tencent.devops.gitci.service
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.pojo.GitRepositoryConf
+import com.tencent.devops.gitci.pojo.RtxCustomProperty
 import com.tencent.devops.gitci.pojo.enums.GitCINotifyType
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.scm.api.ServiceGitResource
@@ -67,10 +68,9 @@ class GitRepositoryConfService @Autowired constructor(
                     updateTime = null,
                     projectCode = null,
                     limitConcurrentJobs = null,
-                    enableNotify = true,
-                    notifyType = setOf(GitCINotifyType.RTX_CUSTOM),
-                    notifyReceivers = setOf(),
-                    notifyRtxGroups = setOf(),
+                    rtxCustomProperty = RtxCustomProperty(true, setOf()),
+                    rtxGroupProperty = null,
+                    emailProperty = null,
                     isFailedNotify = true
                 )
             )

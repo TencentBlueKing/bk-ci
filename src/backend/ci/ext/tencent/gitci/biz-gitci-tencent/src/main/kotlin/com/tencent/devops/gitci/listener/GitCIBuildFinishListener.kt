@@ -202,11 +202,8 @@ class GitCIBuildFinishListener @Autowired constructor(
     // 校验是否发送通知
     private fun checkIsSendNotify(conf: GitRepositoryConf, state: String): Boolean {
         // 老数据不发送通知
-        if (conf.enableNotify == null || !conf.enableNotify!!) {
-            return false
-        }
-        if (conf.notifyType == null || conf.notifyType!!.isEmpty()) {
-            logger.warn("gitCI project: ${conf.gitProjectId} enable notify but not have notifyType")
+        if (conf.rtxCustomProperty == null || conf.rtxGroupProperty == null || conf.emailProperty == null) {
+            logger.warn("gitCI project: ${conf.gitProjectId} enable notify but not have config")
             return false
         }
         if (conf.isFailedNotify == null) {
@@ -230,14 +227,44 @@ class GitCIBuildFinishListener @Autowired constructor(
         pipeline: TGitPipelineResourceRecord,
         build: BuildHistory
     ) {
-        conf.notifyType!!.forEach {
+        if (conf.rtxCustomProperty?.enabled == true) {
             sendNotify(
                 gitProjectId = gitProjectId,
                 sourceProjectId = sourceProjectId,
                 mergeRequestId = mergeRequestId,
                 commitId = commitId,
                 state = state,
-                notify = it,
+                notifyType = GitCINotifyType.RTX_CUSTOM,
+                conf = conf,
+                event = event,
+                pipeline = pipeline,
+                build = build
+            )
+        }
+
+        if (conf.rtxGroupProperty?.enabled == true) {
+            sendNotify(
+                gitProjectId = gitProjectId,
+                sourceProjectId = sourceProjectId,
+                mergeRequestId = mergeRequestId,
+                commitId = commitId,
+                state = state,
+                notifyType = GitCINotifyType.RTX_GROUP,
+                conf = conf,
+                event = event,
+                pipeline = pipeline,
+                build = build
+            )
+        }
+
+        if (conf.emailProperty?.enabled == true) {
+            sendNotify(
+                gitProjectId = gitProjectId,
+                sourceProjectId = sourceProjectId,
+                mergeRequestId = mergeRequestId,
+                commitId = commitId,
+                state = state,
+                notifyType = GitCINotifyType.EMAIL,
                 conf = conf,
                 event = event,
                 pipeline = pipeline,
@@ -252,13 +279,12 @@ class GitCIBuildFinishListener @Autowired constructor(
         mergeRequestId: Long,
         commitId: String,
         state: String,
-        notify: GitCINotifyType,
+        notifyType: GitCINotifyType,
         conf: GitRepositoryConf,
         event: TGitRequestEventBuildRecord,
         pipeline: TGitPipelineResourceRecord,
         build: BuildHistory
     ) {
-        var receivers = replaceReceivers(conf.notifyReceivers, build.buildParameters)
 
         val projectName = getProjectName(conf)
         val branchName = GitCommonUtils.checkAndGetForkBranchName(
@@ -276,14 +302,15 @@ class GitCIBuildFinishListener @Autowired constructor(
         }
         val buildNum = build.buildNum.toString()
 
-        when (notify) {
+        when (notifyType) {
             GitCINotifyType.EMAIL -> {
-                if (receivers.isEmpty()) {
-                    receivers = mutableSetOf(build.userId)
+                var realReceivers = replaceReceivers(conf.emailProperty!!.receivers, build.buildParameters)
+                if (realReceivers.isEmpty()) {
+                    realReceivers = mutableSetOf(build.userId)
                 }
                 val request = getEmailSendRequest(
                     state = state,
-                    receivers = receivers,
+                    receivers = realReceivers,
                     projectName = projectName,
                     branchName = branchName,
                     pipelineName = pipelineName,
@@ -293,16 +320,11 @@ class GitCIBuildFinishListener @Autowired constructor(
                 )
                 client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
             }
-            GitCINotifyType.RTX_CUSTOM, GitCINotifyType.RTX_GROUP -> {
-                if (notify == GitCINotifyType.RTX_GROUP &&
-                    (conf.notifyRtxGroups == null || conf.notifyRtxGroups!!.isEmpty())
-                ) {
-                    logger.warn("notifyRtxGroups receivers is null ")
-                    return
-                }
+            GitCINotifyType.RTX_CUSTOM -> {
+                var realReceivers = replaceReceivers(conf.rtxCustomProperty!!.receivers, build.buildParameters)
                 // 接收人默认带触发人
-                if (notify == GitCINotifyType.RTX_CUSTOM && receivers.isEmpty()) {
-                    receivers = mutableSetOf(build.userId)
+                if (realReceivers.isEmpty()) {
+                    realReceivers = mutableSetOf(build.userId)
                 }
                 val accessToken =
                     RtxCustomApi.getAccessToken(urlPrefix = rtxUrl, corpSecret = corpSecret, corpId = corpId)
@@ -322,16 +344,36 @@ class GitCIBuildFinishListener @Autowired constructor(
                     accessToken = accessToken,
                     content = content,
                     messageType = MessageType.MARKDOWN,
-                    receiverType = if (notify == GitCINotifyType.RTX_CUSTOM) {
-                        ReceiverType.SINGLE
-                    } else {
-                        ReceiverType.GROUP
-                    },
-                    receivers = if (notify == GitCINotifyType.RTX_CUSTOM) {
-                        receivers
-                    } else {
-                        conf.notifyRtxGroups!!
-                    }
+                    receiverType = ReceiverType.SINGLE,
+                    receivers = realReceivers
+                )
+            }
+            GitCINotifyType.RTX_GROUP -> {
+                val realGroups = replaceReceivers(conf.rtxGroupProperty!!.groupIds, build.buildParameters)
+                if (conf.rtxCustomProperty == null || conf.rtxCustomProperty!!.receivers.isEmpty()) {
+                    logger.warn("notifyRtxGroups receivers is null ")
+                    return
+                }
+                val accessToken =
+                    RtxCustomApi.getAccessToken(urlPrefix = rtxUrl, corpSecret = corpSecret, corpId = corpId)
+                val content = getRtxCustomContent(
+                    isSuccess = state == "success",
+                    projectName = projectName,
+                    branchName = branchName,
+                    pipelineName = pipelineName,
+                    pipelineId = pipeline.pipelineId,
+                    buildNum = buildNum,
+                    isMr = isMr,
+                    requestId = requestId,
+                    buildTime = build.totalTime,
+                    openUser = build.userId
+                )
+                sendRtxCustomNotify(
+                    accessToken = accessToken,
+                    content = content,
+                    messageType = MessageType.MARKDOWN,
+                    receiverType = ReceiverType.GROUP,
+                    receivers = realGroups
                 )
             }
             else -> return
