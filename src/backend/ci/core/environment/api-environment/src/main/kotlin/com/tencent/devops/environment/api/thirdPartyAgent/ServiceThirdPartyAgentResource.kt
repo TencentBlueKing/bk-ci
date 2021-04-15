@@ -225,7 +225,13 @@ interface ServiceThirdPartyAgentResource {
         projectId: String,
         @ApiParam("Node Hash ID", required = true)
         @PathParam("nodeHashId")
-        nodeHashId: String
+        nodeHashId: String,
+        @ApiParam("排序字段", required = true)
+        @QueryParam("sortBy, pipelineName|lastBuildTime")
+        sortBy: String? = null,
+        @ApiParam("排序方向, ASC|DESC", required = true)
+        @QueryParam("sortDirection")
+        sortDirection: String? = null
     ): Result<List<AgentPipelineRef>>
 
     @ApiOperation("更新构建机流水线引用信息")

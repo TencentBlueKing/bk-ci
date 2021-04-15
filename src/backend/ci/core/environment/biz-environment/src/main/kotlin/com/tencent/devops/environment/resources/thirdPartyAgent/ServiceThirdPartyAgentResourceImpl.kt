@@ -112,12 +112,35 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
     override fun listPipelineRef(
         userId: String,
         projectId: String,
-        nodeHashId: String
+        nodeHashId: String,
+        sortBy: String?,
+        sortDirection: String?
     ): Result<List<AgentPipelineRef>> {
         checkUserId(userId)
         checkProjectId(projectId)
         checkNodeId(nodeHashId)
-        return Result(agentPipelineService.listPipelineRef(userId, projectId, nodeHashId))
+        val pipelineRefs = agentPipelineService.listPipelineRef(userId, projectId, nodeHashId)
+        return Result(sortPipelineRef(pipelineRefs, sortBy, sortDirection))
+    }
+
+    private fun sortPipelineRef(
+        list: List<AgentPipelineRef>,
+        sortBy: String?,
+        sortDirection: String?
+    ): List<AgentPipelineRef> {
+        return when (sortBy) {
+            "pipelineName" -> if (sortDirection == "DESC") {
+                list.sortedByDescending { it.pipelineName }
+            } else {
+                list.sortedBy { it.pipelineName }
+            }
+            "lastBuildTime" -> if (sortDirection == "DESC") {
+                list.sortedByDescending { it.lastBuildTime }
+            } else {
+                list.sortedBy { it.lastBuildTime }
+            }
+            else -> list
+        }
     }
 
     override fun updatePipelineRef(

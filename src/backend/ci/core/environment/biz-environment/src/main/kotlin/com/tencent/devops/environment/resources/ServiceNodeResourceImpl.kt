@@ -68,7 +68,8 @@ class ServiceNodeResourceImpl @Autowired constructor(
         envHashIds: List<String>
     ): Result<Map<String, List<NodeBaseInfo>>> {
         if (envHashIds.isEmpty()) {
-            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_, params = arrayOf("envHashIds"))
+            throw ErrorCodeException(errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
+                params = arrayOf("envHashIds"))
         }
 
         return Result(envService.listRawServerNodeByEnvHashIds(userId, projectId, envHashIds))
@@ -91,6 +92,6 @@ class ServiceNodeResourceImpl @Autowired constructor(
     }
 
     override fun extListNodes(userId: String, projectId: String): Result<List<NodeWithPermission>> {
-        return Result(NodeUtils.sortByUser(nodeService.extListNodes(userId, projectId), userId))
+        return Result(NodeUtils.sortByDisplayName(nodeService.extListNodes(userId, projectId)))
     }
 }
