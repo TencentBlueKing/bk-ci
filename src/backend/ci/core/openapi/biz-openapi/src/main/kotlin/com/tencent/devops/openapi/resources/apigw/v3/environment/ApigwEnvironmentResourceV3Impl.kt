@@ -124,10 +124,14 @@ class ApigwEnvironmentResourceV3Impl @Autowired constructor(
         apigwType: String?,
         userId: String,
         projectId: String,
-        nodeHashId: String
+        nodeHashId: String,
+        sortBy: String?,
+        sortDirection: String?
     ): Result<List<AgentPipelineRef>> {
-        logger.info("listPipelineRef, userId: $userId, projectId: $projectId, nodeHashId: $nodeHashId")
-        return client.get(ServiceThirdPartyAgentResource::class).listPipelineRef(userId, projectId, nodeHashId)
+        logger.info("listPipelineRef, userId: $userId, projectId: $projectId, nodeHashId: $nodeHashId," +
+            " sortBy: $sortBy, sortDirection: $sortDirection")
+        return client.get(ServiceThirdPartyAgentResource::class).listPipelineRef(userId, projectId, nodeHashId,
+            sortBy, sortDirection)
     }
 
     companion object {
