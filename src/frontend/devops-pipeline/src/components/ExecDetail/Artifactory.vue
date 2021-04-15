@@ -40,14 +40,16 @@
                 const routeParam = this.$route.params || {}
                 const postData = {
                     projectId: routeParam.projectId,
-                    params: [
-                        { key: 'buildId', value: routeParam.buildNo },
-                        { key: 'pipelineId', value: routeParam.pipelineId },
-                        { key: 'taskId', value: this.taskId }
-                    ]
+                    params: {
+                        props: {
+                            buildId: routeParam.buildNo,
+                            pipelineId: routeParam.pipelineId,
+                            taskId: this.taskId
+                        }
+                    }
                 }
                 this.isLoading = true
-                this.$store.dispatch('pipelines/getArtifactories', postData).then((res) => {
+                this.$store.dispatch('soda/requestPartFile', postData).then((res) => {
                     const data = res.data || {}
                     this.artifactories = data.records || []
                 }).catch((err) => {
