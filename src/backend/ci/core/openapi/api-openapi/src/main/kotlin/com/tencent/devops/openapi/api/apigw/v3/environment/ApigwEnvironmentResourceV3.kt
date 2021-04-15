@@ -46,6 +46,7 @@ import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPEN_API_V3_ENVIRONMENT"], description = "OPENAPI-环境管理")
@@ -207,6 +208,12 @@ interface ApigwEnvironmentResourceV3 {
         projectId: String,
         @ApiParam("节点 hashId", required = true)
         @PathParam("nodeHashId")
-        nodeHashId: String
+        nodeHashId: String,
+        @ApiParam("排序字段", required = true)
+        @QueryParam("sortBy, pipelineName|lastBuildTime")
+        sortBy: String? = null,
+        @ApiParam("排序方向, ASC|DESC", required = true)
+        @QueryParam("sortDirection")
+        sortDirection: String? = null
     ): Result<List<AgentPipelineRef>>
 }
