@@ -50,4 +50,25 @@ public interface TaskLogService
      */
     Map<Long, List<TaskLogModel>> batchFindByTaskIdListAndTime(List<Long> taskIds, Long startTime, Long endTime);
 
+
+    /**
+     * 批量获取任务的工具最新一条分析记录
+     *
+     * @param taskIds  任务ID集合
+     * @param toolName 工具名
+     * @return list
+     */
+    Map<Long, TaskLogModel> batchFindLastTaskLogByTool(List<Long> taskIds, String toolName);
+
+
+    /**
+     * 获取指定构建ID的分析记录
+     *
+     * @param taskId   任务ID
+     * @param toolName 工具名
+     * @param buildId  构建ID
+     * @return model
+     */
+    TaskLogModel getBuildTaskLog(long taskId, String toolName, String buildId);
+
 }

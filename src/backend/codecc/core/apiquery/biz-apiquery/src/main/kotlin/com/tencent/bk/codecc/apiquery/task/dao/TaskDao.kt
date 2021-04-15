@@ -2,13 +2,13 @@ package com.tencent.bk.codecc.apiquery.task.dao
 
 import com.google.common.collect.Lists
 import com.mongodb.BasicDBObject
+import com.tencent.bk.codecc.apiquery.task.model.BuildIdRelationshipModel
 import com.tencent.bk.codecc.apiquery.task.model.CustomProjModel
 import com.tencent.bk.codecc.apiquery.task.model.GongfengPublicProjModel
 import com.tencent.bk.codecc.apiquery.task.model.TaskFailRecordModel
 import com.tencent.bk.codecc.apiquery.task.model.TaskInfoModel
 import com.tencent.bk.codecc.apiquery.task.model.ToolConfigInfoModel
 import com.tencent.bk.codecc.apiquery.task.model.ToolMetaModel
-import com.tencent.bk.codecc.apiquery.task.model.*
 import com.tencent.bk.codecc.apiquery.vo.TaskToolInfoReqVO
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.util.DateTimeUtils
@@ -35,16 +35,28 @@ class TaskDao @Autowired constructor(
     /**
      * 根据bgid查询开源任务清单
      */
-    fun findByBgId(
-        bgId: Int,
+    fun findByBgIdAndDeptId(
+        bgId: Int?,
+        deptId: Int?,
         pageNum: Int?,
         pageSize: Int?,
         sortField: String?,
         sortType: String?
     ): List<TaskInfoModel> {
-        val match = Aggregation.match(
-            Criteria.where("bg_id").`is`(bgId).and("create_from").`is`("gongfeng_scan").and("custom_proj_info").exists(false).and("project_id").nin("CUSTOMPROJ_TEG_CUSTOMIZED", "CUSTOMPROJ_PCG_RD")
-        )
+        val match = if (null != bgId && null == deptId) {
+            Aggregation.match(
+                Criteria.where("bg_id").`is`(bgId).and("create_from").`is`("gongfeng_scan").and("project_id").nin("CUSTOMPROJ_TEG_CUSTOMIZED", "CUSTOMPROJ_PCG_RD", "CUSTOMPROJ_codecc", "CUSTOMPROJ_show-code")
+            )
+        } else if (null == bgId && null != deptId) {
+            Aggregation.match(
+                Criteria.where("dept_id").`is`(deptId).and("create_from").`is`("gongfeng_scan").and("project_id").nin("CUSTOMPROJ_TEG_CUSTOMIZED", "CUSTOMPROJ_PCG_RD", "CUSTOMPROJ_codecc", "CUSTOMPROJ_show-code")
+            )
+        } else {
+            Aggregation.match(
+                Criteria.where("bg_id").`is`(bgId).and("dept_id").`is`(deptId).and("create_from").`is`("gongfeng_scan").and("project_id").nin("CUSTOMPROJ_TEG_CUSTOMIZED", "CUSTOMPROJ_PCG_RD", "CUSTOMPROJ_codecc", "CUSTOMPROJ_show-code")
+            )
+        }
+
         val lookup =
             Aggregation.lookup("t_gongfeng_stat_project", "gongfeng_project_id", "id", "gongfeng_stat_proj_info")
         val sort =
@@ -57,12 +69,11 @@ class TaskDao @Autowired constructor(
             )
         val skip = Aggregation.skip((((pageNum ?: 1) - 1) * (pageSize ?: 100)).toLong())
         val limit = Aggregation.limit((pageSize ?: 100).toLong())
-        //允许磁盘操作
+        // 允许磁盘操作
         val options = AggregationOptions.Builder().allowDiskUse(true).build()
         val agg = Aggregation.newAggregation(match, lookup, sort, skip, limit).withOptions(options)
         return taskMongoTemplate.aggregate(agg, "t_task_detail", TaskInfoModel::class.java).mappedResults
     }
-
 
     /**
      * 根据bgid查询开源任务清单
@@ -89,12 +100,11 @@ class TaskDao @Autowired constructor(
             )
         val skip = Aggregation.skip((((pageNum ?: 1) - 1) * (pageSize ?: 100)).toLong())
         val limit = Aggregation.limit((pageSize ?: 100).toLong())
-        //允许磁盘操作
+        // 允许磁盘操作
         val options = AggregationOptions.Builder().allowDiskUse(true).build()
         val agg = Aggregation.newAggregation(match, lookup, sort, skip, limit).withOptions(options)
         return taskMongoTemplate.aggregate(agg, "t_task_detail", TaskInfoModel::class.java).mappedResults
     }
-
 
     fun findCustomProjByTaskIds(
         taskIds: List<Long>,
@@ -118,7 +128,7 @@ class TaskDao @Autowired constructor(
             )
         val skip = Aggregation.skip((((pageNum ?: 1) - 1) * (pageSize ?: 100)).toLong())
         val limit = Aggregation.limit((pageSize ?: 100).toLong())
-        //允许磁盘操作
+        // 允许磁盘操作
         val options = AggregationOptions.Builder().allowDiskUse(true).build()
         val agg = Aggregation.newAggregation(match, lookup, sort, skip, limit).withOptions(options)
         return taskMongoTemplate.aggregate(agg, "t_customized_project", CustomProjModel::class.java).mappedResults
@@ -184,7 +194,7 @@ class TaskDao @Autowired constructor(
         fieldsObj["task_id"] = true
         val query = BasicQuery(BasicDBObject(), fieldsObj)
         query.addCriteria(
-            //todo 要通用化
+            // todo 要通用化
             Criteria.where("bg_id").`is`(bgId).and("create_from").`is`("gongfeng_scan").and("project_id").nin(
                 "CUSTOMPROJ_PCG_RD",
                 "CUSTOMPROJ_BLUEKING_CODE"
@@ -252,7 +262,8 @@ class TaskDao @Autowired constructor(
     }
 
     fun findTaskInfoModelListByTaskIds(
-        taskIds: List<Long>, pageNum: Int?,
+        taskIds: List<Long>,
+        pageNum: Int?,
         pageSize: Int?,
         sortField: String?,
         sortType: String?
@@ -262,6 +273,14 @@ class TaskDao @Autowired constructor(
         )
         val lookup =
             Aggregation.lookup("t_gongfeng_stat_project", "gongfeng_project_id", "id", "gongfeng_stat_proj_info")
+        val project = Aggregation.project("task_id", "name_en", "name_cn", "code_lang", "task_owner", "task_member",
+                    "task_viewer", "status", "project_id", "project_name", "pipeline_id", "create_from", "tool_names", "disable_reason",
+                    "disable_time", "execute_time", "execute_date", "timer_expression", "description", "bg_id", "dept_id",
+                    "center_id", "group_id", "workspace_id", "repo_hash_id", "alias_name", "branch", "scm_type", "repo_revision",
+                    "default_filter_path", "filter_path", "test_source_filter_path", "auto_gen_filter_path", "third_party_filter_path",
+                    "last_disable_task_info", "gongfeng_flag", "gongfeng_project_id", "gongfeng_commit_id", "total_work", "scan_type",
+                    "new_defect_judge", "tops_user", "atom_code", "custom_proj_info", "gongfeng_stat_proj_info", "updated_date", "create_date",
+                    "opensource_disable_reason", "latest_scan_result")
         val sort =
             Aggregation.sort(
                 try {
@@ -272,9 +291,9 @@ class TaskDao @Autowired constructor(
             )
         val skip = Aggregation.skip((((pageNum ?: 1) - 1) * (pageSize ?: 100)).toLong())
         val limit = Aggregation.limit((pageSize ?: 100).toLong())
-        //允许磁盘操作
+        // 允许磁盘操作
         val options = AggregationOptions.Builder().allowDiskUse(true).build()
-        val agg = Aggregation.newAggregation(match, lookup, sort, skip, limit).withOptions(options)
+        val agg = Aggregation.newAggregation(match, lookup, project, sort, skip, limit).withOptions(options)
         return taskMongoTemplate.aggregate(agg, "t_task_detail", TaskInfoModel::class.java).mappedResults
     }
 
@@ -303,7 +322,6 @@ class TaskDao @Autowired constructor(
      * 多条件分页查询任务详情
      */
     fun findTaskInfoPage(reqReq: TaskToolInfoReqVO, pageable: Pageable): Page<TaskInfoModel> {
-        val criteria = Criteria()
         val criteriaList: MutableList<Criteria?> = Lists.newArrayList()
 
         // 可选查询条件  指定taskId集合
@@ -326,67 +344,80 @@ class TaskDao @Autowired constructor(
         if (CollectionUtils.isNotEmpty(createFrom)) {
             criteriaList.add(Criteria.where("create_from").`in`(createFrom))
         }
+
+        // afterMatch
+        val criteriaListAfter: MutableList<Criteria?> = Lists.newArrayList()
+
         // 4.1创建时间-大于等于
         val createStartTime = reqReq.startTime
         if (StringUtils.isNotEmpty(createStartTime)) {
-            criteriaList.add(Criteria.where("create_date").gte(DateTimeUtils.getTimeStamp(createStartTime)))
+            criteriaListAfter.add(Criteria.where("create_date").gte(DateTimeUtils.getTimeStamp(createStartTime)))
         }
         // 4.2创建时间-小于等于
         val createEndTime = reqReq.endTime
         if (StringUtils.isNotEmpty(createEndTime)) {
-            criteriaList.add(Criteria.where("create_date").lte(DateTimeUtils.getTimeStamp(createEndTime)))
+            criteriaListAfter.add(Criteria.where("create_date").lte(DateTimeUtils.getTimeStamp(createEndTime)))
         }
         // 5.任务状态 enum Status
         val taskStatus = reqReq.status
-        if (taskStatus != null && (taskStatus == 0 || taskStatus == 1)) {
+        if (taskStatus == 0 || taskStatus == 1) {
             criteriaList.add(Criteria.where("status").`is`(taskStatus))
         }
-        // 6.工具筛选
-        /*val tool = reqReq.toolName
-        if (StringUtils.isNotEmpty(tool)) {
-            criteriaList.add(Criteria.where("tool_config_info_list").elemMatch(Criteria.where("tool_name").`is`(tool)
-                    .and("follow_status").ne(ComConstants.FOLLOW_STATUS.WITHDRAW.value())))
-        }*/
-        // 7.是否包含新手接入(V1迁移)
-        val hasNoviceRegister = reqReq.hasNoviceRegister
-        if (hasNoviceRegister != null && hasNoviceRegister != 1) {
+        // 6.是否包含新手接入(V1迁移)
+        if (reqReq.hasNoviceRegister != 1) {
             // 默认不包含,正则取反
-            criteriaList.add(Criteria.where("name_cn").regex("新手接入_").not())
+            criteriaListAfter.add(Criteria.where("name_cn").not().regex("新手接入_"))
+        }
+        // 7.中心多选
+        val centerIds = reqReq.centerIds
+        if (!centerIds.isNullOrEmpty()) {
+            criteriaListAfter.add(Criteria.where("center_id").`in`(centerIds))
         }
 
-        // 模糊匹配
-        val nameCn = reqReq.nameCn
-        if (StringUtils.isNotEmpty(nameCn)) {
-            criteriaList.add(Criteria.where("name_cn").regex(nameCn))
-        }
-        val nameEn = reqReq.nameEn
-        if (StringUtils.isNotEmpty(nameEn)) {
-            criteriaList.add(Criteria.where("name_en").regex(nameEn))
-        }
-        val ldProjectName = reqReq.projectName
-        if (StringUtils.isNotEmpty(ldProjectName)) {
-            criteriaList.add(Criteria.where("project_name").regex(ldProjectName))
-        }
-        val ldProjectId = reqReq.projectId
-        if (StringUtils.isNotEmpty(ldProjectId)) {
-            criteriaList.add(Criteria.where("project_id").regex(ldProjectId))
-        }
-        val pipelineId = reqReq.pipelineId
-        if (StringUtils.isNotEmpty(pipelineId)) {
-            criteriaList.add(Criteria.where("pipeline_id").regex(pipelineId))
-        }
-        val description = reqReq.description
-        if (StringUtils.isNotEmpty(description)) {
-            criteriaList.add(Criteria.where("description").regex(description))
+        // 搜索模糊匹配
+        val searchString = reqReq.searchString
+        if (StringUtils.isNotEmpty(searchString)) {
+            val keywordCriteria = Lists.newArrayList<Criteria>()
+            try {
+                val searchTaskId = searchString.toLong()
+                keywordCriteria.add(Criteria.where("task_id").`is`(searchTaskId))
+            } catch (e: NumberFormatException) {
+            }
+            keywordCriteria.add(Criteria.where("name_cn").regex(searchString))
+            keywordCriteria.add(Criteria.where("name_en").regex(searchString))
+            keywordCriteria.add(Criteria.where("project_id").regex(searchString))
+            keywordCriteria.add(Criteria.where("pipeline_id").regex(searchString))
+            // 用orOperator来连接模糊查询条件
+            criteriaList.add(Criteria().orOperator(*keywordCriteria.toTypedArray()))
         }
 
+        // 是否包含管理员的任务
+        val hasAdminTask = reqReq.hasAdminTask
+        if (hasAdminTask != 1) {
+            // 默认不包含
+            criteriaListAfter.add(Criteria.where("task_owner").elemMatch(Criteria().nin(reqReq.excludeUserList)))
+        }
 
+        val criteria = Criteria()
         if (CollectionUtils.isNotEmpty(criteriaList)) {
             criteria.andOperator(*criteriaList.toTypedArray())
         }
 
+        val criteriaAfter = Criteria()
+        if (CollectionUtils.isNotEmpty(criteriaListAfter)) {
+            criteriaAfter.andOperator(*criteriaListAfter.toTypedArray())
+        }
+
+        val match = Aggregation.match(criteria)
+        val matchAfter = Aggregation.match(criteriaAfter)
+
         // 获取满足条件的总数
-        val totalCount: Long = taskMongoTemplate.count(Query(criteria), "t_task_detail")
+        val criteriaCount = Criteria()
+        criteriaList.addAll(criteriaListAfter)
+        if (CollectionUtils.isNotEmpty(criteriaList)) {
+            criteriaCount.andOperator(*criteriaList.toTypedArray())
+        }
+        val totalCount: Long = taskMongoTemplate.count(Query(criteriaCount), "t_task_detail")
 
         // 分页排序
         val pageSize = pageable.pageSize
@@ -398,15 +429,14 @@ class TaskDao @Autowired constructor(
         // 指定查询字段
         val project = Aggregation.project(
             "task_id", "name_en", "name_cn", "code_lang",
-            "task_owner", "status", "project_id", "project_name", "pipeline_id", "create_from", "description",
+            "task_owner", "status", "project_id", "project_name", "pipeline_id", "create_from",
             "tool_names", "bg_id", "dept_id", "center_id", "group_id", "create_date", "created_by", "updated_date",
             "updated_by"
         )
 
         // 允许磁盘操作(支持较大数据集合的处理)
         val options = AggregationOptions.Builder().allowDiskUse(true).build()
-        val aggregation =
-            Aggregation.newAggregation(Aggregation.match(criteria), sort, skip, project, limit).withOptions(options)
+        val aggregation = Aggregation.newAggregation(match, matchAfter, sort, skip, project, limit).withOptions(options)
         val queryResults = taskMongoTemplate.aggregate(aggregation, "t_task_detail", TaskInfoModel::class.java)
 
         // 计算总页数
@@ -418,7 +448,6 @@ class TaskDao @Autowired constructor(
         // 页码加1返回
         return Page(totalCount, pageNumber + 1, pageSize, totalPageNum, queryResults.mappedResults)
     }
-
 
     /**
      * 按查询条件获取所有任务ID
@@ -483,11 +512,11 @@ class TaskDao @Autowired constructor(
     fun findTaskFailRecord(
         projectId: String?,
         taskIds: List<Long>?,
-        pipelineId : String?,
-        buildId : String?,
+        pipelineId: String?,
+        buildId: String?,
         pageable: Pageable?
     ): List<TaskFailRecordModel> {
-        //todo 添加索引
+        // todo 添加索引
         val query = Query()
         query.addCriteria(
             Criteria.where("create_from").`is`("gongfeng_scan")
@@ -499,21 +528,21 @@ class TaskDao @Autowired constructor(
                 ).toInstant().toEpochMilli()
             )
         ).addCriteria(Criteria.where("retry_flag").`is`(false))
-        if(projectId.isNullOrBlank()){
+        if (projectId.isNullOrBlank()) {
             query.addCriteria(Criteria.where("project_id").nin("CUSTOMPROJ_TEG_CUSTOMIZED", "CUSTOMPROJ_PCG_RD"))
         } else {
             query.addCriteria(Criteria.where("project_id").`is`(projectId))
         }
-        if(!taskIds.isNullOrEmpty()){
+        if (!taskIds.isNullOrEmpty()) {
             query.addCriteria(Criteria.where("task_id").`in`(taskIds))
         }
-        if(!pipelineId.isNullOrBlank()){
+        if (!pipelineId.isNullOrBlank()) {
             query.addCriteria(Criteria.where("pipeline_id").`is`(pipelineId))
         }
-        if(!buildId.isNullOrBlank()){
+        if (!buildId.isNullOrBlank()) {
             query.addCriteria(Criteria.where("build_id").`is`(buildId))
         }
-        if(null != pageable){
+        if (null != pageable) {
             query.with(pageable)
         }
 
@@ -530,4 +559,84 @@ class TaskDao @Autowired constructor(
         return taskMongoTemplate.findOne(query, BuildIdRelationshipModel::class.java, "t_build_id_relationship")
     }
 
+    /**
+     * 根据bg、deptIds获取task id
+     */
+    fun findByBgIdAndDeptId(taskToolInfoReqVO: TaskToolInfoReqVO): List<Long> {
+        val fieldsObj = BasicDBObject()
+        fieldsObj["task_id"] = true
+        val query = BasicQuery(BasicDBObject(), fieldsObj)
+        // 1.事业群
+        val bgId = taskToolInfoReqVO.bgId
+        if (bgId != null && bgId != 0) {
+            query.addCriteria(Criteria.where("bg_id").`is`(bgId))
+        }
+        // 2.部门 多选
+        val deptIds = taskToolInfoReqVO.deptIds
+        if (CollectionUtils.isNotEmpty(deptIds)) {
+            query.addCriteria(Criteria.where("dept_id").`in`(deptIds))
+        }
+        // 3.来源 多选
+        val createFroms = taskToolInfoReqVO.createFrom
+        if (!createFroms.isNullOrEmpty()) {
+            query.addCriteria(Criteria.where("create_from").`in`(createFroms))
+        }
+        // 4.使用状态
+        val status = taskToolInfoReqVO.status
+        if (status != null) {
+            query.addCriteria(Criteria.where("status").`is`(status))
+        }
+
+        val hasAdminTask = taskToolInfoReqVO.hasAdminTask
+        if (hasAdminTask != 1) {
+            query.addCriteria(Criteria.where("task_owner").elemMatch(Criteria().nin(taskToolInfoReqVO.excludeUserList)))
+        }
+
+        val modelList = taskMongoTemplate.find(query, TaskInfoModel::class.java, "t_task_detail")
+        return modelList.map { it.taskId }
+    }
+
+    /**
+     * 统计任务数
+     */
+    fun findByCreateFrom(createFromSet: Set<String>?, status: Int?): Long {
+        val query = Query()
+        // 按创建来源
+        if (CollectionUtils.isNotEmpty(createFromSet)) {
+            query.addCriteria(Criteria.where("create_from").`in`(createFromSet))
+        }
+        // 按状态
+        if (status != null) {
+            query.addCriteria(Criteria.where("status").`is`(status))
+        }
+
+        return taskMongoTemplate.count(query, "t_task_detail")
+    }
+
+    /**
+     * 根据taskId集合查找
+     */
+    fun findByTaskIds(taskId: Set<Long>): MutableList<TaskInfoModel> {
+        val query = Query()
+        query.addCriteria(Criteria.where("task_id").`in`(taskId))
+        return taskMongoTemplate.find(query, TaskInfoModel::class.java, "t_task_detail")
+    }
+
+    /**
+     * 获取管理员taskId集合
+     */
+    fun findTaskIdsByBgCreateFrom(createFromReq: MutableSet<String>, excludeUserList: MutableList<String>): MutableList<TaskInfoModel> {
+        val fieldsObj = BasicDBObject()
+        fieldsObj["task_id"] = true
+        val query = BasicQuery(BasicDBObject(), fieldsObj)
+        // 3.来源 多选
+        if (!createFromReq.isNullOrEmpty()) {
+            query.addCriteria(Criteria.where("create_from").`in`(createFromReq))
+        }
+        if (CollectionUtils.isNotEmpty(excludeUserList)) {
+            query.addCriteria(Criteria.where("task_owner").elemMatch(Criteria().`in`(excludeUserList)))
+        }
+
+        return taskMongoTemplate.find(query, TaskInfoModel::class.java, "t_task_detail")
+    }
 }

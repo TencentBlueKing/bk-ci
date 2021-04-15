@@ -6,6 +6,7 @@ import io.swagger.annotations.ApiParam;
 import lombok.Data;
 
 import javax.ws.rs.PathParam;
+import java.util.Set;
 
 /**
  * 规则集与其他对象关系视图
@@ -28,4 +29,7 @@ public class CheckerSetRelationshipVO
 
     @ApiModelProperty(value = "规则集版本号")
     Integer version;
+
+    @ApiModelProperty(value = "规则集集合")
+    Set<String> checkerSetIds;
 }

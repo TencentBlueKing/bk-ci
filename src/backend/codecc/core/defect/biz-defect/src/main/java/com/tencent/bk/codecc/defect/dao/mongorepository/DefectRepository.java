@@ -27,6 +27,7 @@
 package com.tencent.bk.codecc.defect.dao.mongorepository;
 
 import com.tencent.bk.codecc.defect.model.DefectEntity;
+import com.tencent.bk.codecc.defect.model.LintDefectV2Entity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
@@ -64,6 +65,15 @@ public interface DefectRepository extends MongoRepository<DefectEntity, String>
     List<DefectEntity> findByTaskIdAndToolName(long taskId, String toolName);
 
     /**
+     * 通过任务id，工具名查询告警信息
+     *
+     * @param taskId
+     * @param toolNameSet
+     * @return
+     */
+    List<DefectEntity> findByTaskIdAndToolNameIn(long taskId, List<String> toolNameSet);
+
+    /**
      * 通过任务id，工具名和状态查询告警信息
      *
      * @param taskId
@@ -72,6 +82,16 @@ public interface DefectRepository extends MongoRepository<DefectEntity, String>
      * @return
      */
     List<DefectEntity> findByTaskIdAndToolNameAndStatus(long taskId, String toolName, int status);
+
+    /**
+     * 通过任务id，工具名和状态查询告警信息
+     *
+     * @param taskId
+     * @param toolNameSet
+     * @param status
+     * @return
+     */
+    List<DefectEntity> findByTaskIdAndToolNameInAndStatus(long taskId, List<String> toolNameSet, int status);
 
     /**
      * 根据taskId，工具名查询所有的告警ID
@@ -90,7 +110,7 @@ public interface DefectRepository extends MongoRepository<DefectEntity, String>
      * @param toolName
      * @return
      */
-    @Query(fields = "{'id':1, 'status':1, 'author_list':1, 'severity':1, 'file_path_name':1, 'exclude_time':1}", value = "{'task_id': ?0, 'tool_name': ?1, 'id': {'$in': ?2}}")
+    @Query(fields = "{'id':1, 'status':1, 'author_list':1, 'severity':1, 'file_path_name':1, 'exclude_time':1, 'checker_name':1, 'create_time':1}", value = "{'task_id': ?0, 'tool_name': ?1, 'id': {'$in': ?2}}")
     List<DefectEntity> findStatusAndAuthorAndSeverityByTaskIdAndToolNameAndIdIn(long taskId, String toolName, Set<String> idSet);
 
     /**
@@ -140,4 +160,38 @@ public interface DefectRepository extends MongoRepository<DefectEntity, String>
             value = "{'tool_name': ?0, 'task_id': {'$in': ?1}, 'checker_name': {'$in': ?2}}")
     List<DefectEntity> findByToolNameAndTaskIdInAndCheckerNameIn(String toolName, Collection<Long> taskIdSet,
             Set<String> checkerNameSet);
+
+
+    /**
+     * 通过任务Id、工具名称、已关闭的告警
+     *
+     * @param taskId
+     * @param toolName
+     * @return
+     */
+    @Query(fields = "{'severity':1, 'status':1}", value = "{'task_id': ?0, 'tool_name': ?1, 'status': {'$gt':1}}")
+    List<DefectEntity> findCloseDefectByTaskIdAndToolName(long taskId, String toolName);
+
+    /**
+     * 通过任务id，工具名和状态查询告警信息
+     *
+     * @param taskId
+     * @param toolNameList
+     * @param status
+     * @return
+     */
+    Integer countByTaskIdAndToolNameInAndStatusAndSeverity(long taskId,
+                                                           List<String> toolNameList,
+                                                           int status,
+                                                           int severity);
+
+    /**
+     * 通过任务id，工具名和状态查询告警信息
+     *
+     * @param taskId
+     * @param toolName
+     * @param status
+     * @return
+     */
+    Integer countByTaskIdAndToolNameAndStatusAndSeverity(long taskId, String toolName, int status, int severity);
 }

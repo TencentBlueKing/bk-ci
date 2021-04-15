@@ -95,4 +95,11 @@ public class UploadTaskLogStepVO
      * false:不是快速增量扫描，需要做提单等操作
      */
     private boolean fastIncrement;
+
+    /**
+     * 是否是最后一步并且状态成功
+     * 在告警上报完成后写入 True，在这之前都是未完成状态
+     * 用于切面
+     */
+    private boolean isFinish = false;
 }

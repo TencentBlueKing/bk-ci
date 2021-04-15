@@ -17,6 +17,7 @@ import com.tencent.devops.common.api.pojo.ToolRunResult;
 import lombok.Data;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
@@ -31,7 +32,7 @@ import java.util.Map;
 @Data
 @Document(collection = "t_task_fail_record")
 @CompoundIndexes({
-        @CompoundIndex(name = "upload_time_1_retry_flag_1_time_cost_1", def = "{'upload_time': 1, 'retry_flag': 1, 'time_cost' : 1}", background = true)
+        @CompoundIndex(name = "upload_time_1_retry_flag_1_time_cost_1", def = "{'upload_time': 1, 'retry_flag': 1, 'time_cost' : 1}", background = true),
 })
 public class TaskFailRecordEntity extends CommonEntity
 {

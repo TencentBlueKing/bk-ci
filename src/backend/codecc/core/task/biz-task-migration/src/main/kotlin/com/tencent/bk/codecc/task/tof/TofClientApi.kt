@@ -26,7 +26,7 @@ class TofClientApi @Autowired constructor(
     @Value("\${tof.rootpath:#{null}}")
     private val rootPath: String? = null
 
-    private val operator: String = "xxxxxx"
+    private val operator: String = "austinshen"
 
     /**
      * 根据名字获取员工信息
@@ -41,13 +41,13 @@ class TofClientApi @Autowired constructor(
             "login_name" to userName
         )
         val result = OkhttpUtils.doHttpPost(url, objectMapper.writeValueAsString(requestBody))
-        return objectMapper.readValue(result, object : TypeReference<Response<TofStaffInfo>>(){})
+        return objectMapper.readValue(result, object : TypeReference<Response<TofStaffInfo>>() {})
     }
 
     /**
      * 根据员工id获取员工信息
      */
-    fun getStaffInfoByStaffId(staffId : Int) : Response<TofStaffInfo> {
+    fun getStaffInfoByStaffId(staffId: Int): Response<TofStaffInfo> {
         val url =
             "$rootPath/component/compapi/tof/get_staff_info_by_login_name"
         val requestBody = mapOf(
@@ -57,7 +57,7 @@ class TofClientApi @Autowired constructor(
             "staff_id" to staffId
         )
         val result = OkhttpUtils.doHttpPost(url, objectMapper.writeValueAsString(requestBody))
-        return objectMapper.readValue(result, object : TypeReference<Response<TofStaffInfo>>(){})
+        return objectMapper.readValue(result, object : TypeReference<Response<TofStaffInfo>>() {})
     }
 
     /**
@@ -114,7 +114,7 @@ class TofClientApi @Autowired constructor(
             "level" to 10
         )
         val result = OkhttpUtils.doHttpPost(url, objectMapper.writeValueAsString(requestBody))
-        return objectMapper.readValue(result, object : TypeReference<Response<List<TofDeptStaffInfo>>>(){})
+        return objectMapper.readValue(result, object : TypeReference<Response<List<TofDeptStaffInfo>>>() {})
     }
 
     /**
@@ -131,6 +131,6 @@ class TofClientApi @Autowired constructor(
             "level" to 1
         )
         val result = OkhttpUtils.doHttpPost(url, objectMapper.writeValueAsString(requestBody))
-        return objectMapper.readValue(result, object : TypeReference<Response<List<TofDeptInfo>>>(){})
+        return objectMapper.readValue(result, object : TypeReference<Response<List<TofDeptInfo>>>() {})
     }
 }

@@ -12,7 +12,6 @@
 
 package com.tencent.bk.codecc.task.service;
 
-import com.tencent.bk.codecc.task.model.CustomProjEntity;
 import com.tencent.bk.codecc.task.model.GongfengActiveProjEntity;
 import com.tencent.bk.codecc.task.model.GongfengPublicProjEntity;
 import com.tencent.bk.codecc.task.model.GongfengStatProjEntity;
@@ -21,7 +20,6 @@ import com.tencent.bk.codecc.task.vo.GongfengPublicProjVO;
 import com.tencent.bk.codecc.task.vo.gongfeng.ProjectStatVO;
 import com.tencent.devops.common.api.QueryTaskListReqVO;
 import com.tencent.devops.common.api.pojo.Page;
-
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -158,4 +156,10 @@ public interface GongfengPublicProjService
      */
     Boolean delete(Integer id);
 
+    /**
+     * 通过任务ID查询工蜂任务信息
+     * @param taskId
+     * @return
+     */
+    Map<Long, GongfengPublicProjVO> queryGongfengProjectMapByTaskId(List<Long> taskId);
 }

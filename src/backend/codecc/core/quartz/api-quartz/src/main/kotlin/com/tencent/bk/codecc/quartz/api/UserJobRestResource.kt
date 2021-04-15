@@ -2,7 +2,7 @@ package com.tencent.bk.codecc.quartz.api
 
 import com.tencent.bk.codecc.quartz.pojo.JobInfoVO
 import com.tencent.bk.codecc.quartz.pojo.ShardingResultVO
-import com.tencent.devops.common.api.pojo.CodeCCResult
+import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -28,7 +28,7 @@ interface UserJobRestResource {
     @ApiOperation("获取正在执行job信息")
     @Path("/existing")
     @GET
-    fun getExistingJob(): CodeCCResult<List<JobInfoVO>>
+    fun getExistingJob(): Result<List<JobInfoVO>>
 
     @ApiOperation("删除所有正在执行的任务")
     @Path("/all/jobs/{dataDelete}")
@@ -37,13 +37,13 @@ interface UserJobRestResource {
         @ApiParam("是否删除表中数据")
         @PathParam("dataDelete")
         dataDelete : Int
-    ) : CodeCCResult<Boolean>
+    ) : Result<Boolean>
 
 
     @ApiOperation("初始化任务信息")
     @Path("/all/jobs")
     @POST
-    fun initAllJobs() : CodeCCResult<Boolean>
+    fun initAllJobs() : Result<Boolean>
 
     @ApiOperation("刷新所有开源扫描的cron表达式")
     @Path("/openSource/cron/period/{period}/startTime/{startTime}")
@@ -54,11 +54,11 @@ interface UserJobRestResource {
         period : Int,
         @ApiParam("开源扫描时间起点")
         @PathParam("startTime")
-        startTime : Int) : CodeCCResult<Boolean>
+        startTime : Int) : Result<Boolean>
 
     @ApiOperation("获取分片信息")
     @Path("/shardingResult")
     @GET
-    fun getShardingResult(): CodeCCResult<ShardingResultVO?>
+    fun getShardingResult(): Result<ShardingResultVO?>
 
 }

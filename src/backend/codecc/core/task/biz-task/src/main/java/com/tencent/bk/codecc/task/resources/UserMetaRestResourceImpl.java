@@ -31,9 +31,10 @@ import com.tencent.bk.codecc.task.service.MetaService;
 import com.tencent.bk.codecc.task.service.PipelineService;
 import com.tencent.bk.codecc.task.vo.BuildEnvVO;
 import com.tencent.bk.codecc.task.vo.MetadataVO;
+import com.tencent.bk.codecc.task.vo.OpenScanAndEpcToolNameMapVO;
 import com.tencent.devops.common.api.ToolMetaBaseVO;
 import com.tencent.devops.common.api.ToolMetaDetailVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.web.RestResource;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -56,26 +57,31 @@ public class UserMetaRestResourceImpl implements UserMetaRestResource
     private PipelineService pipelineService;
 
     @Override
-    public CodeCCResult<List<ToolMetaBaseVO>> toolList(Boolean isDetail)
+    public Result<List<ToolMetaBaseVO>> toolList(Boolean isDetail)
     {
-        return new CodeCCResult<>(metaService.toolList(isDetail));
+        return new Result<>(metaService.toolList(isDetail));
     }
 
     @Override
-    public CodeCCResult<ToolMetaDetailVO> toolDetail(String toolName)
+    public Result<ToolMetaDetailVO> toolDetail(String toolName)
     {
-        return new CodeCCResult<>(metaService.queryToolDetail(toolName));
+        return new Result<>(metaService.queryToolDetail(toolName));
     }
 
     @Override
-    public CodeCCResult<Map<String, List<MetadataVO>>> metadatas(String metadataType)
+    public Result<Map<String, List<MetadataVO>>> metadatas(String metadataType)
     {
-        return new CodeCCResult<>(metaService.queryMetadatas(metadataType));
+        return new Result<>(metaService.queryMetadatas(metadataType));
     }
 
     @Override
-    public CodeCCResult<List<BuildEnvVO>> getBuildEnv(String os)
+    public Result<List<BuildEnvVO>> getBuildEnv(String os)
     {
-        return new CodeCCResult<>(pipelineService.getBuildEnv(os));
+        return new Result<>(pipelineService.getBuildEnv(os));
+    }
+
+    @Override
+    public Result<OpenScanAndEpcToolNameMapVO> getOpenScanAndEpcToolNameMap() {
+        return new Result<>(metaService.getOpenScanAndEpcToolNameMap());
     }
 }

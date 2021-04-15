@@ -258,6 +258,12 @@ public class CCNDefectEntity extends CommonEntity
     private String pinpointHash;
 
     /**
+     * pinpont_hash组号
+     */
+    @Field("pinpoint_hash_group")
+    private String pinpointHashGroup;
+
+    /**
      * 文件md5值
      */
     @Field("md5")

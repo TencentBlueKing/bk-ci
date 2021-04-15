@@ -32,4 +32,10 @@ public class CodeLineModel
 
     @ApiModelProperty("代码行数")
     private Long codeLine;
+
+    @ApiModelProperty("注释行")
+    private Long commentLine;
+
+    @ApiModelProperty("有效注释行")
+    private Long efficientCommentLine;
 }

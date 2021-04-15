@@ -27,6 +27,7 @@
 package com.tencent.bk.codecc.defect.model.checkerset;
 
 import com.tencent.codecc.common.db.CommonEntity;
+import com.tencent.devops.common.constant.ComConstants;
 import lombok.Data;
 import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
@@ -61,6 +62,7 @@ public class CheckerSetEntity extends CommonEntity
     /**
      * 版本号
      */
+    @Indexed(background = true)
     private Integer version;
 
     /**

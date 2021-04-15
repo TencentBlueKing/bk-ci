@@ -27,7 +27,7 @@
 package com.tencent.bk.codecc.defect.api;
 
 import com.tencent.bk.codecc.defect.vo.coderepository.UploadRepositoriesVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -53,7 +53,7 @@ public interface BuildDefectRestResource
     @ApiOperation("工具侧上报代码仓库信息")
     @Path("/repositories")
     @POST
-    CodeCCResult uploadRepositories(
+    Result uploadRepositories(
             @ApiParam(value = "工具侧上报代码仓库信息", required = true)
                     UploadRepositoriesVO uploadRepositoriesVO);
 }
