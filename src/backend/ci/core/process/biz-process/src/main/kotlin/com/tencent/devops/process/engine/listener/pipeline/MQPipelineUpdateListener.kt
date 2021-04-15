@@ -72,7 +72,6 @@ class MQPipelineUpdateListener @Autowired constructor(
             watcher.start("updateAtomPipelineNum")
             pipelineAtomStatisticsService.updateAtomPipelineNum(event.pipelineId, event.version ?: 1)
             watcher.stop()
-
         } finally {
             watcher.stop()
             LogUtils.printCostTimeWE(watcher)
