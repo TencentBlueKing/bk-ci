@@ -102,61 +102,6 @@ class OpNodeService @Autowired constructor(
         }
     }
 
-    fun addOtherNodes(userId: String, projectId: String, nodeIps: List<String>) {
-        logger.info("addOtherNodes, userId: $userId, projectId: $projectId, nodeIps: $nodeIps")
-
-        // 只添加不存在的节点
-        val existNodeList = nodeDao.listServerAndDevCloudNodes(dslContext, projectId)
-        val existIpList = existNodeList.map { it.nodeIp }.toSet()
-        val toAddIpList = nodeIps.filterNot { existIpList.contains(it) }.toSet()
-        logger.info("toAddIpList: $toAddIpList")
-
-        checkImportCount(
-            dslContext = dslContext,
-            projectConfigDao = projectConfigDao,
-            nodeDao = nodeDao,
-            projectId = projectId,
-            userId = userId,
-            toAddNodeCount = toAddIpList.size
-        )
-
-        val now = LocalDateTime.now()
-        val toAddNodeList = toAddIpList.map {
-            TNodeRecord(
-                null,
-                "",
-                projectId,
-                it,
-                it,
-                NodeStatus.NORMAL.name,
-                NodeType.OTHER.name,
-                null,
-                null,
-                userId,
-                now,
-                null,
-                "",
-                "",
-                "",
-                false,
-                "",
-                "",
-                null,
-                now,
-                userId,
-                0,
-                null
-            )
-        }
-
-        dslContext.transaction { configuration ->
-            val context = DSL.using(configuration)
-            nodeDao.batchAddNode(context, toAddNodeList)
-            val insertedNodeList = nodeDao.listServerNodesByIps(context, projectId, toAddNodeList.map { it.nodeIp })
-            batchRegisterNodePermission(insertedNodeList = insertedNodeList, userId = userId, projectId = projectId)
-        }
-    }
-
     fun listPage(page: Int, pageSize: Int, nodeName: String?): List<NodeDevCloudInfo> {
         return nodeDao.listPage(dslContext, page, pageSize, nodeName).map {
             NodeDevCloudInfo(

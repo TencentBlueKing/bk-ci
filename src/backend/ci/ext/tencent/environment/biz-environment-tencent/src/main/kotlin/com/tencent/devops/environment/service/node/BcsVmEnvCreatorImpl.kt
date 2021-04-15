@@ -34,10 +34,12 @@ import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.ProjectConfigDao
+import com.tencent.devops.environment.model.CreateNodeModel
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvironmentId
 import com.tencent.devops.environment.pojo.enums.NodeSource
+import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.utils.BcsVmParamCheckUtils
 import com.tencent.devops.environment.utils.NodeStringIdUtils
@@ -64,7 +66,6 @@ class BcsVmEnvCreatorImpl @Autowired constructor(
     }
 
     override fun createEnv(projectId: String, userId: String, envCreateInfo: EnvCreateInfo): EnvironmentId {
-
         val now = LocalDateTime.now()
 
         // 创建 BCSVM 节点
@@ -85,30 +86,19 @@ class BcsVmEnvCreatorImpl @Autowired constructor(
             resMemory = vmCreateInfoP.third
         )
         val nodeList = bcsVmList.map {
-            TNodeRecord(
-                null,
-                "",
-                projectId,
-                it.ip,
-                it.name,
-                it.status,
-                NodeType.BCSVM.name,
-                it.clusterId,
-                projectId,
-                userId,
-                now,
-                now.plusDays(envCreateInfo.bcsVmParam!!.validity.toLong()),
-                it.osName,
-                null,
-                null,
-                false,
-                "",
-                "",
-                null,
-                now,
-                userId,
-                0,
-                null
+            CreateNodeModel(
+                nodeStringId = "",
+                projectId = projectId,
+                nodeIp = it.ip,
+                nodeName = it.name,
+                nodeStatus = it.status,
+                nodeType = NodeType.BCSVM.name,
+                nodeClusterId = it.clusterId,
+                nodeNamespace = projectId,
+                createdUser = userId,
+                expireTime = now.plusDays(envCreateInfo.bcsVmParam!!.validity.toLong()),
+                osName = it.osName,
+                agentStatus = false
             )
         }
 

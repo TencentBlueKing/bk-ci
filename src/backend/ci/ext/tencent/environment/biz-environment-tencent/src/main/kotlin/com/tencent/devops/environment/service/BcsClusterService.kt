@@ -36,6 +36,7 @@ import com.tencent.devops.environment.dao.BcsClusterDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.ProjectConfigDao
 import com.tencent.devops.environment.dao.StaticData
+import com.tencent.devops.environment.model.CreateNodeModel
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.BcsCluster
 import com.tencent.devops.environment.pojo.BcsImageInfo
@@ -93,30 +94,19 @@ class BcsClusterService @Autowired constructor(
         )
         val now = LocalDateTime.now()
         val toAddNodeList = bcsVmList.filterNot { existIpList.contains(it.ip) }.map {
-            TNodeRecord(
-                null,
-                "",
-                projectId,
-                it.ip,
-                it.name,
-                it.status,
-                NodeType.BCSVM.name,
-                it.clusterId,
-                projectId,
-                userId,
-                now,
-                now.plusDays(bcsVmParam.validity.toLong()),
-                it.osName,
-                null,
-                null,
-                false,
-                "",
-                "",
-                null,
-                now,
-                userId,
-                0,
-                null
+            CreateNodeModel(
+                nodeStringId = "",
+                projectId = projectId,
+                nodeIp = it.ip,
+                nodeName = it.name,
+                nodeStatus = it.status,
+                nodeType = NodeType.BCSVM.name,
+                nodeClusterId = it.clusterId,
+                nodeNamespace = projectId,
+                createdUser = userId,
+                expireTime = now.plusDays(bcsVmParam.validity.toLong()),
+                osName = it.osName,
+                agentStatus = false
             )
         }
 
