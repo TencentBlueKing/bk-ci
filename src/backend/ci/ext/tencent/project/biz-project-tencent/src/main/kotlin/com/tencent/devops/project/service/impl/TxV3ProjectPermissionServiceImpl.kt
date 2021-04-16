@@ -106,7 +106,7 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
     }
 
     private fun createIamProject(userId: String, resourceRegisterInfo: ResourceRegisterInfo): String {
-        val subjectScopes = ManagerScopes(ManagerScopesEnum.USER, "*")
+        val subjectScopes = ManagerScopes(ManagerScopesEnum.USER.name, "*")
         val authorizationScopes = AuthorizationUtils.buildManagerResources(
             projectId = resourceRegisterInfo.resourceCode,
             projectName = resourceRegisterInfo.resourceName,
