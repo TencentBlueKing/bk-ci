@@ -91,14 +91,14 @@ object AuthorizationUtils {
             projectName = projectName,
             iamConfiguration = iamConfiguration,
             actions = experienceGroupAction.split(","),
-            resourceType = AuthResourceType.EXPERIENCE_GROUP.value
+            resourceType = "experience_group"
         ))
         authorizationScopes.add(buildResource(
             projectId = projectId,
             projectName = projectName,
             iamConfiguration = iamConfiguration,
             actions = experienceTaskAction.split(","),
-            resourceType = AuthResourceType.EXPERIENCE_TASK.value
+            resourceType = "experience_task"
         ))
         authorizationScopes.add(buildResource(
             projectId = projectId,

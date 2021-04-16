@@ -86,17 +86,6 @@
     {
       "operation": "upsert_action",
       "data": {
-        "id": "project_list",
-        "name": "项目列表",
-        "name_en": "Project List",
-        "type": "list",
-        "related_resource_types": [],
-        "version": 1
-      }
-    },
-    {
-      "operation": "upsert_action",
-      "data": {
         "id": "project_manage",
         "name": "项目管理",
         "name_en": "Project Manage",
