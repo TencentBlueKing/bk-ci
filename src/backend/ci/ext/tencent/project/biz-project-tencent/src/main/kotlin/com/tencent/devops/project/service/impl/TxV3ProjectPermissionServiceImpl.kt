@@ -120,7 +120,7 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
             .subject_scopes(arrayListOf(subjectScopes)).build()
         logger.info("createIamProject: ${JsonUtil.toJson(createManagerDTO)}")
         logger.info("system ${iamConfiguration.systemId} | ${iamConfiguration.appCode} | ${iamConfiguration.apigwBaseUrl}")
-        return iamManagerService.createManager(createManagerDTO)
+        return iamManagerService.createManager(createManagerDTO).toString()
     }
 
     private fun createRole(userId: String, iamProjectId: Int) {
