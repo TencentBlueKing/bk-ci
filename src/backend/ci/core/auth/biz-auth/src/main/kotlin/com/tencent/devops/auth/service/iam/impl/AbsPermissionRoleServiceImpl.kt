@@ -70,8 +70,10 @@ open class AbsPermissionRoleServiceImpl @Autowired constructor(
         // 校验用户组名称
         checkRoleName(groupInfo.name, groupInfo.defaultGroup!!)
 
+        val groupName = "$projectCode-${groupInfo.name}"
+
         // 添加项目下用户组
-        val managerRoleGroup = ManagerRoleGroup(groupInfo.name, groupInfo.description)
+        val managerRoleGroup = ManagerRoleGroup(groupName, groupInfo.description)
         val roleGroups = mutableListOf<ManagerRoleGroup>()
         roleGroups.add(managerRoleGroup)
         val groups = ManagerRoleGroupDTO.builder().groups(roleGroups).build()
@@ -80,11 +82,11 @@ open class AbsPermissionRoleServiceImpl @Autowired constructor(
         // 默认分组需要分配默认权限
         if (groupInfo.defaultGroup!!) {
             when (groupInfo.name) {
-                BkAuthGroup.DEVELOPER.value -> addDevelopPermission(projectId, projectCode)
-                BkAuthGroup.MAINTAINER.value -> addMaintainerPermission(projectId, projectCode)
-                BkAuthGroup.TESTER.value -> addTestPermission(projectId, projectCode)
-                BkAuthGroup.QC.value -> addQCPermission(projectId, projectCode)
-                BkAuthGroup.PM.value -> addPMPermission(projectId, projectCode)
+                BkAuthGroup.DEVELOPER.value -> addDevelopPermission(roleId, projectCode)
+                BkAuthGroup.MAINTAINER.value -> addMaintainerPermission(roleId, projectCode)
+                BkAuthGroup.TESTER.value -> addTestPermission(roleId, projectCode)
+                BkAuthGroup.QC.value -> addQCPermission(roleId, projectCode)
+                BkAuthGroup.PM.value -> addPMPermission(roleId, projectCode)
             }
         }
         return roleId
@@ -117,7 +119,7 @@ open class AbsPermissionRoleServiceImpl @Autowired constructor(
         }
     }
 
-    private fun addDevelopPermission(projectId: Int, projectCode: String) {
+    private fun addDevelopPermission(roleId: Int, projectCode: String) {
         val actions = mutableListOf<String>()
         actions.add(PIPELINEACTION)
         actions.add(CREDENTIALACTION)
@@ -127,10 +129,10 @@ open class AbsPermissionRoleServiceImpl @Autowired constructor(
         actions.add(NODEACTION)
         actions.add(REPORTACTION)
         val authorizationScopes = buildCreateAuthorizationScopes(actions, projectCode)
-        iamManagerService.createRolePermission(projectId, authorizationScopes)
+        iamManagerService.createRolePermission(roleId, authorizationScopes)
     }
 
-    private fun addTestPermission(projectId: Int, projectCode: String) {
+    private fun addTestPermission(roleId: Int, projectCode: String) {
         val actions = mutableListOf<String>()
         actions.add(PIPELINEACTION)
         actions.add(CREDENTIALACTION)
@@ -138,34 +140,34 @@ open class AbsPermissionRoleServiceImpl @Autowired constructor(
         actions.add(ENVIRONMENTACTION)
         actions.add(NODEACTION)
         val authorizationScopes = buildCreateAuthorizationScopes(actions, projectCode)
-        iamManagerService.createRolePermission(projectId, authorizationScopes)
+        iamManagerService.createRolePermission(roleId, authorizationScopes)
     }
 
-    private fun addPMPermission(projectId: Int, projectCode: String) {
+    private fun addPMPermission(roleId: Int, projectCode: String) {
         val actions = mutableListOf<String>()
         actions.add(CREDENTIALACTION)
         actions.add(REPERTORYACTION)
         val authorizationScopes = buildCreateAuthorizationScopes(actions, projectCode)
-        iamManagerService.createRolePermission(projectId, authorizationScopes)
+        iamManagerService.createRolePermission(roleId, authorizationScopes)
     }
 
-    private fun addQCPermission(projectId: Int, projectCode: String) {
+    private fun addQCPermission(roleId: Int, projectCode: String) {
         val createActions = mutableListOf<String>()
         createActions.add(CREDENTIALACTION)
         createActions.add(REPERTORYACTION)
         createActions.add(RULECREATEACTION)
         createActions.add(GROUPCREATEACTION)
         val createAuthorizationScopes = buildCreateAuthorizationScopes(createActions, projectCode)
-        iamManagerService.createRolePermission(projectId, createAuthorizationScopes)
+        iamManagerService.createRolePermission(roleId, createAuthorizationScopes)
         val ruleAction = RULEACTION.split(",")
         val ruleAuthorizationScopes = buildOtherAuthorizationScopes(ruleAction, projectCode)
-        iamManagerService.createRolePermission(projectId, ruleAuthorizationScopes)
+        iamManagerService.createRolePermission(roleId, ruleAuthorizationScopes)
         val groupAction = GROUPACTION.split(",")
         val groupAuthorizationScopes = buildOtherAuthorizationScopes(groupAction, projectCode)
-        iamManagerService.createRolePermission(projectId, groupAuthorizationScopes)
+        iamManagerService.createRolePermission(roleId, groupAuthorizationScopes)
     }
 
-    private fun addMaintainerPermission(projectId: Int, projectCode: String) {
+    private fun addMaintainerPermission(roleId: Int, projectCode: String) {
         val actions = mutableListOf<String>()
         actions.add(PIPELINEACTION)
         actions.add(CREDENTIALACTION)
@@ -173,7 +175,7 @@ open class AbsPermissionRoleServiceImpl @Autowired constructor(
         actions.add(ENVIRONMENTACTION)
         actions.add(NODEACTION)
         val authorizationScopes = buildCreateAuthorizationScopes(actions, projectCode)
-        iamManagerService.createRolePermission(projectId, authorizationScopes)
+        iamManagerService.createRolePermission(roleId, authorizationScopes)
     }
 
     private fun buildCreateAuthorizationScopes(actions: List<String>, projectCode: String): AuthorizationScopes {
