@@ -111,7 +111,7 @@ class ProjectDao {
             if (enabled != null) {
                 conditions.add(ENABLED.eq(enabled))
             }
-            dslContext.selectFrom(this).where(PROJECT_ID.`in`(projectIdList)).fetch()
+            dslContext.selectFrom(this).where(conditions).fetch()
         }
     }
 
