@@ -323,7 +323,7 @@ class ExperienceDownloadService @Autowired constructor(
                     downloadTime = experienceIdDownloadTimeMap[it.id]?.timestampmilli() ?: 0,
                     bundleIdentifier = it.bundleIdentifier
                 )
-            }.toList()
+            }.sortByDescending { it.downloadTime }.toList()
             val hasNext = page * pageSize < experienceDao.countByIds(
                 dslContext = dslContext,
                 ids = experienceIdsByBundleId,
