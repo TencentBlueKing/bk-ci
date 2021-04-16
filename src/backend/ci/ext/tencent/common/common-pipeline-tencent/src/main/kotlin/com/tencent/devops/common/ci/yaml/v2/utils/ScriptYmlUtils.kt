@@ -68,10 +68,10 @@ object ScriptYmlUtils {
     fun formatYaml(yamlStr: String): String {
         // replace custom tag
         val yamlNormal = formatYamlCustom(yamlStr)
-
+        println("=====" + yamlNormal)
         // replace anchor tag
         val yaml = Yaml()
-        val obj = yaml.load(yamlStr) as Any
+        val obj = yaml.load(yamlNormal) as Any
         return YamlUtil.toYaml(obj)
     }
 
@@ -141,32 +141,14 @@ object ScriptYmlUtils {
     private fun formatYamlCustom(yamlStr: String): String {
         val sb = StringBuilder()
         val br = BufferedReader(StringReader(yamlStr))
-        val taskTypeRegex = Regex("- $TASK_TYPE:\\s+")
-        val mrNoneRegex = Regex("^(mr:)\\s*(none)\$")
-        val triggerNoneRegex = Regex("^(trigger:)\\s*(none)\$")
         var line: String? = br.readLine()
         while (line != null) {
-            val taskTypeMatches = taskTypeRegex.find(line)
-            if (null != taskTypeMatches) {
-                val taskType = taskTypeMatches.groupValues[0]
-                val taskVersion = line.removePrefix(taskType)
-                val task = taskVersion.split("@")
-                if (task.size != 2 || (task.size == 2 && task[1].isNullOrBlank())) {
-                    line = task[0] + "@latest"
-                }
+            if (line == "on:") {
+                sb.append("triggerOn:").append("\n")
+            } else {
+                sb.append(line).append("\n")
             }
 
-            val mrNoneMatches = mrNoneRegex.find(line)
-            if (null != mrNoneMatches) {
-                line = "mr:" + "\n" + "  disable: true"
-            }
-
-            val triggerNoneMatches = triggerNoneRegex.find(line)
-            if (null != triggerNoneMatches) {
-                line = "trigger:" + "\n" + "  disable: true"
-            }
-
-            sb.append(line).append("\n")
             line = br.readLine()
         }
         return sb.toString()

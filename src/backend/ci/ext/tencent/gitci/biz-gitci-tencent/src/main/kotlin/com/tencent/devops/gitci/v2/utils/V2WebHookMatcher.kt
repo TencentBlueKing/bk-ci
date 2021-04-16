@@ -34,7 +34,7 @@ import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitPushEvent
 import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
 import com.tencent.devops.common.ci.yaml.v2.MergeRequest
-import com.tencent.devops.common.ci.yaml.v2.On
+import com.tencent.devops.common.ci.yaml.v2.TriggerOn
 import com.tencent.devops.process.utils.GIT_MR_NUMBER
 import org.slf4j.LoggerFactory
 import org.springframework.util.AntPathMatcher
@@ -47,16 +47,15 @@ class V2WebHookMatcher(private val event: GitEvent) {
     }
 
     fun isMatch(
-        On: On,
-        mr: MergeRequest
+        triggerOn: TriggerOn
     ): Boolean {
         val eventBranch = getBranch()
         val eventTag = getTag()
         val eventType = getEventType()
 
-        /*when (eventType) {
+        when (eventType) {
             CodeEventType.PUSH -> {
-                if (isPushMatch(On = On, eventBranch = eventBranch)) return true
+                if (isPushMatch(triggerOn = triggerOn, eventBranch = eventBranch)) return true
             }
             CodeEventType.TAG_PUSH -> {
                 if (isTagPushMatch(On = On, eventTag = eventTag)) return true
@@ -67,33 +66,33 @@ class V2WebHookMatcher(private val event: GitEvent) {
             else -> {
                 return false
             }
-        }*/
+        }
 
         logger.info("The include branch($eventBranch) or tag($eventTag) doesn't match the git event($event)")
         return false
     }
-/*
-    private fun isPushMatch(On: On, eventBranch: String): Boolean {
-        if (On.disable == true) {
+
+    private fun isPushMatch(triggerOn: TriggerOn, eventBranch: String): Boolean {
+        if (triggerOn.disable == true) {
             logger.info("The trigger is disabled ($eventBranch)")
             return false
         }
         // exclude
-        if (On.branches?.exclude != null && On.branches!!.exclude!!.isNotEmpty()) {
-            On.branches!!.exclude!!.forEach {
+        if (triggerOn.branches?.exclude != null && triggerOn.branches!!.exclude!!.isNotEmpty()) {
+            triggerOn.branches!!.exclude!!.forEach {
                 if (isBranchMatch(it, eventBranch)) {
                     logger.info("The exclude branch($it) exclude the git branch ($eventBranch)")
                     return false
                 }
             }
         }
-        if (!isExcludePathMatch(On)) return false
+        if (!isExcludePathMatch(triggerOn)) return false
         // include
         var branchIncluded = false
-        if (On.branches?.include != null && On.branches!!.include!!.isNotEmpty()) {
-            logger.info("Include branch set(${On.branches!!.include})")
+        if (triggerOn.branches?.include != null && triggerOn.branches!!.include!!.isNotEmpty()) {
+            logger.info("Include branch set(${triggerOn.branches!!.include})")
             run outside@{
-                On.branches!!.include!!.forEach {
+                triggerOn.branches!!.include!!.forEach {
                     if (isBranchMatch(it, eventBranch)) {
                         logger.info("The include branch($it) include the git update one($eventBranch)")
                         branchIncluded = true
@@ -102,14 +101,15 @@ class V2WebHookMatcher(private val event: GitEvent) {
                 }
             }
         }
-        val pathIncluded = isIncludePathMatch(On)
+        val pathIncluded = isIncludePathMatch(triggerOn)
         if (branchIncluded && pathIncluded) {
-            logger.info("Git trigger branch($eventBranch) is included and path(${On.paths?.include}) is included")
+            logger.info("Git trigger branch($eventBranch) is included and path(${triggerOn.paths?.include}) is included")
             return true
         }
         return false
     }
 
+    /*
     private fun isTagPushMatch(On: On, eventTag: String): Boolean {
         if (On.disable == true) {
             logger.info("The trigger is disabled ($eventTag)")
@@ -333,7 +333,7 @@ class V2WebHookMatcher(private val event: GitEvent) {
         }
     }
 
-    fun getEventType(): CodeEventType {
+    private fun getEventType(): CodeEventType {
         return when (event) {
             is GitPushEvent -> CodeEventType.PUSH
             is GitTagPushEvent -> CodeEventType.TAG_PUSH

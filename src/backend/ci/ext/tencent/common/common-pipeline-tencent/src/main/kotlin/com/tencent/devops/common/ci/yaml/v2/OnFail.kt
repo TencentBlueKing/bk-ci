@@ -27,10 +27,15 @@
 
 package com.tencent.devops.common.ci.yaml.v2
 
-import com.tencent.devops.common.ci.task.AbstractInput
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
 
-data class Task(
-    val task: String,
-    val displayName: String,
-    val input: List<AbstractInput>
+/**
+ * model
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class OnFail(
+    val jobs: List<Job>?,
+    val steps: List<Steps>?
 )

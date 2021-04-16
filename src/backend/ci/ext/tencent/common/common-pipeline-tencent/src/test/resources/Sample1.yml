@@ -53,9 +53,11 @@ on:
       - develop
     always: false
 
-varivable:
-  DEPLOY_TYPE: dev
-  APPROVE: xxx
+variables:
+  DEPLOY_TYPE:
+    value: dev
+  APPROVE:
+    value: xxx
   GIT_USERNAME:
     value: user1
     readonly: true
@@ -131,13 +133,13 @@ stages:
               echo "stage1, job_id_2"
 
 on-fail:
-  job1:
-    name: test1
-  job2:
-    name: test2
+#  job1:
+#    name: test1
+#  job2:
+#    name: test2
   steps:
     - run: |
-      echo "do something when the upstream fails"
+        echo "do something when the upstream fails"
 
 extends:
   template: epc-build.yml

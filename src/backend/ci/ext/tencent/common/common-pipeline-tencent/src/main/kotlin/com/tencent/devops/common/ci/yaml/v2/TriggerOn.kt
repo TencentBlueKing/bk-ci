@@ -35,7 +35,7 @@ import com.fasterxml.jackson.annotation.JsonInclude
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class On(
+data class TriggerOn(
     val push: PushRule?,
     val tag: TagRule?,
     val mr: MrRule?,

@@ -63,7 +63,7 @@ class ScriptYmlUtilsTest {
             sb.append(str).append("\n")
         }
 
-        println(sb.toString())
+        // println(sb.toString())
 
         val obj = YamlUtil.getObjectMapper().readValue(ScriptYmlUtils.formatYaml(sb.toString()), ScriptBuildYaml::class.java)
         println(JsonUtil.toJson(obj))

@@ -119,7 +119,7 @@ class V2RequestTrigger @Autowired constructor (
 
 
     override fun isMatch(event: GitEvent, ymlObject: ScriptBuildYaml): Boolean {
-        return V2WebHookMatcher(event).isMatch(ymlObject.on!!, ymlObject.mr!!)
+        return V2WebHookMatcher(event).isMatch(ymlObject.on!!)
     }
 
     override fun prepareCIBuildYaml(
