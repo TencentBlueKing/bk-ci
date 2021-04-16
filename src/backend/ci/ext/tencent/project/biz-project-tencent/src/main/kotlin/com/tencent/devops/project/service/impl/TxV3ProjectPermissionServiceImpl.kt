@@ -139,7 +139,7 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
         val expired = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(DEFAULT_EXPIRED_AT)
         val managerMemberGroup = ManagerMemberGroupDTO.builder().members(groupMembers).expiredAt(expired).build()
         // 项目创建人添加至管理员分组
-//        iamManagerService.createRoleGroupMember(roleId, managerMemberGroup)
+        iamManagerService.createRoleGroupMember(roleId, managerMemberGroup)
         return roleId
     }
 
@@ -149,7 +149,7 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
         val path = ManagerPath(
             iamConfiguration.systemId,
             AuthResourceType.PROJECT.value,
-            projectId.toString(),
+            projectId,
             projectName
         )
         val paths = mutableListOf<ManagerPath>()
