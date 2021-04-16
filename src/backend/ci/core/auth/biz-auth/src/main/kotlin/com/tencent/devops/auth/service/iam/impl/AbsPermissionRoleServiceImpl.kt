@@ -71,10 +71,18 @@ open class AbsPermissionRoleServiceImpl @Autowired constructor(
         // 校验用户组名称
         checkRoleName(groupInfo.name, groupInfo.defaultGroup!!)
 
+        val defaultGroup = groupInfo.defaultGroup!!
+
+        // 默认分组名称规则: projectCode-groupName
         val groupName = IamUtils.buildIamGroup(projectCode, groupInfo.name)
 
+        val groupDescription = if (defaultGroup) {
+            IamUtils.buildDefaultDescription(projectCode, groupInfo.name)
+        } else {
+            groupInfo.description
+        }
         // 添加项目下用户组
-        val managerRoleGroup = ManagerRoleGroup(groupName, groupInfo.description)
+        val managerRoleGroup = ManagerRoleGroup(groupName, groupDescription)
         val roleGroups = mutableListOf<ManagerRoleGroup>()
         roleGroups.add(managerRoleGroup)
         val groups = ManagerRoleGroupDTO.builder().groups(roleGroups).build()
