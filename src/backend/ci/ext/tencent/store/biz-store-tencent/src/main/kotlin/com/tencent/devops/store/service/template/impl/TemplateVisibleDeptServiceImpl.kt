@@ -300,7 +300,7 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
                     params = arrayOf(imageName ?: imageCode)
                 )
             // 如果镜像是公共镜像或者在可用镜像列表，则无需校验与模板的可见范围
-            if (!storeBaseInfo.publicFlag || validImageCodes?.contains(imageCode) == true) {
+            if (!storeBaseInfo.publicFlag || validImageCodes?.contains(imageCode) == false) {
                 handleInvalidStoreList(
                     storeDeptMap = templateImageDeptMap,
                     storeCode = imageCode,
