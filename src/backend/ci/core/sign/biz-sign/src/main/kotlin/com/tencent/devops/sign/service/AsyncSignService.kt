@@ -32,6 +32,7 @@ import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.jmx.SignBean
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.DisposableBean
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.io.File
 import java.time.LocalDateTime
@@ -102,6 +103,15 @@ class AsyncSignService(
         while (!signExecutorService.awaitTermination(5, TimeUnit.SECONDS)) {
             logger.warn("SignTaskBean still has sign tasks.")
         }
+    }
+
+    @Scheduled(cron="0/10 * *  * * ? ")
+    fun flushTaskStatus() {
+        signBean.flushStatus(
+            activeCount = signExecutorService.activeCount,
+            taskCount = signExecutorService.taskCount,
+            queueSize = signExecutorService.queue.size
+        )
     }
 
     companion object {
