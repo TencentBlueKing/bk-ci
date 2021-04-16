@@ -44,7 +44,7 @@ open class AbsPermissionGradeServiceImpl @Autowired constructor(
         val pageInfoDTO = PageInfoDTO()
         pageInfoDTO.limit = 0
         pageInfoDTO.offset = 500 // 一个用户最多可以加入500个项目
-        val managerProject = iamManagerService.getUserRole(userId, pageInfoDTO)
+        val managerProject = iamManagerService.getUserRole(userId, pageInfoDTO).map { it.id }
 
         if (!managerProject.contains(projectId)) {
             AbsPermissionRoleMemberImpl.logger.warn("createRoleMem")
