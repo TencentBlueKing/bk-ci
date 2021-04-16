@@ -155,14 +155,23 @@ object AuthorizationUtils {
         actions: List<String>,
         resourceType: String
     ): AuthorizationScopes {
-        val projectManagerPath = ManagerPath(iamConfiguration.systemId, AuthResourceType.PROJECT.value, projectId, projectName)
+        val projectManagerPath = ManagerPath(
+            iamConfiguration.systemId,
+            AuthResourceType.PROJECT.value,
+            projectId,
+            projectName
+        )
         val resourceManagerPath = ManagerPath(iamConfiguration.systemId, resourceType, "*", "")
         val managerPaths = mutableListOf<ManagerPath>()
         managerPaths.add(projectManagerPath)
         managerPaths.add(resourceManagerPath)
         val paths = mutableListOf<List<ManagerPath>>()
         paths.add(managerPaths)
-        val resource = ManagerResources.builder().system(iamConfiguration.systemId).type(resourceType).paths(paths).build()
+        val resource = ManagerResources.builder()
+            .system(iamConfiguration.systemId)
+            .type(resourceType)
+            .paths(paths)
+            .build()
         val resources = mutableListOf<ManagerResources>()
         resources.add(resource)
         val action = mutableListOf<Action>()
