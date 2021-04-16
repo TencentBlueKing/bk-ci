@@ -327,7 +327,8 @@ class ExperienceAppService(
                 expired = now.isAfter(it.endDate),
                 lastDownloadHashId = lastDownloadRecord?.let { last ->
                     HashUtil.encodeLongId(last.lastDonwloadRecordId)
-                } ?: ""
+                } ?: "",
+                versionTitle = it.versionTitle
             )
         }.toList()
     }

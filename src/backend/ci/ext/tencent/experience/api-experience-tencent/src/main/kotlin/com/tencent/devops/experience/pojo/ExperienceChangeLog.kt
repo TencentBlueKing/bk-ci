@@ -55,5 +55,7 @@ data class ExperienceChangeLog(
     @ApiModelProperty("是否过期", required = true)
     val expired: Boolean,
     @ApiModelProperty("上次下载的体验ID", required = true)
-    val lastDownloadHashId: String
+    val lastDownloadHashId: String,
+    @ApiModelProperty("版本标题", required = true)
+    val versionTitle: String
 )
