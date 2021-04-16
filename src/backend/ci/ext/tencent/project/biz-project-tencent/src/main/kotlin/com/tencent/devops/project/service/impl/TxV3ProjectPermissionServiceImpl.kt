@@ -117,7 +117,7 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
             .description(resourceRegisterInfo.resourceName)
             .members(arrayListOf(userId))
             .authorization_scopes(authorizationScopes)
-            .subject_scopes(subjectScopes).build()
+            .subject_scopes(arrayListOf(subjectScopes)).build()
         logger.info("createIamProject: ${JsonUtil.toJson(createManagerDTO)}")
         logger.info("system ${iamConfiguration.systemId} | ${iamConfiguration.appCode} | ${iamConfiguration.apigwBaseUrl}")
         return iamManagerService.createManager(createManagerDTO)
