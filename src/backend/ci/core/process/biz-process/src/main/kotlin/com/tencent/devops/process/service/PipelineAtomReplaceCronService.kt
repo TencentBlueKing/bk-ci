@@ -45,6 +45,7 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.process.tables.records.TPipelineAtomReplaceBaseRecord
 import com.tencent.devops.model.process.tables.records.TPipelineAtomReplaceItemRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
@@ -60,6 +61,7 @@ import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.ServiceUserResource
+import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
@@ -214,10 +216,14 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                 if (!projectId.isNullOrBlank()) {
                     // 如果没有指定要替换插件的具体流水线信息而指定了项目，则把该项目下所有流水线下相关的插件都替换
                     val projectInfoRecord = client.get(ServiceProjectResource::class).get(projectId).data
-                    ?: throw ErrorCodeException(
-                        errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                        params = arrayOf(projectId)
-                    )
+                        ?: throw ErrorCodeException(
+                            errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                            params = arrayOf(projectId),
+                            defaultMessage = MessageCodeUtil.getCodeMessage(
+                                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                                params = arrayOf(projectId)
+                            )
+                        )
                     handleProjectPipelineAtom(
                         project = ProjectBaseInfo(projectInfoRecord.id, projectInfoRecord.englishName),
                         projectCompleteFlag = true,
@@ -651,7 +657,9 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                             if (installFlag != true) {
                                 throw ErrorCodeException(
                                     statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                                    errorCode = StoreMessageCode.USER_INSTALL_ATOM_CODE_IS_INVALID
+                                    errorCode = StoreMessageCode.USER_INSTALL_ATOM_CODE_IS_INVALID,
+                                    defaultMessage = MessageCodeUtil
+                                        .getCodeLanMessage(StoreMessageCode.USER_INSTALL_ATOM_CODE_IS_INVALID)
                                 )
                             }
                         }
@@ -676,7 +684,8 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                             logger.warn(message)
                             throw ErrorCodeException(
                                 errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
-                                params = arrayOf(message)
+                                params = arrayOf(message),
+                                defaultMessage = message
                             )
                         }
                         val toAtomJobType = toAtomInfo.jobType
@@ -719,7 +728,8 @@ class PipelineAtomReplaceCronService @Autowired constructor(
             if (projectManagers == null || projectManagers.isEmpty()) {
                 throw ErrorCodeException(
                     statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                    errorCode = StoreMessageCode.USER_INSTALL_ATOM_CODE_IS_INVALID
+                    errorCode = ProjectMessageCode.QUERY_USER_INFO_FAIL,
+                    defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_USER_INFO_FAIL)
                 )
             }
             projectManager = projectManagers[0]
@@ -835,7 +845,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         val toParamName = paramReplaceInfo.toParamName
         // 获取参数自定义转换接口路径
         val paramConvertUrl = paramReplaceInfo.paramConvertUrl
-        if (!paramConvertUrl.isNullOrBlank() && inputParamName == paramReplaceInfo.fromParamName) {
+        if (!paramConvertUrl.isNullOrBlank() && inputParamName == toParamName) {
             // 参数自定义转换
             val atomReplaceParamConvertRequest = AtomReplaceParamConvertRequest(
                 toAtomCode = toAtomCode,
@@ -847,17 +857,20 @@ class PipelineAtomReplaceCronService @Autowired constructor(
             )
             val response = OkhttpUtils.doPost(paramConvertUrl, JsonUtil.toJson(atomReplaceParamConvertRequest))
             val responseContent = response.body()!!.string()
+            val errorMessage = "$inputParamName convert $toParamName fail"
             if (!response.isSuccessful) {
                 throw ErrorCodeException(
                     errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
-                    params = arrayOf("$inputParamName convert $toParamName fail")
+                    params = arrayOf(errorMessage),
+                    defaultMessage = errorMessage
                 )
             }
             val result = JsonUtil.to(responseContent, object : TypeReference<Result<Any?>>() {})
             if (result.isNotOk()) {
                 throw ErrorCodeException(
                     errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
-                    params = arrayOf("$inputParamName convert $toParamName fail")
+                    params = arrayOf(errorMessage),
+                    defaultMessage = errorMessage
                 )
             }
             toAtomInputParamMap[inputParamName] = result.data
