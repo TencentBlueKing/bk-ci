@@ -32,4 +32,8 @@ object IamUtils {
     fun buildIamGroup(projectCode: String, groupName: String): String {
         return "$projectCode-$groupName"
     }
+
+    fun buildDefaultDescription(projectCode: String, groupName: String): String {
+        return "$projectCode: default group $groupName"
+    }
 }
