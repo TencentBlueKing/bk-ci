@@ -77,8 +77,8 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
          *  5. 分配”ALL action“权限到CI管理员
          */
         val iamProjectId = createIamProject(userId, resourceRegisterInfo)
-        createRole(userId, iamProjectId.toInt(), resourceRegisterInfo.resourceCode)
-        createManagerPermission(resourceRegisterInfo.resourceCode.toInt(), resourceRegisterInfo.resourceName)
+        val roleId = createRole(userId, iamProjectId.toInt(), resourceRegisterInfo.resourceCode)
+        createManagerPermission(resourceRegisterInfo.resourceCode, resourceRegisterInfo.resourceName, roleId)
         return iamProjectId
     }
 
@@ -123,7 +123,7 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
         return iamManagerService.createManager(createManagerDTO).toString()
     }
 
-    private fun createRole(userId: String, iamProjectId: Int, projectCode: String) {
+    private fun createRole(userId: String, iamProjectId: Int, projectCode: String): Int {
         val defaultGroup = ManagerRoleGroup(
             IamUtils.buildIamGroup(projectCode, MANAGER_ROLE),
             IamUtils.buildDefaultDescription(projectCode, MANAGER_ROLE)
@@ -140,9 +140,10 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
         val managerMemberGroup = ManagerMemberGroupDTO.builder().members(groupMembers).expiredAt(expired).build()
         // 项目创建人添加至管理员分组
 //        iamManagerService.createRoleGroupMember(roleId, managerMemberGroup)
+        return roleId
     }
 
-    private fun createManagerPermission(projectId: Int, projectName: String) {
+    private fun createManagerPermission(projectId: String, projectName: String, roleId: Int) {
         val managerResources = mutableListOf<ManagerResources>()
         val managerPaths = mutableListOf<List<ManagerPath>>()
         val path = ManagerPath(
@@ -166,7 +167,7 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
             .system(iamConfiguration.systemId)
             .resources(managerResources)
             .build()
-        iamManagerService.createRolePermission(projectId, permission)
+        iamManagerService.createRolePermission(roleId, permission)
     }
 
     companion object {
