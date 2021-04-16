@@ -16,7 +16,8 @@
                                     <bk-option v-for="option in projectList"
                                         :key="option.projectCode"
                                         :id="option.projectCode"
-                                        :name="option.projectName">
+                                        :name="option.projectName"
+                                        :disabled="!option.enabled">
                                     </bk-option>
                                 </bk-select>
                                 <i class="bk-icon icon-check-1" @click="saveChangeProject(props.row)"></i>
