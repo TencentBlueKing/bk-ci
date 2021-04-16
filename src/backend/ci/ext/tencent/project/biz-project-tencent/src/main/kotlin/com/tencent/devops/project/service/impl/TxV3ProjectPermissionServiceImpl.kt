@@ -40,6 +40,7 @@ import com.tencent.bk.sdk.iam.dto.manager.dto.CreateManagerDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
 import com.tencent.bk.sdk.iam.service.ManagerService
+import com.tencent.bk.sdk.iam.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
@@ -116,7 +117,7 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
 
             .authorization_scopes(authorizationScopes)
             .subject_scopes(subjectScopes).build()
-        logger.info("createIamProject: $createManagerDTO")
+        logger.info("createIamProject: ${JsonUtil.toJson(createManagerDTO)}")
         logger.info("system ${iamConfiguration.systemId} | ${iamConfiguration.appCode} | ${iamConfiguration.apigwBaseUrl}")
         return iamManagerService.createManager(createManagerDTO)
     }
