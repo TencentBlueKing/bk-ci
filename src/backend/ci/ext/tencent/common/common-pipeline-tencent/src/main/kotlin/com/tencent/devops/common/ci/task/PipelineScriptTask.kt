@@ -25,22 +25,46 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.constant
+package com.tencent.devops.common.ci.task
 
-object MQ {
+import com.tencent.devops.common.ci.CiBuildConfig
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-    // 工蜂CI请求
-    const val EXCHANGE_GITCI_REQUEST_TRIGGER_EVENT = "e.gitci.request.trigger.event"
-    const val ROUTE_GITCI_REQUEST_TRIGGER_EVENT = "r.gitci.request.trigger.event"
-    const val QUEUE_GITCI_REQUEST_TRIGGER_EVENT = "q.gitci.request.trigger.event"
+@ApiModel("PipelineScript")
+data class PipelineScriptTask(
+    @ApiModelProperty("displayName", required = false)
+    override var displayName: String?,
+    @ApiModelProperty("入参", required = true)
+    override val inputs: PipelineScriptInput,
+    @ApiModelProperty("执行条件", required = true)
+    override val condition: String?
+) : AbstractTask(displayName, inputs, condition) {
 
-    // 工蜂CI请求v2
-    const val EXCHANGE_GITCI_REQUEST_TRIGGER_V2_EVENT = "e.gitci.request.trigger.v2.event"
-    const val ROUTE_GITCI_REQUEST_TRIGGER_V2_EVENT = "r.gitci.request.trigger.v2.event"
-    const val QUEUE_GITCI_REQUEST_TRIGGER_V2_EVENT = "q.gitci.request.trigger.v2.event"
+    companion object {
+        const val taskType = "PipelineScriptDev"
+        const val taskVersion = "@latest"
+        const val atomCode = "PipelineScriptDev"
+    }
 
-    // 工蜂Mr请求冲突检查
-    const val EXCHANGE_GITCI_MR_CONFLICT_CHECK_EVENT = "e.gitci.mr.conflict.check.event"
-    const val ROUTE_GITCI_MR_CONFLICT_CHECK_EVENT = "r.gitci.mr.conflict.check.event"
-    const val QUEUE_GITCI_MR_CONFLICT_CHECK_EVENT = "q.gitci.mr.conflict.check.event"
+    override fun covertToElement(config: CiBuildConfig): MarketBuildAtomElement {
+
+        return MarketBuildAtomElement(
+            name = displayName ?: "PipelineScript",
+            id = null,
+            status = null,
+            atomCode = taskType,
+            version = taskVersion,
+            data = mapOf("input" to inputs)
+        )
+    }
 }
+
+data class PipelineScriptInput (
+    val scriptFileSourceType: String,
+    val script: String,
+    val file: String,
+    val url: String,
+    val enableDebug: Boolean
+) : AbstractInput()

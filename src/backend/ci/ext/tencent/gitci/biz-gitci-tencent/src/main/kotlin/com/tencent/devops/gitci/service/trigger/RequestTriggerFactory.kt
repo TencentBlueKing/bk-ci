@@ -25,22 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.constant
+package com.tencent.devops.gitci.service.trigger
 
-object MQ {
+import com.tencent.devops.common.ci.yaml.v2.YmlVersion
+import com.tencent.devops.gitci.v2.service.V2RequestTrigger
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
-    // 工蜂CI请求
-    const val EXCHANGE_GITCI_REQUEST_TRIGGER_EVENT = "e.gitci.request.trigger.event"
-    const val ROUTE_GITCI_REQUEST_TRIGGER_EVENT = "r.gitci.request.trigger.event"
-    const val QUEUE_GITCI_REQUEST_TRIGGER_EVENT = "q.gitci.request.trigger.event"
+@Component
+class RequestTriggerFactory @Autowired constructor(
+    val requestTrigger: RequestTrigger,
+    val v2RequestTrigger: V2RequestTrigger
+){
 
-    // 工蜂CI请求v2
-    const val EXCHANGE_GITCI_REQUEST_TRIGGER_V2_EVENT = "e.gitci.request.trigger.v2.event"
-    const val ROUTE_GITCI_REQUEST_TRIGGER_V2_EVENT = "r.gitci.request.trigger.v2.event"
-    const val QUEUE_GITCI_REQUEST_TRIGGER_V2_EVENT = "q.gitci.request.trigger.v2.event"
+    fun getGitCIRequestTrigger(ymlVersion: YmlVersion?): RequestTriggerInterface<*> {
+        if (ymlVersion == null) {
+            return requestTrigger
+        }
 
-    // 工蜂Mr请求冲突检查
-    const val EXCHANGE_GITCI_MR_CONFLICT_CHECK_EVENT = "e.gitci.mr.conflict.check.event"
-    const val ROUTE_GITCI_MR_CONFLICT_CHECK_EVENT = "r.gitci.mr.conflict.check.event"
-    const val QUEUE_GITCI_MR_CONFLICT_CHECK_EVENT = "q.gitci.mr.conflict.check.event"
+        return when(ymlVersion.version) {
+            "v2.0" -> {
+                v2RequestTrigger
+            }
+            else -> {
+                requestTrigger
+            }
+        }
+    }
 }

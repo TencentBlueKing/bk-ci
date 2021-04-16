@@ -1,0 +1,23 @@
+version: v2.0
+trigger:
+  branches:
+    include:            # branch names which will trigger a build
+      - master
+      - release/*
+    exclude:            # branch names which will not trigger a build
+      - release/old*
+      - release/bak*
+  tags:
+    include:            # tag names which will trigger a build
+      - master
+      - release/*
+    exclude:            # tag names which will not trigger a build
+      - release/old*
+      - release/bak*
+  paths:
+    include:            # file paths which must match to trigger a build
+      - src/
+    exclude:            # file paths which will not trigger a build
+      - release
+      - build
+

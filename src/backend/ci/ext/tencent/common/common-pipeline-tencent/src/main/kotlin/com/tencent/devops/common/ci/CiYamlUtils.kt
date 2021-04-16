@@ -48,6 +48,7 @@ import com.tencent.devops.common.ci.yaml.JobDetail
 import com.tencent.devops.common.ci.image.Pool
 import com.tencent.devops.common.ci.yaml.Stage
 import com.tencent.devops.common.ci.yaml.Job
+import com.tencent.devops.common.ci.yaml.v2.YmlVersion
 import org.slf4j.LoggerFactory
 import org.yaml.snakeyaml.Yaml
 import java.io.BufferedReader
@@ -60,6 +61,16 @@ object CiYamlUtils {
 
     //    private const val dockerHubUrl = "https://index.docker.io/v1/"
     private const val dockerHubUrl = ""
+
+    fun parseVersion(yamlStr: String?): YmlVersion? {
+        if (yamlStr == null) {
+            return null
+        }
+
+        val yaml = Yaml()
+        val obj = YamlUtil.toYaml(yaml.load(yamlStr) as Any)
+        return YamlUtil.getObjectMapper().readValue(obj, YmlVersion::class.java)
+    }
 
     fun parseImage(imageNameInput: String): Triple<String, String, String> {
         val imageNameStr = imageNameInput.removePrefix("http://").removePrefix("https://")

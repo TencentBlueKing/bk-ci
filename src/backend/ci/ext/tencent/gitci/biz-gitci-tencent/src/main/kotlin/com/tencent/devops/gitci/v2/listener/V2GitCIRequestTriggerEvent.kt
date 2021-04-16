@@ -25,22 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.constant
+package com.tencent.devops.gitci.v2.listener
 
-object MQ {
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.gitci.pojo.GitRequestEvent
+import com.tencent.devops.common.ci.yaml.v2.CIBuildYaml
+import com.tencent.devops.gitci.constant.MQ
+import com.tencent.devops.gitci.pojo.GitProjectPipeline
 
-    // 工蜂CI请求
-    const val EXCHANGE_GITCI_REQUEST_TRIGGER_EVENT = "e.gitci.request.trigger.event"
-    const val ROUTE_GITCI_REQUEST_TRIGGER_EVENT = "r.gitci.request.trigger.event"
-    const val QUEUE_GITCI_REQUEST_TRIGGER_EVENT = "q.gitci.request.trigger.event"
-
-    // 工蜂CI请求v2
-    const val EXCHANGE_GITCI_REQUEST_TRIGGER_V2_EVENT = "e.gitci.request.trigger.v2.event"
-    const val ROUTE_GITCI_REQUEST_TRIGGER_V2_EVENT = "r.gitci.request.trigger.v2.event"
-    const val QUEUE_GITCI_REQUEST_TRIGGER_V2_EVENT = "q.gitci.request.trigger.v2.event"
-
-    // 工蜂Mr请求冲突检查
-    const val EXCHANGE_GITCI_MR_CONFLICT_CHECK_EVENT = "e.gitci.mr.conflict.check.event"
-    const val ROUTE_GITCI_MR_CONFLICT_CHECK_EVENT = "r.gitci.mr.conflict.check.event"
-    const val QUEUE_GITCI_MR_CONFLICT_CHECK_EVENT = "q.gitci.mr.conflict.check.event"
-}
+@Event(MQ.EXCHANGE_GITCI_REQUEST_TRIGGER_V2_EVENT, MQ.ROUTE_GITCI_REQUEST_TRIGGER_V2_EVENT)
+data class V2GitCIRequestTriggerEvent(
+    val pipeline: GitProjectPipeline,
+    val event: GitRequestEvent,
+    val yaml: CIBuildYaml,
+    val originYaml: String,
+    val normalizedYaml: String,
+    val gitBuildId: Long
+)

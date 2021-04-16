@@ -53,7 +53,6 @@ import com.tencent.devops.gitci.listener.GitCIRequestTriggerEvent
 import com.tencent.devops.gitci.pojo.EnvironmentVariables
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.pojo.GitRepositoryConf
-import com.tencent.devops.gitci.utils.GitCIWebHookMatcher
 import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.gitci.pojo.TriggerBuildReq
 import com.tencent.devops.gitci.pojo.enums.GitCiMergeStatus
@@ -63,6 +62,7 @@ import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitPushEvent
 import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
+import com.tencent.devops.gitci.service.trigger.RequestTriggerFactory
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.GitFileInfo
@@ -91,7 +91,8 @@ class GitCITriggerService @Autowired constructor(
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitServicesConfDao: GitCIServicesConfDao,
     private val repositoryConfService: GitRepositoryConfService,
-    private val rabbitTemplate: RabbitTemplate
+    private val rabbitTemplate: RabbitTemplate,
+    private val requestTriggerFactory: RequestTriggerFactory
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCITriggerService::class.java)
@@ -300,13 +301,6 @@ class GitCITriggerService @Autowired constructor(
                         gitProjectId = gitRequestEvent.gitProjectId
                     )
                 }
-                val (yamlObject, normalizedYaml) =
-                    prepareCIBuildYaml(gitRequestEvent, originYaml, filePath, buildPipeline.pipelineId) ?: return@forEach
-                // 若是Yaml格式没问题，则取Yaml中的流水线名称，并修改当前流水线名称
-                displayName = if (!yamlObject.name.isNullOrBlank()) yamlObject.name!! else filePath.removeSuffix(ciFileExtension)
-                buildPipeline.displayName = displayName
-
-                val matcher = GitCIWebHookMatcher(event)
 
                 // 流水线未启用则跳过
                 if (!buildPipeline.enabled) {
@@ -317,13 +311,34 @@ class GitCITriggerService @Autowired constructor(
                         pipelineId = buildPipeline.pipelineId,
                         filePath = buildPipeline.filePath,
                         originYaml = originYaml,
-                        normalizedYaml = normalizedYaml,
+                        normalizedYaml = null,
                         reason = TriggerReason.PIPELINE_DISABLE.name,
                         reasonDetail = TriggerReason.PIPELINE_DISABLE.detail,
                         gitProjectId = gitRequestEvent.gitProjectId
                     )
                     return@forEach
                 }
+
+                // 检查yml版本，根据yml版本选择不同的实现
+                val ymlVersion = CiYamlUtils.parseVersion(originYaml)
+                val triggerInterface = requestTriggerFactory.getGitCIRequestTrigger(ymlVersion)
+                if (!triggerInterface.triggerBuild(
+                        gitRequestEvent,
+                        buildPipeline,
+                        event,
+                        originYaml,
+                        filePath
+                    )) {
+                    return@forEach
+                }
+
+                /*val (yamlObject, normalizedYaml) =
+                    prepareCIBuildYaml(gitRequestEvent, originYaml, filePath, buildPipeline.pipelineId) ?: return@forEach
+                // 若是Yaml格式没问题，则取Yaml中的流水线名称，并修改当前流水线名称
+                displayName = if (!yamlObject.name.isNullOrBlank()) yamlObject.name!! else filePath.removeSuffix(ciFileExtension)
+                buildPipeline.displayName = displayName
+
+                val matcher = GitCIWebHookMatcher(event)
 
                 if (matcher.isMatch(yamlObject.trigger!!, yamlObject.mr!!)) {
                     logger.info("Matcher is true, display the event, gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}, dispatched pipeline: $buildPipeline")
@@ -361,7 +376,7 @@ class GitCITriggerService @Autowired constructor(
                         reasonDetail = TriggerReason.TRIGGER_NOT_MATCH.detail,
                         gitProjectId = gitRequestEvent.gitProjectId
                     )
-                }
+                }*/
             } catch (e: Exception) {
                 logger.error("yamlPathList in gitProjectId:${gitProjectConf.gitProjectId} has invalid yaml file[$filePath]: ", e)
                 return@forEach

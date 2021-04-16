@@ -25,22 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.constant
+package com.tencent.devops.gitci.service.trigger
 
-object MQ {
+import com.tencent.devops.gitci.pojo.GitProjectPipeline
+import com.tencent.devops.gitci.pojo.GitRequestEvent
+import com.tencent.devops.gitci.pojo.git.GitEvent
 
-    // 工蜂CI请求
-    const val EXCHANGE_GITCI_REQUEST_TRIGGER_EVENT = "e.gitci.request.trigger.event"
-    const val ROUTE_GITCI_REQUEST_TRIGGER_EVENT = "r.gitci.request.trigger.event"
-    const val QUEUE_GITCI_REQUEST_TRIGGER_EVENT = "q.gitci.request.trigger.event"
+interface RequestTriggerInterface<T> {
 
-    // 工蜂CI请求v2
-    const val EXCHANGE_GITCI_REQUEST_TRIGGER_V2_EVENT = "e.gitci.request.trigger.v2.event"
-    const val ROUTE_GITCI_REQUEST_TRIGGER_V2_EVENT = "r.gitci.request.trigger.v2.event"
-    const val QUEUE_GITCI_REQUEST_TRIGGER_V2_EVENT = "q.gitci.request.trigger.v2.event"
+    fun triggerBuild(
+        gitRequestEvent: GitRequestEvent,
+        gitProjectPipeline: GitProjectPipeline,
+        event: GitEvent,
+        originYaml: String?,
+        filePath: String
+    ): Boolean
 
-    // 工蜂Mr请求冲突检查
-    const val EXCHANGE_GITCI_MR_CONFLICT_CHECK_EVENT = "e.gitci.mr.conflict.check.event"
-    const val ROUTE_GITCI_MR_CONFLICT_CHECK_EVENT = "r.gitci.mr.conflict.check.event"
-    const val QUEUE_GITCI_MR_CONFLICT_CHECK_EVENT = "q.gitci.mr.conflict.check.event"
+    fun isMatch(event: GitEvent, ymlObject: T): Boolean
+
+    fun prepareCIBuildYaml(
+        gitRequestEvent: GitRequestEvent,
+        originYaml: String?,
+        filePath: String?,
+        pipelineId: String?
+    ): T?
 }

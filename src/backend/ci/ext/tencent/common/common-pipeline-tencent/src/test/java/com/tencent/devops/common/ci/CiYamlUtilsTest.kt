@@ -25,22 +25,88 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.constant
+package com.tencent.devops.common.ci
 
-object MQ {
+import org.junit.Test
+import org.springframework.core.io.ClassPathResource
+import java.io.BufferedReader
+import java.io.InputStream
+import java.io.InputStreamReader
 
-    // 工蜂CI请求
-    const val EXCHANGE_GITCI_REQUEST_TRIGGER_EVENT = "e.gitci.request.trigger.event"
-    const val ROUTE_GITCI_REQUEST_TRIGGER_EVENT = "r.gitci.request.trigger.event"
-    const val QUEUE_GITCI_REQUEST_TRIGGER_EVENT = "q.gitci.request.trigger.event"
 
-    // 工蜂CI请求v2
-    const val EXCHANGE_GITCI_REQUEST_TRIGGER_V2_EVENT = "e.gitci.request.trigger.v2.event"
-    const val ROUTE_GITCI_REQUEST_TRIGGER_V2_EVENT = "r.gitci.request.trigger.v2.event"
-    const val QUEUE_GITCI_REQUEST_TRIGGER_V2_EVENT = "q.gitci.request.trigger.v2.event"
+internal class CiYamlUtilsTest {
 
-    // 工蜂Mr请求冲突检查
-    const val EXCHANGE_GITCI_MR_CONFLICT_CHECK_EVENT = "e.gitci.mr.conflict.check.event"
-    const val ROUTE_GITCI_MR_CONFLICT_CHECK_EVENT = "r.gitci.mr.conflict.check.event"
-    const val QUEUE_GITCI_MR_CONFLICT_CHECK_EVENT = "q.gitci.mr.conflict.check.event"
+    @Test
+    fun parseImage() {
+    }
+
+    @Test
+    fun formatYaml() {
+    }
+
+    @Test
+    fun checkYaml() {
+    }
+
+    @Test
+    fun normalizeGitCiYaml() {
+    }
+
+    @Test
+    fun normalizePrebuildYaml() {
+    }
+
+    @Test
+    fun validateYaml() {
+    }
+
+    @Test
+    fun validate() {
+    }
+
+    @Test
+    fun jsonNodeFromString() {
+    }
+
+    @Test
+    fun validateSchema() {
+    }
+
+    @Test
+    fun validateJson() {
+    }
+
+    @Test
+    fun convertYamlToJson() {
+    }
+
+    @Test
+    fun getCIBuildYamlSchema() {
+    }
+
+    @Test
+    fun getAbstractTaskSchema() {
+    }
+
+    @Test
+    fun getAbstractServiceSchema() {
+    }
+
+    @Test
+    fun versionExist() {
+        val classPathResource = ClassPathResource("test.yml")
+        val inputStream: InputStream = classPathResource.inputStream
+        val isReader = InputStreamReader(inputStream)
+
+        val reader = BufferedReader(isReader)
+        val sb = StringBuffer()
+        var str: String?
+        while (reader.readLine().also { str = it } != null) {
+            sb.append(str).append("\n")
+        }
+
+        println(sb.toString())
+
+        println(CiYamlUtils.parseVersion(sb.toString()))
+    }
 }

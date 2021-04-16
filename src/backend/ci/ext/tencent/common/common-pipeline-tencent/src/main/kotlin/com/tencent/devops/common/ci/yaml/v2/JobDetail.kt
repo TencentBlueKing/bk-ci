@@ -25,22 +25,46 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.constant
+package com.tencent.devops.common.ci.yaml.v2
 
-object MQ {
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.tencent.devops.common.ci.image.Pool
+import com.tencent.devops.common.ci.task.AbstractTask
 
-    // 工蜂CI请求
-    const val EXCHANGE_GITCI_REQUEST_TRIGGER_EVENT = "e.gitci.request.trigger.event"
-    const val ROUTE_GITCI_REQUEST_TRIGGER_EVENT = "r.gitci.request.trigger.event"
-    const val QUEUE_GITCI_REQUEST_TRIGGER_EVENT = "q.gitci.request.trigger.event"
+/**
+ * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(gitci,prebuild等)异常
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class JobDetail(
+    val name: String?,
+    val displayName: String?,
+    val type: String?,
+    val pool: Pool?,
+    val steps: List<AbstractTask>,
+    val condition: String?,
+    val resourceType: ResourceType?
+)
 
-    // 工蜂CI请求v2
-    const val EXCHANGE_GITCI_REQUEST_TRIGGER_V2_EVENT = "e.gitci.request.trigger.v2.event"
-    const val ROUTE_GITCI_REQUEST_TRIGGER_V2_EVENT = "r.gitci.request.trigger.v2.event"
-    const val QUEUE_GITCI_REQUEST_TRIGGER_V2_EVENT = "q.gitci.request.trigger.v2.event"
-
-    // 工蜂Mr请求冲突检查
-    const val EXCHANGE_GITCI_MR_CONFLICT_CHECK_EVENT = "e.gitci.mr.conflict.check.event"
-    const val ROUTE_GITCI_MR_CONFLICT_CHECK_EVENT = "r.gitci.mr.conflict.check.event"
-    const val QUEUE_GITCI_MR_CONFLICT_CHECK_EVENT = "q.gitci.mr.conflict.check.event"
-}
+/**
+ * @Tip 后面的修改以下面的格式为准 , 如果不确定 , 需拉上相关开发和产品讨论
+ *
+ * stages:
+ *   - stage:
+ *       - job:
+ *           resourceType: REMOTE | LOCAL
+ *           pool:
+ *             type: DockerOnVm | DockerOnDevCloud | DockerOnPcg | Windows | Macos | SelfHosted
+ *             container: mirrors.tencent.com/tlinux2.2:latest
+ *             credential:
+ *               credentialId: xxx
+ *               user: xxx
+ *               password: xxx
+ *             visualStudioVersion: 2019 | 2020
+ *             agentId: xxx
+ *             agentName: xxx
+ *             workspace: xxx
+ *             env:
+ *               jdk: 1.8.0_161
+ */
