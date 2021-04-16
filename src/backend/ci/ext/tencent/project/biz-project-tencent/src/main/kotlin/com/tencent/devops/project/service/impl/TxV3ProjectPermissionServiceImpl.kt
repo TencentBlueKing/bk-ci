@@ -41,7 +41,6 @@ import com.tencent.bk.sdk.iam.dto.manager.dto.CreateManagerDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
 import com.tencent.bk.sdk.iam.service.ManagerService
-import com.tencent.bk.sdk.iam.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
@@ -131,19 +130,26 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
         val defaultGroups = mutableListOf<ManagerRoleGroup>()
         defaultGroups.add(defaultGroup)
         val managerRoleGroup = ManagerRoleGroupDTO.builder().groups(defaultGroups).build()
-        val groupId = iamManagerService.createManagerRoleGroup(iamProjectId, managerRoleGroup)
+        // 添加项目管理员
+        val roleId = iamManagerService.createManagerRoleGroup(iamProjectId, managerRoleGroup)
         val groupMember = ManagerMember(ManagerScopesEnum.getType(ManagerScopesEnum.USER), userId)
         val groupMembers = mutableListOf<ManagerMember>()
         groupMembers.add(groupMember)
-        val expired = System.currentTimeMillis()/1000 + TimeUnit.DAYS.toSeconds(DEFAULT_EXPIRED_AT)
+        val expired = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(DEFAULT_EXPIRED_AT)
         val managerMemberGroup = ManagerMemberGroupDTO.builder().members(groupMembers).expiredAt(expired).build()
-        iamManagerService.createRoleGroupMember(groupId, managerMemberGroup)
+        // 项目创建人添加至管理员分组
+        iamManagerService.createRoleGroupMember(roleId, managerMemberGroup)
     }
 
     private fun createManagerPermission(projectId: Int, projectName: String) {
         val managerResources = mutableListOf<ManagerResources>()
         val managerPaths = mutableListOf<List<ManagerPath>>()
-        val path = ManagerPath(iamConfiguration.systemId, AuthResourceType.PROJECT.value, projectId.toString(), projectName)
+        val path = ManagerPath(
+            iamConfiguration.systemId,
+            AuthResourceType.PROJECT.value,
+            projectId.toString(),
+            projectName
+        )
         val paths = mutableListOf<ManagerPath>()
         paths.add(path)
         managerPaths.add(paths)
