@@ -105,7 +105,7 @@ class AsyncSignService(
         }
     }
 
-    @Scheduled(cron="0/10 * *  * * ? ")
+    @Scheduled(cron = "0/10 * *  * * ? ")
     fun flushTaskStatus() {
         signBean.flushStatus(
             activeCount = signExecutorService.activeCount,
