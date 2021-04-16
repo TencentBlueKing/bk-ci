@@ -132,10 +132,10 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
         defaultGroups.add(defaultGroup)
         val managerRoleGroup = ManagerRoleGroupDTO.builder().groups(defaultGroups).build()
         val groupId = iamManagerService.createManagerRoleGroup(iamProjectId, managerRoleGroup)
-        val groupMember = ManagerMember(ManagerScopesEnum.USER, userId)
+        val groupMember = ManagerMember(ManagerScopesEnum.getType(ManagerScopesEnum.USER), userId)
         val groupMembers = mutableListOf<ManagerMember>()
         groupMembers.add(groupMember)
-        val expired = System.currentTimeMillis() + TimeUnit.DAYS.toMillis(DEFAULT_EXPIRED_AT)
+        val expired = System.currentTimeMillis()/1000 + TimeUnit.DAYS.toSeconds(DEFAULT_EXPIRED_AT)
         val managerMemberGroup = ManagerMemberGroupDTO.builder().members(groupMembers).expiredAt(expired).build()
         iamManagerService.createRoleGroupMember(groupId, managerMemberGroup)
     }
