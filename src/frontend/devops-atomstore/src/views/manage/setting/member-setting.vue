@@ -172,7 +172,7 @@
             startEditProject (row) {
                 row.editing = true
                 row.isLoadingProject = true
-                this.$store.dispatch('store/requestProjectList').then((res) => {
+                this.$store.dispatch('store/requestProjectList', { enabled: true }).then((res) => {
                     this.projectList = res || []
                 }).catch(err => this.$bkMessage({ message: err.message || err, theme: 'error' })).finally(() => {
                     row.isLoadingProject = false
