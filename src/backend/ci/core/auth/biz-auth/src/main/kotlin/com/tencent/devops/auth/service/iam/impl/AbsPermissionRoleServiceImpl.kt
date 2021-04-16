@@ -41,6 +41,7 @@ import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
+import com.tencent.devops.auth.utils.IamUtils
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -70,7 +71,7 @@ open class AbsPermissionRoleServiceImpl @Autowired constructor(
         // 校验用户组名称
         checkRoleName(groupInfo.name, groupInfo.defaultGroup!!)
 
-        val groupName = "$projectCode-${groupInfo.name}"
+        val groupName = IamUtils.buildIamGroup(projectCode, groupInfo.name)
 
         // 添加项目下用户组
         val managerRoleGroup = ManagerRoleGroup(groupName, groupInfo.description)
