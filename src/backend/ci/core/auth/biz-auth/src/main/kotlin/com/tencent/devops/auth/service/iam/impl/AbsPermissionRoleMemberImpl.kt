@@ -57,7 +57,7 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
         val roleMembers = mutableListOf<ManagerMember>()
         members.forEach {
             checkUser(it)
-            roleMembers.add(ManagerMember(ManagerScopesEnum.USER, it))
+            roleMembers.add(ManagerMember(ManagerScopesEnum.getType(ManagerScopesEnum.USER), it))
         }
         val expiredTime = System.currentTimeMillis() + TimeUnit.DAYS.toMillis(expiredAt)
         val managerMemberGroupDTO = ManagerMemberGroupDTO.builder().expiredAt(expiredTime).members(roleMembers).build()
