@@ -25,20 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.v2.listener
+package com.tencent.devops.common.ci.yaml.v2
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.gitci.pojo.GitRequestEvent
-import com.tencent.devops.common.ci.yaml.v2.ScriptBuildYaml
-import com.tencent.devops.gitci.constant.MQ
-import com.tencent.devops.gitci.pojo.GitProjectPipeline
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonProperty
 
-@Event(MQ.EXCHANGE_GITCI_REQUEST_TRIGGER_V2_EVENT, MQ.ROUTE_GITCI_REQUEST_TRIGGER_V2_EVENT)
-data class V2GitCIRequestTriggerEvent(
-    val pipeline: GitProjectPipeline,
-    val event: GitRequestEvent,
-    val yaml: ScriptBuildYaml,
-    val originYaml: String,
-    val normalizedYaml: String,
-    val gitBuildId: Long
+/**
+ * model
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class TagRule(
+    val tags: List<String>?,
+
+    @JsonProperty("tags-ignore")
+    val tagsIgnore: List<String>?,
+
+    @JsonProperty("from-branches")
+    val fromBranches: List<String>?,
+
+    val users: List<String>?,
+
+    @JsonProperty("users-ignore")
+    val usersIgnore: List<String>?
 )

@@ -28,19 +28,16 @@
 package com.tencent.devops.gitci.v2.service
 
 import com.tencent.devops.common.api.util.YamlUtil
-import com.tencent.devops.common.ci.yaml.v2.CIBuildYaml
+import com.tencent.devops.common.ci.yaml.v2.ScriptBuildYaml
 import com.tencent.devops.gitci.dao.GitCIServicesConfDao
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
-import com.tencent.devops.gitci.listener.GitCIRequestDispatcher
-import com.tencent.devops.gitci.listener.GitCIRequestTriggerEvent
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.gitci.pojo.enums.TriggerReason
 import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.service.GitRepositoryConfService
-import com.tencent.devops.gitci.service.trigger.RequestTrigger
 import com.tencent.devops.gitci.service.trigger.RequestTriggerInterface
 import com.tencent.devops.gitci.v2.listener.V2GitCIRequestDispatcher
 import com.tencent.devops.gitci.v2.listener.V2GitCIRequestTriggerEvent
@@ -60,7 +57,7 @@ class V2RequestTrigger @Autowired constructor (
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val repositoryConfService: GitRepositoryConfService,
     private val rabbitTemplate: RabbitTemplate
-) : RequestTriggerInterface<CIBuildYaml> {
+) : RequestTriggerInterface<ScriptBuildYaml> {
 
     override fun triggerBuild(
         gitRequestEvent: GitRequestEvent,
@@ -121,8 +118,8 @@ class V2RequestTrigger @Autowired constructor (
     }
 
 
-    override fun isMatch(event: GitEvent, ymlObject: CIBuildYaml): Boolean {
-        return V2WebHookMatcher(event).isMatch(ymlObject.trigger!!, ymlObject.mr!!)
+    override fun isMatch(event: GitEvent, ymlObject: ScriptBuildYaml): Boolean {
+        return V2WebHookMatcher(event).isMatch(ymlObject.on!!, ymlObject.mr!!)
     }
 
     override fun prepareCIBuildYaml(
@@ -130,7 +127,7 @@ class V2RequestTrigger @Autowired constructor (
         originYaml: String?,
         filePath: String?,
         pipelineId: String?
-    ): CIBuildYaml? {
+    ): ScriptBuildYaml? {
         TODO("Not yet implemented")
     }
 

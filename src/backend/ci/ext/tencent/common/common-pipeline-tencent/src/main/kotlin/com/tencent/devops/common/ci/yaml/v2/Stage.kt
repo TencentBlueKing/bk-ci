@@ -27,9 +27,16 @@
 
 package com.tencent.devops.common.ci.yaml.v2
 
+import com.fasterxml.jackson.annotation.JsonProperty
+
 /**
  * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(gitci,prebuild等)异常
  */
 data class Stage(
-    val stage: List<Job>
+    val name: String?,
+    val id: String?,
+    val label: String?,
+    @JsonProperty("if")
+    val ifFiled: String?,
+    val jobs: Map<String, Job>?
 )

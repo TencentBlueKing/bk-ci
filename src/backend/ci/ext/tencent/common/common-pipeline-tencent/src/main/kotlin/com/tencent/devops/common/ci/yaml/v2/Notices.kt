@@ -25,88 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci
+package com.tencent.devops.common.ci.yaml.v2
 
-import org.junit.Test
-import org.springframework.core.io.ClassPathResource
-import java.io.BufferedReader
-import java.io.InputStream
-import java.io.InputStreamReader
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonProperty
 
-
-internal class CiYamlUtilsTest {
-
-    @Test
-    fun parseImage() {
-    }
-
-    @Test
-    fun formatYaml() {
-    }
-
-    @Test
-    fun checkYaml() {
-    }
-
-    @Test
-    fun normalizeGitCiYaml() {
-    }
-
-    @Test
-    fun normalizePrebuildYaml() {
-    }
-
-    @Test
-    fun validateYaml() {
-    }
-
-    @Test
-    fun validate() {
-    }
-
-    @Test
-    fun jsonNodeFromString() {
-    }
-
-    @Test
-    fun validateSchema() {
-    }
-
-    @Test
-    fun validateJson() {
-    }
-
-    @Test
-    fun convertYamlToJson() {
-    }
-
-    @Test
-    fun getCIBuildYamlSchema() {
-    }
-
-    @Test
-    fun getAbstractTaskSchema() {
-    }
-
-    @Test
-    fun getAbstractServiceSchema() {
-    }
-
-    @Test
-    fun versionExist() {
-        val classPathResource = ClassPathResource("test.yml")
-        val inputStream: InputStream = classPathResource.inputStream
-        val isReader = InputStreamReader(inputStream)
-
-        val reader = BufferedReader(isReader)
-        val sb = StringBuffer()
-        var str: String?
-        while (reader.readLine().also { str = it } != null) {
-            sb.append(str).append("\n")
-        }
-
-        println(sb.toString())
-
-        println(CiYamlUtils.parseVersion(sb.toString()))
-    }
-}
+/**
+ * model
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class Notices(
+    val type: String?,
+    val title: String?,
+    val content: String?,
+    val receivers: List<String>?,
+    val ccs: List<String>?,
+    @JsonProperty("if")
+    val ifField: String?,
+    @JsonProperty("chat-id")
+    val chatId: String?
+)

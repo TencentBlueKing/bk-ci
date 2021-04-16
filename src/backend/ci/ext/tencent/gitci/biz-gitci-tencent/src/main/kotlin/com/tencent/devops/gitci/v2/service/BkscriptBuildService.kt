@@ -41,7 +41,7 @@ import com.tencent.devops.common.ci.task.GitCiCodeRepoInput
 import com.tencent.devops.common.ci.task.GitCiCodeRepoTask
 import com.tencent.devops.common.ci.task.PipelineScriptInput
 import com.tencent.devops.common.ci.task.PipelineScriptTask
-import com.tencent.devops.common.ci.yaml.v2.CIBuildYaml
+import com.tencent.devops.common.ci.yaml.v2.ScriptBuildYaml
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
@@ -130,7 +130,7 @@ class BkscriptBuildService @Autowired constructor(
 
     private val channelCode = ChannelCode.GIT
 
-    fun gitStartBuild(pipeline: GitProjectPipeline, event: GitRequestEvent, yaml: CIBuildYaml, gitBuildId: Long): BuildId? {
+    fun gitStartBuild(pipeline: GitProjectPipeline, event: GitRequestEvent, yaml: ScriptBuildYaml, gitBuildId: Long): BuildId? {
         logger.info("Git request gitBuildId:$gitBuildId, pipeline:$pipeline, event: $event, yaml: $yaml")
 
         // create or refresh pipeline
@@ -285,7 +285,7 @@ class BkscriptBuildService @Autowired constructor(
         return false
     }
 
-    private fun createPipelineModel(event: GitRequestEvent, gitProjectConf: GitRepositoryConf, yaml: CIBuildYaml): Model {
+    private fun createPipelineModel(event: GitRequestEvent, gitProjectConf: GitRepositoryConf, yaml: ScriptBuildYaml): Model {
         // 先安装插件市场的插件(拉代码和pipelineScript插件)
         installMarketAtom(gitProjectConf, event.userId, GitCiCodeRepoTask.atomCode)
         installMarketAtom(gitProjectConf, event.userId, PipelineScriptTask.atomCode)

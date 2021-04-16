@@ -25,19 +25,47 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.yaml.v2
+package com.tencent.devops.common.ci.yaml.v2.utils
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonInclude
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.common.ci.yaml.v2.ScriptBuildYaml
+import com.tencent.devops.common.ci.yaml.v2.YmlVersion
+import org.junit.After
+import org.junit.Assert.*
+import org.junit.Before
+import org.junit.Test
+import org.springframework.core.io.ClassPathResource
+import java.io.BufferedReader
+import java.io.InputStream
+import java.io.InputStreamReader
 
-/**
- * model
- */
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class Trigger(
-    val disable: Boolean?,
-    val branches: MatchRule?,
-    val tags: MatchRule?,
-    val paths: MatchRule?
-)
+class ScriptYmlUtilsTest {
+
+    @Before
+    fun setUp() {
+    }
+
+    @After
+    fun tearDown() {
+    }
+
+    @Test
+    fun formatYaml() {
+        val classPathResource = ClassPathResource("Sample1.yml")
+        val inputStream: InputStream = classPathResource.inputStream
+        val isReader = InputStreamReader(inputStream)
+
+        val reader = BufferedReader(isReader)
+        val sb = StringBuffer()
+        var str: String?
+        while (reader.readLine().also { str = it } != null) {
+            sb.append(str).append("\n")
+        }
+
+        println(sb.toString())
+
+        val obj = YamlUtil.getObjectMapper().readValue(ScriptYmlUtils.formatYaml(sb.toString()), ScriptBuildYaml::class.java)
+        println(JsonUtil.toJson(obj))
+    }
+}

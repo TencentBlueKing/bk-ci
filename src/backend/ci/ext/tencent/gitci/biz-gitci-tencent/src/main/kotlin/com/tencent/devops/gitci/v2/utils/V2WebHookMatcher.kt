@@ -34,7 +34,7 @@ import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitPushEvent
 import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
 import com.tencent.devops.common.ci.yaml.v2.MergeRequest
-import com.tencent.devops.common.ci.yaml.v2.Trigger
+import com.tencent.devops.common.ci.yaml.v2.On
 import com.tencent.devops.process.utils.GIT_MR_NUMBER
 import org.slf4j.LoggerFactory
 import org.springframework.util.AntPathMatcher
@@ -47,19 +47,19 @@ class V2WebHookMatcher(private val event: GitEvent) {
     }
 
     fun isMatch(
-        trigger: Trigger,
+        On: On,
         mr: MergeRequest
     ): Boolean {
         val eventBranch = getBranch()
         val eventTag = getTag()
         val eventType = getEventType()
 
-        when (eventType) {
+        /*when (eventType) {
             CodeEventType.PUSH -> {
-                if (isPushMatch(trigger = trigger, eventBranch = eventBranch)) return true
+                if (isPushMatch(On = On, eventBranch = eventBranch)) return true
             }
             CodeEventType.TAG_PUSH -> {
-                if (isTagPushMatch(trigger = trigger, eventTag = eventTag)) return true
+                if (isTagPushMatch(On = On, eventTag = eventTag)) return true
             }
             CodeEventType.MERGE_REQUEST -> {
                 if (isMrMatch(mr, eventBranch)) return true
@@ -67,33 +67,33 @@ class V2WebHookMatcher(private val event: GitEvent) {
             else -> {
                 return false
             }
-        }
+        }*/
 
         logger.info("The include branch($eventBranch) or tag($eventTag) doesn't match the git event($event)")
         return false
     }
-
-    private fun isPushMatch(trigger: Trigger, eventBranch: String): Boolean {
-        if (trigger.disable == true) {
+/*
+    private fun isPushMatch(On: On, eventBranch: String): Boolean {
+        if (On.disable == true) {
             logger.info("The trigger is disabled ($eventBranch)")
             return false
         }
         // exclude
-        if (trigger.branches?.exclude != null && trigger.branches!!.exclude!!.isNotEmpty()) {
-            trigger.branches!!.exclude!!.forEach {
+        if (On.branches?.exclude != null && On.branches!!.exclude!!.isNotEmpty()) {
+            On.branches!!.exclude!!.forEach {
                 if (isBranchMatch(it, eventBranch)) {
                     logger.info("The exclude branch($it) exclude the git branch ($eventBranch)")
                     return false
                 }
             }
         }
-        if (!isExcludePathMatch(trigger)) return false
+        if (!isExcludePathMatch(On)) return false
         // include
         var branchIncluded = false
-        if (trigger.branches?.include != null && trigger.branches!!.include!!.isNotEmpty()) {
-            logger.info("Include branch set(${trigger.branches!!.include})")
+        if (On.branches?.include != null && On.branches!!.include!!.isNotEmpty()) {
+            logger.info("Include branch set(${On.branches!!.include})")
             run outside@{
-                trigger.branches!!.include!!.forEach {
+                On.branches!!.include!!.forEach {
                     if (isBranchMatch(it, eventBranch)) {
                         logger.info("The include branch($it) include the git update one($eventBranch)")
                         branchIncluded = true
@@ -102,35 +102,35 @@ class V2WebHookMatcher(private val event: GitEvent) {
                 }
             }
         }
-        val pathIncluded = isIncludePathMatch(trigger)
+        val pathIncluded = isIncludePathMatch(On)
         if (branchIncluded && pathIncluded) {
-            logger.info("Git trigger branch($eventBranch) is included and path(${trigger.paths?.include}) is included")
+            logger.info("Git trigger branch($eventBranch) is included and path(${On.paths?.include}) is included")
             return true
         }
         return false
     }
 
-    private fun isTagPushMatch(trigger: Trigger, eventTag: String): Boolean {
-        if (trigger.disable == true) {
+    private fun isTagPushMatch(On: On, eventTag: String): Boolean {
+        if (On.disable == true) {
             logger.info("The trigger is disabled ($eventTag)")
             return false
         }
         // exclude
-        if (trigger.tags?.exclude != null && trigger.tags!!.exclude!!.isNotEmpty()) {
-            trigger.tags!!.exclude!!.forEach {
+        if (On.tags?.exclude != null && On.tags!!.exclude!!.isNotEmpty()) {
+            On.tags!!.exclude!!.forEach {
                 if (isTagMatch(it, eventTag)) {
                     logger.info("The exclude tag($it) exclude the git tag ($eventTag)")
                     return false
                 }
             }
         }
-        if (!isExcludePathMatch(trigger)) return false
+        if (!isExcludePathMatch(On)) return false
         // include
         var tagIncluded = false
-        if (trigger.tags?.include != null && trigger.tags!!.include!!.isNotEmpty()) {
-            logger.info("Include tags set(${trigger.tags!!.include})")
+        if (On.tags?.include != null && On.tags!!.include!!.isNotEmpty()) {
+            logger.info("Include tags set(${On.tags!!.include})")
             run outside@{
-                trigger.tags!!.include!!.forEach {
+                On.tags!!.include!!.forEach {
                     if (isTagMatch(it, eventTag)) {
                         logger.info("The include tags($it) include the git update one($eventTag)")
                         tagIncluded = true
@@ -139,20 +139,20 @@ class V2WebHookMatcher(private val event: GitEvent) {
                 }
             }
         }
-        val pathIncluded = isIncludePathMatch(trigger)
+        val pathIncluded = isIncludePathMatch(On)
         if (tagIncluded && pathIncluded) {
-            logger.info("Git trigger tags($eventTag) is included and path(${trigger.paths?.include}) is included")
+            logger.info("Git trigger tags($eventTag) is included and path(${On.paths?.include}) is included")
             return true
         }
         return false
     }
 
-    private fun isExcludePathMatch(trigger: Trigger): Boolean {
-        if (trigger.paths?.exclude != null && trigger.paths!!.exclude!!.isNotEmpty()) {
-            logger.info("Exclude path set ($trigger.paths.exclude)")
+    private fun isExcludePathMatch(On: On): Boolean {
+        if (On.paths?.exclude != null && On.paths!!.exclude!!.isNotEmpty()) {
+            logger.info("Exclude path set ($On.paths.exclude)")
             (event as GitPushEvent).commits.forEach { commit ->
                 commit.added?.forEach { path ->
-                    trigger.paths!!.exclude!!.forEach { excludePath ->
+                    On.paths!!.exclude!!.forEach { excludePath ->
                         if (isPathMatch(path, excludePath)) {
                             logger.info("The exclude path($excludePath) exclude the git update one($path)")
                             return false
@@ -160,7 +160,7 @@ class V2WebHookMatcher(private val event: GitEvent) {
                     }
                 }
                 commit.modified?.forEach { path ->
-                    trigger.paths!!.exclude!!.forEach { excludePath ->
+                    On.paths!!.exclude!!.forEach { excludePath ->
                         if (isPathMatch(path, excludePath)) {
                             logger.info("The exclude path($excludePath) exclude the git update one($path)")
                             return false
@@ -168,7 +168,7 @@ class V2WebHookMatcher(private val event: GitEvent) {
                     }
                 }
                 commit.removed?.forEach { path ->
-                    trigger.paths!!.exclude!!.forEach { excludePath ->
+                    On.paths!!.exclude!!.forEach { excludePath ->
                         if (isPathMatch(path, excludePath)) {
                             logger.info("The exclude path($excludePath) exclude the git update one($path)")
                             return false
@@ -180,14 +180,14 @@ class V2WebHookMatcher(private val event: GitEvent) {
         return true
     }
 
-    private fun isIncludePathMatch(trigger: Trigger): Boolean {
+    private fun isIncludePathMatch(On: On): Boolean {
         var pathIncluded = false
-        if (trigger.paths?.include != null && trigger.paths!!.include!!.isNotEmpty()) {
-            logger.info("Include path set(${trigger.paths!!.include})")
+        if (On.paths?.include != null && On.paths!!.include!!.isNotEmpty()) {
+            logger.info("Include path set(${On.paths!!.include})")
             run outside@{
                 (event as GitPushEvent).commits.forEach { commit ->
                     commit.added?.forEach { path ->
-                        trigger.paths!!.include!!.forEach { includePath ->
+                        On.paths!!.include!!.forEach { includePath ->
                             if (isPathMatch(path, includePath)) {
                                 logger.info("The include path($includePath) include the git update one($path)")
                                 pathIncluded = true
@@ -196,7 +196,7 @@ class V2WebHookMatcher(private val event: GitEvent) {
                         }
                     }
                     commit.modified?.forEach { path ->
-                        trigger.paths!!.include!!.forEach { includePath ->
+                        On.paths!!.include!!.forEach { includePath ->
                             if (isPathMatch(path, includePath)) {
                                 logger.info("The include path($includePath) include the git update one($path)")
                                 pathIncluded = true
@@ -205,7 +205,7 @@ class V2WebHookMatcher(private val event: GitEvent) {
                         }
                     }
                     commit.removed?.forEach { path ->
-                        trigger.paths!!.include!!.forEach { includePath ->
+                        On.paths!!.include!!.forEach { includePath ->
                             if (isPathMatch(path, includePath)) {
                                 logger.info("The include path($includePath) include the git update one($path)")
                                 pathIncluded = true
@@ -220,7 +220,7 @@ class V2WebHookMatcher(private val event: GitEvent) {
             pathIncluded = true
         }
         return pathIncluded
-    }
+    }*/
 
     private fun isMrMatch(mr: MergeRequest, eventBranch: String): Boolean {
         if (mr.disable == true) {

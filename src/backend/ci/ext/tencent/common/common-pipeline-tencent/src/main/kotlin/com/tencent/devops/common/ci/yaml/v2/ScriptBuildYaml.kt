@@ -27,79 +27,26 @@
 
 package com.tencent.devops.common.ci.yaml.v2
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 
 /**
+ * model
+ *
  * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(gitci,prebuild等)异常
  */
-data class Job(
-    // val job: JobDetail,
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class ScriptBuildYaml(
+    val version: String?,
     val name: String?,
-    @JsonProperty("runs-on")
-    val runsOn: List<String>?,
-    val container: Container?,
-    val macOS: MacOS?,
-    val service: Service?,
-    @JsonProperty("if")
-    val ifFiled: List<String>?,
-    val steps: List<Steps>?,
-    @JsonProperty("timeout-minutes")
-    val timeoutMinutes: String?,
-    val env: Any?,
-    @JsonProperty("continue-on-error")
-    val continueOnError: Boolean?,
-    val strategy: Strategy?,
-    @JsonProperty("depend-on")
-    val dependOn: List<String>?
-)
-
-data class Container(
-    val image: String,
-    val credentials: Credentials?
-)
-
-data class Credentials(
-    val username: String,
-    val password: String
-)
-
-data class MacOS(
-    @JsonProperty("system-version")
-    val systemVersion: String,
-    @JsonProperty("xcode-version")
-    val xcodeVersion: String
-)
-
-data class Service(
-    val image: String,
-    val credentials: Credentials?,
-    val port: Int?,
-    val volumes: List<String>?,
-    val env: Any?,
-    val command: String?
-)
-
-data class Steps(
-    val name: String?,
-    val id: String?,
-    @JsonProperty("if")
-    val ifFiled: String?,
-    val use: String?,
-    val with: Map<String, Any>?,
-    @JsonProperty("timeout-minutes")
-    val timeoutMinutes: String?,
-    @JsonProperty("continue-on-error")
-    val continueOnError: String?,
-    @JsonProperty("retry-times")
-    val retryTimes: String?,
-    val env: Any?,
-    val run: String?
-)
-
-data class Strategy(
-    val matrix: Any?,
-    @JsonProperty("fast-kill")
-    val fastKill: String?,
-    @JsonProperty("max-parallel")
-    val maxParallel: String?
+    val on: On?,
+    val variable: Map<String, Variable>?,
+    val stages: List<Stage>?,
+    @JsonProperty("on-fail")
+    val onFail: List<Job>?,
+    val extends: Any?,
+    val resource: Resources?,
+    val notices: List<Notices>?
 )

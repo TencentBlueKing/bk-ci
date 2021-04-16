@@ -25,12 +25,89 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.yaml.v2
+package com.tencent.devops.common.ci
 
-enum class ResourceType {
-    LOCAL,
+import com.tencent.devops.common.ci.CiYamlUtils
+import org.junit.Test
+import org.springframework.core.io.ClassPathResource
+import java.io.BufferedReader
+import java.io.InputStream
+import java.io.InputStreamReader
 
-    REMOTE,
 
-    ;
+internal class CiYamlUtilsTest {
+
+    @Test
+    fun parseImage() {
+    }
+
+    @Test
+    fun formatYaml() {
+    }
+
+    @Test
+    fun checkYaml() {
+    }
+
+    @Test
+    fun normalizeGitCiYaml() {
+    }
+
+    @Test
+    fun normalizePrebuildYaml() {
+    }
+
+    @Test
+    fun validateYaml() {
+    }
+
+    @Test
+    fun validate() {
+    }
+
+    @Test
+    fun jsonNodeFromString() {
+    }
+
+    @Test
+    fun validateSchema() {
+    }
+
+    @Test
+    fun validateJson() {
+    }
+
+    @Test
+    fun convertYamlToJson() {
+    }
+
+    @Test
+    fun getCIBuildYamlSchema() {
+    }
+
+    @Test
+    fun getAbstractTaskSchema() {
+    }
+
+    @Test
+    fun getAbstractServiceSchema() {
+    }
+
+    @Test
+    fun versionExist() {
+        val classPathResource = ClassPathResource("test.yml")
+        val inputStream: InputStream = classPathResource.inputStream
+        val isReader = InputStreamReader(inputStream)
+
+        val reader = BufferedReader(isReader)
+        val sb = StringBuffer()
+        var str: String?
+        while (reader.readLine().also { str = it } != null) {
+            sb.append(str).append("\n")
+        }
+
+        println(sb.toString())
+
+        println(CiYamlUtils.parseVersion(sb.toString()))
+    }
 }
