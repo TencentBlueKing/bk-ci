@@ -46,7 +46,6 @@ import com.tencent.devops.environment.pojo.DevCloudModel
 import com.tencent.devops.environment.pojo.DevCloudVmParam
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
-import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.json.JSONObject

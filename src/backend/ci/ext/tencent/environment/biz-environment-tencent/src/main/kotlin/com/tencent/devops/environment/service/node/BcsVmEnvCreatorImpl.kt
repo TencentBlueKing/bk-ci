@@ -39,11 +39,9 @@ import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.EnvCreateInfo
 import com.tencent.devops.environment.pojo.EnvironmentId
 import com.tencent.devops.environment.pojo.enums.NodeSource
-import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.utils.BcsVmParamCheckUtils
 import com.tencent.devops.environment.utils.NodeStringIdUtils
-import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired

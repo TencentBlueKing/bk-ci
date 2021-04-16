@@ -27,36 +27,19 @@
 
 package com.tencent.devops.environment.service
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_IMPORT_EXCEED
-import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.NodeDao
-import com.tencent.devops.environment.dao.ProjectConfigDao
-import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
-import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.NodeDevCloudInfo
-import com.tencent.devops.environment.pojo.enums.NodeStatus
-import com.tencent.devops.environment.pojo.enums.NodeType
-import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import com.tencent.devops.environment.utils.NodeStringIdUtils
-import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.jooq.DSLContext
-import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Service
 class OpNodeService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val nodeDao: NodeDao,
-    private val envNodeDao: EnvNodeDao,
-    private val projectConfigDao: ProjectConfigDao,
-    private val thirdPartyAgentDao: ThirdPartyAgentDao,
-    private val slaveGatewayService: SlaveGatewayService,
-    private val environmentPermissionService: EnvironmentPermissionService
+    private val nodeDao: NodeDao
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(OpNodeService::class.java)
@@ -85,21 +68,6 @@ class OpNodeService @Autowired constructor(
         }
         logger.info("Finish flushing the node display name - $updateCnt")
         return updateCnt
-    }
-
-    private fun batchRegisterNodePermission(
-        insertedNodeList: List<TNodeRecord>,
-        userId: String,
-        projectId: String
-    ) {
-        insertedNodeList.forEach {
-            environmentPermissionService.createNode(
-                userId = userId,
-                projectId = projectId,
-                nodeId = it.nodeId,
-                nodeName = "${NodeStringIdUtils.getNodeStringId(it)}(${it.nodeIp})"
-            )
-        }
     }
 
     fun listPage(page: Int, pageSize: Int, nodeName: String?): List<NodeDevCloudInfo> {
@@ -131,21 +99,5 @@ class OpNodeService @Autowired constructor(
         logger.info("deleteNode, projectId:$projectId, nodeId: $nodeId, nodeHashId: $nodeHashId")
         nodeDao.batchDeleteNode(dslContext, projectId, listOf(nodeId))
         return true
-    }
-
-    private fun checkImportCount(
-        dslContext: DSLContext,
-        projectConfigDao: ProjectConfigDao,
-        nodeDao: NodeDao,
-        projectId: String,
-        userId: String,
-        toAddNodeCount: Int
-    ) {
-        val projectConfig = projectConfigDao.get(dslContext, projectId, userId)
-        val importQuata = projectConfig.importQuota
-        val existImportNodeCount = nodeDao.countImportNode(dslContext, projectId)
-        if (toAddNodeCount + existImportNodeCount > importQuata) {
-            throw ErrorCodeException(errorCode = ERROR_NODE_IMPORT_EXCEED, params = arrayOf(importQuata.toString()))
-        }
     }
 }
