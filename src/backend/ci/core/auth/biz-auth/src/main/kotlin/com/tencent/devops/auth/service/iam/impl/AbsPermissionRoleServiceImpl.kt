@@ -29,6 +29,7 @@
 package com.tencent.devops.auth.service.iam.impl
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
+import com.tencent.bk.sdk.iam.dto.manager.Action
 import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
 import com.tencent.bk.sdk.iam.dto.manager.ManagerPath
 import com.tencent.bk.sdk.iam.dto.manager.ManagerResources
@@ -193,9 +194,13 @@ open class AbsPermissionRoleServiceImpl @Autowired constructor(
                 .type(AuthResourceType.PROJECT.value)
                 .paths(paths).build()
         )
+        val action = mutableListOf<Action>()
+        actions.forEach {
+            action.add(Action(it))
+        }
         return AuthorizationScopes.builder()
             .system(iamConfiguration.systemId)
-            .actions(actions)
+            .actions(action)
             .resources(managerResources)
             .build()
     }
@@ -236,9 +241,13 @@ open class AbsPermissionRoleServiceImpl @Autowired constructor(
                 .type(AuthResourceType.valueOf(type).value)
                 .paths(paths).build()
         )
+        val action = mutableListOf<Action>()
+        actions.forEach {
+            action.add(Action(it))
+        }
         return AuthorizationScopes.builder()
             .system(iamConfiguration.systemId)
-            .actions(actions)
+            .actions(action)
             .resources(managerResources)
             .build()
     }
