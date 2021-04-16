@@ -26,7 +26,7 @@
  *
  */
 
-package com.tencent.devops.auth.utils
+package com.tencent.devops.common.auth.utils
 
 object IamUtils {
     fun buildIamGroup(projectCode: String, groupName: String): String {
