@@ -237,7 +237,7 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
             )
         }
         // 如果插件是默认插件或者在可用插件列表，则无需校验与模板的可见范围
-        if (!defaultFlag || validAtomCodes?.contains(atomCode) == true) {
+        if (!defaultFlag || validAtomCodes?.contains(atomCode) == false) {
             handleInvalidStoreList(
                 storeDeptMap = currentStageAtomDeptMap,
                 storeCode = atomCode,
@@ -300,7 +300,7 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
                     params = arrayOf(imageName ?: imageCode)
                 )
             // 如果镜像是公共镜像或者在可用镜像列表，则无需校验与模板的可见范围
-            if (!storeBaseInfo.publicFlag || validImageCodes?.contains(imageCode) == true) {
+            if (!storeBaseInfo.publicFlag || validImageCodes?.contains(imageCode) == false) {
                 handleInvalidStoreList(
                     storeDeptMap = templateImageDeptMap,
                     storeCode = imageCode,
