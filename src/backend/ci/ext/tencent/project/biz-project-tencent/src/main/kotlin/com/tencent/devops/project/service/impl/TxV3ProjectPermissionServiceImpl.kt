@@ -45,6 +45,7 @@ import com.tencent.bk.sdk.iam.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
+import com.tencent.devops.common.auth.utils.IamUtils
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.iam.AuthorizationUtils
@@ -67,15 +68,16 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
         resourceRegisterInfo: ResourceRegisterInfo,
         userDeptDetail: UserDeptDetail?
     ): String {
+        // TODO: (V3创建项目未完全迁移完前，需双写V0,V3)
         /**
-         *  V3创建项目流程
+         *  V3创建项目流程 (V3创建项目未完全迁移完前，需双写V0,V3)
          *  1. 创建分级管理员，并记录iam分级管理员id
          *  2. 添加默认用户组”CI管理员“
          *  3. 分配”ALL action“权限到CI管理员
          *  4. 添加创建人到分级管理员
          */
         val iamProjectId = createIamProject(userId, resourceRegisterInfo)
-        createRole(userId, iamProjectId.toInt())
+        createRole(userId, iamProjectId.toInt(), resourceRegisterInfo.resourceCode)
         createManagerPermission(resourceRegisterInfo.resourceCode.toInt(), resourceRegisterInfo.resourceName)
         return iamProjectId
     }
@@ -123,8 +125,8 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
         return iamManagerService.createManager(createManagerDTO).toString()
     }
 
-    private fun createRole(userId: String, iamProjectId: Int) {
-        val defaultGroup = ManagerRoleGroup(MANAGER_ROLE, MANAGER_ROLE)
+    private fun createRole(userId: String, iamProjectId: Int, projectCode: String) {
+        val defaultGroup = ManagerRoleGroup(IamUtils.buildIamGroup(projectCode, MANAGER_ROLE), MANAGER_ROLE)
         val defaultGroups = mutableListOf<ManagerRoleGroup>()
         defaultGroups.add(defaultGroup)
         val managerRoleGroup = ManagerRoleGroupDTO.builder().groups(defaultGroups).build()
