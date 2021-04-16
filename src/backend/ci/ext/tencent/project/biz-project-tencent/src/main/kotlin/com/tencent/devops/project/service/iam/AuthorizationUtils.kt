@@ -187,7 +187,7 @@ object AuthorizationUtils {
     }
 
     private const val projectAction = "project_view,project_edit,project_delete," +
-        "project_list,project_manage,pipeline_create,pipeline_list,project_views_manager," +
+        "project_manage,pipeline_create,pipeline_list,project_views_manager," +
         "repertory_create,repertory_list,credential_create,credential_list," +
         "environment_create,environment_list,env_node_create,env_node_list," +
         "cert_create,cert_list"
