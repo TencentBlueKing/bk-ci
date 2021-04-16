@@ -29,7 +29,6 @@ package com.tencent.devops.repository.api.scm
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
-import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
@@ -346,10 +345,7 @@ interface ServiceGitResource {
         token: String,
         @ApiParam(value = "仓库url", required = true)
         @QueryParam("repoUrl")
-        repoUrl: String? = null,
-        @ApiParam(value = "仓库类型", required = true)
-        @QueryParam("scmType")
-        scmType: ScmType? = null
+        repoUrl: String? = null
     ): Result<GitMrInfo>
 
     @ApiOperation("下载git仓库")
@@ -390,10 +386,7 @@ interface ServiceGitResource {
         token: String,
         @ApiParam(value = "仓库url", required = true)
         @QueryParam("repoUrl")
-        repoUrl: String? = null,
-        @ApiParam(value = "仓库类型", required = true)
-        @QueryParam("scmType")
-        scmType: ScmType? = null
+        repoUrl: String? = null
     ): Result<GitMrReviewInfo>
 
     @ApiOperation("获取mr信息")
@@ -414,10 +407,7 @@ interface ServiceGitResource {
         token: String,
         @ApiParam(value = "仓库url", required = true)
         @QueryParam("repoUrl")
-        repoUrl: String? = null,
-        @ApiParam(value = "仓库类型", required = true)
-        @QueryParam("scmType")
-        scmType: ScmType? = null
+        repoUrl: String? = null
     ): Result<GitMrChangeInfo>
 
     @ApiOperation("获取仓库最近一次提交信息")

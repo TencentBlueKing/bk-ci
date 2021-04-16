@@ -28,7 +28,6 @@
 package com.tencent.devops.repository.service.scm
 
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
-import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
@@ -137,8 +136,7 @@ interface IGitService {
         tokenType:
         TokenTypeEnum,
         token: String,
-        repoUrl: String? = null,
-        scmType: ScmType? = null
+        repoUrl: String? = null
     ): GitMrInfo
 
     fun downloadGitRepoFile(
@@ -154,8 +152,7 @@ interface IGitService {
         mrId: Long,
         tokenType: TokenTypeEnum,
         token: String,
-        repoUrl: String? = null,
-        scmType: ScmType? = null
+        repoUrl: String? = null
     ): GitMrReviewInfo
 
     fun getMrChangeInfo(
@@ -163,8 +160,7 @@ interface IGitService {
         mrId: Long,
         tokenType: TokenTypeEnum,
         token: String,
-        repoUrl: String? = null,
-        scmType: ScmType? = null
+        repoUrl: String? = null
     ): GitMrChangeInfo
 
     fun getRepoMembers(accessToken: String, userId: String, repoName: String): List<GitMember>
