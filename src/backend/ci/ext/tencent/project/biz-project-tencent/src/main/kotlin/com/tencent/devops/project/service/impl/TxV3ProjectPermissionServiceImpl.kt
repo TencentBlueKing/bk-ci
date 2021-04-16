@@ -30,6 +30,7 @@ package com.tencent.devops.project.service.impl
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
+import com.tencent.bk.sdk.iam.dto.manager.Action
 import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
 import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
 import com.tencent.bk.sdk.iam.dto.manager.ManagerPath
@@ -137,8 +138,6 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
     }
 
     private fun createManagerPermission(projectId: Int, projectName: String) {
-        val actions = mutableListOf<String>()
-        actions.add("all_action")
         val managerResources = mutableListOf<ManagerResources>()
         val managerPaths = mutableListOf<List<ManagerPath>>()
         val path = ManagerPath(iamConfiguration.systemId, AuthResourceType.PROJECT.value, projectId.toString(), projectName)
@@ -151,8 +150,9 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
             .paths(managerPaths)
             .build()
         managerResources.add(resources)
+
         val permission = AuthorizationScopes.builder()
-            .actions(actions)
+            .actions(arrayListOf(Action("all_action")))
             .system(iamConfiguration.systemId)
             .resources(managerResources)
             .build()
