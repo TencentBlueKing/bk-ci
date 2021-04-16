@@ -71,9 +71,10 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
         /**
          *  V3创建项目流程 (V3创建项目未完全迁移完前，需双写V0,V3)
          *  1. 创建分级管理员，并记录iam分级管理员id
-         *  2. 添加默认用户组”CI管理员“
-         *  3. 分配”ALL action“权限到CI管理员
-         *  4. 添加创建人到分级管理员
+         *  2. 添加创建人到分级管理员
+         *  3. 添加默认用户组”CI管理员“
+         *  4. 添加创建人到CI管理员
+         *  5. 分配”ALL action“权限到CI管理员
          */
         val iamProjectId = createIamProject(userId, resourceRegisterInfo)
         createRole(userId, iamProjectId.toInt(), resourceRegisterInfo.resourceCode)
@@ -138,7 +139,7 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
         val expired = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(DEFAULT_EXPIRED_AT)
         val managerMemberGroup = ManagerMemberGroupDTO.builder().members(groupMembers).expiredAt(expired).build()
         // 项目创建人添加至管理员分组
-        iamManagerService.createRoleGroupMember(roleId, managerMemberGroup)
+//        iamManagerService.createRoleGroupMember(roleId, managerMemberGroup)
     }
 
     private fun createManagerPermission(projectId: Int, projectName: String) {
