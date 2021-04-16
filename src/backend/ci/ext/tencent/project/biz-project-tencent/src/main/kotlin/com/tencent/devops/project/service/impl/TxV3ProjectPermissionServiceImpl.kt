@@ -120,13 +120,14 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
             .members(arrayListOf(userId))
             .authorization_scopes(authorizationScopes)
             .subject_scopes(arrayListOf(subjectScopes)).build()
-        logger.info("createIamProject: ${JsonUtil.toJson(createManagerDTO)}")
-        logger.info("system ${iamConfiguration.systemId} | ${iamConfiguration.appCode} | ${iamConfiguration.apigwBaseUrl}")
         return iamManagerService.createManager(createManagerDTO).toString()
     }
 
     private fun createRole(userId: String, iamProjectId: Int, projectCode: String) {
-        val defaultGroup = ManagerRoleGroup(IamUtils.buildIamGroup(projectCode, MANAGER_ROLE), MANAGER_ROLE)
+        val defaultGroup = ManagerRoleGroup(
+            IamUtils.buildIamGroup(projectCode, MANAGER_ROLE),
+            IamUtils.buildDefaultDescription(projectCode, MANAGER_ROLE)
+        )
         val defaultGroups = mutableListOf<ManagerRoleGroup>()
         defaultGroups.add(defaultGroup)
         val managerRoleGroup = ManagerRoleGroupDTO.builder().groups(defaultGroups).build()
