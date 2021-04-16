@@ -114,7 +114,7 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
         val createManagerDTO = CreateManagerDTO.builder().system(iamConfiguration.systemId)
             .name(resourceRegisterInfo.resourceName)
             .description(resourceRegisterInfo.resourceName)
-
+            .members(arrayListOf(userId))
             .authorization_scopes(authorizationScopes)
             .subject_scopes(subjectScopes).build()
         logger.info("createIamProject: ${JsonUtil.toJson(createManagerDTO)}")
