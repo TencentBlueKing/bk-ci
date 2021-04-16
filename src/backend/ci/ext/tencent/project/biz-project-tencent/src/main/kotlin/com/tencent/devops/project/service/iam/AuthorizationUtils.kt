@@ -29,6 +29,7 @@
 package com.tencent.devops.project.service.iam
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
+import com.tencent.bk.sdk.iam.dto.manager.Action
 import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
 import com.tencent.bk.sdk.iam.dto.manager.ManagerPath
 import com.tencent.bk.sdk.iam.dto.manager.ManagerResources
@@ -135,10 +136,14 @@ object AuthorizationUtils {
             .build()
         val resources = mutableListOf<ManagerResources>()
         resources.add(resource)
+        val action = mutableListOf<Action>()
+        actions.forEach {
+            action.add(Action(it))
+        }
         return AuthorizationScopes
             .builder()
             .system(iamConfiguration.systemId)
-            .actions(actions)
+            .actions(action)
             .resources(resources)
             .build()
     }
@@ -160,10 +165,14 @@ object AuthorizationUtils {
         val resource = ManagerResources.builder().system(iamConfiguration.systemId).type(resourceType).paths(paths).build()
         val resources = mutableListOf<ManagerResources>()
         resources.add(resource)
+        val action = mutableListOf<Action>()
+        actions.forEach {
+            action.add(Action(it))
+        }
         return AuthorizationScopes
             .builder()
             .system(iamConfiguration.systemId)
-            .actions(actions)
+            .actions(action)
             .resources(resources)
             .build()
     }
