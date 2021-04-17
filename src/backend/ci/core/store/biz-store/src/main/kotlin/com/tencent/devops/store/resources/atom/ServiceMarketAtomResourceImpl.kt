@@ -37,7 +37,6 @@ import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.atom.AtomPipeline
 import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.atom.AtomPostResp
-import com.tencent.devops.store.pojo.atom.AtomStatistic
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
@@ -72,17 +71,6 @@ class ServiceMarketAtomResourceImpl @Autowired constructor(
 
     override fun getAtomByCode(atomCode: String, username: String): Result<AtomVersion?> {
         return marketAtomService.getNewestAtomByCode(username, atomCode)
-    }
-
-    override fun getAtomStatisticByCode(atomCode: String, username: String): Result<AtomStatistic> {
-        // 提供给openApi使用，暂时先使用username来验证权限，等后续openApi层统一加上具体资源访问权限后再去掉
-        if (!atomMemberService.isStoreMember(username, atomCode, StoreTypeEnum.ATOM.type.toByte())) {
-            return MessageCodeUtil.generateResponseDataObject(
-                messageCode = StoreMessageCode.USER_QUERY_ATOM_PERMISSION_IS_INVALID,
-                params = arrayOf(atomCode))
-        }
-
-        return marketAtomStatisticService.getStatisticByCode(username, atomCode)
     }
 
     override fun getAtomPipelinesByCode(

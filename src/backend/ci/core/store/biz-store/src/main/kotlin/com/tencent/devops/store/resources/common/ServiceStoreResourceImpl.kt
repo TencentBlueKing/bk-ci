@@ -28,23 +28,23 @@
 package com.tencent.devops.store.resources.common
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.pojo.common.SensitiveConfResp
 import com.tencent.devops.store.pojo.common.StoreBuildResultRequest
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreBuildService
+import com.tencent.devops.store.service.common.StoreMemberService
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.UserSensitiveConfService
-import com.tencent.devops.store.service.template.MarketTemplateService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceStoreResourceImpl @Autowired constructor(
     private val storeProjectService: StoreProjectService,
     private val sensitiveConfService: UserSensitiveConfService,
-    private val storeBuildService: StoreBuildService,
-    private val marketTemplateService: MarketTemplateService
+    private val storeBuildService: StoreBuildService
 ) : ServiceStoreResource {
 
     override fun uninstall(storeCode: String, storeType: StoreTypeEnum, projectCode: String): Result<Boolean> {
@@ -63,15 +63,12 @@ class ServiceStoreResourceImpl @Autowired constructor(
         return storeBuildService.handleStoreBuildResult(pipelineId, buildId, storeBuildResultRequest)
     }
 
-    override fun validateUserTemplateAtomVisibleDept(
-        userId: String,
-        templateCode: String,
-        projectCode: String?
-    ): Result<Boolean> {
-        return marketTemplateService.validateUserTemplateAtomVisibleDept(
-            userId = userId,
-            templateCode = templateCode,
-            projectCodeList = if (null != projectCode) listOf(projectCode) else null
+    override fun isStoreMember(storeCode: String, storeType: StoreTypeEnum, userId: String): Result<Boolean> {
+        return Result(
+            SpringContextUtil.getBean(
+                clazz = StoreMemberService::class.java,
+                beanName = "${storeType.name.toLowerCase()}MemberService"
+            ).isStoreMember(userId, storeCode, storeType.type.toByte())
         )
     }
 }

@@ -1,7 +1,7 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.  
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -10,13 +10,23 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 package com.tencent.bkrepo.npm.service
@@ -25,13 +35,13 @@ import com.tencent.bkrepo.common.api.exception.ErrorCodeException
 import com.tencent.bkrepo.common.api.message.CommonMessageCode
 import com.tencent.bkrepo.common.api.pojo.Page
 import com.tencent.bkrepo.common.artifact.message.ArtifactMessageCode
+import com.tencent.bkrepo.common.mongo.dao.util.Pages
 import com.tencent.bkrepo.npm.dao.repository.ModuleDepsRepository
 import com.tencent.bkrepo.npm.model.TModuleDeps
 import com.tencent.bkrepo.npm.pojo.module.des.ModuleDepsInfo
 import com.tencent.bkrepo.npm.pojo.module.des.service.DepsCreateRequest
 import com.tencent.bkrepo.npm.pojo.module.des.service.DepsDeleteRequest
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Sort
 import org.springframework.data.mongodb.core.MongoTemplate
 import org.springframework.data.mongodb.core.query.Criteria
@@ -42,12 +52,10 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 @Service
-class ModuleDepsService {
-    @Autowired
-    private lateinit var moduleDepsRepository: ModuleDepsRepository
-
-    @Autowired
-    private lateinit var mongoTemplate: MongoTemplate
+class ModuleDepsService(
+    private val moduleDepsRepository: ModuleDepsRepository,
+    private val mongoTemplate: MongoTemplate
+) {
 
     /**
      * 创建依赖关系
@@ -99,23 +107,8 @@ class ModuleDepsService {
         depsCreateRequestList.forEach continuing@{
             with(it) {
                 checkParameter(it)
-                if (exist(projectId, repoName, name, deps)) {
-                    if (!overwrite) {
-                        throw ErrorCodeException(ArtifactMessageCode.NODE_EXISTED, name)
-                    }
-                    return@continuing
-                }
-
-                val moduleDeps = TModuleDeps(
-                    projectId = projectId,
-                    repoName = repoName,
-                    name = name,
-                    deps = deps,
-                    createdBy = operator,
-                    createdDate = LocalDateTime.now(),
-                    lastModifiedBy = operator,
-                    lastModifiedDate = LocalDateTime.now()
-                )
+                if (checkDepsExists()) return@continuing
+                val moduleDeps = buildModuleDeps(it)
                 createList.add(moduleDeps)
             }
         }
@@ -125,13 +118,23 @@ class ModuleDepsService {
         }
     }
 
+    private fun DepsCreateRequest.checkDepsExists(): Boolean {
+        if (exist(projectId, repoName, name, deps)) {
+            if (!overwrite) {
+                throw ErrorCodeException(ArtifactMessageCode.NODE_EXISTED, name)
+            }
+            return true
+        }
+        return false
+    }
+
     private fun exist(projectId: String, repoName: String, name: String?, deps: String): Boolean {
         if (deps.isBlank()) return false
         val criteria =
-            Criteria.where(TModuleDeps::projectId.name).`is`(projectId).and(TModuleDeps::repoName.name).`is`(repoName)
+            Criteria.where(TModuleDeps::projectId.name).`is`(projectId)
+                .and(TModuleDeps::repoName.name).`is`(repoName)
                 .and(TModuleDeps::deps.name).`is`(deps)
         name?.run { criteria.and(TModuleDeps::name.name).`is`(name) }
-
         return mongoTemplate.exists(Query(criteria), TModuleDeps::class.java)
     }
 
@@ -154,10 +157,10 @@ class ModuleDepsService {
 
     fun deleteAllByName(depsDeleteRequest: DepsDeleteRequest, soft: Boolean = true) {
         with(depsDeleteRequest) {
-            if (!exist(projectId, repoName, name, deps)) throw ErrorCodeException(
-                ArtifactMessageCode.NODE_EXISTED,
-                deps
-            )
+            if (!exist(projectId, repoName, name, deps)) {
+                logger.warn("npm package dependents with name [${depsDeleteRequest.deps}] not exists.")
+                return
+            }
             val depsQuery = depsQuery(this)
             mongoTemplate.remove(depsQuery, TModuleDeps::class.java).also {
                 logger.info("Delete all module deps [$depsDeleteRequest] by [$operator] success.")
@@ -178,7 +181,8 @@ class ModuleDepsService {
 
     fun find(projectId: String, repoName: String, name: String, deps: String): ModuleDepsInfo {
         val criteria =
-            Criteria.where(TModuleDeps::projectId.name).`is`(projectId).and(TModuleDeps::repoName.name).`is`(repoName)
+            Criteria.where(TModuleDeps::projectId.name).`is`(projectId)
+                .and(TModuleDeps::repoName.name).`is`(repoName)
                 .and(TModuleDeps::name.name).`is`(name).and(TModuleDeps::deps.name).`is`(deps)
         if (mongoTemplate.count(Query.query(criteria), TModuleDeps::class.java) >= THRESHOLD) {
             throw ErrorCodeException(ArtifactMessageCode.NODE_LIST_TOO_LARGE)
@@ -197,16 +201,15 @@ class ModuleDepsService {
         return mongoTemplate.find(query, TModuleDeps::class.java).map { convert(it)!! }
     }
 
-    fun page(projectId: String, repoName: String, page: Int, size: Int, name: String): Page<ModuleDepsInfo> {
-        page.takeIf { it >= 0 } ?: throw ErrorCodeException(CommonMessageCode.PARAMETER_INVALID, "page")
-        size.takeIf { it >= 0 } ?: throw ErrorCodeException(CommonMessageCode.PARAMETER_INVALID, "size")
+    fun page(projectId: String, repoName: String, pageNumber: Int, pageSize: Int, name: String): Page<ModuleDepsInfo> {
+        val pageRequest = Pages.ofRequest(pageNumber, pageSize)
         val criteria =
             Criteria.where(TModuleDeps::projectId.name).`is`(projectId).and(TModuleDeps::repoName.name).`is`(repoName)
                 .and(TModuleDeps::name.name).`is`(name)
         val query = Query.query(criteria).with(Sort.by(TModuleDeps::createdDate.name))
-        val listData = mongoTemplate.find(query, TModuleDeps::class.java).map { convert(it)!! }
+        val listData = mongoTemplate.find(query.with(pageRequest), TModuleDeps::class.java).map { convert(it)!! }
         val count = mongoTemplate.count(query, TModuleDeps::class.java)
-        return Page(page, size, count, listData)
+        return Pages.ofResponse(pageRequest, count, listData)
     }
 
     companion object {
@@ -223,6 +226,21 @@ class ModuleDepsService {
                     repoName = it.repoName,
                     createdBy = it.createdBy,
                     createdDate = it.createdDate.format(DateTimeFormatter.ISO_DATE_TIME)
+                )
+            }
+        }
+
+        fun buildModuleDeps(request: DepsCreateRequest): TModuleDeps {
+            return with(request) {
+                TModuleDeps(
+                    projectId = projectId,
+                    repoName = repoName,
+                    name = name,
+                    deps = deps,
+                    createdBy = operator,
+                    createdDate = LocalDateTime.now(),
+                    lastModifiedBy = operator,
+                    lastModifiedDate = LocalDateTime.now()
                 )
             }
         }
