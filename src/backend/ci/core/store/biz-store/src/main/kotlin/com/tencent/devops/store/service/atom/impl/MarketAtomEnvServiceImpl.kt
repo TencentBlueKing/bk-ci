@@ -40,6 +40,7 @@ import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.AtomPostInfo
+import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST_CONDITION
@@ -48,9 +49,11 @@ import com.tencent.devops.store.pojo.common.ATOM_POST_FLAG
 import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
+import com.tencent.devops.store.pojo.common.StoreVersion
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomService
 import com.tencent.devops.store.service.atom.MarketAtomEnvService
+import com.tencent.devops.store.utils.StoreUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -76,6 +79,26 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
 ) : MarketAtomEnvService {
 
     private val logger = LoggerFactory.getLogger(MarketAtomEnvServiceImpl::class.java)
+
+    override fun batchGetAtomRunInfos(
+        projectCode: String,
+        atomVersions: Set<StoreVersion>
+    ): Result<Map<String, AtomRunInfo>?> {
+        logger.info("batchGetAtomRunInfos projectCode:$projectCode,atomVersions:$atomVersions")
+        // 校验插件在项目下是否可用
+        val atomCodeList = atomVersions.map { it.storeCode }
+        val storePublicFlagKey = StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name)
+        if (!redisOperation.hasKey(storePublicFlagKey)) {
+            // 如果redis没有缓存默认插件集合，则从db去查
+            val defaultAtomCodeRecords = atomDao.batchGetDefaultAtomCode(dslContext, atomCodeList)
+            val defaultAtomCodeList = defaultAtomCodeRecords.map { it.value1() }
+            redisOperation.sadd(storePublicFlagKey, *defaultAtomCodeList.toTypedArray())
+        }
+        // 获取需要校验的插件（默认公共插件无需校验）
+        val validateAtomCodeList = atomCodeList.filter { !redisOperation.isMember(storePublicFlagKey, it) }
+        val atomRunInfoMap = mutableMapOf<String, AtomRunInfo>()
+        return Result(atomRunInfoMap)
+    }
 
     /**
      * 根据插件代码和版本号查看插件执行环境信息

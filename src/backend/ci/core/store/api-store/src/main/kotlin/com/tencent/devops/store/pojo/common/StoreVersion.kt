@@ -25,29 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.resources.atom
+package com.tencent.devops.store.pojo.common
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
-import com.tencent.devops.store.pojo.atom.AtomEnv
-import com.tencent.devops.store.pojo.atom.AtomRunInfo
-import com.tencent.devops.store.pojo.common.StoreVersion
-import com.tencent.devops.store.service.atom.MarketAtomEnvService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@RestResource
-class ServiceMarketAtomEnvResourceImpl @Autowired constructor(private val marketAtomEnvService: MarketAtomEnvService) :
-    ServiceMarketAtomEnvResource {
-
-    override fun batchGetAtomRunInfos(
-        projectCode: String,
-        atomVersions: Set<StoreVersion>
-    ): Result<Map<String, AtomRunInfo>?> {
-        TODO("Not yet implemented")
-    }
-
-    override fun getAtomEnv(projectCode: String, atomCode: String, version: String): Result<AtomEnv?> {
-        return marketAtomEnvService.getMarketAtomEnvInfo(projectCode, atomCode, version)
-    }
-}
+@ApiModel("组件版本信息")
+data class StoreVersion(
+    @ApiModelProperty("组件代码", required = true)
+    var storeCode: String,
+    @ApiModelProperty("版本号", required = true)
+    var version: String
+)

@@ -30,6 +30,8 @@ package com.tencent.devops.store.service.atom
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
+import com.tencent.devops.store.pojo.atom.AtomRunInfo
+import com.tencent.devops.store.pojo.common.StoreVersion
 import org.springframework.stereotype.Service
 
 /**
@@ -39,6 +41,14 @@ import org.springframework.stereotype.Service
  */
 @Service
 interface MarketAtomEnvService {
+
+    /**
+     * 批量获取插件运行时信息
+     */
+    fun batchGetAtomRunInfos(
+        projectCode: String,
+        atomVersions: Set<StoreVersion>
+    ): Result<Map<String, AtomRunInfo>?>
 
     /**
      * 根据插件代码和版本号查看插件执行环境信息

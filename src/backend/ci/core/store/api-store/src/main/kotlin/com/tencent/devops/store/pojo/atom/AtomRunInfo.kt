@@ -25,29 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.resources.atom
+package com.tencent.devops.store.pojo.atom
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
-import com.tencent.devops.store.pojo.atom.AtomEnv
-import com.tencent.devops.store.pojo.atom.AtomRunInfo
-import com.tencent.devops.store.pojo.common.StoreVersion
-import com.tencent.devops.store.service.atom.MarketAtomEnvService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@RestResource
-class ServiceMarketAtomEnvResourceImpl @Autowired constructor(private val marketAtomEnvService: MarketAtomEnvService) :
-    ServiceMarketAtomEnvResource {
-
-    override fun batchGetAtomRunInfos(
-        projectCode: String,
-        atomVersions: Set<StoreVersion>
-    ): Result<Map<String, AtomRunInfo>?> {
-        TODO("Not yet implemented")
-    }
-
-    override fun getAtomEnv(projectCode: String, atomCode: String, version: String): Result<AtomEnv?> {
-        return marketAtomEnvService.getMarketAtomEnvInfo(projectCode, atomCode, version)
-    }
-}
+@ApiModel("插件运行时信息")
+data class AtomRunInfo(
+    @ApiModelProperty("插件代码", required = true)
+    val atomCode: String,
+    @ApiModelProperty("插件名称", required = true)
+    val atomName: String,
+    @ApiModelProperty("插件版本号", required = true)
+    val version: String,
+    @ApiModelProperty("插件初始化项目代码", required = true)
+    val initProjectCode: String,
+    @ApiModelProperty("Job类型", required = false)
+    val jobType: JobTypeEnum?,
+    @ApiModelProperty("无构建环境插件是否可以在有构建环境运行标识", required = false)
+    val buildLessRunFlag: Boolean?
+)
