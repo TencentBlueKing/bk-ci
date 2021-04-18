@@ -27,10 +27,12 @@
 
 package com.tencent.devops.worker.common.api.engine.impl
 
+import com.tencent.devops.worker.common.api.ApiPriority
 import com.tencent.devops.worker.common.api.engine.EngineBuildSDKApi
 import com.tencent.devops.worker.common.api.utils.ThirdPartyAgentBuildInfoUtils
 
 @Suppress("UNUSED")
+@ApiPriority(priority = 9)
 class TencentEngineBuildResourceApi : EngineBuildResourceApi(), EngineBuildSDKApi {
 
     private fun identifyUrl(url: String, paramConcat: String = "&"): String {
