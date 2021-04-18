@@ -33,20 +33,16 @@ import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import com.tencent.devops.worker.common.api.ApiPriority
 import com.tencent.devops.worker.common.api.engine.EngineBuildSDKApi
-import com.tencent.devops.worker.common.api.utils.ThirdPartyAgentBuildInfoUtils
 import okhttp3.MediaType
 import okhttp3.RequestBody
 
+@ApiPriority(priority = 1)
 open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKApi {
 
-    private fun identifyUrl(url: String, paramConcat: String = "&"): String {
-        val buildInfo = ThirdPartyAgentBuildInfoUtils.getBuildInfo()
-        return url + paramConcat + "buildId=${buildInfo?.buildId}"
-    }
-
     override fun getRequestUrl(path: String, retryCount: Int): String {
-        return identifyUrl("/ms/process/$path?retryCount=$retryCount")
+        return "/ms/process/$path?retryCount=$retryCount"
     }
 
     override fun setStarted(retryCount: Int): Result<BuildVariables> {
