@@ -129,7 +129,6 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         readTimeoutInSec: Long? = null,
         writeTimeoutInSec: Long? = null
     ): String {
-
         requestForResponse(
             request = request,
             connectTimeoutInSec = connectTimeoutInSec,
