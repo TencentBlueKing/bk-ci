@@ -110,10 +110,10 @@ class EngineVMBuildFacadeService @Autowired(required = false) constructor(
             s.containers.forEach c@{
 
                 if (vmId.toString() == vmSeqId) {
-                    // 增加判断状态，如果是已经启动完成并且不是重试的（属于重复启动请求，要拒绝）
+                    // #3769 如果是已经启动完成并且不是网络故障重试的(retryCount>0), 都属于构建机的重复无效启动请求,要抛异常拒绝
                     Preconditions.checkTrue(
-                        condition = !BuildStatus.parse(it.startVMStatus).isFinish() && retryCount == 0,
-                        exception = OperationException("重复启动构建机/Repeat start VM! startVMStatus ${it.startVMStatus}")
+                        condition = !BuildStatus.parse(it.startVMStatus).isFinish() || retryCount > 0,
+                        exception = OperationException("重复启动构建机/VM Start already: ${it.startVMStatus}")
                     )
                     var timeoutMills: Long? = null
                     val containerAppResource = client.get(ServiceContainerAppResource::class)
@@ -434,8 +434,8 @@ class EngineVMBuildFacadeService @Autowired(required = false) constructor(
         val task = pipelineRuntimeService.listContainerBuildTasks(buildId, vmSeqId)
             .firstOrNull { it.taskId == VMUtils.genEndPointTaskId(it.taskSeq) }
 
-        return if (task == null) {
-            LOG.warn("ENGINE|$buildId|name=$vmName|containerId=$vmSeqId|There are no stopVM tasks!")
+        return if (task == null || task.status.isFinish()) {
+            LOG.info("ENGINE|$buildId|Agent|END_JOB|j($vmSeqId)|Task[${task?.taskName}] ${task?.status}")
             false
         } else {
             buildingHeartBeatUtils.dropHeartbeat(buildId = buildId, vmSeqId = vmSeqId)

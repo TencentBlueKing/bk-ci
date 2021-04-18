@@ -49,7 +49,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["BUILD_BUILD"], description = "构建-构建资源")
+@Api(tags = ["ENGINE_BUILD"], description = "引擎-构建机请求")
 @Path("/build/worker")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -67,7 +67,7 @@ interface EngineBuildResource {
         @ApiParam(value = "构建机名称", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
         vmName: String,
-        @ApiParam(value = "网络问题导致的重试次数", required = true)
+        @ApiParam(value = "网络问题导致的重试次数", required = false)
         @QueryParam("retryCount")
         retryCount: String
     ): Result<BuildVariables>
