@@ -25,56 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.task
+package com.tencent.devops.worker.common.api.engine
 
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.BuildTask
+import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.worker.common.env.BuildEnv
-import com.tencent.devops.worker.common.env.BuildType
-import java.io.File
+import com.tencent.devops.worker.common.api.WorkerRestApiSDK
 
-abstract class ITask {
+interface EngineBuildSDKApi : WorkerRestApiSDK {
 
-    private val environment = HashMap<String, String>()
+    fun setStarted(retryCount: Int): Result<BuildVariables>
 
-    private val monitorData = HashMap<String, Any>()
+    fun claimTask(retryCount: Int): Result<BuildTask>
 
-    fun run(
-        buildTask: BuildTask,
-        buildVariables: BuildVariables,
-        workspace: File
-    ) {
-        execute(buildTask, buildVariables, workspace)
-    }
+    fun completeTask(result: BuildTaskResult, retryCount: Int): Result<Boolean>
 
-    protected abstract fun execute(
-        buildTask: BuildTask,
-        buildVariables: BuildVariables,
-        workspace: File
-    )
+    fun endTask(retryCount: Int): Result<Boolean>
 
-    protected fun addEnv(env: Map<String, String>) {
-        environment.putAll(env)
-    }
+    fun heartbeat(): Result<Boolean>
 
-    protected fun addEnv(key: String, value: String) {
-        environment[key] = value
-    }
-
-    protected fun getEnv(key: String) =
-        environment[key] ?: ""
-
-    fun getAllEnv(): Map<String, String> {
-        return environment
-    }
-
-    protected fun addMonitorData(monitorDataMap: Map<String, Any>) {
-        monitorData.putAll(monitorDataMap)
-    }
-
-    fun getMonitorData(): Map<String, Any> {
-        return monitorData
-    }
-
-    protected fun isThirdAgent() = BuildEnv.getBuildType() == BuildType.AGENT
+    fun timeout(): Result<Boolean>
 }
