@@ -25,27 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo.event
+package com.tencent.devops.worker.common.api.engine
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.BuildTask
+import com.tencent.devops.process.pojo.BuildTaskResult
+import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.worker.common.api.WorkerRestApiSDK
 
-/**
- * 构建容器Agent的心跳检测
- *
- * @version 1.0
- */
-@Event(MQ.EXCHANGE_PIPELINE_MONITOR_DIRECT, MQ.ROUTE_PIPELINE_BUILD_HEART_BEAT, 120000)
-data class PipelineContainerAgentHeartBeatEvent(
-    override val source: String,
-    override val projectId: String,
-    override val pipelineId: String,
-    override val userId: String,
-    val buildId: String,
-    val containerId: String,
-    override var actionType: ActionType = ActionType.REFRESH,
-    override var delayMills: Int = 120000,
-    val executeCount: Int = 1
-) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
+interface EngineBuildSDKApi : WorkerRestApiSDK {
+
+    fun getRequestUrl(path: String, retryCount: Int = 0): String
+
+    fun setStarted(retryCount: Int): Result<BuildVariables>
+
+    fun claimTask(retryCount: Int): Result<BuildTask>
+
+    fun completeTask(result: BuildTaskResult, retryCount: Int): Result<Boolean>
+
+    fun endTask(retryCount: Int): Result<Boolean>
+
+    fun heartbeat(): Result<Boolean>
+
+    fun timeout(): Result<Boolean>
+}
