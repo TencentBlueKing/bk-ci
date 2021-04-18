@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.api.engine
+package com.tencent.devops.worker.common.api.engine.impl
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Result
@@ -33,12 +33,12 @@ import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
+import com.tencent.devops.worker.common.api.engine.EngineBuildSDKApi
 import com.tencent.devops.worker.common.api.utils.ThirdPartyAgentBuildInfoUtils
 import okhttp3.MediaType
 import okhttp3.RequestBody
 
-@Suppress("UNUSED")
-class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKApi {
+open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKApi {
 
     private fun identifyUrl(url: String, paramConcat: String = "&"): String {
         val buildInfo = ThirdPartyAgentBuildInfoUtils.getBuildInfo()
