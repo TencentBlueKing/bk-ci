@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.engine.api.EngineBuildResource
-import com.tencent.devops.process.engine.facade.EngineVMBuildFacadeService
+import com.tencent.devops.process.engine.service.vmbuild.EngineVMBuildService
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
@@ -42,7 +42,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @Suppress("UNUSED")
 @RestResource
 class EngineBuildResourceImpl @Autowired constructor(
-    private val vMBuildFacadeService: EngineVMBuildFacadeService
+    private val vMBuildService: EngineVMBuildService
 ) : EngineBuildResource {
 
     override fun setStarted(
@@ -52,7 +52,7 @@ class EngineBuildResourceImpl @Autowired constructor(
         retryCount: String
     ): Result<BuildVariables> {
         checkParam(buildId, vmSeqId, vmName, retryCount)
-        return Result(vMBuildFacadeService.buildVMStarted(
+        return Result(vMBuildService.buildVMStarted(
             buildId = buildId,
             vmSeqId = vmSeqId,
             vmName = vmName,
@@ -62,7 +62,7 @@ class EngineBuildResourceImpl @Autowired constructor(
 
     override fun claimTask(buildId: String, vmSeqId: String, vmName: String): Result<BuildTask> {
         checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
-        return Result(vMBuildFacadeService.buildClaimTask(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
+        return Result(vMBuildService.buildClaimTask(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
     }
 
     override fun completeTask(
@@ -72,13 +72,13 @@ class EngineBuildResourceImpl @Autowired constructor(
         result: BuildTaskResult
     ): Result<Boolean> {
         checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
-        vMBuildFacadeService.buildCompleteTask(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName, result = result)
+        vMBuildService.buildCompleteTask(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName, result = result)
         return Result(true)
     }
 
     override fun endTask(buildId: String, vmSeqId: String, vmName: String): Result<Boolean> {
         checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
-        return Result(vMBuildFacadeService.buildEndTask(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
+        return Result(vMBuildService.buildEndTask(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
     }
 
     override fun timeoutTheBuild(
@@ -88,7 +88,7 @@ class EngineBuildResourceImpl @Autowired constructor(
         vmSeqId: String
     ): Result<Boolean> {
         return Result(
-            data = vMBuildFacadeService.setStartUpVMStatus(
+            data = vMBuildService.setStartUpVMStatus(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
@@ -100,7 +100,7 @@ class EngineBuildResourceImpl @Autowired constructor(
 
     override fun heartbeat(buildId: String, vmSeqId: String, vmName: String): Result<Boolean> {
         checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
-        return Result(data = vMBuildFacadeService.heartbeat(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
+        return Result(data = vMBuildService.heartbeat(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
     }
 
     companion object {

@@ -73,6 +73,7 @@ import java.util.concurrent.Executors
 import javax.ws.rs.NotFoundException
 import kotlin.math.min
 
+@Deprecated("replace by EngineVMBuildService")
 @Suppress("ALL")
 @Service
 class PipelineVMBuildService @Autowired(required = false) constructor(

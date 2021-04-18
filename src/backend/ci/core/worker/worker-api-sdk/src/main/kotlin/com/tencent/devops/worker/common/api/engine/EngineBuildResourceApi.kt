@@ -45,8 +45,12 @@ class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKApi {
         return url + paramConcat + "buildId=${buildInfo?.buildId}"
     }
 
+    override fun getRequestUrl(path: String, retryCount: Int): String {
+        return identifyUrl("/ms/process/$path?retryCount=$retryCount")
+    }
+
     override fun setStarted(retryCount: Int): Result<BuildVariables> {
-        val path = identifyUrl("/ms/engine/api/build/worker/started?retryCount=$retryCount")
+        val path = getRequestUrl(path = "api/build/worker/started", retryCount = retryCount)
         val request = buildPut(path)
         val errorMessage = "通知服务端启动构建失败"
         val responseContent = request(
@@ -60,7 +64,7 @@ class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKApi {
     }
 
     override fun claimTask(retryCount: Int): Result<BuildTask> {
-        val path = identifyUrl("/ms/engine/api/build/worker/claim?retryCount=$retryCount")
+        val path = getRequestUrl(path = "api/build/worker/claim", retryCount = retryCount)
         val request = buildGet(path)
         val errorMessage = "领取构建机任务失败"
         val responseContent = request(
@@ -74,7 +78,7 @@ class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKApi {
     }
 
     override fun completeTask(result: BuildTaskResult, retryCount: Int): Result<Boolean> {
-        val path = identifyUrl("/ms/engine/api/build/worker/complete?retryCount=$retryCount")
+        val path = getRequestUrl(path = "api/build/worker/complete", retryCount = retryCount)
         val requestBody = RequestBody.create(
             MediaType.parse("application/json; charset=utf-8"),
             objectMapper.writeValueAsString(result)
@@ -92,7 +96,7 @@ class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKApi {
     }
 
     override fun endTask(retryCount: Int): Result<Boolean> {
-        val path = identifyUrl("/ms/engine/api/build/worker/end?retryCount=$retryCount")
+        val path = getRequestUrl(path = "api/build/worker/end", retryCount = retryCount)
         val request = buildPost(path)
         val errorMessage = "构建完成请求失败"
         val responseContent = request(
@@ -106,7 +110,7 @@ class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKApi {
     }
 
     override fun heartbeat(): Result<Boolean> {
-        val path = identifyUrl("/ms/engine/api/build/worker/heartbeat")
+        val path = getRequestUrl(path = "api/build/worker/heartbeat")
         val request = buildPost(path)
         val errorMessage = "心跳失败"
         val responseContent = request(
@@ -120,7 +124,7 @@ class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKApi {
     }
 
     override fun timeout(): Result<Boolean> {
-        val path = identifyUrl("/ms/engine/api/build/worker/timeout")
+        val path = getRequestUrl(path = "api/build/worker/timeout")
         val request = buildPost(path)
         val errorMessage = "构建超时结束请求失败"
         val responseContent = request(

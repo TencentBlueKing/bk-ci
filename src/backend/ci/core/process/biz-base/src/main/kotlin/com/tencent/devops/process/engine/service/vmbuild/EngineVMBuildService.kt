@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.facade
+package com.tencent.devops.process.engine.service.vmbuild
 
 import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.exception.OperationException
@@ -73,7 +73,7 @@ import java.util.concurrent.Executors
 import javax.ws.rs.NotFoundException
 
 @Service
-class EngineVMBuildFacadeService @Autowired(required = false) constructor(
+class EngineVMBuildService @Autowired(required = false) constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val buildVariableService: BuildVariableService,
@@ -479,7 +479,7 @@ class EngineVMBuildFacadeService @Autowired(required = false) constructor(
     }
 
     companion object {
-        private val LOG = LoggerFactory.getLogger(EngineVMBuildFacadeService::class.java)
+        private val LOG = LoggerFactory.getLogger(EngineVMBuildService::class.java)
         private val executor = Executors.newSingleThreadExecutor()
     }
 }

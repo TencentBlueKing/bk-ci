@@ -35,6 +35,8 @@ import com.tencent.devops.worker.common.api.WorkerRestApiSDK
 
 interface EngineBuildSDKApi : WorkerRestApiSDK {
 
+    fun getRequestUrl(path: String, retryCount: Int = 0): String
+
     fun setStarted(retryCount: Int): Result<BuildVariables>
 
     fun claimTask(retryCount: Int): Result<BuildTask>
