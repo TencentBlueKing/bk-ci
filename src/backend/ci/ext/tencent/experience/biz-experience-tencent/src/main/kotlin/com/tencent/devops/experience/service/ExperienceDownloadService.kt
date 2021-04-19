@@ -44,6 +44,7 @@ import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceDownloadDao
+import com.tencent.devops.experience.dao.ExperienceLastDownloadDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.dao.TokenDao
 import com.tencent.devops.experience.pojo.DownloadUrl
@@ -67,6 +68,7 @@ class ExperienceDownloadService @Autowired constructor(
     private val tokenDao: TokenDao,
     private val experienceDao: ExperienceDao,
     private val experienceDownloadDao: ExperienceDownloadDao,
+    private val experienceLastDownloadDao: ExperienceLastDownloadDao,
     private val experiencePublicDao: ExperiencePublicDao,
     private val experienceBaseService: ExperienceBaseService,
     private val client: Client
@@ -172,7 +174,7 @@ class ExperienceDownloadService @Autowired constructor(
         }
         val fileDetail = client.get(ServiceArtifactoryResource::class).show(projectId, artifactoryType, path).data!!
 
-        addDownloadRecord(experienceId, userId)
+        addDownloadRecord(experienceRecord, userId)
         return DownloadUrl(StringUtil.chineseUrlEncode(url), platform, fileDetail.size)
     }
 
@@ -201,7 +203,7 @@ class ExperienceDownloadService @Autowired constructor(
             )
         }
 
-        addDownloadRecord(experienceId, userId)
+        addDownloadRecord(experienceRecord, userId)
         return client.get(ServiceArtifactoryResource::class)
             .downloadUrl(projectId, artifactoryType, userId, path, 24 * 3600, false).data!!.url
     }
@@ -230,15 +232,25 @@ class ExperienceDownloadService @Autowired constructor(
         }
     }
 
-    fun addDownloadRecord(experienceId: Long, userId: String) {
-        val experienceDownloadRecord = experienceDownloadDao.getOrNull(dslContext, experienceId, userId)
+    fun addDownloadRecord(experienceRecord: TExperienceRecord, userId: String) {
+        // 新增下载次数
+        val experienceDownloadRecord = experienceDownloadDao.getOrNull(dslContext, experienceRecord.id, userId)
         if (experienceDownloadRecord == null) {
-            experienceDownloadDao.create(dslContext, experienceId, userId)
+            experienceDownloadDao.create(dslContext, experienceRecord.id, userId)
         } else {
             experienceDownloadDao.plusTimes(dslContext, experienceDownloadRecord.id)
         }
+        experiencePublicDao.addDownloadTimeByRecordId(dslContext, experienceRecord.id)
 
-        experiencePublicDao.addDownloadTimeByRecordId(dslContext, experienceId)
+        // 更新最近下载记录
+        experienceLastDownloadDao.upset(
+            dslContext = dslContext,
+            userId = userId,
+            bundleId = experienceRecord.bundleIdentifier,
+            projectId = experienceRecord.projectId,
+            platform = experienceRecord.platform,
+            recordId = experienceRecord.id
+        )
     }
 
     fun downloadCount(userId: String, projectId: String, experienceHashId: String): ExperienceCount {
@@ -303,6 +315,8 @@ class ExperienceDownloadService @Autowired constructor(
                 online = true
             ).map { it.value1() }.toSet()
 
+            val lastDownloadMap = experienceBaseService.getLastDownloadMap(userId)
+
             val offset = (page - 1) * pageSize
             if (offset >= experienceIdsByBundleId.size) {
                 Pagination(false, emptyList())
@@ -324,7 +338,11 @@ class ExperienceDownloadService @Autowired constructor(
                         versionTitle = it.versionTitle,
                         createTime = it.createTime.timestampmilli(),
                         downloadTime = experienceIdDownloadTimeMap[it.id]?.timestampmilli() ?: 0,
-                        bundleIdentifier = it.bundleIdentifier
+                        bundleIdentifier = it.bundleIdentifier,
+                        appScheme = it.scheme,
+                        expired = false,
+                        lastDownloadHashId = lastDownloadMap[it.projectId + it.bundleIdentifier + it.platform]
+                          ?.let { l -> HashUtil.encodeLongId(l) } ?: ""
                     )
                 }.sortedByDescending { it.downloadTime }.toList()
 

@@ -47,5 +47,11 @@ data class DownloadRecordVO(
     @ApiModelProperty("下载时间", required = true)
     val downloadTime: Long,
     @ApiModelProperty("版本体验BundleIdentifier", required = true)
-    val bundleIdentifier: String
+    val bundleIdentifier: String,
+    @ApiModelProperty("应用Scheme", required = false)
+    val appScheme: String,
+    @ApiModelProperty("是否过期", required = true)
+    val expired: Boolean,
+    @ApiModelProperty("上次下载的体验ID", required = true)
+    val lastDownloadHashId: String
 )

@@ -46,6 +46,7 @@ import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.constant.ProductCategoryEnum
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceGroupDao
+import com.tencent.devops.experience.dao.ExperienceLastDownloadDao
 import com.tencent.devops.experience.pojo.AppExperience
 import com.tencent.devops.experience.pojo.AppExperienceDetail
 import com.tencent.devops.experience.pojo.AppExperienceSummary
@@ -59,6 +60,7 @@ import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 import java.util.concurrent.Executors
 
 @Service
@@ -69,6 +71,7 @@ class ExperienceAppService(
     private val experienceBaseService: ExperienceBaseService,
     private val experienceDownloadService: ExperienceDownloadService,
     private val experienceGroupDao: ExperienceGroupDao,
+    private val experienceLastDownloadDao: ExperienceLastDownloadDao,
     private val client: Client
 ) {
 
@@ -109,6 +112,9 @@ class ExperienceAppService(
         // 同步图片
         syncIcon(records)
 
+        val lastDownloadMap = experienceBaseService.getLastDownloadMap(userId)
+        val now = LocalDateTime.now()
+
         val result = records.map {
             AppExperience(
                 experienceHashId = HashUtil.encodeLongId(it.id),
@@ -123,7 +129,11 @@ class ExperienceAppService(
                 categoryId = if (it.category == null || it.category < 0) ProductCategoryEnum.LIFE.id else it.category,
                 productOwner = objectMapper.readValue(it.productOwner),
                 size = it.size,
-                createDate = it.createTime.timestampmilli()
+                createDate = it.createTime.timestampmilli(),
+                appScheme = it.scheme,
+                lastDownloadHashId = lastDownloadMap[it.projectId + it.bundleIdentifier + it.platform]
+                    ?.let { l -> HashUtil.encodeLongId(l) } ?: "",
+                expired = now.isAfter(it.endDate)
             )
         }
 
@@ -195,9 +205,18 @@ class ExperienceAppService(
             if (StringUtils.isBlank(experience.versionTitle)) experience.name else experience.versionTitle
         val categoryId = if (experience.category < 0) ProductCategoryEnum.LIFE.id else experience.category
         val publicExperience = experienceGroupDao.count(dslContext, experience.id, ExperienceConstant.PUBLIC_GROUP) > 0
+        val lastDownloadMap = experienceBaseService.getLastDownloadMap(userId)
 
         val changeLog = if (isOldVersion) {
-            getChangeLog(projectId, bundleIdentifier, null, 1, 1000, true)
+            getChangeLog(
+                userId = userId,
+                projectId = projectId,
+                bundleIdentifier = bundleIdentifier,
+                platform = null,
+                page = 1,
+                pageSize = 1000,
+                isOldVersion = true
+            )
         } else {
             emptyList() // 新版本使用changeLog接口
         }
@@ -226,7 +245,10 @@ class ExperienceAppService(
             endDate = experience.endDate.let { if (isOldVersion) it.timestamp() else it.timestampmilli() },
             publicExperience = publicExperience,
             remark = experience.remark,
-            bundleIdentifier = experience.bundleIdentifier
+            bundleIdentifier = experience.bundleIdentifier,
+            appScheme = experience.scheme,
+            lastDownloadHashId = lastDownloadMap[experience.projectId + experience.bundleIdentifier + experience.platform]
+                ?.let { l -> HashUtil.encodeLongId(l) } ?: ""
         )
     }
 
@@ -240,12 +262,13 @@ class ExperienceAppService(
         val experience = experienceDao.get(dslContext, experienceId)
         val changeLog =
             getChangeLog(
-                experience.projectId,
-                experience.bundleIdentifier,
-                experience.platform,
-                if (page <= 0) 1 else page,
-                if (pageSize <= 0) 10 else pageSize,
-                false
+                userId = userId,
+                projectId = experience.projectId,
+                bundleIdentifier = experience.bundleIdentifier,
+                platform = experience.platform,
+                page = if (page <= 0) 1 else page,
+                pageSize = if (pageSize <= 0) 10 else pageSize,
+                isOldVersion = false
             )
         val hasNext = if (changeLog.size < pageSize) {
             false
@@ -262,6 +285,7 @@ class ExperienceAppService(
     }
 
     private fun getChangeLog(
+        userId: String,
         projectId: String,
         bundleIdentifier: String,
         platform: String?,
@@ -269,6 +293,16 @@ class ExperienceAppService(
         pageSize: Int,
         isOldVersion: Boolean
     ): List<ExperienceChangeLog> {
+        val now = LocalDateTime.now()
+        val lastDownloadRecord = platform?.let {
+            experienceLastDownloadDao.get(
+                dslContext,
+                userId = userId,
+                bundleId = bundleIdentifier,
+                projectId = projectId,
+                platform = it
+            )
+        }
         val experienceList = experienceDao.listByBundleIdentifier(
             dslContext,
             projectId,
@@ -277,6 +311,7 @@ class ExperienceAppService(
             (page - 1) * pageSize,
             pageSize
         )
+
         return experienceList.map {
             ExperienceChangeLog(
                 experienceHashId = HashUtil.encodeLongId(it.id),
@@ -285,9 +320,17 @@ class ExperienceAppService(
                 createDate = it.createTime.run { if (isOldVersion) timestamp() else timestampmilli() },
                 changelog = it.remark ?: "",
                 experienceName = it.experienceName,
-                size = it.size
+                size = it.size,
+                logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl),
+                bundleIdentifier = it.bundleIdentifier,
+                appScheme = it.scheme,
+                expired = now.isAfter(it.endDate),
+                lastDownloadHashId = lastDownloadRecord?.let { last ->
+                    HashUtil.encodeLongId(last.lastDonwloadRecordId)
+                } ?: "",
+                versionTitle = it.versionTitle
             )
-        }
+        }.toList()
     }
 
     private fun syncExperienceSize(
