@@ -136,7 +136,6 @@ open class AbsPermissionRoleServiceImpl @Autowired constructor(
         actions.add(REPERTORYACTION)
         actions.add(ENVIRONMENTACTION)
         actions.add(NODEACTION)
-        actions.add(REPORTACTION)
         val authorizationScopes = buildCreateAuthorizationScopes(actions, projectCode)
         iamManagerService.createRolePermission(roleId, authorizationScopes)
     }
