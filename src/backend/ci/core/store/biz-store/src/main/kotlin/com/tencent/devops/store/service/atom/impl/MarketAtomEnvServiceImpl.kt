@@ -28,7 +28,9 @@ package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
@@ -36,8 +38,15 @@ import com.tencent.devops.store.dao.atom.MarketAtomEnvInfoDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
+import com.tencent.devops.store.pojo.atom.AtomPostInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
+import com.tencent.devops.store.pojo.common.ATOM_POST_CONDITION
+import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
+import com.tencent.devops.store.pojo.common.ATOM_POST_FLAG
+import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
+import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomService
 import com.tencent.devops.store.service.atom.MarketAtomEnvService
@@ -45,6 +54,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import org.springframework.util.StringUtils
 import java.time.LocalDateTime
 
 /**
@@ -59,8 +69,10 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
     private val storeProjectRelDao: StoreProjectRelDao,
     private val atomDao: AtomDao,
     private val marketAtomDao: MarketAtomDao,
-    private val atomService: AtomService
+    private val atomService: AtomService,
+    private val redisOperation: RedisOperation
 ) : MarketAtomEnvService {
+
     private val logger = LoggerFactory.getLogger(MarketAtomEnvServiceImpl::class.java)
 
     /**
@@ -115,14 +127,44 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             if (atomEnvInfoRecord == null) {
                 null
             } else {
-                val createTime = atomEnvInfoRecord["createTime"] as LocalDateTime
-                val updateTime = atomEnvInfoRecord["updateTime"] as LocalDateTime
+                val atomStatus = atomEnvInfoRecord["atomStatus"] as Byte
+                val createTime = atomEnvInfoRecord[KEY_CREATE_TIME] as LocalDateTime
+                val updateTime = atomEnvInfoRecord[KEY_UPDATE_TIME] as LocalDateTime
+                val postEntryParam = atomEnvInfoRecord[ATOM_POST_ENTRY_PARAM] as? String
+                val postCondition = atomEnvInfoRecord[ATOM_POST_CONDITION] as? String
+                var postFlag = true
+                val atomPostInfo = if (!StringUtils.isEmpty(postEntryParam) && !StringUtils.isEmpty(postEntryParam)) {
+                    AtomPostInfo(
+                        atomCode = atomCode,
+                        version = version,
+                        postEntryParam = postEntryParam!!,
+                        postCondition = postCondition!!
+                    )
+                } else {
+                    postFlag = false
+                    null
+                }
+                val atomPostMap = mapOf(
+                    ATOM_POST_FLAG to postFlag,
+                    ATOM_POST_ENTRY_PARAM to postEntryParam,
+                    ATOM_POST_CONDITION to postCondition
+                )
+                if (atomStatus in normalStatusList) {
+                    val normalProjectPostKey = "$ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX:$atomCode"
+                    if (redisOperation.hget(normalProjectPostKey, version) == null) {
+                        redisOperation.hset(
+                            key = normalProjectPostKey,
+                            hashKey = version,
+                            values = JsonUtil.toJson(atomPostMap)
+                        )
+                    }
+                }
                 val jobType = atomEnvInfoRecord["jobType"] as? String
                 AtomEnv(
                     atomId = atomEnvInfoRecord["atomId"] as String,
                     atomCode = atomEnvInfoRecord["atomCode"] as String,
                     atomName = atomEnvInfoRecord["atomName"] as String,
-                    atomStatus = AtomStatusEnum.getAtomStatus((atomEnvInfoRecord["atomStatus"] as Byte).toInt()),
+                    atomStatus = AtomStatusEnum.getAtomStatus(atomStatus.toInt()),
                     creator = atomEnvInfoRecord["creator"] as String,
                     version = atomEnvInfoRecord["version"] as String,
                     summary = atomEnvInfoRecord["summary"] as? String,
@@ -138,7 +180,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                     target = atomEnvInfoRecord["target"] as String,
                     shaContent = atomEnvInfoRecord["shaContent"] as? String,
                     preCmd = atomEnvInfoRecord["preCmd"] as? String,
-                    jobType = if (jobType == null) null else JobTypeEnum.valueOf(jobType)
+                    jobType = if (jobType == null) null else JobTypeEnum.valueOf(jobType),
+                    atomPostInfo = atomPostInfo
                 )
             }
         )
@@ -153,14 +196,13 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         version: String,
         atomEnvRequest: AtomEnvRequest
     ): Result<Boolean> {
-        logger.info("the atomCode is :$atomCode,version is :$version,atomEnvRequest is :$atomEnvRequest")
+        logger.info("updateMarketAtomEnvInfo atomCode is :$atomCode,version is :$version,atomEnvRequest is :$atomEnvRequest")
         val atomResult = atomService.getPipelineAtom(projectCode, atomCode, version) // 判断插件查看的权限
         val status = atomResult.status
         if (0 != status) {
             return Result(atomResult.status, atomResult.message ?: "", false)
         }
         val atomRecord = atomDao.getPipelineAtom(dslContext, atomCode, version.replace("*", ""))
-        logger.info("the atomRecord is :$atomRecord")
         return if (null != atomRecord) {
             marketAtomEnvInfoDao.updateMarketAtomEnvInfo(dslContext, atomRecord.id, atomEnvRequest)
             Result(true)

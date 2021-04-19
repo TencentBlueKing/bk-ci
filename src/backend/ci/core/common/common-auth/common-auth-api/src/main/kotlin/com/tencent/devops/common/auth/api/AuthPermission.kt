@@ -43,6 +43,7 @@ enum class AuthPermission(val value: String, val alias: String) {
     EXPERIENCE("experience", "转体验"), // 版本体验
     ENABLE("enable", "停用/启用"), // 质量红线
 
+    VIEWS_MANAGER("views_manager", "视图管理"), // 项目视图管理
     MANAGE("manage", "管理"); // 项目管理
 
     companion object {

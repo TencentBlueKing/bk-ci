@@ -38,6 +38,9 @@ public class UploadCLOCStatisticVO
     @JsonProperty("stream_name")
     private String streamName;
 
+    @JsonProperty("tool_name")
+    private String toolName;
+
     @ApiModelProperty("语言代码量统计")
     private List<CLOCLanguageVO> languageCodeList;
 

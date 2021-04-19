@@ -31,6 +31,6 @@ public interface CLOCStatisticRepository extends MongoRepository<CLOCStatisticEn
      * @param taskId 任务ID
      * @param buildId 构建ID
      */
-    List<CLOCStatisticEntity> findByTaskIdAndBuildId(Long taskId, String buildId);
+    List<CLOCStatisticEntity> findByTaskIdAndToolNameAndBuildId(Long taskId, String toolName, String buildId);
 
 }

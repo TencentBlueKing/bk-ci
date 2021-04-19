@@ -125,6 +125,7 @@ class BuildStartControl @Autowired constructor(
 
     private fun PipelineBuildStartEvent.retry() {
         logger.info("[$buildId]|[$pipelineId]|$source|RETRY_TO_LOCK")
+        this.delayMills = 1000
         pipelineEventDispatcher.dispatch(this)
     }
 
@@ -369,7 +370,7 @@ class BuildStartControl @Autowired constructor(
         )
 
         stage.status = BuildStatus.SUCCEED.name
-        stage.elapsed = System.currentTimeMillis() - buildInfo.queueTime
+        stage.elapsed = if (System.currentTimeMillis() - buildInfo.queueTime < 0) 0 else System.currentTimeMillis() - buildInfo.queueTime
         container.status = BuildStatus.SUCCEED.name
         container.systemElapsed = System.currentTimeMillis() - buildInfo.queueTime
         container.elementElapsed = 0

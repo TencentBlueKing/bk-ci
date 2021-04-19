@@ -30,13 +30,17 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.engine.service.PipelineBuildLimitService
 import com.tencent.devops.process.engine.service.PipelineContainerMonitorService
 import com.tencent.devops.process.pojo.PipelineContainerMonitor
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class OpPipelineContainerMonitorResourceImpl @Autowired constructor(private val monitorService: PipelineContainerMonitorService) :
+class OpPipelineContainerMonitorResourceImpl @Autowired constructor(
+    private val monitorService: PipelineContainerMonitorService,
+    private val pipelineBuildLimitService: PipelineBuildLimitService
+) :
     OpPipelineContainerMonitorResource {
     override fun update(userId: String, monitor: PipelineContainerMonitor): Result<Boolean> {
         logger.info("Update the monitor $monitor by user $userId")
@@ -46,6 +50,12 @@ class OpPipelineContainerMonitorResourceImpl @Autowired constructor(private val 
     override fun delete(userId: String, osType: VMBaseOS, buildType: BuildType): Result<Boolean> {
         logger.info("Delete the monitor [$osType|$buildType] by user $userId")
         return Result(monitorService.delete(osType, buildType))
+    }
+
+    override fun refresh(userId: String): Result<Boolean> {
+        logger.info("refresh runningCount $userId")
+        pipelineBuildLimitService.refreshExecuteCount()
+        return Result(true)
     }
 
     companion object {

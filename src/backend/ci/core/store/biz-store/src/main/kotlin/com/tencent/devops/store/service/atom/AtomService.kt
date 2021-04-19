@@ -162,7 +162,7 @@ interface AtomService {
         atomBaseInfoUpdateRequest: AtomBaseInfoUpdateRequest
     ): Result<Boolean>
 
-    fun checkDefaultAtom(
+    fun findUnDefaultAtom(
         atomList: List<String>
     ): Result<List<String>>
 }

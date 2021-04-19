@@ -27,9 +27,13 @@
 package com.tencent.bk.codecc.task.resources;
 
 import com.tencent.bk.codecc.task.api.BuildToolMetaRestResource;
+import com.tencent.bk.codecc.task.api.BuildToolRestResource;
+import com.tencent.bk.codecc.task.service.AnalyzeConfigService;
 import com.tencent.bk.codecc.task.service.ToolMetaService;
+import com.tencent.bk.codecc.task.vo.AnalyzeConfigInfoVO;
+import com.tencent.bk.codecc.task.vo.pipeline.PipelineBuildInfoVO;
 import com.tencent.devops.common.api.ToolMetaDetailVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.web.RestResource;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -49,14 +53,14 @@ public class BuildToolMetaRestResourceImpl implements BuildToolMetaRestResource
     private ToolMetaService toolMetaService;
 
     @Override
-    public CodeCCResult<ToolMetaDetailVO> register(String userName, ToolMetaDetailVO toolMetaDetailVO)
+    public Result<ToolMetaDetailVO> register(String userName, ToolMetaDetailVO toolMetaDetailVO)
     {
-        return new CodeCCResult<>(toolMetaService.register(userName, toolMetaDetailVO));
+        return new Result<>(toolMetaService.register(userName, toolMetaDetailVO));
     }
 
     @Override
-    public CodeCCResult<List<ToolMetaDetailVO>> queryToolMetaDataList()
+    public Result<List<ToolMetaDetailVO>> queryToolMetaDataList(String projectId)
     {
-        return new CodeCCResult<>(toolMetaService.queryToolMetaDataList());
+        return new Result<>(toolMetaService.queryToolMetaDataList(projectId));
     }
 }

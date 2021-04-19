@@ -30,6 +30,7 @@ import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 
 data class GitMergeRequestEvent(
     val user: GitUser,
+    val manual_unlock: Boolean? = false,
     val object_attributes: GitMRAttributes
 ) : GitEvent() {
     companion object {

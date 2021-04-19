@@ -142,6 +142,16 @@ public interface RedisKeyConstants
     String PREFIX_TMP_STATISTIC = "TMP_STATISTIC:";
 
     /**
+     * 告警规则统计临时存放key
+     */
+    String PREFIX_CHECKER_TMP_STATISTIC = "TMP_CHECKER_STATISTIC:";
+
+    /**
+     * 告警规则统计临时存放key
+     */
+    String PREFIX_CHECKER_SUMMARY_TMP_STATISTIC = "TMP_CHECKER_SUMMARY_STATISTIC:";
+
+    /**
      * 分析机器集群
      */
     String KEY_ANALYZE_HOST = "ANALYZE_HOST";
@@ -202,4 +212,100 @@ public interface RedisKeyConstants
      * 任务工具告警的自增序列key
      */
     String PREFIX_DEFECT_SEQUENCE = "DEFECT_SEQUENCE:";
+
+    /**
+     * 以task维度记录信息，用于websocket精准推送
+     */
+    String TASK_WEBSOCKET_SESSION_PREFIX = "TASK_WEBSOCKET_SESSION:";
+
+    /**
+     * task维度度量信息计算
+     */
+    String TASK_CODE_SCORING = "TASK_CODE_SCORING:";
+
+    /**
+     * 一个蓝盾项目的并发分析数
+     */
+    String PROJ_CONCURRENT_ANALYZE_COUNT = "PROJ_CONCURRENT_ANALYZE_COUNT";
+
+    /**
+     * 一个蓝盾项目的在等待队列的任务数
+     */
+    String PROJ_QUEUE_ANALYZE_COUNT = "PROJ_QUEUE_ANALYZE_COUNT";
+
+    /**
+     * 规则告警数统计时间
+     */
+    String CHECKER_DEFECT_STAT_TIME = "CHECKER_DEFECT_STAT_TIME";
+
+    /**
+     * 统计每天活跃任务数
+     */
+    String PREFIX_ACTIVE_TASK = "ACTIVE_TASK:";
+
+    /**
+     * 统计每天活跃工具数
+     */
+    String PREFIX_ACTIVE_TOOL = "ACTIVE_TOOL:";
+
+    /**
+     * 统计工具分析失败次数
+     */
+    String PREFIX_ANALYZE_FAIL_COUNT = "ANALYZE_FAIL_COUNT:";
+
+    /**
+     * 统计工具成功失败次数
+     */
+    String PREFIX_ANALYZE_SUCC_COUNT = "ANALYZE_SUCC_COUNT:";
+
+    /**
+     * 工具类型维度告警聚类
+     */
+    String TOOL_FINISH_CONFIRM_LOCK = "TOOL_FINISH_CONFIRM_LOCK";
+
+    /**
+     * 工具执行完成之后的确认队列
+     */
+    String TOOL_FINISH_CONFIRM = "TOOL_FINISH_CONFIRM";
+
+    /**
+     * 统计代码行
+     */
+    String CODE_LINE_STAT = "CODE_LINE_STAT:";
+
+    /**
+     * 记录工具成功分析的耗时
+     */
+    String PREFIX_ANALYZE_SUCC_ELAPSE_TIME = "ANALYZE_SUCC_ELAPSE_TIME:";
+
+    /**
+     * 按是否超快增量记录工具分析成功次数
+     */
+    String PREFIX_ANALYZE_SUCC_TOOL = "ANALYZE_SUCC_TOOL:";
+
+    /**
+     * 按是否超快增量记录工具分析失败次数
+     */
+    String PREFIX_ANALYZE_FAIL_TOOL = "ANALYZE_FAIL_TOOL:";
+
+    /**
+     * 腾讯代码规范各语言及计算系数
+     */
+    String STANDARD_LANG = "TENCENT_STANDARD_SUPPORT_LANG";
+
+    /**
+     * 按维度统计告警数文件导出标识
+     */
+    String DIMENSION_FILE_EXPORT_FLAG = "DIMENSION_FILE_EXPORT_FLAG";
+
+    /**
+     * 标识文件是否生成
+     */
+    String DIMENSION_FILE_FLAG = "DIMENSION_FILE_FLAG:";
+
+    /**
+     * 记录文件名
+     */
+    String DIMENSION_FILE_NAME = "DIMENSION_FILE_NAME";
+
 }

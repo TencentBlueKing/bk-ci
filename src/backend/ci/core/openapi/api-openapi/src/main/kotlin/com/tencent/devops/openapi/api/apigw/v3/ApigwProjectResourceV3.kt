@@ -32,6 +32,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
+import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -43,6 +45,7 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPENAPI_PROJECT_V3"], description = "OPENAPI-项目资源")
@@ -69,7 +72,7 @@ interface ApigwProjectResourceV3 {
         @ApiParam("access_token")
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String?
-    ): com.tencent.devops.project.pojo.Result<Boolean>
+    ): Result<Boolean>
 
     @PUT
     @Path("/{projectId}")
@@ -92,7 +95,7 @@ interface ApigwProjectResourceV3 {
         @ApiParam("access_token")
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String?
-    ): com.tencent.devops.project.pojo.Result<Boolean>
+    ): Result<Boolean>
 
     @GET
     @Path("/{projectId}")
@@ -113,7 +116,7 @@ interface ApigwProjectResourceV3 {
         @ApiParam("access_token")
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String?
-    ): com.tencent.devops.project.pojo.Result<ProjectVO?>
+    ): Result<ProjectVO?>
 
     @GET
     @Path("/")
@@ -131,5 +134,29 @@ interface ApigwProjectResourceV3 {
         @ApiParam("access_token")
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String?
-    ): com.tencent.devops.project.pojo.Result<List<ProjectVO>>
+    ): Result<List<ProjectVO>>
+
+    @GET
+    @Path("/{validateType}/names/validate")
+    @ApiOperation("校验项目名称和项目英文名")
+    fun validate(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam("userId")
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String?,
+        @ApiParam("校验的是项目名称或者项目英文名")
+        @PathParam("validateType")
+        validateType: ProjectValidateType,
+        @ApiParam("项目名称或者项目英文名")
+        @QueryParam("name")
+        name: String,
+        @ApiParam("项目ID")
+        @QueryParam("english_name")
+        projectId: String?
+    ): Result<Boolean>
 }

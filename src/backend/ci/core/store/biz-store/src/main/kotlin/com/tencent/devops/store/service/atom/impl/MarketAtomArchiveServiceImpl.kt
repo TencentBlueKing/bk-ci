@@ -126,8 +126,12 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         version: String
     ): Result<GetAtomConfigResult?> {
         val taskJsonStr = getFileStr(projectCode, atomCode, version, TASK_JSON_NAME)
-        val getAtomConfResult =
-            marketAtomCommonService.parseBaseTaskJson(taskJsonStr, atomCode, userId)
+        val getAtomConfResult = marketAtomCommonService.parseBaseTaskJson(
+            taskJsonStr = taskJsonStr,
+            atomCode = atomCode,
+            version = version,
+            userId = userId
+        )
         logger.info("parseTaskJson result is :$taskJsonStr")
         return if (getAtomConfResult.errorCode != "0") {
             MessageCodeUtil.generateResponseDataObject(getAtomConfResult.errorCode, getAtomConfResult.errorParams)

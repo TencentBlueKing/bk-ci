@@ -56,13 +56,6 @@ object ScmFactory {
     ): IScm {
         return when (type) {
             ScmType.CODE_SVN -> {
-                if (region == null) {
-                    throw TaskExecuteException(
-                        errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
-                        errorType = ErrorType.USER,
-                        errorMsg = "The svn region is null"
-                    )
-                }
 
                 if (userName == null) {
                     throw TaskExecuteException(

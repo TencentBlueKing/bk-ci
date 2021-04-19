@@ -32,6 +32,11 @@ jar {
     from("src/main/resources") {
         include "*.*"
     }
+    manifest {
+        attributes(
+           'WorkerAgent-Version':version
+        )
+    }
 }
 
 shadowJar {

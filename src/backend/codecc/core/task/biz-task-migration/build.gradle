@@ -1,9 +1,6 @@
 dependencies {
     compile project(":core:task:biz-task")
-    compile(group: 'com.tencent.bk.devops.ci.process', name: 'api-process', version: version, changing: true) {
-        exclude group: 'com.tencent.bk.devops.ci.measure', module: 'api-measure'
-        exclude group: 'com.tencent.bk.devops.ci.image', module: 'api-image'
-    }
+    compile group: 'com.tencent.bk.devops.ci.process', name: 'api-process', version: version, changing: true
     compile group: 'com.tencent.bk.devops.ci.repository', name: 'api-repository', version: version, changing: true
     compile(group: 'com.tencent.bk.devops.ci.project', name: 'api-project', version: version, changing: true) {
         exclude group: 'com.tencent.bk.devops.ci.project', module: 'model-project'
@@ -14,11 +11,7 @@ dependencies {
     compile group: 'com.tencent.bk.devops.ci.notify', name: 'api-notify', version: version, changing: true
     compile group: 'com.tencent.bk.devops.ci.plugin', name: 'common-codecc', version: version, changing: true
     compile group: 'com.tencent.bk.devops.ci.plugin', name: 'api-codecc', version: version, changing: true
-    compile group: 'com.tencent.bk.devops.ci.scm', name: 'api-scm', version: version, changing: true
-    compile group: 'com.tencent.bk.devops.ci.project', name: 'api-project-tencent', version: version, changing: true
-    compile group: 'com.tencent.bk.devops.ci.common', name: 'common-pipeline-tencent', version: version, changing: true
-    compile group: "com.tencent.bk.devops.ci.common", name: "common-kafka-tencent", version: version, changing: true
-    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8"
+    compile group: 'com.tencent.bk.devops.ci.project', name: 'api-project', version: version, changing: true
 }
 repositories {
     mavenCentral()

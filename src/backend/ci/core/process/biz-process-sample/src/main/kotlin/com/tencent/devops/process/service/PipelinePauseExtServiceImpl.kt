@@ -2,6 +2,7 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelinePauseExtService
+import org.springframework.stereotype.Service
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
@@ -28,6 +29,8 @@ import com.tencent.devops.process.engine.service.PipelinePauseExtService
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
+@Service
 class PipelinePauseExtServiceImpl : PipelinePauseExtService {
     override fun sendPauseNotify(buildId: String, buildTask: PipelineBuildTask) {
         return

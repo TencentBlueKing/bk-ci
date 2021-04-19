@@ -21,7 +21,7 @@
                         <div class="bk-form-content">
                             <bk-radio-group v-model="createViewForm.projected">
                                 <bk-radio :value="false" class="view-radio">{{ $t('view.personalView') }}</bk-radio>
-                                <bk-radio :value="true" class="view-radio" :disabled="!isManagerUser">{{ $t('view.projectView') }}<span v-bk-tooltips="viewTypeTips" class="top-start">
+                                <bk-radio :value="true" class="view-radio" :disabled="!viewManageAuth">{{ $t('view.projectView') }}<span v-bk-tooltips="viewTypeTips" class="top-start">
                                     <i class="bk-icon icon-info-circle"></i></span>
                                 </bk-radio>
                             </bk-radio-group>
@@ -163,18 +163,13 @@
         },
         computed: {
             ...mapGetters({
-                'userInfo': 'pipelines/getUserInfo',
+                'viewManageAuth': 'pipelines/getViewManageAuth',
                 'tagGroupList': 'pipelines/getTagGroupList',
                 'showViewCreate': 'pipelines/getShowViewCreate',
                 'createViewForm': 'pipelines/getCreateViewForm'
             }),
             projectId () {
                 return this.$route.params.projectId
-            },
-            isManagerUser () {
-                return this.userInfo.find(val => {
-                    return val.roleName === 'manager'
-                })
             }
         },
         watch: {

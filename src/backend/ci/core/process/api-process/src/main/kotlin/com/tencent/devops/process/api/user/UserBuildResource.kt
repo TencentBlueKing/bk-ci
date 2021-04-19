@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryRemark
@@ -472,7 +473,9 @@ interface UserBuildResource {
         stageId: String,
         @ApiParam("取消执行", required = false)
         @QueryParam("cancel")
-        cancel: Boolean?
+        cancel: Boolean?,
+        @ApiParam("审核请求体", required = false)
+        reviewRequest: StageReviewRequest? = null
     ): Result<Boolean>
 
     @ApiOperation("操作暂停插件")

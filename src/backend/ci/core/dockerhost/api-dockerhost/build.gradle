@@ -26,7 +26,7 @@
 
 dependencies {
     compile project(":core:common:common-api")
-    compile project(":core:dispatch:api-dispatch-docker")
+    compile project(":core:dispatch-docker:api-dispatch-docker")
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"

@@ -26,15 +26,18 @@
 
 package com.tencent.bk.codecc.task.service.impl;
 
+import com.google.common.collect.Sets;
 import com.tencent.bk.codecc.task.constant.TaskConstants;
 import com.tencent.bk.codecc.task.dao.CommonDao;
 import com.tencent.bk.codecc.task.dao.mongorepository.BaseDataRepository;
 import com.tencent.bk.codecc.task.dao.mongorepository.TaskRepository;
 import com.tencent.bk.codecc.task.dao.mongorepository.ToolMetaRepository;
 import com.tencent.bk.codecc.task.model.BaseDataEntity;
+import com.tencent.bk.codecc.task.model.OpenSourceCheckerSet;
 import com.tencent.bk.codecc.task.model.TaskInfoEntity;
 import com.tencent.bk.codecc.task.model.ToolMetaEntity;
 import com.tencent.bk.codecc.task.service.MetaService;
+import com.tencent.bk.codecc.task.vo.OpenScanAndEpcToolNameMapVO;
 import com.tencent.bk.codecc.task.vo.MetadataVO;
 import com.tencent.devops.common.api.ToolMetaBaseVO;
 import com.tencent.devops.common.api.ToolMetaDetailVO;
@@ -55,8 +58,8 @@ import javax.servlet.http.HttpServletRequest;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
-import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEADER_DEVOPS_TASK_ID;
-import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEADER_DEVOPS_USER_ID;
+import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_TASK_ID;
+import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_USER_ID;
 
 /**
  * 工具元数据业务逻辑处理类
@@ -90,7 +93,7 @@ public class MetaServiceImpl implements MetaService
     {
         // 1.查询工具列表
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-        String userId = request.getHeader(CODECC_AUTH_HEADER_DEVOPS_USER_ID);
+        String userId = request.getHeader(AUTH_HEADER_DEVOPS_USER_ID);
         boolean isAdmin = bkAuthExPermissionApi.isAdminMember(userId);
 
         Map<String, ToolMetaBaseVO> toolMap = toolMetaCache.getToolMetaListFromCache(isDetail, isAdmin);
@@ -154,7 +157,7 @@ public class MetaServiceImpl implements MetaService
         }
         else
         {
-            toolMetaList = toolMetaRepository.findByStatus(TaskConstants.ToolIntegratedStatus.P.name());
+            toolMetaList = toolMetaRepository.findByStatus(ComConstants.ToolIntegratedStatus.P.name());
         }
 
         Map<String, ToolMetaBaseVO> toolMap = new HashMap<>();
@@ -273,7 +276,7 @@ public class MetaServiceImpl implements MetaService
     private void isRecommendTool(List<ToolMetaBaseVO> toolList)
     {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-        String taskId = request.getHeader(CODECC_AUTH_HEADER_DEVOPS_TASK_ID);
+        String taskId = request.getHeader(AUTH_HEADER_DEVOPS_TASK_ID);
         if (StringUtils.isNotEmpty(taskId))
         {
             TaskInfoEntity taskInfoEntity = taskRepository.findCodeLangByTaskId(Long.valueOf(taskId));
@@ -321,5 +324,45 @@ public class MetaServiceImpl implements MetaService
             languageList.add("OTHERS");
         }
         return languageList;
+    }
+
+    @Override
+    public OpenScanAndEpcToolNameMapVO getOpenScanAndEpcToolNameMap() {
+        //参考：PipelineTaskRegisterServiceImpl#setOpenScanCheckerSetsAccordingToLanguage
+        //PipelineTaskRegisterServiceImpl#setEpcScanCheckerSetsAccordingToLanguage
+
+        List<BaseDataEntity> baseDataList = baseDataRepository.findAllByParamType(ComConstants.KEY_CODE_LANG);
+        if (CollectionUtils.isEmpty(baseDataList)) {
+            return null;
+        }
+
+        HashMap<String, Set<String>> openScanToolNameMap = new HashMap<>();
+        HashMap<String, Set<String>> epcToolNameMap = new HashMap<>();
+
+        baseDataList.stream().forEach(data -> {
+            if (!CollectionUtils.isEmpty(data.getOpenSourceCheckerSets())) {
+                Set<String> toolNameSet = openScanToolNameMap
+                        .computeIfAbsent(data.getLangFullKey(), k -> Sets.newHashSet());
+
+                for (OpenSourceCheckerSet openSourceCheckerSet : data.getOpenSourceCheckerSets()) {
+                    if (!CollectionUtils.isEmpty(openSourceCheckerSet.getToolList())) {
+                        toolNameSet.addAll(openSourceCheckerSet.getToolList());
+                    }
+                }
+            }
+
+            if (!CollectionUtils.isEmpty(data.getEpcCheckerSets())) {
+                Set<String> toolNameSet = epcToolNameMap
+                        .computeIfAbsent(data.getLangFullKey(), k -> Sets.newHashSet());
+
+                for (OpenSourceCheckerSet epcCheckerSet : data.getEpcCheckerSets()) {
+                    if (!CollectionUtils.isEmpty(epcCheckerSet.getToolList())) {
+                        toolNameSet.addAll(epcCheckerSet.getToolList());
+                    }
+                }
+            }
+        });
+
+        return new OpenScanAndEpcToolNameMapVO(openScanToolNameMap, epcToolNameMap);
     }
 }

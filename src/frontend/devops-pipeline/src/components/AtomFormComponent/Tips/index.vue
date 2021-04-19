@@ -61,8 +61,10 @@
 
                 this.list = []
                 this.tip = str.replace(/{([^\{\}]+)}/gim, (str, key) => {
-                    this.list.push(key)
-                    const val = this.formatter(this.paramValues[key])
+                    const exisParamKey = typeof this.paramValues[key] !== 'undefined'
+                    const value = exisParamKey ? this.paramValues[key] : key
+                    if (exisParamKey) this.list.push(key)
+                    const val = this.formatter(value)
                     return this.escapeHtml(val)
                 })
             },
@@ -84,7 +86,7 @@
                         res = data
                         break
                     default:
-                        res = ''
+                        res = data
                         break
                 }
                 return res

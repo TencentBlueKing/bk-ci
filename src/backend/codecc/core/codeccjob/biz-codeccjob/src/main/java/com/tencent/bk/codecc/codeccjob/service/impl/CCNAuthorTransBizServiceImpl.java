@@ -16,7 +16,7 @@ import com.tencent.bk.codecc.defect.model.CCNDefectEntity;
 import com.tencent.bk.codecc.defect.vo.common.AuthorTransferVO;
 import com.tencent.bk.codecc.codeccjob.dao.mongorepository.CCNDefectRepository;
 import com.tencent.bk.codecc.codeccjob.service.AbstractAuthorTransBizService;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import lombok.extern.slf4j.Slf4j;
@@ -41,7 +41,7 @@ public class CCNAuthorTransBizServiceImpl extends AbstractAuthorTransBizService
     private CCNDefectRepository ccnDefectRepository;
 
     @Override
-    public CodeCCResult processBiz(AuthorTransferVO authorTransferVO)
+    public Result processBiz(AuthorTransferVO authorTransferVO)
     {
         List<CCNDefectEntity> ccnDefectEntityList = ccnDefectRepository.findNotRepairedDefect(authorTransferVO.getTaskId(),
                 ComConstants.DEFECT_STATUS_CLOSED);
@@ -67,6 +67,6 @@ public class CCNAuthorTransBizServiceImpl extends AbstractAuthorTransBizService
             }
         }
 
-        return new CodeCCResult(CommonMessageCode.SUCCESS);
+        return new Result(CommonMessageCode.SUCCESS);
     }
 }

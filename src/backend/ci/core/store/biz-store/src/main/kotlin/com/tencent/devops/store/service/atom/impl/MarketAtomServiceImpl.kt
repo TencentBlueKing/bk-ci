@@ -33,11 +33,13 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.DEFAULT
 import com.tencent.devops.common.api.constant.REQUIRED
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
@@ -58,6 +60,9 @@ import com.tencent.devops.store.dao.common.StoreBuildInfoDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.atom.AtomDevLanguage
+import com.tencent.devops.store.pojo.atom.AtomPostInfo
+import com.tencent.devops.store.pojo.atom.AtomPostReqItem
+import com.tencent.devops.store.pojo.atom.AtomPostResp
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.AtomVersionListItem
 import com.tencent.devops.store.pojo.atom.AtomVersionListResp
@@ -71,6 +76,7 @@ import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomTypeEnum
 import com.tencent.devops.store.pojo.atom.enums.MarketAtomSortTypeEnum
+import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.HOTTEST
 import com.tencent.devops.store.pojo.common.LATEST
 import com.tencent.devops.store.pojo.common.MarketItem
@@ -78,6 +84,7 @@ import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomLabelService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
+import com.tencent.devops.store.service.atom.MarketAtomEnvService
 import com.tencent.devops.store.service.atom.MarketAtomService
 import com.tencent.devops.store.service.atom.MarketAtomStatisticService
 import com.tencent.devops.store.service.common.ClassifyService
@@ -142,6 +149,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
     lateinit var storeCommonService: StoreCommonService
     @Autowired
     lateinit var marketAtomCommonService: MarketAtomCommonService
+    @Autowired
+    lateinit var marketAtomEnvService: MarketAtomEnvService
+    @Autowired
+    lateinit var redisOperation: RedisOperation
     @Autowired
     lateinit var client: Client
 
@@ -743,6 +754,12 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             atomLabelRelDao.deleteByAtomCode(context, atomCode)
             marketAtomVersionLogDao.deleteByAtomCode(context, atomCode)
             marketAtomDao.deleteByAtomCode(context, atomCode)
+            // 清空插件post信息缓存
+            val key = "$ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX:$atomCode"
+            val hashKeys = redisOperation.hkeys(key)
+            if (hashKeys != null && hashKeys.isNotEmpty()) {
+                redisOperation.hdelete(key, hashKeys)
+            }
         }
         return Result(true)
     }
@@ -865,6 +882,36 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             sb.append("{code}\r\n \r\n")
         }
         return sb.toString()
+    }
+
+    override fun getPostAtoms(projectCode: String, atomItems: Set<AtomPostReqItem>): Result<AtomPostResp> {
+        logger.info("getPostAtoms projectCode:$projectCode,atomItems:$atomItems")
+        val postAtoms = mutableListOf<AtomPostInfo>()
+        atomItems.forEach { atomItem ->
+            val atomCode = atomItem.atomCode
+            val version = atomItem.version
+            val atomEnvResult = marketAtomEnvService.getMarketAtomEnvInfo(projectCode, atomCode, version)
+            val atomEnv = atomEnvResult.data
+            if (atomEnvResult.isNotOk()) {
+                throw ErrorCodeException(
+                    errorCode = atomEnvResult.status.toString(),
+                    defaultMessage = atomEnvResult.message
+                )
+            }
+            if (atomEnv == null) {
+                throw ErrorCodeException(
+                    errorCode = StoreMessageCode.USER_ATOM_IS_NOT_ALLOW_USE_IN_PROJECT,
+                    params = arrayOf(projectCode, atomCode)
+                )
+            }
+            val atomPostInfo = atomEnv.atomPostInfo
+            if (atomPostInfo != null) {
+                postAtoms.add(atomPostInfo)
+            }
+        }
+        val atomPostResp = AtomPostResp(postAtoms)
+        logger.info("getPostAtoms atomPostResp:$atomPostResp")
+        return Result(atomPostResp)
     }
 
     abstract fun deleteAtomRepository(

@@ -177,7 +177,7 @@ class ThirdPartyAgentBuildDao {
         agentId: String
     ): Result<TDispatchThirdpartyAgentBuildRecord> {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            return dslContext.selectFrom(this)
+            return dslContext.selectFrom(this.forceIndex("IDX_AGENTID_STATUS_UPDATE"))
                 .where(AGENT_ID.eq(agentId))
                 .and(STATUS.eq(PipelineTaskStatus.QUEUE.status))
                 .orderBy(UPDATED_TIME.asc())
@@ -190,7 +190,7 @@ class ThirdPartyAgentBuildDao {
         agentId: String
     ): Result<TDispatchThirdpartyAgentBuildRecord> {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            return dslContext.selectFrom(this)
+            return dslContext.selectFrom(this.forceIndex("IDX_AGENTID_STATUS_UPDATE"))
                 .where(AGENT_ID.eq(agentId))
                 .and(STATUS.`in`(PipelineTaskStatus.RUNNING.status, PipelineTaskStatus.QUEUE.status))
                 .fetch()
@@ -202,7 +202,7 @@ class ThirdPartyAgentBuildDao {
         agentId: String
     ): List<TDispatchThirdpartyAgentBuildRecord> {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
-            return dslContext.selectFrom(this)
+            return dslContext.selectFrom(this.forceIndex("IDX_AGENTID_STATUS_UPDATE"))
                 .where(AGENT_ID.eq(agentId))
                 .and(STATUS.eq(PipelineTaskStatus.RUNNING.status))
                 .fetch()
@@ -228,7 +228,6 @@ class ThirdPartyAgentBuildDao {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             return dslContext.selectCount().from(this)
                 .where(AGENT_ID.eq(agentId))
-                .orderBy(CREATED_TIME.desc())
                 .fetchOne(0, Long::class.java)
         }
     }

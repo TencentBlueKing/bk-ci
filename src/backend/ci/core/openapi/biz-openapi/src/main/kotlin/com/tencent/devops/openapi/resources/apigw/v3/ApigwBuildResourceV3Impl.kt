@@ -175,6 +175,25 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         )
     }
 
+    override fun getVariableValue(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        variableNames: List<String>
+    ): Result<Map<String, String>> {
+        logger.info("get the pipeline($pipelineId) of project($projectId) variable value  by user($userId)")
+        return client.get(ServiceBuildResource::class).getBuildVariableValue(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            variableNames = variableNames
+        )
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(ApigwBuildResourceV3Impl::class.java)
     }

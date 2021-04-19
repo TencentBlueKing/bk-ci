@@ -26,10 +26,12 @@
 
 package com.tencent.devops.process.service
 
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
 import com.tencent.devops.process.utils.PipelineVarUtil
 import org.jooq.DSLContext
@@ -126,6 +128,8 @@ class BuildVariableService @Autowired constructor(
         buildId: String,
         variables: List<BuildParameters>
     ) {
+        val watch = Watcher(id = "batchSetVariable| $pipelineId| $buildId")
+        watch.start("replaceOldByNewVar")
         val varMaps = variables.map {
             it.key to Pair(it.value.toString(), it.valueType ?: BuildFormPropertyType.STRING)
         }.toMap().toMutableMap()
@@ -142,8 +146,10 @@ class BuildVariableService @Autowired constructor(
 
         val redisLock = RedisLock(redisOperation, "$PIPELINE_BUILD_VAR_KEY:$buildId", 60)
         try {
+            watch.start("getLock")
             // 加锁防止数据被重复插入
             redisLock.lock()
+            watch.start("getVars")
             val buildVarMap = pipelineBuildVarDao.getVars(dslContext, buildId)
             val insertBuildParameters = mutableListOf<BuildParameters>()
             val updateBuildParameters = mutableListOf<BuildParameters>()
@@ -156,6 +162,7 @@ class BuildVariableService @Autowired constructor(
             }
             dslContext.transaction { t ->
                 val context = DSL.using(t)
+                watch.start("batchSave")
                 pipelineBuildVarDao.batchSave(
                     dslContext = context,
                     projectId = projectId,
@@ -163,6 +170,7 @@ class BuildVariableService @Autowired constructor(
                     buildId = buildId,
                     variables = insertBuildParameters
                 )
+                watch.start("batchUpdate")
                 pipelineBuildVarDao.batchUpdate(
                     dslContext = context,
                     buildId = buildId,
@@ -171,6 +179,7 @@ class BuildVariableService @Autowired constructor(
             }
         } finally {
             redisLock.unlock()
+            LogUtils.printCostTimeWE(watch)
         }
     }
 }

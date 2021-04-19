@@ -62,7 +62,15 @@ class V3CredentialPermissionService @Autowired constructor(
         if (isProjectOwner(projectId, userId)) {
             return true
         }
-        return super.validatePermission(userId, projectId, authPermission)
+        return authPermissionApi.validateUserResourcePermission(
+                user = userId,
+                serviceCode = ticketAuthServiceCode,
+                resourceType = AuthResourceType.TICKET_CREDENTIAL,
+                projectCode = projectId,
+                resourceCode = projectId,
+                permission = AuthPermission.CREATE,
+                relationResourceType = AuthResourceType.PROJECT
+        )
     }
 
     override fun validatePermission(userId: String, projectId: String, resourceCode: String, authPermission: AuthPermission): Boolean {

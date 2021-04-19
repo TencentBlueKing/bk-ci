@@ -86,6 +86,7 @@ object MQ {
     const val QUEUE_PIPELINE_BUILD_FINISH_LAMBDA = "q.engine.pipeline.build.lambda"
     const val QUEUE_PIPELINE_BUILD_FINISH_GITCI = "q.engine.pipeline.build.gitci"
     const val QUEUE_PIPELINE_BUILD_FINISH_LOG = "q.engine.pipeline.build.log"
+    const val QUEUE_PIPELINE_BUILD_FINISH_SUBPIPEINE = "q.engine.pipeline.build.subpipeline"
 
     const val QUEUE_PIPELINE_BUILD_FINISH_DISPATCHER = "q.engine.pipeline.build.dispatcher"
 
@@ -219,4 +220,14 @@ object MQ {
 
     // 蓝盾监控数据上报事件广播
     const val EXCHANGE_ATOM_MONITOR_DATA_REPORT_FANOUT = "e.engine.atom.monitor.data.report.fanout"
+
+    // webhook锁
+    const val EXCHANGE_GIT_WEBHOOK_UNLOCK_EVENT = "e.webhook.unlock.event"
+    const val ROUTE_GIT_WEBHOOK_UNLOCK_EVENT = "r.webhook.unlock.event"
+    const val QUEUE_GIT_WEBHOOK_UNLOCK_EVENT = "q.webhook.unlock.event"
+
+    // 蓝盾管理员
+    const val EXCHANGE_AUTH_REFRESH_FANOUT = "e.auth.refresh.exchange.fanout"
+    const val ROUTE_AUTH_REFRESH_FANOUT = "r.auth.refresh.exchange.fanout"
+    const val QUEUE_AUTH_REFRESH_EVENT = "q.auth.refresh.exchange.queue"
 }

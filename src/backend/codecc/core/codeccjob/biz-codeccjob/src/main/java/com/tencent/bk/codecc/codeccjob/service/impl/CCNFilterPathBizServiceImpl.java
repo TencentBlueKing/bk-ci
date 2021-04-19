@@ -16,7 +16,7 @@ import com.tencent.bk.codecc.defect.model.CCNDefectEntity;
 import com.tencent.bk.codecc.codeccjob.dao.mongorepository.CCNDefectRepository;
 import com.tencent.bk.codecc.codeccjob.service.AbstractFilterPathBizService;
 import com.tencent.bk.codecc.task.vo.FilterPathInputVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.util.PathUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +42,7 @@ public class CCNFilterPathBizServiceImpl extends AbstractFilterPathBizService
     private CCNDefectRepository ccnDefectRepository;
 
     @Override
-    public CodeCCResult processBiz(FilterPathInputVO filterPathInputVO)
+    public Result processBiz(FilterPathInputVO filterPathInputVO)
     {
         // CCN类屏蔽路径
         List<CCNDefectEntity> ccnFileInfoList = ccnDefectRepository.findByTaskId(filterPathInputVO.getTaskId());
@@ -53,15 +53,16 @@ public class CCNFilterPathBizServiceImpl extends AbstractFilterPathBizService
                     .filter(defectEntity ->
                     {
                         String path = defectEntity.getUrl();
-                        if (StringUtils.isEmpty(path))
-                        {
+                        if (StringUtils.isEmpty(path)) {
+                            path = defectEntity.getRelPath();
+                        }
+                        if (StringUtils.isEmpty(path)){
                             path = defectEntity.getFilePath();
                         }
-                        if (StringUtils.isEmpty(path))
-                        {
+                        if (StringUtils.isEmpty(path)) {
                             return false;
                         }
-                        return PathUtils.checkIfMaskByPath(defectEntity.getRelPath(), filterPathInputVO.getFilterPaths());
+                        return PathUtils.checkIfMaskByPath(path, filterPathInputVO.getFilterPaths());
                     })
                     .collect(Collectors.toList());
             needUpdateDefectList.forEach(defectEntity ->
@@ -71,6 +72,6 @@ public class CCNFilterPathBizServiceImpl extends AbstractFilterPathBizService
             });
             ccnDefectRepository.save(needUpdateDefectList);
         }
-        return new CodeCCResult(CommonMessageCode.SUCCESS);
+        return new Result(CommonMessageCode.SUCCESS);
     }
 }

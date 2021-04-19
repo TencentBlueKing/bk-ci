@@ -27,18 +27,23 @@
 package com.tencent.bk.codecc.defect.api;
 
 import com.tencent.bk.codecc.defect.vo.TreeNodeVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import net.sf.json.JSONArray;
 
-import javax.ws.rs.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.Set;
 
-import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEADER_DEVOPS_TASK_ID;
+import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_TASK_ID;
 
 /**
  * 告警模块树服务
@@ -56,7 +61,7 @@ public interface ServiceDefectTreeResource
     @ApiOperation("获取告警文件树")
     @Path("/taskId/{taskId}")
     @POST
-    CodeCCResult<TreeNodeVO> getTreeNode(
+    Result<TreeNodeVO> getTreeNode(
             @ApiParam(value = "任务ID", required = true)
             @PathParam(value = "taskId")
                     Long taskId,
@@ -67,12 +72,12 @@ public interface ServiceDefectTreeResource
     @ApiOperation("批量获取工具报表信息")
     @Path("/dataReport/list")
     @POST
-    CodeCCResult<JSONArray> getBatchDataReports(
+    Result<JSONArray> getBatchDataReports(
             @ApiParam(value = "任务ID", required = true)
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_TASK_ID)
-            Long taskId,
+            @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
+                    Long taskId,
             @ApiParam(value = "工具名称", required = true)
-            Set<String> toolNames
+                    Set<String> toolNames
     );
 
 

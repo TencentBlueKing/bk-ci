@@ -18,7 +18,7 @@
                                 :to="addConsole(service.link_new)"
                             >
                                 <Logo
-                                    :name="service.key"
+                                    :name="service.logoUrl"
                                     size="16"
                                 />
                                 {{ serviceName(service.name) }}

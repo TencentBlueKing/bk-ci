@@ -1,16 +1,20 @@
 package com.tencent.bk.codecc.defect.service;
 
 import com.tencent.bk.codecc.defect.vo.BatchDefectProcessReqVO;
+import com.tencent.bk.codecc.defect.vo.TaskPersonalStatisticRefreshReq;
 import com.tencent.bk.codecc.defect.vo.common.DefectQueryReqVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.service.BizServiceFactory;
 import com.tencent.devops.common.service.IBizService;
 import com.tencent.devops.common.util.JsonUtil;
+import com.tencent.devops.common.web.mq.ConstantsKt;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.*;
@@ -27,8 +31,17 @@ public abstract class AbstractBatchDefectProcessBizService implements IBizServic
     @Autowired
     protected BizServiceFactory<IQueryWarningBizService> factory;
 
+    @Autowired
+    private TaskPersonalStatisticService taskPersonalStatisticService;
+
+    @Autowired
+    private RabbitTemplate rabbitTemplate;
+
+    @Autowired
+    protected Client client;
+
     @Override
-    public CodeCCResult processBiz(BatchDefectProcessReqVO batchDefectProcessReqVO)
+    public Result processBiz(BatchDefectProcessReqVO batchDefectProcessReqVO)
     {
         log.info("begin to batch process: {}", batchDefectProcessReqVO);
         String isSelectAll = batchDefectProcessReqVO.getIsSelectAll();
@@ -60,7 +73,11 @@ public abstract class AbstractBatchDefectProcessBizService implements IBizServic
             doBiz(defectList, batchDefectProcessReqVO);
         }
         log.info("batch process successful");
-        return new CodeCCResult(CommonMessageCode.SUCCESS, "batch process successful");
+        return new Result(CommonMessageCode.SUCCESS, "batch process successful");
+    }
+
+    protected void refreshOverviewData(long taskId) {
+        taskPersonalStatisticService.refresh(taskId, "from batch defect process: " + this);
     }
 
     /**

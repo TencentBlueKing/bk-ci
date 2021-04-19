@@ -171,7 +171,12 @@ class ManualReviewTaskAtom(
                 jobId = task.containerHashId,
                 executeCount = task.executeCount ?: 1
             )
-            val reviewParamKey = if (param.namespace.isNullOrBlank()) {
+            val reviewResultParamKey = if (param.namespace.isNullOrBlank()) {
+                MANUAL_REVIEW_ATOM_RESULT
+            } else {
+                "${param.namespace}_$MANUAL_REVIEW_ATOM_RESULT"
+            }
+            val reviewerParamKey = if (param.namespace.isNullOrBlank()) {
                 MANUAL_REVIEW_ATOM_REVIEWER
             } else {
                 "${param.namespace}_$MANUAL_REVIEW_ATOM_REVIEWER"
@@ -185,8 +190,22 @@ class ManualReviewTaskAtom(
                 buildId = buildId,
                 projectId = task.projectId,
                 pipelineId = task.pipelineId,
-                varName = reviewParamKey,
+                varName = reviewResultParamKey,
+                varValue = manualAction
+            )
+            pipelineVariableService.setVariable(
+                buildId = buildId,
+                projectId = task.projectId,
+                pipelineId = task.pipelineId,
+                varName = reviewerParamKey,
                 varValue = manualActionUserId
+            )
+            pipelineVariableService.setVariable(
+                buildId = buildId,
+                projectId = task.projectId,
+                pipelineId = task.pipelineId,
+                varName = suggestParamKey,
+                varValue = suggestContent ?: ""
             )
             val response = when (ManualReviewAction.valueOf(manualAction)) {
                 ManualReviewAction.PROCESS -> {
@@ -219,7 +238,14 @@ class ManualReviewTaskAtom(
             }
             buildLogPrinter.addYellowLine(
                 buildId = buildId,
-                message = "output(except): $reviewParamKey=$manualActionUserId",
+                message = "output(except): $reviewResultParamKey=$manualAction",
+                tag = taskId,
+                jobId = task.containerHashId,
+                executeCount = task.executeCount ?: 1
+            )
+            buildLogPrinter.addYellowLine(
+                buildId = buildId,
+                message = "output(except): $reviewerParamKey=$manualActionUserId",
                 tag = taskId,
                 jobId = task.containerHashId,
                 executeCount = task.executeCount ?: 1
@@ -274,5 +300,6 @@ class ManualReviewTaskAtom(
         private val logger = LoggerFactory.getLogger(ManualReviewTaskAtom::class.java)
         const val MANUAL_REVIEW_ATOM_REVIEWER = "MANUAL_REVIEWER"
         const val MANUAL_REVIEW_ATOM_SUGGEST = "MANUAL_REVIEW_SUGGEST"
+        const val MANUAL_REVIEW_ATOM_RESULT = "MANUAL_REVIEW_RESULT"
     }
 }

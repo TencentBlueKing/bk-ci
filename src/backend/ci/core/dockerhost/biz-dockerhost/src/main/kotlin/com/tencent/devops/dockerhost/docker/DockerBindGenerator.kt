@@ -27,7 +27,7 @@
 package com.tencent.devops.dockerhost.docker
 
 import com.github.dockerjava.api.model.Bind
-import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
+import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 
 /**
  * Docker Bind生成器

@@ -36,7 +36,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
-import org.jooq.Record19
+import org.jooq.Record21
 import org.jooq.SelectOnConditionStep
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -57,6 +57,8 @@ class MarketAtomEnvInfoDao {
                 TARGET,
                 SHA_CONTENT,
                 PRE_CMD,
+                POST_ENTRY_PARAM,
+                POST_CONDITION,
                 CREATOR,
                 MODIFIER
             )
@@ -70,6 +72,8 @@ class MarketAtomEnvInfoDao {
                     atomEnvRequest.target,
                     atomEnvRequest.shaContent,
                     atomEnvRequest.preCmd,
+                    atomEnvRequest.atomPostInfo?.postEntryParam,
+                    atomEnvRequest.atomPostInfo?.postCondition,
                     atomEnvRequest.userId,
                     atomEnvRequest.userId
                 ).execute()
@@ -115,7 +119,7 @@ class MarketAtomEnvInfoDao {
         dslContext: DSLContext,
         a: TAtom,
         b: TAtomEnvInfo
-    ): SelectOnConditionStep<Record19<String, String, Byte, String, String, String, String, String, String, Boolean, String, LocalDateTime, LocalDateTime, String, String, String, String, String, String>> {
+    ): SelectOnConditionStep<Record21<String, String, Byte, String, String, String, String, String, String, Boolean, String, LocalDateTime, LocalDateTime, String, String, String, String, String, String, String, String>> {
         return dslContext.select(
             a.ID.`as`("atomId"),
             a.ATOM_CODE.`as`("atomCode"),
@@ -135,7 +139,9 @@ class MarketAtomEnvInfoDao {
             b.MIN_VERSION.`as`("minVersion"),
             b.TARGET.`as`("target"),
             b.SHA_CONTENT.`as`("shaContent"),
-            b.PRE_CMD.`as`("preCmd")
+            b.PRE_CMD.`as`("preCmd"),
+            b.POST_ENTRY_PARAM.`as`("postEntryParam"),
+            b.POST_CONDITION.`as`("postCondition")
         ).from(a)
             .join(b)
             .on(a.ID.eq(b.ATOM_ID))
@@ -212,7 +218,9 @@ class MarketAtomEnvInfoDao {
             if (!atomEnvRequest.pkgName.isNullOrEmpty()) {
                 baseStep.set(PKG_NAME, atomEnvRequest.pkgName)
             }
-
+            val atomPostInfo = atomEnvRequest.atomPostInfo
+            baseStep.set(POST_ENTRY_PARAM, atomPostInfo?.postEntryParam)
+            baseStep.set(POST_CONDITION, atomPostInfo?.postCondition)
             baseStep.set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, atomEnvRequest.userId)
                 .where(ATOM_ID.eq(atomId))

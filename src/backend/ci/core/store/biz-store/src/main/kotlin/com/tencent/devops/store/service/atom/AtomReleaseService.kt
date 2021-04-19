@@ -72,4 +72,16 @@ interface AtomReleaseService {
         atomOfflineReq: AtomOfflineReq,
         checkPermissionFlag: Boolean = true
     ): Result<Boolean>
+
+    /**
+     * 处理插件发布逻辑
+     */
+    fun handleAtomRelease(
+        releaseFlag: Boolean,
+        atomId: String,
+        atomCode: String,
+        version: String,
+        atomStatus: Byte,
+        userId: String
+    ): Result<Boolean>
 }

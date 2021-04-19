@@ -41,10 +41,11 @@ class CommonAtomTargetHandleServiceImpl : AtomTargetHandleService {
         osType: OSType,
         buildHostType: BuildHostTypeEnum,
         systemEnvVariables: Map<String, String>,
-        buildEnvs: List<BuildEnv>
+        buildEnvs: List<BuildEnv>,
+        postEntryParam: String?
     ): String {
         logger.info("handleAtomTarget target:$target,osType:$osType,buildHostType:$buildHostType")
-        logger.info("handleAtomTarget systemEnvVariables:$systemEnvVariables,buildEnvs:$buildEnvs")
+        logger.info("handleAtomTarget systemEnvVariables:$systemEnvVariables,buildEnvs:$buildEnvs,postEntryParam:$postEntryParam")
         return target
     }
 }

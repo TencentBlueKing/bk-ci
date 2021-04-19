@@ -29,12 +29,15 @@ package com.tencent.devops.store.service.atom.impl
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
+import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.StoreBuildResultRequest
 import com.tencent.devops.store.service.atom.MarketAtomService
 import com.tencent.devops.store.service.common.AbstractStoreHandleBuildResultService
+import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -43,6 +46,7 @@ import org.springframework.stereotype.Service
 @Service("ATOM_HANDLE_BUILD_RESULT")
 class AtomHandleBuildResultServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
+    private val redisOperation: RedisOperation,
     private val marketAtomDao: MarketAtomDao,
     private val marketAtomService: MarketAtomService
 ) : AbstractStoreHandleBuildResultService() {
@@ -65,13 +69,23 @@ class AtomHandleBuildResultServiceImpl @Autowired constructor(
         if (BuildStatus.SUCCEED != storeBuildResultRequest.buildStatus) {
             atomStatus = AtomStatusEnum.BUILD_FAIL // 构建失败
         }
+        val atomCode = atomRecord.atomCode
+        val version = atomRecord.version
         marketAtomService.setAtomBuildStatusByAtomCode(
-            atomCode = atomRecord.atomCode,
-            version = atomRecord.version,
+            atomCode = atomCode,
+            version = version,
             userId = storeBuildResultRequest.userId,
             atomStatus = atomStatus,
             msg = null
         )
+        if (atomStatus == AtomStatusEnum.TESTING) {
+            // 插件大版本内有测试版本则写入缓存
+            redisOperation.hset(
+                key = "$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode",
+                hashKey = VersionUtils.convertLatestVersion(version),
+                values = "true"
+            )
+        }
         return Result(true)
     }
 }

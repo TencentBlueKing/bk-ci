@@ -54,13 +54,6 @@ object ScmOauthFactory {
     ): IScm {
         return when (type) {
             ScmType.CODE_SVN -> {
-                if (region == null) {
-                    throw TaskExecuteException(
-                        errorCode = ErrorCode.USER_INPUT_INVAILD,
-                        errorType = ErrorType.USER,
-                        errorMsg = "The svn region is null"
-                    )
-                }
 
                 if (userName == null) {
                     throw TaskExecuteException(

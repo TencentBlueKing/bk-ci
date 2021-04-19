@@ -50,6 +50,7 @@ import okhttp3.Response
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileOutputStream
+import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.URLEncoder
 import java.net.UnknownHostException
@@ -94,9 +95,15 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         } catch (e: UnknownHostException) { // DNS问题导致请求未到达目标，可重试
             logger.warn("UnknownHostException|request($request),error is :$e, try to retry $retryCount")
             true
+        } catch (e: ConnectException) {
+            logger.warn("ConnectException|request($request),error is :$e, try to retry $retryCount")
+            true
         } catch (e: Exception) {
             if (e is SocketTimeoutException && e.message == "timeout") { // 请求没到达服务器而超时，可重试
-                logger.warn("SocketTimeoutException|request($request),error is :$e, try to retry $retryCount")
+                logger.warn("SocketTimeoutException(timeout)|request($request),error is :$e, try to retry $retryCount")
+                true
+            } else if (e is SocketTimeoutException && e.message == "connect timed out") {
+                logger.warn("SocketTimeoutException(connect timed out)|request($request),error is :$e, try to retry $retryCount")
                 true
             } else {
                 logger.error("Fail to request($request),error is :$e", e)

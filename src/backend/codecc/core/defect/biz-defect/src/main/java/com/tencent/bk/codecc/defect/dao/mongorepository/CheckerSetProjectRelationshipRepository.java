@@ -12,8 +12,8 @@ import java.util.Set;
  * @version V1.0
  * @date 2020/1/5
  */
-public interface CheckerSetProjectRelationshipRepository extends MongoRepository<CheckerSetProjectRelationshipEntity, String>
-{
+public interface CheckerSetProjectRelationshipRepository extends MongoRepository<CheckerSetProjectRelationshipEntity,
+        String> {
     /**
      * 根据规则集ID，关联方编码查询
      *
@@ -45,12 +45,23 @@ public interface CheckerSetProjectRelationshipRepository extends MongoRepository
      * @param checkerSetIds
      * @return
      */
-    List<CheckerSetProjectRelationshipEntity> findByCheckerSetIdInAndProjectId(Set<String> checkerSetIds, String projectId);
+    List<CheckerSetProjectRelationshipEntity> findByCheckerSetIdInAndProjectId(Set<String> checkerSetIds,
+                                                                               String projectId);
 
     /**
      * 通过项目id查找
+     *
      * @param projectId
      * @return
      */
     List<CheckerSetProjectRelationshipEntity> findByProjectId(String projectId);
+
+    /**
+     * 根据规则集ID，是否使用最新版本查询
+     *
+     * @param checkerSetId
+     * @return
+     */
+    List<CheckerSetProjectRelationshipEntity> findByCheckerSetIdAndUselatestVersion(String checkerSetId,
+                                                                                    Boolean uselatestVersion);
 }

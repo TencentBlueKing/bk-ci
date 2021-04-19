@@ -398,4 +398,25 @@ class NodeService @Autowired constructor(
             records = nodeInfos.map { NodeStringIdUtils.getNodeBaseInfo(it) }
         )
     }
+
+    fun searchByDisplayName(projectId: String, offset: Int?, limit: Int?, displayName: String): Page<NodeBaseInfo> {
+        val nodeInfos = nodeDao.searchByDisplayName(
+                dslContext = dslContext,
+                offset = offset!!,
+                limit = limit!!,
+                projectId = projectId,
+                displayName = displayName
+        )
+        val count = nodeDao.countByDisplayName(
+                dslContext = dslContext,
+                project = projectId,
+                displayName = displayName
+        )
+        return Page(
+                count = count.toLong(),
+                page = offset!!,
+                pageSize = limit!!,
+                records = nodeInfos.map { NodeStringIdUtils.getNodeBaseInfo(it) }
+        )
+    }
 }

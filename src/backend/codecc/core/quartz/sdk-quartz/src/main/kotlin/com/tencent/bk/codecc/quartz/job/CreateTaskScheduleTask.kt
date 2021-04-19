@@ -13,8 +13,8 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 
 class CreateTaskScheduleTask @Autowired constructor(
-        private val rabbitTemplate: RabbitTemplate,
-        private val objectMapper: ObjectMapper
+    private val rabbitTemplate: RabbitTemplate,
+    private val objectMapper: ObjectMapper
 ) : IScheduleTask {
 
     companion object {
@@ -44,15 +44,14 @@ class CreateTaskScheduleTask @Autowired constructor(
                 return
             }
             val gongfengModelList: List<GongfengPublicProjModel> =
-                    objectMapper.readValue(result, object : TypeReference<List<GongfengPublicProjModel>>() {})
+                objectMapper.readValue(result, object : TypeReference<List<GongfengPublicProjModel>>() {})
             logger.info("size of json array is: ${gongfengModelList.size}")
             dataSize = gongfengModelList.size
             val gongfengPageModel = GongfengProjPageModel(page, gongfengModelList)
             rabbitTemplate.convertAndSend(EXCHANGE_GONGFENG_CODECC_SCAN, ROUTE_GONGFENG_CODECC_SCAN, gongfengPageModel)
-            //每一次线程休息15秒，确保负载正常
-            Thread.sleep(15000)
+            //每一次线程休息5秒，确保负载正常
+            Thread.sleep(3000)
             page++
-
         } while (dataSize >= 100 && page <= endPage)
     }
 }

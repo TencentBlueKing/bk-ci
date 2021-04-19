@@ -3,6 +3,7 @@
         :title="currentElement.name"
         :status="currentElement.status"
         :current-tab="currentTab"
+        :is-hook="((currentElement.additionalOptions || {}).elementPostInfo || false)"
     >
         <span class="head-tab" slot="tab">
             <span @click="currentTab = 'log'" :class="{ active: currentTab === 'log' }">{{ $t('execDetail.log') }}</span><span @click="currentTab = 'setting'" :class="{ active: currentTab === 'setting' }">{{ $t('execDetail.setting') }}</span>

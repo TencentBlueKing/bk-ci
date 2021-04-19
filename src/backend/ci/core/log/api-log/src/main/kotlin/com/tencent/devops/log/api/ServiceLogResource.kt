@@ -116,7 +116,7 @@ interface ServiceLogResource {
         executeCount: Int?
     ): Result<QueryLogs>
 
-    @ApiOperation("获取某行后的日志")
+    @ApiOperation("获取某行前的日志")
     @GET
     @Path("/{projectId}/{pipelineId}/{buildId}/after")
     fun getAfterLogs(

@@ -115,4 +115,11 @@ class DateTimeUtilTest {
         val expected = LocalDateTime.parse("2020-07-06 01:59:59", DateTimeFormatter.ofPattern(format))
         Assert.assertEquals(expected, DateTimeUtil.stringToLocalDateTime(date, format))
     }
+
+    @Test
+    fun test() {
+        val date = LocalDateTime.of(2020, 12, 15, 21, 9, 59)
+        val dateStr = DateTimeUtil.toDateTime(date)
+        println(dateStr)
+    }
 }

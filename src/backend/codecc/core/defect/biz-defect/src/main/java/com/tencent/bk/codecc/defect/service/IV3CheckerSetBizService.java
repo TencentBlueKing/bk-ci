@@ -1,6 +1,7 @@
 package com.tencent.bk.codecc.defect.service;
 
 import com.tencent.bk.codecc.defect.model.checkerset.CheckerSetEntity;
+import com.tencent.bk.codecc.defect.model.checkerset.CheckerSetProjectRelationshipEntity;
 import com.tencent.bk.codecc.defect.vo.*;
 import com.tencent.bk.codecc.task.vo.TaskBaseVO;
 import com.tencent.devops.common.api.checkerset.*;
@@ -42,9 +43,21 @@ public interface IV3CheckerSetBizService
      * @param checkerSetId
      * @param user
      * @param checkerProps
+     * @param version
      * @return
      */
-    void updateCheckersOfSet(String checkerSetId, String user, List<CheckerPropVO> checkerProps);
+    void updateCheckersOfSet(String checkerSetId, String user, List<CheckerPropVO> checkerProps, Integer version);
+
+    /**
+     * 刷新本次规则更新涉及的任务的信息。包括强制全量标志，工具，告警状态等
+     * @param checkerSetEntity
+     * @param fromCheckerSet
+     * @param projectRelationships
+     * @param user
+     */
+    void updateTaskAfterChangeCheckerSet(CheckerSetEntity checkerSetEntity, CheckerSetEntity fromCheckerSet,
+                                         List<CheckerSetProjectRelationshipEntity> projectRelationships,
+                                         String user);
 
     /**
      * 查询规则集列表
@@ -85,6 +98,16 @@ public interface IV3CheckerSetBizService
      * @return
      */
     List<CheckerSetVO> getCheckerSetsOfTask(CheckerSetListQueryReq queryCheckerSetReq);
+
+    /**
+     * 查询规则集列表
+     *
+     */
+    List<CheckerSetVO> getTaskCheckerSets(String projectId,
+                                          long taskId,
+                                          String toolName,
+                                          String dimension,
+                                          boolean needProps);
 
     /**
      * 分页查询规则集列表
@@ -136,6 +159,12 @@ public interface IV3CheckerSetBizService
     void setRelationships(String checkerSetId, String user, CheckerSetRelationshipVO checkerSetRelationshipVO);
 
     /**
+     * 一键关联单个规则集与项目或任务
+     *
+     */
+    Boolean setRelationshipsOnce(String user, String projectId, long taskId, String toolName);
+
+    /**
      * 批量关联任务和规则集
      *
      * @param projectId
@@ -178,7 +207,9 @@ public interface IV3CheckerSetBizService
      * @param legacy
      * @return
      */
-    List<CheckerSetEntity> findAvailableCheckerSetsByProject(String projectId, List<Boolean> legacy);
+    List<CheckerSetEntity> findAvailableCheckerSetsByProject(String projectId,
+                                                             List<Boolean> legacy,
+                                                             int toolIntegratedStatus);
 
     /**
      * 根据任务id和语言解绑
@@ -203,4 +234,13 @@ public interface IV3CheckerSetBizService
      * @return
      */
     List<CheckerSetVO> queryCheckerSetsForOpenScan(Set<CheckerSetVO> checkerSetList, String projectId);
+
+    Boolean updateCheckerSetBaseInfoByOp(String userName, V3UpdateCheckerSetReqExtVO checkerSetVO);
+
+    /**
+     * 获取规则集管理初始化参数选项
+     *
+     * @return
+     */
+    CheckerSetParamsVO getCheckerSetParams();
 }

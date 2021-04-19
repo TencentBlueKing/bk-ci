@@ -100,10 +100,10 @@ object QualityUtils {
         }
 
         return if (detail.isNullOrBlank() || detail!!.split(",").size > 1) {
-            "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/task/$taskId/detail'>$value</a>"
+            "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/task/$taskId/detail?buildId=$buildId'>$value</a>"
         } else {
             val detailValue = codeccToolUrlPathMap[detail] ?: "defect/lint"
-            "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/task/$taskId/$detailValue/$detail/list'>$value</a>"
+            "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/task/$taskId/$detailValue/$detail/list?buildId=$buildId'>$value</a>"
         }
     }
 }

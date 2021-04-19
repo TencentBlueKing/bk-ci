@@ -31,7 +31,7 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamPai
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("流水线-用户信息")
+@ApiModel("人工审核插件-审核信息")
 data class ReviewParam(
 //    userId: String, projectId: String, pipelineId: String, buildId: String, elementId: String
 //    @ApiModelProperty("主键ID", required = false)
