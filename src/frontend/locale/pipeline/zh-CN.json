@@ -124,6 +124,7 @@
     "sizeLimit": "最大上传{0}MB的文件",
     "fileUploadSuccess": "上传成功",
     "empty": "暂无数据",
+    "link": "链接",
     "execDetail": {
         "log": "日志",
         "setting": "配置",

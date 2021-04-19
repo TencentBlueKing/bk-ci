@@ -12,9 +12,22 @@
                 </li>
             </ul>
 
-            <iframe :src="reportUrl" frameborder="0" class="report-file"></iframe>
+            <bk-table :data="chooseReport.thirdReports"
+                :outer-border="false"
+                :header-border="false"
+                :header-cell-style="{ background: '#f1f2f3' }"
+                v-if="chooseReport.type === 'THIRDPARTY'"
+                class="report-file"
+            >
+                <bk-table-column :label="$t('name')" prop="name" show-overflow-tooltip></bk-table-column>
+                <bk-table-column :label="$t('link')">
+                    <template slot-scope="props">
+                        <a :href="props.row.indexFileUrl" target="_blank" class="text-link">{{ props.row.indexFileUrl }}</a>
+                    </template>
+                </bk-table-column>
+            </bk-table>
+            <iframe :src="chooseReport.indexFileUrl" frameborder="0" class="report-file" v-else></iframe>
         </template>
-
         <span class="bk-table-empty-text" v-if="!isLoading && reportList.length <= 0">
             <i class="bk-table-empty-icon bk-icon icon-empty"></i>
             <div>{{ $t('empty') }}</div>
@@ -37,9 +50,8 @@
         },
 
         computed: {
-            reportUrl () {
-                const report = this.reportList.find((report, index) => (index === this.reportIndex)) || {}
-                return report.indexFileUrl
+            chooseReport () {
+                return this.reportList.find((report, index) => (index === this.reportIndex)) || {}
             }
         },
 
@@ -57,7 +69,17 @@
                     taskId: this.taskId
                 }
                 this.$store.dispatch('soda/requestReportList', postData).then((res) => {
-                    this.reportList = res || []
+                    const thirdReports = []
+                    const innerReports = [];
+                    (res || []).forEach((item) => {
+                        if (item.type === 'THIRDPARTY') {
+                            thirdReports.push(item)
+                        } else {
+                            innerReports.push(item)
+                        }
+                    })
+                    this.reportList = innerReports
+                    if (thirdReports.length) this.reportList.push({ name: this.$t('details.thirdReport'), thirdReports, type: 'THIRDPARTY' })
                 }).catch((err) => {
                     this.$bkMessage({ theme: 'error', message: err.message || err })
                 }).finally(() => {
@@ -109,5 +131,19 @@
     .bk-table-empty-text {
         width: 100%;
         text-align: center;
+    }
+    /deep/ .bk-table {
+        border: none;
+        height: 100%;
+        &::before {
+            background-color: #fff;
+        }
+        td, th.is-leaf {
+            border-bottom-color: #f0f1f5;
+        }
+        .bk-table-body-wrapper {
+            max-height: calc(100% - 43px);
+            overflow-y: auto;
+        }
     }
 </style>

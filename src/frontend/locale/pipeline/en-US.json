@@ -124,6 +124,7 @@
     "sizeLimit": "Maximum file size: {0}MB",
     "fileUploadSuccess": "Upload Sucessful",
     "empty": "No data",
+    "link": "link",
     "execDetail": {
         "log": "Log",
         "setting": "Configuration",
