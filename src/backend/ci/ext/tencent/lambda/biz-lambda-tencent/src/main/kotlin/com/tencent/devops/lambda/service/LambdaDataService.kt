@@ -107,7 +107,7 @@ class LambdaDataService @Autowired constructor(
         pushBuildHistory(projectInfo, history)
         pushBuildDetail(projectInfo, event.pipelineId, model)
 
-        val info = getBuildInfo(event.buildId)
+/*        val info = getBuildInfo(event.buildId)
         if (info == null) {
             logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}] The build info is not exist")
             return
@@ -130,7 +130,7 @@ class LambdaDataService @Autowired constructor(
             model = model.model,
             errorInfoList = event.errorInfoList
         )
-        esService.build(data)
+        esService.build(data)*/
     }
 
     fun onBuildTaskFinish(event: PipelineBuildTaskFinishBroadCastEvent) {
@@ -140,8 +140,8 @@ class LambdaDataService @Autowired constructor(
             return
         }
         pushTaskDetail(task)
-        pushElementData2Es(event, task)
-        pushGitTaskInfo(event, task)
+/*        pushElementData2Es(event, task)
+        pushGitTaskInfo(event, task)*/
     }
 
     fun makeUpBuildHistory(userId: String, makeUpBuildVOs: List<MakeUpBuildVO>): Boolean {
