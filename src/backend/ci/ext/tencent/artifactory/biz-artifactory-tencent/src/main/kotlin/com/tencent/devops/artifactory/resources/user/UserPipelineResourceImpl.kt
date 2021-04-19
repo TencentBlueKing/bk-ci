@@ -42,7 +42,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserPipelineResourceImpl @Autowired constructor(
     val pipelineService: PipelineService,
     val bkRepoPipelineDirService: BkRepoPipelineDirService
-    ) : UserPipelineResource {
+) : UserPipelineResource {
 
     override fun hasPermissionList(userId: String, projectId: String, path: String, permission: Permission): Result<List<FileInfo>> {
         checkParam(userId, projectId, path)
