@@ -81,7 +81,7 @@ interface UserProjectRoleResource {
         projectId: Int,
         @ApiParam(name = "角色Id", required = true)
         @PathParam("roleId")
-        roleId: String,
+        roleId: Int,
         @ApiParam(name= "用户组信息", required = true)
         groupInfo: ManagerRoleGroup
     ): Result<Boolean>
