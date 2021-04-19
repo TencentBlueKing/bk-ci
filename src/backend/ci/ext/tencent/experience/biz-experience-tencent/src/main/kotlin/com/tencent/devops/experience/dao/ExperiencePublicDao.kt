@@ -166,6 +166,7 @@ class ExperiencePublicDao {
         endDate: LocalDateTime,
         size: Long,
         logoUrl: String,
+        scheme: String,
         type: Int = ExperiencePublicType.FROM_BKCI.id,
         externalUrl: String = ""
     ) {
@@ -186,6 +187,7 @@ class ExperiencePublicDao {
                 DOWNLOAD_TIME,
                 SIZE,
                 LOGO_URL,
+                SCHEME,
                 TYPE,
                 EXTERNAL_LINK
             ).values(
@@ -202,6 +204,7 @@ class ExperiencePublicDao {
                 0,
                 size,
                 logoUrl,
+                scheme,
                 type,
                 externalUrl
             ).onDuplicateKeyUpdate()
@@ -213,6 +216,7 @@ class ExperiencePublicDao {
                 .set(UPDATE_TIME, now)
                 .set(SIZE, size)
                 .set(LOGO_URL, logoUrl)
+                .set(SCHEME, scheme)
                 .execute()
         }
     }

@@ -39,12 +39,14 @@ import com.tencent.devops.experience.pojo.index.HotCategoryParam
 import com.tencent.devops.experience.pojo.index.IndexAppInfoVO
 import com.tencent.devops.experience.pojo.index.IndexBannerVO
 import com.tencent.devops.experience.pojo.index.NewCategoryParam
+import com.tencent.devops.model.experience.tables.records.TExperiencePublicRecord
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class ExperienceIndexService @Autowired constructor(
+    val experienceBaseService: ExperienceBaseService,
     val experiencePublicDao: ExperiencePublicDao,
     val dslContext: DSLContext
 ) {
@@ -86,6 +88,7 @@ class ExperienceIndexService @Autowired constructor(
     ): Result<Pagination<IndexAppInfoVO>> {
         val offset = (page - 1) * pageSize
         val platformStr = PlatformEnum.of(platform)?.name
+        val lastDownloadMap = experienceBaseService.getLastDownloadMap(userId)
         val types = ExperiencePublicType.getIds(includeExternalUrl)
 
         val records = experiencePublicDao.listHot(
@@ -94,18 +97,7 @@ class ExperienceIndexService @Autowired constructor(
             limit = pageSize,
             platform = platformStr,
             types = types
-        ).map {
-            IndexAppInfoVO(
-                type = it.type,
-                experienceHashId = HashUtil.encodeLongId(it.recordId),
-                experienceName = it.experienceName,
-                createTime = it.updateTime.timestampmilli(),
-                size = it.size,
-                logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl),
-                bundleIdentifier = it.bundleIdentifier,
-                externalUrl = it.externalLink
-            )
-        }.toList()
+        ).map { toIndexAppInfoVO(it, lastDownloadMap) }.toList()
 
         val hasNext = if (records.size < pageSize) {
             false
@@ -128,6 +120,7 @@ class ExperienceIndexService @Autowired constructor(
     ): Result<Pagination<IndexAppInfoVO>> {
         val offset = (page - 1) * pageSize
         val platformStr = PlatformEnum.of(platform)?.name
+        val lastDownloadMap = experienceBaseService.getLastDownloadMap(userId)
         val types = ExperiencePublicType.getIds(includeExternalUrl)
 
         val records = experiencePublicDao.listNecessary(
@@ -136,18 +129,7 @@ class ExperienceIndexService @Autowired constructor(
             limit = pageSize,
             platform = platformStr,
             types = types
-        ).map {
-            IndexAppInfoVO(
-                type = it.type,
-                experienceHashId = HashUtil.encodeLongId(it.recordId),
-                experienceName = it.experienceName,
-                createTime = it.updateTime.timestampmilli(),
-                size = it.size,
-                logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl),
-                bundleIdentifier = it.bundleIdentifier,
-                externalUrl = it.externalLink
-            )
-        }.toList()
+        ).map { toIndexAppInfoVO(it, lastDownloadMap) }.toList()
 
         val hasNext = if (records.size < pageSize) {
             false
@@ -171,6 +153,7 @@ class ExperienceIndexService @Autowired constructor(
     ): Result<Pagination<IndexAppInfoVO>> {
         val offset = (page - 1) * pageSize
         val platformStr = PlatformEnum.of(platform)?.name
+        val lastDownloadMap = experienceBaseService.getLastDownloadMap(userId)
         val types = ExperiencePublicType.getIds(includeExternalUrl)
 
         val records = experiencePublicDao.listNew(
@@ -179,18 +162,7 @@ class ExperienceIndexService @Autowired constructor(
             limit = pageSize,
             platform = platformStr,
             types = types
-        ).map {
-            IndexAppInfoVO(
-                type = it.type,
-                experienceHashId = HashUtil.encodeLongId(it.recordId),
-                experienceName = it.experienceName,
-                createTime = it.updateTime.timestampmilli(),
-                size = it.size,
-                logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl),
-                bundleIdentifier = it.bundleIdentifier,
-                externalUrl = it.externalLink
-            )
-        }.toList()
+        ).map { toIndexAppInfoVO(it, lastDownloadMap) }.toList()
 
         val hasNext = if (records.size < pageSize) {
             false
@@ -211,6 +183,7 @@ class ExperienceIndexService @Autowired constructor(
     ): Result<Pagination<IndexAppInfoVO>> {
         val offset = (hotCategoryParam.page - 1) * hotCategoryParam.pageSize
         val platformStr = PlatformEnum.of(platform)?.name
+        val lastDownloadMap = experienceBaseService.getLastDownloadMap(userId)
         val types = ExperiencePublicType.getIds(hotCategoryParam.includeExternalUrl)
 
         val records = experiencePublicDao.listHot(
@@ -220,18 +193,7 @@ class ExperienceIndexService @Autowired constructor(
             category = hotCategoryParam.categoryId,
             platform = platformStr,
             types = types
-        ).map {
-            IndexAppInfoVO(
-                type = it.type,
-                experienceHashId = HashUtil.encodeLongId(it.recordId),
-                experienceName = it.experienceName,
-                createTime = it.updateTime.timestampmilli(),
-                size = it.size,
-                logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl),
-                bundleIdentifier = it.bundleIdentifier,
-                externalUrl = it.externalLink
-            )
-        }.toList()
+        ).map { toIndexAppInfoVO(it, lastDownloadMap) }.toList()
 
         val hasNext = if (records.size < hotCategoryParam.pageSize) {
             false
@@ -253,6 +215,7 @@ class ExperienceIndexService @Autowired constructor(
     ): Result<Pagination<IndexAppInfoVO>> {
         val offset = (newCategoryParam.page - 1) * newCategoryParam.pageSize
         val platformStr = PlatformEnum.of(platform)?.name
+        val lastDownloadMap = experienceBaseService.getLastDownloadMap(userId)
         val types = ExperiencePublicType.getIds(newCategoryParam.includeExternalUrl)
 
         val records = experiencePublicDao.listNew(
@@ -262,18 +225,7 @@ class ExperienceIndexService @Autowired constructor(
             category = newCategoryParam.categoryId,
             platform = platformStr,
             types = types
-        ).map {
-            IndexAppInfoVO(
-                type = it.type,
-                experienceHashId = HashUtil.encodeLongId(it.recordId),
-                experienceName = it.experienceName,
-                createTime = it.updateTime.timestampmilli(),
-                size = it.size,
-                logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl),
-                bundleIdentifier = it.bundleIdentifier,
-                externalUrl = it.externalLink
-            )
-        }.toList()
+        ).map { toIndexAppInfoVO(it, lastDownloadMap) }.toList()
 
         val hasNext = if (records.size < newCategoryParam.pageSize) {
             false
@@ -287,4 +239,22 @@ class ExperienceIndexService @Autowired constructor(
 
         return Result(Pagination(hasNext, records))
     }
+
+    private fun toIndexAppInfoVO(
+        it: TExperiencePublicRecord,
+        lastDownloadMap: Map<String, Long>
+    ) = IndexAppInfoVO(
+        experienceHashId = HashUtil.encodeLongId(it.recordId),
+        experienceName = it.experienceName,
+        createTime = it.updateTime.timestampmilli(),
+        size = it.size,
+        logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl),
+        externalUrl = it.externalLink,
+        bundleIdentifier = it.bundleIdentifier,
+        appScheme = it.scheme,
+        expired = false,
+        lastDownloadHashId = lastDownloadMap[it.projectId + it.bundleIdentifier + it.platform]
+            ?.let { l -> HashUtil.encodeLongId(l) } ?: "",
+        type = it.type
+    )
 }

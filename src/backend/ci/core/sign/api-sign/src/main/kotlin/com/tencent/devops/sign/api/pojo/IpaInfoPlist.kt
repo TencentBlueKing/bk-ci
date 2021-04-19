@@ -39,5 +39,7 @@ data class IpaInfoPlist(
     @ApiModelProperty("应用版本", required = true)
     var bundleVersion: String = "",
     @ApiModelProperty("应用构建版本", required = true)
-    var bundleVersionFull: String = ""
+    var bundleVersionFull: String = "",
+    @ApiModelProperty("应用scheme", required = true)
+    var scheme: String = ""
 )

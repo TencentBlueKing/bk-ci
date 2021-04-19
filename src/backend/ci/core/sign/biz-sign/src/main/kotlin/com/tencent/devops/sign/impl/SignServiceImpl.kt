@@ -27,6 +27,7 @@
 
 package com.tencent.devops.sign.impl
 
+import com.dd.plist.NSArray
 import com.dd.plist.NSDictionary
 import com.dd.plist.NSString
 import com.dd.plist.PropertyListParser
@@ -41,18 +42,17 @@ import com.tencent.devops.sign.api.pojo.MobileProvisionInfo
 import com.tencent.devops.sign.api.pojo.SignDetail
 import com.tencent.devops.sign.service.ArchiveService
 import com.tencent.devops.sign.service.FileService
+import com.tencent.devops.sign.service.MobileProvisionService
 import com.tencent.devops.sign.service.SignInfoService
 import com.tencent.devops.sign.service.SignService
-import com.tencent.devops.sign.service.MobileProvisionService
+import com.tencent.devops.sign.utils.SignUtils
+import com.tencent.devops.sign.utils.SignUtils.APP_INFO_PLIST_FILENAME
+import com.tencent.devops.sign.utils.SignUtils.MAIN_APP_FILENAME
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.io.File
 import java.io.InputStream
-import com.tencent.devops.sign.utils.SignUtils
-import com.tencent.devops.sign.utils.SignUtils.APP_INFO_PLIST_FILENAME
-import com.tencent.devops.sign.utils.SignUtils.MAIN_APP_FILENAME
-import java.lang.RuntimeException
 import java.util.regex.Pattern
 
 @Service
@@ -351,11 +351,28 @@ class SignServiceImpl @Autowired constructor(
             if (!rootDict.containsKey("CFBundleVersion")) throw RuntimeException("no CFBundleVersion find in plist")
             parameters = rootDict.objectForKey("CFBundleVersion") as NSString
             val bundleVersionFull = parameters.toString()
+            // scheme
+            val scheme = try {
+                val schemeArray = rootDict.objectForKey("CFBundleURLTypes") as NSArray
+                schemeArray.array
+                    .map { it as NSDictionary }
+                    .map { it.objectForKey("CFBundleURLSchemes") }
+                    .map { it as NSArray }
+                    .map { it.array }
+                    .flatMap { it.toList() }
+                    .map { it as NSString }
+                    .map { it.toString() }
+                    .maxBy { it.length } ?: ""
+            } catch (e: Exception) {
+                ""
+            }
+
             return IpaInfoPlist(
                 bundleIdentifier = bundleIdentifier,
                 appTitle = appTitle,
                 bundleVersion = bundleVersion,
-                bundleVersionFull = bundleVersionFull
+                bundleVersionFull = bundleVersionFull,
+                scheme = scheme
             )
         } catch (e: Exception) {
             throw ErrorCodeException(
@@ -383,6 +400,7 @@ class SignServiceImpl @Autowired constructor(
         properties["buildNo"] = if (ipaSignInfo.buildNum == null) "" else ipaSignInfo.buildNum.toString()
         properties["source"] = "pipeline"
         properties["ipa.sign.status"] = "true"
+        properties["appScheme"] = ipaInfoPlist.scheme
         return properties
     }
 
