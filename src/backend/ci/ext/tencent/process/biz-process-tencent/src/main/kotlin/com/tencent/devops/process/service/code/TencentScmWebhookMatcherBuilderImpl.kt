@@ -36,7 +36,6 @@ import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
 import com.tencent.devops.process.pojo.code.git.GitEvent
 import com.tencent.devops.process.pojo.code.github.GithubEvent
 import com.tencent.devops.process.pojo.code.svn.SvnCommitEvent
-import com.tencent.devops.process.pojo.scm.code.GitlabCommitEvent
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
@@ -54,7 +53,7 @@ class TencentScmWebhookMatcherBuilderImpl : ScmWebhookMatcherBuilder {
         pipelineWebhookService: PipelineWebhookService
     ): ScmWebhookMatcher = SvnWebHookMatcher(event, pipelineWebhookService)
 
-    override fun createGitlabWebHookMatcher(event: GitlabCommitEvent): ScmWebhookMatcher = GitlabWebHookMatcher(event)
+    override fun createGitlabWebHookMatcher(event: GitEvent): ScmWebhookMatcher = GitlabWebHookMatcher(event)
 
     override fun createGithubWebHookMatcher(event: GithubEvent): ScmWebhookMatcher = GithubWebHookMatcher(event)
 }
