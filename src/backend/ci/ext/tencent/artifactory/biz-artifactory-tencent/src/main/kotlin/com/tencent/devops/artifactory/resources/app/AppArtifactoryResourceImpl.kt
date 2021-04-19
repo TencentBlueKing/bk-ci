@@ -44,6 +44,7 @@ import com.tencent.devops.artifactory.service.artifactory.ArtifactoryService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoAppService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoSearchService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoService
+import com.tencent.devops.artifactory.util.UrlUtil
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
@@ -253,7 +254,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
                 pipelineName = pipelineInfo?.pipelineName ?: StringUtils.EMPTY,
                 creator = fileDetail.meta[ARCHIVE_PROPS_USER_ID] ?: StringUtils.EMPTY,
                 bundleIdentifier = fileDetail.meta[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER] ?: StringUtils.EMPTY,
-                logoUrl = fileDetail.meta[ARCHIVE_PROPS_APP_ICON] ?: backUpIcon.value,
+                logoUrl = UrlUtil.toOuterPhotoAddr(fileDetail.meta[ARCHIVE_PROPS_APP_ICON] ?: backUpIcon.value),
                 path = fileDetail.path,
                 fullName = fileDetail.fullName,
                 fullPath = fileDetail.fullPath,
