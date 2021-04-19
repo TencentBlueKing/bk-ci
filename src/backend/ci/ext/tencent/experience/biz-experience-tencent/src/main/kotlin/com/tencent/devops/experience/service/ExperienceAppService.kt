@@ -200,7 +200,7 @@ class ExperienceAppService(
         val experienceCondition = getExperienceCondition(isPublic, isPrivate, isInPrivate)
 
         val changeLog = if (isOldVersion) {
-            getChangeLog(projectId, bundleIdentifier, null, 1, 1000, true)
+            getChangeLog(userId, projectId, bundleIdentifier, null, 1, 1000, true)
         } else {
             emptyList() // 新版本使用changeLog接口
         }
@@ -260,6 +260,7 @@ class ExperienceAppService(
         val experience = experienceDao.get(dslContext, experienceId)
         val changeLog =
             getChangeLog(
+                userId,
                 experience.projectId,
                 experience.bundleIdentifier,
                 experience.platform,
@@ -282,6 +283,7 @@ class ExperienceAppService(
     }
 
     private fun getChangeLog(
+        userId: String,
         projectId: String,
         bundleIdentifier: String,
         platform: String?,
@@ -289,13 +291,15 @@ class ExperienceAppService(
         pageSize: Int,
         isOldVersion: Boolean
     ): List<ExperienceChangeLog> {
+        val recordIds = experienceBaseService.getRecordIdsByUserId(userId, GroupIdTypeEnum.JUST_PRIVATE)
         val experienceList = experienceDao.listByBundleIdentifier(
-            dslContext,
-            projectId,
-            bundleIdentifier,
-            platform,
-            (page - 1) * pageSize,
-            pageSize
+            dslContext = dslContext,
+            projectId = projectId,
+            bundleIdentifier = bundleIdentifier,
+            platform = platform,
+            recordIds = recordIds,
+            offset = (page - 1) * pageSize,
+            limit = pageSize
         )
         return experienceList.map {
             ExperienceChangeLog(
