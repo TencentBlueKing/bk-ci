@@ -112,7 +112,21 @@
 
             savePipelines () {
                 this.isSaving = true
-                api.requestSavePipelinesAsCsv(this.$route.params.code, this.queryData).catch((err) => {
+                api.requestSavePipelinesAsCsv(this.$route.params.code, this.queryData).then((res) => {
+                    if (res.status >= 200 && res.status < 300) {
+                        return res.blob()
+                    } else {
+                        throw new Error(res.statusText)
+                    }
+                }).then((blob) => {
+                    const a = document.createElement('a')
+                    const url = window.URL || window.webkitURL || window.moxURL
+                    a.href = url.createObjectURL(blob)
+                    a.download = `${this.$route.params.code}.csv`
+                    document.body.appendChild(a)
+                    a.click()
+                    document.body.removeChild(a)
+                }).catch((err) => {
                     this.$bkMessage({ theme: 'error', message: err.message || err })
                 }).finally(() => {
                     this.isSaving = false

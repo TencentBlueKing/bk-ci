@@ -38,6 +38,11 @@ export default {
             const val = params[key]
             if (val) query.push(`${key}=${val}`)
         }
-        return vue.$ajax.post(`${processPerfix}/user/pipeline/atoms/${code}/rel/csv/export?${query.join('&')}`)
+        return fetch(`${processPerfix}/user/pipeline/atoms/${code}/rel/csv/export?${query.join('&')}`, {
+            method: 'POST',
+            headers: {
+                'content-type': 'application/json'
+            }
+        })
     }
 }
