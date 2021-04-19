@@ -73,7 +73,21 @@ class ExperienceBaseService @Autowired constructor(
      * 判断用户是否能体验
      */
     fun userCanExperience(userId: String, experienceId: Long): Boolean {
-        val isPublic = lazy { experiencePublicDao.countByRecordId(dslContext, experienceId)?.value1() ?: 0 > 0 }
+        val isPublic = lazy { isPublic(experienceId) }
+        val isInPrivate = lazy { isInPrivate(experienceId, userId) }
+
+        return isPublic.value || isInPrivate.value
+    }
+
+    fun isPublic(experienceId: Long) =
+        experiencePublicDao.countByRecordId(dslContext, experienceId)?.value1() ?: 0 > 0
+
+    fun isPrivate(experienceId: Long): Boolean {
+        return experienceGroupDao.listGroupIdsByRecordId(dslContext, experienceId)
+            .filter { it.value1() == ExperienceConstant.PUBLIC_GROUP }.count() > 0
+    }
+
+    fun isInPrivate(experienceId: Long, userId: String): Boolean {
         val inGroup = lazy {
             getGroupIdToUserIdsMap(experienceId).values.asSequence().flatMap { it.asSequence() }.toSet()
                 .contains(userId)
@@ -84,7 +98,7 @@ class ExperienceBaseService @Autowired constructor(
         }
         val isCreator = lazy { experienceDao.get(dslContext, experienceId).creator == userId }
 
-        return isPublic.value || inGroup.value || isInnerUser.value || isCreator.value
+        return inGroup.value || isInnerUser.value || isCreator.value
     }
 
     /**

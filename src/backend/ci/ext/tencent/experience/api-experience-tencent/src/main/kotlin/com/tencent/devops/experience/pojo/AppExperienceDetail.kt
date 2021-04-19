@@ -74,5 +74,7 @@ data class AppExperienceDetail(
     @ApiModelProperty("描述", required = true)
     val remark: String,
     @ApiModelProperty("版本体验BundleIdentifier", required = true)
-    val bundleIdentifier: String
+    val bundleIdentifier: String,
+    @ApiModelProperty("体验状态", required = true)
+    val experienceCondition: Int
 )
