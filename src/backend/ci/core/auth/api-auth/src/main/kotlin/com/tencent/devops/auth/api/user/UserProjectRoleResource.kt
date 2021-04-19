@@ -88,7 +88,7 @@ interface UserProjectRoleResource {
 
     @GET
     @Path("/projectIds/{projectId}")
-    @ApiOperation("用户组重命名")
+    @ApiOperation("获取用户组")
     fun getProjectRoles(
         @ApiParam(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)

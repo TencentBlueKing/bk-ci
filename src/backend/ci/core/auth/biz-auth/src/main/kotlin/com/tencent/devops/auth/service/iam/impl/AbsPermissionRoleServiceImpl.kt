@@ -86,7 +86,7 @@ open class AbsPermissionRoleServiceImpl @Autowired constructor(
         val roleGroups = mutableListOf<ManagerRoleGroup>()
         roleGroups.add(managerRoleGroup)
         val groups = ManagerRoleGroupDTO.builder().groups(roleGroups).build()
-        val roleId = iamManagerService.createManagerRoleGroup(projectId, groups)
+        val roleId = iamManagerService.batchCreateRoleGroup(projectId, groups)
 
         // 默认分组需要分配默认权限
         if (groupInfo.defaultGroup!!) {
@@ -105,11 +105,11 @@ open class AbsPermissionRoleServiceImpl @Autowired constructor(
         permissionGradeService.checkGradeManagerUser(userId, projectId)
         // 校验用户组名称
         checkRoleName(groupInfo.name, false)
-        iamManagerService.updateManagerRoleGroup(projectId, groupInfo)
+        iamManagerService.updateRoleGroup(projectId, groupInfo)
     }
 
     override fun getPermissionRole(projectId: Int): ManagerRoleGroupVO {
-        return iamManagerService.getManagerRoleGroup(projectId)
+        return iamManagerService.getGradeManagerRoleGroup(projectId)
     }
 
     private fun checkRoleName(name: String, defaultGroup: Boolean) {
