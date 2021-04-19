@@ -1,7 +1,7 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.  
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -10,13 +10,23 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 package com.tencent.bkrepo.npm.exception
@@ -28,9 +38,9 @@ import com.tencent.bkrepo.common.api.util.JsonUtils
 import com.tencent.bkrepo.common.security.constant.BASIC_AUTH_PROMPT
 import com.tencent.bkrepo.common.security.exception.AuthenticationException
 import com.tencent.bkrepo.common.service.util.HttpContextHolder
-import com.tencent.bkrepo.npm.pojo.AuthFailInfo
-import com.tencent.bkrepo.npm.pojo.NpmAuthFailResponse
 import com.tencent.bkrepo.npm.pojo.NpmErrorResponse
+import com.tencent.bkrepo.npm.pojo.auth.AuthFailInfo
+import com.tencent.bkrepo.npm.pojo.auth.NpmAuthFailResponse
 import com.tencent.bkrepo.npm.pojo.auth.NpmAuthResponse
 import org.slf4j.LoggerFactory
 import org.springframework.core.Ordered
@@ -48,10 +58,24 @@ import java.util.concurrent.ExecutionException
 @RestControllerAdvice
 class NpmExceptionHandler {
 
+    @ExceptionHandler(NpmBadRequestException::class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    fun handlerBadRequestException(exception: NpmBadRequestException) {
+        val responseObject = NpmErrorResponse("bad request", exception.message)
+        npmResponse(responseObject, exception)
+    }
+
+    @ExceptionHandler(NpmRepoNotFoundException::class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    fun handlerRepoNotFoundException(exception: NpmRepoNotFoundException) {
+        val responseObject = NpmErrorResponse("bad request", exception.message)
+        npmResponse(responseObject, exception)
+    }
+
     @ExceptionHandler(ExecutionException::class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     fun handlerExecutionException(exception: ExecutionException) {
-        val responseObject = NpmErrorResponse("bad request", exception.message.orEmpty())
+        val responseObject = NpmErrorResponse("execution exception", exception.message.orEmpty())
         npmResponse(responseObject, exception)
     }
 
@@ -87,8 +111,12 @@ class NpmExceptionHandler {
     @ResponseStatus(HttpStatus.UNAUTHORIZED)
     fun handlerNpmTokenIllegalException(exception: NpmTokenIllegalException) {
         HttpContextHolder.getResponse().setHeader(HttpHeaders.WWW_AUTHENTICATE, BASIC_AUTH_PROMPT)
-        val authFailInfo = AuthFailInfo(HttpStatus.UNAUTHORIZED.value(), exception.message)
-        val npmAuthFailResponse = NpmAuthFailResponse(errors = listOf(authFailInfo))
+        val authFailInfo = AuthFailInfo(
+            HttpStatus.UNAUTHORIZED.value(),
+            exception.message
+        )
+        val npmAuthFailResponse =
+            NpmAuthFailResponse(errors = listOf(authFailInfo))
         npmResponse(npmAuthFailResponse, exception)
     }
 
@@ -109,7 +137,14 @@ class NpmExceptionHandler {
     @ExceptionHandler(NpmArtifactExistException::class)
     @ResponseStatus(HttpStatus.FORBIDDEN)
     fun handlerNpmArtifactExistException(exception: NpmArtifactExistException) {
-        val responseObject = NpmErrorResponse("forbidden", exception.message)
+        val responseObject = NpmErrorResponse(exception.message, "forbidden")
+        npmResponse(responseObject, exception)
+    }
+
+    @ExceptionHandler(NpmTagNotExistException::class)
+    @ResponseStatus(HttpStatus.NOT_FOUND)
+    fun handlerNpmTagNotExistException(exception: NpmTagNotExistException) {
+        val responseObject = NpmErrorResponse("not found", exception.message)
         npmResponse(responseObject, exception)
     }
 
@@ -148,7 +183,7 @@ class NpmExceptionHandler {
     private fun logNpmException(exception: Exception) {
         val userId = HttpContextHolder.getRequest().getAttribute(USER_KEY) ?: ANONYMOUS_USER
         val uri = HttpContextHolder.getRequest().requestURI
-        logger.warn("User[$userId] access resource[$uri] failed[${exception.javaClass.simpleName}]: ${exception.message}")
+        logger.warn("User[$userId] access [$uri] failed[${exception.javaClass.simpleName}]: ${exception.message}")
     }
 
     companion object {
