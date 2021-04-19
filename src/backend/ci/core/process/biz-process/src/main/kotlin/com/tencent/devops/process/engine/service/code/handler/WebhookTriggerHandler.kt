@@ -25,42 +25,50 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.code.git
+package com.tencent.devops.process.engine.service.code.handler
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.tencent.devops.process.engine.service.code.filter.WebhookFilter
+import com.tencent.devops.process.engine.service.code.filter.WebhookFilterChain
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
+import com.tencent.devops.process.pojo.code.WebHookEvent
+import com.tencent.devops.repository.pojo.Repository
 
-@Suppress("ALL")
-data class GitMergeRequestEvent(
-    val user: GitUser,
-    val manual_unlock: Boolean? = false,
-    val object_attributes: GitMRAttributes
-) : GitEvent() {
-    companion object {
-        const val classType = "merge_request"
+interface WebhookTriggerHandler {
+
+    /**
+     * 处理类是否能够处理
+     */
+    fun canHandler(event: WebHookEvent): Boolean
+
+    /**
+     * 匹配事件
+     */
+    fun doMatch(
+        event: WebHookEvent,
+        projectId: String,
+        pipelineId: String,
+        repository: Repository,
+        webHookParams: ScmWebhookMatcher.WebHookParams
+    ): ScmWebhookMatcher.MatchResult {
+        val filters = getWebhookFilters(
+            event = event,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            repository = repository,
+            webHookParams = webHookParams
+        )
+        return if (filters.isNotEmpty()) {
+            ScmWebhookMatcher.MatchResult(isMatch = WebhookFilterChain(filters = filters).doFilter())
+        } else {
+            ScmWebhookMatcher.MatchResult(isMatch = true)
+        }
     }
-}
 
-@Suppress("ALL")
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class GitMRAttributes(
-    val id: Long,
-    val target_branch: String,
-    val source_branch: String,
-    val author_id: Long,
-    val assignee_id: Long,
-    val title: String,
-    val created_at: String,
-    val updated_at: String,
-    val state: String,
-    val merge_status: String,
-    val target_project_id: String,
-    val source_project_id: String,
-    val iid: Long,
-    val description: String?,
-    val source: GitProject,
-    val target: GitProject,
-    val last_commit: GitCommit,
-    val url: String,
-    val action: String,
-    val extension_action: String?
-)
+    fun getWebhookFilters(
+        event: WebHookEvent,
+        projectId: String,
+        pipelineId: String,
+        repository: Repository,
+        webHookParams: ScmWebhookMatcher.WebHookParams
+    ): List<WebhookFilter>
+}

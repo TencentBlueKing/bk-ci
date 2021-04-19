@@ -29,21 +29,28 @@ package com.tencent.devops.scm.code
 
 import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.scm.IScm
 import com.tencent.devops.scm.code.git.api.GitApi
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.ScmException
+import com.tencent.devops.scm.pojo.GitMrChangeInfo
+import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import okhttp3.Request
 import org.slf4j.LoggerFactory
+import java.net.URLEncoder
 
 class CodeGitlabScmImpl constructor(
     override val projectName: String,
     override val branchName: String?,
     override val url: String,
     private val token: String,
-    gitConfig: GitConfig
+    gitConfig: GitConfig,
+    private val event: String? = null
 ) : IScm {
 
     private val apiUrl = GitUtils.getGitApiUrl(apiUrl = gitConfig.gitlabApiUrl, repoUrl = url)
@@ -70,7 +77,7 @@ class CodeGitlabScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the gitlab token", ignored)
             throw ScmException(
-                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_ACCESS_CHECK_FAIL),
+                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_ACCESS_CHECK_FAIL),
                 ScmType.CODE_GITLAB.name
             )
         }
@@ -82,7 +89,7 @@ class CodeGitlabScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the gitlab token", ignored)
             throw ScmException(
-                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_ACCESS_CHECK_FAIL),
+                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_ACCESS_CHECK_FAIL),
                 ScmType.CODE_GITLAB.name
             )
         }
@@ -103,10 +110,10 @@ class CodeGitlabScmImpl constructor(
         }
         try {
             logger.info("[HOOK_API]|$apiUrl")
-            gitApi.addWebhook(apiUrl, token, projectName, hookUrl, null)
-        } catch (e: ScmException) {
+            gitApi.addWebhook(apiUrl, token, projectName, hookUrl, event)
+        } catch (ignored: Throwable) {
             throw ScmException(
-                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITLAB_TOKEN_FAIL),
+                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITLAB_TOKEN_FAIL),
                 ScmType.CODE_GITLAB.name
             )
         }
@@ -129,6 +136,45 @@ class CodeGitlabScmImpl constructor(
 
     override fun unlock(repoName: String, applicant: String, subpath: String) {
         logger.info("gitlab can not unlock")
+    }
+
+    override fun getMergeRequestChangeInfo(mrId: Long): GitMrChangeInfo? {
+        val url = StringBuilder(
+            "$apiUrl/projects/${URLEncoder.encode(projectName, "UTF-8")}" +
+                "/merge_requests/$mrId/changes"
+        )
+        logger.info("get mr changes info url: $url")
+        val request = Request.Builder()
+            .url(url.toString())
+            .get()
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            if (!it.isSuccessful) {
+                throw RuntimeException(
+                    "get merge changes request info error for $projectName, $mrId(${it.code()}): ${it.message()}"
+                )
+            }
+            val data = it.body()!!.string()
+            return JsonUtil.to(data, GitMrChangeInfo::class.java)
+        }
+    }
+
+    override fun getMrInfo(mrId: Long): GitMrInfo? {
+        val url = StringBuilder("$apiUrl/projects/${URLEncoder.encode(projectName, "UTF-8")}" +
+            "/merge_requests/$mrId")
+        val request = Request.Builder()
+            .url(url.toString())
+            .get()
+            .build()
+        logger.info("get mr info url: $url")
+        OkhttpUtils.doHttp(request).use {
+            if (!it.isSuccessful) {
+                throw RuntimeException("get merge info error for $projectName, $mrId(${it.code()}): ${it.message()}")
+            }
+            val data = it.body()!!.string()
+            logger.info("get mr info response body: $data")
+            return JsonUtil.to(data, GitMrInfo::class.java)
+        }
     }
 
     companion object {

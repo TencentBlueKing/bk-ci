@@ -40,6 +40,9 @@ import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.exception.GitApiException
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitDiff
+import com.tencent.devops.scm.pojo.GitMrChangeInfo
+import com.tencent.devops.scm.pojo.GitMrInfo
+import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -66,6 +69,9 @@ open class GitApi {
         private const val OPERATION_COMMIT = "拉提交记录"
         private const val OPERATION_COMMIT_DIFF = "查询commit变化"
         private const val OPERATION_UNLOCK_HOOK_LOCK = "解锁hook锁"
+        private const val OPERATION_MR_CHANGE = "查询合并请求的代码变更"
+        private const val OPERATION_MR_INFO = "查询项目合并请求"
+        private const val OPERATION_MR_REVIEW = "查询项目合并请求"
     }
 
     fun listBranches(host: String, token: String, projectName: String): List<String> {
@@ -427,6 +433,24 @@ open class GitApi {
             }
             throw t
         }
+    }
+
+    fun getMergeRequestChangeInfo(host: String, token: String, projectName: String, mrId: Long): GitMrChangeInfo? {
+        val url = "projects/${urlEncode(projectName)}/merge_request/$mrId/changes"
+        val request = get(host, token, url, "")
+        return callMethod(OPERATION_MR_CHANGE, request, GitMrChangeInfo::class.java)
+    }
+
+    fun getMrInfo(host: String, token: String, projectName: String, mrId: Long): GitMrInfo? {
+        val url = "projects/${urlEncode(projectName)}/merge_request/$mrId"
+        val request = get(host, token, url, "")
+        return callMethod(OPERATION_MR_INFO, request, GitMrInfo::class.java)
+    }
+
+    fun getMrReviewInfo(host: String, token: String, projectName: String, mrId: Long): GitMrReviewInfo? {
+        val url = "projects/${urlEncode(projectName)}/merge_request/$mrId/review"
+        val request = get(host, token, url, "")
+        return callMethod(OPERATION_MR_INFO, request, GitMrReviewInfo::class.java)
     }
 
 //    private val OPERATION_BRANCH = "拉分支"
