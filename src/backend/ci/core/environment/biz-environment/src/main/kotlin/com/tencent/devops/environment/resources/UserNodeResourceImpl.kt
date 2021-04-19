@@ -33,12 +33,13 @@ import com.tencent.devops.environment.api.UserNodeResource
 import com.tencent.devops.environment.pojo.DisplayName
 import com.tencent.devops.environment.pojo.NodeWithPermission
 import com.tencent.devops.environment.service.NodeService
+import com.tencent.devops.environment.utils.NodeUtils
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserNodeResourceImpl @Autowired constructor(private val nodeService: NodeService) : UserNodeResource {
     override fun listUsableServerNodes(userId: String, projectId: String): Result<List<NodeWithPermission>> {
-        return Result(sortByUser(nodeService.listUsableServerNodes(userId, projectId), userId))
+        return Result(NodeUtils.sortByUser(nodeService.listUsableServerNodes(userId, projectId), userId))
     }
 
     override fun hasCreatePermission(userId: String, projectId: String): Result<Boolean> {
@@ -51,7 +52,7 @@ class UserNodeResourceImpl @Autowired constructor(private val nodeService: NodeS
     }
 
     override fun list(userId: String, projectId: String): Result<List<NodeWithPermission>> {
-        return Result(sortByUser(nodeService.list(userId, projectId), userId))
+        return Result(NodeUtils.sortByUser(nodeService.list(userId, projectId), userId))
     }
 
     override fun changeCreatedUser(userId: String, projectId: String, nodeHashId: String): Result<Boolean> {
@@ -67,17 +68,5 @@ class UserNodeResourceImpl @Autowired constructor(private val nodeService: NodeS
     ): Result<Boolean> {
         nodeService.updateDisplayName(userId, projectId, nodeHashId, displayName.displayName)
         return Result(true)
-    }
-
-    private fun sortByUser(nodes: List<NodeWithPermission>, userId: String): List<NodeWithPermission> {
-        if (nodes.isEmpty()) {
-            return nodes
-        }
-        val userNodes = nodes.filter { it.createdUser == userId }
-        val notUserNodes = nodes.filterNot { it.createdUser == userId }
-        val resultNodes = mutableListOf<NodeWithPermission>()
-        resultNodes.addAll(userNodes)
-        resultNodes.addAll(notUserNodes)
-        return resultNodes
     }
 }
