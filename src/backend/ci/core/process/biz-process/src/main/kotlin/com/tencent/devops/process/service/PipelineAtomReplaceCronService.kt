@@ -808,12 +808,12 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         paramReplaceInfoList: List<AtomParamReplaceInfo>?
     ): MutableMap<String, Any?> {
         val toAtomInputParamMap = mutableMapOf<String, Any?>()
-        toAtomInputParamNameList?.forEach { inputParamName ->
+        toAtomInputParamNameList?.forEach { toAtomInputParamName ->
             // 如果参数名一样则从被替换插件取值
             if (fromAtomInputParamMap != null) {
-                val fromAtomInputParamValue = fromAtomInputParamMap[inputParamName]
+                val fromAtomInputParamValue = fromAtomInputParamMap[toAtomInputParamName]
                 if (fromAtomInputParamValue != null) {
-                    toAtomInputParamMap[inputParamName] = fromAtomInputParamValue
+                    toAtomInputParamMap[toAtomInputParamName] = fromAtomInputParamValue
                 }
             }
             // 如果有插件参数替换映射信息则根据映射关系替换
@@ -821,7 +821,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                 paramReplaceInfoList?.forEach { paramReplaceInfo ->
                     if (generateToAtomInputParam(
                             paramReplaceInfo = paramReplaceInfo,
-                            inputParamName = inputParamName,
+                            toAtomInputParamName = toAtomInputParamName,
                             toAtomCode = toAtomCode,
                             toAtomVersion = toAtomVersion,
                             fromAtomInputParamMap = fromAtomInputParamMap,
@@ -836,28 +836,29 @@ class PipelineAtomReplaceCronService @Autowired constructor(
 
     private fun generateToAtomInputParam(
         paramReplaceInfo: AtomParamReplaceInfo,
-        inputParamName: String,
+        toAtomInputParamName: String,
         toAtomCode: String,
         toAtomVersion: String,
         fromAtomInputParamMap: Map<String, Any>?,
         toAtomInputParamMap: MutableMap<String, Any?>
     ): Boolean {
+        val fromParamName = paramReplaceInfo.fromParamName
         val toParamName = paramReplaceInfo.toParamName
         // 获取参数自定义转换接口路径
         val paramConvertUrl = paramReplaceInfo.paramConvertUrl
-        if (!paramConvertUrl.isNullOrBlank() && inputParamName == toParamName) {
+        if (!paramConvertUrl.isNullOrBlank() && toAtomInputParamName == toParamName) {
             // 参数自定义转换
             val atomReplaceParamConvertRequest = AtomReplaceParamConvertRequest(
                 toAtomCode = toAtomCode,
                 toAtomVersion = toAtomVersion,
-                fromField = inputParamName,
-                fromFieldValue = fromAtomInputParamMap?.get(inputParamName),
+                fromField = fromParamName,
+                fromFieldValue = fromAtomInputParamMap?.get(fromParamName),
                 toField = toParamName,
                 toFieldDefaultValue = paramReplaceInfo.toParamValue
             )
             val response = OkhttpUtils.doPost(paramConvertUrl, JsonUtil.toJson(atomReplaceParamConvertRequest))
             val responseContent = response.body()!!.string()
-            val errorMessage = "$inputParamName convert $toParamName fail"
+            val errorMessage = "$fromParamName convert $toParamName fail"
             if (!response.isSuccessful) {
                 throw ErrorCodeException(
                     errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
@@ -873,16 +874,16 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                     defaultMessage = errorMessage
                 )
             }
-            toAtomInputParamMap[inputParamName] = result.data
+            toAtomInputParamMap[toAtomInputParamName] = result.data
             return true
-        } else if (inputParamName == toParamName) {
+        } else if (toAtomInputParamName == toParamName) {
             val inputParamValue = if (paramReplaceInfo.toParamValue != null) {
                 paramReplaceInfo.toParamValue
             } else {
-                fromAtomInputParamMap?.get(paramReplaceInfo.fromParamName)
+                fromAtomInputParamMap?.get(fromParamName)
             }
             if (inputParamValue != null) {
-                toAtomInputParamMap[inputParamName] = inputParamValue
+                toAtomInputParamMap[toAtomInputParamName] = inputParamValue
             }
             return true
         }
