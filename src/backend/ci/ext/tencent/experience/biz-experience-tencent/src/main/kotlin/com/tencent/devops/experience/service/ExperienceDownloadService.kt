@@ -342,7 +342,7 @@ class ExperienceDownloadService @Autowired constructor(
                         appScheme = it.scheme,
                         expired = false,
                         lastDownloadHashId = lastDownloadMap[it.projectId + it.bundleIdentifier + it.platform]
-                          ?.let { l -> HashUtil.encodeLongId(l) } ?: ""
+                            ?.let { l -> HashUtil.encodeLongId(l) } ?: ""
                     )
                 }.sortedByDescending { it.downloadTime }.toList()
 

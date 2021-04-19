@@ -27,7 +27,6 @@
 
 package com.tencent.devops.experience.service
 
-
 import com.tencent.devops.artifactory.util.UrlUtil
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.pojo.Pagination
@@ -44,7 +43,6 @@ import com.tencent.devops.model.experience.tables.records.TExperiencePublicRecor
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-
 
 @Service
 class ExperienceIndexService @Autowired constructor(
