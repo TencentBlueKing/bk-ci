@@ -214,7 +214,7 @@ class CodeGitScmImpl constructor(
         logger.info("Git can not unlock")
     }
 
-    override fun getMergeRequestChangeInfo(mrId: Long): GitMrChangeInfo {
+    override fun getMergeRequestChangeInfo(mrId: Long): GitMrChangeInfo? {
         return gitApi.getMergeRequestChangeInfo(
             host = apiUrl,
             token = token,
@@ -223,7 +223,7 @@ class CodeGitScmImpl constructor(
         )
     }
 
-    override fun getMrInfo(mrId: Long): GitMrInfo {
+    override fun getMrInfo(mrId: Long): GitMrInfo? {
         return gitApi.getMrInfo(
             host = apiUrl,
             token = token,
@@ -232,7 +232,7 @@ class CodeGitScmImpl constructor(
         )
     }
 
-    override fun getMrReviewInfo(mrId: Long): GitMrReviewInfo {
+    override fun getMrReviewInfo(mrId: Long): GitMrReviewInfo? {
         return gitApi.getMrReviewInfo(
             host = apiUrl,
             token = token,
