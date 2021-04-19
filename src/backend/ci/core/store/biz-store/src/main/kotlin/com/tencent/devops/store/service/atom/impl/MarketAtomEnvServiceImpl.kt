@@ -47,6 +47,7 @@ import com.tencent.devops.store.pojo.common.ATOM_POST_CONDITION
 import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
 import com.tencent.devops.store.pojo.common.ATOM_POST_FLAG
 import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.StoreVersion
@@ -54,6 +55,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomService
 import com.tencent.devops.store.service.atom.MarketAtomEnvService
 import com.tencent.devops.store.utils.StoreUtils
+import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -85,7 +87,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         atomVersions: Set<StoreVersion>
     ): Result<Map<String, AtomRunInfo>?> {
         logger.info("batchGetAtomRunInfos projectCode:$projectCode,atomVersions:$atomVersions")
-        // 校验插件在项目下是否可用
+        // 1、校验插件在项目下是否可用
         val atomCodeList = atomVersions.map { it.storeCode }
         val storePublicFlagKey = StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name)
         if (!redisOperation.hasKey(storePublicFlagKey)) {
@@ -96,7 +98,62 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         }
         // 获取需要校验的插件（默认公共插件无需校验）
         val validateAtomCodeList = atomCodeList.filter { !redisOperation.isMember(storePublicFlagKey, it) }
+        val validAtomCodeList = storeProjectRelDao.getValidStoreCodesByProject(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            storeCodes = validateAtomCodeList,
+            storeType = StoreTypeEnum.ATOM
+        )?.map { it.value1() } ?: emptyList()
+        // 判断是否存在不可用插件
+        validateAtomCodeList.toMutableList().removeAll(validAtomCodeList)
+        if (validateAtomCodeList.isNotEmpty()) {
+            // 存在不可用插件，给出错误提示
+        }
+        // 2、根据插件代码和版本号查找插件运行时信息
+        // 判断当前项目是否是插件的调试项目
+        val testAtomCodes = storeProjectRelDao.getTestStoreCodes(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            storeType = StoreTypeEnum.ATOM,
+            storeCodeList = atomCodeList
+        )?.map { it.value1() }
+        val atomInitProjectMap = storeProjectRelDao.getInitProjectCodes(
+            dslContext = dslContext,
+            storeType = StoreTypeEnum.ATOM,
+            storeCodeList = atomCodeList
+        )
         val atomRunInfoMap = mutableMapOf<String, AtomRunInfo>()
+        atomVersions.forEach { atomVersion ->
+            val atomCode = atomVersion.storeCode
+            val version = atomVersion.version
+            // 获取当前大版本内是否有测试中的版本
+            val atomVersionTestFlag = redisOperation.hget(
+                key = "$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode",
+                hashKey = VersionUtils.convertLatestVersion(version)
+            )
+            val flag =
+                testAtomCodes?.contains(atomCode) == true && (atomVersionTestFlag == null || atomVersionTestFlag.toBoolean())
+            if (flag) {
+                val atomEnvResult = getMarketAtomEnvInfo(projectCode, atomCode, version)
+                if (atomEnvResult.isNotOk()) {
+                    return Result(atomEnvResult.status, atomEnvResult.message ?: "")
+                }
+                // 查不到当前插件信息则中断流程
+                val atomEnv = atomEnvResult.data ?: return Result(data = null)
+                val atomRunInfo = AtomRunInfo(
+                    atomCode = atomCode,
+                    atomName = atomEnv.atomName,
+                    version = atomEnv.version,
+                    atomStatus = atomEnv.atomStatus,
+                    initProjectCode = atomEnv.projectCode!!,
+                    jobType = atomEnv.jobType,
+                    buildLessRunFlag = atomEnv.buildLessRunFlag
+                )
+                atomRunInfoMap[atomCode] = atomRunInfo
+            } else {
+
+            }
+        }
         return Result(atomRunInfoMap)
     }
 

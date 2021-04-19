@@ -39,6 +39,8 @@ data class AtomRunInfo(
     val atomName: String,
     @ApiModelProperty("插件版本号", required = true)
     val version: String,
+    @ApiModelProperty("插件状态", required = true)
+    val atomStatus: String,
     @ApiModelProperty("插件初始化项目代码", required = true)
     val initProjectCode: String,
     @ApiModelProperty("Job类型", required = false)
