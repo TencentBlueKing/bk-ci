@@ -42,6 +42,38 @@ class ProcessDataClearService @Autowired constructor(
 ) {
 
     /**
+     * 清除流水线数据
+     * @param projectId 项目ID
+     * @param pipelineId 流水线ID
+     */
+    fun clearPipelineData(
+        projectId: String,
+        pipelineId: String
+    ) {
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            processDataClearDao.deletePipelineLabelByPipelineId(context, pipelineId)
+            processDataClearDao.deletePipelineModelTaskByPipelineId(context, pipelineId)
+            processDataClearDao.deletePipelineRemoteAuthByPipelineId(context, pipelineId)
+            processDataClearDao.deletePipelineResourceByPipelineId(context, pipelineId)
+            processDataClearDao.deletePipelineResourceVersionByPipelineId(context, pipelineId)
+            processDataClearDao.deletePipelineSettingByPipelineId(context, pipelineId)
+            processDataClearDao.deletePipelineSettingVersionByPipelineId(context, pipelineId)
+            processDataClearDao.deletePipelineTimerByPipelineId(context, pipelineId)
+            processDataClearDao.deletePipelineWebhookByPipelineId(context, pipelineId)
+            processDataClearDao.deleteTemplatePipelineByPipelineId(context, pipelineId)
+            processDataClearDao.deletePipelineBuildSummaryByPipelineId(context, pipelineId)
+            // 添加删除记录，插入要实现幂等
+            processDao.addPipelineDataClear(
+                dslContext = context,
+                projectId = projectId,
+                pipelineId = pipelineId
+            )
+            processDataClearDao.deletePipelineInfoByPipelineId(context, pipelineId)
+        }
+    }
+
+    /**
      * 清除流水线基础构建数据
      * @param buildId 构建ID
      */
@@ -76,6 +108,7 @@ class ProcessDataClearService @Autowired constructor(
                 buildId = buildId
             )
             processDataClearDao.deleteBuildStartupParamByBuildId(context, buildId)
+            processDataClearDao.deleteMetadataByBuildId(context, buildId)
             // 添加删除记录，插入要实现幂等
             processDao.addBuildHisDataClear(
                 dslContext = context,

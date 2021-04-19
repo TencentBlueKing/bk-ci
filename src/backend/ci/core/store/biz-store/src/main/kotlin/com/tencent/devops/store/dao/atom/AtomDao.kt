@@ -126,9 +126,14 @@ class AtomDao : AtomBaseDao() {
         }
     }
 
-    fun countByName(dslContext: DSLContext, name: String): Int {
+    fun countByName(dslContext: DSLContext, name: String, atomCode: String? = null): Int {
         with(TAtom.T_ATOM) {
-            return dslContext.selectCount().from(this).where(NAME.eq(name)).fetchOne(0, Int::class.java)
+            val conditions = mutableListOf<Condition>()
+            conditions.add(NAME.eq(name))
+            if (atomCode != null) {
+                conditions.add(ATOM_CODE.eq(atomCode))
+            }
+            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)
         }
     }
 
@@ -208,13 +213,15 @@ class AtomDao : AtomBaseDao() {
     fun getPipelineAtom(
         dslContext: DSLContext,
         atomCode: String,
-        version: String,
+        version: String? = null,
         atomStatusList: List<Byte>? = null
     ): TAtomRecord? {
         return with(TAtom.T_ATOM) {
             val conditions = mutableListOf<Condition>()
             conditions.add(ATOM_CODE.eq(atomCode))
-            conditions.add(VERSION.like(VersionUtils.generateQueryVersion(version)))
+            if (version != null) {
+                conditions.add(VERSION.like(VersionUtils.generateQueryVersion(version)))
+            }
             if (atomStatusList != null) {
                 conditions.add(ATOM_STATUS.`in`(atomStatusList))
             }

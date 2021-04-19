@@ -431,4 +431,46 @@ class StoreProjectRelDao {
             .and(tStoreProjectRel.TYPE.eq(StoreProjectTypeEnum.TEST.type.toByte()))
             .fetch()
     }
+
+    fun countInstallNumByCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: Byte,
+        startTime: LocalDateTime? = null,
+        endTime: LocalDateTime? = null
+    ): Int {
+        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_CODE.eq(storeCode))
+            conditions.add(STORE_TYPE.eq(storeType))
+            conditions.add(TYPE.eq(StoreProjectTypeEnum.COMMON.type.toByte()))
+            if (startTime != null) {
+                conditions.add(CREATE_TIME.ge(startTime))
+            }
+            if (endTime != null) {
+                conditions.add(CREATE_TIME.lt(endTime))
+            }
+            return dslContext.selectCount().from(this).where(conditions)
+                .fetchOne(0, Int::class.java)
+        }
+    }
+
+    /**
+     * 获取该项目可用的组件
+     */
+    fun getValidStoreCodesByProject(
+        dslContext: DSLContext,
+        projectCode: String,
+        storeCodes: Collection<String>,
+        storeType: StoreTypeEnum
+    ): Result<Record1<String>>? {
+        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            return dslContext.select(STORE_CODE).from(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(STORE_CODE.`in`(storeCodes))
+                .and(STORE_TYPE.eq(storeType.type.toByte()))
+                .groupBy(STORE_CODE)
+                .fetch()
+        }
+    }
 }

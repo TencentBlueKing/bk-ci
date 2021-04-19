@@ -94,6 +94,7 @@ class MQConfiguration @Autowired constructor() {
         container.setConcurrentConsumers(10)
         container.setMaxConcurrentConsumers(10)
         container.setAmqpAdmin(rabbitAdmin)
+        container.setPrefetchCount(1)
 
         val adapter = MessageListenerAdapter(buildListener, buildListener::onPipelineStartup.name)
         adapter.setMessageConverter(messageConverter)
@@ -136,6 +137,7 @@ class MQConfiguration @Autowired constructor() {
         container.setConcurrentConsumers(10)
         container.setMaxConcurrentConsumers(10)
         container.setAmqpAdmin(rabbitAdmin)
+        container.setPrefetchCount(1)
 
         val adapter = MessageListenerAdapter(buildListener, buildListener::onPipelineShutdown.name)
         adapter.setMessageConverter(messageConverter)
@@ -179,6 +181,7 @@ class MQConfiguration @Autowired constructor() {
         container.setMaxConcurrentConsumers(100)
         container.setAmqpAdmin(rabbitAdmin)
         container.setMismatchedQueuesFatal(true)
+        container.setPrefetchCount(1)
         val messageListenerAdapter = MessageListenerAdapter(buildListener, buildListener::handleStartMessage.name)
         messageListenerAdapter.setMessageConverter(messageConverter)
         container.setMessageListener(messageListenerAdapter)
@@ -210,6 +213,7 @@ class MQConfiguration @Autowired constructor() {
         container.setMaxConcurrentConsumers(100)
         container.setAmqpAdmin(rabbitAdmin)
         container.setMismatchedQueuesFatal(true)
+        container.setPrefetchCount(1)
         val messageListenerAdapter = MessageListenerAdapter(buildListener, buildListener::handleShutdownMessage.name)
         messageListenerAdapter.setMessageConverter(messageConverter)
         container.setMessageListener(messageListenerAdapter)

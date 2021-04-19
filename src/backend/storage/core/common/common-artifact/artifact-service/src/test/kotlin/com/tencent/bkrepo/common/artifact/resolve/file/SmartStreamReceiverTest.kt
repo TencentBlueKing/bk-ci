@@ -1,7 +1,7 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.  
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -10,20 +10,30 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 package com.tencent.bkrepo.common.artifact.resolve.file
 
-import com.google.common.util.concurrent.RateLimiter
 import com.tencent.bkrepo.common.api.constant.StringPool.randomString
 import com.tencent.bkrepo.common.artifact.stream.DigestCalculateListener
+import com.tencent.bkrepo.common.artifact.stream.RateLimitInputStream
 import com.tencent.bkrepo.common.storage.util.toPath
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Assertions
@@ -33,6 +43,7 @@ import org.springframework.util.unit.DataSize
 import java.io.InputStream
 import java.nio.charset.Charset
 import java.nio.file.Files
+import java.nio.file.Path
 import kotlin.concurrent.thread
 
 internal class SmartStreamReceiverTest {
@@ -75,7 +86,6 @@ internal class SmartStreamReceiverTest {
         Assertions.assertFalse(Files.exists(primaryPath.resolve(filename)))
         Assertions.assertFalse(Files.exists(fallbackPath.resolve(filename)))
         Assertions.assertFalse(receiver.fallback)
-
         val memoryContent = receiver.getCachedByteArray().toString(Charset.defaultCharset())
         Assertions.assertEquals(shortContent, memoryContent)
     }
@@ -98,9 +108,7 @@ internal class SmartStreamReceiverTest {
         Assertions.assertTrue(Files.exists(primaryPath.resolve(filename)))
         Assertions.assertFalse(Files.exists(fallbackPath.resolve(filename)))
         Assertions.assertFalse(receiver.fallback)
-
-        val fileContent = primaryPath.resolve(filename).toFile().readText(Charset.defaultCharset())
-        Assertions.assertEquals(shortContent, fileContent)
+        Assertions.assertEquals(shortContent, readText(primaryPath.resolve(filename)))
     }
 
     /**
@@ -109,30 +117,10 @@ internal class SmartStreamReceiverTest {
      */
     @Test
     fun testFallbackInMemory() {
-        val receiver = SmartStreamReceiver(
-            DataSize.ofBytes(DEFAULT_BUFFER_SIZE * 10L).toBytes(),
-            filename,
-            primaryPath,
-            true
-        )
-        val source = longContent.byteInputStream()
-        // 限速的inputStream，平均一秒只能读取DEFAULT_BUFFER_SIZE大小的数据
-        val rateLimitInputStream = RateLimitInputStream(source, DEFAULT_BUFFER_SIZE)
-        thread {
-            // 此时还未超过内存阈值
-            Thread.sleep(5 * 1000)
-            // 手动模拟unhealthy
-            receiver.unhealthy(fallbackPath, "IO Delay")
-        }
-        receiver.receive(rateLimitInputStream, DigestCalculateListener())
-
-        Assertions.assertFalse(receiver.isInMemory)
-        Assertions.assertFalse(Files.exists(primaryPath.resolve(filename)))
-        Assertions.assertTrue(Files.exists(fallbackPath.resolve(filename)))
-        Assertions.assertTrue(receiver.fallback)
-
-        val fileContent = fallbackPath.resolve(filename).toFile().readText(Charset.defaultCharset())
-        Assertions.assertEquals(longContent, fileContent)
+        val receiver = createReceiver(true)
+        val inputStream = createRateLimitInputStream(longContent)
+        simulateIODelay(receiver, inputStream, 5 * 1000)
+        assertFallbackResult(receiver, true)
     }
 
     /**
@@ -141,28 +129,10 @@ internal class SmartStreamReceiverTest {
      */
     @Test
     fun testFallbackInFile() {
-        val receiver = SmartStreamReceiver(
-            DataSize.ofBytes(DEFAULT_BUFFER_SIZE * 10L).toBytes(),
-            filename,
-            primaryPath,
-            true
-        )
-        val source = longContent.byteInputStream()
-        val rateLimitInputStream = RateLimitInputStream(source, DEFAULT_BUFFER_SIZE)
-        thread {
-            // 确保已经超过内存阈值
-            Thread.sleep(15 * 1000)
-            receiver.unhealthy(fallbackPath, "IO Delay")
-        }
-        receiver.receive(rateLimitInputStream, DigestCalculateListener())
-
-        Assertions.assertFalse(receiver.isInMemory)
-        Assertions.assertFalse(Files.exists(primaryPath.resolve(filename)))
-        Assertions.assertTrue(Files.exists(fallbackPath.resolve(filename)))
-        Assertions.assertTrue(receiver.fallback)
-
-        val fileContent = fallbackPath.resolve(filename).toFile().readText(Charset.defaultCharset())
-        Assertions.assertEquals(longContent, fileContent)
+        val receiver = createReceiver(true)
+        val inputStream = createRateLimitInputStream(longContent)
+        simulateIODelay(receiver, inputStream, 15 * 1000)
+        assertFallbackResult(receiver, true)
     }
 
     /**
@@ -171,29 +141,10 @@ internal class SmartStreamReceiverTest {
      */
     @Test
     fun testFallbackInMemoryWithDisableTransfer() {
-        val receiver = SmartStreamReceiver(
-            DataSize.ofBytes(DEFAULT_BUFFER_SIZE * 10L).toBytes(),
-            filename,
-            primaryPath,
-            false
-        )
-        val source = longContent.byteInputStream()
-        val rateLimitInputStream = RateLimitInputStream(source, DEFAULT_BUFFER_SIZE)
-        thread {
-            // 此时还未超过内存阈值
-            Thread.sleep(5 * 1000)
-            receiver.unhealthy(fallbackPath, "IO Delay")
-        }
-        receiver.receive(rateLimitInputStream, DigestCalculateListener())
-
-        Assertions.assertFalse(receiver.isInMemory)
-
-        Assertions.assertFalse(Files.exists(primaryPath.resolve(filename)))
-        Assertions.assertTrue(Files.exists(fallbackPath.resolve(filename)))
-        Assertions.assertTrue(receiver.fallback)
-
-        val fileContent = fallbackPath.resolve(filename).toFile().readText(Charset.defaultCharset())
-        Assertions.assertEquals(longContent, fileContent)
+        val receiver = createReceiver(false)
+        val inputStream = createRateLimitInputStream(longContent)
+        simulateIODelay(receiver, inputStream, 5 * 1000)
+        assertFallbackResult(receiver, true)
     }
 
     /**
@@ -202,74 +153,62 @@ internal class SmartStreamReceiverTest {
      */
     @Test
     fun testFallbackInFileWithDisableTransfer() {
-        val receiver = SmartStreamReceiver(
+        val receiver = createReceiver(false)
+        val inputStream = createRateLimitInputStream(longContent)
+        simulateIODelay(receiver, inputStream, 15 * 1000)
+        assertFallbackResult(receiver, false)
+    }
+
+    private fun createRateLimitInputStream(content: String): InputStream {
+        return RateLimitInputStream(content.byteInputStream(), DEFAULT_BUFFER_SIZE.toLong())
+    }
+
+    private fun createReceiver(enableTransfer: Boolean): SmartStreamReceiver {
+        return SmartStreamReceiver(
             DataSize.ofBytes(DEFAULT_BUFFER_SIZE * 10L).toBytes(),
             filename,
             primaryPath,
-            false
+            enableTransfer
         )
-        val source = longContent.byteInputStream()
-        val rateLimitInputStream = RateLimitInputStream(source, DEFAULT_BUFFER_SIZE)
+    }
+
+    private fun readText(path: Path): String {
+        return path.toFile().readText()
+    }
+
+    private fun simulateIODelay(receiver: SmartStreamReceiver, inputStream: InputStream, millis: Long) {
         thread {
             // 确保已经超过内存阈值
-            Thread.sleep(15 * 1000)
-            receiver.unhealthy(fallbackPath, "IO Delay")
+            Thread.sleep(millis)
+            receiver.unhealthy(fallbackPath, "Simulated IO Delay")
         }
-        receiver.receive(rateLimitInputStream, DigestCalculateListener())
+        receiver.receive(inputStream, DigestCalculateListener())
+    }
 
+    /**
+     * 对fallback结果进行断言
+     * @param transferred 文件数据是否发生转移
+     */
+    private fun assertFallbackResult(receiver: SmartStreamReceiver, transferred: Boolean) {
+        // 文件数据应该落入文件中，isInMemory=false
         Assertions.assertFalse(receiver.isInMemory)
-        Assertions.assertTrue(Files.exists(primaryPath.resolve(filename)))
-        Assertions.assertFalse(Files.exists(fallbackPath.resolve(filename)))
+        // 是否发生fallback，fallback=true
         Assertions.assertTrue(receiver.fallback)
-
-        val fileContent = primaryPath.resolve(filename).toFile().readText(Charset.defaultCharset())
-        Assertions.assertEquals(longContent, fileContent)
-    }
-}
-
-private class RateLimitInputStream(
-    private val source: InputStream,
-    speed: Int
-) : InputStream() {
-
-    private val rateLimiter = RateLimiter.create(speed.toDouble())
-
-    override fun skip(n: Long): Long {
-        return source.skip(n)
-    }
-
-    override fun available(): Int {
-        return source.available()
-    }
-
-    override fun reset() {
-        source.reset()
-    }
-
-    override fun close() {
-        source.close()
-    }
-
-    override fun mark(readlimit: Int) {
-        source.mark(readlimit)
-    }
-
-    override fun markSupported(): Boolean {
-        return source.markSupported()
-    }
-
-    override fun read(): Int {
-        rateLimiter.acquire(1)
-        return source.read()
-    }
-
-    override fun read(b: ByteArray): Int {
-        rateLimiter.acquire(b.size)
-        return source.read(b)
-    }
-
-    override fun read(b: ByteArray, off: Int, len: Int): Int {
-        rateLimiter.acquire(len)
-        return source.read(b, off, len)
+        // 数据发生转移
+        if (transferred) {
+            // primaryPath 文件不存在
+            Assertions.assertFalse(Files.exists(primaryPath.resolve(filename)))
+            // primaryPath 文件存在
+            Assertions.assertTrue(Files.exists(fallbackPath.resolve(filename)))
+            // 文件数据一直
+            Assertions.assertEquals(longContent, readText(fallbackPath.resolve(filename)))
+        } else {
+            // primaryPath 文件不存在
+            Assertions.assertTrue(Files.exists(primaryPath.resolve(filename)))
+            // primaryPath 文件存在
+            Assertions.assertFalse(Files.exists(fallbackPath.resolve(filename)))
+            // 文件数据一直
+            Assertions.assertEquals(longContent, readText(primaryPath.resolve(filename)))
+        }
     }
 }
