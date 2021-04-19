@@ -35,6 +35,9 @@ import com.tencent.devops.scm.code.git.CodeGitCredentialSetter
 import com.tencent.devops.scm.code.git.api.GitOauthApi
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.ScmException
+import com.tencent.devops.scm.pojo.GitMrChangeInfo
+import com.tencent.devops.scm.pojo.GitMrInfo
+import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.eclipse.jgit.api.Git
@@ -210,6 +213,33 @@ class CodeGitScmOauthImpl constructor(
 
     override fun unlock(repoName: String, applicant: String, subpath: String) {
         logger.info("Git oauth can not unlock")
+    }
+
+    override fun getMergeRequestChangeInfo(mrId: Long): GitMrChangeInfo? {
+        return gitOauthApi.getMergeRequestChangeInfo(
+            host = apiUrl,
+            token = token,
+            projectName = projectName,
+            mrId = mrId
+        )
+    }
+
+    override fun getMrInfo(mrId: Long): GitMrInfo? {
+        return gitOauthApi.getMrInfo(
+            host = apiUrl,
+            token = token,
+            projectName = projectName,
+            mrId = mrId
+        )
+    }
+
+    override fun getMrReviewInfo(mrId: Long): GitMrReviewInfo? {
+        return gitOauthApi.getMrReviewInfo(
+            host = apiUrl,
+            token = token,
+            projectName = projectName,
+            mrId = mrId
+        )
     }
 
     companion object {
