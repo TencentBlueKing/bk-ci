@@ -32,13 +32,12 @@ import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
 import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerRoleGroupVO
 import com.tencent.devops.auth.api.user.UserProjectRoleResource
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
-import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.web.bind.annotation.RestController
 
-@RestController
+@RestResource
 class UserProjectRoleResourceImpl @Autowired constructor(
     val permissionRoleService: PermissionRoleService
 ) : UserProjectRoleResource {
@@ -56,7 +55,12 @@ class UserProjectRoleResourceImpl @Autowired constructor(
         ))
     }
 
-    override fun updateProjectRole(userId: String, projectId: Int, roleId: String, groupInfo: ManagerRoleGroup): Result<Boolean> {
+    override fun updateProjectRole(
+        userId: String,
+        projectId: Int,
+        roleId: String,
+        groupInfo: ManagerRoleGroup
+    ): Result<Boolean> {
         permissionRoleService.renamePermissionRole(
             userId = userId,
             projectId = projectId,
