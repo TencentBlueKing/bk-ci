@@ -35,7 +35,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserReportResourceImpl @Autowired constructor(
-    private val bkRepoReportService: BkRepoReportService,
+    private val bkRepoReportService: BkRepoReportService
     ) : UserReportStorageResource {
     override fun get(
         userId: String,

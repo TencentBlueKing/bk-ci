@@ -45,7 +45,7 @@ import java.io.InputStream
 
 @RestResource
 class UserCustomDirResourceImpl @Autowired constructor(
-    val bkRepoCustomDirService: BkRepoCustomDirService,
+    val bkRepoCustomDirService: BkRepoCustomDirService
 ) : UserCustomDirResource {
     override fun deploy(userId: String, projectId: String, path: String, inputStream: InputStream, disposition: FormDataContentDisposition): Result<Boolean> {
         checkParam(userId, projectId, path)
