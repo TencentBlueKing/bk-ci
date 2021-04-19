@@ -281,9 +281,9 @@ class ExperiencePublicDao {
         recordId: Long,
         online: Boolean? = null,
         endDate: LocalDateTime? = null
-    ) {
+    ): Int {
         val now = LocalDateTime.now()
-        with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
+        return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
             dslContext.update(this)
                 .set(UPDATE_TIME, now)
                 .let { if (null == online) it else it.set(ONLINE, online) }
