@@ -30,17 +30,23 @@ package com.tencent.devops.common.service.gray
 import com.tencent.devops.common.redis.RedisOperation
 
 class RepoGray {
-    fun addGrayProject(projectId: String, redisOperation: RedisOperation) {}
+    fun addGrayProject(projectId: String, redisOperation: RedisOperation) {
+        return
+    }
 
-    fun removeGrayProject(projectId: String, redisOperation: RedisOperation) {}
+    fun removeGrayProject(projectId: String, redisOperation: RedisOperation) {
+        return
+    }
 
-    fun addNotGrayProject(projectId: String, redisOperation: RedisOperation) {}
+    fun addNotGrayProject(projectId: String, redisOperation: RedisOperation) {
+        return
+    }
 
-    fun removeNotGrayProject(projectId: String, redisOperation: RedisOperation) {}
+    fun removeNotGrayProject(projectId: String, redisOperation: RedisOperation) {
+        return
+    }
 
     fun isGray(projectId: String, redisOperation: RedisOperation): Boolean {
         return true
     }
-
-    fun grayProjectSet(redisOperation: RedisOperation) = setOf<String>()
 }
