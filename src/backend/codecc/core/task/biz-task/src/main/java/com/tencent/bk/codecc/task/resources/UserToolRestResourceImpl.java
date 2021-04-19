@@ -35,7 +35,7 @@ import com.tencent.bk.codecc.task.vo.RepoInfoVO;
 import com.tencent.bk.codecc.task.vo.ToolConfigPlatformVO;
 import com.tencent.bk.codecc.task.vo.ToolStatusUpdateReqVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.auth.api.pojo.external.CodeCCAuthAction;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
@@ -67,7 +67,7 @@ public class UserToolRestResourceImpl implements UserToolRestResource
     private PipelineService pipelineService;
 
     @Override
-    public CodeCCResult<Boolean> registerTools(
+    public Result<Boolean> registerTools(
             BatchRegisterVO batchRegisterVO,
             String userName
     )
@@ -78,48 +78,48 @@ public class UserToolRestResourceImpl implements UserToolRestResource
 
 
     @Override
-    public CodeCCResult<List<RepoInfoVO>> getRepoList(String projCode)
+    public Result<List<RepoInfoVO>> getRepoList(String projCode)
     {
-        return new CodeCCResult<>(pipelineService.getRepositoryList(projCode));
+        return new Result<>(pipelineService.getRepositoryList(projCode));
     }
 
     @Override
-    public CodeCCResult<List<String>> listBranches(String projCode, String url, String type)
+    public Result<List<String>> listBranches(String projCode, String url, String type)
     {
-        return new CodeCCResult<>(pipelineService.getRepositoryBranches(projCode, url, type));
+        return new Result<>(pipelineService.getRepositoryBranches(projCode, url, type));
     }
 
     @Override
     @AuthMethod(permission = {CodeCCAuthAction.TASK_MANAGE})
-    public CodeCCResult<Boolean> updateToolStatus(ToolStatusUpdateReqVO toolStatusUpdateReqVO,
+    public Result<Boolean> updateToolStatus(ToolStatusUpdateReqVO toolStatusUpdateReqVO,
                                             String userName, long taskId)
     {
         checkToolUpdateParam(toolStatusUpdateReqVO, taskId);
-        return new CodeCCResult<>(toolService.toolStatusManage(toolStatusUpdateReqVO.getToolNameList(),
+        return new Result<>(toolService.toolStatusManage(toolStatusUpdateReqVO.getToolNameList(),
                 toolStatusUpdateReqVO.getManageType(), userName, taskId));
     }
 
 
     @Override
     @AuthMethod(permission = {CodeCCAuthAction.TASK_MANAGE})
-    public CodeCCResult<Boolean> deletePipeline(Long taskId, String projectId, String userName)
+    public Result<Boolean> deletePipeline(Long taskId, String projectId, String userName)
     {
-        return new CodeCCResult<>(toolService.deletePipeline(taskId, projectId, userName));
+        return new Result<>(toolService.deletePipeline(taskId, projectId, userName));
     }
 
     @Override
     @AuthMethod(permission = {CodeCCAuthAction.TASK_MANAGE})
-    public CodeCCResult<Boolean> updateParamJsonAndCheckerSets(String user, Long taskId, ParamJsonAndCheckerSetsVO paramJsonAndCheckerSetsVO)
+    public Result<Boolean> updateParamJsonAndCheckerSets(String user, Long taskId, ParamJsonAndCheckerSetsVO paramJsonAndCheckerSetsVO)
     {
-        return new CodeCCResult<>(toolService.updateParamJsonAndCheckerSets(user, taskId, paramJsonAndCheckerSetsVO));
+        return new Result<>(toolService.updateParamJsonAndCheckerSets(user, taskId, paramJsonAndCheckerSetsVO));
     }
 
 
     @Override
-    public CodeCCResult<Boolean> updateToolPlatformInfo(Long taskId, String userName,
+    public Result<Boolean> updateToolPlatformInfo(Long taskId, String userName,
             ToolConfigPlatformVO toolConfigPlatformVO)
     {
-        return new CodeCCResult<>(toolService.updateToolPlatformInfo(taskId, userName, toolConfigPlatformVO));
+        return new Result<>(toolService.updateToolPlatformInfo(taskId, userName, toolConfigPlatformVO));
     }
 
 

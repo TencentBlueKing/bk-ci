@@ -57,4 +57,7 @@ public class CommitDefectVO
 
     @ApiModelProperty(value = "备注信息")
     private String message;
+
+    @ApiModelProperty(value = "创建来源")
+    private String createFrom;
 }

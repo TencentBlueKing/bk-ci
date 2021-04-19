@@ -28,16 +28,28 @@ package com.tencent.bk.codecc.defect.dao.mongotemplate;
 
 import com.tencent.bk.codecc.defect.model.TaskLogEntity;
 import com.tencent.bk.codecc.defect.model.TaskLogGroupEntity;
+
+import java.util.Collection;
+import java.util.List;
+import java.util.Set;
+
+import com.tencent.bk.codecc.defect.model.TaskLogOverviewEntity;
+import com.tencent.devops.common.constant.ComConstants;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.aggregation.*;
-import org.springframework.data.mongodb.core.mapping.Field;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.aggregation.GroupOperation;
+import org.springframework.data.mongodb.core.aggregation.LimitOperation;
+import org.springframework.data.mongodb.core.aggregation.MatchOperation;
+import org.springframework.data.mongodb.core.aggregation.SortOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
-import java.util.Set;
 
 /**
  * 分析记录复杂查询持久代码
@@ -159,5 +171,30 @@ public class TaskLogDao
         AggregationResults<TaskLogEntity> queryResult =
                 mongoTemplate.aggregate(aggregation, "t_task_log", TaskLogEntity.class);
         return queryResult.getMappedResults();
+    }
+
+    /**
+     * 获取最后十次构建的分析记录
+     *
+     * @param taskId
+     * @param limitSize
+     * @return list
+     */
+    public List<TaskLogEntity> findLatestBuild(Long taskId, int limitSize) {
+        MatchOperation match = Aggregation.match(Criteria.where("task_id").is(taskId));
+        // 以taskId进行分组
+        GroupOperation group = Aggregation.group("build_id")
+                .first("build_id").as("build_id");
+        LimitOperation limit = new LimitOperation(limitSize);
+        SortOperation sort = Aggregation.sort(Sort.Direction.DESC, "start_time");
+        Aggregation agg = Aggregation.newAggregation(match, sort, group, limit);
+
+        AggregationResults<TaskLogEntity> queryResult =
+                mongoTemplate.aggregate(agg, "t_task_log", TaskLogEntity.class);
+        List<String> buildIds = queryResult.getMappedResults()
+                .stream()
+                .map(TaskLogEntity::getBuildId)
+                .collect(Collectors.toList());
+        return mongoTemplate.find(new Query(Criteria.where("build_id").in(buildIds)), TaskLogEntity.class);
     }
 }

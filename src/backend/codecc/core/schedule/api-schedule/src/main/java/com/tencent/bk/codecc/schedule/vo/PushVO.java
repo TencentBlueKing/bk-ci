@@ -44,4 +44,7 @@ public class PushVO
 
     @ApiModelProperty(value = "任务创建来源，主要用于区分工蜂项目")
     private String createFrom;
+
+    @ApiModelProperty(value = "任务所属蓝盾项目")
+    private String projectId;
 }

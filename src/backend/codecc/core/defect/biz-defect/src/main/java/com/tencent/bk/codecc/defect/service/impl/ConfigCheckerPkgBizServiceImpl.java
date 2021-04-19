@@ -52,7 +52,7 @@ import com.tencent.bk.codecc.task.vo.checkerset.ToolCheckerSetVO;
 import com.tencent.devops.common.api.checkerset.CheckerSetVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.api.pojo.GlobalMessage;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.CheckerConstants;
 import com.tencent.devops.common.constant.ComConstants;
@@ -135,11 +135,11 @@ public class ConfigCheckerPkgBizServiceImpl implements IConfigCheckerPkgBizServi
         }
 
         TaskDetailVO taskDetailVO = null;
-        CodeCCResult<TaskDetailVO> taskDetailVOCodeCCResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
-        if (taskDetailVOCodeCCResult.isOk() && null != taskDetailVOCodeCCResult.getData()
-                && CollectionUtils.isNotEmpty(taskDetailVOCodeCCResult.getData().getToolConfigInfoList()))
+        Result<TaskDetailVO> taskDetailVOResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
+        if (taskDetailVOResult.isOk() && null != taskDetailVOResult.getData()
+                && CollectionUtils.isNotEmpty(taskDetailVOResult.getData().getToolConfigInfoList()))
         {
-            taskDetailVO = taskDetailVOCodeCCResult.getData();
+            taskDetailVO = taskDetailVOResult.getData();
         }
 
         // 查询工具配置

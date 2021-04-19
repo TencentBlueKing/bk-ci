@@ -13,7 +13,7 @@
 package com.tencent.bk.codecc.defect.api;
 
 import com.tencent.devops.common.api.CodeRepoVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -23,7 +23,9 @@ import javax.ws.rs.core.MediaType;
 import java.util.Map;
 import java.util.Set;
 
-import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.*;
+import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_PROJECT_ID;
+import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_TASK_ID;
+import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_USER_ID;
 
 /**
  * 代码库前端接口
@@ -40,25 +42,25 @@ public interface UserRepoRestResource
     @ApiOperation("根据任务集获取代码库清单")
     @Path("/list")
     @POST
-    CodeCCResult<Map<Long, Set<CodeRepoVO>>> getCodeRepoListByTaskIds(
+    Result<Map<Long, Set<CodeRepoVO>>> getCodeRepoListByTaskIds(
             @ApiParam("任务id清单")
                     Set<Long> taskIds,
             @ApiParam("项目id清单")
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_PROJECT_ID)
+            @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
                     String projectId);
 
     @ApiOperation("获取oauth跳转链接")
     @Path("/oauth/url")
     @GET
-    CodeCCResult<String> getOauthUrl(
+    Result<String> getOauthUrl(
         @ApiParam("用户Id")
-        @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
             String userId,
         @ApiParam("项目Id")
-        @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_PROJECT_ID)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
             String projectId,
         @ApiParam("任务Id")
-        @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_TASK_ID)
+        @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
             long taskId,
         @ApiParam("工具英文名")
         @QueryParam("toolName")

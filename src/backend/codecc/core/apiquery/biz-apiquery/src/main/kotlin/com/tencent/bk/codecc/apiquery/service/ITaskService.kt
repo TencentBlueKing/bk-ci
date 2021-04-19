@@ -20,7 +20,8 @@ interface ITaskService {
      * 根据入参获取任务详情清单
      */
     fun getTaskDetailList(
-        taskQueryReq: TaskQueryReq, pageNum: Int?,
+        taskQueryReq: TaskQueryReq,
+        pageNum: Int?,
         pageSize: Int?,
         sortField: String?,
         sortType: String?
@@ -30,7 +31,7 @@ interface ITaskService {
      * 通过项目id查询任务详情清单
      */
     fun getTaskDetailByProjectId(
-        projectId : String,
+        projectId: String,
         pageNum: Int?,
         pageSize: Int?,
         sortField: String?,
@@ -57,7 +58,7 @@ interface ITaskService {
         pageSize: Int?,
         sortField: String?,
         sortType: String?
-    ) : Page<ToolConfigInfoModel>
+    ): Page<ToolConfigInfoModel>
 
     /**
      * 按流水线ID批量获取任务信息
@@ -79,10 +80,20 @@ interface ITaskService {
         pageSize: Int?,
         sortField: String?,
         sortType: String?
-    ) : List<TaskFailRecordModel>
-
+    ): List<TaskFailRecordModel>
 
     fun getbuilIdRelationshipByCodeccBuildId(
         taskQueryReq: TaskQueryReq
     ): BuildIdRelationshipModel?
+
+    /**
+     * 根据工具查询任务清单
+     */
+    fun getTaskListByToolName(
+        toolName: String,
+        pageNum: Int?,
+        pageSize: Int?,
+        sortField: String?,
+        sortType: String?
+    ): Page<Long>
 }

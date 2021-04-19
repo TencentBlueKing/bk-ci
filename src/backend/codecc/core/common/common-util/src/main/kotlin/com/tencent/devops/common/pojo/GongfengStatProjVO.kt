@@ -15,6 +15,10 @@ data class GongfengStatProjVO(
     val visibilityLevel: Int?,
     val belong: String?,
     val owners: String?,
+    @JsonProperty("current_owners")
+    val currentOwners : String?,
+    @JsonProperty("current_owners_org_paths")
+    val currentOwnersOrgPaths : String?,
     @JsonProperty("created_at")
     val createdAt: String?,
     val creator: String?,
