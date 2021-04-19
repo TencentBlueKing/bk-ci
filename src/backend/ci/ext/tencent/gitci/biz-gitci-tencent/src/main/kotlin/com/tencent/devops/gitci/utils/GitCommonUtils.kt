@@ -42,12 +42,18 @@ object GitCommonUtils {
     fun getRepoOwner(httpUrl: String): String {
         return when {
             httpUrl.startsWith("http://") -> {
-                httpUrl.removePrefix("http://")
-                    .split("/")[1]
+                val urls = httpUrl.removePrefix("http://")
+                    .split("/").toMutableList()
+                urls.removeAt(0)
+                urls.removeAt(urls.lastIndex)
+                urls.joinToString { "/" }
             }
             httpUrl.startsWith("https://") -> {
-                httpUrl.removePrefix("https://")
-                    .split("/")[1]
+                val urls = httpUrl.removePrefix("https://")
+                    .split("/").toMutableList()
+                urls.removeAt(0)
+                urls.removeAt(urls.lastIndex)
+                urls.joinToString { "/" }
             }
             else -> ""
         }
