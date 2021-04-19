@@ -3,11 +3,10 @@
         <li v-for="(statistic, index) in statisticList" :key="index" class="static-item">
             <icon :name="statistic.name" class="item-icon" size="64"></icon>
             <h5 class="item-title">
-                <span :class="['item-name', { 'g-store-text-underline': statistic.tips, 'statistic-link': statistic.linkName }]"
+                <span :class="['item-name', { 'g-store-text-underline': statistic.tips }]"
                     v-bk-tooltips="{ content: statistic.tips, disabled: !statistic.tips }"
-                    @click="goToLink(statistic.linkName)"
                 >{{ statistic.label }}</span>
-                <p class="item-value">{{ statistic.value }}</p>
+                <p :class="{ 'item-value': true, 'statistic-link': statistic.linkName }" @click="goToLink(statistic.linkName)">{{ statistic.value }}</p>
             </h5>
         </li>
     </ul>
