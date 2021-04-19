@@ -40,6 +40,7 @@ import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import com.tencent.devops.scm.utils.code.git.GitUtils.urlEncode
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
 import org.slf4j.LoggerFactory
@@ -211,30 +212,30 @@ class CodeTGitScmImpl constructor(
         logger.info("Git can not unlock")
     }
 
-    override fun getMergeRequestChangeInfo(mrId: Long): GitMrChangeInfo? {
+    override fun getMergeRequestChangeInfo(mrId: Long): GitMrChangeInfo {
+        val url = "projects/${urlEncode(projectName)}/merge_request/$mrId/changes"
         return gitApi.getMergeRequestChangeInfo(
             host = apiUrl,
             token = token,
-            projectName = projectName,
-            mrId = mrId
+            url = url
         )
     }
 
-    override fun getMrInfo(mrId: Long): GitMrInfo? {
+    override fun getMrInfo(mrId: Long): GitMrInfo {
+        val url = "projects/${urlEncode(projectName)}/merge_request/$mrId"
         return gitApi.getMrInfo(
             host = apiUrl,
             token = token,
-            projectName = projectName,
-            mrId = mrId
+            url = url
         )
     }
 
-    override fun getMrReviewInfo(mrId: Long): GitMrReviewInfo? {
+    override fun getMrReviewInfo(mrId: Long): GitMrReviewInfo {
+        val url = "projects/${urlEncode(projectName)}/merge_request/$mrId/review"
         return gitApi.getMrReviewInfo(
             host = apiUrl,
             token = token,
-            projectName = projectName,
-            mrId = mrId
+            url = url
         )
     }
 

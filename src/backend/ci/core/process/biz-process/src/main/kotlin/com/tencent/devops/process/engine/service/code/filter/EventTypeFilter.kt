@@ -42,7 +42,7 @@ class EventTypeFilter(
     }
 
     override fun doFilter(): Boolean {
-        return isAllowedByMrAction() && isAllowedByEventType()
+        return isAllowedByEventType() && isAllowedByMrAction()
     }
 
     private fun isAllowedByEventType(): Boolean {
