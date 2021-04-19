@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.gray.MacOSGray
-import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.ProjectInfoResponse
@@ -61,7 +60,6 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
     private val projectLabelRelDao: ProjectLabelRelDao,
     private val redisOperation: RedisOperation,
     private val gray: Gray,
-    private val repoGray: RepoGray,
     private val macosGray: MacOSGray,
     private val projectDispatcher: ProjectDispatcher
 ) : OpProjectService {
