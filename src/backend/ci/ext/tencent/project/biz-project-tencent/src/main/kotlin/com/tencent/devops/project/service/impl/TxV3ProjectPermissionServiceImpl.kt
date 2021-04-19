@@ -132,7 +132,7 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
         defaultGroups.add(defaultGroup)
         val managerRoleGroup = ManagerRoleGroupDTO.builder().groups(defaultGroups).build()
         // 添加项目管理员
-        val roleId = iamManagerService.createManagerRoleGroup(iamProjectId, managerRoleGroup)
+        val roleId = iamManagerService.batchCreateRoleGroup(iamProjectId, managerRoleGroup)
         val groupMember = ManagerMember(ManagerScopesEnum.getType(ManagerScopesEnum.USER), userId)
         val groupMembers = mutableListOf<ManagerMember>()
         groupMembers.add(groupMember)
