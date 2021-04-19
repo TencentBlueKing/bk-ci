@@ -72,16 +72,11 @@
                                 <div class="info">
                                     <p class="title">
                                         <template v-if="props.row.approvalStatus !== 2">
-                                            <span
-                                                v-bk-tooltips="{ content: $t('accessDeny.noOperateAccessTip') }"
-                                                class="is-disabled"
-                                                :title="$t('accessDeny.noOperateAccess')"
-                                            >{{ props.row.projectName }}</span>
+                                            <span class="is-disabled">{{ props.row.projectName }}</span>
                                         </template>
                                         <template v-else>
                                             <span
                                                 :class="['title-text', { 'is-disabled': !props.row.enabled }]"
-                                                :title="props.row.projectName"
                                             >{{ props.row.projectName }}</span>
                                         </template>
                                     </p>
