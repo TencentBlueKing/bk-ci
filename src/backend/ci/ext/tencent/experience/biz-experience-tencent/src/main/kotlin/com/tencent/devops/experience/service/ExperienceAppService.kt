@@ -247,7 +247,9 @@ class ExperienceAppService(
             remark = experience.remark,
             bundleIdentifier = experience.bundleIdentifier,
             appScheme = experience.scheme,
-            lastDownloadHashId = lastDownloadMap[experience.projectId + experience.bundleIdentifier + experience.platform]
+            lastDownloadHashId = lastDownloadMap[experience.projectId +
+                    experience.bundleIdentifier +
+                    experience.platform]
                 ?.let { l -> HashUtil.encodeLongId(l) } ?: ""
         )
     }

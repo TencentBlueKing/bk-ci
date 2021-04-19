@@ -11,7 +11,7 @@ import java.util.concurrent.TimeUnit
 
 @Repository
 class ExperienceLastDownloadDao {
-    private val USER_DOWNLOAD_CACHE =
+    private val userDownloadCache =
         CacheBuilder.newBuilder().expireAfterWrite(10, TimeUnit.SECONDS).maximumSize(50000)
             .build<String, Result<TExperienceLastDownloadRecord>?>()
 
@@ -74,7 +74,7 @@ class ExperienceLastDownloadDao {
         dslContext: DSLContext,
         userId: String
     ): Result<TExperienceLastDownloadRecord>? {
-        return USER_DOWNLOAD_CACHE.get(userId) {
+        return userDownloadCache.get(userId) {
             with(TExperienceLastDownload.T_EXPERIENCE_LAST_DOWNLOAD) {
                 dslContext.selectFrom(this)
                     .where(USER_ID.eq(userId))
