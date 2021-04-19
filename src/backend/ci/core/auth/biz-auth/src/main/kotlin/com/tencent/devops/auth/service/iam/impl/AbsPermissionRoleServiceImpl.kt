@@ -168,10 +168,10 @@ open class AbsPermissionRoleServiceImpl @Autowired constructor(
         val createAuthorizationScopes = buildCreateAuthorizationScopes(createActions, projectCode)
         iamManagerService.createRolePermission(roleId, createAuthorizationScopes)
         val ruleAction = RULEACTION.split(",")
-        val ruleAuthorizationScopes = buildOtherAuthorizationScopes(ruleAction, projectCode)
+        val ruleAuthorizationScopes = buildOtherAuthorizationScopes(ruleAction, projectCode, "rule")
         iamManagerService.createRolePermission(roleId, ruleAuthorizationScopes)
         val groupAction = GROUPACTION.split(",")
-        val groupAuthorizationScopes = buildOtherAuthorizationScopes(groupAction, projectCode)
+        val groupAuthorizationScopes = buildOtherAuthorizationScopes(groupAction, projectCode, "group")
         iamManagerService.createRolePermission(roleId, groupAuthorizationScopes)
     }
 
@@ -215,7 +215,11 @@ open class AbsPermissionRoleServiceImpl @Autowired constructor(
             .build()
     }
 
-    private fun buildOtherAuthorizationScopes(actions: List<String>, projectCode: String): AuthorizationScopes? {
+    private fun buildOtherAuthorizationScopes(
+        actions: List<String>,
+        projectCode: String,
+        defaultType: String ?= null
+    ): AuthorizationScopes? {
         val resourceTypes = mutableSetOf<String>()
         var type = ""
         actions.forEach {
@@ -235,9 +239,16 @@ open class AbsPermissionRoleServiceImpl @Autowired constructor(
             projectCode,
             ""
         )
+
+        val iamType = if (defaultType.isNullOrEmpty()) {
+            AuthResourceType.get(type).value
+        } else {
+            defaultType
+        }
+
         val resourcePath = ManagerPath(
             iamConfiguration.systemId,
-            AuthResourceType.valueOf(type).value,
+            iamType,
             "*",
             ""
         )
@@ -248,7 +259,7 @@ open class AbsPermissionRoleServiceImpl @Autowired constructor(
         managerResources.add(
             ManagerResources.builder()
                 .system(iamConfiguration.systemId)
-                .type(AuthResourceType.valueOf(type).value)
+                .type(iamType)
                 .paths(paths).build()
         )
         val action = mutableListOf<Action>()
