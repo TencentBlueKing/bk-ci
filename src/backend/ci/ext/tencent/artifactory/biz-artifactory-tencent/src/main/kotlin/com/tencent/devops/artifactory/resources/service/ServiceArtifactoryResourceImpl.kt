@@ -62,7 +62,7 @@ class ServiceArtifactoryResourceImpl @Autowired constructor(
     private val bkRepoSearchService: BkRepoSearchService,
     private val bkRepoDownloadService: BkRepoDownloadService,
     private val artifactoryInfoService: ArtifactoryInfoService
-    ) : ServiceArtifactoryResource {
+) : ServiceArtifactoryResource {
     override fun check(projectId: String, artifactoryType: ArtifactoryType, path: String): Result<Boolean> {
         checkParam(projectId)
         return Result(bkRepoService.check(projectId, artifactoryType, path))

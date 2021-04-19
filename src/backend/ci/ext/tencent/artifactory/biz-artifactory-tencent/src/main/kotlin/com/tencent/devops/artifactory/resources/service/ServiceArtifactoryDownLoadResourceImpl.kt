@@ -30,21 +30,17 @@ package com.tencent.devops.artifactory.resources.service
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
-import com.tencent.devops.artifactory.service.artifactory.ArtifactoryDownloadService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoDownloadService
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.common.service.gray.RepoGray
-import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
     private val bkRepoDownloadService: BkRepoDownloadService,
-    private val commonConfig: CommonConfig,
+    private val commonConfig: CommonConfig
 ) : ServiceArtifactoryDownLoadResource {
 
     override fun getThirdPartyDownloadUrl(
@@ -110,16 +106,6 @@ class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
             permits = 1
         ).first()
         return Result(Url(url.url, url.url2))
-    }
-
-    private fun getIndexUrl(url: String?): String? {
-        if (url == null) {
-            return null
-        }
-        if (url.startsWith(HomeHostUtil.getHost(commonConfig.devopsHostGateway!!))) {
-            return url.removePrefix(HomeHostUtil.getHost(commonConfig.devopsHostGateway!!))
-        }
-        return url
     }
 
     private fun checkParam(projectId: String, path: String) {

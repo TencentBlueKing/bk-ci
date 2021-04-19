@@ -41,7 +41,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class BuildCustomDirResourceImpl @Autowired constructor(
     private val bkRepoBuildCustomDirService: BkRepoBuildCustomDirService
-    ) : BuildCustomDirResource {
+) : BuildCustomDirResource {
     override fun list(projectId: String, path: String): List<FileInfo> {
         if (path.contains(".")) {
             throw RuntimeException("please confirm the param is directory...")

@@ -29,12 +29,9 @@ package com.tencent.devops.artifactory.resources.service
 
 import com.tencent.devops.artifactory.api.service.ServiceCustomDirResource
 import com.tencent.devops.artifactory.pojo.Url
-import com.tencent.devops.artifactory.service.artifactory.ArtifactoryCustomDirGsService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoCustomDirGsService
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
