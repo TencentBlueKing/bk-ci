@@ -101,11 +101,11 @@ open class AbsPermissionRoleServiceImpl @Autowired constructor(
         return roleId
     }
 
-    override fun renamePermissionRole(userId: String, projectId: Int, roleId: String, groupInfo: ManagerRoleGroup) {
+    override fun renamePermissionRole(userId: String, projectId: Int, roleId: Int, groupInfo: ManagerRoleGroup) {
         permissionGradeService.checkGradeManagerUser(userId, projectId)
         // 校验用户组名称
         checkRoleName(groupInfo.name, false)
-        iamManagerService.updateRoleGroup(projectId, groupInfo)
+        iamManagerService.updateRoleGroup(roleId, groupInfo)
     }
 
     override fun getPermissionRole(projectId: Int): ManagerRoleGroupVO {

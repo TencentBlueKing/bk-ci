@@ -49,7 +49,7 @@ class BkPermissionRoleService @Autowired constructor(
         return super.createPermissionRole(userId, projectId, projectCode, groupInfo)
     }
 
-    override fun renamePermissionRole(userId: String, projectId: Int, roleId: String, groupInfo: ManagerRoleGroup) {
+    override fun renamePermissionRole(userId: String, projectId: Int, roleId: Int, groupInfo: ManagerRoleGroup) {
         super.renamePermissionRole(userId, projectId, roleId, groupInfo)
     }
 

@@ -58,7 +58,7 @@ class UserProjectRoleResourceImpl @Autowired constructor(
     override fun updateProjectRole(
         userId: String,
         projectId: Int,
-        roleId: String,
+        roleId: Int,
         groupInfo: ManagerRoleGroup
     ): Result<Boolean> {
         permissionRoleService.renamePermissionRole(
