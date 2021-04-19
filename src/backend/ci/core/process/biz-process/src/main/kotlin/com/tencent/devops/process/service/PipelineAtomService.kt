@@ -310,23 +310,25 @@ class PipelineAtomService @Autowired constructor(
                 dataArray[3] = DateTimeUtil.toDateTime(pipelineAtomRel[KEY_UPDATE_TIME] as LocalDateTime)
                 pageDataList.add(dataArray)
             }
-            // 查询流水线基本信息，结果集按照查询流水线ID的顺序排序
-            val pagePipelineInfoRecords = pipelineInfoDao.listOrderInfoByPipelineIds(dslContext, pagePipelineIdList)
-            for (index in pagePipelineIdList.indices) {
-                val dataArray = pageDataList[index]
-                val pipelineInfoRecord = pagePipelineInfoRecords[index]
-                val secrecyFlag = dataArray[0] == HIDDEN_SYMBOL
-                dataArray[2] = if (secrecyFlag) HIDDEN_SYMBOL else pipelineInfoRecord.lastModifyUser
-            }
-            // 查询流水线汇总信息，结果集按照查询流水线ID的顺序排序
-            val pagePipelineSummaryRecords =
-                pipelineBuildSummaryDao.listOrderSummaryByPipelineIds(dslContext, pagePipelineIdList)
-            for (index in pagePipelineIdList.indices) {
-                val dataArray = pageDataList[index]
-                val pipelineSummaryRecord = pagePipelineSummaryRecords[index]
-                val secrecyFlag = dataArray[0] == HIDDEN_SYMBOL
-                dataArray[4] = if (secrecyFlag) HIDDEN_SYMBOL else pipelineSummaryRecord.latestStartUser
-                dataArray[5] = DateTimeUtil.toDateTime(pipelineSummaryRecord.latestStartTime)
+            if (pagePipelineIdList.isNotEmpty()) {
+                // 查询流水线基本信息，结果集按照查询流水线ID的顺序排序
+                val pagePipelineInfoRecords = pipelineInfoDao.listOrderInfoByPipelineIds(dslContext, pagePipelineIdList)
+                for (index in pagePipelineIdList.indices) {
+                    val dataArray = pageDataList[index]
+                    val pipelineInfoRecord = pagePipelineInfoRecords[index]
+                    val secrecyFlag = dataArray[0] == HIDDEN_SYMBOL
+                    dataArray[2] = if (secrecyFlag) HIDDEN_SYMBOL else pipelineInfoRecord.lastModifyUser
+                }
+                // 查询流水线汇总信息，结果集按照查询流水线ID的顺序排序
+                val pagePipelineSummaryRecords =
+                    pipelineBuildSummaryDao.listOrderSummaryByPipelineIds(dslContext, pagePipelineIdList)
+                for (index in pagePipelineIdList.indices) {
+                    val dataArray = pageDataList[index]
+                    val pipelineSummaryRecord = pagePipelineSummaryRecords[index]
+                    val secrecyFlag = dataArray[0] == HIDDEN_SYMBOL
+                    dataArray[4] = if (secrecyFlag) HIDDEN_SYMBOL else pipelineSummaryRecord.latestStartUser
+                    dataArray[5] = DateTimeUtil.toDateTime(pipelineSummaryRecord.latestStartTime)
+                }
             }
             dataList.addAll(pageDataList)
             page++
