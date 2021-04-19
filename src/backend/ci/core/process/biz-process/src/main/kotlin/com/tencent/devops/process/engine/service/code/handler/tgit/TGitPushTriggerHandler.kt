@@ -25,15 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.service.code.handler.git
+package com.tencent.devops.process.engine.service.code.handler.tgit
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.process.engine.service.code.filter.BranchFilter
-import com.tencent.devops.process.engine.service.code.filter.EventTypeFilter
 import com.tencent.devops.process.engine.service.code.filter.PathPrefixFilter
 import com.tencent.devops.process.engine.service.code.filter.SkipCiFilter
-import com.tencent.devops.process.engine.service.code.filter.UrlFilter
-import com.tencent.devops.process.engine.service.code.filter.UserFilter
 import com.tencent.devops.process.engine.service.code.filter.WebhookFilter
 import com.tencent.devops.process.engine.service.code.handler.WebhookUtils.convert
 import com.tencent.devops.process.engine.service.code.handler.WebhookUtils.getBranch
@@ -44,13 +41,25 @@ import com.tencent.devops.repository.pojo.Repository
 import org.springframework.stereotype.Service
 
 @Service
-class GitPushTriggerHandler : GitHookTriggerHandler {
+class TGitPushTriggerHandler : TGitHookTriggerHandler {
 
     override fun canHandler(event: WebHookEvent): Boolean {
         return event is GitPushEvent
     }
 
-    override fun getWebhookFilters(
+    override fun getEventType(): CodeEventType {
+        return CodeEventType.PUSH
+    }
+
+    override fun getUrl(event: WebHookEvent): String {
+        return (event as GitPushEvent).repository.git_http_url
+    }
+
+    override fun getUser(event: WebHookEvent): String {
+        return (event as GitPushEvent).user_name
+    }
+
+    override fun getEventFilters(
         event: WebHookEvent,
         projectId: String,
         pipelineId: String,
@@ -59,22 +68,6 @@ class GitPushTriggerHandler : GitHookTriggerHandler {
     ): List<WebhookFilter> {
         event as GitPushEvent
         with(webHookParams) {
-            val urlFilter = UrlFilter(
-                pipelineId = pipelineId,
-                triggerOnUrl = event.repository.git_http_url,
-                repositoryUrl = repository.url
-            )
-            val eventTypeFilter = EventTypeFilter(
-                pipelineId = pipelineId,
-                triggerOnEventType = CodeEventType.PUSH,
-                eventType = eventType
-            )
-            val userFilter = UserFilter(
-                pipelineId = pipelineId,
-                triggerOnUser = event.user_name,
-                includedUsers = convert(includeUsers),
-                excludedUsers = convert(excludeUsers)
-            )
             val branchFilter = BranchFilter(
                 pipelineId = pipelineId,
                 triggerOnBranchName = getBranch(event.ref),
@@ -98,7 +91,7 @@ class GitPushTriggerHandler : GitHookTriggerHandler {
                 includedPaths = convert(includePaths),
                 excludedPaths = convert(excludePaths)
             )
-            return listOf(urlFilter, eventTypeFilter, userFilter, branchFilter, skipCiFilter, pathPrefixFilter)
+            return listOf(branchFilter, skipCiFilter, pathPrefixFilter)
         }
     }
 }

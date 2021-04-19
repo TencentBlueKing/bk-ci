@@ -29,7 +29,7 @@ package com.tencent.devops.process.engine.service.code
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.process.engine.service.code.handler.git.GitHookTriggerHandler
+import com.tencent.devops.process.engine.service.code.handler.tgit.TGitHookTriggerHandler
 import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
 import com.tencent.devops.process.pojo.code.git.GitEvent
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
@@ -52,7 +52,7 @@ class GitlabWebHookMatcher(gitlabEvent: GitEvent) : GitWebHookMatcher(gitlabEven
             logger.warn("The repo($repository) is not code git repo for git web hook")
             return ScmWebhookMatcher.MatchResult(isMatch = false)
         }
-        val handlers = SpringContextUtil.getBeansWithClass(GitHookTriggerHandler::class.java)
+        val handlers = SpringContextUtil.getBeansWithClass(TGitHookTriggerHandler::class.java)
         handlers.forEach { handler ->
             if (handler.canHandler(event)) {
                 return handler.doMatch(

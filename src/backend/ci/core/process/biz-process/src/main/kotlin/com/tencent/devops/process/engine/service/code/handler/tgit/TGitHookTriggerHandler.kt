@@ -25,8 +25,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.service.code.handler.git
+package com.tencent.devops.process.engine.service.code.handler.tgit
 
-import com.tencent.devops.process.engine.service.code.handler.WebhookTriggerHandler
+import com.tencent.devops.process.engine.service.code.handler.GitHookTriggerHandler
 
-interface GitHookTriggerHandler : WebhookTriggerHandler
+interface TGitHookTriggerHandler : GitHookTriggerHandler

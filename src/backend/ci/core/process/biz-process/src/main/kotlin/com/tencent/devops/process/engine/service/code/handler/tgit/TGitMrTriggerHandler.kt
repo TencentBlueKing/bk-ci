@@ -25,15 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.service.code.handler.git
+package com.tencent.devops.process.engine.service.code.handler.tgit
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.process.engine.service.code.filter.BranchFilter
-import com.tencent.devops.process.engine.service.code.filter.EventTypeFilter
 import com.tencent.devops.process.engine.service.code.filter.PathPrefixFilter
 import com.tencent.devops.process.engine.service.code.filter.SkipCiFilter
-import com.tencent.devops.process.engine.service.code.filter.UrlFilter
-import com.tencent.devops.process.engine.service.code.filter.UserFilter
 import com.tencent.devops.process.engine.service.code.filter.WebhookFilter
 import com.tencent.devops.process.engine.service.code.handler.WebhookUtils.convert
 import com.tencent.devops.process.engine.service.code.handler.WebhookUtils.getBranch
@@ -41,18 +38,31 @@ import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
 import com.tencent.devops.process.pojo.code.WebHookEvent
 import com.tencent.devops.process.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.process.service.scm.GitScmService
+import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.Repository
 import org.springframework.stereotype.Service
 
 @Service
-class GitMrTriggerHandler(
+class TGitMrTriggerHandler(
     private val gitScmService: GitScmService
-) : GitHookTriggerHandler {
+) : TGitHookTriggerHandler {
     override fun canHandler(event: WebHookEvent): Boolean {
         return event is GitMergeRequestEvent
     }
 
-    override fun getWebhookFilters(
+    override fun getEventType(): CodeEventType {
+        return CodeEventType.MERGE_REQUEST
+    }
+
+    override fun getUrl(event: WebHookEvent): String {
+        return (event as GitMergeRequestEvent).object_attributes.target.http_url
+    }
+
+    override fun getUser(event: WebHookEvent): String {
+        return (event as GitMergeRequestEvent).user.username
+    }
+
+    override fun getEventFilters(
         event: WebHookEvent,
         projectId: String,
         pipelineId: String,
@@ -61,22 +71,6 @@ class GitMrTriggerHandler(
     ): List<WebhookFilter> {
         event as GitMergeRequestEvent
         with(webHookParams) {
-            val urlFilter = UrlFilter(
-                pipelineId = pipelineId,
-                triggerOnUrl = event.object_attributes.target.http_url,
-                repositoryUrl = repository.url
-            )
-            val eventTypeFilter = EventTypeFilter(
-                pipelineId = pipelineId,
-                triggerOnEventType = CodeEventType.MERGE_REQUEST,
-                eventType = webHookParams.eventType
-            )
-            val userFilter = UserFilter(
-                pipelineId = pipelineId,
-                triggerOnUser = event.user.username,
-                includedUsers = convert(includeUsers),
-                excludedUsers = convert(excludeUsers)
-            )
             val targetBranchFilter = BranchFilter(
                 pipelineId = pipelineId,
                 triggerOnBranchName = getBranch(event.object_attributes.target_branch),
@@ -97,8 +91,12 @@ class GitMrTriggerHandler(
             val mrChangeInfo = if (excludePaths.isNullOrBlank() && includePaths.isNullOrBlank()) {
                 null
             } else {
-                // get mr change file list
-                gitScmService.getMergeRequestChangeInfo(projectId, event.object_attributes.id, repository)
+                val mrId = if (repository is CodeGitlabRepository) {
+                    event.object_attributes.iid
+                } else {
+                    event.object_attributes.id
+                }
+                gitScmService.getMergeRequestChangeInfo(projectId, mrId, repository)
             }
             val changeFiles = mrChangeInfo?.files?.map {
                 if (it.deletedFile) {
@@ -113,10 +111,7 @@ class GitMrTriggerHandler(
                 includedPaths = convert(includePaths),
                 excludedPaths = convert(excludePaths)
             )
-            return listOf(
-                urlFilter, eventTypeFilter, userFilter,
-                targetBranchFilter, sourceBranchFilter, skipCiFilter, pathFilter
-            )
+            return listOf(targetBranchFilter, sourceBranchFilter, skipCiFilter, pathFilter)
         }
     }
 }

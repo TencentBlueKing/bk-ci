@@ -25,13 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.service.code.handler.git
+package com.tencent.devops.process.engine.service.code.handler.tgit
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.process.engine.service.code.filter.BranchFilter
-import com.tencent.devops.process.engine.service.code.filter.EventTypeFilter
-import com.tencent.devops.process.engine.service.code.filter.UrlFilter
-import com.tencent.devops.process.engine.service.code.filter.UserFilter
 import com.tencent.devops.process.engine.service.code.filter.WebhookFilter
 import com.tencent.devops.process.engine.service.code.handler.WebhookUtils
 import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
@@ -41,13 +38,25 @@ import com.tencent.devops.repository.pojo.Repository
 import org.springframework.stereotype.Service
 
 @Service
-class GitTabPushTriggerHandler : GitHookTriggerHandler {
+class TGitTabPushTriggerHandler : TGitHookTriggerHandler {
 
     override fun canHandler(event: WebHookEvent): Boolean {
         return event is GitTagPushEvent
     }
 
-    override fun getWebhookFilters(
+    override fun getEventType(): CodeEventType {
+        return CodeEventType.TAG_PUSH
+    }
+
+    override fun getUrl(event: WebHookEvent): String {
+        return (event as GitTagPushEvent).repository.git_http_url
+    }
+
+    override fun getUser(event: WebHookEvent): String {
+        return (event as GitTagPushEvent).user_name
+    }
+
+    override fun getEventFilters(
         event: WebHookEvent,
         projectId: String,
         pipelineId: String,
@@ -56,29 +65,13 @@ class GitTabPushTriggerHandler : GitHookTriggerHandler {
     ): List<WebhookFilter> {
         event as GitTagPushEvent
         with(webHookParams) {
-            val urlFilter = UrlFilter(
-                pipelineId = pipelineId,
-                triggerOnUrl = event.repository.git_http_url,
-                repositoryUrl = repository.url
-            )
-            val eventTypeFilter = EventTypeFilter(
-                pipelineId = pipelineId,
-                triggerOnEventType = CodeEventType.TAG_PUSH,
-                eventType = eventType
-            )
-            val userFilter = UserFilter(
-                pipelineId = pipelineId,
-                triggerOnUser = event.user_name,
-                includedUsers = WebhookUtils.convert(includeUsers),
-                excludedUsers = WebhookUtils.convert(excludeUsers)
-            )
             val branchFilter = BranchFilter(
                 pipelineId = pipelineId,
                 triggerOnBranchName = WebhookUtils.getTag(event.ref),
                 includedBranches = WebhookUtils.convert(tagName),
                 excludedBranches = WebhookUtils.convert(excludeTagName)
             )
-            return listOf(urlFilter, eventTypeFilter, userFilter, branchFilter)
+            return listOf(branchFilter)
         }
     }
 }
