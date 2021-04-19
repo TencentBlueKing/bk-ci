@@ -43,6 +43,7 @@ import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
 import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.utils.IamUtils
 import com.tencent.devops.project.pojo.user.UserDeptDetail
@@ -125,8 +126,8 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
 
     private fun createRole(userId: String, iamProjectId: Int, projectCode: String): Int {
         val defaultGroup = ManagerRoleGroup(
-            IamUtils.buildIamGroup(projectCode, MANAGER_ROLE),
-            IamUtils.buildDefaultDescription(projectCode, MANAGER_ROLE)
+            IamUtils.buildIamGroup(projectCode, BkAuthGroup.MANAGER.value),
+            IamUtils.buildDefaultDescription(projectCode, BkAuthGroup.MANAGER.name)
         )
         val defaultGroups = mutableListOf<ManagerRoleGroup>()
         defaultGroups.add(defaultGroup)
@@ -172,7 +173,6 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
 
     companion object {
         private const val DEFAULT_EXPIRED_AT = 365L // 用户组默认一年有效期
-        private const val MANAGER_ROLE = "管理员"
         val logger = LoggerFactory.getLogger(TxV3ProjectPermissionServiceImpl::class.java)
     }
 }
