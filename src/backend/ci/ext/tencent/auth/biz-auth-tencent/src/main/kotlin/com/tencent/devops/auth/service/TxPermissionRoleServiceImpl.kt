@@ -57,7 +57,7 @@ class TxPermissionRoleServiceImpl @Autowired constructor(
     override fun renamePermissionRole(
         userId: String,
         projectId: Int,
-        roleId: String,
+        roleId: Int,
         groupInfo: ManagerRoleGroup
     ) {
         super.renamePermissionRole(userId, projectId, roleId, groupInfo)
