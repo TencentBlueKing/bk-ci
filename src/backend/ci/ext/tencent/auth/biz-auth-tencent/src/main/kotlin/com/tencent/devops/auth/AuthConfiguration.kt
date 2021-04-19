@@ -34,7 +34,7 @@ import com.tencent.devops.auth.service.TxPermissionRoleMemberImpl
 import com.tencent.devops.auth.service.TxPermissionRoleServiceImpl
 import com.tencent.devops.common.client.Client
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -46,13 +46,13 @@ import org.springframework.core.Ordered
 class AuthConfiguration {
 
     @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
+    @ConditionalOnMissingBean
     fun txPermissionGradeServiceImpl(
         iamManagerService: ManagerService
     ) = TxPermissionGradeServiceImpl(iamManagerService)
 
     @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
+    @ConditionalOnMissingBean
     fun txPermissionRoleMemberImpl(
         iamManagerService: ManagerService,
         permissionGradeService: TxPermissionGradeServiceImpl,
@@ -60,7 +60,7 @@ class AuthConfiguration {
     ) = TxPermissionRoleMemberImpl(iamManagerService, permissionGradeService, client)
 
     @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
+    @ConditionalOnMissingBean
     fun txPermissionRoleServiceImpl(
         iamManagerService: ManagerService,
         permissionGradeService: TxPermissionGradeServiceImpl,
