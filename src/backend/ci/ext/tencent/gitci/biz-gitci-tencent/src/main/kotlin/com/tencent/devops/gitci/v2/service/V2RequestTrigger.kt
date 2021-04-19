@@ -28,11 +28,14 @@
 package com.tencent.devops.gitci.v2.service
 
 import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.common.ci.yaml.v2.PreScriptBuildYaml
 import com.tencent.devops.common.ci.yaml.v2.ScriptBuildYaml
+import com.tencent.devops.common.ci.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.gitci.dao.GitCIServicesConfDao
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
+import com.tencent.devops.gitci.pojo.EnvironmentVariables
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.gitci.pojo.enums.TriggerReason
@@ -47,6 +50,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import java.io.BufferedReader
+import java.io.StringReader
 
 @Component
 class V2RequestTrigger @Autowired constructor (
@@ -119,7 +124,7 @@ class V2RequestTrigger @Autowired constructor (
 
 
     override fun isMatch(event: GitEvent, ymlObject: ScriptBuildYaml): Boolean {
-        return V2WebHookMatcher(event).isMatch(ymlObject.on!!)
+        return V2WebHookMatcher(event).isMatch(ymlObject.triggerOn!!)
     }
 
     override fun prepareCIBuildYaml(
@@ -128,7 +133,39 @@ class V2RequestTrigger @Autowired constructor (
         filePath: String?,
         pipelineId: String?
     ): ScriptBuildYaml? {
-        TODO("Not yet implemented")
+        if (originYaml.isNullOrBlank()) {
+            return null
+        }
+
+        val yamlObject = try {
+            createCIBuildYaml(originYaml, gitRequestEvent.gitProjectId)
+        } catch (e: Throwable) {
+            logger.error("git ci yaml is invalid", e)
+            gitRequestEventNotBuildDao.save(
+                dslContext = dslContext,
+                eventId = gitRequestEvent.id!!,
+                pipelineId = pipelineId,
+                filePath = filePath,
+                originYaml = originYaml,
+                normalizedYaml = null,
+                reason = TriggerReason.GIT_CI_YAML_INVALID.name,
+                reasonDetail = e.message.toString(),
+                gitProjectId = gitRequestEvent.gitProjectId
+            )
+            return null
+        }
+
+        return yamlObject
+    }
+
+    fun createCIBuildYaml(yamlStr: String, gitProjectId: Long? = null): ScriptBuildYaml {
+        logger.info("input yamlStr: $yamlStr")
+
+        val yaml = ScriptYmlUtils.formatYaml(yamlStr)
+        val preYamlObject = YamlUtil.getObjectMapper().readValue(yaml, PreScriptBuildYaml::class.java)
+        // val yamlObject = YamlUtil.getObjectMapper().readValue(yaml, ScriptBuildYaml::class.java)
+
+        return ScriptYmlUtils.normalizeGitCiYaml(preYamlObject)
     }
 
     companion object {

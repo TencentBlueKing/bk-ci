@@ -44,6 +44,8 @@ data class ScriptBuildYaml(
     val triggerOn: TriggerOn?,
     val variables: Map<String, Variable>?,
     val stages: List<Stage>?,
+    val jobs: Map<String, Job>? = null,
+    val steps: List<Steps>? = null,
     @JsonProperty("on-fail")
     val onFail: OnFail?,
     val extends: Extends?,

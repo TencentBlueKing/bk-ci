@@ -3,55 +3,59 @@ version: v2.0
 name: pipelineName
 
 on:
+#  push: [master, gray ]
   push:
-    branches:
-      - master
-      - release/*
-    branches-ignore:
-      - master
-      - develop
-    paths:
-      - src/*
-    paths-ignore:
-      - release
-    users:
-      - zhangsan
-    users-ignore:
-      - lisi
-  tag:
-    tags:
-      - release_*
-    tags-ignore:
-      - master
-    from-branches:
-      - master
-    users:
-      - zhangsan
-    users-ignore:
-      - lisi
-  mr:
-    target-branches:
-      - master
-    source-branches-ignore:
-      - story
-    paths:
-      - src/*/*
-    paths-ignore:
-      - build/
-    action:
-      - open
-      - reopen
-      - push-update
-    users:
-      - zhangsan
-    users-ignore:
-      - lisi
-  schedules:
-    cron: 0 0/5 0 0 0
-    branches:
-      - master
-      - develop
-    always: false
+    - master
+    - release/*
+#  push:
+#    branches:
+#      - master
+#      - release/*
+#    branches-ignore:
+#      - master
+#      - develop
+#    paths:
+#      - src/*
+#    paths-ignore:
+#      - release
+#    users:
+#      - zhangsan
+#    users-ignore:
+#      - lisi
+#  tag:
+#    tags:
+#      - release_*
+#    tags-ignore:
+#      - master
+#    from-branches:
+#      - master
+#    users:
+#      - zhangsan
+#    users-ignore:
+#      - lisi
+#  mr:
+#    target-branches:
+#      - master
+#    source-branches-ignore:
+#      - story
+#    paths:
+#      - src/*/*
+#    paths-ignore:
+#      - build/
+#    action:
+#      - open
+#      - reopen
+#      - push-update
+#    users:
+#      - zhangsan
+#    users-ignore:
+#      - lisi
+#  schedules:
+#    cron: 0 0/5 0 0 0
+#    branches:
+#      - master
+#      - develop
+#    always: false
 
 variables:
   DEPLOY_TYPE:

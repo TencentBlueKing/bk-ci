@@ -37,16 +37,16 @@ import com.fasterxml.jackson.annotation.JsonProperty
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class TagRule(
-    val tags: List<String>?,
+    val tags: List<String>? = null,
 
     @JsonProperty("tags-ignore")
-    val tagsIgnore: List<String>?,
+    val tagsIgnore: List<String>? = null,
 
     @JsonProperty("from-branches")
-    val fromBranches: List<String>?,
+    val fromBranches: List<String>? = null,
 
-    val users: List<String>?,
+    val users: List<String>? = null,
 
     @JsonProperty("users-ignore")
-    val usersIgnore: List<String>?
+    val usersIgnore: List<String>? = null
 )

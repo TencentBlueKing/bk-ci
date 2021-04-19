@@ -38,24 +38,28 @@ import com.github.fge.jsonschema.core.report.ProcessingMessage
 import com.github.fge.jsonschema.main.JsonSchemaFactory
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.YamlUtil
-import com.tencent.devops.common.ci.NORMAL_JOB
-import com.tencent.devops.common.ci.TASK_TYPE
-import com.tencent.devops.common.ci.VM_JOB
 import com.tencent.devops.common.ci.service.AbstractService
 import com.tencent.devops.common.ci.task.AbstractTask
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.ci.yaml.Trigger
 import com.tencent.devops.common.ci.yaml.MatchRule
 import com.tencent.devops.common.ci.yaml.MergeRequest
-import com.tencent.devops.common.ci.yaml.JobDetail
-import com.tencent.devops.common.ci.image.Pool
-import com.tencent.devops.common.ci.yaml.Stage
-import com.tencent.devops.common.ci.yaml.Job
+import com.tencent.devops.common.ci.yaml.v2.Container
+import com.tencent.devops.common.ci.yaml.v2.Credentials
+import com.tencent.devops.common.ci.yaml.v2.Job
+import com.tencent.devops.common.ci.yaml.v2.MrRule
+import com.tencent.devops.common.ci.yaml.v2.PreScriptBuildYaml
+import com.tencent.devops.common.ci.yaml.v2.PushRule
+import com.tencent.devops.common.ci.yaml.v2.ScriptBuildYaml
+import com.tencent.devops.common.ci.yaml.v2.Stage
+import com.tencent.devops.common.ci.yaml.v2.TagRule
+import com.tencent.devops.common.ci.yaml.v2.TriggerOn
 import com.tencent.devops.common.ci.yaml.v2.YmlVersion
 import org.slf4j.LoggerFactory
 import org.yaml.snakeyaml.Yaml
 import java.io.BufferedReader
 import java.io.StringReader
+import java.util.Random
 import javax.ws.rs.core.Response
 
 object ScriptYmlUtils {
@@ -64,6 +68,8 @@ object ScriptYmlUtils {
 
     //    private const val dockerHubUrl = "https://index.docker.io/v1/"
     private const val dockerHubUrl = ""
+
+    private const val secretSeed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
     fun formatYaml(yamlStr: String): String {
         // replace custom tag
@@ -154,31 +160,47 @@ object ScriptYmlUtils {
         return sb.toString()
     }
 
-    fun checkYaml(originYaml: CIBuildYaml): List<Stage> {
-        if (originYaml.stages != null && originYaml.steps != null) {
-            logger.error("Invalid yaml: steps and stages conflict") // 不能并列存在steps和stages
-            throw CustomException(Response.Status.BAD_REQUEST, "stages和steps不能并列存在!")
+    private fun checkYaml(preScriptBuildYaml: PreScriptBuildYaml): List<Stage> {
+        if ((preScriptBuildYaml.stages != null && preScriptBuildYaml.jobs != null) ||
+            (preScriptBuildYaml.stages != null && preScriptBuildYaml.steps != null) ||
+            (preScriptBuildYaml.jobs != null && preScriptBuildYaml.steps != null)) {
+            logger.error("Invalid yaml: steps or jobs or stages conflict") // 不能并列存在steps和stages
+            throw CustomException(Response.Status.BAD_REQUEST, "stages, jobs, steps不能并列存在，只能存在其一!")
         }
 
-        val stages = originYaml.stages ?: listOf(
-            Stage(
-                stage = listOf(
-                    Job(
-                        JobDetail(
-                            name = "job1",
-                            displayName = "job1",
-                            type = VM_JOB,
-                            pool = Pool(null, null, null, null),
-                            steps = originYaml.steps!!,
-                            condition = null,
-                            resourceType = null
+        when {
+            preScriptBuildYaml.steps != null -> {
+                return listOf(
+                    Stage(
+                        name = "stage_1",
+                        id = randomString("s-"),
+                        jobs = mapOf(
+                            randomString("j-") to
+                                    Job(
+                                        name = "job1",
+                                        runsOn = listOf("devcloud-linux"),
+                                        container = Container("", Credentials("", "")),
+                                        steps = preScriptBuildYaml.steps
+                                    )
                         )
                     )
                 )
-            )
-        )
+            }
+            preScriptBuildYaml.jobs != null -> {
+                return listOf(
+                    Stage(
+                        name = "stage_1",
+                        id = randomString("s-"),
+                        jobs = preScriptBuildYaml.jobs
+                    )
+                )
+            }
+            else -> {
+                preScriptBuildYaml.stages
+            }
+        }
 
-        // 校验job类型
+/*        // 校验job类型
         stages.forEach {
             it.stage.forEach { job ->
                 run {
@@ -188,35 +210,34 @@ object ScriptYmlUtils {
                     }
                 }
             }
-        }
+        }*/
 
-        return stages
+        return emptyList()
     }
 
-    fun normalizeGitCiYaml(originYaml: CIBuildYaml): CIBuildYaml {
-        val stages = checkYaml(originYaml)
+    fun normalizeGitCiYaml(preScriptBuildYaml: PreScriptBuildYaml): ScriptBuildYaml {
+        val stages = checkYaml(preScriptBuildYaml)
 
-        val pipelineName = originYaml.name ?: ""
-        var thisTrigger = Trigger(
-            disable = false,
-            branches = MatchRule(listOf("**"), null),
-            tags = MatchRule(listOf("**"), null),
-            paths = null
+        var thisTriggerOn = TriggerOn(
+            push = PushRule(
+                branches = listOf("*")
+            ),
+            tag = TagRule(
+                tags = listOf("*")
+            ),
+            mr = MrRule(
+                targetBranches = listOf("*")
+            )
         )
-        var thisMr = MergeRequest(
-            disable = false,
-            autoCancel = true,
-            branches = MatchRule(listOf("**"), null),
-            paths = null
-        )
-        if (originYaml.trigger != null || originYaml.mr != null) {
-            thisTrigger = originYaml.trigger ?: Trigger(
+
+        if (preScriptBuildYaml.triggerOn != null) {
+            thisTriggerOn = preScriptBuildYaml.trigger ?: Trigger(
                 disable = true,
                 branches = MatchRule(listOf("**"), null),
                 tags = null,
                 paths = null
             )
-            thisMr = originYaml.mr ?: MergeRequest(
+            thisMr = preScriptBuildYaml.mr ?: MergeRequest(
                 disable = true,
                 autoCancel = true,
                 branches = MatchRule(listOf("**"), null),
@@ -224,10 +245,17 @@ object ScriptYmlUtils {
             )
         }
 
-        val variable = originYaml.variables
-        val services = originYaml.services
-
-        return CIBuildYaml(pipelineName, thisTrigger, thisMr, variable, services, stages, null)
+        return ScriptBuildYaml(
+            name = preScriptBuildYaml.name,
+            version = preScriptBuildYaml.version,
+            triggerOn = null,
+            variables = preScriptBuildYaml.variables,
+            onFail = preScriptBuildYaml.onFail,
+            extends = preScriptBuildYaml.extends,
+            resource = preScriptBuildYaml.resource,
+            notices = preScriptBuildYaml.notices,
+            stages = stages
+        )
     }
 
     fun normalizePrebuildYaml(originYaml: CIBuildYaml): CIBuildYaml {
@@ -317,5 +345,15 @@ object ScriptYmlUtils {
         val mapper = ObjectMapper()
         mapper.configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true)
         return mapper.generateJsonSchema(AbstractService::class.java).schemaNode
+    }
+
+    fun randomString(flag: String): String {
+        val random = Random()
+        val buf = StringBuffer(flag)
+        for (i in 0 until 7) {
+            val num = random.nextInt(secretSeed.length)
+            buf.append(secretSeed[num])
+        }
+        return buf.toString()
     }
 }

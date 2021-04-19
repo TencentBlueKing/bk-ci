@@ -33,25 +33,22 @@ import com.fasterxml.jackson.annotation.JsonProperty
 
 /**
  * model
+ *
+ * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(gitci,prebuild等)异常
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class MrRule(
-    @JsonProperty("source-branches-ignore")
-    val sourceBranchesIgnore: List<String>? = null,
-
-    @JsonProperty("target-branches")
-    val targetBranches: List<String>? = null,
-
-    val paths: List<String>? = null,
-
-    @JsonProperty("path-ignore")
-    val pathsIgnore: List<String>? = null,
-
-    val action: List<String>? = null,
-
-    val users: List<String>? = null,
-
-    @JsonProperty("users-ignore")
-    val usersIgnore: List<String>? = null
+data class PreScriptBuildYaml(
+    val version: String?,
+    val name: String?,
+    val triggerOn: PreTriggerOn?,
+    val variables: Map<String, Variable>?,
+    val stages: List<Stage>?,
+    val jobs: Map<String, Job>? = null,
+    val steps: List<Steps>? = null,
+    @JsonProperty("on-fail")
+    val onFail: OnFail?,
+    val extends: Extends?,
+    val resource: Resources?,
+    val notices: List<Notices>?
 )

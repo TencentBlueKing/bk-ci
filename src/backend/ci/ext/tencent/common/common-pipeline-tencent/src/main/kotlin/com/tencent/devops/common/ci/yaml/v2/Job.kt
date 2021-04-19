@@ -38,19 +38,19 @@ data class Job(
     @JsonProperty("runs-on")
     val runsOn: List<String>?,
     val container: Container?,
-    val macOS: MacOS?,
-    val service: Service?,
+    val macOS: MacOS? = null,
+    val service: Service? = null,
     @JsonProperty("if")
-    val ifFiled: List<String>?,
+    val ifFiled: List<String>? = null,
     val steps: List<Steps>?,
     @JsonProperty("timeout-minutes")
-    val timeoutMinutes: String?,
-    val env: Any?,
+    val timeoutMinutes: String? = null,
+    val env: Any? = null,
     @JsonProperty("continue-on-error")
-    val continueOnError: Boolean?,
-    val strategy: Strategy?,
+    val continueOnError: Boolean? = null,
+    val strategy: Strategy? = null,
     @JsonProperty("depend-on")
-    val dependOn: List<String>?
+    val dependOn: List<String>? = null
 )
 
 data class Container(

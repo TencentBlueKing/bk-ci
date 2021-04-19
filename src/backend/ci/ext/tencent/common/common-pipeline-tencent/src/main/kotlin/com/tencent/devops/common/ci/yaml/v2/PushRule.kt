@@ -37,18 +37,18 @@ import com.fasterxml.jackson.annotation.JsonProperty
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class PushRule(
-    val branches: List<String>?,
+    val branches: List<String>? = null,
 
     @JsonProperty("branches-ignore")
-    val branchesIgnore: List<String>?,
+    val branchesIgnore: List<String>? = null,
 
-    val paths: List<String>?,
+    val paths: List<String>? = null,
 
     @JsonProperty("path-ignore")
-    val pathsIgnore: List<String>?,
+    val pathsIgnore: List<String>? = null,
 
-    val users: List<String>?,
+    val users: List<String>? = null,
 
     @JsonProperty("users-ignore")
-    val usersIgnore: List<String>?
+    val usersIgnore: List<String>? = null
 )
