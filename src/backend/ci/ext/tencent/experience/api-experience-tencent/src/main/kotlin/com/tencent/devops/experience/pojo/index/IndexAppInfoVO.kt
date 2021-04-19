@@ -46,6 +46,12 @@ data class IndexAppInfoVO(
     val logoUrl: String,
     @ApiModelProperty("版本体验BundleIdentifier", required = true)
     val bundleIdentifier: String,
+    @ApiModelProperty("应用Scheme", required = false)
+    val appScheme: String,
+    @ApiModelProperty("是否过期", required = true)
+    val expired: Boolean,
+    @ApiModelProperty("上次下载的体验ID", required = true)
+    val lastDownloadHashId: String,
     @ApiModelProperty("外部链接", required = false)
     val externalUrl: String
 )
