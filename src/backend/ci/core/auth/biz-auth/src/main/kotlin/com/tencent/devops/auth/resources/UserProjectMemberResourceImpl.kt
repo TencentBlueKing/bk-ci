@@ -32,10 +32,10 @@ import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerGroupMemberVo
 import com.tencent.devops.auth.api.user.UserProjectMemberResource
 import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.web.bind.annotation.RestController
 
-@RestController
+@RestResource
 class UserProjectMemberResourceImpl @Autowired constructor(
     val permissionRoleMemberService: PermissionRoleMemberService
 ) : UserProjectMemberResource {
