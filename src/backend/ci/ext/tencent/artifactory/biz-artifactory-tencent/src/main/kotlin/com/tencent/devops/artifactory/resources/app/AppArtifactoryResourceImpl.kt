@@ -52,12 +52,16 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.VersionUtil
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_ICON
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_USER_ID
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.apache.commons.lang3.StringUtils
@@ -207,7 +211,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
             artifactoryService.show(projectId, artifactoryType, path)
         }
 
-        val pipelineId = fileDetail.meta["pipelineId"] ?: StringUtils.EMPTY
+        val pipelineId = fileDetail.meta[ARCHIVE_PROPS_PIPELINE_ID] ?: StringUtils.EMPTY
 
         if (!pipelineService.hasPermission(userId, projectId, pipelineId, AuthPermission.VIEW)) {
             logger.error("no permission , user:$userId , project:$projectId , pipeline:$pipelineId")
@@ -225,6 +229,20 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         }
         val backUpIcon = lazy { client.get(ServiceProjectResource::class).get(projectId).data!!.logoAddr!! }
 
+        // 构建信息
+        val buildId = fileDetail.meta[ARCHIVE_PROPS_BUILD_ID] ?: StringUtils.EMPTY
+        val buildDetail = try {
+            client.get(ServiceBuildResource::class).getBuildDetail(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                channelCode = ChannelCode.BS
+            )
+        } catch (exception: Exception) {
+            null
+        }
+
         return Result(
             FileDetailForApp(
                 name = fileDetail.name,
@@ -241,7 +259,8 @@ class AppArtifactoryResourceImpl @Autowired constructor(
                 fullPath = fileDetail.fullPath,
                 artifactoryType = artifactoryType,
                 modifiedTime = fileDetail.modifiedTime,
-                md5 = fileDetail.checksums.md5
+                md5 = fileDetail.checksums.md5,
+                buildNum = buildDetail?.data?.buildNum ?: 0
             )
         )
     }
