@@ -81,7 +81,7 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
 
     override fun getRoleMember(projectId: Int, roleId: Int): ManagerGroupMemberVo {
         val pageInfoDTO = PageInfoDTO()
-        pageInfoDTO.limit = 1000
+        pageInfoDTO.limit = 100
         pageInfoDTO.offset = 0
         return iamManagerService.getRoleGroupMember(roleId, pageInfoDTO)
     }
