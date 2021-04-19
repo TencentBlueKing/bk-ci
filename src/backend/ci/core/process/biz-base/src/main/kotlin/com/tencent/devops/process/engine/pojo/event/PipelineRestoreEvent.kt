@@ -25,26 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.resources
+package com.tencent.devops.process.engine.pojo.event
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.environment.api.OpNodeResource
-import com.tencent.devops.environment.pojo.NodePage
-import com.tencent.devops.environment.service.OpNodeService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
 
-@RestResource
-class OpNodeResourceImpl @Autowired constructor(private val opNodeService: OpNodeService) : OpNodeResource {
-    override fun flushDisplayName(): Result<Int> {
-        return Result(opNodeService.flushDisplayName())
-    }
-
-    override fun list(page: Int, pageSize: Int, name: String?): Result<NodePage> {
-        return Result(NodePage(opNodeService.countPage(name), opNodeService.listPage(page, pageSize, name)))
-    }
-
-    override fun deleteNodes(projectId: String, nodeHashId: String): Result<Boolean> {
-        return Result(opNodeService.deleteNode(projectId, nodeHashId))
-    }
-}
+/**
+ * 恢复流水线事件
+ *
+ * @version 1.0
+ */
+@Event(MQ.ENGINE_PROCESS_LISTENER_EXCHANGE, MQ.ROUTE_PIPELINE_RESTORE)
+data class PipelineRestoreEvent(
+    override val source: String,
+    override val projectId: String,
+    override val pipelineId: String,
+    override val userId: String,
+    override var actionType: ActionType = ActionType.START,
+    override var delayMills: Int = 0
+) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)

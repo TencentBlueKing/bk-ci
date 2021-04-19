@@ -31,46 +31,29 @@ import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.process.engine.control.CallBackControl
-import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineRestoreEvent
 import com.tencent.devops.process.engine.service.AgentPipelineRefService
-import com.tencent.devops.process.engine.service.PipelineAtomStatisticsService
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
 /**
- *  MQ实现的流水线更新事件
+ *  MQ实现的流水线恢复事件
  *
  * @version 1.0
  */
 @Component
-class MQPipelineUpdateListener @Autowired constructor(
-    private val pipelineRuntimeService: PipelineRuntimeService,
-    private val pipelineAtomStatisticsService: PipelineAtomStatisticsService,
-    private val callBackControl: CallBackControl,
+class MQPipelineRestoreListener @Autowired constructor(
     private val agentPipelineRefService: AgentPipelineRefService,
     pipelineEventDispatcher: PipelineEventDispatcher
-) : BaseListener<PipelineUpdateEvent>(pipelineEventDispatcher) {
+) : BaseListener<PipelineRestoreEvent>(pipelineEventDispatcher) {
 
-    override fun run(event: PipelineUpdateEvent) {
-        val watcher = Watcher(id = "${event.traceId}|UpdatePipeline#${event.pipelineId}|${event.userId}")
+    override fun run(event: PipelineRestoreEvent) {
+        val watcher = Watcher(id = "${event.traceId}|RestorePipeline#${event.pipelineId}|${event.userId}")
         try {
-            if (event.buildNo != null) {
-                watcher.start("updateBuildNo")
-                pipelineRuntimeService.updateBuildNo(event.pipelineId, event.buildNo!!.buildNo)
-                watcher.stop()
-            }
-            watcher.start("callback")
-            callBackControl.pipelineUpdateEvent(projectId = event.projectId, pipelineId = event.pipelineId)
-            watcher.stop()
             watcher.start("updateAgentPipelineRef")
             with(event) {
-                agentPipelineRefService.updateAgentPipelineRef(userId, "update_pipeline", projectId, pipelineId)
+                agentPipelineRefService.updateAgentPipelineRef(userId, "restore_pipeline", projectId, pipelineId)
             }
-            watcher.stop()
-            watcher.start("updateAtomPipelineNum")
-            pipelineAtomStatisticsService.updateAtomPipelineNum(event.pipelineId, event.version ?: 1)
             watcher.stop()
         } finally {
             watcher.stop()

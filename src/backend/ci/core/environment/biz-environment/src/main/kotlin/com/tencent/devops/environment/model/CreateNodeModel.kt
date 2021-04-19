@@ -25,26 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.resources
+package com.tencent.devops.environment.model
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.environment.api.OpNodeResource
-import com.tencent.devops.environment.pojo.NodePage
-import com.tencent.devops.environment.service.OpNodeService
-import org.springframework.beans.factory.annotation.Autowired
+import java.time.LocalDateTime
 
-@RestResource
-class OpNodeResourceImpl @Autowired constructor(private val opNodeService: OpNodeService) : OpNodeResource {
-    override fun flushDisplayName(): Result<Int> {
-        return Result(opNodeService.flushDisplayName())
-    }
-
-    override fun list(page: Int, pageSize: Int, name: String?): Result<NodePage> {
-        return Result(NodePage(opNodeService.countPage(name), opNodeService.listPage(page, pageSize, name)))
-    }
-
-    override fun deleteNodes(projectId: String, nodeHashId: String): Result<Boolean> {
-        return Result(opNodeService.deleteNode(projectId, nodeHashId))
-    }
-}
+data class CreateNodeModel(
+    var nodeStringId: String? = "",
+    var projectId: String,
+    var nodeIp: String = "",
+    var nodeName: String = "",
+    var nodeStatus: String = "",
+    var nodeType: String = "",
+    var nodeClusterId: String? = null,
+    var nodeNamespace: String? = null,
+    var createdUser: String = "",
+    var expireTime: LocalDateTime? = null,
+    var osName: String? = null,
+    var operator: String? = null,
+    var bakOperator: String? = null,
+    var agentStatus: Boolean = false,
+    var displayName: String = "",
+    var image: String? = "",
+    var taskId: Long? = null,
+    var pipelineRefCount: Int = 0,
+    var lastBuildTime: LocalDateTime? = null
+)
