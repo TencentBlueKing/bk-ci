@@ -30,7 +30,7 @@ package com.tencent.devops.experience.dao
 import com.tencent.devops.model.experience.tables.TExperienceDownload
 import com.tencent.devops.model.experience.tables.records.TExperienceDownloadRecord
 import org.jooq.DSLContext
-import org.jooq.Record1
+import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
@@ -62,9 +62,11 @@ class ExperienceDownloadDao {
     }
 
     fun plusTimes(dslContext: DSLContext, id: Long) {
+        val now = LocalDateTime.now()
         with(TExperienceDownload.T_EXPERIENCE_DOWNLOAD) {
             dslContext.update(this)
                 .set(TIMES, TIMES + 1)
+                .set(UPDATE_TIME, now)
                 .where(ID.eq(id))
                 .execute()
         }
@@ -113,12 +115,17 @@ class ExperienceDownloadDao {
         }
     }
 
-    fun distinctExperienceIdByUserId(dslContext: DSLContext, userId: String, limit: Int): Result<Record1<Long>>? {
+    fun distinctExperienceIdByUserId(
+        dslContext: DSLContext,
+        userId: String,
+        limit: Int
+    ): Result<Record2<Long, LocalDateTime>>? {
         with(TExperienceDownload.T_EXPERIENCE_DOWNLOAD) {
             return dslContext
-                .selectDistinct(EXPERIENCE_ID)
+                .select(EXPERIENCE_ID, UPDATE_TIME)
                 .from(this)
                 .where(USER_ID.eq(userId))
+                .orderBy(UPDATE_TIME.desc())
                 .limit(limit)
                 .fetch()
         }

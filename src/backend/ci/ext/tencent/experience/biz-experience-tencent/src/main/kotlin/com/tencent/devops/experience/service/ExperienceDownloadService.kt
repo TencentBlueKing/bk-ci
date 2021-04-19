@@ -287,49 +287,58 @@ class ExperienceDownloadService @Autowired constructor(
             return Pagination(false, emptyList())
         }
 
-        val experienceIds =
+        val experienceIdDownloadTimeMap =
             experienceDownloadDao.distinctExperienceIdByUserId(
                 dslContext = dslContext,
                 userId = userId,
                 limit = 10000
-            )?.map { it.value1() }?.toSet()
-        return if (null == experienceIds || experienceIds.isEmpty()) {
+            )?.map { it.value1() to it.value2() }?.toMap()
+        return if (null == experienceIdDownloadTimeMap || experienceIdDownloadTimeMap.isEmpty()) {
             Pagination(false, emptyList())
         } else {
             val experienceIdsByBundleId = experienceDao.listIdsGroupByBundleId(
                 dslContext = dslContext,
-                ids = experienceIds,
+                ids = experienceIdDownloadTimeMap.keys,
                 expireTime = LocalDateTime.now(),
                 online = true
             ).map { it.value1() }.toSet()
 
             val offset = (page - 1) * pageSize
-            val experiences = experienceDao.listByIds(
-                dslContext = dslContext,
-                ids = experienceIdsByBundleId,
-                platform = PlatformEnum.of(platform)?.name,
-                expireTime = LocalDateTime.now(),
-                online = true,
-                offset = offset,
-                limit = pageSize
-            ).map {
-                DownloadRecordVO(
-                    experienceHashId = HashUtil.encodeLongId(it.id),
-                    size = it.size,
-                    logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl),
-                    experienceName = it.experienceName,
-                    createTime = it.createTime.timestampmilli(),
-                    bundleIdentifier = it.bundleIdentifier
+            if (offset >= experienceIdsByBundleId.size) {
+                Pagination(false, emptyList())
+            } else {
+                var experiences = experienceDao.listByIds(
+                    dslContext = dslContext,
+                    ids = experienceIdsByBundleId,
+                    platform = PlatformEnum.of(platform)?.name,
+                    expireTime = LocalDateTime.now(),
+                    online = true,
+                    offset = 0,
+                    limit = experienceIdsByBundleId.size
+                ).asSequence().map {
+                    DownloadRecordVO(
+                        experienceHashId = HashUtil.encodeLongId(it.id),
+                        size = it.size,
+                        logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl),
+                        experienceName = it.experienceName,
+                        versionTitle = it.versionTitle,
+                        createTime = it.createTime.timestampmilli(),
+                        downloadTime = experienceIdDownloadTimeMap[it.id]?.timestampmilli() ?: 0,
+                        bundleIdentifier = it.bundleIdentifier
+                    )
+                }.sortedByDescending { it.downloadTime }.toList()
+
+                experiences = experiences.subList(offset, (offset + pageSize).coerceAtMost(experiences.size))
+
+                val hasNext = page * pageSize < experienceDao.countByIds(
+                    dslContext = dslContext,
+                    ids = experienceIdsByBundleId,
+                    platform = PlatformEnum.of(platform)?.name,
+                    expireTime = LocalDateTime.now(),
+                    online = true
                 )
-            }.toList()
-            val hasNext = page * pageSize < experienceDao.countByIds(
-                dslContext = dslContext,
-                ids = experienceIdsByBundleId,
-                platform = PlatformEnum.of(platform)?.name,
-                expireTime = LocalDateTime.now(),
-                online = true
-            )
-            Pagination(hasNext, experiences)
+                Pagination(hasNext, experiences)
+            }
         }
     }
 
