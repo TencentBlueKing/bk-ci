@@ -1007,15 +1007,17 @@ class PipelineRepositoryService constructor(
                 pipelineName = setting.pipelineName,
                 pipelineDesc = setting.desc
             )
-            if (old?.maxPipelineResNum != null) {
-                pipelineSettingVersionDao.deleteEarlyVersion(
-                    dslContext = context,
-                    pipelineId = setting.pipelineId,
-                    currentVersion = version,
-                    maxPipelineResNum = old.maxPipelineResNum
-                )
+            if (version > 0) { // #671 兼容无版本要求的修改入口，比如改名，或者只读流水线的修改操作, version=0
+                if (old?.maxPipelineResNum != null) {
+                    pipelineSettingVersionDao.deleteEarlyVersion(
+                        dslContext = context,
+                        pipelineId = setting.pipelineId,
+                        currentVersion = version,
+                        maxPipelineResNum = old.maxPipelineResNum
+                    )
+                }
+                pipelineSettingVersionDao.saveSetting(context, setting, version = version)
             }
-            pipelineSettingVersionDao.saveSetting(context, setting, version = version)
             pipelineSettingDao.saveSetting(context, setting).toString()
         }
     }

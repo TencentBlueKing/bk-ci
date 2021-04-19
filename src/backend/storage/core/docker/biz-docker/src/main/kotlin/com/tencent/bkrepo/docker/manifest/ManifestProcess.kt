@@ -1,7 +1,7 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.  
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -10,13 +10,23 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 package com.tencent.bkrepo.docker.manifest
@@ -93,17 +103,18 @@ class ManifestProcess constructor(val repo: DockerArtifactRepo) {
         manifestPath: String,
         manifestType: ManifestType,
         artifactFile: ArtifactFile
-    ): DockerDigest {
+    ): Pair<DockerDigest, Long> {
         val manifestBytes = artifactFile.getInputStream().readBytes()
         val digest = DockerManifestDigester.calcDigest(manifestBytes)
         logger.info("manifest file digest content digest : [$digest]")
         if (ManifestType.Schema2List == manifestType) {
             processManifestList(context, tag, manifestPath, digest!!, manifestBytes)
-            return digest
+            return Pair(digest, 0L)
         }
 
         // process scheme2 manifest
         val metadata = ManifestDeserializer.deserialize(repo, context, tag, manifestType, manifestBytes, digest!!)
+        val size = metadata.tagInfo.totalSize
         addManifestsBlobs(context, manifestType, manifestBytes, metadata)
         if (!DockerManifestSyncer.syncBlobs(context, repo, metadata, tag)) {
             logger.warn("fail to sync manifest blobs, cancel manifest upload")
@@ -122,7 +133,7 @@ class ManifestProcess constructor(val repo: DockerArtifactRepo) {
             logger.warn("upload manifest fail [$uploadContext]")
             throw DockerFileSaveFailedException(manifestPath)
         }
-        return digest
+        return Pair(digest, size)
     }
 
     /**
@@ -284,7 +295,7 @@ class ManifestProcess constructor(val repo: DockerArtifactRepo) {
             logger.warn("the node not exist [$context,$manifestPath]")
             return DockerV2Errors.manifestUnknown(manifestPath)
         }
-        logger.debug("get manifest by tag result [$manifest]")
+        logger.info("get manifest by tag result [$manifest]")
         val digest = DockerDigest.fromSha256(manifest.sha256!!)
         return buildManifestResponse(context, manifestPath, digest, manifest.length, headers)
     }
@@ -406,6 +417,6 @@ class ManifestProcess constructor(val repo: DockerArtifactRepo) {
      */
     private fun getManifestByName(context: RequestContext, fileName: String): DockerArtifact? {
         val fullPath = "/${context.artifactName}/$fileName"
-        return repo.getArtifact(context.projectId, context.repoName, fullPath) ?: null
+        return repo.getArtifact(context.projectId, context.repoName, fullPath)
     }
 }
