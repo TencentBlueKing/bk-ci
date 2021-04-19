@@ -329,4 +329,13 @@ class ExperiencePublicDao {
                 .execute()
         }
     }
+
+    fun filterRecordId(dslContext: DSLContext, records: Set<Long>): Result<Record1<Long>>? {
+        return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
+            dslContext.select(RECORD_ID)
+                .from(this)
+                .where(RECORD_ID.`in`(records))
+                .fetch()
+        }
+    }
 }

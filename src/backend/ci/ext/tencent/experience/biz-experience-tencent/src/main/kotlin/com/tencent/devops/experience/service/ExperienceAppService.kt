@@ -46,6 +46,7 @@ import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.constant.ProductCategoryEnum
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceGroupDao
+import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.pojo.AppExperience
 import com.tencent.devops.experience.pojo.AppExperienceDetail
 import com.tencent.devops.experience.pojo.AppExperienceSummary
@@ -66,6 +67,7 @@ class ExperienceAppService(
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
     private val experienceDao: ExperienceDao,
+    private val experiencePublicDao: ExperiencePublicDao,
     private val experienceBaseService: ExperienceBaseService,
     private val experienceDownloadService: ExperienceDownloadService,
     private val experienceGroupDao: ExperienceGroupDao,
@@ -292,6 +294,9 @@ class ExperienceAppService(
         isOldVersion: Boolean
     ): List<ExperienceChangeLog> {
         val recordIds = experienceBaseService.getRecordIdsByUserId(userId, GroupIdTypeEnum.JUST_PRIVATE)
+        val publicRecords =
+            experiencePublicDao.filterRecordId(dslContext, recordIds)?.map { it.value1() }?.toSet() ?: emptySet()
+        recordIds.removeAll(publicRecords)
         val experienceList = experienceDao.listByBundleIdentifier(
             dslContext = dslContext,
             projectId = projectId,
