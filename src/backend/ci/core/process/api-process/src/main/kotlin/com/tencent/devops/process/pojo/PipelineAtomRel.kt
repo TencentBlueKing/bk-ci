@@ -35,7 +35,7 @@ data class PipelineAtomRel(
     @ApiModelProperty("流水线链接", required = true)
     val pipelineUrl: String,
     @ApiModelProperty("插件版本", required = true)
-    val atomVersion: String,
+    val atomVersion: String? = null,
     @ApiModelProperty("修改人", required = true)
     val modifier: String,
     @ApiModelProperty("修改时间", required = true)

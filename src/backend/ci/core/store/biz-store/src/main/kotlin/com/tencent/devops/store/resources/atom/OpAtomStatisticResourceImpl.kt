@@ -53,7 +53,7 @@ class OpAtomStatisticResourceImpl @Autowired constructor(
             format = format
         )
         return Result(
-            marketAtomStatisticService.syncAtomDailyStatisticInfo(
+            marketAtomStatisticService.asyncAtomDailyStatisticInfo(
                 storeType = StoreTypeEnum.ATOM.type.toByte(),
                 startTime = startTime,
                 endTime = endTime

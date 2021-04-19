@@ -29,6 +29,8 @@ package com.tencent.devops.misc.service.process
 
 import com.tencent.devops.misc.dao.process.ProcessDao
 import org.jooq.DSLContext
+import org.jooq.Record
+import org.jooq.Result
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -56,15 +58,21 @@ class ProcessService @Autowired constructor(
             maxBuildNum = maxBuildNum,
             maxStartTime = maxStartTime
         )
-        return if (historyBuildIdRecords == null) {
-            null
-        } else {
-            val buildIdList = mutableListOf<String>()
-            historyBuildIdRecords.forEach { historyBuildIdRecord ->
-                buildIdList.add(historyBuildIdRecord.getValue(0, String::class.java))
-            }
-            buildIdList
-        }
+        return generateIdList(historyBuildIdRecords)
+    }
+
+    fun getClearDeletePipelineIdList(
+        projectId: String,
+        pipelineIdList: List<String>,
+        gapDays: Long
+    ): List<String>? {
+        val pipelineIdRecords = processDao.getClearDeletePipelineIdList(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineIdList = pipelineIdList,
+            gapDays = gapDays
+        )
+        return generateIdList(pipelineIdRecords)
     }
 
     fun getPipelineIdListByProjectId(projectId: String): List<String>? {
@@ -72,14 +80,18 @@ class ProcessService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId
         )
-        return if (pipelineIdRecords == null) {
+        return generateIdList(pipelineIdRecords)
+    }
+
+    private fun generateIdList(records: Result<out Record>?): MutableList<String>? {
+        return if (records == null) {
             null
         } else {
-            val pipelineIdList = mutableListOf<String>()
-            pipelineIdRecords.forEach { pipelineIdRecord ->
-                pipelineIdList.add(pipelineIdRecord.getValue(0, String::class.java))
+            val idList = mutableListOf<String>()
+            records.forEach { record ->
+                idList.add(record.getValue(0, String::class.java))
             }
-            pipelineIdList
+            idList
         }
     }
 

@@ -214,4 +214,9 @@ interface ServiceProjectResource {
         @QueryParam("maxId")
         maxId: Long
     ): Result<List<ProjectBaseInfo>>
+
+    @ApiOperation("查看灰度项目列表")
+    @GET
+    @Path("/listSecrecyProject")
+    fun listSecrecyProject(): Result<Set<String>?>
 }
