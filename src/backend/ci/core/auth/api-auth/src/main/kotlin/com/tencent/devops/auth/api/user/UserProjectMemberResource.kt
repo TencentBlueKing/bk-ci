@@ -99,6 +99,7 @@ interface UserProjectMemberResource {
         @QueryParam("managerGroup")
         managerGroup: Boolean,
         @ApiParam("待删除用户", required = true)
-        members: List<String>
+        @QueryParam("members")
+        members: String
     ): Result<Boolean>
 }

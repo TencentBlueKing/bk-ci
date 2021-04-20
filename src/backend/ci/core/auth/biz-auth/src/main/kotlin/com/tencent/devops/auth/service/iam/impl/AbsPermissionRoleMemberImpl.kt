@@ -74,15 +74,14 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
         userId: String,
         projectId: Int,
         roleId: Int,
-        members: List<String>,
+        members: String,
         managerGroup: Boolean
     ) {
         permissionGradeService.checkGradeManagerUser(userId, projectId)
 
-        val memeber = members.joinToString { "," }
-        iamManagerService.deleteRoleGroupMember(roleId, ManagerScopesEnum.getType(ManagerScopesEnum.USER), memeber)
+        iamManagerService.deleteRoleGroupMember(roleId, ManagerScopesEnum.getType(ManagerScopesEnum.USER), members)
         if (managerGroup) {
-            iamManagerService.deleteGradeManagerRoleMember(memeber, projectId)
+            iamManagerService.deleteGradeManagerRoleMember(members, projectId)
         }
     }
 

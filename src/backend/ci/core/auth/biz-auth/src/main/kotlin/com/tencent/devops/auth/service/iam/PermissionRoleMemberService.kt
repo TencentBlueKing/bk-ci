@@ -33,7 +33,7 @@ import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerGroupMemberVo
 interface PermissionRoleMemberService {
     fun createRoleMember(userId: String, projectId: Int, roleId: Int, members: List<String>, managerGroup: Boolean)
 
-    fun deleteRoleMember(userId: String, projectId: Int, roleId: Int, members: List<String>, managerGroup: Boolean)
+    fun deleteRoleMember(userId: String, projectId: Int, roleId: Int, members: String, managerGroup: Boolean)
 
     fun getRoleMember(projectId: Int, roleId: Int): ManagerGroupMemberVo
 }
