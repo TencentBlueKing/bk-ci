@@ -70,7 +70,6 @@ import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.GitFileInfo
 import org.joda.time.DateTime
-import org.joda.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -80,6 +79,7 @@ import java.io.BufferedReader
 import java.io.File
 import java.io.StringReader
 import java.text.SimpleDateFormat
+import java.time.LocalDateTime
 import java.util.Date
 import javax.ws.rs.core.Response
 
@@ -223,7 +223,7 @@ class GitCITriggerService @Autowired constructor(
             )
             return false
         } finally {
-            logger.info("It takes ${LocalDateTime.now().timestampmilli() - start}")
+            logger.info("It takes ${LocalDateTime.now().timestampmilli() - start}ms to match trigger pipeline")
         }
     }
 
