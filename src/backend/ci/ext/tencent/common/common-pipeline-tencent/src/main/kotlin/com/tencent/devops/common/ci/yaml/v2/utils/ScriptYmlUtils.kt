@@ -30,6 +30,7 @@ package com.tencent.devops.common.ci.yaml.v2.utils
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.SerializationFeature
+import com.fasterxml.jackson.databind.exc.MismatchedInputException
 import com.fasterxml.jackson.databind.node.ObjectNode
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.github.fge.jackson.JsonLoader
@@ -37,18 +38,17 @@ import com.github.fge.jsonschema.core.report.LogLevel
 import com.github.fge.jsonschema.core.report.ProcessingMessage
 import com.github.fge.jsonschema.main.JsonSchemaFactory
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.service.AbstractService
 import com.tencent.devops.common.ci.task.AbstractTask
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
-import com.tencent.devops.common.ci.yaml.Trigger
-import com.tencent.devops.common.ci.yaml.MatchRule
-import com.tencent.devops.common.ci.yaml.MergeRequest
 import com.tencent.devops.common.ci.yaml.v2.Container
 import com.tencent.devops.common.ci.yaml.v2.Credentials
 import com.tencent.devops.common.ci.yaml.v2.Job
 import com.tencent.devops.common.ci.yaml.v2.MrRule
 import com.tencent.devops.common.ci.yaml.v2.PreScriptBuildYaml
+import com.tencent.devops.common.ci.yaml.v2.PreTriggerOn
 import com.tencent.devops.common.ci.yaml.v2.PushRule
 import com.tencent.devops.common.ci.yaml.v2.ScriptBuildYaml
 import com.tencent.devops.common.ci.yaml.v2.Stage
@@ -71,10 +71,13 @@ object ScriptYmlUtils {
 
     private const val secretSeed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
+    /**
+     * 1、解决锚点
+     * 2、yml string层面的格式化填充
+     */
     fun formatYaml(yamlStr: String): String {
         // replace custom tag
         val yamlNormal = formatYamlCustom(yamlStr)
-        println("=====" + yamlNormal)
         // replace anchor tag
         val yaml = Yaml()
         val obj = yaml.load(yamlNormal) as Any
@@ -160,7 +163,7 @@ object ScriptYmlUtils {
         return sb.toString()
     }
 
-    private fun checkYaml(preScriptBuildYaml: PreScriptBuildYaml): List<Stage> {
+    private fun formatStage(preScriptBuildYaml: PreScriptBuildYaml): List<Stage> {
         if ((preScriptBuildYaml.stages != null && preScriptBuildYaml.jobs != null) ||
             (preScriptBuildYaml.stages != null && preScriptBuildYaml.steps != null) ||
             (preScriptBuildYaml.jobs != null && preScriptBuildYaml.steps != null)) {
@@ -215,8 +218,11 @@ object ScriptYmlUtils {
         return emptyList()
     }
 
+    /**
+     * 预处理对象转化为合法对象
+     */
     fun normalizeGitCiYaml(preScriptBuildYaml: PreScriptBuildYaml): ScriptBuildYaml {
-        val stages = checkYaml(preScriptBuildYaml)
+        val stages = formatStage(preScriptBuildYaml)
 
         var thisTriggerOn = TriggerOn(
             push = PushRule(
@@ -231,24 +237,13 @@ object ScriptYmlUtils {
         )
 
         if (preScriptBuildYaml.triggerOn != null) {
-            thisTriggerOn = preScriptBuildYaml.trigger ?: Trigger(
-                disable = true,
-                branches = MatchRule(listOf("**"), null),
-                tags = null,
-                paths = null
-            )
-            thisMr = preScriptBuildYaml.mr ?: MergeRequest(
-                disable = true,
-                autoCancel = true,
-                branches = MatchRule(listOf("**"), null),
-                paths = null
-            )
+            thisTriggerOn = formatTriggerOn(preScriptBuildYaml.triggerOn)
         }
 
         return ScriptBuildYaml(
             name = preScriptBuildYaml.name,
             version = preScriptBuildYaml.version,
-            triggerOn = null,
+            triggerOn = thisTriggerOn,
             variables = preScriptBuildYaml.variables,
             onFail = preScriptBuildYaml.onFail,
             extends = preScriptBuildYaml.extends,
@@ -258,9 +253,104 @@ object ScriptYmlUtils {
         )
     }
 
-    fun normalizePrebuildYaml(originYaml: CIBuildYaml): CIBuildYaml {
-        return CIBuildYaml(originYaml.name, null, null, originYaml.variables, null, checkYaml(originYaml), null)
+    private fun formatTriggerOn(preTriggerOn: PreTriggerOn): TriggerOn {
+        var pushRule = PushRule()
+        var tagRule = TagRule()
+        var mrRule = MrRule()
+
+        if (preTriggerOn.push != null) {
+            val push = preTriggerOn.push
+            try {
+                pushRule = YamlUtil.getObjectMapper().readValue(
+                    JsonUtil.toJson(push),
+                    PushRule::class.java
+                )
+            } catch (e: MismatchedInputException) {
+                try {
+                    val pushObj = YamlUtil.getObjectMapper().readValue(
+                        JsonUtil.toJson(push),
+                        List::class.java
+                    ) as ArrayList<String>
+
+                    pushRule = PushRule(
+                        branches = pushObj,
+                        branchesIgnore = null,
+                        paths = null,
+                        pathsIgnore = null,
+                        users = null,
+                        usersIgnore = null
+                    )
+                } catch (e: Exception) {
+                    logger.error("Format triggerOn pushRule failed.", e)
+                }
+            }
+        }
+
+        if (preTriggerOn.tag != null) {
+            val tag = preTriggerOn.tag
+            try {
+                tagRule = YamlUtil.getObjectMapper().readValue(
+                    JsonUtil.toJson(tag),
+                    TagRule::class.java
+                )
+            } catch (e: MismatchedInputException) {
+                try {
+                    val tagList = YamlUtil.getObjectMapper().readValue(
+                        JsonUtil.toJson(tag),
+                        List::class.java
+                    ) as ArrayList<String>
+
+                    tagRule = TagRule(
+                        tags = tagList,
+                        tagsIgnore = null,
+                        fromBranches = null,
+                        users = null,
+                        usersIgnore = null
+                    )
+                } catch (e: Exception) {
+                    logger.error("Format triggerOn tagRule failed.", e)
+                }
+            }
+        }
+
+        if (preTriggerOn.mr != null) {
+            val mr = preTriggerOn.mr
+            try {
+                mrRule = YamlUtil.getObjectMapper().readValue(
+                    JsonUtil.toJson(mr),
+                    MrRule::class.java
+                )
+            } catch (e: MismatchedInputException) {
+                try {
+                    val mrList = YamlUtil.getObjectMapper().readValue(
+                        JsonUtil.toJson(mr),
+                        List::class.java
+                    ) as ArrayList<String>
+
+                    mrRule = MrRule(
+                        targetBranches = mrList,
+                        sourceBranchesIgnore = null,
+                        paths = null,
+                        pathsIgnore = null,
+                        users = null,
+                        usersIgnore = null
+                    )
+                } catch (e: Exception) {
+                    logger.error("Format triggerOn mrRule failed.", e)
+                }
+            }
+        }
+
+        return TriggerOn(
+            push = pushRule,
+            tag = tagRule,
+            mr = mrRule
+        )
     }
+
+/*    fun normalizePrebuildYaml(originYaml: CIBuildYaml): CIBuildYaml {
+        return CIBuildYaml(originYaml.name, null, null, originYaml.variables, null, checkYaml(originYaml), null)
+    }*/
 
     fun validateYaml(yamlStr: String): Pair<Boolean, String> {
         val yamlJsonStr = try {

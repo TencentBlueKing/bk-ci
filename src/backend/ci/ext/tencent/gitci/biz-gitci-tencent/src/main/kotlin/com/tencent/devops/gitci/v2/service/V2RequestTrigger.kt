@@ -163,7 +163,6 @@ class V2RequestTrigger @Autowired constructor (
 
         val yaml = ScriptYmlUtils.formatYaml(yamlStr)
         val preYamlObject = YamlUtil.getObjectMapper().readValue(yaml, PreScriptBuildYaml::class.java)
-        // val yamlObject = YamlUtil.getObjectMapper().readValue(yaml, ScriptBuildYaml::class.java)
 
         return ScriptYmlUtils.normalizeGitCiYaml(preYamlObject)
     }
