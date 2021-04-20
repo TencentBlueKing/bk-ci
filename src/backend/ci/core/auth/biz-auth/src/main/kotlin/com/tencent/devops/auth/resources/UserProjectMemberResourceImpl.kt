@@ -69,7 +69,7 @@ class UserProjectMemberResourceImpl @Autowired constructor(
         projectId: Int,
         roleId: Int,
         managerGroup: Boolean,
-        members: List<String>
+        members: String
     ): Result<Boolean> {
         Result(permissionRoleMemberService.deleteRoleMember(
             userId = userId,
