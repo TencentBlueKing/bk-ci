@@ -27,18 +27,17 @@
 
 package com.tencent.devops.process.engine.service.code.filter
 
-import com.tencent.devops.scm.utils.code.git.GitUtils
+/**
+ *
+ */
+class FilterResponse {
+    private val params = mutableMapOf<String, String>()
 
-class UrlFilter(
-    private val pipelineId: String,
-    private val triggerOnUrl: String,
-    private val repositoryUrl: String
-) : WebhookFilter {
+    fun addParam(key: String, value: String) {
+        params[key] = value
+    }
 
-    override fun doFilter(response: FilterResponse): Boolean {
-        val triggerRepository = GitUtils.getDomainAndRepoName(triggerOnUrl)
-        val repository = GitUtils.getDomainAndRepoName(repositoryUrl)
-
-        return triggerRepository.first == repository.first && triggerRepository.second == repository.second
+    fun getParam(): Map<String, String> {
+        return params
     }
 }

@@ -39,10 +39,11 @@ class BranchFilter(
 
     companion object {
         private val logger = LoggerFactory.getLogger(BranchFilter::class.java)
+        private const val MATCH_BRANCH = "matchBranch"
     }
 
-    override fun doFilter(): Boolean {
-        return hasNoBranchSpecs() || (isBranchNotExcluded() && isBranchIncluded())
+    override fun doFilter(response: FilterResponse): Boolean {
+        return hasNoBranchSpecs() || (isBranchNotExcluded() && isBranchIncluded(response))
     }
 
     private fun hasNoBranchSpecs(): Boolean {
@@ -62,10 +63,11 @@ class BranchFilter(
         return true
     }
 
-    private fun isBranchIncluded(): Boolean {
+    private fun isBranchIncluded(response: FilterResponse): Boolean {
         val matcher = AntPathMatcher()
         includedBranches.forEach { includePattern ->
             if (matcher.match(includePattern, triggerOnBranchName)) {
+                response.addParam(MATCH_BRANCH, includePattern)
                 logger.warn(
                     "$pipelineId|The included branch match the git event branch $includePattern"
                 )

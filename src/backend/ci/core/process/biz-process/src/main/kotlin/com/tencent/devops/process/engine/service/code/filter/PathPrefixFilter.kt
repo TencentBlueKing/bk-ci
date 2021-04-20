@@ -40,7 +40,7 @@ class PathPrefixFilter(
         private val logger = LoggerFactory.getLogger(PathPrefixFilter::class.java)
     }
 
-    override fun doFilter(): Boolean {
+    override fun doFilter(response: FilterResponse): Boolean {
         return hasNoBranchSpecs() || (isPathNotExcluded() && isPathIncluded())
     }
 

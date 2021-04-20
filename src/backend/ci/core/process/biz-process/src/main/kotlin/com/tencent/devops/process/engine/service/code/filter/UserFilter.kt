@@ -40,7 +40,7 @@ class UserFilter(
         private val logger = LoggerFactory.getLogger(UserFilter::class.java)
     }
 
-    override fun doFilter(): Boolean {
+    override fun doFilter(response: FilterResponse): Boolean {
         return hasNoUserSpecs() || (isUserNotExcluded() && isUserIncluded())
     }
 

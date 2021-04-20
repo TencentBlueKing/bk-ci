@@ -51,7 +51,6 @@ import com.tencent.devops.process.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.process.service.scm.GitScmService
 import com.tencent.devops.process.utils.GIT_MR_NUMBER
 import com.tencent.devops.repository.pojo.CodeGitRepository
-import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_MANUAL_UNLOCK
@@ -82,8 +81,7 @@ open class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
             logger.info("do git match for pipeline($pipelineId): ${repository.aliasName}, $branchName, $eventType")
 
             if (repository !is CodeGitRepository &&
-                repository !is CodeTGitRepository &&
-                repository !is CodeGitlabRepository
+                repository !is CodeTGitRepository
             ) {
                 logger.warn("Is not code repo for git web hook for repo and pipeline: $repository, $pipelineId")
                 return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = REPOSITORY_TYPE_NOT_MATCH)
