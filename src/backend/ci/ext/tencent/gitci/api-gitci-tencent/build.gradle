@@ -39,3 +39,5 @@ dependencies {
     compile project(":core:log:api-log")
     compile project(":core:project:api-project")
 }
+
+apply from: "$rootDir/task_deploy_to_maven.gradle"
