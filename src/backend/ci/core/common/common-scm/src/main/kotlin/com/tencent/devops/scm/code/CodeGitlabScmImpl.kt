@@ -136,7 +136,7 @@ class CodeGitlabScmImpl constructor(
     }
 
     override fun getMergeRequestChangeInfo(mrId: Long): GitMrChangeInfo {
-        val url = "/projects/${URLEncoder.encode(projectName, "UTF-8")}/merge_requests/$mrId/changes"
+        val url = "projects/${URLEncoder.encode(projectName, "UTF-8")}/merge_requests/$mrId/changes"
         return gitApi.getMergeRequestChangeInfo(
             host = apiUrl,
             token = token,
@@ -145,7 +145,7 @@ class CodeGitlabScmImpl constructor(
     }
 
     override fun getMrInfo(mrId: Long): GitMrInfo {
-        val url = "/projects/${URLEncoder.encode(projectName, "UTF-8")}/merge_requests/$mrId"
+        val url = "projects/${URLEncoder.encode(projectName, "UTF-8")}/merge_requests/$mrId"
         return gitApi.getMrInfo(
             host = apiUrl,
             token = token,

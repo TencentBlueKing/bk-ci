@@ -27,6 +27,7 @@
 
 package com.tencent.devops.scm.pojo
 
+import com.fasterxml.jackson.annotation.JsonAlias
 import com.fasterxml.jackson.annotation.JsonProperty
 import io.swagger.annotations.ApiModel
 
@@ -115,6 +116,7 @@ data class GitMrChangeInfo(
     val mrId: String = "",
     val labels: List<String>,
     val description: String? = "",
+    @JsonAlias("changes")
     val files: List<GitMrFile>
 ) {
     data class GitMrFile(
@@ -129,10 +131,10 @@ data class GitMrChangeInfo(
         @JsonProperty("deleted_file")
         val deletedFile: Boolean,
         @JsonProperty("is_too_large")
-        val isTooLarge: Boolean,
+        val isTooLarge: Boolean? = false,
         @JsonProperty("additions")
-        val additions: Int,
+        val additions: Int? = 0,
         @JsonProperty("deletions")
-        val deletions: Int
+        val deletions: Int? = 0
     )
 }
