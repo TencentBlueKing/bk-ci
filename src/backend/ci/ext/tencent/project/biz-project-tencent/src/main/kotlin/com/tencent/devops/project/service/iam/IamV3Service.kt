@@ -79,8 +79,8 @@ class IamV3Service @Autowired constructor(
             val iamProjectId = createIamProject(userId, resourceRegisterInfo)
             val roleId = createRole(userId, iamProjectId.toInt(), resourceRegisterInfo.resourceCode)
             createManagerPermission(resourceRegisterInfo.resourceCode, resourceRegisterInfo.resourceName, roleId)
+            event.iamProjectId = iamProjectId
 
-            // TODO: 关联分级管理员Id到项目
             val projectInfo = projectDao.getByEnglishName(dslContext, resourceRegisterInfo.resourceCode)
             if (projectInfo == null) {
                 event.retryCount = event.retryCount + 1
@@ -105,8 +105,9 @@ class IamV3Service @Autowired constructor(
             logger.warn("create iam projectFail, ${resourceRegisterInfo.resourceCode} not find")
         }
 
-        if (relationIam) {
-            // TODO: 关联iam与project
+        // 修改V3项目对应的projectId
+        if (relationIam && !event.iamProjectId.isNullOrEmpty()) {
+            projectDao.updateProjectId(dslContext, event.iamProjectId!!, resourceRegisterInfo.resourceCode)
         }
     }
 
