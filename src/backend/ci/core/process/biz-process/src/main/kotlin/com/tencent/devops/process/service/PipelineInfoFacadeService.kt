@@ -62,6 +62,7 @@ import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
 import com.tencent.devops.process.template.service.TemplateService
@@ -217,10 +218,9 @@ class PipelineInfoFacadeService @Autowired constructor(
             }
 
             val templateId = model.templateId
-            val srcTemplateId = model.srcTemplateId
-            if (srcTemplateId == null && templateId != null) {
+            if (templateId != null) {
                 // 如果是根据模板创建的流水线需为model设置srcTemplateId
-                model.srcTemplateId = templateDao.getSrcTemplateId(dslContext, templateId)
+                model.srcTemplateId = templateDao.getSrcTemplateId(dslContext, templateId, TemplateType.CONSTRAINT.name)
             }
 
             // 检查用户是否有插件的使用权限
