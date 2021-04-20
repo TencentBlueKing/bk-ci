@@ -115,7 +115,7 @@ data class GitMrInfo(
         @JsonProperty("web_url")
         val webUrl: String = "",
         @JsonProperty("avatar_url")
-        val avatarUrl: String = ""
+        val avatarUrl: String? = ""
     )
 
     data class GitMrInfoMilestone(
@@ -136,8 +136,8 @@ data class GitMrInfo(
         @JsonProperty("web_url")
         val webUrl: String = "",
         @JsonProperty("title")
-        val title: String = "",
+        val title: String? = "",
         @JsonProperty("avatar_url")
-        val avatarUrl: String = ""
+        val avatarUrl: String? = ""
     )
 }
