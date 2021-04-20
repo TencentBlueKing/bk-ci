@@ -215,30 +215,30 @@ class CodeGitScmOauthImpl constructor(
         logger.info("Git oauth can not unlock")
     }
 
-    override fun getMergeRequestChangeInfo(mrId: Long): GitMrChangeInfo? {
+    override fun getMergeRequestChangeInfo(mrId: Long): GitMrChangeInfo {
+        val url = "projects/${GitUtils.urlEncode(projectName)}/merge_request/$mrId/changes"
         return gitOauthApi.getMergeRequestChangeInfo(
             host = apiUrl,
             token = token,
-            projectName = projectName,
-            mrId = mrId
+            url = url
         )
     }
 
-    override fun getMrInfo(mrId: Long): GitMrInfo? {
+    override fun getMrInfo(mrId: Long): GitMrInfo {
+        val url = "projects/${GitUtils.urlEncode(projectName)}/merge_request/$mrId"
         return gitOauthApi.getMrInfo(
             host = apiUrl,
             token = token,
-            projectName = projectName,
-            mrId = mrId
+            url = url
         )
     }
 
-    override fun getMrReviewInfo(mrId: Long): GitMrReviewInfo? {
+    override fun getMrReviewInfo(mrId: Long): GitMrReviewInfo {
+        val url = "projects/${GitUtils.urlEncode(projectName)}/merge_request/$mrId/review"
         return gitOauthApi.getMrReviewInfo(
             host = apiUrl,
             token = token,
-            projectName = projectName,
-            mrId = mrId
+            url = url
         )
     }
 
