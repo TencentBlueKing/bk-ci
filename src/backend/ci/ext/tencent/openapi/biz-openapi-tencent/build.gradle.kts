@@ -34,10 +34,9 @@ dependencies {
     api(project(":ext:tencent:repository:api-repository-tencent"))
     api(project(":core:common:common-client"))
     api("io.jsonwebtoken:jjwt-api:0.10.8")
-    runtime {
-        "io.jsonwebtoken:jjwt-impl:0.10.8"
-        "io.jsonwebtoken:jjwt-jackson:0.10.8"
-    }
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.10.8")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.10.8")
+
     api("net.sf.json-lib:json-lib")
     api("org.springframework.boot:spring-boot-starter-aop")
 }

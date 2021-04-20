@@ -32,10 +32,8 @@ dependencies {
     api(project(":core:common:common-client"))
     api(project(":ext:tencent:artifactory:api-artifactory-tencent"))
     api("io.jsonwebtoken:jjwt-api:0.10.8")
-    runtime {
-        "io.jsonwebtoken:jjwt-impl:0.10.8"
-        "io.jsonwebtoken:jjwt-jackson:0.10.8"
-    }
+    runtimeOnly("io.jsonwebtoken:jjwt-impl:0.10.8")
+    runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.10.8")
 }
 
 plugins {
