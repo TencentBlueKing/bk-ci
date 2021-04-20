@@ -697,7 +697,7 @@
         .version-tips {
             display: inline-block;
             vertical-align: -1px;
-            fill: #F6B026;
+            color: #F6B026;
             font-size: 0;
         }
     }
