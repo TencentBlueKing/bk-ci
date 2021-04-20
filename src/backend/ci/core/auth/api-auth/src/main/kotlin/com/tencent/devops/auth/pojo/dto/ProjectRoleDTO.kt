@@ -28,8 +28,20 @@
 
 package com.tencent.devops.auth.pojo.dto
 
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+import org.hibernate.validator.constraints.Length
+
+@ApiModel
 data class ProjectRoleDTO(
+    @ApiModelProperty("用户组名称")
+    @Length(min = 5, max = 128)
     val name: String,
+    @ApiModelProperty("用户组描述")
+    @Length(min = 10)
     val description: String,
+    @ApiModelProperty("用户组类型,默认分组对应BkAuthGroup 枚举, 自定义分组可以为“”")
+    val type: String,
+    @ApiModelProperty("是否为默认分组")
     val defaultGroup: Boolean ?= true
 )

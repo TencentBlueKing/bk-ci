@@ -32,6 +32,7 @@ import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
 import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerRoleGroupVO
 import com.tencent.devops.auth.api.user.UserProjectRoleResource
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
+import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
@@ -39,7 +40,8 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserProjectRoleResourceImpl @Autowired constructor(
-    val permissionRoleService: PermissionRoleService
+    val permissionRoleService: PermissionRoleService,
+    val permissionGradeService: PermissionGradeService
 ) : UserProjectRoleResource {
     override fun createProjectRole(
         userId: String,
@@ -72,5 +74,15 @@ class UserProjectRoleResourceImpl @Autowired constructor(
 
     override fun getProjectRoles(userId: String, projectId: Int): Result<ManagerRoleGroupVO> {
         return Result(permissionRoleService.getPermissionRole(projectId))
+    }
+
+    override fun deleteProjectRole(userId: String, projectId: Int, roleId: Int): Result<Boolean> {
+        permissionRoleService.deletePermissionRole(userId, projectId, roleId)
+        return Result(true)
+    }
+
+    override fun hashPermission(userId: String, projectId: Int): Result<Boolean> {
+        permissionGradeService.checkGradeManagerUser(userId, projectId)
+        return Result(true)
     }
 }

@@ -34,6 +34,7 @@ import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 open class AbsPermissionGradeServiceImpl @Autowired constructor(
@@ -47,8 +48,12 @@ open class AbsPermissionGradeServiceImpl @Autowired constructor(
         val managerProject = iamManagerService.getUserRole(userId, pageInfoDTO).map { it.id }
 
         if (!managerProject.contains(projectId)) {
-            AbsPermissionRoleMemberImpl.logger.warn("createRoleMem")
+            logger.warn("createRoleMem")
             throw PermissionForbiddenException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.GRADE_CHECK_FAIL))
         }
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(AbsPermissionGradeServiceImpl::class.java)
     }
 }

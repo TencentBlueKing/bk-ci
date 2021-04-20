@@ -37,6 +37,7 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -97,4 +98,31 @@ interface UserProjectRoleResource {
         @PathParam("projectId")
         projectId: Int
     ): Result<ManagerRoleGroupVO>
+
+    @DELETE
+    @Path("/projectIds/{projectId}/roles/{roleId}")
+    @ApiOperation("删除用户组")
+    fun deleteProjectRole(
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(name = "项目标识", required = true)
+        @PathParam("projectId")
+        projectId: Int,
+        @ApiParam(name = "角色Id", required = true)
+        @PathParam("roleId")
+        roleId: Int
+    ): Result<Boolean>
+
+    @GET
+    @Path("/projects/{projectId}/manager/hasPermssion")
+    @ApiOperation("是否有项目管理操作的权限")
+    fun hashPermission(
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(name = "项目标识", required = true)
+        @PathParam("projectId")
+        projectId: Int
+    ): Result<Boolean>
 }
