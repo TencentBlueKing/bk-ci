@@ -93,7 +93,7 @@ class MarketAtomDao : AtomBaseDao() {
             yamlFlag = yamlFlag,
             recommendFlag = recommendFlag
         )
-        return baseStep.where(conditions).fetchOne(0, Int::class.java)
+        return baseStep.where(conditions).fetchOne(0, Int::class.java)!!
     }
 
     private fun formatConditions(
@@ -202,9 +202,9 @@ class MarketAtomDao : AtomBaseDao() {
                 }
 
             if (desc != null && desc) {
-                baseStep.where(conditions).orderBy(realSortType.desc())
+                baseStep.where(conditions).orderBy(realSortType!!.desc())
             } else {
-                baseStep.where(conditions).orderBy(realSortType.asc())
+                baseStep.where(conditions).orderBy(realSortType!!.asc())
             }
         } else {
             baseStep.where(conditions)
@@ -247,8 +247,8 @@ class MarketAtomDao : AtomBaseDao() {
                 tas.SCORE_AVERAGE
             ).from(tas).asTable("t")
             baseStep.leftJoin(t).on(ta.ATOM_CODE.eq(t.field("STORE_CODE", String::class.java)))
-            conditions.add(t.field("SCORE_AVERAGE", BigDecimal::class.java).ge(BigDecimal.valueOf(score.toLong())))
-            conditions.add(t.field("STORE_TYPE", Byte::class.java).eq(storeType))
+            conditions.add(t.field("SCORE_AVERAGE", BigDecimal::class.java)!!.ge(BigDecimal.valueOf(score.toLong())))
+            conditions.add(t.field("STORE_TYPE", Byte::class.java)!!.eq(storeType))
         }
         if (null != yamlFlag) {
             conditions.add(taf.YAML_FLAG.eq(yamlFlag))
@@ -268,7 +268,7 @@ class MarketAtomDao : AtomBaseDao() {
             }
             return dslContext.selectCount().from(this)
                 .where(conditions)
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -301,7 +301,7 @@ class MarketAtomDao : AtomBaseDao() {
             .leftJoin(b)
             .on(a.ATOM_CODE.eq(b.STORE_CODE))
             .where(conditions)
-            .fetchOne(0, Int::class.java)
+            .fetchOne(0, Int::class.java)!!
     }
 
     fun getMyAtoms(

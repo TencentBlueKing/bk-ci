@@ -101,7 +101,7 @@ class EnvDao {
             )
                 .returning(ENV_ID)
                 .fetchOne()
-            return record.envId
+            return record!!.envId!!
         }
     }
 
@@ -171,10 +171,10 @@ class EnvDao {
     fun listServerEnvByIdsAllType(dslContext: DSLContext, envIds: Collection<Long>): List<TEnvRecord> {
         with(TEnv.T_ENV) {
             return dslContext.selectFrom(this)
-                    .where(IS_DELETED.eq(false))
-                    .and(ENV_ID.`in`(envIds))
-                    .orderBy(ENV_ID.desc())
-                    .fetch()
+                .where(IS_DELETED.eq(false))
+                .and(ENV_ID.`in`(envIds))
+                .orderBy(ENV_ID.desc())
+                .fetch()
         }
     }
 
@@ -218,14 +218,14 @@ class EnvDao {
                     .and(IS_DELETED.eq(false))
                     .and(ENV_ID.ne(envId))
                     .and(ENV_NAME.eq(envName))
-                    .fetchOne(0, Long::class.java) > 0
+                    .fetchOne(0, Long::class.java)!! > 0
             } else {
                 dslContext.selectCount()
                     .from(this)
                     .where(PROJECT_ID.eq(projectId))
                     .and(IS_DELETED.eq(false))
                     .and(ENV_NAME.eq(envName))
-                    .fetchOne(0, Long::class.java) > 0
+                    .fetchOne(0, Long::class.java)!! > 0
             }
         }
     }
@@ -250,23 +250,29 @@ class EnvDao {
     fun countByProject(dslContext: DSLContext, projectId: String?): Int {
         with(TEnv.T_ENV) {
             return dslContext.selectCount().from(this).where(PROJECT_ID.eq(projectId))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
-    fun searchByName(dslContext: DSLContext, offset: Int, limit: Int, projectId: String?, envName: String): List<TEnvRecord> {
+    fun searchByName(
+        dslContext: DSLContext,
+        offset: Int,
+        limit: Int,
+        projectId: String?,
+        envName: String
+    ): List<TEnvRecord> {
         with(TEnv.T_ENV) {
             return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId).and(ENV_NAME.like("%$envName%")))
-                    .orderBy(CREATED_TIME.desc())
-                    .limit(limit).offset(offset)
-                    .fetch()
+                .orderBy(CREATED_TIME.desc())
+                .limit(limit).offset(offset)
+                .fetch()
         }
     }
 
     fun countByName(dslContext: DSLContext, projectId: String?, envName: String): Int {
         with(TEnv.T_ENV) {
             return dslContext.selectCount().from(this).where(PROJECT_ID.eq(projectId).and(ENV_NAME.like("%$envName%")))
-                    .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 }
