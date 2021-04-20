@@ -25,36 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.api.atom
+package com.tencent.devops.process.api.op
 
 import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.PUT
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.engine.service.AgentPipelineRefService
+import org.springframework.beans.factory.annotation.Autowired
 
-@Api(tags = ["OP_PIPELINE_ATOM_STATISTIC"], description = "插件-插件数据统计")
-@Path("/op/pipeline/atom/statistic")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface OpAtomStatisticResource {
-
-    @ApiOperation("同步使用插件流水线数量到汇总数据统计表")
-    @PUT
-    @Path("/pipelineNum/async/update")
-    fun asyncUpdateStorePipelineNum(): Result<Boolean>
-
-    @ApiOperation("同步更新插件每日统计信息")
-    @PUT
-    @Path("/daily/info/async/update")
-    fun asyncUpdateDailyInfo(
-        @ApiParam("同步日期，格式yyyy-MM-dd", required = true)
-        @QueryParam("date")
-        date: String
-    ): Result<Boolean>
+@RestResource
+class OpPipelineAgentRefResourceImpl @Autowired constructor(
+    private val agentPipelineRefService: AgentPipelineRefService
+) : OpPipelineAgentRefResource {
+    override fun updateAgentPipelineRef(userId: String, projectId: String, pipelineId: String): Result<Boolean> {
+        agentPipelineRefService.updatePipelineRef(userId, projectId, pipelineId)
+        return Result(true)
+    }
 }

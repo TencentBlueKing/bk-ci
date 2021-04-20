@@ -40,6 +40,9 @@ object MQ {
     const val ROUTE_PIPELINE_DELETE = "r.engine.pipeline.delete"
     const val QUEUE_PIPELINE_DELETE = "q.engine.pipeline.delete"
 
+    const val ROUTE_PIPELINE_RESTORE = "r.engine.pipeline.restore"
+    const val QUEUE_PIPELINE_RESTORE = "q.engine.pipeline.restore"
+
     const val ROUTE_PIPELINE_TIMER = "r.engine.pipeline.timer"
     const val QUEUE_PIPELINE_TIMER = "q.engine.pipeline.timer"
 
