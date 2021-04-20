@@ -172,7 +172,7 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
         // 获取模板下镜像的机构信息
         val templateImageDeptMap = storeDeptService.getTemplateImageDeptMap(stageList)
         // 获取模板下插件的机构信息
-        val templateAtomDeptMap = storeDeptService.getTemplateImageDeptMap(stageList)
+        val templateAtomDeptMap = storeDeptService.getTemplateAtomDeptMap(stageList)
         stageList.forEach { stage ->
             val containerList = stage.containers
             containerList.forEach { container ->
