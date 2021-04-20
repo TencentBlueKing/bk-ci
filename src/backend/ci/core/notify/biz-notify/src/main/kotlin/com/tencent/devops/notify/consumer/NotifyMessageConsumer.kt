@@ -67,7 +67,7 @@ class NotifyMessageConsumer @Autowired constructor(
     @RabbitListener(containerFactory = "rabbitListenerContainerFactory",
         bindings = [
             QueueBinding(
-                key = ROUTE_RTX,
+                key = [ROUTE_RTX],
                 value = Queue(value = QUEUE_NOTIFY_RTX, durable = "true"),
                 exchange = Exchange(value = EXCHANGE_NOTIFY, durable = "true", delayed = "true", type = "topic"))])
     fun onReceiveRtxMessage(rtxNotifyMessageWithOperation: RtxNotifyMessageWithOperation) {
@@ -84,7 +84,7 @@ class NotifyMessageConsumer @Autowired constructor(
     @RabbitListener(containerFactory = "rabbitListenerContainerFactory",
         bindings = [
             QueueBinding(
-                key = ROUTE_EMAIL,
+                key = [ROUTE_EMAIL],
                 value = Queue(value = QUEUE_NOTIFY_EMAIL, durable = "true"),
                 exchange = Exchange(value = EXCHANGE_NOTIFY, durable = "true", delayed = "true", type = "topic"))])
     fun onReceiveEmailMessage(emailNotifyMessageWithOperation: EmailNotifyMessageWithOperation) {
@@ -109,7 +109,7 @@ class NotifyMessageConsumer @Autowired constructor(
     @RabbitListener(containerFactory = "rabbitListenerContainerFactory",
         bindings = [
             QueueBinding(
-                key = ROUTE_SMS,
+                key = [ROUTE_SMS],
                 value = Queue(value = QUEUE_NOTIFY_SMS, durable = "true"),
                 exchange = Exchange(value = EXCHANGE_NOTIFY, durable = "true", delayed = "true", type = "topic"))])
     fun onReceiveSmsMessage(smsNotifyMessageWithOperation: SmsNotifyMessageWithOperation) {
@@ -126,7 +126,7 @@ class NotifyMessageConsumer @Autowired constructor(
     @RabbitListener(containerFactory = "rabbitListenerContainerFactory",
         bindings = [
             QueueBinding(
-                key = ROUTE_WECHAT,
+                key = [ROUTE_WECHAT],
                 value = Queue(value = QUEUE_NOTIFY_WECHAT, durable = "true"),
                 exchange = Exchange(value = EXCHANGE_NOTIFY, durable = "true", delayed = "true", type = "topic"))])
     fun onReceiveWechatMessage(wechatNotifyMessageWithOperation: WechatNotifyMessageWithOperation) {

@@ -66,10 +66,18 @@ data class MarketItem(
     val buildLessRunFlag: Boolean?,
     @ApiModelProperty("帮助文档")
     val docsLink: String?,
+    @ApiModelProperty("修改人")
+    val modifier: String,
+    @ApiModelProperty("修改时间")
+    val updateTime: String,
     @ApiModelProperty("是否推荐标识 true：推荐，false：不推荐", required = false)
     val recommendFlag: Boolean? = null,
     @ApiModelProperty("yaml可用标识 true：是，false：否")
     val yamlFlag: Boolean? = null,
     @ApiModelProperty("是否已在该项目安装 true：是，false：否")
-    val installed: Boolean? = null
+    val installed: Boolean? = null,
+    @ApiModelProperty("每日统计信息列表")
+    val dailyStatisticList: List<StoreDailyStatistic>? = null,
+    @ApiModelProperty("最近执行次数")
+    val recentExecuteNum: Int? = null
 )

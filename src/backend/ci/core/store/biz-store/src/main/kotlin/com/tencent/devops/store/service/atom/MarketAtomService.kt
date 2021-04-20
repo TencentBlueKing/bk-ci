@@ -27,13 +27,14 @@
 
 package com.tencent.devops.store.service.atom
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.store.pojo.atom.AtomDevLanguage
 import com.tencent.devops.store.pojo.atom.AtomPostReqItem
 import com.tencent.devops.store.pojo.atom.AtomPostResp
 import com.tencent.devops.store.pojo.atom.AtomVersion
-import com.tencent.devops.store.pojo.atom.AtomVersionListResp
+import com.tencent.devops.store.pojo.atom.AtomVersionListItem
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.MarketAtomResp
 import com.tencent.devops.store.pojo.atom.MarketMainItem
@@ -121,7 +122,12 @@ interface MarketAtomService {
     /**
      * 根据插件标识获取插件版本列表
      */
-    fun getAtomVersionsByCode(userId: String, atomCode: String): Result<AtomVersionListResp>
+    fun getAtomVersionsByCode(
+        userId: String,
+        atomCode: String,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<AtomVersionListItem>>
 
     /**
      * 获取插件开发支持的语言

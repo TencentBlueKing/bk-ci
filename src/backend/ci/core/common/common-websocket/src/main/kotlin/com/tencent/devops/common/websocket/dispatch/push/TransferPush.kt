@@ -27,7 +27,7 @@
 
 package com.tencent.devops.common.websocket.dispatch.push
 
-abstract class TransferPush(
+open class TransferPush(
     open val eventName: String?,
     open val userId: String,
     open var page: String?,

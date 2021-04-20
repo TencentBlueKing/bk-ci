@@ -27,16 +27,11 @@
 
 package com.tencent.devops.store.service.template.impl
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.api.template.ServiceTemplateResource
-import com.tencent.devops.store.dao.template.MarketTemplateDao
 import com.tencent.devops.store.service.template.TemplateModelService
-import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -44,26 +39,10 @@ import org.springframework.stereotype.Service
 class TemplateModelServiceImpl : TemplateModelService {
 
     @Autowired
-    private lateinit var dslContext: DSLContext
-    @Autowired
-    private lateinit var marketTemplateDao: MarketTemplateDao
-    @Autowired
     private lateinit var client: Client
 
-    private val logger = LoggerFactory.getLogger(TemplateModelServiceImpl::class.java)
-
     override fun getTemplateModel(templateCode: String): Result<Model?> {
-        val templateRecord = marketTemplateDao.getUpToDateTemplateByCode(dslContext, templateCode)
-        logger.info("the templateRecord is :$templateRecord")
-        if (null == templateRecord) {
-            return MessageCodeUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf(templateCode)
-            )
-        }
-        val result = client.get(ServiceTemplateResource::class)
-            .getTemplateDetailInfo(templateCode = templateCode, publicFlag = templateRecord.publicFlag)
-        logger.info("the result is :$result")
+        val result = client.get(ServiceTemplateResource::class).getTemplateDetailInfo(templateCode)
         return if (result.isNotOk()) {
             // 抛出错误提示
             Result(result.status, result.message ?: "")

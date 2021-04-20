@@ -1,0 +1,102 @@
+-- Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+-- Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+-- BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+-- A copy of the MIT License is included in this file.
+-- Terms of the MIT License:
+-- ---------------------------------------------------
+-- Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+-- documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+-- rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+-- permit persons to whom the Software is furnished to do so, subject to the following conditions:
+-- The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+-- the Software.
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+-- LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+-- NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+-- WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+-- SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+_M = {}
+-- 获取目标ip:port
+function _M:getTarget(devops_tag, service_name, cache_tail, ns_config)
+    -- 获取consul查询域名
+    local query_subdomain = devops_tag .. "." .. service_name .. ns_config.suffix .. ".service." .. ns_config.domain
+
+    local ips = {} -- address
+    local port = nil -- port
+
+    local router_srv_key = query_subdomain .. cache_tail
+    local router_srv_cache = ngx.shared.router_srv_store
+    local router_srv_value = router_srv_cache:get(router_srv_key)
+
+    if router_srv_value == nil then
+        -- 获取consul dns服务器
+        local dnsIps = {}
+        if type(ns_config.ip) == 'table' then
+            for i, v in ipairs(ns_config.ip) do
+                table.insert(dnsIps, {v, ns_config.port})
+            end
+        else
+            table.insert(dnsIps, {ns_config.ip, ns_config.port})
+        end
+
+        -- 连接consul dns
+        local dns, err = resolver:new{nameservers = dnsIps, retrans = 5, timeout = 2000}
+
+        if not dns then
+            ngx.log(ngx.ERR, "failed to instantiate the resolver: ", err)
+            return nil
+        end
+
+        -- 查询dns
+        local records, err = dns:query(query_subdomain, {qtype = dns.TYPE_SRV, additional_section = true})
+
+        if not records then
+            ngx.log(ngx.ERR, "failed to query the DNS server: ", err)
+            return nil
+        end
+
+        if records.errcode then
+            if records.errcode == 3 then
+                ngx.log(ngx.ERR, "DNS error code #" .. records.errcode .. ": ", records.errstr)
+                return nil
+            else
+                ngx.log(ngx.ERR, "DNS error #" .. records.errcode .. ": ", err)
+                return nil
+            end
+        end
+
+        -- 将ip 放到列表中
+        for _, v in pairs(records) do
+            if v.section == dns.SECTION_AN then
+                port = v.port
+            end
+
+            if v.section == dns.SECTION_AR then
+                table.insert(ips, v.address)
+            end
+        end
+
+        local ip_len = #ips
+        if ip_len == 0 or port == nil then
+            ngx.log(ngx.ERR, "DNS answer didn't include ip or a port , service :" .. service_name)
+            return nil
+        end
+
+        -- set cache
+        router_srv_cache:set(router_srv_key, table.concat(ips, ",") .. ":" .. port, 1)
+
+    else
+        local func_itor = string.gmatch(router_srv_value, "([^:]+)")
+        local ips_str = func_itor()
+        port = func_itor()
+
+        for ip in string.gmatch(ips_str, "([^,]+)") do
+            table.insert(ips, ip)
+        end
+
+    end
+
+    return ips[math.random(#ips)] .. ":" .. port
+end
+
+return _M

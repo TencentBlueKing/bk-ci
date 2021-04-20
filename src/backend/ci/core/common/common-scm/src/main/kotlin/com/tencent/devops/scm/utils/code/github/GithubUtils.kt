@@ -31,8 +31,8 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.scm.exception.ScmException
 
 object GithubUtils {
-    private val HTTP_PREFIX = "https://github.com/"
-    private val SSH_PREFIX = "git@github.com:"
+    private const val HTTP_PREFIX = "https://github.com/"
+    private const val SSH_PREFIX = "git@github.com:"
 
     fun getProjectName(githubUrl: String): String {
         if (!isInvalidUrl(githubUrl)) {

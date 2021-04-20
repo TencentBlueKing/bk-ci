@@ -43,6 +43,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
@@ -211,6 +212,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         projectDao.delete(dslContext, projectId!!)
                         throw e
                     }
+                    if (projectInfo.secrecy) {
+                        redisOperation.addSetValue(SECRECY_PROJECT_REDIS_KEY, projectInfo.englishName)
+                    }
                 }
             } catch (e: DuplicateKeyException) {
                 logger.warn("Duplicate project $projectCreateInfo", e)
@@ -280,6 +284,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         projectUpdateInfo.englishName,
                         projectUpdateInfo.projectName
                     )
+                    if (!projectUpdateInfo.secrecy) {
+                        redisOperation.removeSetMember(SECRECY_PROJECT_REDIS_KEY, projectUpdateInfo.englishName)
+                    } else {
+                        redisOperation.addSetValue(SECRECY_PROJECT_REDIS_KEY, projectUpdateInfo.englishName)
+                    }
                     projectDispatcher.dispatch(ProjectUpdateBroadCastEvent(
                         userId = userId,
                         projectId = projectId,
@@ -602,6 +611,17 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         accessToken: String?
     ): Boolean {
         return validatePermission(projectId, userId, permission)
+    }
+
+    override fun listSecrecyProject(): Set<String>? {
+        var projectIds = redisOperation.getSetMembers(SECRECY_PROJECT_REDIS_KEY)
+        if (projectIds.isNullOrEmpty()) {
+            projectIds = projectDao.listSecrecyProject(dslContext)?.map { it.value1() }?.toSet()
+            if (projectIds != null) {
+                redisOperation.sadd(SECRECY_PROJECT_REDIS_KEY, *projectIds.toTypedArray())
+            }
+        }
+        return projectIds
     }
 
     abstract fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean

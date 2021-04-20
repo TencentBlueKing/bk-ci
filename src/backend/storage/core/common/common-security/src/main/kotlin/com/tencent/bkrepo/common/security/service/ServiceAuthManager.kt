@@ -1,7 +1,7 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.  
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -10,28 +10,36 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 package com.tencent.bkrepo.common.security.service
 
-import com.tencent.bkrepo.common.api.exception.ErrorCodeException
+import com.tencent.bkrepo.common.api.exception.SystemErrorException
 import com.tencent.bkrepo.common.api.message.CommonMessageCode
 import com.tencent.bkrepo.common.security.util.JwtUtils
 import io.jsonwebtoken.ExpiredJwtException
 import io.jsonwebtoken.JwtException
 import org.slf4j.LoggerFactory
 import org.springframework.scheduling.annotation.Scheduled
-import org.springframework.stereotype.Component
 import java.time.Duration
 
-@Component
 class ServiceAuthManager(
     properties: ServiceAuthProperties
 ) {
@@ -46,11 +54,11 @@ class ServiceAuthManager(
         try {
             JwtUtils.validateToken(signingKey, token)
         } catch (exception: ExpiredJwtException) {
-            throw ErrorCodeException(CommonMessageCode.SERVICE_UNAUTHENTICATED, "Expired token")
+            throw SystemErrorException(CommonMessageCode.SERVICE_UNAUTHENTICATED, "Expired token")
         } catch (exception: JwtException) {
-            throw ErrorCodeException(CommonMessageCode.SERVICE_UNAUTHENTICATED, "Invalid token")
+            throw SystemErrorException(CommonMessageCode.SERVICE_UNAUTHENTICATED, "Invalid token")
         } catch (exception: IllegalArgumentException) {
-            throw ErrorCodeException(CommonMessageCode.SERVICE_UNAUTHENTICATED, "Empty token")
+            throw SystemErrorException(CommonMessageCode.SERVICE_UNAUTHENTICATED, "Empty token")
         }
     }
 
@@ -61,13 +69,12 @@ class ServiceAuthManager(
     }
 
     private fun generateSecurityToken(): String {
-        token = JwtUtils.generateToken(signingKey, Duration.ofMillis(TOKEN_EXPIRATION))
-        return token.orEmpty()
+        return JwtUtils.generateToken(signingKey, Duration.ofMillis(TOKEN_EXPIRATION))
     }
 
     companion object {
         private val logger = LoggerFactory.getLogger(ServiceAuthManager::class.java)
         private const val TOKEN_EXPIRATION = 10 * 60 * 1000L
-        private const val REFRESH_DELAY = TOKEN_EXPIRATION - 1000L
+        private const val REFRESH_DELAY = TOKEN_EXPIRATION - 60 * 1000L
     }
 }
