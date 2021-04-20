@@ -90,7 +90,7 @@ open class AbsPermissionRoleServiceImpl @Autowired constructor(
 
         // 默认分组需要分配默认权限
         if (groupInfo.defaultGroup!!) {
-            when (groupInfo.name) {
+            when (groupInfo.type) {
                 BkAuthGroup.DEVELOPER.value -> addDevelopPermission(roleId, projectCode)
                 BkAuthGroup.MAINTAINER.value -> addMaintainerPermission(roleId, projectCode)
                 BkAuthGroup.TESTER.value -> addTestPermission(roleId, projectCode)
@@ -110,6 +110,13 @@ open class AbsPermissionRoleServiceImpl @Autowired constructor(
 
     override fun getPermissionRole(projectId: Int): ManagerRoleGroupVO {
         return iamManagerService.getGradeManagerRoleGroup(projectId)
+    }
+
+    override fun deletePermissionRole(userId: String, projectId: Int, roleId: Int) {
+        permissionGradeService.checkGradeManagerUser(userId, projectId)
+
+        // iam侧会统一把用户组内用剔除后,再删除用户组
+        iamManagerService.deleteRoleGroup(roleId)
     }
 
     private fun checkRoleName(name: String, defaultGroup: Boolean) {

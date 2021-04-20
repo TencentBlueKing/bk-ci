@@ -38,4 +38,6 @@ interface PermissionRoleService {
     fun renamePermissionRole(userId: String, projectId: Int, roleId: Int, groupInfo: ManagerRoleGroup)
 
     fun getPermissionRole(projectId: Int): ManagerRoleGroupVO
+
+    fun deletePermissionRole(userId: String, projectId: Int, roleId: Int)
 }
