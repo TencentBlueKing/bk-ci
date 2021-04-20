@@ -60,14 +60,18 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.BkAuthProperties
+import com.tencent.devops.project.dispatch.ProjectDispatcher
+import com.tencent.devops.project.listener.TxIamV3CreateEvent
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import okhttp3.MediaType
 
 class TxV3ProjectPermissionServiceImpl @Autowired constructor(
     val iamManagerService: ManagerService,
     val iamConfiguration: IamConfiguration,
     val objectMapper: ObjectMapper,
-    val authProperties: BkAuthProperties
+    val authProperties: BkAuthProperties,
+    val projectDispatcher: ProjectDispatcher
 ) : ProjectPermissionService {
 
     private val authUrl = authProperties.url
@@ -83,21 +87,19 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
         userDeptDetail: UserDeptDetail?
     ): String {
         // TODO: (V3创建项目未完全迁移完前，需双写V0,V3)
-        /**
-         *  V3创建项目流程 (V3创建项目未完全迁移完前，需双写V0,V3)
-         *  1. 创建分级管理员，并记录iam分级管理员id
-         *  2. 添加创建人到分级管理员
-         *  3. 添加默认用户组”CI管理员“
-         *  4. 添加创建人到CI管理员
-         *  5. 分配”ALL action“权限到CI管理员
-         */
-        val iamProjectId = createIamProject(userId, resourceRegisterInfo)
-        val roleId = createRole(userId, iamProjectId.toInt(), resourceRegisterInfo.resourceCode)
-        createManagerPermission(resourceRegisterInfo.resourceCode, resourceRegisterInfo.resourceName, roleId)
-
         // 同步创建V0项目
-        createResourcesToV0(userId, accessToken, resourceRegisterInfo, userDeptDetail)
-        return iamProjectId
+        val projectId = createResourcesToV0(userId, accessToken, resourceRegisterInfo, userDeptDetail)
+        // 异步创建V3项目
+        projectDispatcher.dispatch(
+            TxIamV3CreateEvent(
+                userId = userId,
+                retryCount = 0,
+                delayMills = 1000,
+                resourceRegisterInfo = resourceRegisterInfo,
+                projectId = projectId
+            )
+        )
+        return projectId
     }
 
     override fun deleteResource(projectCode: String) {
@@ -125,69 +127,6 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
         permission: AuthPermission
     ): Boolean {
         TODO("Not yet implemented")
-    }
-
-    private fun createIamProject(userId: String, resourceRegisterInfo: ResourceRegisterInfo): String {
-        val subjectScopes = ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.ALL), "*")
-        val authorizationScopes = AuthorizationUtils.buildManagerResources(
-            projectId = resourceRegisterInfo.resourceCode,
-            projectName = resourceRegisterInfo.resourceName,
-            iamConfiguration = iamConfiguration
-        )
-        val createManagerDTO = CreateManagerDTO.builder().system(iamConfiguration.systemId)
-            .name(resourceRegisterInfo.resourceName)
-            .description(resourceRegisterInfo.resourceName)
-            .members(arrayListOf(userId))
-            .authorization_scopes(authorizationScopes)
-            .subject_scopes(arrayListOf(subjectScopes)).build()
-        return iamManagerService.createManager(createManagerDTO).toString()
-    }
-
-    private fun createRole(userId: String, iamProjectId: Int, projectCode: String): Int {
-        val defaultGroup = ManagerRoleGroup(
-            IamUtils.buildIamGroup(projectCode, BkAuthGroup.MANAGER.value),
-            IamUtils.buildDefaultDescription(projectCode, BkAuthGroup.MANAGER.name)
-        )
-        val defaultGroups = mutableListOf<ManagerRoleGroup>()
-        defaultGroups.add(defaultGroup)
-        val managerRoleGroup = ManagerRoleGroupDTO.builder().groups(defaultGroups).build()
-        // 添加项目管理员
-        val roleId = iamManagerService.batchCreateRoleGroup(iamProjectId, managerRoleGroup)
-        val groupMember = ManagerMember(ManagerScopesEnum.getType(ManagerScopesEnum.USER), userId)
-        val groupMembers = mutableListOf<ManagerMember>()
-        groupMembers.add(groupMember)
-        val expired = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(DEFAULT_EXPIRED_AT)
-        val managerMemberGroup = ManagerMemberGroupDTO.builder().members(groupMembers).expiredAt(expired).build()
-        // 项目创建人添加至管理员分组
-        iamManagerService.createRoleGroupMember(roleId, managerMemberGroup)
-        return roleId
-    }
-
-    private fun createManagerPermission(projectId: String, projectName: String, roleId: Int) {
-        val managerResources = mutableListOf<ManagerResources>()
-        val managerPaths = mutableListOf<List<ManagerPath>>()
-        val path = ManagerPath(
-            iamConfiguration.systemId,
-            AuthResourceType.PROJECT.value,
-            projectId,
-            projectName
-        )
-        val paths = mutableListOf<ManagerPath>()
-        paths.add(path)
-        managerPaths.add(paths)
-        val resources = ManagerResources.builder()
-            .system(iamConfiguration.systemId)
-            .type(AuthResourceType.PROJECT.value)
-            .paths(managerPaths)
-            .build()
-        managerResources.add(resources)
-
-        val permission = AuthorizationScopes.builder()
-            .actions(arrayListOf(Action("all_action")))
-            .system(iamConfiguration.systemId)
-            .resources(managerResources)
-            .build()
-        iamManagerService.createRolePermission(roleId, permission)
     }
 
     fun createResourcesToV0(
@@ -240,7 +179,6 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
     }
 
     companion object {
-        private const val DEFAULT_EXPIRED_AT = 365L // 用户组默认一年有效期
         val logger = LoggerFactory.getLogger(TxV3ProjectPermissionServiceImpl::class.java)
     }
 }

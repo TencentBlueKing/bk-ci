@@ -23,39 +23,21 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.project.config
+package com.tencent.devops.project.listener
 
-import com.tencent.devops.common.auth.api.BSAuthTokenApi
-import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
-import com.tencent.devops.project.listener.ProjectEventListener
-import com.tencent.devops.project.listener.TencentProjectEventListener
-import com.tencent.devops.project.service.ProjectPaasCCService
-import com.tencent.devops.project.service.iam.IamV3Service
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.project.pojo.mq.ProjectBroadCastEvent
 
-@Suppress("UNUSED")
-@Configuration
-@ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class TencentProjectMQConfiguration {
-
-    @Bean
-    fun projectEventListener(
-        @Autowired projectPaasCCService: ProjectPaasCCService,
-        @Autowired bsAuthTokenApi: BSAuthTokenApi,
-        @Autowired bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
-        @Autowired iamV3Service: IamV3Service
-    ): ProjectEventListener = TencentProjectEventListener(
-        projectPaasCCService = projectPaasCCService,
-        bsAuthTokenApi = bsAuthTokenApi,
-        bsPipelineAuthServiceCode = bsPipelineAuthServiceCode,
-        iamV3Service = iamV3Service
-    )
-}
+@Event(exchange = MQ.EXCHANGE_PROJECT_CREATE_FANOUT)
+data class TxIamV3CreateEvent(
+    override val userId: String,
+    override val projectId: String,
+    override var retryCount: Int = 0,
+    override var delayMills: Int = 0,
+    val resourceRegisterInfo: ResourceRegisterInfo
+) : ProjectBroadCastEvent(userId, projectId, retryCount, delayMills)
