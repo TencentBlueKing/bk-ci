@@ -321,7 +321,7 @@ class ExperiencePublicDao {
                         if (withBanner) BANNER_URL.ne(StringUtils.EMPTY) else BANNER_URL.eq(StringUtils.EMPTY)
                     )
                 }
-                .fetchOne().value1()
+                .fetchOne()!!.value1()
         }
     }
 

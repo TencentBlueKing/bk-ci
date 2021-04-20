@@ -81,7 +81,7 @@ class GitRequestEventDao {
                 event.description,
                 event.mrTitle
             ).returning(ID)
-                .fetchOne()
+                .fetchOne()!!
             return record.id
         }
     }
@@ -209,7 +209,7 @@ class GitRequestEventDao {
             return dslContext.selectCount().from(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
                 .and(OBJECT_KIND.eq(OBJECT_KIND_MERGE_REQUEST))
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -222,7 +222,7 @@ class GitRequestEventDao {
                 .from(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
                 .orderBy(ID.desc())
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Long::class.java)!!
         }
     }
 

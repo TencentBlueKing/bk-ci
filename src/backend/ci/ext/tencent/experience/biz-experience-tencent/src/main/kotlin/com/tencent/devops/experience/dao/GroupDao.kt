@@ -96,7 +96,7 @@ class GroupDao {
             return dslContext.selectCount()
                     .from(this)
                     .where(PROJECT_ID.eq(projectId))
-                    .fetchOne(0, Long::class.java)
+                    .fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -176,7 +176,7 @@ class GroupDao {
                     now,
                     now)
                     .returning(ID)
-                    .fetchOne()
+                    .fetchOne()!!
             return record.id
         }
     }
