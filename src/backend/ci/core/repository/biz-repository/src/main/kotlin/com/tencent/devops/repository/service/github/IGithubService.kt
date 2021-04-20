@@ -46,7 +46,7 @@ interface IGithubService {
     fun updateCheckRuns(
         token: String,
         projectName: String,
-        checkRunId: Int,
+        checkRunId: Long,
         checkRuns: GithubCheckRuns
     )
 

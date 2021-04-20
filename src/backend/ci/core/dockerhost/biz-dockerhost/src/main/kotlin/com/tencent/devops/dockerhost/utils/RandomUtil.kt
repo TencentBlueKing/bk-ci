@@ -34,7 +34,7 @@ import java.util.Random
  * Powered By Tencent
  */
 object RandomUtil {
-    private val secretSeed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+    private const val secretSeed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 
     fun randomString(): String {
         val random = Random()

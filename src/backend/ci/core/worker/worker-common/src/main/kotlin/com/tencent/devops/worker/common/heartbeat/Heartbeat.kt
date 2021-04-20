@@ -84,22 +84,23 @@ object Heartbeat {
     }
 
     private fun handleRemoteServiceException(e: RemoteServiceException) {
-        if (e.httpStatus == HTTP_500) {
-            val responseContent = e.responseContent
-            if (responseContent != null) {
-                if (responseContent.startsWith("{") && responseContent.endsWith("}")) {
-                    try {
-                        val responseMap = JsonUtil.toMap(responseContent)
-                        val errorCode = responseMap["errorCode"]
-                        // 流水线构建结束则正常结束进程，不再重试
-                        if (errorCode == 2101182) {
-                            logger.error("build end, worker exit")
-                            exitProcess(0)
-                        }
-                    } catch (t: Throwable) {
-                        logger.warn("responseContent covert map fail", e)
-                    }
+
+        if (e.httpStatus != HTTP_500 && e.responseContent.isNullOrBlank()) {
+            return
+        }
+
+        val responseContent = e.responseContent
+        if (responseContent!!.startsWith("{") && responseContent.endsWith("}")) {
+            try {
+                val responseMap = JsonUtil.toMap(responseContent)
+                val errorCode = responseMap["errorCode"]
+                // 流水线构建结束则正常结束进程，不再重试
+                if (errorCode == 2101182) {
+                    logger.error("build end, worker exit")
+                    exitProcess(0)
                 }
+            } catch (t: Throwable) {
+                logger.warn("responseContent covert map fail", e)
             }
         }
     }

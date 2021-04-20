@@ -164,7 +164,7 @@
             },
 
             goToStore () {
-                window.open(`${WEB_URL_PIRFIX}/store/market/home?pipeType=template`, '_blank')
+                window.open(`${WEB_URL_PREFIX}/store/market/home?pipeType=template`, '_blank')
             }
         }
     }

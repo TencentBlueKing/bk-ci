@@ -72,14 +72,16 @@
             },
 
             addParams () {
-                let url = this.param.url || ''
-                let isErrorParam = false
+                // let url = this.param.url || ''
+                // let isErrorParam = false
+                // url = url.replace(/{([^\{\}]+)}/g, (str, key) => {
+                //     const value = this.paramValues[key]
+                //     if (typeof value === 'undefined') isErrorParam = true
+                //     return value
+                // })
+                let [url] = this.generateReqUrl(this.param.url, this.paramValues)
 
-                url = url.replace(/{([^\{\}]+)}/g, (str, key) => {
-                    const value = this.paramValues[key]
-                    if (typeof value === 'undefined') isErrorParam = true
-                    return value
-                })
+                if (!url) return
 
                 const urlQuery = this.param.urlQuery || {}
                 this.queryKey = []
@@ -89,7 +91,6 @@
                     url += `${index <= 0 ? '?' : '&'}${key}=${value}`
                 })
 
-                if (isErrorParam) return
                 this.isLoading = true
                 this.$ajax.get(url).then((res) => {
                     const data = res.data || []

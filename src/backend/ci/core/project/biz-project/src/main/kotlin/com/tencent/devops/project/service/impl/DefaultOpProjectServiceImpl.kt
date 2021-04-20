@@ -33,6 +33,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.gray.MacOSGray
 import com.tencent.devops.common.service.gray.RepoGray
+import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectLabelRelDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
@@ -52,7 +53,7 @@ class DefaultOpProjectServiceImpl @Autowired constructor(
     private val projectDao: ProjectDao,
     private val projectLabelRelDao: ProjectLabelRelDao,
     private val projectDispatcher: ProjectDispatcher,
-    redisOperation: RedisOperation,
+    private val redisOperation: RedisOperation,
     gray: Gray,
     repoGray: RepoGray,
     macosGray: MacOSGray
@@ -105,6 +106,11 @@ class DefaultOpProjectServiceImpl @Autowired constructor(
             val labelIdList = projectInfoRequest.labelIdList
             if (!CollectionUtils.isEmpty(labelIdList)) {
                 projectLabelRelDao.batchAdd(transactionContext, projectId = projectId, labelIdList = labelIdList!!)
+            }
+            if (!projectInfoRequest.secrecyFlag) {
+                redisOperation.removeSetMember(SECRECY_PROJECT_REDIS_KEY, dbProjectRecord.englishName)
+            } else {
+                redisOperation.addSetValue(SECRECY_PROJECT_REDIS_KEY, dbProjectRecord.englishName)
             }
         }
 

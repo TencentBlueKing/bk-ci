@@ -40,6 +40,9 @@ object MQ {
     const val ROUTE_PIPELINE_DELETE = "r.engine.pipeline.delete"
     const val QUEUE_PIPELINE_DELETE = "q.engine.pipeline.delete"
 
+    const val ROUTE_PIPELINE_RESTORE = "r.engine.pipeline.restore"
+    const val QUEUE_PIPELINE_RESTORE = "q.engine.pipeline.restore"
+
     const val ROUTE_PIPELINE_TIMER = "r.engine.pipeline.timer"
     const val QUEUE_PIPELINE_TIMER = "q.engine.pipeline.timer"
 
@@ -77,6 +80,12 @@ object MQ {
     // 构建状态Websocket推送解耦
     const val ROUTE_PIPELINE_BUILD_WEBSOCKET = "r.engine.pipeline.build.websocket"
     const val QUEUE_PIPELINE_BUILD_WEBSOCKET = "q.engine.pipeline.build.websocket"
+
+    // 构建排队广播exchange ====================================
+    const val EXCHANGE_PIPELINE_BUILD_QUEUE_FANOUT = "e.engine.pipeline.build.queue.fanout"
+
+    // 接受排队广播的队列
+    const val QUEUE_PIPELINE_BUILD_QUEUE_CODE_WEBHOOK = "q.engine.pipeline.build.queue.code.webhook"
 
     // 构建启动广播exchange ====================================
     const val EXCHANGE_PIPELINE_BUILD_START_FANOUT = "e.engine.pipeline.build.start.fanout"

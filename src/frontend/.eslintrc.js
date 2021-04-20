@@ -44,14 +44,10 @@ module.exports = {
     globals: {
         'DOCS_URL_PREFIX': true,
         'LOGIN_SERVICE_URL': true,
-        'AJAX_URL_PIRFIX': true,
-        'WEBSITE_URL': false,
-        'WEB_URL_PIRFIX': true,
+        'WEB_URL_PREFIX': true,
         'BUILD_ENV': true,
-        'PERM_URL_PIRFIX': true,
         'PROXY_URL_PREFIX': true,
-        'GW_URL_PREFIX': true,
-        'WS_URL_PREFIX': true,
+        'API_URL_PREFIX': true,
         'BADGE_URL_PREFIX': true,
         'PERM_URL_PREFIX': false,
         'X_DEVOPS_PROJECT_ID': false

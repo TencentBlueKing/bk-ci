@@ -108,49 +108,29 @@ class QualityHisMetadataService @Autowired constructor(
             val isNumber = NumberUtils.isCreatable(value)
             val isDigits = NumberUtils.isDigits(value)
             val metadata = metadataMap[key]
-            // int
-            if (isNumber && isDigits) {
-                return@map QualityHisMetadata(
-                    enName = key,
-                    cnName = metadata?.dataName ?: "",
-                    detail = metadata?.elementDetail ?: "",
-                    type = QualityDataType.INT,
-                    elementType = metadata?.elementType ?: "",
-                    msg = "from script element",
-                    value = value,
-                    extra = null
 
-                )
+            val type = if (isNumber) {
+                if (isDigits) {
+                    QualityDataType.INT
+                } else {
+                    QualityDataType.FLOAT
+                }
+            } else {
+                QualityDataType.BOOLEAN
             }
 
-            // float
-            if (isNumber && !isDigits) {
-                return@map QualityHisMetadata(
-                    enName = key,
-                    cnName = metadata?.dataName ?: "",
-                    detail = metadata?.elementDetail ?: "",
-                    type = QualityDataType.FLOAT,
-                    elementType = metadata?.elementType ?: "",
-                    msg = "from script element",
-                    value = value,
-                    extra = null
-
-                )
-            }
-
-            // boolean
-            return@map QualityHisMetadata(
+            QualityHisMetadata(
                 enName = key,
                 cnName = metadata?.dataName ?: "",
                 detail = metadata?.elementDetail ?: "",
-                type = QualityDataType.BOOLEAN,
+                type = type,
                 elementType = metadata?.elementType ?: "",
                 msg = "from script element",
                 value = value,
                 extra = null
-
             )
         }
+
         hisMetadataDao.batchSaveHisDetailMetadata(
             dslContext = dslContext,
             projectId = projectId,

@@ -74,6 +74,9 @@ interface UserPipelineSettingResource {
         projectId: String,
         @ApiParam("流水线id")
         @QueryParam("pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @ApiParam("流水线编排版本", required = false)
+        @QueryParam("version")
+        version: Int = 0
     ): Result<PipelineSetting>
 }

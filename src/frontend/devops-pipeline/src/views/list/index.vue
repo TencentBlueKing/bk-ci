@@ -58,6 +58,11 @@
                                 :class="{ 'selected-item': routeName === 'pipelinesRestore' }"
                                 @click="routerToManage('pipelinesRestore')">{{$t('restore.recycleBin')}}</a>
                         </li>
+                        <li>
+                            <a href="javascript:;" class="text-link" id="toggleAudit"
+                                :class="{ 'selected-item': routeName === 'pipelinesAudit' }"
+                                @click="routerToManage('pipelinesAudit')">{{$t('operatorAudit')}}</a>
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -121,6 +126,9 @@
                     case 'pipelinesRestore':
                         title = this.$t('restore.recycleBin')
                         break
+                    case 'pipelinesAudit':
+                        title = this.$t('operatorAudit')
+                        break
                     default:
                         title = this.$t('more')
                         break
@@ -138,12 +146,6 @@
             projectId: async function () {
                 await this.initListPage()
                 this.$store.commit('pipelines/toggleShowViewManage', false)
-                this.$router.push({
-                    name: 'pipelinesList',
-                    params: {
-                        type: this.currentViewId
-                    }
-                })
             }
         },
         async created () {
@@ -209,7 +211,15 @@
                 try {
                     this.$store.commit('pipelines/showPageLoading', true)
                     const viewSetting = await this.requestViewSettingInfo({ projectId: this.projectId })
-                    viewSetting.currentViewId = currentViewId || viewSetting.currentViewId
+                    viewSetting.currentViewId = currentViewId || viewSetting.currentViewId || 'myPipeline'
+                    if (!currentViewId) {
+                        this.$router.replace({
+                            name: 'pipelinesList',
+                            params: {
+                                type: viewSetting.currentViewId
+                            }
+                        })
+                    }
                     if (viewSetting.currentViewId) {
                         this.updateViewSettingInfo(viewSetting)
                     }

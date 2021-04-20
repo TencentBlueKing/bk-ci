@@ -1,7 +1,7 @@
 # 服务配置文件模板
 spring:
   datasource:
-    url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_artifactory?useSSL=false&autoReconnect=true&timezone=+800&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+    url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_artifactory?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
     username: __BK_CI_MYSQL_USER__
     password: __BK_CI_MYSQL_PASSWORD__
 
@@ -12,12 +12,12 @@ server:
 store:
   commentNotifyAdmin: admin
   profileUrlPrefix: __BK_CI_STORE_USER_AVATARS_URL__
-  atomDetailBaseUrl: __BK_CI_PUBLIC_URL__/console/store/atomStore/detail/atom/
-  templateDetailBaseUrl: __BK_CI_PUBLIC_URL__/console/store/atomStore/detail/template/
+  atomDetailBaseUrl: /console/store/atomStore/detail/atom/
+  templateDetailBaseUrl: /console/store/atomStore/detail/template/
   artifactoryServiceUrlPrefix: __BK_CI_PUBLIC_URL__/ms/artifactory/api
-  ideAtomDetailBaseUrl: __BK_CI_PUBLIC_URL__/console/store/atomStore/detail/ide/
-  imageDetailBaseUrl: __BK_CI_PUBLIC_URL__/console/store/atomStore/detail/image/
-  serviceDetailBaseUrl: __BK_CI_PUBLIC_URL__/console/store/atomStore/detail/service/
+  ideAtomDetailBaseUrl: /console/store/atomStore/detail/ide/
+  imageDetailBaseUrl: /console/store/atomStore/detail/image/
+  serviceDetailBaseUrl: /console/store/atomStore/detail/service/
   baseImageDocsLink: /console/store/atomStore/detail/image/
   imageAdminUsers: admin
   buildResultBaseUrl: __BK_CI_PUBLIC_URL__/console/pipeline
@@ -42,3 +42,6 @@ aes:
   # 部署前修改好，后续升级如果再修改，会导致历史数据读取不了，所以如果修改需要先解密重新入库
   aesKey: "J%k^yO{?vt}3tXpG"
   aesMock: "******"
+  
+statistics:
+  timeSpanMonth: -3  

@@ -27,6 +27,7 @@
     "noData": "No data available",
     "noresultsFound":"no results found",
     "credential": {
+        "nameTips": "When referencing credentials through variables in the pipeline, only referencing by name is supported",
         "emptyCredential": "Empty credential",
         "emptyCredentialTips": "You can create a new credential",
         "getCredentialError": "Error in getting credential list",
@@ -34,7 +35,7 @@
         "successfullyDeletedCredential": "You've successfully deleted this credential",
         "successfullysavedential": "You've successfully saved this credential",
         "validateId": "It is composed of English letters, numbers or underscores (_), no more than 40 words",
-        "validateName": "It is composed of Chinese characters, English letters, numbers, hyphens (-), underscores (_) or English periods, and no more than 30 characters",
+        "validateName": "Composed of Chinese characters, English letters, numbers, hyphens (-), underscores (_) or English periods, no more than 30 characters, only for display",
         "nameLenLimit": "No more than 30 characters.",
         "remarkLenLimit": "Credential description cannot exceed 50 characters",
         "credentialRemark": "Please enter credential description here",

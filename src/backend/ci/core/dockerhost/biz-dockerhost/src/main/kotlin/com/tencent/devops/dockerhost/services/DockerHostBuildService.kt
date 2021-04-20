@@ -59,6 +59,8 @@ import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dockerhost.common.Constants
+import com.tencent.devops.dockerhost.common.DockerExitCodeEnum
+import com.tencent.devops.dockerhost.common.ErrorCodeEnum
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.AlertApi
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildLogResourceApi
@@ -92,14 +94,15 @@ import java.util.TimeZone
 import java.util.concurrent.TimeUnit
 import javax.annotation.PostConstruct
 
-@Component@Suppress("ALL")
+@Suppress("ALL")
+@Component
 class DockerHostBuildService(
     private val dockerHostConfig: DockerHostConfig,
     private val environment: Environment,
     private val dockerHostBuildApi: DockerHostBuildResourceApi,
     private val dockerHostBuildLogResourceApi: DockerHostBuildLogResourceApi,
     private val alertApi: AlertApi
-) {
+) : AbstractDockerHostBuildService(dockerHostConfig, dockerHostBuildApi) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(DockerHostBuildService::class.java)
@@ -110,83 +113,7 @@ class DockerHostBuildService(
         .withApiVersion(dockerHostConfig.apiVersion)
         .build()
 
-    final var httpClient: DockerHttpClient = OkDockerHttpClient.Builder()
-        .dockerHost(config.dockerHost)
-        .sslConfig(config.sslConfig)
-        .connectTimeout(5000)
-        .readTimeout(30000)
-        .build()
-
-    final var longHttpClient: DockerHttpClient = OkDockerHttpClient.Builder()
-        .dockerHost(config.dockerHost)
-        .sslConfig(config.sslConfig)
-        .connectTimeout(5000)
-        .readTimeout(300000)
-        .build()
-
-    private val httpDockerCli = DockerClientBuilder.getInstance(config).withDockerHttpClient(httpClient).build()
-
-    private val httpLongDockerCli = DockerClientBuilder.getInstance(config).withDockerHttpClient(longHttpClient).build()
-
-    fun startBuild(): DockerHostBuildInfo? {
-        val result = dockerHostBuildApi.startBuild(CommonUtils.getInnerIP())
-        if (result != null) {
-            if (result.isNotOk()) {
-                return null
-            }
-        }
-        return result!!.data!!
-    }
-
-    fun endBuild(): DockerHostBuildInfo? {
-        val result = dockerHostBuildApi.endBuild(CommonUtils.getInnerIP())
-        if (result != null) {
-            if (result.isNotOk()) {
-                return null
-            }
-        }
-        return result!!.data!!
-    }
-
-    fun reportContainerId(buildId: String, vmSeqId: Int, containerId: String): Boolean {
-        val result = dockerHostBuildApi.reportContainerId(buildId, vmSeqId, containerId)
-        if (result != null) {
-            if (result.isNotOk()) {
-                logger.info("[$buildId]|reportContainerId return msg: ${result.message}")
-                return false
-            }
-        }
-        return result!!.data!!
-    }
-
-    fun rollbackBuild(
-        buildId: String,
-        vmSeqId: Int,
-        shutdown: Boolean,
-        containerId: String,
-        containerHashId: String?
-    ): Boolean {
-        log(
-            buildId = buildId,
-            red = true,
-            message = if (shutdown) {
-                "构建环境启动后即退出，请检查镜像是否合法或联系【蓝盾助手】查看，构建任务将失败退出"
-            } else "启动构建环境失败，构建任务将重试",
-            tag = VMUtils.genStartVMTaskId(containerId),
-            containerHashId = containerHashId
-        )
-
-        val result = dockerHostBuildApi.rollbackBuild(buildId, vmSeqId, shutdown)
-        if (result != null) {
-            if (result.isNotOk()) {
-                logger.info("[$buildId]|rollbackBuild return msg: ${result.message}")
-                return false
-            }
-        }
-        return result!!.data!!
-    }
-
-    fun pullImage(
+    fun createPullImage(
         imageType: String?,
         imageName: String,
         registryUser: String?,
@@ -221,7 +148,7 @@ class DockerHostBuildService(
         // 判断用户录入的镜像信息是否能正常拉取到镜像
         val imageName = checkImageRequest.imageName
         try {
-            val pullImageResult = pullImage(
+            val pullImageResult = createPullImage(
                 imageType = checkImageRequest.imageType,
                 imageName = checkImageRequest.imageName,
                 registryUser = checkImageRequest.registryUser,
@@ -253,7 +180,57 @@ class DockerHostBuildService(
         return Result(checkImageResponse)
     }
 
-    fun createContainer(dockerBuildInfo: DockerHostBuildInfo): String {
+    override fun createContainer(dockerHostBuildInfo: DockerHostBuildInfo): String {
+        val imageName = CommonUtils.normalizeImageName(dockerHostBuildInfo.imageName)
+        // 执行docker pull
+        createPullImage(dockerHostBuildInfo)
+
+        // 执行docker run
+        val containerId = createDockerRun(dockerHostBuildInfo, imageName)
+
+        // 等待一段时间，检查一下agent是否正常启动
+        waitAgentUp(dockerHostBuildInfo, containerId)
+
+        return containerId
+    }
+
+    override fun stopContainer(dockerHostBuildInfo: DockerHostBuildInfo) {
+        try {
+            // docker stop
+            val containerInfo = httpLongDockerCli.inspectContainerCmd(dockerHostBuildInfo.containerId).exec()
+            if ("exited" != containerInfo.state.status) {
+                httpLongDockerCli.stopContainerCmd(dockerHostBuildInfo.containerId).withTimeout(15).exec()
+            }
+        } catch (e: Throwable) {
+            logger.error("Stop the container failed, containerId: ${dockerHostBuildInfo.containerId}, error msg: $e")
+        }
+
+        try {
+            // docker rm
+            httpLongDockerCli.removeContainerCmd(dockerHostBuildInfo.containerId).exec()
+        } catch (e: Throwable) {
+            logger.error("Stop the container failed, containerId: ${dockerHostBuildInfo.containerId}, error msg: $e")
+        } finally {
+            // 找出所有跟本次构建关联的dockerRun启动容器并停止容器
+            val containerInfo = httpLongDockerCli.listContainersCmd().withStatusFilter(setOf("running")).exec()
+            for (container in containerInfo) {
+                try {
+                    // logger.info("${dockerBuildInfo.buildId}|${dockerBuildInfo.vmSeqId} containerName: ${container.names[0]}")
+                    val containerName = container.names[0]
+                    if (containerName.contains(getDockerRunStopPattern(dockerHostBuildInfo))) {
+                        logger.info("${dockerHostBuildInfo.buildId}|${dockerHostBuildInfo.vmSeqId} " +
+                                "stop dockerRun container, containerId: ${container.id}")
+                        httpLongDockerCli.stopContainerCmd(container.id).withTimeout(15).exec()
+                    }
+                } catch (e: Exception) {
+                    logger.error("${dockerHostBuildInfo.buildId}|${dockerHostBuildInfo.vmSeqId} " +
+                            "Stop dockerRun container failed, containerId: ${container.id}", e)
+                }
+            }
+        }
+    }
+
+    private fun createPullImage(dockerBuildInfo: DockerHostBuildInfo) {
         val imageName = CommonUtils.normalizeImageName(dockerBuildInfo.imageName)
         val taskId = VMUtils.genStartVMTaskId(dockerBuildInfo.vmSeqId.toString())
         // docker pull
@@ -268,7 +245,7 @@ class DockerHostBuildService(
         } else {
             try {
                 LocalImageCache.saveOrUpdate(imageName)
-                pullImage(
+                createPullImage(
                     imageType = dockerBuildInfo.imageType,
                     imageName = dockerBuildInfo.imageName,
                     registryUser = dockerBuildInfo.registryUser,
@@ -282,13 +259,21 @@ class DockerHostBuildService(
                     "[buildId=${dockerBuildInfo.buildId}][containerHashId=${dockerBuildInfo.containerHashId}]"
                 logger.error(errorMessage, t)
                 // 直接失败，禁止使用本地镜像
-                throw NoSuchImageException(errorMessage)
+                throw ContainerException(
+                    errorCodeEnum = ErrorCodeEnum.NO_AUTH_PULL_IMAGE_ERROR,
+                    message = errorMessage
+                )
+                // throw NoSuchImageException(errorMessage)
             } catch (t: NotFoundException) {
                 val errorMessage = "镜像不存在：$imageName，请检查镜像路径或凭证是否正确；" +
                     "[buildId=${dockerBuildInfo.buildId}][containerHashId=${dockerBuildInfo.containerHashId}]"
                 logger.error(errorMessage, t)
                 // 直接失败，禁止使用本地镜像
-                throw NoSuchImageException(errorMessage)
+                throw ContainerException(
+                    errorCodeEnum = ErrorCodeEnum.IMAGE_NOT_EXIST_ERROR,
+                    message = errorMessage
+                )
+                // throw NoSuchImageException(errorMessage)
             } catch (t: Throwable) {
                 logger.warn("Fail to pull the image $imageName of build ${dockerBuildInfo.buildId}", t)
                 log(
@@ -305,7 +290,9 @@ class DockerHostBuildService(
                 )
             }
         }
+    }
 
+    private fun createDockerRun(dockerBuildInfo: DockerHostBuildInfo, imageName: String): String {
         try {
             // docker run
             val binds = DockerBindLoader.loadBinds(dockerBuildInfo)
@@ -340,43 +327,38 @@ class DockerHostBuildService(
             } else {
                 alertApi.alert(
                     AlertLevel.HIGH.name, "Docker构建机创建容器失败", "Docker构建机创建容器失败, " +
-                    "母机IP:${CommonUtils.getInnerIP()}， 失败信息：${er.message}"
+                            "母机IP:${CommonUtils.getInnerIP()}， 失败信息：${er.message}"
                 )
-                throw ContainerException("Create container failed")
+                throw ContainerException(
+                    errorCodeEnum = ErrorCodeEnum.CREATE_CONTAINER_ERROR,
+                    message = "[${dockerBuildInfo.buildId}]|Create container failed"
+                )
             }
         }
     }
 
-    fun stopContainer(dockerBuildInfo: DockerHostBuildInfo) {
+    private fun waitAgentUp(dockerBuildInfo: DockerHostBuildInfo, containerId: String) {
+        var exitCode = 0L
         try {
-            // docker stop
-            val containerInfo = httpLongDockerCli.inspectContainerCmd(dockerBuildInfo.containerId).exec()
-            if ("exited" != containerInfo.state.status) {
-                httpLongDockerCli.stopContainerCmd(dockerBuildInfo.containerId).withTimeout(15).exec()
+            // 等待5s，看agent是否正常启动
+            Thread.sleep(5000)
+            val containerState = getContainerState(containerId)
+            logger.info("containerState: $containerState")
+            if (containerState != null) {
+                exitCode = containerState.exitCodeLong ?: 0L
             }
-        } catch (e: Throwable) {
-            logger.error("Stop the container failed, containerId: ${dockerBuildInfo.containerId}, error msg: $e")
+        } catch (e: Exception) {
+            logger.error("[${dockerBuildInfo.buildId}]|[${dockerBuildInfo.vmSeqId}] waitAgentUp failed. containerId: $containerId", e)
         }
 
-        try {
-            // docker rm
-            httpLongDockerCli.removeContainerCmd(dockerBuildInfo.containerId).exec()
-        } catch (e: Throwable) {
-            logger.error("Stop the container failed, containerId: ${dockerBuildInfo.containerId}, error msg: $e")
-        } finally {
-            // 找出所有跟本次构建关联的dockerRun启动容器并停止容器
-            val containerInfo = httpLongDockerCli.listContainersCmd().withStatusFilter(setOf("running")).exec()
-            for (container in containerInfo) {
-                try {
-                    val containerName = container.names[0]
-                    if (containerName.contains(getDockerRunStopPattern(dockerBuildInfo))) {
-                        logger.info("${dockerBuildInfo.buildId}|${dockerBuildInfo.vmSeqId}|stop docker:${container.id}")
-                        httpLongDockerCli.stopContainerCmd(container.id).withTimeout(15).exec()
-                    }
-                } catch (e: Exception) {
-                    logger.warn("${dockerBuildInfo.buildId}|${dockerBuildInfo.vmSeqId}|stop docker:${container.id}", e)
-                }
-            }
+        if (exitCode != 0L && DockerExitCodeEnum.getValue(exitCode) != null) {
+            val errorCodeEnum = DockerExitCodeEnum.getValue(exitCode)!!.errorCodeEnum
+            logger.error("[${dockerBuildInfo.buildId}]|[${dockerBuildInfo.vmSeqId}] waitAgentUp failed. " +
+                    "${errorCodeEnum.formatErrorMessage}. containerId: $containerId")
+            throw ContainerException(
+                errorCodeEnum = errorCodeEnum,
+                message = "Failed to wait agent up. ${errorCodeEnum.formatErrorMessage}"
+            )
         }
     }
 
@@ -546,7 +528,7 @@ class DockerHostBuildService(
             // docker pull
             try {
                 LocalImageCache.saveOrUpdate(imageName)
-                pullImage(
+                createPullImage(
                     imageType = ImageType.THIRD.type,
                     imageName = dockerRunParam.imageName,
                     registryUser = dockerRunParam.registryUser,
@@ -617,7 +599,9 @@ class DockerHostBuildService(
                 val localPort = getAvailableHostPort()
                 if (localPort == 0) {
                     throw ContainerException(
-                        "No enough port to use in dockerRun. startPort: ${dockerHostConfig.dockerRunStartPort}")
+                        errorCodeEnum = ErrorCodeEnum.NO_AVAILABLE_PORT_ERROR,
+                        message = "No enough port to use in dockerRun. startPort: ${dockerHostConfig.dockerRunStartPort}"
+                    )
                 }
                 val tcpContainerPort: ExposedPort = ExposedPort.tcp(it)
                 portBindings.bind(tcpContainerPort, Ports.Binding.bindPort(localPort))
@@ -661,7 +645,10 @@ class DockerHostBuildService(
                 level = AlertLevel.HIGH.name, title = "Docker构建机创建容器失败",
                 message = "Docker构建机创建容器失败, 母机IP:${CommonUtils.getInnerIP()}， 失败信息：${er.message}"
             )
-            throw ContainerException("启动容器失败，错误信息:${er.message}")
+            throw ContainerException(
+                errorCodeEnum = ErrorCodeEnum.CREATE_CONTAINER_ERROR,
+                message = "启动容器失败，错误信息:${er.message}"
+            )
         } finally {
             if (!dockerRunParam.registryUser.isNullOrEmpty()) {
                 try {
@@ -673,25 +660,6 @@ class DockerHostBuildService(
                     logger.info("Docker run end......")
                 }
             }
-        }
-    }
-
-    fun dockerStop(projectId: String, pipelineId: String, vmSeqId: String, buildId: String, containerId: String) {
-        try {
-            // docker stop
-            val containerInfo = httpLongDockerCli.inspectContainerCmd(containerId).exec()
-            if ("exited" != containerInfo.state.status) {
-                httpLongDockerCli.stopContainerCmd(containerId).withTimeout(15).exec()
-            }
-        } catch (e: Throwable) {
-            logger.error("Stop the container failed, containerId: $containerId, error msg: $e")
-        }
-
-        try {
-            // docker rm
-            httpLongDockerCli.removeContainerCmd(containerId).exec()
-        } catch (e: Throwable) {
-            logger.error("Stop the container failed, containerId: $containerId, error msg: $e")
         }
     }
 
@@ -927,25 +895,6 @@ class DockerHostBuildService(
         } catch (e: Exception) {
             logger.error("check container: $containerId state failed, return ", e)
             return null
-        }
-    }
-
-    fun log(buildId: String, message: String, tag: String?, containerHashId: String?) {
-        return log(buildId, false, message, tag, containerHashId)
-    }
-
-    fun log(buildId: String, red: Boolean, message: String, tag: String?, containerHashId: String?) {
-        logger.info("write log to dispatch, buildId: $buildId, message: $message")
-        try {
-            dockerHostBuildApi.postLog(
-                buildId = buildId,
-                red = red,
-                message = message,
-                tag = tag,
-                jobId = containerHashId
-            )
-        } catch (t: Throwable) {
-            logger.info("write log to dispatch failed")
         }
     }
 

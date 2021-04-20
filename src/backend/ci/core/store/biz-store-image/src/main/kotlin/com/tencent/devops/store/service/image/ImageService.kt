@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -48,7 +49,6 @@ import com.tencent.devops.store.dao.common.CategoryDao
 import com.tencent.devops.store.dao.common.ClassifyDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
-import com.tencent.devops.store.dao.common.StoreStatisticDao
 import com.tencent.devops.store.dao.image.Constants
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_CODE
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_FEATURE_PUBLIC_FLAG
@@ -105,6 +105,7 @@ import com.tencent.devops.store.pojo.image.response.MyImage
 import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreCommentService
 import com.tencent.devops.store.service.common.StoreMemberService
+import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.util.ImageUtil
 import org.jooq.DSLContext
@@ -117,6 +118,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+import java.util.Date
 import kotlin.math.ceil
 
 @Suppress("ALL")
@@ -148,8 +150,6 @@ abstract class ImageService @Autowired constructor() {
     @Autowired
     lateinit var storeProjectRelDao: StoreProjectRelDao
     @Autowired
-    lateinit var storeStatisticDao: StoreStatisticDao
-    @Autowired
     lateinit var imageCommonService: ImageCommonService
     @Autowired
     lateinit var storeCommentService: StoreCommentService
@@ -163,7 +163,7 @@ abstract class ImageService @Autowired constructor() {
     @Autowired
     lateinit var supportService: SupportService
     @Autowired
-    lateinit var marketImageStatisticService: MarketImageStatisticService
+    lateinit var storeTotalStatisticService: StoreTotalStatisticService
     @Autowired
     lateinit var imageLabelService: ImageLabelService
     @Autowired
@@ -199,9 +199,6 @@ abstract class ImageService @Autowired constructor() {
             val imageId = it.get(KEY_IMAGE_ID) as String
             getImageDetailById(userId, imageId, interfaceName)
         } ?: emptyList()
-        imageVersionList.sortBy {
-            -it.createTime
-        }
         val pageObj = Page(
             count = count.toLong(),
             page = validPage,
@@ -290,23 +287,22 @@ abstract class ImageService @Autowired constructor() {
         logger.info("$interfaceName:doList:Inner:imageCodeList.size=${imageCodeList.size},imageCodeList=$imageCodeList")
 
         // 获取可见范围
-        val imageVisibleData = batchGetVisibleDept(imageCodeList, StoreTypeEnum.IMAGE)
+        val storeType = StoreTypeEnum.IMAGE
+        val imageVisibleData = batchGetVisibleDept(imageCodeList, storeType)
         val imageVisibleDataStr = StringBuilder("\n")
         imageVisibleData?.forEach {
             imageVisibleDataStr.append("${it.key}->${it.value}\n")
         }
-        logger.info("$interfaceName:doList:Inner:imageVisibleData=$imageVisibleDataStr")
-
-        // 获取热度
-        val statField = mutableListOf<String>()
-        statField.add("DOWNLOAD")
-        val imageStatisticData = marketImageStatisticService.getStatisticByCodeList(imageCodeList).data
+        val imageStatisticData = storeTotalStatisticService.getStatisticByCodeList(
+            storeType = storeType.type.toByte(),
+            storeCodeList = imageCodeList
+        )
 
         // 获取用户
-        val memberData = storeMemberService.batchListMember(imageCodeList, StoreTypeEnum.IMAGE).data
+        val memberData = storeMemberService.batchListMember(imageCodeList, storeType).data
 
         // 获取分类
-        val classifyList = classifyService.getAllClassify(StoreTypeEnum.IMAGE.type.toByte()).data
+        val classifyList = classifyService.getAllClassify(storeType.type.toByte()).data
         val classifyMap = mutableMapOf<String, String>()
         classifyList?.forEach {
             classifyMap[it.id] = it.classifyCode
@@ -315,7 +311,7 @@ abstract class ImageService @Autowired constructor() {
         images.forEach {
             val imageCode = it[KEY_IMAGE_CODE] as String
             val visibleList = imageVisibleData?.get(imageCode)
-            val statistic = imageStatisticData?.get(imageCode)
+            val statistic = imageStatisticData[imageCode]
             val members = memberData?.get(imageCode)
 
             val installFlag = generateInstallFlag(
@@ -447,6 +443,8 @@ abstract class ImageService @Autowired constructor() {
                     publicFlag = it.publicFlag,
                     buildLessRunFlag = false,
                     docsLink = baseImageDocsLink + it.code,
+                    modifier = it.modifier,
+                    updateTime = DateTimeUtil.formatDate(Date(it.updateTime)),
                     recommendFlag = it.recommendFlag
                 )
             }
@@ -847,16 +845,15 @@ abstract class ImageService @Autowired constructor() {
 
     private fun getImageDetail(userId: String, imageRecord: TImageRecord): ImageDetail {
         val imageId = imageRecord.id
-        val storeStatisticRecord =
-            storeStatisticDao.getStatisticByStoreId(
-                dslContext = dslContext,
-                storeId = imageId,
-                storeType = StoreTypeEnum.IMAGE.type.toByte()
-            )
+        val imageCode = imageRecord.imageCode
+        val storeStatistic = storeTotalStatisticService.getStatisticByCode(
+            userId = userId,
+            storeCode = imageCode,
+            storeType = StoreTypeEnum.IMAGE.type.toByte()
+        )
         val classifyRecord = classifyService.getClassify(imageRecord.classifyId).data
         val imageFeatureRecord = imageFeatureDao.getImageFeature(dslContext, imageRecord.imageCode)
         val imageVersionLog = imageVersionLogDao.getLatestImageVersionLogByImageId(dslContext, imageId)?.get(0)
-        val imageCode = imageRecord.imageCode
         val publicFlag = imageFeatureRecord.publicFlag
         // 生成icon
         val icon = imageRecord.icon
@@ -921,8 +918,8 @@ abstract class ImageService @Autowired constructor() {
             summary = imageRecord.summary ?: "",
             docsLink = baseImageDocsLink + imageCode,
             projectCode = projectCode,
-            score = storeStatisticRecord?.value3()?.toDouble() ?: 0.0,
-            downloads = storeStatisticRecord?.value1()?.toInt() ?: 0,
+            score = storeStatistic.score ?: 0.0,
+            downloads = storeStatistic.downloads,
             classifyId = classifyRecord?.id ?: "",
             classifyCode = classifyRecord?.classifyCode ?: "",
             classifyName = classifyRecord?.classifyName ?: "",

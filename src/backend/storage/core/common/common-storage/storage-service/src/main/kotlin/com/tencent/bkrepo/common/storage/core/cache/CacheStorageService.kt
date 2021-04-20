@@ -1,7 +1,7 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.  
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -10,13 +10,23 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 package com.tencent.bkrepo.common.storage.core.cache
@@ -25,25 +35,25 @@ import com.tencent.bkrepo.common.api.constant.StringPool.TEMP
 import com.tencent.bkrepo.common.artifact.api.ArtifactFile
 import com.tencent.bkrepo.common.artifact.stream.ArtifactInputStream
 import com.tencent.bkrepo.common.artifact.stream.Range
+import com.tencent.bkrepo.common.artifact.stream.artifactStream
 import com.tencent.bkrepo.common.artifact.stream.bound
-import com.tencent.bkrepo.common.artifact.stream.toArtifactStream
 import com.tencent.bkrepo.common.storage.core.AbstractStorageService
 import com.tencent.bkrepo.common.storage.credentials.StorageCredentials
 import com.tencent.bkrepo.common.storage.filesystem.FileSystemClient
 import com.tencent.bkrepo.common.storage.filesystem.check.FileSynchronizeVisitor
 import com.tencent.bkrepo.common.storage.filesystem.check.SynchronizeResult
 import com.tencent.bkrepo.common.storage.filesystem.cleanup.CleanupResult
+import org.slf4j.LoggerFactory
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor
+import java.io.IOException
 import java.nio.file.Paths
-import java.util.concurrent.Executor
-import javax.annotation.Resource
 
 /**
  * 支持缓存的存储服务
  */
-class CacheStorageService : AbstractStorageService() {
-
-    @Resource
-    private lateinit var taskAsyncExecutor: Executor
+class CacheStorageService(
+    private val threadPoolTaskExecutor: ThreadPoolTaskExecutor
+) : AbstractStorageService() {
 
     override fun doStore(path: String, filename: String, artifactFile: ArtifactFile, credentials: StorageCredentials) {
         when {
@@ -55,28 +65,41 @@ class CacheStorageService : AbstractStorageService() {
             }
             else -> {
                 val cachedFile = getCacheClient(credentials).move(path, filename, artifactFile.flushToFile())
-                taskAsyncExecutor.execute {
-                    fileStorage.store(path, filename, cachedFile, credentials)
+                threadPoolTaskExecutor.execute {
+                    try {
+                        fileStorage.store(path, filename, cachedFile, credentials)
+                    } catch (exception: IOException) {
+                        // 此处为异步上传，失败后异常不会被外层捕获，所以单独捕获打印error日志
+                        logger.error("Failed to async store file [$filename] on [${credentials.key}]", exception)
+                    }
                 }
             }
         }
     }
 
-    override fun doLoad(path: String, filename: String, range: Range, credentials: StorageCredentials): ArtifactInputStream? {
+    override fun doLoad(
+        path: String,
+        filename: String,
+        range: Range,
+        credentials: StorageCredentials
+    ): ArtifactInputStream? {
         val cacheClient = getCacheClient(credentials)
         val loadCacheFirst = isLoadCacheFirst(range, credentials)
         if (loadCacheFirst) {
-            cacheClient.load(path, filename)?.bound(range)?.toArtifactStream(range)?.let { return it }
+            cacheClient.load(path, filename)?.bound(range)?.artifactStream(range)?.let { return it }
         }
-
-        val artifactInputStream = fileStorage.load(path, filename, range, credentials)?.toArtifactStream(range)
-        if (range.isFullContent() && loadCacheFirst && artifactInputStream != null) {
+        val artifactInputStream = fileStorage.load(path, filename, range, credentials)?.artifactStream(range)
+        if (artifactInputStream != null && loadCacheFirst && range.isFullContent()) {
             val cachePath = Paths.get(credentials.cache.path, path)
             val tempPath = Paths.get(credentials.cache.path, TEMP)
             val readListener = CachedFileWriter(cachePath, filename, tempPath)
             artifactInputStream.addListener(readListener)
         }
-        return artifactInputStream
+        return if (artifactInputStream == null && !loadCacheFirst) {
+            cacheClient.load(path, filename)?.bound(range)?.artifactStream(range)
+        } else {
+            artifactInputStream
+        }
     }
 
     override fun doDelete(path: String, filename: String, credentials: StorageCredentials) {
@@ -133,5 +156,9 @@ class CacheStorageService : AbstractStorageService() {
 
     private fun getCacheClient(credentials: StorageCredentials): FileSystemClient {
         return FileSystemClient(credentials.cache.path)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(CacheStorageService::class.java)
     }
 }
