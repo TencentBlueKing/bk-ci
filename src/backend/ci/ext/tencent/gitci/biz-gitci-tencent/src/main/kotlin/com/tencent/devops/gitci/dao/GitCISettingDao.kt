@@ -35,7 +35,6 @@ import com.tencent.devops.gitci.pojo.EnvironmentVariables
 import com.tencent.devops.gitci.pojo.GitRepositoryConf
 import com.tencent.devops.gitci.pojo.RtxCustomProperty
 import com.tencent.devops.gitci.pojo.RtxGroupProperty
-import com.tencent.devops.gitci.pojo.enums.GitCINotifyType
 import com.tencent.devops.model.gitci.tables.TRepositoryConf
 import org.jooq.DSLContext
 import org.jooq.impl.DSL

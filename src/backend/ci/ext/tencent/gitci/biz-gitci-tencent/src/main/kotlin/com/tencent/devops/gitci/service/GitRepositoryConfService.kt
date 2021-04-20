@@ -31,7 +31,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.pojo.GitRepositoryConf
 import com.tencent.devops.gitci.pojo.RtxCustomProperty
-import com.tencent.devops.gitci.pojo.enums.GitCINotifyType
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.GitCIProjectInfo

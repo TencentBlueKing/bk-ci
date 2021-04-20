@@ -32,6 +32,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
@@ -69,6 +70,7 @@ import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.GitFileInfo
 import org.joda.time.DateTime
+import org.joda.time.LocalDateTime
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -102,7 +104,7 @@ class GitCITriggerService @Autowired constructor(
         private const val ciFileName = ".ci.yml"
         private const val ciFileDirectoryName = ".ci"
         private const val ciFileExtension = ".yml"
-        private const val noPipelineBuildEvent = "noPipelineBuildEvent"
+        private const val noPipelineBuildEvent = "validatePipeline"
     }
 
     fun triggerBuild(userId: String, pipelineId: String, triggerBuildReq: TriggerBuildReq): Boolean {
@@ -186,6 +188,7 @@ class GitCITriggerService @Autowired constructor(
     }
 
     private fun checkRequest(gitRequestEvent: GitRequestEvent, event: GitEvent): Boolean {
+        val start = LocalDateTime.now().timestampmilli()
         if (!checkGitProjectConf(gitRequestEvent, event)) return false
         val gitProjectConf = gitCISettingDao.getSetting(dslContext, gitRequestEvent.gitProjectId)
             ?: throw OperationException("git ci projectCode not exist")
@@ -219,6 +222,8 @@ class GitCITriggerService @Autowired constructor(
                 context = noPipelineBuildEvent
             )
             return false
+        } finally {
+            logger.info("It takes ${LocalDateTime.now().timestampmilli() - start}")
         }
     }
 

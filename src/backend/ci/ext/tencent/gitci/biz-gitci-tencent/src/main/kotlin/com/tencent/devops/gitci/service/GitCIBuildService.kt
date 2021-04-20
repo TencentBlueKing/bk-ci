@@ -206,7 +206,7 @@ class GitCIBuildService @Autowired constructor(
             )
             gitPipelineResourceDao.updatePipelineBuildInfo(dslContext, pipeline, buildId)
             gitRequestEventBuildDao.update(dslContext, gitBuildId, pipeline.pipelineId, buildId)
-            // 锁定mr构建提交
+            // 锁定mr构建提交，人工触发时不推送构建消息
             if (event.objectKind == OBJECT_KIND_MERGE_REQUEST) {
                 scmClient.pushCommitCheckWithBlock(
                     commitId = event.commitId,
@@ -214,12 +214,10 @@ class GitCIBuildService @Autowired constructor(
                     userId = event.userId,
                     block = true,
                     state = GitCICommitCheckState.PENDING,
-                    context = "${pipeline.pipelineId}($buildId)",
+                    context = "${pipeline.displayName}(${pipeline.filePath})",
                     gitProjectConf = gitProjectConf
                 )
-            }
-            // 推送启动构建消息,当人工触发时不推送构建消息
-            if (event.objectKind != OBJECT_KIND_MANUAL) {
+            } else if (event.objectKind != OBJECT_KIND_MANUAL) {
                 scmClient.pushCommitCheck(
                     commitId = event.commitId,
                     description = event.description ?: "",
@@ -253,7 +251,7 @@ class GitCIBuildService @Autowired constructor(
             if (build != null) {
                 gitRequestEventBuildDao.removeBuild(dslContext, gitBuildId)
             }
-            // 构建出异常时接触锁定
+            // 构建出异常时解除锁定
             if (event.objectKind == OBJECT_KIND_MERGE_REQUEST) {
                 scmClient.pushCommitCheckWithBlock(
                     commitId = event.commitId,

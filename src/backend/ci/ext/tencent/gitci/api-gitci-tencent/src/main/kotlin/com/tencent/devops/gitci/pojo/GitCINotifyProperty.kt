@@ -7,15 +7,14 @@ abstract class GitCINotifyProperty(open val enabled: Boolean, open val notifyTyp
 class RtxCustomProperty(
     override val enabled: Boolean,
     val receivers: Set<String>
-): GitCINotifyProperty(enabled, GitCINotifyType.RTX_CUSTOM)
+) : GitCINotifyProperty(enabled, GitCINotifyType.RTX_CUSTOM)
 
 class EmailProperty(
     override val enabled: Boolean,
     val receivers: Set<String>
-): GitCINotifyProperty(enabled, GitCINotifyType.EMAIL)
+) : GitCINotifyProperty(enabled, GitCINotifyType.EMAIL)
 
 class RtxGroupProperty(
     override val enabled: Boolean,
     val groupIds: Set<String>
-): GitCINotifyProperty(enabled, GitCINotifyType.RTX_GROUP)
-
+) : GitCINotifyProperty(enabled, GitCINotifyType.RTX_GROUP)
