@@ -25,24 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.v2.listener
+package com.tencent.devops.gitci.pojo
 
-import com.tencent.devops.gitci.pojo.V2GitCIRequestTriggerEvent
 import com.tencent.devops.common.event.annotation.Event
-import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
+import com.tencent.devops.gitci.pojo.GitRequestEvent
+import com.tencent.devops.common.ci.yaml.v2.ScriptBuildYaml
+import com.tencent.devops.gitci.constant.MQ
+import com.tencent.devops.gitci.pojo.GitProjectPipeline
 
-object V2GitCIRequestDispatcher {
-
-    fun dispatch(rabbitTemplate: RabbitTemplate, event: V2GitCIRequestTriggerEvent) {
-        try {
-            logger.info("[${event.event}] Dispatch the event")
-            val eventType = event::class.java.annotations.find { s -> s is Event } as Event
-            rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event)
-        } catch (e: Throwable) {
-            logger.error("Fail to dispatch the event($event)", e)
-        }
-    }
-
-    private val logger = LoggerFactory.getLogger(V2GitCIRequestDispatcher::class.java)
-}
+@Event(MQ.EXCHANGE_GITCI_REQUEST_TRIGGER_V2_EVENT, MQ.ROUTE_GITCI_REQUEST_TRIGGER_V2_EVENT)
+data class V2GitCIRequestTriggerEvent(
+    val pipeline: GitProjectPipeline,
+    val event: GitRequestEvent,
+    val yaml: ScriptBuildYaml,
+    val originYaml: String,
+    val normalizedYaml: String,
+    val gitBuildId: Long
+)

@@ -35,7 +35,6 @@ import com.tencent.devops.gitci.dao.GitCIServicesConfDao
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
-import com.tencent.devops.gitci.pojo.EnvironmentVariables
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.gitci.pojo.enums.TriggerReason
@@ -43,15 +42,13 @@ import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.service.GitRepositoryConfService
 import com.tencent.devops.gitci.service.trigger.RequestTriggerInterface
 import com.tencent.devops.gitci.v2.listener.V2GitCIRequestDispatcher
-import com.tencent.devops.gitci.v2.listener.V2GitCIRequestTriggerEvent
+import com.tencent.devops.gitci.pojo.V2GitCIRequestTriggerEvent
 import com.tencent.devops.gitci.v2.utils.V2WebHookMatcher
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import java.io.BufferedReader
-import java.io.StringReader
 
 @Component
 class V2RequestTrigger @Autowired constructor (

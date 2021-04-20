@@ -27,6 +27,7 @@
 
 package com.tencent.devops.gitci.v2.listener
 
+import com.tencent.devops.gitci.pojo.V2GitCIRequestTriggerEvent
 import com.tencent.devops.gitci.constant.MQ
 import com.tencent.devops.gitci.v2.service.BkscriptBuildService
 import org.slf4j.LoggerFactory

@@ -25,20 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.v2.listener
+package com.tencent.devops.gitci.pojo
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.gitci.pojo.GitRequestEvent
-import com.tencent.devops.common.ci.yaml.v2.ScriptBuildYaml
-import com.tencent.devops.gitci.constant.MQ
-import com.tencent.devops.gitci.pojo.GitProjectPipeline
+import com.tencent.devops.common.pipeline.Model
 
-@Event(MQ.EXCHANGE_GITCI_REQUEST_TRIGGER_V2_EVENT, MQ.ROUTE_GITCI_REQUEST_TRIGGER_V2_EVENT)
-data class V2GitCIRequestTriggerEvent(
+data class GitCIStartupVO(
     val pipeline: GitProjectPipeline,
     val event: GitRequestEvent,
-    val yaml: ScriptBuildYaml,
-    val originYaml: String,
-    val normalizedYaml: String,
+    val gitProjectConf: GitRepositoryConf,
+    val model: Model,
     val gitBuildId: Long
 )

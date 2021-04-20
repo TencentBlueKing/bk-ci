@@ -143,8 +143,20 @@ class GitCIBuildService @Autowired constructor(
 
         // create or refresh pipeline
         val gitProjectConf = gitCISettingDao.getSetting(dslContext, event.gitProjectId) ?: throw OperationException("git ci projectCode not exist")
-        val processClient = client.get(ServicePipelineResource::class)
+
         val model = createPipelineModel(event, gitProjectConf, yaml)
+
+        return startBuild(pipeline, event, gitProjectConf, model, gitBuildId)
+    }
+
+    fun startBuild(
+        pipeline: GitProjectPipeline,
+        event: GitRequestEvent,
+        gitProjectConf: GitRepositoryConf,
+        model: Model,
+        gitBuildId: Long
+    ): BuildId? {
+        val processClient = client.get(ServicePipelineResource::class)
         if (pipeline.pipelineId.isBlank()) {
             // 直接新建
             logger.info("create new gitBuildId:$gitBuildId, pipeline: $pipeline")
@@ -219,7 +231,25 @@ class GitCIBuildService @Autowired constructor(
             )
             if (build != null) gitRequestEventBuildDao.removeBuild(dslContext, gitBuildId)
         }
+
         return null
+    }
+
+    private fun startupPipelineBuild(processClient: ServicePipelineResource, gitBuildId: Long, model: Model, event: GitRequestEvent, gitProjectConf: GitRepositoryConf, pipelineId: String): String {
+        val triggerLock = GitCITriggerLock(redisOperation, gitProjectConf.gitProjectId, pipelineId)
+        try {
+            triggerLock.lock()
+            processClient.edit(event.userId, gitProjectConf.projectCode!!, pipelineId, model, channelCode)
+            return client.get(ServiceBuildResource::class).manualStartup(
+                userId = event.userId,
+                projectId = gitProjectConf.projectCode!!,
+                pipelineId = pipelineId,
+                values = mapOf(),
+                channelCode = channelCode
+            ).data!!.id
+        } finally {
+            triggerLock.unlock()
+        }
     }
 
     fun retry(userId: String, gitProjectId: Long, pipelineId: String, buildId: String, taskId: String?): BuildId {
@@ -240,23 +270,6 @@ class GitCIBuildService @Autowired constructor(
             gitBuildId = gitEventBuild.id
         )
         return newBuildId
-    }
-
-    fun startupPipelineBuild(processClient: ServicePipelineResource, gitBuildId: Long, model: Model, event: GitRequestEvent, gitProjectConf: GitRepositoryConf, pipelineId: String): String {
-        val triggerLock = GitCITriggerLock(redisOperation, gitProjectConf.gitProjectId, pipelineId)
-        try {
-            triggerLock.lock()
-            processClient.edit(event.userId, gitProjectConf.projectCode!!, pipelineId, model, channelCode)
-            return client.get(ServiceBuildResource::class).manualStartup(
-                userId = event.userId,
-                projectId = gitProjectConf.projectCode!!,
-                pipelineId = pipelineId,
-                values = mapOf(),
-                channelCode = channelCode
-            ).data!!.id
-        } finally {
-            triggerLock.unlock()
-        }
     }
 
     fun manualShutdown(userId: String, gitProjectId: Long, pipelineId: String, buildId: String): Boolean {
