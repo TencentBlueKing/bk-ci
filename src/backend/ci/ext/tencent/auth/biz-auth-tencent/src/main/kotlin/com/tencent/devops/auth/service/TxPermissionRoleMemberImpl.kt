@@ -56,7 +56,7 @@ class TxPermissionRoleMemberImpl @Autowired constructor(
         userId: String,
         projectId: Int,
         roleId: Int,
-        members: List<String>,
+        members: String,
         managerGroup: Boolean
     ) {
         super.deleteRoleMember(userId, projectId, roleId, members, managerGroup)
