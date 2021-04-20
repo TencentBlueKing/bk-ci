@@ -92,7 +92,6 @@ import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.service.template.MarketTemplateService
 import com.tencent.devops.store.service.template.TemplateCategoryService
 import com.tencent.devops.store.service.template.TemplateLabelService
-import com.tencent.devops.store.service.template.TemplateModelService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -141,8 +140,6 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
     lateinit var storeMemberService: StoreMemberService
     @Autowired
     lateinit var classifyService: ClassifyService
-    @Autowired
-    lateinit var templateModelService: TemplateModelService
     @Autowired
     lateinit var storeDeptService: StoreDeptService
     @Autowired
@@ -666,12 +663,13 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         templateCode: String,
         projectCodeList: ArrayList<String>
     ): Result<Boolean> {
-        val templateModelResult = templateModelService.getTemplateModel(templateCode)
-        if (templateModelResult.isNotOk()) {
+        val templateDetailResult = client.get(ServiceTemplateResource::class).getTemplateDetailInfo(templateCode)
+        if (templateDetailResult.isNotOk()) {
             // 抛出错误提示
-            return Result(templateModelResult.status, templateModelResult.message ?: "")
+            return Result(templateDetailResult.status, templateDetailResult.message ?: "")
         }
-        val templateModel = templateModelResult.data
+        val templateDetail = templateDetailResult.data
+        val templateModel = templateDetail?.templateModel
             ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
         val invalidImageList = mutableListOf<String>()
         val invalidAtomList = mutableListOf<String>()
@@ -741,7 +739,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 )
             }
             val validateTempleAtomVisibleResult = validateTemplateVisibleDept(
-                templateCode = templateCode,
+                templateCode = templateDetail.templateCode,
                 templateModel = templateModel,
                 validImageCodes = validImageCodes,
                 validAtomCodes = validAtomCodes
