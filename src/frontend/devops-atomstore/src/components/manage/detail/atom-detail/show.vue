@@ -53,6 +53,7 @@
                         v-model="detail.description"
                     />
                 </li>
+                <slot></slot>
             </ul>
         </section>
     </article>

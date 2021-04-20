@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.atom.AtomPipeline
 import com.tencent.devops.store.pojo.atom.AtomPipelineExecInfo
-import com.tencent.devops.store.pojo.atom.AtomStatistic
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -50,17 +49,6 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserMarketAtomStatisticResource {
-
-    @Path("/{atomCode}/")
-    @GET
-    fun getStatisticByCode(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("atomCode", required = true)
-        @PathParam("atomCode")
-        atomCode: String
-    ): Result<AtomStatistic>
 
     @ApiOperation("根据插件代码获取使用的流水线详情 - 所有")
     @GET

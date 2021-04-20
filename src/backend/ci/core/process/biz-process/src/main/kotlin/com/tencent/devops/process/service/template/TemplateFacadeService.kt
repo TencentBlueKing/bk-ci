@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -59,7 +58,6 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
-import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
 import com.tencent.devops.model.process.tables.records.TTemplateInstanceItemRecord
 import com.tencent.devops.model.process.tables.records.TTemplatePipelineRecord
@@ -76,13 +74,11 @@ import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceBaseDao
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceItemDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.PipelineId
-import com.tencent.devops.process.pojo.pipeline.PipelineSubscriptionType
-import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
-import com.tencent.devops.process.pojo.setting.Subscription
 import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
 import com.tencent.devops.process.pojo.template.CopyTemplateReq
 import com.tencent.devops.process.pojo.template.OptionalTemplate
@@ -114,6 +110,7 @@ import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.util.TempNotifyTemplateUtils
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
+import com.tencent.devops.store.api.template.ServiceTemplateResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -153,6 +150,7 @@ class TemplateFacadeService @Autowired constructor(
     private val pipelineGroupService: PipelineGroupService,
     private val modelTaskIdGenerator: ModelTaskIdGenerator,
     private val paramService: ParamFacadeService,
+    private val pipelineRepositoryService: PipelineRepositoryService,
     private val modelCheckPlugin: ModelCheckPlugin
 ) {
 
@@ -449,61 +447,22 @@ class TemplateFacadeService @Autowired constructor(
 
     fun getTemplateSetting(projectId: String, userId: String, templateId: String): PipelineSetting {
 
-        val setting = pipelineSettingDao.getSetting(dslContext, templateId)
+        val setting = pipelineRepositoryService.getSetting(templateId)
         if (setting == null) {
             logger.warn("Fail to get the template setting - [$projectId|$userId|$templateId]")
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS,
                 defaultMessage = "流水线模板设置不存在")
         }
-
         val hasPermission = hasManagerPermission(projectId, userId)
-
         val groups = pipelineGroupService.getGroups(userId, projectId, templateId)
         val labels = ArrayList<String>()
         groups.forEach {
             labels.addAll(it.labels)
         }
-        return setting.map {
-            with(TPipelineSetting.T_PIPELINE_SETTING) {
-                val successType = it.get(SUCCESS_TYPE).split(",").filter { i -> i.isNotBlank() }
-                    .map { type -> PipelineSubscriptionType.valueOf(type) }.toSet()
-                val failType = it.get(FAIL_TYPE).split(",").filter { i -> i.isNotBlank() }
-                    .map { type -> PipelineSubscriptionType.valueOf(type) }.toSet()
-                PipelineSetting(
-                    projectId = projectId,
-                    pipelineId = templateId,
-                    pipelineName = it.get(NAME),
-                    desc = it.get(DESC),
-                    runLockType = PipelineRunLockType.valueOf(it.get(RUN_LOCK_TYPE)),
-                    successSubscription = Subscription(
-                        types = successType,
-                        groups = it.get(SUCCESS_GROUP).split(",").toSet(),
-                        users = it.get(SUCCESS_RECEIVER),
-                        wechatGroupFlag = it.get(SUCCESS_WECHAT_GROUP_FLAG),
-                        wechatGroup = it.get(SUCCESS_WECHAT_GROUP),
-                        wechatGroupMarkdownFlag = it.get(SUCCESS_WECHAT_GROUP_MARKDOWN_FLAG),
-                        detailFlag = it.get(SUCCESS_DETAIL_FLAG),
-                        content = it.get(SUCCESS_CONTENT) ?: ""
-                    ),
-                    failSubscription = Subscription(
-                        types = failType,
-                        groups = it.get(FAIL_GROUP).split(",").toSet(),
-                        users = it.get(FAIL_RECEIVER),
-                        wechatGroupFlag = it.get(FAIL_WECHAT_GROUP_FLAG),
-                        wechatGroup = it.get(FAIL_WECHAT_GROUP),
-                        wechatGroupMarkdownFlag = it.get(FAIL_WECHAT_GROUP_MARKDOWN_FLAG),
-                        detailFlag = it.get(FAIL_DETAIL_FLAG),
-                        content = it.get(FAIL_CONTENT) ?: ""
-                    ),
-                    labels = labels,
-                    waitQueueTimeMinute = DateTimeUtil.secondToMinute(it.get(WAIT_QUEUE_TIME_SECOND)),
-                    maxQueueSize = it.get(MAX_QUEUE_SIZE),
-                    hasPermission = hasPermission,
-                    maxConRunningQueueSize = it.get(MAX_CON_RUNNING_QUEUE_SIZE)
-                )
-            }
-        }
+        setting.labels = labels
+        setting.hasPermission = hasPermission
+        return setting
     }
 
     fun listTemplate(
@@ -1227,7 +1186,7 @@ class TemplateFacadeService @Autowired constructor(
     ): TemplateOperationRet {
         logger.info("Create the new template instance [$projectId|$userId|$templateId|$version|$useTemplateSettings]")
         val template = templateDao.getTemplate(dslContext, version)
-
+        val srcTemplateId = templateDao.getSrcTemplateId(dslContext, templateId)
         val successPipelines = ArrayList<String>()
         val failurePipelines = ArrayList<String>()
         val successPipelinesId = ArrayList<String>()
@@ -1249,6 +1208,7 @@ class TemplateFacadeService @Autowired constructor(
                         defaultStageTagId = defaultStageTagId
                     )
                 instanceModel.templateId = templateId
+                instanceModel.srcTemplateId = srcTemplateId
                 val pipelineId = pipelineInfoFacadeService.createPipeline(
                     userId = userId,
                     projectId = projectId,
@@ -1361,6 +1321,22 @@ class TemplateFacadeService @Autowired constructor(
         templateContent: String,
         templateInstanceUpdate: TemplateInstanceUpdate
     ) {
+        val srcTemplateId = templateDao.getSrcTemplateId(dslContext, templateId)
+        if (srcTemplateId != null) {
+            // 安装的研发商店模板需校验模板下组件可见范围
+            val validateRet = client.get(ServiceTemplateResource::class)
+                .validateUserTemplateComponentVisibleDept(
+                    userId = userId,
+                    templateCode = templateId,
+                    projectCode = projectId
+                )
+            if (validateRet.isNotOk()) {
+                throw ErrorCodeException(
+                    errorCode = validateRet.status.toString(),
+                    defaultMessage = validateRet.message
+                )
+            }
+        }
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             templatePipelineDao.update(

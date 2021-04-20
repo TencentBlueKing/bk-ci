@@ -52,7 +52,8 @@ object Tools {
         startConsumerMinInterval: Long,
         consecutiveActiveTrigger: Int,
         concurrency: Int,
-        maxConcurrency: Int
+        maxConcurrency: Int,
+        prefetchCount: Int = 1
     ): SimpleMessageListenerContainer {
         logger.info("createMQListener|queue=${queue.name}|listener=${buildListener::class.java.name}|concurrency=" +
             "$concurrency|max=$maxConcurrency|trigger=$consecutiveActiveTrigger|jnterval=$startConsumerMinInterval")
@@ -66,7 +67,8 @@ object Tools {
             startConsumerMinInterval = startConsumerMinInterval,
             consecutiveActiveTrigger = consecutiveActiveTrigger,
             concurrency = concurrency,
-            maxConcurrency = maxConcurrency
+            maxConcurrency = maxConcurrency,
+            prefetchCount = prefetchCount
         )
     }
 
@@ -78,17 +80,19 @@ object Tools {
         startConsumerMinInterval: Long,
         consecutiveActiveTrigger: Int,
         concurrency: Int,
-        maxConcurrency: Int
+        maxConcurrency: Int,
+        prefetchCount: Int = 1
     ): SimpleMessageListenerContainer {
         val container = SimpleMessageListenerContainer(connectionFactory)
         container.setQueueNames(queue.name)
         container.setConcurrentConsumers(concurrency)
         container.setMaxConcurrentConsumers(max(maxConcurrency, concurrency))
-        container.setRabbitAdmin(rabbitAdmin)
+        container.setAmqpAdmin(rabbitAdmin)
         container.setStartConsumerMinInterval(startConsumerMinInterval)
         container.setConsecutiveActiveTrigger(consecutiveActiveTrigger)
         container.setMismatchedQueuesFatal(true)
-        container.messageListener = adapter
+        container.setMessageListener(adapter)
+        container.setPrefetchCount(prefetchCount)
         return container
     }
 }

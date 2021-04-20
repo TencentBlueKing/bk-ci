@@ -22,7 +22,7 @@
 </template>
 
 <script>
-import {healthEventSource} from "../../service/stream"
+import { getHealthEventSource } from "../../service/stream"
 import Loading from "vue-loading-overlay";
 import "vue-loading-overlay/dist/vue-loading.css";
 
@@ -44,15 +44,15 @@ export default {
   mounted() {
   },
   created() {
-    healthEventSource.addEventListener(this.health, message => {
+    getHealthEventSource().addEventListener(this.health, message => {
       this.loading = false;
       let data = JSON.parse(message.data);
-      this.proceseData(data);
+      this.processData(data);
     })
   },
   methods: {
-    proceseData(data) {
-      this.healthData[data.instance] = data.status.status.status;
+    processData(data) {
+      this.healthData[data.instance] = data.status.status;
       this.totalCount = Object.keys(this.healthData).length;
       this.upCount = Object.values(this.healthData).filter(
         status => status === "UP"

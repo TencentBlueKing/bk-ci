@@ -38,15 +38,16 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.boot.autoconfigure.jersey.JerseyAutoConfiguration
 import org.springframework.boot.autoconfigure.jmx.JmxAutoConfiguration
-import org.springframework.boot.context.embedded.undertow.UndertowBuilderCustomizer
-import org.springframework.boot.context.embedded.undertow.UndertowEmbeddedServletContainerFactory
 import org.springframework.boot.context.properties.EnableConfigurationProperties
+import org.springframework.boot.web.embedded.undertow.UndertowBuilderCustomizer
+import org.springframework.boot.web.embedded.undertow.UndertowServletWebServerFactory
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
 import org.springframework.context.annotation.Profile
 import org.springframework.context.annotation.PropertySource
 import org.springframework.core.Ordered
+import org.springframework.core.env.Environment
 
 /**
  *
@@ -81,7 +82,7 @@ class WebAutoConfiguration {
     fun versionInfoResource() = VersionInfoResource()
 
     @Bean
-    fun jmxAutoConfiguration() = JmxAutoConfiguration()
+    fun jmxAutoConfiguration(environment: Environment) = JmxAutoConfiguration(environment)
 
     @Bean
     @ConditionalOnProperty(
@@ -92,9 +93,9 @@ class WebAutoConfiguration {
     )
     fun undertowServletWebServerFactory(
         @Value("\${server.undertow.accesslog.pattern:}") pattern: String
-    ): UndertowEmbeddedServletContainerFactory? {
+    ): UndertowServletWebServerFactory? {
         logger.info("undertowServletWebServerFactory|init|pattern=$pattern")
-        val factory = UndertowEmbeddedServletContainerFactory()
+        val factory = UndertowServletWebServerFactory()
         if (pattern.contains("%D") || pattern.contains("%T")) {
             factory.addBuilderCustomizers(UndertowBuilderCustomizer { builder ->
                 builder.setServerOption(UndertowOptions.RECORD_REQUEST_START_TIME, true)

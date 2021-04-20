@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomEnvInfoDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
@@ -58,6 +59,8 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
 
     @Autowired
     lateinit var dslContext: DSLContext
+    @Autowired
+    lateinit var atomDao: AtomDao
     @Autowired
     lateinit var marketAtomDao: MarketAtomDao
     @Autowired
@@ -99,13 +102,11 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         if (!flag) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
-        val atomRecords = marketAtomDao.getAtomsByAtomCode(dslContext, atomCode)
-        logger.info("the atomRecords is :$atomRecords")
-        if (null == atomRecords || atomRecords.isEmpty()) {
+        val atomCount = atomDao.countByCode(dslContext, atomCode)
+        if (atomCount < 0) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomCode))
         }
-        val atomRecord = atomRecords[0]
-        logger.info("the latest atomRecord is :$atomRecord")
+        val atomRecord = atomDao.getNewestAtomByCode(dslContext, atomCode)!!
         // 不是重新上传的包才需要校验版本号
         if (null != releaseType) {
             val osList = JsonUtil.getObjectMapper().readValue(os, ArrayList::class.java) as ArrayList<String>

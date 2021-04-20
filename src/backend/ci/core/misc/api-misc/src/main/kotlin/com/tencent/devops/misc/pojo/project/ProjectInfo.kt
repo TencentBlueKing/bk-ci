@@ -35,5 +35,7 @@ data class ProjectInfo(
     @ApiModelProperty("主键Id", required = true)
     val id: Long,
     @ApiModelProperty("项目Id", required = true)
-    val projectId: String
+    val projectId: String,
+    @ApiModelProperty("项目渠道", required = true)
+    val channel: String
 )
