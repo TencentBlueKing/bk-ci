@@ -66,25 +66,18 @@ class StoreDeptServiceImpl @Autowired constructor(
         }
     }
 
-    override fun getStageAtomDeptMap(stageList: List<Stage>): MutableMap<String, Map<String, List<DeptInfo>?>> {
-        val stageAtomDeptMap = mutableMapOf<String, Map<String, List<DeptInfo>?>>()
+    override fun getTemplateAtomDeptMap(stageList: List<Stage>): Map<String, List<DeptInfo>?> {
+        val templateAtomCodeSet = mutableSetOf<String>()
         stageList.forEach { stage ->
-            val stageAtomSet = mutableSetOf<String>()
             val containerList = stage.containers
             containerList.forEach { container ->
                 val elementList = container.elements
                 elementList.forEach { element ->
-                    stageAtomSet.add(element.getAtomCode())
+                    templateAtomCodeSet.add(element.getAtomCode())
                 }
             }
-            val storeType = StoreTypeEnum.ATOM.type.toByte()
-            val atomDeptRelMap = getStoreDeptRelMap(stageAtomSet, storeType)
-            val stageId = stage.id
-            if (stageId != null) {
-                stageAtomDeptMap[stageId] = atomDeptRelMap
-            }
         }
-        return stageAtomDeptMap
+        return getStoreDeptRelMap(templateAtomCodeSet, StoreTypeEnum.ATOM.type.toByte())
     }
 
     private fun getStoreDeptRelMap(
