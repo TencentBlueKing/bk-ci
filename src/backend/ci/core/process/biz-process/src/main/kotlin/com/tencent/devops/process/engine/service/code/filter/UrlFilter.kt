@@ -35,7 +35,7 @@ class UrlFilter(
     private val repositoryUrl: String
 ) : WebhookFilter {
 
-    override fun doFilter(response: FilterResponse): Boolean {
+    override fun doFilter(response: WebhookFilterResponse): Boolean {
         val triggerRepository = GitUtils.getDomainAndRepoName(triggerOnUrl)
         val repository = GitUtils.getDomainAndRepoName(repositoryUrl)
 

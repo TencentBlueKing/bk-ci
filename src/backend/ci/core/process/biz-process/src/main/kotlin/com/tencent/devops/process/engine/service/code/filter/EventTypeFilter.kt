@@ -41,7 +41,7 @@ class EventTypeFilter(
         private val logger = LoggerFactory.getLogger(EventTypeFilter::class.java)
     }
 
-    override fun doFilter(response: FilterResponse): Boolean {
+    override fun doFilter(response: WebhookFilterResponse): Boolean {
         return isAllowedByEventType() && isAllowedByMrAction()
     }
 

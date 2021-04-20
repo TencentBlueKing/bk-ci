@@ -28,5 +28,5 @@
 package com.tencent.devops.process.engine.service.code.filter
 
 interface WebhookFilter {
-    fun doFilter(response: FilterResponse): Boolean
+    fun doFilter(response: WebhookFilterResponse): Boolean
 }

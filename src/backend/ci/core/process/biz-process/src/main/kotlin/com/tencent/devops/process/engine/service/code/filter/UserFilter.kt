@@ -40,7 +40,7 @@ class UserFilter(
         private val logger = LoggerFactory.getLogger(UserFilter::class.java)
     }
 
-    override fun doFilter(response: FilterResponse): Boolean {
+    override fun doFilter(response: WebhookFilterResponse): Boolean {
         return hasNoUserSpecs() || (isUserNotExcluded() && isUserIncluded())
     }
 

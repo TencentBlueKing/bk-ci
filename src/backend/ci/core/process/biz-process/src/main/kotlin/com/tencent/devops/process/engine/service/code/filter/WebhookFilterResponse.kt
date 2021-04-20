@@ -28,9 +28,9 @@
 package com.tencent.devops.process.engine.service.code.filter
 
 /**
- *
+ * webhook过滤器返回结果
  */
-class FilterResponse {
+class WebhookFilterResponse {
     private val params = mutableMapOf<String, String>()
 
     fun addParam(key: String, value: String) {

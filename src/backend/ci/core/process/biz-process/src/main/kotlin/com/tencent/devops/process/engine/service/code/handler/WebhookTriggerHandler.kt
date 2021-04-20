@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.engine.service.code.handler
 
-import com.tencent.devops.process.engine.service.code.filter.FilterResponse
+import com.tencent.devops.process.engine.service.code.filter.WebhookFilterResponse
 import com.tencent.devops.process.engine.service.code.filter.WebhookFilter
 import com.tencent.devops.process.engine.service.code.filter.WebhookFilterChain
 import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
@@ -58,7 +58,7 @@ interface WebhookTriggerHandler {
             repository = repository,
             webHookParams = webHookParams
         )
-        val response = FilterResponse()
+        val response = WebhookFilterResponse()
         return if (filters.isNotEmpty()) {
             ScmWebhookMatcher.MatchResult(
                 isMatch = WebhookFilterChain(filters = filters).doFilter(response),
