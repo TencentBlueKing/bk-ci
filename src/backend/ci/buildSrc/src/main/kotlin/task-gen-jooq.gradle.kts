@@ -42,18 +42,9 @@ dependencies {
 }
 
 val moduleName = name.split("-")[1]
-val moduleNames = if (moduleName == "misc") listOf(
-    "process",
-    "project",
-    "repository",
-    "dispatch",
-    "plugin",
-    "quality",
-    "artifactory",
-    "environment"
-) else listOf(moduleName)
+val jooqModules = project.extra["jooqModules"]?.let { it as List<*> }
+val moduleNames = if (null == jooqModules || jooqModules.isEmpty()) listOf(moduleName) else jooqModules
 val mysqlPrefix: String? = System.getProperty("mysqlPrefix") ?: System.getenv("mysqlPrefix")
-
 
 jooq {
     configurations {

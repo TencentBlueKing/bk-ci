@@ -25,6 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+project.extra["jooqModules"] = listOf(
+    "process",
+    "project",
+    "repository",
+    "dispatch",
+    "plugin",
+    "quality",
+    "artifactory",
+    "environment"
+)
+
 plugins {
     `task-gen-jooq`
 }
