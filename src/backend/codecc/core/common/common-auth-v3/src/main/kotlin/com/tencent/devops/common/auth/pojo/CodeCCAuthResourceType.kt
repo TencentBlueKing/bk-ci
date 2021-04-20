@@ -1,3 +1,6 @@
+package com.tencent.devops.common.auth.pojo
+
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -24,43 +27,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.auth.api
-
-enum class AuthResourceType(val value: String) {
-    BCS_DEV_IMAGE("dev_image"),     // bcs服务开发镜像
-    BCS_PROD_IMAGE("prod_image"),   // bcs服务生产镜像
-
-    CODE_REPERTORY("repertory"), // code代码仓库
-
-    PIPELINE_DEFAULT("pipeline"), // 流水线默认类型
-
-    ARTIFACTORY_CUSTOM_DIR("custom_dir"), // 版本仓库自定义目录
-
-    TICKET_CREDENTIAL("credential"),        // 凭证服务凭据
-    TICKET_CERT("cert"),                    // 凭证服务证书
-
-    ENVIRONMENT_ENVIRONMENT("environment"), // 环境
-    ENVIRONMENT_ENV_NODE("env_node"),       // 环境节点
-
-    EXPERIENCE_TASK("task"),                // 体验任务
-    EXPERIENCE_GROUP("group"),              // 体验组
-
-    SCAN_TASK("scan_task"), // 扫描任务
-
-    QUALITY_RULE("rule"),                   // 质量红线规则
-    QUALITY_GROUP("group"),                 // 质量红线用户组
-
-    WETEST_TASK("task"), // 体验任务
-    WETEST_EMAIL_GROUP("email_group"), // 体验组
-
-    PROJECT("project"); // 项目管理
-
-    companion object {
-        fun get(value: String): AuthResourceType {
-            AuthResourceType.values().forEach {
-                if (value == it.value) return it
-            }
-            throw IllegalArgumentException("No enum for constant $value")
-        }
-    }
+enum class CodeCCAuthResourceType(val value: String) {
+    CODECC_TASK("codecc_task"); // codecc任务
 }
