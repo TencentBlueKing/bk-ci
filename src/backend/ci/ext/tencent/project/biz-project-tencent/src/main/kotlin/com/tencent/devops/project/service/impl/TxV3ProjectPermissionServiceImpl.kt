@@ -41,22 +41,36 @@ import com.tencent.bk.sdk.iam.dto.manager.dto.CreateManagerDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
 import com.tencent.bk.sdk.iam.service.ManagerService
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.utils.IamUtils
+import com.tencent.devops.project.pojo.AuthProjectForCreateResult
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.iam.AuthorizationUtils
+import okhttp3.Request
+import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.TimeUnit
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.auth.api.BkAuthProperties
+import com.tencent.devops.project.pojo.Result
+import okhttp3.MediaType
 
 class TxV3ProjectPermissionServiceImpl @Autowired constructor(
     val iamManagerService: ManagerService,
-    val iamConfiguration: IamConfiguration
+    val iamConfiguration: IamConfiguration,
+    val objectMapper: ObjectMapper,
+    val authProperties: BkAuthProperties
 ) : ProjectPermissionService {
+
+    private val authUrl = authProperties.url
 
     override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String): Boolean {
         TODO("Not yet implemented")
@@ -80,15 +94,20 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
         val iamProjectId = createIamProject(userId, resourceRegisterInfo)
         val roleId = createRole(userId, iamProjectId.toInt(), resourceRegisterInfo.resourceCode)
         createManagerPermission(resourceRegisterInfo.resourceCode, resourceRegisterInfo.resourceName, roleId)
+
+        // 同步创建V0项目
+        createResourcesToV0(userId, accessToken, resourceRegisterInfo, userDeptDetail)
         return iamProjectId
     }
 
     override fun deleteResource(projectCode: String) {
-        TODO("Not yet implemented")
+        // 资源都在接入方本地，无需删除iam侧数据
+        return
     }
 
     override fun modifyResource(projectCode: String, projectName: String) {
-        TODO("Not yet implemented")
+        // 资源都在接入方本地，无需修改iam侧数据
+        return
     }
 
     override fun getUserProjects(userId: String): List<String> {
@@ -169,6 +188,55 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
             .resources(managerResources)
             .build()
         iamManagerService.createRolePermission(roleId, permission)
+    }
+
+    fun createResourcesToV0(
+        userId: String,
+        accessToken: String?,
+        projectCreateInfo: ResourceRegisterInfo,
+        userDeptDetail: UserDeptDetail?
+    ): String {
+        // 创建AUTH项目
+        val authUrl = "$authUrl/projects?access_token=$accessToken"
+        val param: MutableMap<String, String> = mutableMapOf("project_code" to projectCreateInfo.resourceCode)
+        if (userDeptDetail != null) {
+            param["bg_id"] = userDeptDetail.bgId
+            param["dept_id"] = userDeptDetail.deptId
+            param["center_id"] = userDeptDetail.centerId
+            logger.info("createProjectResources add org info $param")
+        }
+        val mediaType = MediaType.parse("application/json; charset=utf-8")
+        val json = objectMapper.writeValueAsString(param)
+        val requestBody = RequestBody.create(mediaType, json)
+        val request = Request.Builder().url(authUrl).post(requestBody).build()
+        val responseContent = request(request, "调用权限中心创建项目失败")
+        val result = objectMapper.readValue<Result<AuthProjectForCreateResult>>(responseContent)
+        if (result.isNotOk()) {
+            logger.warn("Fail to create the project of response $responseContent")
+            throw OperationException("调用权限中心创建项目失败: ${result.message}")
+        }
+        val authProjectForCreateResult = result.data
+        return if (authProjectForCreateResult != null) {
+            if (authProjectForCreateResult.project_id.isBlank()) {
+                throw OperationException("权限中心创建的项目ID无效")
+            }
+            authProjectForCreateResult.project_id
+        } else {
+            logger.warn("Fail to get the project id from response $responseContent")
+            throw OperationException("权限中心创建的项目ID无效")
+        }
+    }
+
+    private fun request(request: Request, errorMessage: String): String {
+        OkhttpUtils.doHttp(request).use { response ->
+            val responseContent = response.body()!!.string()
+            if (!response.isSuccessful) {
+                logger.warn("Fail to request($request) with code ${response.code()} , " +
+                    "message ${response.message()} and response $responseContent")
+                throw OperationException(errorMessage)
+            }
+            return responseContent
+        }
     }
 
     companion object {

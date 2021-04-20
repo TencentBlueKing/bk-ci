@@ -27,8 +27,10 @@
 
 package com.tencent.devops.project.config
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.service.ManagerService
+import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.impl.TxV3ProjectPermissionServiceImpl
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -47,9 +49,13 @@ class TxV3ProjectInitConfiguration {
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
     fun projectPermissionService(
         iamConfiguration: IamConfiguration,
-        iamManagerService: ManagerService
+        iamManagerService: ManagerService,
+        objectMapper: ObjectMapper,
+        bkAuthProperties: BkAuthProperties
     ): ProjectPermissionService = TxV3ProjectPermissionServiceImpl(
         iamConfiguration = iamConfiguration,
-        iamManagerService = iamManagerService
+        iamManagerService = iamManagerService,
+        objectMapper = objectMapper,
+        authProperties = bkAuthProperties
     )
 }

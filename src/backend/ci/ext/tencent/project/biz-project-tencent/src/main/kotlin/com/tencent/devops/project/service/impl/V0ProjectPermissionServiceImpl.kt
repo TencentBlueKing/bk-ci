@@ -51,7 +51,6 @@ import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.MessageProperties
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
 class V0ProjectPermissionServiceImpl @Autowired constructor(
     private val objectMapper: ObjectMapper,
