@@ -66,6 +66,22 @@ object IosUtils {
             throw ExecuteException("no CFBundleShortVersionString find in plist")
         parameters = rootDict.objectForKey("CFBundleShortVersionString") as NSString
         map["bundleVersion"] = parameters.toString()
+        // scheme
+        val scheme = try {
+            val schemeArray = rootDict.objectForKey("CFBundleURLTypes") as NSArray
+            schemeArray.array
+                .map { it as NSDictionary }
+                .map { it.objectForKey("CFBundleURLSchemes") }
+                .map { it as NSArray }
+                .map { it.array }
+                .flatMap { it.toList() }
+                .map { it as NSString }
+                .map { it.toString() }
+                .maxBy { it.length } ?: ""
+        } catch (e: Exception) {
+            ""
+        }
+        map["scheme"] = scheme
 
         // 如果没有图标，捕获异常，不影响接下步骤
         try {
