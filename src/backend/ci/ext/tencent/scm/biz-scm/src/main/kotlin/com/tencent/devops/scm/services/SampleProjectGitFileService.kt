@@ -49,7 +49,8 @@ class SampleProjectGitFileService {
         repositoryName: String,
         workspace: File? = null
     ): Result<Boolean> {
-        logger.info("handleSampleProjectGitFile workspace is:${workspace?.absolutePath}, nameSpaceName is :$nameSpaceName")
+        logger.info(
+            "handleSampleProjectGitFile workspace is:${workspace?.absolutePath}, nameSpaceName is :$nameSpaceName")
         // 根据groupName推断出要处理的文件
         var type: String? = null
         var fileName: String? = null

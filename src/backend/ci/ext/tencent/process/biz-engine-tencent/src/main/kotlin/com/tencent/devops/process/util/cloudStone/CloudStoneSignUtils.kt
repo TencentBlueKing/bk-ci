@@ -33,10 +33,10 @@ import javax.crypto.spec.SecretKeySpec
 
 object CloudStoneSignUtils {
     // 编码方式
-    private val CONTENT_CHARSET = "UTF-8"
+    private const val CONTENT_CHARSET = "UTF-8"
 
     // HMAC算法
-    private val HMAC_ALGORITHM = "HmacSHA1"
+    private const val HMAC_ALGORITHM = "HmacSHA1"
 
     fun sign(signStr: String, secret: String): String {
         return try {
@@ -63,7 +63,7 @@ object CloudStoneSignUtils {
 
     private fun getDataStringForSign(data: Map<String, String>): String {
         val sb = StringBuilder()
-        data.forEach { key, value ->
+        data.forEach { (key, value) ->
             sb.append(key).append('=').append(value).append('&')
         }
         return sb.toString().removeSuffix("&")

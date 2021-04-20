@@ -39,7 +39,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.web.RestResource
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
 
@@ -50,7 +49,13 @@ class UserCustomDirResourceImpl @Autowired constructor(
     val redisOperation: RedisOperation,
     val repoGray: RepoGray
 ) : UserCustomDirResource {
-    override fun deploy(userId: String, projectId: String, path: String, inputStream: InputStream, disposition: FormDataContentDisposition): Result<Boolean> {
+    override fun deploy(
+        userId: String,
+        projectId: String,
+        path: String,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition
+    ): Result<Boolean> {
         checkParam(userId, projectId, path)
         if (repoGray.isGray(projectId, redisOperation)) {
             bkRepoCustomDirService.deploy(userId, projectId, path, inputStream, disposition)
@@ -130,9 +135,5 @@ class UserCustomDirResourceImpl @Autowired constructor(
         if (path.isBlank()) {
             throw ParamBlankException("Invalid path")
         }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

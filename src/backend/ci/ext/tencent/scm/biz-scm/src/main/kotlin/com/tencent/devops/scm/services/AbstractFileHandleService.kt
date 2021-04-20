@@ -30,14 +30,10 @@ package com.tencent.devops.scm.services
 import com.tencent.devops.common.api.pojo.Result
 import java.io.File
 
-abstract class AbstractFileHandleService {
+interface AbstractFileHandleService {
 
     /**
      * 处理文件
      */
-    abstract fun handleFile(
-        repositoryName: String,
-        fileName: String,
-        workspace: File? = null
-    ): Result<Boolean>
+    fun handleFile(repositoryName: String, fileName: String, workspace: File? = null): Result<Boolean>
 }
