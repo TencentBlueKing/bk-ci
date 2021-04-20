@@ -41,9 +41,15 @@ dependencies {
     jooqGenerator("mysql:mysql-connector-java:8.0.22")
 }
 
-val moduleName = name.split("-")[1]
-val jooqModules: List<String>? by extra
-val moduleNames = if (null == jooqModules || jooqModules!!.isEmpty()) listOf(moduleName) else jooqModules!!
+val moduleNames = when (val moduleName = name.split("-")[1]) {
+    "misc" -> {
+        listOf("process", "project", "repository", "dispatch", "plugin", "quality", "artifactory", "environment")
+    }
+    "statistics" -> {
+        listOf("process", "project", "openapi")
+    }
+    else -> listOf(moduleName)
+}
 val mysqlPrefix: String? = System.getProperty("mysqlPrefix") ?: System.getenv("mysqlPrefix")
 
 jooq {
