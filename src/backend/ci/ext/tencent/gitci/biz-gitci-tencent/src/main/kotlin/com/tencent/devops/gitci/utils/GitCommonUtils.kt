@@ -46,14 +46,14 @@ object GitCommonUtils {
                     .split("/").toMutableList()
                 urls.removeAt(0)
                 urls.removeAt(urls.lastIndex)
-                urls.joinToString { "/" }
+                urls.joinToString("/")
             }
             httpUrl.startsWith("https://") -> {
                 val urls = httpUrl.removePrefix("https://")
                     .split("/").toMutableList()
                 urls.removeAt(0)
                 urls.removeAt(urls.lastIndex)
-                urls.joinToString { "/" }
+                urls.joinToString("/")
             }
             else -> ""
         }
