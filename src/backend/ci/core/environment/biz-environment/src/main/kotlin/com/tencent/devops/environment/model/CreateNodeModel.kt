@@ -25,36 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.api.atom
+package com.tencent.devops.environment.model
 
-import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.PUT
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import java.time.LocalDateTime
 
-@Api(tags = ["OP_PIPELINE_ATOM_STATISTIC"], description = "插件-插件数据统计")
-@Path("/op/pipeline/atom/statistic")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface OpAtomStatisticResource {
-
-    @ApiOperation("同步使用插件流水线数量到汇总数据统计表")
-    @PUT
-    @Path("/pipelineNum/async/update")
-    fun asyncUpdateStorePipelineNum(): Result<Boolean>
-
-    @ApiOperation("同步更新插件每日统计信息")
-    @PUT
-    @Path("/daily/info/async/update")
-    fun asyncUpdateDailyInfo(
-        @ApiParam("同步日期，格式yyyy-MM-dd", required = true)
-        @QueryParam("date")
-        date: String
-    ): Result<Boolean>
-}
+data class CreateNodeModel(
+    var nodeStringId: String? = "",
+    var projectId: String,
+    var nodeIp: String = "",
+    var nodeName: String = "",
+    var nodeStatus: String = "",
+    var nodeType: String = "",
+    var nodeClusterId: String? = null,
+    var nodeNamespace: String? = null,
+    var createdUser: String = "",
+    var expireTime: LocalDateTime? = null,
+    var osName: String? = null,
+    var operator: String? = null,
+    var bakOperator: String? = null,
+    var agentStatus: Boolean = false,
+    var displayName: String = "",
+    var image: String? = "",
+    var taskId: Long? = null,
+    var pipelineRefCount: Int = 0,
+    var lastBuildTime: LocalDateTime? = null
+)
