@@ -81,7 +81,8 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
             override fun load(atomCode: String): Optional<Boolean> {
                 val atomStatusList = listOf(
                     AtomStatusEnum.RELEASED.status.toByte(),
-                    AtomStatusEnum.UNDERCARRIAGING.status.toByte()
+                    AtomStatusEnum.UNDERCARRIAGING.status.toByte(),
+                    AtomStatusEnum.UNDERCARRIAGED.status.toByte()
                 )
                 val atomRecord = atomDao.getPipelineAtom(
                     dslContext = dslContext,
@@ -171,10 +172,8 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
         // 获取模板下镜像的机构信息
         val templateImageDeptMap = storeDeptService.getTemplateImageDeptMap(stageList)
         // 获取模板下插件的机构信息
-        val stageAtomDeptMap = storeDeptService.getStageAtomDeptMap(stageList)
+        val templateAtomDeptMap = storeDeptService.getTemplateImageDeptMap(stageList)
         stageList.forEach { stage ->
-            val stageId = stage.id
-            val currentStageAtomDeptMap = stageAtomDeptMap[stageId]
             val containerList = stage.containers
             containerList.forEach { container ->
                 // 判断镜像的可见范围是否在模板的可见范围之内
@@ -190,7 +189,7 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
                     // 判断插件的可见范围是否在模板的可见范围之内
                     handleAtomVisible(
                         element = element,
-                        currentStageAtomDeptMap = currentStageAtomDeptMap,
+                        templateAtomDeptMap = templateAtomDeptMap,
                         deptInfos = deptInfos,
                         invalidAtomList = invalidAtomList,
                         validAtomCodes = validAtomCodes
@@ -218,11 +217,11 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
     }
 
     private fun handleAtomVisible(
-        element: Element,
-        currentStageAtomDeptMap: Map<String, List<DeptInfo>?>?,
-        deptInfos: List<DeptInfo>?,
-        invalidAtomList: MutableList<String>,
-        validAtomCodes: List<String>?
+            element: Element,
+            templateAtomDeptMap: Map<String, List<DeptInfo>?>?,
+            deptInfos: List<DeptInfo>?,
+            invalidAtomList: MutableList<String>,
+            validAtomCodes: List<String>?
     ) {
         val atomCode = element.getAtomCode()
         val atomName = element.name
@@ -232,18 +231,18 @@ class TemplateVisibleDeptServiceImpl @Autowired constructor(
             defaultFlagOptional.get()
         } else {
             throw ErrorCodeException(
-                errorCode = StoreMessageCode.USER_TEMPLATE_ATOM_IS_INVALID,
-                params = arrayOf(element.name)
+                    errorCode = StoreMessageCode.USER_TEMPLATE_ATOM_IS_INVALID,
+                    params = arrayOf(element.name)
             )
         }
         // 如果插件是默认插件或者在可用插件列表，则无需校验与模板的可见范围
         if (!defaultFlag && validAtomCodes?.contains(atomCode) != true) {
             handleInvalidStoreList(
-                storeDeptMap = currentStageAtomDeptMap,
-                storeCode = atomCode,
-                templateDeptInfos = deptInfos,
-                invalidStoreList = invalidAtomList,
-                storeName = atomName
+                    storeDeptMap = templateAtomDeptMap,
+                    storeCode = atomCode,
+                    templateDeptInfos = deptInfos,
+                    invalidStoreList = invalidAtomList,
+                    storeName = atomName
             )
         }
     }
