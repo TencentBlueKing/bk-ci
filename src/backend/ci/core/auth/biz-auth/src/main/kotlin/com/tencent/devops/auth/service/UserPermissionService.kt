@@ -208,7 +208,7 @@ class UserPermissionService @Autowired constructor(
         var permissionNeedMerge = false
         // 如果一个组织对应多条策略,需取交集,否则就是直接替换用户权限集合
         if (managerOrganizationService.countByOrg(managerOrganizationEntity.organizationId) > 1) {
-           permissionNeedMerge = true
+            permissionNeedMerge = true
         }
 
         // 获取组织策略下相关用户

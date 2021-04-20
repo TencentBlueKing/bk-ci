@@ -206,7 +206,7 @@ class ManagerOrganizationService @Autowired constructor(
         return entitys
     }
 
-    fun countByOrg(orgId: Int) : Int {
+    fun countByOrg(orgId: Int): Int {
         return managerOrganizationDao.countByOrg(dslContext, orgId)
     }
 
