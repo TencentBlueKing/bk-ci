@@ -87,7 +87,8 @@ object ProjectUtils {
             gray = grayProjectSet.contains(tProjectRecord.englishName),
             hybridCcAppId = tProjectRecord.hybridCcAppId,
             enableExternal = tProjectRecord.enableExternal,
-            pipelineLimit = tProjectRecord.pipelineLimit
+            pipelineLimit = tProjectRecord.pipelineLimit,
+            routerTag = tProjectRecord.routerTag
         )
     }
 }
