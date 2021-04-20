@@ -27,41 +27,17 @@
 
 package com.tencent.devops.process.engine.service.code.filter
 
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
-import org.slf4j.LoggerFactory
+/**
+ * webhook过滤器返回结果
+ */
+class WebhookFilterResponse {
+    private val params = mutableMapOf<String, String>()
 
-class EventTypeFilter(
-    private val pipelineId: String,
-    private val triggerOnEventType: CodeEventType,
-    private val eventType: CodeEventType?,
-    private val action: String? = null
-) : WebhookFilter {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(EventTypeFilter::class.java)
+    fun addParam(key: String, value: String) {
+        params[key] = value
     }
 
-    override fun doFilter(response: WebhookFilterResponse): Boolean {
-        return isAllowedByEventType() && isAllowedByMrAction()
-    }
-
-    private fun isAllowedByEventType(): Boolean {
-        return eventType == triggerOnEventType
-    }
-
-    private fun isAllowedByMrAction(): Boolean {
-        if (isMrAndMergeAction() || isMrAcceptNotMergeAction()) {
-            logger.warn("$pipelineId|Git mr web hook not match with action($action)")
-            return false
-        }
-        return true
-    }
-
-    private fun isMrAndMergeAction(): Boolean {
-        return eventType == CodeEventType.MERGE_REQUEST && action == "merge"
-    }
-
-    private fun isMrAcceptNotMergeAction(): Boolean {
-        return eventType == CodeEventType.MERGE_REQUEST_ACCEPT && action != "merge"
+    fun getParam(): Map<String, String> {
+        return params
     }
 }

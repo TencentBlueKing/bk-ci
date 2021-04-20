@@ -46,19 +46,23 @@ interface GitHookTriggerHandler : WebhookTriggerHandler {
         webHookParams: ScmWebhookMatcher.WebHookParams
     ): List<WebhookFilter> {
         val filters = mutableListOf<WebhookFilter>()
-        filters.addAll(initCommonFilters(
-            event = event,
-            pipelineId = pipelineId,
-            repository = repository,
-            webHookParams = webHookParams
-        ))
-        filters.addAll(getEventFilters(
-            event = event,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            repository = repository,
-            webHookParams = webHookParams
-        ))
+        filters.addAll(
+            initCommonFilters(
+                event = event,
+                pipelineId = pipelineId,
+                repository = repository,
+                webHookParams = webHookParams
+            )
+        )
+        filters.addAll(
+            getEventFilters(
+                event = event,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                repository = repository,
+                webHookParams = webHookParams
+            )
+        )
         return filters
     }
 

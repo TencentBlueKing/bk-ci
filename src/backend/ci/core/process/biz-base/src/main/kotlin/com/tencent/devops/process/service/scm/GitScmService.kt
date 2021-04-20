@@ -201,7 +201,7 @@ class GitScmService @Autowired constructor(
     }
 
     private fun getType(repo: Repository): Pair<RepoAuthType?, ScmType>? {
-         return when (repo) {
+        return when (repo) {
             is CodeGitRepository ->
                 Pair(repo.authType, ScmType.CODE_GIT)
             is CodeTGitRepository ->

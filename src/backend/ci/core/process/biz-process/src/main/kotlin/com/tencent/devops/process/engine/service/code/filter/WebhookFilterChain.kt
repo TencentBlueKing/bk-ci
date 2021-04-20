@@ -31,9 +31,9 @@ class WebhookFilterChain(
     private val filters: List<WebhookFilter>
 ) : WebhookFilter {
 
-    override fun doFilter(): Boolean {
+    override fun doFilter(response: WebhookFilterResponse): Boolean {
         filters.forEach { filter ->
-            if (!filter.doFilter()) {
+            if (!filter.doFilter(response)) {
                 return false
             }
         }

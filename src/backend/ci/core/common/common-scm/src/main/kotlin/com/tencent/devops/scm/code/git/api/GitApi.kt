@@ -338,7 +338,7 @@ open class GitApi {
 
     private val mediaType = MediaType.parse("application/json; charset=utf-8")
 
-    private fun post(host: String, token: String, url: String, body: String) =
+    fun post(host: String, token: String, url: String, body: String) =
         request(host, token, url, "").post(RequestBody.create(mediaType, body)).build()
 
     private fun delete(host: String, token: String, url: String, body: String) =
@@ -435,20 +435,20 @@ open class GitApi {
         }
     }
 
-    fun getMergeRequestChangeInfo(host: String, token: String, projectName: String, mrId: Long): GitMrChangeInfo? {
-        val url = "projects/${urlEncode(projectName)}/merge_request/$mrId/changes"
+    fun getMergeRequestChangeInfo(host: String, token: String, url: String): GitMrChangeInfo {
+        logger.info("get mr changes info url: $url")
         val request = get(host, token, url, "")
         return callMethod(OPERATION_MR_CHANGE, request, GitMrChangeInfo::class.java)
     }
 
-    fun getMrInfo(host: String, token: String, projectName: String, mrId: Long): GitMrInfo? {
-        val url = "projects/${urlEncode(projectName)}/merge_request/$mrId"
+    fun getMrInfo(host: String, token: String, url: String): GitMrInfo {
+        logger.info("get mr info url: $url")
         val request = get(host, token, url, "")
         return callMethod(OPERATION_MR_INFO, request, GitMrInfo::class.java)
     }
 
-    fun getMrReviewInfo(host: String, token: String, projectName: String, mrId: Long): GitMrReviewInfo? {
-        val url = "projects/${urlEncode(projectName)}/merge_request/$mrId/review"
+    fun getMrReviewInfo(host: String, token: String, url: String): GitMrReviewInfo {
+        logger.info("get mr review url: $url")
         val request = get(host, token, url, "")
         return callMethod(OPERATION_MR_INFO, request, GitMrReviewInfo::class.java)
     }

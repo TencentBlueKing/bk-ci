@@ -36,7 +36,7 @@ class SkipCiFilter(
         private const val SKIP_CI = "[skip ci]"
     }
 
-    override fun doFilter(): Boolean {
+    override fun doFilter(response: WebhookFilterResponse): Boolean {
         return triggerOnMessage?.contains(SKIP_CI) != true
     }
 }

@@ -522,7 +522,8 @@ class PipelineWebhookService @Autowired constructor(
                         is CodeGitlabWebHookTriggerElement ->
                             scmProxyService.addGitlabWebhook(
                                 projectId,
-                                repositoryConfig = repositoryConfig
+                                repositoryConfig = repositoryConfig,
+                                codeEventType = element.eventType
                             )
                     }
                     break
