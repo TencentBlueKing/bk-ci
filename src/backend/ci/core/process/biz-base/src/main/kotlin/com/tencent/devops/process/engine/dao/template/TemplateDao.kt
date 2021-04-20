@@ -259,6 +259,15 @@ class TemplateDao {
         }
     }
 
+    fun getSrcTemplateId(dslContext: DSLContext, templateId: String): String? {
+        return with(TTemplate.T_TEMPLATE) {
+            dslContext.select(SRC_TEMPLATE_ID).from(this)
+                .where(ID.eq(templateId))
+                .limit(1)
+                .fetchOne(0, String::class.java)
+        }
+    }
+
     fun listTemplate(
         dslContext: DSLContext,
         projectId: String,
@@ -388,12 +397,12 @@ class TemplateDao {
     fun listTemplateByProjectIds(
         dslContext: DSLContext,
         projectIds: Set<String>,
-        includePublicFlag: Boolean?,
-        templateType: TemplateType?,
-        templateIdList: Collection<String>?,
-        storeFlag: Boolean?,
-        page: Int?,
-        pageSize: Int?
+        includePublicFlag: Boolean? = null,
+        templateType: TemplateType? = null,
+        templateIdList: Collection<String>? = null,
+        storeFlag: Boolean? = null,
+        page: Int? = null,
+        pageSize: Int? = null
     ): Result<out Record>? {
         val a = TTemplate.T_TEMPLATE.`as`("a")
 

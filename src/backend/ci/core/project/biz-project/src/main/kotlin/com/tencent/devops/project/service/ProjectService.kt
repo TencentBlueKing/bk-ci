@@ -138,4 +138,6 @@ interface ProjectService {
         permission: AuthPermission,
         accessToken: String?
     ): Boolean
+
+    fun listSecrecyProject(): Set<String>?
 }

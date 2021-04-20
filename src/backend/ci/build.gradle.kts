@@ -151,6 +151,7 @@ subprojects {
             dependency("com.amazonaws:aws-java-sdk-s3:${Versions.AwsS3}")
             dependency("org.asynchttpclient:async-http-client:${Versions.AsyncHttpClient}")
             dependency("com.tencent.devops.ci-plugins:sigar:${Versions.Sigar}")
+            dependency("org.influxdb:influxdb-java:${Versions.InfluxDB}")
 
             dependencySet("org.springframework.cloud:${Versions.SpringConsul}") {
                 entry("spring-cloud-starter-consul-discovery")

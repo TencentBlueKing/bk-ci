@@ -93,14 +93,30 @@
                                             </bk-popover>
                                         </bk-radio-group>
                                     </div>
-                                    <div class="from-group" v-for="(filter, index) in tagGroupList" :key="index">
-                                        <label>{{filter.name}}</label>
-                                        <bk-select
-                                            v-model="filter.labelValue"
-                                            multiple="true">
-                                            <bk-option v-for="(option, oindex) in filter.labels" :key="oindex" :id="option.id" :name="option.name">
-                                            </bk-option>
-                                        </bk-select>
+                                    <section v-if="activeTemp.templateType === 'PUBLIC'">
+                                        <div class="from-group" v-for="(filter, index) in tagGroupList" :key="index">
+                                            <label>{{filter.name}}</label>
+                                            <bk-select
+                                                v-model="filter.labelValue"
+                                                multiple="true">
+                                                <bk-option v-for="(option, oindex) in filter.labels" :key="oindex" :id="option.id" :name="option.name">
+                                                </bk-option>
+                                            </bk-select>
+                                        </div>
+                                    </section>
+                                    <div v-else style="margin-bottom: 15px">
+                                        <label class="bk-form-checkbox template-setting-checkbox">
+                                            <bk-checkbox
+                                                v-model="useTemplateSettings">
+                                                {{ $t('template.applyTemplateSetting') }}
+                                            </bk-checkbox>
+                                            <bk-popover placement="top">
+                                                <i class="bk-icon icon-info-circle"></i>
+                                                <div slot="content" style="white-space: pre-wrap; min-width: 200px">
+                                                    <div>{{ $t('template.applySettingTips') }}</div>
+                                                </div>
+                                            </bk-popover>
+                                        </label>
                                     </div>
                                     <a class="view-pipeline" v-if="showPreview" @click="togglePreview(false)">{{ $t('newlist.closePreview') }}</a>
                                     <a class="view-pipeline" v-if="!showPreview && !activeTemp.isInstall && !isActiveTempEmpty" @click="togglePreview(true)">{{ $t('newlist.tempDetail') }}</a>
@@ -154,6 +170,7 @@
                 activeTempIndex: -1,
                 tempTypeIndex: 0,
                 showPreview: false,
+                useTemplateSettings: false,
                 isLoading: !this.pipelineTemplate,
                 headerHeight: 50,
                 viewHeight: 0,
@@ -207,7 +224,9 @@
                             ...item,
                             isInstall: !item.installed,
                             isFlag: item.flag,
-                            stages: (pipelineTemplate[item.code] && pipelineTemplate[item.code].stages) || []
+                            stages: (pipelineTemplate[item.code] && pipelineTemplate[item.code].stages) || [],
+                            templateId: (pipelineTemplate[item.code] && pipelineTemplate[item.code].templateId) || undefined,
+                            version: (pipelineTemplate[item.code] && pipelineTemplate[item.code].version) || undefined
                         }
                     })
                 } else {
@@ -382,11 +401,15 @@
             },
             async createNewPipeline () {
                 const { icon, ...pipeline } = this.activeTemp
-                let labels = []
-                this.tagGroupList.forEach((item) => {
-                    if (item.labelValue) labels = labels.concat(item.labelValue)
-                })
-                Object.assign(pipeline, { name: this.newPipelineName, labels })
+                Object.assign(pipeline, { name: this.newPipelineName })
+
+                if (this.activeTemp.templateType === 'PUBLIC') {
+                    let labels = []
+                    this.tagGroupList.forEach((item) => {
+                        if (item.labelValue) labels = labels.concat(item.labelValue)
+                    })
+                    Object.assign(pipeline, { labels })
+                }
 
                 const keys = Object.keys(this.activeTemp)
                 if (keys.length <= 0) {
@@ -404,6 +427,9 @@
                             templateId: currentTemplate.templateId,
                             curVersionId: currentTemplate.version,
                             pipelineName: pipeline.name
+                        },
+                        query: {
+                            useTemplateSettings: this.useTemplateSettings.toString()
                         }
                     })
                     return
@@ -411,7 +437,8 @@
 
                 try {
                     this.isDisabled = true
-                    const { data: { id } } = await this.$ajax.post(`/process/api/user/pipelines/${this.projectId}`, pipeline)
+                    const queryStr = this.activeTemp.templateType !== 'PUBLIC' ? `?useTemplateSettings=${this.useTemplateSettings}` : ''
+                    const { data: { id } } = await this.$ajax.post(`/process/api/user/pipelines/${this.projectId}${queryStr}`, pipeline)
                     if (id) {
                         this.$showTips({ message: this.$t('addSuc'), theme: 'success' })
 

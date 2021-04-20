@@ -1,7 +1,7 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.  
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -10,32 +10,40 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 package com.tencent.bkrepo.replication.handler
 
 import com.tencent.bkrepo.common.api.util.JsonUtils
-import com.tencent.bkrepo.common.stream.message.node.NodeCopiedMessage
-import com.tencent.bkrepo.common.stream.message.node.NodeCreatedMessage
-import com.tencent.bkrepo.common.stream.message.node.NodeDeletedMessage
-import com.tencent.bkrepo.common.stream.message.node.NodeMovedMessage
-import com.tencent.bkrepo.common.stream.message.node.NodeRenamedMessage
-import com.tencent.bkrepo.common.stream.message.node.NodeUpdatedMessage
 import com.tencent.bkrepo.replication.config.NODE_REQUEST
-import com.tencent.bkrepo.repository.pojo.node.service.NodeCopyRequest
+import com.tencent.bkrepo.replication.message.node.NodeCopiedMessage
+import com.tencent.bkrepo.replication.message.node.NodeCreatedMessage
+import com.tencent.bkrepo.replication.message.node.NodeDeletedMessage
+import com.tencent.bkrepo.replication.message.node.NodeMovedMessage
+import com.tencent.bkrepo.replication.message.node.NodeRenamedMessage
+import com.tencent.bkrepo.replication.message.node.NodeUpdatedMessage
 import com.tencent.bkrepo.repository.pojo.node.service.NodeCreateRequest
 import com.tencent.bkrepo.repository.pojo.node.service.NodeDeleteRequest
-import com.tencent.bkrepo.repository.pojo.node.service.NodeMoveRequest
+import com.tencent.bkrepo.repository.pojo.node.service.NodeMoveCopyRequest
 import com.tencent.bkrepo.repository.pojo.node.service.NodeRenameRequest
 import com.tencent.bkrepo.repository.pojo.node.service.NodeUpdateRequest
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.ApplicationEventPublisher
 import org.springframework.stereotype.Component
 
@@ -44,10 +52,9 @@ import org.springframework.stereotype.Component
  * dispatch it to event  handler
  */
 @Component
-class NodeEventConsumer : AbstractHandler() {
-
-    @Autowired
-    private lateinit var eventPublisher: ApplicationEventPublisher
+class NodeEventConsumer(
+    private val eventPublisher: ApplicationEventPublisher
+) : BaseHandler() {
 
     fun dealWithNodeCreateEvent(description: Map<String, Any>) {
         val request = description[NODE_REQUEST] as String
@@ -65,7 +72,7 @@ class NodeEventConsumer : AbstractHandler() {
 
     fun dealWithNodeCopyEvent(description: Map<String, Any>) {
         val request = description[NODE_REQUEST] as String
-        JsonUtils.objectMapper.readValue(request, NodeCopyRequest::class.java).also {
+        JsonUtils.objectMapper.readValue(request, NodeMoveCopyRequest::class.java).also {
             eventPublisher.publishEvent(NodeCopiedMessage(it))
         }
     }
@@ -79,7 +86,7 @@ class NodeEventConsumer : AbstractHandler() {
 
     fun dealWithNodeMoveEvent(description: Map<String, Any>) {
         val request = description[NODE_REQUEST] as String
-        JsonUtils.objectMapper.readValue(request, NodeMoveRequest::class.java).also {
+        JsonUtils.objectMapper.readValue(request, NodeMoveCopyRequest::class.java).also {
             eventPublisher.publishEvent(NodeMovedMessage(it))
         }
     }

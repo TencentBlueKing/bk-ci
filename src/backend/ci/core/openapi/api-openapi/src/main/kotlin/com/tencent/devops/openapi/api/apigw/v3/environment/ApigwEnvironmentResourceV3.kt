@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeWithPermission
+import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentPipelineRef
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -45,6 +46,7 @@ import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPEN_API_V3_ENVIRONMENT"], description = "OPENAPI-环境管理")
@@ -169,4 +171,49 @@ interface ApigwEnvironmentResourceV3 {
         @ApiParam("节点 hashIds", required = true)
         envHashIds: List<String>
     ): Result<Map<String, List<NodeBaseInfo>>>
+
+    @ApiOperation("获取构建节点信息（扩展接口）")
+    @GET
+    @Path("/projects/{projectId}/nodes/extListNodes")
+    fun extListNodes(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<List<NodeWithPermission>>
+
+    @ApiOperation("获取构建节点信息（扩展接口）")
+    @GET
+    @Path("/projects/{projectId}/nodes/{nodeHashId}/listPipelineRef")
+    fun listPipelineRef(
+        @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String?,
+        @ApiParam(value = "apigw Type", required = true)
+        @PathParam("apigwType")
+        apigwType: String?,
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("节点 hashId", required = true)
+        @PathParam("nodeHashId")
+        nodeHashId: String,
+        @ApiParam("排序字段, pipelineName|lastBuildTime", required = true)
+        @QueryParam("sortBy")
+        sortBy: String? = null,
+        @ApiParam("排序方向, ASC|DESC", required = true)
+        @QueryParam("sortDirection")
+        sortDirection: String? = null
+    ): Result<List<AgentPipelineRef>>
 }

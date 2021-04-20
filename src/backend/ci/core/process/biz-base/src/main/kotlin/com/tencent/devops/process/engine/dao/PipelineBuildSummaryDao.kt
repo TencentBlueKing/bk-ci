@@ -45,11 +45,13 @@ import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Field
 import org.jooq.Record
 import org.jooq.Result
 import org.jooq.SelectOnConditionStep
 import org.jooq.TableField
 import org.jooq.impl.DSL
+import org.jooq.impl.SQLDataType
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -604,6 +606,24 @@ class PipelineBuildSummaryDao {
             }
             update.where(PIPELINE_ID.eq(pipelineId))
                 .execute()
+        }
+    }
+
+    fun listOrderSummaryByPipelineIds(
+        dslContext: DSLContext,
+        pipelineIds: List<String>
+    ): Result<TPipelineBuildSummaryRecord> {
+        return with(T_PIPELINE_BUILD_SUMMARY) {
+            val query = dslContext.selectFrom(this).where(PIPELINE_ID.`in`(pipelineIds))
+            val size = pipelineIds.size + 1
+            val args = arrayOfNulls<Field<out Any>?>(size)
+            args[0] = DSL.field("PIPELINE_ID")
+            var index = 1
+            pipelineIds.forEach { pipelineId ->
+                args[index++] = DSL.`val`(pipelineId)
+            }
+            query.orderBy(DSL.function("field", SQLDataType.VARCHAR, *args))
+            query.fetch()
         }
     }
 }

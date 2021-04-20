@@ -41,4 +41,5 @@ object Versions {
     const val Logback = "1.1.11"
     const val Poi = "3.17"
     const val Jolokia = "1.6.0"
+    const val InfluxDB = "2.10"
 }

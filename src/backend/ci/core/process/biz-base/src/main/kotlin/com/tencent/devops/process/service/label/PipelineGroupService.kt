@@ -88,22 +88,22 @@ class PipelineGroupService @Autowired constructor(
 
         return groups.map {
             PipelineGroup(
-                encode(it.id),
-                it.projectId,
-                it.name,
-                it.createTime.timestamp(),
-                it.updateTime.timestamp(),
-                it.createUser,
-                it.updateUser,
-                labelsByGroup[it.id]?.map { label ->
+                id = encode(it.id),
+                projectId = it.projectId,
+                name = it.name,
+                createTime = it.createTime.timestamp(),
+                updateTime = it.updateTime.timestamp(),
+                createUser = it.createUser,
+                updateUser = it.updateUser,
+                labels = labelsByGroup[it.id]?.map { label ->
                     PipelineLabel(
-                        encode(label.id),
-                        encode(label.groupId),
-                        label.name,
-                        label.createTime.timestamp(),
-                        label.updateTime.timestamp(),
-                        label.createUser,
-                        label.updateUser
+                        id = encode(label.id),
+                        groupId = encode(label.groupId),
+                        name = label.name,
+                        createTime = label.createTime.timestamp(),
+                        uptimeTime = label.updateTime.timestamp(),
+                        createUser = label.createUser,
+                        updateUser = label.updateUser
                     )
                 }?.sortedBy { label -> label.createTime } ?: emptyList()
             )
@@ -116,8 +116,8 @@ class PipelineGroupService @Autowired constructor(
         val groups = getLabelsGroupByGroup(projectId, labelIds)
         return groups.map {
             PipelineGroupWithLabels(
-                it.id,
-                it.labels.map { label -> label.id }
+                id = it.id,
+                labels = it.labels.map { label -> label.id }
             )
         }
     }
@@ -171,7 +171,7 @@ class PipelineGroupService @Autowired constructor(
         return dslContext.transactionResult { configuration ->
             val context = DSL.using(configuration)
             val id = decode(labelId)
-            val result = pipelineLabelDao.deleteById(dslContext = context, labelId = id, userId = userId)
+            val result = pipelineLabelDao.deleteById(context, labelId = id, userId = userId)
             pipelineViewLabelDao.detachLabel(dslContext = context, labelId = id, userId = userId)
             pipelineLabelPipelineDao.deleteByLabel(dslContext = context, labelId = id, userId = userId)
             result
@@ -188,7 +188,10 @@ class PipelineGroupService @Autowired constructor(
     }
 
     fun deletePipelineLabel(userId: String, pipelineId: String) {
-        pipelineLabelPipelineDao.deleteByPipeline(dslContext, pipelineId, userId)
+        dslContext.transactionResult { configuration ->
+            val context = DSL.using(configuration)
+            pipelineLabelPipelineDao.deleteByPipeline(context, pipelineId = pipelineId, userId = userId)
+        }
     }
 
     fun addPipelineLabel(userId: String, pipelineId: String, labelIds: List<String>) {
@@ -196,7 +199,12 @@ class PipelineGroupService @Autowired constructor(
             return
         }
         try {
-            pipelineLabelPipelineDao.batchCreate(dslContext, pipelineId, labelIds.map { decode(it) }.toSet(), userId)
+            val labelIdArr = labelIds.map { decode(it) }.toSet()
+            pipelineLabelPipelineDao.batchCreate(
+                dslContext = dslContext,
+                pipelineId = pipelineId,
+                labelIds = labelIdArr,
+                userId = userId)
         } catch (t: DuplicateKeyException) {
             logger.warn("Fail to add the pipeline $pipelineId label $labelIds by userId $userId")
             throw OperationException("The label is already exist")
@@ -210,7 +218,7 @@ class PipelineGroupService @Autowired constructor(
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
                 pipelineLabelPipelineDao.deleteByPipeline(context, pipelineId, userId)
-                pipelineLabelPipelineDao.batchCreate(dslContext, pipelineId, ids, userId)
+                pipelineLabelPipelineDao.batchCreate(context, pipelineId, ids, userId)
             }
         } catch (t: DuplicateKeyException) {
             logger.warn("Fail to update the pipeline $pipelineId label $labelIds by userId $userId")
@@ -279,10 +287,6 @@ class PipelineGroupService @Autowired constructor(
         return pipelineFavorDao.list(dslContext, userId, projectId).map { it.pipelineId }
     }
 
-    fun getFavorByPipeline(userId: String, pipelineId: String): List<String>? {
-        return pipelineFavorDao.listByPipelineId(dslContext, userId, pipelineId)?.map { it.pipelineId }
-    }
-
     private fun getLabelsGroupByGroup(projectId: String, labelIds: Set<Long>): List<PipelineGroup> {
         val labels = pipelineLabelDao.getByIds(dslContext, labelIds)
         val groups = HashMap<Long, MutableList<TPipelineLabelRecord>>()
@@ -340,7 +344,7 @@ class PipelineGroupService @Autowired constructor(
     fun getPipelinesGroupLabel(pipelineIds: List<String>): Map<String, List<PipelineGroupLabels>> {
         val records = pipelineLabelPipelineDao.listPipelinesGroupsAndLabels(dslContext, pipelineIds)
         val result = mutableMapOf<String, MutableList<PipelineGroupLabels>>()
-        records.forEach { it ->
+        records.forEach {
             val pipelineId = it.value1()
             val groupName = it.value2()
             val labelName = it.value3()
@@ -383,7 +387,12 @@ class PipelineGroupService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(PipelineGroupService::class.java)
     }
 
-    fun getFavorPipelinesPage(userId: String, page: Int? = null, pageSize: Int? = null): Result<TPipelineFavorRecord>? {
+    @Suppress("UNUSED")
+    fun getFavorPipelinesPage(
+        userId: String,
+        page: Int? = null,
+        pageSize: Int? = null
+    ): Result<TPipelineFavorRecord>? {
         return pipelineFavorDao.listByUserId(dslContext, userId)
     }
 }

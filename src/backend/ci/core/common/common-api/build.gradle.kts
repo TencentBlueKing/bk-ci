@@ -51,4 +51,5 @@ dependencies {
     api("javax.validation:validation-api")
     api("com.vdurmont:emoji-java:5.1.1")
     api("org.apache.lucene:lucene-core")
+    api("org.apache.commons:commons-csv:1.8")
 }
