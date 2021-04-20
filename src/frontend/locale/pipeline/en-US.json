@@ -482,6 +482,7 @@
         "paramsInvalidMsg": "Params Invalid"
     },
     "details": {
+        "pipelineVersionDiffTips": "The pipeline config version has changed",
         "executeDetail": "Build detail",
         "partView": "Artifacts",
         "codeRecords": "Commits",
