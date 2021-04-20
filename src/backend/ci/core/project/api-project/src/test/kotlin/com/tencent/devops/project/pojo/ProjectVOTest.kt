@@ -77,7 +77,8 @@ class ProjectVOTest {
             project_code = "job",
             project_name = "定时任务",
             cc_app_id = 123,
-            cc_app_name = "XXG"
+            cc_app_name = "XXG",
+            routerTag = ""
         )
         val message = JsonUtil.toJson(p)
         println(message)
@@ -137,7 +138,8 @@ class ProjectVOTest {
             project_code = null,
             project_name = null,
             cc_app_id = null,
-            cc_app_name = null
+            cc_app_name = null,
+            routerTag = ""
         )
         val message = JsonUtil.toJson(p)
         println(message)
