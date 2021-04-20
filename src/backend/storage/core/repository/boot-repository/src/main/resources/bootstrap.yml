@@ -1,15 +1,6 @@
-spring:
-  application:
-    name: repository
-  cloud:
-    consul:
-      discovery:
-        heartbeat:
-          enabled: true
-        query-passing: true
-        prefer-ip-address: true
-      config:
-        prefix: bkrepo-config
-        format: YAML
-        data-key: data
-        profileSeparator: '::'
+service.name: repository
+server.port: 25901
+
+repository:
+  deletedNodeReserveDays: 14
+  listCountLimit: 100000

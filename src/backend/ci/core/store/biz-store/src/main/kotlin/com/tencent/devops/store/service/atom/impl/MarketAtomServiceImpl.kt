@@ -579,7 +579,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     privateReason = record["privateReason"] as? String,
                     recommendFlag = feature?.recommendFlag,
                     frontendType = FrontendTypeEnum.getFrontendTypeObj(htmlTemplateVersion),
-                    yamlFlag = feature?.yamlFlag,
+                    // 开启插件yml显示
+                    yamlFlag = true,
                     editFlag = marketAtomCommonService.checkEditCondition(atomCode),
                     dailyStatisticList = getRecentDailyStatisticList(atomCode)
                 )

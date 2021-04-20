@@ -1,7 +1,7 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.  
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -10,13 +10,23 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 package com.tencent.bkrepo.repository.job
@@ -24,8 +34,9 @@ package com.tencent.bkrepo.repository.job
 import com.tencent.bkrepo.common.api.util.executeAndMeasureTime
 import com.tencent.bkrepo.common.service.log.LoggerHolder
 import com.tencent.bkrepo.common.storage.core.StorageService
+import com.tencent.bkrepo.common.storage.credentials.StorageCredentials
+import com.tencent.bkrepo.repository.service.repo.StorageCredentialService
 import net.javacrumbs.shedlock.spring.annotation.SchedulerLock
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
@@ -33,23 +44,31 @@ import org.springframework.stereotype.Component
  * 清理缓存文件定时任务
  */
 @Component
-class ExpiredCacheFileCleanupJob {
-
-    @Autowired
-    private lateinit var storageService: StorageService
+class ExpiredCacheFileCleanupJob(
+    private val storageService: StorageService,
+    private val storageCredentialService: StorageCredentialService
+) {
 
     @Scheduled(cron = "0 0 4 * * ?") // 每天凌晨4点执行
-    @SchedulerLock(name = "ExpiredCacheFileCleanupJob", lockAtMostFor = "PT10H")
-    fun cleanUp() {
-        logger.info("Starting to clean up expired cache files.")
+    @SchedulerLock(name = "ExpiredCacheFileCleanupJob", lockAtMostFor = "P7D")
+    fun cleanup() {
+        logger.info("Starting to clean up temp and expired cache files.")
+        // cleanup default storage
+        cleanUpOnStorage()
+        // cleanup extended storage
+        storageCredentialService.list().forEach {
+            cleanUpOnStorage(it)
+        }
+        logger.info("Clean up completed.")
+    }
+
+    private fun cleanUpOnStorage(storage: StorageCredentials? = null) {
+        val key = storage?.key ?: "default"
+        logger.info("Starting to clean up on storage [$key].")
         executeAndMeasureTime {
-            storageService.cleanUp()
+            storageService.cleanUp(storage)
         }.apply {
-            logger.info(
-                "[${first.getTotal()}] expired cache and temp files has been clean up" +
-                    ", file[${first.fileCount}], folder[${first.folderCount}]" +
-                    ", [${first.size}] bytes totally, elapse [${second.seconds}] s."
-            )
+            logger.info("Clean up on storage[$key] completed, elapse [${second.seconds}] s.")
         }
     }
 
