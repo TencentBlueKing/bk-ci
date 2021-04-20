@@ -50,15 +50,18 @@ class EventTypeFilter(
     }
 
     private fun isAllowedByMrAction(): Boolean {
-        if (eventType == CodeEventType.MERGE_REQUEST || eventType == CodeEventType.MERGE_REQUEST_ACCEPT) {
-            if (
-                (eventType == CodeEventType.MERGE_REQUEST && action == "merge") ||
-                (eventType == CodeEventType.MERGE_REQUEST_ACCEPT && action != "merge")
-            ) {
-                logger.warn("$pipelineId|Git mr web hook not match with action($action)")
-                return false
-            }
+        if (isMrAndMergeAction() || isMrAcceptNotMergeAction()) {
+            logger.warn("$pipelineId|Git mr web hook not match with action($action)")
+            return false
         }
         return true
+    }
+
+    private fun isMrAndMergeAction(): Boolean {
+        return eventType == CodeEventType.MERGE_REQUEST && action == "merge"
+    }
+
+    private fun isMrAcceptNotMergeAction(): Boolean {
+        return eventType == CodeEventType.MERGE_REQUEST_ACCEPT && action != "merge"
     }
 }
