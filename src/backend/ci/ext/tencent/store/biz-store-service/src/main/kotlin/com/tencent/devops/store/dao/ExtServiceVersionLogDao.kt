@@ -101,7 +101,7 @@ class ExtServiceVersionLogDao {
         logId: String
     ): TExtensionServiceVersionLogRecord {
         with(TExtensionServiceVersionLog.T_EXTENSION_SERVICE_VERSION_LOG) {
-            return dslContext.selectFrom(this).where(ID.eq(logId)).fetchOne()
+            return dslContext.selectFrom(this).where(ID.eq(logId)).fetchOne()!!
         }
     }
 
@@ -141,7 +141,7 @@ class ExtServiceVersionLogDao {
         serviceId: String
     ): Int {
         with(TExtensionServiceVersionLog.T_EXTENSION_SERVICE_VERSION_LOG) {
-            return dslContext.selectCount().from(this).where(SERVICE_ID.eq(serviceId)).fetchOne(0, Int::class.java)
+            return dslContext.selectCount().from(this).where(SERVICE_ID.eq(serviceId)).fetchOne(0, Int::class.java)!!
         }
     }
 }

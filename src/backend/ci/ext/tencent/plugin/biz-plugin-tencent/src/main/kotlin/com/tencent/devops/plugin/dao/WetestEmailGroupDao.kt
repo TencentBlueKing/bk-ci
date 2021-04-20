@@ -70,7 +70,7 @@ class WetestEmailGroupDao {
                             wetestGroupId,
                             wetestGroupName)
                     .returning(ID)
-                    .fetchOne()
+                    .fetchOne()!!
             return data.id
         }
     }
@@ -117,7 +117,7 @@ class WetestEmailGroupDao {
     fun getCount(dslContext: DSLContext, projectId: String): Int {
         with(TPluginWetestEamilGroup.T_PLUGIN_WETEST_EAMIL_GROUP) {
             return dslContext.selectCount().from(this).where(PROJECT_ID.eq(projectId))
-                    .fetchOne().get(0) as Int
+                    .fetchOne()!!.get(0) as Int
         }
     }
 
