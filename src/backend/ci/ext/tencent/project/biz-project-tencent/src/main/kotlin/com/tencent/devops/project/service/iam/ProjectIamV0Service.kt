@@ -333,6 +333,6 @@ class ProjectIamV0Service @Autowired constructor(
                 throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ORG_TYPE_ERROR)))
             }
         }
-        return getProjectByGroupId(userId, bgId, deptId, centerId)
+        return projectLocalService.getProjectByGroupId(userId, bgId, deptId, centerId)
     }
 }
