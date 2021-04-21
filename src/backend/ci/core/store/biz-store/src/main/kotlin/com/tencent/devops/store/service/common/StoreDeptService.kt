@@ -33,9 +33,9 @@ import com.tencent.devops.store.pojo.common.DeptInfo
 interface StoreDeptService {
 
     /**
-     * 获取stage下插件对应的机构信息
+     * 获取模板下插件对应的机构信息
      */
-    fun getStageAtomDeptMap(stageList: List<Stage>): MutableMap<String, Map<String, List<DeptInfo>?>>
+    fun getTemplateAtomDeptMap(stageList: List<Stage>): Map<String, List<DeptInfo>?>
 
     /**
      * 获取模板下镜像对应的机构信息
