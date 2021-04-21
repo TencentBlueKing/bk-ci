@@ -94,8 +94,7 @@ class TxProjectServiceImpl @Autowired constructor(
     projectDispatcher: ProjectDispatcher,
     private val authPermissionApi: AuthPermissionApi,
     private val projectAuthServiceCode: ProjectAuthServiceCode,
-    private val managerService: ManagerService,
-    private val projectLocalService: ProjectLocalService
+    private val managerService: ManagerService
 ) : AbsProjectServiceImpl(projectPermissionService, dslContext, projectDao, projectJmxApi, redisOperation, gray, client, projectDispatcher, authPermissionApi, projectAuthServiceCode) {
 
     private var authUrl: String = "${bkAuthProperties.url}/projects"
@@ -282,13 +281,6 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     override fun createProjectUser(createUser: String, createInfo: ProjectCreateUserDTO): Boolean {
-        projectLocalService.createUser2Project(
-            userIds = createInfo.userIds!!,
-            createUser = createUser,
-            projectCode = createInfo.projectId,
-            roleId = createInfo.roleId,
-            roleName = createInfo.roleName
-        )
         return true
     }
 
