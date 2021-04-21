@@ -262,7 +262,7 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         organizationId: Long,
         createInfo: ProjectCreateUserDTO
     ): Result<Boolean> {
-        return Result(projectIamV0Service.createUser2ProjectByApp(
+        return Result(projectLocalService.createUser2ProjectByApp(
             organizationType = organizationType,
             organizationId = organizationId,
             userId = createInfo.userId!!,
@@ -293,7 +293,7 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         createInfo: PipelinePermissionInfo
     ): Result<Boolean> {
         // TODO:此处先临时支持流水线的权限
-        return Result(projectIamV0Service.createPipelinePermissionByApp(
+        return Result(projectLocalService.createPipelinePermissionByApp(
             organizationType = organizationType,
             organizationId = organizationId,
             userId = createInfo.userId,
@@ -305,7 +305,7 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
     }
 
     override fun getProjectRoles(projectCode: String, organizationType: String, organizationId: Long): Result<List<BKAuthProjectRolesResources>> {
-        return Result(projectIamV0Service.getProjectRole(
+        return Result(projectLocalService.getProjectRole(
             organizationType = organizationType,
             organizationId = organizationId,
             projectId = projectCode

@@ -65,6 +65,7 @@ import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectTypeEnum
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.pojo.tof.Response
+import com.tencent.devops.project.service.iam.ProjectIamV0Service
 import com.tencent.devops.project.service.tof.TOFService
 import com.tencent.devops.project.util.ProjectUtils
 import okhttp3.MediaType
@@ -92,7 +93,8 @@ class ProjectLocalService @Autowired constructor(
     private val projectPermissionService: ProjectPermissionService,
     private val gray: Gray,
     private val jmxApi: ProjectJmxApi,
-    private val projectService: ProjectService
+    private val projectService: ProjectService,
+    private val projectIamV0Service: ProjectIamV0Service
 ) {
     private var authUrl: String = "${bkAuthProperties.url}/projects"
 
@@ -534,26 +536,154 @@ class ProjectLocalService @Autowired constructor(
         return ProjectUtils.packagingBean(gitCiProject!!, setOf())
     }
 
-    private fun synAuthProject(
+    fun createUser2ProjectByApp(
+        organizationType: String,
+        organizationId: Long,
         userId: String,
-        accessToken: String,
-        englishName: String,
-        projectUpdateInfo: ProjectUpdateInfo
+        projectCode: String,
+        roleId: Int?,
+        roleName: String?
     ): Boolean {
-        logger.info("synAuthProject by update, $projectUpdateInfo")
-        val projectInfo = bkAuthProjectApi.getProjectInfo(bsPipelineAuthServiceCode, englishName)
-        if (projectInfo == null) {
-            projectPermissionService.createResources(
-                userId = userId,
-                accessToken = accessToken,
-                resourceRegisterInfo = ResourceRegisterInfo(
-                    projectUpdateInfo.englishName,
-                    projectUpdateInfo.projectName
-                ),
-                userDeptDetail = null
-            )
+        logger.info("[createUser2ProjectByApp] organizationType[$organizationType], organizationId[$organizationId] userId[$userId] projectCode[$projectCode]")
+        var bgId: Long? = null
+        var deptId: Long? = null
+        var centerId: Long? = null
+        when (organizationType) {
+            AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_BG -> bgId = organizationId
+            AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT -> deptId = organizationId
+            AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER -> centerId = organizationId
+            else -> {
+                throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ORG_TYPE_ERROR)))
+            }
         }
-        return true
+        val projectList = getProjectByGroupId(
+            userId = userId,
+            bgId = bgId,
+            deptId = deptId,
+            centerId = centerId
+        )
+        if (projectList.isEmpty()) {
+            logger.error("organizationType[$organizationType] :organizationId[$organizationId]  not project[$projectCode] permission ")
+            throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ORG_NOT_PROJECT)))
+        }
+
+        var isCreate = false
+        projectList.forEach { project ->
+            if (project.projectCode.equals(projectCode)) {
+                isCreate = true
+                return@forEach
+            }
+        }
+        if (isCreate) {
+            return projectIamV0Service.createUser2ProjectImpl(
+                userIds = arrayListOf(userId),
+                projectId = projectCode,
+                roleId = roleId,
+                roleName = roleName
+            )
+        } else {
+            logger.error("organizationType[$organizationType] :organizationId[$organizationId]  not project[$projectCode] permission ")
+            throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ORG_NOT_PROJECT)))
+        }
+    }
+
+
+    fun getProjectRole(
+        organizationType: String,
+        organizationId: Long,
+        projectId: String
+    ): List<BKAuthProjectRolesResources> {
+        logger.info("[getProjectRole] organizationType[$organizationType], organizationId[$organizationId] projectCode[$projectId]")
+        val projectList = getProjectListByOrg("", organizationType, organizationId)
+        if (projectList.isEmpty()) {
+            logger.error("organizationType[$organizationType] :organizationId[$organizationId]  not project[$projectId] permission ")
+            throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ORG_NOT_PROJECT)))
+        }
+        if (projectList.isEmpty()) {
+            logger.error("organizationType[$organizationType] :organizationId[$organizationId]  not project[$projectId] permission ")
+            throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ORG_NOT_PROJECT)))
+        }
+        var queryProject: ProjectVO? = null
+        projectList.forEach { project ->
+            if (project.projectCode == projectId) {
+                queryProject = project
+                return@forEach
+            }
+        }
+        var roles = mutableListOf<BKAuthProjectRolesResources>()
+        if (queryProject != null) {
+            roles = bkAuthProjectApi.getProjectRoles(
+                bsPipelineAuthServiceCode,
+                queryProject!!.englishName,
+                queryProject!!.projectId
+            ).toMutableList()
+        }
+        return roles
+    }
+
+    fun createPipelinePermissionByApp(
+        organizationType: String,
+        organizationId: Long,
+        userId: String,
+        projectId: String,
+        permission: String,
+        resourceType: String,
+        resourceTypeCode: String
+    ): Boolean {
+        logger.info("[createPipelinePermissionByApp] organizationType[$organizationType], organizationId[$organizationId] userId[$userId] projectCode[$projectId], permission[$permission], resourceType[$resourceType],resourceTypeCode[$resourceTypeCode]")
+        val projectList = getProjectListByOrg(userId, organizationType, organizationId)
+        if (projectList.isEmpty()) {
+            logger.error("organizationType[$organizationType] :organizationId[$organizationId]  not project[$projectId] permission ")
+            throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ORG_NOT_PROJECT)))
+        }
+        var isCreate = false
+        projectList.forEach { project ->
+            if (project.projectCode == projectId) {
+                isCreate = true
+                return@forEach
+            }
+        }
+        if (!isCreate) {
+            throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.USER_NOT_PROJECT_USER)))
+        }
+        val createUserList = userId.split(",")
+
+        createUserList?.forEach {
+            if (!bkAuthProjectApi.isProjectUser(it, bsPipelineAuthServiceCode, projectId, null)) {
+                logger.error("createPipelinePermission userId is not project user,userId[$it] projectId[$projectId]")
+                throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.USER_NOT_PROJECT_USER)))
+            }
+        }
+
+        // TODO:此处bsPipelineAuthServiceCode 也需写成配置化
+        return projectIamV0Service.createPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = permission,
+            resourceType = resourceType,
+            authServiceCode = bsPipelineAuthServiceCode,
+            resourceTypeCode = resourceTypeCode,
+            userList = createUserList
+        )
+    }
+
+    private fun getProjectListByOrg(
+        userId: String,
+        organizationType: String,
+        organizationId: Long
+    ): List<ProjectVO> {
+        var bgId: Long? = null
+        var deptId: Long? = null
+        var centerId: Long? = null
+        when (organizationType) {
+            AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_BG -> bgId = organizationId
+            AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_DEPARTMENT -> deptId = organizationId
+            AUTH_HEADER_DEVOPS_ORGANIZATION_TYPE_CENTER -> centerId = organizationId
+            else -> {
+                throw OperationException((MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.ORG_TYPE_ERROR)))
+            }
+        }
+        return getProjectByGroupId(userId, bgId, deptId, centerId)
     }
 
     companion object {
