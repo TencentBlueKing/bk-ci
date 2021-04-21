@@ -43,7 +43,6 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
-import com.tencent.devops.dispatch.api.ServiceJobQuotaBusinessResource
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.BuildingHeartBeatUtils
@@ -69,7 +68,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
-import java.util.concurrent.Executors
 import javax.ws.rs.NotFoundException
 import kotlin.math.min
 
@@ -169,16 +167,6 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                         vmSeqId = vmSeqId,
                         buildStatus = BuildStatus.SUCCEED
                     )
-                    // 此逻辑并不重要，异步化处理即可
-                    executor.submit {
-                        // 告诉dispatch agent启动了，为JOB计时服务
-                        try {
-                            client.get(ServiceJobQuotaBusinessResource::class)
-                                .addRunningAgent(projectId = buildInfo.projectId, buildId = buildId, vmSeqId = vmSeqId)
-                        } catch (ignored: Throwable) {
-                            LOG.warn("$buildId|Agent|j($vmSeqId)|Add job quota failed.", ignored)
-                        }
-                    }
 
                     return BuildVariables(
                         buildId = buildId,
@@ -627,6 +615,5 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
 
     companion object {
         private val LOG = LoggerFactory.getLogger(PipelineVMBuildService::class.java)
-        private val executor = Executors.newSingleThreadExecutor()
     }
 }
