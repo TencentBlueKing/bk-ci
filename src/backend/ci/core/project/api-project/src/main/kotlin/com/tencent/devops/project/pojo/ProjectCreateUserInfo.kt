@@ -32,7 +32,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel
-data class ProjectCreateUserDTO(
+data class ProjectCreateUserInfo(
     @ApiModelProperty("操作用户")
     val createUserId: String,
     @ApiModelProperty("角色名称")

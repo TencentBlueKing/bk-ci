@@ -32,7 +32,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwProjectResourceV3
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.pojo.ProjectCreateInfo
-import com.tencent.devops.project.pojo.ProjectCreateUserDTO
+import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
@@ -133,7 +133,7 @@ class ApigwProjectResourceV3Impl @Autowired constructor(private val client: Clie
         appCode: String?,
         apigwType: String?,
         projectId: String,
-        createInfo: ProjectCreateUserDTO
+        createInfo: ProjectCreateUserInfo
     ): Result<Boolean?> {
         logger.info("createProjectUser v3 $projectId| $createInfo")
         return client.get(ServiceProjectResource::class).createProjectUser(
