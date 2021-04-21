@@ -99,8 +99,13 @@ class TxV3AuthAutoConfiguration {
 
     @Bean
     @Primary
-    fun bsAuthTokenApi(bkAuthProperties: BkAuthProperties, objectMapper: ObjectMapper, redisOperation: RedisOperation) =
-        BSAuthTokenApi(bkAuthProperties, objectMapper, redisOperation)
+    fun bsAuthProjectApi(
+        bkAuthProperties: BkAuthProperties,
+        objectMapper: ObjectMapper,
+        bsAuthTokenApi: BSAuthTokenApi,
+        bsCCProjectApi: BSCCProjectApi
+    ) =
+        BSAuthProjectApi(bkAuthProperties, objectMapper, bsAuthTokenApi, bsCCProjectApi)
 
     @Bean
     @Primary
@@ -123,13 +128,9 @@ class TxV3AuthAutoConfiguration {
 
     @Bean
     @Primary
-    fun bsAuthProjectApi(
-        bkAuthProperties: BkAuthProperties,
-        objectMapper: ObjectMapper,
-        bsAuthTokenApi: BSAuthTokenApi,
-        bsCCProjectApi: BSCCProjectApi
-    ) =
-        BSAuthProjectApi(bkAuthProperties, objectMapper, bsAuthTokenApi, bsCCProjectApi)
+    fun bsAuthTokenApi(bkAuthProperties: BkAuthProperties, objectMapper: ObjectMapper, redisOperation: RedisOperation) =
+        BSAuthTokenApi(bkAuthProperties, objectMapper, redisOperation)
+
 
     @Bean
     fun jmxAuthApi(mBeanExporter: MBeanExporter) = JmxAuthApi(mBeanExporter)
