@@ -897,7 +897,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         dataMap: MutableMap<String, Any>
     ): MarketBuildLessAtomElement {
         val marketBuildLessAtomElement = MarketBuildLessAtomElement(
-            name = toAtomInfo.name,
+            name = element.name,
             id = element.id,
             status = element.status,
             atomCode = toAtomInfo.atomCode,
@@ -910,17 +910,17 @@ class PipelineAtomReplaceCronService @Autowired constructor(
 
     private fun setElementBaseInfo(
         element: Element,
-        dateElement: Element
+        dataElement: Element
     ) {
-        element.executeCount = dateElement.executeCount
-        element.canRetry = dateElement.canRetry
-        element.elapsed = dateElement.elapsed
-        element.startEpoch = dateElement.startEpoch
-        element.templateModify = dateElement.templateModify
-        element.additionalOptions = dateElement.additionalOptions
-        element.errorType = dateElement.errorType
-        element.errorCode = dateElement.errorCode
-        element.errorMsg = dateElement.errorMsg
+        element.executeCount = dataElement.executeCount
+        element.canRetry = dataElement.canRetry
+        element.elapsed = dataElement.elapsed
+        element.startEpoch = dataElement.startEpoch
+        element.templateModify = dataElement.templateModify
+        element.additionalOptions = dataElement.additionalOptions
+        element.errorType = dataElement.errorType
+        element.errorCode = dataElement.errorCode
+        element.errorMsg = dataElement.errorMsg
     }
 
     private fun generateMarketBuildAtomElement(
@@ -930,7 +930,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         dataMap: MutableMap<String, Any>
     ): MarketBuildAtomElement {
         val marketBuildAtomElement = MarketBuildAtomElement(
-            name = toAtomInfo.name,
+            name = element.name,
             id = element.id,
             status = element.status,
             atomCode = toAtomInfo.atomCode,
