@@ -135,7 +135,7 @@
                 ]).then(([atomDetail, atomStatic, userAppInfo, yaml]) => {
                     const detail = atomDetail || {}
                     detail.detailId = atomDetail.atomId
-                    detail.downloads = atomStatic.downloads || 0
+                    detail.recentExecuteNum = atomStatic.recentExecuteNum || 0
                     detail.approveStatus = (userAppInfo || {}).approveStatus
                     detail.codeSection = yaml
                     this.setDetail(detail)
