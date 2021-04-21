@@ -122,6 +122,9 @@
                 max-height: calc(100% - 43px);
                 overflow-y: auto;
             }
+            .cell {
+                overflow: hidden;
+            }
         }
     }
 </style>

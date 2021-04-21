@@ -144,6 +144,7 @@
         .bk-table-body-wrapper {
             max-height: calc(100% - 43px);
             overflow-y: auto;
+            overflow-x: hidden;
         }
     }
 </style>
