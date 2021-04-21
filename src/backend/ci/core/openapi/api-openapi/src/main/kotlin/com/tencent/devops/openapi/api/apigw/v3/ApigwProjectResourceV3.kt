@@ -173,7 +173,7 @@ interface ApigwProjectResourceV3 {
         @ApiParam(value = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value= "projectId", required = true)
+        @ApiParam(value = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("添加信息", required = true)
