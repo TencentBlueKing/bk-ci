@@ -120,7 +120,7 @@ import javax.ws.rs.core.StreamingOutput
  */
 @Service("newPipelineService")
 class TXPipelineService @Autowired constructor(
-    private val bkAuthPermissionApi: AuthPermissionApi,
+    private val bsAuthPermissionApi: AuthPermissionApi,
     private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineGroupService: PipelineGroupService,
@@ -157,7 +157,7 @@ class TXPipelineService @Autowired constructor(
         val watch = StopWatch()
         watch.start("perm_r_perm")
         val authPipelines = if (authPipelineIds.isEmpty()) {
-            bkAuthPermissionApi.getUserResourceByPermission(
+            bsAuthPermissionApi.getUserResourceByPermission(
                 userId, bsPipelineAuthServiceCode,
                 AuthResourceType.PIPELINE_DEFAULT, projectId, AuthPermission.LIST,
                 null
