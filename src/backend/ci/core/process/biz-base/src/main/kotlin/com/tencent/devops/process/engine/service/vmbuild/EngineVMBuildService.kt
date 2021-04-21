@@ -270,31 +270,28 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         }
 
         val allTasks = pipelineRuntimeService.listContainerBuildTasks(buildId, vmSeqId)
-        val first = allTasks.firstOrNull { it.status.isReadyToRun() || it.status.isRunning() }
-        if (first == null) {
+        val task = allTasks.firstOrNull { it.status.isReadyToRun() || it.status.isRunning() }
+        if (task == null) {
             LOG.info("ENGINE|$buildId|Agent|CLAIM_TASK_END|j($vmSeqId)|queue=0")
             return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
         }
-        val allVariable = buildVariableService.getAllVariable(buildId)
-        return claim(first, buildId, first.starter, vmSeqId, allVariable)
+        return claim(task = task, buildId = buildId, userId = task.starter, vmSeqId = vmSeqId)
     }
 
-    private fun claim(
-        task: PipelineBuildTask,
-        buildId: String,
-        userId: String,
-        vmSeqId: String,
-        allVariable: Map<String, String>
-    ): BuildTask {
-        LOG.info("ENGINE|$buildId|Agent|CLAIM_TASK_ING|j($vmSeqId)|userId=$userId|[${task.taskId}-${task.taskName}]")
+    private fun claim(task: PipelineBuildTask, buildId: String, userId: String, vmSeqId: String): BuildTask {
+        LOG.info("ENGINE|$buildId|Agent|CLAIM_TASK_ING|j($vmSeqId)|[${task.taskId}-${task.taskName}]")
         return when {
-            task.taskId == VMUtils.genEndPointTaskId(task.taskSeq) -> { // 全部完成了
-                pipelineRuntimeService.claimBuildTask(buildId, task, userId) // 刷新一下这个结束的任务节点时间
-                BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
+            task.status == BuildStatus.QUEUE -> { // 初始化状态，表明任务还未准备好
+                LOG.info("ENGINE|$buildId|taskId=${task.taskId}|name=${task.taskName}|NOT_READY, WAIT!")
+                BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT)
             }
             task.taskAtom.isNotBlank() -> { // 排除非构建机的插件任务 继续等待直到它完成
                 LOG.info("ENGINE|$buildId|taskId=${task.taskId}|taskAtom=${task.taskAtom}|NOT VM TASK, SKIP!")
                 BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT)
+            }
+            task.taskId == VMUtils.genEndPointTaskId(task.taskSeq) -> { // 全部完成了
+                pipelineRuntimeService.claimBuildTask(buildId, task, userId) // 刷新一下这个结束的任务节点时间
+                BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
             }
             pipelineTaskService.isNeedPause(taskId = task.taskId, buildId = task.buildId, taskRecord = task) -> {
                 // 如果插件配置了前置暂停, 暂停期间关闭当前构建机，节约资源。
@@ -303,6 +300,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
             }
             else -> {
+                val allVariable = buildVariableService.getAllVariable(buildId)
                 // 构造扩展变量
                 val extMap = buildExtService.buildExt(task)
                 val buildVariable = mutableMapOf(
