@@ -25,40 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo
+package com.tencent.devops.environment.pojo
 
-import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("流水线模型-构建任务")
-data class BuildTask(
-    @ApiModelProperty("构建ID", required = true)
-    val buildId: String,
-    @ApiModelProperty("构建环境ID", required = true)
-    val vmSeqId: String,
-    @ApiModelProperty("任务状态", required = true)
-    val status: BuildTaskStatus,
-    @ApiModelProperty("任务ID", required = true)
-    val taskId: String? = null,
-    @ApiModelProperty("插件ID", required = true)
-    val elementId: String? = null,
-    @ApiModelProperty("插件名字", required = true)
-    val elementName: String? = null,
-    @ApiModelProperty("任务类型", required = false)
-    val type: String? = null,
-    @ApiModelProperty("任务参数", required = false)
-    val params: Map<String, String>? = null,
-    @ApiModelProperty("环境参数", required = false)
-    val buildVariable: Map<String, String>? = null,
-    @ApiModelProperty("容器类型", required = false)
-    val containerType: String? = null
-) {
-
-    /**
-     * 1、防止打印日志过大对象，影响IO
-     * 2、防止敏感信息打印到日志
-     */
-    override fun toString() = "buildId=$buildId|vmSeqId=$vmSeqId|status=$status|taskId=$taskId|name=$elementName" +
-        "elementId=$elementId|type=$type|paramSize=${params?.size}|buildVarSize=${buildVariable?.size}"
-}
+@ApiModel("agent流水线引用请求")
+data class AgentPipelineRefRequest(
+    @ApiModelProperty("action", required = true)
+    val action: String,
+    @ApiModelProperty("pipelineId", required = true)
+    val pipelineId: String,
+    @ApiModelProperty("PipelineId", required = true)
+    val pipelineRefInfos: List<AgentPipelineRefInfo>
+)

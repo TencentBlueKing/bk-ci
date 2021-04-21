@@ -484,6 +484,7 @@
         "paramsInvalidMsg": "流水线执行参数出错"
     },
     "details": {
+        "pipelineVersionDiffTips": "流水线编排版本号已发生变化",
         "executeDetail": "执行详情",
         "partView": "查看构件",
         "codeRecords": "代码变更记录",

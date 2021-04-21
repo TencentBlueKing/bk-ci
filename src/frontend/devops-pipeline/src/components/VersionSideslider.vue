@@ -74,7 +74,7 @@
             latestPipelineVersionInfo () {
                 if (!this.getPipelineList.length) return
                 const latestPipeline = this.getPipelineList.find(v => v.pipelineId === this.pipelineId)
-                return `${this.$t('version')} ${latestPipeline.pipelineVersion} ${this.$t('save') + this.$t('at')} ${convertTime(latestPipeline.deploymentTime)}`
+                return latestPipeline ? `${this.$t('version')} ${latestPipeline.pipelineVersion} ${this.$t('save') + this.$t('at')} ${convertTime(latestPipeline.deploymentTime)}` : this.$t('pipelinesEdit')
             }
         },
         methods: {
