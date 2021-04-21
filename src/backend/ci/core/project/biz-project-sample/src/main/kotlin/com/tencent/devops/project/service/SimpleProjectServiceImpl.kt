@@ -163,7 +163,7 @@ class SimpleProjectServiceImpl @Autowired constructor(
         )
     }
 
-    override fun createProjectUser(createUser: String, createInfo: ProjectCreateUserDTO): Boolean {
+    override fun createProjectUser(projectId: String, createInfo: ProjectCreateUserDTO): Boolean {
         return true
     }
 
