@@ -146,5 +146,11 @@
             overflow-y: auto;
             overflow-x: hidden;
         }
+        .cell {
+            overflow: hidden;
+        }
+        .bk-table-header, .bk-table-body {
+            width: auto !important;
+        }
     }
 </style>
