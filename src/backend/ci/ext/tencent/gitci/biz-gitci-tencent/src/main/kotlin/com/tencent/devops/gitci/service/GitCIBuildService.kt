@@ -206,29 +206,7 @@ class GitCIBuildService @Autowired constructor(
             )
             gitPipelineResourceDao.updatePipelineBuildInfo(dslContext, pipeline, buildId)
             gitRequestEventBuildDao.update(dslContext, gitBuildId, pipeline.pipelineId, buildId)
-            // 锁定mr构建提交，人工触发时不推送构建消息
-            if (event.objectKind == OBJECT_KIND_MERGE_REQUEST) {
-                scmClient.pushCommitCheckWithBlock(
-                    commitId = event.commitId,
-                    mergeRequestId = event.mergeRequestId ?: 0L,
-                    userId = event.userId,
-                    block = true,
-                    state = GitCICommitCheckState.PENDING,
-                    context = "${pipeline.displayName}(${pipeline.filePath})",
-                    gitProjectConf = gitProjectConf
-                )
-            } else if (event.objectKind != OBJECT_KIND_MANUAL) {
-                scmClient.pushCommitCheck(
-                    commitId = event.commitId,
-                    description = event.description ?: "",
-                    mergeRequestId = event.mergeRequestId ?: 0L,
-                    buildId = buildId,
-                    userId = event.userId,
-                    status = GitCICommitCheckState.PENDING,
-                    context = "${pipeline.displayName}(${pipeline.filePath})",
-                    gitProjectConf = gitProjectConf
-                )
-            }
+            addCommitCheck(buildId, pipeline, event, gitProjectConf)
             return BuildId(buildId)
         } catch (e: Exception) {
             logger.error(
@@ -252,19 +230,56 @@ class GitCIBuildService @Autowired constructor(
                 gitRequestEventBuildDao.removeBuild(dslContext, gitBuildId)
             }
             // 构建出异常时解除锁定
-            if (event.objectKind == OBJECT_KIND_MERGE_REQUEST) {
-                scmClient.pushCommitCheckWithBlock(
-                    commitId = event.commitId,
-                    mergeRequestId = event.mergeRequestId ?: 0L,
-                    userId = event.userId,
-                    block = false,
-                    state = GitCICommitCheckState.FAILURE,
-                    context = "${pipeline.pipelineId}($gitBuildId)",
-                    gitProjectConf = gitProjectConf
-                )
-            }
+            if (event.objectKind == OBJECT_KIND_MERGE_REQUEST) unblockCommitCheck(pipeline, event, gitProjectConf)
         }
         return null
+    }
+
+    private fun addCommitCheck(
+        buildId: String,
+        pipeline: GitProjectPipeline,
+        event: GitRequestEvent,
+        gitProjectConf: GitRepositoryConf
+    ) {
+        // 锁定mr构建提交，人工触发时不推送构建消息
+        if (event.objectKind == OBJECT_KIND_MERGE_REQUEST) {
+            scmClient.pushCommitCheckWithBlock(
+                commitId = event.commitId,
+                mergeRequestId = event.mergeRequestId ?: 0L,
+                userId = event.userId,
+                block = true,
+                state = GitCICommitCheckState.PENDING,
+                context = "${pipeline.displayName}(${pipeline.filePath})",
+                gitProjectConf = gitProjectConf
+            )
+        } else if (event.objectKind != OBJECT_KIND_MANUAL) {
+            scmClient.pushCommitCheck(
+                commitId = event.commitId,
+                description = event.description ?: "",
+                mergeRequestId = event.mergeRequestId ?: 0L,
+                buildId = buildId,
+                userId = event.userId,
+                status = GitCICommitCheckState.PENDING,
+                context = "${pipeline.displayName}(${pipeline.filePath})",
+                gitProjectConf = gitProjectConf
+            )
+        }
+    }
+
+    private fun unblockCommitCheck(
+        pipeline: GitProjectPipeline,
+        event: GitRequestEvent,
+        gitProjectConf: GitRepositoryConf
+    ) {
+        scmClient.pushCommitCheckWithBlock(
+            commitId = event.commitId,
+            mergeRequestId = event.mergeRequestId ?: 0L,
+            userId = event.userId,
+            block = false,
+            state = GitCICommitCheckState.FAILURE,
+            context = "${pipeline.displayName}(${pipeline.filePath})",
+            gitProjectConf = gitProjectConf
+        )
     }
 
     private fun deletePipeline(

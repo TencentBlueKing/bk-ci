@@ -104,19 +104,21 @@ class OpenRtxCustomService constructor(
 //        userName = wechatWorkService.getUserNameByUserId(userId)
 
 //        // 处理msgid,个人会话，群会发并@，click事件
-//        if ((receiverType == ReceiverType.group && mentionType != "0") || receiverType == ReceiverType.single || (callbackElement.msgType == MsgType.Event && EventType.valueOf(
-//                (callbackElement.msgElement.elementIterator("Event").next() as Element).text
-//            ) == EventType.click)
-//        ) {
-//            val msgId = (callbackElement.msgElement.elementIterator("MsgId").next() as Element).text
-//            if (wechatWorkMessageDAO.exist(dslContext, msgId)) {
-//                // 已存在则直接返回
-//                return true
-//            } else {
-//                // 还没有存在则插入并往下走
-//                wechatWorkMessageDAO.insertMassageId(dslContext, msgId)
-//            }
-//        }
+        if ((receiverType == ReceiverType.group && mentionType != "0") ||
+            receiverType == ReceiverType.single ||
+            (callbackElement.msgType == MsgType.Event && EventType.valueOf(
+                (callbackElement.msgElement.elementIterator("Event").next() as Element).text
+            ) == EventType.click)
+        ) {
+            val msgId = (callbackElement.msgElement.elementIterator("MsgId").next() as Element).text
+            if (wechatWorkMessageDAO.exist(dslContext, msgId)) {
+                // 已存在则直接返回
+                return true
+            } else {
+                // 还没有存在则插入并往下走
+                wechatWorkMessageDAO.insertMassageId(dslContext, msgId)
+            }
+        }
 
         // 从这里开始统一处理消息
         when (callbackElement.msgType) {
