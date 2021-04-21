@@ -59,9 +59,9 @@ import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.tof.Response
 import com.tencent.devops.project.pojo.user.UserDeptDetail
-import com.tencent.devops.project.service.ProjectLocalService
 import com.tencent.devops.project.service.ProjectPaasCCService
 import com.tencent.devops.project.service.ProjectPermissionService
+import com.tencent.devops.project.service.iam.ProjectIamV0Service
 import com.tencent.devops.project.service.s3.S3Service
 import com.tencent.devops.project.service.tof.TOFService
 import com.tencent.devops.project.util.ImageUtil
@@ -94,7 +94,8 @@ class TxProjectServiceImpl @Autowired constructor(
     projectDispatcher: ProjectDispatcher,
     private val authPermissionApi: AuthPermissionApi,
     private val projectAuthServiceCode: ProjectAuthServiceCode,
-    private val managerService: ManagerService
+    private val managerService: ManagerService,
+    private val projectIamV0Service: ProjectIamV0Service
 ) : AbsProjectServiceImpl(projectPermissionService, dslContext, projectDao, projectJmxApi, redisOperation, gray, client, projectDispatcher, authPermissionApi, projectAuthServiceCode) {
 
     private var authUrl: String = "${bkAuthProperties.url}/projects"
@@ -281,6 +282,13 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     override fun createProjectUser(createUser: String, createInfo: ProjectCreateUserDTO): Boolean {
+        projectIamV0Service.createUser2Project(
+            createUser = createUser,
+            projectCode = createInfo.projectId,
+            roleName = createInfo.roleName,
+            roleId = createInfo.roleId,
+            userIds = createInfo.userIds!!
+        )
         return true
     }
 
