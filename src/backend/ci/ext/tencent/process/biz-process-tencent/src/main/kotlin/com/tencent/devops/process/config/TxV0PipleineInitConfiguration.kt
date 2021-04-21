@@ -29,14 +29,13 @@ package com.tencent.devops.process.config
 
 
 import com.tencent.devops.auth.service.ManagerService
-import com.tencent.devops.common.auth.api.AuthPermissionApi
-import com.tencent.devops.common.auth.api.AuthProjectApi
-import com.tencent.devops.common.auth.api.AuthResourceApi
+import com.tencent.devops.common.auth.api.BSAuthPermissionApi
+import com.tencent.devops.common.auth.api.BSAuthProjectApi
+import com.tencent.devops.common.auth.api.BSAuthResourceApi
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.permission.PipelinePermissionServiceImpl
-import com.tencent.devops.process.permission.V3PipelinePermissionServiceImpl
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -53,17 +52,17 @@ class TxV0PipleineInitConfiguration {
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
     fun projectPermissionService(
-        authProjectApi: AuthProjectApi,
-        authResourceApi: AuthResourceApi,
-        authPermissionApi: AuthPermissionApi,
+        bkAuthProjectApi: BSAuthProjectApi,
+        bkAuthResourceApi: BSAuthResourceApi,
+        bkAuthPermissionApi: BSAuthPermissionApi,
         pipelineAuthServiceCode: PipelineAuthServiceCode,
         managerService: ManagerService,
         pipelineDao: PipelineInfoDao,
         dslContext: DSLContext
     ): PipelinePermissionService = PipelinePermissionServiceImpl(
-        authProjectApi = authProjectApi,
-        authResourceApi = authResourceApi,
-        authPermissionApi = authPermissionApi,
+        authProjectApi = bkAuthProjectApi,
+        authResourceApi = bkAuthResourceApi,
+        authPermissionApi = bkAuthPermissionApi,
         pipelineAuthServiceCode = pipelineAuthServiceCode,
         managerService = managerService,
         pipelineDao = pipelineDao,
