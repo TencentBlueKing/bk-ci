@@ -23,17 +23,12 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.store.service.template
+package com.tencent.devops.auth.entity
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.VisibleApproveReq
-
-interface TxOpTemplateService {
-
-    /**
-     * 审核可见范围
-     */
-    fun approveVisibleDept(userId: String, storeCode: String, visibleApproveReq: VisibleApproveReq): Result<Boolean>
+enum class StrategyChangeType {
+    UPDATE,
+    DELETE
 }

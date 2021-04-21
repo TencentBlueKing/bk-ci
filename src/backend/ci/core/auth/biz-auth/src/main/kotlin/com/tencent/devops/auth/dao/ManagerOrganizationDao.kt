@@ -124,4 +124,10 @@ class ManagerOrganizationDao {
             return dslContext.selectFrom(this).where(IS_DELETE.eq(0)).count()
         }
     }
+
+    fun countByOrg(dslContext: DSLContext, orgId: Int): Int {
+        with(TAuthManager.T_AUTH_MANAGER) {
+            return dslContext.selectFrom(this).where(IS_DELETE.eq(0).and(ORGANIZATION_ID.eq(orgId))).count()
+        }
+    }
 }

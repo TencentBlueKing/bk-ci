@@ -31,8 +31,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserBuildParametersResource
-import com.tencent.devops.process.utils.GITHUB_PR_NUMBER
-import com.tencent.devops.process.utils.GIT_MR_NUMBER
 import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_ELEMENT_ID
@@ -40,41 +38,32 @@ import com.tencent.devops.process.utils.PIPELINE_ID
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
-import com.tencent.devops.process.utils.PIPELINE_TURBO_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_VMSEQ_ID
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_BRANCH
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_REVISION
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_SOURCE_BRANCH
-import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_BRANCH
 import com.tencent.devops.process.utils.PROJECT_NAME
-import com.tencent.devops.process.utils.REPORT_DYNAMIC_ROOT_URL
 import com.tencent.devops.store.pojo.app.BuildEnvParameters
 
+@Suppress("UNUSED")
 @RestResource
 class UserBuildParametersResourceImpl : UserBuildParametersResource {
 
-    override fun getCommonBuildParams(userId: String) =
-        Result(
-            listOf(
-                BuildEnvParameters(PIPELINE_START_USER_NAME, "当前构建的启动人"),
-                BuildEnvParameters(PIPELINE_START_TYPE, "当前构建的启动方式，从${StartType.values().joinToString("/") {
-                    it.name
-                }}中取值"),
-                BuildEnvParameters(PIPELINE_BUILD_NUM, "当前构建的唯一标示ID，从1开始自增"),
-                BuildEnvParameters(PIPELINE_WEBHOOK_REVISION, "GIT/GITLIB代码自动触发原子的代码版本号"),
-                BuildEnvParameters(PIPELINE_WEBHOOK_BRANCH, "GIT/GITLIB代码自动触发原子的代码分支号"),
-                BuildEnvParameters(PIPELINE_WEBHOOK_SOURCE_BRANCH, "GIT/GITLIB代码自动触发原子的代码源分支号"),
-                BuildEnvParameters(PIPELINE_WEBHOOK_TARGET_BRANCH, "GIT/GITLIB代码自动触发原子的代码目标分支号"),
-                BuildEnvParameters(GIT_MR_NUMBER, "Git MR编号"),
-                BuildEnvParameters(GITHUB_PR_NUMBER, "GitHub PR编号"),
-                BuildEnvParameters(PROJECT_NAME, "项目英文名"),
-                BuildEnvParameters(PIPELINE_ID, "流水线ID"),
-                BuildEnvParameters(PIPELINE_NAME, "流水线名称"),
-                BuildEnvParameters(PIPELINE_BUILD_ID, "当前构建ID"),
-                BuildEnvParameters(PIPELINE_VMSEQ_ID, "流水线JOB ID"),
-                BuildEnvParameters(PIPELINE_ELEMENT_ID, "流水线Task ID"),
-                BuildEnvParameters(PIPELINE_TURBO_TASK_ID, "编译加速任务ID"),
-                BuildEnvParameters(REPORT_DYNAMIC_ROOT_URL, "自定义产出物报告的Web根路径")
-            )
+    private val result = Result(
+        data = listOf(
+            BuildEnvParameters(name = PIPELINE_START_USER_NAME, desc = "当前构建的启动人"),
+            BuildEnvParameters(
+                name = PIPELINE_START_TYPE,
+                desc = "当前构建的启动方式，从${StartType.values().joinToString("/") { it.name }}中取值"
+            ),
+            BuildEnvParameters(name = PIPELINE_BUILD_NUM, desc = "当前构建的唯一标示ID，从1开始自增"),
+            BuildEnvParameters(name = PROJECT_NAME, desc = "项目英文名"),
+            BuildEnvParameters(name = PIPELINE_ID, desc = "流水线ID"),
+            BuildEnvParameters(name = PIPELINE_NAME, desc = "流水线名称"),
+            BuildEnvParameters(name = PIPELINE_BUILD_ID, desc = "当前构建ID"),
+            BuildEnvParameters(name = PIPELINE_VMSEQ_ID, desc = "流水线JOB ID"),
+            BuildEnvParameters(name = PIPELINE_ELEMENT_ID, desc = "流水线Task ID")
         )
+    )
+
+    override fun getCommonBuildParams(userId: String): Result<List<BuildEnvParameters>> {
+        return result
+    }
 }

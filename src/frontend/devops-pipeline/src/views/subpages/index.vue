@@ -15,11 +15,12 @@
                                     <i class="devops-icon icon-txt" :title="$t('history.completedLog')" @click="showLog"></i>
                                 </template>
                             </div>
+                            <version-sideslider v-else-if="$route.name === 'pipelinesEdit' && index === breadCrumbs.length - 1"></version-sideslider>
                         </bread-crumb-item>
                     </template>
                     <i v-else class="devops-icon icon-circle-2-1 spin-icon" />
                 </bread-crumb>
-                <version-sideslider v-if="$route.name === 'pipelinesEdit'"></version-sideslider>
+
             </div>
             <template v-if="$route.name === 'pipelinesPreview'" slot="right">
                 <router-link :to="{ name: 'pipelinesEdit' }"><bk-button>{{ $t('edit') }}</bk-button></router-link>
@@ -244,7 +245,7 @@
                     selectedValue: this.$route.params.type && this.tabMap[this.$route.params.type] ? this.tabMap[this.$route.params.type] : this.$t(this.$route.name)
                 }]
             }
-            
+
         },
         watch: {
             pipelineId (newVal) {

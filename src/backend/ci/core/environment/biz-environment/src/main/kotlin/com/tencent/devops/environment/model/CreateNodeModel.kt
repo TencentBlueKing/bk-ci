@@ -25,24 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.atom.impl
+package com.tencent.devops.environment.model
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.StoreMemberReq
-import com.tencent.devops.store.service.common.TxStoreGitResitoryService
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
-@Service
-class TxAtomMemberServiceImpl @Autowired constructor(
-    private val storeGitResitoryService: TxStoreGitResitoryService
-) : AtomMemberServiceImpl() {
-
-    override fun addRepoMember(storeMemberReq: StoreMemberReq, userId: String, repositoryHashId: String): Result<Boolean> {
-        return storeGitResitoryService.addRepoMember(storeMemberReq, userId, repositoryHashId)
-    }
-
-    override fun deleteRepoMember(userId: String, username: String, repositoryHashId: String): Result<Boolean> {
-        return storeGitResitoryService.deleteRepoMember(userId, username, repositoryHashId)
-    }
-}
+data class CreateNodeModel(
+    var nodeStringId: String? = "",
+    var projectId: String,
+    var nodeIp: String = "",
+    var nodeName: String = "",
+    var nodeStatus: String = "",
+    var nodeType: String = "",
+    var nodeClusterId: String? = null,
+    var nodeNamespace: String? = null,
+    var createdUser: String = "",
+    var expireTime: LocalDateTime? = null,
+    var osName: String? = null,
+    var operator: String? = null,
+    var bakOperator: String? = null,
+    var agentStatus: Boolean = false,
+    var displayName: String = "",
+    var image: String? = "",
+    var taskId: Long? = null,
+    var pipelineRefCount: Int = 0,
+    var lastBuildTime: LocalDateTime? = null
+)
