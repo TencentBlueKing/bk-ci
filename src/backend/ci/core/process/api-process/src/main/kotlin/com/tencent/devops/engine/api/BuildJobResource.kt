@@ -49,15 +49,15 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["ENGINE_BUILD"], description = "引擎-构建机请求")
+@Api(tags = ["ENGINE_BUILD_JOB"], description = "引擎-构建机请求|此接口不接受服务间Feign，只接受构建机处请求")
 @Path("/build/worker")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface EngineBuildResource {
+interface BuildJobResource {
     @ApiOperation("构建机器启动成功")
     @PUT
     @Path("/started")
-    fun setStarted(
+    fun jobStarted(
         @ApiParam(value = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
@@ -72,7 +72,7 @@ interface EngineBuildResource {
         retryCount: String
     ): Result<BuildVariables>
 
-    @ApiOperation("构建机请求任务")
+    @ApiOperation("构建机请求获取任务")
     @GET
     @Path("/claim")
     fun claimTask(
@@ -87,7 +87,7 @@ interface EngineBuildResource {
         vmName: String
     ): Result<BuildTask>
 
-    @ApiOperation("构建机完成任务")
+    @ApiOperation("构建机Job完成任务")
     @POST
     @Path("/complete")
     fun completeTask(
@@ -104,10 +104,10 @@ interface EngineBuildResource {
         result: BuildTaskResult
     ): Result<Boolean>
 
-    @ApiOperation("End the seq build")
+    @ApiOperation("结束构建机Job")
     @POST
     @Path("/end")
-    fun endTask(
+    fun jobEnd(
         @ApiParam(value = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
@@ -119,10 +119,10 @@ interface EngineBuildResource {
         vmName: String
     ): Result<Boolean>
 
-    @ApiOperation("timeout & end the seq build")
+    @ApiOperation("Job超时触发")
     @POST
     @Path("/timeout")
-    fun timeoutTheBuild(
+    fun jobTimeout(
         @ApiParam("projectId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
@@ -137,10 +137,10 @@ interface EngineBuildResource {
         vmSeqId: String
     ): Result<Boolean>
 
-    @ApiOperation("Heartbeat")
+    @ApiOperation("Job心跳请求")
     @POST
     @Path("/heartbeat")
-    fun heartbeat(
+    fun jobHeartbeat(
         @ApiParam(value = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,

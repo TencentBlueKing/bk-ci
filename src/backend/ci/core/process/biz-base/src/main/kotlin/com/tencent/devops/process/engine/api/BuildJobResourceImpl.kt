@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.engine.api.EngineBuildResource
+import com.tencent.devops.engine.api.BuildJobResource
 import com.tencent.devops.process.engine.service.vmbuild.EngineVMBuildService
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
@@ -41,11 +41,11 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("UNUSED")
 @RestResource
-class EngineBuildResourceImpl @Autowired constructor(
+class BuildJobResourceImpl @Autowired constructor(
     private val vMBuildService: EngineVMBuildService
-) : EngineBuildResource {
+) : BuildJobResource {
 
-    override fun setStarted(
+    override fun jobStarted(
         buildId: String,
         vmSeqId: String,
         vmName: String,
@@ -76,12 +76,12 @@ class EngineBuildResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun endTask(buildId: String, vmSeqId: String, vmName: String): Result<Boolean> {
+    override fun jobEnd(buildId: String, vmSeqId: String, vmName: String): Result<Boolean> {
         checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
         return Result(vMBuildService.buildEndTask(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
     }
 
-    override fun timeoutTheBuild(
+    override fun jobTimeout(
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -98,7 +98,7 @@ class EngineBuildResourceImpl @Autowired constructor(
         )
     }
 
-    override fun heartbeat(buildId: String, vmSeqId: String, vmName: String): Result<Boolean> {
+    override fun jobHeartbeat(buildId: String, vmSeqId: String, vmName: String): Result<Boolean> {
         checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
         return Result(data = vMBuildService.heartbeat(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
     }
