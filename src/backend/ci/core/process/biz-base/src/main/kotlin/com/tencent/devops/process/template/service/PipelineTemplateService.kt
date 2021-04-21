@@ -34,11 +34,13 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.pojo.PipelineTemplate
 import com.tencent.devops.process.pojo.template.TemplateDetailInfo
+import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.template.dao.PipelineTemplateDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import org.springframework.util.StringUtils
 
 @Suppress("ALL")
 @Service
@@ -100,12 +102,15 @@ class PipelineTemplateService @Autowired constructor(
 
     fun getTemplateDetailInfo(templateCode: String): Result<TemplateDetailInfo?> {
         logger.info("getTemplateDetailInfo templateCode is:$templateCode")
-        val templateRecord = templateDao.getLatestTemplate(dslContext, templateCode)
+        var templateRecord = templateDao.getLatestTemplate(dslContext, templateCode)
+        if (templateRecord.srcTemplateId != null && templateRecord.type == TemplateType.CONSTRAINT.name) {
+            templateRecord = templateDao.getLatestTemplate(dslContext, templateRecord.srcTemplateId)
+        }
         return Result(
             TemplateDetailInfo(
                 templateCode = templateRecord.id,
                 templateName = templateRecord.templateName,
-                templateModel = if (templateRecord.template.isNotEmpty()) JsonUtil.to(
+                templateModel = if (!StringUtils.isEmpty(templateRecord.template)) JsonUtil.to(
                     templateRecord.template,
                     Model::class.java
                 ) else null

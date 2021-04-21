@@ -30,6 +30,7 @@ package com.tencent.devops.misc.cron.process
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.misc.config.MiscBuildDataClearConfig
+import com.tencent.devops.misc.pojo.project.ProjectDataClearConfig
 import com.tencent.devops.misc.service.artifactory.ArtifactoryDataClearService
 import com.tencent.devops.misc.service.dispatch.DispatchDataClearService
 import com.tencent.devops.misc.service.plugin.PluginDataClearService
@@ -41,6 +42,7 @@ import com.tencent.devops.misc.service.quality.QualityDataClearService
 import com.tencent.devops.misc.service.repository.RepositoryDataClearService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 import java.time.LocalDateTime
@@ -68,6 +70,9 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
         private const val PIPELINE_BUILD_HISTORY_DATA_CLEAR_PROJECT_LIST_KEY =
             "pipeline:build:history:data:clear:project:list"
     }
+
+    @Value("\${process.deletedPipelineStoreDays:30}")
+    private val deletedPipelineStoreDays: Long = 30 // 回收站已删除流水线保存天数
 
     @Scheduled(initialDelay = 10000, fixedDelay = 12000)
     fun pipelineBuildHistoryDataClear() {
@@ -122,28 +127,25 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
                 }
                 val projectId = projectInfo.projectId
                 val pipelineIdList = processService.getPipelineIdListByProjectId(projectId)
+                val deletePipelineIdList = if (pipelineIdList.isNullOrEmpty()) {
+                    null
+                } else {
+                    processService.getClearDeletePipelineIdList(
+                        projectId = projectId,
+                        pipelineIdList = pipelineIdList,
+                        gapDays = deletedPipelineStoreDays
+                    )
+                }
                 val projectDataClearConfig = projectDataClearConfigService.getProjectDataClearConfig()
                 pipelineIdList?.forEach { pipelineId ->
-                    // 根据流水线ID依次查询T_PIPELINE_BUILD_HISTORY表中X个月前的构建记录
                     logger.info("pipelineBuildHistoryPastDataClear start..............")
-                    cleanBuildHistoryData(
-                        pipelineId = pipelineId,
-                        projectId = projectId,
-                        isCompletelyDelete = false,
-                        maxStartTime = projectDataClearConfig.maxStartTime
-                    )
-                    // 判断构建记录是否超过系统展示的最大数量，如果超过则需清理超量的数据
-                    val maxPipelineBuildNum = processService.getMaxPipelineBuildNum(projectId, pipelineId)
-                    val maxKeepNum = projectDataClearConfig.maxKeepNum
-                    val maxBuildNum = maxPipelineBuildNum - maxKeepNum
-                    if (maxBuildNum > 0) {
-                        logger.info("pipelineBuildHistoryRecentDataClear start.............")
-                        cleanBuildHistoryData(
-                            pipelineId = pipelineId,
-                            projectId = projectId,
-                            isCompletelyDelete = true,
-                            maxBuildNum = maxBuildNum.toInt()
-                        )
+                    val deleteFlag = deletePipelineIdList?.contains(pipelineId) == true
+                    if (deleteFlag) {
+                        // 清理已删除流水线记录
+                        cleanDeletePipelineData(pipelineId, projectId)
+                    } else {
+                        // 清理正常流水线记录
+                        cleanNormalPipelineData(pipelineId, projectId, projectDataClearConfig)
                     }
                 }
             }
@@ -158,6 +160,44 @@ class PipelineBuildHistoryDataClearJob @Autowired constructor(
         } finally {
             lock.unlock()
         }
+    }
+
+    private fun cleanNormalPipelineData(
+        pipelineId: String,
+        projectId: String,
+        projectDataClearConfig: ProjectDataClearConfig
+    ) {
+        // 根据流水线ID依次查询T_PIPELINE_BUILD_HISTORY表中X个月前的构建记录
+        cleanBuildHistoryData(
+            pipelineId = pipelineId,
+            projectId = projectId,
+            isCompletelyDelete = false,
+            maxStartTime = projectDataClearConfig.maxStartTime
+        )
+        // 判断构建记录是否超过系统展示的最大数量，如果超过则需清理超量的数据
+        val maxPipelineBuildNum = processService.getMaxPipelineBuildNum(projectId, pipelineId)
+        val maxKeepNum = projectDataClearConfig.maxKeepNum
+        val maxBuildNum = maxPipelineBuildNum - maxKeepNum
+        if (maxBuildNum > 0) {
+            logger.info("pipelineBuildHistoryRecentDataClear start.............")
+            cleanBuildHistoryData(
+                pipelineId = pipelineId,
+                projectId = projectId,
+                isCompletelyDelete = true,
+                maxBuildNum = maxBuildNum.toInt()
+            )
+        }
+    }
+
+    private fun cleanDeletePipelineData(pipelineId: String, projectId: String) {
+        // 删除已删除流水线构建记录
+        cleanBuildHistoryData(
+            pipelineId = pipelineId,
+            projectId = projectId,
+            isCompletelyDelete = true
+        )
+        // 删除已删除流水线记录
+        processDataClearService.clearPipelineData(projectId, pipelineId)
     }
 
     private fun cleanBuildHistoryData(

@@ -259,10 +259,15 @@ class TemplateDao {
         }
     }
 
-    fun getSrcTemplateId(dslContext: DSLContext, templateId: String): String? {
+    fun getSrcTemplateId(dslContext: DSLContext, templateId: String, type: String? = null): String? {
         return with(TTemplate.T_TEMPLATE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(ID.eq(templateId))
+            if (type != null) {
+                conditions.add(TYPE.eq(type))
+            }
             dslContext.select(SRC_TEMPLATE_ID).from(this)
-                .where(ID.eq(templateId))
+                .where(conditions)
                 .limit(1)
                 .fetchOne(0, String::class.java)
         }

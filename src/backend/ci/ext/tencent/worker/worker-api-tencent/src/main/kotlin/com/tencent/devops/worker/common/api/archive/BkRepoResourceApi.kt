@@ -115,7 +115,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
                 throw RuntimeException("request failed: ${responseData.message}")
             }
 
-            return responseData.data!!.token
+            return responseData.data!![0].token
         }
     }
 
