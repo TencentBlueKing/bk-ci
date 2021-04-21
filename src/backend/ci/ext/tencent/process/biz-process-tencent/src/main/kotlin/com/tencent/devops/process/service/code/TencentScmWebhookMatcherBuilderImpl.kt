@@ -37,9 +37,11 @@ import com.tencent.devops.process.pojo.code.git.GitEvent
 import com.tencent.devops.process.pojo.code.github.GithubEvent
 import com.tencent.devops.process.pojo.code.svn.SvnCommitEvent
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 
 @Service
+@Primary
 class TencentScmWebhookMatcherBuilderImpl : ScmWebhookMatcherBuilder {
 
     @Value("\${git.includeHost:#{null}}")
