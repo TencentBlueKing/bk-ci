@@ -59,5 +59,11 @@ data class AppExperience(
     @ApiModelProperty("文件大小(byte)", required = true)
     val size: Long,
     @ApiModelProperty("创建时间", required = true)
-    val createDate: Long
+    val createDate: Long,
+    @ApiModelProperty("应用Scheme", required = false)
+    val appScheme: String,
+    @ApiModelProperty("是否过期", required = true)
+    val expired: Boolean,
+    @ApiModelProperty("上次下载的体验ID", required = true)
+    val lastDownloadHashId: String
 )

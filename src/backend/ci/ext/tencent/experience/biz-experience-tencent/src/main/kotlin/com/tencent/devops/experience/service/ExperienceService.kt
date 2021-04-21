@@ -42,6 +42,7 @@ import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_ICON
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_SCHEME
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_NO
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
@@ -362,6 +363,7 @@ class ExperienceService @Autowired constructor(
         val artifactorySha1 = makeSha1(experience.artifactoryType, experience.path)
         val logoUrl = propertyMap[ARCHIVE_PROPS_APP_ICON]!!
         val fileSize = fileDetail.size
+        val scheme = propertyMap[ARCHIVE_PROPS_APP_SCHEME] ?: ""
 
         val experienceId = experienceDao.create(
             dslContext = dslContext,
@@ -390,7 +392,8 @@ class ExperienceService @Autowired constructor(
             category = experience.categoryId ?: ProductCategoryEnum.LIFE.id,
             productOwner = objectMapper.writeValueAsString(experience.productOwner ?: emptyList<String>()),
             logoUrl = logoUrl,
-            size = fileSize
+            size = fileSize,
+            scheme = scheme
         )
 
         // 加上权限
@@ -412,7 +415,8 @@ class ExperienceService @Autowired constructor(
                 experienceId = experienceId,
                 platform = platform,
                 appBundleIdentifier = appBundleIdentifier,
-                logoUrl = logoUrl
+                logoUrl = logoUrl,
+                scheme = scheme
             )
         } else {
             offlinePublicExperience(projectId, platform, appBundleIdentifier)
@@ -443,7 +447,8 @@ class ExperienceService @Autowired constructor(
         experienceId: Long,
         platform: PlatformEnum,
         appBundleIdentifier: String,
-        logoUrl: String
+        logoUrl: String,
+        scheme: String
     ) {
 
         experiencePublicDao.create(
@@ -456,7 +461,8 @@ class ExperienceService @Autowired constructor(
             bundleIdentifier = appBundleIdentifier,
             endDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(expireDate), ZoneId.systemDefault()),
             size = size,
-            logoUrl = logoUrl
+            logoUrl = logoUrl,
+            scheme = scheme
         )
     }
 
@@ -510,7 +516,8 @@ class ExperienceService @Autowired constructor(
                 experienceId = experienceRecord.id,
                 platform = PlatformEnum.valueOf(experienceRecord.platform),
                 appBundleIdentifier = experienceRecord.bundleIdentifier,
-                logoUrl = experienceRecord.logoUrl
+                logoUrl = experienceRecord.logoUrl,
+                scheme = experienceRecord.scheme
             )
         } else {
             experiencePublicDao.updateByRecordId(

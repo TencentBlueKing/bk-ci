@@ -38,4 +38,8 @@ object ConsulContent {
     fun setConsulContent(consulTag: String) {
         consulContent.set(consulTag)
     }
+
+    fun removeConsulContent() {
+        consulContent.remove()
+    }
 }

@@ -135,7 +135,8 @@ class ExperienceDao {
         category: Int,
         productOwner: String,
         logoUrl: String,
-        size: Long
+        size: Long,
+        scheme: String
     ): Long {
         val now = LocalDateTime.now()
         with(TExperience.T_EXPERIENCE) {
@@ -168,7 +169,8 @@ class ExperienceDao {
                 CATEGORY,
                 PRODUCT_OWNER,
                 LOGO_URL,
-                SIZE
+                SIZE,
+                SCHEME
             ).values(
                 projectId,
                 name,
@@ -197,7 +199,8 @@ class ExperienceDao {
                 category,
                 productOwner,
                 logoUrl,
-                size
+                size,
+                scheme
             )
                 .returning(ID)
                 .fetchOne()

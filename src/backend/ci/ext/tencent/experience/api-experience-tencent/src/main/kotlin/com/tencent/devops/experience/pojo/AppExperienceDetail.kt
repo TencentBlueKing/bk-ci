@@ -76,5 +76,9 @@ data class AppExperienceDetail(
     @ApiModelProperty("版本体验BundleIdentifier", required = true)
     val bundleIdentifier: String,
     @ApiModelProperty("体验状态", required = true)
-    val experienceCondition: Int
+    val experienceCondition: Int,
+    @ApiModelProperty("应用Scheme", required = false)
+    val appScheme: String,
+    @ApiModelProperty("上次下载的体验ID", required = true)
+    val lastDownloadHashId: String
 )
