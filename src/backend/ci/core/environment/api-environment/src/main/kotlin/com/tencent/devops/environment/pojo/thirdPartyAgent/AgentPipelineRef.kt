@@ -25,36 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.api.atom
+package com.tencent.devops.environment.pojo.thirdPartyAgent
 
-import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.PUT
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Api(tags = ["OP_PIPELINE_ATOM_STATISTIC"], description = "插件-插件数据统计")
-@Path("/op/pipeline/atom/statistic")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface OpAtomStatisticResource {
-
-    @ApiOperation("同步使用插件流水线数量到汇总数据统计表")
-    @PUT
-    @Path("/pipelineNum/async/update")
-    fun asyncUpdateStorePipelineNum(): Result<Boolean>
-
-    @ApiOperation("同步更新插件每日统计信息")
-    @PUT
-    @Path("/daily/info/async/update")
-    fun asyncUpdateDailyInfo(
-        @ApiParam("同步日期，格式yyyy-MM-dd", required = true)
-        @QueryParam("date")
-        date: String
-    ): Result<Boolean>
-}
+@ApiModel("第三方构建机流水线引用信息")
+data class AgentPipelineRef(
+    @ApiModelProperty("Node ID", required = true)
+    val nodeId: Long? = null,
+    @ApiModelProperty("Node Hash ID", required = true)
+    val nodeHashId: String? = null,
+    @ApiModelProperty("Agent ID", required = true)
+    val agentId: Long? = null,
+    @ApiModelProperty("Agent Hash ID", required = true)
+    val agentHashId: String? = null,
+    @ApiModelProperty("项目ID", required = true)
+    val projectId: String,
+    @ApiModelProperty("流水线ID", required = true)
+    val pipelineId: String,
+    @ApiModelProperty("流水线名称", required = true)
+    val pipelineName: String,
+    @ApiModelProperty("Vm Seq ID", required = true)
+    val vmSeqId: String?,
+    @ApiModelProperty("Job ID", required = true)
+    val jobId: String?,
+    @ApiModelProperty("Job Name", required = true)
+    val jobName: String,
+    @ApiModelProperty("上次构建时间", required = false)
+    val lastBuildTime: String? = ""
+)
