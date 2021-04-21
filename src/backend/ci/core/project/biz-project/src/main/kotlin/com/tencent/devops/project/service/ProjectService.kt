@@ -142,5 +142,5 @@ interface ProjectService {
 
     fun listSecrecyProject(): Set<String>?
 
-    fun createProjectUser(createUser: String, createInfo: ProjectCreateUserDTO): Boolean
+    fun createProjectUser(projectId: String, createInfo: ProjectCreateUserDTO): Boolean
 }

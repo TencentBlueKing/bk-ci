@@ -173,9 +173,9 @@ interface ApigwProjectResourceV3 {
         @ApiParam(value = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
-        @ApiParam(value = "执行用户Id", required = true)
-        @QueryParam("createUserId")
-        createUserId: String,
+        @ApiParam(value= "projectId", required = true)
+        @PathParam("projectId")
+        projectId: String,
         @ApiParam("添加信息", required = true)
         createInfo: ProjectCreateUserDTO
     ): Result<Boolean?>

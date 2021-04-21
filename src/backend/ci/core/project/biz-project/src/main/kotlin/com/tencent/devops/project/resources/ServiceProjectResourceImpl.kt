@@ -148,7 +148,7 @@ class ServiceProjectResourceImpl @Autowired constructor(
         return Result(projectService.listSecrecyProject())
     }
 
-    override fun createProjectUser(createUser: String, createInfo: ProjectCreateUserDTO): Result<Boolean> {
-        return Result(projectService.createProjectUser(createUser, createInfo))
+    override fun createProjectUser(projectId: String, createInfo: ProjectCreateUserDTO): Result<Boolean> {
+        return Result(projectService.createProjectUser(projectId, createInfo))
     }
 }

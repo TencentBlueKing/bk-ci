@@ -132,11 +132,12 @@ class ApigwProjectResourceV3Impl @Autowired constructor(private val client: Clie
     override fun createProjectUser(
         appCode: String?,
         apigwType: String?,
-        createUserId: String,
+        projectId: String,
         createInfo: ProjectCreateUserDTO
     ): Result<Boolean?> {
+        logger.info("createProjectUser v3 $projectId| $createInfo")
         return client.get(ServiceProjectResource::class).createProjectUser(
-            createUser = createUserId,
+            projectId = projectId,
             createInfo = createInfo
         )
     }

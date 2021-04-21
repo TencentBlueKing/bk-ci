@@ -222,11 +222,11 @@ interface ServiceProjectResource {
     fun listSecrecyProject(): Result<Set<String>?>
 
     @POST
-    @Path("/createUserByUser")
+    @Path("/{projectId}/createUser")
     fun createProjectUser(
-        @ApiParam("执行人Id", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        createUser: String,
+        @ApiParam("项目Id", required = true)
+        @PathParam("projectId")
+        projectId: String,
         @ApiParam("添加信息", required = true)
         createInfo: ProjectCreateUserDTO
     ): Result<Boolean>
