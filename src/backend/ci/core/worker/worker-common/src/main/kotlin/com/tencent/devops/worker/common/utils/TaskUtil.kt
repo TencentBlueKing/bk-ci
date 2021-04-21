@@ -61,7 +61,7 @@ object TaskUtil {
     }
 
     fun getTaskId(): String {
-        return taskThreadLocal.get()
+        return taskThreadLocal.get() ?: ""
     }
 
     fun removeTaskId() {
