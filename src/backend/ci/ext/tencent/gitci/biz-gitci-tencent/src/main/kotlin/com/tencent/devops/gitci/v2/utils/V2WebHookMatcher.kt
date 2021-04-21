@@ -29,12 +29,11 @@ package com.tencent.devops.gitci.v2.utils
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
+import com.tencent.devops.gitci.common.gitci2.TriggerOn
 import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitPushEvent
 import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
-import com.tencent.devops.common.ci.yaml.v2.MergeRequest
-import com.tencent.devops.common.ci.yaml.v2.TriggerOn
 import com.tencent.devops.process.utils.GIT_MR_NUMBER
 import org.slf4j.LoggerFactory
 import org.springframework.util.AntPathMatcher
@@ -77,7 +76,7 @@ class V2WebHookMatcher(private val event: GitEvent) {
         if (triggerOn.push!!.branchesIgnore != null && triggerOn.push!!.branchesIgnore!!.isNotEmpty()) {
             triggerOn.push!!.branchesIgnore!!.forEach {
                 if (isBranchMatch(it, eventBranch)) {
-                    logger.info("The exclude branch($it) exclude the git branch ($eventBranch)")
+                    logger.info("The branchesIgnore($it) exclude the git branch ($eventBranch)")
                     return false
                 }
             }
@@ -97,7 +96,7 @@ class V2WebHookMatcher(private val event: GitEvent) {
                 }
             }
         }
-        val pathIncluded = isIncludePathMatch(triggerOn)
+        val pathIncluded = isIncludePathMatch(triggerOn.push!!.paths)
         if (branchIncluded && pathIncluded) {
             logger.info("Git trigger branch($eventBranch) is included and path(${triggerOn.push!!.paths}) is included")
             return true
@@ -130,7 +129,8 @@ class V2WebHookMatcher(private val event: GitEvent) {
                 }
             }
         }
-        val pathIncluded = isIncludePathMatch(triggerOn)
+        // val pathIncluded = isIncludePathMatch(triggerOn.tag)
+        val pathIncluded = true
         if (tagIncluded && pathIncluded) {
             logger.info("Git trigger tags($eventTag) is included and path(${triggerOn.tag!!.tags}) is included")
             return true
@@ -171,14 +171,14 @@ class V2WebHookMatcher(private val event: GitEvent) {
         return true
     }
 
-    private fun isIncludePathMatch(triggerOn: TriggerOn): Boolean {
+    private fun isIncludePathMatch(pathList: List<String>?): Boolean {
         var pathIncluded = false
-        if (triggerOn.push!!.paths != null && triggerOn.push!!.paths!!.isNotEmpty()) {
-            logger.info("Include path set(${triggerOn.push!!.paths})")
+        if (pathList != null && pathList.isNotEmpty()) {
+            logger.info("Include path set($pathList)")
             run outside@{
                 (event as GitPushEvent).commits.forEach { commit ->
                     commit.added?.forEach { path ->
-                        triggerOn.push!!.paths!!.forEach { includePath ->
+                        pathList.forEach { includePath ->
                             if (isPathMatch(path, includePath)) {
                                 logger.info("The include path($includePath) include the git update one($path)")
                                 pathIncluded = true
@@ -187,7 +187,7 @@ class V2WebHookMatcher(private val event: GitEvent) {
                         }
                     }
                     commit.modified?.forEach { path ->
-                        triggerOn.push!!.paths!!.forEach { includePath ->
+                        pathList.forEach { includePath ->
                             if (isPathMatch(path, includePath)) {
                                 logger.info("The include path($includePath) include the git update one($path)")
                                 pathIncluded = true
@@ -196,7 +196,7 @@ class V2WebHookMatcher(private val event: GitEvent) {
                         }
                     }
                     commit.removed?.forEach { path ->
-                        triggerOn.push!!.paths!!.forEach { includePath ->
+                        pathList.forEach { includePath ->
                             if (isPathMatch(path, includePath)) {
                                 logger.info("The include path($includePath) include the git update one($path)")
                                 pathIncluded = true
