@@ -25,17 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.wechatwork.model.sendmessage.richtext
+package com.tencent.devops.store.service.atom.impl
 
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.tencent.devops.common.wechatwork.model.enums.RichtextContentType
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.StoreMemberReq
+import com.tencent.devops.store.service.common.TxStoreGitResitoryService
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-@JsonSubTypes(
-    JsonSubTypes.Type(value = RichtextText::class, name = "text"),
-    JsonSubTypes.Type(value = RichtextMentioned::class, name = "mentioned"),
-    JsonSubTypes.Type(value = RichtextClick::class, name = "click"),
-    JsonSubTypes.Type(value = RichtextView::class, name = "view")
-)
-open class RichtextContent(
-    val type: RichtextContentType
-)
+@Service
+class TxAtomMemberServiceImpl @Autowired constructor(
+    private val storeGitResitoryService: TxStoreGitResitoryService
+) : AtomMemberServiceImpl() {
+
+    override fun addRepoMember(storeMemberReq: StoreMemberReq, userId: String, repositoryHashId: String): Result<Boolean> {
+        return storeGitResitoryService.addRepoMember(storeMemberReq, userId, repositoryHashId)
+    }
+
+    override fun deleteRepoMember(userId: String, username: String, repositoryHashId: String): Result<Boolean> {
+        return storeGitResitoryService.deleteRepoMember(userId, username, repositoryHashId)
+    }
+}

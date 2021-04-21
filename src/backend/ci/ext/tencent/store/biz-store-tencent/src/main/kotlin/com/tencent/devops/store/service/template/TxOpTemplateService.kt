@@ -25,17 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.wechatwork.model.sendmessage.richtext
+package com.tencent.devops.store.service.template
 
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.tencent.devops.common.wechatwork.model.enums.RichtextContentType
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.VisibleApproveReq
 
-@JsonSubTypes(
-    JsonSubTypes.Type(value = RichtextText::class, name = "text"),
-    JsonSubTypes.Type(value = RichtextMentioned::class, name = "mentioned"),
-    JsonSubTypes.Type(value = RichtextClick::class, name = "click"),
-    JsonSubTypes.Type(value = RichtextView::class, name = "view")
-)
-open class RichtextContent(
-    val type: RichtextContentType
-)
+interface TxOpTemplateService {
+
+    /**
+     * 审核可见范围
+     */
+    fun approveVisibleDept(userId: String, storeCode: String, visibleApproveReq: VisibleApproveReq): Result<Boolean>
+}
