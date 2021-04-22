@@ -70,7 +70,10 @@ class SvnWebHookMatcher(
             // 如果项目名是三层的，比如ied/ied_kihan_rep/server_proj，那对应的rep_name 是 ied_kihan_rep
             val isMatchProject = repository.projectName == event.rep_name ||
                 pipelineWebhookService.getProjectName(repository.projectName) == event.rep_name
-            if (!isMatchProject) ScmWebhookMatcher.MatchResult(false)
+            if (!isMatchProject) {
+                logger.info("project name do not match|${repository.projectName}|${event.rep_name}")
+                return ScmWebhookMatcher.MatchResult(false)
+            }
 
             logger.info("project macth: ${event.rep_name}")
 
