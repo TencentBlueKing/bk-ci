@@ -28,6 +28,7 @@
 package com.tencent.devops.log.lucene
 
 import com.tencent.devops.common.log.pojo.LogLine
+import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.log.service.IndexService
 import com.tencent.devops.log.util.Constants
@@ -78,6 +79,7 @@ class LuceneClient constructor(
 
     fun fetchInitLogs(
         buildId: String,
+        debug: Boolean,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -85,13 +87,14 @@ class LuceneClient constructor(
         size: Int? = null
     ): MutableList<LogLine> {
         val lineNum = size ?: Constants.SCROLL_MAX_LINES
-        val query = prepareQueryBuilder(buildId, tag, subTag, jobId, executeCount).build()
+        val query = prepareQueryBuilder(buildId, debug, tag, subTag, jobId, executeCount).build()
         logger.info("[$buildId] fetchInitLogs with query: $query")
         return doQueryLogsInSize(buildId, query, lineNum)
     }
 
     fun fetchLogs(
         buildId: String,
+        debug: Boolean,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -103,7 +106,7 @@ class LuceneClient constructor(
         val lower = start ?: 0
         val upper = before ?: Long.MAX_VALUE
         val logSize = size ?: Constants.SCROLL_MAX_LINES
-        val query = prepareQueryBuilder(buildId, tag, subTag, jobId, executeCount)
+        val query = prepareQueryBuilder(buildId, debug, tag, subTag, jobId, executeCount)
             .add(NumericDocValuesField.newSlowRangeQuery("lineNo", lower, upper), BooleanClause.Occur.MUST)
             .build()
         logger.info("[$buildId] fetchLogsInRange with query: $query")
@@ -112,25 +115,27 @@ class LuceneClient constructor(
 
     fun fetchLogsCount(
         buildId: String,
+        debug: Boolean,
         tag: String?,
         subTag: String?,
         jobId: String?,
         executeCount: Int?
     ): Int {
-        val query = prepareQueryBuilder(buildId, tag, subTag, jobId, executeCount).build()
+        val query = prepareQueryBuilder(buildId, debug, tag, subTag, jobId, executeCount).build()
         logger.info("[$buildId] fetchLogsCount with query: $query")
         return doQueryLogsCount(buildId, query)
     }
 
     fun fetchDocumentsStreaming(
         buildId: String,
+        debug: Boolean,
         tag: String?,
         subTag: String?,
         jobId: String?,
         executeCount: Int?
     ): StreamingOutput {
         val searcher = prepareSearcher(buildId)
-        val query = prepareQueryBuilder(buildId, tag, subTag, jobId, executeCount).build()
+        val query = prepareQueryBuilder(buildId, debug, tag, subTag, jobId, executeCount).build()
         val sort = getQuerySort()
         val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS")
         try {
@@ -162,6 +167,7 @@ class LuceneClient constructor(
 
     fun fetchAllLogsInPage(
         buildId: String,
+        debug: Boolean,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -170,7 +176,7 @@ class LuceneClient constructor(
         pageSize: Int
     ): List<LogLine> {
 
-        val builder = prepareQueryBuilder(buildId, tag, subTag, jobId, executeCount)
+        val builder = prepareQueryBuilder(buildId, debug, tag, subTag, jobId, executeCount)
         if (page != -1 && pageSize != -1) {
             val endLineNo = pageSize * page
             val beginLineNo = endLineNo - pageSize + 1
@@ -283,6 +289,7 @@ class LuceneClient constructor(
 
     private fun prepareQueryBuilder(
         buildId: String,
+        debug: Boolean,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -299,7 +306,9 @@ class LuceneClient constructor(
         if (!jobId.isNullOrBlank()) {
             query.add(TermQuery(Term("jobId", jobId)), BooleanClause.Occur.MUST)
         }
-
+        if (!debug) {
+            query.add(TermQuery(Term("logType", LogType.DEBUG.name)), BooleanClause.Occur.MUST_NOT)
+        }
         return query.add(IntPoint.newExactQuery("executeCount", executeCount ?: 1), BooleanClause.Occur.MUST)
             .add(TermQuery(Term("buildId", buildId)), BooleanClause.Occur.MUST)
     }
