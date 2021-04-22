@@ -35,6 +35,7 @@ import com.tencent.devops.process.pojo.report.ReportEmail
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.ApiPriority
 import com.tencent.devops.worker.common.api.archive.BkRepoResourceApi
+import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.logger.LoggerService.elementId
 import okhttp3.MediaType
@@ -83,7 +84,7 @@ class TencentReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
     ) {
         val pipelineId = buildVariables.pipelineId
         val buildId = buildVariables.buildId
-        bkrepoResourceApi.uploadBkRepoByToken(
+        bkrepoResourceApi.uploadFileByToken(
             file = file,
             projectId = buildVariables.projectId,
             repoName = "report",
@@ -119,7 +120,12 @@ class TencentReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
 
     override fun uploadReport(file: File, taskId: String, relativePath: String, buildVariables: BuildVariables) {
         if (bkrepoResourceApi.useBkRepo()) {
-            val token = bkrepoResourceApi.createBkRepoUploadToken("report", buildVariables)
+            val token = bkrepoResourceApi.createBkRepoTemporaryToken(
+                projectId = buildVariables.projectId,
+                repoName = "report",
+                path = "/${buildVariables.pipelineId}/${buildVariables.buildId}",
+                type = TokenType.UPLOAD
+            )
             uploadBkRepoReportByToken(file, token, taskId, relativePath, buildVariables)
         } else {
             uploadBkRepoReport(file, taskId, relativePath, buildVariables)

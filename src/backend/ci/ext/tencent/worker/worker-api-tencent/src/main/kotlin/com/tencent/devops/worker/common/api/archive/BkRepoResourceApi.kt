@@ -50,6 +50,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.archive.pojo.BkRepoAccessToken
 import com.tencent.devops.worker.common.api.archive.pojo.BkRepoResponse
+import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.api.pojo.QueryData
 import com.tencent.devops.worker.common.api.pojo.QueryNodeInfo
 import com.tencent.devops.worker.common.utils.IosUtils
@@ -75,16 +76,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         }
     }
 
-    fun createBkRepoUploadToken(repoName: String, buildVariables: BuildVariables): String {
-        val projectId = buildVariables.projectId
-        val pipelineId = buildVariables.pipelineId
-        val buildId = buildVariables.buildId
-        val path = if (repoName == "custom") {
-            "/"
-        } else {
-            "/$pipelineId/$buildId"
-        }
-
+    fun createBkRepoTemporaryToken(projectId: String, repoName: String, path: String, type: TokenType): String {
         val url = "/bkrepo/api/build/generic/temporary/token/create"
         val requestData = mapOf(
             "projectId" to projectId,
@@ -94,7 +86,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
             "authorizedIpSet" to listOf<String>(),
             "expireSeconds" to 86400,
             "permits" to null,
-            "type" to "UPLOAD"
+            "type" to type.name
         )
         val request = buildPost(
             url,
@@ -119,7 +111,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         }
     }
 
-    fun uploadBkRepoByToken(
+    fun uploadFileByToken(
         file: File,
         projectId: String,
         repoName: String,
@@ -142,6 +134,21 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         } catch (e: Exception) {
             AbstractBuildResourceApi.logger.error(e.message ?: "")
         }
+    }
+
+    fun downloadFileByToken(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        fullPath: String,
+        token: String,
+        destPath: File
+    ) {
+        val url = "/generic/temporary/download/$projectId/$repoName$fullPath?token=$token"
+        var header = HashMap<String, String>()
+        header.set("X-BKREPO-UID", userId)
+        val request = buildGet(url, header, useFileGateway = true)
+        download(request, destPath)
     }
 
     fun getUploadHeader(
