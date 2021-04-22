@@ -232,7 +232,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             )
             bkrepoResourceApi.downloadFileByToken(userId, projectId, "pipeline", uri, token, destPath)
         } else {
-            downloadBkRepoFile(userId, projectId, "custom", uri, destPath)
+            downloadBkRepoFile(userId, projectId, "pipeline", uri, destPath)
         }
     }
 
