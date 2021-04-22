@@ -54,10 +54,17 @@ class InfluxdbClient {
     @Value("\${influxdb.password:}")
     val influxdbPassword: String = ""
 
+    private val influxdb by lazy {
+        if (influxdbUserName.isBlank())
+            InfluxDBFactory.connect(influxdbServer)
+        else
+            InfluxDBFactory.connect(influxdbServer, influxdbUserName, influxdbPassword)
+    }
+
     fun getInfluxDb(): InfluxDB? {
         logger.info("getInfluxDb -> influxdbServer: $influxdbServer")
         return try {
-            InfluxDBFactory.connect(influxdbServer, influxdbUserName, influxdbPassword)
+            influxdb
         } catch (ignored: Exception) {
             logger.error("getInfluxDb| fail, msg=${ignored.message}", ignored)
             null // 返回空，防止页面异常。 顶多是数量展示空。 需要用户根据日志定位问题

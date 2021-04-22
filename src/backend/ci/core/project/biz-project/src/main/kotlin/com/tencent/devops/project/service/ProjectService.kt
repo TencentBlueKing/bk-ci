@@ -32,6 +32,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
@@ -138,4 +139,8 @@ interface ProjectService {
         permission: AuthPermission,
         accessToken: String?
     ): Boolean
+
+    fun listSecrecyProject(): Set<String>?
+
+    fun createProjectUser(projectId: String, createInfo: ProjectCreateUserInfo): Boolean
 }

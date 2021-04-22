@@ -34,6 +34,7 @@ dependencies {
     compile project(":core:project:api-project")
     compile project(":core:process:api-process")
     compile project(":core:quality:api-quality")
+    compile project(":core:monitoring:api-monitoring")
     compile project(":core:artifactory:api-artifactory-store")
     compile project(":core:store:model-store")
     testCompile project(":core:common:common-test")

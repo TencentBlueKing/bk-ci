@@ -103,10 +103,10 @@ interface MarketTemplateService {
     /**
      * 校验用户、模板和插件的可见范围
      */
-    fun validateUserTemplateAtomVisibleDept(
+    fun validateUserTemplateComponentVisibleDept(
         userId: String,
         templateCode: String,
-        projectCodeList: List<String>?
+        projectCodeList: ArrayList<String>
     ): Result<Boolean>
 
     /**

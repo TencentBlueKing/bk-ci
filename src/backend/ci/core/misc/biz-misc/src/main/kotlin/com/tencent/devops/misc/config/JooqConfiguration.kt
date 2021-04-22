@@ -31,6 +31,7 @@ import org.jooq.DSLContext
 import org.jooq.SQLDialect
 import org.jooq.impl.DSL
 import org.jooq.impl.DefaultConfiguration
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.InjectionPoint
 import org.springframework.beans.factory.NoSuchBeanDefinitionException
 import org.springframework.beans.factory.annotation.Qualifier
@@ -52,6 +53,13 @@ import javax.sql.DataSource
 @Import(DataSourceConfig::class)
 class JooqConfiguration {
 
+    private val regex =
+        "\\.(tsource|ttarget|process|project|repository|dispatch|plugin|quality|artifactory|environment)".toRegex()
+
+    companion object {
+        private val LOG = LoggerFactory.getLogger(JooqConfiguration::class.java)
+    }
+
     @Bean
     @Primary
     @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
@@ -63,36 +71,11 @@ class JooqConfiguration {
         if (Constructor::class.java.isAssignableFrom(annotatedElement::class.java)) {
             val declaringClass: Class<*> = (annotatedElement as Constructor<*>).declaringClass
             val packageName = declaringClass.getPackage().name
-            val configuration: org.jooq.Configuration?
-            configuration = when {
-                packageName.contains(".process") -> {
-                    configurationMap["processJooqConfiguration"]
-                }
-                packageName.contains(".project") -> {
-                    configurationMap["projectJooqConfiguration"]
-                }
-                packageName.contains(".repository") -> {
-                    configurationMap["repositoryJooqConfiguration"]
-                }
-                packageName.contains(".dispatch") -> {
-                    configurationMap["dispatchJooqConfiguration"]
-                }
-                packageName.contains(".plugin") -> {
-                    configurationMap["pluginJooqConfiguration"]
-                }
-                packageName.contains(".quality") -> {
-                    configurationMap["qualityJooqConfiguration"]
-                }
-                packageName.contains(".artifactory") -> {
-                    configurationMap["artifactoryJooqConfiguration"]
-                }
-                packageName.contains(".environment") -> {
-                    configurationMap["environmentJooqConfiguration"]
-                }
-                else -> {
-                    throw NoSuchBeanDefinitionException("no jooq configuration")
-                }
-            }
+            val matchResult = regex.find(packageName)
+                ?: throw NoSuchBeanDefinitionException("no jooq configuration")
+            val configuration = configurationMap["${matchResult.groupValues[1]}JooqConfiguration"]
+                ?: throw NoSuchBeanDefinitionException("no ${matchResult.groupValues[1]}JooqConfiguration")
+            LOG.info("dslContext_init|${matchResult.groupValues[1]}JooqConfiguration|${declaringClass.name}")
             return DSL.using(configuration)
         }
         throw NoSuchBeanDefinitionException("no jooq configuration")

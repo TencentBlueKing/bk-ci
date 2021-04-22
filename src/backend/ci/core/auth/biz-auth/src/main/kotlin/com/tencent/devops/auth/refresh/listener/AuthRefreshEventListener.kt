@@ -72,8 +72,8 @@ class AuthRefreshEventListener @Autowired constructor(
      *  @param event ProjectCreateBroadCastEvent
      */
     fun onStrategyUpdate(event: StrategyUpdateEvent) {
-        logger.info("onStrategyUpdate: ${event.refreshType} | ${event.strategyId}")
-        userPermissionService.refreshWhenStrategyChanger(event.strategyId)
+        logger.info("onStrategyUpdate: ${event.refreshType} | ${event.strategyId}| ${event.action}")
+        userPermissionService.refreshWhenStrategyChanger(event.strategyId, event.action)
     }
 
     /**
