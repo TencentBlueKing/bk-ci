@@ -38,10 +38,11 @@ class PathPrefixFilter(
 
     companion object {
         private val logger = LoggerFactory.getLogger(PathPrefixFilter::class.java)
+        private const val MATCH_PATHS = "matchPaths"
     }
 
     override fun doFilter(response: WebhookFilterResponse): Boolean {
-        return hasNoBranchSpecs() || (isPathNotExcluded() && isPathIncluded())
+        return hasNoBranchSpecs() || (isPathNotExcluded() && isPathIncluded(response))
     }
 
     private fun hasNoBranchSpecs(): Boolean {
@@ -61,18 +62,22 @@ class PathPrefixFilter(
         return false
     }
 
-    private fun isPathIncluded(): Boolean {
+    private fun isPathIncluded(response: WebhookFilterResponse): Boolean {
         val matchPaths = mutableSetOf<String>()
         triggerOnPath.forEach eventPath@{ eventPath ->
             includedPaths.forEach userPath@{ userPath ->
                 if (isPathMatch(eventPath, userPath)) {
                     logger.warn("$pipelineId|$eventPath|Event path match the user path")
                     matchPaths.add(userPath)
-                    return true
                 }
             }
         }
-        return includedPaths.isEmpty()
+        return if (matchPaths.isNotEmpty()) {
+            response.addParam(MATCH_PATHS, matchPaths.joinToString(","))
+            true
+        } else {
+            false
+        }
     }
 
     private fun isPathMatch(fullPath: String, prefixPath: String): Boolean {
