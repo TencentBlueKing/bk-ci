@@ -118,7 +118,8 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
 
     override fun uploadCustomize(file: File, destPath: String, buildVariables: BuildVariables) {
         if (bkrepoResourceApi.useBkRepo()) {
-            val destFullPath = destPath.removePrefix("/").removePrefix("./").removeSuffix("/") + "/" + file.name
+            val relativePath = destPath.removePrefix("/").removePrefix("./").removeSuffix("/")
+            val destFullPath = "/$relativePath/${file.name}"
             val token = bkrepoResourceApi.createBkRepoUploadToken("custom", buildVariables)
             bkrepoResourceApi.uploadBkRepoByToken(
                 file,
@@ -136,7 +137,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
 
     override fun uploadPipeline(file: File, buildVariables: BuildVariables) {
         if (bkrepoResourceApi.useBkRepo()) {
-            val destFullPath = "${buildVariables.pipelineId}/${buildVariables.buildId}/${file.name}"
+            val destFullPath = "/${buildVariables.pipelineId}/${buildVariables.buildId}/${file.name}"
             val token = bkrepoResourceApi.createBkRepoUploadToken("pipeline", buildVariables)
             bkrepoResourceApi.uploadBkRepoByToken(
                 file,
@@ -153,10 +154,10 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         bkrepoResourceApi.setPipelineMetadata("pipeline", buildVariables)
     }
 
-
     private fun uploadBkRepoPipeline(file: File, buildVariables: BuildVariables) {
         logger.info("upload file >>> ${file.name}")
-        val url = "/bkrepo/api/build/generic/${buildVariables.projectId}/pipeline/${buildVariables.pipelineId}/${buildVariables.buildId}/${file.name}"
+        val url = "/bkrepo/api/build/generic/${buildVariables.projectId}/pipeline/${buildVariables.pipelineId}/" +
+            "${buildVariables.buildId}/${file.name}"
         val request = buildPut(
             url,
             RequestBody.create(MediaType.parse("application/octet-stream"), file),

@@ -66,7 +66,8 @@ class TencentReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         val request = if (reportEmail == null) {
             buildPost(path)
         } else {
-            val requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), objectMapper.writeValueAsString(reportEmail))
+            val requestBody = RequestBody.create(MediaType.parse(
+                "application/json; charset=utf-8"), objectMapper.writeValueAsString(reportEmail))
             buildPost(path, requestBody)
         }
         val responseContent = request(request, "创建报告失败")
