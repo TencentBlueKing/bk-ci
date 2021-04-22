@@ -28,11 +28,13 @@
 package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomEnvInfoDao
@@ -88,7 +90,12 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
     ): Result<Map<String, AtomRunInfo>?> {
         logger.info("batchGetAtomRunInfos projectCode:$projectCode,atomVersions:$atomVersions")
         // 1、校验插件在项目下是否可用
-        val atomCodeList = atomVersions.map { it.storeCode }
+        val atomCodeMap = mutableMapOf<String, String>()
+        val atomCodeList = mutableListOf<String>()
+        atomVersions.forEach { atomVersion ->
+            atomCodeMap[atomVersion.storeCode] = atomVersion.storeName
+            atomCodeList.add(atomVersion.storeCode)
+        }
         val storePublicFlagKey = StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name)
         if (!redisOperation.hasKey(storePublicFlagKey)) {
             // 如果redis没有缓存默认插件集合，则从db去查
@@ -108,6 +115,11 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         validateAtomCodeList.toMutableList().removeAll(validAtomCodeList)
         if (validateAtomCodeList.isNotEmpty()) {
             // 存在不可用插件，给出错误提示
+
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_ATOM_IS_NOT_ALLOW_USE_IN_PROJECT,
+                params = arrayOf(projectCode, version)
+            )
         }
         // 2、根据插件代码和版本号查找插件运行时信息
         // 判断当前项目是否是插件的调试项目
@@ -125,6 +137,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         val atomRunInfoMap = mutableMapOf<String, AtomRunInfo>()
         atomVersions.forEach { atomVersion ->
             val atomCode = atomVersion.storeCode
+            val atomName = atomVersion.storeName
             val version = atomVersion.version
             // 获取当前大版本内是否有测试中的版本
             val atomVersionTestFlag = redisOperation.hget(
@@ -133,28 +146,51 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             )
             val flag =
                 testAtomCodes?.contains(atomCode) == true && (atomVersionTestFlag == null || atomVersionTestFlag.toBoolean())
+            // 如果当前的项目属于插件的调试项目且插件当前大版本有测试中的版本则实时去db查
             if (flag) {
-                val atomEnvResult = getMarketAtomEnvInfo(projectCode, atomCode, version)
-                if (atomEnvResult.isNotOk()) {
-                    return Result(atomEnvResult.status, atomEnvResult.message ?: "")
-                }
-                // 查不到当前插件信息则中断流程
-                val atomEnv = atomEnvResult.data ?: return Result(data = null)
-                val atomRunInfo = AtomRunInfo(
-                    atomCode = atomCode,
-                    atomName = atomEnv.atomName,
-                    version = atomEnv.version,
-                    atomStatus = atomEnv.atomStatus,
-                    initProjectCode = atomEnv.projectCode!!,
-                    jobType = atomEnv.jobType,
-                    buildLessRunFlag = atomEnv.buildLessRunFlag
-                )
-                atomRunInfoMap[atomCode] = atomRunInfo
+                atomRunInfoMap[atomCode] = queryAtomRunInfoFromDb(projectCode, atomCode, atomName, version)
             } else {
-
+                // 去缓存中获取插件运行时信息
+                val atomRunInfoKey = StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, atomCode)
+                val atomRunInfoJson = redisOperation.hget(atomRunInfoKey, version)
+                if (!atomRunInfoJson.isNullOrEmpty()) {
+                    val atomRunInfo = JsonUtil.to(atomRunInfoJson, AtomRunInfo::class.java)
+                    atomRunInfoMap[atomCode] = atomRunInfo
+                } else {
+                    atomRunInfoMap[atomCode] = queryAtomRunInfoFromDb(projectCode, atomCode, atomName, version)
+                }
             }
         }
         return Result(atomRunInfoMap)
+    }
+
+    private fun queryAtomRunInfoFromDb(
+        projectCode: String,
+        atomCode: String,
+        atomName: String,
+        version: String
+    ): AtomRunInfo {
+        val atomEnvResult = getMarketAtomEnvInfo(projectCode, atomCode, version)
+        if (atomEnvResult.isNotOk()) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_ATOM_IS_NOT_ALLOW_USE_IN_PROJECT,
+                params = arrayOf(projectCode, atomName)
+            )
+        }
+        // 查不到当前插件信息则中断流程
+        val atomEnv = atomEnvResult.data ?: throw ErrorCodeException(
+            errorCode = atomEnvResult.status.toString(),
+            defaultMessage = atomEnvResult.message
+        )
+        return AtomRunInfo(
+            atomCode = atomCode,
+            atomName = atomEnv.atomName,
+            version = atomEnv.version,
+            atomStatus = atomEnv.atomStatus,
+            initProjectCode = atomEnv.projectCode!!,
+            jobType = atomEnv.jobType,
+            buildLessRunFlag = atomEnv.buildLessRunFlag
+        )
     }
 
     /**

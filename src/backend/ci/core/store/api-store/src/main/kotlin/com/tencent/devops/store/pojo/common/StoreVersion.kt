@@ -34,6 +34,8 @@ import io.swagger.annotations.ApiModelProperty
 data class StoreVersion(
     @ApiModelProperty("组件代码", required = true)
     var storeCode: String,
+    @ApiModelProperty("组件名称", required = true)
+    var storeName: String,
     @ApiModelProperty("版本号", required = true)
     var version: String
 )
