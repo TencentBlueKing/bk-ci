@@ -87,7 +87,8 @@ object ProjectUtils {
             hybridCcAppId = tProjectRecord.hybridCcAppId,
             enableExternal = tProjectRecord.enableExternal,
             pipelineLimit = tProjectRecord.pipelineLimit,
-            routerTag = tProjectRecord.routerTag
+            routerTag = tProjectRecord.routerTag,
+            relationId = tProjectRecord.relationId
         )
     }
 }
