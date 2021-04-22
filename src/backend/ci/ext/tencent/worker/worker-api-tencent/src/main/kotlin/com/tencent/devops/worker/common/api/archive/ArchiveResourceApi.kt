@@ -92,7 +92,6 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         ).map { it.fullPath }
     }
 
-
     private fun uploadBkRepoCustomize(file: File, destPath: String, buildVariables: BuildVariables) {
         val bkRepoPath = destPath.removeSuffix("/") + "/" + file.name
         val url = "/bkrepo/api/build/generic/${buildVariables.projectId}/custom/$bkRepoPath"
@@ -211,7 +210,6 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         return jacksonObjectMapper().readValue(responseContent)
     }
 
-
     private fun tryEncode(str: String?): String {
         return if (str.isNullOrBlank()) {
             ""
@@ -236,9 +234,5 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         val request = buildPost(url, requestBody, headers ?: emptyMap(), useFileGateway = true)
         val responseContent = request(request, "upload file[$fileName] failed")
         return objectMapper.readValue(responseContent)
-    }
-
-    companion object {
-
     }
 }

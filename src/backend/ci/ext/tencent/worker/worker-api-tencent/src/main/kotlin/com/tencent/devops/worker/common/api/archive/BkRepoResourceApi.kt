@@ -53,6 +53,7 @@ import com.tencent.devops.worker.common.api.archive.pojo.BkRepoResponse
 import com.tencent.devops.worker.common.api.pojo.QueryData
 import com.tencent.devops.worker.common.api.pojo.QueryNodeInfo
 import com.tencent.devops.worker.common.utils.IosUtils
+import com.tencent.devops.worker.common.utils.TaskUtil
 import net.dongliu.apk.parser.ApkFile
 import okhttp3.MediaType
 import okhttp3.RequestBody
@@ -67,8 +68,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         return try {
             val request = buildGet("/dummy", useFileGateway = true)
             val host = request.url().host()
-            logger.info("file gateway host: $host")
-            host.endsWith("bkrepo.oa.com", true) || host.endsWith("bkrepo.woa.com")
+            host.contains("bkrepo", true)
         } catch (e: Exception) {
             logger.warn("check useBkRepo error, cause: ${e.message}")
             false
@@ -110,7 +110,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
                 throw RuntimeException("http request failed")
             }
 
-            val responseData = objectMapper.readValue<BkRepoResponse<BkRepoAccessToken>>(responseContent)
+            val responseData = objectMapper.readValue<BkRepoResponse<List<BkRepoAccessToken>>>(responseContent)
             if (responseData.isNotOk()) {
                 throw RuntimeException("request failed: ${responseData.message}")
             }
@@ -160,6 +160,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         metadata[ARCHIVE_PROPS_USER_ID] = buildVariables.variables[PIPELINE_START_USER_ID] ?: ""
         metadata[ARCHIVE_PROPS_BUILD_NO] = buildVariables.variables[PIPELINE_BUILD_NUM] ?: ""
         metadata[ARCHIVE_PROPS_SOURCE] = "pipeline"
+        metadata[ARCHIVE_PROPS_TASK_ID] = TaskUtil.getTaskId()
         if (parseAppData) {
             metadata.putAll(getAppMetadata(file))
         }
