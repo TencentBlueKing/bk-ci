@@ -325,7 +325,7 @@ class MonitorNotifyJob @Autowired constructor(
         try {
             val sql =
                 "SELECT sum(total_count),sum(success_count),sum(CODE_GIT_total_count),sum(CODE_GIT_success_count),sum(UploadArtifactory_total_count),sum(UploadArtifactory_success_count)," +
-                    "sum(linuxscript_total_count),sum(linuxscript_success_count) FROM AtomMonitorData_success_rat_count WHERE time>${startTime}000000 AND time<${endTime}000000"
+                        "sum(linuxscript_total_count),sum(linuxscript_success_count) FROM AtomMonitorData_success_rat_count WHERE time>${startTime}000000 AND time<${endTime}000000"
             val queryResult = influxdbClient.select(sql)
 
             var totalCount = 1
@@ -453,11 +453,19 @@ class MonitorNotifyJob @Autowired constructor(
     private fun getHits(startTime: Long, name: String, error: Boolean = false): Long {
         val sourceBuilder = SearchSourceBuilder()
         val query =
-            QueryBuilders.boolQuery().filter(QueryBuilders.queryStringQuery("beat.hostname:v2-service AND bkservice:$name" + (if (error) " AND (status:4* OR status:5*)" else "")))
+            QueryBuilders.boolQuery()
+                .filter(
+                    QueryBuilders.queryStringQuery(
+                        """
+                    path:"/data/bkci/logs/websocket/access_log.log" 
+                    ${if (error) " AND status:[400 TO *] " else ""}
+                """.trimIndent()
+                    )
+                )
         sourceBuilder.query(query).size(1)
 
         val searchRequest = SearchRequest()
-        searchRequest.indices("bkdevops-access-prod-${DateFormatUtils.format(startTime, "yyyy.MM.dd")}")
+        searchRequest.indices("v2_9_bklog_prod_ci_service_access_${DateFormatUtils.format(startTime, "yyyyMMdd")}*")
         searchRequest.source(sourceBuilder)
         val hits = restHighLevelClient.search(searchRequest).hits.getTotalHits()
         logger.info("apiStatus:$name , hits:$hits")
@@ -488,11 +496,11 @@ class MonitorNotifyJob @Autowired constructor(
                     ZoneId.ofOffset("UTC", ZoneOffset.UTC)
                 ).toString() + "Z"
             }'))&_a=(columns:!(_source),filters:!(('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67'," +
-                "key:beat.hostname,negate:!f,params:(query:v2-gateway-idc,type:phrase),type:phrase,value:v2-gateway-idc),query:(match:(beat.hostname:(query:v2-gateway-idc,type:phrase))))," +
-                "('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67',key:service,negate:!f,params:(query:$name,type:phrase),type:phrase,value:$name)," +
-                "query:(match:(service:(query:$name,type:phrase)))),('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67'," +
-                "key:status,negate:!f,params:(query:'500',type:phrase),type:phrase,value:'500'),query:(match:(status:(query:'500',type:phrase))))),index:'68f5fd50-798e-11ea-8327-85de2e827c67'," +
-                "interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))"
+                    "key:beat.hostname,negate:!f,params:(query:v2-gateway-idc,type:phrase),type:phrase,value:v2-gateway-idc),query:(match:(beat.hostname:(query:v2-gateway-idc,type:phrase))))," +
+                    "('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67',key:service,negate:!f,params:(query:$name,type:phrase),type:phrase,value:$name)," +
+                    "query:(match:(service:(query:$name,type:phrase)))),('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67'," +
+                    "key:status,negate:!f,params:(query:'500',type:phrase),type:phrase,value:'500'),query:(match:(status:(query:'500',type:phrase))))),index:'68f5fd50-798e-11ea-8327-85de2e827c67'," +
+                    "interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))"
             Module.ATOM -> "$atomDetailUrl?var-atomCode=$name&from=$startTime&to=$endTime"
             Module.DISPATCH -> "$dispatchDetailUrl?var-buildType=$name&from=$startTime&to=$endTime"
             Module.USER_STATUS -> "$userStatusDetailUrl?from=$startTime&to=$endTime"
