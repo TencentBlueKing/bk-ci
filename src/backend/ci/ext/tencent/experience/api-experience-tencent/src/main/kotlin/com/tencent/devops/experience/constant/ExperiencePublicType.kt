@@ -25,13 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.vo
+package com.tencent.devops.experience.constant
 
-import io.swagger.annotations.ApiModelProperty
+enum class ExperiencePublicType(
+    val id: Int
+) {
+    FROM_BKCI(1),
 
-data class ServiceVersionListResp(
-    @ApiModelProperty("总记录数", required = true)
-    val count: Int,
-    @ApiModelProperty("数据集合", required = false)
-    val records: List<ServiceVersionListItem?>
-)
+    FROM_EXTERNAL_URL(2),
+
+    ;
+
+    companion object {
+        fun getIds(includeExternalUrl: Boolean?): List<Int> {
+            return if (includeExternalUrl == true) {
+                listOf(FROM_BKCI.id, FROM_EXTERNAL_URL.id)
+            } else {
+                listOf(FROM_BKCI.id)
+            }
+        }
+    }
+}

@@ -120,16 +120,27 @@ object OkhttpUtils {
     }
 
     private fun doGet(okHttpClient: OkHttpClient, url: String, headers: Map<String, String> = mapOf()): Response {
-        val requestBuilder = Request.Builder()
-            .url(url)
-            .get()
-        if (headers.isNotEmpty()) {
+        val requestBuilder = getBuilder(url, headers)
+        val request = requestBuilder.get().build()
+        return okHttpClient.newCall(request).execute()
+    }
+
+    fun doPost(url: String, jsonParam: String, headers: Map<String, String> = mapOf()): Response {
+        val builder = getBuilder(url, headers)
+        val body = RequestBody.create(jsonMediaType, jsonParam)
+        val request = builder.post(body).build()
+        return doHttp(request)
+    }
+
+    private fun getBuilder(url: String, headers: Map<String, String>? = null): Request.Builder {
+        val builder = Request.Builder()
+        builder.url(url)
+        if (headers?.isNotEmpty() == false) {
             headers.forEach { (key, value) ->
-                requestBuilder.addHeader(key, value)
+                builder.addHeader(key, value)
             }
         }
-        val request = requestBuilder.build()
-        return okHttpClient.newCall(request).execute()
+        return builder
     }
 
     private fun doHttp(okHttpClient: OkHttpClient, request: Request): Response {

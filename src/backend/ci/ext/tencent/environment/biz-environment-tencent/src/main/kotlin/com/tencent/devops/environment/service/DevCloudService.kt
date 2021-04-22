@@ -40,12 +40,12 @@ import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.ProjectConfigDao
 import com.tencent.devops.environment.dao.StaticData
 import com.tencent.devops.environment.dao.devcloud.DevCloudTaskDao
+import com.tencent.devops.environment.model.CreateNodeModel
 import com.tencent.devops.environment.pojo.DevCloudImageParam
 import com.tencent.devops.environment.pojo.DevCloudModel
 import com.tencent.devops.environment.pojo.DevCloudVmParam
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.environment.pojo.enums.NodeType
-import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.json.JSONObject
@@ -101,7 +101,7 @@ class DevCloudService @Autowired constructor(
         }
         val devCloudModel = StaticData.getDevCloudModelList().filter { it.moduleId == devCloudVmParam.modelId }
         val now = LocalDateTime.now()
-        val toAddNodeList = mutableListOf<TNodeRecord>()
+        val toAddNodeList = mutableListOf<CreateNodeModel>()
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             val taskId = devCloudTaskDao.insertTask(
@@ -127,28 +127,20 @@ class DevCloudService @Autowired constructor(
 
             for (i in 0 until devCloudVmParam.instanceCount) {
                 toAddNodeList.add(
-                    TNodeRecord(
-                        null,
-                        "-",
-                        projectId,
-                        "-",
-                        "-",
-                        NodeStatus.CREATING.name,
-                        NodeType.DEVCLOUD.name,
-                        null,
-                        null,
-                        userId,
-                        now,
-                        null,
-                        "Linux",
-                        userId,
-                        userId,
-                        false,
-                        "",
-                        devCloudVmParam.imageId,
-                        taskId,
-                        now,
-                        userId
+                    CreateNodeModel(
+                        nodeStringId = "-",
+                        projectId = projectId,
+                        nodeIp = "-",
+                        nodeName = "-",
+                        nodeStatus = NodeStatus.CREATING.name,
+                        nodeType = NodeType.DEVCLOUD.name,
+                        createdUser = userId,
+                        osName = "Linux",
+                        operator = userId,
+                        bakOperator = userId,
+                        agentStatus = false,
+                        image = devCloudVmParam.imageId,
+                        taskId = taskId
                     )
                 )
             }

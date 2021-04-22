@@ -28,6 +28,7 @@
 package com.tencent.devops.store.service
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.api.service.service.ServiceInfoResource
@@ -35,7 +36,6 @@ import com.tencent.devops.store.dao.ExtServiceDao
 import com.tencent.devops.store.dao.ExtServiceItemRelDao
 import com.tencent.devops.store.dao.common.StoreStatisticDao
 import com.tencent.devops.store.pojo.ExtServiceItem
-import com.tencent.devops.store.pojo.ExtServiceStatistic
 import com.tencent.devops.store.pojo.common.HOTTEST
 import com.tencent.devops.store.pojo.common.LATEST
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -44,14 +44,14 @@ import com.tencent.devops.store.pojo.enums.ServiceTypeEnum
 import com.tencent.devops.store.pojo.vo.ExtServiceMainItemVo
 import com.tencent.devops.store.pojo.vo.SearchExtServiceVO
 import com.tencent.devops.store.service.common.ClassifyService
+import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.service.common.StoreVisibleDeptService
 import org.jooq.DSLContext
-import org.jooq.Record4
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.math.BigDecimal
+import java.time.LocalDateTime
 
 @Service
 class ExtServiceSearchService @Autowired constructor(
@@ -63,7 +63,8 @@ class ExtServiceSearchService @Autowired constructor(
     val storeVisibleDeptService: StoreVisibleDeptService,
     val storeMemberService: TxExtServiceMemberImpl,
     val classifyService: ClassifyService,
-    val storeStatisticDao: StoreStatisticDao
+    val storeStatisticDao: StoreStatisticDao,
+    val storeTotalStatisticService: StoreTotalStatisticService
 ) {
 
     fun mainPageList(
@@ -222,18 +223,18 @@ class ExtServiceSearchService @Autowired constructor(
             it["SERVICE_CODE"] as String
         }.toList()
         // 获取可见范围
+        val storeType = StoreTypeEnum.SERVICE
         val serviceVisibleData =
-            storeVisibleDeptService.batchGetVisibleDept(serviceCodeList, StoreTypeEnum.SERVICE).data
-        logger.info("[list]get serviceVisibleData:$serviceVisibleData")
-        // 获取热度
-        val statField = mutableListOf<String>()
-        statField.add("DOWNLOAD")
-        val serviceStatisticData = getStatisticByCodeList(serviceCodeList, statField).data
+            storeVisibleDeptService.batchGetVisibleDept(serviceCodeList, storeType).data
+        val statisticData = storeTotalStatisticService.getStatisticByCodeList(
+            storeType = storeType.type.toByte(),
+            storeCodeList = serviceCodeList
+        )
         // 获取用户
-        val memberData = storeMemberService.batchListMember(serviceCodeList, StoreTypeEnum.SERVICE).data
+        val memberData = storeMemberService.batchListMember(serviceCodeList, storeType).data
 
         // 获取分类
-        val classifyList = classifyService.getAllClassify(StoreTypeEnum.SERVICE.type.toByte()).data
+        val classifyList = classifyService.getAllClassify(storeType.type.toByte()).data
         val classifyMap = mutableMapOf<String, String>()
         classifyList?.forEach {
             classifyMap[it.id] = it.classifyCode
@@ -242,7 +243,7 @@ class ExtServiceSearchService @Autowired constructor(
         services.forEach {
             val serviceCode = it["SERVICE_CODE"] as String
             val visibleList = serviceVisibleData?.get(serviceCode)
-            val statistic = serviceStatisticData?.get(serviceCode)
+            val statistic = statisticData[serviceCode]
             val publicFlag = it["PUBLIC_FLAG"] as Boolean
             val members = memberData?.get(serviceCode)
             val flag = generateInstallFlag(publicFlag, members, userId, visibleList, userDeptList)
@@ -260,12 +261,12 @@ class ExtServiceSearchService @Autowired constructor(
                     summary = it["SUMMARY"] as? String,
                     flag = flag,
                     publicFlag = it["PUBLIC_FLAG"] as Boolean,
+                    modifier = it["MODIFIER"] as String,
+                    updateTime = DateTimeUtil.toDateTime(it["UPDATE_TIME"] as LocalDateTime),
                     recommendFlag = it["RECOMMEND_FLAG"] as? Boolean
                 )
             )
         }
-
-        logger.info("[list]end")
         return SearchExtServiceVO(count, page, pageSize, results)
     }
 
@@ -284,40 +285,7 @@ class ExtServiceSearchService @Autowired constructor(
         }
     }
 
-    private fun getStatisticByCodeList(
-        serviceCodeList: List<String>,
-        statFiledList: List<String>
-    ): Result<HashMap<String, ExtServiceStatistic>> {
-        val records = storeStatisticDao.batchGetStatisticByStoreCode(
-            dslContext,
-            serviceCodeList,
-            StoreTypeEnum.SERVICE.type.toByte()
-        )
-        val serviceStatistic = hashMapOf<String, ExtServiceStatistic>()
-        records.map {
-            if (it.value4() != null) {
-                val serviceCode = it.value4()
-                serviceStatistic[serviceCode] = formatServiceStatistic(it)
-            }
-        }
-        return Result(serviceStatistic)
-    }
-
-    private fun formatServiceStatistic(record: Record4<BigDecimal, BigDecimal, BigDecimal, String>): ExtServiceStatistic {
-        val downloads = record.value1()?.toInt()
-        val comments = record.value2()?.toInt()
-        val score = record.value3()?.toDouble()
-        val averageScore: Double =
-            if (score != null && comments != null && score > 0 && comments > 0) score.div(comments) else 0.toDouble()
-
-        return ExtServiceStatistic(
-            downloads = downloads ?: 0,
-            commentCnt = comments ?: 0,
-            score = String.format("%.1f", averageScore).toDoubleOrNull()
-        )
-    }
-
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

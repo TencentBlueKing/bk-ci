@@ -72,6 +72,7 @@ class ExperienceDao {
         projectId: String,
         bundleIdentifier: String,
         platform: String?,
+        recordIds: Set<Long>? = null,
         offset: Int,
         limit: Int
     ): Result<TExperienceRecord> {
@@ -81,6 +82,9 @@ class ExperienceDao {
                 .and(BUNDLE_IDENTIFIER.eq(bundleIdentifier))
                 .let {
                     if (null == platform) it else it.and(PLATFORM.eq(platform))
+                }
+                .let {
+                    if (null == recordIds) it else it.and(ID.`in`(recordIds))
                 }
                 .orderBy(CREATE_TIME.desc())
                 .limit(offset, limit)
@@ -131,7 +135,8 @@ class ExperienceDao {
         category: Int,
         productOwner: String,
         logoUrl: String,
-        size: Long
+        size: Long,
+        scheme: String
     ): Long {
         val now = LocalDateTime.now()
         with(TExperience.T_EXPERIENCE) {
@@ -164,7 +169,8 @@ class ExperienceDao {
                 CATEGORY,
                 PRODUCT_OWNER,
                 LOGO_URL,
-                SIZE
+                SIZE,
+                SCHEME
             ).values(
                 projectId,
                 name,
@@ -193,7 +199,8 @@ class ExperienceDao {
                 category,
                 productOwner,
                 logoUrl,
-                size
+                size,
+                scheme
             )
                 .returning(ID)
                 .fetchOne()
@@ -348,7 +355,7 @@ class ExperienceDao {
 
     fun countByIds(
         dslContext: DSLContext,
-        ids: MutableSet<Long>,
+        ids: Set<Long>,
         platform: String?,
         expireTime: LocalDateTime,
         online: Boolean

@@ -40,6 +40,7 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_APP_TITLE
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_FULL_IMAGE
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_IMAGE
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_SCHEME
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
@@ -126,7 +127,12 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
 
         logger.info("header: $header")
 
-        val request = buildPut(url.toString(), RequestBody.create(MediaType.parse("application/octet-stream"), file), header, useFileGateway = true)
+        val request = buildPut(
+            url.toString(),
+            RequestBody.create(MediaType.parse("application/octet-stream"), file),
+            header,
+            useFileGateway = true
+        )
         val response = request(request, "上传自定义文件失败")
         try {
             val obj = JsonParser().parse(response).asJsonObject
@@ -179,16 +185,21 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
 
     private fun uploadBkRepoPipeline(file: File, buildVariables: BuildVariables) {
         logger.info("upload file >>> ${file.name}")
-        val url = "/bkrepo/api/build/generic/${buildVariables.projectId}/pipeline/${buildVariables.pipelineId}/${buildVariables.buildId}/${file.name}"
+        val url =
+            "/bkrepo/api/build/generic/${buildVariables.projectId}/pipeline/${buildVariables.pipelineId}/${buildVariables.buildId}/${file.name}"
         val header = mutableMapOf<String, String>()
         with(buildVariables) {
-            header[bkrepoMetaDataPrefix + com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PROJECT_ID] = projectId
-            header[bkrepoMetaDataPrefix + com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID] = pipelineId
+            header[bkrepoMetaDataPrefix + com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PROJECT_ID] =
+                projectId
+            header[bkrepoMetaDataPrefix + com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID] =
+                pipelineId
             header[bkrepoMetaDataPrefix + com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID] = buildId
-            header[bkrepoMetaDataPrefix + com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_USER_ID] = variables[PIPELINE_START_USER_ID]
-                ?: ""
-            header[bkrepoMetaDataPrefix + com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_NO] = variables[PIPELINE_BUILD_NUM]
-                ?: ""
+            header[bkrepoMetaDataPrefix + com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_USER_ID] =
+                variables[PIPELINE_START_USER_ID]
+                    ?: ""
+            header[bkrepoMetaDataPrefix + com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_NO] =
+                variables[PIPELINE_BUILD_NUM]
+                    ?: ""
             header[bkrepoMetaDataPrefix + com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_SOURCE] = "pipeline"
             header[bkrepoMetaDataPrefix + ARCHIVE_PROPS_TASK_ID] = TaskUtil.getTaskId()
             header[bkrepoUid] = variables[PIPELINE_START_USER_ID] ?: ""
@@ -196,7 +207,12 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         }
         appendBkRepoProps(file, header)
 
-        val request = buildPut(url, RequestBody.create(MediaType.parse("application/octet-stream"), file), header, useFileGateway = true)
+        val request = buildPut(
+            url,
+            RequestBody.create(MediaType.parse("application/octet-stream"), file),
+            header,
+            useFileGateway = true
+        )
         val response = request(request, "上传流水线文件失败")
 
         try {
@@ -212,7 +228,13 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         setPipelineMetadata(buildVariables)
     }
 
-    private fun downloadBkRepoFile(user: String, projectId: String, repoName: String, fullpath: String, destPath: File) {
+    private fun downloadBkRepoFile(
+        user: String,
+        projectId: String,
+        repoName: String,
+        fullpath: String,
+        destPath: File
+    ) {
         val url = "/bkrepo/api/build/generic/$projectId/$repoName$fullpath"
         var header = HashMap<String, String>()
         header.set("X-BKREPO-UID", user)
@@ -259,6 +281,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
                 header[bkrepoMetaDataPrefix + ARCHIVE_PROPS_APP_APP_TITLE] = tryEncode(map["appTitle"])
                 header[bkrepoMetaDataPrefix + ARCHIVE_PROPS_APP_IMAGE] = tryEncode(map["image"])
                 header[bkrepoMetaDataPrefix + ARCHIVE_PROPS_APP_FULL_IMAGE] = tryEncode(map["fullImage"])
+                header[bkrepoMetaDataPrefix + ARCHIVE_PROPS_APP_SCHEME] = tryEncode(map["scheme"])
             }
             if (file.name.endsWith(".apk")) {
                 val apkFile = ApkFile(file)

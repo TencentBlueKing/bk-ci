@@ -31,8 +31,10 @@ import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.app.AppExperienceIndexResource
+import com.tencent.devops.experience.pojo.index.HotCategoryParam
 import com.tencent.devops.experience.pojo.index.IndexAppInfoVO
 import com.tencent.devops.experience.pojo.index.IndexBannerVO
+import com.tencent.devops.experience.pojo.index.NewCategoryParam
 import com.tencent.devops.experience.service.ExperienceIndexService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -53,46 +55,45 @@ class AppExperienceIndexResourceImpl @Autowired constructor(
         userId: String,
         platform: Int,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        includeExternalUrl: Boolean?
     ): Result<Pagination<IndexAppInfoVO>> {
-        return experienceIndexService.hots(userId, page, pageSize, platform)
+        return experienceIndexService.hots(userId, page, pageSize, platform, includeExternalUrl)
     }
 
     override fun necessary(
         userId: String,
         platform: Int,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        includeExternalUrl: Boolean?
     ): Result<Pagination<IndexAppInfoVO>> {
-        return experienceIndexService.necessary(userId, page, pageSize, platform)
+        return experienceIndexService.necessary(userId, page, pageSize, platform, includeExternalUrl)
     }
 
     override fun newest(
         userId: String,
         platform: Int,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        includeExternalUrl: Boolean?
     ): Result<Pagination<IndexAppInfoVO>> {
-        return experienceIndexService.newest(userId, page, pageSize, platform)
+        return experienceIndexService.newest(userId, page, pageSize, platform, includeExternalUrl)
     }
 
     override fun hotCategory(
         userId: String,
         platform: Int,
-        categoryId: Int,
-        page: Int,
-        pageSize: Int
+        hotCategoryParam: HotCategoryParam
     ): Result<Pagination<IndexAppInfoVO>> {
-        return experienceIndexService.hotCategory(userId, categoryId, page, pageSize, platform)
+        return experienceIndexService.hotCategory(userId, platform, hotCategoryParam)
     }
 
     override fun newCategory(
         userId: String,
         platform: Int,
-        categoryId: Int,
-        page: Int,
-        pageSize: Int
+        newCategoryParam: NewCategoryParam
     ): Result<Pagination<IndexAppInfoVO>> {
-        return experienceIndexService.newCategory(userId, categoryId, page, pageSize, platform)
+        return experienceIndexService.newCategory(userId, platform, newCategoryParam)
     }
 }
