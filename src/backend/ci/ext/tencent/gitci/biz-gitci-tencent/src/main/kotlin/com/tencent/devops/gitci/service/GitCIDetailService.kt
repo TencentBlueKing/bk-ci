@@ -222,7 +222,7 @@ class GitCIDetailService @Autowired constructor(
             "项目未开启工蜂CI，无法查询"
         )
 
-        return client.get(UserReportResource::class).get(userId, conf.projectCode!!, pipelineId, buildId).data!!
+        return client.get(UserReportResource::class).get(userId, conf.projectCode!!, pipelineId, buildId, null).data!!
     }
 
     fun getPipelineWithId(
