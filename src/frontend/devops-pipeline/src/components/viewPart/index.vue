@@ -240,7 +240,6 @@
                 }
             },
             async requestUrl (row, key, index, type) {
-                debugger
                 this.curIndexItemUrl = ''
                 this.partList.forEach((vv, kk) => {
                     if (kk === index) {
