@@ -27,6 +27,7 @@
 
 package com.tencent.devops.gitci.v2.service
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.gitci.common.gitci2.PreScriptBuildYaml
 import com.tencent.devops.gitci.common.gitci2.ScriptBuildYaml
@@ -94,7 +95,7 @@ class V2RequestTrigger @Autowired constructor (
                 V2GitCIRequestTriggerEvent(
                     pipeline = gitProjectPipeline,
                     event = gitRequestEvent,
-                    yaml = yamlObject,
+                    yaml = JsonUtil.toJson(yamlObject),
                     originYaml = originYaml,
                     normalizedYaml = normalizedYaml,
                     gitBuildId = gitBuildId

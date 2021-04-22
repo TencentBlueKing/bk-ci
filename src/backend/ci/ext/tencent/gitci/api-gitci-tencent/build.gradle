@@ -38,8 +38,6 @@ dependencies {
     compile project(":core:process:api-process")
     compile project(":core:log:api-log")
     compile project(":core:project:api-project")
-
-    compile "com.tencent.devops.gitci.common:common-gitci2:1.0.1-SNAPSHOT"
 }
 
 apply from: "$rootDir/task_deploy_to_maven.gradle"

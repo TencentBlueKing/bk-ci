@@ -28,14 +28,13 @@
 package com.tencent.devops.gitci.pojo
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.gitci.common.gitci2.ScriptBuildYaml
 import com.tencent.devops.gitci.constant.MQ
 
 @Event(MQ.EXCHANGE_GITCI_REQUEST_TRIGGER_V2_EVENT, MQ.ROUTE_GITCI_REQUEST_TRIGGER_V2_EVENT)
 data class V2GitCIRequestTriggerEvent(
     val pipeline: GitProjectPipeline,
     val event: GitRequestEvent,
-    val yaml: ScriptBuildYaml,
+    val yaml: String,
     val originYaml: String,
     val normalizedYaml: String,
     val gitBuildId: Long
