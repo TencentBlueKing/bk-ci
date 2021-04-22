@@ -41,10 +41,12 @@ import com.tencent.bk.sdk.iam.dto.manager.dto.CreateManagerDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
 import com.tencent.bk.sdk.iam.service.ManagerService
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.utils.IamUtils
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.listener.TxIamV3CreateEvent
@@ -71,43 +73,55 @@ class IamV3Service @Autowired constructor(
      *  5. 分配”ALL action“权限到CI管理员
      */
     fun createIamV3Project(event: TxIamV3CreateEvent) {
-        val resourceRegisterInfo = event.resourceRegisterInfo
-        val userId = event.userId
-        var relationIam = false
-        if (event.retryCount == 0) {
-            logger.info("start create iam V3 project $event")
-            val iamProjectId = createIamProject(userId, resourceRegisterInfo)
-            val roleId = createRole(userId, iamProjectId.toInt(), resourceRegisterInfo.resourceCode)
-            createManagerPermission(resourceRegisterInfo.resourceCode, resourceRegisterInfo.resourceName, roleId)
-            event.iamProjectId = iamProjectId
-
-            val projectInfo = projectDao.getByEnglishName(dslContext, resourceRegisterInfo.resourceCode)
-            if (projectInfo == null) {
-                event.retryCount = event.retryCount + 1
-                event.delayMills = 1000
-                projectDispatcher.dispatch(event)
-                return
+        val watcher = Watcher(
+            id = "IAM|CreateProject|${event.projectId}|${event.userId}"
+        )
+        logger.info("start create iamV3 project: $event")
+        try {
+            val resourceRegisterInfo = event.resourceRegisterInfo
+            val userId = event.userId
+            var relationIam = false
+            if (event.retryCount == 0) {
+                logger.info("start create iam V3 project $event")
+                watcher.start("createProject")
+                val iamProjectId = createIamProject(userId, resourceRegisterInfo)
+                watcher.start("createManagerRole")
+                val roleId = createRole(userId, iamProjectId.toInt(), resourceRegisterInfo.resourceCode)
+                watcher.start("createManagerPermission")
+                createManagerPermission(resourceRegisterInfo.resourceCode, resourceRegisterInfo.resourceName, roleId)
+                event.iamProjectId = iamProjectId
+                watcher.start("findProject")
+                val projectInfo = projectDao.getByEnglishName(dslContext, resourceRegisterInfo.resourceCode)
+                if (projectInfo == null) {
+                    event.retryCount = event.retryCount + 1
+                    event.delayMills = 1000
+                    projectDispatcher.dispatch(event)
+                    return
+                } else {
+                    relationIam = true
+                }
+            } else if (event.retryCount < 10) {
+                val projectInfo = projectDao.getByEnglishName(dslContext, resourceRegisterInfo.resourceCode)
+                if (projectInfo == null) {
+                    event.retryCount = event.retryCount + 1
+                    event.delayMills = 1000
+                    logger.info("find ${resourceRegisterInfo.resourceCode} ${event.retryCount} times")
+                    projectDispatcher.dispatch(event)
+                    return
+                } else {
+                    relationIam = true
+                }
             } else {
-                relationIam = true
+                logger.warn("create iam projectFail, ${resourceRegisterInfo.resourceCode} not find")
             }
-        } else if (event.retryCount < 10) {
-            val projectInfo = projectDao.getByEnglishName(dslContext, resourceRegisterInfo.resourceCode)
-            if (projectInfo == null) {
-                event.retryCount = event.retryCount + 1
-                event.delayMills = 1000
-                logger.info("find ${resourceRegisterInfo.resourceCode} ${event.retryCount} times")
-                projectDispatcher.dispatch(event)
-                return
-            } else {
-                relationIam = true
-            }
-        } else {
-            logger.warn("create iam projectFail, ${resourceRegisterInfo.resourceCode} not find")
-        }
 
-        // 修改V3项目对应的projectId
-        if (relationIam && !event.iamProjectId.isNullOrEmpty()) {
-            projectDao.updateRelationByCode(dslContext, resourceRegisterInfo.resourceCode, event.iamProjectId.toString())
+            // 修改V3项目对应的projectId
+            if (relationIam && !event.iamProjectId.isNullOrEmpty()) {
+                projectDao.updateRelationByCode(dslContext, resourceRegisterInfo.resourceCode, event.iamProjectId.toString())
+            }
+        } finally {
+            watcher.stop()
+            LogUtils.printCostTimeWE(watcher = watcher, warnThreshold = 5000)
         }
     }
 
