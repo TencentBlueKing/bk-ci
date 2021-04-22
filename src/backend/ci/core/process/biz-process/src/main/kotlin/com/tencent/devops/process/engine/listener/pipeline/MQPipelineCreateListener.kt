@@ -53,6 +53,7 @@ import com.tencent.devops.common.websocket.pojo.WebSocketType
 import com.tencent.devops.process.engine.control.CallBackControl
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.engine.pojo.event.PipelineCreateEvent
+import com.tencent.devops.process.engine.service.AgentPipelineRefService
 import com.tencent.devops.process.engine.service.PipelineAtomStatisticsService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.engine.utils.RepositoryUtils
@@ -74,6 +75,7 @@ class MQPipelineCreateListener @Autowired constructor(
     private val webSocketDispatcher: WebSocketDispatcher,
     private val redisOperation: RedisOperation,
     private val callBackControl: CallBackControl,
+    private val agentPipelineRefService: AgentPipelineRefService,
     private val objectMapper: ObjectMapper,
     pipelineEventDispatcher: PipelineEventDispatcher
 ) : BaseListener<PipelineCreateEvent>(pipelineEventDispatcher) {
@@ -88,6 +90,11 @@ class MQPipelineCreateListener @Autowired constructor(
                 watcher.stop()
                 watcher.start("updateAtomPipelineNum")
                 pipelineAtomStatisticsService.updateAtomPipelineNum(event.pipelineId, event.version ?: 1)
+                watcher.stop()
+                watcher.start("updateAgentPipelineRef")
+                with(event) {
+                    agentPipelineRefService.updateAgentPipelineRef(userId, "create_pipeline", projectId, pipelineId)
+                }
                 watcher.stop()
             }
             if (event.source == "createWebhook") {

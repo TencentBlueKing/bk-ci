@@ -74,6 +74,7 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.engine.pojo.event.PipelineCreateEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineDeleteEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineRestoreEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
 import com.tencent.devops.process.plugin.load.ElementBizRegistrar
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
@@ -1098,6 +1099,16 @@ class PipelineRepositoryService constructor(
             )
             pipelineModelTaskDao.batchSave(transactionContext, tasks)
         }
+
+        pipelineEventDispatcher.dispatch(
+            PipelineRestoreEvent(
+                source = "restore_pipeline",
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId
+            )
+        )
+
         return existModel
     }
 
