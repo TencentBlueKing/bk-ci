@@ -48,79 +48,79 @@ class V2WebHookMatcher(private val event: GitEvent) {
     fun isMatch(
         triggerOn: TriggerOn
     ): Boolean {
-        val eventBranch = getBranch()
-        val eventTag = getTag()
-        val eventType = getEventType()
+        if (triggerOn.mr != null || triggerOn.push != null || triggerOn.tag != null) {
+            val eventBranch = getBranch()
+            val eventTag = getTag()
+            val eventType = getEventType()
 
-        when (eventType) {
-            CodeEventType.PUSH -> {
-                if (isPushMatch(triggerOn = triggerOn, eventBranch = eventBranch)) return true
-            }
-            CodeEventType.TAG_PUSH -> {
-                if (isTagPushMatch(triggerOn = triggerOn, eventTag = eventTag)) return true
-            }
-            CodeEventType.MERGE_REQUEST -> {
-                if (isMrMatch(triggerOn = triggerOn, eventBranch = eventBranch)) return true
-            }
-            else -> {
-                return false
-            }
-        }
-
-        logger.info("The include branch($eventBranch) or tag($eventTag) doesn't match the git event($event)")
-        return false
-    }
-
-    private fun isPushMatch(triggerOn: TriggerOn, eventBranch: String): Boolean {
-        // exclude
-        if (triggerOn.push!!.branchesIgnore != null && triggerOn.push!!.branchesIgnore!!.isNotEmpty()) {
-            triggerOn.push!!.branchesIgnore!!.forEach {
-                if (isBranchMatch(it, eventBranch)) {
-                    logger.info("The branchesIgnore($it) exclude the git branch ($eventBranch)")
+            when (eventType) {
+                CodeEventType.PUSH -> {
+                    if (isPushMatch(triggerOn, eventBranch)) return true
+                }
+                CodeEventType.TAG_PUSH -> {
+                    if (isTagPushMatch(triggerOn, eventTag)) return true
+                }
+                CodeEventType.MERGE_REQUEST -> {
+                    if (isMrMatch(triggerOn, eventBranch)) return true
+                }
+                else -> {
                     return false
                 }
             }
         }
-        if (!isExcludePathMatch(triggerOn)) return false
-        // include
-        var branchIncluded = false
-        if (triggerOn.push!!.branches != null && triggerOn.push!!.branches!!.isNotEmpty()) {
-            logger.info("Include branch set(${triggerOn.push!!.branches})")
-            run outside@{
-                triggerOn.push!!.branches!!.forEach {
-                    if (isBranchMatch(it, eventBranch)) {
-                        logger.info("The include branch($it) include the git update one($eventBranch)")
-                        branchIncluded = true
-                        return@outside
-                    }
-                }
-            }
+
+        logger.info("The triggerOn doesn't match the git event($event)")
+        return false
+    }
+
+    private fun isPushMatch(triggerOn: TriggerOn, eventBranch: String): Boolean {
+        // 如果没有配置push，默认匹配
+        if (triggerOn.push == null) {
+            return true
         }
-        val pathIncluded = isIncludePathMatch(triggerOn.push!!.paths)
-        if (branchIncluded && pathIncluded) {
-            logger.info("Git trigger branch($eventBranch) is included and path(${triggerOn.push!!.paths}) is included")
+
+        val pushRule = triggerOn.push!!
+        // 1、check branchIgnore，满足屏蔽条件直接返回不匹配
+        if (isIgnoreBranchMatch(pushRule.branchesIgnore)) return false
+
+        // 2、check pathIgnore，满足屏蔽条件直接返回不匹配
+        if (isIgnorePathMatch(pushRule.pathsIgnore)) return false
+
+        // 3、check userIgnore,满足屏蔽条件直接返回不匹配
+        if (isIgnoreUserMatch(pushRule.usersIgnore)) return false
+
+        // include
+        if (isBranchMatch(pushRule.branches) && isIncludePathMatch(pushRule.paths) && isUserMatch(pushRule.users)) {
+            logger.info("Git trigger branch($eventBranch) is included and path(${pushRule.paths}) is included")
             return true
         }
         return false
     }
 
     private fun isTagPushMatch(triggerOn: TriggerOn, eventTag: String): Boolean {
-        // exclude
-        if (triggerOn.tag?.tagsIgnore != null && triggerOn.tag!!.tagsIgnore!!.isNotEmpty()) {
-            triggerOn.tag!!.tagsIgnore!!.forEach {
+        if (triggerOn.tag == null) {
+            return true
+        }
+
+        val tagRule = triggerOn.tag!!
+        // ignore
+        if (tagRule.tagsIgnore != null && tagRule.tagsIgnore!!.isNotEmpty()) {
+            tagRule.tagsIgnore!!.forEach {
                 if (isTagMatch(it, eventTag)) {
                     logger.info("The exclude tag($it) exclude the git tag ($eventTag)")
                     return false
                 }
             }
         }
-        if (!isExcludePathMatch(triggerOn)) return false
+
+        if (isIgnoreUserMatch(tagRule.usersIgnore)) return false
+
         // include
         var tagIncluded = false
-        if (triggerOn.tag!!.tags != null && triggerOn.tag!!.tags!!.isNotEmpty()) {
-            logger.info("Include tags set(${triggerOn.tag!!.tags})")
+        if (tagRule.tags != null && tagRule.tags!!.isNotEmpty()) {
+            logger.info("Include tags set(${tagRule.tags})")
             run outside@{
-                triggerOn.tag!!.tags!!.forEach {
+                tagRule.tags!!.forEach {
                     if (isTagMatch(it, eventTag)) {
                         logger.info("The include tags($it) include the git update one($eventTag)")
                         tagIncluded = true
@@ -129,46 +129,123 @@ class V2WebHookMatcher(private val event: GitEvent) {
                 }
             }
         }
-        // val pathIncluded = isIncludePathMatch(triggerOn.tag)
-        val pathIncluded = true
-        if (tagIncluded && pathIncluded) {
+
+        if (tagIncluded && isUserMatch(tagRule.users)) {
             logger.info("Git trigger tags($eventTag) is included and path(${triggerOn.tag!!.tags}) is included")
             return true
         }
         return false
     }
 
-    private fun isExcludePathMatch(triggerOn: TriggerOn): Boolean {
-        if (triggerOn.push!!.pathsIgnore != null && triggerOn.push!!.pathsIgnore!!.isNotEmpty()) {
-            logger.info("Exclude path set (${triggerOn.push!!.pathsIgnore})")
+    private fun isMrMatch(triggerOn: TriggerOn, eventBranch: String): Boolean {
+        if (triggerOn.mr == null) {
+            return true
+        }
+
+        // exclude branch of mr
+        if (triggerOn.mr!!.sourceBranchesIgnore != null && triggerOn.mr!!.sourceBranchesIgnore!!.isNotEmpty()) {
+            logger.info("Exclude branch set(${triggerOn.mr!!.sourceBranchesIgnore})")
+            triggerOn.mr!!.sourceBranchesIgnore!!.forEach {
+                if (isBranchMatch(it, eventBranch)) {
+                    logger.info("The exclude branch($it) exclude the git update one($eventBranch)")
+                    return false
+                }
+            }
+        }
+
+        if (isIgnorePathMatch(triggerOn.mr!!.pathsIgnore)) return false
+        if (isIgnoreUserMatch(triggerOn.mr!!.usersIgnore)) return false
+
+        // include branch of mr
+        var targetBranchMatch = false
+        if (triggerOn.mr!!.targetBranches != null && triggerOn.mr!!.targetBranches!!.isNotEmpty()) {
+            logger.info("Include branch set(${triggerOn.mr!!.targetBranches})")
+            triggerOn.mr!!.targetBranches!!.forEach {
+                if (isBranchMatch(it, eventBranch)) {
+                    logger.info("The include branch($it) include the git update one($eventBranch)")
+                    targetBranchMatch = true
+                }
+            }
+        }
+
+        if (targetBranchMatch && isIncludePathMatch(triggerOn.mr!!.paths) &&
+                isUserMatch(triggerOn.mr!!.users)) {
+            return true
+        }
+
+        return false
+    }
+
+    private fun isIgnoreBranchMatch(branchList: List<String>?): Boolean {
+        val eventBranch = getBranch()
+        if (branchList != null && branchList.isNotEmpty()) {
+            branchList.forEach {
+                if (isBranchMatch(it, eventBranch)) {
+                    logger.info("The branchesIgnore($it) exclude the git branch ($eventBranch)")
+                    return true
+                }
+            }
+        }
+
+        return false
+    }
+
+
+    private fun isIgnorePathMatch(pathIgnoreList: List<String>?): Boolean {
+        if (pathIgnoreList != null && pathIgnoreList.isNotEmpty()) {
+            logger.info("Exclude path set ($pathIgnoreList)")
             (event as GitPushEvent).commits.forEach { commit ->
                 commit.added?.forEach { path ->
-                    triggerOn.push!!.pathsIgnore!!.forEach { excludePath ->
+                    pathIgnoreList.forEach { excludePath ->
                         if (isPathMatch(path, excludePath)) {
                             logger.info("The exclude path($excludePath) exclude the git update one($path)")
-                            return false
+                            return true
                         }
                     }
                 }
                 commit.modified?.forEach { path ->
-                    triggerOn.push!!.pathsIgnore!!.forEach { excludePath ->
+                    pathIgnoreList.forEach { excludePath ->
                         if (isPathMatch(path, excludePath)) {
                             logger.info("The exclude path($excludePath) exclude the git update one($path)")
-                            return false
+                            return true
                         }
                     }
                 }
                 commit.removed?.forEach { path ->
-                    triggerOn.push!!.pathsIgnore!!.forEach { excludePath ->
+                    pathIgnoreList.forEach { excludePath ->
                         if (isPathMatch(path, excludePath)) {
                             logger.info("The exclude path($excludePath) exclude the git update one($path)")
-                            return false
+                            return true
                         }
                     }
                 }
             }
         }
-        return true
+
+        return false
+    }
+
+    private fun isBranchMatch(branchList: List<String>?): Boolean {
+        var branchIncluded = false
+        val eventBranch = getBranch()
+        if (branchList != null && branchList.isNotEmpty()) {
+            logger.info("Include branch set($branchList)")
+            if (branchList.size == 1 && branchList[0] == "*") {
+                branchIncluded = true
+            } else {
+                run outside@{
+                    branchList.forEach {
+                        if (isBranchMatch(it, eventBranch)) {
+                            logger.info("The include branch($it) include the git update one($eventBranch)")
+                            branchIncluded = true
+                            return@outside
+                        }
+                    }
+                }
+            }
+        }
+
+        return branchIncluded
     }
 
     private fun isIncludePathMatch(pathList: List<String>?): Boolean {
@@ -210,32 +287,23 @@ class V2WebHookMatcher(private val event: GitEvent) {
             logger.info("trigger path include is empty.")
             pathIncluded = true
         }
+
         return pathIncluded
     }
 
-    private fun isMrMatch(triggerOn: TriggerOn, eventBranch: String): Boolean {
-        // exclude branch of mr
-        if (triggerOn.mr!!.sourceBranchesIgnore != null && triggerOn.mr!!.sourceBranchesIgnore!!.isNotEmpty()) {
-            logger.info("Exclude branch set(${triggerOn.mr!!.sourceBranchesIgnore})")
-            triggerOn.mr!!.sourceBranchesIgnore!!.forEach {
-                if (isBranchMatch(it, eventBranch)) {
-                    logger.info("The exclude branch($it) exclude the git update one($eventBranch)")
-                    return false
-                }
-            }
+    private fun isUserMatch(userList: List<String>?): Boolean {
+        return if (userList != null && userList.isNotEmpty()) {
+            userList.contains(getUser())
+        } else {
+            true
         }
-        // mr 没有path？
+    }
 
-        // include branch of mr
-        if (triggerOn.mr!!.targetBranches != null && triggerOn.mr!!.targetBranches!!.isNotEmpty()) {
-            logger.info("Include branch set(${triggerOn.mr!!.targetBranches})")
-            triggerOn.mr!!.targetBranches!!.forEach {
-                if (isBranchMatch(it, eventBranch)) {
-                    logger.info("The include branch($it) include the git update one($eventBranch)")
-                    return true
-                }
-            }
+    private fun isIgnoreUserMatch(ignoreUserList: List<String>?): Boolean {
+        if (ignoreUserList != null && ignoreUserList.isEmpty() && ignoreUserList.contains(getUser())) {
+            return true
         }
+
         return false
     }
 
