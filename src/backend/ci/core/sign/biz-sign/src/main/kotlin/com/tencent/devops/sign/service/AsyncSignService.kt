@@ -27,11 +27,15 @@
 
 package com.tencent.devops.sign.service
 
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
+import com.tencent.devops.sign.jmx.SignBean
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.DisposableBean
+import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.io.File
+import java.time.LocalDateTime
 import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.RejectedExecutionException
 import java.util.concurrent.ThreadPoolExecutor
@@ -40,7 +44,8 @@ import java.util.concurrent.TimeUnit
 @Service
 class AsyncSignService(
     private val signService: SignService,
-    private val signInfoService: SignInfoService
+    private val signInfoService: SignInfoService,
+    private val signBean: SignBean
 ) : DisposableBean {
 
     // 线程池队列和线程上限保持一致，并保持有一个活跃线程
@@ -60,9 +65,14 @@ class AsyncSignService(
     ) {
         try {
             signExecutorService.execute {
+                val start = LocalDateTime.now()
                 logger.info("[$resignId] asyncSign start")
-                signService.signIpaAndArchive(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
-                logger.info("[$resignId] asyncSign finished")
+                val success = signService.signIpaAndArchive(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
+                logger.info("[$resignId] asyncSign finished with success:$success")
+                signBean.signTaskFinish(
+                    elapse = LocalDateTime.now().timestampmilli() - start.timestampmilli(),
+                    success = success
+                )
             }
         } catch (e: RejectedExecutionException) {
             // 失败结束签名逻辑
@@ -93,6 +103,15 @@ class AsyncSignService(
         while (!signExecutorService.awaitTermination(5, TimeUnit.SECONDS)) {
             logger.warn("SignTaskBean still has sign tasks.")
         }
+    }
+
+    @Scheduled(cron = "0/10 * *  * * ? ")
+    fun flushTaskStatus() {
+        signBean.flushStatus(
+            activeCount = signExecutorService.activeCount,
+            taskCount = signExecutorService.taskCount,
+            queueSize = signExecutorService.queue.size
+        )
     }
 
     companion object {
