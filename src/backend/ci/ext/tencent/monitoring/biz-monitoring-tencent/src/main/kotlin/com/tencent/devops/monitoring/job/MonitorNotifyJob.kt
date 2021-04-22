@@ -45,6 +45,7 @@ import org.elasticsearch.action.search.SearchRequest
 import org.elasticsearch.client.RestHighLevelClient
 import org.elasticsearch.index.query.QueryBuilders
 import org.elasticsearch.search.builder.SearchSourceBuilder
+import org.influxdb.dto.QueryResult
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -115,10 +116,7 @@ class MonitorNotifyJob @Autowired constructor(
             return
         }
 
-        if (null == receivers || null == title || //
-            null == atomDetailUrl || null == dispatchDetailUrl || null == userStatusDetailUrl || null == codeccDetailUrl || //
-            null == atomObservableUrl || null == dispatchObservableUrl || null == userStatusObservableUrl || null == codeccObservableUrl //
-        ) {
+        if (illegalConfig()) {
             logger.info("some params is null , notifyDaily no start")
             return
         }
@@ -128,38 +126,7 @@ class MonitorNotifyJob @Autowired constructor(
             logger.info("MonitorNotifyJob , notifyDaily start")
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
-                val yesterday = LocalDateTime.now().minusDays(1)
-                val startTime = yesterday.withHour(0).withMinute(0).withSecond(0).timestampmilli()
-                val endTime = yesterday.withHour(23).withMinute(59).withSecond(59).timestampmilli()
-
-                val moduleDatas = listOf(
-                    gatewayStatus(startTime, endTime),
-                    atomMonitor(startTime, endTime),
-                    dispatchStatus(startTime, endTime),
-                    userStatus(startTime, endTime),
-                    commitCheck(startTime, endTime),
-                    codecc(startTime, endTime)
-                )
-
-                // 发送邮件
-                val message = EmailNotifyMessage()
-                message.addAllReceivers(receivers!!.split(",").toHashSet())
-                message.title = title as String
-                message.body = EmailUtil.getEmailBody(startTime, endTime, moduleDatas)
-                message.format = EnumEmailFormat.HTML
-                client.get(ServiceNotifyResource::class).sendEmailNotify(message)
-
-                // 落库
-                val startLocalTime = Instant.ofEpochMilli(startTime).atZone(ZoneOffset.ofHours(8)).toLocalDateTime()
-                val endLocalTime = Instant.ofEpochMilli(endTime).atZone(ZoneOffset.ofHours(8)).toLocalDateTime()
-                moduleDatas.forEach { m ->
-                    m.rowList.forEach { l ->
-                        l.run {
-                            slaDailyDao.insert(dslContext, m.module, l.first, l.second, startLocalTime, endLocalTime)
-                        }
-                    }
-                }
-
+                doNotify()
                 logger.info("MonitorNotifyJob , notifyDaily finish")
             } else {
                 logger.info("SLA Daily Email is running")
@@ -171,29 +138,55 @@ class MonitorNotifyJob @Autowired constructor(
         }
     }
 
+    private fun illegalConfig() =
+        null == receivers || null == title || null == atomDetailUrl || null == dispatchDetailUrl ||
+                null == userStatusDetailUrl || null == codeccDetailUrl || null == atomObservableUrl ||
+                null == dispatchObservableUrl || null == userStatusObservableUrl || null == codeccObservableUrl
+
+    private fun doNotify() {
+        val yesterday = LocalDateTime.now().minusDays(1)
+        val startTime = yesterday.withHour(0).withMinute(0).withSecond(0).timestampmilli()
+        val endTime = yesterday.withHour(23).withMinute(59).withSecond(59).timestampmilli()
+
+        val moduleDataList = listOf(
+            gatewayStatus(startTime, endTime),
+            atomMonitor(startTime, endTime),
+            dispatchStatus(startTime, endTime),
+            userStatus(startTime, endTime),
+            commitCheck(startTime, endTime),
+            codecc(startTime, endTime)
+        )
+
+        // 发送邮件
+        val message = EmailNotifyMessage()
+        message.addAllReceivers(receivers!!.split(",").toHashSet())
+        message.title = title as String
+        message.body = EmailUtil.getEmailBody(startTime, endTime, moduleDataList)
+        message.format = EnumEmailFormat.HTML
+        client.get(ServiceNotifyResource::class).sendEmailNotify(message)
+
+        // 落库
+        val startLocalTime = Instant.ofEpochMilli(startTime).atZone(ZoneOffset.ofHours(8)).toLocalDateTime()
+        val endLocalTime = Instant.ofEpochMilli(endTime).atZone(ZoneOffset.ofHours(8)).toLocalDateTime()
+        moduleDataList.forEach { m ->
+            m.rowList.forEach { l ->
+                l.run {
+                    slaDailyDao.insert(dslContext, m.module, l.first, l.second, startLocalTime, endLocalTime)
+                }
+            }
+        }
+    }
+
     private fun commitCheck(startTime: Long, endTime: Long): EmailModuleData {
         try {
             val sql =
-                "SELECT sum(commit_total_count),sum(commit_success_count) FROM CommitCheck_success_rat_count WHERE time>${startTime}000000 AND time<${endTime}000000"
+                "SELECT sum(commit_total_count),sum(commit_success_count) FROM CommitCheck_success_rat_count " +
+                        "WHERE time>${startTime}000000 AND time<${endTime}000000"
             val queryResult = influxdbClient.select(sql)
 
             val rowList = mutableListOf<Triple<String, Double, String>>()
             if (null != queryResult && !queryResult.hasError()) {
-                queryResult.results.forEach { result ->
-                    result.series?.forEach { serie ->
-                        serie.run {
-                            val count = serie.values[0][1].let { if (it is Number) it.toInt() else 1 }
-                            val success = serie.values[0][2].let { if (it is Number) it.toInt() else 0 }
-                            rowList.add(
-                                Triple(
-                                    "CommitCheck",
-                                    success * 100.0 / count,
-                                    getDetailUrl(startTime, endTime, Module.COMMIT_CHECK)
-                                )
-                            )
-                        }
-                    }
-                }
+                putCommitCheckRowList(queryResult, rowList, startTime, endTime)
             } else {
                 logger.error("commitCheck , get map error , errorMsg:${queryResult?.error}")
             }
@@ -202,6 +195,29 @@ class MonitorNotifyJob @Autowired constructor(
         } catch (e: Throwable) {
             logger.error("commitCheck", e)
             return EmailModuleData("工蜂回写统计", emptyList(), getObservableUrl(startTime, endTime, Module.COMMIT_CHECK))
+        }
+    }
+
+    private fun putCommitCheckRowList(
+        queryResult: QueryResult,
+        rowList: MutableList<Triple<String, Double, String>>,
+        startTime: Long,
+        endTime: Long
+    ) {
+        queryResult.results.forEach { result ->
+            result.series?.forEach { serie ->
+                val countAny = serie.values[0][1]
+                val successAny = serie.values[0][2]
+                val count = if (countAny is Number) countAny.toInt() else 1
+                val success = if (successAny is Number) successAny.toInt() else 0
+                rowList.add(
+                    Triple(
+                        "CommitCheck",
+                        success * 100.0 / count,
+                        getDetailUrl(startTime, endTime, Module.COMMIT_CHECK)
+                    )
+                )
+            }
         }
     }
 
@@ -247,26 +263,13 @@ class MonitorNotifyJob @Autowired constructor(
     fun userStatus(startTime: Long, endTime: Long): EmailModuleData {
         try {
             val sql =
-                "SELECT sum(user_total_count),sum(user_success_count) FROM UsersStatus_success_rat_count WHERE time>${startTime}000000 AND time<${endTime}000000"
+                "SELECT sum(user_total_count),sum(user_success_count) FROM UsersStatus_success_rat_count " +
+                        "WHERE time>${startTime}000000 AND time<${endTime}000000"
             val queryResult = influxdbClient.select(sql)
 
             val rowList = mutableListOf<Triple<String, Double, String>>()
             if (null != queryResult && !queryResult.hasError()) {
-                queryResult.results.forEach { result ->
-                    result.series?.forEach { serie ->
-                        serie.run {
-                            val count = serie.values[0][1].let { if (it is Number) it.toInt() else 1 }
-                            val success = serie.values[0][2].let { if (it is Number) it.toInt() else 0 }
-                            rowList.add(
-                                Triple(
-                                    "userStatus",
-                                    success * 100.0 / count,
-                                    getDetailUrl(startTime, endTime, Module.USER_STATUS)
-                                )
-                            )
-                        }
-                    }
-                }
+                putUserStatusRowList(queryResult, rowList, startTime, endTime)
             } else {
                 logger.error("userStatus , get map error , errorMsg:${queryResult?.error}")
             }
@@ -278,30 +281,38 @@ class MonitorNotifyJob @Autowired constructor(
         }
     }
 
+    private fun putUserStatusRowList(
+        queryResult: QueryResult,
+        rowList: MutableList<Triple<String, Double, String>>,
+        startTime: Long,
+        endTime: Long
+    ) {
+        queryResult.results.forEach { result ->
+            result.series?.forEach { serie ->
+                val countAny = serie.values[0][1]
+                val successAny = serie.values[0][2]
+                val success = if (successAny is Number) successAny.toInt() else 0
+                rowList.add(
+                    Triple(
+                        "userStatus",
+                        success * 100.0 / if (countAny is Number) countAny.toInt() else 1,
+                        getDetailUrl(startTime, endTime, Module.USER_STATUS)
+                    )
+                )
+            }
+        }
+    }
+
     fun dispatchStatus(startTime: Long, endTime: Long): EmailModuleData {
         try {
             val sql =
-                "SELECT sum(devcloud_total_count),sum(devcloud_success_count) FROM DispatchStatus_success_rat_count WHERE time>${startTime}000000 AND time<${endTime}000000 GROUP BY buildType"
+                "SELECT sum(devcloud_total_count),sum(devcloud_success_count) FROM DispatchStatus_success_rat_count " +
+                        "WHERE time>${startTime}000000 AND time<${endTime}000000 GROUP BY buildType"
             val queryResult = influxdbClient.select(sql)
 
             val rowList = mutableListOf<Triple<String, Double, String>>()
             if (null != queryResult && !queryResult.hasError()) {
-                queryResult.results.forEach { result ->
-                    result.series?.forEach { serie ->
-                        serie.run {
-                            val count = serie.values[0][1].let { if (it is Number) it.toInt() else 1 }
-                            val success = serie.values[0][2].let { if (it is Number) it.toInt() else 0 }
-                            val name = tags["buildType"] ?: "Unknown"
-                            rowList.add(
-                                Triple(
-                                    name,
-                                    success * 100.0 / count,
-                                    getDetailUrl(startTime, endTime, Module.DISPATCH, name)
-                                )
-                            )
-                        }
-                    }
-                }
+                putDispatchStatusRowList(queryResult, rowList, startTime, endTime)
             } else {
                 logger.error("dispatchStatus , get map error , errorMsg:${queryResult?.error}")
             }
@@ -321,11 +332,38 @@ class MonitorNotifyJob @Autowired constructor(
         }
     }
 
+    private fun putDispatchStatusRowList(
+        queryResult: QueryResult,
+        rowList: MutableList<Triple<String, Double, String>>,
+        startTime: Long,
+        endTime: Long
+    ) {
+        queryResult.results.forEach { result ->
+            result.series?.forEach { serie ->
+                val countAny = serie.values[0][1]
+                val successAny = serie.values[0][2]
+                val count = if (countAny is Number) countAny.toInt() else 1
+                val success = if (successAny is Number) successAny.toInt() else 0
+                val name = serie.tags["buildType"] ?: "Unknown"
+                rowList.add(
+                    Triple(
+                        name,
+                        success * 100.0 / count,
+                        getDetailUrl(startTime, endTime, Module.DISPATCH, name)
+                    )
+                )
+            }
+        }
+    }
+
+    @SuppressWarnings("ComplexMethod", "NestedBlockDepth")
     fun atomMonitor(startTime: Long, endTime: Long): EmailModuleData {
         try {
             val sql =
-                "SELECT sum(total_count),sum(success_count),sum(CODE_GIT_total_count),sum(CODE_GIT_success_count),sum(UploadArtifactory_total_count),sum(UploadArtifactory_success_count)," +
-                        "sum(linuxscript_total_count),sum(linuxscript_success_count) FROM AtomMonitorData_success_rat_count WHERE time>${startTime}000000 AND time<${endTime}000000"
+                "SELECT sum(total_count),sum(success_count),sum(CODE_GIT_total_count),sum(CODE_GIT_success_count)" +
+                        ",sum(UploadArtifactory_total_count),sum(UploadArtifactory_success_count)," +
+                        "sum(linuxscript_total_count),sum(linuxscript_success_count) " +
+                        "FROM AtomMonitorData_success_rat_count WHERE time>${startTime}000000 AND time<${endTime}000000"
             val queryResult = influxdbClient.select(sql)
 
             var totalCount = 1
@@ -340,16 +378,14 @@ class MonitorNotifyJob @Autowired constructor(
             if (null != queryResult && !queryResult.hasError()) {
                 queryResult.results.forEach { result ->
                     result.series?.forEach { serie ->
-                        serie.run {
-                            totalCount = serie.values[0][1].let { if (it is Number) it.toInt() else 1 }
-                            totalSuccess = serie.values[0][2].let { if (it is Number) it.toInt() else 0 }
-                            gitCount = serie.values[0][3].let { if (it is Number) it.toInt() else 1 }
-                            gitSuccess = serie.values[0][4].let { if (it is Number) it.toInt() else 0 }
-                            artiCount = serie.values[0][5].let { if (it is Number) it.toInt() else 1 }
-                            artiSuccess = serie.values[0][6].let { if (it is Number) it.toInt() else 0 }
-                            shCount = serie.values[0][7].let { if (it is Number) it.toInt() else 1 }
-                            shSuccess = serie.values[0][8].let { if (it is Number) it.toInt() else 0 }
-                        }
+                        totalCount = serie.values[0][1].let { if (it is Number) it.toInt() else 1 }
+                        totalSuccess = serie.values[0][2].let { if (it is Number) it.toInt() else 0 }
+                        gitCount = serie.values[0][3].let { if (it is Number) it.toInt() else 1 }
+                        gitSuccess = serie.values[0][4].let { if (it is Number) it.toInt() else 0 }
+                        artiCount = serie.values[0][5].let { if (it is Number) it.toInt() else 1 }
+                        artiSuccess = serie.values[0][6].let { if (it is Number) it.toInt() else 0 }
+                        shCount = serie.values[0][7].let { if (it is Number) it.toInt() else 1 }
+                        shSuccess = serie.values[0][8].let { if (it is Number) it.toInt() else 0 }
                     }
                 }
             } else {
@@ -393,9 +429,11 @@ class MonitorNotifyJob @Autowired constructor(
     fun codecc(startTime: Long, endTime: Long): EmailModuleData {
         try {
             val successSql =
-                "SELECT SUM(total_count)  FROM CodeccMonitor_reduce WHERE time>${startTime}000000 AND time<${endTime}000000 AND errorCode='0' GROUP BY toolName"
+                "SELECT SUM(total_count)  FROM CodeccMonitor_reduce " +
+                        "WHERE time>${startTime}000000 AND time<${endTime}000000 AND errorCode='0' GROUP BY toolName"
             val errorSql =
-                "SELECT SUM(total_count)  FROM CodeccMonitor_reduce WHERE time>${startTime}000000 AND time<${endTime}000000 AND errorCode!='0' GROUP BY toolName"
+                "SELECT SUM(total_count)  FROM CodeccMonitor_reduce " +
+                        "WHERE time>${startTime}000000 AND time<${endTime}000000 AND errorCode!='0' GROUP BY toolName"
 
             val successMap = getCodeCCMap(successSql)
             val errorMap = getCodeCCMap(errorSql)
@@ -429,6 +467,7 @@ class MonitorNotifyJob @Autowired constructor(
         }
     }
 
+    @SuppressWarnings("NestedBlockDepth")
     private fun getCodeCCMap(sql: String): HashMap<String, Int> {
         val queryResult = influxdbClient.select(sql)
         val codeCCMap = HashMap<String/*toolName*/, Int/*count*/>()
@@ -452,15 +491,16 @@ class MonitorNotifyJob @Autowired constructor(
 
     private fun getHits(startTime: Long, name: String, error: Boolean = false): Long {
         val sourceBuilder = SearchSourceBuilder()
+        val queryStringQuery = QueryBuilders.queryStringQuery(
+            """
+                    path:"/data/bkci/logs/$name/access_log.log" 
+                    ${if (error) " AND status:[400 TO *] " else ""}
+                """.trimIndent()
+        )
         val query =
             QueryBuilders.boolQuery()
                 .filter(
-                    QueryBuilders.queryStringQuery(
-                        """
-                    path:"/data/bkci/logs/websocket/access_log.log" 
-                    ${if (error) " AND status:[400 TO *] " else ""}
-                """.trimIndent()
-                    )
+                    queryStringQuery
                 )
         sourceBuilder.query(query).size(1)
 
@@ -474,7 +514,8 @@ class MonitorNotifyJob @Autowired constructor(
 
     private fun getObservableUrl(startTime: Long, endTime: Long, module: Module): String {
         return when (module) {
-            Module.GATEWAY -> "http://opdata.devops.oa.com/d/sL8BLj7Gk/v2-wang-guan-accessjian-kong?orgId=1&from=$startTime&to=$endTime"
+            Module.GATEWAY -> "http://opdata.devops.oa.com/" +
+                    "d/sL8BLj7Gk/v2-wang-guan-accessjian-kong?orgId=1&from=$startTime&to=$endTime"
             Module.CODECC -> "$codeccObservableUrl?from=$startTime&to=$endTime"
             Module.ATOM -> "$atomObservableUrl?from=$startTime&to=$endTime"
             Module.DISPATCH -> "$dispatchObservableUrl?from=$startTime&to=$endTime"
@@ -485,28 +526,31 @@ class MonitorNotifyJob @Autowired constructor(
 
     private fun getDetailUrl(startTime: Long, endTime: Long, module: Module, name: String = ""): String {
         return when (module) {
-            Module.GATEWAY -> "http://logs.ms.devops.oa.com/app/kibana#/discover?_g=(refreshInterval:(pause:!t,value:0),time:(from:'${
-                LocalDateTime.ofInstant(
-                    Instant.ofEpochMilli(startTime),
-                    ZoneId.ofOffset("UTC", ZoneOffset.UTC)
-                ).toString() + "Z"
-            }',mode:absolute,to:'${
-                LocalDateTime.ofInstant(
-                    Instant.ofEpochMilli(endTime),
-                    ZoneId.ofOffset("UTC", ZoneOffset.UTC)
-                ).toString() + "Z"
-            }'))&_a=(columns:!(_source),filters:!(('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67'," +
-                    "key:beat.hostname,negate:!f,params:(query:v2-gateway-idc,type:phrase),type:phrase,value:v2-gateway-idc),query:(match:(beat.hostname:(query:v2-gateway-idc,type:phrase))))," +
-                    "('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67',key:service,negate:!f,params:(query:$name,type:phrase),type:phrase,value:$name)," +
-                    "query:(match:(service:(query:$name,type:phrase)))),('\$state':(store:appState),meta:(alias:!n,disabled:!f,index:'68f5fd50-798e-11ea-8327-85de2e827c67'," +
-                    "key:status,negate:!f,params:(query:'500',type:phrase),type:phrase,value:'500'),query:(match:(status:(query:'500',type:phrase))))),index:'68f5fd50-798e-11ea-8327-85de2e827c67'," +
-                    "interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))"
+            Module.GATEWAY -> gatewayDetailUrl(startTime, endTime, name)
             Module.ATOM -> "$atomDetailUrl?var-atomCode=$name&from=$startTime&to=$endTime"
             Module.DISPATCH -> "$dispatchDetailUrl?var-buildType=$name&from=$startTime&to=$endTime"
             Module.USER_STATUS -> "$userStatusDetailUrl?from=$startTime&to=$endTime"
             Module.COMMIT_CHECK -> "$commitCheckDetailUrl?from=$startTime&to=$endTime"
             Module.CODECC -> "$codeccDetailUrl?var-toolName=$name&from=$startTime&to=$endTime"
         }
+    }
+
+    private fun gatewayDetailUrl(startTime: Long, endTime: Long, name: String): String {
+        val startTimeStr = LocalDateTime.ofInstant(
+            Instant.ofEpochMilli(startTime),
+            ZoneId.ofOffset("UTC", ZoneOffset.UTC)
+        ).toString()
+        val endTimeStr = LocalDateTime.ofInstant(
+            Instant.ofEpochMilli(endTime),
+            ZoneId.ofOffset("UTC", ZoneOffset.UTC)
+        ).toString()
+        return """
+            http://logs.ms.devops.oa.com/app/kibana#/discover?_g=(refreshInterval:(pause:!t,value:0),
+            time:(from:'${startTimeStr}Z',mode:absolute,to:'${endTimeStr}Z'))&
+            _a=(columns:!(_source),index:'4b38ef10-9da1-11eb-8559-712c276f42f2',
+            interval:auto,query:(language:lucene,query:'path:%22%2Fdata%2Fbkci%2Flogs%2F$name%2Faccess_log.log
+            %22%20AND%20status:%5B400%20TO%20*%5D'),sort:!(time,desc))
+        """.trimIndent().replace("\n", "")
     }
 
     enum class Module {
