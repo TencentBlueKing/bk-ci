@@ -494,7 +494,7 @@ class MonitorNotifyJob @Autowired constructor(
         val queryStringQuery = QueryBuilders.queryStringQuery(
             """
                     path:"/data/bkci/logs/$name/access_log.log" 
-                    ${if (error) " AND status:[400 TO *] " else ""}
+                    ${if (error) " AND status:[500 TO *] " else ""}
                 """.trimIndent()
         )
         val query =
@@ -549,7 +549,7 @@ class MonitorNotifyJob @Autowired constructor(
             time:(from:'${startTimeStr}Z',mode:absolute,to:'${endTimeStr}Z'))&
             _a=(columns:!(_source),index:'4b38ef10-9da1-11eb-8559-712c276f42f2',
             interval:auto,query:(language:lucene,query:'path:%22%2Fdata%2Fbkci%2Flogs%2F$name%2Faccess_log.log
-            %22%20AND%20status:%5B400%20TO%20*%5D'),sort:!(time,desc))
+            %22%20AND%20status:%5B500%20TO%20*%5D'),sort:!(time,desc))
         """.trimIndent().replace("\n", "")
     }
 
