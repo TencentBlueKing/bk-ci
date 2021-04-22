@@ -75,7 +75,7 @@ class ExperienceDownloadService @Autowired constructor(
 ) {
     fun checkVersion(userId: String, platform: Int, params: List<CheckVersionParam>): List<CheckVersionVO> {
         val experienceRecordIds = if (params.isEmpty()) {
-            emptySet()
+            mutableSetOf()
         } else experienceBaseService.getRecordIdsByUserId(
             userId,
             GroupIdTypeEnum.ALL
