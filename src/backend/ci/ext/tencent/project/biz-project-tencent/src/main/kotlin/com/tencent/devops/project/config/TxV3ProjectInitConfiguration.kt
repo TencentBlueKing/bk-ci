@@ -49,14 +49,10 @@ class TxV3ProjectInitConfiguration {
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
     fun projectPermissionService(
-        iamConfiguration: IamConfiguration,
-        iamManagerService: ManagerService,
         objectMapper: ObjectMapper,
         bkAuthProperties: BkAuthProperties,
         projectDispatcher: ProjectDispatcher
     ): ProjectPermissionService = TxV3ProjectPermissionServiceImpl(
-        iamConfiguration = iamConfiguration,
-        iamManagerService = iamManagerService,
         objectMapper = objectMapper,
         authProperties = bkAuthProperties,
         projectDispatcher = projectDispatcher
