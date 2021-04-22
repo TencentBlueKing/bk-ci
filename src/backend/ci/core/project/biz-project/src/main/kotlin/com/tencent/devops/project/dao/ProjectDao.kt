@@ -746,4 +746,12 @@ class ProjectDao {
                 .fetchOne(0, Int::class.java)
         }
     }
+
+    fun updateRelationByCode(dslContext: DSLContext, projectCode: String, relationId: String): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.update(this)
+                .set(RELATION_ID, relationId).where(ENGLISH_NAME.eq(projectCode))
+                .execute()
+        }
+    }
 }
