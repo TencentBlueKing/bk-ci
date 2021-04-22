@@ -28,10 +28,8 @@
 package com.tencent.devops.gitci.pojo
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.gitci.pojo.GitRequestEvent
-import com.tencent.devops.common.ci.yaml.v2.ScriptBuildYaml
+import com.tencent.devops.gitci.common.gitci2.ScriptBuildYaml
 import com.tencent.devops.gitci.constant.MQ
-import com.tencent.devops.gitci.pojo.GitProjectPipeline
 
 @Event(MQ.EXCHANGE_GITCI_REQUEST_TRIGGER_V2_EVENT, MQ.ROUTE_GITCI_REQUEST_TRIGGER_V2_EVENT)
 data class V2GitCIRequestTriggerEvent(

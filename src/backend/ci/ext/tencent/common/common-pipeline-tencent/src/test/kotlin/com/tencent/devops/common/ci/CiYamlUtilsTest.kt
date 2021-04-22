@@ -108,6 +108,6 @@ internal class CiYamlUtilsTest {
 
         println(sb.toString())
 
-        println(CiYamlUtils.parseVersion(sb.toString()))
+        // println(CiYamlUtils.parseVersion(sb.toString()))
     }
 }

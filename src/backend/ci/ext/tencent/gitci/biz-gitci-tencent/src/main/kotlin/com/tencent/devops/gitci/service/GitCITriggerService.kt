@@ -40,6 +40,7 @@ import com.tencent.devops.common.ci.OBJECT_KIND_TAG_PUSH
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.gitci.common.gitci2.utils.ScriptYmlUtils
 import com.tencent.devops.gitci.dao.GitCIServicesConfDao
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
@@ -320,7 +321,7 @@ class GitCITriggerService @Autowired constructor(
                 }
 
                 // 检查yml版本，根据yml版本选择不同的实现
-                val ymlVersion = CiYamlUtils.parseVersion(originYaml)
+                val ymlVersion = ScriptYmlUtils.parseVersion(originYaml)
                 val triggerInterface = requestTriggerFactory.getGitCIRequestTrigger(ymlVersion)
                 if (!triggerInterface.triggerBuild(
                         gitRequestEvent,
