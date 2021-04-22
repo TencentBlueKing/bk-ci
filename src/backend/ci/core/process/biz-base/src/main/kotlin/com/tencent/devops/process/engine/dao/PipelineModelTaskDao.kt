@@ -236,10 +236,10 @@ class PipelineModelTaskDao {
     ): MutableList<Condition> {
         val condition = mutableListOf<Condition>()
         condition.add(a.ATOM_CODE.eq(atomCode))
-        if (projectId != null) {
+        if (!projectId.isNullOrEmpty()) {
             condition.add(a.PROJECT_ID.eq(projectId))
         }
-        if (version != null) {
+        if (!version.isNullOrEmpty()) {
             condition.add(a.ATOM_VERSION.eq(version))
         }
         if (startUpdateTime != null) {
