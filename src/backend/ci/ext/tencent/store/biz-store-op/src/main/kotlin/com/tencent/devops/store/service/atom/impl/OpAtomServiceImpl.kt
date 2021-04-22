@@ -257,12 +257,12 @@ class OpAtomServiceImpl @Autowired constructor(
                         latestUpgradeTime = pubTime
                     )
                 )
-                // 处理post操作缓存
-                marketAtomCommonService.handleAtomPostCache(
+                // 处理插件缓存
+                marketAtomCommonService.handleAtomCache(
                     atomId = atomId,
                     atomCode = atomCode,
                     version = atom.version,
-                    atomStatus = atomStatus
+                    releaseFlag = true
                 )
             }
 

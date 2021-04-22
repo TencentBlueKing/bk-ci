@@ -28,11 +28,13 @@
 package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomEnvInfoDao
@@ -40,17 +42,22 @@ import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.AtomPostInfo
+import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.ATOM_POST_CONDITION
 import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
 import com.tencent.devops.store.pojo.common.ATOM_POST_FLAG
 import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
+import com.tencent.devops.store.pojo.common.StoreVersion
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomService
 import com.tencent.devops.store.service.atom.MarketAtomEnvService
+import com.tencent.devops.store.utils.StoreUtils
+import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -76,6 +83,133 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
 ) : MarketAtomEnvService {
 
     private val logger = LoggerFactory.getLogger(MarketAtomEnvServiceImpl::class.java)
+
+    override fun batchGetAtomRunInfos(
+        projectCode: String,
+        atomVersions: Set<StoreVersion>
+    ): Result<Map<String, AtomRunInfo>?> {
+        logger.info("batchGetAtomRunInfos projectCode:$projectCode,atomVersions:$atomVersions")
+        // 1、校验插件在项目下是否可用
+        val atomCodeMap = mutableMapOf<String, String>()
+        val atomCodeList = mutableListOf<String>()
+        atomVersions.forEach { atomVersion ->
+            atomCodeMap[atomVersion.storeCode] = atomVersion.storeName
+            atomCodeList.add(atomVersion.storeCode)
+        }
+        val storePublicFlagKey = StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name)
+        if (!redisOperation.hasKey(storePublicFlagKey)) {
+            // 如果redis没有缓存默认插件集合，则从db去查
+            val defaultAtomCodeRecords = atomDao.batchGetDefaultAtomCode(dslContext, atomCodeList)
+            val defaultAtomCodeList = defaultAtomCodeRecords.map { it.value1() }
+            redisOperation.sadd(storePublicFlagKey, *defaultAtomCodeList.toTypedArray())
+        }
+        // 获取需要校验的插件（默认公共插件无需校验）
+        val validateAtomCodeList = atomCodeList.filter { !redisOperation.isMember(storePublicFlagKey, it) }
+        val validAtomCodeList = storeProjectRelDao.getValidStoreCodesByProject(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            storeCodes = validateAtomCodeList,
+            storeType = StoreTypeEnum.ATOM
+        )?.map { it.value1() } ?: emptyList()
+        // 判断是否存在不可用插件
+        validateAtomCodeList.toMutableList().removeAll(validAtomCodeList)
+        if (validateAtomCodeList.isNotEmpty()) {
+            // 存在不可用插件，给出错误提示
+            val inValidAtomNameList = mutableListOf<String>()
+            validateAtomCodeList.forEach { atomCode ->
+                inValidAtomNameList.add(atomCodeMap[atomCode] ?: atomCode)
+            }
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_ATOM_IS_NOT_ALLOW_USE_IN_PROJECT,
+                params = arrayOf(projectCode, JsonUtil.toJson(inValidAtomNameList))
+            )
+        }
+        // 2、根据插件代码和版本号查找插件运行时信息
+        // 判断当前项目是否是插件的调试项目
+        val testAtomCodes = storeProjectRelDao.getTestStoreCodes(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            storeType = StoreTypeEnum.ATOM,
+            storeCodeList = atomCodeList
+        )?.map { it.value1() }
+        val atomRunInfoMap = mutableMapOf<String, AtomRunInfo>()
+        atomVersions.forEach { atomVersion ->
+            val atomCode = atomVersion.storeCode
+            val atomName = atomVersion.storeName
+            val version = atomVersion.version
+            // 获取当前大版本内是否有测试中的版本
+            val atomVersionTestFlag = redisOperation.hget(
+                key = "$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode",
+                hashKey = VersionUtils.convertLatestVersion(version)
+            )
+            val testFlag =
+                testAtomCodes?.contains(atomCode) == true && (atomVersionTestFlag == null || atomVersionTestFlag.toBoolean())
+            // 如果当前的项目属于插件的调试项目且插件当前大版本有测试中的版本则实时去db查
+            val atomRunInfoName = "$atomCode:$version"
+            if (testFlag) {
+                atomRunInfoMap[atomRunInfoName] = queryAtomRunInfoFromDb(
+                    projectCode = projectCode,
+                    atomCode = atomCode,
+                    atomName = atomName,
+                    version = version,
+                    testFlag = testFlag
+                )
+            } else {
+                // 去缓存中获取插件运行时信息
+                val atomRunInfoKey = StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, atomCode)
+                val atomRunInfoJson = redisOperation.hget(atomRunInfoKey, version)
+                if (!atomRunInfoJson.isNullOrEmpty()) {
+                    val atomRunInfo = JsonUtil.to(atomRunInfoJson, AtomRunInfo::class.java)
+                    atomRunInfoMap[atomRunInfoName] = atomRunInfo
+                } else {
+                    atomRunInfoMap[atomRunInfoName] = queryAtomRunInfoFromDb(
+                        projectCode = projectCode,
+                        atomCode = atomCode,
+                        atomName = atomName,
+                        version = version,
+                        testFlag = testFlag
+                    )
+                }
+            }
+        }
+        return Result(atomRunInfoMap)
+    }
+
+    private fun queryAtomRunInfoFromDb(
+        projectCode: String,
+        atomCode: String,
+        atomName: String,
+        version: String,
+        testFlag: Boolean
+    ): AtomRunInfo {
+        val atomEnvResult = getMarketAtomEnvInfo(projectCode, atomCode, version)
+        if (atomEnvResult.isNotOk()) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_ATOM_IS_NOT_ALLOW_USE_IN_PROJECT,
+                params = arrayOf(projectCode, atomName)
+            )
+        }
+        // 查不到当前插件信息则中断流程
+        val atomEnv = atomEnvResult.data ?: throw ErrorCodeException(
+            errorCode = StoreMessageCode.USER_ATOM_IS_NOT_ALLOW_USE_IN_PROJECT,
+            params = arrayOf(projectCode, atomName)
+        )
+        val atomRunInfo = AtomRunInfo(
+            atomCode = atomCode,
+            atomName = atomEnv.atomName,
+            version = atomEnv.version,
+            atomStatus = atomEnv.atomStatus,
+            initProjectCode = atomEnv.projectCode!!,
+            jobType = atomEnv.jobType,
+            buildLessRunFlag = atomEnv.buildLessRunFlag
+        )
+        if (!testFlag) {
+            // 将db中的环境信息写入缓存
+            val atomRunInfoKey = StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, atomCode)
+            redisOperation.hset(atomRunInfoKey, version, JsonUtil.toJson(atomRunInfo))
+        }
+        return atomRunInfo
+    }
 
     /**
      * 根据插件代码和版本号查看插件执行环境信息

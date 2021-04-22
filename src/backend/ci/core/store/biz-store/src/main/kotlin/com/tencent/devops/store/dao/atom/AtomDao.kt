@@ -48,6 +48,7 @@ import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
+import org.jooq.Record1
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
@@ -1003,6 +1004,21 @@ class AtomDao : AtomBaseDao() {
             dslContext.selectFrom(this)
                     .where(ATOM_CODE.`in`(atomList).and(DEFAULT_FLAG.eq(true)))
                     .fetch()
+        }
+    }
+
+    fun batchGetDefaultAtomCode(
+        dslContext: DSLContext,
+        atomCodeList: List<String>
+    ): Result<Record1<String>> {
+        return with(TAtom.T_ATOM) {
+            dslContext.select(ATOM_CODE).from(this)
+                .where(
+                    ATOM_CODE.`in`(atomCodeList)
+                        .and(LATEST_FLAG.eq(true))
+                        .and(DEFAULT_FLAG.eq(true))
+                )
+                .fetch()
         }
     }
 }

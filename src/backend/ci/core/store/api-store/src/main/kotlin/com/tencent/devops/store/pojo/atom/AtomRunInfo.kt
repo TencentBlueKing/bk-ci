@@ -25,39 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.atom
+package com.tencent.devops.store.pojo.atom
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.model.store.tables.records.TAtomRecord
-import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
-import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-interface MarketAtomCommonService {
-
-    fun validateAtomVersion(
-        atomRecord: TAtomRecord,
-        releaseType: ReleaseTypeEnum,
-        osList: ArrayList<String>,
-        version: String
-    ): Result<Boolean>
-
-    fun parseBaseTaskJson(
-        taskJsonStr: String,
-        atomCode: String,
-        version: String,
-        userId: String
-    ): GetAtomConfigResult
-
-    fun checkEditCondition(
-        atomCode: String
-    ): Boolean
-
-    fun getNormalUpgradeFlag(atomCode: String, status: Int): Boolean
-
-    fun handleAtomCache(
-        atomId: String,
-        atomCode: String,
-        version: String,
-        releaseFlag: Boolean
-    )
-}
+@ApiModel("插件运行时信息")
+data class AtomRunInfo(
+    @ApiModelProperty("插件代码", required = true)
+    val atomCode: String,
+    @ApiModelProperty("插件名称", required = true)
+    val atomName: String,
+    @ApiModelProperty("插件版本号", required = true)
+    val version: String,
+    @ApiModelProperty("插件状态", required = true)
+    val atomStatus: String,
+    @ApiModelProperty("插件初始化项目代码", required = true)
+    val initProjectCode: String,
+    @ApiModelProperty("Job类型", required = false)
+    val jobType: JobTypeEnum?,
+    @ApiModelProperty("无构建环境插件是否可以在有构建环境运行标识", required = false)
+    val buildLessRunFlag: Boolean?
+)
