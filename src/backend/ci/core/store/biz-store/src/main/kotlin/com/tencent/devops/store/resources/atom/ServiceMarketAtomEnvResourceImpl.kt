@@ -44,7 +44,7 @@ class ServiceMarketAtomEnvResourceImpl @Autowired constructor(private val market
         projectCode: String,
         atomVersions: Set<StoreVersion>
     ): Result<Map<String, AtomRunInfo>?> {
-        TODO("Not yet implemented")
+        return marketAtomEnvService.batchGetAtomRunInfos(projectCode, atomVersions)
     }
 
     override fun getAtomEnv(projectCode: String, atomCode: String, version: String): Result<AtomEnv?> {

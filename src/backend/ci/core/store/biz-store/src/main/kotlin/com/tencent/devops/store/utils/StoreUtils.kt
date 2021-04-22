@@ -31,7 +31,7 @@ import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.store.pojo.common.STORE_PUBLIC_FLAG_KEY_PREFIX
-import com.tencent.devops.store.pojo.common.STORE_RUN_INFO_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.STORE_NORMAL_PROJECT_RUN_INFO_KEY_PREFIX
 
 object StoreUtils {
 
@@ -76,6 +76,6 @@ object StoreUtils {
      * @param storeCode 组件代码
      */
     fun getStoreRunInfoKey(typeName: String, storeCode: String): String {
-        return "$STORE_RUN_INFO_KEY_PREFIX:$typeName:$storeCode"
+        return "$STORE_NORMAL_PROJECT_RUN_INFO_KEY_PREFIX:$typeName:$storeCode"
     }
 }
