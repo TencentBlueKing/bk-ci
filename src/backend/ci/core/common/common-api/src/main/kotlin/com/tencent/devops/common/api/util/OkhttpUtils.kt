@@ -125,7 +125,6 @@ object OkhttpUtils {
         return okHttpClient.newCall(request).execute()
     }
 
-
     fun doPost(url: String, jsonParam: String, headers: Map<String, String> = mapOf()): Response {
         val builder = getBuilder(url, headers)
         val body = RequestBody.create(jsonMediaType, jsonParam)
