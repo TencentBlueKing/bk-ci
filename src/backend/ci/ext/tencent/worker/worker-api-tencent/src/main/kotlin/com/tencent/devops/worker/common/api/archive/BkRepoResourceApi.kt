@@ -79,7 +79,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         val projectId = buildVariables.projectId
         val pipelineId = buildVariables.pipelineId
         val buildId = buildVariables.buildId
-        val path = if (repoName == "pipeline") {
+        val path = if (repoName == "custom") {
             "/"
         } else {
             "/$pipelineId/$buildId"
