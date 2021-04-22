@@ -46,6 +46,7 @@ import com.tencent.devops.artifactory.service.bkrepo.BkRepoSearchService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoService
 import com.tencent.devops.artifactory.util.UrlUtil
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
@@ -232,7 +233,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         return Result(
             FileDetailForApp(
                 name = fileDetail.name,
-                platform = if (fileDetail.name.endsWith(".apk")) "ANDROID" else "iPhone、iPad",
+                platform = if (fileDetail.name.endsWith(".apk")) PlatformEnum.ANDROID.name else PlatformEnum.IOS.name,
                 size = fileDetail.size,
                 createdTime = fileDetail.createdTime,
                 projectName = projectId,
