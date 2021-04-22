@@ -172,7 +172,13 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         }
     }
 
-    private fun downloadBkRepoFile(user: String, projectId: String, repoName: String, fullpath: String, destPath: File) {
+    private fun downloadBkRepoFile(
+        user: String,
+        projectId: String,
+        repoName: String,
+        fullpath: String,
+        destPath: File
+    ) {
         val url = "/bkrepo/api/build/generic/$projectId/$repoName$fullpath"
         var header = HashMap<String, String>()
         header.set("X-BKREPO-UID", user)
