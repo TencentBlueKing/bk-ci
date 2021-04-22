@@ -265,16 +265,24 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     fun buildClaimTask(buildId: String, vmSeqId: String, vmName: String): BuildTask {
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
         if (buildInfo == null || buildInfo.status.isFinish()) {
-            LOG.info("ENGINE|$buildId|Agent|CLAIM_TASK_END|j($vmSeqId)|buildInfo was finish")
+            LOG.info("ENGINE|$buildId|Agent|CLAIM_TASK_END|j($vmSeqId)|buildInfo ${buildInfo?.status}")
+            return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
+        }
+        val container = pipelineRuntimeService.getContainer(buildId, stageId = null, containerId = vmSeqId)
+        if (container == null || container.status.isFinish()) {
+            LOG.info("ENGINE|$buildId|Agent|CLAIM_TASK_END|j($vmSeqId)|container ${container?.status}")
             return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
         }
 
-        val allTasks = pipelineRuntimeService.listContainerBuildTasks(buildId, vmSeqId)
-        val task = allTasks.firstOrNull { it.status.isReadyToRun() || it.status.isRunning() }
-        if (task == null) {
-            LOG.info("ENGINE|$buildId|Agent|CLAIM_TASK_END|j($vmSeqId)|queue=0")
-            return BuildTask(buildId, vmSeqId, BuildTaskStatus.END)
-        }
+        val allTasks = pipelineRuntimeService.listContainerBuildTasks(
+            buildId = buildId,
+            containerId = vmSeqId,
+            buildStatusSet = setOf(BuildStatus.QUEUE_CACHE, BuildStatus.RUNNING)
+        )
+
+        val task = allTasks.firstOrNull()
+            ?: return BuildTask(buildId, vmSeqId, BuildTaskStatus.WAIT)
+
         return claim(task = task, buildId = buildId, userId = task.starter, vmSeqId = vmSeqId)
     }
 
@@ -348,10 +356,11 @@ class EngineVMBuildService @Autowired(required = false) constructor(
      * 构建机完成任务请求
      */
     fun buildCompleteTask(buildId: String, vmSeqId: String, vmName: String, result: BuildTaskResult) {
-        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId) ?: return
-        if (!result.success && !result.type.isNullOrBlank()) {
-            jmxElements.fail(result.type!!)
+        val buildInfo = pipelineRuntimeService.getBuildInfo(buildId) ?: run {
+            LOG.error("BKSystemErrorMonitor|ENGINE|$buildId|buildInfo is null")
+            return // 数据为空是平台异常，正常情况不应该出现
         }
+
         // 只要buildResult不为空，都写入到环境变量里面
         if (result.buildResult.isNotEmpty()) {
             LOG.info("ENGINE|$buildId| Add the build result size(${result.buildResult.size}) to var")
@@ -364,7 +373,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             }
         }
 
-        val errorType = if (!result.errorType.isNullOrBlank()) ErrorType.valueOf(result.errorType!!) else null
+        val errorType = ErrorType.getErrorType(result.errorType)
 
         val buildStatus = if (result.success) {
             pipelineTaskService.removeRetryCache(buildId, result.taskId)
@@ -448,6 +457,9 @@ class EngineVMBuildService @Autowired(required = false) constructor(
     @Suppress("UNCHECKED_CAST")
     private fun sendElementData(buildId: String, result: BuildTaskResult) {
         try {
+            if (!result.success && !result.type.isNullOrBlank()) {
+                jmxElements.fail(elementType = result.type!!)
+            }
             val task: PipelineBuildTask by lazy { pipelineRuntimeService.getBuildTask(buildId, result.taskId)!! }
             measureService?.postTaskData(
                 task = task,
