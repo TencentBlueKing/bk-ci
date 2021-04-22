@@ -31,7 +31,7 @@ import java.net.URLEncoder
 import java.util.Random
 
 object StringUtil {
-    private val BASE = "abcdefghijklmnopqrstuvwxyz"
+    private const val BASE = "abcdefghijklmnopqrstuvwxyz"
 
     fun random(length: Int): String {
         val random = Random()

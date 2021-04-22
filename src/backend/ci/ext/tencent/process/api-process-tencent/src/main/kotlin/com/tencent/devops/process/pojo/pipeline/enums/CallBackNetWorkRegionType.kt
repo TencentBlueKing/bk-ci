@@ -29,6 +29,5 @@ package com.tencent.devops.process.pojo.pipeline.enums
 
 enum class CallBackNetWorkRegionType {
     DEVNET,
-    OSS,
     IDC
 }
