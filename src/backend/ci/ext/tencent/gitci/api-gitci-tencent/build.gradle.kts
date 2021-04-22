@@ -35,7 +35,7 @@ dependencies {
 //    api(project(":api:api-environment")
 //    api(project(":api:api-image")
     api(project(":core:store:api-store"))
-    api(project(":core:process:api-process"))
+    api(project(":ext:tencent:process:api-process-tencent"))
     api(project(":core:log:api-log"))
     api(project(":core:project:api-project"))
 }
