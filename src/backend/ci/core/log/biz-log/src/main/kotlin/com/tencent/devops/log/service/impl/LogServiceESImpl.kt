@@ -461,6 +461,7 @@ class LogServiceESImpl constructor(
     override fun getBottomLogs(
         pipelineId: String,
         buildId: String,
+        debug: Boolean,
         tag: String?,
         subTag: String?,
         jobId: String?,
