@@ -15,14 +15,14 @@
             <bk-table :data="chooseReport.thirdReports"
                 :outer-border="false"
                 :header-border="false"
-                :header-cell-style="{ background: '#f1f2f3' }"
+                :header-cell-style="{ background: '#FAFBFD' }"
                 v-if="chooseReport.type === 'THIRDPARTY'"
                 class="report-file"
             >
-                <bk-table-column :label="$t('name')" prop="name" show-overflow-tooltip></bk-table-column>
-                <bk-table-column :label="$t('link')">
+                <bk-table-column :label="$t('name')" show-overflow-tooltip>
                     <template slot-scope="props">
-                        <a :href="props.row.indexFileUrl" target="_blank" class="text-link">{{ props.row.indexFileUrl }}</a>
+                        <logo name="tiaozhuan" size="18" class="jump-icon" />
+                        <a :href="props.row.indexFileUrl" target="_blank" class="text-link">{{ props.row.name }}</a>
                     </template>
                 </bk-table-column>
             </bk-table>
@@ -36,7 +36,13 @@
 </template>
 
 <script>
+    import Logo from '@/components/Logo'
+
     export default {
+        components: {
+            Logo
+        },
+
         props: {
             taskId: String
         },
@@ -127,6 +133,11 @@
     .report-file {
         flex: 1;
         padding: 30px;
+        .jump-icon {
+            fill: #3c96ff;
+            vertical-align: bottom;
+            margin-right: 3px;
+        }
     }
     .bk-table-empty-text {
         width: 100%;
