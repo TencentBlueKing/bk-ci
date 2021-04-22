@@ -28,34 +28,16 @@
 
 package com.tencent.devops.project.service.impl
 
-import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
-import com.tencent.bk.sdk.iam.dto.manager.Action
-import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
-import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
-import com.tencent.bk.sdk.iam.dto.manager.ManagerPath
-import com.tencent.bk.sdk.iam.dto.manager.ManagerResources
-import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
-import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
-import com.tencent.bk.sdk.iam.dto.manager.dto.CreateManagerDTO
-import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
-import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
-import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
-import com.tencent.devops.common.auth.utils.IamUtils
 import com.tencent.devops.project.pojo.AuthProjectForCreateResult
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectPermissionService
-import com.tencent.devops.project.service.iam.AuthorizationUtils
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.util.concurrent.TimeUnit
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -63,12 +45,9 @@ import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.listener.TxIamV3CreateEvent
 import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import okhttp3.MediaType
 
 class TxV3ProjectPermissionServiceImpl @Autowired constructor(
-    val iamManagerService: ManagerService,
-    val iamConfiguration: IamConfiguration,
     val objectMapper: ObjectMapper,
     val authProperties: BkAuthProperties,
     val projectDispatcher: ProjectDispatcher
