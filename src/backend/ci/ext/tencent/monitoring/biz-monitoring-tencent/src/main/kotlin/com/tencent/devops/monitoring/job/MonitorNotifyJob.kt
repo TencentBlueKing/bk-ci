@@ -133,8 +133,6 @@ class MonitorNotifyJob @Autowired constructor(
             }
         } catch (e: Throwable) {
             logger.error("SLA Daily Email error:", e)
-        } finally {
-            redisLock.unlock()
         }
     }
 
