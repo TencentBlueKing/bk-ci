@@ -46,6 +46,9 @@ class CodeCCAuthResourceApi @Autowired constructor(
     val iamConfiguration: IamConfiguration
 ) {
     fun createResource(user: String, resourceType: CodeCCAuthResourceType, projectCode: String, resourceId: String, resourceName: String) {
+    }
+
+    fun doCreateResource(user: String, resourceType: CodeCCAuthResourceType, projectCode: String, resourceId: String, resourceName: String) {
         logger.info("v3 createResource projectCode[$projectCode] resourceName[$resourceName]" +
             " resourceId[$resourceId] resourceType[${resourceType.value}]")
         val ancestors = mutableListOf<AncestorsApiReq>()

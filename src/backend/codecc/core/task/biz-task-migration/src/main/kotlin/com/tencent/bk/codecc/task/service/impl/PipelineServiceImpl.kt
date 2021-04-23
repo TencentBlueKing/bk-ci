@@ -184,7 +184,6 @@ open class PipelineServiceImpl @Autowired constructor(
             imageName = imageName,
             dispatchType = pipelineUtils.getDispatchType(buildType, imageName, imageVersion)
         )
-        logger.info("modelParam: ${JsonUtil.toJson(modelParam)}")
         val result = client.getDevopsService(ServicePipelineResource::class.java)
             .create(userName, taskInfoEntity.projectId, modelParam, ChannelCode.CODECC_EE)
         if (result.isNotOk() || null == result.data) {

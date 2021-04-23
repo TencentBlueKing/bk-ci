@@ -486,7 +486,7 @@ class PipelineUtils {
             id = null,
             status = null,
             atomCode = CODECC_ATOM_CODE,
-            version = "4.*",
+            version = CODECC_ATOM_VERSION,
             data = mapOf("input" to mapOf<String, String>())
         )
     }

@@ -32,6 +32,7 @@ aes:
 
 pipeline:
   atomCode:
-    codec: __BK_CODECC_ATOM_CODE__
+    codecc: __BK_CODECC_ATOM_CODE__
     codeccVersion: __BK_CODECC_ATOM_CODE_VERSION__
+    git: __
   imageType: __BK_CODECC_PIPELINE_IMAGE_TYPE__
