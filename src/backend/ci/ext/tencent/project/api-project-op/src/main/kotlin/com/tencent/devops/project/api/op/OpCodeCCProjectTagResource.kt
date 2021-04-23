@@ -26,13 +26,46 @@
  *
  */
 
-package com.tencent.devops.common.client.consul
+package com.tencent.devops.project.api.op
 
-object ConsulConstants {
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.project.api.op.pojo.OpProjectTagUpdateDTO
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-    const val PROJECT_TAG_REDIS_KEY = "project:setting:tag:v2"
+@Api(tags = ["OP_CODECC_PROJECT_TAG"], description = "CodeCC项目TAG")
+@Path("/op/codecc/projects/tag")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpCodeCCProjectTagResource {
 
-    const val PROJECT_TAG_CODECC_REDIS_KEY = "project:setting:tag:codecc:v2"
+    @ApiOperation("按项目设置consul Tag")
+    @PUT
+    @Path("/setTagByProject")
+    fun setTagByProject(
+        @ApiParam(value = "consulTag请求入参", required = true)
+        opProjectTagUpdateDTO: OpProjectTagUpdateDTO
+    ): Result<Boolean>
 
-    const val HEAD_CONSUL_TAG = "X-HEAD-CONSUL-TAG"
+    @ApiOperation("按组织设置consul Tag")
+    @PUT
+    @Path("/setTagByOrg")
+    fun setTagByOrg(
+        @ApiParam(value = "consulTag请求入参", required = true)
+        opProjectTagUpdateDTO: OpProjectTagUpdateDTO
+    ): Result<Boolean>
+
+    @ApiOperation("按组织设置consul Tag")
+    @PUT
+    @Path("/setTagByChannel")
+    fun setTagByChannel(
+        @ApiParam(value = "consulTag请求入参", required = true)
+        opProjectTagUpdateDTO: OpProjectTagUpdateDTO
+    ): Result<Boolean>
 }

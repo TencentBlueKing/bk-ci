@@ -26,13 +26,28 @@
  *
  */
 
-package com.tencent.devops.common.client.consul
+package com.tencent.devops.project.resources
 
-object ConsulConstants {
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.api.op.OpCodeCCProjectTagResource
+import com.tencent.devops.project.api.op.pojo.OpProjectTagUpdateDTO
+import com.tencent.devops.project.service.ProjectCodeCCTagService
+import org.springframework.beans.factory.annotation.Autowired
 
-    const val PROJECT_TAG_REDIS_KEY = "project:setting:tag:v2"
+@RestResource
+class OpCodeCCProjectTagResourceImpl @Autowired constructor(
+    val projectTagService: ProjectCodeCCTagService
+) : OpCodeCCProjectTagResource {
+    override fun setTagByProject(opProjectTagUpdateDTO: OpProjectTagUpdateDTO): Result<Boolean> {
+        return projectTagService.updateTagByProject(opProjectTagUpdateDTO)
+    }
 
-    const val PROJECT_TAG_CODECC_REDIS_KEY = "project:setting:tag:codecc:v2"
+    override fun setTagByOrg(opProjectTagUpdateDTO: OpProjectTagUpdateDTO): Result<Boolean> {
+        return projectTagService.updateTagByOrg(opProjectTagUpdateDTO)
+    }
 
-    const val HEAD_CONSUL_TAG = "X-HEAD-CONSUL-TAG"
+    override fun setTagByChannel(opProjectTagUpdateDTO: OpProjectTagUpdateDTO): Result<Boolean> {
+        return projectTagService.updateTagByChannel(opProjectTagUpdateDTO)
+    }
 }
