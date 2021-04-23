@@ -81,7 +81,7 @@ object AtomUtils {
             flag = false
             null
         }
-        if (flag || atomRunInfoResult?.isNotOk() == true) {
+        if (!flag || atomRunInfoResult?.isNotOk() == true) {
             throw BuildTaskException(
                 errorType = ErrorType.USER,
                 errorCode = ProcessMessageCode.ERROR_ATOM_NOT_FOUND.toInt(),

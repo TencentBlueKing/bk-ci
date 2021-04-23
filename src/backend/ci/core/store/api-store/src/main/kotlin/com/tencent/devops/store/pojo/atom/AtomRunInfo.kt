@@ -36,15 +36,13 @@ data class AtomRunInfo(
     @ApiModelProperty("插件代码", required = true)
     val atomCode: String,
     @ApiModelProperty("插件名称", required = true)
-    val atomName: String,
+    var atomName: String,
     @ApiModelProperty("插件版本号", required = true)
     val version: String,
-    @ApiModelProperty("插件状态", required = true)
-    val atomStatus: String,
     @ApiModelProperty("插件初始化项目代码", required = true)
     val initProjectCode: String,
     @ApiModelProperty("Job类型", required = false)
-    val jobType: JobTypeEnum?,
+    var jobType: JobTypeEnum?,
     @ApiModelProperty("无构建环境插件是否可以在有构建环境运行标识", required = false)
-    val buildLessRunFlag: Boolean?
+    var buildLessRunFlag: Boolean?
 )
