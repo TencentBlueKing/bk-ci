@@ -29,7 +29,6 @@
 package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
 import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerRoleGroupVO
 import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
@@ -58,7 +57,7 @@ class TxPermissionRoleServiceImpl @Autowired constructor(
         userId: String,
         projectId: Int,
         roleId: Int,
-        groupInfo: ManagerRoleGroup
+        groupInfo: ProjectRoleDTO
     ) {
         super.renamePermissionRole(userId, projectId, roleId, groupInfo)
     }
