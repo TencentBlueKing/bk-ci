@@ -108,15 +108,22 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         val storePublicFlagKey = StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name)
         // 获取从db查询默认插件开关，开关打开则实时从db查
         val queryDefaultAtomSwitch = cache.get("queryDefaultAtomSwitch")?.toBoolean() ?: false
-        if (queryDefaultAtomSwitch || !redisOperation.hasKey(storePublicFlagKey)) {
+        // 获取需要校验的插件（默认公共插件无需校验）
+        val validateAtomCodeList = if (queryDefaultAtomSwitch || !redisOperation.hasKey(storePublicFlagKey)) {
             logger.info("$storePublicFlagKey is not exist!")
-            // 如果redis没有缓存默认插件集合，则从db去查
+            if (queryDefaultAtomSwitch && redisOperation.hasKey(storePublicFlagKey)) {
+                redisOperation.delete(storePublicFlagKey)
+            }
+            // 从db去查查默认插件
             val defaultAtomCodeRecords = atomDao.batchGetDefaultAtomCode(dslContext)
             val defaultAtomCodeList = defaultAtomCodeRecords.map { it.value1() }
-            redisOperation.sadd(storePublicFlagKey, *defaultAtomCodeList.toTypedArray())
+            if (!queryDefaultAtomSwitch) {
+                redisOperation.sadd(storePublicFlagKey, *defaultAtomCodeList.toTypedArray())
+            }
+            atomCodeList.filter { !defaultAtomCodeList.contains(it) }
+        } else {
+            atomCodeList.filter { !redisOperation.isMember(storePublicFlagKey, it) }
         }
-        // 获取需要校验的插件（默认公共插件无需校验）
-        val validateAtomCodeList = atomCodeList.filter { !redisOperation.isMember(storePublicFlagKey, it) }
         val validAtomCodeList = storeProjectRelDao.getValidStoreCodesByProject(
             dslContext = dslContext,
             projectCode = projectCode,

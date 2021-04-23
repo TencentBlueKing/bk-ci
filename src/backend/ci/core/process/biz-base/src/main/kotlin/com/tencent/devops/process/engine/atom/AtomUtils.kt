@@ -74,18 +74,24 @@ object AtomUtils {
             return atoms
         }
         // 批量获取插件运行时信息
-        val atomRunInfoResult = serviceMarketAtomEnvResource.batchGetAtomRunInfos(task.projectId, atomVersions)
-        if (atomRunInfoResult.isNotOk()) {
+        var flag = true
+        val atomRunInfoResult = try {
+            serviceMarketAtomEnvResource.batchGetAtomRunInfos(task.projectId, atomVersions)
+        } catch (ignored: Exception) {
+            flag = false
+            null
+        }
+        if (flag || atomRunInfoResult?.isNotOk() == true) {
             throw BuildTaskException(
                 errorType = ErrorType.USER,
                 errorCode = ProcessMessageCode.ERROR_ATOM_NOT_FOUND.toInt(),
-                errorMsg = atomRunInfoResult.message ?: "query tasks error",
+                errorMsg = atomRunInfoResult?.message ?: "query tasks error",
                 pipelineId = task.pipelineId,
                 buildId = task.buildId,
                 taskId = task.taskId
             )
         }
-        val atomRunInfoMap = atomRunInfoResult.data
+        val atomRunInfoMap = atomRunInfoResult?.data
         container.elements.forEach nextOne@{ element ->
             if (isHisAtomElement(element)) {
                 return@nextOne
