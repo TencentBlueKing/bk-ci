@@ -98,6 +98,7 @@ import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.util.BuildMsgUtils
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
+import com.tencent.devops.process.utils.PIPELINE_RETRY_ALL_FAILED_CONTAINER
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
@@ -313,6 +314,7 @@ class PipelineBuildFacadeService(
         pipelineId: String,
         buildId: String,
         taskId: String? = null,
+        failedContainer: Boolean? = false,
         isMobile: Boolean = false,
         channelCode: ChannelCode? = ChannelCode.BS,
         checkPermission: Boolean? = true
@@ -372,41 +374,53 @@ class PipelineBuildFacadeService(
             )
             val params = mutableMapOf<String, Any>()
             val originVars = buildVariableService.getAllVariable(buildId)
-            if (!taskId.isNullOrBlank()) {
-                // stage/job/task级重试，获取buildVariable构建参数，恢复环境变量
-                params.putAll(originVars)
-                // stage/job/task级重试
-                run {
-                    model.stages.forEach { s ->
-                        // stage 级重试
-                        if (s.id == taskId) {
-                            params[PIPELINE_RETRY_START_TASK_ID] = s.id!!
-                            return@run
-                        }
-                        s.containers.forEach { c ->
-                            val pos = if (c.id == taskId) 0 else -1 // 容器job级别的重试，则找job的第一个原子
-                            c.elements.forEachIndexed { index, element ->
-                                if (index == pos) {
-                                    params[PIPELINE_RETRY_START_TASK_ID] = element.id!!
-                                    return@run
-                                }
-                                if (element.id == taskId) {
-                                    params[PIPELINE_RETRY_START_TASK_ID] = element.id!!
-                                    return@run
+            when {
+                // --- 插件级别重试 ---
+                !taskId.isNullOrBlank() -> {
+                    // stage/job/task级重试，获取buildVariable构建参数，恢复环境变量
+                    params.putAll(originVars)
+                    // stage/job/task级重试
+                    run {
+                        model.stages.forEach { s ->
+                            // stage 级重试
+                            if (s.id == taskId) {
+                                params[PIPELINE_RETRY_START_TASK_ID] = s.id!!
+                                return@run
+                            }
+                            s.containers.forEach { c ->
+                                val pos = if (c.id == taskId) 0 else -1 // 容器job级别的重试，则找job的第一个原子
+                                c.elements.forEachIndexed { index, element ->
+                                    if (index == pos) {
+                                        params[PIPELINE_RETRY_START_TASK_ID] = element.id!!
+                                        return@run
+                                    }
+                                    if (element.id == taskId) {
+                                        params[PIPELINE_RETRY_START_TASK_ID] = element.id!!
+                                        return@run
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            } else {
-                // 完整构建重试，去掉启动参数中的重试插件ID保证不冲突，同时保留重试次数
-                try {
-                    val startupParam = buildStartupParamService.getParam(buildId)
-                    if (startupParam != null && startupParam.isNotEmpty()) {
-                        params.putAll(JsonUtil.toMap(startupParam).filter { it.key != PIPELINE_RETRY_START_TASK_ID })
+
+                // --- 失败Job重试 ---
+                failedContainer == true -> {
+                    params.putAll(originVars)
+                    params[PIPELINE_RETRY_ALL_FAILED_CONTAINER] = true
+                }
+
+                // --- 完整构建重试 ---
+                else -> {
+                    // 去掉启动参数中的重试插件ID保证不冲突，同时保留重试次数
+                    try {
+                        val startupParam = buildStartupParamService.getParam(buildId)
+                        if (startupParam != null && startupParam.isNotEmpty()) {
+                            params.putAll(JsonUtil.toMap(startupParam).filter { it.key != PIPELINE_RETRY_START_TASK_ID })
+                        }
+                    } catch (ignored: Exception) {
+                        logger.warn("ENGINE|$buildId|Fail to get the startup param: $ignored")
                     }
-                } catch (ignored: Exception) {
-                    logger.warn("ENGINE|$buildId|Fail to get the startup param: $ignored")
                 }
             }
 

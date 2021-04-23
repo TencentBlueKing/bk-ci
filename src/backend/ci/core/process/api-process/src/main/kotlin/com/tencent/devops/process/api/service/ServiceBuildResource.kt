@@ -202,6 +202,9 @@ interface ServiceBuildResource {
         @ApiParam("要重试的原子任务ID", required = false)
         @QueryParam("taskId")
         taskId: String? = null,
+        @ApiParam("重试所有失败Job", required = false)
+        @QueryParam("failedContainer")
+        failedContainer: Boolean? = false,
         @ApiParam("渠道号，默认为DS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode
