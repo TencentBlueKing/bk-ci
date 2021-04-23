@@ -43,5 +43,7 @@ data class ProjectRoleDTO(
     @ApiModelProperty("用户组类型,默认分组对应BkAuthGroup 枚举, 自定义分组可以为“”")
     val type: String,
     @ApiModelProperty("是否为默认分组")
-    val defaultGroup: Boolean ?= true
+    val defaultGroup: Boolean ?= true,
+    @ApiModelProperty("项目名称")
+    val projectName: String
 )
