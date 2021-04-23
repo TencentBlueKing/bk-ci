@@ -45,19 +45,20 @@ class CodeCCAuthResourceApi @Autowired constructor(
     val iamEsbService: IamEsbService,
     val iamConfiguration: IamConfiguration
 ) {
-    fun createResource(user: String, serviceCode: AuthServiceCode, resourceType: CodeCCAuthResourceType, projectCode: String, resourceCode: String, resourceName: String) {
-        logger.info("v3 createResource projectCode[$projectCode] resourceCode[$resourceCode] resourceName[$resourceName] resourceType[${resourceType.value}]")
+    fun createResource(user: String, resourceType: CodeCCAuthResourceType, projectCode: String, resourceId: String, resourceName: String) {
+        logger.info("v3 createResource projectCode[$projectCode] resourceName[$resourceName]" +
+            " resourceId[$resourceId] resourceType[${resourceType.value}]")
         val ancestors = mutableListOf<AncestorsApiReq>()
         ancestors.add(AncestorsApiReq(
             system = iamConfiguration.systemId,
             id = projectCode,
-            type = CodeCCAuthResourceType.CODECC_TASK.value
+            type = AuthResourceType.PROJECT.value
         ))
 
         val iamApiReq = IamCreateApiReq(
             creator = user,
             name = resourceName,
-            id = resourceCode,
+            id = resourceId,
             type = resourceType.value,
             system = iamConfiguration.systemId,
             ancestors = ancestors,

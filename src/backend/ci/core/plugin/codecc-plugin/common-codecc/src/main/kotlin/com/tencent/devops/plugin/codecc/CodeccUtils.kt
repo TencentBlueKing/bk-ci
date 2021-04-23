@@ -28,12 +28,14 @@ package com.tencent.devops.plugin.codecc
 
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxCodeCCScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.plugin.codecc.config.CodeccConfig
 
 object CodeccUtils {
 
     const val BK_CI_CODECC_TASK_ID = "BK_CI_CODECC_TASK_ID"
 
-    const val BK_CI_CODECC_V3_ATOM = "CodeccCheckAtomDebug"
+    private var codeccConfig: CodeccConfig? = null;
 
     fun isCodeccAtom(atomName: String?): Boolean {
         return isCodeccNewAtom(atomName) || isCodeccV1Atom(atomName)
@@ -49,18 +51,17 @@ object CodeccUtils {
     }
 
     fun isCodeccV2Atom(atomName: String?): Boolean {
-        return atomName == "CodeccCheckAtom"
+        return atomName == getCodeCCConfig().codeccV2Atom
     }
 
     fun isCodeccV3Atom(atomName: String?): Boolean {
-        return atomName == BK_CI_CODECC_V3_ATOM
+        return atomName == getCodeCCConfig().codeccV3Atom
     }
 
-    // 主要是因为codecc插件版本太多，又要统一处理，故加此map
-    val realAtomCodeMap = mapOf(
-        LinuxCodeCCScriptElement.classType to BK_CI_CODECC_V3_ATOM,
-        LinuxPaasCodeCCScriptElement.classType to BK_CI_CODECC_V3_ATOM,
-        "CodeccCheckAtom" to BK_CI_CODECC_V3_ATOM,
-        BK_CI_CODECC_V3_ATOM to BK_CI_CODECC_V3_ATOM
-    )
+    fun getCodeCCConfig(): CodeccConfig {
+        if (codeccConfig == null) {
+            codeccConfig = SpringContextUtil.getBean(CodeccConfig::class.java)
+        }
+        return codeccConfig!!;
+    }
 }

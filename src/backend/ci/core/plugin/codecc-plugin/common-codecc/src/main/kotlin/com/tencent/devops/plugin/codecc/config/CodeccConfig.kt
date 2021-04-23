@@ -58,4 +58,10 @@ class CodeccConfig {
 
     @Value("\${codeccGateway.api.getRuleSets:/blueShield/getRuleSetsPath}")
     val getRuleSetsPath = ""
+
+    @Value("\${pipeline.atomCode.codeccV2:CodeccCheckAtom}")
+    val codeccV2Atom = ""
+
+    @Value("\${pipeline.atomCode.codecc:CodeccCheckAtomDebug}")
+    val codeccV3Atom = ""
 }

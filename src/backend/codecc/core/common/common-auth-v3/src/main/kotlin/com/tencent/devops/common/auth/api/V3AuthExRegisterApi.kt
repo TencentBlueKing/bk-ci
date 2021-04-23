@@ -11,7 +11,7 @@ class V3AuthExRegisterApi @Autowired constructor(
     private val authResourceApi: CodeCCAuthResourceApi
 ): AuthExRegisterApi {
     override fun registerCodeCCTask(user: String, taskId: String, taskName: String, projectId: String): Boolean {
-        authResourceApi.createResource(user, CodeCCAuthServiceCode(), CodeCCAuthResourceType.CODECC_TASK, projectId, taskId, taskName)
+        authResourceApi.createResource(user, CodeCCAuthResourceType.CODECC_TASK, projectId, taskId, taskName)
         return true
     }
 
