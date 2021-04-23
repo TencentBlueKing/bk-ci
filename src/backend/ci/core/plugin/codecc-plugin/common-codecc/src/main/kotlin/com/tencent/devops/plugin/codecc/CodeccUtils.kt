@@ -37,6 +37,9 @@ object CodeccUtils {
 
     private var codeccConfig: CodeccConfig? = null
 
+    // 主要是因为codecc插件版本太多，又要统一处理，故加此map
+    private lateinit var realAtomCodeMap: Map<String, String>
+
     fun isCodeccAtom(atomName: String?): Boolean {
         return isCodeccNewAtom(atomName) || isCodeccV1Atom(atomName)
     }
@@ -63,5 +66,18 @@ object CodeccUtils {
             codeccConfig = SpringContextUtil.getBean(CodeccConfig::class.java)
         }
         return codeccConfig!!
+    }
+
+    fun getRealAtomCodeMap(): Map<String, String> {
+        val config = getCodeCCConfig()
+        if (realAtomCodeMap == null) {
+            realAtomCodeMap = mapOf(
+                LinuxCodeCCScriptElement.classType to config.codeccV3Atom,
+                LinuxPaasCodeCCScriptElement.classType to config.codeccV3Atom,
+                config.codeccV2Atom to config.codeccV3Atom,
+                config.codeccV3Atom to config.codeccV3Atom
+            )
+        }
+        return realAtomCodeMap
     }
 }

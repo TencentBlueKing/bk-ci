@@ -82,7 +82,7 @@ class PluginGithubCheckDao {
                 repositoryConfig.repositoryHashId,
                 repositoryConfig.repositoryName,
                 commitId,
-                checkRunId,
+                checkRunId.toLong(),
                 now,
                 now
             ).execute()

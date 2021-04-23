@@ -29,18 +29,29 @@ package com.tencent.devops.plugin.utils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.plugin.codecc.CodeccUtils
+import com.tencent.devops.plugin.codecc.config.CodeccConfig
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
+import org.apache.commons.lang3.StringUtils
 
 object ElementUtils {
+
+    private lateinit var codeccV3AtomCode: String;
 
     fun getElementCnName(classType: String, projectId: String): String {
         val map = getProjectElement(projectId)
 
         if (CodeccUtils.isCodeccAtom(classType)) {
-            return map[CodeccUtils.BK_CI_CODECC_V3_ATOM] ?: ""
+            return map[getCodeCCV3AtomCode()] ?: ""
         }
 
         return map[classType] ?: ""
+    }
+
+    fun getCodeCCV3AtomCode(): String {
+        if (StringUtils.isBlank(codeccV3AtomCode)) {
+            codeccV3AtomCode = SpringContextUtil.getBean(CodeccConfig::class.java).codeccV3Atom
+        }
+        return codeccV3AtomCode
     }
 
     private fun getProjectElement(projectId: String): Map<String/* atomCode */, String/* cnName */> {
