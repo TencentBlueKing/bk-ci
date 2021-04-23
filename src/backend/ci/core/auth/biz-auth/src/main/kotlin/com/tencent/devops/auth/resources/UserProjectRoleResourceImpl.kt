@@ -61,7 +61,7 @@ class UserProjectRoleResourceImpl @Autowired constructor(
         userId: String,
         projectId: Int,
         roleId: Int,
-        groupInfo: ManagerRoleGroup
+        groupInfo: ProjectRoleDTO
     ): Result<Boolean> {
         permissionRoleService.renamePermissionRole(
             userId = userId,

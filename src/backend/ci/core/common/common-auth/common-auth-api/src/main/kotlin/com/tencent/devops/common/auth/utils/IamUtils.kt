@@ -29,11 +29,11 @@
 package com.tencent.devops.common.auth.utils
 
 object IamUtils {
-    fun buildIamGroup(projectCode: String, groupName: String): String {
-        return "$projectCode-$groupName"
+    fun buildIamGroup(projectName: String, groupName: String): String {
+        return "$projectName-$groupName"
     }
 
-    fun buildDefaultDescription(projectCode: String, groupName: String): String {
-        return "$projectCode: default group $groupName"
+    fun buildDefaultDescription(projectName: String, groupName: String): String {
+        return "$projectName: default group $groupName"
     }
 }

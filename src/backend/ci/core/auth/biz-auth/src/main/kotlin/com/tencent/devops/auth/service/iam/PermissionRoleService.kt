@@ -35,7 +35,7 @@ import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 interface PermissionRoleService {
     fun createPermissionRole(userId: String, projectId: Int, projectCode: String, groupInfo: ProjectRoleDTO): Int
 
-    fun renamePermissionRole(userId: String, projectId: Int, roleId: Int, groupInfo: ManagerRoleGroup)
+    fun renamePermissionRole(userId: String, projectId: Int, roleId: Int, groupInfo: ProjectRoleDTO)
 
     fun getPermissionRole(projectId: Int): ManagerRoleGroupVO
 

@@ -73,11 +73,11 @@ open class AbsPermissionRoleServiceImpl @Autowired constructor(
 
         val defaultGroup = groupInfo.defaultGroup!!
 
-        // 默认分组名称规则: projectCode-groupName
-        val groupName = IamUtils.buildIamGroup(projectCode, groupInfo.name)
+        // 默认分组名称规则: projectName-groupName
+        val groupName = IamUtils.buildIamGroup(groupInfo.projectName, groupInfo.name)
 
         val groupDescription = if (defaultGroup) {
-            IamUtils.buildDefaultDescription(projectCode, groupInfo.name)
+            IamUtils.buildDefaultDescription(groupInfo.projectName, groupInfo.name)
         } else {
             groupInfo.description
         }
@@ -101,11 +101,16 @@ open class AbsPermissionRoleServiceImpl @Autowired constructor(
         return roleId
     }
 
-    override fun renamePermissionRole(userId: String, projectId: Int, roleId: Int, groupInfo: ManagerRoleGroup) {
+    override fun renamePermissionRole(userId: String, projectId: Int, roleId: Int, groupInfo: ProjectRoleDTO) {
         permissionGradeService.checkGradeManagerUser(userId, projectId)
         // 校验用户组名称
         checkRoleName(groupInfo.name, false)
-        iamManagerService.updateRoleGroup(roleId, groupInfo)
+        val roleName = IamUtils.buildIamGroup(groupInfo.projectName, groupInfo.name)
+        val newGroupInfo = ManagerRoleGroup(
+            roleName,
+            groupInfo.description
+        )
+        iamManagerService.updateRoleGroup(roleId, newGroupInfo)
     }
 
     override fun getPermissionRole(projectId: Int): ManagerRoleGroupVO {
