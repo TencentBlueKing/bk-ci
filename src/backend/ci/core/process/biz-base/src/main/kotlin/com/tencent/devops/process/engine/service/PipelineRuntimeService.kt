@@ -873,6 +873,13 @@ class PipelineRuntimeService @Autowired constructor(
                     }
                 }
 
+                if (retryFailedContainer && BuildStatus.parse(container.status).isSuccess()) {
+                    logger.info("[$buildId|RETRY_SKIP_SUCCESSFUL_JOB|" +
+                        "retryFailed($retryFailedContainer)|j($containerId)|${container.name}")
+                    containerSeq++
+                    return@nextContainer
+                }
+
                 // --- 第3层循环：Element遍历处理 ---
                 val containerElements = container.elements
                 containerElements.forEach nextElement@{ atomElement ->
@@ -941,12 +948,6 @@ class PipelineRuntimeService @Autowired constructor(
                                 logger.error("[$buildId]|BAD_BUILD_STATUS|${target?.taskId}|${target?.status}|$ignored")
                                 return@nextElement
                             }
-                        }
-
-                        if (retryFailedContainer && BuildStatus.parse(container.status).isSuccess()) {
-                            logger.info("[$buildId|RETRY_SKIP_SUCCESSFUL_JOB|j($containerId)|${container.name}")
-                            containerSeq++
-                            return@nextContainer
                         }
 
                         // Rebuild/Stage-Retry/Fail-Task-Retry  重跑/Stage重试/失败的插件重试
