@@ -134,7 +134,7 @@ class IamV3Service @Autowired constructor(
             iamConfiguration = iamConfiguration
         )
         val createManagerDTO = CreateManagerDTO.builder().system(iamConfiguration.systemId)
-            .name(resourceRegisterInfo.resourceName)
+            .name("$SYSTEM_DEFAULT_NAME-${resourceRegisterInfo.resourceName}")
             .description(resourceRegisterInfo.resourceName)
             .members(arrayListOf(userId))
             .authorization_scopes(authorizationScopes)
@@ -191,6 +191,7 @@ class IamV3Service @Autowired constructor(
 
     companion object {
         private const val DEFAULT_EXPIRED_AT = 365L // 用户组默认一年有效期
+        private const val SYSTEM_DEFAULT_NAME = "CI"
         val logger = LoggerFactory.getLogger(IamV3Service::class.java)
     }
 }
