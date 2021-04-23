@@ -35,7 +35,7 @@ import org.apache.commons.lang3.StringUtils
 
 object ElementUtils {
 
-    private lateinit var codeccV3AtomCode: String;
+    private lateinit var codeccV3AtomCode: String
 
     fun getElementCnName(classType: String, projectId: String): String {
         val map = getProjectElement(projectId)
