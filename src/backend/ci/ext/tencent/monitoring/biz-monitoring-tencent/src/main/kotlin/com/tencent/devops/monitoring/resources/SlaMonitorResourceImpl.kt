@@ -30,6 +30,7 @@ package com.tencent.devops.monitoring.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.monitoring.api.service.SlaMonitorResource
+import com.tencent.devops.monitoring.job.MonitorNotifyJob
 import com.tencent.devops.monitoring.pojo.SlaCodeccResponseData
 import com.tencent.devops.monitoring.services.SlaMonitorService
 import org.apache.commons.lang3.math.NumberUtils
@@ -38,7 +39,8 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class SlaMonitorResourceImpl @Autowired constructor(
-    private val slaMonitorService: SlaMonitorService
+    private val slaMonitorService: SlaMonitorService,
+    private val monitorNotifyJob: MonitorNotifyJob
 ) : SlaMonitorResource {
     override fun codeccQuery(bgId: String, startTime: Long, endTime: Long): Result<SlaCodeccResponseData> {
         if (startTime > System.currentTimeMillis() || startTime > endTime) {
@@ -52,6 +54,12 @@ class SlaMonitorResourceImpl @Autowired constructor(
         }
 
         return Result(slaMonitorService.codeccQuery(bgId, startTime, endTime))
+    }
+
+    override fun emailTest(pwd: String): Result<String> {
+        if (pwd != "234lsd&QWfjno1!") return Result("密码错误")
+        monitorNotifyJob.notifyDaily()
+        return Result("发送成功")
     }
 
     companion object {
