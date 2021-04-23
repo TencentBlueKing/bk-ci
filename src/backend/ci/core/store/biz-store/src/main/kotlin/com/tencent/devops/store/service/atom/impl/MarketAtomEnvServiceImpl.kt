@@ -27,6 +27,8 @@
 
 package com.tencent.devops.store.service.atom.impl
 
+import com.google.common.cache.CacheBuilder
+import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
@@ -64,6 +66,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.util.StringUtils
 import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
 /**
  * 插件执行环境逻辑类
@@ -84,6 +87,12 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
 
     private val logger = LoggerFactory.getLogger(MarketAtomEnvServiceImpl::class.java)
 
+    private val cache = CacheBuilder.newBuilder().maximumSize(10)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .build(object : CacheLoader<String, String>() {
+            override fun load(key: String) = redisOperation.get(key)
+        })
+
     override fun batchGetAtomRunInfos(
         projectCode: String,
         atomVersions: Set<StoreVersion>
@@ -97,9 +106,12 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             atomCodeList.add(atomVersion.storeCode)
         }
         val storePublicFlagKey = StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name)
-        if (!redisOperation.hasKey(storePublicFlagKey)) {
+        // 获取从db查询默认插件开关，开关打开则实时从db查
+        val queryDefaultAtomSwitch = cache.get("queryDefaultAtomSwitch")?.toBoolean() ?: false
+        if (queryDefaultAtomSwitch || !redisOperation.hasKey(storePublicFlagKey)) {
+            logger.info("$storePublicFlagKey is not exist!")
             // 如果redis没有缓存默认插件集合，则从db去查
-            val defaultAtomCodeRecords = atomDao.batchGetDefaultAtomCode(dslContext, atomCodeList)
+            val defaultAtomCodeRecords = atomDao.batchGetDefaultAtomCode(dslContext)
             val defaultAtomCodeList = defaultAtomCodeRecords.map { it.value1() }
             redisOperation.sadd(storePublicFlagKey, *defaultAtomCodeList.toTypedArray())
         }
@@ -144,6 +156,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             )
             val testFlag =
                 testAtomCodes?.contains(atomCode) == true && (atomVersionTestFlag == null || atomVersionTestFlag.toBoolean())
+            logger.info("batchGetAtomRunInfos atomCode:$atomCode,version:$version,testFlag:$testFlag")
             // 如果当前的项目属于插件的调试项目且插件当前大版本有测试中的版本则实时去db查
             val atomRunInfoName = "$atomCode:$version"
             if (testFlag) {
