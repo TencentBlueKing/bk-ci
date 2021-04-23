@@ -460,7 +460,7 @@ class CodeWebhookService @Autowired constructor(
                 } else {
                     if (buildNum.toInt() >= record.buildNumber) {
                         scmService.updateGithubCheckRuns(
-                            checkRunId = record.checkRunId.toInt(),
+                            checkRunId = record.checkRunId,
                             projectId = projectId,
                             repositoryConfig = repositoryConfig,
                             name = name,
