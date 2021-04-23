@@ -233,7 +233,7 @@ class MonitorNotifyJob @Autowired constructor(
                 "environment"
             )) {
                 val errorCount = getHits(startTime, name, true)
-                val totalCount = getHits(startTime, name)
+                val totalCount = getHits(startTime, name).coerceAtLeast(1)
                 rowList.add(
                     Triple(
                         name,
