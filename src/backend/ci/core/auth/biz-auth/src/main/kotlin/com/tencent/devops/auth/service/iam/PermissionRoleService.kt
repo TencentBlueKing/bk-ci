@@ -28,7 +28,6 @@
 
 package com.tencent.devops.auth.service.iam
 
-import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
 import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerRoleGroupVO
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 
