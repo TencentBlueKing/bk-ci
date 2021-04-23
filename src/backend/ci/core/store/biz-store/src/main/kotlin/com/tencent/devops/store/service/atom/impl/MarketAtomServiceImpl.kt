@@ -813,6 +813,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             atomLabelRelDao.deleteByAtomCode(context, atomCode)
             marketAtomVersionLogDao.deleteByAtomCode(context, atomCode)
             marketAtomDao.deleteByAtomCode(context, atomCode)
+            // 删除插件默认标识缓存
+            redisOperation.removeSetMember(StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name), atomCode)
             // 清空插件post信息缓存
             redisOperation.delete("$ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX:$atomCode")
             // 清空插件运行时信息缓存

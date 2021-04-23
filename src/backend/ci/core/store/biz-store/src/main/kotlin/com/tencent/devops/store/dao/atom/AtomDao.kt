@@ -1007,15 +1007,11 @@ class AtomDao : AtomBaseDao() {
         }
     }
 
-    fun batchGetDefaultAtomCode(
-        dslContext: DSLContext,
-        atomCodeList: List<String>
-    ): Result<Record1<String>> {
+    fun batchGetDefaultAtomCode(dslContext: DSLContext): Result<Record1<String>> {
         return with(TAtom.T_ATOM) {
             dslContext.select(ATOM_CODE).from(this)
                 .where(
-                    ATOM_CODE.`in`(atomCodeList)
-                        .and(LATEST_FLAG.eq(true))
+                    LATEST_FLAG.eq(true)
                         .and(DEFAULT_FLAG.eq(true))
                 )
                 .fetch()
