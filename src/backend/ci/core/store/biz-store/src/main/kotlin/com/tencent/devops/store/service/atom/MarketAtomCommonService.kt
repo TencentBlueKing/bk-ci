@@ -30,6 +30,7 @@ package com.tencent.devops.store.service.atom
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
+import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 
 interface MarketAtomCommonService {
@@ -59,5 +60,13 @@ interface MarketAtomCommonService {
         atomCode: String,
         version: String,
         releaseFlag: Boolean
+    )
+
+    fun updateAtomRunInfoCache(
+        atomId: String,
+        atomName: String? = null,
+        jobType: JobTypeEnum? = null,
+        buildLessRunFlag: Boolean? = null,
+        latestFlag: Boolean? = null
     )
 }

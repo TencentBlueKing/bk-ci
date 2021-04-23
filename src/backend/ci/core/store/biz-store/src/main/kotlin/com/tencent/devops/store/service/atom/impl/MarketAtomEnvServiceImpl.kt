@@ -66,6 +66,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.util.StringUtils
 import java.time.LocalDateTime
+import java.util.Optional
 import java.util.concurrent.TimeUnit
 
 /**
@@ -89,8 +90,15 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
 
     private val cache = CacheBuilder.newBuilder().maximumSize(10)
         .expireAfterWrite(1, TimeUnit.MINUTES)
-        .build(object : CacheLoader<String, String>() {
-            override fun load(key: String) = redisOperation.get(key)
+        .build(object : CacheLoader<String, Optional<Boolean>>() {
+            override fun load(key: String): Optional<Boolean> {
+                val value = redisOperation.get(key)
+                return if (value != null) {
+                    Optional.of(value.toBoolean())
+                } else {
+                    Optional.empty()
+                }
+            }
         })
 
     override fun batchGetAtomRunInfos(
@@ -107,7 +115,10 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
         }
         val storePublicFlagKey = StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name)
         // 获取从db查询默认插件开关，开关打开则实时从db查
-        val queryDefaultAtomSwitch = cache.get("queryDefaultAtomSwitch")?.toBoolean() ?: false
+        val queryDefaultAtomSwitchOptional = cache.get("queryDefaultAtomSwitch")
+        val queryDefaultAtomSwitch = if (queryDefaultAtomSwitchOptional.isPresent) {
+            queryDefaultAtomSwitchOptional.get()
+        } else false
         // 获取需要校验的插件（默认公共插件无需校验）
         val validateAtomCodeList = if (queryDefaultAtomSwitch || !redisOperation.hasKey(storePublicFlagKey)) {
             logger.info("$storePublicFlagKey is not exist!")
@@ -218,7 +229,6 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             atomCode = atomCode,
             atomName = atomEnv.atomName,
             version = atomEnv.version,
-            atomStatus = atomEnv.atomStatus,
             initProjectCode = atomEnv.projectCode!!,
             jobType = atomEnv.jobType,
             buildLessRunFlag = atomEnv.buildLessRunFlag

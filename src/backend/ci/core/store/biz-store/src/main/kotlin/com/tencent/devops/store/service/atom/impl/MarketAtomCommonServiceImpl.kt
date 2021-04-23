@@ -277,7 +277,6 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             atomCode = atomCode,
             atomName = atom.name,
             version = atom.version,
-            atomStatus = AtomStatusEnum.getAtomStatus(atom.atomStatus.toInt()),
             initProjectCode = initProjectCode!!,
             jobType = if (jobType == null) null else JobTypeEnum.valueOf(jobType),
             buildLessRunFlag = atom.buildLessRunFlag
@@ -311,6 +310,46 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 hashKey = VersionUtils.convertLatestVersion(version),
                 values = "false"
             )
+        }
+    }
+
+    override fun updateAtomRunInfoCache(
+        atomId: String,
+        atomName: String?,
+        jobType: JobTypeEnum?,
+        buildLessRunFlag: Boolean?,
+        latestFlag: Boolean?
+    ) {
+        val atomRecord = atomDao.getPipelineAtom(dslContext, atomId) ?: return
+        val atomCode = atomRecord.atomCode
+        val version = atomRecord.version
+        val atomRunInfoKey = StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, atomCode)
+        val atomRunInfoJson = redisOperation.hget(atomRunInfoKey, version)
+        if (!atomRunInfoJson.isNullOrEmpty()) {
+            val atomRunInfo = JsonUtil.to(atomRunInfoJson, AtomRunInfo::class.java)
+            if (atomName != null) atomRunInfo.atomName = atomName
+            if (jobType != null) atomRunInfo.jobType = jobType
+            if (buildLessRunFlag != null) atomRunInfo.buildLessRunFlag = buildLessRunFlag
+            // 更新插件当前版本号的缓存信息
+            redisOperation.hset(
+                key = atomRunInfoKey,
+                hashKey = version,
+                values = JsonUtil.toJson(atomRunInfo)
+            )
+            val updateLatestAtomCacheFlag = if (latestFlag == true) {
+                true
+            } else {
+                val latestAtomRecord = marketAtomDao.getLatestAtomByCode(dslContext, atomCode)
+                atomId == latestAtomRecord?.id
+            }
+            if (updateLatestAtomCacheFlag) {
+                // 更新插件xxx.latest这种版本号的缓存信息
+                redisOperation.hset(
+                    key = atomRunInfoKey,
+                    hashKey = VersionUtils.convertLatestVersion(version),
+                    values = JsonUtil.toJson(atomRunInfo)
+                )
+            }
         }
     }
 }
