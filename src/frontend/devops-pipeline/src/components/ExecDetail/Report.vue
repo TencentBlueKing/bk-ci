@@ -74,6 +74,7 @@
                     buildId: routeParam.buildNo,
                     taskId: this.taskId
                 }
+                this.isLoading = true
                 this.$store.dispatch('soda/requestReportList', postData).then((res) => {
                     const thirdReports = []
                     const innerReports = [];
@@ -86,10 +87,14 @@
                     })
                     this.reportList = innerReports
                     if (thirdReports.length) this.reportList.push({ name: this.$t('details.thirdReport'), thirdReports, type: 'THIRDPARTY' })
+                    if (this.reportList.length <= 0) {
+                        this.$emit('hidden')
+                    }
                 }).catch((err) => {
                     this.$bkMessage({ theme: 'error', message: err.message || err })
                 }).finally(() => {
                     this.isLoading = false
+                    this.$emit('complete')
                 })
             }
         }

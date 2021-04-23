@@ -5,12 +5,14 @@
         :current-tab="currentTab"
         :is-hook="((currentElement.additionalOptions || {}).elementPostInfo || false)"
     >
-        <span class="head-tab" slot="tab">
-            <span v-for="tab in tabList"
-                :key="tab"
-                :class="{ active: currentTab === tab }"
-                @click="currentTab = tab"
-            >{{ $t(`execDetail.${tab}`) }}</span>
+        <span class="head-tab" slot="tab" v-if="showTab">
+            <template v-for="tab in tabList">
+                <span v-if="tab.show"
+                    :key="tab.name"
+                    :class="{ active: currentTab === tab.name }"
+                    @click="currentTab = tab.name"
+                >{{ $t(`execDetail.${tab.name}`) }}</span>
+            </template>
         </span>
         <reference-variable slot="tool" class="head-tool" :global-envs="globalEnvs" :stages="stages" :container="container" v-if="currentTab === 'setting'" />
         <template v-slot:content>
@@ -21,7 +23,15 @@
                 ref="log"
                 v-show="currentTab === 'log'"
             />
-            <component :is="(componentList[currentTab] || {}).component" v-bind="(componentList[currentTab] || {}).bindData"></component>
+            <component :is="value.component"
+                v-bind="value.bindData"
+                v-for="(value, key) in componentList"
+                :key="key"
+                :ref="key"
+                @hidden="hideTab(key)"
+                @complete="completeLoading(key)"
+                v-show="currentTab === key"
+            ></component>
         </template>
     </detail-container>
 </template>
@@ -45,7 +55,12 @@
         data () {
             return {
                 currentTab: 'log',
-                tabList: ['log', 'artifactory', 'report', 'setting']
+                tabList: [
+                    { name: 'log', show: true },
+                    { name: 'artifactory', show: true, completeLoading: false },
+                    { name: 'report', show: true, completeLoading: false },
+                    { name: 'setting', show: true }
+                ]
             }
         },
 
@@ -102,6 +117,22 @@
                         }
                     }
                 }
+            },
+
+            showTab () {
+                return this.tabList[1].completeLoading && this.tabList[2].completeLoading
+            }
+        },
+
+        methods: {
+            hideTab (key) {
+                const tab = this.tabList.find(tab => tab.name === key)
+                tab.show = false
+            },
+
+            completeLoading (key) {
+                const tab = this.tabList.find(tab => tab.name === key)
+                tab.completeLoading = true
             }
         }
     }
