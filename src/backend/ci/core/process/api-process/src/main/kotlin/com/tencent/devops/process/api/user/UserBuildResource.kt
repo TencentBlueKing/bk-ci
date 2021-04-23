@@ -141,7 +141,7 @@ interface UserBuildResource {
         @ApiParam("要重试的插件任务ID", required = false)
         @QueryParam("taskId")
         taskId: String? = null,
-        @ApiParam("重试所有失败Job", required = false)
+        @ApiParam("仅重试所有失败Job", required = false)
         @QueryParam("failedContainer")
         failedContainer: Boolean? = false
     ): Result<BuildId>

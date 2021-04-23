@@ -866,11 +866,17 @@ class PipelineRuntimeService @Autowired constructor(
                 if (BuildStatus.parse(container.status).isFailure() &&
                     !retryStage && !retryStartTaskId.isNullOrBlank() &&
                     lastTimeBuildContainerRecords.isNotEmpty()) {
-                    if (null == findTaskRecord(lastTimeBuildTaskRecords, container, retryStartTaskId) || retryFailedContainer) {
+                    if (null == findTaskRecord(lastTimeBuildTaskRecords, container, retryStartTaskId)) {
                         logger.info("[$buildId|RETRY_SKIP_JOB|j($containerId)|${container.name}")
                         containerSeq++
                         return@nextContainer
                     }
+                }
+
+                if (BuildStatus.parse(container.status).isSuccess() && retryFailedContainer) {
+                    logger.info("[$buildId|RETRY_SKIP_SUCCESSFUL_JOB|j($containerId)|${container.name}")
+                    containerSeq++
+                    return@nextContainer
                 }
 
                 // --- 第3层循环：Element遍历处理 ---
