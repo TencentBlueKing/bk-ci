@@ -35,7 +35,7 @@ object CodeccUtils {
 
     const val BK_CI_CODECC_TASK_ID = "BK_CI_CODECC_TASK_ID"
 
-    private var codeccConfig: CodeccConfig? = null;
+    private var codeccConfig: CodeccConfig? = null
 
     fun isCodeccAtom(atomName: String?): Boolean {
         return isCodeccNewAtom(atomName) || isCodeccV1Atom(atomName)
@@ -62,6 +62,6 @@ object CodeccUtils {
         if (codeccConfig == null) {
             codeccConfig = SpringContextUtil.getBean(CodeccConfig::class.java)
         }
-        return codeccConfig!!;
+        return codeccConfig!!
     }
 }
