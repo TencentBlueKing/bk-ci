@@ -27,11 +27,15 @@
 
 package com.tencent.devops.process.service.label
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.model.process.tables.records.TPipelineFavorRecord
 import com.tencent.devops.model.process.tables.records.TPipelineLabelRecord
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_GROUP_COUNT_EXCEEDS_LIMIT
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_LABEL_COUNT_EXCEEDS_LIMIT
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_LABEL_NAME_TOO_LONG
 import com.tencent.devops.process.dao.PipelineFavorDao
 import com.tencent.devops.process.dao.label.PipelineGroupDao
 import com.tencent.devops.process.dao.label.PipelineLabelDao
@@ -124,6 +128,13 @@ class PipelineGroupService @Autowired constructor(
 
     fun addGroup(userId: String, pipelineGroup: PipelineGroupCreate): Boolean {
         try {
+            val groupCount = pipelineGroupDao.count(dslContext = dslContext, projectId = pipelineGroup.projectId)
+            if (groupCount >= MAX_GROUP_UNDER_PROJECT) {
+                throw ErrorCodeException(
+                    errorCode = ERROR_GROUP_COUNT_EXCEEDS_LIMIT,
+                    defaultMessage = "At most $MAX_GROUP_UNDER_PROJECT label groups under a project"
+                )
+            }
             pipelineGroupDao.create(dslContext, pipelineGroup.projectId, pipelineGroup.name, userId)
         } catch (t: DuplicateKeyException) {
             logger.warn("Fail to create the group $pipelineGroup by userId $userId")
@@ -153,9 +164,26 @@ class PipelineGroupService @Autowired constructor(
 
     fun addLabel(userId: String, pipelineLabel: PipelineLabelCreate): Boolean {
         try {
+            val groupId = decode(pipelineLabel.groupId)
+            val labelCount = pipelineLabelDao.countByGroupId(
+                dslContext = dslContext,
+                groupId = groupId
+            )
+            if (labelCount >= MAX_LABEL_UNDER_GROUP) {
+                throw ErrorCodeException(
+                    errorCode = ERROR_LABEL_COUNT_EXCEEDS_LIMIT,
+                    defaultMessage = "No more than $MAX_LABEL_UNDER_GROUP labels under a label group"
+                )
+            }
+            if (pipelineLabel.name.length > MAX_LABEL_NAME_LENGTH) {
+                throw ErrorCodeException(
+                    errorCode = ERROR_LABEL_NAME_TOO_LONG,
+                    defaultMessage = "label name cannot exceed $MAX_LABEL_NAME_LENGTH characters"
+                )
+            }
             pipelineLabelDao.create(
                 dslContext = dslContext,
-                groupId = decode(pipelineLabel.groupId),
+                groupId = groupId,
                 name = pipelineLabel.name,
                 userId = userId
             )
@@ -180,6 +208,12 @@ class PipelineGroupService @Autowired constructor(
 
     fun updateLabel(userId: String, pipelineLabel: PipelineLabelUpdate): Boolean {
         try {
+            if (pipelineLabel.name.length > MAX_LABEL_NAME_LENGTH) {
+                throw ErrorCodeException(
+                    errorCode = ERROR_LABEL_NAME_TOO_LONG,
+                    defaultMessage = "label name cannot exceed $MAX_LABEL_NAME_LENGTH characters"
+                )
+            }
             return pipelineLabelDao.update(dslContext, decode(pipelineLabel.id), pipelineLabel.name, userId)
         } catch (t: DuplicateKeyException) {
             logger.warn("Fail to update the label $pipelineLabel by userId $userId")
@@ -385,6 +419,9 @@ class PipelineGroupService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineGroupService::class.java)
+        private const val MAX_GROUP_UNDER_PROJECT = 10
+        private const val MAX_LABEL_UNDER_GROUP = 12
+        private const val MAX_LABEL_NAME_LENGTH = 20
     }
 
     @Suppress("UNUSED")

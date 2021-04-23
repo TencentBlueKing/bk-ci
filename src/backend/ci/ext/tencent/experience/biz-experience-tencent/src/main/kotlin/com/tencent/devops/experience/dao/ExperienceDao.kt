@@ -72,6 +72,7 @@ class ExperienceDao {
         projectId: String,
         bundleIdentifier: String,
         platform: String?,
+        recordIds: Set<Long>? = null,
         offset: Int,
         limit: Int
     ): Result<TExperienceRecord> {
@@ -81,6 +82,9 @@ class ExperienceDao {
                 .and(BUNDLE_IDENTIFIER.eq(bundleIdentifier))
                 .let {
                     if (null == platform) it else it.and(PLATFORM.eq(platform))
+                }
+                .let {
+                    if (null == recordIds) it else it.and(ID.`in`(recordIds))
                 }
                 .orderBy(CREATE_TIME.desc())
                 .limit(offset, limit)

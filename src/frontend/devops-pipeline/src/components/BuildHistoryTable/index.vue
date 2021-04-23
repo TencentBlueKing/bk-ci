@@ -88,8 +88,10 @@
                     </div>
                 </template>
                 <template v-else-if="col.prop === 'pipelineVersion'" v-slot="props">
-                    {{ props.row[col.prop] }}
-                    <span v-if="isNotLatest(props)" class="version-tips"></span>
+                    <div>
+                        <span>{{ props.row[col.prop] }}</span>
+                        <logo v-if="isNotLatest(props)" v-bk-tooltips="$t('details.pipelineVersionDiffTips')" size="12" class="version-tips" name="warning-circle" />
+                    </div>
                 </template>
                 <template v-else-if="col.prop === 'errorCode'" v-slot="props">
                     <template v-if="Array.isArray(props.row.errorInfoList) && props.row.errorInfoList.length > 0">
@@ -694,14 +696,9 @@
         }
         .version-tips {
             display: inline-block;
-            vertical-align: top;
-            width: 4px;
-            height: 2px;
-            margin-left: 5px;
+            vertical-align: -1px;
+            color: #F6B026;
             font-size: 0;
-            box-sizing: content-box;
-            border: solid #fde92e;
-            border-width: 10px 0 4px;
         }
     }
     .artifact-list-popup {

@@ -219,7 +219,7 @@ class SubPipelineStartUpService(
                     if (element is MarketBuildLessAtomElement) {
                         val map = element.data
                         val msg = map["input"] as? Map<*, *> ?: return@element
-                        val subPip = msg["subPip"]
+                        val subPip = msg["subPip"] ?: return@element
                         logger.info("callPipelineStartup: ${msg["projectId"]} $projectId")
                         val subPro =
                             if (msg["projectId"] == null || msg["projectId"].toString()

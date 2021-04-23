@@ -103,7 +103,6 @@ interface UsageMetrics {
         }
 
         fun loadMetricsBean(metricsType: MetricsType, os: OS): UsageMetrics? {
-
             return map[genKey(metricsType, os)]
         }
 
