@@ -81,9 +81,9 @@ class PipelineUtils {
     @Value("\${pipeline.scmType.svn.old:false}")
     public var SVN_SCM_TYPE_OLD: Boolean = false
 
-
     @Value("\${pipeline.imageType:BKSTORE}")
     public var PIPELINE_IMAGE_TYPE: ImageType = ImageType.BKSTORE
+
     /**
      * 创建流水线
      */

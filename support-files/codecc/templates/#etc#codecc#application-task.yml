@@ -36,3 +36,8 @@ pipeline:
     codeccVersion: __BK_CODECC_ATOM_CODE_VERSION__
     git: __
   imageType: __BK_CODECC_PIPELINE_IMAGE_TYPE__
+  scmType:
+    svn:
+      old: __SVN_SCM_TYPE_OLD__
+    github:
+      old: __GITHUB_SCM_TYPE_OLD__
