@@ -120,7 +120,7 @@
                     cursor: pointer;
                     color: #3a84ff;
                     &:hover {
-                        border-bottom: 1px dashed #3a84ff;
+                        border-bottom: 1px solid #3a84ff;
                     }
                 }
             }

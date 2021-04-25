@@ -1,12 +1,15 @@
 <template>
     <article class="manage-statistic-pipeline">
-        <main class="g-scroll-pagination-table" v-bkloading="{ isLoading }">
+        <main class="g-scroll-pagination-table">
             <bk-form form-type="inline" class="statistic-pipeline-head">
                 <bk-form-item :label="$t('store.修改时间')">
-                    <bk-date-picker :placeholder="$t('store.请选择起止时间')" type="datetimerange" v-model="searchData.modifyTimeRange" :clearable="false" @open-change="changeDate"></bk-date-picker>
+                    <bk-date-picker :placeholder="$t('store.请选择起止时间')" type="datetimerange" v-model="searchData.modifyTimeRange" :clearable="false"></bk-date-picker>
                 </bk-form-item>
                 <bk-form-item :label="$t('store.版本')">
-                    <bk-input :placeholder="$t('store.请输入版本')" v-model="searchData.version" @change="getPipelineList"></bk-input>
+                    <bk-input :placeholder="$t('store.请输入版本')" v-model="searchData.version"></bk-input>
+                </bk-form-item>
+                <bk-form-item>
+                    <bk-button theme="primary" @click="getPipelineList" :loading="isLoading">{{ $t('store.搜索') }}</bk-button>
                 </bk-form-item>
                 <bk-form-item>
                     <bk-button @click="savePipelines" :loading="isSaving">{{ $t('store.导出') }}</bk-button>
@@ -20,6 +23,7 @@
                 :pagination="pagination"
                 @page-change="pageChanged"
                 @page-limit-change="pageLimitChanged"
+                v-bkloading="{ isLoading }"
             >
                 <bk-table-column :label="$t('store.流水线链接')">
                     <template slot-scope="props">
@@ -131,10 +135,6 @@
                 }).finally(() => {
                     this.isSaving = false
                 })
-            },
-
-            changeDate (status) {
-                if (!status) this.getPipelineList()
             }
         }
     }
