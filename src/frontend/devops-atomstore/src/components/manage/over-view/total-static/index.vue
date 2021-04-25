@@ -113,10 +113,15 @@
                     font-size: .26rem;
                     line-height: .3rem;
                     margin-top: .03rem;
+                    box-sizing: border-box;
+                    height: .3rem;
                 }
                 .statistic-link {
                     cursor: pointer;
                     color: #3a84ff;
+                    &:hover {
+                        border-bottom: 1px dashed #3a84ff;
+                    }
                 }
             }
         }

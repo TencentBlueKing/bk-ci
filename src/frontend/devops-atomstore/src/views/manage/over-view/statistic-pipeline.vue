@@ -9,7 +9,7 @@
                     <bk-input :placeholder="$t('store.请输入版本')" v-model="searchData.version" @change="getPipelineList"></bk-input>
                 </bk-form-item>
                 <bk-form-item>
-                    <bk-button theme="primary" @click="savePipelines" :loading="isSaving">{{ $t('store.导出') }}</bk-button>
+                    <bk-button @click="savePipelines" :loading="isSaving">{{ $t('store.导出') }}</bk-button>
                 </bk-form-item>
             </bk-form>
 
