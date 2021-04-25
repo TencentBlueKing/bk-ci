@@ -35,27 +35,33 @@ class CodeccConfig {
     /**
      * 代码检查网关地址
      */
-    @Value("\${codeccGateway.gateway:}")
+    @Value("\${plugin.codecc.gateway:}")
     val codeccApiGateWay: String = ""
 
-    @Value("\${codeccGateway.proxy:}")
+    @Value("\${plugin.codecc.proxy:}")
     val codeccApiProxyGateWay: String = ""
 
-    @Value("\${codeccGateway.api.createTask:/ms/task/api/service/task}")
+    @Value("\${plugin.codecc.api.createTask:/ms/task/api/service/task}")
     val createPath = "/ms/task/api/service/task"
 
-    @Value("\${codeccGateway.api.updateTask:/ms/task/api/service/task}")
+    @Value("\${plugin.codecc.api.updateTask:/ms/task/api/service/task}")
     val updatePath = "/ms/task/api/service/task"
 
-    @Value("\${codeccGateway.api.checkTaskExists:/ms/task/api/service/task/exists}")
+    @Value("\${plugin.codecc.api.checkTaskExists:/ms/task/api/service/task/exists}")
     val existPath = "/ms/task/api/service/task/exists"
 
-    @Value("\${codeccGateway.api.deleteTask:/ms/task/api/service/task}")
+    @Value("\${plugin.codecc.api.deleteTask:/ms/task/api/service/task}")
     val deletePath = "/ms/task/api/service/task"
 
-    @Value("\${codeccGateway.api.codeCheckReport:/api}")
+    @Value("\${plugin.codecc.api.codeCheckReport:/api}")
     val report = ""
 
-    @Value("\${codeccGateway.api.getRuleSets:/blueShield/getRuleSetsPath}")
+    @Value("\${plugin.codecc.api.getRuleSets:/blueShield/getRuleSetsPath}")
     val getRuleSetsPath = ""
+
+    @Value("\${pipeline.atomCode.codeccV2:CodeccCheckAtom}")
+    val codeccV2Atom = ""
+
+    @Value("\${pipeline.atomCode.codecc:CodeccCheckAtomDebug}")
+    val codeccV3Atom = ""
 }

@@ -1,3 +1,6 @@
+package com.tencent.devops.common.auth.pojo
+
+
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -24,38 +27,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.quality.util
-
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.plugin.codecc.CodeccUtils
-import com.tencent.devops.plugin.codecc.config.CodeccConfig
-import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
-import org.apache.commons.lang3.StringUtils
-
-object ElementUtils {
-
-    private lateinit var codeccV3AtomCode: String
-
-    fun getElementCnName(classType: String, projectId: String): String {
-        val map = getProjectElement(projectId)
-
-        if (CodeccUtils.isCodeccAtom(classType)) {
-            return map[getCodeCCV3AtomCode()] ?: ""
-        }
-
-        return map[classType] ?: ""
-    }
-
-    fun getCodeCCV3AtomCode(): String {
-        if (StringUtils.isBlank(codeccV3AtomCode)) {
-            codeccV3AtomCode = SpringContextUtil.getBean(CodeccConfig::class.java).codeccV3Atom
-        }
-        return codeccV3AtomCode
-    }
-
-    fun getProjectElement(projectId: String): Map<String/* atomCode */, String/* cnName */> {
-        val client = SpringContextUtil.getBean(Client::class.java)
-        return client.get(ServiceMarketAtomResource::class).getProjectElements(projectId).data!!
-    }
+enum class CodeCCAuthResourceType(val value: String) {
+    CODECC_TASK("codecc_task"); // codecc任务
 }

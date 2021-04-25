@@ -53,9 +53,7 @@ enum class AuthResourceType(val value: String) {
     WETEST_TASK("task"), // 体验任务
     WETEST_EMAIL_GROUP("email_group"), // 体验组
 
-    PROJECT("project"), // 项目管理
-
-    CODECC_TASK("codecc_task"); // codecc任务
+    PROJECT("project"); // 项目管理
 
     companion object {
         fun get(value: String): AuthResourceType {

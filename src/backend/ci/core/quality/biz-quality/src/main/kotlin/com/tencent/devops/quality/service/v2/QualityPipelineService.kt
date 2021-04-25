@@ -174,7 +174,7 @@ class QualityPipelineService @Autowired constructor(
     }
 
     private fun getRealAtomCode(atomCode: String): String {
-        return CodeccUtils.realAtomCodeMap[atomCode] ?: atomCode
+        return CodeccUtils.getRealAtomCodeMap()[atomCode] ?: atomCode
     }
 
     data class CheckElement(

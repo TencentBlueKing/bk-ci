@@ -34,11 +34,14 @@ import com.tencent.bk.sdk.iam.service.impl.TokenServiceImpl
 import com.tencent.devops.common.auth.api.*
 import com.tencent.devops.common.auth.api.external.AuthTaskService
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.common.auth.service.IamEsbService
+import com.tencent.devops.common.auth.utils.CodeCCAuthResourceApi
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
@@ -83,14 +86,21 @@ class V3AuthExAutoConfiguration {
                 codeccAuthPermissionApi = codeccAuthPermissionStrApi)
 
     @Bean
-    @Primary
-    fun authExRegisterApi(authResourceApi: AuthResourceApi) =
+    fun authExRegisterApi(authResourceApi: CodeCCAuthResourceApi) =
             V3AuthExRegisterApi(authResourceApi)
 
     @Bean
-    @Primary
     fun codeCCV3AuthPermissionApi(redisOperation: RedisOperation) =
         CodeCCV3AuthPermissionApi(authHelper(), policyService(), redisOperation)
+
+    @Bean
+    fun codeCCV3AuthResourceApi(redisOperation: RedisOperation,
+                                iamEsbService: IamEsbService,
+                                iamConfiguration: IamConfiguration) =
+        CodeCCAuthResourceApi(iamEsbService, iamConfiguration)
+
+    @Bean
+    fun iamEsbService() = IamEsbService()
 
     @Bean
     fun policyService() = PolicyServiceImpl(iamConfiguration(), httpService())

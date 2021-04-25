@@ -14,3 +14,17 @@ plugin:
     path: __BK_CODECC_DATA_DIR__/tools
     covFile: build_dev.py
     toolFile: build_tool_dev.py
+    gateway: host
+    proxy: proxyHost
+    api:
+      createTask: /ms/task/api/service/task
+      updateTask: /ms/task/api/service/task
+      checkTaskExists: /ms/task/api/service/task
+      deleteTask: /ms/task/api/service/task
+      codeCheckReport: /ms/task/api/service/task
+      getRuleSets: /ms/task/api/service/task
+
+pipeline:
+  atomCode:
+    codecc: CodeccCheckAtomDebug
+    codeccV2: CodeccCheckAtom
