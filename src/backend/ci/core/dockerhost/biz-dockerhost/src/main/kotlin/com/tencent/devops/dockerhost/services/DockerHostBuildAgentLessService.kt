@@ -80,7 +80,7 @@ class DockerHostBuildAgentLessService(
             val imageName = CommonUtils.normalizeImageName(dockerHostBuildInfo.imageName)
             try {
                 LocalImageCache.saveOrUpdate(imageName)
-                httpDockerCli.pullImageCmd(imageName)
+                httpLongDockerCli.pullImageCmd(imageName)
                     .withAuthConfig(authConfig).exec(PullImageResultCallback()).awaitCompletion()
             } catch (t: Throwable) {
                 logger.warn("[${dockerHostBuildInfo.buildId}]|Fail to pull the image $imageName of build" +
@@ -191,7 +191,7 @@ class DockerHostBuildAgentLessService(
             Bind(linkPath, volumeTmpLink),
             Bind(hostWorkspace, volumeWs)
         )
-        val container = httpDockerCli.createContainerCmd(imageName)
+        val container = httpLongDockerCli.createContainerCmd(imageName)
             .withCmd("/bin/sh", ENTRY_POINT_CMD)
             .withEnv(
                 listOf(
@@ -220,7 +220,7 @@ class DockerHostBuildAgentLessService(
             .exec()
 
         logger.info("[$buildId]|Created container $container")
-        httpDockerCli.startContainerCmd(container.id).exec()
+        httpLongDockerCli.startContainerCmd(container.id).exec()
 
         return container.id
     }
