@@ -364,13 +364,13 @@ class PipelineRuntimeService @Autowired constructor(
     fun listContainerBuildTasks(
         buildId: String,
         containerId: String,
-        buildStatus: BuildStatus? = null
+        buildStatusSet: Set<BuildStatus>? = null
     ): List<PipelineBuildTask> {
         val list = pipelineBuildTaskDao.listByStatus(
             dslContext = dslContext,
             buildId = buildId,
             containerId = containerId,
-            statusSet = if (buildStatus != null) setOf(buildStatus) else null
+            statusSet = buildStatusSet
         )
         val result = mutableListOf<PipelineBuildTask>()
         if (list.isNotEmpty()) {
@@ -739,7 +739,7 @@ class PipelineRuntimeService @Autowired constructor(
         startParamsWithType: List<BuildParameters>,
         buildNo: Int? = null
     ): String {
-        val params = startParamsWithType.map { it.key to it.value }.toMap()
+        val params = startParamsWithType.associate { it.key to it.value }
         val startBuildStatus: BuildStatus = BuildStatus.QUEUE // 默认都是排队状态
         // 2019-12-16 产品 rerun 需求
         val pipelineId = pipelineInfo.pipelineId
@@ -1521,7 +1521,7 @@ class PipelineRuntimeService @Autowired constructor(
                             projectId = projectId,
                             pipelineId = pipelineId,
                             buildId = buildId,
-                            variables = params.params.map { it.key to it.value.toString() }.toMap()
+                            variables = params.params.associate { it.key to it.value.toString() }
                         )
                         pipelineEventDispatcher.dispatch(
                             PipelineBuildAtomTaskEvent(

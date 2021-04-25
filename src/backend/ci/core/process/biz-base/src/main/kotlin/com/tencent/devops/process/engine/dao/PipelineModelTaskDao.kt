@@ -165,6 +165,18 @@ class PipelineModelTaskDao {
         }
     }
 
+    fun listByPipelineIds(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineIds: Collection<String>
+    ): Result<TPipelineModelTaskRecord>? {
+        with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.`in`(pipelineIds)))
+                .fetch()
+        }
+    }
+
     fun listByAtomCode(
         dslContext: DSLContext,
         atomCode: String,
