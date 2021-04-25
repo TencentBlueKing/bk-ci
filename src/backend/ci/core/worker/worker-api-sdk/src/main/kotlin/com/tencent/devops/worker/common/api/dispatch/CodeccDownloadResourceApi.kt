@@ -51,8 +51,8 @@ class CodeccDownloadResourceApi : AbstractBuildResourceApi(), CodeccDownloadApi 
         if (!response.isSuccessful) {
             logger.warn("Fail to request($request) with code ${response.code()} , message ${response.message()} and response (${response.body()?.string()})")
             throw TaskExecuteException(
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                 errorMsg = "下载Codecc的 $tool 工具失败"
             )
         }
@@ -72,8 +72,8 @@ class CodeccDownloadResourceApi : AbstractBuildResourceApi(), CodeccDownloadApi 
         if (!response.isSuccessful) {
             logger.warn("Fail to request($request) with code ${response.code()} , message ${response.message()} and response (${response.body()?.string()})")
             throw TaskExecuteException(
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                 errorMsg = "下载codecc的coverity的执行脚本失败"
             )
         }
@@ -94,8 +94,8 @@ class CodeccDownloadResourceApi : AbstractBuildResourceApi(), CodeccDownloadApi 
         if (!response.isSuccessful) {
             logger.warn("Fail to request($request) with code ${response.code()} , message ${response.message()} and response (${response.body()?.string()})")
             throw TaskExecuteException(
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR,
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                 errorMsg = "下载codecc的多工具执行脚本失败"
             )
         }

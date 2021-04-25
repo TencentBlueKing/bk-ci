@@ -81,5 +81,7 @@ data class BuildHistoryWithVars(
     @ApiModelProperty("推荐版本号", required = false)
     val recommendVersion: String?,
     @ApiModelProperty("构建变量集合", required = true)
-    val variables: Map<String, String>
+    val variables: Map<String, String>,
+    @ApiModelProperty("构建信息", required = false)
+    var buildMsg: String?
 )

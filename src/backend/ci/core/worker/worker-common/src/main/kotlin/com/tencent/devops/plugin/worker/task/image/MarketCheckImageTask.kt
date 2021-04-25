@@ -89,8 +89,8 @@ class MarketCheckImageTask : ITask() {
             LoggerService.addRedLine(response.message())
             throw TaskExecuteException(
                 errorMsg = "checkImage fail: message ${response.message()} and response ($responseContent)",
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                errorType = ErrorType.USER
             )
         }
         val checkImageResult = JsonUtil.to(responseContent!!, object : TypeReference<Result<CheckImageResponse?>>() {
@@ -100,8 +100,8 @@ class MarketCheckImageTask : ITask() {
             LoggerService.addRedLine(JsonUtil.toJson(checkImageResult))
             throw TaskExecuteException(
                 errorMsg = "checkImage fail: ${checkImageResult.message}",
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                errorType = ErrorType.USER
             )
         }
         val imageVersion = buildVariableMap["version"]
@@ -122,8 +122,8 @@ class MarketCheckImageTask : ITask() {
             LoggerService.addRedLine(JsonUtil.toJson(updateImageResult))
             throw TaskExecuteException(
                 errorMsg = "updateImage fail: ${updateImageResult.message}",
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.SYSTEM_SERVICE_ERROR
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                errorType = ErrorType.USER
             )
         }
         LoggerService.addNormalLine("check image success")

@@ -20,9 +20,9 @@ log:
     indexMaxSize: __BK_CI_LUCENE_INDEX_MAX_SIZE__   # 单个构建的最大日志行数，建议设在100万内
   # 通过Elasticsearch服务进行存储的必要配置
   elasticsearch:
-    ip: __BKCI_ES_IP__
-    port: __BKCI_ES_PORT__
-    cluster: __BKCI_ES_CLUSTER__
+    ip: __BK_CI_ES_REST_ADDR__   # 今后只使用REST client.
+    port: __BK_CI_ES_REST_PORT__
+    cluster: __BK_CI_ES_CLUSTER_NAME__
     name: DEVOPS
     #  ES集群如果不要求账号密码认证，则可以去掉以下2个ES的访问账号密码配置项或留空
     username: __BK_CI_ES_USER__

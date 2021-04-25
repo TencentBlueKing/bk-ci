@@ -146,6 +146,32 @@ class AppLogResourceImpl @Autowired constructor(
         )
     }
 
+    override fun getBeforeLogs(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        end: Long,
+        size: Int?,
+        tag: String?,
+        subTag: String?,
+        jobId: String?,
+        executeCount: Int?
+    ): Result<QueryLogs> {
+        validateAuth(userId, projectId, pipelineId, buildId)
+        return logDispatcher.getBeforeLogs(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            end = end,
+            size = size,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount
+        )
+    }
+
     override fun downloadLogs(
         userId: String,
         projectId: String,
@@ -169,7 +195,7 @@ class AppLogResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getEndLogs(
+    override fun getEndLogsPage(
         userId: String,
         projectId: String,
         pipelineId: String,
@@ -181,7 +207,32 @@ class AppLogResourceImpl @Autowired constructor(
         executeCount: Int?
     ): Result<EndPageQueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId)
-        return logDispatcher.getEndLogs(
+        return logDispatcher.getEndLogsPage(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            size = size,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount
+        )
+    }
+
+    override fun getBottomLogs(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        size: Int?,
+        tag: String?,
+        subTag: String?,
+        jobId: String?,
+        executeCount: Int?
+    ): Result<QueryLogs> {
+        validateAuth(userId, projectId, pipelineId, buildId)
+        return logDispatcher.getBottomLogs(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,

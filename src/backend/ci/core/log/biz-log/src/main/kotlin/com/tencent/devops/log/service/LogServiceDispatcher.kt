@@ -106,7 +106,7 @@ class LogServiceDispatcher @Autowired constructor(
         subTag: String? = null
     ): Result<QueryLogs> {
         return Result(
-            logService.queryMoreLogsBetweenLines(
+            logService.queryLogsBetweenLines(
                 buildId = buildId,
                 num = num ?: 100,
                 fromStart = fromStart ?: true,
@@ -144,6 +144,30 @@ class LogServiceDispatcher @Autowired constructor(
         )
     }
 
+    fun getBeforeLogs(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        end: Long,
+        size: Int?,
+        tag: String?,
+        jobId: String?,
+        executeCount: Int?,
+        subTag: String? = null
+    ): Result<QueryLogs> {
+        return Result(
+            logService.queryLogsBeforeLine(
+                buildId = buildId,
+                end = end,
+                size = size,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount
+            )
+        )
+    }
+
     fun downloadLogs(
         projectId: String,
         pipelineId: String,
@@ -165,7 +189,7 @@ class LogServiceDispatcher @Autowired constructor(
         )
     }
 
-    fun getEndLogs(
+    fun getEndLogsPage(
         userId: String,
         projectId: String,
         pipelineId: String,
@@ -176,14 +200,36 @@ class LogServiceDispatcher @Autowired constructor(
         executeCount: Int?,
         subTag: String? = null
     ): Result<EndPageQueryLogs> {
-        return Result(logService.getEndLogs(
-            pipelineId,
-            buildId,
-            tag,
-            subTag,
-            jobId,
-            executeCount,
-            size
+        return Result(logService.getEndLogsPage(
+            pipelineId = pipelineId,
+            buildId = buildId,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount,
+            size = size
+        ))
+    }
+
+    fun getBottomLogs(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        size: Int?,
+        tag: String?,
+        jobId: String?,
+        executeCount: Int?,
+        subTag: String? = null
+    ): Result<QueryLogs> {
+        return Result(logService.getBottomLogs(
+            pipelineId = pipelineId,
+            buildId = buildId,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount,
+            size = size
         ))
     }
 }

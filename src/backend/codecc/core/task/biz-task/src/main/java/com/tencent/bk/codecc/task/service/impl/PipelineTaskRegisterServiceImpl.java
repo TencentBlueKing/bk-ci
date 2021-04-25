@@ -26,25 +26,42 @@
 
 package com.tencent.bk.codecc.task.service.impl;
 
+import static com.tencent.devops.common.constant.CommonMessageCode.UTIL_EXECUTE_FAIL;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.Sets;
 import com.tencent.bk.codecc.defect.api.ServiceCheckerSetRestResource;
 import com.tencent.bk.codecc.defect.api.ServiceToolBuildInfoResource;
 import com.tencent.bk.codecc.task.constant.TaskConstants;
+import com.tencent.bk.codecc.task.dao.mongorepository.BaseDataRepository;
+import com.tencent.bk.codecc.task.model.BaseDataEntity;
 import com.tencent.bk.codecc.task.model.CustomProjEntity;
+import com.tencent.bk.codecc.task.model.OpenSourceCheckerSet;
 import com.tencent.bk.codecc.task.model.TaskInfoEntity;
 import com.tencent.bk.codecc.task.service.AbstractTaskRegisterService;
-import com.tencent.bk.codecc.task.utils.CommonKafkaClient;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.bk.codecc.task.vo.TaskIdVO;
 import com.tencent.bk.codecc.task.vo.ToolConfigInfoVO;
 import com.tencent.devops.common.api.checkerset.CheckerSetVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.api.exception.StreamException;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.constant.ComConstants;
+import com.tencent.devops.common.constant.ComConstants.CheckerSetType;
+import com.tencent.devops.common.constant.ComConstants.OpenSourceCheckerSetType;
+import com.tencent.devops.common.constant.ComConstants.Tool;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.util.JsonUtil;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -54,12 +71,6 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-import static com.tencent.devops.common.constant.CommonMessageCode.UTIL_EXECUTE_FAIL;
 
 /**
  * 流水线创建任务实现类
@@ -79,7 +90,7 @@ public class PipelineTaskRegisterServiceImpl extends AbstractTaskRegisterService
     private RabbitTemplate rabbitTemplate;
 
     @Autowired
-    private CommonKafkaClient commonKafkaClient;
+    private BaseDataRepository baseDataRepository;
 
     @Override
     public TaskIdVO registerTask(TaskDetailVO taskDetailVO, String userName)
@@ -170,14 +181,9 @@ public class PipelineTaskRegisterServiceImpl extends AbstractTaskRegisterService
             String nameEn = getTaskStreamName(taskDetailVO.getProjectId(), taskDetailVO.getPipelineId(), taskDetailVO.getCreateFrom());
             taskDetailVO.setNameEn(nameEn);
             taskInfoEntity = createTask(taskDetailVO, userName);
-            //发送数据到数据平台
-            commonKafkaClient.pushTaskDetailToKafka(taskInfoEntity);
 
             //添加或者更新工具配置
             upsertTools(taskDetailVO, taskInfoEntity, userName);
-
-            //发送数据到数据平台
-//            sendTaskDetail(taskInfoEntity);
         }
         else
         {
@@ -312,6 +318,20 @@ public class PipelineTaskRegisterServiceImpl extends AbstractTaskRegisterService
      */
     private void upsertTools(TaskDetailVO taskDetailVO, TaskInfoEntity taskInfoEntity, String userName)
     {
+        boolean isOpenSource = configCheckerSetByType(taskDetailVO);
+        /*if (taskDetailVO.getLanguages() != null && !taskDetailVO.getLanguages().isEmpty()) {
+            // 构造代码行扫描规则
+            CheckerSetVO clocCheckerSet = new CheckerSetVO();
+            clocCheckerSet.setCheckerSetId("standard_cloc");
+            clocCheckerSet.setToolList(Collections.singleton(Tool.CLOC.name()));
+            clocCheckerSet.setVersion(Integer.MAX_VALUE);
+            clocCheckerSet.setCodeLang(1073741824L);
+            List<CheckerSetVO> checkerSetList = setOpenScanCheckerSetsAccordingToLanguage(taskDetailVO.getLanguages());
+            checkerSetList.add(clocCheckerSet);
+            log.info("set open scan checker set: {} {}", taskDetailVO.getLanguages(), checkerSetList);
+            taskDetailVO.setCheckerSetList(checkerSetList);
+            isOpenSource = true;
+        }*/
         // 如果不带有插件code，表示是旧插件接入，需要适配兼容旧插件
         if (StringUtils.isEmpty(taskDetailVO.getAtomCode()))
         {
@@ -329,7 +349,11 @@ public class PipelineTaskRegisterServiceImpl extends AbstractTaskRegisterService
         upsert(taskDetailVO, taskInfoEntity, userName, forceFullScanTools);
 
         // 更新关联的规则集
-        client.get(ServiceCheckerSetRestResource.class).batchRelateTaskAndCheckerSet(userName, taskInfoEntity.getProjectId(), taskId, taskDetailVO.getCheckerSetList(), false);
+        client.get(ServiceCheckerSetRestResource.class).batchRelateTaskAndCheckerSet(userName,
+            taskInfoEntity.getProjectId(),
+            taskId,
+            taskDetailVO.getCheckerSetList(),
+            isOpenSource);
 
         // 设置强制全量扫描标志
         if (CollectionUtils.isNotEmpty(forceFullScanTools))
@@ -382,13 +406,13 @@ public class PipelineTaskRegisterServiceImpl extends AbstractTaskRegisterService
         // 没有选择规则集的，且任务工具关联的规则集为空，则自动选择默认规则集，默认规则集的ID为：codecc_default_rules_toolNmae(小写)
         if (hasCheckerSetTools.size() < reqToolSet.size())
         {
-            CodeCCResult<List<CheckerSetVO>> codeCCResult = client.get(ServiceCheckerSetRestResource.class).getCheckerSets(taskDetailVO.getTaskId());
-            if (codeCCResult.isNotOk() || codeCCResult.getData() == null)
+            Result<List<CheckerSetVO>> result = client.get(ServiceCheckerSetRestResource.class).getCheckerSets(taskDetailVO.getTaskId());
+            if (result.isNotOk() || result.getData() == null)
             {
-                log.error("query checker sets fail, result: {}", codeCCResult);
+                log.error("query checker sets fail, result: {}", result);
                 throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
             }
-            List<CheckerSetVO> existCheckerSetList = codeCCResult.getData();
+            List<CheckerSetVO> existCheckerSetList = result.getData();
             Map<String, CheckerSetVO> toolCheckerSetMap = existCheckerSetList.stream()
                     .collect(Collectors.toMap(checkerSetVO -> checkerSetVO.getToolList().iterator().next(), Function.identity(), (k, v) -> v));
             for (ToolConfigInfoVO toolConfigInfoVO : toolList)
@@ -507,6 +531,165 @@ public class PipelineTaskRegisterServiceImpl extends AbstractTaskRegisterService
         }
         String checkerSetId = defaultCheckerSetMap.get(phpcs_standard);
         return checkerSetId;
+    }
+
+    private List<CheckerSetVO> setOpenScanCheckerSetsAccordingToLanguage(
+            List<String> languages
+    ) {
+        Set<OpenSourceCheckerSetType> finalOpensourceCheckerSetType =
+                Collections.singleton(ComConstants.OpenSourceCheckerSetType.FULL);
+        List<BaseDataEntity> metaLangList = baseDataRepository.findAllByParamType(ComConstants.KEY_CODE_LANG);
+        final boolean[] otherLanguageCheckerSet = {false};
+        List<CheckerSetVO> checkerSetVOList = new ArrayList<>();
+        if (!languages.isEmpty()) {
+            languages.forEach(it -> {
+                BaseDataEntity selectedBaseData = metaLangList.stream().filter(metaLang -> {
+                    List<String> langArray = JsonUtil.INSTANCE.to(metaLang.getParamExtend2(),
+                            new TypeReference<List<String>>() {});
+                    return langArray.contains(it);
+                }).findAny().orElse(null);
+                // 如果有选中的语言，并且规则集配置不为空的话，则配置相应的规则集
+                if (null != selectedBaseData && !selectedBaseData.getOpenSourceCheckerSets().isEmpty()) {
+                    selectedBaseData.getOpenSourceCheckerSets().forEach(checkerSet -> {
+                        if (StringUtils.isNotBlank(checkerSet.getCheckerSetType())
+                                && !finalOpensourceCheckerSetType.contains(ComConstants.OpenSourceCheckerSetType
+                                .valueOf(checkerSet.getCheckerSetType()))) {
+                            return;
+                        }
+                        CheckerSetVO formatCheckerSet = new CheckerSetVO();
+                        formatCheckerSet.setCheckerSetId(checkerSet.getCheckerSetId());
+                        formatCheckerSet.setToolList(checkerSet.getToolList());
+                        //如果有配置版本，则固定用版本，如果没有配置版本，则用最新版本
+                        if (null != checkerSet.getVersion()) {
+                            formatCheckerSet.setVersion(checkerSet.getVersion());
+                        } else {
+                            formatCheckerSet.setVersion(Integer.MAX_VALUE);
+                        }
+                        checkerSetVOList.add(formatCheckerSet);
+                    });
+                }
+                // 如果包含有codecc不支持的语言，则配置啄木鸟-其他规则集
+                if (null == selectedBaseData) {
+                    if (!otherLanguageCheckerSet[0]) {
+                        BaseDataEntity otherBaseData = metaLangList.stream().filter(metaLang -> {
+                                String langArray = JsonUtil.INSTANCE.to(metaLang.getParamExtend2());
+                                return langArray.contains("OTHERS");
+                        }).findAny().orElse(null);
+
+                        if (null != otherBaseData && !otherBaseData.getOpenSourceCheckerSets().isEmpty()) {
+                            otherBaseData.getOpenSourceCheckerSets().forEach(checkerSet -> {
+                                CheckerSetVO formatCheckerSet = new CheckerSetVO();
+                                formatCheckerSet.setCheckerSetId(checkerSet.getCheckerSetId());
+                                formatCheckerSet.setToolList(checkerSet.getToolList());
+                                //如果有配置版本，则固定用版本，如果没有配置版本，则用最新版本
+                                if (null != checkerSet.getVersion()) {
+                                    formatCheckerSet.setVersion(checkerSet.getVersion());
+                                } else {
+                                    formatCheckerSet.setVersion(Integer.MAX_VALUE);
+                                }
+                                checkerSetVOList.add(formatCheckerSet);
+                                otherLanguageCheckerSet[0] = true;
+                            });
+                        }
+                    }
+                }
+            });
+        }
+        return checkerSetVOList;
+    }
+
+    private List<CheckerSetVO> setEpcScanCheckerSetsAccordingToLanguage(
+            List<String> languages
+    ) {
+        List<BaseDataEntity> metaLangList = baseDataRepository.findAllByParamType(ComConstants.KEY_CODE_LANG);
+        List<CheckerSetVO> checkerSetVOList = new ArrayList<>();
+        if (!languages.isEmpty()) {
+            languages.forEach(it -> {
+                BaseDataEntity selectedBaseData = metaLangList.stream().filter(metaLang -> {
+                    List<String> langArray = JsonUtil.INSTANCE.to(metaLang.getParamExtend2(),
+                            new TypeReference<List<String>>() {});
+                    return langArray.contains(it);
+                }).findAny().orElse(null);
+                // 如果有选中的语言，并且规则集配置不为空的话，则配置相应的规则集
+                if (null != selectedBaseData && !selectedBaseData.getEpcCheckerSets().isEmpty()) {
+                    selectedBaseData.getEpcCheckerSets().forEach(checkerSet -> {
+                        CheckerSetVO formatCheckerSet = new CheckerSetVO();
+                        formatCheckerSet.setCheckerSetId(checkerSet.getCheckerSetId());
+                        formatCheckerSet.setToolList(checkerSet.getToolList());
+                        //如果有配置版本，则固定用版本，如果没有配置版本，则用最新版本
+                        if (null != checkerSet.getVersion()) {
+                            formatCheckerSet.setVersion(checkerSet.getVersion());
+                        } else {
+                            formatCheckerSet.setVersion(Integer.MAX_VALUE);
+                        }
+                        checkerSetVOList.add(formatCheckerSet);
+                    });
+                }
+            });
+        }
+        return checkerSetVOList;
+    }
+
+    private boolean configCheckerSetByType(TaskDetailVO taskDetailVO) {
+        if (taskDetailVO.getCheckerSetType() == null) {
+            return configOldAtomCheckerSet(taskDetailVO);
+        } else {
+            return configNewAtomCheckerSet(taskDetailVO);
+        }
+    }
+
+    private boolean configOldAtomCheckerSet(TaskDetailVO taskDetailVO) {
+        if (taskDetailVO.getLanguages() != null) {
+            List<CheckerSetVO> checkerSetList = setOpenScanCheckerSetsAccordingToLanguage(taskDetailVO.getLanguages());
+            log.info("set old open scan checker set: {} {} {} {}",
+                    taskDetailVO.getTaskId(),
+                    taskDetailVO.getNameEn(),
+                    taskDetailVO.getLanguages(),
+                    checkerSetList);
+            taskDetailVO.setCheckerSetList(checkerSetList);
+            addClocCheckerSet(taskDetailVO);
+            return true;
+        } else {
+            addClocCheckerSet(taskDetailVO);
+            return false;
+        }
+    }
+
+    private boolean configNewAtomCheckerSet(TaskDetailVO taskDetailVO) {
+        List<String> languages = JsonUtil.INSTANCE.to(taskDetailVO.getDevopsCodeLang());
+        List<CheckerSetVO> checkerSetList;
+        log.info("before set new open scan checker set: {} {} {} {}",
+                taskDetailVO.getTaskId(),
+                taskDetailVO.getNameEn(),
+                taskDetailVO.getLanguages(),
+                taskDetailVO.getCheckerSetType());
+        if (taskDetailVO.getCheckerSetType() == CheckerSetType.OPEN_SCAN) {
+            checkerSetList = setOpenScanCheckerSetsAccordingToLanguage(languages);
+        } else if (taskDetailVO.getCheckerSetType() == CheckerSetType.EPC_SCAN) {
+            checkerSetList = setEpcScanCheckerSetsAccordingToLanguage(languages);
+        } else {
+            return false;
+        }
+        log.info("set new open scan checker set: {} {} {} {}",
+                taskDetailVO.getTaskId(),
+                taskDetailVO.getNameEn(),
+                taskDetailVO.getLanguages(),
+                checkerSetList);
+        taskDetailVO.setCheckerSetList(checkerSetList);
+        addClocCheckerSet(taskDetailVO);
+        return true;
+    }
+
+    private void addClocCheckerSet(TaskDetailVO taskDetailVO) {
+        CheckerSetVO clocCheckerSet = new CheckerSetVO();
+        clocCheckerSet.setCheckerSetId("standard_cloc");
+        clocCheckerSet.setToolList(Collections.singleton(Tool.CLOC.name()));
+        clocCheckerSet.setVersion(Integer.MAX_VALUE);
+        clocCheckerSet.setCodeLang(1073741824L);
+        if (taskDetailVO.getCheckerSetList() == null) {
+            taskDetailVO.setCheckerSetList(new ArrayList<>());
+        }
+        taskDetailVO.getCheckerSetList().add(clocCheckerSet);
     }
 
     private static final Map<String, String> defaultCheckerSetMap = createDefaultCheckerSetMap();

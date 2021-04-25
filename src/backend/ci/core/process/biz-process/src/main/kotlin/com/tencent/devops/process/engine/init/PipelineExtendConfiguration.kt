@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.init
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.process.engine.listener.run.callback.PipelineBuildCallBackListener
+import com.tencent.devops.process.engine.listener.run.finish.SubPipelineBuildFinishListener
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.DirectExchange
@@ -137,6 +138,41 @@ class PipelineExtendConfiguration {
             consecutiveActiveTrigger = 5,
             concurrency = 1,
             maxConcurrency = 20
+        )
+    }
+
+    @Bean
+    fun subPipelineBuildStatusQueue(): Queue {
+        return Queue(MQ.QUEUE_PIPELINE_BUILD_FINISH_SUBPIPEINE)
+    }
+
+    @Bean
+    fun subPipelineBuildFinishQueueBind(
+        @Autowired subPipelineBuildStatusQueue: Queue,
+        @Autowired pipelineBuildFanoutExchange: FanoutExchange
+    ): Binding {
+        return BindingBuilder.bind(subPipelineBuildStatusQueue).to(pipelineBuildFanoutExchange)
+    }
+
+    @Bean
+    fun subPipelineBuildFinishListenerContainer(
+        @Autowired connectionFactory: ConnectionFactory,
+        @Autowired subPipelineBuildStatusQueue: Queue,
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired buildListener: SubPipelineBuildFinishListener,
+        @Autowired messageConverter: Jackson2JsonMessageConverter
+    ): SimpleMessageListenerContainer {
+
+        return Tools.createSimpleMessageListenerContainer(
+            connectionFactory = connectionFactory,
+            queue = subPipelineBuildStatusQueue,
+            rabbitAdmin = rabbitAdmin,
+            buildListener = buildListener,
+            messageConverter = messageConverter,
+            startConsumerMinInterval = 10000,
+            consecutiveActiveTrigger = 5,
+            concurrency = 1,
+            maxConcurrency = 10
         )
     }
 }

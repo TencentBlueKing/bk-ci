@@ -34,9 +34,10 @@ class SessionHandler @Autowired constructor(
         if (userId.isNullOrEmpty()) {
             logger.warn("connection closed can not find userId, $uri| ${session?.remoteAddress}| $sessionId")
             super.afterConnectionClosed(session, closeStatus)
+        } else {
+            logger.info("connection closed closeStatus[$closeStatus] user[$userId] page[$page], session[$sessionId]")
+            websocketService.clearAllBySession(userId!!, sessionId)
         }
-        logger.info("connection closed closeStatus[$closeStatus] user[$userId] page[$page], session[$sessionId]")
-        websocketService.clearAllBySession(userId!!, sessionId)
 
         super.afterConnectionClosed(session, closeStatus)
     }

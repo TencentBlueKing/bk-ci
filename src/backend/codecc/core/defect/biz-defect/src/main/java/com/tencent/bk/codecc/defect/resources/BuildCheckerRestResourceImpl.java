@@ -14,9 +14,11 @@ package com.tencent.bk.codecc.defect.resources;
 
 import com.tencent.bk.codecc.defect.api.BuildCheckerRestResource;
 import com.tencent.bk.codecc.defect.service.CheckerImportService;
+import com.tencent.bk.codecc.defect.service.ICheckerIntegratedBizService;
 import com.tencent.bk.codecc.defect.vo.CheckerImportVO;
 import com.tencent.devops.common.api.checkerset.CheckerPropVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.web.RestResource;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -35,9 +37,29 @@ public class BuildCheckerRestResourceImpl implements BuildCheckerRestResource
     @Autowired
     private CheckerImportService checkerImportService;
 
+    @Autowired
+    private ICheckerIntegratedBizService checkerIntegratedBizService;
+
     @Override
-    public CodeCCResult<Map<String, List<CheckerPropVO>>> checkerImport(String userName, String projectId, CheckerImportVO checkerImportVO)
+    public Result<Map<String, List<CheckerPropVO>>> checkerImport(String userName,
+                                                                  String projectId,
+                                                                  CheckerImportVO checkerImportVO)
     {
-        return new CodeCCResult<>(checkerImportService.checkerImport(userName, projectId, checkerImportVO));
+        return new Result<>(checkerImportService.checkerImport(userName, projectId, checkerImportVO));
+    }
+
+    @Override
+    public Result<List<String>> updateToolCheckerSetToStatus(String userName,
+                                                             String buildId,
+                                                             String toolName,
+                                                             ComConstants.ToolIntegratedStatus status) {
+        return new Result<>(checkerIntegratedBizService.updateToStatus(userName, buildId, toolName, status));
+    }
+
+    @Override
+    public Result<String> revertToolCheckerSetStatus(String userName,
+                                                     String toolName,
+                                                     ComConstants.ToolIntegratedStatus status) {
+        return new Result<>(checkerIntegratedBizService.revertStatus(userName, toolName, status));
     }
 }

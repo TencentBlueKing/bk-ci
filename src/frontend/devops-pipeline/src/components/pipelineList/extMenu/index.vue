@@ -117,11 +117,11 @@
     .footer-ext-item {
         position: relative;
         width: 23px;
-        height: 100%;
+        height: 30px;
         cursor: pointer;
         &:hover,
         &.active {
-            background-color: $bgHoverColor;
+            // background-color: $bgHoverColor;
             .ext-dot {
                 background-color: $primaryColor;
             }

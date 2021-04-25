@@ -59,4 +59,5 @@ interface IEnvService {
     fun listAllEnvNodes(userId: String, projectId: String, envHashIds: List<String>): List<NodeBaseInfo>
     fun addEnvNodes(userId: String, projectId: String, envHashId: String, nodeHashIds: List<String>)
     fun deleteEnvNodes(userId: String, projectId: String, envHashId: String, nodeHashIds: List<String>)
+    fun searchByName(projectId: String, envName: String, limit: Int, offset: Int): Page<EnvWithPermission>
 }

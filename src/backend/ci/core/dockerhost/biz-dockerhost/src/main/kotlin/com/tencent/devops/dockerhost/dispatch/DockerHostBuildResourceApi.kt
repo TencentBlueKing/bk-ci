@@ -34,9 +34,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.gray.Gray
-import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
-import com.tencent.devops.dispatch.pojo.DockerHostInfo
-import com.tencent.devops.dispatch.pojo.DockerIpInfoVO
+import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
+import com.tencent.devops.dispatch.docker.pojo.DockerHostInfo
+import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.dockerhost.utils.SigarUtil
@@ -48,7 +48,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class DockerHostBuildResourceApi constructor(
-    dockerHostConfig: DockerHostConfig,
+    private val dockerHostConfig: DockerHostConfig,
     gray: Gray
 ) : AbstractBuildResourceApi(dockerHostConfig, gray) {
     private val logger = LoggerFactory.getLogger(DockerHostBuildResourceApi::class.java)
@@ -156,7 +156,7 @@ class DockerHostBuildResourceApi constructor(
     }
 
     fun refreshDockerIpStatus(port: String, containerNum: Int): Result<Boolean>? {
-        val dockerIp = CommonUtils.getInnerIP()
+        val dockerIp = CommonUtils.getInnerIP(dockerHostConfig.dockerhostLocalIp)
         val path = "/${getUrlPrefix()}/api/dockerhost/dockerIp/$dockerIp/refresh"
         val dockerIpInfoVO = DockerIpInfoVO(
             id = 0L,

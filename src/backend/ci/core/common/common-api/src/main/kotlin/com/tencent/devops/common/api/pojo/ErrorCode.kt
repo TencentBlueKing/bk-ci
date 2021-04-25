@@ -51,6 +51,8 @@ object ErrorCode {
     const val SYSTEM_INNER_TASK_ERROR = 2189505 // 系统任务执行出错
 
     // 第三方接入平台错误
+    const val THIRD_PARTY_INTERFACE_ERROR = 2199501 // 第三方接口调用错误
+    const val THIRD_PARTY_BUILD_ENV_ERROR = 2199502 // 第三方构建环境错误
 
     // 插件执行错误
     const val PLUGIN_DEFAULT_ERROR = 2199001 // 插件异常默认

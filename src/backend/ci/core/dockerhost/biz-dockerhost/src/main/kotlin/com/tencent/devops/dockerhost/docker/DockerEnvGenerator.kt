@@ -26,7 +26,7 @@
 
 package com.tencent.devops.dockerhost.docker
 
-import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
+import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.pojo.Env
 
 /**

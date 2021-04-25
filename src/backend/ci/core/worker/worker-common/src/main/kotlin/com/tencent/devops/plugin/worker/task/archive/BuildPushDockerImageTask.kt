@@ -153,8 +153,8 @@ class BuildPushDockerImageTask : ITask() {
             if (!response.isSuccessful) {
                 LoggerService.addNormalLine(Ansi().fgRed().a("启动构建镜像失败！请联系【蓝盾助手】").reset().toString())
                 throw TaskExecuteException(
-                    errorCode = ErrorCode.SYSTEM_INNER_TASK_ERROR,
-                    errorType = ErrorType.SYSTEM,
+                    errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                    errorType = ErrorType.USER,
                     errorMsg = "failed to get start docker build status"
                 )
             }

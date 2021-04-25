@@ -39,7 +39,9 @@ spring:
       username: __BK_CI_RABBITMQ_USER__
       password: __BK_CI_RABBITMQ_PASSWORD__
       addresses: __BK_CI_RABBITMQ_ADDR__
-
+  metrics:
+    servo:
+      enabled: false
 service-suffix: "-__BK_CI_CONSUL_DISCOVERY_TAG__"
 # http concurrency
 server:

@@ -1234,6 +1234,34 @@ class CertServiceImpl @Autowired constructor(
         return certList
     }
 
+    override fun searchByCertId(projectId: String, offset: Int, limit: Int, certId: String): SQLPage<Cert> {
+            val count = certDao.countByIdLike(dslContext, projectId, certId)
+            val certList = mutableListOf<Cert>()
+            val certInfos = certDao.searchByIdLike(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    offset = offset,
+                    limit = limit,
+                    certId = certId
+            )
+            certInfos.map {
+                certList.add(Cert(
+                        certId = it.certId,
+                        certType = it.certType,
+                        creator = it.certUserId,
+                        credentialId = it.credentialId,
+                        createTime = it.certCreateTime.timestamp(),
+                        certRemark = it.certRemark,
+                        expireTime = it.certExpireDate.timestamp()
+                ))
+            }
+
+            return SQLPage(
+                    count = count,
+                    records = certList
+            )
+    }
+
     private fun encryptCert(
         cert: ByteArray,
         publicKeyByteArray: ByteArray,

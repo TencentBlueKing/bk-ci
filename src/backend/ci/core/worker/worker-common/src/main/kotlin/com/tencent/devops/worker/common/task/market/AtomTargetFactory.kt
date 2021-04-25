@@ -28,10 +28,12 @@ package com.tencent.devops.worker.common.task.market
 
 import com.tencent.devops.common.api.constant.JAVA
 import com.tencent.devops.common.api.constant.NODEJS
+import com.tencent.devops.common.api.constant.PYTHON
 import com.tencent.devops.worker.common.service.AtomTargetHandleService
 import com.tencent.devops.worker.common.service.impl.CommonAtomTargetHandleServiceImpl
 import com.tencent.devops.worker.common.service.impl.JavaAtomTargetHandleServiceImpl
 import com.tencent.devops.worker.common.service.impl.NodeJsAtomTargetHandleServiceImpl
+import com.tencent.devops.worker.common.service.impl.PythonAtomTargetHandleServiceImpl
 import java.util.concurrent.ConcurrentHashMap
 
 object AtomTargetFactory {
@@ -52,6 +54,12 @@ object AtomTargetFactory {
             NODEJS -> {
                 if (atomTargetHandleService == null) {
                     atomTargetHandleService = NodeJsAtomTargetHandleServiceImpl()
+                    atomTargetMap[language] = atomTargetHandleService
+                }
+            }
+            PYTHON -> {
+                if (atomTargetHandleService == null) {
+                    atomTargetHandleService = PythonAtomTargetHandleServiceImpl()
                     atomTargetMap[language] = atomTargetHandleService
                 }
             }

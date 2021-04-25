@@ -31,12 +31,14 @@ import com.tencent.bk.codecc.defect.api.UserDefectRestResource;
 import com.tencent.bk.codecc.defect.service.FileDefectGatherService;
 import com.tencent.bk.codecc.defect.service.IDefectOperateBizService;
 import com.tencent.bk.codecc.defect.service.IQueryWarningBizService;
+import com.tencent.bk.codecc.defect.service.IStatQueryWarningService;
 import com.tencent.bk.codecc.defect.service.TaskLogService;
 import com.tencent.bk.codecc.defect.service.impl.CLOCQueryWarningBizServiceImpl;
 import com.tencent.bk.codecc.defect.vo.BatchDefectProcessReqVO;
 import com.tencent.bk.codecc.defect.vo.FileDefectGatherVO;
 import com.tencent.bk.codecc.defect.vo.GetFileContentSegmentReqVO;
 import com.tencent.bk.codecc.defect.vo.SingleCommentVO;
+import com.tencent.bk.codecc.defect.vo.StatDefectQueryRespVO;
 import com.tencent.bk.codecc.defect.vo.admin.DeptTaskDefectReqVO;
 import com.tencent.bk.codecc.defect.vo.admin.DeptTaskDefectRspVO;
 import com.tencent.bk.codecc.defect.vo.common.BuildVO;
@@ -46,7 +48,7 @@ import com.tencent.bk.codecc.defect.vo.common.CommonDefectQueryRspVO;
 import com.tencent.bk.codecc.defect.vo.common.DefectQueryReqVO;
 import com.tencent.bk.codecc.defect.vo.common.QueryWarningPageInitRspVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.auth.api.external.AuthExPermissionApi;
 import com.tencent.devops.common.auth.api.pojo.external.CodeCCAuthAction;
 import com.tencent.devops.common.constant.ComConstants;
@@ -56,110 +58,138 @@ import com.tencent.devops.common.service.IBizService;
 import com.tencent.devops.common.util.List2StrUtil;
 import com.tencent.devops.common.web.RestResource;
 import com.tencent.devops.common.web.security.AuthMethod;
+import java.util.List;
+import java.util.Set;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
-
-import java.util.List;
-import java.util.Set;
 
 /**
  * 告警查询服务实现
  */
 @RestResource
 @AuthMethod(permission = {CodeCCAuthAction.DEFECT_VIEW})
-public class UserDefectRestResourceImpl implements UserDefectRestResource
-{
+public class UserDefectRestResourceImpl implements UserDefectRestResource {
+
     /**
      * 查询构建信息最大数量
      */
     private static final int MAX_BUILD_LIST_SIZE = 100;
-
+    @Autowired
+    CLOCQueryWarningBizServiceImpl clocQueryWarningBizService;
+    @Autowired
+    IStatQueryWarningService iStatQueryWarningService;
     @Autowired
     private BizServiceFactory<IQueryWarningBizService> fileAndDefectQueryFactory;
-
     @Autowired
     private BizServiceFactory<IBizService> bizServiceFactory;
-
     @Autowired
     private BizServiceFactory<IDefectOperateBizService> defectOperateBizServiceFactory;
-
     @Autowired
     private TaskLogService taskLogService;
-
     @Autowired
     private AuthExPermissionApi authExPermissionApi;
-
     @Autowired
     private FileDefectGatherService fileDefectGatherService;
 
-    @Autowired
-    CLOCQueryWarningBizServiceImpl clocQueryWarningBizService;
-
     @Override
-    public CodeCCResult<QueryWarningPageInitRspVO> queryCheckersAndAuthors(Long taskId, String toolName, String status) {
-        IQueryWarningBizService queryWarningBizService = fileAndDefectQueryFactory.createBizService(toolName,
-                ComConstants.BusinessType.QUERY_WARNING.value(), IQueryWarningBizService.class);
+    public Result<QueryWarningPageInitRspVO> queryCheckersAndAuthors(Long taskId,
+                                                                     String toolName,
+                                                                     String status) {
+        IQueryWarningBizService queryWarningBizService = fileAndDefectQueryFactory.createBizService(
+            toolName,
+            ComConstants.BusinessType.QUERY_WARNING.value(),
+            IQueryWarningBizService.class);
 
         Set<String> statusSet = null;
-        if (StringUtils.isNotEmpty(status))
-        {
+        if (StringUtils.isNotEmpty(status)) {
             statusSet = Sets.newHashSet(List2StrUtil.fromString(status, ComConstants.STRING_SPLIT));
         }
-        return new CodeCCResult<>(queryWarningBizService.processQueryWarningPageInitRequest(taskId, toolName, statusSet));
+        return new Result<>(queryWarningBizService.processQueryWarningPageInitRequest(taskId, toolName, null, statusSet, null));
     }
 
     @Override
-    public CodeCCResult<CommonDefectQueryRspVO> queryDefectList(long taskId,
+    public Result<QueryWarningPageInitRspVO> queryCheckersAndAuthors(Long taskId,
+                                                                     String toolName,
+                                                                     String dimension,
+                                                                     String status,
+                                                                     String checkerSet) {
+        IQueryWarningBizService queryWarningBizService = fileAndDefectQueryFactory.createBizService(
+            toolName,
+            dimension,
+            ComConstants.BusinessType.QUERY_WARNING.value(),
+            IQueryWarningBizService.class);
+
+        Set<String> statusSet = null;
+        if (StringUtils.isNotEmpty(status)) {
+            statusSet = Sets.newHashSet(List2StrUtil.fromString(status, ComConstants.STRING_SPLIT));
+        }
+        return new Result<>(queryWarningBizService.processQueryWarningPageInitRequest(taskId, toolName, dimension, statusSet, checkerSet));
+    }
+
+    @Override
+    public Result<CommonDefectQueryRspVO> queryDefectList(long taskId,
                                                           DefectQueryReqVO defectQueryReqVO,
                                                           int pageNum,
                                                           int pageSize,
                                                           String sortField,
                                                           Sort.Direction sortType)
     {
-        IQueryWarningBizService queryWarningBizService = fileAndDefectQueryFactory.createBizService(defectQueryReqVO.getToolName(),
-                ComConstants.BusinessType.QUERY_WARNING.value(), IQueryWarningBizService.class);
-        return new CodeCCResult<>(queryWarningBizService.processQueryWarningRequest(taskId, defectQueryReqVO, pageNum, pageSize, sortField, sortType));
+        IQueryWarningBizService queryWarningBizService = fileAndDefectQueryFactory.createBizService(
+            defectQueryReqVO.getToolName(),
+            defectQueryReqVO.getDimension(),
+            ComConstants.BusinessType.QUERY_WARNING.value(),
+            IQueryWarningBizService.class);
+        return new Result<>(queryWarningBizService.processQueryWarningRequest(taskId, defectQueryReqVO, pageNum, pageSize, sortField, sortType));
     }
 
     @Override
-    public CodeCCResult<CommonDefectDetailQueryRspVO> queryDefectDetail(long taskId,
-                                                                  String userId,
-                                                                  CommonDefectDetailQueryReqVO commonDefectDetailQueryReqVO,
-                                                                  String sortField,
-                                                                  Sort.Direction sortType)
-    {
-        IQueryWarningBizService queryWarningBizService = fileAndDefectQueryFactory.createBizService(commonDefectDetailQueryReqVO.getToolName(),
-                ComConstants.BusinessType.QUERY_WARNING.value(), IQueryWarningBizService.class);
-        return new CodeCCResult<>(queryWarningBizService.processQueryWarningDetailRequest(taskId, userId, commonDefectDetailQueryReqVO, sortField, sortType));
+    public Result<CommonDefectDetailQueryRspVO> queryDefectDetail(long taskId,
+            String userId,
+            CommonDefectDetailQueryReqVO commonDefectDetailQueryReqVO,
+            String sortField,
+            Sort.Direction sortType) {
+        IQueryWarningBizService queryWarningBizService = fileAndDefectQueryFactory
+                .createBizService(commonDefectDetailQueryReqVO.getToolName(),
+                        commonDefectDetailQueryReqVO.getDimension(),
+                        ComConstants.BusinessType.QUERY_WARNING.value(),
+                        IQueryWarningBizService.class);
+        return new Result<>(queryWarningBizService
+                .processQueryWarningDetailRequest(taskId, userId, commonDefectDetailQueryReqVO, sortField, sortType));
     }
 
     @Override
-    public CodeCCResult<CommonDefectDetailQueryRspVO> getFileContentSegment(long taskId, String userId, GetFileContentSegmentReqVO getFileContentSegmentReqVO)
-    {
-        IQueryWarningBizService queryWarningBizService = fileAndDefectQueryFactory.createBizService(getFileContentSegmentReqVO.getToolName(),
-                ComConstants.BusinessType.QUERY_WARNING.value(), IQueryWarningBizService.class);
-        return new CodeCCResult<>(queryWarningBizService.processGetFileContentSegmentRequest(taskId, userId, getFileContentSegmentReqVO));
+    public Result<CommonDefectDetailQueryRspVO> getFileContentSegment(long taskId, String userId,
+            GetFileContentSegmentReqVO getFileContentSegmentReqVO) {
+        IQueryWarningBizService queryWarningBizService = fileAndDefectQueryFactory
+                .createBizService(getFileContentSegmentReqVO.getToolName(),
+                        getFileContentSegmentReqVO.getDimension(),
+                        ComConstants.BusinessType.QUERY_WARNING.value(), IQueryWarningBizService.class);
+        return new Result<>(
+                queryWarningBizService.processGetFileContentSegmentRequest(taskId, userId, getFileContentSegmentReqVO));
     }
 
     @Override
-    public CodeCCResult<Boolean> batchDefectProcess(long taskId, String userName, BatchDefectProcessReqVO batchDefectProcessReqVO)
+    public Result<Boolean> batchDefectProcess(long taskId, String userName, BatchDefectProcessReqVO batchDefectProcessReqVO)
     {
         batchDefectProcessReqVO.setTaskId(taskId);
         batchDefectProcessReqVO.setIgnoreAuthor(userName);
-        IBizService<BatchDefectProcessReqVO> bizService = bizServiceFactory.createBizService(batchDefectProcessReqVO.getToolName(),
-                ComConstants.BATCH_PROCESSOR_INFIX + batchDefectProcessReqVO.getBizType(), IBizService.class);
+        IBizService<BatchDefectProcessReqVO> bizService = bizServiceFactory.createBizService(
+                batchDefectProcessReqVO.getToolName(),
+                batchDefectProcessReqVO.getDimension(),
+                ComConstants.BATCH_PROCESSOR_INFIX + batchDefectProcessReqVO.getBizType(),
+                IBizService.class);
         return bizService.processBiz(batchDefectProcessReqVO);
     }
 
     @Override
-    public CodeCCResult<List<BuildVO>> queryBuildInfos(Long taskId)
+    public Result<List<BuildVO>> queryBuildInfos(Long taskId)
     {
-        return new CodeCCResult<>(taskLogService.getTaskBuildInfos(taskId, MAX_BUILD_LIST_SIZE));
+        return new Result<>(taskLogService.getTaskBuildInfos(taskId, MAX_BUILD_LIST_SIZE));
     }
 
     @Override
-    public CodeCCResult<DeptTaskDefectRspVO> queryDeptTaskDefect(String userName, DeptTaskDefectReqVO deptTaskDefectReqVO)
+    public Result<DeptTaskDefectRspVO> queryDeptTaskDefect(String userName, DeptTaskDefectReqVO deptTaskDefectReqVO)
     {
         // 判断是否为管理员
         if (!authExPermissionApi.isAdminMember(userName))
@@ -169,54 +199,61 @@ public class UserDefectRestResourceImpl implements UserDefectRestResource
 
         IQueryWarningBizService queryWarningBizService = fileAndDefectQueryFactory.createBizService(deptTaskDefectReqVO.getToolName(),
                 ComConstants.BusinessType.QUERY_WARNING.value(), IQueryWarningBizService.class);
-        return new CodeCCResult<>(queryWarningBizService.processDeptTaskDefectReq(deptTaskDefectReqVO));
+        return new Result<>(queryWarningBizService.processDeptTaskDefectReq(deptTaskDefectReqVO));
     }
 
     @Override
-    public CodeCCResult<Boolean> addCodeComment(String defectId, String toolName, String commentId,
+    public Result<Boolean> addCodeComment(String defectId, String toolName, String commentId,
                                           String userName, SingleCommentVO singleCommentVO)
     {
         IDefectOperateBizService defectOperateBizService = defectOperateBizServiceFactory.createBizService(toolName,
                 ComConstants.BusinessType.DEFECT_OPERATE.value(), IDefectOperateBizService.class);
         defectOperateBizService.addCodeComment(defectId, commentId, userName, singleCommentVO);
-        return new CodeCCResult<>(true);
+        return new Result<>(true);
     }
 
 
     @Override
-    public CodeCCResult<Boolean> updateCodeComment(String commentId, String userName, String toolName, SingleCommentVO singleCommentVO)
+    public Result<Boolean> updateCodeComment(String commentId, String userName, String toolName, SingleCommentVO singleCommentVO)
     {
         IDefectOperateBizService defectOperateBizService = defectOperateBizServiceFactory.createBizService(toolName,
                 ComConstants.BusinessType.DEFECT_OPERATE.value(), IDefectOperateBizService.class);
         defectOperateBizService.updateCodeComment(commentId, userName, singleCommentVO);
-        return new CodeCCResult<>(true);
+        return new Result<>(true);
     }
 
 
 
     @Override
-    public CodeCCResult<Boolean> deleteCodeComment(String commentId, String singleCommentId, String toolName, String userName)
+    public Result<Boolean> deleteCodeComment(String commentId, String singleCommentId, String toolName, String userName)
     {
         IDefectOperateBizService defectOperateBizService = defectOperateBizServiceFactory.createBizService(toolName,
                 ComConstants.BusinessType.DEFECT_OPERATE.value(), IDefectOperateBizService.class);
         defectOperateBizService.deleteCodeComment(commentId, singleCommentId, userName);
-        return new CodeCCResult<>(true);
+        return new Result<>(true);
     }
 
     @Override
-    public CodeCCResult<FileDefectGatherVO> queryFileDefectGather(long taskId, String toolName)
+    public Result<FileDefectGatherVO> queryFileDefectGather(long taskId, String toolName)
     {
-        return new CodeCCResult<>(fileDefectGatherService.getFileDefectGather(taskId, toolName));
+        return new Result<>(fileDefectGatherService.getFileDefectGather(taskId, toolName, null));
     }
 
     @Override
-    public CodeCCResult<CommonDefectQueryRspVO> queryCLOCList(long taskId, String toolName, ComConstants.CLOCOrder orderBy) {
+    public Result<FileDefectGatherVO> queryFileDefectGather(long taskId, String toolName, String dimension) {
+        return new Result<>(fileDefectGatherService.getFileDefectGather(taskId, toolName, dimension));
+    }
+
+    @Override
+    public Result<CommonDefectQueryRspVO> queryCLOCList(long taskId, String toolName, ComConstants.CLOCOrder orderBy) {
         DefectQueryReqVO defectQueryReqVO = new DefectQueryReqVO();
         defectQueryReqVO.setToolName(toolName);
         defectQueryReqVO.setOrder(orderBy);
-        if (!checkParam(defectQueryReqVO))
-            return new CodeCCResult<>(CommonMessageCode.PARAMETER_IS_INVALID, null);
-        return new CodeCCResult<>(clocQueryWarningBizService.processQueryWarningRequest(taskId, defectQueryReqVO, 0, 0, null, null));
+        if (!checkParam(defectQueryReqVO)) {
+            return new Result<>(CommonMessageCode.PARAMETER_IS_INVALID, null);
+        }
+        return new Result<>(clocQueryWarningBizService.processQueryWarningRequest(taskId, defectQueryReqVO,
+                0, 0, null, null));
     }
 
     private boolean checkParam(DefectQueryReqVO defectQueryReqVO) {
@@ -226,12 +263,24 @@ public class UserDefectRestResourceImpl implements UserDefectRestResource
 
         return defectQueryReqVO.getToolName().equalsIgnoreCase(ComConstants.Tool.CLOC.name());
     }
+
     @Override
-    public CodeCCResult<QueryWarningPageInitRspVO> pageInit(long taskId, DefectQueryReqVO defectQueryReqVO)
+    public Result<QueryWarningPageInitRspVO> pageInit(long taskId, DefectQueryReqVO defectQueryReqVO)
     {
-        IQueryWarningBizService queryWarningBizService = fileAndDefectQueryFactory.createBizService(defectQueryReqVO.getToolName(),
-                ComConstants.BusinessType.QUERY_WARNING.value(), IQueryWarningBizService.class);
-        return new CodeCCResult<>(queryWarningBizService.pageInit(taskId, defectQueryReqVO));
+        IQueryWarningBizService queryWarningBizService = fileAndDefectQueryFactory.createBizService(
+            defectQueryReqVO.getToolName(),
+            defectQueryReqVO.getDimension(),
+            ComConstants.BusinessType.QUERY_WARNING.value(),
+            IQueryWarningBizService.class);
+        return new Result<>(queryWarningBizService.pageInit(taskId, defectQueryReqVO));
+    }
+
+    @Override
+    public Result<List<StatDefectQueryRespVO>> queryStatList(long taskId, String toolName, long startTime, long endTime) {
+        if (StringUtils.isBlank(toolName)) {
+            throw new CodeCCException(CommonMessageCode.INVALID_TOOL_NAME);
+        }
+        return new Result<>(iStatQueryWarningService.processQueryWarningRequest(taskId, toolName, startTime, endTime));
     }
 
 

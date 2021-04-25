@@ -29,7 +29,9 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @Data
 @Document(collection = "t_cloc_statistic")
 @CompoundIndexes({
-        @CompoundIndex(name = "task_id_1_language_1", def = "{'task_id': 1, 'language': 1}")
+        @CompoundIndex(name = "task_id_1_tool_name_1_build_id_language_1",
+                def = "{'task_id': 1, 'tool_name': 1, 'build_id': 1, 'language': 1}",
+                background = true)
 })
 public class CLOCStatisticEntity extends CommonEntity
 {
@@ -38,6 +40,7 @@ public class CLOCStatisticEntity extends CommonEntity
     private Long taskId;
 
     @Field("build_id")
+    @Indexed(background = true)
     private String buildId;
 
     @Field("stream_name")
@@ -55,6 +58,9 @@ public class CLOCStatisticEntity extends CommonEntity
     @Field("sum_comment")
     private Long sumComment;
 
+    @Field("sum_efficient_comment")
+    private Long sumEfficientComment;
+
     @Field("blank_change")
     private Long blankChange;
 
@@ -63,6 +69,9 @@ public class CLOCStatisticEntity extends CommonEntity
 
     @Field("comment_change")
     private Long commentChange;
+
+    @Field("efficient_comment_change")
+    private Long efficientCommentChange;
 
     @Field("language")
     private String language;

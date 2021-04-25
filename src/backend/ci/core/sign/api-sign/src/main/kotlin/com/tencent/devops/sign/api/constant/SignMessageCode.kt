@@ -57,10 +57,10 @@ object SignMessageCode {
     const val ERROR_PARS_INFO_PLIST = "2122010" // 解析Info.plist失败
     const val ERROR_RESIGN_TASK_NOT_EXIST = "2122011" // 签名任务不存在
     const val ERROR_CREATE_DOWNLOAD_URL = "2122012" // 创建下载连接失败
-    const val ERROR_INFO_PLIST_NOT_EXIST = "2122013" // 寻找Info.plist失败
+    const val ERROR_INFO_PLIST_NOT_EXIST = "2122013" // ipa文件解压并检查签名信息失败
     const val ERROR_WILDCARD_MP_NOT_EXIST = "2122014" // 通配符描述文件不存在
     const val ERROR_INSERT_KEYCHAIN_GROUPS = "2122015" // entitlement插入keychain失败
-    const val ERROR_NOT_AUTH_UPLOAD = "2122016" // 无发起iOS重签名权限。
+    const val ERROR_NOT_AUTH_UPLOAD = "2122016" // 无发起iOS重签名权限
     const val ERROR_UPLOAD_TOKEN_INVALID = "2122017" // 上传IPA使用的token不存在
     const val ERROR_UPLOAD_TOKEN_EXPIRED = "2122018" // 上传IPA使用的token已过期
 }

@@ -37,22 +37,34 @@ import com.tencent.bk.codecc.task.constant.TaskConstants;
 import com.tencent.bk.codecc.task.constant.TaskMessageCode;
 import com.tencent.bk.codecc.task.dao.mongorepository.TaskRepository;
 import com.tencent.bk.codecc.task.dao.mongorepository.ToolRepository;
+import com.tencent.bk.codecc.task.dao.mongorepository.ToolStatisticRepository;
 import com.tencent.bk.codecc.task.dao.mongotemplate.TaskDao;
 import com.tencent.bk.codecc.task.dao.mongotemplate.ToolDao;
 import com.tencent.bk.codecc.task.model.TaskInfoEntity;
 import com.tencent.bk.codecc.task.model.ToolCheckerSetEntity;
 import com.tencent.bk.codecc.task.model.ToolConfigInfoEntity;
+import com.tencent.bk.codecc.task.model.ToolCountScriptEntity;
+import com.tencent.bk.codecc.task.model.ToolStatisticEntity;
 import com.tencent.bk.codecc.task.service.IRegisterToolBizService;
 import com.tencent.bk.codecc.task.service.PipelineService;
 import com.tencent.bk.codecc.task.service.PlatformService;
+import com.tencent.bk.codecc.task.service.TaskService;
 import com.tencent.bk.codecc.task.service.ToolService;
 import com.tencent.bk.codecc.task.service.specialparam.SpecialParamUtil;
-import com.tencent.bk.codecc.task.vo.*;
+import com.tencent.bk.codecc.task.vo.BatchRegisterVO;
+import com.tencent.bk.codecc.task.vo.ParamJsonAndCheckerSetsVO;
+import com.tencent.bk.codecc.task.vo.PlatformVO;
+import com.tencent.bk.codecc.task.vo.TaskUpdateVO;
+import com.tencent.bk.codecc.task.vo.ToolConfigBaseVO;
+import com.tencent.bk.codecc.task.vo.ToolConfigInfoVO;
+import com.tencent.bk.codecc.task.vo.ToolConfigInfoWithMetadataVO;
+import com.tencent.bk.codecc.task.vo.ToolConfigPlatformVO;
+import com.tencent.bk.codecc.task.vo.ToolParamJsonAndCheckerSetVO;
 import com.tencent.bk.codecc.task.vo.checkerset.ToolCheckerSetVO;
 import com.tencent.devops.common.api.QueryTaskListReqVO;
 import com.tencent.devops.common.api.ToolMetaBaseVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.auth.api.external.AuthExRegisterApi;
 import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.ComConstants;
@@ -60,6 +72,7 @@ import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.service.BizServiceFactory;
 import com.tencent.devops.common.service.ToolMetaCacheService;
 import com.tencent.devops.common.service.utils.PageableUtils;
+import com.tencent.devops.common.util.DateTimeUtils;
 import com.tencent.devops.common.util.List2StrUtil;
 import com.tencent.devops.common.web.aop.annotation.OperationHistory;
 import lombok.extern.slf4j.Slf4j;
@@ -77,10 +90,24 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Collection;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 import java.util.stream.Collectors;
 
-import static com.tencent.devops.common.constant.ComConstants.*;
+import static com.tencent.devops.common.constant.ComConstants.BsTaskCreateFrom;
+import static com.tencent.devops.common.constant.ComConstants.CommonJudge;
+import static com.tencent.devops.common.constant.ComConstants.DefectStatType;
+import static com.tencent.devops.common.constant.ComConstants.FOLLOW_STATUS;
+import static com.tencent.devops.common.constant.ComConstants.FUNC_TOOL_SWITCH;
+import static com.tencent.devops.common.constant.ComConstants.PipelineToolUpdateType;
+import static com.tencent.devops.common.constant.ComConstants.Status;
+import static com.tencent.devops.common.constant.ComConstants.Tool;
 
 /**
  * ci流水线工具管理服务层代码
@@ -129,16 +156,21 @@ public class ToolServiceImpl implements ToolService
 
     @Autowired
     private PlatformService platformService;
+    @Autowired
+    private TaskService taskService;
+    @Autowired
+    private ToolStatisticRepository toolStatisticRepository;
+
 
     @Override
-    public CodeCCResult<Boolean> registerTools(BatchRegisterVO batchRegisterVO, TaskInfoEntity taskInfoEntity, String userName)
+    public Result<Boolean> registerTools(BatchRegisterVO batchRegisterVO, TaskInfoEntity taskInfoEntity, String userName)
     {
-        CodeCCResult<Boolean> registerCodeCCResult;
+        Result<Boolean> registerResult;
         long taskId = batchRegisterVO.getTaskId();
         if(CollectionUtils.isEmpty(batchRegisterVO.getTools()))
         {
             logger.error("no tools will be registered!");
-            return new CodeCCResult<>(false);
+            return new Result<>(false);
         }
         if (null == taskInfoEntity)
         {
@@ -196,12 +228,12 @@ public class ToolServiceImpl implements ToolService
         //全部工具添加失败
         if (failTools.size() == batchRegisterVO.getTools().size())
         {
-            registerCodeCCResult = new CodeCCResult<>(0, TaskMessageCode.ADD_TOOL_FAIL, "所有工具添加失败", false);
+            registerResult = new Result<>(0, TaskMessageCode.ADD_TOOL_FAIL, "所有工具添加失败", false);
         }
         //全部工具添加成功
         else if (successTools.size() == batchRegisterVO.getTools().size())
         {
-            registerCodeCCResult = new CodeCCResult<>(true);
+            registerResult = new Result<>(true);
         }
         else
         {
@@ -210,7 +242,7 @@ public class ToolServiceImpl implements ToolService
             buffer.append("添加成功；\n");
             formatToolNames(failTools, buffer);
             buffer.append("添加失败");
-            registerCodeCCResult = new CodeCCResult<>(0, TaskMessageCode.ADD_TOOL_PARTIALLY_SUCCESS, buffer.toString(), false);
+            registerResult = new Result<>(0, TaskMessageCode.ADD_TOOL_PARTIALLY_SUCCESS, buffer.toString(), false);
         }
 
         // 接入成功不再自动启动流水线
@@ -223,7 +255,7 @@ public class ToolServiceImpl implements ToolService
             TaskInfoEntity finalTaskInfoEntity = taskInfoEntity;
             successTools.forEach(tool -> pipelineService.updateTaskInitStep(String.valueOf(true), finalTaskInfoEntity, buildId, tool, userName));
         }*/
-        return registerCodeCCResult;
+        return registerResult;
     }
 
 
@@ -531,9 +563,11 @@ public class ToolServiceImpl implements ToolService
         String platformIp = toolConfigInfoEntity.getPlatformIp();
         if (StringUtils.isNotBlank(platformIp)) {
             PlatformVO platformVO = platformService.getPlatformByToolNameAndIp(toolName, platformIp);
-            port = platformVO.getPort();
-            userName = platformVO.getUserName();
-            passwd = platformVO.getPasswd();
+            if (null != platformVO) {
+                port = platformVO.getPort();
+                userName = platformVO.getUserName();
+                passwd = platformVO.getPasswd();
+            }
         }
         TaskInfoEntity taskInfoEntity = taskRepository.findByTaskId(taskId);
 
@@ -567,18 +601,18 @@ public class ToolServiceImpl implements ToolService
         }
         // 检查任务ID是否有效
         TaskInfoEntity taskInfoEntity = taskRepository.findByTaskId(taskIdReq);
-        if (taskInfoEntity == null)
-        {
+        if (taskInfoEntity == null) {
             logger.error("taskId [{}] is invalid!", taskIdReq);
             throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, new String[]{"taskId"}, null);
         }
         // 检查platform IP是否存在
         String platformIp = toolConfigPlatformVO.getIp();
-        PlatformVO platformVO = platformService.getPlatformByToolNameAndIp(toolName, platformIp);
-        if (platformVO == null)
-        {
-            logger.error("platform ip [{}] is not found!", platformIp);
-            throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, new String[]{"platform ip"}, null);
+        if (StringUtils.isNotBlank(platformIp)) {
+            PlatformVO platformVO = platformService.getPlatformByToolNameAndIp(toolName, platformIp);
+            if (platformVO == null) {
+                logger.error("platform ip [{}] is not found!", platformIp);
+                throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, new String[]{"platform ip"}, null);
+            }
         }
 
         return toolDao.updateToolConfigInfo(taskIdReq, toolName, userName, toolConfigPlatformVO.getSpecConfig(),
@@ -586,7 +620,7 @@ public class ToolServiceImpl implements ToolService
     }
 
     @Override
-    public CodeCCResult<Boolean> updateTools(Long taskId, String user, BatchRegisterVO batchRegisterVO)
+    public Result<Boolean> updateTools(Long taskId, String user, BatchRegisterVO batchRegisterVO)
     {
         // 查询任务已接入的工具列表
         TaskInfoEntity taskInfoEntity = taskRepository.findByTaskId(taskId);
@@ -657,7 +691,7 @@ public class ToolServiceImpl implements ToolService
         }
         else
         {
-            return new CodeCCResult<>(true);
+            return new Result<>(true);
         }
     }
 
@@ -911,4 +945,66 @@ public class ToolServiceImpl implements ToolService
         return true;
     }
 
+    /**
+     * 仅用于初始化查询工具数量
+     *
+     * @param day 天数
+     * @return
+     */
+    @Override
+    public Boolean initToolCountScript(Integer day) {
+        // 获取日期
+        List<String> dates = DateTimeUtils.getBeforeDaily(day);
+
+        // 获取开源的任务id集合
+        List<Long> openTaskIdList = taskService.queryTaskIdByType(DefectStatType.GONGFENG_SCAN);
+        // 获取非开源的任务id集合
+        List<Long> taskIdList = taskService.queryTaskIdByType(DefectStatType.USER);
+
+        List<ToolStatisticEntity> toolCountData = Lists.newArrayList();
+        for (String date : dates) {
+            // 获取结束时间
+            long endTime = DateTimeUtils.getTimeStampEnd(date);
+            try {
+                // 根据工具名分组 查询开源的各工具数量
+                getToolCount(openTaskIdList, toolCountData, date, endTime, DefectStatType.GONGFENG_SCAN.value());
+                // 根据工具名分组 查询非开源的各工具数量
+                getToolCount(taskIdList, toolCountData, date, endTime, DefectStatType.USER.value());
+            } catch (Exception e) {
+                log.error("Failed to obtain tool data", e);
+            }
+        }
+
+        toolStatisticRepository.save(toolCountData);
+        return true;
+    }
+
+    /**
+     * 根据工具名分组 查询开源的工具数量
+     *
+     * @param taskIdList    任务id集合
+     * @param toolCountData 容器
+     * @param date          日期
+     * @param endTime       时间
+     * @param createFrom    来源
+     */
+    private void getToolCount(List<Long> taskIdList, List<ToolStatisticEntity> toolCountData, String date,
+            long endTime, String createFrom) {
+
+        List<ToolCountScriptEntity> toolCountScriptList = toolDao.findDailyToolCount(taskIdList, endTime);
+
+        for (ToolCountScriptEntity toolCountScript : toolCountScriptList) {
+            ToolStatisticEntity toolStatisticEntity = new ToolStatisticEntity();
+            // 设置时间
+            toolStatisticEntity.setDate(date);
+            // 设置工具名称
+            toolStatisticEntity.setToolName(toolCountScript.getToolName());
+            // 设置来源
+            toolStatisticEntity.setDataFrom(createFrom);
+            // 设置总数量
+            toolStatisticEntity.setToolCount(toolCountScript.getCount());
+
+            toolCountData.add(toolStatisticEntity);
+        }
+    }
 }

@@ -169,7 +169,6 @@ public class RedLineReportServiceImpl implements RedLineReportService
      *
      * @param taskDetailVO
      * @param effectiveTools
-     * @param buildId
      * @return
      */
     private PipelineRedLineCallbackVO getRedLineIndicators(TaskDetailVO taskDetailVO, List<String> effectiveTools, String toolName)
@@ -181,7 +180,7 @@ public class RedLineReportServiceImpl implements RedLineReportService
         metadataCallback.setData(Lists.newArrayList());
 
         // 如果当前任务工具存在收敛告警文件，那么相应质量红线指标为null
-        FileDefectGatherVO fileDefectGatherVO = fileDefectGatherService.getFileDefectGather(taskDetailVO.getTaskId(), toolName);
+        FileDefectGatherVO fileDefectGatherVO = fileDefectGatherService.getFileDefectGather(taskDetailVO.getTaskId(), toolName, null);
         // 查询元数据模板
         Map<String, RedLineVO> metadataModel = loadRedLineMetaData(toolName);
         if (MapUtils.isEmpty(metadataModel) || fileDefectGatherVO != null)
@@ -202,9 +201,9 @@ public class RedLineReportServiceImpl implements RedLineReportService
         // 查询元数据
         ToolMetaBaseVO toolMeta = toolMetaCacheService.getToolBaseMetaCache(toolName);
         ToolConfigInfoVO toolConfig = toolConfigBaseMap.get(toolName);
+        log.info("[ red line ] current reporting tool: {}", toolMeta);
         if (Objects.nonNull(toolMeta))
         {
-            log.info("[ red line ] current reporting tool: {}", toolName);
             String pattern = toolMeta.getPattern();
             if (ComConstants.ToolPattern.LINT.name().equals(pattern))
             {
@@ -240,6 +239,8 @@ public class RedLineReportServiceImpl implements RedLineReportService
     private void getLintAnalysisResult(TaskDetailVO taskDetailVO, ToolMetaBaseVO toolInfo, ToolConfigInfoVO toolConfig, Map<String, RedLineVO> metadataModel,
                                        PipelineRedLineCallbackVO metadataCallback, List<String> effectiveTools)
     {
+        log.info("start to get lint analysis result for task: {}", taskDetailVO.getTaskId());
+
         long taskId = taskDetailVO.getTaskId();
         String toolName = toolInfo.getName();
         RLLintDefectVO lintRLModel = new RLLintDefectVO();
@@ -281,9 +282,12 @@ public class RedLineReportServiceImpl implements RedLineReportService
 
                 // 查询规则包和规则打开情况
                 List<CheckerPkgRspVO> checkerPkgList = configCheckerPkgBizService.getConfigCheckerPkg(taskId, toolName, toolInfo.getLang(), toolConfig).getCheckerPackages();
+
                 Map<String, CheckerPkgRspVO> pkgMap = Maps.newHashMap();
                 if (CollectionUtils.isNotEmpty(checkerPkgList))
                 {
+                    log.info("get lint analysis result for checkerPkgList: {}", checkerPkgList.size());
+
                     for (CheckerPkgRspVO checkerPkgRsp : checkerPkgList)
                     {
                         pkgMap.put(checkerPkgRsp.getPkgId(), checkerPkgRsp);
@@ -293,6 +297,8 @@ public class RedLineReportServiceImpl implements RedLineReportService
                 // 初始化规则包告警数
                 if (MapUtils.isNotEmpty(pkgMap))
                 {
+                    log.info("get lint analysis result for pkgMap: {}", pkgMap.size());
+
                     // 初始化规则包告警数量，设置规则未全部打开的规则包告警数量为-1，全打开的设置为0
                     for (Map.Entry<String, CheckerPkgRspVO> checkerPkgEntry : pkgMap.entrySet())
                     {
@@ -337,8 +343,11 @@ public class RedLineReportServiceImpl implements RedLineReportService
                 }
 
                 List<LintDefectV2Entity> defectV2EntityList = lintDefectV2Repository.findFiledsByTaskIdAndToolNameAndStatus(taskId, toolName, ComConstants.DefectStatus.NEW.value());
+
                 if (CollectionUtils.isNotEmpty(defectV2EntityList))
                 {
+                    log.info("get lint analysis result for defectV2EntityList: {}", defectV2EntityList.size());
+
                     // 查询新老告警判定时间
                     long newDefectJudgeTime = newDefectJudgeService.getNewDefectJudgeTime(taskId, toolName, taskDetailVO);
 
@@ -411,6 +420,8 @@ public class RedLineReportServiceImpl implements RedLineReportService
             updateValue(metadataKey, String.valueOf(entry.getValue()), metadataModel,
                     metadataCallback);
         }
+
+        log.info("finish to get lint analysis result for task: {}", taskDetailVO.getTaskId());
     }
     /**
      * 查询Coverity分析结果
@@ -823,7 +834,7 @@ public class RedLineReportServiceImpl implements RedLineReportService
                 defectCountModel.setNewNormal(defectCountModel.getNewNormal() + 1L);
             }
         }
-        else if (ComConstants.PROMPT_IN_DB == severity)
+        else if (ComConstants.PROMPT_IN_DB == severity || ComConstants.PROMPT == severity)
         {
             if (ComConstants.FileType.HISTORY.equals(fileType))
             {

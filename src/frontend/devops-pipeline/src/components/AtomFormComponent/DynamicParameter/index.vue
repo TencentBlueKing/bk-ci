@@ -68,10 +68,12 @@
         methods: {
             plusParam (parameter, index) {
                 this.parameters.splice(index, 0, JSON.parse(JSON.stringify(parameter)))
+                this.updateParameters()
             },
 
             minusParam (index) {
                 this.parameters.splice(index, 1)
+                this.updateParameters()
             },
 
             initData () {

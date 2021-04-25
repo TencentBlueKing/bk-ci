@@ -27,8 +27,8 @@
 package com.tencent.devops.common.pipeline.container
 
 import com.tencent.devops.common.pipeline.NameAndValue
-import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.option.JobControlOption
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 

@@ -28,12 +28,18 @@ package com.tencent.devops.quality.util
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 
 object ElementUtils {
 
     fun getElementCnName(classType: String, projectId: String): String {
         val map = getProjectElement(projectId)
+
+        if (CodeccUtils.isCodeccAtom(classType)) {
+            return map[CodeccUtils.BK_CI_CODECC_V3_ATOM] ?: ""
+        }
+
         return map[classType] ?: ""
     }
 

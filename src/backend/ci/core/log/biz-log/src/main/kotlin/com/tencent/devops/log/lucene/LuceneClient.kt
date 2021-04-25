@@ -57,7 +57,7 @@ class LuceneClient constructor(
         executeCount: Int?,
         size: Int? = null
     ): MutableList<LogLine> {
-        val lineNum = size ?: Constants.MAX_LINES
+        val lineNum = size ?: Constants.SCROLL_MAX_LINES
         val query = prepareQueryBuilder(buildId, tag, subTag, jobId, executeCount).build()
         logger.info("[$buildId] fetchInitLogs with query: $query")
         return doQueryLogsInSize(buildId, query, lineNum)
@@ -70,17 +70,17 @@ class LuceneClient constructor(
         jobId: String?,
         executeCount: Int?,
         start: Long? = null,
-        end: Long? = null,
+        before: Long? = null,
         size: Int? = null
     ): MutableList<LogLine> {
         val lower = start ?: 0
-        val upper = end ?: Long.MAX_VALUE
-        val lineNum = size ?: Constants.MAX_LINES
+        val upper = before ?: Long.MAX_VALUE
+        val logSize = size ?: Constants.SCROLL_MAX_LINES
         val query = prepareQueryBuilder(buildId, tag, subTag, jobId, executeCount)
             .add(NumericDocValuesField.newSlowRangeQuery("lineNo", lower, upper), BooleanClause.Occur.MUST)
             .build()
         logger.info("[$buildId] fetchLogsInRange with query: $query")
-        return doQueryLogsInSize(buildId, query, lineNum)
+        return doQueryLogsInSize(buildId, query, logSize)
     }
 
     fun fetchLogsCount(

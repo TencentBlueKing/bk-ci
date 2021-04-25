@@ -72,8 +72,8 @@ object CodeccRepoHelper {
     ): List<CodeccExecuteConfig.RepoItem> {
         val buildTasks = pipelineTaskApi.getAllBuildTask().data
             ?: throw TaskExecuteException(
-                errorType = ErrorType.SYSTEM,
-                errorCode = ErrorCode.SYSTEM_INNER_TASK_ERROR,
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                 errorMsg = "get build task fail"
             )
         val codeccTask = buildTasks.first { it.taskType in codeccElementTypes }
@@ -113,9 +113,9 @@ object CodeccRepoHelper {
                 }
                 else -> {
                     throw TaskExecuteException(
-                        ErrorType.SYSTEM,
-                        ErrorCode.SYSTEM_INNER_TASK_ERROR,
-                        "get codecc task fail"
+                        errorType = ErrorType.USER,
+                        errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                        errorMsg = "get codecc task fail"
                     )
                 }
             }

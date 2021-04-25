@@ -109,6 +109,14 @@ class PipelineFavorDao {
         }
     }
 
+    fun listByPipelineId(dslContext: DSLContext, userId: String, pipelineId: String): Result<TPipelineFavorRecord>? {
+        with(TPipelineFavor.T_PIPELINE_FAVOR) {
+            return dslContext.selectFrom(this)
+                .where(CREATE_USER.eq(userId).and(PIPELINE_ID.eq(pipelineId)))
+                .fetch()
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineFavorDao::class.java)
     }

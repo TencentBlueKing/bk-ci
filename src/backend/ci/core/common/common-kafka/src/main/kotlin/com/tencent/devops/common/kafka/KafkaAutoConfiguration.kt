@@ -26,15 +26,15 @@
 
 package com.tencent.devops.common.kafka
 
+import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization.StringDeserializer
 import org.apache.kafka.common.serialization.StringSerializer
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+import org.springframework.kafka.annotation.EnableKafka
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory
 import org.springframework.kafka.core.ConsumerFactory
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory
@@ -45,7 +45,7 @@ import org.springframework.kafka.support.serializer.JsonDeserializer
 import org.springframework.kafka.support.serializer.JsonSerializer
 
 @Configuration
-@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
+@EnableKafka
 class KafkaAutoConfiguration {
 
     @Bean
@@ -53,6 +53,7 @@ class KafkaAutoConfiguration {
         val props = HashMap<String, Any>(kafkaProperties.buildProducerProperties())
         props[ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG] = StringSerializer::class.java
         props[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = JsonSerializer::class.java
+
         return props
     }
 
@@ -67,10 +68,33 @@ class KafkaAutoConfiguration {
     }
 
     @Bean
+    fun stringProducerConfigs(@Autowired kafkaProperties: KafkaProperties): Map<String, Any> {
+        val props = HashMap<String, Any>(kafkaProperties.buildProducerProperties())
+        props[ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG] = StringSerializer::class.java
+        props[ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG] = StringSerializer::class.java
+
+        return props
+    }
+
+    @Bean
+    fun stringProducerFactory(@Autowired kafkaProperties: KafkaProperties): ProducerFactory<String, Any> {
+        return DefaultKafkaProducerFactory(stringProducerConfigs(kafkaProperties))
+    }
+
+    @Bean
+    fun stringKafkaTemplate(@Autowired kafkaProperties: KafkaProperties): KafkaTemplate<String, Any> {
+        return KafkaTemplate(stringProducerFactory(kafkaProperties))
+    }
+
+    @Bean
     fun consumerFactory(@Autowired kafkaProperties: KafkaProperties): ConsumerFactory<String, Any> {
+        val props = HashMap<String, Any>(kafkaProperties.buildConsumerProperties())
+        props[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java
+        props[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = JsonDeserializer::class.java
+
         val jsonDeserializer = JsonDeserializer(Any::class.java)
         return DefaultKafkaConsumerFactory(
-            kafkaProperties.buildConsumerProperties(), StringDeserializer(), jsonDeserializer
+            props, StringDeserializer(), jsonDeserializer
         )
     }
 
@@ -81,4 +105,30 @@ class KafkaAutoConfiguration {
 
         return factory
     }
+
+    @Bean
+    fun stringConsumerFactory(@Autowired kafkaProperties: KafkaProperties): ConsumerFactory<String, String> {
+        val props = HashMap<String, Any>(kafkaProperties.buildConsumerProperties())
+        props[ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java
+        props[ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG] = StringDeserializer::class.java
+
+        return DefaultKafkaConsumerFactory(
+            props, StringDeserializer(), StringDeserializer()
+        )
+    }
+
+    @Bean
+    fun stringKafkaListenerContainerFactory(@Autowired kafkaProperties: KafkaProperties): ConcurrentKafkaListenerContainerFactory<String, String> {
+        val factory = ConcurrentKafkaListenerContainerFactory<String, String>()
+        factory.consumerFactory = stringConsumerFactory(kafkaProperties)
+
+        return factory
+    }
 }
+
+/*
+@KafkaListener(topics = "Kafka_Example_json", group = "group_json",
+    containerFactory = "userKafkaListenerFactory")
+public void consumeJson(User user) {
+    System.out.println("Consumed JSON Message: " + user);
+}*/

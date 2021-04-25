@@ -249,7 +249,19 @@ class PipelineSettingService @Autowired constructor(
     }
 
     fun isQueueTimeout(pipelineId: String, startTime: Long): Boolean {
-        val waitQueueTimeMills = (getSetting(pipelineId)?.waitQueueTimeSecond ?: 3600) * 1000
+        val setting = getSetting(pipelineId)
+        val waitQueueTimeMills =
+            when {
+                setting == null -> {
+                    3600 * 1000
+                }
+                setting!!.runLockType == PipelineRunLockType.toValue(PipelineRunLockType.SINGLE) -> {
+                    setting.waitQueueTimeSecond * 1000
+                }
+                else -> {
+                    3600 * 1000
+                }
+            }
         return System.currentTimeMillis() - startTime > waitQueueTimeMills
     }
 

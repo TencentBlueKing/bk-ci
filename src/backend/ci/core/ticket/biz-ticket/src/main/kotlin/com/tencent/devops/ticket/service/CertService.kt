@@ -199,6 +199,13 @@ interface CertService {
 
     fun getCertByIds(certIds: Set<String>): List<Cert>?
 
+    fun searchByCertId(
+        projectId: String,
+        offset: Int,
+        limit: Int,
+        certId: String
+    ): SQLPage<Cert>
+
     private fun encryptCert(
         cert: ByteArray,
         publicKeyByteArray: ByteArray,

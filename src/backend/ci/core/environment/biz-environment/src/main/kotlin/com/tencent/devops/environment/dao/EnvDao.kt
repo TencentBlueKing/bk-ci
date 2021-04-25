@@ -251,4 +251,20 @@ class EnvDao {
                 .fetchOne(0, Int::class.java)
         }
     }
+
+    fun searchByName(dslContext: DSLContext, offset: Int, limit: Int, projectId: String?, envName: String): List<TEnvRecord> {
+        with(TEnv.T_ENV) {
+            return dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId).and(ENV_NAME.like("%$envName%")))
+                    .orderBy(CREATED_TIME.desc())
+                    .limit(limit).offset(offset)
+                    .fetch()
+        }
+    }
+
+    fun countByName(dslContext: DSLContext, projectId: String?, envName: String): Int {
+        with(TEnv.T_ENV) {
+            return dslContext.selectCount().from(this).where(PROJECT_ID.eq(projectId).and(ENV_NAME.like("%$envName%")))
+                    .fetchOne(0, Int::class.java)
+        }
+    }
 }

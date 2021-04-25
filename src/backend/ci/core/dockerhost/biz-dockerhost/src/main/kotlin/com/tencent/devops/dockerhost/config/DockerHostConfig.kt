@@ -185,11 +185,26 @@ class DockerHostConfig {
     @Value("\${dockerhost.mode:#{null}}")
     var dockerhostMode: String? = null
 
+    @Value("\${dockerhost.localIp:#{null}}")
+    var dockerhostLocalIp: String? = null
+
     /**
      * 运行dockerRun启动mysql,redis服务时的初始映射端口
      */
     @Value("\${dockerhost.dockerRun.startPort:20000}")
     var dockerRunStartPort: Int? = 20000
+
+    /**
+     * DockerHost母机开启容器负载检测的CPU阈值
+     */
+    @Value("\${dockerhost.elasticity.systemCpuThreshold:80}")
+    var elasticitySystemCpuThreshold: Int? = 80
+
+    /**
+     * DockerHost母机开启容器负载检测的应用内存阈值
+     */
+    @Value("\${dockerhost.elasticity.systemMemThreshold:80}")
+    var elasticitySystemMemThreshold: Int? = 80
 
     /**
      * DockerHost容器负载弹性扩缩cpuPeriod配置--指定容器对CPU的使用要在多长时间内做一次重新分配

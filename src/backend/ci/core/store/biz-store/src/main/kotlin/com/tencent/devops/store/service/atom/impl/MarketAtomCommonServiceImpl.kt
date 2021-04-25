@@ -31,18 +31,28 @@ import com.tencent.devops.common.api.constant.INIT_VERSION
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TAtomRecord
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
+import com.tencent.devops.store.dao.atom.MarketAtomEnvInfoDao
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
+import com.tencent.devops.store.pojo.atom.AtomPostInfo
 import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
+import com.tencent.devops.store.pojo.common.ATOM_POST
+import com.tencent.devops.store.pojo.common.ATOM_POST_CONDITION
+import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
+import com.tencent.devops.store.pojo.common.ATOM_POST_FLAG
+import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.common.StoreCommonService
+import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -56,10 +66,16 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
     private lateinit var dslContext: DSLContext
 
     @Autowired
+    private lateinit var redisOperation: RedisOperation
+
+    @Autowired
     private lateinit var atomDao: AtomDao
 
     @Autowired
     private lateinit var marketAtomDao: MarketAtomDao
+
+    @Autowired
+    private lateinit var marketAtomEnvInfoDao: MarketAtomEnvInfoDao
 
     @Autowired
     private lateinit var storeCommonService: StoreCommonService
@@ -119,6 +135,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
     override fun parseBaseTaskJson(
         taskJsonStr: String,
         atomCode: String,
+        version: String,
         userId: String
     ): GetAtomConfigResult {
         val taskDataMap = try {
@@ -133,11 +150,12 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         if (atomCode != taskAtomCode) {
             // 如果用户输入的插件代码和其代码库配置文件的不一致，则抛出错误提示给用户
             return GetAtomConfigResult(
-                StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
+                StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NOT_MATCH,
                 arrayOf("atomCode"), null, null
             )
         }
         val executionInfoMap = taskDataMap["execution"] as? Map<String, Any>
+        var atomPostInfo: AtomPostInfo? = null
         if (null != executionInfoMap) {
             val target = executionInfoMap["target"]
             if (StringUtils.isEmpty(target)) {
@@ -146,6 +164,32 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                     StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
                     arrayOf("target"), null, null
                 )
+            }
+            val atomPostMap = executionInfoMap[ATOM_POST] as? Map<String, Any>
+            if (null != atomPostMap) {
+                try {
+                    val postCondition = atomPostMap[ATOM_POST_CONDITION] as? String
+                        ?: throw ErrorCodeException(
+                            errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
+                            params = arrayOf(ATOM_POST_CONDITION)
+                        )
+                    val postEntryParam = atomPostMap[ATOM_POST_ENTRY_PARAM] as? String
+                        ?: throw ErrorCodeException(
+                            errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
+                            params = arrayOf(ATOM_POST_ENTRY_PARAM)
+                        )
+                    atomPostInfo = AtomPostInfo(
+                        atomCode = atomCode,
+                        version = version,
+                        postEntryParam = postEntryParam,
+                        postCondition = postCondition
+                    )
+                } catch (e: Exception) {
+                    throw ErrorCodeException(
+                        errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_INVALID,
+                        params = arrayOf(ATOM_POST_CONDITION)
+                    )
+                }
             }
         } else {
             // 抛出错误提示
@@ -162,7 +206,8 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             minVersion = executionInfoMap["minimumVersion"] as? String,
             target = executionInfoMap["target"] as String,
             shaContent = null,
-            preCmd = JsonUtil.toJson(executionInfoMap["demands"] ?: "")
+            preCmd = JsonUtil.toJson(executionInfoMap["demands"] ?: ""),
+            atomPostInfo = atomPostInfo
         )
         return GetAtomConfigResult("0", arrayOf(""), taskDataMap, atomEnvRequest)
     }
@@ -188,5 +233,40 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         val releaseTotalNum = marketAtomDao.countReleaseAtomByCode(dslContext, atomCode)
         val currentNum = if (status == AtomStatusEnum.RELEASED.status) 1 else 0
         return releaseTotalNum > currentNum
+    }
+
+    override fun handleAtomPostCache(atomId: String, atomCode: String, version: String, atomStatus: Byte) {
+        if (atomStatus == AtomStatusEnum.RELEASED.status.toByte()) {
+            val atomEnv = marketAtomEnvInfoDao.getMarketAtomEnvInfoByAtomId(dslContext, atomId)
+                ?: throw ErrorCodeException(
+                    errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                    params = arrayOf(atomId)
+                )
+            val postEntryParam = atomEnv.postEntryParam
+            val postCondition = atomEnv.postCondition
+            val postFlag = !StringUtils.isEmpty(postEntryParam) && !StringUtils.isEmpty(postEntryParam)
+            val atomPostMap = mapOf(
+                ATOM_POST_FLAG to postFlag,
+                ATOM_POST_ENTRY_PARAM to postEntryParam,
+                ATOM_POST_CONDITION to postCondition
+            )
+            redisOperation.hset(
+                key = "$ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX:$atomCode",
+                hashKey = version,
+                values = JsonUtil.toJson(atomPostMap)
+            )
+            // 更新xxx.latest这种版本号的post缓存信息
+            redisOperation.hset(
+                key = "$ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX:$atomCode",
+                hashKey = VersionUtils.convertLatestVersion(version),
+                values = JsonUtil.toJson(atomPostMap)
+            )
+            // 更新插件当前大版本内是否有测试版本标识
+            redisOperation.hset(
+                key = "$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode",
+                hashKey = VersionUtils.convertLatestVersion(version),
+                values = "false"
+            )
+        }
     }
 }

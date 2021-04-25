@@ -122,6 +122,28 @@
     {
       "operation": "upsert_action",
       "data": {
+        "id": "project_views_manager",
+        "name": "项目视图管理",
+        "name_en": "Project Views Manager",
+        "type": "edit",
+        "related_resource_types": [
+          {
+            "system_id": "bk_ci",
+            "id": "project",
+            "related_instance_selections": [
+              {
+                "system_id": "bk_ci",
+                "id": "project_instance"
+              }
+            ]
+          }
+        ],
+        "version": 1
+      }
+    },
+    {
+      "operation": "upsert_action",
+      "data": {
         "id": "pipeline_view",
         "name": "查看流水线",
         "name_en": "Pipeline View",

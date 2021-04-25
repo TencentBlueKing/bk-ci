@@ -27,7 +27,7 @@
 package com.tencent.devops.dockerhost.docker
 
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.dispatch.pojo.DockerHostBuildInfo
+import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.docker.annotation.EnvGenerator
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory

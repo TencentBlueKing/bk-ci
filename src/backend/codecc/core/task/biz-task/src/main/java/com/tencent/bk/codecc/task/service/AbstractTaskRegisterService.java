@@ -30,6 +30,7 @@ import com.tencent.bk.codecc.defect.api.ServiceCheckerSetRestResource;
 import com.tencent.bk.codecc.task.constant.TaskConstants;
 import com.tencent.bk.codecc.task.dao.mongorepository.TaskRepository;
 import com.tencent.bk.codecc.task.dao.mongorepository.ToolRepository;
+import com.tencent.bk.codecc.task.dao.mongotemplate.ToolDao;
 import com.tencent.bk.codecc.task.model.TaskInfoEntity;
 import com.tencent.bk.codecc.task.model.ToolConfigInfoEntity;
 import com.tencent.bk.codecc.task.service.specialparam.SpecialParamUtil;
@@ -39,11 +40,14 @@ import com.tencent.bk.codecc.task.vo.ToolConfigParamJsonVO;
 import com.tencent.devops.common.api.ToolMetaBaseVO;
 import com.tencent.devops.common.api.checkerset.CheckerSetVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.ComConstants;
+import com.tencent.devops.common.constant.ComConstants.CheckerSetType;
+import com.tencent.devops.common.constant.ComConstants.Tool;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.constant.RedisKeyConstants;
+import com.tencent.devops.common.redis.lock.RedisLock;
 import com.tencent.devops.common.service.ToolMetaCacheService;
 import com.tencent.devops.common.util.MD5Utils;
 import lombok.extern.slf4j.Slf4j;
@@ -98,6 +102,9 @@ public abstract class AbstractTaskRegisterService implements TaskRegisterService
 
     @Autowired
     protected SpecialParamUtil specialParamUtil;
+
+    @Autowired
+    protected ToolDao toolDao;
 
     @Autowired
     protected Client client;
@@ -332,22 +339,44 @@ public abstract class AbstractTaskRegisterService implements TaskRegisterService
         return paramJson;
     }
 
-
     protected void adaptV3AtomCodeCC(TaskDetailVO taskDetailVO)
     {
+        // 所有任务添加 CLOC 工具
+        CheckerSetVO clocCheckerSet = new CheckerSetVO();
+        clocCheckerSet.setCheckerSetId("standard_cloc");
+        clocCheckerSet.setToolList(Collections.singleton(Tool.CLOC.name()));
+        clocCheckerSet.setVersion(Integer.MAX_VALUE);
+        clocCheckerSet.setCodeLang(1073741824L);
+        if ((taskDetailVO.getCodeLang() & 1073741824L) <= 0) {
+            taskDetailVO.setCodeLang(taskDetailVO.getCodeLang() + 1073741824L);
+        }
+        taskDetailVO.getCheckerSetList().add(clocCheckerSet);
         // 初始化规则集列表
         Set<String> checkerSetIdList = taskDetailVO.getCheckerSetList().stream().map(CheckerSetVO::getCheckerSetId).collect(Collectors.toSet());
-        CodeCCResult<List<CheckerSetVO>> codeCCResult = client.get(ServiceCheckerSetRestResource.class).queryCheckerSets(checkerSetIdList, taskDetailVO.getProjectId());
-        if (codeCCResult.isNotOk() || CollectionUtils.isEmpty(codeCCResult.getData()))
+        Result<List<CheckerSetVO>> result;
+
+        // 兼容旧逻辑判断
+        if ((CollectionUtils.isEmpty(taskDetailVO.getLanguages()) && taskDetailVO.getCheckerSetType() == null)
+                || taskDetailVO.getCheckerSetType() == CheckerSetType.NORMAL) {
+            log.info("query checker set {}", taskDetailVO.getProjectId());
+            result = client.get(ServiceCheckerSetRestResource.class)
+                    .queryCheckerSets(checkerSetIdList, taskDetailVO.getProjectId());
+        } else {
+            log.info("query checker set for open source {}", taskDetailVO.getProjectId());
+            result = client.get(ServiceCheckerSetRestResource.class).queryCheckerSetsForOpenScan(
+                    new HashSet<>(taskDetailVO.getCheckerSetList()), taskDetailVO.getProjectId());
+        }
+
+        if (result.isNotOk() || CollectionUtils.isEmpty(result.getData()))
         {
-            String errorLog = "query checker sets fail, result: " + codeCCResult;
+            String errorLog = "query checker sets fail, result: " + result;
             log.error(errorLog);
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL, new String[]{errorLog});
         }
-        log.info("adapt v3 atom checker set result for task: " + taskDetailVO.getTaskId() + ", " + codeCCResult);
+        log.info("adapt v3 atom checker set result for task: " + taskDetailVO.getTaskId() + ", " + result);
 
         //要对语言进行过滤
-        List<CheckerSetVO> resultCheckerSetList = codeCCResult.getData();
+        List<CheckerSetVO> resultCheckerSetList = result.getData();
         List<CheckerSetVO> finalCheckerSetList = resultCheckerSetList.stream().filter(checkerSetVO ->
             (checkerSetVO.getCodeLang() & taskDetailVO.getCodeLang()) > 0L
         ).collect(Collectors.toList());
@@ -375,6 +404,28 @@ public abstract class AbstractTaskRegisterService implements TaskRegisterService
         taskDetailVO.setToolConfigInfoList(toolList);
     }
 
+    /**
+     * 更新保存工具，包括新添加工具、信息修改工具、停用工具、启用工具
+     *
+     * @param taskDetailVO
+     * @param taskInfoEntity
+     * @param userName
+     * @param forceFullScanTools
+     */
+    protected void upsert(TaskDetailVO taskDetailVO, TaskInfoEntity taskInfoEntity, String userName,
+            List<String> forceFullScanTools) {
+        String lockKey = String.format("lock:task:upsert_tool_config:%s", taskInfoEntity.getTaskId());
+        RedisLock redisLock = new RedisLock(redisTemplate, lockKey, 5);
+
+        try {
+            redisLock.lock();
+            upsertCore(taskDetailVO, taskInfoEntity, userName, forceFullScanTools);
+        } catch (Exception e) {
+            log.error("task upsert tool config fail, task id: {}", taskInfoEntity.getTaskId(), e);
+        } finally {
+            redisLock.unlock();
+        }
+    }
 
     /**
      * 更新保存工具，包括新添加工具、信息修改工具、停用工具、启用工具
@@ -384,10 +435,17 @@ public abstract class AbstractTaskRegisterService implements TaskRegisterService
      * @param userName
      * @param forceFullScanTools
      */
-    protected void upsert(TaskDetailVO taskDetailVO, TaskInfoEntity taskInfoEntity, String userName, List<String> forceFullScanTools)
-    {
+    private void upsertCore(TaskDetailVO taskDetailVO, TaskInfoEntity taskInfoEntity, String userName,
+            List<String> forceFullScanTools) {
         // 旧工具列表
-        List<ToolConfigInfoEntity> oldToolList = taskInfoEntity.getToolConfigInfoList();
+        TaskInfoEntity refreshTaskInfo = taskRepository.findByTaskId(taskInfoEntity.getTaskId());
+        List<ToolConfigInfoEntity> oldToolList = refreshTaskInfo != null
+                ? refreshTaskInfo.getToolConfigInfoList()
+                : taskInfoEntity.getToolConfigInfoList();
+
+        // 清理脏数据
+        clearDirtyToolConfig(taskInfoEntity.getTaskId(), oldToolList);
+
         Map<String, ToolConfigInfoEntity> oldToolMap;
         if (CollectionUtils.isEmpty(oldToolList))
         {
@@ -395,8 +453,10 @@ public abstract class AbstractTaskRegisterService implements TaskRegisterService
         }
         else
         {
-            oldToolMap = oldToolList.stream().collect(Collectors
-                    .toMap(ToolConfigInfoEntity::getToolName, toolConfigInfoEntity -> toolConfigInfoEntity, (k, v) -> v));
+            // 并发导致小部分引用的toolConfig可能为null，需过滤处理
+            oldToolMap = oldToolList.stream().filter(Objects::nonNull).collect(Collectors
+                    .toMap(ToolConfigInfoEntity::getToolName, toolConfigInfoEntity -> toolConfigInfoEntity,
+                            (k, v) -> v));
         }
 
         List<ToolConfigInfoEntity> toolConfigInfoEntityList = new ArrayList<>();
@@ -471,14 +531,55 @@ public abstract class AbstractTaskRegisterService implements TaskRegisterService
                     toolConfigInfoEntity.setLastFollowStatus(toolFollowStatus);
                     toolConfigInfoEntity.setUpdatedBy(userName);
                     toolConfigInfoEntity.setUpdatedDate(curTime);
-                    toolConfigInfoEntityList.add(toolConfigInfoEntity);
                     log.info("disable task {} tool {}", taskId, toolConfigInfoEntity.getToolName());
                 }
+
+                toolConfigInfoEntityList.add(toolConfigInfoEntity);
             }
         }
 
         toolConfigInfoEntityList = toolRepository.save(toolConfigInfoEntityList);
         taskInfoEntity.setToolConfigInfoList(toolConfigInfoEntityList);
         taskRepository.save(taskInfoEntity);
+    }
+
+    /**
+     * 清理ToolConfig的脏数据
+     * 注：目前仅清理task关联之外的多余数据，task自身的重复数据暂不作处理
+     *
+     * @param taskId
+     * @param taskDBRefToolList
+     */
+    private void clearDirtyToolConfig(long taskId, List<ToolConfigInfoEntity> taskDBRefToolList) {
+        List<ToolConfigInfoEntity> totalToolList = toolRepository.findByTaskId(taskId);
+        if (CollectionUtils.isEmpty(totalToolList)) {
+            return;
+        }
+
+        List<ToolConfigInfoEntity> toDelToolList;
+
+        if (CollectionUtils.isEmpty(taskDBRefToolList)) {
+            toDelToolList = new ArrayList<>(totalToolList);
+        } else {
+            if (totalToolList.size() == taskDBRefToolList.size()) {
+                return;
+            }
+
+            // 并发导致小部分引用的toolConfig可能为null，需过滤处理
+            Set<String> inUsingToolIdSet = taskDBRefToolList.stream()
+                    .filter(Objects::nonNull)
+                    .map(ToolConfigInfoEntity::getEntityId).collect(Collectors.toSet());
+
+            toDelToolList = totalToolList.stream()
+                    .filter(tool -> !inUsingToolIdSet.contains(tool.getEntityId())).collect(Collectors.toList());
+        }
+
+        if (CollectionUtils.isNotEmpty(toDelToolList)) {
+            toolDao.removeByIds(
+                    toDelToolList.stream().map(ToolConfigInfoEntity::getEntityId).collect(Collectors.toSet()));
+
+            log.info("clear dirty tool config, task id: {}, total size: {}, del size: {}, del detail: {}",
+                    taskId, totalToolList.size(), toDelToolList.size(), toDelToolList);
+        }
     }
 }

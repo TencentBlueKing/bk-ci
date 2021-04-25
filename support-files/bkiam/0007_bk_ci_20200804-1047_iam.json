@@ -33,6 +33,10 @@
                 "required": false
               },
               {
+                "id": "project_views_manager",
+                "required": false
+              },
+              {
                 "id": "repertory_create",
                 "required": false
               },

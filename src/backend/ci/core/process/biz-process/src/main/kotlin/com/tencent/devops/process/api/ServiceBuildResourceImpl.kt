@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.SimpleResult
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.engine.service.PipelineBuildService
@@ -352,6 +353,37 @@ class ServiceBuildResourceImpl @Autowired constructor(
         return buildService.getBuildVars(userId, projectId, pipelineId, buildId, ChannelCode.isNeedAuth(channelCode))
     }
 
+    override fun getBuildVariableValue(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        channelCode: ChannelCode,
+        variableNames: List<String>
+    ): Result<Map<String, String>> {
+        checkUserId(userId)
+        checkParam(projectId, pipelineId)
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        if (variableNames.isEmpty()) {
+            throw ParamBlankException("Invalid variableNames")
+        }
+        if (variableNames.size > 50) {
+            throw RuntimeException("The maximum number of variableNames is 50")
+        }
+        return Result(
+            buildService.getBuildVarsByNames(
+                userId,
+                projectId,
+                pipelineId,
+                buildId,
+                variableNames,
+                ChannelCode.isNeedAuth(channelCode)
+            )
+        )
+    }
+
     override fun batchServiceBasic(buildIds: Set<String>): Result<Map<String, BuildBasicInfo>> {
         if (buildIds.isEmpty()) return Result(mapOf())
         return Result(buildService.batchServiceBasic(buildIds))
@@ -428,7 +460,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         stageId: String,
-        cancel: Boolean?
+        cancel: Boolean?,
+        reviewRequest: StageReviewRequest?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
@@ -443,7 +476,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             stageId = stageId,
-            isCancel = cancel ?: false
+            isCancel = cancel ?: false,
+            reviewRequest = reviewRequest
         )
         return Result(true)
     }

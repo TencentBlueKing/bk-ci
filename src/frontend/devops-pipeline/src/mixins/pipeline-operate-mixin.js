@@ -563,7 +563,7 @@ export default {
                     resourceId: this.$permissionResourceMap.pipeline,
                     instanceId: [{
                         id: pipelineId,
-                        name: this.pipeline.name
+                        name: this.pipeline ? this.pipeline.name : ''
                     }],
                     projectId
                 }])
