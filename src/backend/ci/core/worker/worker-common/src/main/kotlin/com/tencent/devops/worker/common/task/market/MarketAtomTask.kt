@@ -60,6 +60,7 @@ import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.BatScriptUtil
 import com.tencent.devops.worker.common.utils.FileUtils
 import com.tencent.devops.worker.common.utils.ShellUtil
+import com.tencent.devops.worker.common.utils.TaskUtil
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Files
@@ -504,11 +505,13 @@ open class MarketAtomTask : ITask() {
                     }
                 }
                  */
+                TaskUtil.setTaskId(buildTask.taskId ?: "")
                 when (type) {
                     "string" -> env[key] = output["value"] as String
                     "report" -> env[key] = archiveReport(buildTask, output, buildVariables, bkWorkspace)
                     "artifact" -> env[key] = archiveArtifact(output, bkWorkspace, buildVariables)
                 }
+                TaskUtil.removeTaskId()
                 if (outputTemplate.containsKey(varKey)) {
                     val outPutDefine = outputTemplate[varKey]
                     val sensitiveFlag = outPutDefine!!["isSensitive"] as Boolean? ?: false
@@ -551,7 +554,7 @@ open class MarketAtomTask : ITask() {
             if (!success) {
                 throw TaskExecuteException(
                     errorMsg = "[Finish task] status: ${atomResult.status}, errorType: ${atomResult.errorType}, " +
-                        "errorCode: ${atomResult.message}, message: ${atomResult.message}",
+                        "errorCode: ${atomResult.errorCode}, message: ${atomResult.message}",
                     errorType = when (atomResult.errorType) {
                         // 插件上报的错误类型，若非用户业务错误或插件内的第三方服务调用错误，统一设为插件逻辑错误
                         1 -> ErrorType.USER

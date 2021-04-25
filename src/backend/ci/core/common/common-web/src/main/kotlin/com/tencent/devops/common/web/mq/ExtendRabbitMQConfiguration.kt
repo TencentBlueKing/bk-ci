@@ -62,6 +62,8 @@ class ExtendRabbitMQConfiguration {
     private var maxConcurrency: Int? = null
     @Value("\${spring.rabbitmq.extend.cache.channel.size:#{null}}")
     private var channelCacheSize: Int? = null
+    @Value("\${spring.rabbitmq.listener.simple.prefetch:#{null}}")
+    private val preFetchCount: Int? = null
 
     @Bean(name = [EXTEND_CONNECTION_FACTORY_NAME])
     fun extendConnectionFactory(config: ExtendRabbitMQProperties): ConnectionFactory {
@@ -111,6 +113,9 @@ class ExtendRabbitMQConfiguration {
         }
         if (maxConcurrency != null) {
             factory.setMaxConcurrentConsumers(maxConcurrency)
+        }
+        if (preFetchCount != null) {
+            factory.setPrefetchCount(preFetchCount)
         }
         return factory
     }

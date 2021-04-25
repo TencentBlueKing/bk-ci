@@ -28,6 +28,7 @@
 package com.tencent.devops.common.client
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.client.consul.ConsulFilter
 import com.tencent.devops.common.service.ServiceAutoConfiguration
 import com.tencent.devops.common.service.config.CommonConfig
 import org.springframework.beans.factory.annotation.Autowired
@@ -65,4 +66,7 @@ class ClientAutoConfiguration {
         objectMapper: ObjectMapper,
         @Autowired(required = false) consulDiscoveryClient: ConsulDiscoveryClient?
     ) = Client(consulDiscoveryClient, clientErrorDecoder, commonConfig, objectMapper)
+
+    @Bean
+    fun consulFilter() = ConsulFilter()
 }

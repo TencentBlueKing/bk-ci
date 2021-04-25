@@ -84,10 +84,7 @@ interface ServiceTemplateResource {
     fun getTemplateDetailInfo(
         @ApiParam("模板代码", required = true)
         @PathParam("templateCode")
-        templateCode: String,
-        @ApiParam("是否为公共模板", required = true)
-        @QueryParam("publicFlag")
-        publicFlag: Boolean
+        templateCode: String
     ): Result<TemplateDetailInfo?>
 
     @ApiOperation("查询项目下所有源模板的ID")

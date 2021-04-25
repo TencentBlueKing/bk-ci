@@ -201,17 +201,18 @@ class CodeWebhookListenerConfiguration {
         @Autowired listener: TGitCommitListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(gitCommitCheckQueue.name)
-        val concurrency = gitCommitCheckConcurrency!!
-        container.setConcurrentConsumers(concurrency)
-        container.setMaxConcurrentConsumers(Math.max(CHECK_MAX_CONCURRENT, concurrency))
-        container.setRabbitAdmin(rabbitAdmin)
-
         val adapter = MessageListenerAdapter(listener, listener::execute.name)
         adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
-        return container
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = gitCommitCheckQueue,
+            rabbitAdmin = rabbitAdmin,
+            adapter = adapter,
+            startConsumerMinInterval = 10000,
+            consecutiveActiveTrigger = 5,
+            concurrency = gitCommitCheckConcurrency!!,
+            maxConcurrency = CHECK_MAX_CONCURRENT
+        )
     }
 
     @Value("\${queueConcurrency.githubPr:1}")
@@ -240,16 +241,17 @@ class CodeWebhookListenerConfiguration {
         @Autowired listener: GitHubPullRequestListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(githubPrQueue.name)
-        val concurrency = githubPrConcurrency!!
-        container.setConcurrentConsumers(concurrency)
-        container.setMaxConcurrentConsumers(Math.max(CHECK_MAX_CONCURRENT, concurrency))
-        container.setRabbitAdmin(rabbitAdmin)
-
         val adapter = MessageListenerAdapter(listener, listener::execute.name)
         adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
-        return container
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = githubPrQueue,
+            rabbitAdmin = rabbitAdmin,
+            adapter = adapter,
+            startConsumerMinInterval = 10000,
+            consecutiveActiveTrigger = 5,
+            concurrency = githubPrConcurrency!!,
+            maxConcurrency = CHECK_MAX_CONCURRENT
+        )
     }
 }

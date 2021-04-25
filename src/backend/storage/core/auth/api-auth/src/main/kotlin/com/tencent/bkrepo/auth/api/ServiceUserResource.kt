@@ -1,7 +1,7 @@
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2020 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -10,13 +10,23 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
  *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
- *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
  */
 
 package com.tencent.bkrepo.auth.api
@@ -24,16 +34,22 @@ package com.tencent.bkrepo.auth.api
 import com.tencent.bkrepo.auth.constant.AUTH_API_USER_PREFIX
 import com.tencent.bkrepo.auth.constant.AUTH_SERVICE_USER_PREFIX
 import com.tencent.bkrepo.auth.constant.AUTH_USER_PREFIX
-import com.tencent.bkrepo.auth.constant.SERVICE_NAME
-import com.tencent.bkrepo.auth.pojo.CreateUserRequest
-import com.tencent.bkrepo.auth.pojo.CreateUserToProjectRequest
-import com.tencent.bkrepo.auth.pojo.UpdateUserRequest
-import com.tencent.bkrepo.auth.pojo.User
+import com.tencent.bkrepo.auth.pojo.token.Token
+import com.tencent.bkrepo.auth.pojo.token.TokenResult
+import com.tencent.bkrepo.auth.pojo.user.CreateUserRequest
+import com.tencent.bkrepo.auth.pojo.user.CreateUserToProjectRequest
+import com.tencent.bkrepo.auth.pojo.user.CreateUserToRepoRequest
+import com.tencent.bkrepo.auth.pojo.user.UpdateUserRequest
+import com.tencent.bkrepo.auth.pojo.user.User
+import com.tencent.bkrepo.auth.pojo.user.UserResult
+import com.tencent.bkrepo.common.api.constant.AUTH_SERVICE_NAME
 import com.tencent.bkrepo.common.api.pojo.Response
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import org.springframework.cloud.openfeign.FeignClient
+import org.springframework.context.annotation.Primary
+import org.springframework.web.bind.annotation.CookieValue
 import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.PatchMapping
@@ -42,9 +58,11 @@ import org.springframework.web.bind.annotation.PostMapping
 import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RequestParam
 
 @Api(tags = ["SERVICE_USER"], description = "服务-用户接口")
-@FeignClient(SERVICE_NAME, contextId = "ServiceUserResource")
+@Primary
+@FeignClient(AUTH_SERVICE_NAME, contextId = "ServiceUserResource")
 @RequestMapping(AUTH_USER_PREFIX, AUTH_API_USER_PREFIX, AUTH_SERVICE_USER_PREFIX)
 interface ServiceUserResource {
 
@@ -54,6 +72,12 @@ interface ServiceUserResource {
         @RequestBody request: CreateUserToProjectRequest
     ): Response<Boolean>
 
+    @ApiOperation("创建仓库用户")
+    @PostMapping("/create/repo")
+    fun createUserToRepo(
+        @RequestBody request: CreateUserToRepoRequest
+    ): Response<Boolean>
+
     @ApiOperation("创建用户")
     @PostMapping("/create")
     fun createUser(
@@ -61,9 +85,15 @@ interface ServiceUserResource {
     ): Response<Boolean>
 
     @ApiOperation("用户列表")
-    @PostMapping("/list")
+    @GetMapping("/list")
     fun listUser(
-        @RequestBody rids: List<String> = emptyList()
+        @RequestBody rids: List<String>?
+    ): Response<List<UserResult>>
+
+    @ApiOperation("用户列表")
+    @GetMapping("/listall")
+    fun listAllUser(
+        @RequestBody rids: List<String>?
     ): Response<List<User>>
 
     @ApiOperation("删除用户")
@@ -130,25 +160,36 @@ interface ServiceUserResource {
     fun createToken(
         @ApiParam(value = "用户id")
         @PathVariable uid: String
-    ): Response<User?>
+    ): Response<Token?>
 
     @ApiOperation("新加用户token")
-    @PostMapping("/token/{uid}/{token}")
+    @PostMapping("/token/{uid}/{name}")
     fun addUserToken(
         @ApiParam(value = "用户id")
-        @PathVariable uid: String,
-        @ApiParam(value = "token")
-        @PathVariable token: String
-    ): Response<User?>
+        @PathVariable("uid") uid: String,
+        @ApiParam(value = "name")
+        @PathVariable("name") name: String,
+        @ApiParam(value = "expiredAt", required = false)
+        @RequestParam expiredAt: String?,
+        @ApiParam(value = "projectId", required = false)
+        @RequestParam projectId: String?
+    ): Response<Token?>
+
+    @ApiOperation("查询用户token列表")
+    @GetMapping("/list/token/{uid}")
+    fun listUserToken(
+        @ApiParam(value = "用户id")
+        @PathVariable("uid") uid: String
+    ): Response<List<TokenResult>>
 
     @ApiOperation("删除用户token")
-    @DeleteMapping("/token/{uid}/{token}")
+    @DeleteMapping("/token/{uid}/{name}")
     fun deleteToken(
         @ApiParam(value = "用户id")
         @PathVariable uid: String,
         @ApiParam(value = "用户token")
-        @PathVariable token: String
-    ): Response<User?>
+        @PathVariable name: String
+    ): Response<Boolean>
 
     @ApiOperation("校验用户token")
     @GetMapping("/token/{uid}/{token}")
@@ -158,4 +199,27 @@ interface ServiceUserResource {
         @ApiParam(value = "用户token")
         @PathVariable token: String
     ): Response<Boolean>
+
+    @ApiOperation("校验用户token")
+    @PostMapping("/login")
+    fun loginUser(
+        @ApiParam(value = "用户id")
+        @RequestParam("uid") uid: String,
+        @ApiParam(value = "用户token")
+        @RequestParam("token") token: String
+    ): Response<Boolean>
+
+    @ApiOperation("获取用户信息")
+    @GetMapping("/info")
+    fun userInfo(
+        @ApiParam(value = "用户id")
+        @CookieValue(value = "bkrepo_ticket") bkrepoToken: String?
+    ): Response<Map<String, Any>>
+
+    @ApiOperation("校验用户ticket")
+    @GetMapping("/verify")
+    fun verify(
+        @ApiParam(value = "用户id")
+        @RequestParam(value = "bkrepo_ticket") bkrepoToken: String?
+    ): Response<Map<String, Any>>
 }

@@ -29,10 +29,14 @@ package com.tencent.devops.process.engine.dao
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.process.Tables.T_PIPELINE_MODEL_TASK
-import com.tencent.devops.model.process.tables.TPipelineInfo
 import com.tencent.devops.model.process.tables.TPipelineModelTask
 import com.tencent.devops.model.process.tables.records.TPipelineModelTaskRecord
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
+import com.tencent.devops.process.utils.KEY_PIPELINE_ID
+import com.tencent.devops.process.utils.KEY_PROJECT_ID
+import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
+import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
+import com.tencent.devops.store.pojo.common.KEY_VERSION
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.InsertOnDuplicateSetMoreStep
@@ -42,6 +46,7 @@ import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -53,6 +58,7 @@ class PipelineModelTaskDao {
             modelTasks.forEach { modelTask ->
                 val taskParamJson = JsonUtil.toJson(modelTask.taskParams)
                 val additionalOptionsJson = JsonUtil.toJson(modelTask.additionalOptions ?: "")
+                val currentTime = LocalDateTime.now()
                 val set = dslContext.insertInto(this)
                     .set(PIPELINE_ID, modelTask.pipelineId)
                     .set(PROJECT_ID, modelTask.projectId)
@@ -62,17 +68,22 @@ class PipelineModelTaskDao {
                     .set(TASK_NAME, modelTask.taskName)
                     .set(TASK_ATOM, modelTask.taskAtom)
                     .set(ATOM_CODE, modelTask.atomCode)
+                    .set(ATOM_VERSION, modelTask.atomVersion)
                     .set(CLASS_TYPE, modelTask.classType)
                     .set(TASK_SEQ, modelTask.taskSeq)
                     .set(TASK_PARAMS, taskParamJson)
+                    .set(CREATE_TIME, currentTime)
+                    .set(UPDATE_TIME, currentTime)
                     .onDuplicateKeyUpdate()
                     .set(TASK_NAME, modelTask.taskName)
                     .set(TASK_ATOM, modelTask.taskAtom)
                     .set(ATOM_CODE, modelTask.atomCode)
+                    .set(ATOM_VERSION, modelTask.atomVersion)
                     .set(CLASS_TYPE, modelTask.classType)
                     .set(TASK_SEQ, modelTask.taskSeq)
                     .set(TASK_PARAMS, taskParamJson)
                     .set(ADDITIONAL_OPTIONS, additionalOptionsJson)
+                    .set(UPDATE_TIME, currentTime)
                 records.add(set)
             }
         }
@@ -101,16 +112,13 @@ class PipelineModelTaskDao {
      * 根据原子标识，获取使用该原子的pipeline个数
      */
     fun getPipelineCountByAtomCode(dslContext: DSLContext, atomCode: String, projectCode: String?): Int {
-        val a = TPipelineInfo.T_PIPELINE_INFO.`as`("a")
-        val b = TPipelineModelTask.T_PIPELINE_MODEL_TASK.`as`("b")
-        val condition = getListByAtomCodeCond(a, b, atomCode, projectCode)
-
-        return dslContext.select(DSL.countDistinct(a.PIPELINE_ID))
-            .from(a)
-            .join(b)
-            .on(a.PIPELINE_ID.eq(b.PIPELINE_ID))
-            .where(condition)
-            .fetchOne(0, Int::class.java)
+        with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
+            val condition = getListByAtomCodeCond(this, atomCode, projectCode)
+            return dslContext.select(DSL.countDistinct(PIPELINE_ID))
+                .from(this)
+                .where(condition)
+                .fetchOne(0, Int::class.java)
+        }
     }
 
     /**
@@ -121,28 +129,38 @@ class PipelineModelTaskDao {
         atomCodeList: List<String>,
         projectCode: String?
     ): Result<Record2<Int, String>> {
-        val a = TPipelineInfo.T_PIPELINE_INFO.`as`("a")
-        val b = TPipelineModelTask.T_PIPELINE_MODEL_TASK.`as`("b")
-        val condition = mutableListOf<Condition>()
-        condition.add(a.DELETE.eq(false))
-        condition.add(b.ATOM_CODE.`in`(atomCodeList))
-        if (projectCode != null) {
-            condition.add(a.PROJECT_ID.eq(projectCode))
-        }
+        with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
+            val condition = mutableListOf<Condition>()
+            condition.add(ATOM_CODE.`in`(atomCodeList))
+            if (projectCode != null) {
+                condition.add(PROJECT_ID.eq(projectCode))
+            }
 
-        return dslContext.select(DSL.countDistinct(a.PIPELINE_ID), b.ATOM_CODE)
-            .from(a)
-            .join(b)
-            .on(a.PIPELINE_ID.eq(b.PIPELINE_ID))
-            .where(condition)
-            .groupBy(b.ATOM_CODE)
-            .fetch()
+            return dslContext.select(DSL.countDistinct(PIPELINE_ID), ATOM_CODE)
+                .from(this)
+                .where(condition)
+                .groupBy(ATOM_CODE)
+                .fetch()
+        }
     }
 
-    fun getModelTasks(dslContext: DSLContext, pipelineId: String): Result<TPipelineModelTaskRecord>? {
+    fun getModelTasks(
+        dslContext: DSLContext,
+        pipelineId: String,
+        isAtomVersionNull: Boolean? = null
+    ): Result<TPipelineModelTaskRecord>? {
         with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
+            val condition = mutableListOf<Condition>()
+            condition.add(PIPELINE_ID.eq(pipelineId))
+            if (isAtomVersionNull != null) {
+                if (isAtomVersionNull) {
+                    condition.add(ATOM_VERSION.isNull)
+                } else {
+                    condition.add(ATOM_VERSION.isNotNull)
+                }
+            }
             return dslContext.selectFrom(this)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(condition)
                 .fetch()
         }
     }
@@ -150,44 +168,85 @@ class PipelineModelTaskDao {
     fun listByAtomCode(
         dslContext: DSLContext,
         atomCode: String,
-        projectCode: String?,
-        page: Int?,
-        pageSize: Int?
+        projectId: String? = null,
+        version: String? = null,
+        startUpdateTime: LocalDateTime? = null,
+        endUpdateTime: LocalDateTime? = null,
+        page: Int? = null,
+        pageSize: Int? = null
     ): Result<out Record>? {
-        val a = TPipelineInfo.T_PIPELINE_INFO.`as`("a")
-        val b = TPipelineModelTask.T_PIPELINE_MODEL_TASK.`as`("b")
-        val condition = getListByAtomCodeCond(a, b, atomCode, projectCode)
+        with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
+            val condition = getListByAtomCodeCond(
+                a = this,
+                atomCode = atomCode,
+                projectId = projectId,
+                version = version,
+                startUpdateTime = startUpdateTime,
+                endUpdateTime = endUpdateTime
+            )
 
-        val baseStep = dslContext.select(
-            a.PIPELINE_ID.`as`("pipelineId"),
-            a.PIPELINE_NAME.`as`("pipelineName"),
-            a.PROJECT_ID.`as`("projectCode")
-        )
-            .from(a)
-            .join(b)
-            .on(a.PIPELINE_ID.eq(b.PIPELINE_ID))
-            .where(condition)
-            .groupBy(b.PIPELINE_ID)
-            .orderBy(a.PIPELINE_NAME.desc())
+            val baseStep = dslContext.select(
+                PIPELINE_ID.`as`(KEY_PIPELINE_ID),
+                PROJECT_ID.`as`(KEY_PROJECT_ID),
+                ATOM_VERSION.`as`(KEY_VERSION),
+                CREATE_TIME.`as`(KEY_CREATE_TIME),
+                UPDATE_TIME.`as`(KEY_UPDATE_TIME)
+            )
+                .from(this)
+                .where(condition)
+                .groupBy(PIPELINE_ID)
+                .orderBy(UPDATE_TIME.desc(), PIPELINE_ID.desc())
 
-        return if (null != page && null != pageSize) {
-            baseStep.limit((page - 1) * pageSize, pageSize).fetch()
-        } else {
-            baseStep.fetch()
+            return if (null != page && null != pageSize) {
+                baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+            } else {
+                baseStep.fetch()
+            }
+        }
+    }
+
+    fun countByAtomCode(
+        dslContext: DSLContext,
+        atomCode: String,
+        projectId: String? = null,
+        version: String? = null,
+        startUpdateTime: LocalDateTime? = null,
+        endUpdateTime: LocalDateTime? = null
+    ): Long {
+        with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
+            val condition = getListByAtomCodeCond(
+                a = this,
+                atomCode = atomCode,
+                projectId = projectId,
+                version = version,
+                startUpdateTime = startUpdateTime,
+                endUpdateTime = endUpdateTime
+            )
+            return dslContext.selectCount().from(this).where(condition).fetchOne(0, Long::class.java)
         }
     }
 
     private fun getListByAtomCodeCond(
-        a: TPipelineInfo,
-        b: TPipelineModelTask,
+        a: TPipelineModelTask,
         atomCode: String,
-        projectCode: String?
+        projectId: String? = null,
+        version: String? = null,
+        startUpdateTime: LocalDateTime? = null,
+        endUpdateTime: LocalDateTime? = null
     ): MutableList<Condition> {
         val condition = mutableListOf<Condition>()
-        condition.add(a.DELETE.eq(false))
-        condition.add(b.ATOM_CODE.eq(atomCode))
-        if (projectCode != null) {
-            condition.add(a.PROJECT_ID.eq(projectCode))
+        condition.add(a.ATOM_CODE.eq(atomCode))
+        if (projectId != null) {
+            condition.add(a.PROJECT_ID.eq(projectId))
+        }
+        if (version != null) {
+            condition.add(a.ATOM_VERSION.eq(version))
+        }
+        if (startUpdateTime != null) {
+            condition.add(a.UPDATE_TIME.ge(startUpdateTime))
+        }
+        if (endUpdateTime != null) {
+            condition.add(a.UPDATE_TIME.le(endUpdateTime))
         }
         return condition
     }
@@ -197,23 +256,44 @@ class PipelineModelTaskDao {
         atomCode: String,
         pipelineIdList: List<String>
     ): Result<out Record>? {
-        val a = TPipelineInfo.T_PIPELINE_INFO.`as`("a")
-        val b = TPipelineModelTask.T_PIPELINE_MODEL_TASK.`as`("b")
-        val condition = getListByAtomCodeCond(a, b, atomCode, null)
+        with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
+            val condition = getListByAtomCodeCond(this, atomCode, null)
 
-        val baseStep = dslContext.select(
-            a.PIPELINE_ID.`as`("pipelineId"),
-            a.PIPELINE_NAME.`as`("pipelineName"),
-            a.PROJECT_ID.`as`("projectCode"),
-            b.TASK_PARAMS.`as`("taskParams")
-        )
-            .from(b)
-            .join(a)
-            .on(a.PIPELINE_ID.eq(b.PIPELINE_ID))
-            .where(condition)
-            .and(b.PIPELINE_ID.`in`(pipelineIdList))
+            val baseStep = dslContext.select(
+                PIPELINE_ID.`as`(KEY_PIPELINE_ID),
+                ATOM_VERSION.`as`(KEY_VERSION)
+            )
+                .from(this)
+                .where(condition)
+                .and(PIPELINE_ID.`in`(pipelineIdList))
 
-        return baseStep.fetch()
+            return baseStep.fetch()
+        }
+    }
+
+    fun updateTaskAtomVersion(
+        dslContext: DSLContext,
+        atomVersion: String,
+        createTime: LocalDateTime,
+        updateTime: LocalDateTime,
+        projectId: String,
+        pipelineId: String,
+        stageId: String,
+        containerId: String,
+        taskId: String
+    ) {
+        with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
+            dslContext.update(this)
+                .set(ATOM_VERSION, atomVersion)
+                .set(CREATE_TIME, createTime)
+                .set(UPDATE_TIME, updateTime)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(STAGE_ID.eq(stageId))
+                .and(CONTAINER_ID.eq(containerId))
+                .and(TASK_ID.eq(taskId))
+                .execute()
+        }
     }
 
     companion object {

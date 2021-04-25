@@ -47,20 +47,28 @@ class ContainerUtilsTest {
         val containerId = "1"
         assertEquals(
             "container:startup:$pipelineId:$buildId:$containerId",
-            ContainerUtils.getContainerStartupKey(pipelineId = pipelineId, buildId = buildId, containerId = containerId)
+            ContainerUtils.getContainerStartupKey(pipelineId = pipelineId,
+                buildId = buildId,
+                containerId = containerId)
         )
     }
 
     @Test
     fun isNormalContainerEnable() {
         assertTrue(ContainerUtils.isNormalContainerEnable(NormalContainer()))
-        assertTrue(ContainerUtils.isNormalContainerEnable(NormalContainer(enableSkip = false, jobControlOption = null)))
-        assertTrue(ContainerUtils.isNormalContainerEnable(NormalContainer(enableSkip = false, jobControlOption = option(true))))
-        assertTrue(ContainerUtils.isNormalContainerEnable(NormalContainer(enableSkip = null, jobControlOption = option(true))))
+        assertTrue(ContainerUtils.isNormalContainerEnable(NormalContainer(enableSkip = false,
+            jobControlOption = null)))
+        assertTrue(ContainerUtils.isNormalContainerEnable(NormalContainer(enableSkip = false,
+            jobControlOption = option(true))))
+        assertTrue(ContainerUtils.isNormalContainerEnable(NormalContainer(enableSkip = null,
+            jobControlOption = option(true))))
 
-        assertFalse(ContainerUtils.isNormalContainerEnable(NormalContainer(enableSkip = null, jobControlOption = option(false))))
-        assertFalse(ContainerUtils.isNormalContainerEnable(NormalContainer(enableSkip = true, jobControlOption = option(false))))
-        assertFalse(ContainerUtils.isNormalContainerEnable(NormalContainer(enableSkip = true, jobControlOption = null)))
+        assertFalse(ContainerUtils.isNormalContainerEnable(NormalContainer(enableSkip = null,
+            jobControlOption = option(false))))
+        assertFalse(ContainerUtils.isNormalContainerEnable(NormalContainer(enableSkip = true,
+            jobControlOption = option(false))))
+        assertFalse(ContainerUtils.isNormalContainerEnable(NormalContainer(enableSkip = true,
+            jobControlOption = null)))
     }
 
     @Test
@@ -68,11 +76,15 @@ class ContainerUtilsTest {
 
         assertTrue(ContainerUtils.isVMBuildContainerEnable(VMBuildContainer(baseOS = VMBaseOS.MACOS)))
 
-        assertTrue(ContainerUtils.isVMBuildContainerEnable(VMBuildContainer(baseOS = VMBaseOS.MACOS, jobControlOption = null)))
-        assertTrue(ContainerUtils.isVMBuildContainerEnable(VMBuildContainer(baseOS = VMBaseOS.MACOS, jobControlOption = option(true))))
+        assertTrue(ContainerUtils.isVMBuildContainerEnable(VMBuildContainer(baseOS = VMBaseOS.MACOS,
+            jobControlOption = null)))
+        assertTrue(ContainerUtils.isVMBuildContainerEnable(VMBuildContainer(baseOS = VMBaseOS.MACOS,
+            jobControlOption = option(true))))
 
-        assertFalse(ContainerUtils.isVMBuildContainerEnable(VMBuildContainer(baseOS = VMBaseOS.MACOS, jobControlOption = option(false))))
+        assertFalse(ContainerUtils.isVMBuildContainerEnable(VMBuildContainer(baseOS = VMBaseOS.MACOS,
+            jobControlOption = option(false))))
     }
 
-    private fun option(enable: Boolean) = JobControlOption(enable = enable, timeout = 600, runCondition = JobRunCondition.STAGE_RUNNING)
+    private fun option(enable: Boolean) =
+        JobControlOption(enable = enable, timeout = 600, runCondition = JobRunCondition.STAGE_RUNNING)
 }

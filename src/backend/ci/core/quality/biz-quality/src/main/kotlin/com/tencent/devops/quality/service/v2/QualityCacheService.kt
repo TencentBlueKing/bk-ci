@@ -73,7 +73,7 @@ class QualityCacheService @Autowired constructor(
     }
 
     fun buildQuality(redisData: String): List<QualityRuleMatchTask> {
-        return JsonUtil.getObjectMapper().readValue(redisData!!)
+        return JsonUtil.getObjectMapper().readValue(redisData)
     }
 
     private fun setCacheRuleListByPipeline(
@@ -117,13 +117,13 @@ class QualityCacheService @Autowired constructor(
     ) {
         try {
             val refreshTask = RefreshTask(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    templateId = templateId,
-                    ruleTasks = ruleTasks,
-                    cacheService = this,
-                    redisOperation = redisOperation,
-                    refreshType = type
+                projectId = projectId,
+                pipelineId = pipelineId,
+                templateId = templateId,
+                ruleTasks = ruleTasks,
+                cacheService = this,
+                redisOperation = redisOperation,
+                refreshType = type
             )
             executors.execute(refreshTask)
         } catch (e: Exception) {
@@ -157,9 +157,9 @@ class QualityCacheService @Autowired constructor(
         override fun run() {
 
             val redisLock = RedisLock(
-                    redisOperation = redisOperation,
-                    lockKey = "quality:rule:lock:$projectId",
-                    expiredTimeInSeconds = 60
+                redisOperation = redisOperation,
+                lockKey = "quality:rule:lock:$projectId",
+                expiredTimeInSeconds = 60
             )
 
             try {
@@ -168,12 +168,12 @@ class QualityCacheService @Autowired constructor(
 
                 ruleTasks?.forEach {
                     val ruleMatchTask = QualityRuleMatchTask(
-                            taskId = it.taskId,
-                            taskName = it.taskName,
-                            controlStage = it.controlStage,
-                            ruleList = it.ruleList,
-                            auditUserList = null,
-                            thresholdList = null
+                        taskId = it.taskId,
+                        taskName = it.taskName,
+                        controlStage = it.controlStage,
+                        ruleList = it.ruleList,
+                        auditUserList = null,
+                        thresholdList = null
                     )
                     redisRuleTasks.add(ruleMatchTask)
                 }
@@ -182,9 +182,7 @@ class QualityCacheService @Autowired constructor(
                     var pipelineRefresh = true
                     if (refreshType == RefreshType.GET) { // 防止多实例间 修改和查询的并发场景，以免查询的旧数据覆盖掉修改后的新数据
                         val redisPipelineData = cacheService.getCacheRuleListByPipelineId(projectId, pipelineId!!)
-                        if (redisPipelineData != null) {
-                            pipelineRefresh = false
-                        }
+                        pipelineRefresh = redisPipelineData == null
                     }
                     if (pipelineRefresh) {
                         cacheService.setCacheRuleListByPipeline(projectId, pipelineId!!, redisRuleTasks)
@@ -196,9 +194,7 @@ class QualityCacheService @Autowired constructor(
 
                     if (refreshType == RefreshType.GET) { // 防止多实例间 修改和查询的并发场景，以免查询的旧数据覆盖掉修改后的新数据
                         val redisTemplateData = cacheService.getCacheRuleListByTemplateId(projectId, templateId!!)
-                        if (redisTemplateData != null) {
-                            templateRefresh = false
-                        }
+                        templateRefresh = redisTemplateData == null
                     }
                     if (templateRefresh) {
                         cacheService.setCacheRuleListByTemplateId(projectId, templateId!!, redisRuleTasks)
