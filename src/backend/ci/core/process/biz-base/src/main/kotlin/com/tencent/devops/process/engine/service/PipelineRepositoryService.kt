@@ -679,7 +679,7 @@ class PipelineRepositoryService constructor(
                         dslContext = transactionContext,
                         pipelineId = pipelineId,
                         creator = userId,
-                        version = version,
+                        version = version - 1,
                         modelString = lastVersionModelStr
                     )
                 }
