@@ -35,6 +35,7 @@ import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
+import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
@@ -44,6 +45,7 @@ import org.springframework.stereotype.Service
  */
 @Service
 class StartContainerStageCmd(
+    private val pipelineStageService: PipelineStageService,
     private val pipelineEventDispatcher: PipelineEventDispatcher
 ) : StageCmd {
 
@@ -107,6 +109,12 @@ class StartContainerStageCmd(
         var skipContainers = 0
         var stageStatus: BuildStatus? = null
 
+        // 查找最后一个结束状态的Stage
+        var previousStageStatus: BuildStatus? = null
+        if (commandContext.stage.controlOption?.finally == true) {
+            previousStageStatus = pipelineStageService.listStages(commandContext.stage.buildId)
+                .lastOrNull { it.status.isFinish() || it.status == BuildStatus.STAGE_SUCCESS }?.status
+        }
         // 同一Stage下的多个Container是并行
         commandContext.containers.forEach { c ->
             if (c.status.isCancel()) {
@@ -123,7 +131,12 @@ class StartContainerStageCmd(
                 stageStatus = BuildStatus.RUNNING
             } else if (!c.status.isFinish()) {
                 stageStatus = BuildStatus.RUNNING
-                sendBuildContainerEvent(commandContext, container = c, actionType = actionType, userId = userId)
+                sendBuildContainerEvent(commandContext,
+                    container = c,
+                    actionType = actionType,
+                    userId = userId,
+                    previousStageStatus = previousStageStatus
+                )
                 LOG.info("ENGINE|${c.buildId}|STAGE_CONTAINER_SEND|s(${c.stageId})|" +
                     "j(${c.containerId})|status=${c.status}|newActonType=$actionType")
             }
@@ -144,7 +157,8 @@ class StartContainerStageCmd(
         commandContext: StageContext,
         container: PipelineBuildContainer,
         actionType: ActionType,
-        userId: String
+        userId: String,
+        previousStageStatus: BuildStatus?
     ) {
         val errorCode: Int
         val errorTypeName: String?
@@ -165,6 +179,7 @@ class StartContainerStageCmd(
                 userId = userId,
                 buildId = container.buildId,
                 stageId = container.stageId,
+                previousStageStatus = previousStageStatus,
                 containerType = container.containerType,
                 containerId = container.containerId,
                 actionType = actionType,

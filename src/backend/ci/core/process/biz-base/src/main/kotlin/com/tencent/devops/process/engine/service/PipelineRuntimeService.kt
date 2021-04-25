@@ -1010,12 +1010,14 @@ class PipelineRuntimeService @Autowired constructor(
                         ModelUtils.initContainerOldData(container)
                         val controlOption = when (container) {
                             is NormalContainer -> PipelineBuildContainerControlOption(
-                                container.jobControlOption!!,
-                                container.mutexGroup
+                                jobControlOption = container.jobControlOption!!,
+                                inFinallyStage = stage.finally,
+                                mutexGroup = container.mutexGroup
                             )
                             is VMBuildContainer -> PipelineBuildContainerControlOption(
-                                container.jobControlOption!!,
-                                container.mutexGroup
+                                jobControlOption = container.jobControlOption!!,
+                                inFinallyStage = stage.finally,
+                                mutexGroup = container.mutexGroup
                             )
                             else -> null
                         }
@@ -1049,6 +1051,7 @@ class PipelineRuntimeService @Autowired constructor(
                         manualTrigger = false,
                         triggerUsers = null
                     ),
+                    finally = stage.finally,
                     fastKill = stage.fastKill
                 )
                 if (stage.name.isNullOrBlank()) stage.name = stage.id
