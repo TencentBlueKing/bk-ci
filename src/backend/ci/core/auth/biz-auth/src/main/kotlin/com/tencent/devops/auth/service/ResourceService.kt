@@ -67,7 +67,6 @@ class ResourceService @Autowired constructor(
         callBackInfo: CallbackRequestDTO,
         token: String
     ): CallbackBaseResponseDTO1? {
-        checkoutParentType(callBackInfo.filter.parent.type)
         if (callBackInfo.method == CallbackMethodEnum.SEARCH_INSTANCE) {
             if (!checkKeyword(callBackInfo.filter.keyword)) {
                 var result = SearchInstanceInfo()
@@ -82,6 +81,10 @@ class ResourceService @Autowired constructor(
         if (resourceInfo == null) {
             logger.warn("action $actionType not find resourceInfo, resourceType: $resourceType")
             return null
+        }
+
+        if (resourceInfo.system == DEFAULTSYSTEM) {
+            checkoutParentType(callBackInfo.filter.parent.type)
         }
 
         val request = authHttpClientService.buildPost(
