@@ -30,6 +30,7 @@ package com.tencent.devops.auth.service
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.auth.entity.ManagerChangeType
 import com.tencent.devops.auth.entity.ManagerOrganizationInfo
+import com.tencent.devops.auth.entity.StrategyChangeType
 import com.tencent.devops.auth.entity.UserChangeType
 import com.tencent.devops.auth.pojo.UserPermissionInfo
 import com.tencent.devops.common.api.util.Watcher
@@ -107,20 +108,28 @@ class UserPermissionService @Autowired constructor(
         return null
     }
 
-    fun refreshWhenStrategyChanger(strategyId: Int) {
-        val watcher = Watcher("refreshWhenStrategyChanger|$strategyId")
-        try {
-            watcher.start("getStrategy")
-            val managerIds = managerOrganizationService.getManagerIdByStrategyId(strategyId)
-            watcher.start("refreshByManagerId")
-            managerIds.forEach {
-                val manageOrganizationEntity = managerOrganizationService.getManagerInfo(it.toInt())
-                if (manageOrganizationEntity != null) {
-                    refreshByManagerId(manageOrganizationEntity)
+    fun refreshWhenStrategyChanger(strategyId: Int, action: StrategyChangeType) {
+        when (action) {
+            StrategyChangeType.UPDATE -> {
+                val watcher = Watcher("refreshWhenStrategyChanger|$strategyId")
+                try {
+                    watcher.start("getStrategy")
+                    val managerIds = managerOrganizationService.getManagerIdByStrategyId(strategyId)
+                    watcher.start("refreshByManagerId")
+                    managerIds.forEach {
+                        val manageOrganizationEntity = managerOrganizationService.getManagerInfo(it.toInt())
+                        if (manageOrganizationEntity != null) {
+                            refreshByManagerId(manageOrganizationEntity)
+                        }
+                    }
+                } finally {
+                    LogUtils.printCostTimeWE(watcher)
                 }
             }
-        } finally {
-            LogUtils.printCostTimeWE(watcher)
+            // 删除所有实例内的cache
+            StrategyChangeType.DELETE -> {
+                strategyService.deleteCache(strategyId.toString())
+            }
         }
     }
 
@@ -183,7 +192,10 @@ class UserPermissionService @Autowired constructor(
         userPermissionMap.put(userId, newManagerOrganizationMap)
     }
 
-    private fun refreshByManagerId(managerOrganizationEntity: ManagerOrganizationInfo, userId: String? = null) {
+    private fun refreshByManagerId(
+        managerOrganizationEntity: ManagerOrganizationInfo,
+        userId: String? = null
+    ) {
         logger.info("refreshByManagerId $managerOrganizationEntity $userId")
         val aliveUserInManager = managerUserService.aliveManagerListByManagerId(managerOrganizationEntity.id!!)
         if (aliveUserInManager == null) {
@@ -192,6 +204,12 @@ class UserPermissionService @Autowired constructor(
         }
         val strategyId = managerOrganizationEntity.strategyId
         val permissionMap = strategyService.getStrategy2Map(strategyId)
+
+        var permissionNeedMerge = false
+        // 如果一个组织对应多条策略,需取交集,否则就是直接替换用户权限集合
+        if (managerOrganizationService.countByOrg(managerOrganizationEntity.organizationId) > 1) {
+            permissionNeedMerge = true
+        }
 
         // 获取组织策略下相关用户
         val userIds = mutableListOf<String>()
@@ -215,7 +233,7 @@ class UserPermissionService @Autowired constructor(
                 val userPermission = userPermissionMap.getIfPresent(user)?.toMutableMap()
                 val organizationPermissionInfo = userPermission!![organizationId.toString()]
                 // 如果有其他策略包含了相同的组织权限, 需要合并两条策略的权限集合
-                if (organizationPermissionInfo != null) {
+                if (organizationPermissionInfo != null && permissionNeedMerge) {
                     val mergePermissionMap = mergePermission(
                         oldPermission = organizationPermissionInfo.permissionMap,
                         newPermission = permissionMap

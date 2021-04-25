@@ -48,13 +48,6 @@ class TxProjectPipelineCallBackUrlGeneratorImpl : ProjectPipelineCallBackUrlGene
         val encodeUrl = URLEncoder.encode(url, "UTF-8")
         return when (region) {
             CallBackNetWorkRegionType.IDC -> url
-            CallBackNetWorkRegionType.OSS -> {
-                if (gatewayIDCProxy.isNotBlank()) {
-                    "$gatewayIDCProxy/proxy-oss?url=$encodeUrl"
-                } else {
-                    url
-                }
-            }
             CallBackNetWorkRegionType.DEVNET -> {
                 if (gatewayIDCProxy.isNotBlank()) {
                     "$gatewayIDCProxy/proxy-devnet?url=$encodeUrl"

@@ -285,9 +285,9 @@ class ExperiencePublicDao {
         recordId: Long,
         online: Boolean? = null,
         endDate: LocalDateTime? = null
-    ) {
+    ): Int {
         val now = LocalDateTime.now()
-        with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
+        return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
             dslContext.update(this)
                 .set(UPDATE_TIME, now)
                 .let { if (null == online) it else it.set(ONLINE, online) }
@@ -331,6 +331,15 @@ class ExperiencePublicDao {
                 .set(DOWNLOAD_TIME, DOWNLOAD_TIME.plus(1))
                 .where(RECORD_ID.eq(recordId))
                 .execute()
+        }
+    }
+
+    fun filterRecordId(dslContext: DSLContext, records: Set<Long>): Result<Record1<Long>>? {
+        return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
+            dslContext.select(RECORD_ID)
+                .from(this)
+                .where(RECORD_ID.`in`(records))
+                .fetch()
         }
     }
 }

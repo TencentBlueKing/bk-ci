@@ -88,13 +88,13 @@ class StoreProjectRelDao {
 
     fun getTestProjectCodesByStoreCode(
         dslContext: DSLContext,
-        projectCode: String,
+        storeCode: String,
         storeType: StoreTypeEnum
     ): Result<Record1<String>>? {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
             return dslContext.select(PROJECT_CODE).from(this)
                 .where(
-                    PROJECT_CODE.eq(projectCode)
+                    STORE_CODE.eq(storeCode)
                         .and(STORE_TYPE.eq(storeType.type.toByte()))
                         .and(TYPE.eq(StoreProjectTypeEnum.TEST.type.toByte()))
                 )
