@@ -474,7 +474,8 @@ class BuildStartControl @Autowired constructor(
             pipelineEventDispatcher.dispatch(
                 PipelineBuildStageEvent(source = TAG,
                     projectId = projectId, pipelineId = pipelineId, userId = userId,
-                    buildId = buildId, stageId = model.stages[1].id!!, actionType = actionType
+                    buildId = buildId, stageId = model.stages[1].id!!, actionType = actionType,
+                    failedContainer = failedContainer
                 )
             )
         }

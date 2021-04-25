@@ -1206,6 +1206,7 @@ class PipelineRuntimeService @Autowired constructor(
                 userId = userId,
                 buildId = buildId,
                 taskId = firstTaskId,
+                failedContainer = retryFailedContainer,
                 status = startBuildStatus,
                 actionType = actionType
             ), // 监控事件

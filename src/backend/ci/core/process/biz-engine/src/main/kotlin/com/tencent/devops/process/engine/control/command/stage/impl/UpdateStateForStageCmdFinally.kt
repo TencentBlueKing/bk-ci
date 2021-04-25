@@ -181,7 +181,8 @@ class UpdateStateForStageCmdFinally(
                 userId = userId,
                 buildId = buildId,
                 stageId = stageId,
-                actionType = ActionType.START
+                actionType = ActionType.START,
+                failedContainer = failedContainer
             )
         )
     }

@@ -118,7 +118,8 @@ class StageControl @Autowired constructor(
             latestSummary = "init",
             watcher = watcher,
             variables = variables,
-            executeCount = executeCount
+            executeCount = executeCount,
+            failedContainer = failedContainer
         )
         watcher.stop()
 

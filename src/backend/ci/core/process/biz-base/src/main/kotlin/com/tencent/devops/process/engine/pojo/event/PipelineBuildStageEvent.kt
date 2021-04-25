@@ -45,6 +45,7 @@ data class PipelineBuildStageEvent(
     override val userId: String,
     val buildId: String,
     val stageId: String,
+    val failedContainer: Boolean? = false,
     override var actionType: ActionType,
     override var delayMills: Int = 0
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
