@@ -249,6 +249,13 @@ class PipelineBuildStageDao {
         }
     }
 
+    fun getMaxStage(dslContext: DSLContext, buildId: String): TPipelineBuildStageRecord? {
+        return with(T_PIPELINE_BUILD_STAGE) {
+            dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId)).orderBy(SEQ.desc()).limit(1).fetchAny()
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildStageDao::class.java)
     }

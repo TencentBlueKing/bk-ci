@@ -233,4 +233,12 @@ class PipelineStageService @Autowired constructor(
             )
         }
     }
+
+    fun getLastStage(buildId: String): PipelineBuildStage? {
+        val result = pipelineBuildStageDao.getMaxStage(dslContext, buildId)
+        if (result != null) {
+            return pipelineBuildStageDao.convert(result)
+        }
+        return null
+    }
 }

@@ -81,22 +81,31 @@ class UpdateStateForStageCmdFinally(
             if (commandContext.buildStatus == BuildStatus.SKIP) { // 跳过
                 pipelineStageService.skipStage(userId = event.userId, buildStage = stage)
             }
-            // 中断的事件或者快速失败
-            if (commandContext.buildStatus.isFailure() || commandContext.fastKill) {
-                cancelBuild(commandContext = commandContext)
-                LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_CANCEL|${event.stageId}|" +
-                    "${commandContext.buildStatus}|${commandContext.latestSummary}")
-            } else {
-                nextOrFinish(event, stage, commandContext)
-            }
+            nextOrFinish(event, stage, commandContext)
         }
     }
 
     private fun nextOrFinish(event: PipelineBuildStageEvent, stage: PipelineBuildStage, commandContext: StageContext) {
-        // 寻找next Stage
-        val nextStage = pipelineStageService.getStageBySeq(buildId = event.buildId, stageSeq = stage.seq + 1)
+
+        val nextStage: PipelineBuildStage?
+
+        // 中断的失败事件或者FastKill快速失败，寻找FinallyStage
+        val failNeedStop = commandContext.buildStatus.isFailure() || commandContext.fastKill
+        if (failNeedStop) {
+            nextStage = pipelineStageService.getLastStage(buildId = event.buildId)
+            if (nextStage == null || nextStage.seq == stage.seq || nextStage.controlOption?.finally != true) {
+
+                LOG.info("ENGINE|${stage.buildId}|${event.source}|STAGE_FAST_KILL|${stage.stageId}|" +
+                    "${commandContext.buildStatus}|${commandContext.latestSummary}")
+
+                return cancelBuild(commandContext = commandContext)
+            }
+        } else {
+            nextStage = pipelineStageService.getStageBySeq(buildId = event.buildId, stageSeq = stage.seq + 1)
+        }
+
         if (nextStage != null) {
-            LOG.info("ENGINE|${event.buildId}|${event.source}|NEXT_STAGE|${event.stageId}|" +
+            LOG.info("ENGINE|${event.buildId}|${event.source}|NEXT_STAGE|${event.stageId}|$failNeedStop|" +
                 "next_s(${nextStage.stageId})|e=${stage.executeCount}|summary:${commandContext.latestSummary}")
             event.sendNextStage(source = "From_s(${stage.stageId})", stageId = nextStage.stageId)
         } else {
@@ -106,7 +115,7 @@ class UpdateStateForStageCmdFinally(
                 commandContext.buildStatus = BuildStatus.SUCCEED
             }
             finishBuild(commandContext = commandContext)
-            LOG.info("ENGINE|${event.buildId}|${event.source}|STAGE_FINALLY|${event.stageId}|" +
+            LOG.info("ENGINE|${stage.buildId}|${event.source}|STAGE_FINALLY|${stage.stageId}|" +
                 "${commandContext.buildStatus}|${commandContext.latestSummary}")
         }
     }
