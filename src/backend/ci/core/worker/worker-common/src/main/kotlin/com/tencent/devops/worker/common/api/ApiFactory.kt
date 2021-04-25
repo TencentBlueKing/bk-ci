@@ -50,7 +50,7 @@ object ApiFactory {
         val candidateMap = HashMap<String, KClass<*>>()
         apiClasses?.forEach { apiClass ->
             if (!Modifier.isAbstract(apiClass.modifiers)) {
-                apiClass.interfaces?.forEach { apiInterfaceClass ->
+                apiClass.interfaces.forEach { apiInterfaceClass ->
                     var find = false
                     var priority = candidatePriorityMap[apiInterfaceClass.canonicalName]
                     val apiPriority = apiClass.getAnnotation(ApiPriority::class.java)

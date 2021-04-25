@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.builds
+package com.tencent.devops.engine.api
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
@@ -33,13 +33,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_NAME
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.process.pojo.RedisAtomsBuild
-import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -49,22 +45,19 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["BUILD_BUILD"], description = "构建-构建资源")
-@Path("/build/builds")
+@Api(tags = ["ENGINE_BUILD_JOB"], description = "引擎-构建机请求|此接口不接受服务间Feign，只接受构建机处请求")
+@Path("/build/worker")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface BuildBuildResource {
-
-    @Deprecated("replace by EngineBuildResource")
+interface BuildJobResource {
     @ApiOperation("构建机器启动成功")
     @PUT
     @Path("/started")
-    fun setStarted(
+    fun jobStarted(
         @ApiParam(value = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
@@ -73,11 +66,13 @@ interface BuildBuildResource {
         vmSeqId: String,
         @ApiParam(value = "构建机名称", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
-        vmName: String
+        vmName: String,
+        @ApiParam(value = "网络问题导致的重试次数", required = false)
+        @QueryParam("retryCount")
+        retryCount: String
     ): Result<BuildVariables>
 
-    @Deprecated("replace by EngineBuildResource")
-    @ApiOperation("构建机请求任务")
+    @ApiOperation("构建机请求获取任务")
     @GET
     @Path("/claim")
     fun claimTask(
@@ -92,8 +87,7 @@ interface BuildBuildResource {
         vmName: String
     ): Result<BuildTask>
 
-    @Deprecated("replace by EngineBuildResource")
-    @ApiOperation("构建机完成任务")
+    @ApiOperation("构建机Job完成任务")
     @POST
     @Path("/complete")
     fun completeTask(
@@ -110,11 +104,10 @@ interface BuildBuildResource {
         result: BuildTaskResult
     ): Result<Boolean>
 
-    @Deprecated("replace by EngineBuildResource")
-    @ApiOperation("End the seq build")
+    @ApiOperation("结束构建机Job")
     @POST
     @Path("/end")
-    fun endTask(
+    fun jobEnd(
         @ApiParam(value = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
@@ -126,11 +119,10 @@ interface BuildBuildResource {
         vmName: String
     ): Result<Boolean>
 
-    @Deprecated("replace by EngineBuildResource")
-    @ApiOperation("timeout & end the seq build")
+    @ApiOperation("Job超时触发")
     @POST
     @Path("/timeout")
-    fun timeoutTheBuild(
+    fun jobTimeout(
         @ApiParam("projectId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
         projectId: String,
@@ -145,11 +137,10 @@ interface BuildBuildResource {
         vmSeqId: String
     ): Result<Boolean>
 
-    @Deprecated("replace by EngineBuildResource")
-    @ApiOperation("Heartbeat")
+    @ApiOperation("Job心跳请求")
     @POST
     @Path("/heartbeat")
-    fun heartbeat(
+    fun jobHeartbeat(
         @ApiParam(value = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
@@ -159,84 +150,5 @@ interface BuildBuildResource {
         @ApiParam(value = "构建机名称", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_VM_NAME)
         vmName: String
-    ): Result<Boolean>
-
-    @ApiOperation("获取流水线构建单条历史")
-    @GET
-    // @Path("/projects/{projectId}/pipelines/{pipelineId}/buildNums/{buildNum}/history")
-    @Path("/{projectId}/{pipelineId}/{buildNum}/history")
-    fun getSingleHistoryBuild(
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("流水线buildNum", required = true)
-        @PathParam("buildNum")
-        buildNum: String,
-        @ApiParam("渠道号，默认为DS", required = false)
-        @QueryParam("channelCode")
-        channelCode: ChannelCode?
-    ): Result<BuildHistory?>
-
-    @ApiOperation("获取流水线最近成功构建")
-    @GET
-    @Path("/{projectId}/{pipelineId}/latestSuccessBuild")
-    fun getLatestSuccessBuild(
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("渠道号，默认为DS", required = false)
-        @QueryParam("channelCode")
-        channelCode: ChannelCode?
-    ): Result<BuildHistory?>
-
-    @ApiOperation("获取构建详情")
-    @GET
-    // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/detail")
-    @Path("/{projectId}/{pipelineId}/{buildId}/detail")
-    fun getBuildDetail(
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("流水线ID", required = true)
-        @PathParam("pipelineId")
-        pipelineId: String,
-        @ApiParam("构建ID", required = true)
-        @PathParam("buildId")
-        buildId: String,
-        @ApiParam("渠道号，默认为DS", required = false)
-        @QueryParam("channelCode")
-        channelCode: ChannelCode
-    ): Result<ModelDetail>
-
-    @ApiOperation("获取子流水线变量")
-    @GET
-    @Path("/taskIds/{taskId}/subVar")
-    fun getSubBuildVars(
-        @ApiParam("构建ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
-        buildId: String,
-        @ApiParam("任务ID", required = false)
-        @PathParam("taskId")
-        taskId: String
-    ): Result<Map<String, String>>
-
-    @ApiOperation("构建过程中主动更新atoms缓存信息")
-    @PUT
-    @Path("/project/updateRedisAtoms")
-    fun updateRedisAtoms(
-        @ApiParam("", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        projectId: String,
-        @ApiParam("构建ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
-        buildId: String,
-        @ApiParam("", required = true)
-        redisAtomsBuild: RedisAtomsBuild
     ): Result<Boolean>
 }
