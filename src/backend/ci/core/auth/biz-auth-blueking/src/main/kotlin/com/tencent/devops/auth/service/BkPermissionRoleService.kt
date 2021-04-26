@@ -29,7 +29,6 @@
 package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
 import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerRoleGroupVO
 import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
@@ -45,7 +44,12 @@ class BkPermissionRoleService @Autowired constructor(
     private val iamConfiguration: IamConfiguration
 ) : AbsPermissionRoleServiceImpl(iamManagerService, permissionGradeService, iamConfiguration) {
 
-    override fun createPermissionRole(userId: String, projectId: Int, projectCode: String, groupInfo: ProjectRoleDTO): Int {
+    override fun createPermissionRole(
+        userId: String,
+        projectId: Int,
+        projectCode: String,
+        groupInfo: ProjectRoleDTO
+    ): Int {
         return super.createPermissionRole(userId, projectId, projectCode, groupInfo)
     }
 

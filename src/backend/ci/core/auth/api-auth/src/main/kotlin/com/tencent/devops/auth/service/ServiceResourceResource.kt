@@ -23,27 +23,42 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.pojo.dto
+package com.tencent.devops.auth.service
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-import org.hibernate.validator.constraints.Length
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@ApiModel
-data class ProjectRoleDTO(
-    @ApiModelProperty("用户组名称")
-    @Length(min = 5, max = 128)
-    val name: String,
-    @ApiModelProperty("用户组描述")
-    @Length(min = 10)
-    val description: String,
-    @ApiModelProperty("用户组类型,默认分组对应BkAuthGroup 枚举, 自定义分组可以为“”")
-    val type: String,
-    @ApiModelProperty("是否为默认分组")
-    val defaultGroup: Boolean? = true,
-    @ApiModelProperty("项目名称")
-    val projectName: String
-)
+@Api(tags = ["AUTH_SERVICE_RESOUCRE"], description = "权限校验--资源相关")
+@Path("/service/auth/resource")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceResourceResource {
+
+    @POST
+    @Path("/projects/{projectCode}/createResource")
+    @ApiOperation("创建资源实例")
+    fun createResource(
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @ApiParam("userId", required = true)
+        userId: String,
+        @PathParam("projectCode")
+        @ApiParam("projectCode", required = true)
+        projectCode: String,
+
+        serviceCode: String,
+        resourceType: String,
+        resourceCode: String,
+        resourceName: String
+    )
+}

@@ -23,27 +23,44 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.pojo.dto
+package com.tencent.devops.auth.service
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-import org.hibernate.validator.constraints.Length
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
 
-@ApiModel
-data class ProjectRoleDTO(
-    @ApiModelProperty("用户组名称")
-    @Length(min = 5, max = 128)
-    val name: String,
-    @ApiModelProperty("用户组描述")
-    @Length(min = 10)
-    val description: String,
-    @ApiModelProperty("用户组类型,默认分组对应BkAuthGroup 枚举, 自定义分组可以为“”")
-    val type: String,
-    @ApiModelProperty("是否为默认分组")
-    val defaultGroup: Boolean? = true,
-    @ApiModelProperty("项目名称")
-    val projectName: String
-)
+interface PermissionService {
+    fun validateUserResourcePermission(
+        userId: String,
+        resourceType: String,
+        projectCode: String,
+        permission: String
+    ): Boolean
+
+    fun validateUserResourcePermissionByRelation(
+        userId: String,
+        resourceType: String,
+        projectCode: String,
+        permission: String,
+        relationResourceType: String?
+    ): Boolean
+
+    fun getUserResourceByPermission(
+        userId: String,
+        serviceCode: String,
+        resourceType: String,
+        projectCode: String,
+        permission: String
+    ): List<String> {
+        TODO("Not yet implemented")
+    }
+
+    fun getUserResourcesByPermissions(
+        userId: String,
+        serviceCode: String,
+        resourceType: String,
+        projectCode: String,
+        permission: Set<AuthPermission>
+    ): Map<AuthPermission, List<String>>
+}

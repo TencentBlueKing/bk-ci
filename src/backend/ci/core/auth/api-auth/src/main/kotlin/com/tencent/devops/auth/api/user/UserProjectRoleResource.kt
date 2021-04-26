@@ -28,7 +28,6 @@
 
 package com.tencent.devops.auth.api.user
 
-import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
 import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerRoleGroupVO
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
@@ -83,7 +82,7 @@ interface UserProjectRoleResource {
         @ApiParam(name = "角色Id", required = true)
         @PathParam("roleId")
         roleId: Int,
-        @ApiParam(name= "用户组信息", required = true)
+        @ApiParam(name = "用户组信息", required = true)
         groupInfo: ProjectRoleDTO
     ): Result<Boolean>
 
