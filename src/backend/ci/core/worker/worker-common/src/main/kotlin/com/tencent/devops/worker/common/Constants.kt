@@ -45,4 +45,6 @@ const val LOG_SUBTAG_FLAG = "##subTag##"
 
 const val LOG_SUBTAG_FINISH_FLAG = "##subTagFinish##"
 
+const val LOG_TASK_LINE_LIMIT = 1000000
+
 val PIPELINE_SCRIPT_ATOM_CODE = listOf("PipelineScriptDev", "PipelineScriptTest", "PipelineScript")

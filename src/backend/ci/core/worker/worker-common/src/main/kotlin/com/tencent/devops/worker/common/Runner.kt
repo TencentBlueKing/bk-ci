@@ -83,6 +83,7 @@ object Runner {
                 LoggerService.stop()
                 Heartbeat.stop()
                 EngineService.endBuild()
+                LoggerService.archiveLogFiles()
             }
         } catch (ignore: Exception) {
             failed = true
