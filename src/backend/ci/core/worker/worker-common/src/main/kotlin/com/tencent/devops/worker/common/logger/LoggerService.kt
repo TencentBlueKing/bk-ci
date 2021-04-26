@@ -302,7 +302,7 @@ object LoggerService {
             val result = logResourceApi.addLogMultiLine(logMessages)
             when {
                 result.status == 503 || result.status == 509 -> {
-                    logger.warn("Log storage status is wrong：${result.message}")
+                    logger.warn("Log service storage is unable：${result.message}")
                     AgentEnv.setLogMode(LogMode.LOCAL)
                 }
                 result.isNotOk() -> {
