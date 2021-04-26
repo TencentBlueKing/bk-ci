@@ -42,7 +42,11 @@ class EventTypeFilter(
     }
 
     override fun doFilter(response: WebhookFilterResponse): Boolean {
-        return isAllowedByEventType() && isAllowedByMrAction()
+        return if (triggerOnEventType == CodeEventType.MERGE_REQUEST) {
+            isAllowedByMrAction()
+        } else {
+            isAllowedByEventType()
+        }
     }
 
     private fun isAllowedByEventType(): Boolean {
