@@ -80,6 +80,8 @@ interface GitHookTriggerHandler : WebhookTriggerHandler {
 
     fun getUser(event: WebHookEvent): String
 
+    fun getAction(event: WebHookEvent): String? = null
+
     private fun initCommonFilters(
         event: WebHookEvent,
         pipelineId: String,
@@ -95,7 +97,8 @@ interface GitHookTriggerHandler : WebhookTriggerHandler {
             val eventTypeFilter = EventTypeFilter(
                 pipelineId = pipelineId,
                 triggerOnEventType = getEventType(),
-                eventType = eventType
+                eventType = eventType,
+                action = getAction(event)
             )
             val userFilter = UserFilter(
                 pipelineId = pipelineId,

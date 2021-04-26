@@ -62,6 +62,10 @@ class TGitMrTriggerHandler(
         return (event as GitMergeRequestEvent).user.username
     }
 
+    override fun getAction(event: WebHookEvent): String? {
+        return (event as GitMergeRequestEvent).object_attributes.action
+    }
+
     override fun getEventFilters(
         event: WebHookEvent,
         projectId: String,
