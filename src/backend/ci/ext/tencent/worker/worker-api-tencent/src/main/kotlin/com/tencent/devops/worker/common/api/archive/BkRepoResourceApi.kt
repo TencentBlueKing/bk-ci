@@ -64,6 +64,7 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.net.URLEncoder
 import java.util.Base64
+import java.util.Locale
 
 class BkRepoResourceApi : AbstractBuildResourceApi() {
     fun useBkRepo(): Boolean {
@@ -211,6 +212,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
                 }
                 file.name.endsWith(".apk") -> {
                     val apkFile = ApkFile(file)
+                    apkFile.preferredLocale = Locale.SIMPLIFIED_CHINESE
                     val meta = apkFile.apkMeta
                     val result = mutableMapOf(
                         ARCHIVE_PROPS_APP_VERSION to meta.versionName,
