@@ -58,10 +58,10 @@ class EventTypeFilter(
     }
 
     private fun isMrAndMergeAction(): Boolean {
-        return triggerOnEventType == CodeEventType.MERGE_REQUEST && action == "merge"
+        return eventType == CodeEventType.MERGE_REQUEST && action == "merge"
     }
 
     private fun isMrAcceptNotMergeAction(): Boolean {
-        return triggerOnEventType == CodeEventType.MERGE_REQUEST_ACCEPT && action != "merge"
+        return eventType == CodeEventType.MERGE_REQUEST_ACCEPT && action != "merge"
     }
 }
