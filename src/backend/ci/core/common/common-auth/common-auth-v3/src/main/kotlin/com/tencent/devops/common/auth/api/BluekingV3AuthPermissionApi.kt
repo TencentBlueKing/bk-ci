@@ -48,7 +48,7 @@ class BluekingV3AuthPermissionApi @Autowired constructor(
     private val policyService: PolicyService,
     private val redisOperation: RedisOperation,
     private val iamConfiguration: IamConfiguration
-): AuthPermissionApi {
+) : AuthPermissionApi {
     override fun addResourcePermissionForUsers(
         userId: String,
         projectCode: String,

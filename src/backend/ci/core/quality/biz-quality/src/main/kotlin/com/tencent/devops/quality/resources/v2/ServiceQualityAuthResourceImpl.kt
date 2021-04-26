@@ -39,7 +39,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ServiceQualityAuthResourceImpl @Autowired constructor(
     val authQualityService: AuthQualityService
-): ServiceQualityAuthResource {
+) : ServiceQualityAuthResource {
     override fun qualityRuleInfo(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO? {
         val method = callBackInfo.method
         val page = callBackInfo.page
