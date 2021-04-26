@@ -43,11 +43,11 @@ object EnvUtils {
         return parseWithDoubleCurlyBraces(value, data, replaceWithEmpty, isEscape)
     }
 
-    private fun parseWithDoubleCurlyBraces(
+    fun parseWithDoubleCurlyBraces(
         value: String,
         data: Map<String, String>,
-        replaceWithEmpty: Boolean,
-        escape: Boolean
+        replaceWithEmpty: Boolean = false,
+        escape: Boolean = false
     ): String {
         val newValue = StringBuilder()
         var index = 0

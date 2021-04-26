@@ -37,6 +37,7 @@ import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.quality.QualityGatewaySDKApi
 import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.script.bat.WindowsScriptTask
@@ -68,6 +69,7 @@ open class ScriptTask : ITask() {
                     errorType = ErrorType.USER,
                     errorCode = ErrorCode.USER_INPUT_INVAILD
                 ), "UTF-8").replace("\r", "")
+        EnvUtils.parseWithDoubleCurlyBraces(script, buildVariables.variables)
         logger.info("Start to execute the script task($scriptType) ($script)")
         val command = CommandFactory.create(scriptType)
         val buildId = buildVariables.buildId
