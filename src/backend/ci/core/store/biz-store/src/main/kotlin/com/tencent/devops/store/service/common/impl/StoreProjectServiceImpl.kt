@@ -33,13 +33,17 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
+import com.tencent.devops.store.dao.common.StoreStatisticDailyDao
 import com.tencent.devops.store.dao.common.StoreStatisticDao
 import com.tencent.devops.store.pojo.common.InstalledProjRespItem
+import com.tencent.devops.store.pojo.common.StoreDailyStatisticRequest
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreProjectService
@@ -49,6 +53,7 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.Date
 
 /**
  * store项目通用业务逻辑类
@@ -62,7 +67,9 @@ class StoreProjectServiceImpl @Autowired constructor(
     private val client: Client,
     private val storeProjectRelDao: StoreProjectRelDao,
     private val storeStatisticDao: StoreStatisticDao,
-    private val storeUserService: StoreUserService
+    private val storeStatisticDailyDao: StoreStatisticDailyDao,
+    private val storeUserService: StoreUserService,
+    private val redisOperation: RedisOperation
 ) : StoreProjectService {
 
     private val logger = LoggerFactory.getLogger(StoreProjectServiceImpl::class.java)
@@ -81,7 +88,6 @@ class StoreProjectServiceImpl @Autowired constructor(
             // 获取用户有权限的项目列表
             watcher.start("get accessible projects")
             val projectList = client.get(ServiceProjectResource::class).list(userId).data
-            logger.info("$userId accessible projectList is :size=${projectList?.size},$projectList")
             if (projectList?.count() == 0) {
                 return Result(mutableListOf())
             }
@@ -120,6 +126,19 @@ class StoreProjectServiceImpl @Autowired constructor(
         publicFlag: Boolean,
         channelCode: ChannelCode
     ): Result<Boolean> {
+        val testProjectCodeList = storeProjectRelDao.getTestProjectCodesByStoreCode(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeType
+        )?.map { it.value1() }
+        if (!testProjectCodeList.isNullOrEmpty()) {
+            // 剔除需要安装的调试项目
+            projectCodeList.removeAll(testProjectCodeList)
+        }
+        if (projectCodeList.isNullOrEmpty()) {
+            // 如果全都是调试项目，无需安装
+            return Result(true)
+        }
         val validateInstallResult = validateInstallPermission(
             publicFlag = publicFlag,
             userId = userId,
@@ -158,17 +177,72 @@ class StoreProjectServiceImpl @Autowired constructor(
             }
             // 更新安装量
             if (increment > 0) {
-                storeStatisticDao.updateDownloads(
-                    dslContext = context,
-                    userId = userId,
-                    storeId = storeId,
-                    storeCode = storeCode,
-                    storeType = storeType.type.toByte(),
-                    increment = increment
-                )
+                val redisLock = RedisLock(redisOperation, "store:$storeId", 10)
+                try {
+                    redisLock.lock()
+                    updateStoreIncrement(
+                        context = context,
+                        userId = userId,
+                        storeId = storeId,
+                        storeCode = storeCode,
+                        storeType = storeType,
+                        increment = increment
+                    )
+                } finally {
+                    redisLock.unlock()
+                }
             }
         }
         return Result(true)
+    }
+
+    private fun updateStoreIncrement(
+        context: DSLContext,
+        userId: String,
+        storeId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        increment: Int
+    ) {
+        storeStatisticDao.updateDownloads(
+            dslContext = context,
+            userId = userId,
+            storeId = storeId,
+            storeCode = storeCode,
+            storeType = storeType.type.toByte(),
+            increment = increment
+        )
+        val storeStatisticsRecord = storeStatisticDao.batchGetStatisticByStoreCode(
+            dslContext = context,
+            storeCodeList = listOf(storeCode),
+            storeType = storeType.type.toByte()
+        )
+        val downloads = if (storeStatisticsRecord.isNotEmpty) storeStatisticsRecord[0].value1().toInt() else 0
+        val storeDailyStatistic = storeStatisticDailyDao.getDailyStatisticByCode(
+            dslContext = context,
+            storeCode = storeCode,
+            storeType = storeType.type.toByte(),
+            statisticsTime = DateTimeUtil.convertDateToFormatLocalDateTime(Date(), "yyyy-MM-dd")
+        )
+        val storeDailyStatisticRequest = StoreDailyStatisticRequest(
+            totalDownloads = downloads,
+            dailyDownloads = storeDailyStatistic?.dailyDownloads ?: 0 + increment
+        )
+        if (storeDailyStatistic != null) {
+            storeStatisticDailyDao.updateDailyStatisticData(
+                dslContext = context,
+                storeCode = storeCode,
+                storeType = storeType.type.toByte(),
+                storeDailyStatisticRequest = storeDailyStatisticRequest
+            )
+        } else {
+            storeStatisticDailyDao.insertDailyStatisticData(
+                dslContext = context,
+                storeCode = storeCode,
+                storeType = storeType.type.toByte(),
+                storeDailyStatisticRequest = storeDailyStatisticRequest
+            )
+        }
     }
 
     override fun validateInstallPermission(

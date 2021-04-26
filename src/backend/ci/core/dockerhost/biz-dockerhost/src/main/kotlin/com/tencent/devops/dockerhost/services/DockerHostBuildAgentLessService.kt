@@ -40,7 +40,6 @@ import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.common.ErrorCodeEnum
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.AlertApi
-import com.tencent.devops.dockerhost.dispatch.BuildResourceApi
 import com.tencent.devops.dockerhost.dispatch.DockerEnv
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
 import com.tencent.devops.dockerhost.exception.ContainerException
@@ -68,8 +67,7 @@ class DockerHostBuildAgentLessService(
     dockerHostBuildApi: DockerHostBuildResourceApi,
     private val dockerHostConfig: DockerHostConfig,
     private val dockerHostWorkSpaceService: DockerHostWorkSpaceService,
-    private val alertApi: AlertApi,
-    private val buildResourceApi: BuildResourceApi
+    private val alertApi: AlertApi
 ) : AbstractDockerHostBuildService(dockerHostConfig, dockerHostBuildApi) {
 
     override fun createContainer(dockerHostBuildInfo: DockerHostBuildInfo): String {
@@ -233,17 +231,6 @@ class DockerHostBuildAgentLessService(
             logger.info("Clear container, containerId: ${container.id}")
             httpDockerCli.removeContainerCmd(container.id).exec()
         }
-    }
-
-    fun reportContainerId(buildId: String, vmSeqId: String, containerId: String): Boolean {
-        val result = buildResourceApi.reportContainerId(buildId, vmSeqId, containerId, CommonUtils.getInnerIP())
-        if (result != null) {
-            if (result.isNotOk()) {
-                logger.info("reportContainerId return msg: ${result.message}")
-                return false
-            }
-        }
-        return result!!.data!!
     }
 
     private fun getWorkspace(pipelineId: String, vmSeqId: String): String {

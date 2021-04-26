@@ -37,7 +37,7 @@ data class DeptInfo(
     @ApiModelProperty("机构名称", required = true)
     val deptName: String,
     @ApiModelProperty("机构审核状态(0：待审核 1：审核通过 2：审核驳回)", required = false)
-    val status: String?,
+    val status: String? = null,
     @ApiModelProperty("批注", required = false)
-    val comment: String?
+    val comment: String? = null
 )

@@ -58,7 +58,7 @@ class RedisLockByValue(
 
         private val logger = LoggerFactory.getLogger(RedisLockByValue::class.java)
 
-        private val UNLOCK_LUA =
+        private const val UNLOCK_LUA =
             "if redis.call('get', KEYS[1]) == ARGV[1] then return redis.call('del', KEYS[1]) else return 0 end"
     }
 

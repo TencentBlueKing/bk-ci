@@ -35,7 +35,7 @@ enum class ErrorType(val typeName: String, val num: Int) {
 
     companion object {
 
-        fun getErrorType(name: String): ErrorType? {
+        fun getErrorType(name: String?): ErrorType? {
             values().forEach { enumObj ->
                 if (enumObj.name == name) {
                     return enumObj

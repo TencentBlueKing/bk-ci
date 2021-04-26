@@ -28,11 +28,9 @@
 package com.tencent.devops.process.template.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.pojo.PipelineTemplate
 import com.tencent.devops.process.pojo.template.TemplateDetailInfo
@@ -42,6 +40,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import org.springframework.util.StringUtils
 
 @Suppress("ALL")
 @Service
@@ -101,68 +100,22 @@ class PipelineTemplateService @Autowired constructor(
         return map
     }
 
-    fun addTemplate(
-        userId: String,
-        author: String,
-        name: String,
-        type: TemplateType,
-        category: String,
-        icon: String?,
-        logoUrl: String?,
-        projectCode: String,
-        model: Model,
-        srcTemplateId: String?
-    ) {
-        val atomNum = generateAtomNum(model)
-        pipelineTemplateDao.addTemplate(
-            dslContext, name, userId, type.name, category, icon, logoUrl, projectCode, author,
-            atomNum, objectMapper.writeValueAsString(model), srcTemplateId
+    fun getTemplateDetailInfo(templateCode: String): Result<TemplateDetailInfo?> {
+        logger.info("getTemplateDetailInfo templateCode is:$templateCode")
+        var templateRecord = templateDao.getLatestTemplate(dslContext, templateCode)
+        if (templateRecord.srcTemplateId != null && templateRecord.type == TemplateType.CONSTRAINT.name) {
+            templateRecord = templateDao.getLatestTemplate(dslContext, templateRecord.srcTemplateId)
+        }
+        return Result(
+            TemplateDetailInfo(
+                templateCode = templateRecord.id,
+                templateName = templateRecord.templateName,
+                templateModel = if (!StringUtils.isEmpty(templateRecord.template)) JsonUtil.to(
+                    templateRecord.template,
+                    Model::class.java
+                ) else null
+            )
         )
-    }
-
-    private fun generateAtomNum(model: Model): Int {
-        var atomNum = 0
-        model.stages.forEach { s ->
-            s.containers.forEach { c ->
-                atomNum += c.elements.size
-            }
-        }
-        return atomNum
-    }
-
-    fun getTemplateDetailInfo(templateCode: String, publicFlag: Boolean): Result<TemplateDetailInfo?> {
-        logger.info("the userId is:$templateCode,publicFlag is:$publicFlag")
-        if (publicFlag) {
-            val publicTemplateRecord = pipelineTemplateDao.getTemplate(dslContext, templateCode.toLong())
-                ?: return MessageCodeUtil.generateResponseDataObject(
-                    CommonMessageCode.PARAMETER_IS_INVALID,
-                    arrayOf(templateCode)
-                )
-            logger.info("the publicTemplateRecord is:$publicTemplateRecord")
-            return Result(
-                TemplateDetailInfo(
-                    templateCode = publicTemplateRecord.id.toString(),
-                    templateName = publicTemplateRecord.templateName,
-                    templateModel = if (publicTemplateRecord.template.isNotEmpty()) JsonUtil.to(
-                        publicTemplateRecord.template,
-                        Model::class.java
-                    ) else null
-                )
-            )
-        } else {
-            val customizeTemplateRecord = templateDao.getLatestTemplate(dslContext, templateCode)
-            logger.info("the customizeTemplateRecord is:$customizeTemplateRecord")
-            return Result(
-                TemplateDetailInfo(
-                    templateCode = customizeTemplateRecord.id,
-                    templateName = customizeTemplateRecord.templateName,
-                    templateModel = if (customizeTemplateRecord.template.isNotEmpty()) JsonUtil.to(
-                        customizeTemplateRecord.template,
-                        Model::class.java
-                    ) else null
-                )
-            )
-        }
     }
 
     companion object {

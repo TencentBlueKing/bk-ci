@@ -125,6 +125,17 @@ class PipelineLabelDao {
         }
     }
 
+    fun countByGroupId(
+        dslContext: DSLContext,
+        groupId: Long
+    ): Long {
+        with(TPipelineLabel.T_PIPELINE_LABEL) {
+            return dslContext.selectCount().from(this)
+                .where(GROUP_ID.eq(groupId))
+                .fetchOne(0, Long::class.java)
+        }
+    }
+
     fun getByGroupIds(
         dslContext: DSLContext,
         groupId: Set<Long>

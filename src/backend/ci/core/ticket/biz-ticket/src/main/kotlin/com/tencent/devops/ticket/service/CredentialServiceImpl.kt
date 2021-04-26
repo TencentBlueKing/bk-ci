@@ -77,16 +77,16 @@ class CredentialServiceImpl @Autowired constructor(
             )
         }
         if (!credential.credentialName.isNullOrBlank()) {
-            if (credential.credentialName!!.length > credentialIdMaxSize) {
+            if (credential.credentialName!!.length > CREDENTIAL_NAME_MAX_SIZE) {
                 throw ErrorCodeException(
                     errorCode = TicketMessageCode.CREDENTIAL_NAME_TOO_LONG,
-                    defaultMessage = "凭证名称不能超过32位"
+                    defaultMessage = "凭证别名不能超过$CREDENTIAL_NAME_MAX_SIZE 位"
                 )
             }
             if (!CREDENTIAL_NAME_REGEX.matches(credential.credentialName!!)) {
                 throw ErrorCodeException(
                     errorCode = TicketMessageCode.CREDENTIAL_NAME_ILLEGAL,
-                    defaultMessage = "凭证名称必须是汉字、英文字母、数字、连字符(-)、下划线(_)或英文句号(.)"
+                    defaultMessage = "凭证别名必须是汉字、英文字母、数字、连字符(-)、下划线(_)或英文句号(.)"
                 )
             }
         }
@@ -110,8 +110,6 @@ class CredentialServiceImpl @Autowired constructor(
         )
     }
 
-    private val credentialIdMaxSize = 32
-
     override fun userCreate(
         userId: String,
         projectId: String,
@@ -129,7 +127,7 @@ class CredentialServiceImpl @Autowired constructor(
             throw ErrorCodeException(
                 errorCode = TicketMessageCode.CREDENTIAL_EXIST,
                 params = arrayOf(credential.credentialId),
-                defaultMessage = "凭证标识${credential.credentialId}已存在"
+                defaultMessage = "凭证名称${credential.credentialId}已存在"
             )
         }
         if (!credentialHelper.isValid(credential)) {
@@ -138,29 +136,29 @@ class CredentialServiceImpl @Autowired constructor(
                 defaultMessage = "凭证格式不正确"
             )
         }
-        if (credential.credentialId.length > credentialIdMaxSize) {
+        if (credential.credentialId.length > CREDENTIAL_ID_MAX_SIZE) {
             throw ErrorCodeException(
                 errorCode = TicketMessageCode.CREDENTIAL_ID_TOO_LONG,
-                defaultMessage = "凭证ID不能超过32位"
+                defaultMessage = "凭证名称不能超过$CREDENTIAL_ID_MAX_SIZE 位"
             )
         }
         if (!CREDENTIAL_ID_REGEX.matches(credential.credentialId)) {
             throw ErrorCodeException(
                 errorCode = TicketMessageCode.CREDENTIAL_ID_ILLEGAL,
-                defaultMessage = "凭证标识必须是英文字母、数字或下划线(_)"
+                defaultMessage = "凭证名称必须是英文字母、数字或下划线(_)"
             )
         }
         if (!credential.credentialName.isNullOrBlank()) {
-            if (credential.credentialName!!.length > credentialIdMaxSize) {
+            if (credential.credentialName!!.length > CREDENTIAL_NAME_MAX_SIZE) {
                 throw ErrorCodeException(
                     errorCode = TicketMessageCode.CREDENTIAL_NAME_TOO_LONG,
-                    defaultMessage = "凭证名称不能超过32位"
+                    defaultMessage = "凭证别名不能超过$CREDENTIAL_NAME_MAX_SIZE 位"
                 )
             }
             if (!CREDENTIAL_NAME_REGEX.matches(credential.credentialName!!)) {
                 throw ErrorCodeException(
                     errorCode = TicketMessageCode.CREDENTIAL_NAME_ILLEGAL,
-                    defaultMessage = "凭证名称必须是汉字、英文字母、数字、连字符(-)、下划线(_)或英文句号(.)"
+                    defaultMessage = "凭证别名必须是汉字、英文字母、数字、连字符(-)、下划线(_)或英文句号(.)"
                 )
             }
         }
@@ -566,7 +564,9 @@ class CredentialServiceImpl @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(CredentialServiceImpl::class.java)
+        private const val CREDENTIAL_ID_MAX_SIZE = 40
+        private const val CREDENTIAL_NAME_MAX_SIZE = 30
         private val CREDENTIAL_ID_REGEX = Regex("^[0-9a-zA-Z_]+$")
-        private val CREDENTIAL_NAME_REGEX = Regex("^[a-zA-Z0-9_\u4e00-\u9fa5-]+$")
+        private val CREDENTIAL_NAME_REGEX = Regex("^[a-zA-Z0-9_\u4e00-\u9fa5-.]+$")
     }
 }
