@@ -382,7 +382,7 @@ class SignServiceImpl @Autowired constructor(
             } catch (e: Exception) {
                 ""
             }
-            //应用名称
+            // 应用名称
             val appName = try {
                 (rootDict.objectForKey("CFBundleDisplayName") as NSString).toString()
             } catch (e: Exception) {
