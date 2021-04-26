@@ -33,6 +33,7 @@ import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.LOG_SUBTAG_FINISH_FLAG
 import com.tencent.devops.worker.common.LOG_SUBTAG_FLAG
+import com.tencent.devops.worker.common.LOG_TASK_LINE_LIMIT
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.log.LogSDKApi
 import com.tencent.devops.worker.common.env.AgentEnv
@@ -57,6 +58,7 @@ object LoggerService {
     private val logger = LoggerFactory.getLogger(LoggerService::class.java)
     private var future: Future<Boolean>? = null
     private val running = AtomicBoolean(true)
+    private var currentTaskLineNo = 0
 
     /**
      * 构建日志处理的异步线程池
@@ -122,6 +124,7 @@ object LoggerService {
                 if (size >= 200 || (size > 0 && (now - lastSaveTime > 3 * 1000))) {
                     flush()
                     lastSaveTime = now
+                    currentTaskLineNo += size
                 }
             }
             if (logMessages.isNotEmpty()) {
@@ -210,7 +213,9 @@ object LoggerService {
             executeCount = executeCount
         )
         // 如果已经进入Job执行任务，则可以做日志本地落盘
-        if (elementId.isNotBlank() && pipelineLogDir != null) saveLocalLog(logMessage)
+        if (elementId.isNotBlank() && pipelineLogDir != null && currentTaskLineNo <= LOG_TASK_LINE_LIMIT) {
+            saveLocalLog(logMessage)
+        }
 
         try {
             this.queue.put(logMessage)
@@ -345,6 +350,7 @@ object LoggerService {
         subTag: String? = null
     ) {
         try {
+            currentTaskLineNo = 0
             logger.info("Start to finish the log")
             val result = logResourceApi.finishLog(tag, jobId, executeCount, subTag)
             if (result.isNotOk()) {
