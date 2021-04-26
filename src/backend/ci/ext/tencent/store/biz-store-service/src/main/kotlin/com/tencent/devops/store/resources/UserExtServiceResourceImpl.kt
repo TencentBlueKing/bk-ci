@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.resources
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.UserExtServiceResource
@@ -38,7 +39,7 @@ import com.tencent.devops.store.pojo.enums.ExtServiceSortTypeEnum
 import com.tencent.devops.store.pojo.enums.ServiceTypeEnum
 import com.tencent.devops.store.pojo.vo.ExtServiceMainItemVo
 import com.tencent.devops.store.pojo.vo.SearchExtServiceVO
-import com.tencent.devops.store.pojo.vo.ServiceVersionListResp
+import com.tencent.devops.store.pojo.vo.ServiceVersionListItem
 import com.tencent.devops.store.pojo.vo.ServiceVersionVO
 import com.tencent.devops.store.service.ExtServiceBaseService
 import com.tencent.devops.store.service.ExtServiceSearchService
@@ -86,8 +87,13 @@ class UserExtServiceResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getServiceVersionsByCode(userId: String, serviceCode: String): Result<ServiceVersionListResp> {
-        return extServiceBaseService.getServiceVersionListByCode(serviceCode, userId)
+    override fun getServiceVersionsByCode(
+        userId: String,
+        serviceCode: String,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<ServiceVersionListItem>> {
+        return extServiceBaseService.getServiceVersionListByCode(userId, serviceCode, page, pageSize)
     }
 
     override fun createMediaAndVisible(userId: String, serviceId: String, submitInfo: ExtSubmitDTO): Result<Boolean> {

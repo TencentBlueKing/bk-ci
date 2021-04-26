@@ -50,6 +50,7 @@ import com.tencent.devops.project.service.ProjectLocalService
 import com.tencent.devops.project.service.ProjectMemberService
 import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.TxProjectPermissionService
+import com.tencent.devops.project.service.iam.ProjectIamV0Service
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -58,7 +59,8 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
     private val projectPermissionService: TxProjectPermissionService,
     private val projectLocalService: ProjectLocalService,
     private val projectService: ProjectService,
-    private val projectMemberService: ProjectMemberService
+    private val projectMemberService: ProjectMemberService,
+    private val projectIamV0Service: ProjectIamV0Service
 ) : ServiceTxProjectResource {
     override fun addManagerForProject(userId: String, addManagerRequest: AddManagerRequest): Result<Boolean> {
         return Result(bsAuthPermissionApi.addResourcePermissionForUsers(
@@ -246,7 +248,7 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         createUser: String,
         createInfo: ProjectCreateUserDTO
     ): Result<Boolean> {
-        return Result(projectLocalService.createUser2Project(
+        return Result(projectIamV0Service.createUser2Project(
             createUser = createUser,
             userIds = createInfo.userIds!!,
             projectCode = createInfo.projectId,
@@ -275,7 +277,7 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         createUser: String,
         createInfo: PipelinePermissionInfo
     ): Result<Boolean> {
-        return Result(projectLocalService.createPipelinePermission(
+        return Result(projectIamV0Service.createPipelinePermission(
             createUser = createUser,
             projectId = createInfo.projectId,
             userId = createInfo.userId,

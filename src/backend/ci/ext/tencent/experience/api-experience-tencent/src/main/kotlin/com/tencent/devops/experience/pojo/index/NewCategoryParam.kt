@@ -25,15 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo
+package com.tencent.devops.experience.pojo.index
 
-import io.swagger.annotations.ApiModelProperty
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.PathParam
+import javax.ws.rs.QueryParam
 
-data class ExtServiceStatistic(
-    @ApiModelProperty("下载量")
-    val downloads: Int,
-    @ApiModelProperty("评论量")
-    val commentCnt: Int,
-    @ApiModelProperty("星级评分")
-    val score: Double?
-)
+class NewCategoryParam {
+    @ApiParam("类别ID,1--游戏,2--工具,3--生活,4--社交", required = true)
+    @PathParam("categoryId")
+    var categoryId: Int = 0
+
+    @ApiParam("页目", required = false)
+    @QueryParam("page")
+    var page: Int = 0
+
+    @ApiParam("每页数目", required = false)
+    @QueryParam("pageSize")
+    var pageSize: Int = 0
+
+    @ApiParam("是否包含外部跳转", required = false)
+    @QueryParam("includeExternalUrl")
+    var includeExternalUrl: Boolean? = false
+}

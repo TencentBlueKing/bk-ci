@@ -23,22 +23,33 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.store.service.ideatom
+package com.tencent.devops.project.api.op.pojo
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.atom.AtomStatistic
+import com.fasterxml.jackson.annotation.JsonProperty
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-interface MarketIdeAtomStatisticService {
-
-    /**
-     * 根据标识获取统计数据
-     */
-    fun getStatisticByCode(userId: String, atomCode: String): Result<AtomStatistic>
-
-    /**
-     * 根据批量标识获取统计数据
-     */
-    fun getStatisticByCodeList(atomCodeList: List<String>, statFiledList: List<String>): Result<HashMap<String, AtomStatistic>>
-}
+@ApiModel("项目consul tag修改入参")
+data class OpProjectTagUpdateDTO(
+    @JsonProperty(value = "routerTag", required = true)
+    @ApiModelProperty("项目对应的router tags")
+    val routerTag: String,
+    @JsonProperty(value = "projectCodeList", required = false)
+    @ApiModelProperty("项目编码集合")
+    val projectCodeList: List<String>?,
+    @JsonProperty(value = "bgId", required = false)
+    @ApiModelProperty("BgId")
+    val bgId: Long?,
+    @JsonProperty(value = "centerId", required = false)
+    @ApiModelProperty("centerId")
+    val centerId: Long?,
+    @JsonProperty(value = "deptId", required = false)
+    @ApiModelProperty("deptId")
+    val deptId: Long?,
+    @JsonProperty(value = "channel", required = false)
+    @ApiModelProperty("channel")
+    val channel: String?
+)

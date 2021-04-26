@@ -532,17 +532,10 @@ class PipelineRepositoryService constructor(
                 canElementSkip = canElementSkip,
                 taskCount = taskCount
             )
-//            pipelineResDao.create(
-//                dslContext = transactionContext,
-//                pipelineId = pipelineId,
-//                creator = userId,
-//                version = 1,
-//                model = model
-//            )
-            createInfo(
-                transactionContext = transactionContext,
+            pipelineResDao.create(
+                dslContext = transactionContext,
                 pipelineId = pipelineId,
-                userId = userId,
+                creator = userId,
                 version = 1,
                 model = model
             )
@@ -1034,17 +1027,7 @@ class PipelineRepositoryService constructor(
         userId: String,
         pipelineModelVersionList: List<PipelineModelVersion>
     ) {
-        try {
-            pipelineResDao.updatePipelineModel(dslContext, userId, pipelineModelVersionList)
-        } finally {
-            if (pipelineBackupService.isBackUp(pipelineBackupService.resourceLabel)) {
-                try {
-                    pipelineResDao.updatePipelineModelBak(dslContext, userId, pipelineModelVersionList)
-                } catch (e: Exception) {
-                    logger.warn("updateModel fail: ", e)
-                }
-            }
-        }
+        pipelineResDao.updatePipelineModel(dslContext, userId, pipelineModelVersionList)
     }
 
     /**

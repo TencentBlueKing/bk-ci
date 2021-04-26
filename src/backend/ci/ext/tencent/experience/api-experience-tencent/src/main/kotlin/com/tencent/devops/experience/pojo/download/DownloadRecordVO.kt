@@ -25,9 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.monitoring.consumer.processor.monitor
+package com.tencent.devops.experience.pojo.download
 
-data class MonitorData(
-    val fields: HashMap<String, Any> = HashMap(),
-    val tags: HashMap<String, String> = HashMap()
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("版本体验-下载记录出参")
+data class DownloadRecordVO(
+    @ApiModelProperty("版本体验ID", required = true)
+    val experienceHashId: String,
+    @ApiModelProperty("文件大小(byte)", required = true)
+    val size: Long,
+    @ApiModelProperty("logo链接", required = true)
+    val logoUrl: String,
+    @ApiModelProperty("体验名称", required = true)
+    val experienceName: String,
+    @ApiModelProperty("版本标题", required = true)
+    val versionTitle: String,
+    @ApiModelProperty("创建时间", required = true)
+    val createTime: Long,
+    @ApiModelProperty("下载时间", required = true)
+    val downloadTime: Long,
+    @ApiModelProperty("版本体验BundleIdentifier", required = true)
+    val bundleIdentifier: String,
+    @ApiModelProperty("应用Scheme", required = false)
+    val appScheme: String,
+    @ApiModelProperty("是否过期", required = true)
+    val expired: Boolean,
+    @ApiModelProperty("上次下载的体验ID", required = true)
+    val lastDownloadHashId: String
 )

@@ -27,22 +27,27 @@
 
 package com.tencent.devops.experience.dao
 
+import com.tencent.devops.experience.constant.ExperiencePublicType
 import com.tencent.devops.model.experience.tables.TExperiencePublic
 import com.tencent.devops.model.experience.tables.records.TExperiencePublicRecord
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
+import org.jooq.Record1
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
 class ExperiencePublicDao {
+
+    @SuppressWarnings("ALL")
     fun listHot(
         dslContext: DSLContext,
         offset: Int,
         limit: Int,
         category: Int? = null,
-        platform: String?
+        platform: String?,
+        types: List<Int>
     ): Result<TExperiencePublicRecord> {
         val now = LocalDateTime.now()
         return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
@@ -61,12 +66,14 @@ class ExperiencePublicDao {
         }
     }
 
+    @SuppressWarnings("ALL")
     fun listNew(
         dslContext: DSLContext,
         offset: Int,
         limit: Int,
         category: Int? = null,
-        platform: String?
+        platform: String?,
+        types: List<Int>
     ): Result<TExperiencePublicRecord> {
         val now = LocalDateTime.now()
         return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
@@ -89,7 +96,8 @@ class ExperiencePublicDao {
         dslContext: DSLContext,
         offset: Int,
         limit: Int,
-        platform: String?
+        platform: String?,
+        types: List<Int>
     ): Result<TExperiencePublicRecord> {
         val now = LocalDateTime.now()
         return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
@@ -157,7 +165,10 @@ class ExperiencePublicDao {
         bundleIdentifier: String,
         endDate: LocalDateTime,
         size: Long,
-        logoUrl: String
+        logoUrl: String,
+        scheme: String,
+        type: Int = ExperiencePublicType.FROM_BKCI.id,
+        externalUrl: String = ""
     ) {
         val now = LocalDateTime.now()
         with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
@@ -175,7 +186,10 @@ class ExperiencePublicDao {
                 UPDATE_TIME,
                 DOWNLOAD_TIME,
                 SIZE,
-                LOGO_URL
+                LOGO_URL,
+                SCHEME,
+                TYPE,
+                EXTERNAL_LINK
             ).values(
                 recordId,
                 projectId,
@@ -189,7 +203,10 @@ class ExperiencePublicDao {
                 now,
                 0,
                 size,
-                logoUrl
+                logoUrl,
+                scheme,
+                type,
+                externalUrl
             ).onDuplicateKeyUpdate()
                 .set(RECORD_ID, recordId)
                 .set(EXPERIENCE_NAME, experienceName)
@@ -199,6 +216,7 @@ class ExperiencePublicDao {
                 .set(UPDATE_TIME, now)
                 .set(SIZE, size)
                 .set(LOGO_URL, logoUrl)
+                .set(SCHEME, scheme)
                 .execute()
         }
     }
@@ -212,6 +230,16 @@ class ExperiencePublicDao {
         }
     }
 
+    fun countByRecordId(
+        dslContext: DSLContext,
+        recordId: Long
+    ): Record1<Int>? {
+        return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
+            dslContext.selectCount().from(this).where(RECORD_ID.eq(recordId)).fetchOne()
+        }
+    }
+
+    @SuppressWarnings("ALL")
     fun updateById(
         dslContext: DSLContext,
         id: Long,
@@ -257,9 +285,9 @@ class ExperiencePublicDao {
         recordId: Long,
         online: Boolean? = null,
         endDate: LocalDateTime? = null
-    ) {
+    ): Int {
         val now = LocalDateTime.now()
-        with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
+        return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
             dslContext.update(this)
                 .set(UPDATE_TIME, now)
                 .let { if (null == online) it else it.set(ONLINE, online) }
@@ -303,6 +331,15 @@ class ExperiencePublicDao {
                 .set(DOWNLOAD_TIME, DOWNLOAD_TIME.plus(1))
                 .where(RECORD_ID.eq(recordId))
                 .execute()
+        }
+    }
+
+    fun filterRecordId(dslContext: DSLContext, records: Set<Long>): Result<Record1<Long>>? {
+        return with(TExperiencePublic.T_EXPERIENCE_PUBLIC) {
+            dslContext.select(RECORD_ID)
+                .from(this)
+                .where(RECORD_ID.`in`(records))
+                .fetch()
         }
     }
 }

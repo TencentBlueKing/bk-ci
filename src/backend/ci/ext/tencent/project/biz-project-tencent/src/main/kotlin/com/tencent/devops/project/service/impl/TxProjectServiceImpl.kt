@@ -53,6 +53,7 @@ import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.pojo.AuthProjectForList
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
@@ -60,6 +61,7 @@ import com.tencent.devops.project.pojo.tof.Response
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectPaasCCService
 import com.tencent.devops.project.service.ProjectPermissionService
+import com.tencent.devops.project.service.iam.ProjectIamV0Service
 import com.tencent.devops.project.service.s3.S3Service
 import com.tencent.devops.project.service.tof.TOFService
 import com.tencent.devops.project.util.ImageUtil
@@ -72,6 +74,7 @@ import org.springframework.stereotype.Service
 import java.io.File
 import java.util.ArrayList
 
+@Suppress("ALL")
 @Service
 class TxProjectServiceImpl @Autowired constructor(
     projectPermissionService: ProjectPermissionService,
@@ -92,7 +95,8 @@ class TxProjectServiceImpl @Autowired constructor(
     projectDispatcher: ProjectDispatcher,
     private val authPermissionApi: AuthPermissionApi,
     private val projectAuthServiceCode: ProjectAuthServiceCode,
-    private val managerService: ManagerService
+    private val managerService: ManagerService,
+    private val projectIamV0Service: ProjectIamV0Service
 ) : AbsProjectServiceImpl(projectPermissionService, dslContext, projectDao, projectJmxApi, redisOperation, gray, client, projectDispatcher, authPermissionApi, projectAuthServiceCode) {
 
     private var authUrl: String = "${bkAuthProperties.url}/projects"
@@ -276,6 +280,17 @@ class TxProjectServiceImpl @Autowired constructor(
             deptName = deptName,
             englishName = projectCreateInfo.englishName
         )
+    }
+
+    override fun createProjectUser(projectId: String, createInfo: ProjectCreateUserInfo): Boolean {
+        projectIamV0Service.createUser2Project(
+            createUser = createInfo.createUserId,
+            projectCode = projectId,
+            roleName = createInfo.roleName,
+            roleId = createInfo.roleId,
+            userIds = createInfo.userIds!!
+        )
+        return true
     }
 
     companion object {

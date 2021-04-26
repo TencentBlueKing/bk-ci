@@ -32,16 +32,18 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.experience.pojo.index.HotCategoryParam
 import com.tencent.devops.experience.pojo.index.IndexAppInfoVO
 import com.tencent.devops.experience.pojo.index.IndexBannerVO
+import com.tencent.devops.experience.pojo.index.NewCategoryParam
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import javax.ws.rs.BeanParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
@@ -85,7 +87,10 @@ interface AppExperienceIndexResource {
         page: Int,
         @ApiParam("每页数目", required = false)
         @QueryParam("pageSize")
-        pageSize: Int
+        pageSize: Int,
+        @ApiParam("是否包含外部跳转", required = false)
+        @QueryParam("includeExternalUrl")
+        includeExternalUrl: Boolean? = false
     ): Result<Pagination<IndexAppInfoVO>>
 
     @ApiOperation("鹅厂必备")
@@ -103,7 +108,10 @@ interface AppExperienceIndexResource {
         page: Int,
         @ApiParam("每页数目", required = false)
         @QueryParam("pageSize")
-        pageSize: Int
+        pageSize: Int,
+        @ApiParam("是否包含外部跳转", required = false)
+        @QueryParam("includeExternalUrl")
+        includeExternalUrl: Boolean? = false
     ): Result<Pagination<IndexAppInfoVO>>
 
     @ApiOperation("本周最新")
@@ -121,7 +129,10 @@ interface AppExperienceIndexResource {
         page: Int,
         @ApiParam("每页数目", required = false)
         @QueryParam("pageSize")
-        pageSize: Int
+        pageSize: Int,
+        @ApiParam("是否包含外部跳转", required = false)
+        @QueryParam("includeExternalUrl")
+        includeExternalUrl: Boolean? = false
     ): Result<Pagination<IndexAppInfoVO>>
 
     @ApiOperation("分类列表--热门")
@@ -134,15 +145,9 @@ interface AppExperienceIndexResource {
         @ApiParam("平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: Int,
-        @ApiParam("类别ID,1--游戏,2--工具,3--生活,4--社交", required = true)
-        @PathParam("categoryId")
-        categoryId: Int,
-        @ApiParam("页目", required = false)
-        @QueryParam("page")
-        page: Int,
-        @ApiParam("每页数目", required = false)
-        @QueryParam("pageSize")
-        pageSize: Int
+        @BeanParam
+        hotCategoryParam: HotCategoryParam
+
     ): Result<Pagination<IndexAppInfoVO>>
 
     @ApiOperation("分类列表--最新")
@@ -155,14 +160,7 @@ interface AppExperienceIndexResource {
         @ApiParam("平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: Int,
-        @ApiParam("类别ID,1--游戏,2--工具,3--生活,4--社交", required = true)
-        @PathParam("categoryId")
-        categoryId: Int,
-        @ApiParam("页目", required = false)
-        @QueryParam("page")
-        page: Int,
-        @ApiParam("每页数目", required = false)
-        @QueryParam("pageSize")
-        pageSize: Int
+        @BeanParam
+        newCategoryParam: NewCategoryParam
     ): Result<Pagination<IndexAppInfoVO>>
 }
