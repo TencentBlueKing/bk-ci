@@ -38,6 +38,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class BkPermissionRoleMemberImpl @Autowired constructor(
     override val iamManagerService: ManagerService,
     private val permissionGradeService: PermissionGradeService
-): AbsPermissionRoleMemberImpl(iamManagerService, permissionGradeService) {
-    override fun checkUser(userId: String) { return }
+) : AbsPermissionRoleMemberImpl(iamManagerService, permissionGradeService) {
+    override fun checkUser(userId: String) {
+        return
+    }
 }

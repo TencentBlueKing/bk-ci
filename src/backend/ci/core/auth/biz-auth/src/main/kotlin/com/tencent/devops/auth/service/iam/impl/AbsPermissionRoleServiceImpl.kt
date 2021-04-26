@@ -231,7 +231,7 @@ open class AbsPermissionRoleServiceImpl @Autowired constructor(
     private fun buildOtherAuthorizationScopes(
         actions: List<String>,
         projectCode: String,
-        defaultType: String ?= null
+        defaultType: String? = null
     ): AuthorizationScopes? {
         val resourceTypes = mutableSetOf<String>()
         var type = ""
