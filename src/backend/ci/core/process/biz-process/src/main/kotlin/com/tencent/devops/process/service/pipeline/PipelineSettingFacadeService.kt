@@ -27,23 +27,21 @@
 
 package com.tencent.devops.process.service.pipeline
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.api.service.ServicePipelineResource
-import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.Subscription
 import com.tencent.devops.process.pojo.setting.UpdatePipelineModelRequest
+import com.tencent.devops.process.service.PipelineSettingVersionService
 import com.tencent.devops.process.service.label.PipelineGroupService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -51,10 +49,16 @@ class PipelineSettingFacadeService @Autowired constructor(
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineGroupService: PipelineGroupService,
+    private val pipelineSettingVersionService: PipelineSettingVersionService,
     private val client: Client
 ) {
 
-    fun saveSetting(userId: String, setting: PipelineSetting, checkPermission: Boolean = true): String {
+    fun saveSetting(
+        userId: String,
+        setting: PipelineSetting,
+        checkPermission: Boolean = true,
+        version: Int = 0
+    ): String {
         if (checkPermission) {
             checkEditPermission(
                 userId = userId,
@@ -64,22 +68,7 @@ class PipelineSettingFacadeService @Autowired constructor(
             )
         }
 
-        with(setting) {
-            if (pipelineRepositoryService.isPipelineExist(
-                    projectId = projectId, excludePipelineId = pipelineId, pipelineName = pipelineName
-                )
-            ) {
-                throw ErrorCodeException(
-                    statusCode = Response.Status.CONFLICT.statusCode,
-                    errorCode = ProcessMessageCode.ERROR_PIPELINE_NAME_EXISTS,
-                    defaultMessage = "流水线名称已被使用"
-                )
-            }
-        }
-
-        pipelineRepositoryService.updatePipelineName(userId, setting.pipelineId, setting.pipelineName)
-
-        val id = pipelineRepositoryService.saveSetting(userId, setting)
+        pipelineRepositoryService.saveSetting(userId, setting, version)
 
         if (checkPermission) {
             pipelinePermissionService.modifyResource(
@@ -94,14 +83,15 @@ class PipelineSettingFacadeService @Autowired constructor(
             pipelineId = setting.pipelineId,
             labelIds = setting.labels
         )
-        return id
+        return setting.pipelineId
     }
 
     fun userGetSetting(
         userId: String,
         projectId: String,
         pipelineId: String,
-        channelCode: ChannelCode = ChannelCode.BS
+        channelCode: ChannelCode = ChannelCode.BS,
+        version: Int = 0
     ): PipelineSetting {
         var settingInfo = pipelineRepositoryService.getSetting(pipelineId)
         val groups = pipelineGroupService.getGroups(userId, projectId, pipelineId)
@@ -126,6 +116,13 @@ class PipelineSettingFacadeService @Autowired constructor(
         } else {
             settingInfo.labels = labels
         }
+
+        if (version > 0) { // #671 目前只接受通知设置的版本管理, 其他属于公共设置不接受版本管理
+            val ve = pipelineSettingVersionService.getSubscriptionsVer(userId, projectId, pipelineId, version)
+            settingInfo.successSubscription = ve.successSubscription
+            settingInfo.failSubscription = ve.failSubscription
+        }
+
         return settingInfo
     }
 

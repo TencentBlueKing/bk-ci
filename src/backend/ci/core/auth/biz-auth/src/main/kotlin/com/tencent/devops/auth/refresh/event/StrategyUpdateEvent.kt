@@ -27,6 +27,7 @@
 
 package com.tencent.devops.auth.refresh.event
 
+import com.tencent.devops.auth.entity.StrategyChangeType
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 
@@ -35,5 +36,6 @@ data class StrategyUpdateEvent(
     override val refreshType: String,
     override var retryCount: Int = 0,
     override var delayMills: Int = 0,
+    val action: StrategyChangeType,
     val strategyId: Int
 ) : RefreshBroadCastEvent(refreshType, retryCount, delayMills)

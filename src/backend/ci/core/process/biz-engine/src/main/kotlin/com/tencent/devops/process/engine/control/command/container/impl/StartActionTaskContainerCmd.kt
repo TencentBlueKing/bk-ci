@@ -82,7 +82,7 @@ class StartActionTaskContainerCmd(
                     if (!fastKill && actionType.isTerminate() && !commandContext.buildStatus.isFailure()) {
                         commandContext.buildStatus = BuildStatus.FAILED
                     }
-                    commandContext.latestSummary = "status=${commandContext.buildStatus}"
+                    commandContext.latestSummary += "| status=${commandContext.buildStatus}"
                 } else {
                     sendTask(event = commandContext.event, task = waitToDoTask)
                 }
@@ -154,7 +154,7 @@ class StartActionTaskContainerCmd(
 
     private fun isTerminate(containerContext: ContainerContext): Boolean {
         return containerContext.event.actionType.isTerminate() ||
-            FastKillUtils.isFastKillCode(containerContext.event.errorCode)
+            FastKillUtils.isTerminateCode(containerContext.event.errorCode)
     }
 
     private fun findRunningTask(
@@ -237,6 +237,8 @@ class StartActionTaskContainerCmd(
         }
 
         if (toDoTask != null) {
+            // 进入预队列
+            pipelineRuntimeService.updateTaskStatus(toDoTask, userId = starter, buildStatus = BuildStatus.QUEUE_CACHE)
             containerContext.buildStatus = BuildStatus.RUNNING
             containerContext.event.actionType = ActionType.START // 未开始的需要开始
         }

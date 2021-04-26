@@ -31,6 +31,7 @@ import org.springframework.boot.Banner
 import org.springframework.boot.builder.SpringApplicationBuilder
 import kotlin.reflect.KClass
 
+@Suppress("ALL")
 object MicroServiceApplication {
     fun run(application: KClass<*>, args: Array<String>) {
         SpringApplicationBuilder()

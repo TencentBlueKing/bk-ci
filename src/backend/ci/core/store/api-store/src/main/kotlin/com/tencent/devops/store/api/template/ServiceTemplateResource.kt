@@ -39,7 +39,9 @@ import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_MARKET_TEMPLATE"], description = "服务端-模板")
@@ -66,5 +68,20 @@ interface ServiceTemplateResource {
         userId: String,
         @ApiParam("安装模板到项目请求报文体", required = true)
         installTemplateReq: InstallTemplateReq
+    ): Result<Boolean>
+
+    @ApiOperation("校验模板内组件可见范围")
+    @GET
+    @Path("/{templateCode}/validate")
+    fun validateUserTemplateComponentVisibleDept(
+        @ApiParam("用户", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @ApiParam("标识", required = true)
+        @PathParam("templateCode")
+        templateCode: String,
+        @ApiParam("项目", required = true)
+        @QueryParam("projectCode")
+        projectCode: String
     ): Result<Boolean>
 }

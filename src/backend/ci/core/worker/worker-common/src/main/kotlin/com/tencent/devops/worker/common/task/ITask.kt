@@ -58,7 +58,7 @@ abstract class ITask {
     }
 
     protected fun addEnv(key: String, value: String) {
-        environment.put(key, value)
+        environment[key] = value
     }
 
     protected fun getEnv(key: String) =

@@ -44,7 +44,7 @@ class ProjectDao {
     ): Long {
         with(TProject.T_PROJECT) {
             val baseStep = dslContext.select(DSL.min(ID)).from(this)
-            if (projectIdList != null) {
+            if (!projectIdList.isNullOrEmpty()) {
                 baseStep.where(ENGLISH_NAME.`in`(projectIdList))
             }
             return baseStep.fetchOne(0, Long::class.java)
@@ -57,7 +57,7 @@ class ProjectDao {
     ): Long {
         with(TProject.T_PROJECT) {
             val baseStep = dslContext.select(DSL.max(ID)).from(this)
-            if (projectIdList != null) {
+            if (!projectIdList.isNullOrEmpty()) {
                 baseStep.where(ENGLISH_NAME.`in`(projectIdList))
             }
             return baseStep.fetchOne(0, Long::class.java)
@@ -72,17 +72,20 @@ class ProjectDao {
     ): Result<out Record>? {
         with(TProject.T_PROJECT) {
             val conditions = mutableListOf<Condition>()
-            if (projectIdList != null) {
+            if (!projectIdList.isNullOrEmpty()) {
                 conditions.add(ENGLISH_NAME.`in`(projectIdList))
             }
             if (minId != null) {
-                conditions.add(ID.gt(minId))
+                conditions.add(ID.ge(minId))
             }
             if (maxId != null) {
                 conditions.add(ID.lt(maxId))
             }
-            return dslContext.select(ID.`as`("ID"), ENGLISH_NAME.`as`("ENGLISH_NAME"))
-                .from(this).where(conditions).fetch()
+            return dslContext.select(
+                ID.`as`("ID"),
+                ENGLISH_NAME.`as`("ENGLISH_NAME"),
+                CHANNEL.`as`("CHANNEL")
+            ).from(this).where(conditions).fetch()
         }
     }
 }

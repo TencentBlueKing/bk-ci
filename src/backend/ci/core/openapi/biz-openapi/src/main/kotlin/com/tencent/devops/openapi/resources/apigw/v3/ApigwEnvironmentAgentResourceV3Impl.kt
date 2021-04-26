@@ -72,12 +72,12 @@ class ApigwEnvironmentAgentResourceV3Impl @Autowired constructor(
             return Result(nodeList[0])
         }
         throw ErrorCodeException(
-                errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
-                params = arrayOf(nodeHashId)
+            errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
+            params = arrayOf(nodeHashId)
         )
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this:: class.java)
+        val logger = LoggerFactory.getLogger(ApigwEnvironmentAgentResourceV3Impl::class.java)
     }
 }

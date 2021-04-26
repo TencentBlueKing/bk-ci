@@ -37,9 +37,11 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.process.dao.PipelineTaskDao
+import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
+import com.tencent.devops.model.process.tables.records.TPipelineModelTaskRecord
 import com.tencent.devops.process.engine.common.Timeout.MAX_MINUTES
 import com.tencent.devops.process.engine.control.ControlUtils
+import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
@@ -50,21 +52,26 @@ import com.tencent.devops.process.engine.utils.PauseRedisUtils
 import com.tencent.devops.process.pojo.PipelineProjectRel
 import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKNAMES
 import com.tencent.devops.process.utils.BK_CI_BUILD_FAIL_TASKS
+import com.tencent.devops.process.utils.KEY_PIPELINE_ID
+import com.tencent.devops.process.utils.KEY_PROJECT_ID
+import com.tencent.devops.store.pojo.common.KEY_VERSION
 import org.jooq.DSLContext
+import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 
 @Suppress("ALL")
 @Service
 class PipelineTaskService @Autowired constructor(
-    val dslContext: DSLContext,
-    val redisOperation: RedisOperation,
-    val objectMapper: ObjectMapper,
-    val pipelineTaskDao: PipelineTaskDao,
-    val pipelineBuildDetailService: PipelineBuildDetailService,
-    val pipelineModelTaskDao: PipelineModelTaskDao,
+    private val dslContext: DSLContext,
+    private val redisOperation: RedisOperation,
+    private val objectMapper: ObjectMapper,
+    private val pipelineInfoDao: PipelineInfoDao,
+    private val pipelineBuildDetailService: PipelineBuildDetailService,
+    private val pipelineModelTaskDao: PipelineModelTaskDao,
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineVariableService: BuildVariableService,
     private val pipelineRuntimeService: PipelineRuntimeService,
@@ -72,7 +79,7 @@ class PipelineTaskService @Autowired constructor(
 ) {
 
     fun list(projectId: String, pipelineIds: Collection<String>): Map<String, List<PipelineModelTask>> {
-        return pipelineTaskDao.list(dslContext, projectId, pipelineIds)?.map {
+        return pipelineModelTaskDao.listByPipelineIds(dslContext, projectId, pipelineIds)?.map {
             PipelineModelTask(
                 projectId = it.projectId,
                 pipelineId = it.pipelineId,
@@ -82,6 +89,7 @@ class PipelineTaskService @Autowired constructor(
                 taskSeq = it.taskSeq,
                 taskName = it.taskName,
                 atomCode = it.atomCode,
+                atomVersion = it.atomVersion,
                 classType = it.classType,
                 taskAtom = it.taskAtom,
                 taskParams = objectMapper.readValue(it.taskParams),
@@ -109,42 +117,65 @@ class PipelineTaskService @Autowired constructor(
         val pageSizeNotNull = PageUtil.getValidPageSize(pageSize)
 
         val count = pipelineModelTaskDao.getPipelineCountByAtomCode(dslContext, atomCode, projectCode).toLong()
-        val pipelines =
-            pipelineModelTaskDao.listByAtomCode(dslContext, atomCode, projectCode, pageNotNull, pageSizeNotNull)
+        val pipelineTasks =
+            pipelineModelTaskDao.listByAtomCode(
+                dslContext = dslContext,
+                atomCode = atomCode,
+                projectId = projectCode,
+                page = pageNotNull,
+                pageSize = pageSizeNotNull
+            )
 
-        val pipelineAtomVersionInfo = mutableMapOf<String, MutableList<String>>()
-        val pipelineIds = pipelines?.map { it["pipelineId"] as String }
+        val pipelineAtomVersionInfo = mutableMapOf<String, MutableSet<String>>()
+        val pipelineIds = pipelineTasks?.map { it[KEY_PIPELINE_ID] as String }
+        var pipelineNameMap: MutableMap<String, String>? = null
         if (pipelineIds != null && pipelineIds.isNotEmpty()) {
-            val pipelineAtoms = pipelineModelTaskDao.listByAtomCodeAndPipelineIds(dslContext, atomCode, pipelineIds)
+            pipelineNameMap = mutableMapOf()
+            val pipelineAtoms = pipelineModelTaskDao.listByAtomCodeAndPipelineIds(
+                dslContext = dslContext,
+                atomCode = atomCode,
+                pipelineIdList = pipelineIds
+            )
             pipelineAtoms?.forEach {
-                val pipelineId = it["pipelineId"] as String
-                val taskParamsStr = it["taskParams"] as? String
-                val taskParams = if (!taskParamsStr.isNullOrBlank()) JsonUtil.getObjectMapper()
-                    .readValue(taskParamsStr, Map::class.java) as Map<String, Any> else mapOf()
+                val version = it[KEY_VERSION] as? String ?: return@forEach
+                val pipelineId = it[KEY_PIPELINE_ID] as String
                 if (pipelineAtomVersionInfo.containsKey(pipelineId)) {
-                    pipelineAtomVersionInfo[pipelineId]!!.add(taskParams["version"].toString())
+                    pipelineAtomVersionInfo[pipelineId]!!.add(version)
                 } else {
-                    pipelineAtomVersionInfo[pipelineId] = mutableListOf(taskParams["version"].toString())
+                    pipelineAtomVersionInfo[pipelineId] = mutableSetOf(version)
                 }
+            }
+            val pipelineInfoRecords =
+                pipelineInfoDao.listInfoByPipelineIds(dslContext = dslContext, pipelineIds = pipelineIds.toSet())
+            pipelineInfoRecords.forEach {
+                pipelineNameMap[it.pipelineId] = it.pipelineName
             }
         }
 
-        val records = if (pipelines == null) {
+        val records = if (pipelineTasks == null) {
             listOf<PipelineProjectRel>()
         } else {
-            pipelines.map {
-                val pipelineId = it["pipelineId"] as String
+            pipelineTasks.map {
+                val pipelineId = it[KEY_PIPELINE_ID] as String
                 PipelineProjectRel(
                     pipelineId = pipelineId,
-                    pipelineName = it["pipelineName"] as String,
-                    projectCode = it["projectCode"] as String,
-                    atomVersion = pipelineAtomVersionInfo.getOrDefault(pipelineId, mutableListOf()).distinct()
-                        .joinToString(",")
+                    pipelineName = pipelineNameMap?.get(pipelineId) ?: "",
+                    projectCode = it[KEY_PROJECT_ID] as String,
+                    atomVersion = pipelineAtomVersionInfo[pipelineId]?.joinToString(",") ?: ""
                 )
             }
         }
 
         return Page(pageNotNull, pageSizeNotNull, count, records)
+    }
+
+    fun listPipelineNumByAtomCodes(projectId: String? = null, atomCodes: List<String>): Map<String, Int> {
+        val dataMap = mutableMapOf<String, Int>()
+        atomCodes.forEach { atomCode ->
+            val count = pipelineModelTaskDao.getPipelineCountByAtomCode(dslContext, atomCode, projectId)
+            dataMap[atomCode] = count
+        }
+        return dataMap
     }
 
     fun isRetryWhenFail(taskId: String, buildId: String): Boolean {
@@ -223,7 +254,7 @@ class PipelineTaskService @Autowired constructor(
                 variables = valueMap
             )
         } catch (ignored: Exception) {
-            LOG.warn("$buildId| $taskId| createFailElementVar error, msg: $ignored")
+            logger.warn("$buildId| $taskId| createFailElementVar error, msg: $ignored")
         }
     }
 
@@ -236,8 +267,8 @@ class PipelineTaskService @Autowired constructor(
         try {
             val failTask = pipelineVariableService.getVariable(buildId, BK_CI_BUILD_FAIL_TASKS)
             val failTaskNames = pipelineVariableService.getVariable(buildId, BK_CI_BUILD_FAIL_TASKNAMES)
-            val newFailTask = failTask!!.replace(failTaskRecord!!, "")
-            val newFailTaskNames = failTaskNames!!.replace(failTaskNameRecord!!, "")
+            val newFailTask = failTask!!.replace(failTaskRecord, "")
+            val newFailTaskNames = failTaskNames!!.replace(failTaskNameRecord, "")
             if (newFailTask != failTask || newFailTaskNames != failTaskNames) {
                 val valueMap = mutableMapOf<String, Any>()
                 valueMap[BK_CI_BUILD_FAIL_TASKS] = newFailTask
@@ -249,7 +280,7 @@ class PipelineTaskService @Autowired constructor(
             redisOperation.delete(failTaskRedisKey(buildId = buildId, taskId = taskId))
             redisOperation.delete(failTaskNameRedisKey(buildId = buildId, taskId = taskId))
         } catch (ignored: Exception) {
-            LOG.warn("$buildId|$taskId|removeFailVarWhenSuccess error, msg: $ignored")
+            logger.warn("$buildId|$taskId|removeFailVarWhenSuccess error, msg: $ignored")
         }
     }
 
@@ -304,7 +335,7 @@ class PipelineTaskService @Autowired constructor(
     }
 
     fun pauseBuild(task: PipelineBuildTask) {
-        LOG.info("ENGINE|${task.buildId}|PAUSE_BUILD|${task.stageId}|j(${task.containerId})|task=${task.taskId}")
+        logger.info("ENGINE|${task.buildId}|PAUSE_BUILD|${task.stageId}|j(${task.containerId})|task=${task.taskId}")
         // 修改任务状态位暂停
         pipelineRuntimeService.updateTaskStatus(task = task, userId = task.starter, buildStatus = BuildStatus.PAUSE)
 
@@ -323,8 +354,75 @@ class PipelineTaskService @Autowired constructor(
         )
     }
 
+    /**
+     * 更新ModelTask表插件版本
+     */
+    fun asyncUpdateTaskAtomVersion(): Boolean {
+        Executors.newFixedThreadPool(1).submit {
+            logger.info("begin asyncUpdateTaskAtomVersion!!")
+            var offset = 0
+            do {
+                // 查询流水线记录
+                val pipelineInfoRecords = pipelineInfoDao.listPipelineInfoByProject(
+                    dslContext = dslContext,
+                    offset = offset,
+                    limit = DEFAULT_PAGE_SIZE
+                )
+                // 更新流水线任务表的插件版本
+                updatePipelineTaskAtomVersion(pipelineInfoRecords)
+                offset += DEFAULT_PAGE_SIZE
+            } while (pipelineInfoRecords?.size == DEFAULT_PAGE_SIZE)
+            logger.info("end asyncUpdateTaskAtomVersion!!")
+        }
+        return true
+    }
+
+    private fun updatePipelineTaskAtomVersion(pipelineInfoRecords: Result<TPipelineInfoRecord>?) {
+        if (pipelineInfoRecords?.isNotEmpty == true) {
+            pipelineInfoRecords.forEach { pipelineInfoRecord ->
+                val modelTasks = pipelineModelTaskDao.getModelTasks(
+                    dslContext = dslContext,
+                    pipelineId = pipelineInfoRecord.pipelineId,
+                    isAtomVersionNull = true
+                )
+                modelTasks?.forEach { modelTask ->
+                    updateModelTaskVersion(modelTask, pipelineInfoRecord)
+                }
+            }
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun updateModelTaskVersion(
+        modelTask: TPipelineModelTaskRecord,
+        pipelineInfoRecord: TPipelineInfoRecord
+    ) {
+        val pipelineId = modelTask.pipelineId
+        val taskParamsStr = modelTask.taskParams
+        val taskParams = if (!taskParamsStr.isNullOrBlank()) JsonUtil.getObjectMapper()
+            .readValue(taskParamsStr, Map::class.java) as Map<String, Any?> else mapOf()
+        val atomVersion = taskParams[KEY_VERSION]?.toString()
+        try {
+            pipelineModelTaskDao.updateTaskAtomVersion(
+                dslContext = dslContext,
+                atomVersion = atomVersion ?: "",
+                createTime = pipelineInfoRecord.createTime,
+                updateTime = pipelineInfoRecord.updateTime,
+                projectId = modelTask.projectId,
+                pipelineId = pipelineId,
+                stageId = modelTask.stageId,
+                containerId = modelTask.containerId,
+                taskId = modelTask.taskId
+            )
+        } catch (ignored: Exception) {
+            val taskName = modelTask.taskName
+            logger.warn("update pipelineId:$pipelineId,taskName:$taskName version fail:", ignored)
+        }
+    }
+
     companion object {
-        private val LOG = LoggerFactory.getLogger(PipelineTaskService::class.java)
+        private val logger = LoggerFactory.getLogger(this::class.java)
         private val expiredInSecond = TimeUnit.DAYS.toMinutes(7L)
+        private const val DEFAULT_PAGE_SIZE = 50
     }
 }
