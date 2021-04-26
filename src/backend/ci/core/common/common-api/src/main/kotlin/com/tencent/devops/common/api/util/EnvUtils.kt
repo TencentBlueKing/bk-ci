@@ -37,6 +37,44 @@ object EnvUtils {
         if (command.isNullOrBlank()) {
             return command ?: ""
         }
+        // 先处理${} 单个花括号的情况
+        val value = parseWithSingleCurlyBraces(command, data, replaceWithEmpty, isEscape)
+        // 再处理${{}} 双花括号的情况
+        return parseWithDoubleCurlyBraces(value, data, replaceWithEmpty, isEscape)
+    }
+
+    private fun parseWithDoubleCurlyBraces(
+        value: String,
+        data: Map<String, String>,
+        replaceWithEmpty: Boolean,
+        escape: Boolean
+    ): String {
+        val newValue = StringBuilder()
+        var index = 0
+        while (index < value!!.length) {
+            val c = value[index]
+            if (c == '$' && (index + 2) < value.length && value[index + 1] == '{' && value[index + 2] == '{') {
+                val inside = StringBuilder()
+                index = parseVariableWithDoubleCurlyBraces(value, index + 3, inside, data, replaceWithEmpty)
+                if (escape) {
+                    newValue.append(escapeSpecialWord(inside.toString()))
+                } else {
+                    newValue.append(inside)
+                }
+            } else {
+                newValue.append(c)
+                index++
+            }
+        }
+        return newValue.toString()
+    }
+
+    private fun parseWithSingleCurlyBraces(
+        command: String,
+        data: Map<String, String>,
+        replaceWithEmpty: Boolean,
+        isEscape: Boolean
+    ): String {
         val newValue = StringBuilder()
         var index = 0
         while (index < command!!.length) {
@@ -103,4 +141,60 @@ object EnvUtils {
         newValue.append("\${").append(token)
         return index
     }
+
+    private fun parseVariableWithDoubleCurlyBraces(
+        command: String,
+        start: Int,
+        newValue: StringBuilder,
+        data: Map<String, String>,
+        replaceWithEmpty: Boolean = false
+    ): Int {
+        val token = StringBuilder()
+        var index = start
+        while (index < command.length) {
+            val c = command[index]
+            if (c == '$' && (index + 2) < command.length && command[index + 1] == '{' && command[index + 2] == '{') {
+                val inside = StringBuilder()
+                index = parseVariable(command, index + 3, inside, data, replaceWithEmpty)
+                token.append(inside)
+            } else if (c == '}' && index + 1 < command.length && command[index + 1] == '}') {
+                val value = data[token.toString().trim()] ?: if (replaceWithEmpty) {
+                    ""
+                } else {
+                    "\${$token}"
+                }
+
+                newValue.append(value)
+                return index + 2
+            } else {
+                token.append(c)
+                index++
+            }
+        }
+        newValue.append("\${{").append(token)
+        return index
+    }
 }
+
+/*
+fun main() {
+    val command1 = "hello \${{variables.abc}} world"
+    val command2 = "\${{variables.abc}}world"
+    val command3 = "hello\${{variables.abc}}"
+    val command4 = "hello\${{variables.abc"
+    val command5 = "hello\${{variables.abc}"
+    val command6 = "hello\${variables.abc}}"
+    val command7 = "hello\$variables.abc}}"
+    val data = mapOf(
+        "variables.abc" to "variables.value"
+    )
+
+    println(EnvUtils.parseEnv(command1, data))
+    println(EnvUtils.parseEnv(command2, data))
+    println(EnvUtils.parseEnv(command3, data))
+    println(EnvUtils.parseEnv(command4, data))
+    println(EnvUtils.parseEnv(command5, data))
+    println(EnvUtils.parseEnv(command6, data))
+    println(EnvUtils.parseEnv(command7, data))
+}
+*/
