@@ -33,6 +33,7 @@ import com.tencent.devops.project.pojo.OrgInfo
 import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
@@ -145,5 +146,9 @@ class ServiceProjectResourceImpl @Autowired constructor(
 
     override fun listSecrecyProject(): Result<Set<String>?> {
         return Result(projectService.listSecrecyProject())
+    }
+
+    override fun createProjectUser(projectId: String, createInfo: ProjectCreateUserInfo): Result<Boolean> {
+        return Result(projectService.createProjectUser(projectId, createInfo))
     }
 }
