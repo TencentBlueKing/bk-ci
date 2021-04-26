@@ -14,8 +14,8 @@
                 <bk-checkbox class="atom-canskip-checkbox" v-model="stage.runStage" :disabled="stageDisabled"></bk-checkbox>
             </span>
             <span class="stage-single-retry" v-if="canStageRetry" @click.stop="singleRetry(stage.id)">{{ $t('retry') }}</span>
-            <span v-if="showCopyStage" class="stage-entry-btns">
-                <span :title="$t('editPage.copyStage')" v-if="!stage.isError" class="bk-icon copy-stage" @click.stop="copyStage">
+            <span class="stage-entry-btns">
+                <span :title="$t('editPage.copyStage')" v-if="!stage.isError && showCopyStage" class="bk-icon copy-stage" @click.stop="copyStage">
                     <Logo name="copy" size="16"></Logo>
                 </span>
                 <i @click.stop="deleteStageHandler" class="add-plus-icon close" />
@@ -44,11 +44,19 @@
                 <i :class="{ [iconCls]: true, 'active': isAddMenuShow }" />
                 <template v-if="isAddMenuShow">
                     <cruve-line class="add-connector connect-line left" :width="60" :height="cruveHeight"></cruve-line>
-                    <span class="insert-tip direction line-add" @click.stop="showStageSelectPopup(false)">
-                        <i class="tip-icon" />
-                        <span>
-                            {{ $t('editPage.insert') }}
-                        </span>
+                    <span class="insert-tip insert-stage direction line-add">
+                        <div @click.stop="appendStage(false)">
+                            <i class="tip-icon" />
+                            <span>
+                                {{ $t('editPage.insertStage') }}
+                            </span>
+                        </div>
+                        <div :class="{ 'disabled-item': hasFinallyStage }" @click.stop="appendStage(true)">
+                            <i class="tip-icon" />
+                            <span>
+                                {{ $t('editPage.insertFinallyStage') }}
+                            </span>
+                        </div>
                     </span>
                     <div @click.stop="showStageSelectPopup(true)" class="insert-tip parallel-add" :style="`top: ${cruveHeight}px`">
                         <i class="tip-icon" />
@@ -58,8 +66,24 @@
                     </div>
                 </template>
             </span>
-            <span v-if="isLastStage && editable" @click="appendStage" class="append-stage pointer">
+            <span v-bk-clickoutside="toggleLastMenu" v-if="isLastStage && !isFinallyStage && editable" @click="toggleLastMenu(!lastAddMenuShow)" class="append-stage pointer">
                 <i class="add-plus-icon" />
+                <template v-if="lastAddMenuShow">
+                    <span class="insert-tip insert-stage direction line-add">
+                        <div @click.stop="appendStage(false, true)">
+                            <i class="tip-icon" />
+                            <span>
+                                {{ $t('editPage.insertStage') }}
+                            </span>
+                        </div>
+                        <div :class="{ 'disabled-item': hasFinallyStage }" @click.stop="appendStage(true)">
+                            <i class="tip-icon" />
+                            <span>
+                                {{ $t('editPage.insertFinallyStage') }}
+                            </span>
+                        </div>
+                    </span>
+                </template>
             </span>
         </template>
     </div>
@@ -108,6 +132,7 @@
         data () {
             return {
                 isAddMenuShow: false,
+                lastAddMenuShow: false,
                 cruveHeight: 0
             }
         },
@@ -117,7 +142,8 @@
                 'pipeline'
             ]),
             ...mapGetters('atom', [
-                'isTriggerContainer'
+                'isTriggerContainer',
+                'hasFinallyStage'
             ]),
             isStageError () {
                 try {
@@ -131,7 +157,7 @@
                 return this.stage.status === 'FAILED' || this.stage.status === 'CANCELED'
             },
             showCopyStage () {
-                return !this.isTriggerStage && this.editable
+                return !this.isTriggerStage && !this.isFinallyStage && this.editable
             },
             isFirstStage () {
                 return this.stageIndex === 0
@@ -141,6 +167,9 @@
             },
             isTriggerStage () {
                 return this.checkIsTriggerStage(this.stage)
+            },
+            isFinallyStage () {
+                return this.stage.finally === true
             },
             stageTitle () {
                 return this.stage ? this.stage.name : 'stage'
@@ -175,7 +204,7 @@
             },
             dragOptions () {
                 return {
-                    group: 'pipeline-job',
+                    group: this.stage.finally ? 'finally-stage-job' : 'pipeline-job',
                     ghostClass: 'sortable-ghost-atom',
                     chosenClass: 'sortable-chosen-atom',
                     animation: 130,
@@ -281,6 +310,7 @@
             ...mapActions('pipelines', ['requestRetryPipeline']),
             ...mapActions('atom', [
                 'setInertStageIndex',
+                'setInsertStageIsFinally',
                 'togglePropertyPanel',
                 'toggleStageSelectPopup',
                 'setPipelineContainer',
@@ -355,10 +385,15 @@
                 return !isTrigger && !isRelatedTrigger && !isTriggerStage
             },
 
-            appendStage () {
-                const { stageIndex, setInertStageIndex, showStageSelectPopup } = this
+            appendStage (isFinally = false, fromLast = false) {
+                console.log(this.stageIndex, 55)
+                const { stageIndex, setInertStageIndex, setInsertStageIsFinally, hasFinallyStage, showStageSelectPopup } = this
+                if (isFinally && hasFinallyStage) return
                 setInertStageIndex({
-                    insertStageIndex: stageIndex + 1
+                    insertStageIndex: isFinally ? this.stageLength : (fromLast ? stageIndex + 1 : stageIndex)
+                })
+                setInsertStageIsFinally({
+                    insertStageIsFinally: isFinally
                 })
                 showStageSelectPopup(false)
             },
@@ -368,6 +403,7 @@
                     isAddParallelContainer: isParallel
                 })
             },
+            
             toggleAddMenu (isAddMenuShow) {
                 if (!this.editable) return
                 const { stageIndex, setInertStageIndex } = this
@@ -377,6 +413,11 @@
                         insertStageIndex: stageIndex
                     })
                 }
+            },
+
+            toggleLastMenu (isAddMenuShow) {
+                if (!this.editable) return
+                this.lastAddMenuShow = typeof isAddMenuShow === 'boolean' ? isAddMenuShow : false
             },
 
             startNextStage () {
@@ -600,6 +641,10 @@
             .add-plus-icon {
                 box-shadow: 0px 2px 4px 0px rgba(60, 150, 255, 0.2);
             }
+            .line-add {
+                top: -46px;
+                left: -16px;
+            }
         }
 
         .add-menu {
@@ -615,7 +660,7 @@
                 z-index: 4;
             }
             .line-add {
-                top: -30px;
+                top: -46px;
                 left: -16px;
             }
             .parallel-add {
@@ -655,6 +700,45 @@
                 position: absolute;
                 right: -$angleSize;
                 top: -$angleSize;
+            }
+        }
+
+        .insert-stage {
+            display: block;
+            max-width: 150px;
+            width: 140px;
+            height: 46px;
+            border-radius: 10px;
+            .tip-icon {
+                display: inline-block;
+            }
+            div {
+                margin: 4px;
+            }
+            &:hover {
+                border-color: $primaryColor;
+                color: $primaryColor;
+                background-color: white;
+                &.direction:after {
+                    background-color: white;
+                    border-right-color: $borderColor;
+                    border-bottom-color: $borderColor;
+                }
+                // div {
+                //     background-color: #c4cdd6;
+                // }
+                .tip-icon {
+                    @include add-plus-icon($primaryColor, $primaryColor, white, 8px, false);
+                    display: inline-block;
+                }
+            }
+            .disabled-item {
+                cursor: not-allowed;
+                color: #c4cdd6;
+                .tip-icon {
+                    @include add-plus-icon( #c4cdd6,  #c4cdd6,  #c4cdd6, 8px, false);
+                    display: inline-block;
+                }
             }
         }
     }

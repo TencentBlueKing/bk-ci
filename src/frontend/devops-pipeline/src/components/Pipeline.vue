@@ -133,6 +133,7 @@
                 'editingElementPos',
                 'isStagePopupShow',
                 'insertStageIndex',
+                'insertStageIsFinally',
                 'isAddParallelContainer',
                 'showStageReviewPanel'
             ]),
@@ -241,12 +242,18 @@
             },
             insert (type) {
                 if (!this.isStagePopupShow) return
-                const { pipeline, insertStageIndex, isAddParallelContainer, setInertStageIndex } = this
+                const { pipeline, insertStageIndex, isAddParallelContainer, insertStageIsFinally, setInertStageIndex } = this
                 if (!isAddParallelContainer) {
                     this.addStage({
                         stages: pipeline.stages,
-                        insertStageIndex
+                        insertStageIndex,
+                        insertStageIsFinally
                     })
+                    if (insertStageIsFinally) {
+                        const element = document.getElementsByClassName('bk-tab-section')[0]
+                        console.log(element, element.scrollWidth)
+                        element && (element.scrollLeft = element.scrollWidth)
+                    }
                     setInertStageIndex({
                         insertStageIndex: insertStageIndex + 1
                     })
@@ -303,7 +310,7 @@
         flex: 1;
         overflow: auto;
         .scroll-wraper {
-            padding: 20px 0 40px 30px;
+            padding: 30px 0 40px 30px;
             min-height: 100%;
         }
         &:before {
