@@ -40,10 +40,16 @@
 
             displayNum () {
                 const pipeType = this.$route.query.pipeType
-                const numMap = {
-                    'atom': this.atom.recentExecuteNum
+                let res
+                switch (pipeType) {
+                    case 'atom':
+                        res = this.atom.recentExecuteNum
+                        break;
+                    default:
+                        res = this.atom.downloads
+                        break
                 }
-                return numMap[pipeType] || this.atom.downloads
+                return res
             }
         }
     }
