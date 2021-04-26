@@ -67,11 +67,11 @@ class PathPrefixFilter(
         triggerOnPath.forEach eventPath@{ eventPath ->
             includedPaths.forEach userPath@{ userPath ->
                 if (isPathMatch(eventPath, userPath)) {
-                    logger.warn("$pipelineId|$eventPath|Event path match the user path")
                     matchPaths.add(userPath)
                 }
             }
         }
+        logger.warn("$pipelineId|$matchPaths|Event path match the user path")
         return if (matchPaths.isNotEmpty()) {
             response.addParam(MATCH_PATHS, matchPaths.joinToString(","))
             true

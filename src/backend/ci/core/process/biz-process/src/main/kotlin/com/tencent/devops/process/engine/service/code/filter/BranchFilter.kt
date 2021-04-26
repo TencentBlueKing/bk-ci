@@ -43,6 +43,9 @@ class BranchFilter(
     }
 
     override fun doFilter(response: WebhookFilterResponse): Boolean {
+        logger.info(
+            "$pipelineId|$triggerOnBranchName|$includedBranches|$excludedBranches|git web hook branch filter"
+        )
         return hasNoBranchSpecs() || (isBranchNotExcluded() && isBranchIncluded(response))
     }
 

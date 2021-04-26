@@ -42,6 +42,7 @@ class EventTypeFilter(
     }
 
     override fun doFilter(response: WebhookFilterResponse): Boolean {
+        logger.info("$pipelineId|$triggerOnEventType|$eventType|$action|git web hook eventType filter")
         return if (triggerOnEventType == CodeEventType.MERGE_REQUEST) {
             isAllowedByMrAction()
         } else {
