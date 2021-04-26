@@ -23,7 +23,7 @@ function _M:get_gray()
     end
 
     -- 现在灰度配置只对codecc生效
-    local devops_project = projectUtil:get_project()
+    local devops_project = ngx.var.project_id
     local gray_flag = false
 
     if (devops_project ~= nil and devops_project ~= "") then

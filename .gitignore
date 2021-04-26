@@ -30,3 +30,4 @@ out
 /src/backend/ci/.settings/
 .prebuild.yml
 .temp
+.history
