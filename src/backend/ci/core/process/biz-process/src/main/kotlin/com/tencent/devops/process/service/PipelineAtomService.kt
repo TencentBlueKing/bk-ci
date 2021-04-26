@@ -95,8 +95,8 @@ class PipelineAtomService @Autowired constructor(
     @Value("\${pipeline.atom.maxRelQueryNum:2000}")
     private val maxRelQueryNum: Int = 2000
 
-    @Value("\${pipeline.atom.maxRelQueryRangeTime:30}")
-    private val maxRelQueryRangeTime: Long = 30
+    @Value("\${pipeline.atom.maxRelQueryRangeTime:90}")
+    private val maxRelQueryRangeTime: Long = 90
 
     fun createReplaceAtomInfo(
         userId: String,
