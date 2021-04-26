@@ -378,7 +378,7 @@ class PipelineBuildFacadeService(
                 // stage/job/task级重试，获取buildVariable构建参数，恢复环境变量
                 params.putAll(originVars)
                 // stage/job/task级重试
-                if (failedContainer == true) params[PIPELINE_RETRY_ALL_FAILED_CONTAINER] = true
+                params[PIPELINE_RETRY_ALL_FAILED_CONTAINER] = failedContainer == true
                 run {
                     model.stages.forEach { s ->
                         // stage 级重试
