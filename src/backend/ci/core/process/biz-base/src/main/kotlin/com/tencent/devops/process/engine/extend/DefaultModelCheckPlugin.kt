@@ -260,25 +260,43 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
             }
         }
 
+        checkJobCondition(finallyStage = finallyStage, jobContainer = jobContainer)
+    }
+
+    private fun checkJobCondition(finallyStage: Boolean, jobContainer: Container) {
+
         val jobControlOption = when (jobContainer) {
             is VMBuildContainer -> jobContainer.jobControlOption
             is NormalContainer -> jobContainer.jobControlOption
             else -> null
         }
 
-        if (jobControlOption?.runCondition != null) {
-            // 非finallyStage下不允许有finallyStageJobRunConditionSet下的条件
-            if (!finallyStage || finallyStageJobRunConditionSet.contains(jobControlOption.runCondition)) {
+        if (jobControlOption?.runCondition == null) {
+            return
+        }
+
+        // 非finallyStage下不允许有finallyStageJobRunConditionSet下的条件
+        if (finallyStage) {
+            if (!finallyStageJobRunConditionSet.contains(jobControlOption.runCondition)) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_FINALLY_STAGE_JOB_CONDITION,
                     defaultMessage = "流水线: [{0}]下的Job运行条件配置错误: {1}",
                     params = arrayOf(jobContainer.name, jobControlOption.runCondition.name)
                 )
             }
+            return
+        } else {
+            if (!normalStageJobRunConditionSet.contains(jobControlOption.runCondition)) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_NORMAL_STAGE_JOB_CONDITION,
+                    defaultMessage = "流水线: [{0}]下的Job运行条件配置错误: {1}",
+                    params = arrayOf(jobContainer.name, jobControlOption.runCondition.name)
+                )
+            }
         }
 
-        if (jobControlOption?.runCondition == JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN ||
-            jobControlOption?.runCondition == JobRunCondition.CUSTOM_VARIABLE_MATCH
+        if (jobControlOption.runCondition == JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN ||
+            jobControlOption.runCondition == JobRunCondition.CUSTOM_VARIABLE_MATCH
         ) {
             if (jobControlOption.customVariables == null ||
                 jobControlOption.customVariables!!.isEmpty()
@@ -295,6 +313,13 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
         JobRunCondition.PREVIOUS_STAGE_CANCEL,
         JobRunCondition.PREVIOUS_STAGE_FAILED,
         JobRunCondition.PREVIOUS_STAGE_SUCCESS,
+        JobRunCondition.STAGE_RUNNING
+    )
+
+    private val normalStageJobRunConditionSet = setOf(
+        JobRunCondition.CUSTOM_CONDITION_MATCH,
+        JobRunCondition.CUSTOM_VARIABLE_MATCH,
+        JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN,
         JobRunCondition.STAGE_RUNNING
     )
 }

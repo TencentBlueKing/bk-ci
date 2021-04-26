@@ -38,7 +38,6 @@ import com.tencent.devops.process.utils.TASK_FAIL_RETRY_MAX_COUNT
 import com.tencent.devops.process.utils.TASK_FAIL_RETRY_MIN_COUNT
 import org.slf4j.LoggerFactory
 
-@Suppress("ALL")
 object ControlUtils {
 
     private val logger = LoggerFactory.getLogger(javaClass)
