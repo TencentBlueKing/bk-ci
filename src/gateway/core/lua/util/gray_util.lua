@@ -18,7 +18,7 @@
 _M = {}
 
 function _M:get_gray()
-    if ngx.var.not_use_gray == 'true' or ngx.var.project ~= 'codecc' then
+    if ngx.var.project ~= 'codecc' then
         return false
     end
 
