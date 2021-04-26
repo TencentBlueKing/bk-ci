@@ -25,31 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.service.trigger
+package com.tencent.devops.common.ci.v2
 
-import com.tencent.devops.common.ci.v2.YmlVersion
-import com.tencent.devops.gitci.v2.service.V2RequestTrigger
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonProperty
 
-@Component
-class RequestTriggerFactory @Autowired constructor(
-    val requestTrigger: RequestTrigger,
-    val v2RequestTrigger: V2RequestTrigger
-){
-
-    fun getGitCIRequestTrigger(ymlVersion: YmlVersion?): RequestTriggerInterface<*> {
-        if (ymlVersion == null) {
-            return requestTrigger
-        }
-
-        return when(ymlVersion.version) {
-            "v2.0" -> {
-                v2RequestTrigger
-            }
-            else -> {
-                requestTrigger
-            }
-        }
-    }
-}
+/**
+ * model
+ *
+ * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(gitci,prebuild等)异常
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class PreScriptBuildYaml(
+    val version: String?,
+    val name: String?,
+    val label: String? = null,
+    val triggerOn: PreTriggerOn?,
+    val variables: Map<String, Variable>?,
+    val stages: List<PreStage>?,
+    val jobs: Map<String, Job>? = null,
+    val steps: List<Steps>? = null,
+    @JsonProperty("on-fail")
+    val onFail: OnFail?,
+    val extends: Extends?,
+    val resource: Resources?,
+    val notices: List<Notices>?
+)

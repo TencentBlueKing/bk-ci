@@ -25,31 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.service.trigger
+package com.tencent.devops.common.ci.v2
 
-import com.tencent.devops.common.ci.v2.YmlVersion
-import com.tencent.devops.gitci.v2.service.V2RequestTrigger
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.tencent.devops.common.ci.v2.MrRule
+import com.tencent.devops.common.ci.v2.PushRule
+import com.tencent.devops.common.ci.v2.SchedulesRule
+import com.tencent.devops.common.ci.v2.TagRule
 
-@Component
-class RequestTriggerFactory @Autowired constructor(
-    val requestTrigger: RequestTrigger,
-    val v2RequestTrigger: V2RequestTrigger
-){
+/**
+ * model
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class TriggerOn(
+    val push: PushRule?,
+    val tag: TagRule?,
+    val mr: MrRule?,
+    val schedules: SchedulesRule? = null
+)
 
-    fun getGitCIRequestTrigger(ymlVersion: YmlVersion?): RequestTriggerInterface<*> {
-        if (ymlVersion == null) {
-            return requestTrigger
-        }
 
-        return when(ymlVersion.version) {
-            "v2.0" -> {
-                v2RequestTrigger
-            }
-            else -> {
-                requestTrigger
-            }
-        }
-    }
-}
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class PreTriggerOn(
+    val push: Any?,
+    val tag: Any?,
+    val mr: Any?,
+    val schedules: SchedulesRule?
+)

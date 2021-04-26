@@ -25,31 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.service.trigger
+package com.tencent.devops.common.ci.v2
 
-import com.tencent.devops.common.ci.v2.YmlVersion
-import com.tencent.devops.gitci.v2.service.V2RequestTrigger
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonProperty
 
-@Component
-class RequestTriggerFactory @Autowired constructor(
-    val requestTrigger: RequestTrigger,
-    val v2RequestTrigger: V2RequestTrigger
-){
+/**
+ * model
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class TagRule(
+    val tags: List<String>? = null,
 
-    fun getGitCIRequestTrigger(ymlVersion: YmlVersion?): RequestTriggerInterface<*> {
-        if (ymlVersion == null) {
-            return requestTrigger
-        }
+    @JsonProperty("tags-ignore")
+    val tagsIgnore: List<String>? = null,
 
-        return when(ymlVersion.version) {
-            "v2.0" -> {
-                v2RequestTrigger
-            }
-            else -> {
-                requestTrigger
-            }
-        }
-    }
-}
+    @JsonProperty("from-branches")
+    val fromBranches: List<String>? = null,
+
+    val users: List<String>? = null,
+
+    @JsonProperty("users-ignore")
+    val usersIgnore: List<String>? = null
+)

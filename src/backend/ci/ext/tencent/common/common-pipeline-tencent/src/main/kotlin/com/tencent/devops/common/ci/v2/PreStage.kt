@@ -25,31 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.service.trigger
+package com.tencent.devops.common.ci.v2
 
-import com.tencent.devops.common.ci.v2.YmlVersion
-import com.tencent.devops.gitci.v2.service.V2RequestTrigger
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.ci.v2.PreJob
 
-@Component
-class RequestTriggerFactory @Autowired constructor(
-    val requestTrigger: RequestTrigger,
-    val v2RequestTrigger: V2RequestTrigger
-){
-
-    fun getGitCIRequestTrigger(ymlVersion: YmlVersion?): RequestTriggerInterface<*> {
-        if (ymlVersion == null) {
-            return requestTrigger
-        }
-
-        return when(ymlVersion.version) {
-            "v2.0" -> {
-                v2RequestTrigger
-            }
-            else -> {
-                requestTrigger
-            }
-        }
-    }
-}
+/**
+ * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(gitci,prebuild等)异常
+ */
+data class PreStage(
+    val name: String?,
+    val id: String?,
+    val label: String? = null,
+    @JsonProperty("if")
+    val ifField: String? = null,
+    @JsonProperty("fast-kill")
+    val fastKill: Boolean? = false,
+    val jobs: Map<String, PreJob>?
+)
