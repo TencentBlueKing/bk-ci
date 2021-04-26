@@ -67,8 +67,11 @@ class PipelineBuildTurboExtService @Autowired constructor(
                 return ""
             }
             val instance = loadBalance(instances)
-            val url = "${if (instance.isSecure) "https" else
-                "http"}://${instance.host}:${instance.port}/api/service/turbo/task/pipeline/$pipelineId/$elementId"
+            val apiUrl = "/api/service/turboPlan/pipelineId/$pipelineId/pipelineElementId/$elementId"
+            val url = "${
+                if (instance.isSecure) "https" else
+                    "http"
+            }://${instance.host}:${instance.port}$apiUrl"
 
             logger.info("Get turbo task info, request url: $url")
             val startTime = System.currentTimeMillis()
