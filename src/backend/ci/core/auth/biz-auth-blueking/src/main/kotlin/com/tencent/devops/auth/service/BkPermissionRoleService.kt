@@ -44,7 +44,12 @@ class BkPermissionRoleService @Autowired constructor(
     private val iamConfiguration: IamConfiguration
 ) : AbsPermissionRoleServiceImpl(iamManagerService, permissionGradeService, iamConfiguration) {
 
-    override fun createPermissionRole(userId: String, projectId: Int, projectCode: String, groupInfo: ProjectRoleDTO): Int {
+    override fun createPermissionRole(
+        userId: String,
+        projectId: Int,
+        projectCode: String,
+        groupInfo: ProjectRoleDTO
+    ): Int {
         return super.createPermissionRole(userId, projectId, projectCode, groupInfo)
     }
 
