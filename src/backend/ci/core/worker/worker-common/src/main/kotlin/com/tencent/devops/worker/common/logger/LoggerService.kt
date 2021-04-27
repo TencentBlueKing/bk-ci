@@ -49,7 +49,6 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
-import kotlin.math.log
 
 @Suppress("ALL")
 object LoggerService {
@@ -78,7 +77,7 @@ object LoggerService {
     /**
      * 日志上报缓冲队列
      */
-    private val queue = LinkedBlockingQueue<LogMessage>(2000)
+    private val uploadQueue = LinkedBlockingQueue<LogMessage>(2000)
 
     /**
      * 日志本地存储文件映射关系
@@ -104,7 +103,7 @@ object LoggerService {
             var lastSaveTime: Long = 0
             while (running.get()) {
                 val logMessage = try {
-                    queue.poll(3, TimeUnit.SECONDS)
+                    uploadQueue.poll(3, TimeUnit.SECONDS)
                 } catch (e: InterruptedException) {
                     logger.warn("Logger service poll thread interrupted", e)
                     null
@@ -133,7 +132,7 @@ object LoggerService {
         } catch (t: Throwable) {
             logger.warn("Fail to send the logger", t)
         }
-        logger.info("Finish the sending thread - (${queue.size})")
+        logger.info("Finish the sending thread - (${uploadQueue.size})")
         true
     }
 
@@ -175,8 +174,8 @@ object LoggerService {
                     future!!.get()
                 }
                 // 把没完成的日志打完
-                while (queue.size != 0) {
-                    queue.drainTo(logMessages)
+                while (uploadQueue.size != 0) {
+                    uploadQueue.drainTo(logMessages)
                     if (logMessages.isNotEmpty()) {
                         flush()
                     }
@@ -213,12 +212,12 @@ object LoggerService {
             executeCount = executeCount
         )
         // 如果已经进入Job执行任务，则可以做日志本地落盘
-        if (elementId.isNotBlank() && pipelineLogDir != null && currentTaskLineNo <= LOG_TASK_LINE_LIMIT) {
+        if (elementId.isNotBlank() && pipelineLogDir != null) {
             saveLocalLog(logMessage)
         }
 
         try {
-            this.queue.put(logMessage)
+            if (currentTaskLineNo <= LOG_TASK_LINE_LIMIT) this.uploadQueue.put(logMessage)
         } catch (e: InterruptedException) {
             logger.error("写入普通日志行失败：", e)
         }
@@ -292,7 +291,7 @@ object LoggerService {
         }
     }
 
-    private fun addLog(message: LogMessage) = queue.put(message)
+    private fun addLog(message: LogMessage) = uploadQueue.put(message)
 
     private fun sendMultiLog(logMessages: List<LogMessage>) {
         try {
@@ -326,10 +325,9 @@ object LoggerService {
             if (null == logFile) {
                 logFile = WorkspaceUtils.getBuildLogFile(
                     pipelineLogDir = pipelineLogDir!!,
+                    pipelineId = buildVariables?.pipelineId!!,
                     buildId = buildVariables?.buildId!!,
-                    vmSeqId = buildVariables?.vmSeqId ?: "",
-                    vmName = buildVariables?.vmName ?: "",
-                    elementName = elementName,
+                    elementId = elementId,
                     executeCount = executeCount
                 )
                 logger.info("Create new build log file(${logFile.absolutePath})")

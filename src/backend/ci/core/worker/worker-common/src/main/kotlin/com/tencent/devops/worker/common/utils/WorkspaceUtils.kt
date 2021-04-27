@@ -92,13 +92,12 @@ object WorkspaceUtils {
 
     fun getBuildLogFile(
         pipelineLogDir: File,
+        pipelineId: String,
         buildId: String,
-        vmSeqId: String,
-        vmName: String,
-        elementName: String,
+        elementId: String,
         executeCount: Int
     ):File {
-        val logFile = File(pipelineLogDir, "/$buildId/${vmSeqId}-${vmName}_${elementName}_${executeCount}.log")
+        val logFile = File(pipelineLogDir, "/$pipelineId/$buildId/$elementId/$executeCount.log")
         logFile.parentFile.mkdirs()
         logFile.createNewFile()
         return logFile
