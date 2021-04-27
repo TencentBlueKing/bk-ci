@@ -61,6 +61,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventTy
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.gitci.api.GitCIBuildResource
 import com.tencent.devops.gitci.api.GitRepositoryConfResource
+import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.pojo.BuildConfig
 import com.tencent.devops.gitci.pojo.GitCIStartupVO
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
@@ -94,6 +95,7 @@ import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_NAME
 import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_URL
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -101,9 +103,11 @@ import org.springframework.stereotype.Service
 @Service
 class TriggerBuildService @Autowired constructor(
     private val client: Client,
+    private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
     private val buildConfig: BuildConfig,
     private val objectMapper: ObjectMapper,
+    private val gitCISettingDao: GitCISettingDao,
     private val gitCIParameterUtils: GitCIParameterUtils
 ) {
     private val channelCode = ChannelCode.GIT
@@ -112,9 +116,8 @@ class TriggerBuildService @Autowired constructor(
         logger.info("Git request gitBuildId:$gitBuildId, pipeline:$pipeline, event: $event, yaml: $scriptBuildYaml")
 
         // create or refresh pipeline
-        val gitProjectConf =
-            client.get(GitRepositoryConfResource::class).getGitCIConf(event.userId, event.gitProjectId).data
-                ?: throw OperationException("git ci projectCode not exist")
+        val gitProjectConf = gitCISettingDao.getSetting(dslContext, event.gitProjectId) ?: throw OperationException("git ci projectCode not exist")
+
         val model = createPipelineModel(event, gitProjectConf, scriptBuildYaml)
 
         return client.get(GitCIBuildResource::class).gitCIStartupPipeline(
