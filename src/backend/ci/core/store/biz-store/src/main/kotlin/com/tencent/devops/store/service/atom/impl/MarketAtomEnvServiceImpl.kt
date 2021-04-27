@@ -131,9 +131,9 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             if (!queryDefaultAtomSwitch) {
                 redisOperation.sadd(storePublicFlagKey, *defaultAtomCodeList.toTypedArray())
             }
-            atomCodeList.filter { !defaultAtomCodeList.contains(it) }
+            atomCodeList.filter { !defaultAtomCodeList.contains(it) }.toMutableList()
         } else {
-            atomCodeList.filter { !redisOperation.isMember(storePublicFlagKey, it) }
+            atomCodeList.filter { !redisOperation.isMember(storePublicFlagKey, it) }.toMutableList()
         }
         val validAtomCodeList = storeProjectRelDao.getValidStoreCodesByProject(
             dslContext = dslContext,
@@ -142,16 +142,21 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             storeType = StoreTypeEnum.ATOM
         )?.map { it.value1() } ?: emptyList()
         // 判断是否存在不可用插件
-        validateAtomCodeList.toMutableList().removeAll(validAtomCodeList)
+        validateAtomCodeList.removeAll(validAtomCodeList)
         if (validateAtomCodeList.isNotEmpty()) {
             // 存在不可用插件，给出错误提示
             val inValidAtomNameList = mutableListOf<String>()
             validateAtomCodeList.forEach { atomCode ->
                 inValidAtomNameList.add(atomCodeMap[atomCode] ?: atomCode)
             }
+            val params = arrayOf(projectCode, JsonUtil.toJson(inValidAtomNameList))
             throw ErrorCodeException(
                 errorCode = StoreMessageCode.USER_ATOM_IS_NOT_ALLOW_USE_IN_PROJECT,
-                params = arrayOf(projectCode, JsonUtil.toJson(inValidAtomNameList))
+                params = params,
+                defaultMessage = MessageCodeUtil.getCodeMessage(
+                    messageCode = StoreMessageCode.USER_ATOM_IS_NOT_ALLOW_USE_IN_PROJECT,
+                    params = params
+                )
             )
         }
         // 2、根据插件代码和版本号查找插件运行时信息
@@ -215,15 +220,24 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
     ): AtomRunInfo {
         val atomEnvResult = getMarketAtomEnvInfo(projectCode, atomCode, version)
         if (atomEnvResult.isNotOk()) {
+            val params = arrayOf(projectCode, atomName)
             throw ErrorCodeException(
                 errorCode = StoreMessageCode.USER_ATOM_IS_NOT_ALLOW_USE_IN_PROJECT,
-                params = arrayOf(projectCode, atomName)
+                params = params,
+                defaultMessage = MessageCodeUtil.getCodeMessage(
+                    messageCode = StoreMessageCode.USER_ATOM_IS_NOT_ALLOW_USE_IN_PROJECT,
+                    params = params
+                )
             )
         }
         // 查不到当前插件信息则中断流程
         val atomEnv = atomEnvResult.data ?: throw ErrorCodeException(
             errorCode = StoreMessageCode.USER_ATOM_IS_NOT_ALLOW_USE_IN_PROJECT,
-            params = arrayOf(projectCode, atomName)
+            params = arrayOf(projectCode, atomName),
+            defaultMessage = MessageCodeUtil.getCodeMessage(
+                messageCode = StoreMessageCode.USER_ATOM_IS_NOT_ALLOW_USE_IN_PROJECT,
+                params = arrayOf(projectCode, atomName)
+            )
         )
         val atomRunInfo = AtomRunInfo(
             atomCode = atomCode,
