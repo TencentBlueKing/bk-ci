@@ -28,7 +28,7 @@
 package com.tencent.devops.gitci.service.trigger
 
 import com.tencent.devops.common.ci.v2.YmlVersion
-import com.tencent.devops.gitci.v2.service.V2RequestTrigger
+import com.tencent.devops.gitci.v2.service.trigger.V2RequestTrigger
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 

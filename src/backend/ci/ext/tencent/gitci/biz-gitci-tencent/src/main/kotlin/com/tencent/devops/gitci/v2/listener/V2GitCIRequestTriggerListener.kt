@@ -29,7 +29,7 @@ package com.tencent.devops.gitci.v2.listener
 
 import com.tencent.devops.gitci.pojo.V2GitCIRequestTriggerEvent
 import com.tencent.devops.gitci.constant.MQ
-import com.tencent.devops.gitci.v2.service.trigger.TriggerBuildService
+import com.tencent.devops.gitci.v2.service.TriggerBuildService
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.ExchangeTypes
 import org.springframework.amqp.rabbit.annotation.Exchange
@@ -59,7 +59,7 @@ constructor(private val triggerBuildService: TriggerBuildService) {
             triggerBuildService.gitStartBuild(
                 pipeline = v2GitCIRequestTriggerEvent.pipeline,
                 event = v2GitCIRequestTriggerEvent.event,
-                scriptBuildYaml = v2GitCIRequestTriggerEvent.yaml,
+                yaml = v2GitCIRequestTriggerEvent.yaml,
                 gitBuildId = v2GitCIRequestTriggerEvent.gitBuildId
             )
         } catch (e: Throwable) {

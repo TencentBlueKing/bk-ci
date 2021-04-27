@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.v2.service.trigger
+package com.tencent.devops.gitci.v2.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
@@ -67,11 +67,12 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventTy
 import com.tencent.devops.common.pipeline.type.gitci.GitCIDispatchType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.gitci.api.GitCIBuildResource
-import com.tencent.devops.gitci.api.GitRepositoryConfResource
+import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.gitci.dao.GitCISettingDao
+import com.tencent.devops.gitci.dao.GitPipelineResourceDao
+import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
+import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.gitci.pojo.BuildConfig
-import com.tencent.devops.gitci.pojo.GitCIStartupVO
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.pojo.GitRepositoryConf
 import com.tencent.devops.gitci.pojo.GitRequestEvent
@@ -79,6 +80,7 @@ import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitPushEvent
 import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
+import com.tencent.devops.gitci.service.BaseBuildService
 import com.tencent.devops.gitci.utils.GitCIParameterUtils
 import com.tencent.devops.gitci.utils.GitCIPipelineUtils
 import com.tencent.devops.gitci.utils.GitCommonUtils
@@ -112,32 +114,32 @@ import org.springframework.stereotype.Service
 class TriggerBuildService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
-    private val redisOperation: RedisOperation,
     private val buildConfig: BuildConfig,
     private val objectMapper: ObjectMapper,
     private val gitCISettingDao: GitCISettingDao,
-    private val gitCIParameterUtils: GitCIParameterUtils
-) {
+    private val gitCIParameterUtils: GitCIParameterUtils,
+    redisOperation: RedisOperation,
+    scmClient: ScmClient,
+    gitPipelineResourceDao: GitPipelineResourceDao,
+    gitRequestEventBuildDao: GitRequestEventBuildDao,
+    gitRequestEventNotBuildDao: GitRequestEventNotBuildDao
+) : BaseBuildService<ScriptBuildYaml>(client, scmClient, dslContext, redisOperation, gitPipelineResourceDao, gitRequestEventBuildDao, gitRequestEventNotBuildDao) {
     private val channelCode = ChannelCode.GIT
 
-    fun gitStartBuild(
+    override fun gitStartBuild(
         pipeline: GitProjectPipeline,
         event: GitRequestEvent,
-        scriptBuildYaml: ScriptBuildYaml,
+        yaml: ScriptBuildYaml,
         gitBuildId: Long
     ): BuildId? {
-        logger.info("Git request gitBuildId:$gitBuildId, pipeline:$pipeline, event: $event, yaml: $scriptBuildYaml")
+        logger.info("Git request gitBuildId:$gitBuildId, pipeline:$pipeline, event: $event, yaml: $yaml")
 
         // create or refresh pipeline
         val gitProjectConf = gitCISettingDao.getSetting(dslContext, event.gitProjectId) ?: throw OperationException("git ci projectCode not exist")
 
-        val model = createPipelineModel(event, gitProjectConf, scriptBuildYaml)
+        val model = createPipelineModel(event, gitProjectConf, yaml)
 
-        return client.get(GitCIBuildResource::class).gitCIStartupPipeline(
-            event.userId, GitCIStartupVO(
-                pipeline, event, gitProjectConf, model, gitBuildId
-            )
-        ).data
+        return startBuild(pipeline, event, gitProjectConf, model, gitBuildId)
     }
 
     private fun createPipelineModel(
