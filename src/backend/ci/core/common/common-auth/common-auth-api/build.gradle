@@ -33,6 +33,7 @@ dependencies {
     compile "com.fasterxml.jackson.dataformat:jackson-dataformat-yaml"
     compile "com.fasterxml.jackson.jaxrs:jackson-jaxrs-base"
     compile "com.fasterxml.jackson.module:jackson-module-kotlin"
+    compile project(":core:common:common-api")
 
     compile fileTree(dir: 'lib/iam-sdk-1.0.1.jar', includes: ['*.jar'])
 }
