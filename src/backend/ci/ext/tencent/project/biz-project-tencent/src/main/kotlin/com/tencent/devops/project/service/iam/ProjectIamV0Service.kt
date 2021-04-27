@@ -181,7 +181,7 @@ class ProjectIamV0Service @Autowired constructor(
             } catch (ope: OperationException) {
                 throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_USER_INFO_FAIL))
             } catch (e: Exception) {
-                ProjectLocalService.logger.warn("createUser2Project fail, userId[$it]", e)
+                logger.warn("createUser2Project fail, userId[$it]", e)
                 return false
             }
         }
