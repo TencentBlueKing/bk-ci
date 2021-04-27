@@ -25,16 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.setting
+package com.tencent.devops.process.engine.service.rule.processor
 
-import com.tencent.devops.common.pipeline.Model
-import io.swagger.annotations.ApiModelProperty
-import javax.validation.Valid
+import org.springframework.stereotype.Service
 
-data class PipelineModelAndSetting(
-    @ApiModelProperty("流水线模型", required = true)
-    val model: Model,
-    @ApiModelProperty("流水线设置", required = false)
-    @Valid
-    val setting: PipelineSetting
-)
+@Service("DefaultCalendarProcessor")
+class DefaultCalendarProcessorService : ProcessorService {
+
+    override fun getRuleValue(ruleName: String): String? {
+        TODO("Not yet implemented")
+    }
+}

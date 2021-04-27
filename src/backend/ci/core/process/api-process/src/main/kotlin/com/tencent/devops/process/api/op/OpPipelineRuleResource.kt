@@ -25,16 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.setting
+package com.tencent.devops.process.api.op
 
-import com.tencent.devops.common.pipeline.Model
-import io.swagger.annotations.ApiModelProperty
-import javax.validation.Valid
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import javax.ws.rs.Consumes
+import javax.ws.rs.PUT
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-data class PipelineModelAndSetting(
-    @ApiModelProperty("流水线模型", required = true)
-    val model: Model,
-    @ApiModelProperty("流水线设置", required = false)
-    @Valid
-    val setting: PipelineSetting
-)
+@Api(tags = ["OP_PIPELINE_TASKS"], description = "OP-流水线-任务")
+@Path("/op/pipeline/tasks")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpPipelineTaskResource {
+
+    @ApiOperation("更新任务表插件版本")
+    @PUT
+    @Path("/atomVersion/async/update")
+    fun asyncUpdateTaskAtomVersion(): Result<Boolean>
+}

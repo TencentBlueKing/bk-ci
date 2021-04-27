@@ -25,16 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.setting
+package com.tencent.devops.process.engine.service.rule.processor
 
-import com.tencent.devops.common.pipeline.Model
-import io.swagger.annotations.ApiModelProperty
-import javax.validation.Valid
+import java.util.Calendar
 
-data class PipelineModelAndSetting(
-    @ApiModelProperty("流水线模型", required = true)
-    val model: Model,
-    @ApiModelProperty("流水线设置", required = false)
-    @Valid
-    val setting: PipelineSetting
-)
+abstract class CalendarProcessorService : ProcessorService {
+
+    companion object {
+
+        @JvmField
+        val fieldNames = getCalendarFieldNames()
+
+        @JvmStatic
+        private fun getCalendarFieldNames(): Set<String> {
+            val declaredFields = Calendar::class.java.declaredFields
+            val fieldNames = mutableSetOf<String>()
+            declaredFields.forEach {
+                fieldNames.add(it.name)
+            }
+            return fieldNames
+        }
+    }
+}
