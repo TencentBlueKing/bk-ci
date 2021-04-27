@@ -190,7 +190,6 @@ class V2WebHookMatcher(private val event: GitEvent) {
         return false
     }
 
-
     private fun isIgnorePathMatch(pathIgnoreList: List<String>?): Boolean {
         if (pathIgnoreList != null && pathIgnoreList.isNotEmpty()) {
             logger.info("Exclude path set ($pathIgnoreList)")

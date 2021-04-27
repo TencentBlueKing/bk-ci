@@ -71,7 +71,7 @@ class RequestTrigger @Autowired constructor (
         originYaml: String?,
         filePath: String
     ): Boolean {
-        val yamlObject= prepareCIBuildYaml(gitRequestEvent, originYaml, filePath, gitProjectPipeline.pipelineId) ?: return false
+        val yamlObject = prepareCIBuildYaml(gitRequestEvent, originYaml, filePath, gitProjectPipeline.pipelineId) ?: return false
 
         val normalizedYaml = YamlUtil.toYaml(yamlObject)
         logger.info("normalize yaml: $normalizedYaml")

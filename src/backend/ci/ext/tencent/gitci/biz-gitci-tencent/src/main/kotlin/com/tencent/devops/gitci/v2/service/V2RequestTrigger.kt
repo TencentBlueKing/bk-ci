@@ -27,7 +27,6 @@
 
 package com.tencent.devops.gitci.v2.service
 
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.PreScriptBuildYaml
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
@@ -69,7 +68,7 @@ class V2RequestTrigger @Autowired constructor (
         originYaml: String?,
         filePath: String
     ): Boolean {
-        val yamlObject= prepareCIBuildYaml(gitRequestEvent, originYaml, filePath, gitProjectPipeline.pipelineId) ?: return false
+        val yamlObject = prepareCIBuildYaml(gitRequestEvent, originYaml, filePath, gitProjectPipeline.pipelineId) ?: return false
 
         val normalizedYaml = YamlUtil.toYaml(yamlObject)
         logger.info("normalize yaml: $normalizedYaml")
@@ -119,7 +118,6 @@ class V2RequestTrigger @Autowired constructor (
 
         return true
     }
-
 
     override fun isMatch(event: GitEvent, ymlObject: ScriptBuildYaml): Boolean {
         return V2WebHookMatcher(event).isMatch(ymlObject.triggerOn!!)
