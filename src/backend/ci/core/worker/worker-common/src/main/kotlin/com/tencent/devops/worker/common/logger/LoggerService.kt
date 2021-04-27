@@ -82,7 +82,7 @@ object LoggerService {
     /**
      * 日志本地存储文件映射关系
      */
-    private val taskId2LogFile = mutableMapOf<String, File>()
+    private val taskId2LogFile = mutableMapOf<String/*elementId*/, Pair<String/*childPath*/, File/*logFile*/>>()
 
     /**
      * 当前执行插件的各类构建信息
@@ -282,8 +282,8 @@ object LoggerService {
         logger.info("Start to archive log files because of LogMode[${AgentEnv.getLogMode()}]")
         try {
             taskId2LogFile.forEach { (elementId, logFile) ->
-                logger.info("Archive task[$elementId] build log file(${logFile.absolutePath})")
-                ArchiveUtils.archivePipelineFile(logFile, buildVariables!!)
+                logger.info("Archive task[$elementId] build log file(${logFile.second.absolutePath})")
+                ArchiveUtils.archivePipelineFile(logFile.second, buildVariables!!)
             }
             logger.info("Finished archiving log ${taskId2LogFile.size} files")
         } catch (e: Exception) {
@@ -323,17 +323,17 @@ object LoggerService {
             // 必要的本地保存
             var logFile = taskId2LogFile[elementId]
             if (null == logFile) {
-                logFile = WorkspaceUtils.getBuildLogFile(
+                logFile = WorkspaceUtils.getBuildLogPathAndFile(
                     pipelineLogDir = pipelineLogDir!!,
                     pipelineId = buildVariables?.pipelineId!!,
                     buildId = buildVariables?.buildId!!,
                     elementId = elementId,
                     executeCount = executeCount
                 )
-                logger.info("Create new build log file(${logFile.absolutePath})")
+                logger.info("Create new build log file(${logFile.second.absolutePath})")
                 taskId2LogFile[elementId] = logFile
             }
-            logFile.printWriter().use { out ->
+            logFile.second.printWriter().use { out ->
                 out.println(logMessage.message)
             }
         } catch (e: Exception) {
