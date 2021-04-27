@@ -43,4 +43,5 @@ enum class BkStyleEnum(val style: String) {
     BOOLEAN_STYLE("^true|false\$"), // 布尔型正则表达式
     SCOPE_STYLE("^TEST|PRD|ALL\$"), // 适用范围正则表达式
     SERVICE_CODE_STYLE("^[a-z][([-a-z-0-9]*[a-z-0-9])?]{0,31}\$"), // 研发商店扩展服务标识正则表达式
+    BUILD_NUM_RULE_STYLE("^[\\w-.:\"]{1,256}\$") // 构建号生成规则正则表达式
 }
