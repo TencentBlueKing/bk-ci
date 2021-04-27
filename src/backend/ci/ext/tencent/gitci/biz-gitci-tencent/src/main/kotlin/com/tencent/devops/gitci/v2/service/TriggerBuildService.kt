@@ -138,6 +138,7 @@ class TriggerBuildService @Autowired constructor(
         val gitProjectConf = gitCISettingDao.getSetting(dslContext, event.gitProjectId) ?: throw OperationException("git ci projectCode not exist")
 
         val model = createPipelineModel(event, gitProjectConf, yaml)
+        logger.info("Git request gitBuildId:$gitBuildId, pipeline:$pipeline, model: $model")
 
         return startBuild(pipeline, event, gitProjectConf, model, gitBuildId)
     }
