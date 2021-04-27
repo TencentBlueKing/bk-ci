@@ -63,17 +63,13 @@ open class ScriptTask : ITask() {
         val continueNoneZero = taskParams["continueNoneZero"] ?: "false"
         // 如果脚本执行失败之后可以选择归档这个问题
         val archiveFileIfExecFail = taskParams["archiveFile"]
-        val script = URLDecoder.decode(taskParams["script"]
+        val scriptTmp = URLDecoder.decode(taskParams["script"]
                 ?: throw TaskExecuteException(
                     errorMsg = "Empty build script content",
                     errorType = ErrorType.USER,
                     errorCode = ErrorCode.USER_INPUT_INVAILD
                 ), "UTF-8").replace("\r", "")
-        logger.info("script = $script")
-        buildVariables.variables.forEach { (t, u) ->
-            logger.info("$t -> $u")
-        }
-        EnvUtils.parseWithDoubleCurlyBraces(script, buildVariables.variables)
+        val script = EnvUtils.parseWithDoubleCurlyBraces(scriptTmp, buildVariables.variables)
         logger.info("Start to execute the script task($scriptType) ($script)")
         val command = CommandFactory.create(scriptType)
         val buildId = buildVariables.buildId

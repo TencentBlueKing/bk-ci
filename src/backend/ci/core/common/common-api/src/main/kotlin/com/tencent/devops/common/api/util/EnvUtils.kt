@@ -175,26 +175,3 @@ object EnvUtils {
         return index
     }
 }
-
-/*
-fun main() {
-    val command1 = "hello \${{variables.abc}} world"
-    val command2 = "\${{variables.abc}}world"
-    val command3 = "hello\${{variables.abc}}"
-    val command4 = "hello\${{variables.abc"
-    val command5 = "hello\${{variables.abc}"
-    val command6 = "hello\${variables.abc}}"
-    val command7 = "hello\$variables.abc}}"
-    val data = mapOf(
-        "variables.abc" to "variables.value"
-    )
-
-    println(EnvUtils.parseEnv(command1, data))
-    println(EnvUtils.parseEnv(command2, data))
-    println(EnvUtils.parseEnv(command3, data))
-    println(EnvUtils.parseEnv(command4, data))
-    println(EnvUtils.parseEnv(command5, data))
-    println(EnvUtils.parseEnv(command6, data))
-    println(EnvUtils.parseEnv(command7, data))
-}
-*/
