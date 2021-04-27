@@ -37,7 +37,6 @@ import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.quality.QualityGatewaySDKApi
 import com.tencent.devops.common.api.exception.TaskExecuteException
-import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.script.bat.WindowsScriptTask
@@ -63,13 +62,12 @@ open class ScriptTask : ITask() {
         val continueNoneZero = taskParams["continueNoneZero"] ?: "false"
         // 如果脚本执行失败之后可以选择归档这个问题
         val archiveFileIfExecFail = taskParams["archiveFile"]
-        val scriptTmp = URLDecoder.decode(taskParams["script"]
+        val script = URLDecoder.decode(taskParams["script"]
                 ?: throw TaskExecuteException(
                     errorMsg = "Empty build script content",
                     errorType = ErrorType.USER,
                     errorCode = ErrorCode.USER_INPUT_INVAILD
                 ), "UTF-8").replace("\r", "")
-        val script = EnvUtils.parseWithDoubleCurlyBraces(scriptTmp, buildVariables.variables)
         logger.info("Start to execute the script task($scriptType) ($script)")
         val command = CommandFactory.create(scriptType)
         val buildId = buildVariables.buildId

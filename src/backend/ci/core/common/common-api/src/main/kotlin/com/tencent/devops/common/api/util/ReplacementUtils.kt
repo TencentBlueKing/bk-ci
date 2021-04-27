@@ -41,7 +41,10 @@ object ReplacementUtils {
             val template = if (line.trim().startsWith("#")) {
                 line
             } else {
-                parseTemplate(line, replacement)
+                // 先处理${} 单个花括号的情况
+                val lineTmp = parseTemplate(line, replacement)
+                // 再处理${{}} 双花括号的情况
+                parseWithDoubleCurlyBraces(lineTmp, replacement)
             }
             sb.append(template)
             if (index != lines.size - 1) {
@@ -71,6 +74,26 @@ object ReplacementUtils {
         return newValue.toString()
     }
 
+    private fun parseWithDoubleCurlyBraces(command: String, replacement: KeyReplacement): String {
+        if (command.isBlank()) {
+            return command
+        }
+        val newValue = StringBuilder()
+        var index = 0
+        while (index < command.length) {
+            val c = command[index]
+            if (c == '$' && (index + 2) < command.length && command[index + 1] == '{' && command[index + 2] == '{') {
+                val inside = StringBuilder()
+                index = parseVariableWithDoubleCurlyBraces(command, index + 3, inside, replacement)
+                newValue.append(inside)
+            } else {
+                newValue.append(c)
+                index++
+            }
+        }
+        return newValue.toString()
+    }
+
     private fun parseVariable(command: String, start: Int, newValue: StringBuilder, replacement: KeyReplacement): Int {
         val token = StringBuilder()
         var index = start
@@ -84,6 +107,33 @@ object ReplacementUtils {
                 val tokenValue = getVariable(token.toString(), replacement) ?: "\${$token}"
                 newValue.append(tokenValue)
                 return index + 1
+            } else {
+                token.append(c)
+                index++
+            }
+        }
+        newValue.append("\${").append(token)
+        return index
+    }
+
+    private fun parseVariableWithDoubleCurlyBraces(
+        command: String,
+        start: Int,
+        newValue: StringBuilder,
+        replacement: KeyReplacement
+    ): Int {
+        val token = StringBuilder()
+        var index = start
+        while (index < command.length) {
+            val c = command[index]
+            if (c == '$' && (index + 2) < command.length && command[index + 1] == '{' && command[index + 2] == '{') {
+                val inside = StringBuilder()
+                index = parseVariable(command, index + 3, inside, replacement)
+                token.append(inside)
+            } else if (c == '}' && index + 1 < command.length && command[index + 1] == '}') {
+                val tokenValue = getVariable(token.toString(), replacement) ?: "\${$token}"
+                newValue.append(tokenValue)
+                return index + 2
             } else {
                 token.append(c)
                 index++
