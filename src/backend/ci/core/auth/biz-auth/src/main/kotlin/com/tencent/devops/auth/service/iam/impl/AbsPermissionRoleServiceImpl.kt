@@ -77,7 +77,7 @@ open class AbsPermissionRoleServiceImpl @Autowired constructor(
         val groupName = IamUtils.buildIamGroup(groupInfo.projectName, groupInfo.name)
 
         val groupDescription = if (defaultGroup) {
-            IamUtils.buildDefaultDescription(groupInfo.projectName, groupInfo.name)
+            IamUtils.buildDefaultDescription(groupInfo.projectName, groupInfo.name, userId)
         } else {
             groupInfo.description
         }
