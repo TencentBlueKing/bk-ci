@@ -75,9 +75,9 @@ object LoggerService {
     private val uploadQueue = LinkedBlockingQueue<LogMessage>(2000)
 
     /**
-     * 日志本地存储文件映射关系
+     * 每个插件的日志存储属性映射
      */
-    private val taskId2LogProperty = mutableMapOf<String/*elementId*/, TaskBuildLogProperty>()
+    private val elementId2LogProperty = mutableMapOf<String, TaskBuildLogProperty>()
 
     /**
      * 当前执行插件的各类构建信息
@@ -217,7 +217,7 @@ object LoggerService {
             } else {
                 logger.warn("The number of Task[$elementId] log lines exceeds the limit, " +
                     "the log file will be archived.")
-                taskId2LogProperty[elementId]?.logMode = LogMode.LOCAL
+                elementId2LogProperty[elementId]?.logMode = LogMode.LOCAL
             }
         } catch (e: InterruptedException) {
             logger.error("写入普通日志行失败：", e)
@@ -281,12 +281,12 @@ object LoggerService {
     fun archiveLogFiles() {
         logger.info("Start to archive log files because of LogMode[${AgentEnv.getLogMode()}]")
         try {
-            taskId2LogProperty.forEach { (elementId, property) ->
+            elementId2LogProperty.forEach { (elementId, property) ->
                 if (property.logMode == LogMode.UPLOAD) return@forEach
                 logger.info("Archive task[$elementId] build log file(${property.logFile.absolutePath})")
                 ArchiveUtils.archivePipelineFile(property.logFile, buildVariables!!)
             }
-            logger.info("Finished archiving log ${taskId2LogProperty.size} files")
+            logger.info("Finished archiving log ${elementId2LogProperty.size} files")
         } catch (e: Exception) {
             logger.warn("Fail to finish the logs", e)
         }
@@ -322,7 +322,7 @@ object LoggerService {
     private fun saveLocalLog(logMessage: LogMessage) {
         try {
             // 必要的本地保存
-            var logProperty = taskId2LogProperty[elementId]
+            var logProperty = elementId2LogProperty[elementId]
             if (null == logProperty) {
                 logProperty = WorkspaceUtils.getBuildLogProperty(
                     pipelineLogDir = pipelineLogDir!!,
@@ -333,7 +333,7 @@ object LoggerService {
                     logMode = AgentEnv.getLogMode()
                 )
                 logger.info("Create new build log file(${logProperty.logFile.absolutePath})")
-                taskId2LogProperty[elementId] = logProperty
+                elementId2LogProperty[elementId] = logProperty
             }
             logProperty.logFile.printWriter().use { out ->
                 out.println(logMessage.message)
