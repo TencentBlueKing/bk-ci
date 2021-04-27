@@ -36,14 +36,14 @@ import org.springframework.stereotype.Component
 class RequestTriggerFactory @Autowired constructor(
     val requestTrigger: RequestTrigger,
     val v2RequestTrigger: V2RequestTrigger
-){
+) {
 
     fun getGitCIRequestTrigger(ymlVersion: YmlVersion?): RequestTriggerInterface<*> {
         if (ymlVersion == null) {
             return requestTrigger
         }
 
-        return when(ymlVersion.version) {
+        return when (ymlVersion.version) {
             "v2.0" -> {
                 v2RequestTrigger
             }

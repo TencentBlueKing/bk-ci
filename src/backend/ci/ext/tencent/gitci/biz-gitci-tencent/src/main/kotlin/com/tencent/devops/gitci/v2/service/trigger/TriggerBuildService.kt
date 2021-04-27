@@ -35,6 +35,9 @@ import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.common.ci.OBJECT_KIND_PUSH
 import com.tencent.devops.common.ci.OBJECT_KIND_TAG_PUSH
+import com.tencent.devops.common.ci.image.Credential
+import com.tencent.devops.common.ci.image.MacOS
+import com.tencent.devops.common.ci.image.Pool
 import com.tencent.devops.common.ci.task.GitCiCodeRepoInput
 import com.tencent.devops.common.ci.task.GitCiCodeRepoTask
 import com.tencent.devops.common.ci.task.PipelineScriptTask
@@ -44,20 +47,25 @@ import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.CodePullStrategy
 import com.tencent.devops.common.pipeline.enums.GitPullModeType
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.pipeline.type.gitci.GitCIDispatchType
+import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.gitci.api.GitCIBuildResource
 import com.tencent.devops.gitci.api.GitRepositoryConfResource
@@ -108,7 +116,12 @@ class TriggerBuildService @Autowired constructor(
 ) {
     private val channelCode = ChannelCode.GIT
 
-    fun gitStartBuild(pipeline: GitProjectPipeline, event: GitRequestEvent, scriptBuildYaml: ScriptBuildYaml, gitBuildId: Long): BuildId? {
+    fun gitStartBuild(
+        pipeline: GitProjectPipeline,
+        event: GitRequestEvent,
+        scriptBuildYaml: ScriptBuildYaml,
+        gitBuildId: Long
+    ): BuildId? {
         logger.info("Git request gitBuildId:$gitBuildId, pipeline:$pipeline, event: $event, yaml: $scriptBuildYaml")
 
         // create or refresh pipeline
@@ -151,10 +164,10 @@ class TriggerBuildService @Autowired constructor(
 
                 if (job.runsOn == null) {
                     makeElementList(job, elementList, gitProjectConf, event.userId)
-//                    addVmBuildContainer(job, elementList, containerList, jobIndex)
+                    addVmBuildContainer(job, elementList, containerList, jobIndex)
                 } else if (job.runsOn!![0] == JobRunsOnType.DOCKER_ON_VM) {
                     makeElementList(job, elementList, gitProjectConf, event.userId)
-//                    addNormalContainer(job, elementList, containerList, jobIndex)
+                    addNormalContainer(job, elementList, containerList, jobIndex)
                 }
             }
 
@@ -184,6 +197,106 @@ class TriggerBuildService @Autowired constructor(
             logger.error("install atom($atomCode) failed, exception:", e)
             // 可能之前安装过，继续执行不退出
         }
+    }
+
+    private fun addVmBuildContainer(
+        job: Job,
+        elementList: List<Element>,
+        containerList: MutableList<Container>,
+        jobIndex: Int
+    ) {
+        var osType = VMBaseOS.LINUX
+        val containerPool =
+            when {
+                // 有container配置时优先使用
+                job.container != null -> {
+                    Pool(
+                        container = job.container!!.image,
+                        credential = Credential(
+                            user = job.container!!.credentials?.username ?: "",
+                            password = job.container!!.credentials?.password ?: ""
+                        ),
+                        macOS = null,
+                        third = null
+                    )
+                }
+
+                // 没有container配置时，优先使用macOS配置
+                job.macOS != null -> {
+                    osType = VMBaseOS.MACOS
+                    Pool(
+                        container = null,
+                        credential = null,
+                        macOS = MacOS(
+                            systemVersion = job.macOS?.systemVersion ?: "",
+                            xcodeVersion = job.macOS?.xcodeVersion ?: ""
+                        ),
+                        third = null
+                    )
+                }
+
+                // 假设都没有配置，使用默认镜像
+                else -> {
+                    Pool(buildConfig.registryImage, Credential("", ""), null, null)
+                }
+            }
+
+        val vmContainer = VMBuildContainer(
+            id = null,
+            name = "Job_${jobIndex + 1} ${job.name ?: ""}",
+            elements = elementList,
+            status = null,
+            startEpoch = null,
+            systemElapsed = null,
+            elementElapsed = null,
+            baseOS = osType,
+            vmNames = setOf(),
+            maxQueueMinutes = 60,
+            maxRunningMinutes = 900,
+            buildEnv = null,
+            customBuildEnv = null,
+            thirdPartyAgentId = null,
+            thirdPartyAgentEnvId = null,
+            thirdPartyWorkspace = null,
+            dockerBuildVersion = null,
+            tstackAgentId = null,
+            dispatchType = if (containerPool.macOS != null) {
+                MacOSDispatchType(
+                    macOSEvn = containerPool.macOS!!.systemVersion!! + ":" + containerPool.macOS!!.xcodeVersion!!,
+                    systemVersion = containerPool.macOS!!.systemVersion!!,
+                    xcodeVersion = containerPool.macOS!!.xcodeVersion!!
+                )
+            } else {
+                GitCIDispatchType(objectMapper.writeValueAsString(containerPool))
+            }
+        )
+        containerList.add(vmContainer)
+    }
+
+    private fun addNormalContainer(
+        job: Job,
+        elementList: List<Element>,
+        containerList: MutableList<Container>,
+        jobIndex: Int
+    ) {
+
+        containerList.add(
+            NormalContainer(
+                containerId = null,
+                id = null,
+                name = "Job_${jobIndex + 1} ${job.name ?: ""}",
+                elements = elementList,
+                status = null,
+                startEpoch = null,
+                systemElapsed = null,
+                elementElapsed = null,
+                enableSkip = false,
+                conditions = null,
+                canRetry = false,
+                jobControlOption = null,
+                mutexGroup = null
+            )
+        )
     }
 
     private fun makeElementList(
