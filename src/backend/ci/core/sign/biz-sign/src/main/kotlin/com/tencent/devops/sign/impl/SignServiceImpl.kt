@@ -137,7 +137,10 @@ class SignServiceImpl @Autowired constructor(
             val archiveResult = archiveService.archive(signedIpaFile, ipaSignInfo, properties)
             if (!archiveResult) {
                 logger.error("[$resignId]|[${ipaSignInfo.buildId}] archive signed ipa failed.")
-                throw ErrorCodeException(errorCode = SignMessageCode.ERROR_ARCHIVE_SIGNED_IPA, defaultMessage = "归档IPA包失败")
+                throw ErrorCodeException(
+                    errorCode = SignMessageCode.ERROR_ARCHIVE_SIGNED_IPA,
+                    defaultMessage = "归档IPA包失败"
+                )
             }
             signInfoService.finishArchive(resignId, ipaSignInfo, taskExecuteCount)
 
@@ -149,7 +152,12 @@ class SignServiceImpl @Autowired constructor(
             signInfoService.failResign(resignId, ipaSignInfo, taskExecuteCount, t.message ?: "Unknown error")
             finished = true
         } finally {
-            if (!finished) signInfoService.failResign(resignId, ipaSignInfo, taskExecuteCount, "Task exit with unknown error")
+            if (!finished) signInfoService.failResign(
+                resignId,
+                ipaSignInfo,
+                taskExecuteCount,
+                "Task exit with unknown error"
+            )
         }
         return finished
     }
@@ -345,7 +353,7 @@ class SignServiceImpl @Autowired constructor(
             }
             var parameters = rootDict.objectForKey("CFBundleIdentifier") as NSString
             val bundleIdentifier = parameters.toString()
-            // 应用名称
+            // 应用标题
             if (!rootDict.containsKey("CFBundleName")) throw RuntimeException("no CFBundleName find in plist")
             parameters = rootDict.objectForKey("CFBundleName") as NSString
             val appTitle = parameters.toString()
@@ -374,13 +382,20 @@ class SignServiceImpl @Autowired constructor(
             } catch (e: Exception) {
                 ""
             }
+            // 应用名称
+            val appName = try {
+                (rootDict.objectForKey("CFBundleDisplayName") as NSString).toString()
+            } catch (e: Exception) {
+                ""
+            }
 
             return IpaInfoPlist(
                 bundleIdentifier = bundleIdentifier,
                 appTitle = appTitle,
                 bundleVersion = bundleVersion,
                 bundleVersionFull = bundleVersionFull,
-                scheme = scheme
+                scheme = scheme,
+                appName = appName
             )
         } catch (e: Exception) {
             throw ErrorCodeException(
@@ -409,6 +424,7 @@ class SignServiceImpl @Autowired constructor(
         properties["source"] = "pipeline"
         properties["ipa.sign.status"] = "true"
         properties["appScheme"] = ipaInfoPlist.scheme
+        properties["appName"] = ipaInfoPlist.appName
         return properties
     }
 
