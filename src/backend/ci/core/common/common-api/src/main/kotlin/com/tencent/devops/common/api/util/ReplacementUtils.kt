@@ -139,7 +139,7 @@ object ReplacementUtils {
                 index++
             }
         }
-        newValue.append("\${").append(token)
+        newValue.append("\${{").append(token)
         return index
     }
 
