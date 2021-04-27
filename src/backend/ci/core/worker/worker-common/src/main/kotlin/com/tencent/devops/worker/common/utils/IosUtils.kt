@@ -56,7 +56,7 @@ object IosUtils {
             throw ExecuteException("no CFBundleIdentifier find in plist")
         var parameters = rootDict.objectForKey("CFBundleIdentifier") as NSString
         map["bundleIdentifier"] = parameters.toString()
-        // 应用名称
+        // 应用标题
         if (!rootDict.containsKey("CFBundleName"))
             throw ExecuteException("no CFBundleName find in plist")
         parameters = rootDict.objectForKey("CFBundleName") as NSString
@@ -82,6 +82,13 @@ object IosUtils {
             ""
         }
         map["scheme"] = scheme
+        // 应用名称
+        val appName = try {
+            (rootDict.objectForKey("CFBundleDisplayName") as NSString).toString()
+        } catch (e: Exception) {
+            ""
+        }
+        map["appName"] = appName
 
         // 如果没有图标，捕获异常，不影响接下步骤
         try {
