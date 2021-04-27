@@ -201,7 +201,7 @@ class GitCISettingDao {
                 return null
             } else {
                 val rtxCustomProperty = try {
-                    if (conf.rtxCustomProperty.isNullOrBlank()) {
+                    if (!conf.rtxCustomProperty.isNullOrBlank()) {
                         JsonUtil.getObjectMapper().readValue(conf.rtxCustomProperty) as RtxCustomProperty
                     } else null
                 } catch (e: Exception) {
@@ -209,7 +209,7 @@ class GitCISettingDao {
                 }
 
                 val emailProperty = try {
-                    if (conf.emailProperty.isNullOrBlank()) {
+                    if (!conf.emailProperty.isNullOrBlank()) {
                         JsonUtil.getObjectMapper().readValue(conf.emailProperty) as EmailProperty
                     } else null
                 } catch (e: Exception) {
@@ -217,7 +217,7 @@ class GitCISettingDao {
                 }
 
                 val rtxGroupProperty = try {
-                    if (conf.rtxGroupProperty.isNullOrBlank()) {
+                    if (!conf.rtxGroupProperty.isNullOrBlank()) {
                         JsonUtil.getObjectMapper().readValue(conf.rtxGroupProperty) as RtxGroupProperty
                     } else null
                 } catch (e: Exception) {
