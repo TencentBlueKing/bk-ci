@@ -134,7 +134,17 @@ class GitCIBuildFinishListener @Autowired constructor(
                     ?: throw OperationException("git ci pipeline not exist")
 
                 // 推送结束构建消息,当人工触发时不推送CommitCheck消息
-                if (objectKind != OBJECT_KIND_MANUAL) {
+                if (objectKind == OBJECT_KIND_MERGE_REQUEST) {
+                    scmClient.pushCommitCheckWithBlock(
+                        commitId = commitId,
+                        mergeRequestId = mergeRequestId,
+                        userId = buildFinishEvent.userId,
+                        context = "${pipeline.displayName}(${pipeline.filePath})",
+                        block = false,
+                        state = state,
+                        gitProjectConf = gitProjectConf
+                    )
+                } else if (objectKind != OBJECT_KIND_MANUAL) {
                     scmClient.pushCommitCheck(
                         commitId = commitId,
                         description = description,
@@ -142,17 +152,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                         buildId = buildFinishEvent.buildId,
                         userId = buildFinishEvent.userId,
                         status = state,
-                        context = "${pipeline!!.displayName}(${pipeline.filePath})",
-                        gitProjectConf = gitProjectConf
-                    )
-                } else if (objectKind == OBJECT_KIND_MERGE_REQUEST) {
-                    scmClient.pushCommitCheckWithBlock(
-                        commitId = commitId,
-                        mergeRequestId = mergeRequestId,
-                        userId = buildFinishEvent.userId,
-                        context = "${pipeline!!.displayName}(${pipeline.filePath})",
-                        block = false,
-                        state = state,
+                        context = "${pipeline.displayName}(${pipeline.filePath})",
                         gitProjectConf = gitProjectConf
                     )
                 }
