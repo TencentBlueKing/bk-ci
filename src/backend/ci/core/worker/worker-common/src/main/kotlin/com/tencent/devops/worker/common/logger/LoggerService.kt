@@ -27,9 +27,9 @@
 
 package com.tencent.devops.worker.common.logger
 
-import com.tencent.devops.log.meta.Ansi
-import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.pojo.enums.LogType
+import com.tencent.devops.common.log.pojo.message.LogMessage
+import com.tencent.devops.log.meta.Ansi
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.LOG_SUBTAG_FINISH_FLAG
 import com.tencent.devops.worker.common.LOG_SUBTAG_FLAG
@@ -42,6 +42,8 @@ import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.sql.Date
+import java.text.SimpleDateFormat
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
@@ -58,6 +60,7 @@ object LoggerService {
     private var future: Future<Boolean>? = null
     private val running = AtomicBoolean(true)
     private var currentTaskLineNo = 0
+    private val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS")
 
     /**
      * 构建日志处理的异步线程池
@@ -284,7 +287,7 @@ object LoggerService {
             elementId2LogProperty.forEach { (elementId, property) ->
                 if (property.logMode == LogMode.UPLOAD) return@forEach
                 logger.info("Archive task[$elementId] build log file(${property.logFile.absolutePath})")
-                ArchiveUtils.archivePipelineFile(property.logFile, buildVariables!!)
+                ArchiveUtils.archiveLogFile(property.logFile, property.childPath, buildVariables!!)
             }
             logger.info("Finished archiving log ${elementId2LogProperty.size} files")
         } catch (e: Exception) {
@@ -306,9 +309,10 @@ object LoggerService {
             // 通过上报的结果感知是否需要调整模式
             val result = logResourceApi.addLogMultiLine(logMessages)
             when {
+                // 当log服务返回拒绝请求或者并发量超限制时，自动切换模式为本地保存并归档
                 result.status == 503 || result.status == 509 -> {
                     logger.warn("Log service storage is unable：${result.message}")
-                    AgentEnv.setLogMode(LogMode.LOCAL)
+                    disableLogUpload()
                 }
                 result.isNotOk() -> {
                     logger.error("Fail to send the multi logs：${result.message}")
@@ -336,7 +340,8 @@ object LoggerService {
                 elementId2LogProperty[elementId] = logProperty
             }
             logProperty.logFile.printWriter().use { out ->
-                out.println(logMessage.message)
+                val dateTime = sdf.format(Date(logMessage.timestamp))
+                out.println("$dateTime : ${logMessage.message}")
             }
         } catch (e: Exception) {
             logger.warn("Fail to save the logs($logMessage)", e)
@@ -359,5 +364,16 @@ object LoggerService {
         } catch (e: Exception) {
             logger.warn("Fail to finish the logs", e)
         }
+    }
+
+    private fun disableLogUpload() {
+        // 将已有任务的日志模式都设为本地保存
+        elementId2LogProperty.forEach { (elementId, property) ->
+            logger.warn("Set Task[$elementId] logMode to ${LogMode.LOCAL.name}")
+            property.logMode = LogMode.LOCAL
+        }
+        // 将全局日志模式设为本地保存
+        logger.warn("Set AgentEnv logMode to ${LogMode.LOCAL.name}")
+        AgentEnv.setLogMode(LogMode.LOCAL)
     }
 }
