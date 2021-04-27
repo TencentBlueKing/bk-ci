@@ -90,16 +90,24 @@ object WorkspaceUtils {
         return createTempDir("DEVOPS_BUILD_LOGS_${pipelineId}_", null)
     }
 
-    fun getBuildLogFile(
+    fun getBuildLogPathAndFile(
         pipelineLogDir: File,
         pipelineId: String,
         buildId: String,
         elementId: String,
         executeCount: Int
-    ):File {
-        val logFile = File(pipelineLogDir, "/$pipelineId/$buildId/$elementId/$executeCount.log")
+    ): Pair<String, File> {
+        val childPath = getBuildLogChildPath(pipelineId, buildId, elementId, executeCount)
+        val logFile = File(pipelineLogDir, childPath)
         logFile.parentFile.mkdirs()
         logFile.createNewFile()
-        return logFile
+        return Pair(childPath, logFile)
     }
+
+    private fun getBuildLogChildPath(
+        pipelineId: String,
+        buildId: String,
+        elementId: String,
+        executeCount: Int
+    ) = "/$pipelineId/$buildId/$elementId/$executeCount.log"
 }
