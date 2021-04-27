@@ -93,10 +93,6 @@ object ArchiveUtils {
         return fileList.size
     }
 
-    fun archivePipelineFile(file: File, buildVariables: BuildVariables) {
-        api.uploadPipeline(file, buildVariables)
-    }
-
     fun matchFiles(workspace: File, path: String): List<File> {
         val isAbsPath = isAbsPath(path)
         val fullFile = if (!isAbsPath) {
