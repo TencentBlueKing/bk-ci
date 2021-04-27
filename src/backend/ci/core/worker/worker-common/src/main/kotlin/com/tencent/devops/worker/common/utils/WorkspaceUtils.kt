@@ -29,6 +29,8 @@ package com.tencent.devops.worker.common.utils
 
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.worker.common.env.AgentEnv.getOS
+import com.tencent.devops.worker.common.env.LogMode
+import com.tencent.devops.worker.common.logger.TaskBuildLogProperty
 import java.io.File
 
 object WorkspaceUtils {
@@ -90,17 +92,25 @@ object WorkspaceUtils {
         return createTempDir("DEVOPS_BUILD_LOGS_${pipelineId}_", null)
     }
 
-    fun getBuildLogFile(
+    fun getBuildLogProperty(
         pipelineLogDir: File,
+        pipelineId: String,
         buildId: String,
-        vmSeqId: String,
-        vmName: String,
-        elementName: String,
-        executeCount: Int
-    ):File {
-        val logFile = File(pipelineLogDir, "/$buildId/${vmSeqId}-${vmName}_${elementName}_${executeCount}.log")
+        elementId: String,
+        executeCount: Int,
+        logMode: LogMode
+    ): TaskBuildLogProperty {
+        val childPath = getBuildLogChildPath(pipelineId, buildId, elementId, executeCount)
+        val logFile = File(pipelineLogDir, childPath)
         logFile.parentFile.mkdirs()
         logFile.createNewFile()
-        return logFile
+        return TaskBuildLogProperty(elementId, childPath, logFile, logMode)
     }
+
+    private fun getBuildLogChildPath(
+        pipelineId: String,
+        buildId: String,
+        elementId: String,
+        executeCount: Int
+    ) = "/$pipelineId/$buildId/$elementId/$executeCount.log"
 }

@@ -42,6 +42,8 @@ import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import org.slf4j.LoggerFactory
 import java.io.File
+import java.sql.Date
+import java.text.SimpleDateFormat
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
@@ -49,7 +51,6 @@ import java.util.concurrent.LinkedBlockingQueue
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
-import kotlin.math.log
 
 @Suppress("ALL")
 object LoggerService {
@@ -59,6 +60,7 @@ object LoggerService {
     private var future: Future<Boolean>? = null
     private val running = AtomicBoolean(true)
     private var currentTaskLineNo = 0
+    private val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS")
 
     /**
      * 构建日志处理的异步线程池
@@ -71,19 +73,14 @@ object LoggerService {
     private val flushExecutor = Executors.newSingleThreadExecutor()
 
     /**
-     * 构建日志归档的异步线程池
-     */
-    private val archiveService = Executors.newSingleThreadExecutor()
-
-    /**
      * 日志上报缓冲队列
      */
-    private val queue = LinkedBlockingQueue<LogMessage>(2000)
+    private val uploadQueue = LinkedBlockingQueue<LogMessage>(2000)
 
     /**
-     * 日志本地存储文件映射关系
+     * 每个插件的日志存储属性映射
      */
-    private val taskId2LogFile = mutableMapOf<String, File>()
+    private val elementId2LogProperty = mutableMapOf<String, TaskBuildLogProperty>()
 
     /**
      * 当前执行插件的各类构建信息
@@ -104,7 +101,7 @@ object LoggerService {
             var lastSaveTime: Long = 0
             while (running.get()) {
                 val logMessage = try {
-                    queue.poll(3, TimeUnit.SECONDS)
+                    uploadQueue.poll(3, TimeUnit.SECONDS)
                 } catch (e: InterruptedException) {
                     logger.warn("Logger service poll thread interrupted", e)
                     null
@@ -133,7 +130,7 @@ object LoggerService {
         } catch (t: Throwable) {
             logger.warn("Fail to send the logger", t)
         }
-        logger.info("Finish the sending thread - (${queue.size})")
+        logger.info("Finish the sending thread - (${uploadQueue.size})")
         true
     }
 
@@ -175,8 +172,8 @@ object LoggerService {
                     future!!.get()
                 }
                 // 把没完成的日志打完
-                while (queue.size != 0) {
-                    queue.drainTo(logMessages)
+                while (uploadQueue.size != 0) {
+                    uploadQueue.drainTo(logMessages)
                     if (logMessages.isNotEmpty()) {
                         flush()
                     }
@@ -213,12 +210,18 @@ object LoggerService {
             executeCount = executeCount
         )
         // 如果已经进入Job执行任务，则可以做日志本地落盘
-        if (elementId.isNotBlank() && pipelineLogDir != null && currentTaskLineNo <= LOG_TASK_LINE_LIMIT) {
+        if (elementId.isNotBlank() && pipelineLogDir != null) {
             saveLocalLog(logMessage)
         }
 
         try {
-            this.queue.put(logMessage)
+            if (currentTaskLineNo <= LOG_TASK_LINE_LIMIT) {
+                this.uploadQueue.put(logMessage)
+            } else {
+                logger.warn("The number of Task[$elementId] log lines exceeds the limit, " +
+                    "the log file will be archived.")
+                elementId2LogProperty[elementId]?.logMode = LogMode.LOCAL
+            }
         } catch (e: InterruptedException) {
             logger.error("写入普通日志行失败：", e)
         }
@@ -279,26 +282,26 @@ object LoggerService {
     }
 
     fun archiveLogFiles() {
-        if (LogMode.UPLOAD == AgentEnv.getLogMode()) return
         logger.info("Start to archive log files because of LogMode[${AgentEnv.getLogMode()}]")
         try {
-            taskId2LogFile.forEach { (elementId, logFile) ->
-                logger.info("Archive task[$elementId] build log file(${logFile.absolutePath})")
-                ArchiveUtils.archivePipelineFile(logFile, buildVariables!!)
+            elementId2LogProperty.forEach { (elementId, property) ->
+                if (property.logMode == LogMode.UPLOAD) return@forEach
+                logger.info("Archive task[$elementId] build log file(${property.logFile.absolutePath})")
+                ArchiveUtils.archivePipelineFile(property.logFile, buildVariables!!)
             }
-            logger.info("Finished archiving log ${taskId2LogFile.size} files")
+            logger.info("Finished archiving log ${elementId2LogProperty.size} files")
         } catch (e: Exception) {
             logger.warn("Fail to finish the logs", e)
         }
     }
 
-    private fun addLog(message: LogMessage) = queue.put(message)
+    private fun addLog(message: LogMessage) = uploadQueue.put(message)
 
     private fun sendMultiLog(logMessages: List<LogMessage>) {
         try {
             logger.info("Start to save the log - ${logMessages.size}")
 
-            // 如果模式为本地保存则不做上报
+            // 如果agent启动时日志模式为本地保存，则不做上报
             if (LogMode.LOCAL == AgentEnv.getLogMode()) {
                 return
             }
@@ -306,9 +309,10 @@ object LoggerService {
             // 通过上报的结果感知是否需要调整模式
             val result = logResourceApi.addLogMultiLine(logMessages)
             when {
+                // 当log服务返回拒绝请求或者并发量超限制时，自动切换模式为本地保存并归档
                 result.status == 503 || result.status == 509 -> {
                     logger.warn("Log service storage is unable：${result.message}")
-                    AgentEnv.setLogMode(LogMode.LOCAL)
+                    disableLogUpload()
                 }
                 result.isNotOk() -> {
                     logger.error("Fail to send the multi logs：${result.message}")
@@ -322,21 +326,22 @@ object LoggerService {
     private fun saveLocalLog(logMessage: LogMessage) {
         try {
             // 必要的本地保存
-            var logFile = taskId2LogFile[elementId]
-            if (null == logFile) {
-                logFile = WorkspaceUtils.getBuildLogFile(
+            var logProperty = elementId2LogProperty[elementId]
+            if (null == logProperty) {
+                logProperty = WorkspaceUtils.getBuildLogProperty(
                     pipelineLogDir = pipelineLogDir!!,
+                    pipelineId = buildVariables?.pipelineId!!,
                     buildId = buildVariables?.buildId!!,
-                    vmSeqId = buildVariables?.vmSeqId ?: "",
-                    vmName = buildVariables?.vmName ?: "",
-                    elementName = elementName,
-                    executeCount = executeCount
+                    elementId = elementId,
+                    executeCount = executeCount,
+                    logMode = AgentEnv.getLogMode()
                 )
-                logger.info("Create new build log file(${logFile.absolutePath})")
-                taskId2LogFile[elementId] = logFile
+                logger.info("Create new build log file(${logProperty.logFile.absolutePath})")
+                elementId2LogProperty[elementId] = logProperty
             }
-            logFile.printWriter().use { out ->
-                out.println(logMessage.message)
+            logProperty.logFile.printWriter().use { out ->
+                val dateTime = sdf.format(Date(logMessage.timestamp))
+                out.println("$dateTime : ${logMessage.message}")
             }
         } catch (e: Exception) {
             logger.warn("Fail to save the logs($logMessage)", e)
@@ -359,5 +364,16 @@ object LoggerService {
         } catch (e: Exception) {
             logger.warn("Fail to finish the logs", e)
         }
+    }
+
+    private fun disableLogUpload() {
+        // 将已有任务的日志模式都设为本地保存
+        elementId2LogProperty.forEach { (elementId, property) ->
+            logger.warn("Set Task[$elementId] logMode to ${LogMode.LOCAL.name}")
+            property.logMode = LogMode.LOCAL
+        }
+        // 将全局日志模式设为本地保存
+        logger.warn("Set AgentEnv logMode to ${LogMode.LOCAL.name}")
+        AgentEnv.setLogMode(LogMode.LOCAL)
     }
 }
