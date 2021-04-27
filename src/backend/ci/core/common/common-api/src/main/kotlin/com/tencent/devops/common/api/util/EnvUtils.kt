@@ -53,7 +53,7 @@ object EnvUtils {
         var index = 0
         while (index < value!!.length) {
             val c = value[index]
-            if (c == '$' && (index + 2) < value.length && value[index + 1] == '{' && value[index + 2] == '{') {
+            if (checkPrefix(c, index, value)) {
                 val inside = StringBuilder()
                 index = parseVariableWithDoubleCurlyBraces(value, index + 3, inside, data, replaceWithEmpty)
                 if (escape) {
@@ -153,7 +153,7 @@ object EnvUtils {
         var index = start
         while (index < command.length) {
             val c = command[index]
-            if (c == '$' && (index + 2) < command.length && command[index + 1] == '{' && command[index + 2] == '{') {
+            if (checkPrefix(c, index, command)) {
                 val inside = StringBuilder()
                 index = parseVariable(command, index + 3, inside, data, replaceWithEmpty)
                 token.append(inside)
@@ -174,4 +174,7 @@ object EnvUtils {
         newValue.append("\${{").append(token)
         return index
     }
+
+    private fun checkPrefix(c: Char, index: Int, value: String) =
+        c == '$' && (index + 2) < value.length && value[index + 1] == '{' && value[index + 2] == '{'
 }

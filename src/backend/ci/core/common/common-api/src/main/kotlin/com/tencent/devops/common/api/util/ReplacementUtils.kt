@@ -82,7 +82,7 @@ object ReplacementUtils {
         var index = 0
         while (index < command.length) {
             val c = command[index]
-            if (c == '$' && (index + 2) < command.length && command[index + 1] == '{' && command[index + 2] == '{') {
+            if (checkPrefix(c, index, command)) {
                 val inside = StringBuilder()
                 index = parseVariableWithDoubleCurlyBraces(command, index + 3, inside, replacement)
                 newValue.append(inside)
@@ -126,7 +126,7 @@ object ReplacementUtils {
         var index = start
         while (index < command.length) {
             val c = command[index]
-            if (c == '$' && (index + 2) < command.length && command[index + 1] == '{' && command[index + 2] == '{') {
+            if (checkPrefix(c, index, command)) {
                 val inside = StringBuilder()
                 index = parseVariable(command, index + 3, inside, replacement)
                 token.append(inside)
@@ -142,6 +142,9 @@ object ReplacementUtils {
         newValue.append("\${{").append(token)
         return index
     }
+
+    private fun checkPrefix(c: Char, index: Int, command: String) =
+        c == '$' && (index + 2) < command.length && command[index + 1] == '{' && command[index + 2] == '{'
 
     private fun getVariable(key: String, replacement: KeyReplacement) = replacement.getReplacement(key)
 
