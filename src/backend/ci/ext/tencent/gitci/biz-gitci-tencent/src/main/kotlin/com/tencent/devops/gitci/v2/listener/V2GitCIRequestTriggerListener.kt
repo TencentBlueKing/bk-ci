@@ -47,7 +47,7 @@ constructor(private val triggerBuildService: TriggerBuildService) {
         bindings = [(QueueBinding(
             key = [MQ.ROUTE_GITCI_REQUEST_TRIGGER_V2_EVENT], value = Queue(value = MQ.QUEUE_GITCI_REQUEST_TRIGGER_V2_EVENT, durable = "true"),
             exchange = Exchange(
-                value = MQ.EXCHANGE_GITCI_REQUEST_TRIGGER_EVENT,
+                value = MQ.EXCHANGE_GITCI_REQUEST_TRIGGER_V2_EVENT,
                 durable = "true",
                 delayed = "true",
                 type = ExchangeTypes.DIRECT
