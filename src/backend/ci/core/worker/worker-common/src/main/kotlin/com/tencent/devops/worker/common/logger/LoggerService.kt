@@ -325,10 +325,9 @@ object LoggerService {
             if (null == logFile) {
                 logFile = WorkspaceUtils.getBuildLogFile(
                     pipelineLogDir = pipelineLogDir!!,
+                    pipelineId = buildVariables?.pipelineId!!,
                     buildId = buildVariables?.buildId!!,
-                    vmSeqId = buildVariables?.vmSeqId ?: "",
-                    vmName = buildVariables?.vmName ?: "",
-                    elementName = elementName,
+                    elementId = elementId,
                     executeCount = executeCount
                 )
                 logger.info("Create new build log file(${logFile.absolutePath})")
