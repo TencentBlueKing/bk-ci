@@ -46,7 +46,7 @@ internal class IamUtilsTest {
         val groupName = "管理员"
         val userId = "admin"
         val group = IamUtils.buildDefaultDescription(projectName, groupName, userId)
-        println(group)
+        Assert.assertNotEquals("测试项目 分级管理员, 由admin 创建于 2021-04-27T21:58:52+0800", group)
     }
 
     @Test
@@ -54,6 +54,6 @@ internal class IamUtilsTest {
         val projectName = "测试项目"
         val userId = "admin"
         val group = IamUtils.buildManagerDescription(projectName, userId)
-        println(group)
+        Assert.assertNotEquals("测试项目 用户组:管理员, 由admin 创建于 2021-04-27T21:58:52+0800", group)
     }
 }
