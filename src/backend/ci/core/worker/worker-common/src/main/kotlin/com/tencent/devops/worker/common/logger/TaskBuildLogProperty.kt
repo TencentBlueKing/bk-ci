@@ -16,6 +16,6 @@ data class TaskBuildLogProperty(
     val childPath: String,
     @ApiModelProperty("日志文件句柄", required = true)
     val logFile: File,
-    @ApiModelProperty("日志文件句柄", required = false)
+    @ApiModelProperty("日志的存储模式", required = false)
     var logMode: LogMode = LogMode.UPLOAD
 )
