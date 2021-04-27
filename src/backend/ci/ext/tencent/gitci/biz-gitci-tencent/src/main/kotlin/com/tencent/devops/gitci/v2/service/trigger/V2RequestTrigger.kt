@@ -42,7 +42,7 @@ import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.service.GitRepositoryConfService
 import com.tencent.devops.gitci.service.trigger.RequestTriggerInterface
 import com.tencent.devops.gitci.v2.listener.V2GitCIRequestDispatcher
-import com.tencent.devops.gitci.pojo.V2GitCIRequestTriggerEvent
+import com.tencent.devops.gitci.v2.listener.V2GitCIRequestTriggerEvent
 import com.tencent.devops.gitci.v2.utils.V2WebHookMatcher
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory

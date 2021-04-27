@@ -27,15 +27,8 @@
 
 package com.tencent.devops.gitci.v2.listener
 
-import com.tencent.devops.gitci.pojo.V2GitCIRequestTriggerEvent
-import com.tencent.devops.gitci.constant.MQ
 import com.tencent.devops.gitci.v2.service.TriggerBuildService
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.core.ExchangeTypes
-import org.springframework.amqp.rabbit.annotation.Exchange
-import org.springframework.amqp.rabbit.annotation.Queue
-import org.springframework.amqp.rabbit.annotation.QueueBinding
-import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -43,17 +36,6 @@ import org.springframework.stereotype.Service
 class V2GitCIRequestTriggerListener @Autowired
 constructor(private val triggerBuildService: TriggerBuildService) {
 
-    @RabbitListener(
-        bindings = [(QueueBinding(
-            key = [MQ.ROUTE_GITCI_REQUEST_TRIGGER_V2_EVENT], value = Queue(value = MQ.QUEUE_GITCI_REQUEST_TRIGGER_V2_EVENT, durable = "true"),
-            exchange = Exchange(
-                value = MQ.EXCHANGE_GITCI_REQUEST_TRIGGER_V2_EVENT,
-                durable = "true",
-                delayed = "true",
-                type = ExchangeTypes.DIRECT
-            )
-        ))]
-    )
     fun listenGitCIRequestTriggerEvent(v2GitCIRequestTriggerEvent: V2GitCIRequestTriggerEvent) {
         try {
             triggerBuildService.gitStartBuild(

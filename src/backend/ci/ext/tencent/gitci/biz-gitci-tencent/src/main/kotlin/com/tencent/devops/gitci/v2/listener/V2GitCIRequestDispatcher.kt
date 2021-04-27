@@ -27,7 +27,6 @@
 
 package com.tencent.devops.gitci.v2.listener
 
-import com.tencent.devops.gitci.pojo.V2GitCIRequestTriggerEvent
 import com.tencent.devops.common.event.annotation.Event
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
