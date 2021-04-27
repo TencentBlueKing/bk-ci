@@ -27,19 +27,22 @@
 
 package com.tencent.devops.common.api.util
 
+import org.junit.Assert
 import org.junit.Test
 
-class EnvUtilTest {
-    @Test
-    fun parseEnvTest() {
-        val map = mutableMapOf<String, String>()
-        map["age"] = "1"
-        map["name"] = "jacky"
-        val command = "{\"age\": \${age} , \"sex\": \"boy\", \"name\": \${name}}"
-        println(command)
-        val parseEnv = EnvUtils.parseEnv(command, map)
-        println(parseEnv)
+class ReplacementUtilsTest {
+    class Replacement(
+        private val data: Map<String, String>
+    ) : ReplacementUtils.KeyReplacement {
+        override fun getReplacement(key: String): String? = if (data[key] != null) {
+            data[key]!!
+        } else {
+            "\${$key}"
+        }
+    }
 
+    @Test
+    fun replace() {
         val command1 = "hello \${{variables.abc}} world"
         val command2 = "\${{variables.abc}}world"
         val command3 = "hello\${{variables.abc}}"
@@ -53,13 +56,13 @@ class EnvUtilTest {
             "variables.hello" to "hahahahaha"
         )
 
-        println(EnvUtils.parseWithDoubleCurlyBraces(command1, data))
-        println(EnvUtils.parseWithDoubleCurlyBraces(command2, data))
-        println(EnvUtils.parseWithDoubleCurlyBraces(command3, data))
-        println(EnvUtils.parseWithDoubleCurlyBraces(command4, data))
-        println(EnvUtils.parseWithDoubleCurlyBraces(command5, data))
-        println(EnvUtils.parseWithDoubleCurlyBraces(command6, data))
-        println(EnvUtils.parseWithDoubleCurlyBraces(command7, data))
-        println(EnvUtils.parseWithDoubleCurlyBraces(command8, data))
+        Assert.assertEquals("hello variables.value world", ReplacementUtils.replace(command1, Replacement(data)))
+        Assert.assertEquals("variables.valueworld", ReplacementUtils.replace(command2, Replacement(data)))
+        Assert.assertEquals("hellovariables.value", ReplacementUtils.replace(command3, Replacement(data)))
+        Assert.assertEquals("hello\${{variables.abc", ReplacementUtils.replace(command4, Replacement(data)))
+        Assert.assertEquals("hello\${{variables.abc}", ReplacementUtils.replace(command5, Replacement(data)))
+        Assert.assertEquals("hellovariables.value}", ReplacementUtils.replace(command6, Replacement(data)))
+        Assert.assertEquals("hello\$variables.abc}}", ReplacementUtils.replace(command7, Replacement(data)))
+        Assert.assertEquals("echo hahahahaha", ReplacementUtils.replace(command8, Replacement(data)))
     }
 }

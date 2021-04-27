@@ -37,6 +37,44 @@ object EnvUtils {
         if (command.isNullOrBlank()) {
             return command ?: ""
         }
+        // 先处理${} 单个花括号的情况
+        val value = parseWithSingleCurlyBraces(command, data, replaceWithEmpty, isEscape)
+        // 再处理${{}} 双花括号的情况
+        return parseWithDoubleCurlyBraces(value, data, replaceWithEmpty, isEscape)
+    }
+
+    fun parseWithDoubleCurlyBraces(
+        value: String,
+        data: Map<String, String>,
+        replaceWithEmpty: Boolean = false,
+        escape: Boolean = false
+    ): String {
+        val newValue = StringBuilder()
+        var index = 0
+        while (index < value!!.length) {
+            val c = value[index]
+            if (checkPrefix(c, index, value)) {
+                val inside = StringBuilder()
+                index = parseVariableWithDoubleCurlyBraces(value, index + 3, inside, data, replaceWithEmpty)
+                if (escape) {
+                    newValue.append(escapeSpecialWord(inside.toString()))
+                } else {
+                    newValue.append(inside)
+                }
+            } else {
+                newValue.append(c)
+                index++
+            }
+        }
+        return newValue.toString()
+    }
+
+    private fun parseWithSingleCurlyBraces(
+        command: String,
+        data: Map<String, String>,
+        replaceWithEmpty: Boolean,
+        isEscape: Boolean
+    ): String {
         val newValue = StringBuilder()
         var index = 0
         while (index < command!!.length) {
@@ -103,4 +141,40 @@ object EnvUtils {
         newValue.append("\${").append(token)
         return index
     }
+
+    private fun parseVariableWithDoubleCurlyBraces(
+        command: String,
+        start: Int,
+        newValue: StringBuilder,
+        data: Map<String, String>,
+        replaceWithEmpty: Boolean = false
+    ): Int {
+        val token = StringBuilder()
+        var index = start
+        while (index < command.length) {
+            val c = command[index]
+            if (checkPrefix(c, index, command)) {
+                val inside = StringBuilder()
+                index = parseVariable(command, index + 3, inside, data, replaceWithEmpty)
+                token.append(inside)
+            } else if (c == '}' && index + 1 < command.length && command[index + 1] == '}') {
+                val value = data[token.toString().trim()] ?: if (replaceWithEmpty) {
+                    ""
+                } else {
+                    "\${$token}"
+                }
+
+                newValue.append(value)
+                return index + 2
+            } else {
+                token.append(c)
+                index++
+            }
+        }
+        newValue.append("\${{").append(token)
+        return index
+    }
+
+    private fun checkPrefix(c: Char, index: Int, value: String) =
+        c == '$' && (index + 2) < value.length && value[index + 1] == '{' && value[index + 2] == '{'
 }
