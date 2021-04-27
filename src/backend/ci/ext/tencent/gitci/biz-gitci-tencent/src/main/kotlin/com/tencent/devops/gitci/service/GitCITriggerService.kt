@@ -40,7 +40,7 @@ import com.tencent.devops.common.ci.OBJECT_KIND_TAG_PUSH
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.gitci.common.gitci2.utils.ScriptYmlUtils
+import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.gitci.dao.GitCIServicesConfDao
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao

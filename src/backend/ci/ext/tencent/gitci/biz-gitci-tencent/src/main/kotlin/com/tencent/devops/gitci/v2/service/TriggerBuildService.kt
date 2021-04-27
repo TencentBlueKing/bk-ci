@@ -36,11 +36,11 @@ import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.common.ci.OBJECT_KIND_PUSH
 import com.tencent.devops.common.ci.OBJECT_KIND_TAG_PUSH
 import com.tencent.devops.common.ci.image.Credential
-import com.tencent.devops.common.ci.image.MacOS
 import com.tencent.devops.common.ci.image.Pool
+import com.tencent.devops.common.ci.task.DockerRunDevCloudTask
 import com.tencent.devops.common.ci.task.GitCiCodeRepoInput
 import com.tencent.devops.common.ci.task.GitCiCodeRepoTask
-import com.tencent.devops.common.ci.task.PipelineScriptTask
+import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
 import com.tencent.devops.common.ci.v2.Job
 import com.tencent.devops.common.ci.v2.JobRunsOnType
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
@@ -103,8 +103,6 @@ import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_TARGET_URL
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_URL
 import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_NAME
 import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_URL
-import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
-import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -148,9 +146,10 @@ class TriggerBuildService @Autowired constructor(
         gitProjectConf: GitRepositoryConf,
         yaml: ScriptBuildYaml
     ): Model {
-        // 先安装插件市场的插件(拉代码和pipelineScript插件)
+        // 预安装插件市场的插件
         installMarketAtom(gitProjectConf, event.userId, GitCiCodeRepoTask.atomCode)
-        installMarketAtom(gitProjectConf, event.userId, PipelineScriptTask.atomCode)
+        installMarketAtom(gitProjectConf, event.userId, DockerRunDevCloudTask.atomCode)
+        installMarketAtom(gitProjectConf, event.userId, ServiceJobDevCloudTask.atomCode)
 
         val stageList = mutableListOf<Stage>()
 
@@ -166,13 +165,13 @@ class TriggerBuildService @Autowired constructor(
         yaml.stages.forEachIndexed { stageIndex, stage ->
             val containerList = mutableListOf<Container>()
             stage.jobs.forEachIndexed { jobIndex, job ->
-                val elementList = mutableListOf<Element>()
+                val elementList: List<Element>
 
-                if (job.runsOn == null) {
-                    makeElementList(job, elementList, gitProjectConf, event.userId)
+                if (job.runsOn[0] == JobRunsOnType.DOCKER_ON_VM) {
+                    elementList = makeElementList(job, gitProjectConf, event.userId)
                     addVmBuildContainer(job, elementList, containerList, jobIndex)
-                } else if (job.runsOn!![0] == JobRunsOnType.DOCKER_ON_VM) {
-                    makeElementList(job, elementList, gitProjectConf, event.userId)
+                } else {
+                    elementList = makeElementList(job, gitProjectConf, event.userId)
                     addNormalContainer(job, elementList, containerList, jobIndex)
                 }
             }
@@ -190,28 +189,13 @@ class TriggerBuildService @Autowired constructor(
         )
     }
 
-    private fun installMarketAtom(gitProjectConf: GitRepositoryConf, userId: String, atomCode: String) {
-        val projectCodes = ArrayList<String>()
-        projectCodes.add(gitProjectConf.projectCode!!)
-        try {
-            client.get(ServiceMarketAtomResource::class).installAtom(
-                userId = userId,
-                channelCode = channelCode,
-                installAtomReq = InstallAtomReq(projectCodes, atomCode)
-            )
-        } catch (e: Throwable) {
-            logger.error("install atom($atomCode) failed, exception:", e)
-            // 可能之前安装过，继续执行不退出
-        }
-    }
-
     private fun addVmBuildContainer(
         job: Job,
         elementList: List<Element>,
         containerList: MutableList<Container>,
         jobIndex: Int
     ) {
-        var osType = VMBaseOS.LINUX
+        val osType = VMBaseOS.LINUX
         val containerPool =
             when {
                 // 有container配置时优先使用
@@ -223,20 +207,6 @@ class TriggerBuildService @Autowired constructor(
                             password = job.container!!.credentials?.password ?: ""
                         ),
                         macOS = null,
-                        third = null
-                    )
-                }
-
-                // 没有container配置时，优先使用macOS配置
-                job.macOS != null -> {
-                    osType = VMBaseOS.MACOS
-                    Pool(
-                        container = null,
-                        credential = null,
-                        macOS = MacOS(
-                            systemVersion = job.macOS?.systemVersion ?: "",
-                            xcodeVersion = job.macOS?.xcodeVersion ?: ""
-                        ),
                         third = null
                     )
                 }
@@ -258,9 +228,9 @@ class TriggerBuildService @Autowired constructor(
             baseOS = osType,
             vmNames = setOf(),
             maxQueueMinutes = 60,
-            maxRunningMinutes = 900,
+            maxRunningMinutes = job.timeoutMinutes ?: 900,
             buildEnv = null,
-            customBuildEnv = null,
+            customBuildEnv = job.env,
             thirdPartyAgentId = null,
             thirdPartyAgentEnvId = null,
             thirdPartyWorkspace = null,
@@ -307,10 +277,10 @@ class TriggerBuildService @Autowired constructor(
 
     private fun makeElementList(
         job: Job,
-        elementList: MutableList<Element>,
         gitProjectConf: GitRepositoryConf,
         userId: String
-    ) {
+    ): List<Element> {
+        val elementList = mutableListOf<Element>()
         job.steps!!.forEach { step ->
             // bash
             val element: Element = if (step.run != null) {
@@ -326,17 +296,21 @@ class TriggerBuildService @Autowired constructor(
                 MarketBuildAtomElement(
                     name = step.name ?: "插件市场第三方构建环境类插件",
                     id = step.id,
-                    atomCode = step.use!!.split('@')[0],
-                    version = step.use!!.split('@')[1],
+                    atomCode = step.uses!!.split('@')[0],
+                    version = step.uses!!.split('@')[1],
                     data = step.with ?: mapOf()
                 )
             }
+
             elementList.add(element)
+
             if (element is MarketBuildAtomElement) {
                 logger.info("install market atom: ${element.getAtomCode()}")
                 installMarketAtom(gitProjectConf, userId, element.getAtomCode())
             }
         }
+
+        return elementList
     }
 
     private fun createGitCodeElement(event: GitRequestEvent, gitProjectConf: GitRepositoryConf): Element {

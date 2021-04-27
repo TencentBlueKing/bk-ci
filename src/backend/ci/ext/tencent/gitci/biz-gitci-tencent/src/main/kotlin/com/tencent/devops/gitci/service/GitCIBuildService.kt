@@ -342,21 +342,6 @@ class GitCIBuildService @Autowired constructor(
         }
     }
 
-    private fun installMarketAtom(gitProjectConf: GitRepositoryConf, userId: String, atomCode: String) {
-        val projectCodes = ArrayList<String>()
-        projectCodes.add(gitProjectConf.projectCode!!)
-        try {
-            client.get(ServiceMarketAtomResource::class).installAtom(
-                userId = userId,
-                channelCode = channelCode,
-                installAtomReq = InstallAtomReq(projectCodes, atomCode)
-            )
-        } catch (e: Throwable) {
-            logger.error("install atom($atomCode) failed, exception:", e)
-            // 可能之前安装过，继续执行不退出
-        }
-    }
-
     private fun createGitCodeElement(event: GitRequestEvent, gitProjectConf: GitRepositoryConf): Element {
         val gitToken = client.getScm(ServiceGitResource::class).getToken(gitProjectConf.gitProjectId).data!!
         logger.info("get token from scm success, gitToken: $gitToken")

@@ -29,8 +29,6 @@ package com.tencent.devops.common.ci.v2
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.tencent.devops.common.ci.v2.Job
-import com.tencent.devops.common.ci.v2.Steps
 
 /**
  * model
@@ -39,5 +37,5 @@ import com.tencent.devops.common.ci.v2.Steps
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class OnFail(
     val jobs: List<Job>?,
-    val steps: List<Steps>?
+    val steps: List<Step>?
 )

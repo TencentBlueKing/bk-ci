@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.common.gitci2.utils
+package com.tencent.devops.common.ci.v2.utils
 
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
@@ -47,6 +47,13 @@ import com.tencent.devops.common.ci.v2.YmlVersion
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.common.ci.v2.Container
+import com.tencent.devops.common.ci.v2.Credentials
+import com.tencent.devops.common.ci.v2.Job
+import com.tencent.devops.common.ci.v2.JobRunsOnType
+import com.tencent.devops.common.ci.v2.PreJob
+import com.tencent.devops.common.ci.v2.PreStage
+import com.tencent.devops.common.ci.v2.Step
 import org.slf4j.LoggerFactory
 import org.yaml.snakeyaml.Yaml
 import java.io.BufferedReader
@@ -62,6 +69,11 @@ object ScriptYmlUtils {
     private const val dockerHubUrl = ""
 
     private const val secretSeed = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+
+    private const val stageNamespace = "stage-"
+    private const val jobNamespace = "job-"
+    private const val stepNamespace = "step-"
+
 
     /**
      * 1、解决锚点
@@ -164,63 +176,131 @@ object ScriptYmlUtils {
             throw CustomException(Response.Status.BAD_REQUEST, "stages, jobs, steps不能并列存在，只能存在其一!")
         }
 
-  /*      when {
+        val stages = when {
             preScriptBuildYaml.steps != null -> {
-                return listOf(
-                    PreStage(
+                listOf(
+                    Stage(
                         name = "stage_1",
-                        id = randomString(
-                            "s-"
-                        ),
-                        jobs = mapOf(
-                            randomString(
-                                "j-"
-                            ) to
-                                    Job(
-                                        name = "job1",
-                                        runsOn = listOf("devcloud-linux"),
-                                        container = Container(
-                                            "",
-                                            Credentials(
-                                                "",
-                                                ""
-                                            )
-                                        ),
-                                        steps = preScriptBuildYaml.steps
+                        id = randomString(stageNamespace),
+                        jobs = listOf(
+                            Job(
+                                id = randomString(jobNamespace),
+                                name = "job1",
+                                runsOn = listOf(JobRunsOnType.DOCKER_ON_VM),
+                                container = Container(
+                                    "",
+                                    Credentials(
+                                        "",
+                                        ""
                                     )
+                                ),
+                                steps = formatSteps(preScriptBuildYaml.steps)
+                            )
                         )
                     )
                 )
             }
             preScriptBuildYaml.jobs != null -> {
-                return listOf(
+                listOf(
                     Stage(
                         name = "stage_1",
-                        id = randomString(
-                            "s-"
-                        ),
-                        jobs = preScriptBuildYaml.jobs
+                        id = randomString(stageNamespace),
+                        jobs = preJobs2Jobs(preScriptBuildYaml.jobs)
                     )
                 )
             }
             else -> {
-                preScriptBuildYaml.stages
+                preStages2Stages(preScriptBuildYaml.stages)
             }
-        }*/
+        }
 
-/*        // 校验job类型
-        stages.forEach {
-            it.stage.forEach { job ->
-                run {
-                    val type = job.job.type
-                    if (type != null && type != "" && type != VM_JOB && type != NORMAL_JOB) {
-                        throw CustomException(Response.Status.BAD_REQUEST, "非法的job类型")
-                    }
-                }
+        return stages
+    }
+
+    private fun preJobs2Jobs(preJobs: Map<String, PreJob>?): List<Job> {
+        if (preJobs == null) {
+            return emptyList()
+        }
+
+        val jobs = mutableListOf<Job>()
+        preJobs.forEach { (t, u) ->
+            val container = if (u.runsOn != null && u.container == null) {
+                Container(
+                    image = "http://mirrors.tencent.com/ci/tlinux3_ci:0.1.1.0",
+                    credentials = null
+                )
+            } else {
+                u.container
             }
-        }*/
 
-        return emptyList()
+            jobs.add(
+                Job(
+                    id = t,
+                    name = u.name,
+                    runsOn = u.runsOn ?: listOf(JobRunsOnType.DOCKER_ON_VM),
+                    container = container,
+                    service = u.service,
+                    ifField = u.ifField,
+                    steps = formatSteps(u.steps),
+                    timeoutMinutes = u.timeoutMinutes,
+                    env = u.env,
+                    continueOnError = u.continueOnError,
+                    strategy = u.strategy,
+                    dependOn = u.dependOn
+                )
+            )
+        }
+
+        return jobs
+    }
+
+    private fun formatSteps(oldSteps: List<Step>?): List<Step> {
+        if (oldSteps == null) {
+            return emptyList()
+        }
+
+        val stepList = mutableListOf<Step>()
+        oldSteps.forEach {
+            if (it.uses == null && it.run == null) {
+                throw CustomException(Response.Status.BAD_REQUEST, "step必须包含use或run!")
+            }
+
+            stepList.add(Step(
+                name = it.name,
+                id = it.id ?: randomString(stepNamespace),
+                ifFiled = it.ifFiled,
+                uses = it.uses,
+                with = it.with,
+                timeoutMinutes = it.timeoutMinutes,
+                continueOnError = it.continueOnError,
+                retryTimes = it.retryTimes,
+                env = it.env,
+                run = it.run
+            ))
+        }
+
+        return stepList
+    }
+
+    private fun preStages2Stages(preStageList: List<PreStage>?): List<Stage> {
+        if (preStageList == null) {
+            return emptyList()
+        }
+
+        val stageList = mutableListOf<Stage>()
+        preStageList.forEach {
+            stageList.add(
+                Stage(
+                    id = it.id ?: "",
+                    name = it.name,
+                    label = it.label,
+                    ifField = it.ifField,
+                    fastKill = it.fastKill ?: false,
+                    jobs = preJobs2Jobs(it.jobs)
+            ))
+        }
+
+        return stageList
     }
 
     /**
@@ -446,7 +526,7 @@ object ScriptYmlUtils {
         return mapper.generateJsonSchema(AbstractService::class.java).schemaNode
     }*/
 
-    fun randomString(flag: String): String {
+    private fun randomString(flag: String): String {
         val random = Random()
         val buf = StringBuffer(flag)
         for (i in 0 until 7) {

@@ -42,9 +42,12 @@ import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.pojo.GitRepositoryConf
 import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.gitci.pojo.enums.TriggerReason
+import com.tencent.devops.gitci.v2.service.TriggerBuildService
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildId
+import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
+import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -185,50 +188,18 @@ abstract class BaseBuildService<T> @Autowired constructor(
         return false
     }
 
-/*    private fun createPipelineModel(event: GitRequestEvent, gitProjectConf: GitRepositoryConf, yaml: CIBuildYaml): Model {
-        // 先安装插件市场的插件
-        installMarketAtom(gitProjectConf, event.userId, GitCiCodeRepoTask.atomCode)
-        installMarketAtom(gitProjectConf, event.userId, DockerRunDevCloudTask.atomCode)
-        installMarketAtom(gitProjectConf, event.userId, ServiceJobDevCloudTask.atomCode)
-
-        val stageList = mutableListOf<Stage>()
-
-        // 第一个stage，触发类
-        val manualTriggerElement = ManualTriggerElement("手动触发", "T-1-1-1")
-        val params = createPipelineParams(gitProjectConf, yaml, event)
-        val triggerContainer = TriggerContainer("0", "构建触发", listOf(manualTriggerElement), null, null, null, null, params)
-        val stage1 = Stage(listOf(triggerContainer), "stage-1")
-        stageList.add(stage1)
-
-        // 第二个stage，services初始化
-        addServicesStage(yaml, stageList)
-
-        // 其他的stage
-        yaml.stages!!.forEachIndexed { stageIndex, stage ->
-            val containerList = mutableListOf<Container>()
-            stage.stage.forEachIndexed { jobIndex, job ->
-                val elementList = mutableListOf<Element>()
-                // 根据job类型创建构建容器或者无构建环境容器，默认vmBuild
-                if (job.job.type == null || job.job.type == VM_JOB) {
-                    // 构建环境容器每个job的第一个插件都是拉代码
-                    elementList.add(createGitCodeElement(event, gitProjectConf))
-                    makeElementList(job, elementList, gitProjectConf, event.userId)
-                    addVmBuildContainer(job, elementList, containerList, jobIndex)
-                } else if (job.job.type == NORMAL_JOB) {
-                    makeElementList(job, elementList, gitProjectConf, event.userId)
-                    addNormalContainer(job, elementList, containerList, jobIndex)
-                }
-            }
-
-            stageList.add(Stage(containerList, "stage-$stageIndex"))
+    fun installMarketAtom(gitProjectConf: GitRepositoryConf, userId: String, atomCode: String) {
+        val projectCodes = ArrayList<String>()
+        projectCodes.add(gitProjectConf.projectCode!!)
+        try {
+            client.get(ServiceMarketAtomResource::class).installAtom(
+                userId = userId,
+                channelCode = channelCode,
+                installAtomReq = InstallAtomReq(projectCodes, atomCode)
+            )
+        } catch (e: Throwable) {
+            logger.error("install atom($atomCode) failed, exception:", e)
+            // 可能之前安装过，继续执行不退出
         }
-        return Model(
-            name = GitCIPipelineUtils.genBKPipelineName(gitProjectConf.gitProjectId),
-            desc = "",
-            stages = stageList,
-            labels = emptyList(),
-            instanceFromTemplate = false,
-            pipelineCreator = event.userId
-        )
-    }*/
+    }
 }
