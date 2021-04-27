@@ -69,6 +69,10 @@ open class ScriptTask : ITask() {
                     errorType = ErrorType.USER,
                     errorCode = ErrorCode.USER_INPUT_INVAILD
                 ), "UTF-8").replace("\r", "")
+        logger.info("script = $script")
+        buildVariables.variables.forEach { (t, u) ->
+            logger.info("$t -> $u")
+        }
         EnvUtils.parseWithDoubleCurlyBraces(script, buildVariables.variables)
         logger.info("Start to execute the script task($scriptType) ($script)")
         val command = CommandFactory.create(scriptType)
