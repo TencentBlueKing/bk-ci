@@ -46,7 +46,6 @@ data class StageContext(
     var latestSummary: String, // 最新备注信息，64字符以内
     var fastKill: Boolean = false, // 快速失败标志
     var cmdFlowState: CmdFlowState = CmdFlowState.CONTINUE, // 当前Stage引擎命令流转状态
-    val failedContainer: Boolean? = false, // 仅重试失败的Container
     override var cmdFlowSeq: Int = 0, // 命令序号
     override val variables: Map<String, String>, // 变量
     override val watcher: Watcher, // 监控对象
