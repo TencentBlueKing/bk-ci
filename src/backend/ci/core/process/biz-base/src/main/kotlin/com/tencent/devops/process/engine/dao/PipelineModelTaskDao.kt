@@ -222,7 +222,8 @@ class PipelineModelTaskDao {
                 startUpdateTime = startUpdateTime,
                 endUpdateTime = endUpdateTime
             )
-            return dslContext.selectCount().from(this).where(condition).fetchOne(0, Long::class.java)
+            return dslContext.selectCount().from(this).where(condition).groupBy(PIPELINE_ID)
+                .fetchOne(0, Long::class.java)
         }
     }
 
