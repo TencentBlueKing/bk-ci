@@ -324,11 +324,13 @@ class GitCITriggerService @Autowired constructor(
                 val ymlVersion = ScriptYmlUtils.parseVersion(originYaml)
                 val triggerInterface = requestTriggerFactory.getGitCIRequestTrigger(ymlVersion)
                 if (!triggerInterface.triggerBuild(
-                        gitRequestEvent,
-                        buildPipeline,
-                        event,
-                        originYaml,
-                        filePath
+                        gitToken = gitToken,
+                        forkGitToken = forkGitToken,
+                        gitRequestEvent = gitRequestEvent,
+                        gitProjectPipeline = buildPipeline,
+                        event = event,
+                        originYaml = originYaml,
+                        filePath = filePath
                     )) {
                     return@forEach
                 }

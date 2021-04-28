@@ -53,6 +53,7 @@ import com.tencent.devops.common.ci.v2.Job
 import com.tencent.devops.common.ci.v2.JobRunsOnType
 import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreStage
+import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
 import com.tencent.devops.common.ci.v2.Step
 import org.slf4j.LoggerFactory
 import org.yaml.snakeyaml.Yaml
@@ -168,13 +169,16 @@ object ScriptYmlUtils {
         return sb.toString()
     }
 
-    private fun formatStage(preScriptBuildYaml: PreScriptBuildYaml): List<Stage> {
+    fun checkStage(preScriptBuildYaml: PreTemplateScriptBuildYaml){
         if ((preScriptBuildYaml.stages != null && preScriptBuildYaml.jobs != null) ||
             (preScriptBuildYaml.stages != null && preScriptBuildYaml.steps != null) ||
             (preScriptBuildYaml.jobs != null && preScriptBuildYaml.steps != null)) {
             logger.error("Invalid yaml: steps or jobs or stages conflict") // 不能并列存在steps和stages
             throw CustomException(Response.Status.BAD_REQUEST, "stages, jobs, steps不能并列存在，只能存在其一!")
         }
+    }
+
+    private fun formatStage(preScriptBuildYaml: PreScriptBuildYaml): List<Stage> {
 
         val stages = when {
             preScriptBuildYaml.steps != null -> {
@@ -210,7 +214,7 @@ object ScriptYmlUtils {
                 )
             }
             else -> {
-                preStages2Stages(preScriptBuildYaml.stages)
+                preStages2Stages(preScriptBuildYaml.stages as List<PreStage>)
             }
         }
 
@@ -296,7 +300,7 @@ object ScriptYmlUtils {
                     label = it.label,
                     ifField = it.ifField,
                     fastKill = it.fastKill ?: false,
-                    jobs = preJobs2Jobs(it.jobs)
+                    jobs = preJobs2Jobs(it.jobs as Map<String, PreJob>)
             ))
         }
 

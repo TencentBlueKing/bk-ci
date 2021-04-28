@@ -25,34 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.service.trigger
+package com.tencent.devops.common.ci.v2
 
-import com.tencent.devops.gitci.pojo.GitProjectPipeline
-import com.tencent.devops.gitci.pojo.GitRequestEvent
-import com.tencent.devops.gitci.pojo.git.GitEvent
-import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonProperty
 
-interface RequestTriggerInterface<T> {
-
-    fun triggerBuild(
-        gitToken: GitToken,
-        forkGitToken: GitToken?,
-        gitRequestEvent: GitRequestEvent,
-        gitProjectPipeline: GitProjectPipeline,
-        event: GitEvent,
-        originYaml: String?,
-        filePath: String
-    ): Boolean
-
-    fun isMatch(event: GitEvent, ymlObject: T): Boolean
-
-    fun prepareCIBuildYaml(
-        gitToken: GitToken,
-        forkGitToken: GitToken?,
-        gitRequestEvent: GitRequestEvent,
-        event: GitEvent,
-        originYaml: String?,
-        filePath: String?,
-        pipelineId: String?
-    ): T?
-}
+/**
+ * model
+ *
+ * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(gitci,prebuild等)异常
+ */
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class PreTemplateScriptBuildYaml(
+    val version: String?,
+    val name: String?,
+    val label: String? = null,
+    val triggerOn: PreTriggerOn?,
+    val variables: Map<String, Variable>?,
+    val stages: List<Map<String, Any>>?,
+    val jobs: Map<String, Any>? = null,
+    val steps: List<Map<String, Any>>? = null,
+    @JsonProperty("on-fail")
+    val onFail: OnFail?,
+    val extends: Extends?,
+    val resource: Resources?,
+    val notices: List<Notices>?
+)

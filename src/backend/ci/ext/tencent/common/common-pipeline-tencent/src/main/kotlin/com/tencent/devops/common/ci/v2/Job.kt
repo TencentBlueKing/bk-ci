@@ -41,7 +41,7 @@ data class Job(
     val container: Container?,
     val service: Service? = null,
     @JsonProperty("if")
-    val ifField: List<String>? = null,
+    val ifField: String? = null,
     val steps: List<Step>?,
     @JsonProperty("timeout-minutes")
     val timeoutMinutes: Int? = null,
@@ -80,7 +80,7 @@ data class Strategy(
     val maxParallel: String?
 )
 
-enum class JobRunsOnType(type: String){
+enum class JobRunsOnType(type: String) {
     DOCKER_ON_VM("docker-on-vm"),
     SERVER("server")
 }

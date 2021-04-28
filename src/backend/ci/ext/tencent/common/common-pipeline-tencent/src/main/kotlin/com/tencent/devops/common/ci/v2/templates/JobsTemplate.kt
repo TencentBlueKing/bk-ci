@@ -25,34 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.service.trigger
+package com.tencent.devops.common.ci.v2.templates
 
-import com.tencent.devops.gitci.pojo.GitProjectPipeline
-import com.tencent.devops.gitci.pojo.GitRequestEvent
-import com.tencent.devops.gitci.pojo.git.GitEvent
-import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.common.ci.v2.Job
+import com.tencent.devops.common.ci.v2.PreJob
 
-interface RequestTriggerInterface<T> {
-
-    fun triggerBuild(
-        gitToken: GitToken,
-        forkGitToken: GitToken?,
-        gitRequestEvent: GitRequestEvent,
-        gitProjectPipeline: GitProjectPipeline,
-        event: GitEvent,
-        originYaml: String?,
-        filePath: String
-    ): Boolean
-
-    fun isMatch(event: GitEvent, ymlObject: T): Boolean
-
-    fun prepareCIBuildYaml(
-        gitToken: GitToken,
-        forkGitToken: GitToken?,
-        gitRequestEvent: GitRequestEvent,
-        event: GitEvent,
-        originYaml: String?,
-        filePath: String?,
-        pipelineId: String?
-    ): T?
-}
+data class JobsTemplate(
+    val parameters: List<Parameters>?,
+    val jobs: Map<String, PreJob>
+)

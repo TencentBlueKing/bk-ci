@@ -25,34 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.service.trigger
+package com.tencent.devops.common.ci.v2.templates
 
-import com.tencent.devops.gitci.pojo.GitProjectPipeline
-import com.tencent.devops.gitci.pojo.GitRequestEvent
-import com.tencent.devops.gitci.pojo.git.GitEvent
-import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.ci.v2.Extends
+import com.tencent.devops.common.ci.v2.Notices
+import com.tencent.devops.common.ci.v2.OnFail
+import com.tencent.devops.common.ci.v2.Resources
+import com.tencent.devops.common.ci.v2.Stage
+import com.tencent.devops.common.ci.v2.TriggerOn
+import com.tencent.devops.common.ci.v2.Variable
 
-interface RequestTriggerInterface<T> {
-
-    fun triggerBuild(
-        gitToken: GitToken,
-        forkGitToken: GitToken?,
-        gitRequestEvent: GitRequestEvent,
-        gitProjectPipeline: GitProjectPipeline,
-        event: GitEvent,
-        originYaml: String?,
-        filePath: String
-    ): Boolean
-
-    fun isMatch(event: GitEvent, ymlObject: T): Boolean
-
-    fun prepareCIBuildYaml(
-        gitToken: GitToken,
-        forkGitToken: GitToken?,
-        gitRequestEvent: GitRequestEvent,
-        event: GitEvent,
-        originYaml: String?,
-        filePath: String?,
-        pipelineId: String?
-    ): T?
-}
+data class PipelineTemplate(
+    val parameters: List<Parameters>?,
+    val name: String?,
+    val label: String? = null,
+    val triggerOn: TriggerOn?,
+    val variables: Map<String, Variable>?,
+    val stages: List<Stage>,
+    @JsonProperty("on-fail")
+    val onFail: OnFail?,
+    val extends: Extends?,
+    val resource: Resources?,
+    val notices: List<Notices>?
+)
