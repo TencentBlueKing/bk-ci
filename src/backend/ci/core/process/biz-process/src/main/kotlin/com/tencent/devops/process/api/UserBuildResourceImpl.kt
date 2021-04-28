@@ -119,7 +119,8 @@ class UserBuildResourceImpl @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            taskId = taskId
+            taskId = taskId,
+            failedContainer = failedContainer
         )))
     }
 
