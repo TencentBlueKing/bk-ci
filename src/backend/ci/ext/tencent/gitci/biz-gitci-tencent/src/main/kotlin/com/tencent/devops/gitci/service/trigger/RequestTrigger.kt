@@ -44,6 +44,7 @@ import com.tencent.devops.gitci.pojo.enums.TriggerReason
 import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.service.GitRepositoryConfService
 import com.tencent.devops.gitci.utils.GitCIWebHookMatcher
+import com.tencent.devops.repository.pojo.oauth.GitToken
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -54,7 +55,7 @@ import java.io.StringReader
 import javax.ws.rs.core.Response
 
 @Component
-class RequestTrigger @Autowired constructor (
+class RequestTrigger @Autowired constructor(
     private val dslContext: DSLContext,
     private val gitCISettingDao: GitCISettingDao,
     private val gitServicesConfDao: GitCIServicesConfDao,
@@ -65,19 +66,30 @@ class RequestTrigger @Autowired constructor (
 ) : RequestTriggerInterface<CIBuildYaml> {
 
     override fun triggerBuild(
+        gitToken: GitToken,
+        forkGitToken: GitToken?,
         gitRequestEvent: GitRequestEvent,
         gitProjectPipeline: GitProjectPipeline,
         event: GitEvent,
         originYaml: String?,
         filePath: String
     ): Boolean {
-        val yamlObject = prepareCIBuildYaml(gitRequestEvent, originYaml, filePath, gitProjectPipeline.pipelineId) ?: return false
+        val yamlObject = prepareCIBuildYaml(
+            gitToken = gitToken,
+            forkGitToken = forkGitToken,
+            gitRequestEvent = gitRequestEvent,
+            event = event,
+            originYaml = originYaml,
+            filePath = filePath,
+            pipelineId = gitProjectPipeline.pipelineId
+        ) ?: return false
 
         val normalizedYaml = YamlUtil.toYaml(yamlObject)
         logger.info("normalize yaml: $normalizedYaml")
 
         // 若是Yaml格式没问题，则取Yaml中的流水线名称，并修改当前流水线名称
-        gitProjectPipeline.displayName = if (!yamlObject.name.isNullOrBlank()) yamlObject.name!! else filePath.removeSuffix(".yml")
+        gitProjectPipeline.displayName =
+            if (!yamlObject.name.isNullOrBlank()) yamlObject.name!! else filePath.removeSuffix(".yml")
 
         if (isMatch(event, yamlObject)) {
             logger.info("Matcher is true, display the event, gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}, dispatched pipeline: $gitProjectPipeline")
@@ -128,7 +140,10 @@ class RequestTrigger @Autowired constructor (
     }
 
     override fun prepareCIBuildYaml(
+        gitToken: GitToken,
+        forkGitToken: GitToken?,
         gitRequestEvent: GitRequestEvent,
+        event: GitEvent,
         originYaml: String?,
         filePath: String?,
         pipelineId: String?

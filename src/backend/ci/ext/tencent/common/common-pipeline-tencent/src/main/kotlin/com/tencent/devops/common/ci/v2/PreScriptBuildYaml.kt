@@ -44,9 +44,9 @@ data class PreScriptBuildYaml(
     val label: String? = null,
     val triggerOn: PreTriggerOn?,
     val variables: Map<String, Variable>?,
-    val stages: List<PreStage>?,
-    val jobs: Map<String, PreJob>? = null,
-    val steps: List<Step>? = null,
+    var stages: List<PreStage>? =null,
+    var jobs: Map<String, PreJob>? = null,
+    var steps: List<Step>? = null,
     @JsonProperty("on-fail")
     val onFail: OnFail?,
     val extends: Extends?,

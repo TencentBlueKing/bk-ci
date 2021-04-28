@@ -77,9 +77,7 @@ import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.gitci.pojo.BuildConfig
-import com.tencent.devops.gitci.pojo.GitCITriggerLock
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
-import com.tencent.devops.gitci.pojo.enums.TriggerReason
 import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitPushEvent
@@ -88,7 +86,6 @@ import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.utils.GitCIParameterUtils
 import com.tencent.devops.gitci.utils.GitCIPipelineUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.BK_CI_REF
@@ -108,8 +105,6 @@ import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_TARGET_URL
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_URL
 import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_NAME
 import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_URL
-import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
-import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
