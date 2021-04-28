@@ -194,26 +194,38 @@ class Lex(var str: MutableList<Char>) {
                     40 -> {
                         token.add(ch!!)
                         ch = getNext()
-                        //向前看一位还是字母
-                        if (isLetter(ch!!)) {
-                            state = 40
+                        if (ch == null) {
+                            state = 100
+                            syn = 27
                         } else {
-                            back()
-                            state = 100;
-                            syn = 27;
+                            //向前看一位还是字母
+                            if (isLetter(ch!!)) {
+                                state = 40
+                            } else {
+                                back()
+                                state = 100
+                                syn = 27
+                            }
                         }
-
                     }
                     // 匹配中出错
                     99 -> {
 //                        println("error: { $ch } in index: $pos")
                         ch = getNext()
-                        while (ch!! != ' ') {
-                            ch = getNext()
+                        if (ch == null) {
+                            state = 100
+                            syn = 27
+                        } else {
+                            while (ch!! != ' ') {
+                                ch = getNext()
+                                if (ch == null) {
+                                    break
+                                }
+                            }
+                            back()
+                            state = 100
+                            syn = -1
                         }
-                        back()
-                        state = 100
-                        syn = -1
                     }
                 }
             }
