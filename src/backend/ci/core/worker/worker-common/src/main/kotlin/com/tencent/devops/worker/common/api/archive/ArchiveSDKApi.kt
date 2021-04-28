@@ -52,6 +52,11 @@ interface ArchiveSDKApi : WorkerRestApiSDK {
     fun uploadPipeline(file: File, buildVariables: BuildVariables)
 
     /**
+     * 上传日志文件
+     */
+    fun uploadLog(file: File, destFullPath: String, buildVariables: BuildVariables)
+
+    /**
      * 下载仓库中指定路径的文件
      *
      * @param uri 下载路径

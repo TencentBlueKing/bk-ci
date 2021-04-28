@@ -55,6 +55,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.config.BkRepoConfig
 import com.tencent.devops.common.archive.constant.REPO_CUSTOM
+import com.tencent.devops.common.archive.constant.REPO_LOG
 import com.tencent.devops.common.archive.constant.REPO_PIPELINE
 import com.tencent.devops.common.archive.constant.REPO_REPORT
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
@@ -85,7 +86,6 @@ class BkRepoClient constructor(
     private val commonConfig: CommonConfig,
     private val bkRepoConfig: BkRepoConfig
 ) {
-
     private fun getGatewaytUrl(): String {
         return HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
     }
@@ -96,6 +96,7 @@ class BkRepoClient constructor(
             createGenericRepo(userId, projectId, REPO_PIPELINE)
             createGenericRepo(userId, projectId, REPO_CUSTOM)
             createGenericRepo(userId, projectId, REPO_REPORT)
+            createGenericRepo(userId, projectId, REPO_LOG)
             true
         } catch (e: Exception) {
             logger.error("create repo resource error", e)
