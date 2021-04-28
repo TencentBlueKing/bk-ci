@@ -30,6 +30,7 @@ package com.tencent.devops.auth.resources
 
 import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerGroupMemberVo
 import com.tencent.devops.auth.api.user.UserProjectMemberResource
+import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
 import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
@@ -44,7 +45,7 @@ class UserProjectMemberResourceImpl @Autowired constructor(
         projectId: Int,
         roleId: Int,
         managerGroup: Boolean,
-        members: List<String>
+        members: List<RoleMemberDTO>
     ): Result<Boolean> {
         permissionRoleMemberService.createRoleMember(
             userId = userId,
@@ -69,7 +70,7 @@ class UserProjectMemberResourceImpl @Autowired constructor(
         projectId: Int,
         roleId: Int,
         managerGroup: Boolean,
-        members: String
+        members: RoleMemberDTO
     ): Result<Boolean> {
         Result(permissionRoleMemberService.deleteRoleMember(
             userId = userId,

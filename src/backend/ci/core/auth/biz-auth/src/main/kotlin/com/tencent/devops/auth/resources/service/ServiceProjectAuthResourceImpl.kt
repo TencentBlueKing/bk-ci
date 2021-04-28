@@ -28,7 +28,7 @@
 package com.tencent.devops.auth.resources.service
 
 import com.tencent.devops.auth.service.PermissionProjectService
-import com.tencent.devops.auth.service.ServiceProjectResource
+import com.tencent.devops.auth.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -37,9 +37,9 @@ import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceProjectResourceImpl @Autowired constructor(
+class ServiceProjectAuthResourceImpl @Autowired constructor(
     val permissionProjectService: PermissionProjectService
-) : ServiceProjectResource {
+) : ServiceProjectAuthResource {
     override fun getProjectUsers(serviceCode: String, projectCode: String, group: BkAuthGroup?): Result<List<String>> {
         return Result(
             permissionProjectService.getProjectUsers(
@@ -59,12 +59,8 @@ class ServiceProjectResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getUserProjects(userId: String): Result<String> {
+    override fun getUserProjects(userId: String): Result<List<String>> {
         return Result(permissionProjectService.getUserProjects(userId))
-    }
-
-    override fun getUserProjectViewsAndManager(userId: String): Result<Map<String, String>> {
-        return Result(permissionProjectService.getUserProjectViewsAndManager(userId))
     }
 
     override fun isProjectUser(userId: String, projectCode: String, group: BkAuthGroup?): Result<Boolean> {

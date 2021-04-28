@@ -47,7 +47,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/auth/project")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceProjectResource {
+interface ServiceProjectAuthResource {
 
     @GET
     @Path("/projectCodes/{projectCode}/users/byGroup")
@@ -83,16 +83,7 @@ interface ServiceProjectResource {
         @PathParam("userId")
         @ApiParam("用户userId", required = true)
         userId: String
-    ): Result<String>
-
-    @GET
-    @Path("/users/{userId}/viewsAndManager")
-    @ApiOperation("获取用户有查看或管理权限的项目")
-    fun getUserProjectViewsAndManager(
-        @PathParam("userId")
-        @ApiParam("用户Id", required = true)
-        userId: String
-    ): Result<Map<String, String>>
+    ): Result<List<String>>
 
     @GET
     @Path("projects/{projectCode}/users/{userId}/isProjectUsers")

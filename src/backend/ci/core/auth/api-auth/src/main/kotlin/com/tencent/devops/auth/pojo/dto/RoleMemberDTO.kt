@@ -25,40 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.service
+package com.tencent.devops.auth.pojo.dto
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Api(tags = ["AUTH_SERVICE_RESOUCRE"], description = "权限校验--资源相关")
-@Path("/service/auth/resource")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ServiceResourceResource {
-
-    @POST
-    @Path("/projects/{projectCode}/createResource")
-    @ApiOperation("创建资源实例")
-    fun createResource(
-        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
-        @ApiParam("userId", required = true)
-        userId: String,
-        @PathParam("projectCode")
-        @ApiParam("projectCode", required = true)
-        projectCode: String,
-
-        serviceCode: String,
-        resourceType: String,
-        resourceCode: String,
-        resourceName: String
-    )
-}
+@ApiModel
+data class RoleMemberDTO (
+    @ApiModelProperty("组员类型 user:单用户, dept:组织")
+    val type: ManagerScopesEnum,
+    @ApiModelProperty("用户Id或组织Id")
+    val id: String
+)

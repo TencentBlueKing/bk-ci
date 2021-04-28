@@ -23,18 +23,42 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.service.iam
+package com.tencent.devops.auth.service
 
-import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerGroupMemberVo
-import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-interface PermissionRoleMemberService {
-    fun createRoleMember(userId: String, projectId: Int, roleId: Int, members: List<RoleMemberDTO>, managerGroup: Boolean)
+@Api(tags = ["AUTH_SERVICE_RESOUCRE"], description = "权限校验--资源相关")
+@Path("/service/auth/resource")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceResourceAuthResource {
 
-    fun deleteRoleMember(userId: String, projectId: Int, roleId: Int, members: RoleMemberDTO, managerGroup: Boolean)
+    @POST
+    @Path("/projects/{projectCode}/createResource")
+    @ApiOperation("创建资源实例")
+    fun createResource(
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @ApiParam("userId", required = true)
+        userId: String,
+        @PathParam("projectCode")
+        @ApiParam("projectCode", required = true)
+        projectCode: String,
 
-    fun getRoleMember(projectId: Int, roleId: Int): ManagerGroupMemberVo
+        serviceCode: String,
+        resourceType: String,
+        resourceCode: String,
+        resourceName: String
+    )
 }
