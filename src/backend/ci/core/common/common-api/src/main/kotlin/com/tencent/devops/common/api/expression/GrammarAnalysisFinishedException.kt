@@ -25,13 +25,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.control.expression
+package com.tencent.devops.common.api.expression
 
-data class Word(
-    val str : String,
-    val symbol : String
-) {
-    override fun toString(): String {
-        return "Word(str='$str', symbol='$symbol')"
-    }
-}
+import java.lang.Exception
+
+class GrammarAnalysisFinishedException(override val message: String) : Exception(message)
