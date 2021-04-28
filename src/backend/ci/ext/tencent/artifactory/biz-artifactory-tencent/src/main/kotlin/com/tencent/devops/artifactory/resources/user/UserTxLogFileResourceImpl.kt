@@ -25,9 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.archive.constant
+package com.tencent.devops.artifactory.resources.user
 
-const val REPO_PIPELINE = "pipeline"
-const val REPO_CUSTOM = "custom"
-const val REPO_REPORT = "report"
-const val REPO_LOG = "log"
+import com.tencent.devops.artifactory.api.user.UserLogFileResource
+import com.tencent.devops.artifactory.pojo.Url
+import com.tencent.devops.artifactory.service.LogFileService
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+
+@RestResource
+class UserTxLogFileResourceImpl(
+    private val logFileService: LogFileService
+) : UserLogFileResource {
+
+    override fun getPluginLogUrl(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        elementId: String,
+        executeCount: String
+    ): Result<Url> {
+        return Result(
+            logFileService.getPluginLogUrl(
+                userId,
+                projectId,
+                pipelineId,
+                buildId,
+                elementId,
+                executeCount
+            )
+        )
+    }
+}

@@ -25,9 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.archive.constant
+package com.tencent.devops.artifactory.service
 
-const val REPO_PIPELINE = "pipeline"
-const val REPO_CUSTOM = "custom"
-const val REPO_REPORT = "report"
-const val REPO_LOG = "log"
+import com.tencent.devops.artifactory.pojo.Url
+
+interface LogFileService {
+    fun getPluginLogUrl(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        elementId: String,
+        executeCount: String
+    ): Url
+}
