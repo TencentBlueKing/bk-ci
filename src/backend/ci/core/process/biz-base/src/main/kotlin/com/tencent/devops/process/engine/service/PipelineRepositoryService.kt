@@ -564,10 +564,10 @@ class PipelineRepositoryService constructor(
                             ""
                         }
 
-                        // 渠道为工蜂或者开源扫描只需为流水线模型保留二个版本
-                        val filterList = listOf(ChannelCode.GIT, ChannelCode.GONGFENGSCAN)
-                        val maxPipelineResNum = if (channelCode in filterList) {
-                            2
+                        // 特定渠道保留特定版本
+                        val filterList = versionConfigure.specChannels.split(",")
+                        val maxPipelineResNum = if (channelCode.name in filterList) {
+                            versionConfigure.specChannelMaxKeepNum
                         } else {
                             versionConfigure.maxKeepNum
                         }

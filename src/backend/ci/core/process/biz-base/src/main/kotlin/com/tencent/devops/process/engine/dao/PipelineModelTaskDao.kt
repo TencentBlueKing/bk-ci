@@ -189,7 +189,7 @@ class PipelineModelTaskDao {
             val baseStep = dslContext.select(
                 PIPELINE_ID.`as`(KEY_PIPELINE_ID),
                 PROJECT_ID.`as`(KEY_PROJECT_ID),
-                groupConcatDistinct(DSL.concat(ATOM_VERSION)).`as`(KEY_VERSION),
+                groupConcatDistinct(ATOM_VERSION).`as`(KEY_VERSION),
                 CREATE_TIME.`as`(KEY_CREATE_TIME),
                 UPDATE_TIME.`as`(KEY_UPDATE_TIME)
             )
