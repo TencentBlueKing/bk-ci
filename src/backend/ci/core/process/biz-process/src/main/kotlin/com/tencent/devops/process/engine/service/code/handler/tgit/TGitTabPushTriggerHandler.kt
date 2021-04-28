@@ -25,47 +25,53 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.service.code
+package com.tencent.devops.process.engine.service.code.handler.tgit
 
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
-import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.process.engine.service.code.handler.tgit.TGitHookTriggerHandler
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.process.engine.service.code.filter.BranchFilter
+import com.tencent.devops.process.engine.service.code.filter.WebhookFilter
+import com.tencent.devops.process.engine.service.code.handler.WebhookUtils
 import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
-import com.tencent.devops.process.pojo.code.git.GitEvent
-import com.tencent.devops.repository.pojo.CodeGitlabRepository
+import com.tencent.devops.process.pojo.code.WebHookEvent
+import com.tencent.devops.process.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.repository.pojo.Repository
-import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
 
-class GitlabWebHookMatcher(gitlabEvent: GitEvent) : GitWebHookMatcher(gitlabEvent) {
+@Service
+class TGitTabPushTriggerHandler : TGitHookTriggerHandler {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(GitlabWebHookMatcher::class.java)
+    override fun canHandler(event: WebHookEvent): Boolean {
+        return event is GitTagPushEvent
     }
 
-    override fun isMatch(
+    override fun getEventType(): CodeEventType {
+        return CodeEventType.TAG_PUSH
+    }
+
+    override fun getUrl(event: WebHookEvent): String {
+        return (event as GitTagPushEvent).repository.git_http_url
+    }
+
+    override fun getUser(event: WebHookEvent): String {
+        return (event as GitTagPushEvent).user_name
+    }
+
+    override fun getEventFilters(
+        event: WebHookEvent,
         projectId: String,
         pipelineId: String,
         repository: Repository,
         webHookParams: ScmWebhookMatcher.WebHookParams
-    ): ScmWebhookMatcher.MatchResult {
-        if (repository !is CodeGitlabRepository) {
-            logger.warn("The repo($repository) is not code git repo for git web hook")
-            return ScmWebhookMatcher.MatchResult(isMatch = false)
+    ): List<WebhookFilter> {
+        event as GitTagPushEvent
+        with(webHookParams) {
+            val branchFilter = BranchFilter(
+                pipelineId = pipelineId,
+                triggerOnBranchName = WebhookUtils.getTag(event.ref),
+                includedBranches = WebhookUtils.convert(tagName),
+                excludedBranches = WebhookUtils.convert(excludeTagName)
+            )
+            return listOf(branchFilter)
         }
-        val handlers = SpringContextUtil.getBeansWithClass(TGitHookTriggerHandler::class.java)
-        handlers.forEach { handler ->
-            if (handler.canHandler(event)) {
-                return handler.doMatch(
-                    event = event,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    repository = repository,
-                    webHookParams = webHookParams
-                )
-            }
-        }
-        return ScmWebhookMatcher.MatchResult(false)
     }
-
-    override fun getCodeType() = CodeType.GITLAB
 }

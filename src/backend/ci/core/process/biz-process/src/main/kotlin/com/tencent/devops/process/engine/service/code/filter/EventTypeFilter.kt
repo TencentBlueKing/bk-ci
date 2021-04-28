@@ -25,42 +25,48 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.code.git
+package com.tencent.devops.process.engine.service.code.filter
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import org.slf4j.LoggerFactory
 
-@Suppress("ALL")
-data class GitMergeRequestEvent(
-    val user: GitUser,
-    val manual_unlock: Boolean? = false,
-    val object_attributes: GitMRAttributes
-) : GitEvent() {
+class EventTypeFilter(
+    private val pipelineId: String,
+    private val triggerOnEventType: CodeEventType,
+    private val eventType: CodeEventType?,
+    private val action: String? = null
+) : WebhookFilter {
+
     companion object {
-        const val classType = "merge_request"
+        private val logger = LoggerFactory.getLogger(EventTypeFilter::class.java)
+    }
+
+    override fun doFilter(response: WebhookFilterResponse): Boolean {
+        logger.info("$pipelineId|$triggerOnEventType|$eventType|$action|git web hook eventType filter")
+        return if (triggerOnEventType == CodeEventType.MERGE_REQUEST) {
+            isAllowedByMrAction()
+        } else {
+            isAllowedByEventType()
+        }
+    }
+
+    private fun isAllowedByEventType(): Boolean {
+        return eventType == triggerOnEventType
+    }
+
+    private fun isAllowedByMrAction(): Boolean {
+        if (isMrAndMergeAction() || isMrAcceptNotMergeAction()) {
+            logger.warn("$pipelineId|Git mr web hook not match with action($action)")
+            return false
+        }
+        return true
+    }
+
+    private fun isMrAndMergeAction(): Boolean {
+        return eventType == CodeEventType.MERGE_REQUEST && action == "merge"
+    }
+
+    private fun isMrAcceptNotMergeAction(): Boolean {
+        return eventType == CodeEventType.MERGE_REQUEST_ACCEPT && action != "merge"
     }
 }
-
-@Suppress("ALL")
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class GitMRAttributes(
-    val id: Long,
-    val target_branch: String,
-    val source_branch: String,
-    val author_id: Long,
-    val assignee_id: Long,
-    val title: String,
-    val created_at: String,
-    val updated_at: String,
-    val state: String,
-    val merge_status: String,
-    val target_project_id: String,
-    val source_project_id: String,
-    val iid: Long,
-    val description: String?,
-    val source: GitProject,
-    val target: GitProject,
-    val last_commit: GitCommit,
-    val url: String,
-    val action: String,
-    val extension_action: String?
-)
