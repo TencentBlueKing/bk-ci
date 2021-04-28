@@ -40,6 +40,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
+import com.tencent.devops.common.auth.utils.AuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
@@ -70,6 +71,7 @@ class TxPermissionProjectServiceImpl @Autowired constructor(
             allGroupAndUser.map { allMembers.addAll(it.userIdList) }
             allMembers
         } else {
+            // TODO: 待iam完成group lable后补齐
             // 通过分组类型匹配分组用户
             emptyList()
         }
@@ -98,12 +100,20 @@ class TxPermissionProjectServiceImpl @Autowired constructor(
         return result
     }
 
-    override fun getUserProjects(userId: String): String {
-        TODO("Not yet implemented")
-    }
-
-    override fun getUserProjectViewsAndManager(userId: String): Map<String, String> {
-        TODO("Not yet implemented")
+    override fun getUserProjects(userId: String): List<String> {
+        val viewAction = "project_view"
+        val managerAction = "all_action"
+        val actionDTOs = mutableListOf<ActionDTO>()
+        val viewActionDto = ActionDTO()
+        viewActionDto.id = viewAction
+        val managerActionDto = ActionDTO()
+        managerActionDto.id = managerAction
+        actionDTOs.add(viewActionDto)
+        actionDTOs.add(managerActionDto)
+        val actionPolicyDTOs = policyService.batchGetPolicyByActionList(userId, actionDTOs, null) ?: return emptyList()
+        logger.info("[IAM] getUserProjects actionPolicyDTOs $actionPolicyDTOs")
+        val actionPolicy = actionPolicyDTOs[0]
+        return AuthUtils.getProjects(actionPolicy.condition)
     }
 
     /**
@@ -131,6 +141,7 @@ class TxPermissionProjectServiceImpl @Autowired constructor(
     }
 
     override fun createProjectUser(userId: String, projectCode: String, role: String): Boolean {
+
     }
 
     override fun getProjectRoles(projectCode: String, projectId: String): List<BKAuthProjectRolesResources> {
