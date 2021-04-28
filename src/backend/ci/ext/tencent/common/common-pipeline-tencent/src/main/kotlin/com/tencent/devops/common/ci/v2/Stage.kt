@@ -37,7 +37,7 @@ data class Stage(
     val id: String?,
     val label: String? = null,
     @JsonProperty("if")
-    val ifField: List<String>? = emptyList(),
+    val ifField: String? = null,
     @JsonProperty("fast-kill")
     val fastKill: Boolean? = false,
     val jobs: List<Job>
