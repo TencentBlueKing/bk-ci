@@ -18,10 +18,11 @@
 _M = {}
 
 function _M:get_gray()
-    if ngx.var.not_use_gray == 'true' then
+    if ngx.var.not_use_gray == 'true' or ngx.var.project ~= 'codecc' then
         return false
     end
 
+    -- 现在灰度配置只对codecc生效
     local devops_project = projectUtil:get_project()
     local gray_flag = false
 
@@ -31,13 +32,7 @@ function _M:get_gray()
         local project_cache_value = project_cache:get(devops_project)
         if project_cache_value == nil then
             --- 获取redis key
-            local red_key = nil
-            if ngx.var.project == "codecc" then
-                red_key = "project:setting:gray:codecc:v2"
-            else
-                red_key = "project:setting:gray:v2"
-            end
-
+            local red_key = "project:setting:gray:codecc:v2"
             --- 查询redis的灰度情况
             local red, err = redisUtil:new()
             if not red then

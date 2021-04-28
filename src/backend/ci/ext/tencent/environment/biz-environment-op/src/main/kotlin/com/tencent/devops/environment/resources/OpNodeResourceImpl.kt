@@ -36,11 +36,6 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpNodeResourceImpl @Autowired constructor(private val opNodeService: OpNodeService) : OpNodeResource {
-    override fun addOtherNodes(userId: String, projectId: String, nodeIps: List<String>): Result<Boolean> {
-        opNodeService.addOtherNodes(userId, projectId, nodeIps)
-        return Result(true)
-    }
-
     override fun flushDisplayName(): Result<Int> {
         return Result(opNodeService.flushDisplayName())
     }
