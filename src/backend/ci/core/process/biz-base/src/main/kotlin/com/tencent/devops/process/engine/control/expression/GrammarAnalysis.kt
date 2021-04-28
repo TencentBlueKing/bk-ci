@@ -28,7 +28,6 @@
 package com.tencent.devops.process.engine.control.expression
 
 import java.lang.Exception
-import kotlin.system.exitProcess
 import java.util.ArrayDeque
 
 @Suppress("ALL")
