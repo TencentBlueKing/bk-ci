@@ -409,7 +409,7 @@ class ExperienceService @Autowired constructor(
             onlinePublicExperience(
                 projectId = projectId,
                 size = fileSize,
-                experienceName = experience.name,
+                experienceName = experience.experienceName ?: projectId,
                 categoryId = experience.categoryId ?: ProductCategoryEnum.LIFE.id,
                 expireDate = experience.expireDate,
                 experienceId = experienceId,

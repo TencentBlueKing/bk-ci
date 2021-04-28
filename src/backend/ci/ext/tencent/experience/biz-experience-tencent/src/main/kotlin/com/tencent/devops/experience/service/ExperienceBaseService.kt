@@ -86,7 +86,7 @@ class ExperienceBaseService @Autowired constructor(
 
     fun isPrivate(experienceId: Long): Boolean {
         return experienceGroupDao.listGroupIdsByRecordId(dslContext, experienceId)
-            .filter { it.value1() == ExperienceConstant.PUBLIC_GROUP }.count() > 0
+            .filterNot { it.value1() == ExperienceConstant.PUBLIC_GROUP }.count() > 0
     }
 
     fun isInPrivate(experienceId: Long, userId: String): Boolean {
