@@ -206,7 +206,7 @@ class Lex(var str: MutableList<Char>) {
                     }
                     // 匹配中出错
                     99 -> {
-                        println("error: { $ch } in index: $pos")
+//                        println("error: { $ch } in index: $pos")
                         ch = getNext()
                         while (ch!! != ' ') {
                             ch = getNext()

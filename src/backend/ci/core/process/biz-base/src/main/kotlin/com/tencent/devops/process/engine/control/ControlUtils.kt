@@ -265,7 +265,7 @@ object ControlUtils {
                 expressionResult
             } catch (e: Exception) {
                 // 异常，则任务表达式为false
-                logger.info("[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition|result=exception: ${e.message}")
+                logger.info("[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition|result=exception: ${e.message}", e)
                 return false
             }
         } else {

@@ -109,13 +109,11 @@ class GrammarAnalysis(private val items: List<Word>) {
     }
 
     private fun nextSym() {
-        println("index: $index   symbol: ${sym.symbol}")
+//        println("index: $index   symbol: ${sym.symbol}")
         index++
         if (index >= items.size) {
             if (parentStack.isNotEmpty()) {
                 error("condition:  need ')' ")
-            } else {
-                println("success")
             }
             throw GrammarAnalysisFinishedException("success")
         }
