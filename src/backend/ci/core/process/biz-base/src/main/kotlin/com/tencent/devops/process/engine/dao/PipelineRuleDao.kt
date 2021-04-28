@@ -138,6 +138,21 @@ class PipelineRuleDao {
         }
     }
 
+    fun getPipelineRulesByBusCode(
+        dslContext: DSLContext,
+        busCode: String,
+        ruleNameList: List<String>? = null
+    ): Result<TPipelineRuleRecord>? {
+        with(TPipelineRule.T_PIPELINE_RULE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(BUS_CODE.eq(busCode))
+            if (ruleNameList != null) {
+                conditions.add(RULE_NAME.`in`(ruleNameList))
+            }
+            return dslContext.selectFrom(this).where(conditions).orderBy(CREATE_TIME.desc()).fetch()
+        }
+    }
+
     private fun TPipelineRule.generateQueryPipelineRuleCondition(
         ruleName: String?,
         busCode: String?

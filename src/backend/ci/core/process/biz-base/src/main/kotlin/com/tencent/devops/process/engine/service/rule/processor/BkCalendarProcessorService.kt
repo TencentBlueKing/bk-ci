@@ -27,23 +27,33 @@
 
 package com.tencent.devops.process.engine.service.rule.processor
 
+import com.tencent.devops.common.api.util.DateTimeUtil
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 import java.util.Calendar
 
-abstract class CalendarProcessorService : ProcessorService {
+@Service("BkCalendarProcessor")
+class BkCalendarProcessorService : ProcessorService {
 
     companion object {
+        private val logger = LoggerFactory.getLogger(BkCalendarProcessorService::class.java)
+        private val calendar = Calendar.getInstance()
+        private const val FORMAT_DATE_NAME = "FORMAT_DATE:"
+    }
 
-        @JvmField
-        val fieldNames = getCalendarFieldNames()
-
-        @JvmStatic
-        private fun getCalendarFieldNames(): Set<String> {
-            val declaredFields = Calendar::class.java.declaredFields
-            val fieldNames = mutableSetOf<String>()
-            declaredFields.forEach {
-                fieldNames.add(it.name)
+    override fun getRuleValue(ruleName: String, pipelineId: String?): String? {
+        return when {
+            ruleName == "DAY_OF_MONTH" -> {
+                (calendar.get(Calendar.MONTH) + 1).toString()
             }
-            return fieldNames
+            ruleName.startsWith(FORMAT_DATE_NAME) -> {
+                val rule = ruleName.substring(FORMAT_DATE_NAME.length).removePrefix("\"").removeSuffix("\"")
+                DateTimeUtil.toDateTime(LocalDateTime.now(), rule)
+            }
+            else -> {
+                null
+            }
         }
     }
 }

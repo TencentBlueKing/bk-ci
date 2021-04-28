@@ -32,6 +32,7 @@ import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -43,6 +44,7 @@ import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
@@ -106,6 +108,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildMonitorEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
+import com.tencent.devops.process.engine.service.rule.PipelineRuleService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
@@ -116,6 +119,7 @@ import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.code.WebhookInfo
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineRuleBusCodeEnum
 import com.tencent.devops.process.service.BuildStartupParamService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.StageTagService
@@ -126,6 +130,7 @@ import com.tencent.devops.process.utils.MAJORVERSION
 import com.tencent.devops.process.utils.MINORVERSION
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
+import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM_ALIAS
 import com.tencent.devops.process.utils.PIPELINE_BUILD_REMARK
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
@@ -156,6 +161,8 @@ import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAccessor
+import java.util.Calendar
+import java.util.Date
 
 /**
  * 流水线运行时相关的服务
@@ -176,6 +183,8 @@ class PipelineRuntimeService @Autowired constructor(
     private val buildDetailDao: BuildDetailDao,
     private val buildStartupParamService: BuildStartupParamService,
     private val buildVariableService: BuildVariableService,
+    private val pipelineSettingService: PipelineSettingService,
+    private val pipelineRuleService: PipelineRuleService,
     private val vmOperatorTaskGenerator: VmOperateTaskGenerator
 ) {
     companion object {
@@ -737,7 +746,8 @@ class PipelineRuntimeService @Autowired constructor(
         pipelineInfo: PipelineInfo,
         fullModel: Model,
         startParamsWithType: List<BuildParameters>,
-        buildNo: Int? = null
+        buildNo: Int? = null,
+        buildNumRule: String? = null
     ): String {
         val params = startParamsWithType.associate { it.key to it.value }
         val startBuildStatus: BuildStatus = BuildStatus.QUEUE // 默认都是排队状态
@@ -1100,6 +1110,13 @@ class PipelineRuntimeService @Autowired constructor(
             } else { // 创建构建记录
                 // 构建号递增
                 val buildNum = pipelineBuildSummaryDao.updateBuildNum(transactionContext, pipelineInfo.pipelineId)
+                val buildNumAlias = if (!buildNumRule.isNullOrBlank()) {
+                    pipelineRuleService.parsePipelineRule(
+                        pipelineId = pipelineId,
+                        busCode = PipelineRuleBusCodeEnum.BUILD_NUM.name,
+                        ruleStr = buildNumRule
+                    )
+                } else null
                 pipelineBuildDao.create(
                     dslContext = transactionContext,
                     projectId = pipelineInfo.projectId,
@@ -1118,7 +1135,8 @@ class PipelineRuntimeService @Autowired constructor(
                     parentTaskId = parentTaskId,
                     webhookType = params[PIPELINE_WEBHOOK_TYPE] as String?,
                     webhookInfo = getWebhookInfo(params),
-                    buildMsg = getBuildMsg(params[PIPELINE_BUILD_MSG] as String?)
+                    buildMsg = getBuildMsg(params[PIPELINE_BUILD_MSG] as String?),
+                    buildNumAlias = buildNumAlias
                 )
                 // detail记录,未正式启动，先排队状态
                 buildDetailDao.create(
@@ -1130,7 +1148,18 @@ class PipelineRuntimeService @Autowired constructor(
                     model = JsonUtil.toJson(fullModel),
                     buildStatus = BuildStatus.QUEUE
                 )
-                // 写入版本号
+                // 写构建号信息
+                val variables = mutableListOf<BuildParameters>()
+                variables.add(BuildParameters(PIPELINE_BUILD_NUM, buildNum, BuildFormPropertyType.STRING))
+                if (!buildNumAlias.isNullOrBlank()) {
+                    variables.add(
+                        BuildParameters(
+                            key = PIPELINE_BUILD_NUM_ALIAS,
+                            value = buildNumAlias,
+                            valueType = BuildFormPropertyType.STRING
+                        )
+                    )
+                }
                 buildVariableService.saveVariable(
                     dslContext = transactionContext,
                     projectId = pipelineInfo.projectId,
@@ -1149,6 +1178,8 @@ class PipelineRuntimeService @Autowired constructor(
                         varValue = currentBuildNo.toString()
                     )
                 }
+                // 设置流水线每日构建次数
+                pipelineSettingService.setCurrentDayBuildCount(pipelineId)
             }
 
             // 保存参数

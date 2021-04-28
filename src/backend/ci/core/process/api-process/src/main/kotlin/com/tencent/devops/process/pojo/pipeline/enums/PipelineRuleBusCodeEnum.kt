@@ -25,15 +25,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.service.rule.processor
+package com.tencent.devops.process.pojo.pipeline.enums
 
-interface ProcessorService {
-
-    /**
-     * 根据规则名称获取规则值
-     * @param ruleName 规则名称
-     * @param pipelineId 流水线ID
-     * @return 具体规则值
-     */
-    fun getRuleValue(ruleName: String, pipelineId: String? = null): String?
+enum class PipelineRuleBusCodeEnum {
+    BUILD_NUM
 }

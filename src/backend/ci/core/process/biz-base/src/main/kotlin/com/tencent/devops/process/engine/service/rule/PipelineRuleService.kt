@@ -30,13 +30,17 @@ package com.tencent.devops.process.engine.service.rule
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.engine.dao.PipelineRuleDao
+import com.tencent.devops.process.engine.service.rule.processor.ProcessorService
 import com.tencent.devops.process.pojo.pipeline.PipelineRule
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.regex.Pattern
 
 @Service
 class PipelineRuleService @Autowired constructor(
@@ -141,5 +145,60 @@ class PipelineRuleService @Autowired constructor(
             totalPages = totalPages,
             records = pipelineRuleList ?: listOf()
         )
+    }
+
+    fun parsePipelineRule(pipelineId: String, busCode: String, ruleStr: String): String {
+        val ruleNameList = getRuleNameList(ruleStr)
+        val pipelineRuleRecords = pipelineRuleDao.getPipelineRulesByBusCode(dslContext, busCode, ruleNameList)
+        val validRuleProcessorMap = mutableMapOf<String, String>()
+        pipelineRuleRecords?.forEach { ruleRecord ->
+            validRuleProcessorMap[ruleRecord.ruleName] = ruleRecord.processor
+        }
+        if (validRuleProcessorMap.isNotEmpty()) {
+            ruleNameList.removeAll(validRuleProcessorMap.keys)
+        }
+        // 判断用户填的规则是否合法
+        if (ruleNameList.size != validRuleProcessorMap.size) {
+            ruleNameList.removeAll(validRuleProcessorMap.keys)
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf("$ruleStr(error rule:${JsonUtil.toJson(ruleNameList)})")
+            )
+        }
+        val validRuleValueMap = mutableMapOf<String, String>()
+        validRuleProcessorMap.map { validRule ->
+            // 根据规则名称获取具体的规则值
+            val ruleName = validRule.key
+            val processorName = validRule.value
+            val processor = SpringContextUtil.getBean(ProcessorService::class.java, processorName)
+            val ruleValue = processor.getRuleValue(ruleName, pipelineId)
+                ?: throw ErrorCodeException(
+                    errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                    params = arrayOf("$ruleStr(error rule:$ruleName)")
+                )
+            validRuleValueMap[ruleName] = ruleValue
+        }
+        return generateReplaceRuleStr(ruleStr, validRuleValueMap)
+    }
+
+    fun generateReplaceRuleStr(
+        ruleStr: String,
+        validRuleValueMap: MutableMap<String, String>
+    ): String {
+        var replaceRuleStr = ruleStr
+        validRuleValueMap.forEach { (ruleName, ruleValue) ->
+            // 占位符替换
+            replaceRuleStr = replaceRuleStr.replace("\${{$ruleName}}", ruleValue)
+        }
+        return replaceRuleStr
+    }
+
+    fun getRuleNameList(ruleStr: String): MutableList<String> {
+        val ruleNameList = mutableListOf<String>()
+        val pattern = Pattern.compile("(?<=\\$\\{\\{)(.+?)(?=}})")
+        val matcher = pattern.matcher(ruleStr)
+        // 根据${{xxx}}提取规则名称xxx
+        while (matcher.find()) ruleNameList.add(matcher.group())
+        return ruleNameList
     }
 }

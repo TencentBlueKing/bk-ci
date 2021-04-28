@@ -27,13 +27,28 @@
 
 package com.tencent.devops.process.engine.service.rule.processor
 
-interface ProcessorService {
+import com.tencent.devops.process.engine.service.PipelineSettingService
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-    /**
-     * 根据规则名称获取规则值
-     * @param ruleName 规则名称
-     * @param pipelineId 流水线ID
-     * @return 具体规则值
-     */
-    fun getRuleValue(ruleName: String, pipelineId: String? = null): String?
+@Service("BuildNoOfDayProcessor")
+class BuildNoOfDayProcessorService : ProcessorService {
+
+    @Autowired
+    private lateinit var pipelineSettingService: PipelineSettingService
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(BuildNoOfDayProcessorService::class.java)
+    }
+
+    override fun getRuleValue(ruleName: String, pipelineId: String?): String? {
+        val ruleValue = if (pipelineId != null) {
+            pipelineSettingService.getCurrentDayBuildCount(pipelineId).toString()
+        } else {
+            null
+        }
+        logger.info("getRuleValue ruleName:$ruleName,pipelineId:$pipelineId,ruleValue:$ruleValue")
+        return ruleValue
+    }
 }
