@@ -34,14 +34,30 @@
                 cards: [],
                 count: 0,
                 orderType: { id: 'DOWNLOAD_COUNT', name: this.$t('store.按热度') },
-                showOrderList: false,
-                orderList: [
+                showOrderList: false
+            }
+        },
+
+        computed: {
+            orderList () {
+                const orderMap = {
+                    atom: [
+                        { id: 'NAME', name: this.$t('store.按名称A-Z') },
+                        { id: 'CREATE_TIME', name: this.$t('store.按创建时间') },
+                        { id: 'UPDATE_TIME', name: this.$t('store.按修改时间') },
+                        { id: 'PUBLISHER', name: this.$t('store.按发布者') },
+                        { id: 'RECENT_EXECUTE_NUM', name: this.$t('store.按热度') }
+                    ]
+                }
+                const defaultOrder = [
                     { id: 'NAME', name: this.$t('store.按名称A-Z') },
                     { id: 'CREATE_TIME', name: this.$t('store.按创建时间') },
                     { id: 'UPDATE_TIME', name: this.$t('store.按修改时间') },
                     { id: 'PUBLISHER', name: this.$t('store.按发布者') },
                     { id: 'DOWNLOAD_COUNT', name: this.$t('store.按热度') }
                 ]
+                const type = this.$route.query.pipeType || 'atom'
+                return orderMap[type] || defaultOrder
             }
         },
 

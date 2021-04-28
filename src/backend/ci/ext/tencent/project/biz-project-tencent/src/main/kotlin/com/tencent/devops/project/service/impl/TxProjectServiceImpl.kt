@@ -131,17 +131,16 @@ class TxProjectServiceImpl @Autowired constructor(
         return projectVO
     }
 
-    override fun list(userId: String, accessToken: String?): List<ProjectVO> {
+    override fun list(userId: String, accessToken: String?, enabled: Boolean?): List<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         try {
 
             val projects = getProjectFromAuth(userId, accessToken).toSet()
-            if (projects == null || projects.isEmpty()) {
+            if (projects.isEmpty()) {
                 return emptyList()
             }
-            logger.info("项目列表：$projects")
             val list = ArrayList<ProjectVO>()
-            projectDao.list(dslContext, projects).map {
+            projectDao.list(dslContext, projects, enabled).map {
                 list.add(ProjectUtils.packagingBean(it, grayProjectSet()))
             }
             return list

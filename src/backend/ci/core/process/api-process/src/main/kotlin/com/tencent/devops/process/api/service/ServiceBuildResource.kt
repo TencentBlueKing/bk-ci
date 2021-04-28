@@ -99,6 +99,7 @@ interface ServiceBuildResource {
         errorMsg: String? = null
     ): Result<Boolean>
 
+    @Deprecated("早已经没有使用，已经作废，请不要使用，未来将会进行删除")
     @ApiOperation("Notify process that the vm startup for the build")
     @PUT
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/vmStarted")

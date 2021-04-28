@@ -40,6 +40,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.engine.service.PipelineVMBuildService
+import com.tencent.devops.process.engine.service.vmbuild.EngineVMBuildService
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryVariables
@@ -56,6 +57,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ServiceBuildResourceImpl @Autowired constructor(
     private val pipelineBuildFacadeService: PipelineBuildFacadeService,
+    private val engineVMBuildService: EngineVMBuildService,
     private val vmBuildService: PipelineVMBuildService
 ) : ServiceBuildResource {
 
@@ -73,7 +75,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        return Result(vmBuildService.setStartUpVMStatus(
+        return Result(engineVMBuildService.setStartUpVMStatus(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,

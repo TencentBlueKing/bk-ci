@@ -25,25 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.dao
+package com.tencent.devops.worker.common.api.engine
 
-import com.tencent.devops.model.process.tables.TPipelineModelTask
-import com.tencent.devops.model.process.tables.records.TPipelineModelTaskRecord
-import org.jooq.DSLContext
-import org.jooq.Result
-import org.springframework.stereotype.Repository
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.process.pojo.BuildTask
+import com.tencent.devops.process.pojo.BuildTaskResult
+import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.worker.common.api.WorkerRestApiSDK
 
-@Repository
-class PipelineTaskDao {
-    fun list(
-        dslContext: DSLContext,
-        projectId: String,
-        pipelineIds: Collection<String>
-    ): Result<TPipelineModelTaskRecord>? {
-        with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
-            return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.`in`(pipelineIds)))
-                .fetch()
-        }
-    }
+interface EngineBuildSDKApi : WorkerRestApiSDK {
+
+    fun getRequestUrl(path: String, retryCount: Int = 0): String
+
+    fun setStarted(retryCount: Int): Result<BuildVariables>
+
+    fun claimTask(retryCount: Int): Result<BuildTask>
+
+    fun completeTask(result: BuildTaskResult, retryCount: Int): Result<Boolean>
+
+    fun endTask(retryCount: Int): Result<Boolean>
+
+    fun heartbeat(): Result<Boolean>
+
+    fun timeout(): Result<Boolean>
 }

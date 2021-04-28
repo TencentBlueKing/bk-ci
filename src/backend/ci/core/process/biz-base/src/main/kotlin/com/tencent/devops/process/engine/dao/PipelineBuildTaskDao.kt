@@ -216,10 +216,8 @@ class PipelineBuildTaskDao @Autowired constructor(private val objectMapper: Obje
             }
             if (statusSet != null && statusSet.isNotEmpty()) {
                 val statusIntSet = mutableSetOf<Int>()
-                if (statusSet.isNotEmpty()) {
-                    statusSet.forEach {
-                        statusIntSet.add(it.ordinal)
-                    }
+                statusSet.forEach {
+                    statusIntSet.add(it.ordinal)
                 }
                 where.and(STATUS.`in`(statusIntSet))
             }

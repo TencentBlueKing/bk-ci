@@ -44,6 +44,7 @@ import org.jooq.Record
 import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.impl.DSL
+import org.jooq.impl.DSL.groupConcatDistinct
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -165,6 +166,18 @@ class PipelineModelTaskDao {
         }
     }
 
+    fun listByPipelineIds(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineIds: Collection<String>
+    ): Result<TPipelineModelTaskRecord>? {
+        with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.`in`(pipelineIds)))
+                .fetch()
+        }
+    }
+
     fun listByAtomCode(
         dslContext: DSLContext,
         atomCode: String,
@@ -188,7 +201,7 @@ class PipelineModelTaskDao {
             val baseStep = dslContext.select(
                 PIPELINE_ID.`as`(KEY_PIPELINE_ID),
                 PROJECT_ID.`as`(KEY_PROJECT_ID),
-                ATOM_VERSION.`as`(KEY_VERSION),
+                groupConcatDistinct(ATOM_VERSION).`as`(KEY_VERSION),
                 CREATE_TIME.`as`(KEY_CREATE_TIME),
                 UPDATE_TIME.`as`(KEY_UPDATE_TIME)
             )
@@ -222,7 +235,8 @@ class PipelineModelTaskDao {
                 startUpdateTime = startUpdateTime,
                 endUpdateTime = endUpdateTime
             )
-            return dslContext.selectCount().from(this).where(condition).fetchOne(0, Long::class.java)
+            return dslContext.select(DSL.countDistinct(PIPELINE_ID)).from(this).where(condition)
+                .fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -236,11 +250,11 @@ class PipelineModelTaskDao {
     ): MutableList<Condition> {
         val condition = mutableListOf<Condition>()
         condition.add(a.ATOM_CODE.eq(atomCode))
-        if (projectId != null) {
+        if (!projectId.isNullOrEmpty()) {
             condition.add(a.PROJECT_ID.eq(projectId))
         }
-        if (version != null) {
-            condition.add(a.ATOM_VERSION.eq(version))
+        if (!version.isNullOrEmpty()) {
+            condition.add(a.ATOM_VERSION.contains(version))
         }
         if (startUpdateTime != null) {
             condition.add(a.UPDATE_TIME.ge(startUpdateTime))
