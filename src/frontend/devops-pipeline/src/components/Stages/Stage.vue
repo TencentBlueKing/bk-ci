@@ -13,7 +13,17 @@
             <span @click.stop v-if="showCheckedToatal" class="check-total-stage">
                 <bk-checkbox class="atom-canskip-checkbox" v-model="stage.runStage" :disabled="stageDisabled"></bk-checkbox>
             </span>
-            <span class="stage-single-retry" v-if="canStageRetry" @click.stop="singleRetry(stage.id)">{{ $t('retry') }}</span>
+            <span @click.stop class="stage-single-retry">
+                <bk-popconfirm trigger="click" v-if="canStageRetry" :ext-popover-cls="'retry-pop-confirm'" placement="right-start" width="240" @confirm="singleRetry(stage.id)">
+                    <div slot="content">
+                        <bk-radio-group v-model="failedContainer">
+                            <bk-radio :value="false">{{ $t('editPage.retryAllJobs') }}</bk-radio>
+                            <bk-radio :value="true">{{ $t('editPage.retryFailJobs') }}</bk-radio>
+                        </bk-radio-group>
+                    </div>
+                    <span>{{ $t('retry') }}</span>
+                </bk-popconfirm>
+            </span>
             <span v-if="showCopyStage" class="stage-entry-btns">
                 <span :title="$t('editPage.copyStage')" v-if="!stage.isError" class="bk-icon copy-stage" @click.stop="copyStage">
                     <Logo name="copy" size="16"></Logo>
@@ -108,7 +118,8 @@
         data () {
             return {
                 isAddMenuShow: false,
-                cruveHeight: 0
+                cruveHeight: 0,
+                failedContainer: false
             }
         },
         computed: {
@@ -298,7 +309,8 @@
                         projectId: this.$route.params.projectId,
                         pipelineId: this.$route.params.pipelineId,
                         buildId: this.$route.params.buildNo,
-                        taskId: stageId
+                        taskId: stageId,
+                        failedContainer: this.failedContainer
                     })
                     if (res.id) {
                         message = this.$t('subpage.retrySuc')
@@ -656,6 +668,11 @@
                 right: -$angleSize;
                 top: -$angleSize;
             }
+        }
+    }
+    .retry-pop-confirm {
+        .bk-form-radio {
+            margin-top: 5px;
         }
     }
 </style>
