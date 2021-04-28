@@ -404,7 +404,7 @@ class GitCIBuildFinishListener @Autowired constructor(
             "pipelineName" to pipelineName,
             "buildNum" to build.buildNum.toString(),
             "startTime" to DateTimeUtil.formatDate(Date(build.startTime), "yyyy-MM-dd HH:mm"),
-            "totalTime" to getTotalTime(build.totalTime),
+            "totalTime" to DateTimeUtil.formatMillSecond(build.totalTime ?: 0),
             "trigger" to build.userId,
             "commitId" to commitId,
             "webUrl" to "$gitUrl/$projectName/ci/pipelines#/detail/$pipelineId/?pipelineName=$pipelineName"
@@ -443,7 +443,7 @@ class GitCIBuildFinishListener @Autowired constructor(
             "Commit [[${requestId.subSequence(0, 7)}]]($gitUrl/$projectName/commit/$requestId)" +
                     "pushed by $openUser \n"
         }
-        val costTime = "Time cost ${getTotalTime(buildTime)}.  \n   "
+        val costTime = "Time cost ${DateTimeUtil.formatMillSecond(buildTime ?: 0)}.  \n   "
         return " <font color=\"${state.second}\"> ${state.first} </font> " +
                 "$projectName($branchName) - $pipelineName #$buildNum run ${state.third} \n " +
                 request +
@@ -497,14 +497,6 @@ class GitCIBuildFinishListener @Autowired constructor(
         return receivers.map { receiver ->
             EnvUtils.parseEnv(receiver, paramMap)
         }.toMutableSet()
-    }
-
-    private fun getTotalTime(totalTime: Long?): String {
-        return when (totalTime) {
-            null -> ""
-            in 0..60 -> "${totalTime}s"
-            else -> "${totalTime / 60}m ${totalTime % 60}s"
-        }
     }
 
     companion object {
