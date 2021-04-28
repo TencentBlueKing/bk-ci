@@ -28,15 +28,10 @@
 package com.tencent.devops.store.pojo.common
 
 import com.tencent.devops.store.pojo.common.enums.ApiStatusEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("敏感API审批请求体")
-data class SensitiveApiApproveReq(
-    @ApiModelProperty("敏感API ID", required = true)
+data class SensitiveApiUpdateDTO(
     val id: String,
-    @ApiModelProperty("审批状态 PASS:通过，REFUSE:拒绝", required = true)
+    val userId: String,
     val apiStatus: ApiStatusEnum,
-    @ApiModelProperty("审批信息", required = true)
-    val approveMsg: String?
+    val approveMsg: String? = null
 )

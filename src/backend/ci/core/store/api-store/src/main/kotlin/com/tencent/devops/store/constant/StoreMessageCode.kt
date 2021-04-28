@@ -43,6 +43,7 @@ package com.tencent.devops.store.constant
  * @version: $Revision$ $Date$ $LastChangedBy$
  *
  */
+@Suppress("ALL")
 object StoreMessageCode {
 
     const val MSG_CODE_STORE_CLASSIFY_PREFIX = "MSG_CODE_STORE_CLASSIFY_PREFIX_" // 研发商店插分类国际化前缀
@@ -123,4 +124,6 @@ object StoreMessageCode {
     const val USER_SENSITIVE_CONF_EXIST = "2120907" // 研发商店：字段名{0}已存在
     const val USER_START_CODECC_TASK_FAIL = "2120908" // 研发商店：启动代码扫描任务失败
     const val USER_CHANGE_TEST_PROJECT_FAIL = "2120909" // 研发商店：用户[{0}]没有项目[{1}]下的流水线新增/修改/执行权限，请先给用户赋权
+    const val API_PASS_IS_NOT_ALLOW_CANCEL = "2120910" // 研发商店：敏感API已经审批通过不能取消
+    const val API_APPROVE_IS_NOT_ALLOW_PASS = "2120911" // 研发商店：敏感API已经取消不能审批
 }

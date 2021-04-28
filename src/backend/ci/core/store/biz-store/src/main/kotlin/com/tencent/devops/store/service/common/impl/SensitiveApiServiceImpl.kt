@@ -1,0 +1,216 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+package com.tencent.devops.store.service.common.impl
+
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.api.util.PageUtil.DEFAULT_PAGE_SIZE
+import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.dao.common.BusinessConfigDao
+import com.tencent.devops.store.dao.common.SensitiveApiDao
+import com.tencent.devops.store.pojo.common.SensitiveApiApplyReq
+import com.tencent.devops.store.pojo.common.SensitiveApiApproveReq
+import com.tencent.devops.store.pojo.common.SensitiveApiConfig
+import com.tencent.devops.store.pojo.common.SensitiveApiCreateDTO
+import com.tencent.devops.store.pojo.common.SensitiveApiInfo
+import com.tencent.devops.store.pojo.common.SensitiveApiSearchDTO
+import com.tencent.devops.store.pojo.common.SensitiveApiUpdateDTO
+import com.tencent.devops.store.pojo.common.enums.ApiLevelEnum
+import com.tencent.devops.store.pojo.common.enums.ApiStatusEnum
+import com.tencent.devops.store.pojo.common.enums.BusinessEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.common.SensitiveApiService
+import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+
+@Service
+class SensitiveApiServiceImpl @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val sensitiveApiDao: SensitiveApiDao,
+    private val businessConfigDao: BusinessConfigDao
+) : SensitiveApiService {
+
+    companion object {
+        private const val BUSINESS_CONFIG_FEATURE = "api"
+        private const val BUSINESS_CONFIG_VALUE = "sensitiveApi"
+    }
+
+    override fun unApprovalApiList(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String
+    ): Result<List<String>> {
+        val businessConfigRecord = businessConfigDao.get(
+            dslContext = dslContext,
+            business = BusinessEnum.ATOM.name,
+            feature = BUSINESS_CONFIG_FEATURE,
+            businessValue = BUSINESS_CONFIG_VALUE
+        ) ?: return Result(emptyList())
+        val sensitiveApiConfigList = JsonUtil.to(
+            json = businessConfigRecord.configValue,
+            typeReference = object : TypeReference<List<SensitiveApiConfig>>() {}
+        )
+        val approvedApiList = sensitiveApiDao.getApprovedApiNameList(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeType
+        )
+        return Result(
+            sensitiveApiConfigList.filter { !approvedApiList.contains(it.apiName) }
+                .map { it.apiName }
+                .toList()
+        )
+    }
+
+    override fun apply(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        sensitiveApiApplyReq: SensitiveApiApplyReq
+    ): Result<Boolean> {
+        with(sensitiveApiApplyReq) {
+            if (sensitiveApiApplyReq.applyDesc.isBlank()) {
+                return MessageCodeUtil.generateResponseDataObject(
+                    messageCode = CommonMessageCode.PARAMETER_IS_NULL,
+                    params = arrayOf("applyDesc"),
+                    data = false
+                )
+            }
+            val sensitiveApiCreateDTO = SensitiveApiCreateDTO(
+                id = UUIDUtil.generate(),
+                userId = userId,
+                storeType = storeType,
+                storeCode = storeCode,
+                apiNameList = apiNameList.filter { it.isNotBlank() },
+                applyDesc = applyDesc,
+                apiStatus = ApiStatusEnum.WAIT,
+                apiLevel = ApiLevelEnum.SENSITIVE
+            )
+            sensitiveApiDao.create(
+                dslContext = dslContext,
+                sensitiveApiCreateDTO = sensitiveApiCreateDTO
+            )
+        }
+        return Result(true)
+    }
+
+    override fun list(
+        page: Int?,
+        pageSize: Int?,
+        sensitiveApiSearchDTO: SensitiveApiSearchDTO
+    ): Result<Page<SensitiveApiInfo>> {
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: DEFAULT_PAGE_SIZE
+        val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        val count = sensitiveApiDao.count(
+            dslContext = dslContext,
+            sensitiveApiSearchDTO = sensitiveApiSearchDTO
+        )
+        val record = sensitiveApiDao.list(
+            dslContext = dslContext,
+            offset = limit.offset,
+            limit = limit.limit,
+            sensitiveApiSearchDTO = sensitiveApiSearchDTO
+        ).map { sensitiveApiDao.convert(it) }
+        return Result(Page(pageNotNull, pageSizeNotNull, count, record))
+    }
+
+    @Suppress("ReturnCount")
+    override fun cancel(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        id: String
+    ): Result<Boolean> {
+        val record = sensitiveApiDao.get(
+            dslContext = dslContext,
+            id = id
+        ) ?: return MessageCodeUtil.generateResponseDataObject(
+            messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+            params = arrayOf("id"),
+            data = false
+        )
+        if (record.apiStatus == ApiStatusEnum.PASS.name) {
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.API_PASS_IS_NOT_ALLOW_CANCEL,
+                data = false
+            )
+        }
+        val updateDTO = SensitiveApiUpdateDTO(
+            id = id,
+            userId = userId,
+            apiStatus = ApiStatusEnum.CANCEL
+        )
+        sensitiveApiDao.updateApiStatus(
+            dslContext = dslContext,
+            sensitiveApiUpdateDTO = updateDTO
+        )
+        return Result(true)
+    }
+
+    @Suppress("ReturnCount")
+    override fun approve(
+        userId: String,
+        sensitiveApiApproveReq: SensitiveApiApproveReq
+    ): Result<Boolean> {
+        with(sensitiveApiApproveReq) {
+            val record = sensitiveApiDao.get(
+                dslContext = dslContext,
+                id = id
+            ) ?: return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf("id"),
+                data = false
+            )
+            if (record.apiStatus == ApiStatusEnum.CANCEL.name) {
+                return MessageCodeUtil.generateResponseDataObject(
+                    messageCode = StoreMessageCode.API_APPROVE_IS_NOT_ALLOW_PASS,
+                    data = false
+                )
+            }
+            val updateDTO = SensitiveApiUpdateDTO(
+                id = id,
+                userId = userId,
+                apiStatus = apiStatus,
+                approveMsg = approveMsg
+            )
+            sensitiveApiDao.updateApiStatus(
+                dslContext = dslContext,
+                sensitiveApiUpdateDTO = updateDTO
+            )
+        }
+        return Result(true)
+    }
+}

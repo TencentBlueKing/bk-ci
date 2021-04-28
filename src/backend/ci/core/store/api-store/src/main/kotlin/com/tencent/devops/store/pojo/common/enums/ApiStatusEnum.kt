@@ -35,4 +35,16 @@ enum class ApiStatusEnum {
     PASS, // 审批通过
     REFUSE, // 审批拒绝
     CANCEL; // 取消
+
+    companion object {
+        fun valueOf(name: String?): ApiStatusEnum? {
+            return when (name) {
+                WAIT.name -> WAIT
+                PASS.name -> PASS
+                REFUSE.name -> REFUSE
+                CANCEL.name -> CANCEL
+                else -> null
+            }
+        }
+    }
 }

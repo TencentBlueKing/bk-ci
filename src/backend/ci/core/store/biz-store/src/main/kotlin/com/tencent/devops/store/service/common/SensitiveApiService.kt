@@ -25,18 +25,46 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common
+package com.tencent.devops.store.service.common
 
-import com.tencent.devops.store.pojo.common.enums.ApiStatusEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.SensitiveApiApplyReq
+import com.tencent.devops.store.pojo.common.SensitiveApiApproveReq
+import com.tencent.devops.store.pojo.common.SensitiveApiInfo
+import com.tencent.devops.store.pojo.common.SensitiveApiSearchDTO
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
-@ApiModel("敏感API审批请求体")
-data class SensitiveApiApproveReq(
-    @ApiModelProperty("敏感API ID", required = true)
-    val id: String,
-    @ApiModelProperty("审批状态 PASS:通过，REFUSE:拒绝", required = true)
-    val apiStatus: ApiStatusEnum,
-    @ApiModelProperty("审批信息", required = true)
-    val approveMsg: String?
-)
+interface SensitiveApiService {
+
+    fun unApprovalApiList(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String
+    ): Result<List<String>>
+
+    fun apply(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        sensitiveApiApplyReq: SensitiveApiApplyReq
+    ): Result<Boolean>
+
+    fun list(
+        page: Int?,
+        pageSize: Int?,
+        sensitiveApiSearchDTO: SensitiveApiSearchDTO
+    ): Result<Page<SensitiveApiInfo>>
+
+    fun cancel(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        id: String
+    ): Result<Boolean>
+
+    fun approve(
+        userId: String,
+        sensitiveApiApproveReq: SensitiveApiApproveReq
+    ): Result<Boolean>
+}

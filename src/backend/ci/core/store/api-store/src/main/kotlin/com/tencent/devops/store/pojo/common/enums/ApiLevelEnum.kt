@@ -33,4 +33,14 @@ package com.tencent.devops.store.pojo.common.enums
 enum class ApiLevelEnum {
     NORMAL, // 普通
     SENSITIVE; // 敏感
+
+    companion object {
+        fun valueOf(name: String?): ApiLevelEnum? {
+            return when (name) {
+                NORMAL.name -> NORMAL
+                SENSITIVE.name -> SENSITIVE
+                else -> null
+            }
+        }
+    }
 }

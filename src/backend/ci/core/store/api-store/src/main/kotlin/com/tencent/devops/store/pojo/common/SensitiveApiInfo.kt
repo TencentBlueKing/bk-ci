@@ -34,7 +34,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("敏感API信息")
 data class SensitiveApiInfo(
     @ApiModelProperty("ID")
-    val id: Long,
+    val id: String,
     @ApiModelProperty("store组件类别 ATOM:插件 TEMPLATE:模板 IMAGE:镜像 IDE_ATOM:IDE插件", required = true)
     val storeType: StoreTypeEnum,
     @ApiModelProperty("store组件代码", required = true)

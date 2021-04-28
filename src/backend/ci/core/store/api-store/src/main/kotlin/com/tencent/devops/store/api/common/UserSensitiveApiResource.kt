@@ -108,10 +108,10 @@ interface UserSensitiveApiResource {
         @ApiParam("每页条数", required = false)
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Page<List<SensitiveApiInfo>>
+    ): Result<Page<SensitiveApiInfo>>
 
     @ApiOperation("取消申请敏感API")
-    @Path("cancel")
+    @Path("cancel/{id}")
     @PUT
     fun cancel(
         @ApiParam("userId", required = true)
@@ -124,7 +124,7 @@ interface UserSensitiveApiResource {
         @PathParam("storeCode")
         storeCode: String,
         @ApiParam("敏感API名称", required = true)
-        @QueryParam("apiName")
-        apiName: String
+        @PathParam("id")
+        id: String
     ): Result<Boolean>
 }
