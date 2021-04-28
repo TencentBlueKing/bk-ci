@@ -44,10 +44,10 @@ data class Job(
     val ifField: List<String>? = null,
     val steps: List<Step>?,
     @JsonProperty("timeout-minutes")
-    val timeoutMinutes: Int? = null,
+    val timeoutMinutes: Int? = 480,
     val env: Map<String, String>? = emptyMap(),
     @JsonProperty("continue-on-error")
-    val continueOnError: Boolean? = null,
+    val continueOnError: Boolean? = false,
     val strategy: Strategy? = null,
     @JsonProperty("depend-on")
     val dependOn: List<String>? = emptyList()
