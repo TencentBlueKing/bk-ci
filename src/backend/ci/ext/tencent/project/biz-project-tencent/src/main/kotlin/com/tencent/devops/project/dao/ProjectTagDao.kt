@@ -50,16 +50,6 @@ class ProjectTagDao {
         }
     }
 
-    fun updateProjectOtherTags(
-        dslContext: DSLContext,
-        routerTag: String,
-        projectIds: List<String>
-    ) {
-        with(Tables.T_PROJECT) {
-            dslContext.update(this).set(OTHER_ROUTER_TAGS, routerTag).where(ENGLISH_NAME.`in`(projectIds)).execute()
-        }
-    }
-
     fun updateChannelTags(
         dslContext: DSLContext,
         routerTag: String,
@@ -67,16 +57,6 @@ class ProjectTagDao {
     ) {
         with(Tables.T_PROJECT) {
             dslContext.update(this).set(ROUTER_TAG, routerTag).where(CHANNEL.eq(channel)).execute()
-        }
-    }
-
-    fun updateChannelOtherTags(
-        dslContext: DSLContext,
-        routerTag: String,
-        channel: String
-    ) {
-        with(Tables.T_PROJECT) {
-            dslContext.update(this).set(OTHER_ROUTER_TAGS, routerTag).where(CHANNEL.eq(channel)).execute()
         }
     }
 
@@ -106,35 +86,6 @@ class ProjectTagDao {
                 conditions.add(DEPT_ID.eq(deptId))
             }
             dslContext.update(this).set(ROUTER_TAG, routerTag).where(conditions).execute()
-        }
-    }
-
-    fun updateOrgOtherTags(
-        dslContext: DSLContext,
-        routerTag: String,
-        bgId: Long?,
-        centerId: Long?,
-        deptId: Long?
-    ) {
-        if (bgId == null && centerId == null && deptId == null) {
-            throw ParamBlankException("Invalid project org")
-        }
-
-        with(Tables.T_PROJECT) {
-            val conditions = mutableListOf<Condition>()
-
-            if (bgId != null) {
-                conditions.add(BG_ID.eq(bgId))
-            }
-
-            if (centerId != null) {
-                conditions.add(CENTER_ID.eq(centerId))
-            }
-
-            if (deptId != null) {
-                conditions.add(DEPT_ID.eq(deptId))
-            }
-            dslContext.update(this).set(OTHER_ROUTER_TAGS, routerTag).where(conditions).execute()
         }
     }
 
