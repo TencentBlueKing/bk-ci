@@ -571,7 +571,7 @@ class TriggerBuildService @Autowired constructor(
         }
     }
 
-    private fun formatVariablesValue(value: String?, gitProjectConf: GitRepositoryConf): String {
+    private fun formatVariablesValue(value: String?, gitProjectConf: GitRepositoryConf): String? {
         if (value == null || value.isEmpty()) {
             return ""
         }
@@ -581,12 +581,12 @@ class TriggerBuildService @Autowired constructor(
             settingMap[it.name] = it.value
         }
 
-        var newValue = value ?: ""
+        var newValue = value
         val pattern = Pattern.compile("\\$\\{\\{([^{}]+?)}}")
         val matcher = pattern.matcher(value)
         while (matcher.find()) {
             val realValue = settingMap[matcher.group(1).trim()]
-            newValue = newValue.replace(matcher.group(), realValue ?: "")
+            newValue = newValue!!.replace(matcher.group(), realValue ?: "")
         }
         return newValue
     }
