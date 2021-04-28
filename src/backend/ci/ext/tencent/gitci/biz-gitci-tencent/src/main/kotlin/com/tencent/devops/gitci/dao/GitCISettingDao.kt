@@ -78,7 +78,7 @@ class GitCISettingDao {
                         RTX_CUSTOM_PROPERTY,
                         RTX_GROUP_PROPERTY,
                         EMAIL_PROPERTY,
-                        IS_FAILED_NOTIFY,
+                        ONLY_FAILED_NOTIFY,
                         ENABLE_MR_BLOCK
                     )
                         .values(
@@ -117,7 +117,7 @@ class GitCISettingDao {
                             } else {
                                 JsonUtil.toJson(conf.emailProperty!!)
                             },
-                            conf.isFailedNotify,
+                            conf.onlyFailedNotify,
                             conf.enableMrBlock
                         ).execute()
                 } else {
@@ -159,7 +159,7 @@ class GitCISettingDao {
                                 JsonUtil.toJson(conf.emailProperty!!)
                             }
                         )
-                        .set(IS_FAILED_NOTIFY, conf.isFailedNotify)
+                        .set(ONLY_FAILED_NOTIFY, conf.onlyFailedNotify)
                         .set(ENABLE_MR_BLOCK, conf.enableMrBlock)
                         .where(ID.eq(conf.gitProjectId))
                         .execute()
@@ -248,7 +248,7 @@ class GitCISettingDao {
                     rtxCustomProperty = rtxCustomProperty,
                     emailProperty = emailProperty,
                     rtxGroupProperty = rtxGroupProperty,
-                    isFailedNotify = conf.isFailedNotify,
+                    onlyFailedNotify = conf.onlyFailedNotify,
                     enableMrBlock = conf.enableMrBlock
                 )
             }

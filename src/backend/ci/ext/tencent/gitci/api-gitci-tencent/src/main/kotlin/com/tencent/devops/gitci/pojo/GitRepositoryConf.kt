@@ -71,7 +71,7 @@ data class GitRepositoryConf(
     @ApiModelProperty("邮件通知")
     val emailProperty: EmailProperty?,
     @ApiModelProperty("是否只在失败时通知")
-    val isFailedNotify: Boolean? = true,
+    val onlyFailedNotify: Boolean? = true,
     @ApiModelProperty("是否开启Mr锁定")
     val enableMrBlock: Boolean? = true
 ) : Repository(gitProjectId, name, url, homepage, gitHttpUrl, gitSshUrl)

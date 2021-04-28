@@ -70,7 +70,7 @@ class GitRepositoryConfService @Autowired constructor(
                     rtxCustomProperty = RtxCustomProperty(true, setOf()),
                     rtxGroupProperty = null,
                     emailProperty = null,
-                    isFailedNotify = true
+                    onlyFailedNotify = true
                 )
             )
         } else {

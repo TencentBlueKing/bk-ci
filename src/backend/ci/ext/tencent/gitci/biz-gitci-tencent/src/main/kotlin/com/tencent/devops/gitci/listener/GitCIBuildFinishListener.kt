@@ -203,11 +203,11 @@ class GitCIBuildFinishListener @Autowired constructor(
             logger.warn("gitCI project: ${conf.gitProjectId} enable notify but not have config")
             return false
         }
-        if (conf.isFailedNotify == null) {
+        if (conf.onlyFailedNotify == null) {
             return false
         }
         // 仅在失败时发送通知
-        if (conf.isFailedNotify!! && state != "failure") {
+        if (conf.onlyFailedNotify!! && state != "failure") {
             return false
         }
         return true
