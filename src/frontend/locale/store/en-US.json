@@ -564,5 +564,14 @@
     "月": "month",
     "日": "day",
     "适用机器类型：": "Machine",
-    "editLogo": "Edit"
+    "editLogo": "Edit",
+    "apiSettingManage": "SDK API Manage",
+    "申请API": "Apply for API",
+    "权限等级": "Permission level",
+    "申请": "Application",
+    "撤单": "Cancel order",
+    "使用场景": "Scenes to be used",
+    "请输入使用场景": "Please enter the usage scenario",
+    "普通": "Ordinary",
+    "敏感": "Sensitive"
 }

@@ -25,5 +25,21 @@ export default {
 
     requestStaticChartData (storeType, storeCode, params) {
         return vue.$ajax.get(`${prefix}/user/store/statistic/types/${storeType}/codes/${storeCode}/trend/data`, { params })
+    },
+
+    requestSensitiveApiList (storeType, storeCode, params) {
+        return vue.$ajax.get(`${prefix}/user/sdk/${storeType}/${storeCode}/sensitiveApi/list`, { params })
+    },
+
+    requestUnApprovalApiList (storeType, storeCode) {
+        return vue.$ajax.get(`${prefix}/user/sdk/${storeType}/${storeCode}/sensitiveApi/unApprovalApiList`)
+    },
+
+    requestApplySensitiveApi (storeType, storeCode, postData) {
+        return vue.$ajax.post(`${prefix}/user/sdk/${storeType}/${storeCode}/sensitiveApi/apply`, postData)
+    },
+
+    requestCancelSensitiveApi (storeType, storeCode, id) {
+        return vue.$ajax.put(`${prefix}/user/sdk/${storeType}/${storeCode}/sensitiveApi/cancel/${id}`)
     }
 }
