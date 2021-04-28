@@ -112,6 +112,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.regex.Pattern
 
 @Service
 class TriggerBuildService @Autowired constructor(
@@ -128,6 +129,14 @@ class TriggerBuildService @Autowired constructor(
     gitRequestEventNotBuildDao: GitRequestEventNotBuildDao
 ) : BaseBuildService<ScriptBuildYaml>(client, scmClient, dslContext, redisOperation, gitPipelineResourceDao, gitRequestEventBuildDao, gitRequestEventNotBuildDao) {
     private val channelCode = ChannelCode.GIT
+
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(TriggerBuildService::class.java)
+
+        const val BK_REPO_GIT_WEBHOOK_MR_IID = "BK_CI_REPO_GIT_WEBHOOK_MR_IID"
+        const val VARIABLE_PREFIX = "variables."
+    }
 
     override fun gitStartBuild(
         pipeline: GitProjectPipeline,
@@ -523,7 +532,7 @@ class TriggerBuildService @Autowired constructor(
 
         // 用户自定义变量
         // startParams.putAll(yaml.variables ?: mapOf())
-        putVariables(yaml, startParams)
+        putVariables2StartParams(yaml, gitProjectConf, startParams)
 
         startParams.forEach {
             result.add(
@@ -547,15 +556,39 @@ class TriggerBuildService @Autowired constructor(
         return result
     }
 
-    private fun putVariables(yaml: ScriptBuildYaml, startParams: MutableMap<String, String>) {
+    private fun putVariables2StartParams(
+        yaml: ScriptBuildYaml,
+        gitProjectConf: GitRepositoryConf,
+        startParams: MutableMap<String, String>
+    ) {
         if (yaml.variables == null) {
             return
         }
 
-        yaml.variables!!.forEach { key, variable ->
-            // if ()
-            startParams[key] = variable.toString()
+        yaml.variables!!.forEach { (key, variable) ->
+            startParams[VARIABLE_PREFIX + key] =
+                variable.copy(value = formatVariablesValue(variable.value, gitProjectConf)).toString()
         }
+    }
+
+    private fun formatVariablesValue(value: String?, gitProjectConf: GitRepositoryConf): String {
+        if (value == null || value.isEmpty()) {
+            return ""
+        }
+
+        val settingMap = mutableMapOf<String, String>()
+        gitProjectConf.env?.forEach {
+            settingMap[it.name] = it.value
+        }
+
+        var newValue = value ?: ""
+        val pattern = Pattern.compile("\\$\\{\\{([^{}]+?)}}")
+        val matcher = pattern.matcher(value)
+        while (matcher.find()) {
+            val realValue = settingMap[matcher.group(1).trim()]
+            newValue = newValue.replace(matcher.group(), realValue ?: "")
+        }
+        return newValue
     }
 
     private fun getCiBuildConf(buildConf: BuildConfig): CiBuildConfig {
@@ -575,11 +608,5 @@ class TriggerBuildService @Autowired constructor(
             buildConf.devCloudToken,
             buildConf.devCloudUrl
         )
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(TriggerBuildService::class.java)
-
-        const val BK_REPO_GIT_WEBHOOK_MR_IID = "BK_CI_REPO_GIT_WEBHOOK_MR_IID"
     }
 }
