@@ -23,18 +23,18 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.service.iam
+package com.tencent.devops.auth.pojo.dto
 
-import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerGroupMemberVo
-import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
+import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-interface PermissionRoleMemberService {
-    fun createRoleMember(userId: String, projectId: Int, roleId: Int, members: List<RoleMemberDTO>, managerGroup: Boolean)
-
-    fun deleteRoleMember(userId: String, projectId: Int, roleId: Int, members: RoleMemberDTO, managerGroup: Boolean)
-
-    fun getRoleMember(projectId: Int, roleId: Int): ManagerGroupMemberVo
-}
+@ApiModel
+data class RoleMemberDTO (
+    @ApiModelProperty("组员类型 user:单用户, dept:组织")
+    val type: ManagerScopesEnum,
+    @ApiModelProperty("用户Id或组织Id")
+    val id: String
+)

@@ -35,6 +35,7 @@ import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleMemberDTO
 import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerGroupMemberVo
 import com.tencent.bk.sdk.iam.service.ManagerService
+import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
 import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import org.slf4j.LoggerFactory
@@ -50,14 +51,18 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
         userId: String,
         projectId: Int,
         roleId: Int,
-        members: List<String>,
+        members: List<RoleMemberDTO>,
         managerGroup: Boolean
     ) {
         permissionGradeService.checkGradeManagerUser(projectId = projectId, userId = userId)
         val roleMembers = mutableListOf<ManagerMember>()
+        val userIds = mutableListOf<String>()
         members.forEach {
-            checkUser(it)
-            roleMembers.add(ManagerMember(ManagerScopesEnum.getType(ManagerScopesEnum.USER), it))
+            if (it.type == ManagerScopesEnum.USER) {
+                checkUser(it.id)
+                userIds.add(it.id)
+            }
+            roleMembers.add(ManagerMember(ManagerScopesEnum.getType(it.type), it.id))
         }
         val expiredTime = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(expiredAt)
         val managerMemberGroupDTO = ManagerMemberGroupDTO.builder().expiredAt(expiredTime).members(roleMembers).build()
@@ -65,8 +70,10 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
 
         // 添加用户到管理员需要同步添加用户到分级管理员
         if (managerGroup) {
-            val gradeMembers = ManagerRoleMemberDTO.builder().members(members).build()
-            iamManagerService.batchCreateGradeManagerRoleMember(gradeMembers, projectId)
+            if (userIds.isNotEmpty()) {
+                val gradeMembers = ManagerRoleMemberDTO.builder().members(userIds).build()
+                iamManagerService.batchCreateGradeManagerRoleMember(gradeMembers, projectId)
+            }
         }
     }
 
@@ -74,14 +81,14 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
         userId: String,
         projectId: Int,
         roleId: Int,
-        members: String,
+        members: RoleMemberDTO,
         managerGroup: Boolean
     ) {
         permissionGradeService.checkGradeManagerUser(userId, projectId)
 
-        iamManagerService.deleteRoleGroupMember(roleId, ManagerScopesEnum.getType(ManagerScopesEnum.USER), members)
-        if (managerGroup) {
-            iamManagerService.deleteGradeManagerRoleMember(members, projectId)
+        iamManagerService.deleteRoleGroupMember(roleId, ManagerScopesEnum.getType(members.type), members.id)
+        if (managerGroup && members.type == ManagerScopesEnum.USER) {
+            iamManagerService.deleteGradeManagerRoleMember(members.id, projectId)
         }
     }
 

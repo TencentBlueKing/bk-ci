@@ -29,6 +29,7 @@
 package com.tencent.devops.auth.api.user
 
 import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerGroupMemberVo
+import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
@@ -66,8 +67,8 @@ interface UserProjectMemberResource {
         @ApiParam(name = "是否为管理员分组", required = true)
         @QueryParam("managerGroup")
         managerGroup: Boolean,
-        @ApiParam("添加用户", required = true)
-        members: List<String>
+        @ApiParam("添加用户集合", required = true)
+        members: List<RoleMemberDTO>
     ): Result<Boolean>
 
     @GET
@@ -100,6 +101,6 @@ interface UserProjectMemberResource {
         managerGroup: Boolean,
         @ApiParam("待删除用户", required = true)
         @QueryParam("members")
-        members: String
+        members: RoleMemberDTO
     ): Result<Boolean>
 }
