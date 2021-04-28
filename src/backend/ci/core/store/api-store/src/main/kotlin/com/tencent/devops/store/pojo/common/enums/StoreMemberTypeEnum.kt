@@ -31,8 +31,6 @@ enum class StoreMemberTypeEnum(val type: Int) {
     ADMIN(0),     // 管理员
     DEVELOPER(1); // 开发人员
 
-    override fun toString() = type.toString()
-
     companion object {
         fun getAtomMemberType(type: Int): String {
             return when (type) {

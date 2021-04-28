@@ -39,8 +39,18 @@ import org.springframework.beans.factory.annotation.Autowired
 class BuildMarketAtomEnvResourceImpl @Autowired constructor(private val marketAtomEnvService: MarketAtomEnvService) :
     BuildMarketAtomEnvResource {
 
-    override fun getAtomEnv(projectCode: String, atomCode: String, version: String): Result<AtomEnv?> {
-        return marketAtomEnvService.getMarketAtomEnvInfo(projectCode, atomCode, version)
+    override fun getAtomEnv(
+        projectCode: String,
+        atomCode: String,
+        version: String,
+        atomStatus: Byte?
+    ): Result<AtomEnv?> {
+        return marketAtomEnvService.getMarketAtomEnvInfo(
+            projectCode = projectCode,
+            atomCode = atomCode,
+            version = version,
+            atomStatus = atomStatus
+        )
     }
 
     override fun updateMarketAtom(

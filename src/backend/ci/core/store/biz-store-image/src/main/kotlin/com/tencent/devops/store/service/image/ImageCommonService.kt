@@ -50,7 +50,7 @@ class ImageCommonService @Autowired constructor(
         imageCode: String,
         projectCode: String
     ): MutableList<Byte> {
-        val flag = storeProjectRelDao.isInitTestProjectCode(dslContext, imageCode, StoreTypeEnum.IMAGE, projectCode)
+        val flag = storeProjectRelDao.isTestProjectCode(dslContext, imageCode, StoreTypeEnum.IMAGE, projectCode)
         logger.info("the isInitTestProjectCode flag is :$flag")
         // 普通项目的查已发布、下架中、已下架的镜像
         var imageStatusList =
