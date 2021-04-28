@@ -45,7 +45,7 @@ data class FileDetailForApp(
     val projectName: String,
     @ApiModelProperty("流水线", required = true)
     val pipelineName: String,
-    @ApiModelProperty("执行人", required = true)
+    @ApiModelProperty("构件创建人", required = true)
     val creator: String,
     @ApiModelProperty("版本体验BundleIdentifier", required = true)
     val bundleIdentifier: String,
@@ -62,5 +62,7 @@ data class FileDetailForApp(
     @ApiModelProperty("修改时间", required = true)
     val modifiedTime: Long,
     @ApiModelProperty("md5", required = true)
-    val md5: String
+    val md5: String,
+    @ApiModelProperty("构建号", required = true)
+    val buildNum: Int
 )

@@ -133,3 +133,6 @@ bkci:
     public-key: "__BK_CI_JWT_RSA_PUBLIC_KEY__"
     private-key: "__BK_CI_JWT_RSA_PRIVATE_KEY__"
     enable: false
+    
+process:
+  deletedPipelineStoreDays: 30    

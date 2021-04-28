@@ -70,7 +70,10 @@ interface UserProjectResource {
         userId: String,
         @ApiParam("access_token")
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
-        accessToken: String?
+        accessToken: String?,
+        @ApiParam("是否启用", required = false)
+        @QueryParam("enabled")
+        enabled: Boolean?
     ): Result<List<ProjectVO>>
 
     @GET

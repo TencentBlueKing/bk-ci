@@ -30,6 +30,7 @@ package com.tencent.devops.auth.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.StrategyDao
+import com.tencent.devops.auth.entity.StrategyChangeType
 import com.tencent.devops.auth.entity.StrategyInfo
 import com.tencent.devops.auth.pojo.StrategyEntity
 import com.tencent.devops.auth.pojo.dto.ManageStrategyDTO
@@ -56,7 +57,6 @@ class StrategyService @Autowired constructor(
     val objectMapper: ObjectMapper,
     val refreshDispatch: AuthRefreshDispatch
 ) {
-
     private val strategyNameMap = ConcurrentHashMap<String/*strategyId*/, String/*strategyName*/>()
 
     private val strategyMap = ConcurrentHashMap<String/*strategyId*/, String/*strategyBody*/>()
@@ -182,7 +182,8 @@ class StrategyService @Autowired constructor(
     }
 
     fun getStrategy2Map(strategyId: Int): Map<AuthResourceType, List<AuthPermission>> {
-        val strategyStr = getCacheStrategy(strategyId)
+        // 从db获取源数据, 因update数据会导致cache数据差异
+        val strategyStr = refreshStrategy(strategyId.toString(), null)
         val strategyBody: Map<String, List<String>>
         strategyBody = JsonUtil.to(strategyStr!!)
         val permissionMap = mutableMapOf<AuthResourceType, List<AuthPermission>>()
@@ -199,6 +200,11 @@ class StrategyService @Autowired constructor(
         return permissionMap
     }
 
+    fun deleteCache(strategyId: String) {
+        strategyNameMap.remove(strategyId)
+        strategyMap.remove(strategyId)
+    }
+
     private fun refreshWhenCreate(strategyId: Int) {
         val record = strategyDao.get(dslContext, strategyId)
         refreshStrategyName(strategyId.toString(), record)
@@ -206,8 +212,15 @@ class StrategyService @Autowired constructor(
     }
 
     private fun refreshWhenDelete(strategyId: Int) {
-        strategyNameMap.remove(strategyId.toString())
-        strategyMap.remove(strategyId.toString())
+        deleteCache(strategyId.toString())
+        // 异步删除该策略下的其他实例缓存数据
+        refreshDispatch.dispatch(
+            StrategyUpdateEvent(
+                refreshType = "refreshWhenUpdate",
+                strategyId = strategyId,
+                action = StrategyChangeType.DELETE
+            )
+        )
     }
 
     private fun refreshWhenUpdate(strategyId: Int, strategyStr: String) {
@@ -223,7 +236,8 @@ class StrategyService @Autowired constructor(
                 refreshDispatch.dispatch(
                     StrategyUpdateEvent(
                         refreshType = "refreshWhenUpdate",
-                        strategyId = strategyId
+                        strategyId = strategyId,
+                        action = StrategyChangeType.UPDATE
                     )
                 )
             }
@@ -240,7 +254,7 @@ class StrategyService @Autowired constructor(
         return null
     }
 
-    private fun refreshStrategy(strategyId: String, inputRecord: TAuthStrategyRecord?): String? {
+    fun refreshStrategy(strategyId: String, inputRecord: TAuthStrategyRecord?): String? {
         val record = inputRecord ?: strategyDao.get(dslContext, strategyId.toInt())
         if (record != null) {
             logger.info("refreshStrategy |$strategyId| ${record.strategyBody}")

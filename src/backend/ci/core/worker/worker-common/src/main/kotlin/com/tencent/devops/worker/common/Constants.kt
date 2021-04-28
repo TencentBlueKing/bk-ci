@@ -27,6 +27,8 @@
 
 package com.tencent.devops.worker.common
 
+const val BUILD_ID = "devops.build.id"
+
 const val BUILD_TYPE = "build.type"
 
 const val WORKSPACE_ENV = "WORKSPACE"
