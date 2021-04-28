@@ -415,7 +415,7 @@ class ExperienceService @Autowired constructor(
             onlinePublicExperience(
                 projectId = projectId,
                 size = fileSize,
-                experienceName = experience.experienceName ?: projectId,
+                experienceName = appName ?: projectId,
                 categoryId = experience.categoryId ?: ProductCategoryEnum.LIFE.id,
                 expireDate = experience.expireDate,
                 experienceId = experienceId,
@@ -516,9 +516,9 @@ class ExperienceService @Autowired constructor(
             onlinePublicExperience(
                 projectId = projectId,
                 size = experienceRecord.size,
-                experienceName = experienceRecord.experienceName,
-                categoryId = experienceRecord.category,
-                expireDate = experienceRecord.endDate.timestamp(),
+                experienceName = experience.experienceName ?: projectId,
+                categoryId = experience.categoryId ?: ProductCategoryEnum.LIFE.id,
+                expireDate = experience.expireDate,
                 experienceId = experienceRecord.id,
                 platform = PlatformEnum.valueOf(experienceRecord.platform),
                 appBundleIdentifier = experienceRecord.bundleIdentifier,
