@@ -55,7 +55,7 @@ class BkRepoLogFileService @Autowired constructor(
         elementId: String,
         executeCount: String
     ): Url {
-        val fullPath = "/$pipelineId/$buildId/$elementId/$executeCount.txt"
+        val fullPath = "/$pipelineId/$buildId/$elementId/$executeCount.log"
         val shareUrl = bkRepoClient.createShareUri(
             userId = userId,
             projectId = projectId,
