@@ -31,8 +31,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.auth.pojo.IamCreateApiReq
-import com.tencent.devops.common.auth.pojo.IamPermissionUrlReq
+import com.tencent.devops.common.auth.api.pojo.EsbCreateApiReq
+import com.tencent.devops.common.auth.api.pojo.EsbPermissionUrlReq
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -49,7 +49,7 @@ class IamEsbService {
     @Value("\${bk.paas.host:#{null}}")
     val iamHost: String? = null
 
-    fun createRelationResource(iamCreateApiReq: IamCreateApiReq): Boolean {
+    fun createRelationResource(iamCreateApiReq: EsbCreateApiReq): Boolean {
         var url = "api/c/compapi/v2/iam/authorization/resource_creator_action/"
         url = getAuthRequestUrl(url)
         iamCreateApiReq.bk_app_code = appCode!!
@@ -80,7 +80,7 @@ class IamEsbService {
         }
     }
 
-    fun getPermissionUrl(iamPermissionUrl: IamPermissionUrlReq): String? {
+    fun getPermissionUrl(iamPermissionUrl: EsbPermissionUrlReq): String? {
         var url = "/api/c/compapi/v2/iam/application/"
         url = getAuthRequestUrl(url)
         iamPermissionUrl.bk_app_code = appCode!!

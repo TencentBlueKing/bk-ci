@@ -25,14 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.pojo
+package com.tencent.devops.auth.resources
 
-import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.pojo.Instance
+import com.tencent.devops.auth.api.user.UserDeptResource
+import com.tencent.devops.auth.pojo.vo.DeptInfoVo
+import com.tencent.devops.auth.service.DeptService
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import org.springframework.beans.factory.annotation.Autowired
 
-data class PermissionUrlDTO(
-    val actionId: AuthPermission,
-    val resourceId: AuthResourceType,
-    val instanceId: List<Instance>?
-)
+@RestResource
+class UserDeptResourceImpl @Autowired constructor(
+    val deptService: DeptService
+): UserDeptResource {
+    override fun getDeptByLevel(level: Int): Result<DeptInfoVo> {
+        return Result(deptService.getDeptByLevel(level))
+    }
+
+    override fun getDeptByParent(parentId: Int): Result<DeptInfoVo> {
+        return Result(deptService.getDeptByParent(parentId))
+    }
+}

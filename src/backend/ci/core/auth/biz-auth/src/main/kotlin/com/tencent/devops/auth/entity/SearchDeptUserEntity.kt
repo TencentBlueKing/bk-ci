@@ -25,14 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.pojo
+package com.tencent.devops.auth.entity
 
-import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.pojo.Instance
+import com.tencent.devops.common.auth.api.pojo.EsbBaseReq
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-data class PermissionUrlDTO(
-    val actionId: AuthPermission,
-    val resourceId: AuthResourceType,
-    val instanceId: List<Instance>?
-)
+@ApiModel
+data class SearchDeptUserEntity(
+    @ApiModelProperty("部门 ID")
+    val id: Int,
+    @ApiModelProperty("是否级联查询部门用户")
+    val recursive: Boolean,
+    override var bk_app_code: String,
+    override var bk_app_secret: String,
+    override var bk_username: String,
+    override val bk_token: String = ""
+) : EsbBaseReq(bk_app_code, bk_app_secret, bk_username, bk_token)

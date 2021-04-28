@@ -25,14 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.pojo
+package com.tencent.devops.auth.service
 
-import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.pojo.Instance
+import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 
-data class PermissionUrlDTO(
-    val actionId: AuthPermission,
-    val resourceId: AuthResourceType,
-    val instanceId: List<Instance>?
-)
+interface DeptService {
+    fun getDeptByLevel(level: Int): DeptInfoVo
+
+    fun getDeptByParent(parentId: Int): DeptInfoVo
+
+    fun getDeptUser(deptId: Int): List<String>
+}

@@ -25,14 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.pojo
+package com.tencent.devops.common.auth.api.pojo
 
-import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.pojo.Instance
-
-data class PermissionUrlDTO(
-    val actionId: AuthPermission,
-    val resourceId: AuthResourceType,
-    val instanceId: List<Instance>?
+@Suppress("ALL")
+abstract class EsbBaseReq(
+    open var bk_app_code: String,
+    open var bk_app_secret: String,
+    open var bk_username: String,
+    open val bk_token: String = ""
 )

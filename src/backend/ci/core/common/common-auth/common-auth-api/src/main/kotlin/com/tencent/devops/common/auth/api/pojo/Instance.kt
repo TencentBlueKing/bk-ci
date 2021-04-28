@@ -25,14 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.auth.pojo
+package com.tencent.devops.common.auth.api.pojo
 
-@Suppress("ALL")
-data class IamPermissionUrlReq(
-    val system: String,
-    val actions: List<Action>,
-    override var bk_app_code: String,
-    override var bk_app_secret: String,
-    override var bk_username: String,
-    override val bk_token: String = ""
-) : IamBaseReq(bk_app_code, bk_app_secret, bk_username, bk_token)
+data class Instance(
+    val id: String,
+    val type: String
+)

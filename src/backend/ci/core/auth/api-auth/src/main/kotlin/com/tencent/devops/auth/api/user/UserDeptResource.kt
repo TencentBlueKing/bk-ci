@@ -25,14 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.pojo
+package com.tencent.devops.auth.api.user
 
-import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.pojo.Instance
+import com.tencent.devops.auth.pojo.DeptInfo
+import com.tencent.devops.auth.pojo.vo.DeptInfoVo
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-data class PermissionUrlDTO(
-    val actionId: AuthPermission,
-    val resourceId: AuthResourceType,
-    val instanceId: List<Instance>?
-)
+@Api(tags = ["USER_DEPT"], description = "组织架构")
+@Path("/user/dept/")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserDeptResource {
+
+    @GET
+    @Path("levels/{level}")
+    @ApiOperation("按组织级别获取组织列表")
+    fun getDeptByLevel(
+        @PathParam("level")
+        @ApiParam("组织级别", required = true)
+        level: Int
+    ): Result<DeptInfoVo>
+
+    @GET
+    @Path("parents/{parentId}")
+    @ApiOperation("按组织级别获取组织列表")
+    fun getDeptByParent(
+        @PathParam("parentId")
+        @ApiParam("父组织Id", required = true)
+        parentId: Int
+    ): Result<DeptInfoVo>
+}

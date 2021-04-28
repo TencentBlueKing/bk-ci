@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.auth.pojo
+package com.tencent.devops.common.auth.api.pojo
 
 import com.tencent.bk.sdk.iam.dto.callback.response.AttributeDTO
 

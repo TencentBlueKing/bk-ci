@@ -25,9 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.auth.pojo
+package com.tencent.devops.auth.pojo.vo
 
-data class Instance(
-    val id: String,
-    val type: String
+import com.tencent.devops.auth.pojo.DeptInfo
+
+data class DeptInfoVo (
+    val count : Int,
+    val result: List<DeptInfo>
 )

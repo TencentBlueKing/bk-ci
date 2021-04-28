@@ -25,10 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.auth.pojo
+package com.tencent.devops.auth.entity
 
-@Suppress("ALL")
-data class Action(
-    val id: String,
-    val related_resource_types: List<RelatedResourceTypes>?
-)
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.auth.api.pojo.EsbBaseReq
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel
+data class SearchDeptEntity(
+    @ApiModelProperty("查找字段, 默认值为 'id'")
+    @JsonProperty("lookup_field")
+    val lookupField: String,
+    @ApiModelProperty("返回值字段")
+    val fields: String,
+    @ApiModelProperty("精确查找内容列表")
+    @JsonProperty("exact_lookups")
+    val exactLookups: Any? = null,
+    @ApiModelProperty("模糊查找内容列表")
+    @JsonProperty("fuzzy_lookups")
+    val fuzzyLookups: Any? = null,
+    override var bk_app_code: String,
+    override var bk_app_secret: String,
+    override var bk_username: String,
+    override val bk_token: String = ""
+) : EsbBaseReq(bk_app_code, bk_app_secret, bk_username, bk_token)

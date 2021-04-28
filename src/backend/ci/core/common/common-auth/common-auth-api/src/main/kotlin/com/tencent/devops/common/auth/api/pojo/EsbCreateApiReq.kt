@@ -25,10 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.auth.pojo
+package com.tencent.devops.common.auth.api.pojo
 
 @Suppress("ALL")
-data class IamCreateApiReq(
+data class EsbCreateApiReq(
     val system: String,
     val type: String,
     val id: String,
@@ -39,4 +39,4 @@ data class IamCreateApiReq(
     override var bk_app_secret: String,
     override var bk_username: String,
     override val bk_token: String = ""
-) : IamBaseReq(bk_app_code, bk_app_secret, bk_username, bk_token)
+) : EsbBaseReq(bk_app_code, bk_app_secret, bk_username, bk_token)
