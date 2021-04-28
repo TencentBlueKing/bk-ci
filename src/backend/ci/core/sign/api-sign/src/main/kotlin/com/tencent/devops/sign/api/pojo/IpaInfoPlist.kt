@@ -34,12 +34,14 @@ import io.swagger.annotations.ApiModelProperty
 data class IpaInfoPlist(
     @ApiModelProperty("bundleId", required = true)
     var bundleIdentifier: String = "",
-    @ApiModelProperty("应用名字", required = true)
+    @ApiModelProperty("应用标题", required = true)
     var appTitle: String = "",
     @ApiModelProperty("应用版本", required = true)
     var bundleVersion: String = "",
     @ApiModelProperty("应用构建版本", required = true)
     var bundleVersionFull: String = "",
     @ApiModelProperty("应用scheme", required = true)
-    var scheme: String = ""
+    var scheme: String = "",
+    @ApiModelProperty("应用名称", required = true)
+    var appName: String = ""
 )
