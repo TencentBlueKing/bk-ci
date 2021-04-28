@@ -25,42 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.code.git
+package com.tencent.devops.process.engine.service.code
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.tencent.devops.process.engine.service.PipelineWebhookService
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
+import com.tencent.devops.process.pojo.code.git.GitEvent
+import com.tencent.devops.process.pojo.code.github.GithubEvent
+import com.tencent.devops.process.pojo.code.svn.SvnCommitEvent
+import org.springframework.stereotype.Service
 
-@Suppress("ALL")
-data class GitMergeRequestEvent(
-    val user: GitUser,
-    val manual_unlock: Boolean? = false,
-    val object_attributes: GitMRAttributes
-) : GitEvent() {
-    companion object {
-        const val classType = "merge_request"
-    }
+@Service
+class ScmWebhookMatcherBuilderImpl : ScmWebhookMatcherBuilder {
+    override fun createGitWebHookMatcher(event: GitEvent): ScmWebhookMatcher = GitWebHookMatcher(event)
+
+    override fun createSvnWebHookMatcher(
+        event: SvnCommitEvent,
+        pipelineWebhookService: PipelineWebhookService
+    ): ScmWebhookMatcher = SvnWebHookMatcher(event, pipelineWebhookService)
+
+    override fun createGitlabWebHookMatcher(event: GitEvent): ScmWebhookMatcher = GitlabWebHookMatcher(event)
+
+    override fun createGithubWebHookMatcher(event: GithubEvent): ScmWebhookMatcher = GithubWebHookMatcher(event)
 }
-
-@Suppress("ALL")
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class GitMRAttributes(
-    val id: Long,
-    val target_branch: String,
-    val source_branch: String,
-    val author_id: Long,
-    val assignee_id: Long,
-    val title: String,
-    val created_at: String,
-    val updated_at: String,
-    val state: String,
-    val merge_status: String,
-    val target_project_id: String,
-    val source_project_id: String,
-    val iid: Long,
-    val description: String?,
-    val source: GitProject,
-    val target: GitProject,
-    val last_commit: GitCommit,
-    val url: String,
-    val action: String,
-    val extension_action: String?
-)
