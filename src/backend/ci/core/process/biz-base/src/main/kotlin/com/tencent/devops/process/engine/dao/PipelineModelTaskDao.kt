@@ -44,6 +44,7 @@ import org.jooq.Record
 import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.impl.DSL
+import org.jooq.impl.DSL.groupConcatDistinct
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -188,7 +189,7 @@ class PipelineModelTaskDao {
             val baseStep = dslContext.select(
                 PIPELINE_ID.`as`(KEY_PIPELINE_ID),
                 PROJECT_ID.`as`(KEY_PROJECT_ID),
-                ATOM_VERSION.`as`(KEY_VERSION),
+                groupConcatDistinct(DSL.concat(ATOM_VERSION)).`as`(KEY_VERSION),
                 CREATE_TIME.`as`(KEY_CREATE_TIME),
                 UPDATE_TIME.`as`(KEY_UPDATE_TIME)
             )
@@ -241,7 +242,7 @@ class PipelineModelTaskDao {
             condition.add(a.PROJECT_ID.eq(projectId))
         }
         if (!version.isNullOrEmpty()) {
-            condition.add(a.ATOM_VERSION.eq(version))
+            condition.add(a.ATOM_VERSION.contains(version))
         }
         if (startUpdateTime != null) {
             condition.add(a.UPDATE_TIME.ge(startUpdateTime))
