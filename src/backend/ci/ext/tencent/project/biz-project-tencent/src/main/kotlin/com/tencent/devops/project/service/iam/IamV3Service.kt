@@ -135,7 +135,7 @@ class IamV3Service @Autowired constructor(
         )
         val createManagerDTO = CreateManagerDTO.builder().system(iamConfiguration.systemId)
             .name("$SYSTEM_DEFAULT_NAME-${resourceRegisterInfo.resourceName}")
-            .description(resourceRegisterInfo.resourceName)
+            .description(IamUtils.buildManagerDescription(resourceRegisterInfo.resourceName, userId))
             .members(arrayListOf(userId))
             .authorization_scopes(authorizationScopes)
             .subject_scopes(arrayListOf(subjectScopes)).build()
@@ -145,7 +145,7 @@ class IamV3Service @Autowired constructor(
     private fun createRole(userId: String, iamProjectId: Int, projectCode: String): Int {
         val defaultGroup = ManagerRoleGroup(
             IamUtils.buildIamGroup(projectCode, BkAuthGroup.MANAGER.value),
-            IamUtils.buildDefaultDescription(projectCode, BkAuthGroup.MANAGER.name)
+            IamUtils.buildDefaultDescription(projectCode, BkAuthGroup.MANAGER.name, userId)
         )
         val defaultGroups = mutableListOf<ManagerRoleGroup>()
         defaultGroups.add(defaultGroup)
@@ -191,7 +191,7 @@ class IamV3Service @Autowired constructor(
 
     companion object {
         private const val DEFAULT_EXPIRED_AT = 365L // 用户组默认一年有效期
-        private const val SYSTEM_DEFAULT_NAME = "CI"
+        private const val SYSTEM_DEFAULT_NAME = "蓝盾"
         val logger = LoggerFactory.getLogger(IamV3Service::class.java)
     }
 }

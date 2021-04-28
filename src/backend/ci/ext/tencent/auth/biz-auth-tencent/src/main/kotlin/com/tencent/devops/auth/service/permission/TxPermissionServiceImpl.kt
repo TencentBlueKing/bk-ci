@@ -23,51 +23,32 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.service
+package com.tencent.devops.auth.service.permission
 
-import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerGroupMemberVo
-import com.tencent.bk.sdk.iam.service.ManagerService
-import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
-import com.tencent.devops.auth.service.iam.PermissionGradeService
-import com.tencent.devops.auth.service.iam.impl.AbsPermissionRoleMemberImpl
-import com.tencent.devops.common.client.Client
-import org.jvnet.hk2.annotations.Service
+import com.tencent.devops.auth.service.PermissionService
+import com.tencent.devops.common.auth.api.AuthPermission
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
 @Service
-class TxPermissionRoleMemberImpl @Autowired constructor(
-    override val iamManagerService: ManagerService,
-    private val permissionGradeService: PermissionGradeService,
-    private val client: Client
-) : AbsPermissionRoleMemberImpl(iamManagerService, permissionGradeService) {
-    override fun createRoleMember(
-        userId: String,
-        projectId: Int,
-        roleId: Int,
-        members: List<RoleMemberDTO>,
-        managerGroup: Boolean
-    ) {
-        super.createRoleMember(userId, projectId, roleId, members, managerGroup)
+class TxPermissionServiceImpl @Autowired constructor(
+
+) : PermissionService {
+    override fun validateUserResourcePermission(userId: String, resourceType: String, projectCode: String, permission: String): Boolean {
+        TODO("Not yet implemented")
     }
 
-    override fun deleteRoleMember(
-        userId: String,
-        projectId: Int,
-        roleId: Int,
-        members: RoleMemberDTO,
-        managerGroup: Boolean
-    ) {
-        super.deleteRoleMember(userId, projectId, roleId, members, managerGroup)
+    override fun validateUserResourcePermissionByRelation(userId: String, resourceType: String, projectCode: String, permission: String, relationResourceType: String?): Boolean {
+        TODO("Not yet implemented")
     }
 
-    override fun getRoleMember(projectId: Int, roleId: Int): ManagerGroupMemberVo {
-        return super.getRoleMember(projectId, roleId)
+    override fun getUserResourceByPermission(userId: String, serviceCode: String, resourceType: String, projectCode: String, permission: String): List<String> {
+        return super.getUserResourceByPermission(userId, serviceCode, resourceType, projectCode, permission)
     }
 
-    override fun checkUser(userId: String) {
-        return
+    override fun getUserResourcesByPermissions(userId: String, serviceCode: String, resourceType: String, projectCode: String, permission: Set<AuthPermission>): Map<AuthPermission, List<String>> {
+        TODO("Not yet implemented")
     }
 }
