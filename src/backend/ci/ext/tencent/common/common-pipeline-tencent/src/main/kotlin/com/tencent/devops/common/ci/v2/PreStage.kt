@@ -37,7 +37,7 @@ data class PreStage(
     val id: String?,
     val label: String? = null,
     @JsonProperty("if")
-    val ifField: String? = null,
+    val ifField: List<String>? = emptyList(),
     @JsonProperty("fast-kill")
     val fastKill: Boolean? = false,
     val jobs: Map<String, PreJob>?
