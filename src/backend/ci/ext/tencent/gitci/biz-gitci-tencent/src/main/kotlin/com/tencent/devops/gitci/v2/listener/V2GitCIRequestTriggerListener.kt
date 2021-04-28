@@ -33,8 +33,9 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-class V2GitCIRequestTriggerListener @Autowired
-constructor(private val triggerBuildService: TriggerBuildService) {
+class V2GitCIRequestTriggerListener @Autowired constructor(
+    private val triggerBuildService: TriggerBuildService
+) {
 
     fun listenGitCIRequestTriggerEvent(v2GitCIRequestTriggerEvent: V2GitCIRequestTriggerEvent) {
         try {
