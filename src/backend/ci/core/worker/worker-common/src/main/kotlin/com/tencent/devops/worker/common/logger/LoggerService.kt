@@ -27,9 +27,9 @@
 
 package com.tencent.devops.worker.common.logger
 
-import com.tencent.devops.log.meta.Ansi
-import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.pojo.enums.LogType
+import com.tencent.devops.common.log.pojo.message.LogMessage
+import com.tencent.devops.log.meta.Ansi
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.LOG_SUBTAG_FINISH_FLAG
 import com.tencent.devops.worker.common.LOG_SUBTAG_FLAG
@@ -287,7 +287,7 @@ object LoggerService {
             elementId2LogProperty.forEach { (elementId, property) ->
                 if (property.logMode == LogMode.UPLOAD) return@forEach
                 logger.info("Archive task[$elementId] build log file(${property.logFile.absolutePath})")
-                ArchiveUtils.archivePipelineFile(property.logFile, buildVariables!!)
+                ArchiveUtils.archiveLogFile(property.logFile, property.childPath, buildVariables!!)
             }
             logger.info("Finished archiving log ${elementId2LogProperty.size} files")
         } catch (e: Exception) {

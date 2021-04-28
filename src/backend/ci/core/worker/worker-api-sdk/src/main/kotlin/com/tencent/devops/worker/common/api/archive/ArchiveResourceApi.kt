@@ -120,6 +120,10 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         }
     }
 
+    override fun uploadLog(file: File, destFullPath: String, buildVariables: BuildVariables) {
+        logger.warn("uploadLog not implemented")
+    }
+
     override fun downloadCustomizeFile(userId: String, projectId: String, uri: String, destPath: File) {
         val url = if (uri.startsWith("http://") || uri.startsWith("https://")) {
             uri
