@@ -426,7 +426,7 @@ export default {
 
     // 获取项目下已安装的插件列表
     getInstallAtomList ({ commit }, projectCode) {
-        return request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/projectCodes/${projectCode}/list?page=1&pageSize=1000`)
+        return request.get(`${STORE_API_URL_PREFIX}/user/pipeline/atom/projectCodes/${projectCode}/list?page=1&pageSize=2000`)
     },
 
     // 获取已安装的插件详情
