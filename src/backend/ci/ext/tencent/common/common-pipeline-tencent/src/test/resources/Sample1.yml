@@ -61,7 +61,7 @@ variables:
   DEPLOY_TYPE:
     value: dev
   APPROVE:
-    value: xxx
+    value: ${{ sss }}_${{ approve22 }}
   GIT_USERNAME:
     value: user1
     readonly: true
@@ -70,22 +70,17 @@ stages:
   - name: "stage1"
     id: abc
     label: ${{ varivable.approve }}
-    if: envs.BK_CI_EVENT == 'push' || varivable.approve
+    if: [envs.BK_CI_EVENT == 'push' || varivable.approve]
     jobs:
       job_id_1:
         name: my_job_1
         runs-on:
-          - devcloud-linux
-          - devcloud-mac
-          - service
+          - docker-on-vm
         container:
           image: tlinux:2.2
           credentials:
             username: user1
             password: password
-        macOS:
-          system-version: 10.15.4
-          xcode-version: 10.4
         service:
           image: mysql:8.0
           credentials:
@@ -105,7 +100,7 @@ stages:
           - name: xxx
             id: idxxx
             if: xxx
-            use: UploadArtifactory@1.*
+            uses: UploadArtifactory@1.*
             with:
               path: test.txt
             timeout-minutes: 480
@@ -115,7 +110,7 @@ stages:
 
           - run: |
               echo "stage1, job_id_1"
-              echo "hello world!" >> test.txt
+              echo "hello world" >> test.txt
 
         timeout-minutes: 480
         env:

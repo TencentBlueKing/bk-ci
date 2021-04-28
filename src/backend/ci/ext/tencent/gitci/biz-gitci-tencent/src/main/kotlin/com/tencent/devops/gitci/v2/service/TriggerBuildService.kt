@@ -160,7 +160,7 @@ class TriggerBuildService @Autowired constructor(
 
         // 第一个stage，触发类
         val manualTriggerElement = ManualTriggerElement("手动触发", "T-1-1-1")
-        val params = createPipelineParams(gitProjectConf, event)
+        val params = createPipelineParams(yaml, gitProjectConf, event)
         val triggerContainer =
             TriggerContainer("0", "构建触发", listOf(manualTriggerElement), null, null, null, null, params)
         val stage1 = Stage(listOf(triggerContainer), "stage-1")
@@ -172,7 +172,7 @@ class TriggerBuildService @Autowired constructor(
             stage.jobs.forEachIndexed { jobIndex, job ->
                 var elementList = mutableListOf<Element>()
 
-                if (job.runsOn[0] == JobRunsOnType.DOCKER_ON_VM) {
+                if (job.runsOn[0] == JobRunsOnType.DOCKER_ON_VM.type) {
                     // 构建环境容器每个job的第一个插件都是拉代码
                     elementList.add(createGitCodeElement(event, gitProjectConf))
                     elementList = makeElementList(job, gitProjectConf, event.userId)
@@ -433,6 +433,7 @@ class TriggerBuildService @Autowired constructor(
     }
 
     private fun createPipelineParams(
+        yaml: ScriptBuildYaml,
         gitProjectConf: GitRepositoryConf,
         event: GitRequestEvent
     ): MutableList<BuildFormProperty> {
@@ -522,6 +523,7 @@ class TriggerBuildService @Autowired constructor(
 
         // 用户自定义变量
         // startParams.putAll(yaml.variables ?: mapOf())
+        putVariables(yaml, startParams)
 
         startParams.forEach {
             result.add(
@@ -543,6 +545,17 @@ class TriggerBuildService @Autowired constructor(
         }
 
         return result
+    }
+
+    private fun putVariables(yaml: ScriptBuildYaml, startParams: MutableMap<String, String>) {
+        if (yaml.variables == null) {
+            return
+        }
+
+        yaml.variables!!.forEach { key, variable ->
+            // if ()
+            startParams[key] = variable.toString()
+        }
     }
 
     private fun getCiBuildConf(buildConf: BuildConfig): CiBuildConfig {

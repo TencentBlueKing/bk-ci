@@ -37,7 +37,7 @@ data class Job(
     val id: String? = "",
     val name: String?,
     @JsonProperty("runs-on")
-    val runsOn: List<JobRunsOnType> = listOf(JobRunsOnType.DOCKER_ON_VM),
+    val runsOn: List<String> = listOf(JobRunsOnType.DOCKER_ON_VM.type),
     val container: Container?,
     val service: Service? = null,
     @JsonProperty("if")
@@ -80,7 +80,7 @@ data class Strategy(
     val maxParallel: String?
 )
 
-enum class JobRunsOnType(type: String){
+enum class JobRunsOnType(val type: String){
     DOCKER_ON_VM("docker-on-vm"),
     SERVER("server")
 }

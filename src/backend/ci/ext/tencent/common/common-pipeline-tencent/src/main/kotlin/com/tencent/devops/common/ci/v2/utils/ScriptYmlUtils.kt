@@ -186,7 +186,7 @@ object ScriptYmlUtils {
                             Job(
                                 id = randomString(jobNamespace),
                                 name = "job1",
-                                runsOn = listOf(JobRunsOnType.DOCKER_ON_VM),
+                                runsOn = listOf(JobRunsOnType.DOCKER_ON_VM.type),
                                 container = Container(
                                     "",
                                     Credentials(
@@ -237,7 +237,7 @@ object ScriptYmlUtils {
                 Job(
                     id = t,
                     name = u.name,
-                    runsOn = u.runsOn ?: listOf(JobRunsOnType.DOCKER_ON_VM),
+                    runsOn = u.runsOn ?: listOf(JobRunsOnType.DOCKER_ON_VM.type),
                     container = container,
                     service = u.service,
                     ifField = u.ifField,
