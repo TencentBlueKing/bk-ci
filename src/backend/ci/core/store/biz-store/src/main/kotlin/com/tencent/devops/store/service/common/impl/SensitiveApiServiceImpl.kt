@@ -213,4 +213,18 @@ class SensitiveApiServiceImpl @Autowired constructor(
         }
         return Result(true)
     }
+
+    override fun verifyApi(
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        apiName: String
+    ): Result<Boolean> {
+        val record = sensitiveApiDao.getByApiName(
+            dslContext = dslContext,
+            storeType = storeType,
+            storeCode = storeCode,
+            apiName = apiName
+        )
+        return Result(record != null && record.apiStatus == ApiStatusEnum.PASS.name)
+    }
 }

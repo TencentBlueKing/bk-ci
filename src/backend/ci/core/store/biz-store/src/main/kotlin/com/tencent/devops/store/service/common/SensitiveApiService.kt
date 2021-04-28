@@ -67,4 +67,10 @@ interface SensitiveApiService {
         userId: String,
         sensitiveApiApproveReq: SensitiveApiApproveReq
     ): Result<Boolean>
+
+    fun verifyApi(
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        apiName: String
+    ): Result<Boolean>
 }

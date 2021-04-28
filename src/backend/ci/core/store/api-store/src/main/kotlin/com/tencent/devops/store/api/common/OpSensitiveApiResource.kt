@@ -69,7 +69,7 @@ interface OpSensitiveApiResource {
         @QueryParam("apiLevel")
         apiLevel: String?,
         @ApiParam("API状态 WAIT:待审批，PASS:通过，REFUSE:拒绝, CANCEL: 取消")
-        @QueryParam("apiLevel")
+        @QueryParam("apiStatus")
         apiStatus: String?,
         @ApiParam("第几页", required = false)
         @QueryParam("page")

@@ -100,6 +100,21 @@ class SensitiveApiDao {
         }
     }
 
+    fun getByApiName(
+        dslContext: DSLContext,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        apiName: String
+    ): TStoreSensitiveApiRecord? {
+        return with(TStoreSensitiveApi.T_STORE_SENSITIVE_API) {
+            dslContext.selectFrom(this)
+                .where(STORE_TYPE.eq(storeType.type.toByte()))
+                .and(STORE_CODE.eq(storeCode))
+                .and(API_NAME.eq(apiName))
+                .fetchOne()
+        }
+    }
+
     fun getApprovedApiNameList(
         dslContext: DSLContext,
         storeType: StoreTypeEnum,
@@ -168,7 +183,7 @@ class SensitiveApiDao {
             if (storeType != null) {
                 conditions.add(STORE_TYPE.eq(storeType!!.type.toByte()))
             }
-            if (STORE_CODE != null) {
+            if (!storeCode.isNullOrBlank()) {
                 conditions.add(STORE_CODE.eq(storeCode))
             }
             if (!apiName.isNullOrBlank()) {
