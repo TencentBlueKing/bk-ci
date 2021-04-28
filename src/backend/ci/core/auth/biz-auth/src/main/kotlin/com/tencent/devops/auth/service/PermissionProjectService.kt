@@ -37,9 +37,7 @@ interface PermissionProjectService {
 
     fun getProjectGroupAndUserList(serviceCode: String, projectCode: String): List<BkAuthGroupAndUserList>
 
-    fun getUserProjects(userId: String): String
-
-    fun getUserProjectViewsAndManager(userId: String): Map<String, String>
+    fun getUserProjects(userId: String): List<String>
 
     fun isProjectUser(userId: String, projectCode: String, group: BkAuthGroup?): Boolean
 
