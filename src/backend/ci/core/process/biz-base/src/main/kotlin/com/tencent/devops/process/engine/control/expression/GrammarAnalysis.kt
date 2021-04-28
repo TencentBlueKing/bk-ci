@@ -118,7 +118,7 @@ class GrammarAnalysis(private val items: List<Word>) {
             } else {
                 println("success")
             }
-            exitProcess(0)
+            throw GrammarAnalysisFinishedException("success")
         }
         sym = items[index]
     }
