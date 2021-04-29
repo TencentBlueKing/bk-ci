@@ -27,36 +27,41 @@
 
 package com.tencent.devops.common.ci.v2.service
 
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.fasterxml.jackson.annotation.JsonTypeInfo
-import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.ci.SERVICE_TYPE
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudInput
-import com.tencent.devops.common.ci.v2.Credentials
 import com.tencent.devops.common.ci.v2.ServiceWith
-import javax.ws.rs.core.Response
 
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = SERVICE_TYPE)
-@JsonSubTypes(
-    JsonSubTypes.Type(value = V2MysqlService::class, name = V2MysqlService.type)
-)
+data class V2MysqlService(
+    override val serviceId: String,
+    override val image: String,
+    override val with: ServiceWith
+) : V2AbstractService(serviceId, image, with) {
 
-abstract class V2AbstractService(
-    open val serviceId: String,
-    open val image: String,
-    open val with: ServiceWith
-) {
-    abstract fun getType(): String
+    override fun getType(): String {
+        return type
+    }
 
-    abstract fun getServiceParamNameSpace(): String
-
-    abstract fun getServiceInput(repoUrl: String, repoUsername: String, repoPwd: String, env: String): ServiceJobDevCloudInput
-
-    fun parseImage(): Pair<String, String> {
-        val list = image.split(":")
-        if (list.size != 2) {
-            throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "GITCI Service镜像格式非法")
+    override fun getServiceInput(repoUrl: String, repoUsername: String, repoPwd: String, env: String): ServiceJobDevCloudInput {
+        val params = if (with.password.isNullOrBlank()) {
+            "{\"env\":{\"MYSQL_ALLOW_EMPTY_PASSWORD\":\"yes\"}}"
+        } else {
+            "{\"env\":{\"MYSQL_ROOT_PASSWORD\":\"${with.password}\"}}"
         }
-        return Pair(list[0], list[1])
+
+        return ServiceJobDevCloudInput(
+            image,
+            repoUrl,
+            repoUsername,
+            repoPwd,
+            params,
+            env
+        )
+    }
+
+    override fun getServiceParamNameSpace(): String {
+        return serviceId
+    }
+
+    companion object {
+        const val type = "mysql"
     }
 }

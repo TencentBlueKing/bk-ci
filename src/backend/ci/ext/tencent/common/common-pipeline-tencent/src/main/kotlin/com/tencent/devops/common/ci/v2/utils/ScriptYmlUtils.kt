@@ -54,6 +54,7 @@ import com.tencent.devops.common.ci.v2.JobRunsOnType
 import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreStage
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
+import com.tencent.devops.common.ci.v2.Service
 import com.tencent.devops.common.ci.v2.Step
 import org.slf4j.LoggerFactory
 import org.yaml.snakeyaml.Yaml
@@ -256,13 +257,23 @@ object ScriptYmlUtils {
                 u.container
             }
 
+            val services = mutableListOf<Service>()
+            u.services?.forEach { key, value ->
+                services.add(
+                    Service(
+                        serviceId = key,
+                        image = value.image,
+                        with = value.with
+                ))
+            }
+
             jobs.add(
                 Job(
                     id = t,
                     name = u.name,
                     runsOn = u.runsOn ?: listOf(JobRunsOnType.DOCKER_ON_VM.type),
                     container = container,
-                    services = u.services,
+                    services = services,
                     ifField = u.ifField,
                     steps = formatSteps(u.steps),
                     timeoutMinutes = u.timeoutMinutes,
