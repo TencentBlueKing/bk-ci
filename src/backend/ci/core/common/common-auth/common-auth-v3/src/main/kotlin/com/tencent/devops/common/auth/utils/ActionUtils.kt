@@ -25,19 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.utils
+package com.tencent.devops.common.auth.utils
 
-import java.nio.charset.Charset
-import java.util.Base64
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 
-object StringUtils {
-    fun decodeAuth(token: String): Pair<String, String> {
-        val str = if (token.contains("Basic ")) {
-            token.substringAfter("Basic ")
+object ActionUtils {
+
+    fun buildAction(authResourceType: AuthResourceType, permission: AuthPermission): String {
+        return if (permission == AuthPermission.LIST) {
+            "${authResourceType.value}_${AuthPermission.VIEW.value}"
         } else {
-            token
+            "${authResourceType.value}_${permission.value}"
         }
-        val decodeStr = String(Base64.getDecoder().decode(str), Charset.forName("UTF-8"))
-        return Pair(decodeStr.substringBefore(":"), decodeStr.substringAfter(":"))
     }
 }
