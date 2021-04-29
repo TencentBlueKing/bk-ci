@@ -94,15 +94,15 @@ class TaskDaemon(
     ): BuildTaskResult {
 
         val allEnv = getAllEnv()
-        val buildResult = allEnv.toMutableMap()
-        if (buildResult.isNotEmpty()) {
-            buildResult.forEach { (key, value) ->
+        val buildResult = mutableMapOf<String, String>()
+        if (allEnv.isNotEmpty()) {
+            allEnv.forEach { (key, value) ->
                 if (value.length > PARAM_MAX_LENGTH) {
-                    buildResult.remove(key)
                     LoggerService.addYellowLine("[${buildTask.taskId}]|ABANDON_DATA|len[$key]=${value.length}" +
                         "(max=$PARAM_MAX_LENGTH)")
                     return@forEach
                 }
+                buildResult[key] = value
             }
         }
 
