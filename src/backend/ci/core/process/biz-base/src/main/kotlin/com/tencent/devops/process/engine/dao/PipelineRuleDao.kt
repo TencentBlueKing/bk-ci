@@ -116,7 +116,7 @@ class PipelineRuleDao {
         with(TPipelineRule.T_PIPELINE_RULE) {
             val conditions = generateQueryPipelineRuleCondition(ruleName, busCode)
             return dslContext.selectCount().from(this).where(conditions)
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Long::class.java)!!
         }
     }
 

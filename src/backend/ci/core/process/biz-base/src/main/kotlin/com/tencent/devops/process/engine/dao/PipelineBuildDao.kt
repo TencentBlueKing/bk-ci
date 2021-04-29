@@ -830,7 +830,7 @@ class PipelineBuildDao {
             conditions.add(END_TIME.lt(endTime))
             dslContext.selectCount().from(this)
                 .where(conditions)
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 }
