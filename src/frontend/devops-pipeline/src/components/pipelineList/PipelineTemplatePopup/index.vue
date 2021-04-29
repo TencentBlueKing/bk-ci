@@ -459,7 +459,7 @@
                         actionId: this.$permissionActionMap.create,
                         resourceId: this.$permissionResourceMap.pipeline,
                         instanceId: [],
-                        projectId: this.this.$route.params.projectId
+                        projectId: this.$route.params.projectId
                     }])
                 } finally {
                     this.isDisabled = false

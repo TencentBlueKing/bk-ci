@@ -54,7 +54,7 @@ interface SignService {
         ipaSignInfo: IpaSignInfo,
         ipaFile: File,
         taskExecuteCount: Int
-    )
+    ): Boolean
 
     /*
     * 查询某次签名任务是否完成

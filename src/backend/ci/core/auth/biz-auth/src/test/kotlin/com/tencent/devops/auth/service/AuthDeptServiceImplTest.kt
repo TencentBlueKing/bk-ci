@@ -34,13 +34,15 @@ import org.junit.Test
 
 class AuthDeptServiceImplTest{
 
-    private val redisOperation: RedisOperation = mock()
+    private val redisOperation: RedisOperation = RedisOperation(mock())
 
     private val objectMapper: ObjectMapper = mock()
 
+    private val authDeptServiceImpl = AuthDeptServiceImpl(redisOperation, objectMapper)
+
+
     @Test
     fun test() {
-        val authDeptServiceImpl = AuthDeptServiceImpl(redisOperation, objectMapper)
         val response = "{\n" +
             "    \"message\": \"success\",\n" +
             "    \"code\": 0,\n" +
@@ -137,6 +139,6 @@ class AuthDeptServiceImplTest{
             "    \"request_id\": \"ca60654f7f054606a56a9644b7211ddf\"\n" +
             "}"
         val users = authDeptServiceImpl.findUserName(response)
-        print(users)
+        println(users)
     }
 }

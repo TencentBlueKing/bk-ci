@@ -28,7 +28,13 @@
 package com.tencent.devops.auth.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
+import com.google.common.cache.CacheBuilder
+import com.tencent.bk.sdk.iam.dto.response.ResponseDTO
+import com.tencent.bk.sdk.iam.util.JsonUtil
+import com.tencent.devops.auth.common.Constants.DEPT_LABEL
+import com.tencent.devops.auth.common.Constants.LEVEL
+import com.tencent.devops.auth.common.Constants.PARENT
+import com.tencent.devops.auth.common.Constants.HTTP_RESULT
 import com.tencent.devops.auth.entity.SearchDeptEntity
 import com.tencent.devops.auth.entity.SearchDeptUserEntity
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
@@ -41,6 +47,7 @@ import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import java.util.concurrent.TimeUnit
 
 class AuthDeptServiceImpl @Autowired constructor(
     val redisOperation: RedisOperation,
@@ -56,13 +63,18 @@ class AuthDeptServiceImpl @Autowired constructor(
     @Value("\${bk.paas.host:#{null}}")
     val iamHost: String? = null
 
+    private val deptUserCache = CacheBuilder.newBuilder()
+        .maximumSize(500)
+        .expireAfterWrite(1, TimeUnit.HOURS)
+        .build<String/*deptId*/, List<String>>()
+
     override fun getDeptByLevel(level: Int): DeptInfoVo {
         val search = SearchDeptEntity(
             bk_app_code = appCode!!,
             bk_app_secret = appSecret!!,
             bk_username = "",
-            fields = "id,name,parent",
-            lookupField = "level",
+            fields = DEPT_LABEL,
+            lookupField = LEVEL,
             exactLookups = level,
             fuzzyLookups = null
         )
@@ -74,8 +86,8 @@ class AuthDeptServiceImpl @Autowired constructor(
             bk_app_code = appCode!!,
             bk_app_secret = appSecret!!,
             bk_username = "",
-            fields = "id,name,parent",
-            lookupField = "parent",
+            fields = DEPT_LABEL,
+            lookupField = PARENT,
             exactLookups = parentId,
             fuzzyLookups = null
         )
@@ -83,6 +95,16 @@ class AuthDeptServiceImpl @Autowired constructor(
     }
 
     override fun getDeptUser(deptId: Int): List<String> {
+        return if (deptUserCache.getIfPresent(deptId.toString()) == null) {
+            deptUserCache.getIfPresent(deptId.toString())!!
+        } else {
+            val deptUsers = getAndRefreshDeptUser(deptId)
+            deptUserCache.put(deptId.toString(), deptUsers)
+            deptUsers
+        }
+    }
+
+    private fun getAndRefreshDeptUser(deptId: Int) : List<String> {
         val search = SearchDeptUserEntity(
             id = deptId,
             recursive = true,
@@ -103,22 +125,7 @@ class AuthDeptServiceImpl @Autowired constructor(
                 throw RemoteServiceException("get dept user fail, response: ($it)")
             }
             val responseStr = it.body()!!.string()
-            val deptInfos = objectMapper.readValue<Map<String, Any>>(responseStr)
-            if (deptInfos["code"] != 0 || deptInfos["result"] == false) {
-                // 请求错误
-                throw RemoteServiceException(
-                    "get dept user fail: $responseStr"
-                )
-            }
-            val data = deptInfos["data"].toString()
-            val dataMap = objectMapper.readValue<Map<String, Any>>(data)
-            val userInfos = objectMapper.readValue<List<Map<String,Any>>>(dataMap["result"].toString())
-            val users = mutableListOf<String>()
-            userInfos.forEach {
-                users.add(it["username"].toString())
-            }
-
-            return users
+            return findUserName(responseStr)
         }
     }
 
@@ -136,31 +143,35 @@ class AuthDeptServiceImpl @Autowired constructor(
                 throw RemoteServiceException("get dept fail, response: ($it)")
             }
             val responseStr = it.body()!!.string()
-            val deptInfos = objectMapper.readValue<Map<String, Any>>(responseStr)
-            if (deptInfos["code"] != 0 || deptInfos["result"] == false) {
+            val responseDTO = JsonUtil.fromJson(responseStr, ResponseDTO::class.java)
+            if (responseDTO.code != 0L || responseDTO.result == false) {
                 // 请求错误
                 throw RemoteServiceException(
                     "get dept fail: $responseStr"
                 )
             }
-            return objectMapper.readValue<DeptInfoVo>(deptInfos["data"].toString())
+            return JsonUtil.fromJson(JsonUtil.toJson(responseDTO.data), DeptInfoVo::class.java)
         }
     }
 
     fun findUserName(str: String): List<String> {
-        val deptInfos = objectMapper.readValue<Map<String, Any>>(str)
-        if (deptInfos["code"] != 0 || deptInfos["result"] == false) {
+        val responseDTO = JsonUtil.fromJson(str, ResponseDTO::class.java)
+
+        if (responseDTO.code != 0L || responseDTO.result == false) {
             // 请求错误
             throw RemoteServiceException(
                 "get dept user fail: $str"
             )
         }
-        val data = deptInfos["data"].toString()
-        val dataMap = objectMapper.readValue<Map<String, Any>>(data)
-        val userInfos = objectMapper.readValue<List<Map<String,Any>>>(dataMap["result"].toString())
+        val responseData = JsonUtil.toJson(responseDTO.data)
+        val dataMap =  JsonUtil.fromJson(responseData, Map::class.java)
+        val userInfoList = JsonUtil.fromJson(JsonUtil.toJson(dataMap[HTTP_RESULT]), List::class.java)
         val users = mutableListOf<String>()
-        userInfos.forEach {
-            users.add(it["username"].toString())
+        userInfoList.forEach {
+            val userInfo = JsonUtil.toJson(it)
+            val userInfoMap = JsonUtil.fromJson(userInfo, Map::class.java)
+            val userName = userInfoMap.get("username").toString()
+            users.add(userName)
         }
 
         return users
