@@ -36,5 +36,5 @@ interface PermissionRoleMemberService {
 
     fun deleteRoleMember(userId: String, projectId: Int, roleId: Int, members: RoleMemberDTO, managerGroup: Boolean)
 
-    fun getRoleMember(projectId: Int, roleId: Int): ManagerGroupMemberVo
+    fun getRoleMember(projectId: Int, roleId: Int, page: Int, pageSize: Int): ManagerGroupMemberVo
 }

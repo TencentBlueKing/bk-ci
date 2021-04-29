@@ -84,3 +84,4 @@ const val LATEST_EXECUTE_TIME = "latestExecuteTime" // 最近执行时间
 const val KEY_START_TIME = "startTime"
 const val KEY_END_TIME = "endTime"
 const val KEY_CHANNEL = "channel"
+const val HIDDEN_SYMBOL = "******"

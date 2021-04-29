@@ -92,7 +92,6 @@ import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.service.template.MarketTemplateService
 import com.tencent.devops.store.service.template.TemplateCategoryService
 import com.tencent.devops.store.service.template.TemplateLabelService
-import com.tencent.devops.store.service.template.TemplateModelService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -142,8 +141,6 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
     @Autowired
     lateinit var classifyService: ClassifyService
     @Autowired
-    lateinit var templateModelService: TemplateModelService
-    @Autowired
     lateinit var storeDeptService: StoreDeptService
     @Autowired
     lateinit var client: Client
@@ -160,7 +157,11 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 val atomRecord = atomDao.getPipelineAtom(
                     dslContext = dslContext,
                     atomCode = atomCode,
-                    atomStatusList = listOf(AtomStatusEnum.RELEASED.status.toByte())
+                    atomStatusList = listOf(
+                        AtomStatusEnum.RELEASED.status.toByte(),
+                        AtomStatusEnum.UNDERCARRIAGING.status.toByte(),
+                        AtomStatusEnum.UNDERCARRIAGED.status.toByte()
+                    )
                 )
                 return if (atomRecord != null) {
                     val storeBaseInfo = StoreBaseInfo(
@@ -662,12 +663,13 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         templateCode: String,
         projectCodeList: ArrayList<String>
     ): Result<Boolean> {
-        val templateModelResult = templateModelService.getTemplateModel(templateCode)
-        if (templateModelResult.isNotOk()) {
+        val templateDetailResult = client.get(ServiceTemplateResource::class).getTemplateDetailInfo(templateCode)
+        if (templateDetailResult.isNotOk()) {
             // 抛出错误提示
-            return Result(templateModelResult.status, templateModelResult.message ?: "")
+            return Result(templateDetailResult.status, templateDetailResult.message ?: "")
         }
-        val templateModel = templateModelResult.data
+        val templateDetail = templateDetailResult.data
+        val templateModel = templateDetail?.templateModel
             ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
         val invalidImageList = mutableListOf<String>()
         val invalidAtomList = mutableListOf<String>()
@@ -677,8 +679,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         val stageList = templateModel.stages
         // 获取模板下镜像的机构信息
         val templateImageDeptMap = storeDeptService.getTemplateImageDeptMap(stageList)
-        // 获取每个stage下插件的机构信息
-        val stageAtomDeptMap = storeDeptService.getStageAtomDeptMap(stageList)
+        // 获取每个模板下插件的机构信息
+        val templateAtomDeptMap = storeDeptService.getTemplateAtomDeptMap(stageList)
         projectCodeList.forEach { projectCode ->
             // 获取可用的镜像标识列表
             val validImageCodes = getValidStoreCodes(
@@ -686,18 +688,14 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 storeCodes = templateImageDeptMap.keys,
                 storeType = StoreTypeEnum.IMAGE
             )
-            val totalValidAtomCodes = mutableListOf<String>()
+            // 获取可用的插件标识列表
+            val validAtomCodes = getValidStoreCodes(
+                projectCode = projectCode,
+                storeCodes = templateAtomDeptMap.keys,
+                storeType = StoreTypeEnum.ATOM
+            )
             stageList.forEach { stage ->
                 val containerList = stage.containers
-                val stageId = stage.id
-                val currentStageAtomDeptMap = stageAtomDeptMap[stageId]
-                // 获取可用的插件标识列表
-                val validAtomCodes = if (currentStageAtomDeptMap != null) getValidStoreCodes(
-                    projectCode = projectCode,
-                    storeCodes = currentStageAtomDeptMap.keys,
-                    storeType = StoreTypeEnum.ATOM
-                ) else null
-                validAtomCodes?.let { totalValidAtomCodes.addAll(it) }
                 containerList.forEach { container ->
                     // 判断用户的组织架构是否在镜像的可见范围之内
                     validateUserImageVisible(
@@ -716,7 +714,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                             element = element,
                             userId = userId,
                             userDeptIdList = userDeptIdList,
-                            currentStageAtomDeptMap = currentStageAtomDeptMap,
+                            templateAtomDeptMap = templateAtomDeptMap,
                             validAtomCodes = validAtomCodes,
                             invalidAtomList = invalidAtomList,
                             needInstallAtomMap = needInstallAtomMap
@@ -741,10 +739,10 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 )
             }
             val validateTempleAtomVisibleResult = validateTemplateVisibleDept(
-                templateCode = templateCode,
+                templateCode = templateDetail.templateCode,
                 templateModel = templateModel,
                 validImageCodes = validImageCodes,
-                validAtomCodes = totalValidAtomCodes
+                validAtomCodes = validAtomCodes
             )
             if (validateTempleAtomVisibleResult.isNotOk()) {
                 return validateTempleAtomVisibleResult
@@ -847,7 +845,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
         element: Element,
         userId: String,
         userDeptIdList: List<Int>,
-        currentStageAtomDeptMap: Map<String, List<DeptInfo>?>?,
+        templateAtomDeptMap: Map<String, List<DeptInfo>?>?,
         validAtomCodes: List<String>?,
         invalidAtomList: MutableList<String>,
         needInstallAtomMap: MutableMap<String, StoreBaseInfo>
@@ -867,7 +865,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 params = arrayOf(element.name)
             )
         }
-        val storeDepInfoList = currentStageAtomDeptMap?.get(atomCode)
+        val storeDepInfoList = templateAtomDeptMap?.get(atomCode)
         val validFlag = checkUserInvalidVisibleStoreInfo(
             UserStoreDeptInfoRequest(
                 userId = userId,

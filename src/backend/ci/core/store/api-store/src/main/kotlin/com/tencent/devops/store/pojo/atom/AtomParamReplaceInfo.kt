@@ -37,5 +37,7 @@ data class AtomParamReplaceInfo(
     @ApiModelProperty("替换插件参数名称", required = true)
     val toParamName: String,
     @ApiModelProperty("替换插件参数值，不传默认用被替换插件参数值替换", required = false)
-    val toParamValue: Any? = null
+    val toParamValue: Any? = null,
+    @ApiModelProperty("参数自定义转换接口url地址，接口参数结构需统一", required = false)
+    val paramConvertUrl: String? = null
 )

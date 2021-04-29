@@ -38,6 +38,7 @@ import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
 import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
+import com.tencent.devops.common.api.util.PageUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.TimeUnit
@@ -92,10 +93,11 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
         }
     }
 
-    override fun getRoleMember(projectId: Int, roleId: Int): ManagerGroupMemberVo {
+    override fun getRoleMember(projectId: Int, roleId: Int, page: Int, pageSiz: Int): ManagerGroupMemberVo {
         val pageInfoDTO = PageInfoDTO()
-        pageInfoDTO.limit = 100
-        pageInfoDTO.offset = 0
+        val pageInfo = PageUtil.convertPageSizeToSQLLimit(page, pageSiz)
+        pageInfoDTO.limit = pageInfo.limit.toLong()
+        pageInfoDTO.offset = pageInfo.offset.toLong()
         return iamManagerService.getRoleGroupMember(roleId, pageInfoDTO)
     }
 

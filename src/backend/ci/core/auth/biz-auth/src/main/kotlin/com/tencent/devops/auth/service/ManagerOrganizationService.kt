@@ -206,6 +206,10 @@ class ManagerOrganizationService @Autowired constructor(
         return entitys
     }
 
+    fun countByOrg(orgId: Int): Int {
+        return managerOrganizationDao.countByOrg(dslContext, orgId)
+    }
+
     private fun checkBeforeExecute(managerOrganization: ManageOrganizationDTO, action: String, id: Int?) {
         checkOrgLevel(managerOrganization.level, managerOrganization.parentOrgId)
         logger.info("checkBeforeExecute level check success, $managerOrganization | $action| $id")

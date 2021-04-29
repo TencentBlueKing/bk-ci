@@ -28,6 +28,7 @@
 package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.HIDDEN_SYMBOL
 import com.tencent.devops.common.api.constant.LATEST_EXECUTE_TIME
 import com.tencent.devops.common.api.constant.LATEST_EXECUTOR
 import com.tencent.devops.common.api.constant.LATEST_MODIFIER
@@ -53,6 +54,7 @@ import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
 import com.tencent.devops.process.pojo.PipelineAtomRel
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.KEY_PROJECT_ID
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.api.common.ServiceStoreResource
 import com.tencent.devops.store.pojo.atom.AtomReplaceRequest
 import com.tencent.devops.store.pojo.atom.AtomReplaceRollBack
@@ -87,13 +89,13 @@ class PipelineAtomService @Autowired constructor(
         private const val DEFAULT_PAGE_SIZE = 50
     }
 
-    @Value("\${pipeline.editPath}")
+    @Value("\${pipeline.editPath:}")
     private val pipelineEditPath: String = ""
 
-    @Value("\${pipeline.atom.maxRelQueryNum}")
+    @Value("\${pipeline.atom.maxRelQueryNum:2000}")
     private val maxRelQueryNum: Int = 2000
 
-    @Value("\${pipeline.atom.maxRelQueryRangeTime}")
+    @Value("\${pipeline.atom.maxRelQueryRangeTime:30}")
     private val maxRelQueryRangeTime: Long = 30
 
     fun createReplaceAtomInfo(
@@ -178,6 +180,14 @@ class PipelineAtomService @Autowired constructor(
         val convertEndUpdateTime = DateTimeUtil.stringToLocalDateTime(endUpdateTime)
         // 校验查询时间范围跨度
         validateQueryTimeRange(convertStartUpdateTime, convertEndUpdateTime)
+        val pipelineAtomRelCount = pipelineModelTaskDao.countByAtomCode(
+            dslContext = dslContext,
+            atomCode = atomCode,
+            version = version,
+            startUpdateTime = convertStartUpdateTime,
+            endUpdateTime = convertEndUpdateTime
+        )
+        val secrecyProjectSet: Set<String>? = getSecrecyProjectSet(pipelineAtomRelCount)
         // 查询使用该插件的流水线信息
         val pipelineAtomRelList =
             pipelineModelTaskDao.listByAtomCode(
@@ -193,23 +203,17 @@ class PipelineAtomService @Autowired constructor(
                 val projectId = pipelineModelTask[KEY_PROJECT_ID] as String
                 val pipelineInfoRecord = pipelineInfoDao.getPipelineInfo(dslContext, pipelineId)
                 val pipelineBuildSummaryRecord = pipelineBuildSummaryDao.get(dslContext, pipelineId)
-                val pipelineUrl = getPipelineUrl(projectId, pipelineId)
+                val secrecyFlag = secrecyProjectSet?.contains(projectId) == true
+                val pipelineUrl = if (secrecyFlag) HIDDEN_SYMBOL else getPipelineUrl(projectId, pipelineId)
                 PipelineAtomRel(
                     pipelineUrl = pipelineUrl,
-                    atomVersion = pipelineModelTask[KEY_VERSION] as String,
-                    modifier = pipelineInfoRecord!!.lastModifyUser,
+                    atomVersion = pipelineModelTask[KEY_VERSION] as? String,
+                    modifier = if (secrecyFlag) HIDDEN_SYMBOL else pipelineInfoRecord!!.lastModifyUser,
                     updateTime = DateTimeUtil.toDateTime(pipelineModelTask[KEY_UPDATE_TIME] as LocalDateTime),
-                    executor = pipelineBuildSummaryRecord?.latestStartUser,
+                    executor = if (secrecyFlag) HIDDEN_SYMBOL else pipelineBuildSummaryRecord?.latestStartUser,
                     executeTime = DateTimeUtil.toDateTime(pipelineBuildSummaryRecord?.latestStartTime)
                 )
             }
-        val pipelineAtomRelCount = pipelineModelTaskDao.countByAtomCode(
-            dslContext = dslContext,
-            atomCode = atomCode,
-            version = version,
-            startUpdateTime = convertStartUpdateTime,
-            endUpdateTime = convertEndUpdateTime
-        )
         val totalPages = PageUtil.calTotalPage(pageSize, pipelineAtomRelCount)
         return Result(
             Page(
@@ -220,6 +224,22 @@ class PipelineAtomService @Autowired constructor(
                 records = pipelineAtomRelList ?: listOf()
             )
         )
+    }
+
+    private fun getSecrecyProjectSet(count: Long): Set<String>? {
+        var secrecyProjectSet: Set<String>? = null
+        if (count > 0) {
+            val listSecrecyProjectResult =
+                client.get(ServiceProjectResource::class).listSecrecyProject()
+            if (listSecrecyProjectResult.isNotOk()) {
+                throw ErrorCodeException(
+                    errorCode = listSecrecyProjectResult.code.toString(),
+                    defaultMessage = listSecrecyProjectResult.message
+                )
+            }
+            secrecyProjectSet = listSecrecyProjectResult.data
+        }
+        return secrecyProjectSet
     }
 
     private fun validateQueryTimeRange(
@@ -264,6 +284,7 @@ class PipelineAtomService @Autowired constructor(
                 params = arrayOf(maxRelQueryNum.toString())
             )
         }
+        val secrecyProjectSet: Set<String>? = getSecrecyProjectSet(pipelineAtomRelCount)
         val dataList = mutableListOf<Array<String?>>()
         var page = 1
         do {
@@ -281,10 +302,11 @@ class PipelineAtomService @Autowired constructor(
             pipelineAtomRelList?.forEach { pipelineAtomRel ->
                 val pipelineId = pipelineAtomRel[KEY_PIPELINE_ID] as String
                 val projectId = pipelineAtomRel[KEY_PROJECT_ID] as String
+                val secrecyFlag = secrecyProjectSet?.contains(projectId) == true
                 pagePipelineIdList.add(pipelineId)
                 val dataArray = arrayOfNulls<String>(6)
-                dataArray[0] = getPipelineUrl(projectId, pipelineId)
-                dataArray[1] = pipelineAtomRel[KEY_VERSION] as String
+                dataArray[0] = if (secrecyFlag) HIDDEN_SYMBOL else getPipelineUrl(projectId, pipelineId)
+                dataArray[1] = pipelineAtomRel[KEY_VERSION] as? String
                 dataArray[3] = DateTimeUtil.toDateTime(pipelineAtomRel[KEY_UPDATE_TIME] as LocalDateTime)
                 pageDataList.add(dataArray)
             }
@@ -293,7 +315,8 @@ class PipelineAtomService @Autowired constructor(
             for (index in pagePipelineIdList.indices) {
                 val dataArray = pageDataList[index]
                 val pipelineInfoRecord = pagePipelineInfoRecords[index]
-                dataArray[2] = pipelineInfoRecord.lastModifyUser
+                val secrecyFlag = dataArray[0] == HIDDEN_SYMBOL
+                dataArray[2] = if (secrecyFlag) HIDDEN_SYMBOL else pipelineInfoRecord.lastModifyUser
             }
             // 查询流水线汇总信息，结果集按照查询流水线ID的顺序排序
             val pagePipelineSummaryRecords =
@@ -301,7 +324,8 @@ class PipelineAtomService @Autowired constructor(
             for (index in pagePipelineIdList.indices) {
                 val dataArray = pageDataList[index]
                 val pipelineSummaryRecord = pagePipelineSummaryRecords[index]
-                dataArray[4] = pipelineSummaryRecord.latestStartUser
+                val secrecyFlag = dataArray[0] == HIDDEN_SYMBOL
+                dataArray[4] = if (secrecyFlag) HIDDEN_SYMBOL else pipelineSummaryRecord.latestStartUser
                 dataArray[5] = DateTimeUtil.toDateTime(pipelineSummaryRecord.latestStartTime)
             }
             dataList.addAll(pageDataList)

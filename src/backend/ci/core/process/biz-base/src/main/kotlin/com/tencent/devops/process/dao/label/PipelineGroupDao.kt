@@ -113,6 +113,17 @@ class PipelineGroupDao {
         }
     }
 
+    fun count(
+        dslContext: DSLContext,
+        projectId: String
+    ): Long {
+        with(TPipelineGroup.T_PIPELINE_GROUP) {
+            return dslContext.selectCount().from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .fetchOne(0, Long::class.java)
+        }
+    }
+
     fun listByIds(dslContext: DSLContext, projectId: String, ids: Set<Long>): Result<TPipelineGroupRecord> {
         with(TPipelineGroup.T_PIPELINE_GROUP) {
             return dslContext.selectFrom(this)

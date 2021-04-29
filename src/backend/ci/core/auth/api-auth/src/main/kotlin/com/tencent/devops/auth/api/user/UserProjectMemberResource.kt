@@ -80,7 +80,13 @@ interface UserProjectMemberResource {
         projectId: Int,
         @ApiParam(name = "角色Id", required = true)
         @PathParam("roleId")
-        roleId: Int
+        roleId: Int,
+        @ApiParam(name = "页数", required = true)
+        @QueryParam("path")
+        page: Int,
+        @ApiParam(name = "页面大小", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int
     ): Result<ManagerGroupMemberVo>
 
     @DELETE

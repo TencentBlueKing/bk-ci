@@ -32,9 +32,9 @@ import com.tencent.devops.auth.pojo.PermissionUrlDTO
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.pojo.Action
-import com.tencent.devops.common.auth.pojo.IamPermissionUrlReq
-import com.tencent.devops.common.auth.pojo.RelatedResourceTypes
+import com.tencent.devops.common.auth.api.pojo.Action
+import com.tencent.devops.common.auth.api.pojo.EsbPermissionUrlReq
+import com.tencent.devops.common.auth.api.pojo.RelatedResourceTypes
 import com.tencent.devops.common.auth.service.IamEsbService
 import com.tencent.devops.common.auth.utils.ActionUtils
 import org.slf4j.LoggerFactory
@@ -90,7 +90,7 @@ class IamService @Autowired constructor(
                 )
             }
         }
-        val iamEsbReq = IamPermissionUrlReq(
+        val iamEsbReq = EsbPermissionUrlReq(
                 system = iamConfiguration.systemId,
                 actions = actions,
                 bk_app_code = "",

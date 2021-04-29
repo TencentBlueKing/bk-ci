@@ -39,6 +39,7 @@ import com.tencent.devops.project.pojo.user.UserDeptDetail
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
+import org.jooq.Record1
 import org.jooq.Result
 import org.jooq.UpdateConditionStep
 import org.jooq.impl.DSL
@@ -752,6 +753,15 @@ class ProjectDao {
             return dslContext.update(this)
                 .set(RELATION_ID, relationId).where(ENGLISH_NAME.eq(projectCode))
                 .execute()
+        }
+    }
+
+    fun listSecrecyProject(dslContext: DSLContext): Result<Record1<String>>? {
+        with(TProject.T_PROJECT) {
+            return dslContext.select(ENGLISH_NAME)
+                .from(this)
+                .where(IS_SECRECY.eq(true))
+                .fetch()
         }
     }
 }
