@@ -70,7 +70,7 @@ stages:
   - name: "stage1"
     id: abc
     label: ${{ varivable.approve }}
-    if: [envs.BK_CI_EVENT == 'push' || varivable.approve]
+    if: envs.BK_CI_EVENT == 'push' || varivable.approve
     jobs:
       job_id_1:
         name: my_job_1
@@ -81,21 +81,12 @@ stages:
           credentials:
             username: user1
             password: password
-        service:
-          image: mysql:8.0
-          credentials:
-            username: user1
-            password: pwd
-          port: 3306
-          volumes:
-            - src
-            - src:target
-            - ${WORKSPACE}:/data/workspace
-          env:
-
-          command: mysqld
-        if:
-          - variables.DEPLOY_TYPE == 'dev' || cancelled()
+        services:
+          mysql1:
+            image: mysql:8.0
+            with:
+              password: 123456
+        if: variables.DEPLOY_TYPE == 'dev' || cancelled()
         steps:
           - name: xxx
             id: idxxx

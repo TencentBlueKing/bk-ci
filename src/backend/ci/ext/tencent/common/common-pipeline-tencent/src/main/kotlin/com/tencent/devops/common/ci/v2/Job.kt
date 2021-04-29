@@ -39,7 +39,7 @@ data class Job(
     @JsonProperty("runs-on")
     val runsOn: List<String> = listOf(JobRunsOnType.DOCKER_ON_VM.type),
     val container: Container?,
-    val service: Service? = null,
+    val services: Map<String, Service>? = null,
     @JsonProperty("if")
     val ifField: String? = null,
     val steps: List<Step>?,
@@ -65,13 +65,12 @@ data class Credentials(
 
 data class Service(
     val image: String,
-    val credentials: Credentials?,
-    val port: Int?,
-    val volumes: List<String>?,
-    val env: Any?,
-    val command: String?
+    val with: ServiceWith
 )
 
+data class ServiceWith(
+    val password: String
+)
 data class Strategy(
     val matrix: Any?,
     @JsonProperty("fast-kill")
