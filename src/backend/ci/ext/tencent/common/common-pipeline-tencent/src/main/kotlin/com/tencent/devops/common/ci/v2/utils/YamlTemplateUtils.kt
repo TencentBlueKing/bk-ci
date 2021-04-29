@@ -25,14 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci
+package com.tencent.devops.common.ci.v2.utils
 
-import com.fasterxml.jackson.core.type.TypeReference
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.Container
 import com.tencent.devops.common.ci.v2.Credentials
-import com.tencent.devops.common.ci.v2.JobRunsOnType
 import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreScriptBuildYaml
 import com.tencent.devops.common.ci.v2.PreStage
@@ -44,45 +41,18 @@ import com.tencent.devops.common.ci.v2.Strategy
 import com.tencent.devops.common.ci.v2.templates.JobsTemplate
 import com.tencent.devops.common.ci.v2.templates.StagesTemplate
 import com.tencent.devops.common.ci.v2.templates.StepsTemplate
-import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
-import org.junit.Test
 
-import org.springframework.core.io.ClassPathResource
-import java.io.BufferedReader
-import java.io.InputStream
-import java.io.InputStreamReader
+class YamlTemplateUtils(val preTemplateYamlObject: PreTemplateScriptBuildYaml, val templates: Map<String, String?>) {
 
-class ScriptYmlUtilsTest {
-
-    val testYaml = "pipelineWithTemplate.yml"
-    val templateYamlList = listOf("templates/stages.yml", "templates/jobs.yml", "templates/steps.yml")
-
-    @Test
-    fun test() {
-        println(YamlUtil.toYaml(formatYaml()))
+    fun replaceTemplate(): PreScriptBuildYaml {
+//        val preTemplateYamlObject = YamlUtil.getObjectMapper().readValue(yaml, PreTemplateScriptBuildYaml::class.java)
+//        // 校验是否符合规范
+//        ScriptYmlUtils.checkStage(preTemplateYamlObject)
+        return replaceStageTemplate()
     }
 
-    fun formatYaml(): ScriptBuildYaml {
 
-        val classPathResource = ClassPathResource(testYaml)
-        val inputStream: InputStream = classPathResource.inputStream
-        val isReader = InputStreamReader(inputStream)
-
-        val reader = BufferedReader(isReader)
-        val sb = StringBuffer()
-        var str: String?
-        while (reader.readLine().also { str = it } != null) {
-            sb.append(str).append("\n")
-        }
-
-        val yaml = ScriptYmlUtils.formatYaml(sb.toString())
-//        println(yaml)
-        val preTemplateYamlObject = YamlUtil.getObjectMapper().readValue(yaml, PreTemplateScriptBuildYaml::class.java)
-        // 校验是否符合规范
-        ScriptYmlUtils.checkStage(preTemplateYamlObject)
-
-        val templates = getAllTemplates()
-
+    private fun replaceStageTemplate(): PreScriptBuildYaml {
         val preYamlObject = with(preTemplateYamlObject) {
             PreScriptBuildYaml(
                 version = version,
@@ -134,7 +104,7 @@ class ScriptYmlUtilsTest {
                 throw RuntimeException("yaml file: need stages/jobs/steps")
             }
         }
-        return ScriptYmlUtils.normalizeGitCiYaml(preYamlObject)
+        return preYamlObject
     }
 
     private fun replaceStepTemplate(
@@ -369,24 +339,5 @@ class ScriptYmlUtilsTest {
         } else {
             map[key].toString()
         }
-    }
-
-    private fun getAllTemplates(): Map<String, String> {
-        val pathList = templateYamlList
-        val yamlList = mutableMapOf<String, String>()
-        pathList.forEach {
-            val classPathResource = ClassPathResource(it)
-            val inputStream: InputStream = classPathResource.inputStream
-            val isReader = InputStreamReader(inputStream)
-
-            val reader = BufferedReader(isReader)
-            val sb = StringBuffer()
-            var str: String?
-            while (reader.readLine().also { str = it } != null) {
-                sb.append(str).append("\n")
-            }
-            yamlList[it] = sb.toString()
-        }
-        return yamlList
     }
 }
