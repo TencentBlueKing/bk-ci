@@ -1,0 +1,25 @@
+parameters:
+- name: username
+  type: string
+  default: world
+
+jobs:
+  job_id_1:
+    name: my_job_1
+    steps:
+    - run: |
+        echo "stage1, job_id_1"
+        echo "hello world!" >> "test.txt"
+#    - template: templates/steps.yml
+#      parameters:
+#        username: lilei
+#    - use: UploadArtifactory@1.*
+#      with:
+#        path: test.txt
+  job_id_2:
+    name: my_job_2
+    steps:
+    - run: |
+        echo "hello ${{ parameters.username }}!"
+    - run: |
+        echo "hello ${{ parameters.username }} again!"

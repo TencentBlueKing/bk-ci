@@ -357,7 +357,7 @@ class V2RequestTrigger @Autowired constructor(
             runsOn = if (job["runsOn"] == null) {
                 null
             } else {
-                job["runsOn"] as List<JobRunsOnType>
+                job["runsOn"] as List<String>
             },
             container = if (job["container"] == null) {
                 null

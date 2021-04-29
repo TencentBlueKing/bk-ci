@@ -41,7 +41,7 @@ data class Job(
     val container: Container?,
     val service: Service? = null,
     @JsonProperty("if")
-    val ifField: List<String>? = null,
+    val ifField: String? = null,
     val steps: List<Step>?,
     @JsonProperty("timeout-minutes")
     val timeoutMinutes: Int? = 480,
@@ -75,7 +75,7 @@ data class Service(
 data class Strategy(
     val matrix: Any?,
     @JsonProperty("fast-kill")
-    val fastKill: String?,
+    val fastKill: Boolean? =false,
     @JsonProperty("max-parallel")
     val maxParallel: String?
 )

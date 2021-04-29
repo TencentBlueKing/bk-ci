@@ -1,0 +1,148 @@
+version: v2.0
+
+on:
+  push:
+    branches:
+      - master
+      - release/*
+    path:
+      - src/*
+  tag:
+    tags:
+      - release_*
+    from-branches:
+      - master
+  mr:
+    target-branches:
+      - master
+    path:
+      - src/*/*
+  schedules:
+    cron: 0 0/5 0 0 0
+    branches:
+      - master
+      - develop
+    always: false
+
+variables:
+  DEPLOY_TYPE:
+    value: dev
+  APPROVE:
+    value: ${{ sss }}_${{ approve22 }}
+  GIT_USERNAME:
+    value: user1
+    readonly: true
+
+stages:
+  - name: "stage1"
+    id: abc
+    label: ${{ varivable.approve }}
+    if: [envs.BK_CI_EVENT == 'push' || varivable.approve]
+    jobs:
+      job_id_1:
+        name: my_job_1
+        runs-on:
+          - docker-on-vm
+        container:
+          image: tlinux:2.2
+          credentials:
+            username: user1
+            password: password
+        service:
+          image: mysql:8.0
+          credentials:
+            username: user1
+            password: pwd
+          port: 3306
+          volumes:
+            - src
+            - src:target
+            - ${WORKSPACE}:/data/workspace
+          env:
+
+          command: mysqld
+        if:
+          - variables.DEPLOY_TYPE == 'dev' || cancelled()
+        steps:
+          - name: xxx
+            id: idxxx
+            if: xxx
+            uses: UploadArtifactory@1.*
+            with:
+              path: test.txt
+            timeout-minutes: 480
+            continue-on-error: false
+            retry-times: 0
+            env:
+          - template: templates/steps.yml
+            parameters:
+              username: STEP
+          - run: |
+              echo "stage1, job_id_1"
+              echo "hello world" >> test.txt
+
+        timeout-minutes: 480
+        env:
+
+        continue-on-error: false
+        strategy:
+          matrix:
+
+          fast-kill: true
+          max-parallel: 10
+        depend-on:
+          - job1
+          - job2
+      template:
+        template: templates/jobs.yml
+        parameters:
+          username: JOB
+      job_id_2:
+        name: my_job_2
+        steps:
+          - run: |
+              echo "stage1, job_id_2"
+
+  - template: templates/stages.yml
+    parameters:
+      username: STAGE
+
+on-fail:
+#  job1:
+#    name: test1
+#  job2:
+#    name: test2
+  steps:
+    - run: |
+        echo "do something when the upstream fails"
+
+extends:
+  template: epc-build.yml
+  parameters:
+    repo: "hello/my-first-repo"
+resources:
+  repositories:
+    - repository: epc-ieg-bk-common
+      name: ieg/epc-ieg-bk-common
+      ref: refs/tags/v1.0
+
+notices:
+  - type: email
+    title: this is a email notice
+    content: this is a email notice,content is hello.
+    receivers:
+      - user1
+      - user2
+    ccs:
+      - user3
+    if: ${{ failure() }}
+  - type: wework-message
+    title: this is a wework-message notice
+    content: this is a wework-message notice,content is hello.
+    receivers:
+      - user1
+      - user2
+  - type: wework-chat
+    chat-id: xxxxxxxxxx
+    content: this is a wework-chat notice,content is hello.
+
