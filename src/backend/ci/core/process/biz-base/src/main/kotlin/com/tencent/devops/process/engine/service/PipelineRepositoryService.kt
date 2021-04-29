@@ -565,10 +565,10 @@ class PipelineRepositoryService constructor(
                             ""
                         }
 
-                        // 渠道为工蜂或者开源扫描只需为流水线模型保留一个版本
-                        val filterList = listOf(ChannelCode.GIT, ChannelCode.GONGFENGSCAN)
-                        val maxPipelineResNum = if (channelCode in filterList) {
-                            1
+                        // 特定渠道保留特定版本
+                        val filterList = versionConfigure.specChannels.split(",")
+                        val maxPipelineResNum = if (channelCode.name in filterList) {
+                            versionConfigure.specChannelMaxKeepNum
                         } else {
                             versionConfigure.maxKeepNum
                         }
@@ -663,6 +663,28 @@ class PipelineRepositoryService constructor(
                 version = version,
                 model = model
             )
+            if (version > 1 && pipelineResVersionDao.getVersionModelString(
+                    dslContext = transactionContext,
+                    pipelineId = pipelineId,
+                    version = version - 1
+                ) == null
+            ) {
+                // 当ResVersion表中缺失上一个有效版本时需从Res表迁移数据（版本间流水线模型对比有用）
+                val lastVersionModelStr = pipelineResDao.getVersionModelString(
+                    dslContext = dslContext,
+                    pipelineId = pipelineId,
+                    version = version - 1
+                )
+                if (!lastVersionModelStr.isNullOrEmpty()) {
+                    pipelineResVersionDao.create(
+                        dslContext = transactionContext,
+                        pipelineId = pipelineId,
+                        creator = userId,
+                        version = version - 1,
+                        modelString = lastVersionModelStr
+                    )
+                }
+            }
             pipelineModelTaskDao.deletePipelineTasks(
                 dslContext = transactionContext,
                 projectId = projectId,

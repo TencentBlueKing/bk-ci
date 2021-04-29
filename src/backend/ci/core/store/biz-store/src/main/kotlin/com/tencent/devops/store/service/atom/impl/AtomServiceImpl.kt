@@ -265,9 +265,19 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     /**
      * 根据插件代码和版本号获取插件信息
      */
-    override fun getPipelineAtom(projectCode: String, atomCode: String, version: String): Result<PipelineAtom?> {
-        logger.info("projectCode is: $projectCode,atomCode is: $atomCode,version is:$version")
-        val atomResult = getPipelineAtomDetail(projectCode, atomCode, version)
+    override fun getPipelineAtom(
+        projectCode: String,
+        atomCode: String,
+        version: String,
+        atomStatus: Byte?
+    ): Result<PipelineAtom?> {
+        logger.info("getPipelineAtom $projectCode,$atomCode,$version,$atomStatus")
+        val atomResult = getPipelineAtomDetail(
+            projectCode = projectCode,
+            atomCode = atomCode,
+            version = version,
+            atomStatus = atomStatus
+        )
         val atom = atomResult.data
         if (null != atom) {
             val defaultFlag = atom.defaultFlag
@@ -292,14 +302,24 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
      * 根据项目代码、插件代码和版本号获取插件信息
      */
     @Suppress("UNCHECKED_CAST")
-    override fun getPipelineAtomDetail(projectCode: String?, atomCode: String, version: String): Result<PipelineAtom?> {
-        logger.info("getPipelineAtomDetail projectCode is: $projectCode,atomCode is: $atomCode,version is:$version")
-        val atomStatusList = if (projectCode != null) {
-            generateAtomStatusList(atomCode, projectCode)
+    override fun getPipelineAtomDetail(
+        projectCode: String?,
+        atomCode: String,
+        version: String,
+        atomStatus: Byte?
+    ): Result<PipelineAtom?> {
+        logger.info("getPipelineAtomDetail $projectCode,$atomCode,$version,$atomStatus")
+        val atomStatusList = if (atomStatus != null) {
+            mutableListOf(atomStatus)
         } else {
-            null
+            if (projectCode != null) {
+                generateAtomStatusList(atomCode, projectCode)
+            } else {
+                null
+            }
         }
-        atomStatusList?.add(AtomStatusEnum.UNDERCARRIAGED.status.toByte()) // 也要给那些还在使用已下架的插件插件展示详情
+        if (atomStatus == null)
+            atomStatusList?.add(AtomStatusEnum.UNDERCARRIAGED.status.toByte()) // 也要给那些还在使用已下架的插件插件展示详情
         val pipelineAtomRecord = if (projectCode != null) {
             atomDao.getPipelineAtom(
                 dslContext = dslContext,
@@ -323,7 +343,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 val atomClassify = classifyService.getClassify(pipelineAtomRecord.classifyId).data
                 val versionList = getPipelineAtomVersions(projectCode, atomCode).data
                 val atomLabelList = mutableListOf<Label>()
-                val atomLabelRecords = atomLabelRelDao.getLabelsByAtomId(dslContext, pipelineAtomRecord.id) // 查询插件标签信息
+                // 查询插件标签信息
+                val atomLabelRecords = atomLabelRelDao.getLabelsByAtomId(dslContext, pipelineAtomRecord.id)
                 atomLabelRecords?.forEach {
                     atomLabelList.add(
                         Label(
@@ -433,7 +454,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             }
             versionList.add(VersionInfo(versionName, atomVersion)) // 添加具体的版本号
         }
-        logger.info("the atomCode is: $atomCode,versionList is: $versionList")
         return Result(versionList)
     }
 
@@ -441,7 +461,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         atomCode: String,
         projectCode: String
     ): MutableList<Byte> {
-        val flag = storeProjectRelDao.isInitTestProjectCode(dslContext, atomCode, StoreTypeEnum.ATOM, projectCode)
+        val flag = storeProjectRelDao.isTestProjectCode(dslContext, atomCode, StoreTypeEnum.ATOM, projectCode)
         logger.info("the isInitTestProjectCode flag is :$flag")
         // 普通项目的查已发布和下架中的插件
         var atomStatusList =
@@ -523,7 +543,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 data = false
             )
         val atomRecord = atomDao.getPipelineAtom(dslContext, id)
-        logger.info("the atomRecord is :$atomRecord")
         return if (null != atomRecord) {
             // 触发器类的插件repositoryHashId字段值为空
             if (atomRecord.repositoryHashId != null) {
@@ -847,7 +866,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         }
         val atomIdList = mutableListOf(newestAtomRecord.id)
         val latestAtomRecord = atomDao.getLatestAtomByCode(dslContext, atomCode)
-        logger.info("updateAtomBaseInfo latestAtomRecord is :$latestAtomRecord")
         if (null != latestAtomRecord) {
             atomIdList.add(latestAtomRecord.id)
         }
