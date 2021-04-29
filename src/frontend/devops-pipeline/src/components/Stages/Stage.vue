@@ -381,12 +381,12 @@
                 const relatedelement = relatedContext.element || {}
                 const isRelatedTrigger = relatedelement['@type'] === 'trigger'
                 const isTriggerStage = this.checkIsTriggerStage(relatedelement)
+                const isFinallyStage = relatedelement.finally === true
 
-                return !isTrigger && !isRelatedTrigger && !isTriggerStage
+                return !isTrigger && !isRelatedTrigger && !isTriggerStage && !isFinallyStage
             },
 
             appendStage (isFinally = false, fromLast = false) {
-                console.log(this.stageIndex, 55)
                 const { stageIndex, setInertStageIndex, setInsertStageIsFinally, hasFinallyStage, showStageSelectPopup } = this
                 if (isFinally && hasFinallyStage) return
                 setInertStageIndex({
