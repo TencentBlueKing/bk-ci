@@ -44,7 +44,7 @@ class BuildNoOfDayProcessorService : ProcessorService {
 
     override fun getRuleValue(ruleName: String, pipelineId: String?): String? {
         val ruleValue = if (pipelineId != null) {
-            pipelineSettingService.getCurrentDayBuildCount(pipelineId).toString()
+            (pipelineSettingService.getCurrentDayBuildCount(pipelineId) + 1).toString()
         } else {
             null
         }

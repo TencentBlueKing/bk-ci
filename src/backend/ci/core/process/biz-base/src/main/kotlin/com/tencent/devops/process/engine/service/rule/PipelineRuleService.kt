@@ -148,23 +148,7 @@ class PipelineRuleService @Autowired constructor(
     }
 
     fun parsePipelineRule(pipelineId: String, busCode: String, ruleStr: String): String {
-        val ruleNameList = getRuleNameList(ruleStr)
-        val pipelineRuleRecords = pipelineRuleDao.getPipelineRulesByBusCode(dslContext, busCode, ruleNameList)
-        val validRuleProcessorMap = mutableMapOf<String, String>()
-        pipelineRuleRecords?.forEach { ruleRecord ->
-            validRuleProcessorMap[ruleRecord.ruleName] = ruleRecord.processor
-        }
-        if (validRuleProcessorMap.isNotEmpty()) {
-            ruleNameList.removeAll(validRuleProcessorMap.keys)
-        }
-        // 判断用户填的规则是否合法
-        if (ruleNameList.size != validRuleProcessorMap.size) {
-            ruleNameList.removeAll(validRuleProcessorMap.keys)
-            throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf("$ruleStr(error rule:${JsonUtil.toJson(ruleNameList)})")
-            )
-        }
+        val validRuleProcessorMap = validateRuleStr(ruleStr, busCode)
         val validRuleValueMap = mutableMapOf<String, String>()
         validRuleProcessorMap.map { validRule ->
             // 根据规则名称获取具体的规则值
@@ -179,6 +163,27 @@ class PipelineRuleService @Autowired constructor(
             validRuleValueMap[ruleName] = ruleValue
         }
         return generateReplaceRuleStr(ruleStr, validRuleValueMap)
+    }
+
+    fun validateRuleStr(
+        ruleStr: String,
+        busCode: String
+    ): MutableMap<String, String> {
+        val ruleNameList = getRuleNameList(ruleStr)
+        val pipelineRuleRecords = pipelineRuleDao.getPipelineRulesByBusCode(dslContext, busCode, ruleNameList)
+        val validRuleProcessorMap = mutableMapOf<String, String>()
+        pipelineRuleRecords?.forEach { ruleRecord ->
+            validRuleProcessorMap[ruleRecord.ruleName] = ruleRecord.processor
+        }
+        // 判断用户填的规则是否合法
+        if (ruleNameList.size != validRuleProcessorMap.size) {
+            ruleNameList.removeAll(validRuleProcessorMap.keys)
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf("$ruleStr(error rule:${JsonUtil.toJson(ruleNameList)})")
+            )
+        }
+        return validRuleProcessorMap
     }
 
     fun generateReplaceRuleStr(

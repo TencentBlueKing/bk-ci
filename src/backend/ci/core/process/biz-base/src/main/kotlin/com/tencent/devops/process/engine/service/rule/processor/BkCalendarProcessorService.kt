@@ -49,7 +49,12 @@ class BkCalendarProcessorService : ProcessorService {
             }
             ruleName.startsWith(FORMAT_DATE_NAME) -> {
                 val rule = ruleName.substring(FORMAT_DATE_NAME.length).removePrefix("\"").removeSuffix("\"")
-                DateTimeUtil.toDateTime(LocalDateTime.now(), rule)
+                try {
+                    DateTimeUtil.toDateTime(LocalDateTime.now(), rule)
+                } catch (ingored: Exception) {
+                    logger.warn("$rule toDateTime error:", ingored)
+                    null
+                }
             }
             else -> {
                 null
