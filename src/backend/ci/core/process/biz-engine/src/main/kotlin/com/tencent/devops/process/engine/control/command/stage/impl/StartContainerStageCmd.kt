@@ -114,32 +114,28 @@ class StartContainerStageCmd(
         var stageStatus: BuildStatus? = null
 
         // 查找最后一个结束状态的Stage
-        var previousStageStatus: BuildStatus? = null
         if (commandContext.stage.controlOption?.finally == true) {
-            previousStageStatus = pipelineStageService.listStages(commandContext.stage.buildId)
+            commandContext.previousStageStatus = pipelineStageService.listStages(commandContext.stage.buildId)
                 .lastOrNull { it.status.isFinish() || it.status == BuildStatus.STAGE_SUCCESS }?.status
         }
         // 同一Stage下的多个Container是并行
-        commandContext.containers.forEach { c ->
-            if (c.status.isCancel()) {
+        commandContext.containers.forEach { container ->
+            if (container.status.isCancel()) {
                 commandContext.cancelContainerNum++
-            } else if (c.status.isFailure()) {
+            } else if (container.status.isFailure()) {
                 commandContext.failureContainerNum++
-            } else if (c.status == BuildStatus.SKIP) {
+            } else if (container.status == BuildStatus.SKIP) {
                 commandContext.skipContainerNum++
-            } else if (c.status.isRunning() && !actionType.isTerminate()) {
+            } else if (container.status.isRunning() && !actionType.isTerminate()) {
                 // 已经在运行中的, 只接受强制终止
                 stageStatus = BuildStatus.RUNNING
-            } else if (!c.status.isFinish()) {
+            } else if (!container.status.isFinish()) {
+
                 stageStatus = BuildStatus.RUNNING
-                sendBuildContainerEvent(commandContext,
-                    container = c,
-                    actionType = actionType,
-                    userId = userId,
-                    previousStageStatus = previousStageStatus
-                )
-                LOG.info("ENGINE|${c.buildId}|STAGE_CONTAINER_SEND|s(${c.stageId})|" +
-                    "j(${c.containerId})|status=${c.status}|newActonType=$actionType")
+                sendBuildContainerEvent(commandContext, container, actionType = actionType, userId = userId)
+
+                LOG.info("ENGINE|${container.buildId}|STAGE_CONTAINER_SEND|s(${container.stageId})|" +
+                    "j(${container.containerId})|status=${container.status}|newActonType=$actionType")
             }
         }
 
@@ -150,8 +146,7 @@ class StartContainerStageCmd(
         commandContext: StageContext,
         container: PipelineBuildContainer,
         actionType: ActionType,
-        userId: String,
-        previousStageStatus: BuildStatus?
+        userId: String
     ) {
         val errorCode: Int
         val errorTypeName: String?
@@ -172,7 +167,7 @@ class StartContainerStageCmd(
                 userId = userId,
                 buildId = container.buildId,
                 stageId = container.stageId,
-                previousStageStatus = previousStageStatus,
+                previousStageStatus = commandContext.previousStageStatus,
                 containerType = container.containerType,
                 containerId = container.containerId,
                 actionType = actionType,

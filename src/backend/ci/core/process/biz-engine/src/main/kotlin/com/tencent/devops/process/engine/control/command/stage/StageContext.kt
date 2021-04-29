@@ -49,6 +49,7 @@ data class StageContext(
     var cancelContainerNum: Int = 0,
     var failureContainerNum: Int = 0,
     var skipContainerNum: Int = 0,
+    var previousStageStatus: BuildStatus? = null, // 上一个Stage的状态
     override var cmdFlowSeq: Int = 0, // 命令序号
     override val variables: Map<String, String>, // 变量
     override val watcher: Watcher, // 监控对象

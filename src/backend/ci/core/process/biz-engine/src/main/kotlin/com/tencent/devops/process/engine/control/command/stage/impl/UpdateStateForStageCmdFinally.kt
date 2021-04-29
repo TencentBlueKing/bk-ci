@@ -109,12 +109,10 @@ class UpdateStateForStageCmdFinally(
                 "next_s(${nextStage.stageId})|e=${stage.executeCount}|summary:${commandContext.latestSummary}")
             event.sendNextStage(source = "From_s(${stage.stageId})", stageId = nextStage.stageId)
         } else {
+
             // 正常完成构建
-            commandContext.latestSummary = "finally_s(${stage.stageId})"
-            if (commandContext.buildStatus.isSuccess()) { // #3400 最后一个Stage成功代表整个Build成功，统一设置为SUCCEED
-                commandContext.buildStatus = BuildStatus.SUCCEED
-            }
             finishBuild(commandContext = commandContext)
+
             LOG.info("ENGINE|${stage.buildId}|${event.source}|STAGE_FINALLY|${stage.stageId}|" +
                 "${commandContext.buildStatus}|${commandContext.latestSummary}")
         }
@@ -199,36 +197,47 @@ class UpdateStateForStageCmdFinally(
      * 将[commandContext]中参数，发送取消构建事件
      */
     private fun cancelBuild(commandContext: StageContext) {
-        with(commandContext.event) {
-            pipelineEventDispatcher.dispatch(
-                PipelineBuildCancelEvent(
-                    source = commandContext.latestSummary,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    userId = userId,
-                    buildId = buildId,
-                    status = commandContext.buildStatus
-                )
+        pipelineEventDispatcher.dispatch(
+            PipelineBuildCancelEvent(
+                source = commandContext.latestSummary,
+                projectId = commandContext.event.projectId,
+                pipelineId = commandContext.event.pipelineId,
+                userId = commandContext.event.userId,
+                buildId = commandContext.event.buildId,
+                status = commandContext.buildStatus
             )
-        }
+        )
     }
 
     /**
      * 完成构建事件
      */
     private fun finishBuild(commandContext: StageContext) {
-        with(commandContext.event) {
-            pipelineEventDispatcher.dispatch(
-                PipelineBuildFinishEvent(
-                    source = commandContext.latestSummary,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    userId = userId,
-                    buildId = buildId,
-                    status = commandContext.buildStatus
-                )
-            )
+
+        commandContext.latestSummary = "finally_s(${commandContext.stage.stageId})"
+        if (commandContext.buildStatus.isSuccess()) { // #3400 最后一个Stage成功代表整个Build成功，but when finally stage:
+            // #3138 如果上游流水线失败，不管 finally stage 成功还是失败，流水线最终状态为失败
+            if (commandContext.stage.controlOption?.finally == true &&
+                commandContext.previousStageStatus?.isFailure() == true) {
+
+                commandContext.buildStatus = commandContext.previousStageStatus!!
+                commandContext.latestSummary += "|previousStageStatus=${commandContext.buildStatus}"
+            } else {
+
+                commandContext.buildStatus = BuildStatus.SUCCEED
+            }
         }
+
+        pipelineEventDispatcher.dispatch(
+            PipelineBuildFinishEvent(
+                source = commandContext.latestSummary,
+                projectId = commandContext.stage.projectId,
+                pipelineId = commandContext.stage.pipelineId,
+                userId = commandContext.event.userId,
+                buildId = commandContext.stage.buildId,
+                status = commandContext.buildStatus
+            )
+        )
     }
 
     companion object {
