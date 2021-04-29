@@ -442,8 +442,12 @@ class GitCIBuildFinishListener @Autowired constructor(
             "Merge requests [[!$requestId]]($gitUrl/$projectName/merge_requests/$requestId)" +
                     "opened by $openUser \n"
         } else {
-            "Commit [[${requestId.subSequence(0, 7)}]]($gitUrl/$projectName/commit/$requestId)" +
+            if (requestId.length >= 8) {
+                "Commit [[${requestId.subSequence(0, 7)}]]($gitUrl/$projectName/commit/$requestId)" +
                     "pushed by $openUser \n"
+            } else {
+                "Manual Triggered by $openUser \n"
+            }
         }
         val costTime = "Time cost ${DateTimeUtil.formatMillSecond(buildTime ?: 0)}.  \n   "
         return " <font color=\"${state.second}\"> ${state.first} </font> " +
