@@ -101,7 +101,7 @@ object ScriptYmlUtils {
         return YamlUtil.getObjectMapper().readValue(obj, YmlVersion::class.java)
     }
 
-    fun parseVariableValue(value: String?, settingMap: MutableMap<String, String>): String? {
+    fun parseVariableValue(value: String?, settingMap: Map<String, String?>): String? {
         if (value == null || value.isEmpty()) {
             return ""
         }
@@ -185,12 +185,15 @@ object ScriptYmlUtils {
         return sb.toString()
     }
 
-    fun checkStage(preScriptBuildYaml: PreTemplateScriptBuildYaml){
+    fun checkStage(preScriptBuildYaml: PreTemplateScriptBuildYaml) {
         if ((preScriptBuildYaml.stages != null && preScriptBuildYaml.jobs != null) ||
             (preScriptBuildYaml.stages != null && preScriptBuildYaml.steps != null) ||
-            (preScriptBuildYaml.jobs != null && preScriptBuildYaml.steps != null)) {
-            logger.error("Invalid yaml: steps or jobs or stages conflict") // 不能并列存在steps和stages
-            throw CustomException(Response.Status.BAD_REQUEST, "stages, jobs, steps不能并列存在，只能存在其一!")
+            (preScriptBuildYaml.jobs != null && preScriptBuildYaml.steps != null) ||
+            (preScriptBuildYaml.extends != null && preScriptBuildYaml.stages != null) ||
+            (preScriptBuildYaml.extends != null && preScriptBuildYaml.jobs != null) ||
+            (preScriptBuildYaml.extends != null && preScriptBuildYaml.steps != null)
+        ) {
+            throw CustomException(Response.Status.BAD_REQUEST, "extend, stages, jobs, steps不能并列存在，只能存在其一!")
         }
     }
 
@@ -285,18 +288,20 @@ object ScriptYmlUtils {
                 throw CustomException(Response.Status.BAD_REQUEST, "step必须包含use或run!")
             }
 
-            stepList.add(Step(
-                name = it.name,
-                id = it.id ?: randomString(stepNamespace),
-                ifFiled = it.ifFiled,
-                uses = it.uses,
-                with = it.with,
-                timeoutMinutes = it.timeoutMinutes,
-                continueOnError = it.continueOnError,
-                retryTimes = it.retryTimes,
-                env = it.env,
-                run = it.run
-            ))
+            stepList.add(
+                Step(
+                    name = it.name,
+                    id = it.id ?: randomString(stepNamespace),
+                    ifFiled = it.ifFiled,
+                    uses = it.uses,
+                    with = it.with,
+                    timeoutMinutes = it.timeoutMinutes,
+                    continueOnError = it.continueOnError,
+                    retryTimes = it.retryTimes,
+                    env = it.env,
+                    run = it.run
+                )
+            )
         }
 
         return stepList
@@ -317,7 +322,8 @@ object ScriptYmlUtils {
                     ifField = it.ifField,
                     fastKill = it.fastKill ?: false,
                     jobs = preJobs2Jobs(it.jobs as Map<String, PreJob>)
-            ))
+                )
+            )
         }
 
         return stageList

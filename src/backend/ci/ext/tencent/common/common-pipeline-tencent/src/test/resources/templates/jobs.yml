@@ -2,9 +2,12 @@ parameters:
 - name: username
   type: string
   default: world
+- name: jobname
+  type: String
+  default: JOBNAME
 
 jobs:
-  job_id_1:
+  job_id_template_1:
     name: my_job_1
     steps:
     - run: |
@@ -16,10 +19,10 @@ jobs:
 #    - use: UploadArtifactory@1.*
 #      with:
 #        path: test.txt
-  job_id_2:
+  job_id_template_2:
     name: my_job_2
     steps:
     - run: |
         echo "hello ${{ parameters.username }}!"
     - run: |
-        echo "hello ${{ parameters.username }} again!"
+        echo "hello ${{ parameters.jobname }} again!"

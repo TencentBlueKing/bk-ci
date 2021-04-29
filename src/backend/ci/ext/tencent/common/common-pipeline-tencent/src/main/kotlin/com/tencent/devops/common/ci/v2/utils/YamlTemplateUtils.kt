@@ -27,6 +27,8 @@
 
 package com.tencent.devops.common.ci.v2.utils
 
+import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.Container
 import com.tencent.devops.common.ci.v2.Credentials
@@ -39,21 +41,25 @@ import com.tencent.devops.common.ci.v2.Service
 import com.tencent.devops.common.ci.v2.Step
 import com.tencent.devops.common.ci.v2.Strategy
 import com.tencent.devops.common.ci.v2.templates.JobsTemplate
+import com.tencent.devops.common.ci.v2.templates.Parameters
 import com.tencent.devops.common.ci.v2.templates.StagesTemplate
 import com.tencent.devops.common.ci.v2.templates.StepsTemplate
+import com.tencent.devops.common.ci.v2.templates.TemplateType
+import javax.ws.rs.core.Response
 
-class YamlTemplateUtils(val preTemplateYamlObject: PreTemplateScriptBuildYaml, val templates: Map<String, String?>) {
+class YamlTemplateUtils(
+    val yamlObject: PreTemplateScriptBuildYaml,
+    val templates: Map<String, String?>
+) {
 
     fun replaceTemplate(): PreScriptBuildYaml {
-//        val preTemplateYamlObject = YamlUtil.getObjectMapper().readValue(yaml, PreTemplateScriptBuildYaml::class.java)
-//        // 校验是否符合规范
-//        ScriptYmlUtils.checkStage(preTemplateYamlObject)
+        
+
         return replaceStageTemplate()
     }
 
-
     private fun replaceStageTemplate(): PreScriptBuildYaml {
-        val preYamlObject = with(preTemplateYamlObject) {
+        val preYamlObject = with(yamlObject) {
             PreScriptBuildYaml(
                 version = version,
                 name = name,
@@ -67,29 +73,34 @@ class YamlTemplateUtils(val preTemplateYamlObject: PreTemplateScriptBuildYaml, v
             )
         }
         when {
-            preTemplateYamlObject.steps != null -> {
+            yamlObject.steps != null -> {
                 val stepList = mutableListOf<Step>()
-                preTemplateYamlObject.steps!!.forEach { step ->
+                yamlObject.steps.forEach { step ->
                     replaceStepTemplate(step, templates)
                 }
                 preYamlObject.steps = stepList
             }
-            preTemplateYamlObject.jobs != null -> {
+            yamlObject.jobs != null -> {
                 val jobMap = mutableMapOf<String, PreJob>()
-                preTemplateYamlObject.jobs!!.forEach { job ->
-                    jobMap.putAll(replaceJobTemplate(job, templates))
+                yamlObject.jobs.forEach { job ->
+                    val newJob = replaceJobTemplate(job, templates)
+                    if (job.key == "template" && newJob.keys.contains(job.key)) {
+                        throw RuntimeException("Job template's id ${job.key} Duplicate with Job id")
+                    } else {
+                        jobMap.putAll(newJob)
+                    }
                 }
             }
-            preTemplateYamlObject.stages != null -> {
+            yamlObject.stages != null -> {
                 val stageList = mutableListOf<PreStage>()
-                preTemplateYamlObject.stages!!.forEach { stage ->
+                yamlObject.stages.forEach { stage ->
                     if ("template" in stage.keys) {
                         val path = stage["template"].toString()
                         val parameters = transNullValue<Map<String, String?>>(
                             key = "parameters",
-                            map = stage["parameters"] as Map<String, Any?>
+                            map = stage
                         )
-                        val template = templates[path] ?: throw RuntimeException("template file: $path not find")
+                        val template = parseTemplateParameters(path, templates[path], parameters, TemplateType.STAGE)
                         val templateObject = YamlUtil.getObjectMapper().readValue(template, StagesTemplate::class.java)
                         stageList.addAll(templateObject.stages)
                     } else {
@@ -115,9 +126,9 @@ class YamlTemplateUtils(val preTemplateYamlObject: PreTemplateScriptBuildYaml, v
             val path = step["template"].toString()
             val parameters = transNullValue<Map<String, String?>>(
                 key = "parameters",
-                map = step["parameters"] as Map<String, Any?>
+                map = step
             )
-            val template = templates[path] ?: throw RuntimeException("template file: $path not find")
+            val template = parseTemplateParameters(path, templates[path], parameters, TemplateType.STEP)
             val templateObject = YamlUtil.getObjectMapper().readValue(template, StepsTemplate::class.java)
             templateObject.steps
         } else {
@@ -131,21 +142,29 @@ class YamlTemplateUtils(val preTemplateYamlObject: PreTemplateScriptBuildYaml, v
         job: Map.Entry<String, Any>,
         templates: Map<String, String?>
     ): Map<String, PreJob> {
+        var isString = false
         return if (job.key == "template") {
             val path = try {
                 (job.value as Map<String, Any>)["template"]
             } catch (e: Exception) {
+                isString = true
                 job.value.toString()
             }
-            val parameters = if (path is String) {
+            val parameters = if (isString) {
                 null
             } else {
                 transNullValue<Map<String, String?>>(
                     key = "parameters",
-                    map = ((job.value as Map<String, Any>)["parameters"]) as Map<String, Any?>
+                    map = job.value as Map<String, Any>
                 )
             }
-            val template = templates[path] ?: throw RuntimeException("template file: $path not find")
+            val template =
+                parseTemplateParameters(
+                    path = path.toString(),
+                    template = templates[path],
+                    parameters = parameters,
+                    templateType = TemplateType.JOB
+                )
             val templateObject = YamlUtil.getObjectMapper().readValue(template, JobsTemplate::class.java)
             templateObject.jobs
         } else {
@@ -155,16 +174,75 @@ class YamlTemplateUtils(val preTemplateYamlObject: PreTemplateScriptBuildYaml, v
         }
     }
 
+    // 为模板中的变量赋值
+    private fun parseTemplateParameters(
+        path: String,
+        template: String?,
+        parameters: Map<String, String?>?,
+        templateType: TemplateType
+    ): String {
+        if (template == null) {
+            throw RuntimeException("template file: $path not find")
+        }
+        var newParameters: MutableList<Parameters>? = null
+        when (templateType) {
+            TemplateType.VARIABLE -> {
 
-    private fun replaceTemplateParameters(template: String, parameters: Map<String, String>): String {
-        // todo: 替换模板中的变量
-        return template
+            }
+            TemplateType.PARAMETER -> {
+
+            }
+            TemplateType.STAGE -> {
+                newParameters = getStageTemplate(path, template).parameters?.toMutableList()
+            }
+            TemplateType.JOB -> {
+                newParameters = getJobTemplate(path, template).parameters?.toMutableList()
+            }
+            TemplateType.STEP -> {
+                newParameters = getStepTemplate(path, template).parameters?.toMutableList()
+            }
+        }
+        if (!newParameters.isNullOrEmpty()) {
+            newParameters.forEachIndexed { index, param ->
+                if (parameters != null) {
+                    if (parameters.keys.contains(param.name)) {
+                        newParameters[index] = param.copy(default = parameters[param.name].toString())
+                    }
+                }
+            }
+        } else {
+            return template
+        }
+        val parametersMap = newParameters.associate {
+            "parameters.${it.name}" to it.default
+        }
+        return ScriptYmlUtils.parseVariableValue(template, parametersMap)!!
     }
 
-    private fun getParameters(parameters: Any?): Map<String, String?>? {
-        val parametersMap = parameters as Map<String, String?>
-        return emptyMap()
+    private fun getStageTemplate(path: String, template: String?): StagesTemplate {
+        return try {
+            YamlUtil.getObjectMapper().readValue(template, StagesTemplate::class.java)
+        } catch (e: Exception) {
+            throw RuntimeException("$path wrong format！")
+        }
     }
+
+    private fun getJobTemplate(path: String, template: String): JobsTemplate {
+        return try {
+            YamlUtil.getObjectMapper().readValue(template, JobsTemplate::class.java)
+        } catch (e: Exception) {
+            throw RuntimeException("$path wrong format！")
+        }
+    }
+
+    private fun getStepTemplate(path: String, template: String): StepsTemplate {
+        return try {
+            YamlUtil.getObjectMapper().readValue(template, StepsTemplate::class.java)
+        } catch (e: Exception) {
+            throw RuntimeException("$path wrong format！")
+        }
+    }
+
 
     private fun getStep(step: Map<String, Any>): Step {
         return Step(
@@ -262,10 +340,13 @@ class YamlTemplateUtils(val preTemplateYamlObject: PreTemplateScriptBuildYaml, v
             } else {
                 val jobs = stage["jobs"] as Map<String, Any>
                 val map = mutableMapOf<String, PreJob>()
-                jobs.forEach {
-                    map.putAll(
-                        replaceJobTemplate(it, templates)
-                    )
+                jobs.forEach { job ->
+                    val newJob = replaceJobTemplate(job, templates)
+                    if (job.key == "template" && newJob.keys.contains(job.key)) {
+                        throw RuntimeException("Job template's id ${job.key} Duplicate with Job id")
+                    } else {
+                        map.putAll(newJob)
+                    }
                 }
                 map
             }

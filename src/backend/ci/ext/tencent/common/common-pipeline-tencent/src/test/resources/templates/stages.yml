@@ -4,23 +4,26 @@ parameters:
 - name: username
   type: string
   default: world
+- name: stagename
+  type: String
+  default: STAGENAME
 
 stages:
-- name: "stage1"
+- name: "stage_template_1"
   jobs:
-    job_id_1:
+    job_id_stage_template_1_1:
       name: my_job_1
       steps:
       - run: |
           echo "hello ${{ parameters.username }}"
-    job_id_2:
+    job_id_stage_template_1_2:
       name: my_job_2
       steps:
       - run: |
-          echo "stage1, job_id_2"
-- name: "stage2"
+          echo "stage1, ${{ parameters.stagename }}"
+- name: "stage_template_2"
   jobs:
-    job_id_2:
+    job_id_stage_template_2_2:
       name: my_job_3
       steps:
       - run: echo "stage2, job_id_3"

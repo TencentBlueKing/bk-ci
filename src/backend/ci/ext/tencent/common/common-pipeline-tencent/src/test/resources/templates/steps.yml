@@ -2,9 +2,12 @@ parameters:
 - name: username
   type: string
   default: world
+- name: stepname
+  type: String
+  default: STEPNAME
 
 steps:
 - run: |
-    echo "hello ${{ parameters.username }}!"
+    echo "hello template ${{ parameters.username }}!"
 - run: |
-    echo "hello ${{ parameters.username }} again!"
+    echo "hello template ${{ parameters.stepname }} again!"

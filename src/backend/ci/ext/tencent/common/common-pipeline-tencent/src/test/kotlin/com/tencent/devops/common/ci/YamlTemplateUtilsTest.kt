@@ -62,7 +62,7 @@ class ScriptYmlUtilsTest {
         println(
             YamlUtil.toYaml(
                 YamlTemplateUtils(
-                    preTemplateYamlObject = preTemplateYamlObject,
+                    yamlObject = preTemplateYamlObject,
                     templates = getAllTemplates()
                 )
                     .replaceTemplate()
