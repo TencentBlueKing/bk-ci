@@ -25,25 +25,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.dao
+package com.tencent.devops.process.engine.service.code.filter
 
-import com.tencent.devops.model.process.tables.TPipelineModelTask
-import com.tencent.devops.model.process.tables.records.TPipelineModelTaskRecord
-import org.jooq.DSLContext
-import org.jooq.Result
-import org.springframework.stereotype.Repository
-
-@Repository
-class PipelineTaskDao {
-    fun list(
-        dslContext: DSLContext,
-        projectId: String,
-        pipelineIds: Collection<String>
-    ): Result<TPipelineModelTaskRecord>? {
-        with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
-            return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.`in`(pipelineIds)))
-                .fetch()
-        }
-    }
+interface WebhookFilter {
+    fun doFilter(response: WebhookFilterResponse): Boolean
 }

@@ -62,10 +62,17 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
     /**
      * 获取插件信息
      */
-    override fun getAtomEnv(projectCode: String, atomCode: String, atomVersion: String): Result<AtomEnv> {
-        val path = "/ms/store/api/build/market/atom/env/$projectCode/$atomCode/$atomVersion"
+    override fun getAtomEnv(
+        projectCode: String,
+        atomCode: String,
+        atomVersion: String,
+        atomStatus: Byte?
+    ): Result<AtomEnv> {
+        var path = "/ms/store/api/build/market/atom/env/$projectCode/$atomCode/$atomVersion"
+        if (atomStatus != null) {
+            path = "$path?atomStatus=$atomStatus"
+        }
         val request = buildGet(path)
-
         val responseContent = request(request, "获取插件执行环境信息失败")
         return objectMapper.readValue(responseContent)
     }

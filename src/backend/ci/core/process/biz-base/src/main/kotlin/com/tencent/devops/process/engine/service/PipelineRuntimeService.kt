@@ -357,13 +357,13 @@ class PipelineRuntimeService @Autowired constructor(
     fun listContainerBuildTasks(
         buildId: String,
         containerId: String,
-        buildStatus: BuildStatus? = null
+        buildStatusSet: Set<BuildStatus>? = null
     ): List<PipelineBuildTask> {
         val list = pipelineBuildTaskDao.listByStatus(
             dslContext = dslContext,
             buildId = buildId,
             containerId = containerId,
-            statusSet = if (buildStatus != null) setOf(buildStatus) else null
+            statusSet = buildStatusSet
         )
         val result = mutableListOf<PipelineBuildTask>()
         if (list.isNotEmpty()) {
