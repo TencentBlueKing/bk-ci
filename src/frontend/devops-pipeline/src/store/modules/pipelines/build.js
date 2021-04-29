@@ -259,8 +259,10 @@ const actions = {
      *
      * @return {Promise} promise 对象
      */
-    requestRetryPipeline ({ commit, state, dispatch }, { projectId, pipelineId, buildId, taskId }) {
-        return ajax.post(`${prefix}${projectId}/${pipelineId}/${buildId}/retry${taskId ? '?taskId=' + taskId : ''}`).then(response => {
+    requestRetryPipeline ({ commit, state, dispatch }, { projectId, pipelineId, buildId, taskId, failedContainer }) {
+        const failedContainerStr = failedContainer === undefined ? '' : `&failedContainer=${failedContainer}`
+        const queryStr = taskId ? `?taskId=${taskId}${failedContainerStr}` : ''
+        return ajax.post(`${prefix}${projectId}/${pipelineId}/${buildId}/retry${queryStr}`).then(response => {
             return response.data
         })
     },
