@@ -181,6 +181,8 @@ class TriggerBuildService @Autowired constructor(
             stage.jobs.forEachIndexed { jobIndex, job ->
                 var elementList = mutableListOf<Element>()
 
+
+
                 if (job.runsOn[0] == JobRunsOnType.DOCKER_ON_VM.type) {
                     // 构建环境容器每个job的第一个插件都是拉代码
                     elementList.add(createGitCodeElement(event, gitProjectConf))
@@ -331,6 +333,13 @@ class TriggerBuildService @Autowired constructor(
         userId: String
     ): MutableList<Element> {
         val elementList = mutableListOf<Element>()
+
+        // 解析services
+        if (job.service != null) {
+            // val (imageName, imageTag) = it.parseImage()
+        }
+
+        // 解析job steps
         job.steps!!.forEach { step ->
             // bash
             val element: Element = if (step.run != null) {
