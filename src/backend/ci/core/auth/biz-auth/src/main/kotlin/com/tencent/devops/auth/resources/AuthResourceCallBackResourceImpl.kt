@@ -23,13 +23,14 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
 package com.tencent.devops.auth.resources
 
 import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
-import com.tencent.devops.auth.api.AuthResourceCallBackResource
+import com.tencent.devops.auth.api.callback.AuthResourceCallBackResource
 import com.tencent.devops.auth.service.ResourceService
 import com.tencent.devops.common.web.RestResource
 import org.slf4j.LoggerFactory
