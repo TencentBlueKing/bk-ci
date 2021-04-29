@@ -60,6 +60,7 @@ import org.yaml.snakeyaml.Yaml
 import java.io.BufferedReader
 import java.io.StringReader
 import java.util.Random
+import java.util.regex.Pattern
 import javax.ws.rs.core.Response
 
 object ScriptYmlUtils {
@@ -98,6 +99,21 @@ object ScriptYmlUtils {
         val yaml = Yaml()
         val obj = YamlUtil.toYaml(yaml.load(yamlStr) as Any)
         return YamlUtil.getObjectMapper().readValue(obj, YmlVersion::class.java)
+    }
+
+    fun parseVariableValue(value: String?, settingMap: MutableMap<String, String>): String? {
+        if (value == null || value.isEmpty()) {
+            return ""
+        }
+
+        var newValue = value
+        val pattern = Pattern.compile("\\$\\{\\{([^{}]+?)}}")
+        val matcher = pattern.matcher(value)
+        while (matcher.find()) {
+            val realValue = settingMap[matcher.group(1).trim()]
+            newValue = newValue!!.replace(matcher.group(), realValue ?: "")
+        }
+        return newValue
     }
 
     fun parseImage(imageNameInput: String): Triple<String, String, String> {
