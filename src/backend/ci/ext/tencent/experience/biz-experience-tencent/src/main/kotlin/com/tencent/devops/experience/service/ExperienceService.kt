@@ -40,6 +40,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_APP_TITLE
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_ICON
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_NAME
@@ -369,7 +370,20 @@ class ExperienceService @Autowired constructor(
         val logoUrl = propertyMap[ARCHIVE_PROPS_APP_ICON]!!
         val fileSize = fileDetail.size
         val scheme = propertyMap[ARCHIVE_PROPS_APP_SCHEME] ?: ""
-        val appName = StringUtils.defaultIfBlank(experience.experienceName, propertyMap[ARCHIVE_PROPS_APP_NAME])
+        val experienceName = when {
+            StringUtils.isNotBlank(experience.experienceName) -> {
+                experience.experienceName!!
+            }
+            StringUtils.isNotBlank(propertyMap[ARCHIVE_PROPS_APP_NAME]) -> {
+                propertyMap[ARCHIVE_PROPS_APP_NAME]!!
+            }
+            StringUtils.isNotBlank(propertyMap[ARCHIVE_PROPS_APP_APP_TITLE]) -> {
+                propertyMap[ARCHIVE_PROPS_APP_APP_TITLE]!!
+            }
+            else -> {
+                projectId
+            }
+        }
 
         val experienceId = experienceDao.create(
             dslContext = dslContext,
@@ -393,7 +407,7 @@ class ExperienceService @Autowired constructor(
             source = source.name,
             creator = userId,
             updator = userId,
-            experienceName = appName ?: projectId,
+            experienceName = experienceName,
             versionTitle = experience.versionTitle ?: experience.name,
             category = experience.categoryId ?: ProductCategoryEnum.LIFE.id,
             productOwner = objectMapper.writeValueAsString(experience.productOwner ?: emptyList<String>()),
@@ -415,7 +429,7 @@ class ExperienceService @Autowired constructor(
             onlinePublicExperience(
                 projectId = projectId,
                 size = fileSize,
-                experienceName = appName ?: projectId,
+                experienceName = experienceName,
                 categoryId = experience.categoryId ?: ProductCategoryEnum.LIFE.id,
                 expireDate = experience.expireDate,
                 experienceId = experienceId,
