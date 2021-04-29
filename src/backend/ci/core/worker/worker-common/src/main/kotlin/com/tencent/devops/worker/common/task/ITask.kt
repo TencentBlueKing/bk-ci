@@ -51,6 +51,10 @@ abstract class ITask {
             val additionalOptionsStr = params["additionalOptions"]
             val additionalOptions = JsonUtil.toOrNull(additionalOptionsStr, ElementAdditionalOptions::class.java)
             if (additionalOptions?.enableCustomEnv == true && additionalOptions.customEnv?.isNotEmpty() == true) {
+                val variables = buildVariables.variables.toMutableMap()
+                additionalOptions.customEnv!!.filter { !it.key.isNullOrBlank() }.forEach {
+                    variables[it.key!!] = it.value ?: ""
+                }
                 return execute(
                     buildTask,
                     BuildVariables(
@@ -59,7 +63,7 @@ abstract class ITask {
                         vmName = buildVariables.vmName,
                         projectId = buildVariables.projectId,
                         pipelineId = buildVariables.pipelineId,
-                        variables = buildVariables.variables.plus(additionalOptions.customEnv!!),
+                        variables = variables,
                         buildEnvs = buildVariables.buildEnvs,
                         containerId = buildVariables.containerId,
                         containerHashId = buildVariables.containerHashId,

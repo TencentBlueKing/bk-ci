@@ -45,7 +45,7 @@ data class ElementAdditionalOptions(
     val elementPostInfo: ElementPostInfo? = null,
 
     val enableCustomEnv: Boolean? = false, // 是否设置自定义环境变量
-    val customEnv: MutableMap<String, String>? = mutableMapOf()
+    val customEnv: List<NameAndValue>? = null
 )
 
 enum class RunCondition {
