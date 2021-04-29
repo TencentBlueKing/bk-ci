@@ -145,7 +145,8 @@ class IamV3Service @Autowired constructor(
     private fun createRole(userId: String, iamProjectId: Int, projectCode: String): Int {
         val defaultGroup = ManagerRoleGroup(
             IamUtils.buildIamGroup(projectCode, BkAuthGroup.MANAGER.value),
-            IamUtils.buildDefaultDescription(projectCode, BkAuthGroup.MANAGER.name, userId)
+            IamUtils.buildDefaultDescription(projectCode, BkAuthGroup.MANAGER.name, userId),
+            BkAuthGroup.MANAGER.value
         )
         val defaultGroups = mutableListOf<ManagerRoleGroup>()
         defaultGroups.add(defaultGroup)

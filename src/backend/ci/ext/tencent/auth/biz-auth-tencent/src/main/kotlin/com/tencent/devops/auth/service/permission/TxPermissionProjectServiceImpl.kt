@@ -86,15 +86,17 @@ class TxPermissionProjectServiceImpl @Autowired constructor(
         val iamProjectId = getProjectId(projectCode)
         // 2. 获取项目下的所有用户组
         val roleInfos = permissionRoleService.getPermissionRole(iamProjectId).result
-
+        logger.info("[IAM] $projectCode $iamProjectId roleInfos: $roleInfos")
         val result = mutableListOf<BkAuthGroupAndUserList>()
         // 3. 获取用户组下的所有用户
         roleInfos.forEach {
             val groupMemberInfos = permissionRoleMemberService.getRoleMember(iamProjectId, it.id, 0, 1000).results
+            logger.info("[IAM] $projectCode $iamProjectId ,role ${it.id}| users $groupMemberInfos")
             val members = mutableListOf<String>()
             groupMemberInfos.forEach { memberInfo ->
                 // 如果为组织需要获取组织对应的用户
                 if (memberInfo.type == ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)) {
+                    logger.info("[IAM] $projectCode $iamProjectId ,role ${it.id}| dept ${memberInfo.id}")
                     members.addAll(deptService.getDeptUser(memberInfo.id.toInt()))
                 } else {
                     members.add(memberInfo.id)
@@ -170,6 +172,7 @@ class TxPermissionProjectServiceImpl @Autowired constructor(
 
     override fun getProjectRoles(projectCode: String, projectId: String): List<BKAuthProjectRolesResources> {
         val roleInfos = permissionRoleService.getPermissionRole(projectId.toInt()).result
+        logger.info("[IAM] getProjectRole $roleInfos")
         val roleList = mutableListOf<BKAuthProjectRolesResources>()
         roleInfos.forEach {
             val role = BKAuthProjectRolesResources(
