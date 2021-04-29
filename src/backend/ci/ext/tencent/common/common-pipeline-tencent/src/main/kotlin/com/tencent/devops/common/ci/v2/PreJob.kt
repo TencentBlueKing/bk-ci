@@ -40,7 +40,7 @@ data class PreJob(
     val container: Container?,
     val service: Service? = null,
     @JsonProperty("if")
-    val ifField: String? = null,
+    val ifField: List<String>? = null,
     val steps: List<Step>?,
     @JsonProperty("timeout-minutes")
     val timeoutMinutes: Int? = null,

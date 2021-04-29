@@ -44,6 +44,7 @@ import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
 import com.tencent.devops.common.ci.v2.Job
 import com.tencent.devops.common.ci.v2.JobRunsOnType
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
+import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
@@ -112,7 +113,6 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.regex.Pattern
 
 @Service
 class TriggerBuildService @Autowired constructor(
@@ -581,14 +581,7 @@ class TriggerBuildService @Autowired constructor(
             settingMap[it.name] = it.value
         }
 
-        var newValue = value
-        val pattern = Pattern.compile("\\$\\{\\{([^{}]+?)}}")
-        val matcher = pattern.matcher(value)
-        while (matcher.find()) {
-            val realValue = settingMap[matcher.group(1).trim()]
-            newValue = newValue!!.replace(matcher.group(), realValue ?: "")
-        }
-        return newValue
+        return ScriptYmlUtils.parseVariableValue(value, settingMap)
     }
 
     private fun getCiBuildConf(buildConf: BuildConfig): CiBuildConfig {

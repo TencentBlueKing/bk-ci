@@ -369,7 +369,7 @@ class V2RequestTrigger @Autowired constructor(
             } else {
                 job["service"] as Service
             },
-            ifField = job["if"].toString(),
+            ifField = job["if"] as List<String>,
             steps = if (job["steps"] == null) {
                 null
             } else {
