@@ -178,7 +178,6 @@ class Lex(var str: MutableList<Char>) {
                         } else {
                             state = 99
                         }
-
                     }
                     // 匹配到字母
                     40 -> {
@@ -188,7 +187,7 @@ class Lex(var str: MutableList<Char>) {
                             state = 100
                             syn = 27
                         } else {
-                            //向前看一位还是字母
+                            // 向前看一位还是字母
                             if (isLetter(ch!!)) {
                                 state = 40
                             } else {

@@ -170,7 +170,7 @@ object ControlUtils {
             containerFinalStatus.isFailure() -> skip = true
         }
 
-        return skip|| checkCustomVariableSkip(buildId, additionalOptions, variables) ||
+        return skip || checkCustomVariableSkip(buildId, additionalOptions, variables) ||
             checkCustomConditionSkip(buildId, additionalOptions, variables, buildLogPrinter)
     }
 
@@ -180,8 +180,8 @@ object ControlUtils {
         variables: Map<String, String>,
         buildLogPrinter: BuildLogPrinter? = null
     ): Boolean {
-        if (additionalOptions?.runCondition == RunCondition.CUSTOM_CONDITION_MATCH
-            && !additionalOptions.customCondition.isNullOrBlank()) {
+        if (additionalOptions?.runCondition == RunCondition.CUSTOM_CONDITION_MATCH &&
+            !additionalOptions.customCondition.isNullOrBlank()) {
             return !evalExpression(additionalOptions.customCondition, buildId, variables, buildLogPrinter)
         }
 
@@ -259,7 +259,7 @@ object ControlUtils {
             try {
                 val expressionResult = EvalExpress.eval(buildId, customCondition, variables)
                 logger.info("[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition|result=$expressionResult")
-                val logMessage = "Custom condition($customCondition) result is $expressionResult. " + if (!expressionResult) { " will be skipped! "} else { "" }
+                val logMessage = "Custom condition($customCondition) result is $expressionResult. " + if (!expressionResult) { " will be skipped! " } else { "" }
                 buildLogPrinter?.addLine(buildId, logMessage, "", "", 1)
                 expressionResult
             } catch (e: Exception) {
