@@ -170,9 +170,8 @@ object ControlUtils {
             containerFinalStatus.isFailure() -> skip = true
         }
 
-        return skip
-            || checkCustomVariableSkip(buildId, additionalOptions, variables)
-            || checkCustomConditionSkip(buildId, additionalOptions, variables, buildLogPrinter)
+        return skip|| checkCustomVariableSkip(buildId, additionalOptions, variables) ||
+            checkCustomConditionSkip(buildId, additionalOptions, variables, buildLogPrinter)
     }
 
     private fun checkCustomConditionSkip(

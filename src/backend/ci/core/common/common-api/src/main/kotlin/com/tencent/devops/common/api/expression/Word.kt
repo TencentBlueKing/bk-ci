@@ -28,8 +28,8 @@
 package com.tencent.devops.common.api.expression
 
 data class Word(
-    val str : String,
-    val symbol : String
+    val str: String,
+    val symbol: String
 ) {
     override fun toString(): String {
         return "Word(str='$str', symbol='$symbol')"

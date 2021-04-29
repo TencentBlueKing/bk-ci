@@ -46,7 +46,7 @@ class GrammarAnalysis(private val items: List<Word>) {
             if (e is GrammarAnalysisFinishedException) {
                 return true
             }
-            throw  e
+            throw e
         }
         return false
     }
@@ -70,10 +70,8 @@ class GrammarAnalysis(private val items: List<Word>) {
     private fun factor() {
         when {
             accept("ident") -> {
-
             }
             accept("number") -> {
-
             }
             accept("(") -> {
                 parentStack.push("(")
@@ -97,8 +95,7 @@ class GrammarAnalysis(private val items: List<Word>) {
                 parentStack.pop()
             }
         } else if (sym.symbol == "==" || sym.symbol == "!=" || sym.symbol == "<" || sym.symbol == "<=" || sym
-                .symbol == ">"
-            || sym.symbol == ">=" || sym.symbol == "||" || sym.symbol == "&&"
+                .symbol == ">" || sym.symbol == ">=" || sym.symbol == "||" || sym.symbol == "&&"
         ) {
             nextSym()
             condition()

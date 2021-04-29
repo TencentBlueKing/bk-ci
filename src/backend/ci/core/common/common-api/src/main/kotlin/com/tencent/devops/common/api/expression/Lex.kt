@@ -67,9 +67,9 @@ class Lex(var str: MutableList<Char>) {
                         else if (isLetter(ch!!)) state = 40
 //                        else if (isNum(ch)) state = 50
                         else if (ch == ' ' || ch == '\t' || ch == '\n') state = 100
-                        else state = 99            //异常
+                        else state = 99 // 异常
                     }
-                    //匹配到 <
+                    // 匹配到 <
                     5 -> {
                         token.add(ch!!)
                         ch = getNext()
@@ -80,16 +80,14 @@ class Lex(var str: MutableList<Char>) {
                             state = 100
                             syn = 12
                         }
-
                     }
-                    //匹配到 <=
+                    // 匹配到 <=
                     24 -> {
                         token.add(ch!!)
                         state = 100
                         syn = 23
-
                     }
-                    //匹配到 >
+                    // 匹配到 >
                     6 -> {
                         token.add(ch!!)
                         ch = getNext()
@@ -100,16 +98,14 @@ class Lex(var str: MutableList<Char>) {
                             state = 100
                             syn = 13
                         }
-
                     }
-                    //匹配到 <=
+                    // 匹配到 <=
                     25 -> {
                         token.add(ch!!)
                         state = 100
                         syn = 24
-
                     }
-                    //匹配到 =
+                    // 匹配到 =
                     7 -> {
                         token.add(ch!!)
                         ch = getNext()
@@ -120,16 +116,14 @@ class Lex(var str: MutableList<Char>) {
                             state = 100
                             syn = 14
                         }
-
                     }
-                    //匹配到 ==
+                    // 匹配到 ==
                     26 -> {
                         token.add(ch!!)
                         state = 100
                         syn = 25
-
                     }
-                    //匹配到 !
+                    // 匹配到 !
                     9 -> {
                         token.add(ch!!)
                         ch = getNext()
@@ -140,30 +134,26 @@ class Lex(var str: MutableList<Char>) {
                             state = 100
                             syn = 15
                         }
-
                     }
-                    //匹配到 !=
+                    // 匹配到 !=
                     27 -> {
                         token.add(ch!!)
                         state = 100
                         syn = 26
-
                     }
-                    //匹配到 (
+                    // 匹配到 (
                     12 -> {
                         token.add(ch!!)
                         state = 100
                         syn = 19
-
                     }
-                    //匹配到 )
+                    // 匹配到 )
                     13 -> {
                         token.add(ch!!)
                         state = 100
                         syn = 20
-
                     }
-                    //匹配到 &
+                    // 匹配到 &
                     17 -> {
                         token.add(ch!!)
                         ch = getNext()
@@ -176,7 +166,7 @@ class Lex(var str: MutableList<Char>) {
                             state = 99
                         }
                     }
-                    //匹配到 |
+                    // 匹配到 |
                     18 -> {
                         token.add(ch!!)
                         ch = getNext()
@@ -238,7 +228,6 @@ class Lex(var str: MutableList<Char>) {
                         results.add(Word(token.joinToString(""), "ident"))
                     }
                     31, 32 -> {
-
                     }
                     else -> {
                         results.add(Word(token.joinToString(""), token.joinToString("")))
