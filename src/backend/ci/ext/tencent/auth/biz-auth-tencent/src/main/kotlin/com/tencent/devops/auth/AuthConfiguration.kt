@@ -27,14 +27,18 @@
 
 package com.tencent.devops.auth
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.service.ManagerService
+import com.tencent.devops.auth.service.AuthDeptServiceImpl
 import com.tencent.devops.auth.service.TxPermissionGradeServiceImpl
 import com.tencent.devops.auth.service.TxPermissionRoleMemberImpl
 import com.tencent.devops.auth.service.TxPermissionRoleServiceImpl
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -66,4 +70,11 @@ class AuthConfiguration {
         permissionGradeService: TxPermissionGradeServiceImpl,
         iamConfiguration: IamConfiguration
     ) = TxPermissionRoleServiceImpl(iamManagerService, permissionGradeService, iamConfiguration)
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
+    fun deptService(
+        redisOperation: RedisOperation,
+        objectMapper: ObjectMapper
+    ) = AuthDeptServiceImpl(redisOperation, objectMapper)
 }

@@ -29,10 +29,13 @@ package com.tencent.devops.auth.service.permission
 
 import com.google.common.cache.CacheBuilder
 import com.tencent.bk.sdk.iam.config.IamConfiguration
+import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.InstanceDTO
 import com.tencent.bk.sdk.iam.dto.action.ActionDTO
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
+import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
+import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.PermissionProjectService
 import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
@@ -56,7 +59,8 @@ class TxPermissionProjectServiceImpl @Autowired constructor(
     val authHelper: AuthHelper,
     val policyService: PolicyService,
     val client: Client,
-    val iamConfiguration: IamConfiguration
+    val iamConfiguration: IamConfiguration,
+    val deptService: DeptService
 ) : PermissionProjectService {
 
     private val projectIdCache = CacheBuilder.newBuilder()
@@ -86,7 +90,16 @@ class TxPermissionProjectServiceImpl @Autowired constructor(
         val result = mutableListOf<BkAuthGroupAndUserList>()
         // 3. 获取用户组下的所有用户
         roleInfos.forEach {
-            val members = permissionRoleMemberService.getRoleMember(iamProjectId, it.id).results.map { it.id }
+            val groupMemberInfos = permissionRoleMemberService.getRoleMember(iamProjectId, it.id, 0, 1000).results
+            val members = mutableListOf<String>()
+            groupMemberInfos.forEach { memberInfo ->
+                // 如果为组织需要获取组织对应的用户
+                if (memberInfo.type == ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)) {
+                    members.addAll(deptService.getDeptUser(memberInfo.id.toInt()))
+                } else {
+                    members.add(memberInfo.id)
+                }
+            }
             val groupAndUser = BkAuthGroupAndUserList(
                 displayName = it.name,
                 roleId = it.id,
@@ -141,7 +154,18 @@ class TxPermissionProjectServiceImpl @Autowired constructor(
     }
 
     override fun createProjectUser(userId: String, projectCode: String, role: String): Boolean {
+        val projectId = getProjectId(projectCode)
+        val projectRoles = permissionRoleService.getPermissionRole(projectId).result
+        var roleId = 0
+        projectRoles.forEach {
+            // TODO: 通过roleType匹配对应的roleId
 
+        }
+        val managerRole = role == BkAuthGroup.MANAGER.value
+        val members = mutableListOf<RoleMemberDTO>()
+        members.add(RoleMemberDTO(type = ManagerScopesEnum.USER, id = userId))
+        permissionRoleMemberService.createRoleMember(userId, projectId, roleId, members, managerRole)
+        return true
     }
 
     override fun getProjectRoles(projectCode: String, projectId: String): List<BKAuthProjectRolesResources> {
@@ -164,6 +188,7 @@ class TxPermissionProjectServiceImpl @Autowired constructor(
             projectIdCache.getIfPresent(projectCode)!!
         } else {
             val projectInfo = client.get(ServiceProjectResource::class).get(projectCode).data
+
             if (projectInfo != null && !projectInfo.relationId.isNullOrEmpty()) {
                 projectIdCache.put(projectCode, projectInfo!!.relationId!!)
             }
