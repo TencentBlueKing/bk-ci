@@ -262,7 +262,7 @@ object ScriptYmlUtils {
                     name = u.name,
                     runsOn = u.runsOn ?: listOf(JobRunsOnType.DOCKER_ON_VM.type),
                     container = container,
-                    service = u.service,
+                    services = u.services,
                     ifField = u.ifField,
                     steps = formatSteps(u.steps),
                     timeoutMinutes = u.timeoutMinutes,

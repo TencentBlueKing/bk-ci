@@ -38,6 +38,7 @@ import com.tencent.devops.common.ci.v2.PreStage
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.ci.v2.Service
+import com.tencent.devops.common.ci.v2.ServiceWith
 import com.tencent.devops.common.ci.v2.Step
 import com.tencent.devops.common.ci.v2.Strategy
 import com.tencent.devops.common.ci.v2.templates.JobsTemplate
@@ -280,10 +281,10 @@ class YamlTemplateUtils(
             } else {
                 getContainer(job["container"]!!)
             },
-            service = if (job["service"] == null) {
+            services = if (job["services"] == null) {
                 null
             } else {
-                getService(job["service"]!!)
+                getService(job["services"]!!)
             },
             ifField = job["if"].toString(),
             steps = if (job["steps"] == null) {
@@ -353,24 +354,23 @@ class YamlTemplateUtils(
         )
     }
 
-    private fun getService(service: Any): Service {
+    private fun getService(service: Any): Map<String, Service> {
         val serviceMap = service as Map<String, Any?>
-        return Service(
-            image = getNotNullValue(key = "image", mapName = "Container", map = serviceMap),
-            credentials = if (serviceMap["credentials"] == null) {
-                null
-            } else {
-                val credentialsMap = serviceMap["credentials"] as Map<String, String>
-                Credentials(
-                    username = credentialsMap["username"]!!,
-                    password = credentialsMap["password"]!!
+        val newServiceMap = mutableMapOf<String, Service>()
+        serviceMap.forEach { key, value ->
+            val with = (value as Map<String, Any>)["with"] as Map<String, Any>
+            newServiceMap.putAll(
+                mapOf(
+                    key to Service(
+                        image = getNotNullValue(key = "image", mapName = "Container", map = value),
+                        with = ServiceWith(
+                            password = getNotNullValue(key = "password", mapName = "with", map = with)
+                        )
+                    )
                 )
-            },
-            port = getNullValue(key = "port", map = serviceMap)?.toInt(),
-            volumes = transNullValue<List<String>>(key = "volumes", map = serviceMap),
-            env = serviceMap["env"],
-            command = getNullValue("command", serviceMap)
-        )
+            )
+        }
+        return newServiceMap
     }
 
     private fun getContainer(container: Any): Container {
