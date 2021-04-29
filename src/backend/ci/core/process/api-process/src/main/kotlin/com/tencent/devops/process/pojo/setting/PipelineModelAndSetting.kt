@@ -35,6 +35,6 @@ data class PipelineModelAndSetting(
     @ApiModelProperty("流水线模型", required = true)
     val model: Model,
     @ApiModelProperty("流水线设置", required = false)
-    @Valid
+    @field:Valid
     val setting: PipelineSetting
 )

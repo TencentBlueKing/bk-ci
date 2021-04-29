@@ -178,12 +178,49 @@ class PipelineRuleService @Autowired constructor(
         // 判断用户填的规则是否合法
         if (ruleNameList.size != validRuleProcessorMap.size) {
             ruleNameList.removeAll(validRuleProcessorMap.keys)
-            throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf("$ruleStr(error rule:${JsonUtil.toJson(ruleNameList)})")
-            )
+            // 判断规则是否符合通用规则
+            validateCommonRuleName(ruleNameList, busCode, validRuleProcessorMap)
+            if (ruleNameList.isNotEmpty()) {
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                    params = arrayOf("$ruleStr(error rule:${JsonUtil.toJson(ruleNameList)})")
+                )
+            }
         }
         return validRuleProcessorMap
+    }
+
+    private fun validateCommonRuleName(
+        ruleNameList: MutableList<String>,
+        busCode: String,
+        validRuleProcessorMap: MutableMap<String, String>
+    ) {
+        val commonRuleNameList = mutableListOf<String>()
+        ruleNameList.forEach { ruleName ->
+            val pattern = Pattern.compile("(?<=:\")(.+?)(?=\")")
+            val matcher = pattern.matcher(ruleName)
+            if (matcher.find()) {
+                val content = matcher.group()
+                val commonRuleName = ruleName.replace(":\"$content\"", ":\"(.+?)\"")
+                commonRuleNameList.add(commonRuleName)
+            }
+        }
+        // 判断通用规则是否存在
+        if (commonRuleNameList.isNotEmpty()) {
+            val realCommonRuleRecords = pipelineRuleDao.getPipelineRulesByBusCode(
+                dslContext = dslContext,
+                busCode = busCode,
+                ruleNameList = commonRuleNameList
+            )
+            if (realCommonRuleRecords != null && realCommonRuleRecords.isNotEmpty) {
+                val realCommonRuleNameList = mutableListOf<String>()
+                realCommonRuleRecords.forEach { realCommonRuleRecord ->
+                    realCommonRuleNameList.add(realCommonRuleRecord.ruleName)
+                    validRuleProcessorMap[realCommonRuleRecord.ruleName] = realCommonRuleRecord.processor
+                }
+                ruleNameList.removeAll(realCommonRuleNameList)
+            }
+        }
     }
 
     fun generateReplaceRuleStr(
@@ -203,7 +240,10 @@ class PipelineRuleService @Autowired constructor(
         val pattern = Pattern.compile("(?<=\\$\\{\\{)(.+?)(?=}})")
         val matcher = pattern.matcher(ruleStr)
         // 根据${{xxx}}提取规则名称xxx
-        while (matcher.find()) ruleNameList.add(matcher.group())
+        while (matcher.find()) {
+            val ruleName = matcher.group()
+            ruleNameList.add(ruleName)
+        }
         return ruleNameList
     }
 }
