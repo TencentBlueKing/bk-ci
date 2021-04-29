@@ -130,7 +130,6 @@ class TriggerBuildService @Autowired constructor(
 ) : BaseBuildService<ScriptBuildYaml>(client, scmClient, dslContext, redisOperation, gitPipelineResourceDao, gitRequestEventBuildDao, gitRequestEventNotBuildDao) {
     private val channelCode = ChannelCode.GIT
 
-
     companion object {
         private val logger = LoggerFactory.getLogger(TriggerBuildService::class.java)
 

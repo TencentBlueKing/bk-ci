@@ -139,7 +139,7 @@ class ScriptYmlUtilsTest {
 
     private fun replaceStepTemplate(
         step: Map<String, Any>,
-        templates: Map<String, String>
+        templates: Map<String, String?>
     ): List<Step> {
         return if ("template" in step.keys) {
             val path = step["template"].toString()
@@ -159,7 +159,7 @@ class ScriptYmlUtilsTest {
 
     private fun replaceJobTemplate(
         job: Map.Entry<String, Any>,
-        templates: Map<String, String>
+        templates: Map<String, String?>
     ): Map<String, PreJob> {
         return if (job.key == "template") {
             val path = try {
@@ -219,7 +219,7 @@ class ScriptYmlUtilsTest {
         )
     }
 
-    private fun getJob(job: Map<String, Any>, templates: Map<String, String>): PreJob {
+    private fun getJob(job: Map<String, Any>, templates: Map<String, String?>): PreJob {
         return PreJob(
             name = job["name"].toString(),
             runsOn = if (job["runsOn"] == null) {
@@ -276,7 +276,7 @@ class ScriptYmlUtilsTest {
         )
     }
 
-    private fun getStage(stage: Map<String, Any>, templates: Map<String, String>): PreStage {
+    private fun getStage(stage: Map<String, Any>, templates: Map<String, String?>): PreStage {
         return PreStage(
             name = stage["name"].toString(),
             id = stage["id"].toString(),

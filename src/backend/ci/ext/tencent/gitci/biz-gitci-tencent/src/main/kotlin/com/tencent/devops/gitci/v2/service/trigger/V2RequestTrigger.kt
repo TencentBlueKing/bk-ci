@@ -27,11 +27,9 @@
 
 package com.tencent.devops.gitci.v2.service.trigger
 
-import com.fasterxml.jackson.core.type.TypeReference
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.Container
-import com.tencent.devops.common.ci.v2.JobRunsOnType
+import com.tencent.devops.common.ci.v2.Credentials
 import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreScriptBuildYaml
 import com.tencent.devops.common.ci.v2.PreStage
@@ -253,10 +251,10 @@ class V2RequestTrigger @Autowired constructor(
                 preTemplateYamlObject.stages!!.forEach { stage ->
                     if ("template" in stage.keys) {
                         val path = stage["template"].toString()
-//                        val parameters = JsonUtil.to(
-//                            stage["template"].toString(),
-//                            object : TypeReference<Map<String, String>>() {}
-//                        )
+                        val parameters = transNullValue<Map<String, String?>>(
+                            key = "parameters",
+                            map = stage["parameters"] as Map<String, Any?>
+                        )
                         val template = templates[path] ?: throw RuntimeException("template file: $path not find")
                         val templateObject = YamlUtil.getObjectMapper().readValue(template, StagesTemplate::class.java)
                         stageList.addAll(templateObject.stages)
@@ -281,10 +279,10 @@ class V2RequestTrigger @Autowired constructor(
     ): List<Step> {
         return if ("template" in step.keys) {
             val path = step["template"].toString()
-//            val parameters = JsonUtil.to(
-//                step["parameters"].toString(),
-//                object : TypeReference<Map<String, String>>() {}
-//            )
+            val parameters = transNullValue<Map<String, String?>>(
+                key = "parameters",
+                map = step["parameters"] as Map<String, Any?>
+            )
             val template = templates[path] ?: throw RuntimeException("template file: $path not find")
             val templateObject = YamlUtil.getObjectMapper().readValue(template, StepsTemplate::class.java)
             templateObject.steps
@@ -308,9 +306,9 @@ class V2RequestTrigger @Autowired constructor(
             val parameters = if (path is String) {
                 null
             } else {
-                JsonUtil.to(
-                    (job.value as Map<String, Any>)["parameters"].toString(),
-                    object : TypeReference<Map<String, String>>() {}
+                transNullValue<Map<String, String?>>(
+                    key = "parameters",
+                    map = ((job.value as Map<String, Any>)["parameters"]) as Map<String, Any?>
                 )
             }
             val template = templates[path] ?: throw RuntimeException("template file: $path not find")
@@ -328,7 +326,12 @@ class V2RequestTrigger @Autowired constructor(
         return template
     }
 
-    private fun getStep(step: Map<String, Any?>): Step {
+    private fun getParameters(parameters: Any?): Map<String, String?>? {
+        val parametersMap = parameters as Map<String, String?>
+        return emptyMap()
+    }
+
+    private fun getStep(step: Map<String, Any>): Step {
         return Step(
             name = step["name"].toString(),
             id = step["id"].toString(),
@@ -362,14 +365,14 @@ class V2RequestTrigger @Autowired constructor(
             container = if (job["container"] == null) {
                 null
             } else {
-                job["container"] as Container
+                getContainer(job["container"]!!)
             },
             service = if (job["service"] == null) {
                 null
             } else {
-                job["service"] as Service
+                getService(job["service"]!!)
             },
-            ifField = job["if"] as List<String>,
+            ifField = job["if"].toString(),
             steps = if (job["steps"] == null) {
                 null
             } else {
@@ -398,7 +401,7 @@ class V2RequestTrigger @Autowired constructor(
             strategy = if (job["strategy"] == null) {
                 null
             } else {
-                job["strategy"] as Strategy
+                getStrategy(job["strategy"]!!)
             },
             dependOn = if (job["dependOn"] == null) {
                 null
@@ -432,6 +435,75 @@ class V2RequestTrigger @Autowired constructor(
                 map
             }
         )
+    }
+
+    private fun getService(service: Any): Service {
+        val serviceMap = service as Map<String, Any?>
+        return Service(
+            image = getNotNullValue(key = "image", mapName = "Container", map = serviceMap),
+            credentials = if (serviceMap["credentials"] == null) {
+                null
+            } else {
+                val credentialsMap = serviceMap["credentials"] as Map<String, String>
+                Credentials(
+                    username = credentialsMap["username"]!!,
+                    password = credentialsMap["password"]!!
+                )
+            },
+            port = getNullValue(key = "port", map = serviceMap)?.toInt(),
+            volumes = transNullValue<List<String>>(key = "volumes", map = serviceMap),
+            env = serviceMap["env"],
+            command = getNullValue("command", serviceMap)
+        )
+    }
+
+    private fun getContainer(container: Any): Container {
+        val containerMap = container as Map<String, Any?>
+        return Container(
+            image = getNotNullValue(key = "image", mapName = "Container", map = containerMap),
+            credentials = if (containerMap["credentials"] == null) {
+                null
+            } else {
+                val credentialsMap = containerMap["credentials"] as Map<String, String>
+                Credentials(
+                    username = credentialsMap["username"]!!,
+                    password = credentialsMap["password"]!!
+                )
+            }
+        )
+    }
+
+    private fun getStrategy(strategy: Any?): Strategy {
+        val strategyMap = strategy as Map<String, Any?>
+        return Strategy(
+            matrix = strategyMap["matrix"],
+            fastKill = getNullValue("fastKill", strategyMap)?.toBoolean(),
+            maxParallel = getNullValue("maxParallel", strategyMap)
+        )
+    }
+
+    private fun <T> transNullValue(key: String, map: Map<String, Any?>): T? {
+        return if (map[key] == null) {
+            null
+        } else {
+            map[key] as T
+        }
+    }
+
+    private fun getNullValue(key: String, map: Map<String, Any?>): String? {
+        return if (map[key] == null) {
+            null
+        } else {
+            map[key].toString()
+        }
+    }
+
+    private fun getNotNullValue(key: String, mapName: String, map: Map<String, Any?>): String {
+        return if (map[key] == null) {
+            throw RuntimeException("$mapName need $key")
+        } else {
+            map[key].toString()
+        }
     }
 
     private fun getAllTemplates(
