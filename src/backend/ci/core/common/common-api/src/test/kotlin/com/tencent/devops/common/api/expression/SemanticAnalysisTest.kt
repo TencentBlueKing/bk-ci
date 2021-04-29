@@ -30,18 +30,15 @@ package com.tencent.devops.common.api.expression
 import org.junit.Assert.assertEquals
 import org.junit.Assert.fail
 import org.junit.Test
-import java.lang.RuntimeException
 
-class GrammarAnalysisTest {
-
-    private val aesKey = "123A4$5@678"
+class SemanticAnalysisTest {
 
     @Test
     fun analysis1() {
         val str = "a == a"
         val items = Lex(str.toList().toMutableList()).getToken()
         try {
-            assertEquals(true, GrammarAnalysis(items).analysis())
+            assertEquals(true, SemanticAnalysis(items).analysis())
         } catch (e: Exception) {
             fail()
         }
@@ -52,7 +49,7 @@ class GrammarAnalysisTest {
         val str = " a==a "
         val items = Lex(str.toList().toMutableList()).getToken()
         try {
-            assertEquals(true, GrammarAnalysis(items).analysis())
+            assertEquals(true, SemanticAnalysis(items).analysis())
         } catch (e: Exception) {
             fail()
         }
@@ -60,10 +57,10 @@ class GrammarAnalysisTest {
 
     @Test
     fun analysis3() {
-        val str = "'push'== 'push' && (true && (bbb != aaa && 1 <= 2 )) && (( !true == false) || (!false != false ))"
+        val str = "'push'==  'push' && (true && (bbb != aaa && 1 <= 2 )) && (( !true == false) || (!false != false ))  "
         val items = Lex(str.toList().toMutableList()).getToken()
         try {
-            assertEquals(true, GrammarAnalysis(items).analysis())
+            assertEquals(true, SemanticAnalysis(items).analysis())
         } catch (e: Exception) {
             fail()
         }
@@ -71,12 +68,12 @@ class GrammarAnalysisTest {
 
     @Test
     fun analysis4() {
-        val str = "'push'== 'push' && (true && (bbb != aaa && 1 <= 2 )) && (( !true == false) || (!false != false ) "
+        val str = "'push'== 'push' && (true && (bbb != aaa && 1 >= 2 )) && (( !true == false) || (!false != false )) "
         val items = Lex(str.toList().toMutableList()).getToken()
         try {
-            GrammarAnalysis(items).analysis()
+            assertEquals(false, SemanticAnalysis(items).analysis())
         } catch (e: Exception) {
-            assertEquals(e.javaClass, RuntimeException::class.java)
+            fail()
         }
     }
 }
