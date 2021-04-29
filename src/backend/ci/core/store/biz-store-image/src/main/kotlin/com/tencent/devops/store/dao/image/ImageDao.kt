@@ -398,7 +398,7 @@ class ImageDao {
                     .where(initTestImageCondition)
             )
             .asTable("t")
-        val baseStep = dslContext.select().from(t).orderBy(t.field("weight").desc(), t.field("imageName").asc())
+        val baseStep = dslContext.select().from(t).orderBy(t.field("weight")!!.desc(), t.field("imageName")!!.asc())
         return if (null != page && null != pageSize) {
             baseStep.limit((page - 1) * pageSize + (offsetNum ?: 0), pageSize).fetch()
         } else {
