@@ -36,36 +36,31 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.annotation.SensitiveApiPermission
 import com.tencent.devops.common.web.service.ServiceSensitiveApiPermissionResource
-import org.aspectj.lang.ProceedingJoinPoint
-import org.aspectj.lang.annotation.Around
+import org.aspectj.lang.JoinPoint
 import org.aspectj.lang.annotation.Aspect
+import org.aspectj.lang.annotation.Before
 import org.aspectj.lang.annotation.Pointcut
 import org.aspectj.lang.reflect.MethodSignature
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
 
-@Component
 @Aspect
-class SensitiveApiPermissionAspect @Autowired constructor(
+class SensitiveApiPermissionAspect constructor(
     private val client: Client,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val enableSensitiveApi: Boolean
 ) {
-    @Value("\${bkci.sensitive.api.enable:#{false}}")
-    private val enableSensitiveApi: Boolean = false
 
     @Pointcut("@annotation(com.tencent.devops.common.web.annotation.SensitiveApiPermission)")
     fun pointCut() = Unit
 
-    @Around("pointCut()")
-    fun doAround(proceedingJoinPoint: ProceedingJoinPoint): Any {
+    @Before("pointCut()")
+    fun doBefore(jp: JoinPoint) {
         val request = (RequestContextHolder.getRequestAttributes() as ServletRequestAttributes).request
         val buildId = request.getHeader(AUTH_HEADER_DEVOPS_BUILD_ID)
         val vmSeqId = request.getHeader(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
-        val method = (proceedingJoinPoint.signature as MethodSignature).method
+        val method = (jp.signature as MethodSignature).method
         val apiName = method.getAnnotation(SensitiveApiPermission::class.java)?.value
         logger.info("$buildId|$vmSeqId|$apiName|sensitive api permission aspect")
 
@@ -90,7 +85,6 @@ class SensitiveApiPermissionAspect @Autowired constructor(
                 )
             }
         }
-        return proceedingJoinPoint.proceed()
     }
 
     companion object {
