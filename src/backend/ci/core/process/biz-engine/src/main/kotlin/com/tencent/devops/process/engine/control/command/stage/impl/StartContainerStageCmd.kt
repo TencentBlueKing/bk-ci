@@ -91,7 +91,14 @@ class StartContainerStageCmd(
         return if (stageStatus.isFinish() || stageStatus == BuildStatus.STAGE_SUCCESS) {
             stageStatus // 已经是结束或者是STAGE_SUCCESS就直接返回
         } else {
-            sendContainerEvent(commandContext = commandContext, actionType = newActionType, userId = event.userId)
+            val runningStatus = sendContainerEvent(commandContext, actionType = newActionType, userId = event.userId)
+            return when {
+                runningStatus != null -> runningStatus
+                commandContext.failureContainerNum > 0 -> BuildStatus.FAILED // 存在失败
+                commandContext.cancelContainerNum > 0 -> BuildStatus.CANCELED // 存在取消
+                commandContext.skipContainerNum == commandContext.containers.size -> BuildStatus.SKIP // 全部跳过
+                else -> BuildStatus.SUCCEED
+            }
         }
     }
 
@@ -102,11 +109,8 @@ class StartContainerStageCmd(
      * 所有容器都结束，但有失败的容器，则直接返回:[BuildStatus.FAILED]
      * 所有容器都结束，但有取消的容器，则直接返回:[BuildStatus.CANCELED]
      */
-    private fun sendContainerEvent(commandContext: StageContext, actionType: ActionType, userId: String): BuildStatus {
+    private fun sendContainerEvent(commandContext: StageContext, actionType: ActionType, userId: String): BuildStatus? {
 
-        var failureContainers = 0
-        var cancelContainers = 0
-        var skipContainers = 0
         var stageStatus: BuildStatus? = null
 
         // 查找最后一个结束状态的Stage
@@ -118,14 +122,11 @@ class StartContainerStageCmd(
         // 同一Stage下的多个Container是并行
         commandContext.containers.forEach { c ->
             if (c.status.isCancel()) {
-                cancelContainers++
+                commandContext.cancelContainerNum++
             } else if (c.status.isFailure()) {
-                failureContainers++
+                commandContext.failureContainerNum++
             } else if (c.status == BuildStatus.SKIP) {
-                skipContainers++
-//            } else if (c.status.isReadyToRun() && !ActionType.isStart(actionType)) {
-                // 失败或可重试的容器，如果不是重试动作，则跳过
-//                stageStatus = BuildStatus.RUNNING
+                commandContext.skipContainerNum++
             } else if (c.status.isRunning() && !actionType.isTerminate()) {
                 // 已经在运行中的, 只接受强制终止
                 stageStatus = BuildStatus.RUNNING
@@ -142,15 +143,7 @@ class StartContainerStageCmd(
             }
         }
 
-        if (stageStatus == null) {
-            stageStatus = when {
-                failureContainers > 0 -> BuildStatus.FAILED // 存在失败
-                cancelContainers > 0 -> BuildStatus.CANCELED // 存在取消
-                skipContainers == commandContext.containers.size -> BuildStatus.SKIP // 全部跳过
-                else -> BuildStatus.SUCCEED
-            }
-        }
-        return stageStatus!!
+        return stageStatus
     }
 
     private fun sendBuildContainerEvent(

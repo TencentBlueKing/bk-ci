@@ -27,63 +27,165 @@
 
 package com.tencent.devops.process.engine.extend
 
-import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.container.Container
-import com.tencent.devops.common.pipeline.container.Stage
-import com.tencent.devops.common.pipeline.container.TriggerContainer
-import com.tencent.devops.common.pipeline.container.VMBuildContainer
-import com.tencent.devops.common.pipeline.enums.VMBaseOS
-import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
+import com.nhaarman.mockito_kotlin.mock
+import com.nhaarman.mockito_kotlin.whenever
+import com.tencent.devops.common.api.enums.FrontendTypeEnum
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
+import com.tencent.devops.process.TestBase
+import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.store.api.atom.ServiceAtomResource
+import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
+import com.tencent.devops.store.pojo.atom.AtomVersion
+import com.tencent.devops.store.pojo.atom.InstalledAtom
+import com.tencent.devops.store.pojo.common.StoreUserCommentInfo
+import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
+import org.junit.Assert
+import org.junit.Before
 import org.junit.Test
 
-class DefaultModelCheckPluginTest {
+class DefaultModelCheckPluginTest : TestBase() {
 
-    @Test
-    fun checkModelIntegrity() {
-        val stages = genStages()
-        val model = Model(name = "DefaultModelCheckPluginTest", desc = "unit test", stages = stages)
+    private val client: Client = mock()
+
+    private val checkPlugin = DefaultModelCheckPlugin(client)
+    private val serviceMarketAtomResource: ServiceMarketAtomResource = mock()
+    private val serviceAtomResource: ServiceAtomResource = mock()
+
+    private fun genAtomVersion() = AtomVersion(atomId = "1",
+        atomCode = "atomCode",
+        name = "name",
+        logoUrl = "logoUrl",
+        classifyCode = "classifyCode",
+        classifyName = "classifyLanName",
+        category = "category",
+        docsLink = "docsLink",
+        htmlTemplateVersion = "htmlTemplateVersion",
+        atomType = "atomType",
+        jobType = "jobType",
+        os = null,
+        summary = "summary",
+        description = "description",
+        version = "version",
+        atomStatus = "atomStatus",
+        releaseType = null,
+        versionContent = "versionContent",
+        language = "language",
+        codeSrc = "codeSrc",
+        publisher = "publisher",
+        modifier = "modifier",
+        creator = "creator",
+        createTime = "2020-01-01 01:01:01",
+        updateTime = "2020-01-01 01:01:01",
+        flag = false,
+        repositoryAuthorizer = null,
+        defaultFlag = null,
+        projectCode = "",
+        initProjectCode = "projectCode",
+        labelList = null,
+        pkgName = null,
+        userCommentInfo = StoreUserCommentInfo(true, ""),
+        visibilityLevel = VisibilityLevelEnum.LOGIN_PUBLIC.name,
+        privateReason = "privateReason",
+        recommendFlag = null,
+        frontendType = FrontendTypeEnum.NORMAL,
+        // 开启插件yml显示
+        yamlFlag = true,
+        editFlag = false,
+        dailyStatisticList = null
+    )
+
+    @Before
+    fun setUp2() {
+        whenever(client.get(ServiceMarketAtomResource::class)).thenReturn(serviceMarketAtomResource)
+        whenever(
+            client.get(ServiceMarketAtomResource::class).getAtomByCode(atomCode = atomCode, username = "")
+        ).thenReturn(
+            Result(genAtomVersion())
+        )
+
+        whenever(client.get(ServiceAtomResource::class)).thenReturn(serviceAtomResource)
+        whenever(
+            client.get(ServiceAtomResource::class).getInstalledAtoms(projectId)
+        ).thenReturn(
+            Result(genInstallAtomInfo())
+        )
     }
 
-    private fun genStages(): List<Stage> {
-        val stags = mutableListOf<Stage>()
-        for (seq in 1..3) {
-            val stageId = "stage-$seq"
-            stags.add(
-                Stage(containers = genContainers(stageId, seq = seq), id = stageId)
+    private fun genInstallAtomInfo(): List<InstalledAtom> {
+        return listOf(
+            InstalledAtom(
+                atomId = "atomId",
+                atomCode = atomCode,
+                name = "atomName",
+                logoUrl = "logoUrl",
+                classifyCode = "classifyCode",
+                classifyName = "classifyLanName",
+                category = "category",
+                summary = "summary",
+                publisher = "publisher",
+                installer = "installer",
+                installTime = "2020-01-01 01:01:01",
+                installType = StoreProjectTypeEnum.COMMON.name,
+                pipelineCnt = 0,
+                hasPermission = true
             )
-        }
-        return stags
-    }
-
-    private fun genContainers(stageId: String, seq: Int): List<Container> {
-        val jobs = mutableListOf<Container>()
-        if (seq == 1) {
-            val elements = mutableListOf<Element>(
-                ManualTriggerElement(canElementSkip = true, useLatestParameters = true)
-            )
-            jobs.add(TriggerContainer(id = "1", name = "trigger", elements = elements))
-        } else if (seq == 2) {
-            jobs.add(VMBuildContainer(baseOS = VMBaseOS.MACOS))
-        } else if (seq == 3) {
-
-        }
-        return jobs
+        )
     }
 
     @Test
     fun checkTriggerContainer() {
+        // trigger
+        val triggerStage = genStages(1, 1, 1)
+        checkPlugin.checkTriggerContainer(triggerStage[0])
     }
 
     @Test
     fun beforeDeleteElementInExistsModel() {
+        val existsModel = genModel(stageSize = 4, jobSize = 2, elementSize = 2)
+        checkPlugin.beforeDeleteElementInExistsModel(existsModel, null, BeforeDeleteParam(
+            userId, projectId, pipelineId
+        ))
     }
 
     @Test
     fun clearUpModel() {
+        val model = genModel(stageSize = 3, jobSize = 3, elementSize = 0)
+        checkPlugin.clearUpModel(model)
     }
 
     @Test
     fun checkJob() {
+        // trigger
+        val triggerContainers = genContainers(1, 1, 2)
+        checkPlugin.checkJob(triggerContainers[0], projectId, pipelineId, userId, false)
+        val allContainers = genContainers(2, 3, 2)
+        val mac = allContainers[0]
+        checkPlugin.checkJob(mac, projectId, pipelineId, userId, false)
+        val win = allContainers[1]
+        checkPlugin.checkJob(win, projectId, pipelineId, userId, false)
+        val linux = allContainers[2]
+        checkPlugin.checkJob(linux, projectId, pipelineId, userId, false)
+    }
+
+    @Test(expected = ErrorCodeException::class)
+    fun checkModelIntegrityEmptyElement() {
+        val model = genModel(stageSize = 4, jobSize = 2, elementSize = 0)
+        checkPlugin.checkModelIntegrity(model, projectId)
+    }
+
+    @Test
+    fun checkModelIntegrity() {
+        try {
+            checkModelIntegrityEmptyElement()
+        } catch (actual: ErrorCodeException) {
+            Assert.assertEquals(ProcessMessageCode.ERROR_EMPTY_JOB, actual.errorCode)
+        }
+
+        val fulModel = genModel(stageSize = 3, jobSize = 2, elementSize = 2)
+        checkPlugin.checkModelIntegrity(fulModel, projectId)
     }
 }

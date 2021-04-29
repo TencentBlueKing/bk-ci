@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.extend
 
+import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
@@ -129,6 +130,10 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
             val cCnt = containerCnt.computeIfPresent(c.getClassType()) { _, oldValue -> oldValue + 1 }
                 ?: containerCnt.computeIfAbsent(c.getClassType()) { 1 } // 第一次时出现1次
             ContainerBizRegistrar.getPlugin(c)?.check(c, cCnt)
+            Preconditions.checkTrue(c.elements.isNotEmpty(), ErrorCodeException(
+                defaultMessage = "流水线: Model信息不完整，Stage[{0}] Job[{1}]下没有插件",
+                errorCode = ProcessMessageCode.ERROR_EMPTY_JOB, params = arrayOf(stage.name!!, c.name)
+            ))
             c.elements.forEach { e ->
                 val eCnt = elementCnt.computeIfPresent(e.getAtomCode()) { _, oldValue -> oldValue + 1 }
                     ?: elementCnt.computeIfAbsent(e.getAtomCode()) { 1 } // 第一次时出现1次

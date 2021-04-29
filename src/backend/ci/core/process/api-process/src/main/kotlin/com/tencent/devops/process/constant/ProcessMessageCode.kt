@@ -122,6 +122,7 @@ object ProcessMessageCode {
     const val ERROR_FINALLY_STAGE = "2101064" // 流水线: 每个Model只能包含一个FinallyStage，并且处于最后位置
     const val ERROR_FINALLY_STAGE_JOB_CONDITION = "2101065" // 流水线: finally stage下的[{0}]Job运行条件配置错误: {1}
     const val ERROR_NORMAL_STAGE_JOB_CONDITION = "2101066" // 流水线: 普通stage下的[{0}]Job运行条件配置错误: {0}
+    const val ERROR_EMPTY_JOB = "2101067" // 流水线: Model信息不完整，Stage[{0}] Job[{1}]下没有插件
 
     // 通用参数错误
     const val ERROR_RETRY_3_FAILED = "2101989" // 重试3次失败
