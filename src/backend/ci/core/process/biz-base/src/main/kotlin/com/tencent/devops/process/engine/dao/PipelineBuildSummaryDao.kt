@@ -114,16 +114,23 @@ class PipelineBuildSummaryDao {
         }
     }
 
-    fun updateBuildNum(dslContext: DSLContext, pipelineId: String, buildNum: Int = 0): Int {
+    fun updateBuildNum(
+        dslContext: DSLContext,
+        pipelineId: String,
+        buildNum: Int = 0,
+        buildNumAlias: String? = null
+    ): Int {
 
         with(T_PIPELINE_BUILD_SUMMARY) {
             if (buildNum == 0) {
                 dslContext.update(this)
                     .set(BUILD_NUM, BUILD_NUM + 1)
+                    .set(BUILD_NUM_ALIAS, buildNumAlias)
                     .where(PIPELINE_ID.eq(pipelineId)).execute()
             } else {
                 dslContext.update(this)
                     .set(BUILD_NUM, buildNum)
+                    .set(BUILD_NUM_ALIAS, buildNumAlias)
                     .where(PIPELINE_ID.eq(pipelineId)).execute()
             }
         }
@@ -457,6 +464,7 @@ class PipelineBuildSummaryDao {
             T_PIPELINE_SETTING.DESC,
             T_PIPELINE_SETTING.RUN_LOCK_TYPE,
             T_PIPELINE_BUILD_SUMMARY.BUILD_NUM,
+            T_PIPELINE_BUILD_SUMMARY.BUILD_NUM_ALIAS,
             T_PIPELINE_BUILD_SUMMARY.BUILD_NO,
             T_PIPELINE_BUILD_SUMMARY.FINISH_COUNT,
             T_PIPELINE_BUILD_SUMMARY.RUNNING_COUNT,

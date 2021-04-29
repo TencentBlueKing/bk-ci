@@ -32,7 +32,6 @@ import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -161,8 +160,6 @@ import java.time.Duration
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.time.temporal.TemporalAccessor
-import java.util.Calendar
-import java.util.Date
 
 /**
  * 流水线运行时相关的服务
@@ -634,7 +631,8 @@ class PipelineRuntimeService @Autowired constructor(
                     buildMsg = buildMsg,
                     startType = StartType.toStartType(trigger),
                     channelCode = ChannelCode.valueOf(channel)
-                )
+                ),
+                buildNumAlias = buildNumAlias
             )
         }
     }
@@ -1108,15 +1106,20 @@ class PipelineRuntimeService @Autowired constructor(
                 // 重置状态和人
                 buildDetailDao.update(transactionContext, buildId, JsonUtil.toJson(fullModel), startBuildStatus, "")
             } else { // 创建构建记录
-                // 构建号递增
-                val buildNum = pipelineBuildSummaryDao.updateBuildNum(transactionContext, pipelineInfo.pipelineId)
                 val buildNumAlias = if (!buildNumRule.isNullOrBlank()) {
-                    pipelineRuleService.parsePipelineRule(
+                    val parsedValue = pipelineRuleService.parsePipelineRule(
                         pipelineId = pipelineId,
                         busCode = PipelineRuleBusCodeEnum.BUILD_NUM.name,
                         ruleStr = buildNumRule
                     )
+                    if (parsedValue.length > 256) parsedValue.substring(0, 256) else parsedValue
                 } else null
+                // 构建号递增
+                val buildNum = pipelineBuildSummaryDao.updateBuildNum(
+                    dslContext = transactionContext,
+                    pipelineId = pipelineInfo.pipelineId,
+                    buildNumAlias = buildNumAlias
+                )
                 pipelineBuildDao.create(
                     dslContext = transactionContext,
                     projectId = pipelineInfo.projectId,
@@ -1160,13 +1163,12 @@ class PipelineRuntimeService @Autowired constructor(
                         )
                     )
                 }
-                buildVariableService.saveVariable(
+                buildVariableService.batchSetVariable(
                     dslContext = transactionContext,
                     projectId = pipelineInfo.projectId,
                     pipelineId = pipelineInfo.pipelineId,
                     buildId = buildId,
-                    name = PIPELINE_BUILD_NUM,
-                    value = buildNum
+                    variables = variables
                 )
                 // 写入BuildNo
                 if (currentBuildNo != null && actionType == ActionType.START) {
