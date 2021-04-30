@@ -40,6 +40,7 @@ import com.tencent.devops.common.ci.image.Pool
 import com.tencent.devops.common.ci.task.DockerRunDevCloudTask
 import com.tencent.devops.common.ci.task.GitCiCodeRepoInput
 import com.tencent.devops.common.ci.task.GitCiCodeRepoTask
+import com.tencent.devops.common.ci.task.ServiceJobDevCloudInput
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
 import com.tencent.devops.common.ci.v2.Job
 import com.tencent.devops.common.ci.v2.JobRunsOnType
@@ -74,6 +75,7 @@ import com.tencent.devops.common.pipeline.type.gitci.GitCIDispatchType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.gitci.client.ScmClient
+import com.tencent.devops.gitci.dao.GitCIServicesConfDao
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
@@ -122,6 +124,7 @@ class TriggerBuildService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val gitCISettingDao: GitCISettingDao,
     private val gitCIParameterUtils: GitCIParameterUtils,
+    private val gitServicesConfDao: GitCIServicesConfDao,
     redisOperation: RedisOperation,
     scmClient: ScmClient,
     gitPipelineResourceDao: GitPipelineResourceDao,
@@ -179,8 +182,6 @@ class TriggerBuildService @Autowired constructor(
             val containerList = mutableListOf<Container>()
             stage.jobs.forEachIndexed { jobIndex, job ->
                 var elementList = mutableListOf<Element>()
-
-
 
                 if (job.runsOn[0] == JobRunsOnType.DOCKER_ON_VM.type) {
                     // 构建环境容器每个job的第一个插件都是拉代码
@@ -331,12 +332,8 @@ class TriggerBuildService @Autowired constructor(
         gitProjectConf: GitRepositoryConf,
         userId: String
     ): MutableList<Element> {
-        val elementList = mutableListOf<Element>()
-
-        // 解析services
-        if (job.service != null) {
-            // val (imageName, imageTag) = it.parseImage()
-        }
+        // 解析service
+        val elementList = makeServiceElementList(job)
 
         // 解析job steps
         job.steps!!.forEach { step ->
@@ -367,6 +364,49 @@ class TriggerBuildService @Autowired constructor(
             if (element is MarketBuildAtomElement) {
                 logger.info("install market atom: ${element.getAtomCode()}")
                 installMarketAtom(gitProjectConf, userId, element.getAtomCode())
+            }
+        }
+
+        return elementList
+    }
+
+    private fun makeServiceElementList(job: Job): MutableList<Element> {
+        val elementList = mutableListOf<Element>()
+
+        // 解析services
+        if (job.services != null) {
+            job.services!!.forEach {
+                val (imageName, imageTag) = ScriptYmlUtils.parseServiceImage(it.image)
+
+                val record = gitServicesConfDao.get(dslContext, imageName, imageTag) ?: throw RuntimeException("Git CI没有此镜像版本记录. ${it.image}")
+                if (!record.enable) {
+                    throw RuntimeException("镜像版本不可用")
+                }
+
+                val params = if (it.with.password.isNullOrBlank()) {
+                    "{\"env\":{\"MYSQL_ALLOW_EMPTY_PASSWORD\":\"yes\"}}"
+                } else {
+                    "{\"env\":{\"MYSQL_ROOT_PASSWORD\":\"${it.with.password}\"}}"
+                }
+
+                val serviceJobDevCloudInput = ServiceJobDevCloudInput(
+                    it.image,
+                    record.repoUrl,
+                    record.repoUsername,
+                    record.repoPwd,
+                    params,
+                    record.env
+                )
+                val servicesElement = MarketBuildAtomElement(
+                    name = "创建${it.image}服务",
+                    id = null,
+                    status = null,
+                    atomCode = ServiceJobDevCloudTask.atomCode,
+                    version = "1.*",
+                    data = mapOf("input" to serviceJobDevCloudInput, "namespace" to (it.serviceId ?: ""))
+                )
+
+                elementList.add(servicesElement)
             }
         }
 

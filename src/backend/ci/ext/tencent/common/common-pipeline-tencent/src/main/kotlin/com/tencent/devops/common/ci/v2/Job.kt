@@ -39,7 +39,7 @@ data class Job(
     @JsonProperty("runs-on")
     val runsOn: List<String> = listOf(JobRunsOnType.DOCKER_ON_VM.type),
     val container: Container?,
-    val services: Map<String, Service>? = null,
+    val services: List<Service>? = null,
     @JsonProperty("if")
     val ifField: String? = null,
     val steps: List<Step>?,
@@ -64,12 +64,13 @@ data class Credentials(
 )
 
 data class Service(
+    val serviceId: String? = "",
     val image: String,
     val with: ServiceWith
 )
 
 data class ServiceWith(
-    val password: String
+    val password: String? = ""
 )
 data class Strategy(
     val matrix: Any?,

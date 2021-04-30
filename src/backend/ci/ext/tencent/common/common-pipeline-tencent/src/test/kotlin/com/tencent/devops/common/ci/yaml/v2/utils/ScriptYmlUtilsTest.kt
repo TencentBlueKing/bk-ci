@@ -55,7 +55,7 @@ class ScriptYmlUtilsTest {
 
     @Test
     fun formatYaml() {
-        val classPathResource = ClassPathResource("Sample1.yml")
+        val classPathResource = ClassPathResource("test.yml")
         val inputStream: InputStream = classPathResource.inputStream
         val isReader = InputStreamReader(inputStream)
 
@@ -67,49 +67,12 @@ class ScriptYmlUtilsTest {
         }
 
         // println(sb.toString())
-
         val obj = YamlUtil.getObjectMapper().readValue(
             ScriptYmlUtils.formatYaml(sb.toString()),
             PreScriptBuildYaml::class.java
         )
 
-        if (obj.triggerOn != null && obj.triggerOn!!.push != null) {
-            val push = obj.triggerOn!!.push
-
-            var pushRule: PushRule?
-            try {
-                pushRule = YamlUtil.getObjectMapper().readValue(
-                    JsonUtil.toJson(push!!),
-                    PushRule::class.java
-                )
-
-                println(JsonUtil.toJson(pushRule))
-            } catch (e: MismatchedInputException) {
-                try {
-                    println("push: " + JsonUtil.toJson(push!!))
-                    val pushObj = YamlUtil.getObjectMapper().readValue(
-                        JsonUtil.toJson(push!!),
-                        List::class.java
-                    ) as ArrayList<String>
-
-                    pushRule = PushRule(
-                        branches = pushObj,
-                        branchesIgnore = null,
-                        paths = null,
-                        pathsIgnore = null,
-                        users = null,
-                        usersIgnore = null
-                    )
-                    println("array: " + JsonUtil.toJson(pushObj))
-                } catch (e: Exception) {
-                    println(e)
-                    pushRule = null
-                }
-
-            }
-
-            println(JsonUtil.toJson(pushRule!!))
-        }
+        println("1111")
     }
 
     @Test

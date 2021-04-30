@@ -54,6 +54,7 @@ import com.tencent.devops.common.ci.v2.JobRunsOnType
 import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreStage
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
+import com.tencent.devops.common.ci.v2.Service
 import com.tencent.devops.common.ci.v2.Step
 import org.slf4j.LoggerFactory
 import org.yaml.snakeyaml.Yaml
@@ -256,13 +257,23 @@ object ScriptYmlUtils {
                 u.container
             }
 
+            val services = mutableListOf<Service>()
+            u.services?.forEach { key, value ->
+                services.add(
+                    Service(
+                        serviceId = key,
+                        image = value.image,
+                        with = value.with
+                ))
+            }
+
             jobs.add(
                 Job(
                     id = t,
                     name = u.name,
                     runsOn = u.runsOn ?: listOf(JobRunsOnType.DOCKER_ON_VM.type),
                     container = container,
-                    services = u.services,
+                    services = services,
                     ifField = u.ifField,
                     steps = formatSteps(u.steps),
                     timeoutMinutes = u.timeoutMinutes,
@@ -316,7 +327,7 @@ object ScriptYmlUtils {
         preStageList.forEach {
             stageList.add(
                 Stage(
-                    id = it.id ?: "",
+                    id = it.id ?: randomString(stageNamespace),
                     name = it.name,
                     label = it.label,
                     ifField = it.ifField,
@@ -520,37 +531,13 @@ object ScriptYmlUtils {
         return jsonWriter.writeValueAsString(obj)
     }
 
-/*    fun getCIBuildYamlSchema(): String {
-        val mapper = ObjectMapper()
-        mapper.configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true)
-        val schema = mapper.generateJsonSchema(CIBuildYaml::class.java)
-        schema.schemaNode.with("properties").with("steps").put("item", getAbstractTaskSchema())
-        schema.schemaNode.with("properties").with("services").put("item", getAbstractServiceSchema())
-        schema.schemaNode.with("properties")
-            .with("stages")
-            .with("items")
-            .with("properties")
-            .with("stage")
-            .with("items")
-            .with("properties")
-            .with("job")
-            .with("properties")
-            .with("steps")
-            .put("item", getAbstractTaskSchema())
-        return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(schema)
+    fun parseServiceImage(image:String): Pair<String, String> {
+        val list = image.split(":")
+        if (list.size != 2) {
+            throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "GITCI Service镜像格式非法")
+        }
+        return Pair(list[0], list[1])
     }
-
-    fun getAbstractTaskSchema(): ObjectNode {
-        val mapper = ObjectMapper()
-        mapper.configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true)
-        return mapper.generateJsonSchema(AbstractTask::class.java).schemaNode
-    }
-
-    fun getAbstractServiceSchema(): ObjectNode {
-        val mapper = ObjectMapper()
-        mapper.configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true)
-        return mapper.generateJsonSchema(AbstractService::class.java).schemaNode
-    }*/
 
     private fun randomString(flag: String): String {
         val random = Random()
