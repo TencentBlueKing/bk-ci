@@ -610,7 +610,6 @@
                 const knownErrorList = JSON.parse(localStorage.getItem('pipelineKnowError')) || {}
                 Object.keys(data).map(pipelineId => {
                     const item = data[pipelineId]
-                    console.log(item, 11111111)
                     if (item) {
                         const status = statusMap[item.latestBuildStatus]
                         let feConfig = {

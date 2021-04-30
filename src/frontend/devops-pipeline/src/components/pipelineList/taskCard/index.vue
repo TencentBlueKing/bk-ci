@@ -179,7 +179,6 @@
              * 点击content部分的回调
              */
             cardContentClick () {
-                console.log(this.config)
                 const { config } = this
 
                 if (config.status === 'not_built') {
