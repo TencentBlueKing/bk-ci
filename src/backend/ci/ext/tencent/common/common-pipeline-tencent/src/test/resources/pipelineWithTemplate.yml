@@ -86,7 +86,7 @@ stages:
           - job1
           - job2
       template:
-        template: templates/jobs.yml
+        name: templates/jobs.yml
         parameters:
           username: JOB
       job_id_2:
@@ -109,9 +109,10 @@ on-fail:
         echo "do something when the upstream fails"
 
 extends:
-  template: epc-build.yml
+  template: templates/pipeline.yml
   parameters:
     repo: "hello/my-first-repo"
+
 resources:
   repositories:
     - repository: epc-ieg-bk-common

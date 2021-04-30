@@ -31,21 +31,25 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.ci.v2.Extends
 import com.tencent.devops.common.ci.v2.Notices
 import com.tencent.devops.common.ci.v2.OnFail
+import com.tencent.devops.common.ci.v2.PreJob
+import com.tencent.devops.common.ci.v2.PreStage
+import com.tencent.devops.common.ci.v2.PreTriggerOn
 import com.tencent.devops.common.ci.v2.Resources
 import com.tencent.devops.common.ci.v2.Stage
+import com.tencent.devops.common.ci.v2.Step
 import com.tencent.devops.common.ci.v2.TriggerOn
 import com.tencent.devops.common.ci.v2.Variable
 
 data class PipelineTemplate(
     val parameters: List<Parameters>?,
-    val name: String?,
-    val label: String? = null,
-    val triggerOn: TriggerOn?,
-    val variables: Map<String, Variable>?,
-    val stages: List<Stage>,
+    var label: String? = null,
+    var variables: Map<String, Variable>?,
+    var stages: List<PreStage>? =null,
+    var jobs: Map<String, PreJob>? = null,
+    var steps: List<Step>? = null,
     @JsonProperty("on-fail")
-    val onFail: OnFail?,
-    val extends: Extends?,
-    val resource: Resources?,
-    val notices: List<Notices>?
+    var onFail: OnFail?,
+    var extends: Extends?,
+    var resource: Resources?,
+    var notices: List<Notices>?
 )

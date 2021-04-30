@@ -41,7 +41,12 @@ import java.io.InputStreamReader
 class ScriptYmlUtilsTest {
 
     val testYaml = "pipelineWithTemplate.yml"
-    val templateYamlList = listOf("templates/stages.yml", "templates/jobs.yml", "templates/steps.yml")
+    val templateYamlList = listOf(
+        "templates/stages.yml",
+        "templates/jobs.yml",
+        "templates/steps.yml",
+        "templates/pipeline.yml"
+    )
 
     @Test
     fun test() {

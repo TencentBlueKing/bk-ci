@@ -32,5 +32,6 @@ enum class TemplateType {
     PARAMETER,
     STAGE,
     JOB,
-    STEP
+    STEP,
+    PIPELINE
 }

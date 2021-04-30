@@ -41,11 +41,14 @@ import com.tencent.devops.common.ci.v2.Service
 import com.tencent.devops.common.ci.v2.ServiceWith
 import com.tencent.devops.common.ci.v2.Step
 import com.tencent.devops.common.ci.v2.Strategy
+import com.tencent.devops.common.ci.v2.Variable
 import com.tencent.devops.common.ci.v2.templates.JobsTemplate
 import com.tencent.devops.common.ci.v2.templates.Parameters
+import com.tencent.devops.common.ci.v2.templates.PipelineTemplate
 import com.tencent.devops.common.ci.v2.templates.StagesTemplate
 import com.tencent.devops.common.ci.v2.templates.StepsTemplate
 import com.tencent.devops.common.ci.v2.templates.TemplateType
+import com.tencent.devops.common.ci.v2.templates.VariablesTemplate
 import javax.ws.rs.core.Response
 
 class YamlTemplateUtils(
@@ -54,8 +57,6 @@ class YamlTemplateUtils(
 ) {
 
     fun replaceTemplate(): PreScriptBuildYaml {
-        
-
         return replaceStageTemplate()
     }
 
@@ -66,75 +67,124 @@ class YamlTemplateUtils(
                 name = name,
                 label = label,
                 triggerOn = triggerOn,
-                variables = variables,
                 onFail = onFail,
                 extends = extends,
                 resource = resource,
                 notices = notices
             )
         }
-        when {
-            yamlObject.steps != null -> {
-                val stepList = mutableListOf<Step>()
-                yamlObject.steps.forEach { step ->
-                    replaceStepTemplate(step, templates)
-                }
-                preYamlObject.steps = stepList
-            }
-            yamlObject.jobs != null -> {
-                val jobMap = mutableMapOf<String, PreJob>()
-                yamlObject.jobs.forEach { job ->
-                    val newJob = replaceJobTemplate(job, templates)
-                    if (job.key == "template" && newJob.keys.contains(job.key)) {
-                        throw RuntimeException("Job template's id ${job.key} Duplicate with Job id")
-                    } else {
-                        jobMap.putAll(newJob)
-                    }
-                }
-            }
-            yamlObject.stages != null -> {
-                val stageList = mutableListOf<PreStage>()
-                yamlObject.stages.forEach { stage ->
-                    if ("template" in stage.keys) {
-                        val path = stage["template"].toString()
-                        val parameters = transNullValue<Map<String, String?>>(
-                            key = "parameters",
-                            map = stage
-                        )
-                        val template = parseTemplateParameters(path, templates[path], parameters, TemplateType.STAGE)
-                        val templateObject = YamlUtil.getObjectMapper().readValue(template, StagesTemplate::class.java)
-                        stageList.addAll(templateObject.stages)
-                    } else {
-                        stageList.add(
-                            getStage(stage, templates)
-                        )
-                    }
-                }
-                preYamlObject.stages = stageList
-            }
-            else -> {
-                throw RuntimeException("yaml file: need stages/jobs/steps")
+
+        if (yamlObject.extends != null) {
+            val path = yamlObject.extends.template
+            val parameters = yamlObject.extends.parameters
+            val template = parseTemplateParameters(path, templates[path], parameters, TemplateType.PIPELINE)
+            val templateObject = YamlUtil.getObjectMapper().readValue(template, PipelineTemplate::class.java)
+            with(templateObject) {
+                preYamlObject.label = label
+                preYamlObject.variables = variables
+                preYamlObject.onFail = onFail
+                preYamlObject.extends = extends
+                preYamlObject.resource = resource
+                preYamlObject.notices = notices
+                preYamlObject.stages = stages
+                preYamlObject.jobs = jobs
+                preYamlObject.steps = steps
             }
         }
+        if (yamlObject.variables != null) {
+            val variableMap = mutableMapOf<String, Variable>()
+            yamlObject.variables.forEach { variable ->
+                val newVariable = replaceVariableTemplate(variable, templates)
+                if (variable.key == "template" && newVariable.keys.contains(variable.key)) {
+                    throw RuntimeException("Job template's id ${variable.key} Duplicate with Job id")
+                } else {
+                    variableMap.putAll(newVariable)
+                }
+            }
+            preYamlObject.variables = variableMap
+        }
+        if (yamlObject.steps != null) {
+            val stepList = mutableListOf<Step>()
+            yamlObject.steps.forEach { step ->
+                stepList.addAll(replaceStepTemplate(step, templates))
+            }
+            preYamlObject.steps = stepList
+        }
+        if (yamlObject.jobs != null) {
+            val jobMap = mutableMapOf<String, PreJob>()
+            yamlObject.jobs.forEach { job ->
+                val newJob = replaceJobTemplate(job, templates)
+                if (job.key == "template" && newJob.keys.contains(job.key)) {
+                    throw RuntimeException("Job template's id ${job.key} Duplicate with Job id")
+                } else {
+                    jobMap.putAll(newJob)
+                }
+            }
+            preYamlObject.jobs = jobMap
+        }
+        if (yamlObject.stages != null) {
+            val stageList = mutableListOf<PreStage>()
+            yamlObject.stages.forEach { stage ->
+                stageList.addAll(replaceStageTemplate(stage, templates))
+            }
+            preYamlObject.stages = stageList
+        }
+
         return preYamlObject
     }
 
-    private fun replaceStepTemplate(
-        step: Map<String, Any>,
+    private fun replaceVariableTemplate(
+        variable: Map.Entry<String, Any>,
         templates: Map<String, String?>
-    ): List<Step> {
-        return if ("template" in step.keys) {
-            val path = step["template"].toString()
+    ): Map<String, Variable> {
+        var isString = false
+        return if (variable.key == "template") {
+            val path = try {
+                (variable.value as Map<String, Any>)["name"]
+            } catch (e: Exception) {
+                isString = true
+                variable.value.toString()
+            }
+            val parameters = if (isString) {
+                null
+            } else {
+                transNullValue<Map<String, String?>>(
+                    key = "parameters",
+                    map = variable.value as Map<String, Any>
+                )
+            }
+            val template =
+                parseTemplateParameters(
+                    path = path.toString(),
+                    template = templates[path],
+                    parameters = parameters,
+                    templateType = TemplateType.VARIABLE
+                )
+            val templateObject = YamlUtil.getObjectMapper().readValue(template, VariablesTemplate::class.java)
+            templateObject.variables
+        } else {
+            mapOf(
+                variable.key to getVariable((variable.value as Map<String, Any>))
+            )
+        }
+    }
+
+    private fun replaceStageTemplate(
+        stage: Map<String, Any>,
+        templates: Map<String, String?>
+    ): List<PreStage> {
+        return if ("template" in stage.keys) {
+            val path = stage["template"].toString()
             val parameters = transNullValue<Map<String, String?>>(
                 key = "parameters",
-                map = step
+                map = stage
             )
-            val template = parseTemplateParameters(path, templates[path], parameters, TemplateType.STEP)
-            val templateObject = YamlUtil.getObjectMapper().readValue(template, StepsTemplate::class.java)
-            templateObject.steps
+            val template = parseTemplateParameters(path, templates[path], parameters, TemplateType.STAGE)
+            val templateObject = YamlUtil.getObjectMapper().readValue(template, StagesTemplate::class.java)
+            templateObject.stages
         } else {
             listOf(
-                getStep(step)
+                getStage(stage, templates)
             )
         }
     }
@@ -146,7 +196,7 @@ class YamlTemplateUtils(
         var isString = false
         return if (job.key == "template") {
             val path = try {
-                (job.value as Map<String, Any>)["template"]
+                (job.value as Map<String, Any>)["name"]
             } catch (e: Exception) {
                 isString = true
                 job.value.toString()
@@ -175,6 +225,26 @@ class YamlTemplateUtils(
         }
     }
 
+    private fun replaceStepTemplate(
+        step: Map<String, Any>,
+        templates: Map<String, String?>
+    ): List<Step> {
+        return if ("template" in step.keys) {
+            val path = step["template"].toString()
+            val parameters = transNullValue<Map<String, String?>>(
+                key = "parameters",
+                map = step
+            )
+            val template = parseTemplateParameters(path, templates[path], parameters, TemplateType.STEP)
+            val templateObject = YamlUtil.getObjectMapper().readValue(template, StepsTemplate::class.java)
+            templateObject.steps
+        } else {
+            listOf(
+                getStep(step)
+            )
+        }
+    }
+
     // 为模板中的变量赋值
     private fun parseTemplateParameters(
         path: String,
@@ -187,6 +257,9 @@ class YamlTemplateUtils(
         }
         var newParameters: MutableList<Parameters>? = null
         when (templateType) {
+            TemplateType.PIPELINE -> {
+                newParameters = getPipelineTemplate(path, template).parameters?.toMutableList()
+            }
             TemplateType.VARIABLE -> {
 
             }
@@ -220,7 +293,15 @@ class YamlTemplateUtils(
         return ScriptYmlUtils.parseVariableValue(template, parametersMap)!!
     }
 
-    private fun getStageTemplate(path: String, template: String?): StagesTemplate {
+    private fun getPipelineTemplate(path: String, template: String): PipelineTemplate {
+        return try {
+            YamlUtil.getObjectMapper().readValue(template, PipelineTemplate::class.java)
+        } catch (e: Exception) {
+            throw RuntimeException("$path wrong format！ ${e.message}")
+        }
+    }
+
+    private fun getStageTemplate(path: String, template: String): StagesTemplate {
         return try {
             YamlUtil.getObjectMapper().readValue(template, StagesTemplate::class.java)
         } catch (e: Exception) {
@@ -242,6 +323,17 @@ class YamlTemplateUtils(
         } catch (e: Exception) {
             throw RuntimeException("$path wrong format！")
         }
+    }
+
+    private fun getVariable(variable: Map<String, Any>): Variable {
+        return Variable(
+            value = variable["value"].toString(),
+            readonly = if (variable["readonly"] == null) {
+                null
+            } else {
+                variable["readonly"].toString().toBoolean()
+            }
+        )
     }
 
 

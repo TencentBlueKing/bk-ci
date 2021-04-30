@@ -352,7 +352,7 @@ object ScriptYmlUtils {
         if (preScriptBuildYaml.triggerOn != null) {
             thisTriggerOn =
                 formatTriggerOn(
-                    preScriptBuildYaml.triggerOn
+                    preScriptBuildYaml.triggerOn!!
                 )
         }
 

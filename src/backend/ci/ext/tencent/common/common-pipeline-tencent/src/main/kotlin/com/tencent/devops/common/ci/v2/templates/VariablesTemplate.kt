@@ -30,5 +30,6 @@ package com.tencent.devops.common.ci.v2.templates
 import com.tencent.devops.common.ci.v2.Variable
 
 data class VariablesTemplate(
-    val variables: List<Variable>
+    val parameters: List<Parameters>?,
+    val variables: Map<String, Variable>
 )

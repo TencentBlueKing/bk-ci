@@ -39,17 +39,17 @@ import com.fasterxml.jackson.annotation.JsonProperty
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class PreScriptBuildYaml(
-    val version: String?,
-    val name: String?,
-    val label: String? = null,
-    val triggerOn: PreTriggerOn?,
-    val variables: Map<String, Variable>?,
-    var stages: List<PreStage>? =null,
+    var version: String?,
+    var name: String?,
+    var label: String? = null,
+    var triggerOn: PreTriggerOn?,
+    var variables: Map<String, Variable>? = null,
+    var stages: List<PreStage>? = null,
     var jobs: Map<String, PreJob>? = null,
     var steps: List<Step>? = null,
     @JsonProperty("on-fail")
-    val onFail: OnFail?,
-    val extends: Extends?,
-    val resource: Resources?,
-    val notices: List<Notices>?
+    var onFail: OnFail?,
+    var extends: Extends?,
+    var resource: Resources?,
+    var notices: List<Notices>?
 )

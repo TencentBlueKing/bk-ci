@@ -43,7 +43,7 @@ data class PreTemplateScriptBuildYaml(
     val name: String?,
     val label: String? = null,
     val triggerOn: PreTriggerOn?,
-    val variables: Map<String, Variable>?,
+    val variables: Map<String, Any>?,
     val stages: List<Map<String, Any>>?,
     val jobs: Map<String, Any>? = null,
     val steps: List<Map<String, Any>>? = null,
