@@ -141,7 +141,7 @@ class StartContainerStageCmd(
     }
 
     private fun checkContainerFailure(c: PipelineBuildContainer): Boolean {
-        return c.status.isFailure() && c.controlOption?.jobControlOption?.continueWhenFailed == true
+        return c.status.isFailure() && c.controlOption?.jobControlOption?.continueWhenFailed != true
     }
 
     private fun sendBuildContainerEvent(
