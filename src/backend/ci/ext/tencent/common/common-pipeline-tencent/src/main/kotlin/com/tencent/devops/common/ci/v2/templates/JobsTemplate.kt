@@ -27,7 +27,6 @@
 
 package com.tencent.devops.common.ci.v2.templates
 
-import com.tencent.devops.common.ci.v2.Job
 import com.tencent.devops.common.ci.v2.PreJob
 
 data class JobsTemplate(

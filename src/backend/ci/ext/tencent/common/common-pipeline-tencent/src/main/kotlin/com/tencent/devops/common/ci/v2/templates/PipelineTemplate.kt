@@ -33,18 +33,15 @@ import com.tencent.devops.common.ci.v2.Notices
 import com.tencent.devops.common.ci.v2.OnFail
 import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreStage
-import com.tencent.devops.common.ci.v2.PreTriggerOn
 import com.tencent.devops.common.ci.v2.Resources
-import com.tencent.devops.common.ci.v2.Stage
 import com.tencent.devops.common.ci.v2.Step
-import com.tencent.devops.common.ci.v2.TriggerOn
 import com.tencent.devops.common.ci.v2.Variable
 
 data class PipelineTemplate(
     val parameters: List<Parameters>?,
     var label: String? = null,
     var variables: Map<String, Variable>?,
-    var stages: List<PreStage>? =null,
+    var stages: List<PreStage>? = null,
     var jobs: Map<String, PreJob>? = null,
     var steps: List<Step>? = null,
     @JsonProperty("on-fail")

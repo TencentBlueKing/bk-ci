@@ -29,10 +29,6 @@ package com.tencent.devops.common.ci.v2
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
-import com.tencent.devops.common.ci.v2.MrRule
-import com.tencent.devops.common.ci.v2.PushRule
-import com.tencent.devops.common.ci.v2.SchedulesRule
-import com.tencent.devops.common.ci.v2.TagRule
 
 /**
  * model
@@ -45,7 +41,6 @@ data class TriggerOn(
     val mr: MrRule?,
     val schedules: SchedulesRule? = null
 )
-
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)

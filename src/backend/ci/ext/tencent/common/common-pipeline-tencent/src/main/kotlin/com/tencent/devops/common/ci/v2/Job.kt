@@ -75,12 +75,12 @@ data class ServiceWith(
 data class Strategy(
     val matrix: Any?,
     @JsonProperty("fast-kill")
-    val fastKill: Boolean? =false,
+    val fastKill: Boolean? = false,
     @JsonProperty("max-parallel")
     val maxParallel: String?
 )
 
-enum class JobRunsOnType(val type: String){
+enum class JobRunsOnType(val type: String) {
     DOCKER_ON_VM("docker-on-vm"),
     SERVER("server")
 }

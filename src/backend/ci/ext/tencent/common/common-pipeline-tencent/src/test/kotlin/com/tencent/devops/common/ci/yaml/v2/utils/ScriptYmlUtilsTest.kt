@@ -27,14 +27,10 @@
 
 package com.tencent.devops.common.ci.yaml.v2.utils
 
-import com.fasterxml.jackson.databind.exc.MismatchedInputException
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.PreScriptBuildYaml
-import com.tencent.devops.common.ci.v2.PushRule
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import org.junit.After
-import org.junit.Assert.*
 import org.junit.Before
 import org.junit.Test
 import org.springframework.core.io.ClassPathResource

@@ -37,7 +37,7 @@ data class Step(
     val uses: String?,
     val with: Map<String, Any>?,
     @JsonProperty("timeout-minutes")
-    val timeoutMinutes: String?,
+    val timeoutMinutes: Int?,
     @JsonProperty("continue-on-error")
     val continueOnError: Boolean?,
     @JsonProperty("retry-times")

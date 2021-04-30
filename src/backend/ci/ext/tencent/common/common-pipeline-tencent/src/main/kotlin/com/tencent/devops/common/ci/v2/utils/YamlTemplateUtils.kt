@@ -27,8 +27,6 @@
 
 package com.tencent.devops.common.ci.v2.utils
 
-import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.Container
 import com.tencent.devops.common.ci.v2.Credentials
@@ -36,7 +34,6 @@ import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreScriptBuildYaml
 import com.tencent.devops.common.ci.v2.PreStage
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
-import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.ci.v2.Service
 import com.tencent.devops.common.ci.v2.ServiceWith
 import com.tencent.devops.common.ci.v2.Step
@@ -49,7 +46,6 @@ import com.tencent.devops.common.ci.v2.templates.StagesTemplate
 import com.tencent.devops.common.ci.v2.templates.StepsTemplate
 import com.tencent.devops.common.ci.v2.templates.TemplateType
 import com.tencent.devops.common.ci.v2.templates.VariablesTemplate
-import javax.ws.rs.core.Response
 
 class YamlTemplateUtils(
     val yamlObject: PreTemplateScriptBuildYaml,
@@ -261,10 +257,8 @@ class YamlTemplateUtils(
                 newParameters = getPipelineTemplate(path, template).parameters?.toMutableList()
             }
             TemplateType.VARIABLE -> {
-
             }
             TemplateType.PARAMETER -> {
-
             }
             TemplateType.STAGE -> {
                 newParameters = getStageTemplate(path, template).parameters?.toMutableList()
@@ -327,42 +321,33 @@ class YamlTemplateUtils(
 
     private fun getVariable(variable: Map<String, Any>): Variable {
         return Variable(
-            value = variable["value"].toString(),
-            readonly = if (variable["readonly"] == null) {
-                null
-            } else {
-                variable["readonly"].toString().toBoolean()
-            }
+            value = variable["value"]?.toString(),
+            readonly = getNullValue("readonly", variable)?.toBoolean()
         )
     }
 
-
     private fun getStep(step: Map<String, Any>): Step {
         return Step(
-            name = step["name"].toString(),
-            id = step["id"].toString(),
-            ifFiled = step["if"].toString(),
-            uses = step["uses"].toString(),
+            name = step["name"]?.toString(),
+            id = step["id"]?.toString(),
+            ifFiled = step["if"]?.toString(),
+            uses = step["uses"]?.toString(),
             with = if (step["with"] == null) {
                 mapOf()
             } else {
                 step["with"] as Map<String, Any>
             },
-            timeoutMinutes = step["timeoutMinutes"].toString(),
-            continueOnError = if (step["with"] == null) {
-                null
-            } else {
-                step["with"].toString().toBoolean()
-            },
-            retryTimes = step["retryTimes"].toString(),
-            env = step["env"].toString(),
-            run = step["run"].toString()
+            timeoutMinutes = getNullValue("timeoutMinutes", step)?.toInt(),
+            continueOnError = getNullValue("with", step)?.toBoolean(),
+            retryTimes = step["retryTimes"]?.toString(),
+            env = step["env"]?.toString(),
+            run = step["run"]?.toString()
         )
     }
 
     private fun getJob(job: Map<String, Any>, templates: Map<String, String?>): PreJob {
         return PreJob(
-            name = job["name"].toString(),
+            name = job["name"]?.toString(),
             runsOn = if (job["runsOn"] == null) {
                 null
             } else {
@@ -378,7 +363,7 @@ class YamlTemplateUtils(
             } else {
                 getService(job["services"]!!)
             },
-            ifField = job["if"].toString(),
+            ifField = job["if"]?.toString(),
             steps = if (job["steps"] == null) {
                 null
             } else {
@@ -389,21 +374,13 @@ class YamlTemplateUtils(
                 }
                 list
             },
-            timeoutMinutes = if (job["timeoutMinutes"] == null) {
-                null
-            } else {
-                job["timeoutMinutes"].toString().toInt()
-            },
+            timeoutMinutes = getNullValue("timeoutMinutes", job)?.toInt(),
             env = if (job["env"] == null) {
                 emptyMap()
             } else {
                 job["env"] as Map<String, String>
             },
-            continueOnError = if (job["continueOnError"] == null) {
-                null
-            } else {
-                job["continueOnError"].toString().toBoolean()
-            },
+            continueOnError = getNullValue("continueOnError", job)?.toBoolean(),
             strategy = if (job["strategy"] == null) {
                 null
             } else {
@@ -419,15 +396,11 @@ class YamlTemplateUtils(
 
     private fun getStage(stage: Map<String, Any>, templates: Map<String, String?>): PreStage {
         return PreStage(
-            name = stage["name"].toString(),
-            id = stage["id"].toString(),
-            label = stage["label"].toString(),
-            ifField = stage["if"].toString(),
-            fastKill = if (stage["fastKill"] == null) {
-                null
-            } else {
-                stage["fastKill"].toString().toBoolean()
-            },
+            name = stage["name"]?.toString(),
+            id = stage["id"]?.toString(),
+            label = stage["label"]?.toString(),
+            ifField = stage["if"]?.toString(),
+            fastKill = getNullValue("fastKill", stage)?.toBoolean(),
             jobs = if (stage["jobs"] == null) {
                 null
             } else {

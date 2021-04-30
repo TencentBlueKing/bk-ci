@@ -77,7 +77,6 @@ object ScriptYmlUtils {
     private const val jobNamespace = "job-"
     private const val stepNamespace = "step-"
 
-
     /**
      * 1、解决锚点
      * 2、yml string层面的格式化填充
@@ -531,7 +530,7 @@ object ScriptYmlUtils {
         return jsonWriter.writeValueAsString(obj)
     }
 
-    fun parseServiceImage(image:String): Pair<String, String> {
+    fun parseServiceImage(image: String): Pair<String, String> {
         val list = image.split(":")
         if (list.size != 2) {
             throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "GITCI Service镜像格式非法")

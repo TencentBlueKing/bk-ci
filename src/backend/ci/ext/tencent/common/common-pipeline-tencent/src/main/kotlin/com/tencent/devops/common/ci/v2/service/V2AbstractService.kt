@@ -32,7 +32,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.ci.SERVICE_TYPE
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudInput
-import com.tencent.devops.common.ci.v2.Credentials
 import com.tencent.devops.common.ci.v2.ServiceWith
 import javax.ws.rs.core.Response
 

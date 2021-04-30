@@ -61,7 +61,7 @@ data class PipelineScriptTask(
     }
 }
 
-data class PipelineScriptInput (
+data class PipelineScriptInput(
     val scriptFileSourceType: String,
     val script: String,
     val file: String,

@@ -27,13 +27,11 @@
 
 package com.tencent.devops.common.ci
 
-import com.tencent.devops.common.ci.CiYamlUtils
 import org.junit.Test
 import org.springframework.core.io.ClassPathResource
 import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
-
 
 internal class CiYamlUtilsTest {
 

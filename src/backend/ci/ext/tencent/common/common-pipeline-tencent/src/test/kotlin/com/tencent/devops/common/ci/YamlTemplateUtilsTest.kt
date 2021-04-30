@@ -38,7 +38,7 @@ import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
 
-class ScriptYmlUtilsTest {
+class YamlTemplateUtilsTest {
 
     val testYaml = "pipelineWithTemplate.yml"
     val templateYamlList = listOf(

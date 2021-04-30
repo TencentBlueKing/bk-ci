@@ -32,6 +32,6 @@ import com.fasterxml.jackson.annotation.JsonInclude
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class YmlVersion (
+data class YmlVersion(
     val version: String?
 )
