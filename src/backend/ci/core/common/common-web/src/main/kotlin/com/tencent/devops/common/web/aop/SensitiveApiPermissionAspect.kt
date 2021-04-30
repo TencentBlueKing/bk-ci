@@ -62,15 +62,15 @@ class SensitiveApiPermissionAspect constructor(
         val vmSeqId = request.getHeader(AUTH_HEADER_DEVOPS_VM_SEQ_ID)
         val method = (jp.signature as MethodSignature).method
         val apiName = method.getAnnotation(SensitiveApiPermission::class.java)?.value
-        logger.info("$buildId|$vmSeqId|$apiName|sensitive api permission aspect")
 
         var atomCode: String? = null
         if (buildId != null && vmSeqId != null) {
             val redisKey = SensitiveApiUtil.getRunningAtomCodeKey(buildId, vmSeqId)
             atomCode = redisOperation.get(redisKey)
         }
+
+        logger.info("$buildId|$vmSeqId|$atomCode|$apiName|$enableSensitiveApi|using sensitive api")
         if (apiName != null && atomCode != null) {
-            logger.info("$buildId|$vmSeqId|$atomCode|$apiName|using sensitive api")
             if (enableSensitiveApi &&
                 client.get(ServiceSensitiveApiPermissionResource::class).verifyApi(
                     atomCode = atomCode,
