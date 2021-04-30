@@ -36,7 +36,7 @@ data class SensitiveApiCreateDTO(
     val userId: String,
     val storeType: StoreTypeEnum,
     val storeCode: String,
-    val apiNameList: List<String>,
+    val apiName: String,
     val applyDesc: String,
     val apiStatus: ApiStatusEnum,
     val apiLevel: ApiLevelEnum

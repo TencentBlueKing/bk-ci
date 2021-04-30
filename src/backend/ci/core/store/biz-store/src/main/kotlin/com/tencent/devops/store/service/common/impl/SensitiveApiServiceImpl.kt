@@ -110,19 +110,21 @@ class SensitiveApiServiceImpl @Autowired constructor(
                     data = false
                 )
             }
-            val sensitiveApiCreateDTO = SensitiveApiCreateDTO(
-                id = UUIDUtil.generate(),
-                userId = userId,
-                storeType = storeType,
-                storeCode = storeCode,
-                apiNameList = apiNameList.filter { it.isNotBlank() },
-                applyDesc = applyDesc,
-                apiStatus = ApiStatusEnum.WAIT,
-                apiLevel = ApiLevelEnum.SENSITIVE
-            )
+            val sensitiveApiCreateDTOs = apiNameList.filter { it.isNotBlank() }.map { apiName ->
+                SensitiveApiCreateDTO(
+                    id = UUIDUtil.generate(),
+                    userId = userId,
+                    storeType = storeType,
+                    storeCode = storeCode,
+                    apiName = apiName,
+                    applyDesc = applyDesc,
+                    apiStatus = ApiStatusEnum.WAIT,
+                    apiLevel = ApiLevelEnum.SENSITIVE
+                )
+            }
             sensitiveApiDao.create(
                 dslContext = dslContext,
-                sensitiveApiCreateDTO = sensitiveApiCreateDTO
+                sensitiveApiCreateDTOs = sensitiveApiCreateDTOs
             )
         }
         return Result(true)
