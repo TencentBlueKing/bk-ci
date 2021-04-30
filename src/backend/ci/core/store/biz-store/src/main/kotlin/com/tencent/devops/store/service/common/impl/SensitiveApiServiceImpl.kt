@@ -52,6 +52,7 @@ import com.tencent.devops.store.pojo.common.enums.BusinessEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.SensitiveApiService
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -65,6 +66,7 @@ class SensitiveApiServiceImpl @Autowired constructor(
     companion object {
         private const val BUSINESS_CONFIG_FEATURE = "api"
         private const val BUSINESS_CONFIG_VALUE = "sensitiveApi"
+        private val logger = LoggerFactory.getLogger(SensitiveApiServiceImpl::class.java)
     }
 
     override fun unApprovalApiList(
@@ -219,6 +221,7 @@ class SensitiveApiServiceImpl @Autowired constructor(
         storeCode: String,
         apiName: String
     ): Result<Boolean> {
+        logger.info("$storeType|$storeCode|$apiName verify api")
         val record = sensitiveApiDao.getByApiName(
             dslContext = dslContext,
             storeType = storeType,
