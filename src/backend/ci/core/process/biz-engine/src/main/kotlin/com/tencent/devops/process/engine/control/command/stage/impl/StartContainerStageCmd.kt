@@ -113,10 +113,13 @@ class StartContainerStageCmd(
 
         var stageStatus: BuildStatus? = null
 
-        // 查找最后一个结束状态的Stage
+        // 查找最后一个结束状态的Stage (排除Finally）
         if (commandContext.stage.controlOption?.finally == true) {
             commandContext.previousStageStatus = pipelineStageService.listStages(commandContext.stage.buildId)
-                .lastOrNull { it.status.isFinish() || it.status == BuildStatus.STAGE_SUCCESS }?.status
+                .lastOrNull {
+                    it.stageId != commandContext.stage.stageId &&
+                        (it.status.isFinish() || it.status == BuildStatus.STAGE_SUCCESS)
+                }?.status
         }
         // 同一Stage下的多个Container是并行
         commandContext.containers.forEach { container ->

@@ -32,6 +32,7 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
+import com.tencent.devops.process.engine.common.BS_STAGE_CANCELED_END_SOURCE
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
@@ -72,11 +73,18 @@ class UpdateStateForStageCmdFinally(
             return nextOrFinish(event, stage, commandContext)
         }
 
-        // 更新状态&模型
-        updateStageStatus(commandContext = commandContext)
+        // #3138 stage cancel 不在此处理 更新状态&模型 @see PipelineStageService.cancelStage
+        if (event.source != BS_STAGE_CANCELED_END_SOURCE) {
+            updateStageStatus(commandContext = commandContext)
+        }
+
         // Stage 暂停
         if (commandContext.buildStatus == BuildStatus.STAGE_SUCCESS) {
-            pipelineStageService.pauseStage(userId = event.userId, buildStage = stage)
+            if (event.source != BS_STAGE_CANCELED_END_SOURCE) { // 不是 stage cancel，暂停
+                pipelineStageService.pauseStage(userId = event.userId, buildStage = stage)
+            } else {
+                nextOrFinish(event, stage, commandContext)
+            }
         } else if (commandContext.buildStatus.isFinish()) { // 当前Stage结束
             if (commandContext.buildStatus == BuildStatus.SKIP) { // 跳过
                 pipelineStageService.skipStage(userId = event.userId, buildStage = stage)
@@ -89,9 +97,12 @@ class UpdateStateForStageCmdFinally(
 
         val nextStage: PipelineBuildStage?
 
-        // 中断的失败事件或者FastKill快速失败，寻找FinallyStage
-        val failNeedStop = commandContext.buildStatus.isFailure() || commandContext.fastKill
-        if (failNeedStop) {
+        // 中断的失败事件或者FastKill快速失败，或者 #3138 stage cancel 则直接寻找FinallyStage
+        val gotoFinally = commandContext.buildStatus.isFailure() ||
+            commandContext.fastKill ||
+            event.source == BS_STAGE_CANCELED_END_SOURCE
+
+        if (gotoFinally) {
             nextStage = pipelineStageService.getLastStage(buildId = event.buildId)
             if (nextStage == null || nextStage.seq == stage.seq || nextStage.controlOption?.finally != true) {
 
@@ -105,8 +116,8 @@ class UpdateStateForStageCmdFinally(
         }
 
         if (nextStage != null) {
-            LOG.info("ENGINE|${event.buildId}|${event.source}|NEXT_STAGE|${event.stageId}|$failNeedStop|" +
-                "next_s(${nextStage.stageId})|e=${stage.executeCount}|summary:${commandContext.latestSummary}")
+            LOG.info("ENGINE|${event.buildId}|${event.source}|NEXT_STAGE|${event.stageId}|gotoFinally=$gotoFinally|" +
+                "next_s(${nextStage.stageId})|e=${stage.executeCount}|summary=${commandContext.latestSummary}")
             event.sendNextStage(source = "From_s(${stage.stageId})", stageId = nextStage.stageId)
         } else {
 
@@ -216,15 +227,15 @@ class UpdateStateForStageCmdFinally(
 
         commandContext.latestSummary = "finally_s(${commandContext.stage.stageId})"
         if (commandContext.buildStatus.isSuccess()) { // #3400 最后一个Stage成功代表整个Build成功，but when finally stage:
-            // #3138 如果上游流水线失败，不管 finally stage 成功还是失败，流水线最终状态为失败
-            if (commandContext.stage.controlOption?.finally == true &&
-                commandContext.previousStageStatus?.isFailure() == true) {
-
-                commandContext.buildStatus = commandContext.previousStageStatus!!
-                commandContext.latestSummary += "|previousStageStatus=${commandContext.buildStatus}"
-            } else {
-
-                commandContext.buildStatus = BuildStatus.SUCCEED
+            if (commandContext.stage.controlOption?.finally == true) {
+                if (commandContext.previousStageStatus == BuildStatus.STAGE_SUCCESS) {
+                    // #3138 如果上游流水线STAGE成功，则继承
+                    commandContext.buildStatus = BuildStatus.STAGE_SUCCESS
+                } else if (commandContext.previousStageStatus?.isFailure() == true) {
+                    // #3138 如果上游流水线失败，不管 finally stage 成功还是失败，流水线最终状态为失败
+                    commandContext.buildStatus = commandContext.previousStageStatus!!
+                    commandContext.latestSummary += "|previousStageStatus=${commandContext.buildStatus}"
+                }
             }
         }
 
