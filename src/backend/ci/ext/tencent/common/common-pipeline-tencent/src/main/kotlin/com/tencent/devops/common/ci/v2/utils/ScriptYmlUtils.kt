@@ -531,37 +531,13 @@ object ScriptYmlUtils {
         return jsonWriter.writeValueAsString(obj)
     }
 
-/*    fun getCIBuildYamlSchema(): String {
-        val mapper = ObjectMapper()
-        mapper.configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true)
-        val schema = mapper.generateJsonSchema(CIBuildYaml::class.java)
-        schema.schemaNode.with("properties").with("steps").put("item", getAbstractTaskSchema())
-        schema.schemaNode.with("properties").with("services").put("item", getAbstractServiceSchema())
-        schema.schemaNode.with("properties")
-            .with("stages")
-            .with("items")
-            .with("properties")
-            .with("stage")
-            .with("items")
-            .with("properties")
-            .with("job")
-            .with("properties")
-            .with("steps")
-            .put("item", getAbstractTaskSchema())
-        return mapper.writerWithDefaultPrettyPrinter().writeValueAsString(schema)
+    fun parseServiceImage(image:String): Pair<String, String> {
+        val list = image.split(":")
+        if (list.size != 2) {
+            throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "GITCI Service镜像格式非法")
+        }
+        return Pair(list[0], list[1])
     }
-
-    fun getAbstractTaskSchema(): ObjectNode {
-        val mapper = ObjectMapper()
-        mapper.configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true)
-        return mapper.generateJsonSchema(AbstractTask::class.java).schemaNode
-    }
-
-    fun getAbstractServiceSchema(): ObjectNode {
-        val mapper = ObjectMapper()
-        mapper.configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true)
-        return mapper.generateJsonSchema(AbstractService::class.java).schemaNode
-    }*/
 
     private fun randomString(flag: String): String {
         val random = Random()
