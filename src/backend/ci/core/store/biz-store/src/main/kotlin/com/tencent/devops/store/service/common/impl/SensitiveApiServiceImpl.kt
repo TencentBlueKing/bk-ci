@@ -221,7 +221,6 @@ class SensitiveApiServiceImpl @Autowired constructor(
         storeCode: String,
         apiName: String
     ): Result<Boolean> {
-        logger.info("$storeType|$storeCode|$apiName verify api")
         val record = sensitiveApiDao.getByApiName(
             dslContext = dslContext,
             storeType = storeType,
