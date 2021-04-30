@@ -134,6 +134,7 @@ object IosUtils {
         return Pair(file, zhFile)
     }
 
+    @SuppressWarnings("NestedBlockDepth")
     private fun toTmpFile(
         pattern: Pattern,
         entry: ZipEntry,
