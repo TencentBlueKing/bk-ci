@@ -1,23 +1,39 @@
 version: v2.0
-trigger:
-  branches:
-    include:            # branch names which will trigger a build
-      - master
-      - release/*
-    exclude:            # branch names which will not trigger a build
-      - release/old*
-      - release/bak*
-  tags:
-    include:            # tag names which will trigger a build
-      - master
-      - release/*
-    exclude:            # tag names which will not trigger a build
-      - release/old*
-      - release/bak*
-  paths:
-    include:            # file paths which must match to trigger a build
-      - src/
-    exclude:            # file paths which will not trigger a build
-      - release
-      - build
 
+on:
+  push:
+    branches:
+      - master
+      - release/*
+    path:
+      - src/*
+  tag:
+    tags:
+      - release_*
+    from-branches:
+      - master
+  mr:
+    target-branches:
+      - master
+    path:
+      - src/*/*
+
+
+stages:
+  - name: "stage1"
+    jobs:
+      job_id_1:
+        name: my_job_1
+        steps:
+          - run: |
+              echo "stage1, job_id_1"
+              echo "hello world11" >> test.txt
+              ls -l
+          - uses: SawyerJavaTest@1.*
+            with:
+              desc: 10000
+      job_id_2:
+        name: my_job_2
+        steps:
+          - run: |
+              echo "stage1, job_id_2"

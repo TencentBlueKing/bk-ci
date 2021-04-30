@@ -327,7 +327,7 @@ object ScriptYmlUtils {
         preStageList.forEach {
             stageList.add(
                 Stage(
-                    id = it.id ?: "",
+                    id = it.id ?: randomString(stageNamespace),
                     name = it.name,
                     label = it.label,
                     ifField = it.ifField,
