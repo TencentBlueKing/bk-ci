@@ -39,11 +39,16 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
 class SensitiveApiDao {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(SensitiveApiDao::class.java)
+    }
 
     fun create(
         dslContext: DSLContext,
@@ -51,6 +56,7 @@ class SensitiveApiDao {
     ) {
         val now = LocalDateTime.now()
         val records = with(sensitiveApiCreateDTO) {
+            logger.info("apiNameList:$apiNameList")
             with(TStoreSensitiveApi.T_STORE_SENSITIVE_API) {
                 apiNameList.map { apiName ->
                     dslContext.insertInto(
