@@ -69,15 +69,15 @@ class SensitiveApiPermissionAspect constructor(
             atomCode = redisOperation.get(redisKey)
         }
 
-        logger.info("$buildId|$vmSeqId|$atomCode|$apiName|$enableSensitiveApi|using sensitive api")
+        logger.info("$buildId|$vmSeqId|$atomCode|$apiName|using sensitive api")
         if (apiName != null && atomCode != null) {
             if (enableSensitiveApi &&
                 client.get(ServiceSensitiveApiPermissionResource::class).verifyApi(
                     atomCode = atomCode,
                     apiName = apiName
-                ).data == true
+                ).data != true
             ) {
-                logger.info("$buildId|$vmSeqId|$atomCode|$apiName|verify sensitive api failed")
+                logger.warn("$buildId|$vmSeqId|$atomCode|$apiName|verify sensitive api failed")
                 throw ErrorCodeException(
                     statusCode = 401,
                     errorCode = CommonMessageCode.ERROR_SENSITIVE_API_NO_AUTH,
