@@ -99,40 +99,40 @@ class BuildLogPrinter(
         ))
     }
 
-    fun addRangeStartLine(
+    fun addErrorLine(
         buildId: String,
-        rangeName: String,
+        message: String,
         tag: String,
-        subTag: String? = null,
         jobId: String? = null,
-        executeCount: Int
+        executeCount: Int,
+        subTag: String? = null
     ) {
         logMQEventDispatcher.dispatch(genLogEvent(
             buildId = buildId,
-            message = "[START] $rangeName",
+            message = message,
             tag = tag,
             subTag = subTag,
             jobId = jobId,
-            logType = LogType.START,
+            logType = LogType.ERROR,
             executeCount = executeCount
         ))
     }
 
-    fun addRangeEndLine(
+    fun addDebugLine(
         buildId: String,
-        rangeName: String,
+        message: String,
         tag: String,
-        subTag: String? = null,
         jobId: String? = null,
-        executeCount: Int
+        executeCount: Int,
+        subTag: String? = null
     ) {
         logMQEventDispatcher.dispatch(genLogEvent(
             buildId = buildId,
-            message = "[END] $rangeName",
+            message = message,
             tag = tag,
             subTag = subTag,
             jobId = jobId,
-            logType = LogType.END,
+            logType = LogType.DEBUG,
             executeCount = executeCount
         ))
     }
