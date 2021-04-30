@@ -73,6 +73,8 @@
     "pipelineNameInputTips": "请输入流水线名称,不超过40个字符",
     "pipelineDesc": "描述",
     "pipelineDescInputTips": "请输入100字符以内的描述内容",
+    "buildDescInputTips": "$(Date:yyyyMMdd)$(Rev:.r)",
+    "buildNumRuleWarn": "超出长度限制的部分会被截断",
     "nameInputTips": "请输入名称",
     "loadingTips": "数据加载中，请稍候",
     "metaData": "元数据",
@@ -187,6 +189,8 @@
     "settings": {
         "baseInfo": "基本信息",
         "group": "分组",
+        "buildNumberFormat": "构建号格式",
+        "validatebuildNum": "只支持[a-z A-Z 0-9 . - _ : + ? $ {} ()]",
         "runLock": "运行锁定",
         "namePlaceholder": "请输入流水线名称，长度不超过40个字符",
         "descPlaceholder": "请输入100字符以内的描述内容",

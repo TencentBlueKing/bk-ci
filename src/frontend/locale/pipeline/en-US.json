@@ -73,6 +73,8 @@
     "pipelineNameInputTips": "Please enter a name for this pipeline within 40 letters",
     "pipelineDesc": "Description",
     "pipelineDescInputTips": "Please describe this pipeline within 100 letters",
+    "buildDescInputTips": "$(Date:yyyyMMdd)$(Rev:.r)",
+    "buildNumRuleWarn": "The parts beyond the length limit will be cut off",
     "nameInputTips": "Please enter a name",
     "loadingTips": "Data is Loading, Please wait",
     "metaData": "Meta Data",
@@ -187,6 +189,8 @@
     "settings": {
         "baseInfo": "Basic information",
         "group": "Group",
+        "buildNumberFormat": "Build number format",
+        "validatebuildNum": "only supports [a-z A-Z 0-9 . - _ : + ? $ {} ()]",
         "runLock": "Locking behavior",
         "namePlaceholder": "Please enter a name for this pipeline within 40 letters",
         "descPlaceholder": "Please add a description within 100 letters",
