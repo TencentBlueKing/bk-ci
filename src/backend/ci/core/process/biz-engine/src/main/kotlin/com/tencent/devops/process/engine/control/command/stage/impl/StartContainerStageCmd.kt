@@ -111,7 +111,7 @@ class StartContainerStageCmd(
         commandContext.containers.forEach { c ->
             if (c.status.isCancel()) {
                 cancelContainers++
-            } else if (c.status.isFailure()) {
+            } else if (checkContainerFailure(c)) {
                 failureContainers++
             } else if (c.status == BuildStatus.SKIP) {
                 skipContainers++
@@ -138,6 +138,10 @@ class StartContainerStageCmd(
             }
         }
         return stageStatus!!
+    }
+
+    private fun checkContainerFailure(c: PipelineBuildContainer): Boolean {
+        return c.status.isFailure() && c.controlOption?.jobControlOption?.continueWhenFailed == true
     }
 
     private fun sendBuildContainerEvent(
