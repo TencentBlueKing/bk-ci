@@ -29,7 +29,6 @@ package com.tencent.devops.common.ci.v2.templates
 
 enum class TemplateType {
     VARIABLE,
-    PARAMETER,
     STAGE,
     JOB,
     STEP,

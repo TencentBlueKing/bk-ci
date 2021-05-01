@@ -32,6 +32,10 @@ variables:
   GIT_USERNAME:
     value: user1
     readonly: true
+  template:
+    - name: templates/variables.yml
+      parameters:
+        username: VARIABLES
 
 stages:
   - name: "stage1"
@@ -75,11 +79,9 @@ stages:
 
         timeout-minutes: 480
         env:
-
         continue-on-error: false
         strategy:
           matrix:
-
           fast-kill: true
           max-parallel: 10
         depend-on:
@@ -92,12 +94,10 @@ stages:
               echo "stage1, job_id_2"
         depend-on:
           - job_id_1
-
       template:
-        name: templates/jobs.yml
-        parameters:
-          username: JOB
-
+        - name: templates/jobs.yml
+          parameters:
+            username: JOB
   - template: templates/stages.yml
     parameters:
       username: STAGE

@@ -8,4 +8,4 @@ steps:
     echo "step4: ${{ parameters.username }}!"
 - template: cyclic/step/templates/step8.yml
   parameters:
-    username: STEP8
+    username: CYC_STEP8
