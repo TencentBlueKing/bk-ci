@@ -348,10 +348,10 @@ class YamlTemplateUtils(
     private fun getJob(job: Map<String, Any>, templates: Map<String, String?>): PreJob {
         return PreJob(
             name = job["name"]?.toString(),
-            runsOn = if (job["runsOn"] == null) {
+            runsOn = if (job["runs-on"] == null) {
                 null
             } else {
-                job["runsOn"] as List<String>
+                job["runs-on"] as List<String>
             },
             container = if (job["container"] == null) {
                 null
@@ -386,10 +386,10 @@ class YamlTemplateUtils(
             } else {
                 getStrategy(job["strategy"]!!)
             },
-            dependOn = if (job["dependOn"] == null) {
+            dependOn = if (job["depend-on"] == null) {
                 null
             } else {
-                job["dependOn"] as List<String>
+                job["depend-on"] as List<String>
             }
         )
     }

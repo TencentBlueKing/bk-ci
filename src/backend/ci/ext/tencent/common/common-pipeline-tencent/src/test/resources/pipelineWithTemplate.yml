@@ -85,15 +85,18 @@ stages:
         depend-on:
           - job1
           - job2
-      template:
-        name: templates/jobs.yml
-        parameters:
-          username: JOB
       job_id_2:
         name: my_job_2
         steps:
           - run: |
               echo "stage1, job_id_2"
+        depend-on:
+          - job_id_1
+
+      template:
+        name: templates/jobs.yml
+        parameters:
+          username: JOB
 
   - template: templates/stages.yml
     parameters:

@@ -27,13 +27,35 @@ stages:
         steps:
           - run: |
               echo "stage1, job_id_1"
-              echo "hello world11" >> test.txt
+              echo "hello world1111" >> test.txt
               ls -l
           - uses: SawyerJavaTest@1.*
             with:
               desc: 10000
+        timeout-minutes: 480
+        env:
+        continue-on-error: true
+
       job_id_2:
-        name: my_job_2
+        name: my_job_1
         steps:
           - run: |
               echo "stage1, job_id_2"
+          - uses: SawyerJavaTest@1.*
+            with:
+              desc: 10000
+        depend-on:
+          - job_id_1
+      job_id_3:
+        name: my_job_3
+        steps:
+          - run: |
+              echo "stage1, job_id_3"
+      job_id_4:
+        name: my_job_4
+        steps:
+          - run: |
+              echo "stage1, job_id_4"
+        depend-on:
+          - job_id_2
+          - job_id_3
