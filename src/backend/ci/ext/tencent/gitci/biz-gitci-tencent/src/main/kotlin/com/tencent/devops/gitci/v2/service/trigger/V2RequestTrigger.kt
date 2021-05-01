@@ -170,6 +170,7 @@ class V2RequestTrigger @Autowired constructor(
                 gitToken = gitToken,
                 forkGitToken = forkGitToken,
                 yamlStr = originYaml,
+                filePath = filePath ?: "root",
                 gitRequestEvent = gitRequestEvent,
                 gitProjectId = gitRequestEvent.gitProjectId
             )
@@ -197,6 +198,7 @@ class V2RequestTrigger @Autowired constructor(
         gitToken: GitToken,
         forkGitToken: GitToken?,
         yamlStr: String,
+        filePath: String,
         gitRequestEvent: GitRequestEvent,
         gitProjectId: Long? = null
     ): ScriptBuildYaml {
@@ -209,7 +211,7 @@ class V2RequestTrigger @Autowired constructor(
         // 校验是否符合规范
         ScriptYmlUtils.checkStage(preTemplateYamlObject)
         // 替换yaml文件中的模板引用
-        val preYamlObject = YamlTemplateUtils(preTemplateYamlObject, templates).replaceTemplate()
+        val preYamlObject = YamlTemplateUtils(preTemplateYamlObject, templates, filePath).replace()
 
         return ScriptYmlUtils.normalizeGitCiYaml(preYamlObject)
     }

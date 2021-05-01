@@ -1,0 +1,18 @@
+parameters:
+- name: username
+  type: string
+  default: world
+- name: jobname
+  type: String
+  default: JOBNAME
+
+jobs:
+  job_id_template_cyc_2:
+    name: my_job_2
+    steps:
+      - run: |
+          echo "stage1, job_id_2"
+  template:
+    - name: cyclic/job/templates/job3.yml
+      parameters:
+        username: CYC_JOB3

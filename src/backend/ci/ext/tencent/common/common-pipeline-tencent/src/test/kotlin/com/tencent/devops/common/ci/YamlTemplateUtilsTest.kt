@@ -39,17 +39,26 @@ import java.io.InputStream
 import java.io.InputStreamReader
 
 class YamlTemplateUtilsTest {
-    //    // 综合测试
-//    val testYaml = "pipelineWithTemplate.yml"
-//    val templateYamlList = listOf(
-//        "templates/stages.yml",
-//        "templates/jobs.yml",
-//        "templates/steps.yml",
-//        "templates/pipeline.yml"
-//    )
-    // 测试step循环嵌套
-    val testYaml = "/cyclic/step/pipeline.yml"
+    // 综合测试
+    val testYaml = "pipelineWithTemplate.yml"
     val templateYamlList = listOf(
+        "templates/stages.yml",
+        "templates/jobs.yml",
+        "templates/steps.yml",
+        "templates/pipeline.yml",
+        "templates/variables.yml",
+        "cyclic/variable/templates/variable1.yml",
+        "cyclic/variable/templates/variable2.yml",
+        "cyclic/stage/templates/stage1.yml",
+        "cyclic/stage/templates/stage2.yml",
+        "cyclic/job/templates/job1.yml",
+        "cyclic/job/templates/job2.yml",
+        "cyclic/job/templates/job3.yml",
+        "cyclic/job/templates/job4.yml",
+        "cyclic/job/templates/job5.yml",
+        "cyclic/step/templates/step1.yml",
+        "cyclic/step/templates/step2.yml",
+        "cyclic/step/templates/step3.yml",
         "cyclic/step/templates/step1.yml",
         "cyclic/step/templates/step2.yml",
         "cyclic/step/templates/step3.yml",
@@ -59,6 +68,30 @@ class YamlTemplateUtilsTest {
         "cyclic/step/templates/step7.yml",
         "cyclic/step/templates/step8.yml"
     )
+//    // 测试step循环嵌套
+//    val testYaml = "/cyclic/step/pipeline.yml"
+//    val templateYamlList = listOf(
+//        "cyclic/step/templates/step1.yml",
+//        "cyclic/step/templates/step2.yml",
+//        "cyclic/step/templates/step3.yml",
+//        "cyclic/step/templates/step4.yml",
+//        "cyclic/step/templates/step5.yml",
+//        "cyclic/step/templates/step6.yml",
+//        "cyclic/step/templates/step7.yml",
+//        "cyclic/step/templates/step8.yml"
+//    )
+//    // 测试job循环嵌套
+//    val testYaml = "/cyclic/job/pipeline.yml"
+//    val templateYamlList = listOf(
+//        "cyclic/job/templates/job1.yml",
+//        "cyclic/job/templates/job2.yml",
+//        "cyclic/job/templates/job3.yml",
+//        "cyclic/job/templates/job4.yml",
+//        "cyclic/job/templates/job5.yml",
+//        "cyclic/step/templates/step1.yml",
+//        "cyclic/step/templates/step2.yml",
+//        "cyclic/step/templates/step3.yml"
+//    )
 
     @Test
     fun test() {
@@ -80,9 +113,9 @@ class YamlTemplateUtilsTest {
             YamlUtil.toYaml(
                 YamlTemplateUtils(
                     yamlObject = preTemplateYamlObject,
-                    templates = getAllTemplates()
-                )
-                    .replaceTemplate()
+                    templates = getAllTemplates(),
+                    rootPath = testYaml
+                ).replace()
             )
         )
     }

@@ -9,5 +9,8 @@ parameters:
 steps:
 - run: |
     echo "hello template ${{ parameters.username }}!"
+- template: cyclic/step/templates/step1.yml
+  parameters:
+    username:  CYC_STEP1
 - run: |
     echo "hello template ${{ parameters.stepname }} again!"

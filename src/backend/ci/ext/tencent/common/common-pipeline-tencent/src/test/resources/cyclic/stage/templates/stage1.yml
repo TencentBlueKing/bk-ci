@@ -1,5 +1,3 @@
-# .ci/templates/stages.yml
-
 parameters:
 - name: username
   type: string
@@ -9,6 +7,9 @@ parameters:
   default: STAGENAME
 
 stages:
+- template: cyclic/stage/templates/stage2.yml
+  parameters:
+    username: CYC_STAGE2
 - name: "stage_template_1"
   jobs:
     job_id_stage_template_1_1:
@@ -16,11 +17,3 @@ stages:
       steps:
       - run: |
           echo "hello ${{ parameters.username }}"
-    job_id_stage_template_1_2:
-      name: my_job_2
-      steps:
-      - run: |
-          echo "stage1, ${{ parameters.stagename }}"
-- template: cyclic/stage/templates/stage1.yml
-  parameters:
-    username: CYC_STAGE1
