@@ -148,12 +148,33 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 )
             }
         }
+        val atomId = atomRecord.id
         // 发布类型为兼容式升级时需判断插件的输入和输出参数是否有变更
+        validateReleaseType(
+            releaseType = releaseType,
+            atomCode = atomCode,
+            atomId = atomId,
+            taskDataMap = taskDataMap,
+            version = version,
+            fieldCheckConfirmFlag = fieldCheckConfirmFlag
+        )
+        return Result(true)
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun validateReleaseType(
+        atomId: String,
+        atomCode: String,
+        version: String,
+        releaseType: ReleaseTypeEnum,
+        taskDataMap: Map<String, Any>,
+        fieldCheckConfirmFlag: Boolean?
+    ) {
         val validateReleaseTypeList = listOf(ReleaseTypeEnum.COMPATIBILITY_FIX, ReleaseTypeEnum.COMPATIBILITY_UPGRADE)
         val validateFlag = releaseType in validateReleaseTypeList
         val dbAtomProps = marketAtomDao.getLatestAtomByCode(dslContext, atomCode)?.props
         if (dbAtomProps != null && (validateFlag || getCancelValidateFlag(
-                atomRecord = atomRecord,
+                atomId = atomId,
                 releaseType = releaseType,
                 validateReleaseTypeList = validateReleaseTypeList
             ))
@@ -192,16 +213,15 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             // 判断插件是否有减少的输出参数
             handleAtomDecreaseField(currentAtomOutputNames, dbAtomOutputNames, fieldCheckConfirmFlag)
         }
-        return Result(true)
     }
 
     private fun getCancelValidateFlag(
-        atomRecord: TAtomRecord,
+        atomId: String,
         releaseType: ReleaseTypeEnum,
         validateReleaseTypeList: List<ReleaseTypeEnum>
     ): Boolean {
         var cancelValidateFlag = false
-        val atomVersionRecord = marketAtomVersionLogDao.getAtomVersion(dslContext, atomRecord.id)
+        val atomVersionRecord = marketAtomVersionLogDao.getAtomVersion(dslContext, atomId)
         val dbReleaseType = ReleaseTypeEnum.getReleaseTypeObj(atomVersionRecord.releaseType.toInt())!!
         if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE && dbReleaseType in validateReleaseTypeList) {
             cancelValidateFlag = true

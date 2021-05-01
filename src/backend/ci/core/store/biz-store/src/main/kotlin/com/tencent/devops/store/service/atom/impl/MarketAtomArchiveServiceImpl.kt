@@ -29,6 +29,7 @@ package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
@@ -37,6 +38,7 @@ import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomEnvInfoDao
+import com.tencent.devops.store.dao.atom.MarketAtomVersionLogDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.pojo.atom.AtomPkgInfoUpdateRequest
 import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
@@ -73,6 +75,8 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
     lateinit var marketAtomEnvInfoDao: MarketAtomEnvInfoDao
     @Autowired
     lateinit var storeMemberDao: StoreMemberDao
+    @Autowired
+    lateinit var marketAtomVersionLogDao: MarketAtomVersionLogDao
     @Autowired
     lateinit var marketAtomCommonService: MarketAtomCommonService
     @Autowired
@@ -173,6 +177,46 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
                 Result(getAtomConfResult)
             }
         }
+    }
+
+    override fun validateReleaseType(
+        userId: String,
+        projectCode: String,
+        atomCode: String,
+        version: String,
+        fieldCheckConfirmFlag: Boolean?
+    ): Result<Boolean> {
+        val atomInfo = atomDao.getPipelineAtom(dslContext, atomCode, version)
+            ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf("$atomCode+$version")
+            )
+        val taskJsonStr = getFileStr(projectCode, atomCode, version, TASK_JSON_NAME)
+        val getAtomConfResult = marketAtomCommonService.parseBaseTaskJson(
+            taskJsonStr = taskJsonStr,
+            atomCode = atomCode,
+            version = version,
+            userId = userId
+        )
+        if (getAtomConfResult.errorCode != "0") {
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = getAtomConfResult.errorCode,
+                params = getAtomConfResult.errorParams
+            )
+        }
+        val taskDataMap = getAtomConfResult.taskDataMap
+        val atomId = atomInfo.id
+        val atomVersionRecord = marketAtomVersionLogDao.getAtomVersion(dslContext, atomInfo.id)
+        val releaseType = ReleaseTypeEnum.getReleaseTypeObj(atomVersionRecord.releaseType.toInt())!!
+        marketAtomCommonService.validateReleaseType(
+            atomId = atomId,
+            atomCode = atomCode,
+            version = version,
+            releaseType = releaseType,
+            taskDataMap = taskDataMap,
+            fieldCheckConfirmFlag = fieldCheckConfirmFlag
+        )
+        return Result(true)
     }
 
     override fun updateAtomPkgInfo(

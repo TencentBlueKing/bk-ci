@@ -43,6 +43,15 @@ interface MarketAtomCommonService {
         fieldCheckConfirmFlag: Boolean? = false
     ): Result<Boolean>
 
+    fun validateReleaseType(
+        atomId: String,
+        atomCode: String,
+        version: String,
+        releaseType: ReleaseTypeEnum,
+        taskDataMap: Map<String, Any>,
+        fieldCheckConfirmFlag: Boolean? = false
+    )
+
     fun parseBaseTaskJson(
         taskJsonStr: String,
         atomCode: String,
