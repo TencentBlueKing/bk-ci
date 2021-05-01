@@ -1,4 +1,4 @@
-package com.tencent.bk.devops.plugin.docker.pojo.job.request
+package com.tencent.devops.common.environment.agent.pojo.devcloud
 
 import com.fasterxml.jackson.annotation.JsonInclude
 

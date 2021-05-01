@@ -1,4 +1,4 @@
-package com.tencent.devops.dispatcher.devcloud.pojo.devcloud
+package com.tencent.devops.common.environment.agent.pojo.devcloud
 
 data class Registry (
     val host: String,

@@ -73,12 +73,6 @@ enum class ContainerType(private val type: String) {
     }
 }
 
-data class Registry(
-    val host: String,
-    val username: String,
-    val password: String
-)
-
 data class Ports(
     val protocol: String?,
     val port: String?,

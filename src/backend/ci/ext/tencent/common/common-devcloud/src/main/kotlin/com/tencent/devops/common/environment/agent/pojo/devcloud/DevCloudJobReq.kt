@@ -1,6 +1,4 @@
-package com.tencent.devops.dispatcher.devcloud.pojo.devcloud
-
-import com.tencent.bk.devops.plugin.docker.pojo.job.request.JobParam
+package com.tencent.devops.common.environment.agent.pojo.devcloud
 
 data class DevCloudJobReq(
     val alias: String? = null,
