@@ -370,13 +370,21 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
         return repo.projectName
     }
 
-    fun addGitlabWebhook(projectId: String, repositoryConfig: RepositoryConfig): String {
+    fun addGitlabWebhook(projectId: String, repositoryConfig: RepositoryConfig, codeEventType: CodeEventType?): String {
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig) as? CodeGitlabRepository
             ?: throw ErrorCodeException(
                 defaultMessage = "不是Gitlab代码仓库",
                 errorCode = RepositoryMessageCode.GITLAB_INVALID
             )
+        val event = when (codeEventType) {
+            null, CodeEventType.PUSH -> CodeGitWebhookEvent.PUSH_EVENTS.value
+            CodeEventType.TAG_PUSH -> CodeGitWebhookEvent.TAG_PUSH_EVENTS.value
+            CodeEventType.MERGE_REQUEST, CodeEventType.MERGE_REQUEST_ACCEPT -> {
+                CodeGitWebhookEvent.MERGE_REQUESTS_EVENTS.value
+            }
+            else -> null
+        }
         val token = getCredential(projectId, repo).privateKey
         client.get(ServiceScmResource::class).addWebHook(
             projectName = repo.projectName,
@@ -387,7 +395,7 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             token = token,
             region = null,
             userName = repo.userName,
-            event = null
+            event = event
         )
         return repo.projectName
     }

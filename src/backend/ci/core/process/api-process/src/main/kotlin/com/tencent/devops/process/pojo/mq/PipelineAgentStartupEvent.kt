@@ -59,5 +59,6 @@ data class PipelineAgentStartupEvent(
     override var actionType: ActionType = ActionType.REFRESH,
     override var delayMills: Int = 0,
     val executeCount: Int?,
-    override var routeKeySuffix: String? = null
+    override var routeKeySuffix: String? = null,
+    val customBuildEnv: Map<String, String>? = null
 ) : IPipelineRoutableEvent(routeKeySuffix, actionType, source, projectId, pipelineId, userId, delayMills)
