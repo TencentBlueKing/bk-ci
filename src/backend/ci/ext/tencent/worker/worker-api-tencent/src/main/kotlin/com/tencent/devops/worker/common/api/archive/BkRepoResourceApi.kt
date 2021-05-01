@@ -43,6 +43,7 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_APP_TITLE
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_FULL_IMAGE
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_IMAGE
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_NAME
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_SCHEME
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
 import com.tencent.devops.process.pojo.BuildVariables
@@ -64,6 +65,7 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.net.URLEncoder
 import java.util.Base64
+import java.util.Locale
 
 class BkRepoResourceApi : AbstractBuildResourceApi() {
     fun useBkRepo(): Boolean {
@@ -313,6 +315,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
                 }
                 file.name.endsWith(".apk") -> {
                     val apkFile = ApkFile(file)
+                    apkFile.preferredLocale = Locale.SIMPLIFIED_CHINESE
                     val meta = apkFile.apkMeta
                     val result = mutableMapOf(
                         ARCHIVE_PROPS_APP_VERSION to meta.versionName,
@@ -379,15 +382,23 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         val repoRule = Rule.QueryRule("repoName", repoNames, OperationType.IN)
         var ruleList = mutableListOf<Rule>(projectRule, repoRule, Rule.QueryRule("folder", false, OperationType.EQ))
         if (filePaths.isNotEmpty()) {
-            val filePathRule = Rule.NestedRule(filePaths.map { Rule.QueryRule("path", it, OperationType.EQ) }.toMutableList(), Rule.NestedRule.RelationType.OR)
+            val filePathRule = Rule.NestedRule(
+                filePaths.map { Rule.QueryRule("path", it, OperationType.EQ) }.toMutableList(),
+                Rule.NestedRule.RelationType.OR
+            )
             ruleList.add(filePathRule)
         }
         if (fileNames.isNotEmpty()) {
-            val fileNameRule = Rule.NestedRule(fileNames.map { Rule.QueryRule("name", it, OperationType.MATCH) }.toMutableList(), Rule.NestedRule.RelationType.OR)
+            val fileNameRule = Rule.NestedRule(
+                fileNames.map { Rule.QueryRule("name", it, OperationType.MATCH) }.toMutableList(),
+                Rule.NestedRule.RelationType.OR
+            )
             ruleList.add(fileNameRule)
         }
         if (metadata.isNotEmpty()) {
-            val metadataRule = Rule.NestedRule(metadata.map { Rule.QueryRule("metadata.${it.key}", it.value, OperationType.EQ) }.toMutableList(), Rule.NestedRule.RelationType.AND)
+            val metadataRule =
+                Rule.NestedRule(metadata.map { Rule.QueryRule("metadata.${it.key}", it.value, OperationType.EQ) }
+                    .toMutableList(), Rule.NestedRule.RelationType.AND)
             ruleList.add(metadataRule)
         }
         var rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)

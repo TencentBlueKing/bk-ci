@@ -25,10 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.agent
+package com.tencent.devops.worker.common.api.engine.impl
 
-const val AGENT_VERSION = 12.26
+import com.tencent.devops.worker.common.api.ApiPriority
+import com.tencent.devops.worker.common.api.engine.EngineBuildSDKApi
+import com.tencent.devops.worker.common.api.utils.ThirdPartyAgentBuildInfoUtils
 
-fun main(argv: Array<String>) {
-    println(AGENT_VERSION)
+@Suppress("UNUSED")
+@ApiPriority(priority = 9)
+class TencentEngineBuildResourceApi : EngineBuildResourceApi(), EngineBuildSDKApi {
+
+    private fun identifyUrl(url: String, paramConcat: String = "&"): String {
+        val buildInfo = ThirdPartyAgentBuildInfoUtils.getBuildInfo()
+        return url + paramConcat + "buildId=${buildInfo?.buildId}"
+    }
+
+    override fun getRequestUrl(path: String, retryCount: Int): String {
+        return identifyUrl("/ms/engine/$path?retryCount=$retryCount")
+    }
 }

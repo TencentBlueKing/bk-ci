@@ -1,22 +1,20 @@
---[[
-Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
-
-Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
-
-BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
-
-A copy of the MIT License is included in this file.
-
-
-Terms of the MIT License:
----------------------------------------------------
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-]]
-
+-- Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+-- Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+-- BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+-- A copy of the MIT License is included in this file.
+-- Terms of the MIT License:
+-- ---------------------------------------------------
+-- Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+-- documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+-- rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+-- permit persons to whom the Software is furnished to do so, subject to the following conditions:
+-- The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+-- the Software.
+-- THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+-- LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+-- NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+-- WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+-- SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 local build_type = ngx.var.http_x_devops_build_type
 local cjson = require("cjson")
 
@@ -54,7 +52,8 @@ if build_type == "AGENT" then
         return
     else
         --- 获取对应的buildId
-        local redRes, err = red:get("third_party_agent_" .. reqSecretKey .. "_" .. reqAgentId .. "_" .. reqBuildId .. "_" .. reqVmSid)
+        local redRes, err = red:get("third_party_agent_" .. reqSecretKey .. "_" .. reqAgentId .. "_" .. reqBuildId ..
+                                        "_" .. reqVmSid)
         --- 将redis连接放回pool中
         local ok, err = red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
         if not ok then
@@ -82,7 +81,7 @@ if build_type == "AGENT" then
                 --  "channelCode": "channelCode"?,
                 -- }
                 ]]
-            
+
                 -- parameter check
                 if obj.projectId == nil then
                     ngx.log(ngx.STDERR, "projectId is null: ")
@@ -140,12 +139,15 @@ if build_type == "AGENT" then
                 ngx.header["X-DEVOPS-AGENT-SECRET-KEY"] = reqSecretKey
                 ngx.header["X-DEVOPS-SYSTEM-VERSION"] = ""
                 ngx.header["X-DEVOPS-XCODE-VERSION"] = ""
+
+                -- 重写project_id变量
+                ngx.var.project_id = obj.projectId
+
                 ngx.exit(200)
                 return
             end
         end
     end
-
 
 elseif build_type == "DOCKER" then
     -- --- Docker构建机
@@ -199,7 +201,7 @@ elseif build_type == "DOCKER" then
                 --      "pipelineId": "d577f5c2f3704c84b36559d769f472ef"
                 -- }
                 ]]
-            
+
                 -- parameter check
                 if obj.projectId == nil then
                     ngx.log(ngx.STDERR, "projectId is null: ")
@@ -251,13 +253,16 @@ elseif build_type == "DOCKER" then
                 ngx.header["X-DEVOPS-AGENT-SECRET-KEY"] = reqSecretKey
                 ngx.header["X-DEVOPS-SYSTEM-VERSION"] = ""
                 ngx.header["X-DEVOPS-XCODE-VERSION"] = ""
+
+                -- 重写project_id变量
+                ngx.var.project_id = obj.projectId
+
                 ngx.exit(200)
                 return
             end
         end
     end
 
-    
 elseif build_type == "PLUGIN_AGENT" then
     -- --- Docker构建机
     -- if build_type == "PLUGIN_AGENT" then 
@@ -310,7 +315,7 @@ elseif build_type == "PLUGIN_AGENT" then
                 --      "pipelineId": "d577f5c2f3704c84b36559d769f472ef"
                 -- }
                 ]]
-            
+
                 -- parameter check
                 if obj.projectId == nil then
                     ngx.log(ngx.STDERR, "projectId is null: ")
@@ -362,6 +367,10 @@ elseif build_type == "PLUGIN_AGENT" then
                 ngx.header["X-DEVOPS-AGENT-SECRET-KEY"] = reqSecretKey
                 ngx.header["X-DEVOPS-SYSTEM-VERSION"] = ""
                 ngx.header["X-DEVOPS-XCODE-VERSION"] = ""
+
+                -- 重写project_id变量
+                ngx.var.project_id = obj.projectId
+
                 ngx.exit(200)
                 return
             end
@@ -458,6 +467,10 @@ elseif build_type == "MACOS" then
                 ngx.header["X-DEVOPS-AGENT-SECRET-KEY"] = obj.secretKey
                 ngx.header["X-DEVOPS-SYSTEM-VERSION"] = obj.systemVersion
                 ngx.header["X-DEVOPS-XCODE-VERSION"] = obj.xcodeVersion
+
+                -- 重写project_id变量
+                ngx.var.project_id = obj.projectId
+
                 return
             end
         end
@@ -551,6 +564,10 @@ else
                 ngx.header["X-DEVOPS-AGENT-SECRET-KEY"] = ""
                 ngx.header["X-DEVOPS-SYSTEM-VERSION"] = ""
                 ngx.header["X-DEVOPS-XCODE-VERSION"] = ""
+
+                -- 重写project_id变量
+                ngx.var.project_id = obj.projectId
+
                 ngx.exit(200)
                 return
             end
@@ -558,4 +575,3 @@ else
     end
 end
 
-   
