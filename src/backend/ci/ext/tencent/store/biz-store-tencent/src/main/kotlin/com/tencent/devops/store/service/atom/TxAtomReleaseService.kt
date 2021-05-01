@@ -34,5 +34,10 @@ interface TxAtomReleaseService {
     /**
      * 重新构建
      */
-    fun rebuild(projectCode: String, userId: String, atomId: String): Result<Boolean>
+    fun rebuild(
+        projectCode: String,
+        userId: String,
+        atomId: String,
+        fieldCheckConfirmFlag: Boolean? = false
+    ): Result<Boolean>
 }
