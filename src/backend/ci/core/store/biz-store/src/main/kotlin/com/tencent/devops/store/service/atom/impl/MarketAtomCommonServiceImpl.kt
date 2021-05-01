@@ -175,7 +175,8 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                         atomAddInputNames = currentAtomInputNames,
                         atomInputMap = currentAtomInputMap,
                         atomCode = atomCode,
-                        version = version
+                        version = version,
+                        fieldCheckConfirmFlag = fieldCheckConfirmFlag
                     )
                 }
             } else if (dbAtomInputNames?.isEmpty() == true && currentAtomInputNames?.isNotEmpty() == true) {
@@ -184,11 +185,12 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                     atomAddInputNames = currentAtomInputNames,
                     atomInputMap = currentAtomInputMap,
                     atomCode = atomCode,
-                    version = version
+                    version = version,
+                    fieldCheckConfirmFlag = fieldCheckConfirmFlag
                 )
             }
             // 判断插件是否有减少的输出参数
-            handleAtomDecreaseField(currentAtomOutputNames, dbAtomOutputNames)
+            handleAtomDecreaseField(currentAtomOutputNames, dbAtomOutputNames, fieldCheckConfirmFlag)
         }
         return Result(true)
     }
