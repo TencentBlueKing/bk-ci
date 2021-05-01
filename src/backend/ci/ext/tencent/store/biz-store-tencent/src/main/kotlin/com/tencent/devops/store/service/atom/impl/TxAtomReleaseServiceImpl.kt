@@ -387,14 +387,13 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             )
         }
         val taskDataMap = getAtomConfResult.taskDataMap
-        val atomId = atomRecord.id
         val atomVersionRecord = marketAtomVersionLogDao.getAtomVersion(dslContext, atomId)
         val releaseType = ReleaseTypeEnum.getReleaseTypeObj(atomVersionRecord.releaseType.toInt())!!
         // 校验插件发布类型
         marketAtomCommonService.validateReleaseType(
             atomId = atomId,
             atomCode = atomCode,
-            version = version,
+            version = atomVersion,
             releaseType = releaseType,
             taskDataMap = taskDataMap,
             fieldCheckConfirmFlag = fieldCheckConfirmFlag
