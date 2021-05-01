@@ -349,7 +349,7 @@ class TriggerBuildService @Autowired constructor(
                 )
             } else {
                 val data = mutableMapOf<String, Any>()
-                data["input"] = step.with.toString()
+                data["input"] = step.with!!
                 MarketBuildAtomElement(
                     name = step.name ?: "插件市场第三方构建环境类插件",
                     id = step.id,
