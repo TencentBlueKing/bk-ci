@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.ci.v2.utils
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.Container
 import com.tencent.devops.common.ci.v2.Credentials
@@ -41,9 +42,10 @@ import com.tencent.devops.common.ci.v2.Strategy
 import com.tencent.devops.common.ci.v2.Variable
 import com.tencent.devops.common.ci.v2.templates.JobsTemplate
 import com.tencent.devops.common.ci.v2.templates.Parameters
+import com.tencent.devops.common.ci.v2.templates.ParametersTemplateNull
 import com.tencent.devops.common.ci.v2.templates.PipelineTemplate
 import com.tencent.devops.common.ci.v2.templates.StagesTemplate
-import com.tencent.devops.common.ci.v2.templates.StepsTemplate
+import com.tencent.devops.common.ci.v2.templates.TemplateGraph
 import com.tencent.devops.common.ci.v2.templates.TemplateType
 import com.tencent.devops.common.ci.v2.templates.VariablesTemplate
 
@@ -51,6 +53,8 @@ class YamlTemplateUtils(
     val yamlObject: PreTemplateScriptBuildYaml,
     val templates: Map<String, String?>
 ) {
+    // 添加池防止末班的循环嵌套
+    var stepTemplateGraph = TemplateGraph<String>()
 
     fun replaceTemplate(): PreScriptBuildYaml {
         return replaceStageTemplate()
@@ -102,7 +106,7 @@ class YamlTemplateUtils(
         if (yamlObject.steps != null) {
             val stepList = mutableListOf<Step>()
             yamlObject.steps.forEach { step ->
-                stepList.addAll(replaceStepTemplate(step, templates))
+                stepList.addAll(replaceStepTemplate(listOf(step), templates))
             }
             preYamlObject.steps = stepList
         }
@@ -222,22 +226,61 @@ class YamlTemplateUtils(
     }
 
     private fun replaceStepTemplate(
-        step: Map<String, Any>,
+        steps: List<Map<String, Any>>,
         templates: Map<String, String?>
     ): List<Step> {
-        return if ("template" in step.keys) {
-            val path = step["template"].toString()
-            val parameters = transNullValue<Map<String, String?>>(
-                key = "parameters",
-                map = step
-            )
-            val template = parseTemplateParameters(path, templates[path], parameters, TemplateType.STEP)
-            val templateObject = YamlUtil.getObjectMapper().readValue(template, StepsTemplate::class.java)
-            templateObject.steps
-        } else {
-            listOf(
-                getStep(step)
-            )
+        val list = replaceStepTemplate(steps, templates, "root")
+        return list
+    }
+
+    private fun replaceStepTemplate(
+        steps: List<Map<String, Any>>,
+        templates: Map<String, String?>,
+        fromPath: String
+    ): List<Step> {
+        val stepList = mutableListOf<Step>()
+        steps.forEach { step ->
+            if ("template" in step.keys) {
+                val toPath = step["template"].toString()
+
+                saveAndCheckCyclicTemplate(fromPath, toPath, TemplateType.STEP)
+
+                val parameters = transNullValue<Map<String, String?>>(
+                    key = "parameters",
+                    map = step
+                )
+                val template = parseTemplateParameters(toPath, templates[toPath], parameters, TemplateType.STEP)
+                val templateObject =
+                    YamlUtil.getObjectMapper().readValue(template, object : TypeReference<Map<String, Any>>() {})
+
+                stepList.addAll(
+                    replaceStepTemplate(
+                        steps = templateObject["steps"] as List<Map<String, Any>>,
+                        templates = templates,
+                        fromPath = toPath
+                    )
+                )
+            } else {
+                stepList.add(getStep(step))
+            }
+        }
+        return stepList
+    }
+
+    private fun saveAndCheckCyclicTemplate(
+        fromPath: String,
+        toPath: String,
+        templateType: TemplateType
+    ) {
+        when (templateType) {
+            TemplateType.STEP -> {
+                stepTemplateGraph.addEdge(fromPath, toPath)
+                if (stepTemplateGraph.hasCyclic()) {
+                    throw RuntimeException("yml file : $toPath in $fromPath has cricly")
+                }
+            }
+            else -> {
+            }
         }
     }
 
@@ -254,20 +297,20 @@ class YamlTemplateUtils(
         var newParameters: MutableList<Parameters>? = null
         when (templateType) {
             TemplateType.PIPELINE -> {
-                newParameters = getPipelineTemplate(path, template).parameters?.toMutableList()
+                newParameters = getTemplateParameters(path, template).parameters?.toMutableList()
             }
             TemplateType.VARIABLE -> {
             }
             TemplateType.PARAMETER -> {
             }
             TemplateType.STAGE -> {
-                newParameters = getStageTemplate(path, template).parameters?.toMutableList()
+                newParameters = getTemplateParameters(path, template).parameters?.toMutableList()
             }
             TemplateType.JOB -> {
-                newParameters = getJobTemplate(path, template).parameters?.toMutableList()
+                newParameters = getTemplateParameters(path, template).parameters?.toMutableList()
             }
             TemplateType.STEP -> {
-                newParameters = getStepTemplate(path, template).parameters?.toMutableList()
+                newParameters = getTemplateParameters(path, template).parameters?.toMutableList()
             }
         }
         if (!newParameters.isNullOrEmpty()) {
@@ -287,35 +330,11 @@ class YamlTemplateUtils(
         return ScriptYmlUtils.parseVariableValue(template, parametersMap)!!
     }
 
-    private fun getPipelineTemplate(path: String, template: String): PipelineTemplate {
+    private fun getTemplateParameters(path: String, template: String): ParametersTemplateNull {
         return try {
-            YamlUtil.getObjectMapper().readValue(template, PipelineTemplate::class.java)
+            YamlUtil.getObjectMapper().readValue(template, ParametersTemplateNull::class.java)
         } catch (e: Exception) {
             throw RuntimeException("$path wrong format！ ${e.message}")
-        }
-    }
-
-    private fun getStageTemplate(path: String, template: String): StagesTemplate {
-        return try {
-            YamlUtil.getObjectMapper().readValue(template, StagesTemplate::class.java)
-        } catch (e: Exception) {
-            throw RuntimeException("$path wrong format！")
-        }
-    }
-
-    private fun getJobTemplate(path: String, template: String): JobsTemplate {
-        return try {
-            YamlUtil.getObjectMapper().readValue(template, JobsTemplate::class.java)
-        } catch (e: Exception) {
-            throw RuntimeException("$path wrong format！")
-        }
-    }
-
-    private fun getStepTemplate(path: String, template: String): StepsTemplate {
-        return try {
-            YamlUtil.getObjectMapper().readValue(template, StepsTemplate::class.java)
-        } catch (e: Exception) {
-            throw RuntimeException("$path wrong format！")
         }
     }
 
@@ -370,7 +389,7 @@ class YamlTemplateUtils(
                 val steps = job["steps"] as List<Map<String, Any>>
                 val list = mutableListOf<Step>()
                 steps.forEach {
-                    list.addAll(replaceStepTemplate(it, templates))
+                    list.addAll(replaceStepTemplate(listOf(it), templates))
                 }
                 list
             },

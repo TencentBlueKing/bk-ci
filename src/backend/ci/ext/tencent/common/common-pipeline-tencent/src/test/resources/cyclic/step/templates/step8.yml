@@ -1,0 +1,8 @@
+parameters:
+- name: username
+  type: string
+  default: world
+
+steps:
+- run: |
+    echo "step8: ${{ parameters.username }}!"

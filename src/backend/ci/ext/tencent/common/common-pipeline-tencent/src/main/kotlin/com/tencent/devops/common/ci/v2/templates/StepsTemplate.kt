@@ -27,9 +27,8 @@
 
 package com.tencent.devops.common.ci.v2.templates
 
-import com.tencent.devops.common.ci.v2.Step
-
+// @JsonIgnoreProperties(ignoreUnknown = true)
 data class StepsTemplate(
     val parameters: List<Parameters>?,
-    val steps: List<Step>
+    val steps: List<Map<String, Any>>
 )

@@ -39,13 +39,25 @@ import java.io.InputStream
 import java.io.InputStreamReader
 
 class YamlTemplateUtilsTest {
-
-    val testYaml = "pipelineWithTemplate.yml"
+    //    // 综合测试
+//    val testYaml = "pipelineWithTemplate.yml"
+//    val templateYamlList = listOf(
+//        "templates/stages.yml",
+//        "templates/jobs.yml",
+//        "templates/steps.yml",
+//        "templates/pipeline.yml"
+//    )
+    // 测试step循环嵌套
+    val testYaml = "/cyclic/step/pipeline.yml"
     val templateYamlList = listOf(
-        "templates/stages.yml",
-        "templates/jobs.yml",
-        "templates/steps.yml",
-        "templates/pipeline.yml"
+        "cyclic/step/templates/step1.yml",
+        "cyclic/step/templates/step2.yml",
+        "cyclic/step/templates/step3.yml",
+        "cyclic/step/templates/step4.yml",
+        "cyclic/step/templates/step5.yml",
+        "cyclic/step/templates/step6.yml",
+        "cyclic/step/templates/step7.yml",
+        "cyclic/step/templates/step8.yml"
     )
 
     @Test
