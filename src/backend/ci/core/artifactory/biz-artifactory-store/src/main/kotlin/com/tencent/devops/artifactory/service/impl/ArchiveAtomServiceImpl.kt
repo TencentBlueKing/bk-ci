@@ -89,7 +89,15 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
         val releaseType = archiveAtomRequest.releaseType
         val os = archiveAtomRequest.os
         val verifyAtomPackageResult = client.get(ServiceMarketAtomArchiveResource::class)
-            .verifyAtomPackageByUserId(userId, projectCode, atomCode, version, releaseType, os)
+            .verifyAtomPackageByUserId(
+                userId = userId,
+                projectCode = projectCode,
+                atomCode = atomCode,
+                version = version,
+                releaseType = releaseType,
+                os = os,
+                fieldCheckConfirmFlag = archiveAtomRequest.fieldCheckConfirmFlag
+            )
         if (verifyAtomPackageResult.isNotOk()) {
             return Result(verifyAtomPackageResult.status, verifyAtomPackageResult.message, null)
         }
@@ -164,7 +172,8 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
             atomCode = reArchiveAtomRequest.atomCode,
             version = reArchiveAtomRequest.version,
             releaseType = null,
-            os = null
+            os = null,
+            fieldCheckConfirmFlag = reArchiveAtomRequest.fieldCheckConfirmFlag
         )
         val archiveAtomResult = archiveAtom(userId, inputStream, disposition, archiveAtomRequest)
         if (archiveAtomResult.isNotOk()) {

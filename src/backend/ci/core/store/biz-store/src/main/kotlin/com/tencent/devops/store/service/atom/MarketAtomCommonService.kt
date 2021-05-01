@@ -38,7 +38,9 @@ interface MarketAtomCommonService {
         atomRecord: TAtomRecord,
         releaseType: ReleaseTypeEnum,
         osList: ArrayList<String>,
-        version: String
+        version: String,
+        taskDataMap: Map<String, Any>,
+        fieldCheckConfirmFlag: Boolean? = false
     ): Result<Boolean>
 
     fun parseBaseTaskJson(
