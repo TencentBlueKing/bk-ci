@@ -247,11 +247,12 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         }
 
         // 处理dispatchType中的BKSTORE镜像信息
+        dispatchType.replaceVariable(buildVariableService.getAllVariable(task.buildId))
+
         dispatchTypeParser.parse(userId = task.starter, projectId = task.projectId,
             pipelineId = task.pipelineId, buildId = task.buildId, dispatchType = dispatchType
         )
 
-        dispatchType.replaceVariable(buildVariableService.getAllVariable(task.buildId))
         return dispatchType
     }
 
