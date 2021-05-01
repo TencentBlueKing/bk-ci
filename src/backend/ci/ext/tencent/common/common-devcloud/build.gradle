@@ -27,6 +27,7 @@
 
 dependencies {
     compile project(":core:common:common-service")
+    compile project(":core:common:common-dispatch-sdk")
     compile("org.json:json")
     compile("org.apache.commons:commons-lang3:$commonLang3Version")
 }

@@ -37,5 +37,5 @@ import com.fasterxml.jackson.annotation.JsonInclude
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Variable(
     val value: String?,
-    val readonly: Boolean?
+    val readonly: Boolean? = false
 )
