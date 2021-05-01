@@ -18,6 +18,14 @@ on:
     path:
       - src/*/*
 
+variables:
+  DEPLOY_TYPE:
+    value: dev
+  APPROVE:
+    value: this_${{ approve22 }}
+  GIT_USERNAME:
+    value: user1
+    readonly: true
 
 stages:
   - name: "stage1"
