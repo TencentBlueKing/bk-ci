@@ -39,6 +39,7 @@ import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomEnvInfoDao
+import com.tencent.devops.store.dao.atom.MarketAtomVersionLogDao
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.AtomPostInfo
 import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
@@ -88,6 +89,9 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
     private lateinit var marketAtomEnvInfoDao: MarketAtomEnvInfoDao
 
     @Autowired
+    private lateinit var marketAtomVersionLogDao: MarketAtomVersionLogDao
+
+    @Autowired
     private lateinit var storeCommonService: StoreCommonService
 
     private val logger = LoggerFactory.getLogger(MarketAtomCommonServiceImpl::class.java)
@@ -129,11 +133,34 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 arrayOf(version, requireVersion)
             )
         }
+        if (dbVersion.isNotBlank()) {
+            // 判断最近一个插件版本的状态，只有处于审核驳回、已发布、上架中止和已下架的状态才允许添加新的版本
+            val atomFinalStatusList = listOf(
+                AtomStatusEnum.AUDIT_REJECT.status.toByte(),
+                AtomStatusEnum.RELEASED.status.toByte(),
+                AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
+                AtomStatusEnum.UNDERCARRIAGED.status.toByte()
+            )
+            if (!atomFinalStatusList.contains(atomRecord.atomStatus)) {
+                return MessageCodeUtil.generateResponseDataObject(
+                    StoreMessageCode.USER_ATOM_VERSION_IS_NOT_FINISH,
+                    arrayOf(atomRecord.name, atomRecord.version)
+                )
+            }
+        }
         // 发布类型为兼容式升级时需判断插件的输入和输出参数是否有变更
-        if (releaseType == ReleaseTypeEnum.COMPATIBILITY_FIX || releaseType == ReleaseTypeEnum.COMPATIBILITY_UPGRADE) {
-            val dbAtomProps = JsonUtil.toMap(atomRecord.props)
-            val dbAtomInputMap = dbAtomProps[KEY_INPUT] as? Map<String, Any>
-            val dbAtomOutputMap = dbAtomProps[KEY_OUTPUT] as? Map<String, Any>
+        val validateReleaseTypeList = listOf(ReleaseTypeEnum.COMPATIBILITY_FIX, ReleaseTypeEnum.COMPATIBILITY_UPGRADE)
+        val validateFlag = releaseType in validateReleaseTypeList
+        val dbAtomProps = marketAtomDao.getLatestAtomByCode(dslContext, atomCode)?.props
+        if (dbAtomProps != null && (validateFlag || getCancelValidateFlag(
+                atomRecord = atomRecord,
+                releaseType = releaseType,
+                validateReleaseTypeList = validateReleaseTypeList
+            ))
+        ) {
+            val dbAtomPropMap = JsonUtil.toMap(dbAtomProps)
+            val dbAtomInputMap = dbAtomPropMap[KEY_INPUT] as? Map<String, Any>
+            val dbAtomOutputMap = dbAtomPropMap[KEY_OUTPUT] as? Map<String, Any>
             val currentAtomInputMap = taskDataMap[KEY_INPUT] as? Map<String, Any>
             val currentAtomOutputMap = taskDataMap[KEY_OUTPUT] as? Map<String, Any>
             val dbAtomInputNames = dbAtomInputMap?.keys
@@ -163,22 +190,21 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             // 判断插件是否有减少的输出参数
             handleAtomDecreaseField(currentAtomOutputNames, dbAtomOutputNames)
         }
-        if (dbVersion.isNotBlank()) {
-            // 判断最近一个插件版本的状态，只有处于审核驳回、已发布、上架中止和已下架的状态才允许添加新的版本
-            val atomFinalStatusList = listOf(
-                AtomStatusEnum.AUDIT_REJECT.status.toByte(),
-                AtomStatusEnum.RELEASED.status.toByte(),
-                AtomStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
-                AtomStatusEnum.UNDERCARRIAGED.status.toByte()
-            )
-            if (!atomFinalStatusList.contains(atomRecord.atomStatus)) {
-                return MessageCodeUtil.generateResponseDataObject(
-                    StoreMessageCode.USER_ATOM_VERSION_IS_NOT_FINISH,
-                    arrayOf(atomRecord.name, atomRecord.version)
-                )
-            }
-        }
         return Result(true)
+    }
+
+    private fun getCancelValidateFlag(
+        atomRecord: TAtomRecord,
+        releaseType: ReleaseTypeEnum,
+        validateReleaseTypeList: List<ReleaseTypeEnum>
+    ): Boolean {
+        var cancelValidateFlag = false
+        val atomVersionRecord = marketAtomVersionLogDao.getAtomVersion(dslContext, atomRecord.id)
+        val dbReleaseType = ReleaseTypeEnum.getReleaseTypeObj(atomVersionRecord.releaseType.toInt())!!
+        if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE && dbReleaseType in validateReleaseTypeList) {
+            cancelValidateFlag = true
+        }
+        return cancelValidateFlag
     }
 
     private fun handleAtomDecreaseField(
