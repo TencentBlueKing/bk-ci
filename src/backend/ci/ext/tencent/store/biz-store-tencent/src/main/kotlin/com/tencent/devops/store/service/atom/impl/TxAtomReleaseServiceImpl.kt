@@ -387,21 +387,18 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             )
         }
         val taskDataMap = getAtomConfResult.taskDataMap
-        val atomVersionRecord = marketAtomVersionLogDao.getAtomVersion(dslContext, atomRecord.id)
+        val atomId = atomRecord.id
+        val atomVersionRecord = marketAtomVersionLogDao.getAtomVersion(dslContext, atomId)
         val releaseType = ReleaseTypeEnum.getReleaseTypeObj(atomVersionRecord.releaseType.toInt())!!
-        val validateAtomVersionResult =
-            marketAtomCommonService.validateAtomVersion(
-                atomRecord = atomRecord,
-                releaseType = releaseType,
-                osList = JsonUtil.to(atomRecord.props, ArrayList::class.java) as ArrayList<String>,
-                version = atomVersion,
-                taskDataMap = taskDataMap,
-                fieldCheckConfirmFlag = fieldCheckConfirmFlag
-            )
-        logger.info("validateAtomVersionResult is :$validateAtomVersionResult")
-        if (validateAtomVersionResult.isNotOk()) {
-            return Result(status = validateAtomVersionResult.status, message = validateAtomVersionResult.message ?: "")
-        }
+        // 校验插件发布类型
+        marketAtomCommonService.validateReleaseType(
+            atomId = atomId,
+            atomCode = atomCode,
+            version = version,
+            releaseType = releaseType,
+            taskDataMap = taskDataMap,
+            fieldCheckConfirmFlag = fieldCheckConfirmFlag
+        )
         val atomEnvRequest = getAtomConfResult.atomEnvRequest ?: return MessageCodeUtil.generateResponseDataObject(
             StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL, arrayOf("execution")
         )
