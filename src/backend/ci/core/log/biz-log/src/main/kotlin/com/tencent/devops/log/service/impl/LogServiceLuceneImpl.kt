@@ -36,6 +36,7 @@ import com.tencent.devops.common.log.pojo.LogEvent
 import com.tencent.devops.common.log.pojo.LogStatusEvent
 import com.tencent.devops.common.log.pojo.PageQueryLogs
 import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
 import com.tencent.devops.common.log.pojo.enums.LogStatus
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo

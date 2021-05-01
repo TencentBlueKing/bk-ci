@@ -27,7 +27,7 @@
 
 package com.tencent.devops.common.log.pojo
 
-import com.tencent.devops.common.log.pojo.enums.LogMode
+import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import io.swagger.annotations.ApiModelProperty
 import java.io.File
 
@@ -39,5 +39,5 @@ data class TaskBuildLogProperty(
     @ApiModelProperty("日志文件句柄", required = true)
     val logFile: File,
     @ApiModelProperty("日志的存储模式", required = false)
-    var logMode: LogMode = LogMode.UPLOAD
+    var logStorageMode: LogStorageMode = LogStorageMode.UPLOAD
 )

@@ -29,11 +29,11 @@ package com.tencent.devops.common.log.pojo.enums
 
 import io.swagger.annotations.ApiModelProperty
 
-enum class LogMode(private val mode: Int) {
+enum class LogStorageMode {
     @ApiModelProperty("上报服务")
-    UPLOAD(0),
+    UPLOAD,
     @ApiModelProperty("本地保存")
-    LOCAL(1),
+    LOCAL,
     @ApiModelProperty("仓库已归档")
-    ARCHIVED(2)
+    ARCHIVED
 }

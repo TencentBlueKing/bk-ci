@@ -29,6 +29,7 @@ package com.tencent.devops.common.log.pojo
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 
 @Event(MQ.EXCHANGE_LOG_STATUS_BUILD_EVENT, MQ.ROUTE_LOG_STATUS_BUILD_EVENT)
 data class LogStatusEvent(
@@ -38,6 +39,7 @@ data class LogStatusEvent(
     val subTag: String?,
     val jobId: String,
     val executeCount: Int?,
+    val logStorageMode: LogStorageMode? = LogStorageMode.UPLOAD,
     override val retryTime: Int = 2,
     override val delayMills: Int = 0
 ) : ILogEvent(buildId, retryTime, delayMills)

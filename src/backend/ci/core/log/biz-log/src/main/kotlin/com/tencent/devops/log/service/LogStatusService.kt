@@ -27,6 +27,8 @@
 
 package com.tencent.devops.log.service
 
+import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
+import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.log.dao.LogStatusDao
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -44,6 +46,7 @@ class LogStatusService @Autowired constructor(
         subTag: String?,
         jobId: String?,
         executeCount: Int?,
+        logStorageMode: LogStorageMode?,
         finish: Boolean
     ) {
         logStatusDao.finish(
@@ -53,7 +56,24 @@ class LogStatusService @Autowired constructor(
             subTags = subTag,
             jobId = jobId,
             executeCount = executeCount,
+            logStorageMode = logStorageMode,
             finish = finish
+        )
+    }
+
+    fun updateStorageMode(
+        buildId: String,
+        executeCount: Int,
+        propertyList: List<TaskBuildLogProperty>
+    ) {
+        val modeList = propertyList.map {
+            it.elementId to it.logStorageMode
+        }.toMap()
+        logStatusDao.updateStorageMode(
+            dslContext = dslContext,
+            buildId = buildId,
+            executeCount = executeCount,
+            modeList = modeList
         )
     }
 
