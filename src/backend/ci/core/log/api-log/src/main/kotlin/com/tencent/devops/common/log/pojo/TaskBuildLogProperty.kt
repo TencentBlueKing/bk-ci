@@ -25,9 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.env
+package com.tencent.devops.common.log.pojo
 
-enum class LogMode {
-    UPLOAD,
-    LOCAL
-}
+import com.tencent.devops.common.log.pojo.enums.LogMode
+import io.swagger.annotations.ApiModelProperty
+import java.io.File
+
+data class TaskBuildLogProperty(
+    @ApiModelProperty("插件任务ID", required = true)
+    val elementId: String,
+    @ApiModelProperty("日志文件子路径", required = true)
+    val childPath: String,
+    @ApiModelProperty("日志文件句柄", required = true)
+    val logFile: File,
+    @ApiModelProperty("日志的存储模式", required = false)
+    var logMode: LogMode = LogMode.UPLOAD
+)

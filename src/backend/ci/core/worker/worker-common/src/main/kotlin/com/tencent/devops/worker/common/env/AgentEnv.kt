@@ -29,6 +29,7 @@ package com.tencent.devops.worker.common.env
 
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.log.pojo.enums.LogMode
 import com.tencent.devops.common.service.env.Env
 import com.tencent.devops.worker.common.exception.PropertyNotExistException
 import com.tencent.devops.worker.common.utils.WorkspaceUtils.getLandun

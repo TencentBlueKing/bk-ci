@@ -27,6 +27,7 @@
 
 package com.tencent.devops.worker.common.logger
 
+import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
 import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.log.meta.Ansi
@@ -40,7 +41,7 @@ import com.tencent.devops.worker.common.LOG_WARN_FLAG
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.log.LogSDKApi
 import com.tencent.devops.worker.common.env.AgentEnv
-import com.tencent.devops.worker.common.env.LogMode
+import com.tencent.devops.common.log.pojo.enums.LogMode
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import org.slf4j.LoggerFactory
@@ -144,7 +145,7 @@ object LoggerService {
             val size = logMessages.size
             try {
                 if (size > 0) {
-                    sendMultiLog(logMessages)
+                    sendMultiLog()
                     logMessages.clear()
                 }
             } finally {
@@ -270,9 +271,10 @@ object LoggerService {
         logger.info("Start to archive log files because of LogMode[${AgentEnv.getLogMode()}]")
         try {
             elementId2LogProperty.forEach { (elementId, property) ->
-                if (property.logMode == LogMode.UPLOAD) return@forEach
+                if (property.logMode != LogMode.LOCAL) return@forEach
                 logger.info("Archive task[$elementId] build log file(${property.logFile.absolutePath})")
                 ArchiveUtils.archiveLogFile(property.logFile, property.childPath, buildVariables!!)
+                property.logMode = LogMode.ARCHIVED
             }
             logger.info("Finished archiving log ${elementId2LogProperty.size} files")
         } catch (e: Exception) {
@@ -282,7 +284,7 @@ object LoggerService {
 
     private fun addLog(message: LogMessage) = uploadQueue.put(message)
 
-    private fun sendMultiLog(logMessages: List<LogMessage>) {
+    private fun sendMultiLog() {
         try {
             logger.info("Start to save the log - ${logMessages.size}")
 

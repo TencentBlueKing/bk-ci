@@ -29,8 +29,8 @@ package com.tencent.devops.worker.common.utils
 
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.worker.common.env.AgentEnv.getOS
-import com.tencent.devops.worker.common.env.LogMode
-import com.tencent.devops.worker.common.logger.TaskBuildLogProperty
+import com.tencent.devops.common.log.pojo.enums.LogMode
+import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
 import java.io.File
 
 object WorkspaceUtils {
