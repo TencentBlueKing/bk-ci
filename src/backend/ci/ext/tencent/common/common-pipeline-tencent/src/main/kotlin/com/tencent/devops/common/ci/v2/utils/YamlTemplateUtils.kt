@@ -356,9 +356,9 @@ class YamlTemplateUtils(
             } else {
                 step["with"] as Map<String, Any>
             },
-            timeoutMinutes = getNullValue("timeoutMinutes", step)?.toInt(),
-            continueOnError = getNullValue("with", step)?.toBoolean(),
-            retryTimes = step["retryTimes"]?.toString(),
+            timeoutMinutes = getNullValue("timeout-minutes", step)?.toInt(),
+            continueOnError = getNullValue("continue-on-error", step)?.toBoolean(),
+            retryTimes = step["retry-times"]?.toString(),
             env = step["env"]?.toString(),
             run = step["run"]?.toString()
         )
@@ -367,10 +367,10 @@ class YamlTemplateUtils(
     private fun getJob(job: Map<String, Any>, templates: Map<String, String?>): PreJob {
         return PreJob(
             name = job["name"]?.toString(),
-            runsOn = if (job["runsOn"] == null) {
+            runsOn = if (job["runs-on"] == null) {
                 null
             } else {
-                job["runsOn"] as List<String>
+                job["runs-on"] as List<String>
             },
             container = if (job["container"] == null) {
                 null
@@ -393,22 +393,22 @@ class YamlTemplateUtils(
                 }
                 list
             },
-            timeoutMinutes = getNullValue("timeoutMinutes", job)?.toInt(),
+            timeoutMinutes = getNullValue("timeout-minutes", job)?.toInt(),
             env = if (job["env"] == null) {
                 emptyMap()
             } else {
                 job["env"] as Map<String, String>
             },
-            continueOnError = getNullValue("continueOnError", job)?.toBoolean(),
+            continueOnError = getNullValue("continue-on-error", job)?.toBoolean(),
             strategy = if (job["strategy"] == null) {
                 null
             } else {
                 getStrategy(job["strategy"]!!)
             },
-            dependOn = if (job["dependOn"] == null) {
+            dependOn = if (job["depend-on"] == null) {
                 null
             } else {
-                job["dependOn"] as List<String>
+                job["depend-on"] as List<String>
             }
         )
     }
@@ -419,7 +419,7 @@ class YamlTemplateUtils(
             id = stage["id"]?.toString(),
             label = stage["label"]?.toString(),
             ifField = stage["if"]?.toString(),
-            fastKill = getNullValue("fastKill", stage)?.toBoolean(),
+            fastKill = getNullValue("fast-kill", stage)?.toBoolean(),
             jobs = if (stage["jobs"] == null) {
                 null
             } else {
@@ -477,8 +477,8 @@ class YamlTemplateUtils(
         val strategyMap = strategy as Map<String, Any?>
         return Strategy(
             matrix = strategyMap["matrix"],
-            fastKill = getNullValue("fastKill", strategyMap)?.toBoolean(),
-            maxParallel = getNullValue("maxParallel", strategyMap)
+            fastKill = getNullValue("fast-kill", strategyMap)?.toBoolean(),
+            maxParallel = getNullValue("max-parallel", strategyMap)
         )
     }
 
