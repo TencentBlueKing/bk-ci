@@ -59,8 +59,7 @@ class StoreLogServiceImpl @Autowired constructor(
         projectCode: String,
         pipelineId: String,
         buildId: String,
-        isAnalysis: Boolean?,
-        queryKeywords: String?,
+        debug: Boolean?,
         tag: String?,
         executeCount: Int?
     ): Result<QueryLogs?> {
@@ -73,8 +72,7 @@ class StoreLogServiceImpl @Autowired constructor(
                 projectId = projectCode,
                 pipelineId = pipelineId,
                 buildId = buildId,
-                isAnalysis = isAnalysis,
-                queryKeywords = queryKeywords,
+                debug = debug,
                 tag = tag,
                 jobId = null,
                 executeCount = executeCount
@@ -92,8 +90,7 @@ class StoreLogServiceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         start: Long,
-        isAnalysis: Boolean?,
-        queryKeywords: String?,
+        debug: Boolean?,
         tag: String?,
         executeCount: Int?
     ): Result<QueryLogs?> {
@@ -107,8 +104,7 @@ class StoreLogServiceImpl @Autowired constructor(
                 pipelineId = pipelineId,
                 buildId = buildId,
                 start = start,
-                isAnalysis = isAnalysis,
-                queryKeywords = queryKeywords,
+                debug = debug,
                 tag = tag,
                     jobId = null,
                     executeCount = executeCount
@@ -125,6 +121,7 @@ class StoreLogServiceImpl @Autowired constructor(
         projectCode: String,
         pipelineId: String,
         buildId: String,
+        debug: Boolean?,
         num: Int?,
         fromStart: Boolean?,
         start: Long,
@@ -141,6 +138,7 @@ class StoreLogServiceImpl @Autowired constructor(
                 projectId = projectCode,
                 pipelineId = pipelineId,
                 buildId = buildId,
+                debug = debug,
                 num = num,
                 fromStart = fromStart,
                 start = start,

@@ -613,6 +613,8 @@
         "copyJobFail": "复制job失败",
         "copyStage": "复制stage",
         "copyStageFail": "复制stage失败",
+        "retryAllJobs": "重新运行Stage下所有Job",
+        "retryFailJobs": "重新运行Stage下所有失败Job",
         "stageManualTriggerUserNoEmptyTips": "请输入至少一名审核人",
         "triggerTooltips": "点击构建触发可配置推荐版本号、流水线变量",
         "userTime": "用户耗时",

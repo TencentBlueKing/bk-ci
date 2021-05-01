@@ -29,6 +29,7 @@ package com.tencent.devops.common.pipeline.pojo.element.trigger
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -47,7 +48,27 @@ data class CodeGitlabWebHookTriggerElement(
     @ApiModelProperty("新版的gitlab原子的类型")
     val repositoryType: RepositoryType? = null,
     @ApiModelProperty("新版的gitlab代码库名")
-    val repositoryName: String? = null
+    val repositoryName: String? = null,
+    @ApiModelProperty("eventType", required = false)
+    val eventType: CodeEventType? = null,
+    @ApiModelProperty("excludeBranch", required = false)
+    val excludeBranchName: String?,
+    @ApiModelProperty("includePaths", required = false)
+    val includePaths: String?,
+    @ApiModelProperty("excludePaths", required = false)
+    val excludePaths: String?,
+    @ApiModelProperty("excludeUsers", required = false)
+    val excludeUsers: List<String>?,
+    @ApiModelProperty("block", required = false)
+    val block: Boolean?,
+    @ApiModelProperty("tagName", required = false)
+    val tagName: String? = null,
+    @ApiModelProperty("excludeTagName", required = false)
+    val excludeTagName: String? = null,
+    @ApiModelProperty("excludeSourceBranchName", required = false)
+    val excludeSourceBranchName: String? = null,
+    @ApiModelProperty("includeSourceBranchName", required = false)
+    val includeSourceBranchName: String? = null
 ) : WebHookTriggerElement(name, id, status) {
     companion object {
         const val classType = "codeGitlabWebHookTrigger"

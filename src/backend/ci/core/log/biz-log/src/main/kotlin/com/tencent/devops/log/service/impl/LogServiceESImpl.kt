@@ -163,8 +163,7 @@ class LogServiceESImpl constructor(
 
     override fun queryInitLogs(
         buildId: String,
-        isAnalysis: Boolean,
-        keywordsStr: String?,
+        debug: Boolean,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -177,6 +176,7 @@ class LogServiceESImpl constructor(
             val result = doQueryInitLogs(
                 buildId = buildId,
                 index = index,
+                debug = debug,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -195,6 +195,7 @@ class LogServiceESImpl constructor(
         fromStart: Boolean,
         start: Long,
         end: Long,
+        debug: Boolean,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -216,8 +217,14 @@ class LogServiceESImpl constructor(
             )
 
             try {
-                val query = getQuery(buildId, tag, subTag, jobId, executeCount)
-                    .must(QueryBuilders.rangeQuery("lineNo").gte(start).lte(end))
+                val query = getQuery(
+                    buildId = buildId,
+                    debug = debug,
+                    tag = tag,
+                    subTag = subTag,
+                    jobId = jobId,
+                    executeCount = executeCount
+                ).must(QueryBuilders.rangeQuery("lineNo").gte(start).lte(end))
 
                 val sortOrder = if (fromStart) SortOrder.ASC else SortOrder.DESC
                 val searchRequest = SearchRequest(index)
@@ -279,6 +286,7 @@ class LogServiceESImpl constructor(
     override fun queryLogsAfterLine(
         buildId: String,
         start: Long,
+        debug: Boolean,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -292,6 +300,7 @@ class LogServiceESImpl constructor(
                 buildId = buildId,
                 index = index,
                 start = start,
+                debug = debug,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -307,6 +316,7 @@ class LogServiceESImpl constructor(
     override fun queryLogsBeforeLine(
         buildId: String,
         end: Long,
+        debug: Boolean,
         size: Int?,
         tag: String?,
         subTag: String?,
@@ -321,6 +331,7 @@ class LogServiceESImpl constructor(
                 buildId = buildId,
                 index = index,
                 end = end,
+                debug = debug,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -348,6 +359,7 @@ class LogServiceESImpl constructor(
         val index = indexService.getIndexName(buildId)
         val query = getQuery(
             buildId = buildId,
+            debug = false,
             tag = tag,
             subTag = subTag,
             jobId = jobId,
@@ -364,8 +376,7 @@ class LogServiceESImpl constructor(
                     .size(Constants.SCROLL_MAX_LINES)
                     .sort("timestamp", SortOrder.ASC)
                     .sort("lineNo", SortOrder.ASC)
-            )
-            .scroll(TimeValue(1000 * 64))
+            ).scroll(TimeValue(1000 * 64))
 
         var scrollResp = try {
             scrollClient.restClient.search(searchRequest, RequestOptions.DEFAULT)
@@ -414,6 +425,7 @@ class LogServiceESImpl constructor(
     override fun getEndLogsPage(
         pipelineId: String,
         buildId: String,
+        debug: Boolean,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -426,6 +438,7 @@ class LogServiceESImpl constructor(
         try {
             val result = doGetEndLogs(
                 buildId = buildId,
+                debug = debug,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -446,6 +459,7 @@ class LogServiceESImpl constructor(
     override fun getBottomLogs(
         pipelineId: String,
         buildId: String,
+        debug: Boolean,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -457,6 +471,7 @@ class LogServiceESImpl constructor(
         try {
             val result = doGetEndLogs(
                 buildId = buildId,
+                debug = debug,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -473,8 +488,7 @@ class LogServiceESImpl constructor(
 
     override fun queryInitLogsPage(
         buildId: String,
-        isAnalysis: Boolean,
-        keywordsStr: String?,
+        debug: Boolean,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -496,8 +510,9 @@ class LogServiceESImpl constructor(
         var logSize = 0L
         try {
             val index = indexService.getIndexName(buildId)
-            queryLogs = queryInitLogsPage(
+            queryLogs = doQueryInitLogsPage(
                 buildId = buildId,
+                debug = debug,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -508,6 +523,7 @@ class LogServiceESImpl constructor(
             logSize = getLogSize(
                 index = index,
                 buildId = buildId,
+                debug = debug,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -559,8 +575,9 @@ class LogServiceESImpl constructor(
             .isAcknowledged
     }
 
-    private fun queryInitLogsPage(
+    private fun doQueryInitLogsPage(
         buildId: String,
+        debug: Boolean,
         tag: String? = null,
         subTag: String? = null,
         jobId: String? = null,
@@ -586,8 +603,14 @@ class LogServiceESImpl constructor(
             boolQuery.must(QueryBuilders.rangeQuery("lineNo").gte(beginLineNo).lte(endLineNo))
         }
 
-        val query = getQuery(buildId, tag, subTag, jobId, executeCount)
-            .must(boolQuery)
+        val query = getQuery(
+            buildId = buildId,
+            debug = debug,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount
+        ).must(boolQuery)
 
         val scrollClient = logClient.hashClient(buildId)
         val searchRequest = SearchRequest(index)
@@ -632,6 +655,7 @@ class LogServiceESImpl constructor(
 
     private fun doGetEndLogs(
         buildId: String,
+        debug: Boolean,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -658,6 +682,7 @@ class LogServiceESImpl constructor(
             val logSize = getLogSize(
                 index = index,
                 buildId = buildId,
+                debug = debug,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -665,8 +690,14 @@ class LogServiceESImpl constructor(
             )
             if (logSize == 0L) return queryLogs
             val start = if (logSize > size.toLong()) logSize - size.toLong() else 0L
-            val query = getQuery(buildId, tag, subTag, jobId, executeCount)
-                .must(QueryBuilders.rangeQuery("lineNo").gte(start))
+            val query = getQuery(
+                buildId = buildId,
+                debug = debug,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount
+            ).must(QueryBuilders.rangeQuery("lineNo").gte(start))
             val searchRequest = SearchRequest(index)
                 .source(
                     SearchSourceBuilder()
@@ -720,6 +751,7 @@ class LogServiceESImpl constructor(
     private fun doQueryInitLogs(
         buildId: String,
         index: String,
+        debug: Boolean,
         tag: String? = null,
         subTag: String? = null,
         jobId: String? = null,
@@ -746,6 +778,7 @@ class LogServiceESImpl constructor(
             val logSize = getLogSize(
                 index = index,
                 buildId = buildId,
+                debug = debug,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -756,6 +789,7 @@ class LogServiceESImpl constructor(
             val startTime = System.currentTimeMillis()
             val boolQueryBuilder = getQuery(
                 buildId = buildId,
+                debug = debug,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -817,6 +851,7 @@ class LogServiceESImpl constructor(
         buildId: String,
         index: String,
         start: Long,
+        debug: Boolean,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -848,6 +883,7 @@ class LogServiceESImpl constructor(
             val logSize = getLogSize(
                 index = index,
                 buildId = buildId,
+                debug = debug,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -857,6 +893,7 @@ class LogServiceESImpl constructor(
             if (logSize == 0L) return queryLogs
             val boolQueryBuilder = getQuery(
                 buildId = buildId,
+                debug = debug,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -938,6 +975,7 @@ class LogServiceESImpl constructor(
         index: String,
         end: Long,
         size: Int,
+        debug: Boolean,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -969,6 +1007,7 @@ class LogServiceESImpl constructor(
             val logSize = getLogSize(
                 index = index,
                 buildId = buildId,
+                debug = debug,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -989,6 +1028,7 @@ class LogServiceESImpl constructor(
             }
             val boolQueryBuilder = getQuery(
                 buildId = buildId,
+                debug = debug,
                 tag = tag,
                 subTag = subTag,
                 jobId = jobId,
@@ -1067,6 +1107,7 @@ class LogServiceESImpl constructor(
     private fun getLogSize(
         index: String,
         buildId: String,
+        debug: Boolean,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -1074,7 +1115,7 @@ class LogServiceESImpl constructor(
         start: Long? = null,
         end: Long? = null
     ): Long {
-        val query = getQuery(buildId, tag, subTag, jobId, executeCount)
+        val query = getQuery(buildId, debug, tag, subTag, jobId, executeCount)
         if (start != null) query.must(QueryBuilders.rangeQuery("lineNo").gte(start))
         if (end != null) query.must(QueryBuilders.rangeQuery("lineNo").lte(end))
         val countRequest = CountRequest(index).source(SearchSourceBuilder().query(query))
@@ -1253,6 +1294,7 @@ class LogServiceESImpl constructor(
 
     private fun getQuery(
         buildId: String,
+        debug: Boolean,
         tag: String?,
         subTag: String?,
         jobId: String?,
@@ -1267,6 +1309,9 @@ class LogServiceESImpl constructor(
         }
         if (!jobId.isNullOrBlank()) {
             query.must(QueryBuilders.matchQuery("jobId", jobId).operator(Operator.AND))
+        }
+        if (!debug) {
+            query.mustNot(QueryBuilders.matchQuery("logType", LogType.DEBUG.name).operator(Operator.AND))
         }
         query.must(QueryBuilders.matchQuery("executeCount", executeCount ?: 1).operator(Operator.AND))
             .must(QueryBuilders.matchQuery("buildId", buildId).operator(Operator.AND))
