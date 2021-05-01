@@ -161,7 +161,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 )
             }
             // 判断插件是否有减少的输出参数
-            handleAtomDecreaseField(currentAtomOutputNames, dbAtomOutputNames, dbAtomInputNames)
+            handleAtomDecreaseField(currentAtomOutputNames, dbAtomOutputNames)
         }
         if (dbVersion.isNotBlank()) {
             // 判断最近一个插件版本的状态，只有处于审核驳回、已发布、上架中止和已下架的状态才允许添加新的版本
@@ -184,13 +184,12 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
     private fun handleAtomDecreaseField(
         currentAtomOutputNames: Set<String>?,
         dbAtomOutputNames: MutableSet<String>?,
-        dbAtomInputNames: Set<String>?,
         fieldCheckConfirmFlag: Boolean? = false
     ) {
         var flag = false
         if (currentAtomOutputNames?.isNotEmpty() == true) {
             dbAtomOutputNames?.removeAll(currentAtomOutputNames)
-            if (dbAtomInputNames?.isNotEmpty() == true) {
+            if (dbAtomOutputNames?.isNotEmpty() == true) {
                 // 当前版本的插件有减少的输出参数，让用户确定是否继续发布
                 flag = true
             }
@@ -199,10 +198,10 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             flag = true
         }
         if (flag && fieldCheckConfirmFlag != true) {
-            if (dbAtomInputNames?.isNotEmpty() == true) {
+            if (dbAtomOutputNames?.isNotEmpty() == true) {
                 throw ErrorCodeException(
                     errorCode = StoreMessageCode.USER_ATOM_COMPATIBLE_OUTPUT_FIELD_CONFIRM,
-                    params = arrayOf(JsonUtil.toJson(dbAtomInputNames))
+                    params = arrayOf(JsonUtil.toJson(dbAtomOutputNames))
                 )
             }
         }
