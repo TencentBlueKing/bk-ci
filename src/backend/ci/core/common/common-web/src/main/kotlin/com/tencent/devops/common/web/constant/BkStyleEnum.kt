@@ -34,6 +34,7 @@ enum class BkStyleEnum(val style: String) {
     ID_STYLE("^[\\w-]{1,64}\$"), // 标识正则表达式
     NAME_STYLE("^[\\w-\\u4E00-\\u9FBB\\u3400-\\u4DBF\\uF900-\\uFAD9\\u3000-\\u303F" +
         "\\u2000-\\u206F\\uFF00-\\uFFEF]{1,32}\$"), // 名称正则表达式
+    STORE_MEMBER_TYPE_STYLE("^ADMIN|DEVELOPER\$"), // 研发商店组件成员类型正则表达式
     EMAIL_STYLE("^\\w+([-+.]\\w+)*@\\w+([-.]\\w+)*\\.\\w+([-.]\\w+)*\$"), // 电子邮箱正则表达式
     AUTH_STYLE("^HTTP|HTTPS|OAUTH|SSH\$"), // 权限认证类型正则表达式
     NOTE_STYLE("^[A-Za-z0-9\\u4E00-\\u9FBB\\u3400-\\u4DBF\\uF900-\\uFAD9\\u3000-\\u303F" +
@@ -42,5 +43,5 @@ enum class BkStyleEnum(val style: String) {
     LANGUAGE_STYLE("^java|python|nodejs|golang|c|c++|php|c#\$"), // 开发语言正则表达式
     BOOLEAN_STYLE("^true|false\$"), // 布尔型正则表达式
     SCOPE_STYLE("^TEST|PRD|ALL\$"), // 适用范围正则表达式
-    SERVICE_CODE_STYLE("^[a-z][([-a-z-0-9]*[a-z-0-9])?]{0,31}\$"), // 研发商店扩展服务标识正则表达式
+    SERVICE_CODE_STYLE("^[a-z][([-a-z-0-9]*[a-z-0-9])?]{0,31}\$") // 研发商店扩展服务标识正则表达式
 }

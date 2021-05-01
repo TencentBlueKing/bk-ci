@@ -48,22 +48,28 @@ object IosUtils {
     fun getIpaInfoMap(ipa: File): Map<String, String> {
 
         val map = mutableMapOf<String, String>()
-        val file = getPlistFile(ipa) ?: throw ExecuteException("not Info.plist found")
+        val infoFilePair = getInfoFilePair(ipa)
+        if (infoFilePair.first == null) {
+            throw ExecuteException("not Info.plist found")
+        }
         // 第三方jar包提供
-        val rootDict = PropertyListParser.parse(file) as NSDictionary
+        val rootDict = PropertyListParser.parse(infoFilePair.first) as NSDictionary
         // 应用包名
-        if (!rootDict.containsKey("CFBundleIdentifier"))
+        if (!rootDict.containsKey("CFBundleIdentifier")) {
             throw ExecuteException("no CFBundleIdentifier find in plist")
+        }
         var parameters = rootDict.objectForKey("CFBundleIdentifier") as NSString
         map["bundleIdentifier"] = parameters.toString()
         // 应用标题
-        if (!rootDict.containsKey("CFBundleName"))
+        if (!rootDict.containsKey("CFBundleName")) {
             throw ExecuteException("no CFBundleName find in plist")
+        }
         parameters = rootDict.objectForKey("CFBundleName") as NSString
         map["appTitle"] = parameters.toString()
         // 应用版本
-        if (!rootDict.containsKey("CFBundleShortVersionString"))
+        if (!rootDict.containsKey("CFBundleShortVersionString")) {
             throw ExecuteException("no CFBundleShortVersionString find in plist")
+        }
         parameters = rootDict.objectForKey("CFBundleShortVersionString") as NSString
         map["bundleVersion"] = parameters.toString()
         // scheme
@@ -84,7 +90,12 @@ object IosUtils {
         map["scheme"] = scheme
         // 应用名称
         val appName = try {
-            (rootDict.objectForKey("CFBundleDisplayName") as NSString).toString()
+            val nameDictionary = if (infoFilePair.second != null) {
+                PropertyListParser.parse(infoFilePair.second) as NSDictionary
+            } else {
+                rootDict
+            }
+            nameDictionary.objectForKey("CFBundleDisplayName").toString()
         } catch (e: Exception) {
             ""
         }
@@ -105,32 +116,46 @@ object IosUtils {
         return map
     }
 
-    private fun getPlistFile(srcZipFile: File): File? {
+    private fun getInfoFilePair(srcZipFile: File): Pair<File?/*Info.plist*/, File?/*InfoPlist.strings*/> {
         val pattern = Pattern.compile("Payload/[\\w.-]+\\.app/Info.plist")
+        val zhPattern = Pattern.compile("Payload/[\\w.-]+\\.app/zh-Hans.lproj/InfoPlist.strings")
+        var file: File? = null
+        var zhFile: File? = null
         ZipInputStream(BufferedInputStream(FileInputStream(srcZipFile))).use { zis ->
             var entry: ZipEntry?
-            while (true) {
+            while (file == null || zhFile == null) {
                 entry = zis.nextEntry
                 if (entry == null) break
-                if (pattern.matcher(entry.name).matches()) {
-                    return unzip2TempPlist(zis)
-                }
+                file = file ?: toTmpFile(pattern, entry, zis, "Info", ".plist")
+                zhFile = zhFile ?: toTmpFile(zhPattern, entry, zis, "InfoPlist", ".strings")
             }
         }
-        return null
+
+        return Pair(file, zhFile)
     }
 
-    private fun unzip2TempPlist(zis: ZipInputStream): File? {
-        val file = File.createTempFile("Info", ".plist")
-        BufferedOutputStream(FileOutputStream(file.canonicalFile)).use { bos ->
-            var b: Int
-            val buf = ByteArray(byteBufferSize)
-            while (true) {
-                b = zis.read(buf)
-                if (b == -1) break
-                bos.write(buf, 0, b)
+    @SuppressWarnings("NestedBlockDepth")
+    private fun toTmpFile(
+        pattern: Pattern,
+        entry: ZipEntry,
+        zis: ZipInputStream,
+        prefix: String,
+        suffix: String
+    ): File? {
+        return if (pattern.matcher(entry.name).matches()) {
+            val file = File.createTempFile(prefix, suffix)
+            BufferedOutputStream(FileOutputStream(file.canonicalFile)).use { bos ->
+                var b: Int
+                val buf = ByteArray(4096)
+                while (true) {
+                    b = zis.read(buf)
+                    if (b == -1) break
+                    bos.write(buf, 0, b)
+                }
             }
+            file
+        } else {
+            null
         }
-        return file
     }
 }
