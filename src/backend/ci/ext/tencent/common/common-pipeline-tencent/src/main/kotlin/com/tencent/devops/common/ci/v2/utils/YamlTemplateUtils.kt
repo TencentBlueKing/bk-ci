@@ -337,9 +337,9 @@ class YamlTemplateUtils(
             } else {
                 step["with"] as Map<String, Any>
             },
-            timeoutMinutes = getNullValue("timeoutMinutes", step)?.toInt(),
-            continueOnError = getNullValue("with", step)?.toBoolean(),
-            retryTimes = step["retryTimes"]?.toString(),
+            timeoutMinutes = getNullValue("timeout-minutes", step)?.toInt(),
+            continueOnError = getNullValue("continue-on-error", step)?.toBoolean(),
+            retryTimes = step["retry-times"]?.toString(),
             env = step["env"]?.toString(),
             run = step["run"]?.toString()
         )
@@ -374,13 +374,13 @@ class YamlTemplateUtils(
                 }
                 list
             },
-            timeoutMinutes = getNullValue("timeoutMinutes", job)?.toInt(),
+            timeoutMinutes = getNullValue("timeout-minutes", job)?.toInt(),
             env = if (job["env"] == null) {
                 emptyMap()
             } else {
                 job["env"] as Map<String, String>
             },
-            continueOnError = getNullValue("continueOnError", job)?.toBoolean(),
+            continueOnError = getNullValue("continue-on-error", job)?.toBoolean(),
             strategy = if (job["strategy"] == null) {
                 null
             } else {
@@ -400,7 +400,7 @@ class YamlTemplateUtils(
             id = stage["id"]?.toString(),
             label = stage["label"]?.toString(),
             ifField = stage["if"]?.toString(),
-            fastKill = getNullValue("fastKill", stage)?.toBoolean(),
+            fastKill = getNullValue("fast-kill", stage)?.toBoolean(),
             jobs = if (stage["jobs"] == null) {
                 null
             } else {
@@ -458,8 +458,8 @@ class YamlTemplateUtils(
         val strategyMap = strategy as Map<String, Any?>
         return Strategy(
             matrix = strategyMap["matrix"],
-            fastKill = getNullValue("fastKill", strategyMap)?.toBoolean(),
-            maxParallel = getNullValue("maxParallel", strategyMap)
+            fastKill = getNullValue("fast-kill", strategyMap)?.toBoolean(),
+            maxParallel = getNullValue("max-parallel", strategyMap)
         )
     }
 
