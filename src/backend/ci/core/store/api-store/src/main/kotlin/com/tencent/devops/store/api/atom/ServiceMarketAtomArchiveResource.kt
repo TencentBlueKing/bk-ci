@@ -71,7 +71,10 @@ interface ServiceMarketAtomArchiveResource {
         releaseType: ReleaseTypeEnum?,
         @ApiParam("支持的操作系统", required = false)
         @QueryParam("os")
-        os: String?
+        os: String?,
+        @ApiParam("插件字段校验确认标识", required = false)
+        @QueryParam("fieldCheckConfirmFlag")
+        fieldCheckConfirmFlag: Boolean?
     ): Result<Boolean>
 
     @ApiOperation("校验用户上传的插件包中的taskJson是否正确")
