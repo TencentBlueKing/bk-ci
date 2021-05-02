@@ -28,6 +28,7 @@
 package com.tencent.devops.store.service.atom
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.atom.AtomRebuildRequest
 
 interface TxAtomReleaseService {
 
@@ -38,6 +39,6 @@ interface TxAtomReleaseService {
         projectCode: String,
         userId: String,
         atomId: String,
-        fieldCheckConfirmFlag: Boolean? = false
+        atomRebuildRequest: AtomRebuildRequest
     ): Result<Boolean>
 }

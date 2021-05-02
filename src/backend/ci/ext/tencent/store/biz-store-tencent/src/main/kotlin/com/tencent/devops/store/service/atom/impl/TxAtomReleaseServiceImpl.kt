@@ -70,6 +70,7 @@ import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.common.StoreBuildInfoDao
 import com.tencent.devops.store.dao.common.StorePipelineBuildRelDao
 import com.tencent.devops.store.dao.common.StorePipelineRelDao
+import com.tencent.devops.store.pojo.atom.AtomRebuildRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
 import com.tencent.devops.store.pojo.atom.MarketAtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.enums.AtomPackageSourceTypeEnum
@@ -354,9 +355,9 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
         projectCode: String,
         userId: String,
         atomId: String,
-        fieldCheckConfirmFlag: Boolean?
+        atomRebuildRequest: AtomRebuildRequest
     ): Result<Boolean> {
-        logger.info("rebuild, projectCode=$projectCode, userId=$userId, atomId=$atomId, flag=$fieldCheckConfirmFlag")
+        logger.info("rebuild, projectCode=$projectCode, userId=$userId, atomId=$atomId, request=$atomRebuildRequest")
         // 判断是否可以启动构建
         val status = AtomStatusEnum.BUILDING.status.toByte()
         val (checkResult, code) = checkAtomVersionOptRight(userId, atomId, status)
@@ -396,7 +397,7 @@ class TxAtomReleaseServiceImpl : TxAtomReleaseService, AtomReleaseServiceImpl() 
             version = atomVersion,
             releaseType = releaseType,
             taskDataMap = taskDataMap,
-            fieldCheckConfirmFlag = fieldCheckConfirmFlag
+            fieldCheckConfirmFlag = atomRebuildRequest.fieldCheckConfirmFlag
         )
         val atomEnvRequest = getAtomConfResult.atomEnvRequest ?: return MessageCodeUtil.generateResponseDataObject(
             StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL, arrayOf("execution")
