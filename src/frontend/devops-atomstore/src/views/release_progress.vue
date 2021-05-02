@@ -421,7 +421,7 @@
                     }
                 }
             },
-            uploadFile (fileObj) {
+            uploadFile (fileObj, fieldCheckConfirmFlag = false) {
                 const formData = new FormData()
                 formData.append('file', fileObj.origin)
                 formData.append('os', `["${this.versionDetail.os.join('","')}"]`)
@@ -430,7 +430,8 @@
                 fileObj.xhr = xhr // 保存，用于中断请求
 
                 xhr.withCredentials = true
-                xhr.open('POST', this.postUrl, true)
+                const url = this.postUrl + `?fieldCheckConfirmFlag=${fieldCheckConfirmFlag}`
+                xhr.open('POST', url, true)
                 xhr.onreadystatechange = () => {
                     if (xhr.readyState === 4) {
                         let theme, message
@@ -443,6 +444,9 @@
 
                                 this.requestRelease(this.routerParams.atomId)
                                 this.requestAtomDetail(this.routerParams.atomId)
+                            } else if ([2120030, 2120031].includes(response.status)) {
+                                this.confirmSubmit(response.message, () => this.uploadFile(fileObj, true))
+                                return
                             } else {
                                 theme = 'error'
                                 message = response.message
@@ -470,6 +474,24 @@
                 xhr.setRequestHeader('X-CSRFToken', CSRFToken)
                 xhr.send(formData)
                 document.querySelector('.upload-input').value = ''
+            },
+            confirmSubmit (message, cb) {
+                const h = this.$createElement
+                const subHeader = h('p', { style: {
+                    textDecoration: 'none',
+                    cursor: 'pointer',
+                    whiteSpace: 'normal',
+                    textAlign: 'left'
+                } }, message)
+                this.$bkInfo({
+                    type: 'warning',
+                    title: this.$t('store.请确认'),
+                    subHeader,
+                    okText: this.$t('store.提交'),
+                    confirmFn (vm) {
+                        cb()
+                    }
+                })
             },
             atomOs (os) {
                 const target = []

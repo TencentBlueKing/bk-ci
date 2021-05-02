@@ -662,7 +662,7 @@
                 })
             },
 
-            submit () {
+            submit (fieldCheckConfirmFlag) {
                 this.validate().then(() => {
                     this.loading.isLoading = true
                     const params = {
@@ -684,7 +684,8 @@
                         visibilityLevel: this.atomForm.visibilityLevel,
                         packageShaContent: this.atomForm.packageShaContent,
                         pkgName: this.atomForm.pkgName,
-                        frontendType: this.atomForm.frontendType
+                        frontendType: this.atomForm.frontendType,
+                        fieldCheckConfirmFlag
                     }
 
                     return this.$store.dispatch('store/editAtom', {
@@ -698,20 +699,30 @@
                 }).catch((err) => {
                     if (err.httpStatus === 200) {
                         const h = this.$createElement
-
-                        this.$bkInfo({
-                            type: 'error',
-                            title: this.$t('store.提交失败'),
-                            showFooter: false,
-                            subHeader: h('p', {
-                                style: {
-                                    textDecoration: 'none',
-                                    cursor: 'pointer',
-                                    whiteSpace: 'normal',
-                                    textAlign: 'left'
+                        const subHeader = h('p', { style: {
+                            textDecoration: 'none',
+                            cursor: 'pointer',
+                            whiteSpace: 'normal',
+                            textAlign: 'left'
+                        } }, err.message || err)
+                        if ([2120030, 2120031].includes(err.code)) {
+                            this.$bkInfo({
+                                type: 'warning',
+                                title: this.$t('store.请确认'),
+                                subHeader,
+                                okText: this.$t('store.提交'),
+                                confirmFn (vm) {
+                                    vm.submit(true)
                                 }
-                            }, err.message ? err.message : err)
-                        })
+                            })
+                        } else {
+                            this.$bkInfo({
+                                type: 'error',
+                                title: this.$t('store.提交失败'),
+                                showFooter: false,
+                                subHeader
+                            })
+                        }
                     } else if (err) {
                         this.$bkMessage({ message: err.message || err, theme: 'error' })
                     }
