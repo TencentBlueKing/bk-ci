@@ -48,8 +48,7 @@ interface MarketAtomArchiveService {
         atomCode: String,
         version: String,
         releaseType: ReleaseTypeEnum?,
-        os: String?,
-        fieldCheckConfirmFlag: Boolean? = false
+        os: String?
     ): Result<Boolean>
 
     fun verifyAtomTaskJson(

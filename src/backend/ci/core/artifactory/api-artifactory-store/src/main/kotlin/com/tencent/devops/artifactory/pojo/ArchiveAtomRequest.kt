@@ -42,7 +42,5 @@ data class ArchiveAtomRequest(
     @ApiModelProperty("发布类型", required = false)
     val releaseType: ReleaseTypeEnum?,
     @ApiModelProperty("支持的操作系统", required = false)
-    val os: String?,
-    @ApiModelProperty(value = "插件字段校验确认标识", required = false)
-    val fieldCheckConfirmFlag: Boolean? = false
+    val os: String?
 )

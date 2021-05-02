@@ -79,10 +79,7 @@ interface UserArchiveAtomResource {
         disposition: FormDataContentDisposition,
         @ApiParam("支持的操作系统", required = true)
         @FormDataParam("os")
-        os: String,
-        @ApiParam("插件字段校验确认标识", required = false)
-        @QueryParam("fieldCheckConfirmFlag")
-        fieldCheckConfirmFlag: Boolean?
+        os: String
     ): Result<ArchiveAtomResponse?>
 
     @ApiOperation("重新归档插件包")
