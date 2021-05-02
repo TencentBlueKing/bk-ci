@@ -68,6 +68,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.springframework.util.StringUtils
+import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -235,6 +236,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         if (flag && fieldCheckConfirmFlag != true) {
             if (dbAtomOutputNames?.isNotEmpty() == true) {
                 throw ErrorCodeException(
+                    statusCode = Response.Status.OK.statusCode,
                     errorCode = StoreMessageCode.USER_ATOM_COMPATIBLE_OUTPUT_FIELD_CONFIRM,
                     params = arrayOf(JsonUtil.toJson(dbAtomOutputNames))
                 )
@@ -269,6 +271,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             // 存在有默认值的不兼容新增参数，让用户确定是否继续发布
             logger.info("validateVersion $atomCode,$version,confirmAtomInputNames:$atomAddInputNames")
             throw ErrorCodeException(
+                statusCode = Response.Status.OK.statusCode,
                 errorCode = StoreMessageCode.USER_ATOM_COMPATIBLE_INPUT_FIELD_CONFIRM,
                 params = arrayOf(JsonUtil.toJson(atomAddInputNames))
             )
