@@ -95,8 +95,7 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
                 atomCode = atomCode,
                 version = version,
                 releaseType = releaseType,
-                os = os,
-                fieldCheckConfirmFlag = archiveAtomRequest.fieldCheckConfirmFlag
+                os = os
             )
         if (verifyAtomPackageResult.isNotOk()) {
             return Result(verifyAtomPackageResult.status, verifyAtomPackageResult.message, null)
@@ -186,8 +185,7 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
             atomCode = atomCode,
             version = version,
             releaseType = null,
-            os = null,
-            fieldCheckConfirmFlag = reArchiveAtomRequest.fieldCheckConfirmFlag
+            os = null
         )
         val archiveAtomResult = archiveAtom(userId, inputStream, disposition, archiveAtomRequest)
         if (archiveAtomResult.isNotOk()) {

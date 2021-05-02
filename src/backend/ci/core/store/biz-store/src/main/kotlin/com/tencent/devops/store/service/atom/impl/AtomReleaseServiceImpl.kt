@@ -334,14 +334,21 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 atomRecord = atomRecord,
                 releaseType = releaseType,
                 osList = osList,
-                version = version,
-                taskDataMap = taskDataMap,
-                fieldCheckConfirmFlag = marketAtomUpdateRequest.fieldCheckConfirmFlag
+                version = version
             )
         logger.info("validateAtomVersionResult is :$validateAtomVersionResult")
         if (validateAtomVersionResult.isNotOk()) {
             return Result(status = validateAtomVersionResult.status, message = validateAtomVersionResult.message ?: "")
         }
+        // 校验插件发布类型
+        marketAtomCommonService.validateReleaseType(
+            atomId = atomRecord.id,
+            atomCode = atomCode,
+            version = version,
+            releaseType = releaseType,
+            taskDataMap = taskDataMap,
+            fieldCheckConfirmFlag = marketAtomUpdateRequest.fieldCheckConfirmFlag
+        )
         val validateResult = validateUpdateMarketAtomReq(userId, marketAtomUpdateRequest, atomRecord)
         logger.info("validateUpdateMarketAtomReq validateResult is :$validateResult")
         if (validateResult.isNotOk()) {

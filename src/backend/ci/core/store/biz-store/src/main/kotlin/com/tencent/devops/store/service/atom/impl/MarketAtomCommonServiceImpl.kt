@@ -101,11 +101,8 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         atomRecord: TAtomRecord,
         releaseType: ReleaseTypeEnum,
         osList: ArrayList<String>,
-        version: String,
-        taskDataMap: Map<String, Any>,
-        fieldCheckConfirmFlag: Boolean?
+        version: String
     ): Result<Boolean> {
-        val atomCode = atomRecord.atomCode
         val dbVersion = atomRecord.version
         if (INIT_VERSION == dbVersion && releaseType == ReleaseTypeEnum.NEW) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_EXIST, arrayOf(version))
@@ -148,16 +145,6 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 )
             }
         }
-        val atomId = atomRecord.id
-        // 发布类型为兼容式升级时需判断插件的输入和输出参数是否有变更
-        validateReleaseType(
-            releaseType = releaseType,
-            atomCode = atomCode,
-            atomId = atomId,
-            taskDataMap = taskDataMap,
-            version = version,
-            fieldCheckConfirmFlag = fieldCheckConfirmFlag
-        )
         return Result(true)
     }
 

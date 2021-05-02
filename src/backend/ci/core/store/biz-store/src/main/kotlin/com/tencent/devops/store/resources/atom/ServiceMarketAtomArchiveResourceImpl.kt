@@ -47,8 +47,7 @@ class ServiceMarketAtomArchiveResourceImpl @Autowired constructor(
         atomCode: String,
         version: String,
         releaseType: ReleaseTypeEnum?,
-        os: String?,
-        fieldCheckConfirmFlag: Boolean?
+        os: String?
     ): Result<Boolean> {
         return marketAtomArchiveService.verifyAtomPackageByUserId(
             userId = userId,
@@ -56,8 +55,7 @@ class ServiceMarketAtomArchiveResourceImpl @Autowired constructor(
             atomCode = atomCode,
             version = version,
             releaseType = releaseType,
-            os = os,
-            fieldCheckConfirmFlag = fieldCheckConfirmFlag
+            os = os
         )
     }
 

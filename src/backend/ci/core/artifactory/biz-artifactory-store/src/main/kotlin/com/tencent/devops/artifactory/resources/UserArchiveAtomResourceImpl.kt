@@ -51,8 +51,7 @@ class UserArchiveAtomResourceImpl @Autowired constructor(private val archiveAtom
         releaseType: ReleaseTypeEnum,
         inputStream: InputStream,
         disposition: FormDataContentDisposition,
-        os: String,
-        fieldCheckConfirmFlag: Boolean?
+        os: String
     ): Result<ArchiveAtomResponse?> {
         return archiveAtomService.archiveAtom(
             userId = userId,
@@ -63,8 +62,7 @@ class UserArchiveAtomResourceImpl @Autowired constructor(private val archiveAtom
                 atomCode = atomCode,
                 version = version,
                 releaseType = releaseType,
-                os = os,
-                fieldCheckConfirmFlag = fieldCheckConfirmFlag
+                os = os
             )
         )
     }

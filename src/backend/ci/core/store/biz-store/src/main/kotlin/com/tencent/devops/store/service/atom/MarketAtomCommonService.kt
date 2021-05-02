@@ -38,9 +38,7 @@ interface MarketAtomCommonService {
         atomRecord: TAtomRecord,
         releaseType: ReleaseTypeEnum,
         osList: ArrayList<String>,
-        version: String,
-        taskDataMap: Map<String, Any>,
-        fieldCheckConfirmFlag: Boolean? = false
+        version: String
     ): Result<Boolean>
 
     fun validateReleaseType(

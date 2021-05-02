@@ -105,8 +105,7 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         atomCode: String,
         version: String,
         releaseType: ReleaseTypeEnum?,
-        os: String?,
-        fieldCheckConfirmFlag: Boolean?
+        os: String?
     ): Result<Boolean> {
         // 校验用户是否是该插件的开发成员
         val flag = storeMemberDao.isStoreMember(dslContext, userId, atomCode, StoreTypeEnum.ATOM.type.toByte())
@@ -121,21 +120,11 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         // 不是重新上传的包才需要校验版本号
         if (null != releaseType) {
             val osList = JsonUtil.getObjectMapper().readValue(os, ArrayList::class.java) as ArrayList<String>
-            val taskJsonStr = getFileStr(projectCode, atomCode, version, TASK_JSON_NAME)
-            val taskDataMap = marketAtomCommonService.parseBaseTaskJson(
-                taskJsonStr = taskJsonStr,
-                atomCode = atomCode,
-                version = version,
-                userId = userId
-            ).taskDataMap
-            val validateAtomVersionResult =
-                marketAtomCommonService.validateAtomVersion(
+            val validateAtomVersionResult = marketAtomCommonService.validateAtomVersion(
                     atomRecord = atomRecord,
                     releaseType = releaseType,
                     osList = osList,
-                    version = version,
-                    taskDataMap = taskDataMap,
-                    fieldCheckConfirmFlag = fieldCheckConfirmFlag
+                    version = version
                 )
             logger.info("validateAtomVersionResult is :$validateAtomVersionResult")
             if (validateAtomVersionResult.isNotOk()) {
