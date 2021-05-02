@@ -25,15 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.setting
+package com.tencent.devops.process.pojo.config
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 
-@ApiModel("流水线job公共配置信息")
-data class JobCommonSetting(
-    @ApiModelProperty("每个job最大task个数", required = true)
-    val maxTaskNum: Int,
-    @ApiModelProperty("task公共配置", required = true)
-    val taskCommonSetting: TaskCommonSetting
-)
+@Component
+class PipelineCommonSettingConfig {
+
+    @Value("\${pipeline.setting.common.stage.maxStageNum:20}")
+    val maxStageNum: Int = 20
+}

@@ -27,6 +27,10 @@
 
 package com.tencent.devops.process.service.pipeline
 
+import com.tencent.devops.common.api.constant.KEY_CODE_EDITOR
+import com.tencent.devops.common.api.constant.KEY_DEFAULT
+import com.tencent.devops.common.api.constant.KEY_INPUT
+import com.tencent.devops.common.api.constant.KEY_TEXTAREA
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
@@ -34,9 +38,18 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.config.JobCommonSettingConfig
+import com.tencent.devops.process.pojo.config.PipelineCommonSettingConfig
+import com.tencent.devops.process.pojo.config.StageCommonSettingConfig
+import com.tencent.devops.process.pojo.config.TaskCommonSettingConfig
+import com.tencent.devops.process.pojo.setting.JobCommonSetting
+import com.tencent.devops.process.pojo.setting.PipelineCommonSetting
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.process.pojo.setting.StageCommonSetting
 import com.tencent.devops.process.pojo.setting.Subscription
+import com.tencent.devops.process.pojo.setting.TaskCommonSetting
+import com.tencent.devops.process.pojo.setting.TaskComponentCommonSetting
 import com.tencent.devops.process.pojo.setting.UpdatePipelineModelRequest
 import com.tencent.devops.process.service.PipelineSettingVersionService
 import com.tencent.devops.process.service.label.PipelineGroupService
@@ -50,6 +63,10 @@ class PipelineSettingFacadeService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineGroupService: PipelineGroupService,
     private val pipelineSettingVersionService: PipelineSettingVersionService,
+    private val pipelineCommonSettingConfig: PipelineCommonSettingConfig,
+    private val stageCommonSettingConfig: StageCommonSettingConfig,
+    private val jobCommonSettingConfig: JobCommonSettingConfig,
+    private val taskCommonSettingConfig: TaskCommonSettingConfig,
     private val client: Client
 ) {
 
@@ -124,6 +141,56 @@ class PipelineSettingFacadeService @Autowired constructor(
         }
 
         return settingInfo
+    }
+
+    fun getCommonSetting(userId: String): PipelineCommonSetting {
+        val inputComponentCommonSettings = mutableListOf<TaskComponentCommonSetting>()
+        inputComponentCommonSettings.add(
+            TaskComponentCommonSetting(
+                componentType = KEY_INPUT,
+                maxSize = taskCommonSettingConfig.maxInputComponentSize
+            )
+        )
+        inputComponentCommonSettings.add(
+            TaskComponentCommonSetting(
+                componentType = KEY_TEXTAREA,
+                maxSize = taskCommonSettingConfig.maxTextareaComponentSize
+            )
+        )
+        inputComponentCommonSettings.add(
+            TaskComponentCommonSetting(
+                componentType = KEY_CODE_EDITOR,
+                maxSize = taskCommonSettingConfig.maxCodeEditorComponentSize
+            )
+        )
+        inputComponentCommonSettings.add(
+            TaskComponentCommonSetting(
+                componentType = KEY_DEFAULT,
+                maxSize = taskCommonSettingConfig.maxDefaultInputComponentSize
+            )
+        )
+        val outputComponentCommonSettings = listOf(
+            TaskComponentCommonSetting(
+                componentType = KEY_DEFAULT,
+                maxSize = taskCommonSettingConfig.maxDefaultOutputComponentSize
+            )
+        )
+        val taskCommonSetting = TaskCommonSetting(
+            maxInputNum = taskCommonSettingConfig.maxInputNum,
+            maxOutputNum = taskCommonSettingConfig.maxOutputNum,
+            inputComponentCommonSettings = inputComponentCommonSettings,
+            outputComponentCommonSettings = outputComponentCommonSettings
+        )
+        return PipelineCommonSetting(
+            maxStageNum = pipelineCommonSettingConfig.maxStageNum,
+            stageCommonSetting = StageCommonSetting(
+                maxJobNum = stageCommonSettingConfig.maxStageNum,
+                jobCommonSetting = JobCommonSetting(
+                    maxTaskNum = jobCommonSettingConfig.maxTaskNum,
+                    taskCommonSetting = taskCommonSetting
+                )
+            )
+        )
     }
 
     fun getSettingInfo(pipelineId: String): PipelineSetting? {

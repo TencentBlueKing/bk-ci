@@ -36,6 +36,8 @@ data class TaskCommonSetting(
     val maxInputNum: Int,
     @ApiModelProperty("最大输出参数个数", required = true)
     val maxOutputNum: Int,
-    @ApiModelProperty("组件配置", required = true)
-    val componentCommonSettings: List<TaskComponentCommonSetting>
+    @ApiModelProperty("输入参数组件配置", required = true)
+    val inputComponentCommonSettings: List<TaskComponentCommonSetting>,
+    @ApiModelProperty("输出参数组件配置", required = true)
+    val outputComponentCommonSettings: List<TaskComponentCommonSetting>
 )

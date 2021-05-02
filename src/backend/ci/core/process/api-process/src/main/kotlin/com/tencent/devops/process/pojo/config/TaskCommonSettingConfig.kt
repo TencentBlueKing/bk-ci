@@ -25,15 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.setting
+package com.tencent.devops.process.pojo.config
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 
-@ApiModel("流水线job公共配置信息")
-data class JobCommonSetting(
-    @ApiModelProperty("每个job最大task个数", required = true)
-    val maxTaskNum: Int,
-    @ApiModelProperty("task公共配置", required = true)
-    val taskCommonSetting: TaskCommonSetting
-)
+@Component
+class TaskCommonSettingConfig {
+
+    @Value("\${pipeline.setting.common.stage.job.task.maxInputNum:50}")
+    val maxInputNum: Int = 50
+
+    @Value("\${pipeline.setting.common.stage.job.task.maxOutputNum:50}")
+    val maxOutputNum: Int = 50
+
+    @Value("\${pipeline.setting.common.stage.job.task.inputComponent.input:1024}")
+    val maxInputComponentSize: Int = 1024
+
+    @Value("\${pipeline.setting.common.stage.job.task.inputComponent.textarea:4096}")
+    val maxTextareaComponentSize: Int = 4096
+
+    @Value("\${pipeline.setting.common.stage.job.task.inputComponent.codeEditor:16384}")
+    val maxCodeEditorComponentSize: Int = 16384
+
+    @Value("\${pipeline.setting.common.stage.job.task.inputComponent.default:1024}")
+    val maxDefaultInputComponentSize: Int = 1024
+
+    @Value("\${pipeline.setting.common.stage.job.task.outputComponent.default:4000}")
+    val maxDefaultOutputComponentSize: Int = 4000
+}

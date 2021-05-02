@@ -32,6 +32,8 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("流水线公共配置信息")
 data class PipelineCommonSetting(
-    @ApiModelProperty("流水线job公共配置信息", required = true)
-    val jobCommonSetting: JobCommonSetting
+    @ApiModelProperty("每条流水线最大stage个数", required = true)
+    val maxStageNum: Int,
+    @ApiModelProperty("流水线stage公共配置信息", required = true)
+    val stageCommonSetting: StageCommonSetting
 )
