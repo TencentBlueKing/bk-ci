@@ -98,6 +98,7 @@ import com.tencent.devops.process.service.ParamFacadeService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.util.BuildMsgUtils
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
+import com.tencent.devops.process.utils.PIPELINE_RETRY_ALL_FAILED_CONTAINER
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
@@ -313,6 +314,7 @@ class PipelineBuildFacadeService(
         pipelineId: String,
         buildId: String,
         taskId: String? = null,
+        failedContainer: Boolean? = false,
         isMobile: Boolean = false,
         channelCode: ChannelCode? = ChannelCode.BS,
         checkPermission: Boolean? = true
@@ -381,6 +383,7 @@ class PipelineBuildFacadeService(
                         // stage 级重试
                         if (s.id == taskId) {
                             params[PIPELINE_RETRY_START_TASK_ID] = s.id!!
+                            params[PIPELINE_RETRY_ALL_FAILED_CONTAINER] = failedContainer == true
                             return@run
                         }
                         s.containers.forEach { c ->
