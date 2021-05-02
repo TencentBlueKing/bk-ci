@@ -703,17 +703,16 @@
                             textDecoration: 'none',
                             cursor: 'pointer',
                             whiteSpace: 'normal',
-                            textAlign: 'left'
+                            textAlign: 'left',
+                            lineHeight: '24px'
                         } }, err.message || err)
                         if ([2120030, 2120031].includes(err.code)) {
+                            const confirmFn = () => this.submit(true)
                             this.$bkInfo({
                                 type: 'warning',
-                                title: this.$t('store.请确认'),
                                 subHeader,
                                 okText: this.$t('store.提交'),
-                                confirmFn (vm) {
-                                    vm.submit(true)
-                                }
+                                confirmFn
                             })
                         } else {
                             this.$bkInfo({

@@ -475,22 +475,20 @@
                 xhr.send(formData)
                 document.querySelector('.upload-input').value = ''
             },
-            confirmSubmit (message, cb) {
+            confirmSubmit (message, confirmFn) {
                 const h = this.$createElement
                 const subHeader = h('p', { style: {
                     textDecoration: 'none',
                     cursor: 'pointer',
                     whiteSpace: 'normal',
-                    textAlign: 'left'
+                    textAlign: 'left',
+                    lineHeight: '24px'
                 } }, message)
                 this.$bkInfo({
                     type: 'warning',
-                    title: this.$t('store.请确认'),
                     subHeader,
                     okText: this.$t('store.提交'),
-                    confirmFn (vm) {
-                        cb()
-                    }
+                    confirmFn
                 })
             },
             atomOs (os) {
