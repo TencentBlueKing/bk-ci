@@ -33,6 +33,6 @@ import org.springframework.stereotype.Component
 @Component
 class StageCommonSettingConfig {
 
-    @Value("\${pipeline.setting.common.stage.maxStageNum:20}")
-    val maxStageNum: Int = 20
+    @Value("\${pipeline.setting.common.stage.maxJobNum:20}")
+    val maxJobNum: Int = 20
 }

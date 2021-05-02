@@ -49,6 +49,8 @@ import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
 import com.tencent.devops.store.pojo.common.ATOM_POST_FLAG
 import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.KEY_INPUT
+import com.tencent.devops.store.pojo.common.KEY_OUTPUT
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
@@ -57,6 +59,7 @@ import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.util.StringUtils
 
@@ -81,6 +84,12 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
 
     @Autowired
     private lateinit var storeCommonService: StoreCommonService
+
+    @Value("\${pipeline.setting.common.stage.job.task.maxInputNum:50}")
+    private val maxInputNum: Int = 50
+
+    @Value("\${pipeline.setting.common.stage.job.task.maxOutputNum:50}")
+    private val maxOutputNum: Int = 50
 
     private val logger = LoggerFactory.getLogger(MarketAtomCommonServiceImpl::class.java)
 
@@ -201,6 +210,22 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             return GetAtomConfigResult(
                 StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
                 arrayOf("execution"), null, null
+            )
+        }
+
+        // 校验参数输入参数和输出参数是否超过最大值
+        val inputDataMap = taskDataMap[KEY_INPUT] as? Map<String, Any>
+        if (inputDataMap != null && inputDataMap.size > maxInputNum) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_ATOM_INPUT_NUM_IS_TOO_MANY,
+                params = arrayOf(maxInputNum.toString())
+            )
+        }
+        val outputDataMap = taskDataMap[KEY_OUTPUT] as? Map<String, Any>
+        if (outputDataMap != null && outputDataMap.size > maxOutputNum) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_ATOM_OUTPUT_NUM_IS_TOO_MANY,
+                params = arrayOf(maxOutputNum.toString())
             )
         }
 
