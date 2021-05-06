@@ -32,8 +32,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_TYPE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.dockerhost.common.Constants
+import com.tencent.devops.dockerhost.common.EnvEnum
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import okhttp3.Headers
 import okhttp3.MediaType
@@ -44,14 +44,11 @@ import java.net.URLEncoder
 
 @Suppress("ALL")
 abstract class AbstractBuildResourceApi constructor(
-    private val dockerHostConfig: DockerHostConfig,
-    private val gray: Gray
+    private val dockerHostConfig: DockerHostConfig
 ) {
     companion object {
         const val GRAY_PROJECT = "grayproject"
         const val AUTO_PROJECT = "autoproject"
-        const val CODECC_BUILD = "codecc_build"
-        const val GITCI_BUILD = "gitci_build"
 
         private val gateway: String by lazy {
             DockerEnv.getGatway().removePrefix("http://").removePrefix("https://")
@@ -151,14 +148,12 @@ abstract class AbstractBuildResourceApi constructor(
     }
 
     private fun getAllHeaders(headers: Map<String, String>): Map<String, String> {
-
-        if (gray.isGray()) {
-            logger.info("Now is gray environment, request with the x-devops-project-id header.")
-            return buildArgs.plus(headers).plus(mapOf("x-devops-project-id" to GRAY_PROJECT))
-        }
-
-        return when (dockerHostConfig.dockerhostMode) {
-            CODECC_BUILD -> {
+        return when (dockerHostConfig.landunEnv ?: EnvEnum.PROD_ENV.value) {
+            EnvEnum.GRAY_ENV.value -> {
+                logger.info("Now is gray environment, request with the x-devops-project-id header.")
+                buildArgs.plus(headers).plus(mapOf("x-devops-project-id" to GRAY_PROJECT))
+            }
+            EnvEnum.AUTO_ENV.value -> {
                 logger.info("Now is auto environment, request with the x-devops-project-id header.")
                 buildArgs.plus(headers).plus(mapOf(AUTH_HEADER_DEVOPS_PROJECT_ID to AUTO_PROJECT))
             }
