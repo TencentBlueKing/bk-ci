@@ -86,6 +86,7 @@ class AuthConfiguration {
     fun policyService() = PolicyServiceImpl(iamConfiguration(), httpService())
 
     @Bean
+    @ConditionalOnMissingBean
     fun authHelper() = AuthHelper(tokenService(), policyService(), iamConfiguration())
 
     @Bean
