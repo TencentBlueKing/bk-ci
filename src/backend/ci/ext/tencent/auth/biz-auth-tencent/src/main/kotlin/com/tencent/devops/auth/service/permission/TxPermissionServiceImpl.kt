@@ -29,19 +29,20 @@ package com.tencent.devops.auth.service.permission
 
 import com.tencent.devops.auth.service.PermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class TxPermissionServiceImpl @Autowired constructor(
-
+    val redisOperation: RedisOperation
 ) : PermissionService {
     override fun validateUserResourcePermission(userId: String, resourceType: String, projectCode: String, permission: String): Boolean {
-        TODO("Not yet implemented")
+        return true
     }
 
     override fun validateUserResourcePermissionByRelation(userId: String, resourceType: String, projectCode: String, permission: String, relationResourceType: String?): Boolean {
-        TODO("Not yet implemented")
+        return true
     }
 
     override fun getUserResourceByPermission(userId: String, serviceCode: String, resourceType: String, projectCode: String, permission: String): List<String> {
@@ -49,6 +50,6 @@ class TxPermissionServiceImpl @Autowired constructor(
     }
 
     override fun getUserResourcesByPermissions(userId: String, serviceCode: String, resourceType: String, projectCode: String, permission: Set<AuthPermission>): Map<AuthPermission, List<String>> {
-        TODO("Not yet implemented")
+        return emptyMap()
     }
 }
