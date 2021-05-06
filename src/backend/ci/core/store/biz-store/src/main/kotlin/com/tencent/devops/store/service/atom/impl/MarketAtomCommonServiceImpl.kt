@@ -27,8 +27,10 @@
 
 package com.tencent.devops.store.service.atom.impl
 
+import com.tencent.devops.common.api.constant.COMPONENT
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.INIT_VERSION
+import com.tencent.devops.common.api.constant.TYPE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
@@ -46,6 +48,7 @@ import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
+import com.tencent.devops.store.pojo.common.ATOM_INPUT
 import com.tencent.devops.store.pojo.common.ATOM_POST
 import com.tencent.devops.store.pojo.common.ATOM_POST_CONDITION
 import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
@@ -279,7 +282,8 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             version = atom.version,
             initProjectCode = initProjectCode!!,
             jobType = if (jobType == null) null else JobTypeEnum.valueOf(jobType),
-            buildLessRunFlag = atom.buildLessRunFlag
+            buildLessRunFlag = atom.buildLessRunFlag,
+            inputTypeInfos = generateInputTypeInfos(atom.props)
         )
         // 更新插件当前版本号的缓存信息
         redisOperation.hset(
@@ -351,5 +355,29 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 )
             }
         }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun generateInputTypeInfos(props: String?): Map<String, String>? {
+        var inputTypeInfos: Map<String, String>? = null
+        if (!props.isNullOrEmpty()) {
+            val propMap = JsonUtil.toMap(props)
+            inputTypeInfos = mutableMapOf()
+            val inputDataMap = propMap[ATOM_INPUT] as? Map<String, Any>
+            if (inputDataMap != null) {
+                // 生成新插件输入参数对应的类型数据
+                inputDataMap.keys.forEach { inputKey ->
+                    val inputDataObj = inputDataMap[inputKey] as Map<String, Any>
+                    inputTypeInfos[inputKey] = inputDataObj[TYPE].toString()
+                }
+            } else {
+                // 生成老插件输入参数对应的类型数据
+                propMap.keys.forEach { inputKey ->
+                    val inputDataObj = propMap[inputKey] as Map<String, Any>
+                    inputTypeInfos[inputKey] = inputDataObj[COMPONENT].toString()
+                }
+            }
+        }
+        return inputTypeInfos
     }
 }
