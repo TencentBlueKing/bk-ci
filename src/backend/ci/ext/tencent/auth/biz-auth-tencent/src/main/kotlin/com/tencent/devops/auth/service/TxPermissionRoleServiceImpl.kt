@@ -34,7 +34,7 @@ import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.auth.pojo.dto.ProjectRoleDTO
 import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.auth.service.iam.impl.AbsPermissionRoleServiceImpl
-import org.jvnet.hk2.annotations.Service
+import org.springframework.stereotype.Service
 import org.springframework.beans.factory.annotation.Autowired
 
 @Service
