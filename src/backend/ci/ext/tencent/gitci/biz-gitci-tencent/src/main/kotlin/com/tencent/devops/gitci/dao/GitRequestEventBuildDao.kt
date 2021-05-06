@@ -43,6 +43,7 @@ class GitRequestEventBuildDao {
         dslContext: DSLContext,
         eventId: Long,
         originYaml: String,
+        parsedYaml: String,
         normalizedYaml: String,
         gitProjectId: Long,
         branch: String,
@@ -56,6 +57,7 @@ class GitRequestEventBuildDao {
                 this,
                 EVENT_ID,
                 ORIGIN_YAML,
+                PARSED_YAML,
                 NORMALIZED_YAML,
                 GIT_PROJECT_ID,
                 BRANCH,
@@ -67,6 +69,7 @@ class GitRequestEventBuildDao {
             ).values(
                 eventId,
                 originYaml,
+                parsedYaml,
                 normalizedYaml,
                 gitProjectId,
                 branch,

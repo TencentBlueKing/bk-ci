@@ -97,6 +97,7 @@ class RequestTrigger @Autowired constructor(
                 dslContext = dslContext,
                 eventId = gitRequestEvent.id!!,
                 originYaml = originYaml!!,
+                parsedYaml = originYaml,
                 normalizedYaml = normalizedYaml,
                 gitProjectId = gitRequestEvent.gitProjectId,
                 branch = gitRequestEvent.branch,

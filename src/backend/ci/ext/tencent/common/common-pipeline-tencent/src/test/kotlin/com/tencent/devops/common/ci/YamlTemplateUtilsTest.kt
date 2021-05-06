@@ -30,6 +30,7 @@ package com.tencent.devops.common.ci
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
+import com.tencent.devops.common.ci.v2.utils.YamlCommonUtils
 import com.tencent.devops.common.ci.v2.utils.YamlTemplateUtils
 import org.junit.Test
 
@@ -110,7 +111,7 @@ class YamlTemplateUtilsTest {
         val preTemplateYamlObject = YamlUtil.getObjectMapper().readValue(yaml, PreTemplateScriptBuildYaml::class.java)
 
         println(
-            YamlUtil.toYaml(
+            YamlCommonUtils.toYamlNotNull(
                 YamlTemplateUtils(
                     yamlObject = preTemplateYamlObject,
                     templates = getAllTemplates(),

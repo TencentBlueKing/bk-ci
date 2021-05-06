@@ -29,8 +29,8 @@ package com.tencent.devops.gitci.v2.service.trigger
 
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
-import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
+import com.tencent.devops.common.ci.v2.utils.YamlCommonUtils
 import com.tencent.devops.common.ci.v2.utils.YamlTemplateUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.gitci.dao.GitCIServicesConfDao
@@ -42,6 +42,7 @@ import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.gitci.pojo.enums.TriggerReason
 import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
+import com.tencent.devops.gitci.pojo.v2.YamlObjects
 import com.tencent.devops.gitci.service.GitRepositoryConfService
 import com.tencent.devops.gitci.service.trigger.RequestTriggerInterface
 import com.tencent.devops.gitci.v2.listener.V2GitCIRequestDispatcher
@@ -67,7 +68,7 @@ class V2RequestTrigger @Autowired constructor(
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val repositoryConfService: GitRepositoryConfService,
     private val rabbitTemplate: RabbitTemplate
-) : RequestTriggerInterface<ScriptBuildYaml> {
+) : RequestTriggerInterface<YamlObjects> {
 
     companion object {
         private val logger = LoggerFactory.getLogger(V2RequestTrigger::class.java)
@@ -85,7 +86,7 @@ class V2RequestTrigger @Autowired constructor(
         originYaml: String?,
         filePath: String
     ): Boolean {
-        val yamlObject = prepareCIBuildYaml(
+        val yamlObjects = prepareCIBuildYaml(
             gitToken = gitToken,
             forkGitToken = forkGitToken,
             gitRequestEvent = gitRequestEvent,
@@ -94,7 +95,7 @@ class V2RequestTrigger @Autowired constructor(
             filePath = filePath,
             pipelineId = gitProjectPipeline.pipelineId
         ) ?: return false
-
+        val yamlObject = yamlObjects.normalYaml
         val normalizedYaml = YamlUtil.toYaml(yamlObject)
         logger.info("normalize yaml: $normalizedYaml")
 
@@ -102,12 +103,13 @@ class V2RequestTrigger @Autowired constructor(
         gitProjectPipeline.displayName =
             if (!yamlObject.name.isNullOrBlank()) yamlObject.name!! else filePath.removeSuffix(".yml")
 
-        if (isMatch(event, yamlObject)) {
+        if (isMatch(event, yamlObjects)) {
             logger.info("Matcher is true, display the event, gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}, dispatched pipeline: $gitProjectPipeline")
             val gitBuildId = gitRequestEventBuildDao.save(
                 dslContext = dslContext,
                 eventId = gitRequestEvent.id!!,
                 originYaml = originYaml!!,
+                parsedYaml = YamlCommonUtils.toYamlNotNull(yamlObjects.preYaml),
                 normalizedYaml = normalizedYaml,
                 gitProjectId = gitRequestEvent.gitProjectId,
                 branch = gitRequestEvent.branch,
@@ -136,6 +138,7 @@ class V2RequestTrigger @Autowired constructor(
                 pipelineId = if (gitProjectPipeline.pipelineId.isBlank()) null else gitProjectPipeline.pipelineId,
                 filePath = gitProjectPipeline.filePath,
                 originYaml = originYaml,
+                parsedYaml = YamlCommonUtils.toYamlNotNull(yamlObjects.preYaml),
                 normalizedYaml = normalizedYaml,
                 reason = TriggerReason.TRIGGER_NOT_MATCH.name,
                 reasonDetail = TriggerReason.TRIGGER_NOT_MATCH.detail,
@@ -146,8 +149,8 @@ class V2RequestTrigger @Autowired constructor(
         return true
     }
 
-    override fun isMatch(event: GitEvent, ymlObject: ScriptBuildYaml): Boolean {
-        return V2WebHookMatcher(event).isMatch(ymlObject.triggerOn!!)
+    override fun isMatch(event: GitEvent, ymlObject: YamlObjects): Boolean {
+        return V2WebHookMatcher(event).isMatch(ymlObject.normalYaml.triggerOn!!)
     }
 
     override fun prepareCIBuildYaml(
@@ -158,13 +161,13 @@ class V2RequestTrigger @Autowired constructor(
         originYaml: String?,
         filePath: String?,
         pipelineId: String?
-    ): ScriptBuildYaml? {
+    ): YamlObjects? {
         if (originYaml.isNullOrBlank()) {
             return null
         }
         val isFork = (event is GitMergeRequestEvent) && gitRequestEvent.sourceGitProjectId != null &&
                 gitRequestEvent.sourceGitProjectId != gitRequestEvent.gitProjectId
-        val yamlObject = try {
+        val yamlObjects = try {
             createCIBuildYaml(
                 isFork = isFork,
                 gitToken = gitToken,
@@ -182,6 +185,7 @@ class V2RequestTrigger @Autowired constructor(
                 pipelineId = pipelineId,
                 filePath = filePath,
                 originYaml = originYaml,
+                parsedYaml = null,
                 normalizedYaml = null,
                 reason = TriggerReason.GIT_CI_YAML_INVALID.name,
                 reasonDetail = e.message.toString(),
@@ -189,8 +193,7 @@ class V2RequestTrigger @Autowired constructor(
             )
             return null
         }
-
-        return yamlObject
+        return yamlObjects
     }
 
     fun createCIBuildYaml(
@@ -201,7 +204,7 @@ class V2RequestTrigger @Autowired constructor(
         filePath: String,
         gitRequestEvent: GitRequestEvent,
         gitProjectId: Long? = null
-    ): ScriptBuildYaml {
+    ): YamlObjects {
         logger.info("input yamlStr: $yamlStr")
 
         val yaml = ScriptYmlUtils.formatYaml(yamlStr)
@@ -213,7 +216,7 @@ class V2RequestTrigger @Autowired constructor(
         // 替换yaml文件中的模板引用
         val preYamlObject = YamlTemplateUtils(preTemplateYamlObject, templates, filePath).replace()
 
-        return ScriptYmlUtils.normalizeGitCiYaml(preYamlObject)
+        return YamlObjects(preYaml = preYamlObject, normalYaml = ScriptYmlUtils.normalizeGitCiYaml(preYamlObject))
     }
 
     private fun getAllTemplates(

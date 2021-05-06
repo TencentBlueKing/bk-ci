@@ -63,6 +63,7 @@ import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitPushEvent
 import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
+import com.tencent.devops.gitci.pojo.v2.V2BuildYaml
 import com.tencent.devops.gitci.service.trigger.RequestTriggerFactory
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitResource
@@ -145,6 +146,7 @@ class GitCITriggerService @Autowired constructor(
             dslContext = dslContext,
             eventId = gitRequestEvent.id!!,
             originYaml = originYaml!!,
+            parsedYaml = originYaml,
             normalizedYaml = normalizedYaml,
             gitProjectId = gitRequestEvent.gitProjectId,
             branch = gitRequestEvent.branch,
@@ -1025,5 +1027,15 @@ class GitCITriggerService @Autowired constructor(
         gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(Response.Status.FORBIDDEN, "项目未开启工蜂CI，无法查询")
         val eventBuild = gitRequestEventBuildDao.getByBuildId(dslContext, buildId)
         return (eventBuild?.originYaml) ?: ""
+    }
+
+    fun getYamlV2(gitProjectId: Long, buildId: String): V2BuildYaml? {
+        logger.info("get yaml by buildId:($buildId), gitProjectId: $gitProjectId")
+        gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(Response.Status.FORBIDDEN, "项目未开启工蜂CI，无法查询")
+        val eventBuild = gitRequestEventBuildDao.getByBuildId(dslContext, buildId)
+        if (eventBuild == null) {
+            return null
+        }
+        return V2BuildYaml(parsedYaml = eventBuild.parsedYaml, originYaml = eventBuild.originYaml)
     }
 }
