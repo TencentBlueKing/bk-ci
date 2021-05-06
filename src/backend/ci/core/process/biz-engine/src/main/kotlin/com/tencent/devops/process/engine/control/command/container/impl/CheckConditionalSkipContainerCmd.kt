@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.control.command.container.impl
 
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.control.command.CmdFlowState
@@ -39,7 +40,9 @@ import org.springframework.stereotype.Service
  * Job的按条件跳过命令处理
  */
 @Service
-class CheckConditionalSkipContainerCmd : ContainerCmd {
+class CheckConditionalSkipContainerCmd constructor(
+    private val buildLogPrinter: BuildLogPrinter
+) : ContainerCmd {
 
     companion object {
         private val LOG = LoggerFactory.getLogger(CheckConditionalSkipContainerCmd::class.java)
@@ -84,7 +87,9 @@ class CheckConditionalSkipContainerCmd : ContainerCmd {
                 conditions = conditions,
                 variables = containerContext.variables,
                 buildId = container.buildId,
-                runCondition = runCondition
+                runCondition = runCondition,
+                customCondition = jobControlOption.customCondition,
+                buildLogPrinter = buildLogPrinter
             )
 
             if (skip) {
