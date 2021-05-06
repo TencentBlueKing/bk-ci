@@ -132,6 +132,7 @@ class AuthDeptServiceImpl @Autowired constructor(
     private fun getDeptInfo(search: SearchDeptEntity): DeptInfoVo {
         val url = getAuthRequestUrl(LIST_DEPARTMENTS)
         val content = objectMapper.writeValueAsString(search)
+        logger.info("getDeptInfo url: $url, body: ${JsonUtil.toJson(search)}")
         val mediaType = MediaType.parse("application/json; charset=utf-8")
         val requestBody = RequestBody.create(mediaType, content)
         val request = Request.Builder().url(url)
