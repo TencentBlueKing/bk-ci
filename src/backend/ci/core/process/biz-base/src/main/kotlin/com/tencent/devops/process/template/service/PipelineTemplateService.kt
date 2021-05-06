@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.pojo.PipelineTemplate
 import com.tencent.devops.process.pojo.template.TemplateDetailInfo
+import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.template.dao.PipelineTemplateDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -102,7 +103,7 @@ class PipelineTemplateService @Autowired constructor(
     fun getTemplateDetailInfo(templateCode: String): Result<TemplateDetailInfo?> {
         logger.info("getTemplateDetailInfo templateCode is:$templateCode")
         var templateRecord = templateDao.getLatestTemplate(dslContext, templateCode)
-        if (templateRecord.srcTemplateId != null) {
+        if (templateRecord.srcTemplateId != null && templateRecord.type == TemplateType.CONSTRAINT.name) {
             templateRecord = templateDao.getLatestTemplate(dslContext, templateRecord.srcTemplateId)
         }
         return Result(

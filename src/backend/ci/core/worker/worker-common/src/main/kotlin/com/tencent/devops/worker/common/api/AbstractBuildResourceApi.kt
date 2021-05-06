@@ -52,6 +52,7 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.io.FileOutputStream
 import java.net.ConnectException
+import java.net.HttpRetryException
 import java.net.SocketTimeoutException
 import java.net.URLEncoder
 import java.net.UnknownHostException
@@ -86,9 +87,8 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         val httpClient = builder.build()
         val retryFlag = try {
             val response = httpClient.newCall(request).execute()
-            logger.warn(
-                "Request($request) with code ${response.code()}"
-            )
+            logger.info("Request($request) with code ${response.code()}")
+
             if (retryCodes.contains(response.code())) { // 网关502,503，可重试
                 true
             } else {
@@ -100,14 +100,17 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         } catch (e: ConnectException) {
             logger.warn("ConnectException|request($request),error is :$e, try to retry $retryCount")
             true
-        } catch (ignore: Exception) {
-            if (ignore is SocketTimeoutException && ignore.message == "connect timed out") {
-                logger.warn("SocketTimeoutException(${ignore.message})|request($request), try to retry $retryCount")
+        } catch (re: SocketTimeoutException) {
+            if (re.message == "connect timed out") {
+                logger.warn("SocketTimeoutException(${re.message})|request($request), try to retry $retryCount")
                 true
-            } else {
-                logger.error("Fail to request($request),error is :$ignore", ignore)
-                throw ClientException("Fail to request($request),error is:${ignore.message}")
+            } else { // 对于因为服务器的超时，不一定能幂等重试的，抛出原来的异常，外层业务自行决定是否重试
+                logger.error("Fail to request($request),error is :$re", re)
+                throw re
             }
+        } catch (ignore: Exception) {
+            logger.error("Fail to request($request),error is :$ignore", ignore)
+            throw ClientException("Fail to request($request),error is:${ignore.message}")
         }
 
         if (retryFlag && retryCount > 0) {
@@ -118,7 +121,7 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
             return requestForResponse(request, connectTimeoutInSec, readTimeoutInSec, writeTimeoutInSec, retryCount - 1)
         } else {
             logger.error("Fail to request($request), try to retry $DEFAULT_RETRY_TIME")
-            throw ClientException("Fail to request($request), try to retry $DEFAULT_RETRY_TIME")
+            throw HttpRetryException("Fail to request($request), try to retry $DEFAULT_RETRY_TIME", 999)
         }
     }
 

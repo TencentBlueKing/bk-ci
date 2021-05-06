@@ -88,13 +88,13 @@ class StoreProjectRelDao {
 
     fun getTestProjectCodesByStoreCode(
         dslContext: DSLContext,
-        projectCode: String,
+        storeCode: String,
         storeType: StoreTypeEnum
     ): Result<Record1<String>>? {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
             return dslContext.select(PROJECT_CODE).from(this)
                 .where(
-                    PROJECT_CODE.eq(projectCode)
+                    STORE_CODE.eq(storeCode)
                         .and(STORE_TYPE.eq(storeType.type.toByte()))
                         .and(TYPE.eq(StoreProjectTypeEnum.TEST.type.toByte()))
                 )
@@ -310,9 +310,9 @@ class StoreProjectRelDao {
     }
 
     /**
-     * 判断项目是否为原生初始化项目有或者申请插件协作者指定的调试项目
+     * 判断项目是否为调试项目
      */
-    fun isInitTestProjectCode(
+    fun isTestProjectCode(
         dslContext: DSLContext,
         storeCode: String,
         storeType: StoreTypeEnum,
@@ -324,9 +324,7 @@ class StoreProjectRelDao {
                 .where(STORE_CODE.eq(storeCode))
                 .and(STORE_TYPE.eq(storeType.type.toByte()))
                 .and(PROJECT_CODE.eq(projectCode))
-                .and(TYPE.`in`(
-                    listOf(StoreProjectTypeEnum.INIT.type.toByte(), StoreProjectTypeEnum.TEST.type.toByte())
-                ))
+                .and(TYPE.eq(StoreProjectTypeEnum.TEST.type.toByte()))
                 .fetchOne(0, Long::class.java) != 0L
         }
     }

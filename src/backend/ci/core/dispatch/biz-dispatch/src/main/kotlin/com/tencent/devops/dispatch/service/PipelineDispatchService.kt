@@ -28,17 +28,14 @@
 package com.tencent.devops.dispatch.service
 
 import com.tencent.devops.common.api.exception.InvalidParamException
-import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.dispatch.dao.DispatchPipelineBuildDao
 import com.tencent.devops.dispatch.pojo.PipelineBuild
 import com.tencent.devops.dispatch.service.dispatcher.Dispatcher
-import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.dispatch.exception.ErrorCodeEnum
-import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
@@ -113,31 +110,31 @@ class PipelineDispatchService @Autowired constructor(
 
         val dispatcher = findDispatch(startupEvent) // 最少只有一个Dispatcher
         if (dispatcher != null) {
-            // JOB配额判断
-            if (!jobQuotaBusinessService.checkJobQuota(startupEvent, buildLogPrinter)) {
-                dispatcher.onFailBuild(
-                    client = client,
-                    buildLogPrinter = buildLogPrinter,
-                    event = startupEvent,
-                    errorType = ErrorType.USER,
-                    errorCode = ErrorCodeEnum.JOB_QUOTA_EXCESS.errorCode,
-                    errorMsg = "系统JOB配额超限"
-                )
-            } else {
-                dispatcher.startUp(startupEvent)
-                // 到这里说明JOB已经启动成功(但是不代表Agent启动成功)，开始累加使用额度
-                val vmType = JobQuotaVmType.parse(startupEvent.dispatchType)
-                if (null != vmType) {
-                    jobQuotaBusinessService.insertRunningJob(
-                        projectId = startupEvent.projectId,
-                        vmType = vmType,
-                        buildId = startupEvent.buildId,
-                        vmSeqId = startupEvent.vmSeqId
-                    )
-                }
-            }
+//            // JOB配额判断
+//            if (!jobQuotaBusinessService.checkJobQuota(startupEvent, buildLogPrinter)) {
+//                dispatcher.onFailBuild(
+//                    client = client,
+//                    buildLogPrinter = buildLogPrinter,
+//                    event = startupEvent,
+//                    errorType = ErrorType.USER,
+//                    errorCode = ErrorCodeEnum.JOB_QUOTA_EXCESS.errorCode,
+//                    errorMsg = "系统JOB配额超限"
+//                )
+            dispatcher.startUp(startupEvent)
+//            } else {
+//                // 到这里说明JOB已经启动成功(但是不代表Agent启动成功)，开始累加使用额度
+//                val vmType = JobQuotaVmType.parse(startupEvent.dispatchType)
+//                if (null != vmType) {
+//                    jobQuotaBusinessService.insertRunningJob(
+//                        projectId = startupEvent.projectId,
+//                        vmType = vmType,
+//                        buildId = startupEvent.buildId,
+//                        vmSeqId = startupEvent.vmSeqId
+//                    )
+//                }
+//            }
         } else {
-            logger.error("ENGINE|${startupEvent.buildId}|VM_START|j(${startupEvent.vmSeqId})|" +
+            logger.error("BKSystemErrorMonitor|ENGINE|${startupEvent.buildId}|VM_START|j(${startupEvent.vmSeqId})|" +
                 "dispatchType=${startupEvent.dispatchType}")
         }
     }
@@ -157,16 +154,16 @@ class PipelineDispatchService @Autowired constructor(
     fun shutdown(pipelineAgentShutdownEvent: PipelineAgentShutdownEvent) {
         logger.info("Start to finish the pipeline build($pipelineAgentShutdownEvent)")
         getDispatchers().forEach {
-            try {
-                it.shutdown(pipelineAgentShutdownEvent)
-            } finally {
-                // 不管shutdown成功失败，都要回收配额；这里回收job，将自动累加agent执行时间
-                jobQuotaBusinessService.deleteRunningJob(
-                    projectId = pipelineAgentShutdownEvent.projectId,
-                    buildId = pipelineAgentShutdownEvent.buildId,
-                    vmSeqId = pipelineAgentShutdownEvent.vmSeqId
-                )
-            }
+//            try {
+            it.shutdown(pipelineAgentShutdownEvent)
+//            } finally {
+//                // 不管shutdown成功失败，都要回收配额；这里回收job，将自动累加agent执行时间
+//                jobQuotaBusinessService.deleteRunningJob(
+//                    projectId = pipelineAgentShutdownEvent.projectId,
+//                    buildId = pipelineAgentShutdownEvent.buildId,
+//                    vmSeqId = pipelineAgentShutdownEvent.vmSeqId
+//                )
+//            }
         }
     }
 

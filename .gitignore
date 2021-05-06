@@ -30,3 +30,5 @@ out
 /src/backend/ci/.settings/
 .prebuild.yml
 .temp
+.history
+/src/backend/ci/core/sign/biz-sign/test.ipa

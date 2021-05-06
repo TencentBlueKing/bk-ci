@@ -53,4 +53,12 @@ data class BuildTask(
     val buildVariable: Map<String, String>? = null,
     @ApiModelProperty("容器类型", required = false)
     val containerType: String? = null
-)
+) {
+
+    /**
+     * 1、防止打印日志过大对象，影响IO
+     * 2、防止敏感信息打印到日志
+     */
+    override fun toString() = "buildId=$buildId|vmSeqId=$vmSeqId|status=$status|taskId=$taskId|name=$elementName" +
+        "elementId=$elementId|type=$type|paramSize=${params?.size}|buildVarSize=${buildVariable?.size}"
+}
