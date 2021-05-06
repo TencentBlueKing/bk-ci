@@ -83,13 +83,23 @@ interface AtomService {
     /**
      * 根据插件代码和版本号获取插件信息
      */
-    fun getPipelineAtom(projectCode: String, atomCode: String, version: String): Result<PipelineAtom?>
+    fun getPipelineAtom(
+        projectCode: String,
+        atomCode: String,
+        version: String,
+        atomStatus: Byte? = null
+    ): Result<PipelineAtom?>
 
     /**
      * 根据项目代码、插件代码和版本号获取插件信息
      */
     @Suppress("UNCHECKED_CAST")
-    fun getPipelineAtomDetail(projectCode: String? = null, atomCode: String, version: String): Result<PipelineAtom?>
+    fun getPipelineAtomDetail(
+        projectCode: String? = null,
+        atomCode: String,
+        version: String,
+        atomStatus: Byte? = null
+    ): Result<PipelineAtom?>
 
     /**
      * 根据项目代码、插件代码和版本号获取插件信息

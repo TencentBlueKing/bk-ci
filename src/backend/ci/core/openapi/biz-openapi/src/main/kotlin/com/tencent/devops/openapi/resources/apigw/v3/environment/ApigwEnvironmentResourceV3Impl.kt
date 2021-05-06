@@ -32,9 +32,11 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.ServiceNodeResource
+import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.EnvWithPermission
 import com.tencent.devops.environment.pojo.NodeBaseInfo
 import com.tencent.devops.environment.pojo.NodeWithPermission
+import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentPipelineRef
 import com.tencent.devops.openapi.api.apigw.v3.environment.ApigwEnvironmentResourceV3
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -104,14 +106,35 @@ class ApigwEnvironmentResourceV3Impl @Autowired constructor(
         envHashIds: List<String>
     ): Result<Map<String, List<NodeBaseInfo>>> {
         logger.info("listNodeRawByEnvHashIds userId[$userId] project[$projectId] envHashIds[$envHashIds]")
-        return client.get(ServiceNodeResource::class).listRawByEnvHashIds(
-            userId = userId,
-            projectId = projectId,
-            envHashIds = envHashIds
-        )
+        return client.get(ServiceNodeResource::class).listRawByEnvHashIds(userId, projectId, envHashIds)
+    }
+
+    override fun extListNodes(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String
+    ): Result<List<NodeWithPermission>> {
+        logger.info("extListNodes, userId: $userId, projectId: $projectId")
+        return client.get(ServiceNodeResource::class).extListNodes(userId, projectId)
+    }
+
+    override fun listPipelineRef(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        nodeHashId: String,
+        sortBy: String?,
+        sortDirection: String?
+    ): Result<List<AgentPipelineRef>> {
+        logger.info("listPipelineRef, userId: $userId, projectId: $projectId, nodeHashId: $nodeHashId," +
+            " sortBy: $sortBy, sortDirection: $sortDirection")
+        return client.get(ServiceThirdPartyAgentResource::class).listPipelineRef(userId, projectId, nodeHashId,
+            sortBy, sortDirection)
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ApigwEnvironmentResourceV3::class.java)
+        private val logger = LoggerFactory.getLogger(ApigwEnvironmentResourceV3Impl::class.java)
     }
 }

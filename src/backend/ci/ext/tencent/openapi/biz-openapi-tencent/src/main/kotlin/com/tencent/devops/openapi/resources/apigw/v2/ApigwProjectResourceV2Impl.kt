@@ -93,7 +93,15 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
         )
     }
 
-    override fun getProjectByOrganizationId(appCode: String?, apigwType: String?, userId: String, organizationType: String, organizationId: Long, name: String, nameType: ProjectValidateType): Result<ProjectVO?> {
+    override fun getProjectByOrganizationId(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        organizationType: String,
+        organizationId: Long,
+        name: String,
+        nameType: ProjectValidateType
+    ): Result<ProjectVO?> {
         return Result(
             apigwProjectService.getProjectByName(
                 userId = userId,
@@ -116,7 +124,12 @@ class ApigwProjectResourceV2Impl @Autowired constructor(
         return Result(apigwProjectService.createProjectUserByUser(createUserId, createInfo))
     }
 
-    override fun createProjectUser(appCode: String?, apigwType: String?, createUserId: String, createInfo: ProjectCreateUserDTO): Result<Boolean?> {
+    override fun createProjectUser(
+        appCode: String?,
+        apigwType: String?,
+        createUserId: String,
+        createInfo: ProjectCreateUserDTO
+    ): Result<Boolean?> {
         // 设置项目对应的consulTag
         apigwProjectService.setProjectRouteType(createInfo.projectId)
         return Result(apigwProjectService.createProjectUser(createUserId, createInfo))

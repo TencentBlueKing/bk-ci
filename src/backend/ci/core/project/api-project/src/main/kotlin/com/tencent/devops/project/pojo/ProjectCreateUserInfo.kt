@@ -23,27 +23,22 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.process.dao
+package com.tencent.devops.project.pojo
 
-import com.tencent.devops.model.process.tables.TPipelineModelTask
-import com.tencent.devops.model.process.tables.records.TPipelineModelTaskRecord
-import org.jooq.DSLContext
-import org.jooq.Result
-import org.springframework.stereotype.Repository
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Repository
-class PipelineTaskDao {
-    fun list(
-        dslContext: DSLContext,
-        projectId: String,
-        pipelineIds: Collection<String>
-    ): Result<TPipelineModelTaskRecord>? {
-        with(TPipelineModelTask.T_PIPELINE_MODEL_TASK) {
-            return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.`in`(pipelineIds)))
-                .fetch()
-        }
-    }
-}
+@ApiModel
+data class ProjectCreateUserInfo(
+    @ApiModelProperty("操作用户")
+    val createUserId: String,
+    @ApiModelProperty("角色名称")
+    val roleName: String?,
+    @ApiModelProperty("角色Id")
+    val roleId: Int?,
+    @ApiModelProperty("多目标用户id")
+    val userIds: List<String>? = emptyList()
+)

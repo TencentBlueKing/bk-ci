@@ -91,7 +91,7 @@ class ExtItemServiceDao {
                 queryNormalExtItemServiceCondition(dslContext, conditions, tes, tesf, tspr, projectCode)
 
             // 查询初始化或者调试项目下状态为测试中或审核中的扩展服务
-            val initTestConditions = queryInitTestExtItemServiceCondition(conditions, tes, tspr, projectCode)
+            val initTestConditions = queryTestExtItemServiceCondition(conditions, tes, tspr, projectCode)
             baseStep.where(publicConditions)
                 .union(
                     getExtItemServiceBaseStep(dslContext, tes, tesir, tesf)
@@ -116,7 +116,7 @@ class ExtItemServiceDao {
         }
     }
 
-    private fun queryInitTestExtItemServiceCondition(
+    private fun queryTestExtItemServiceCondition(
         conditions: MutableList<Condition>,
         tes: TExtensionService,
         tspr: TStoreProjectRel,
@@ -134,16 +134,8 @@ class ExtItemServiceDao {
             )
         )
         initTestConditions.add(tspr.PROJECT_CODE.eq(projectCode))
-        // 新增扩展服务时关联的项目或者申请成为协作者时关联的调试项目
-        initTestConditions.add(
-            tspr.TYPE.`in`(
-                listOf(
-                    StoreProjectTypeEnum.INIT.type.toByte(),
-                    StoreProjectTypeEnum.TEST.type.toByte()
-                )
-            )
-        )
-        initTestConditions.add(tspr.STORE_TYPE.eq(StoreTypeEnum.SERVICE.type.toByte()))
+        // 微扩展调试项目
+        initTestConditions.add(tspr.TYPE.eq(StoreProjectTypeEnum.TEST.type.toByte()))
         return initTestConditions
     }
 
@@ -162,7 +154,7 @@ class ExtItemServiceDao {
         normalConditions.add(tesf.PUBLIC_FLAG.eq(false))
         normalConditions.add(tspr.PROJECT_CODE.eq(projectCode))
         normalConditions.add(tspr.STORE_TYPE.eq(StoreTypeEnum.SERVICE.type.toByte()))
-        val initTestConditions = queryInitTestExtItemServiceCondition(conditions, tes, tspr, projectCode)
+        val initTestConditions = queryTestExtItemServiceCondition(conditions, tes, tspr, projectCode)
         normalConditions.add(
             tes.SERVICE_CODE.notIn(
                 dslContext.select(tes.SERVICE_CODE).from(tes).join(tspr).on(
@@ -188,7 +180,7 @@ class ExtItemServiceDao {
         publicConditions.add(tes.SERVICE_STATUS.eq(ExtServiceStatusEnum.RELEASED.status.toByte()))
         publicConditions.add(tes.LATEST_FLAG.eq(true))
         publicConditions.add(tesf.PUBLIC_FLAG.eq(true))
-        val initTestConditions = queryInitTestExtItemServiceCondition(conditions, tes, tspr, projectCode)
+        val initTestConditions = queryTestExtItemServiceCondition(conditions, tes, tspr, projectCode)
         publicConditions.add(
             tes.SERVICE_CODE.notIn(
                 dslContext.select(tes.SERVICE_CODE).from(tes).join(tspr).on(

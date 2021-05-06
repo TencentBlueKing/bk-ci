@@ -27,6 +27,7 @@
 
 package com.tencent.devops.worker.common.env
 
+import com.tencent.devops.worker.common.BUILD_ID
 import com.tencent.devops.worker.common.BUILD_TYPE
 
 object BuildEnv {
@@ -47,8 +48,10 @@ object BuildEnv {
     }
 
     fun isThirdParty() = getBuildType() == BuildType.AGENT
-}
 
-fun main(args: Array<String>) {
-    println(BuildEnv.getBuildType())
+    fun getBuildId() = System.getProperty(BUILD_ID)
+
+    fun setBuildId(buildId: String) {
+        System.setProperty(BUILD_ID, buildId)
+    }
 }

@@ -40,13 +40,14 @@ import com.tencent.devops.common.api.util.VersionUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.experience.constant.ExperienceConstant
+import com.tencent.devops.experience.constant.ExperienceConditionEnum
 import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.constant.ProductCategoryEnum
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceGroupDao
 import com.tencent.devops.experience.dao.ExperienceLastDownloadDao
+import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.pojo.AppExperience
 import com.tencent.devops.experience.pojo.AppExperienceDetail
 import com.tencent.devops.experience.pojo.AppExperienceSummary
@@ -68,6 +69,7 @@ class ExperienceAppService(
     private val dslContext: DSLContext,
     private val objectMapper: ObjectMapper,
     private val experienceDao: ExperienceDao,
+    private val experiencePublicDao: ExperiencePublicDao,
     private val experienceBaseService: ExperienceBaseService,
     private val experienceDownloadService: ExperienceDownloadService,
     private val experienceGroupDao: ExperienceGroupDao,
@@ -175,13 +177,16 @@ class ExperienceAppService(
         }
     }
 
+    @SuppressWarnings("ComplexMethod")
     fun detail(userId: String, experienceHashId: String, platform: Int, appVersion: String?): AppExperienceDetail {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
         val isOldVersion = VersionUtil.compare(appVersion, "2.0.0") < 0
-        val canExperience = experienceBaseService.userCanExperience(userId, experienceId)
 
-        // 新版本直接抛异常
-        if (!isOldVersion && !canExperience) {
+        val isPublic = experienceBaseService.isPublic(experienceId)
+        val isInPrivate = experienceBaseService.isInPrivate(experienceId, userId)
+
+        // 新版本且没权限
+        if (!isOldVersion && !isPublic && !isInPrivate) {
             throw ErrorCodeException(
                 statusCode = 403,
                 defaultMessage = "没有权限访问资源",
@@ -204,7 +209,8 @@ class ExperienceAppService(
         val versionTitle =
             if (StringUtils.isBlank(experience.versionTitle)) experience.name else experience.versionTitle
         val categoryId = if (experience.category < 0) ProductCategoryEnum.LIFE.id else experience.category
-        val publicExperience = experienceGroupDao.count(dslContext, experience.id, ExperienceConstant.PUBLIC_GROUP) > 0
+        val isPrivate = experienceBaseService.isPrivate(experienceId)
+        val experienceCondition = getExperienceCondition(isPublic, isPrivate, isInPrivate)
         val lastDownloadMap = experienceBaseService.getLastDownloadMap(userId)
 
         val changeLog = if (isOldVersion) {
@@ -234,7 +240,7 @@ class ExperienceAppService(
             platform = PlatformEnum.valueOf(experience.platform),
             version = version,
             expired = isExpired,
-            canExperience = canExperience,
+            canExperience = isPublic || isInPrivate,
             online = experience.online,
             changeLog = changeLog,
             experienceName = experienceName,
@@ -243,15 +249,32 @@ class ExperienceAppService(
             productOwner = objectMapper.readValue(experience.productOwner),
             createDate = experience.updateTime.let { if (isOldVersion) it.timestamp() else it.timestampmilli() },
             endDate = experience.endDate.let { if (isOldVersion) it.timestamp() else it.timestampmilli() },
-            publicExperience = publicExperience,
+            publicExperience = isPublic,
             remark = experience.remark,
             bundleIdentifier = experience.bundleIdentifier,
+            experienceCondition = experienceCondition.id,
             appScheme = experience.scheme,
             lastDownloadHashId = lastDownloadMap[experience.projectId +
                     experience.bundleIdentifier +
                     experience.platform]
                 ?.let { l -> HashUtil.encodeLongId(l) } ?: ""
         )
+    }
+
+    private fun getExperienceCondition(
+        isPublic: Boolean,
+        isPrivate: Boolean,
+        isInPrivate: Boolean
+    ): ExperienceConditionEnum {
+        return if (isPublic && !isPrivate) {
+            ExperienceConditionEnum.JUST_PUBLIC
+        } else if (!isPublic && isPrivate) {
+            ExperienceConditionEnum.JUST_PRIVATE
+        } else if (isInPrivate) {
+            ExperienceConditionEnum.BOTH_WITH_PRIVATE
+        } else {
+            ExperienceConditionEnum.BOTH_WITHOUT_PRIVATE
+        }
     }
 
     fun changeLog(
@@ -295,6 +318,7 @@ class ExperienceAppService(
         pageSize: Int,
         isOldVersion: Boolean
     ): List<ExperienceChangeLog> {
+        val recordIds = experienceBaseService.getRecordIdsByUserId(userId, GroupIdTypeEnum.JUST_PRIVATE)
         val now = LocalDateTime.now()
         val lastDownloadRecord = platform?.let {
             experienceLastDownloadDao.get(
@@ -305,13 +329,15 @@ class ExperienceAppService(
                 platform = it
             )
         }
+
         val experienceList = experienceDao.listByBundleIdentifier(
-            dslContext,
-            projectId,
-            bundleIdentifier,
-            platform,
-            (page - 1) * pageSize,
-            pageSize
+            dslContext = dslContext,
+            projectId = projectId,
+            bundleIdentifier = bundleIdentifier,
+            platform = platform,
+            recordIds = recordIds,
+            offset = (page - 1) * pageSize,
+            limit = pageSize
         )
 
         return experienceList.map {

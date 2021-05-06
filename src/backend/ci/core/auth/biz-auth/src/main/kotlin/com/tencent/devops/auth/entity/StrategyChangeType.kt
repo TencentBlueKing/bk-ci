@@ -23,17 +23,12 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.store.service.template
+package com.tencent.devops.auth.entity
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.Model
-
-interface TemplateModelService {
-
-    /**
-     * 根据模板代码查询模板模型
-     */
-    fun getTemplateModel(templateCode: String): Result<Model?>
+enum class StrategyChangeType {
+    UPDATE,
+    DELETE
 }

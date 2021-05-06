@@ -88,7 +88,6 @@ class StoreProjectServiceImpl @Autowired constructor(
             // 获取用户有权限的项目列表
             watcher.start("get accessible projects")
             val projectList = client.get(ServiceProjectResource::class).list(userId).data
-            logger.info("$userId accessible projectList is :size=${projectList?.size},$projectList")
             if (projectList?.count() == 0) {
                 return Result(mutableListOf())
             }
@@ -127,6 +126,19 @@ class StoreProjectServiceImpl @Autowired constructor(
         publicFlag: Boolean,
         channelCode: ChannelCode
     ): Result<Boolean> {
+        val testProjectCodeList = storeProjectRelDao.getTestProjectCodesByStoreCode(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeType
+        )?.map { it.value1() }
+        if (!testProjectCodeList.isNullOrEmpty()) {
+            // 剔除需要安装的调试项目
+            projectCodeList.removeAll(testProjectCodeList)
+        }
+        if (projectCodeList.isNullOrEmpty()) {
+            // 如果全都是调试项目，无需安装
+            return Result(true)
+        }
         val validateInstallResult = validateInstallPermission(
             publicFlag = publicFlag,
             userId = userId,

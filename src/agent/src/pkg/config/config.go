@@ -84,7 +84,7 @@ var GAgentConfig *AgentConfig
 var GIsAgentUpgrading = false
 var GWorkDir string
 var GEnvVars map[string]string
-
+var UseCert bool
 func Init() {
 	err := LoadAgentConfig()
 	if err != nil {
@@ -320,4 +320,5 @@ func initCert() {
 	tlsConfig := &tls.Config{RootCAs: caCertPool}
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = tlsConfig
 	logs.Informational("load cert success")
+	UseCert = true
 }

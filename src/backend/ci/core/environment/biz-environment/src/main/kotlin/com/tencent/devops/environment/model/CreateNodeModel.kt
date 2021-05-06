@@ -25,31 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.template.impl
+package com.tencent.devops.environment.model
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.process.api.template.ServiceTemplateResource
-import com.tencent.devops.store.service.template.TemplateModelService
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
-@Service
-class TemplateModelServiceImpl : TemplateModelService {
-
-    @Autowired
-    private lateinit var client: Client
-
-    override fun getTemplateModel(templateCode: String): Result<Model?> {
-        val result = client.get(ServiceTemplateResource::class).getTemplateDetailInfo(templateCode)
-        return if (result.isNotOk()) {
-            // 抛出错误提示
-            Result(result.status, result.message ?: "")
-        } else {
-            val templateDetailInfo = result.data
-            val templateModel = templateDetailInfo?.templateModel
-            Result(templateModel)
-        }
-    }
-}
+data class CreateNodeModel(
+    var nodeStringId: String? = "",
+    var projectId: String,
+    var nodeIp: String = "",
+    var nodeName: String = "",
+    var nodeStatus: String = "",
+    var nodeType: String = "",
+    var nodeClusterId: String? = null,
+    var nodeNamespace: String? = null,
+    var createdUser: String = "",
+    var expireTime: LocalDateTime? = null,
+    var osName: String? = null,
+    var operator: String? = null,
+    var bakOperator: String? = null,
+    var agentStatus: Boolean = false,
+    var displayName: String = "",
+    var image: String? = "",
+    var taskId: Long? = null,
+    var pipelineRefCount: Int = 0,
+    var lastBuildTime: LocalDateTime? = null
+)

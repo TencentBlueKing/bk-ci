@@ -80,9 +80,20 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
     /**
      * 根据插件代码和版本号查看插件执行环境信息
      */
-    override fun getMarketAtomEnvInfo(projectCode: String, atomCode: String, version: String): Result<AtomEnv?> {
-        logger.info("getMarketAtomEnvInfo projectCode is :$projectCode,atomCode is :$atomCode,version is :$version")
-        val atomResult = atomService.getPipelineAtom(projectCode, atomCode, version) // 判断插件查看的权限
+    override fun getMarketAtomEnvInfo(
+        projectCode: String,
+        atomCode: String,
+        version: String,
+        atomStatus: Byte?
+    ): Result<AtomEnv?> {
+        logger.info("getMarketAtomEnvInfo $projectCode,$atomCode,$version,$atomStatus")
+        // 判断插件查看的权限
+        val atomResult = atomService.getPipelineAtom(
+            projectCode = projectCode,
+            atomCode = atomCode,
+            version = version,
+            atomStatus = atomStatus
+        )
         if (atomResult.isNotOk()) {
             return Result(atomResult.status, atomResult.message ?: "")
         }
@@ -93,32 +104,19 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             storeType = StoreTypeEnum.ATOM.type.toByte()
         )
         logger.info("the initProjectCode is :$initProjectCode")
-        var atomStatusList: List<Byte>? = null
         // 普通项目的查已发布、下架中和已下架（需要兼容那些还在使用已下架插件插件的项目）的插件
         val normalStatusList = listOf(
             AtomStatusEnum.RELEASED.status.toByte(),
             AtomStatusEnum.UNDERCARRIAGING.status.toByte(),
             AtomStatusEnum.UNDERCARRIAGED.status.toByte()
         )
-        if (version.contains("*")) {
-            atomStatusList = normalStatusList.toMutableList()
-            val releaseCount = marketAtomDao.countReleaseAtomByCode(dslContext, atomCode, version)
-            if (releaseCount > 0) {
-                // 如果当前大版本内还有已发布的版本，则xx.latest只对应最新已发布的版本
-                atomStatusList = mutableListOf(AtomStatusEnum.RELEASED.status.toByte())
-            }
-            val flag = storeProjectRelDao.isInitTestProjectCode(dslContext, atomCode, StoreTypeEnum.ATOM, projectCode)
-            logger.info("the isInitTestProjectCode flag is :$flag")
-            if (flag) {
-                // 原生项目或者调试项目有权查处于测试中、审核中的插件
-                atomStatusList.addAll(
-                    listOf(
-                        AtomStatusEnum.TESTING.status.toByte(),
-                        AtomStatusEnum.AUDITING.status.toByte()
-                    )
-                )
-            }
-        }
+        val atomStatusList = getAtomStatusList(
+            atomStatus = atomStatus,
+            version = version,
+            normalStatusList = normalStatusList,
+            atomCode = atomCode,
+            projectCode = projectCode
+        )
         val atomDefaultFlag = atom.defaultFlag == true
         val atomEnvInfoRecord = marketAtomEnvInfoDao.getProjectMarketAtomEnvInfo(
             dslContext = dslContext,
@@ -133,7 +131,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             if (atomEnvInfoRecord == null) {
                 null
             } else {
-                val atomStatus = atomEnvInfoRecord["atomStatus"] as Byte
+                val status = atomEnvInfoRecord["atomStatus"] as Byte
                 val createTime = atomEnvInfoRecord[KEY_CREATE_TIME] as LocalDateTime
                 val updateTime = atomEnvInfoRecord[KEY_UPDATE_TIME] as LocalDateTime
                 val postEntryParam = atomEnvInfoRecord[ATOM_POST_ENTRY_PARAM] as? String
@@ -155,7 +153,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                     ATOM_POST_ENTRY_PARAM to postEntryParam,
                     ATOM_POST_CONDITION to postCondition
                 )
-                if (atomStatus in normalStatusList) {
+                if (status in normalStatusList) {
                     val normalProjectPostKey = "$ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX:$atomCode"
                     if (redisOperation.hget(normalProjectPostKey, version) == null) {
                         redisOperation.hset(
@@ -170,7 +168,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                     atomId = atomEnvInfoRecord["atomId"] as String,
                     atomCode = atomEnvInfoRecord["atomCode"] as String,
                     atomName = atomEnvInfoRecord["atomName"] as String,
-                    atomStatus = AtomStatusEnum.getAtomStatus(atomStatus.toInt()),
+                    atomStatus = AtomStatusEnum.getAtomStatus(status.toInt()),
                     creator = atomEnvInfoRecord["creator"] as String,
                     version = atomEnvInfoRecord["version"] as String,
                     summary = atomEnvInfoRecord["summary"] as? String,
@@ -191,6 +189,41 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                 )
             }
         )
+    }
+
+    private fun getAtomStatusList(
+        atomStatus: Byte?,
+        version: String,
+        normalStatusList: List<Byte>,
+        atomCode: String,
+        projectCode: String
+    ): List<Byte>? {
+        var atomStatusList: List<Byte>? = null
+        if (atomStatus != null) {
+            mutableListOf(atomStatus)
+        } else {
+            if (version.contains("*")) {
+                atomStatusList = normalStatusList.toMutableList()
+                val releaseCount = marketAtomDao.countReleaseAtomByCode(dslContext, atomCode, version)
+                if (releaseCount > 0) {
+                    // 如果当前大版本内还有已发布的版本，则xx.latest只对应最新已发布的版本
+                    atomStatusList = mutableListOf(AtomStatusEnum.RELEASED.status.toByte())
+                }
+                val flag =
+                    storeProjectRelDao.isTestProjectCode(dslContext, atomCode, StoreTypeEnum.ATOM, projectCode)
+                logger.info("isInitTestProjectCode flag is :$flag")
+                if (flag) {
+                    // 原生项目或者调试项目有权查处于测试中、审核中的插件
+                    atomStatusList.addAll(
+                        listOf(
+                            AtomStatusEnum.TESTING.status.toByte(),
+                            AtomStatusEnum.AUDITING.status.toByte()
+                        )
+                    )
+                }
+            }
+        }
+        return atomStatusList
     }
 
     /**

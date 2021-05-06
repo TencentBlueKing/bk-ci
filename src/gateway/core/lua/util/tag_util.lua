@@ -22,7 +22,7 @@ function _M:get_tag(ns_config)
         return ns_config.tag
     end
 
-    local devops_project = projectUtil:get_project()
+    local devops_project = ngx.var.project_id
     local default_tag = ns_config.tag
     local tag = default_tag
 
@@ -40,9 +40,15 @@ function _M:get_tag(ns_config)
         if tag_cache_value ~= nil then
             tag = tag_cache_value
         else
+            local redis_key = nil
+            if ngx.var.project == 'codecc' then
+                redis_key = 'project:setting:tag:codecc:v2'
+            else
+                redis_key = "project:setting:tag:v2"
+            end
             -- 从redis获取tag
             local hash_key = '\xAC\xED\x00\x05t\x00' .. string.char(devops_project:len()) .. devops_project -- 兼容Spring Redis的hashKey的默认序列化
-            local redRes, err = red:hget("project:setting:tag:v2", hash_key)
+            local redRes, err = red:hget(redis_key, hash_key)
             if not redRes then
                 ngx.log(ngx.ERR, "tag failed to get redis result: ", err)
                 tag_cache:set(devops_project, default_tag, 30)
