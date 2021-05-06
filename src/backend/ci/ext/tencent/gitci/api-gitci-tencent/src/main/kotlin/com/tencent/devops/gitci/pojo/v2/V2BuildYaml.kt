@@ -31,6 +31,6 @@ package com.tencent.devops.gitci.pojo.v2
  * v2版本GitCI，展示两个Yaml，ParsedYaml，和OriginYaml
  */
 data class V2BuildYaml(
-    val parsedYaml: String,
+    val parsedYaml: String?,
     val originYaml: String
 )

@@ -1032,10 +1032,7 @@ class GitCITriggerService @Autowired constructor(
     fun getYamlV2(gitProjectId: Long, buildId: String): V2BuildYaml? {
         logger.info("get yaml by buildId:($buildId), gitProjectId: $gitProjectId")
         gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(Response.Status.FORBIDDEN, "项目未开启工蜂CI，无法查询")
-        val eventBuild = gitRequestEventBuildDao.getByBuildId(dslContext, buildId)
-        if (eventBuild == null) {
-            return null
-        }
+        val eventBuild = gitRequestEventBuildDao.getByBuildId(dslContext, buildId) ?: return null
         return V2BuildYaml(parsedYaml = eventBuild.parsedYaml, originYaml = eventBuild.originYaml)
     }
 }
