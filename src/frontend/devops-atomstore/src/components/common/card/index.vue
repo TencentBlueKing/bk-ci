@@ -44,7 +44,7 @@
                 switch (pipeType) {
                     case 'atom':
                         res = this.atom.recentExecuteNum
-                        break;
+                        break
                     default:
                         res = this.atom.downloads
                         break

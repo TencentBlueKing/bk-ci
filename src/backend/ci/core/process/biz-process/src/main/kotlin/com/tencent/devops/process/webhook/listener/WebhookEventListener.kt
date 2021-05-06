@@ -66,7 +66,9 @@ class WebhookEventListener constructor(
                     codeRepositoryType = CodeGitWebHookTriggerElement.classType,
                     e = event.requestContent
                 )
-                CommitEventType.GITLAB -> pipelineBuildService.externalGitlabBuild(event.requestContent)
+                CommitEventType.GITLAB -> pipelineBuildService.externalGitlabBuild(
+                    e = event.requestContent
+                )
                 CommitEventType.TGIT -> pipelineBuildService.externalCodeGitBuild(
                     codeRepositoryType = CodeTGitWebHookTriggerElement.classType,
                     e = event.requestContent

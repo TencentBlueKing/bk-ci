@@ -35,12 +35,16 @@ import com.tencent.devops.scm.code.git.CodeGitCredentialSetter
 import com.tencent.devops.scm.code.git.api.GitOauthApi
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.ScmException
+import com.tencent.devops.scm.pojo.GitMrChangeInfo
+import com.tencent.devops.scm.pojo.GitMrInfo
+import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
 import org.slf4j.LoggerFactory
 
+@Suppress("ALL")
 class CodeGitScmOauthImpl constructor(
     override val projectName: String,
     override val branchName: String?,
@@ -88,7 +92,7 @@ class CodeGitScmOauthImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to list all branches", ignored)
             throw ScmException(
-                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_WRONG),
+                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_WRONG),
                 ScmType.CODE_GIT.name
             )
         }
@@ -103,7 +107,7 @@ class CodeGitScmOauthImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the private key of git", ignored)
             throw ScmException(
-                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_SERCRT_WRONG),
+                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_SERCRT_WRONG),
                 ScmType.CODE_GIT.name
             )
         }
@@ -123,7 +127,7 @@ class CodeGitScmOauthImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to list all branches", ignored)
             throw ScmException(
-                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_WRONG),
+                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_WRONG),
                 ScmType.CODE_GIT.name
             )
         }
@@ -136,7 +140,7 @@ class CodeGitScmOauthImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the username and password of git", ignored)
             throw ScmException(
-                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_LOGIN_FAIL),
+                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_LOGIN_FAIL),
                 ScmType.CODE_GIT.name
             )
         }
@@ -157,9 +161,9 @@ class CodeGitScmOauthImpl constructor(
         }
         try {
             gitOauthApi.addWebhook(gitConfig.gitApiUrl, token, projectName, hookUrl, event)
-        } catch (e: ScmException) {
+        } catch (ignored: Throwable) {
             throw ScmException(
-                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_FAIL),
+                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_LOGIN_FAIL),
                 ScmType.CODE_GIT.name
             )
         }
@@ -174,10 +178,10 @@ class CodeGitScmOauthImpl constructor(
         block: Boolean
     ) {
         if (token.isEmpty()) {
-            throw ScmException(scmType = ScmType.CODE_GIT.name,
-                message = MessageCodeUtil.getCodeLanMessage(
-                    messageCode = RepositoryMessageCode.GIT_TOKEN_EMPTY,
-                    defaultMessage = RepositoryMessageCode.GIT_TOKEN_EMPTY))
+            throw ScmException(
+                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_EMPTY),
+                ScmType.CODE_GIT.name
+            )
         }
         try {
             gitOauthApi.addCommitCheck(
@@ -191,11 +195,11 @@ class CodeGitScmOauthImpl constructor(
                 description = description,
                 block = block
             )
-        } catch (e: ScmException) {
-            throw ScmException(scmType = ScmType.CODE_GIT.name,
-                message = MessageCodeUtil.getCodeLanMessage(
-                    messageCode = RepositoryMessageCode.GIT_TOKEN_FAIL,
-                    defaultMessage = RepositoryMessageCode.GIT_TOKEN_FAIL))
+        } catch (ignored: Throwable) {
+            throw ScmException(
+                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_LOGIN_FAIL),
+                ScmType.CODE_GIT.name
+            )
         }
     }
 
@@ -209,6 +213,33 @@ class CodeGitScmOauthImpl constructor(
 
     override fun unlock(repoName: String, applicant: String, subpath: String) {
         logger.info("Git oauth can not unlock")
+    }
+
+    override fun getMergeRequestChangeInfo(mrId: Long): GitMrChangeInfo {
+        val url = "projects/${GitUtils.urlEncode(projectName)}/merge_request/$mrId/changes"
+        return gitOauthApi.getMergeRequestChangeInfo(
+            host = apiUrl,
+            token = token,
+            url = url
+        )
+    }
+
+    override fun getMrInfo(mrId: Long): GitMrInfo {
+        val url = "projects/${GitUtils.urlEncode(projectName)}/merge_request/$mrId"
+        return gitOauthApi.getMrInfo(
+            host = apiUrl,
+            token = token,
+            url = url
+        )
+    }
+
+    override fun getMrReviewInfo(mrId: Long): GitMrReviewInfo {
+        val url = "projects/${GitUtils.urlEncode(projectName)}/merge_request/$mrId/review"
+        return gitOauthApi.getMrReviewInfo(
+            host = apiUrl,
+            token = token,
+            url = url
+        )
     }
 
     companion object {

@@ -25,28 +25,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.auth.utlis
+package com.tencent.devops.process.engine.service.code.handler.tgit
 
-object StringUtils {
-    fun obj2List(str: String): List<String> {
-        val list = str.substringBefore("]").substringAfter("[").split(",")
-        val newList = mutableListOf<String>()
-        list.map {
-            newList.add(it.trim())
-        }
-        return newList
-    }
+import com.tencent.devops.process.engine.service.code.handler.GitHookTriggerHandler
 
-    fun removeAllElement(set: Set<String>): Set<String> {
-        if (set.contains("*")) {
-            val newSet = mutableSetOf<String>()
-            set.map {
-                if (it != "*") {
-                    newSet.add(it)
-                }
-                return newSet
-            }
-        }
-        return set
-    }
-}
+interface TGitHookTriggerHandler : GitHookTriggerHandler
