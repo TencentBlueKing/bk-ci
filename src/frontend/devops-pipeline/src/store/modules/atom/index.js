@@ -59,7 +59,12 @@ export default {
         reviewInfo: null,
         showStageReviewPanel: false,
         importedPipelineJson: null,
-        atomVersionChangedKeys: []
+        atomVersionChangedKeys: [],
+        pipelineLimit: {
+            stageLimit: 3,
+            jobLimit: 4,
+            atomLimit: 5
+        }
     },
     mutations,
     actions,

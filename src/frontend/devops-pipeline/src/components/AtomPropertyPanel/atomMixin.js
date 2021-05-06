@@ -202,6 +202,24 @@ const atomMixin = {
         },
         rely (obj, element) {
             return rely(obj, element)
+        },
+        /**
+         * 获取每种类型最大长度限制
+         */
+        getMaxLengthByType (type) {
+            let length = 10
+            switch (type) {
+                case 'vuex-input':
+                    length = 10
+                    break
+                case 'vuex-textarea':
+                    length = 1024 * 4
+                    break
+                case 'ace-editor':
+                    length = 1024 * 16
+                    break
+            }
+            return length
         }
     }
 }

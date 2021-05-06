@@ -131,7 +131,8 @@
         computed: {
             ...mapState('atom', [
                 'insertStageIndex',
-                'pipeline'
+                'pipeline',
+                'pipelineLimit'
             ]),
             ...mapGetters('atom', [
                 'isTriggerContainer'
@@ -385,6 +386,20 @@
                 showStageSelectPopup(false)
             },
             showStageSelectPopup (isParallel) {
+                let limitMsg = ''
+                if (!isParallel && this.stageLength >= this.pipelineLimit.stageLimit) {
+                    limitMsg = this.$t('storeMap.stageLimit') + this.pipelineLimit.stageLimit
+                } else if (isParallel && this.stage.containers.length >= this.pipelineLimit.jobLimit) {
+                    limitMsg = this.$t('storeMap.jobLimit') + this.pipelineLimit.jobLimit
+                }
+                if (limitMsg) {
+                    this.$showTips({
+                        theme: 'error',
+                        message: limitMsg
+                    })
+                    return
+                }
+
                 this.toggleStageSelectPopup({
                     isStagePopupShow: true,
                     isAddParallelContainer: isParallel
@@ -429,6 +444,13 @@
                 })
             },
             copyStage () {
+                if (this.stageLength >= this.pipelineLimit.stageLimit) {
+                    this.$showTips({
+                        theme: 'error',
+                        message: this.$t('storeMap.stageLimit') + this.pipelineLimit.stageLimit
+                    })
+                    return
+                }
                 try {
                     const copyStage = JSON.parse(JSON.stringify(this.stage))
                     const stage = {

@@ -164,14 +164,26 @@ export default {
             let timerTriggerCount = 0
             let remoteTriggerCount = 0
 
+            if (stages.length > state.pipelineLimit.stageLimit) {
+                throw new Error(window.pipelineVue.$i18n && (window.pipelineVue.$i18n.t('storeMap.stageLimit') + state.pipelineLimit.stageLimit))
+            }
+
             if (stages.some(stage => stage.isError)) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.correctPipeline'))
+            }
+
+            if (stages.some(stage => stage.containers.length > state.pipelineLimit.jobLimit)) {
+                throw new Error(window.pipelineVue.$i18n && (window.pipelineVue.$i18n.t('storeMap.jobLimit') + state.pipelineLimit.jobLimit))
             }
 
             const allContainers = getters.getAllContainers(stages)
 
             if (allContainers.some(container => container.isError)) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.correctPipeline'))
+            }
+
+            if (allContainers.some(container => container.elements.length > state.pipelineLimit.atomLimit)) {
+                throw new Error(window.pipelineVue.$i18n && (window.pipelineVue.$i18n.t('storeMap.atomLimit') + state.pipelineLimit.atomLimit))
             }
 
             const allElements = getters.getAllElements(stages)
@@ -189,7 +201,7 @@ export default {
             if (codeccCount > 1) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.oneCodecc'))
             } else if (manualTriggerCount > 1) {
-                throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.oneManualTrigger'))
+                throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.oneManualTrigger') + '444')
             } else if (timerTriggerCount > 1) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.oneTimerTrigger'))
             } else if (remoteTriggerCount > 1) {
