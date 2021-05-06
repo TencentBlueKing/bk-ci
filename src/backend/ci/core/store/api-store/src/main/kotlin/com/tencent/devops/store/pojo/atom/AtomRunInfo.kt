@@ -31,48 +31,20 @@ import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("插件执行环境信息")
-data class AtomEnv(
-    @ApiModelProperty("插件Id", required = true)
-    val atomId: String,
+@ApiModel("插件运行时信息")
+data class AtomRunInfo(
     @ApiModelProperty("插件代码", required = true)
     val atomCode: String,
     @ApiModelProperty("插件名称", required = true)
-    val atomName: String,
-    @ApiModelProperty("插件状态", required = true)
-    val atomStatus: String,
-    @ApiModelProperty("插件创建人", required = true)
-    val creator: String,
+    var atomName: String,
     @ApiModelProperty("插件版本号", required = true)
     val version: String,
-    @ApiModelProperty("插件简介", required = false)
-    val summary: String?,
-    @ApiModelProperty("插件说明文档链接", required = false)
-    val docsLink: String?,
-    @ApiModelProperty("插件自定义json串", required = false)
-    val props: String?,
-    @ApiModelProperty("无构建环境插件是否可以在有构建环境运行标识", required = false)
-    val buildLessRunFlag: Boolean?,
-    @ApiModelProperty("插件创建时间", required = true)
-    val createTime: Long,
-    @ApiModelProperty("插件最后修改时间", required = true)
-    val updateTime: Long,
-    @ApiModelProperty("插件初始化项目代码", required = false)
-    val projectCode: String? = null,
-    @ApiModelProperty("安装包路径", required = false)
-    val pkgPath: String? = null,
-    @ApiModelProperty("插件开发语言", required = false)
-    val language: String? = null,
-    @ApiModelProperty("支持插件开发语言的最低版本", required = false)
-    val minVersion: String? = null,
-    @ApiModelProperty("插件执行入口", required = false)
-    val target: String? = null,
-    @ApiModelProperty("插件SHA签名串", required = false)
-    val shaContent: String? = null,
-    @ApiModelProperty("插件执行前置命令", required = false)
-    val preCmd: String? = null,
+    @ApiModelProperty("插件初始化项目代码", required = true)
+    val initProjectCode: String,
     @ApiModelProperty("Job类型", required = false)
-    val jobType: JobTypeEnum? = null,
-    @ApiModelProperty("插件post信息", required = false)
-    val atomPostInfo: AtomPostInfo? = null
+    var jobType: JobTypeEnum?,
+    @ApiModelProperty("无构建环境插件是否可以在有构建环境运行标识", required = false)
+    var buildLessRunFlag: Boolean?,
+    @ApiModelProperty("输入字段类型信息数据", required = false)
+    var inputTypeInfos: Map<String, String>?
 )

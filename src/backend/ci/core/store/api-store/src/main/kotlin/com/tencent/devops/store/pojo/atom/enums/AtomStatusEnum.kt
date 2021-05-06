@@ -61,22 +61,6 @@ enum class AtomStatusEnum(val status: Int) {
                 }
             }
             return INIT.name
-//            return when (status) {
-//                0 -> INIT.name
-//                1 -> COMMITTING.name
-//                2 -> BUILDING.name
-//                3 -> BUILD_FAIL.name
-//                4 -> TESTING.name
-//                5 -> AUDITING.name
-//                6 -> AUDIT_REJECT.name
-//                7 -> RELEASED.name
-//                8 -> GROUNDING_SUSPENSION.name
-//                9 -> UNDERCARRIAGING.name
-//                10 -> UNDERCARRIAGED.name
-//                11 -> CODECCING.name
-//                12 -> CODECC_FAIL.name
-//                else -> INIT.name
-//            }
         }
     }
 }
