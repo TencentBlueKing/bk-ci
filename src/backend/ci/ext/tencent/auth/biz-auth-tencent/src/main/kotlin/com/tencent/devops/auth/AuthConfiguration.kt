@@ -29,8 +29,12 @@ package com.tencent.devops.auth
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.config.IamConfiguration
+import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.impl.ApigwHttpClientServiceImpl
+import com.tencent.bk.sdk.iam.service.impl.DefaultHttpClientServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.ManagerServiceImpl
+import com.tencent.bk.sdk.iam.service.impl.PolicyServiceImpl
+import com.tencent.bk.sdk.iam.service.impl.TokenServiceImpl
 import com.tencent.devops.auth.service.AuthDeptServiceImpl
 import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.beans.factory.annotation.Value
@@ -71,6 +75,18 @@ class AuthConfiguration {
 
     @Bean
     fun iamManagerService() = ManagerServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
+
+    @Bean
+    fun httpService() = DefaultHttpClientServiceImpl(iamConfiguration())
+
+    @Bean
+    fun tokenService() = TokenServiceImpl(iamConfiguration(), httpService())
+
+    @Bean
+    fun policyService() = PolicyServiceImpl(iamConfiguration(), httpService())
+
+    @Bean
+    fun authHelper() = AuthHelper(tokenService(), policyService(), iamConfiguration())
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
