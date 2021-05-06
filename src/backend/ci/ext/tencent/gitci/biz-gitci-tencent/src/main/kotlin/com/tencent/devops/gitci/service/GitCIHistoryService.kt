@@ -215,7 +215,7 @@ class GitCIHistoryService @Autowired constructor(
                 return@forEach
             }
             if (status != null) {
-                if (build.status != status.statusName) {
+                if (build.status != status.name) {
                     return@forEach
                 }
             }
