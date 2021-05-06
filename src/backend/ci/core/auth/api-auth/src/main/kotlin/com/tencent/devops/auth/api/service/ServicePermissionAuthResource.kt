@@ -94,6 +94,7 @@ interface ServicePermissionAuthResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("待校验用户ID", required = true)
         userId: String,
+        @QueryParam("serviceCode")
         serviceCode: String,
         @QueryParam("resourceType")
         @ApiParam("资源类型", required = true)
@@ -114,6 +115,7 @@ interface ServicePermissionAuthResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("待校验用户ID", required = true)
         userId: String,
+        @QueryParam("serviceCode")
         serviceCode: String,
         @QueryParam("resourceType")
         @ApiParam("资源类型", required = true)
