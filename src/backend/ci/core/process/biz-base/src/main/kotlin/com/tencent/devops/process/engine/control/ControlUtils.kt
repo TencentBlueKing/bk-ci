@@ -259,14 +259,18 @@ object ControlUtils {
         return if (!customCondition.isNullOrBlank()) {
             try {
                 val expressionResult = EvalExpress.eval(buildId, customCondition, variables)
-                logger.info("[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition|result=$expressionResult")
-                val logMessage = "Custom condition($customCondition) result is $expressionResult. " + if (!expressionResult) { " will be skipped! " } else { "" }
+                logger.info("[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
+                    "|result=$expressionResult")
+                val logMessage = "Custom condition($customCondition) result is $expressionResult. " +
+                    if (!expressionResult) { " will be skipped! " } else { "" }
                 buildLogPrinter?.addLine(buildId, logMessage, "", "", 1)
                 expressionResult
             } catch (e: Exception) {
                 // 异常，则任务表达式为false
-                logger.info("[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition|result=exception: ${e.message}", e)
-                val logMessage = "Custom condition($customCondition) parse failed, will be skipped! Detail message: ${e.message}"
+                logger.info("[$buildId]|STAGE_CONDITION|skip|CUSTOM_CONDITION_MATCH|expression=$customCondition" +
+                    "|result=exception: ${e.message}", e)
+                val logMessage =
+                    "Custom condition($customCondition) parse failed, will be skipped! Detail message: ${e.message}"
                 buildLogPrinter?.addRedLine(buildId, logMessage, "", "", 1)
                 return false
             }
