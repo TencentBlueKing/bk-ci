@@ -51,6 +51,7 @@ abstract class AbstractBuildResourceApi constructor(
         const val GRAY_PROJECT = "grayproject"
         const val AUTO_PROJECT = "autoproject"
         const val CODECC_BUILD = "codecc_build"
+        const val GITCI_BUILD = "gitci_build"
 
         private val gateway: String by lazy {
             DockerEnv.getGatway().removePrefix("http://").removePrefix("https://")
@@ -168,10 +169,6 @@ abstract class AbstractBuildResourceApi constructor(
     }
 
     fun getUrlPrefix(): String {
-        return if (CODECC_BUILD == dockerHostConfig.dockerhostMode) {
-            Constants.DISPATCH_CODECC_PREFIX
-        } else {
-            Constants.DISPATCH_DOCKER_PREFIX
-        }
+        return dockerHostConfig.dispatchUrlPrefix ?: Constants.DISPATCH_DOCKER_PREFIX
     }
 }

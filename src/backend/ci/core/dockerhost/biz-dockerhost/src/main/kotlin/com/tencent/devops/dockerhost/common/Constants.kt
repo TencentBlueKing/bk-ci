@@ -30,4 +30,5 @@ object Constants {
     const val DOCKER_EXIST_CODE = 255 // docker容器状态异常退出码
     const val DISPATCH_DOCKER_PREFIX = "ms/dispatch-docker"
     const val DISPATCH_CODECC_PREFIX = "ms/dispatch-codecc"
+    const val DISPATCH_GITCI_PREFIX = "ms/dispatch-gitci"
 }
