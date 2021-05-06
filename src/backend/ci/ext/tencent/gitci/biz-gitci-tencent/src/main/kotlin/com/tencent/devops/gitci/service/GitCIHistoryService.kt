@@ -30,6 +30,7 @@ package com.tencent.devops.gitci.service
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
@@ -37,6 +38,7 @@ import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventDao
 import com.tencent.devops.gitci.pojo.GitCIBuildBranch
 import com.tencent.devops.gitci.pojo.GitCIBuildHistory
+import com.tencent.devops.gitci.pojo.enums.GitEventEnum
 import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
@@ -70,7 +72,10 @@ class GitCIHistoryService @Autowired constructor(
         branch: String?,
         sourceGitProjectId: Long?,
         triggerUser: String?,
-        pipelineId: String?
+        pipelineId: String?,
+        commitMsg: String? = null,
+        event: GitEventEnum? = null,
+        status: BuildStatus? = null
     ): Page<GitCIBuildHistory> {
         logger.info("get history build list, gitProjectId: $gitProjectId")
         val pageNotNull = page ?: 1
@@ -91,11 +96,13 @@ class GitCIHistoryService @Autowired constructor(
             branchName = branch,
             sourceGitProjectId = sourceGitProjectId,
             triggerUser = triggerUser,
-            pipelineId = pipelineId
+            pipelineId = pipelineId,
+            event = event?.value
         )
         val builds = gitRequestBuildList.map { it.buildId }.toSet()
         logger.info("get history build list, build ids: $builds")
-        val buildHistoryList = client.get(ServiceBuildResource::class).getBatchBuildStatus(conf.projectCode!!, builds, channelCode).data
+        val buildHistoryList =
+            client.get(ServiceBuildResource::class).getBatchBuildStatus(conf.projectCode!!, builds, channelCode).data
         if (null == buildHistoryList) {
             logger.info("Get branch build history list return empty, gitProjectId: $gitProjectId")
             return Page(
@@ -107,23 +114,31 @@ class GitCIHistoryService @Autowired constructor(
         }
         val firstIndex = (pageNotNull - 1) * pageSizeNotNull
         val lastIndex = if (pageNotNull * pageSizeNotNull > gitRequestBuildList.size) {
-                            gitRequestBuildList.size
-                        } else {
-                            pageNotNull * pageSizeNotNull
-                        }
+            gitRequestBuildList.size
+        } else {
+            pageNotNull * pageSizeNotNull
+        }
         val records = mutableListOf<GitCIBuildHistory>()
         gitRequestBuildList.subList(firstIndex, lastIndex).forEach {
+            val buildHistory = getBuildHistory(
+                buildId = it.buildId,
+                buildHistoryList = buildHistoryList,
+                commitMsg = commitMsg,
+                status = status
+            ) ?: return@forEach
             val gitRequestEvent = gitRequestEventDao.get(dslContext, it.eventId) ?: return@forEach
             // 如果是来自fork库的分支，单独标识
             val realEvent = GitCommonUtils.checkAndGetForkBranch(gitRequestEvent, client)
-            val buildHistory = getBuildHistory(it.buildId, buildHistoryList) ?: return@forEach
-            val pipeline = pipelineResourceDao.getPipelineById(dslContext, gitProjectId, it.pipelineId) ?: return@forEach
-            records.add(GitCIBuildHistory(
-                displayName = pipeline.displayName,
-                pipelineId = pipeline.pipelineId,
-                gitRequestEvent = realEvent,
-                buildHistory = buildHistory
-            ))
+            val pipeline =
+                pipelineResourceDao.getPipelineById(dslContext, gitProjectId, it.pipelineId) ?: return@forEach
+            records.add(
+                GitCIBuildHistory(
+                    displayName = pipeline.displayName,
+                    pipelineId = pipeline.pipelineId,
+                    gitRequestEvent = realEvent,
+                    buildHistory = buildHistory
+                )
+            )
         }
         return Page(
             page = pageNotNull,
@@ -143,7 +158,10 @@ class GitCIHistoryService @Autowired constructor(
         logger.info("get all branch build list, gitProjectId: $gitProjectId")
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
-        gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(Response.Status.FORBIDDEN, "项目未开启工蜂CI，无法查询")
+        gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(
+            Response.Status.FORBIDDEN,
+            "项目未开启工蜂CI，无法查询"
+        )
         val buildBranchList = gitRequestEventBuildDao.getAllBuildBranchList(
             dslContext = dslContext,
             gitProjectId = gitProjectId,
@@ -163,10 +181,10 @@ class GitCIHistoryService @Autowired constructor(
         // 因为涉及到分组，selectCount无法拿到具体条数，所以拿出来全部查询自己分页
         val firstIndex = (pageNotNull - 1) * pageSizeNotNull
         val lastIndex = if (pageNotNull * pageSizeNotNull > buildBranchList.size) {
-                            buildBranchList.size
-                        } else {
-                            pageNotNull * pageSizeNotNull
-                        }
+            buildBranchList.size
+        } else {
+            pageNotNull * pageSizeNotNull
+        }
         // 如果是来自fork库的分支，单独标识
         val records = buildBranchList.subList(firstIndex, lastIndex).map {
             GitCIBuildBranch(
@@ -188,9 +206,34 @@ class GitCIHistoryService @Autowired constructor(
         )
     }
 
-    private fun getBuildHistory(buildId: String, buildHistoryList: List<BuildHistory>): BuildHistory? {
+    private fun getBuildHistory(
+        buildId: String,
+        buildHistoryList: List<BuildHistory>,
+        commitMsg: String?,
+        status: BuildStatus?
+    ): BuildHistory? {
         buildHistoryList.forEach {
+            var flag: Boolean
             if (it.id == buildId) {
+                flag = true
+            } else {
+                return@forEach
+            }
+            if (!commitMsg.isNullOrBlank()) {
+                run loop@{
+                    it.material?.forEach { item ->
+                        if (!item.newCommitComment.isNullOrBlank() && item.newCommitComment == commitMsg) {
+                            flag = true
+                            return@loop
+                        }
+                    }
+                    flag = false
+                }
+            }
+            if (status != null) {
+                flag = (it.status == status.statusName)
+            }
+            if (flag) {
                 return it
             }
         }
