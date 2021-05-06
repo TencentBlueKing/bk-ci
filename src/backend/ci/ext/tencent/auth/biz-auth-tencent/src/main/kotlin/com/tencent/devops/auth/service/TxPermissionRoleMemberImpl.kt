@@ -28,6 +28,7 @@
 
 package com.tencent.devops.auth.service
 
+import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerGroupMemberVo
 import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
@@ -53,14 +54,8 @@ class TxPermissionRoleMemberImpl @Autowired constructor(
         super.createRoleMember(userId, projectId, roleId, members, managerGroup)
     }
 
-    override fun deleteRoleMember(
-        userId: String,
-        projectId: Int,
-        roleId: Int,
-        members: RoleMemberDTO,
-        managerGroup: Boolean
-    ) {
-        super.deleteRoleMember(userId, projectId, roleId, members, managerGroup)
+    override fun deleteRoleMember(userId: String, projectId: Int, roleId: Int, id: String, type: ManagerScopesEnum, managerGroup: Boolean) {
+        super.deleteRoleMember(userId, projectId, roleId, id, type, managerGroup)
     }
 
     override fun getRoleMember(projectId: Int, roleId: Int, page: Int, pageSiz: Int): ManagerGroupMemberVo {
