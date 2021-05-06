@@ -27,7 +27,6 @@
 
 package com.tencent.devops.auth.api.user
 
-import com.tencent.devops.auth.pojo.DeptInfo
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
