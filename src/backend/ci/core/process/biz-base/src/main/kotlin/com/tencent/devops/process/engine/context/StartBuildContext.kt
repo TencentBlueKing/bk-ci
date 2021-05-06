@@ -33,6 +33,7 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.process.utils.PIPELINE_RETRY_ALL_FAILED_CONTAINER
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
@@ -59,7 +60,8 @@ class StartBuildContext(
     val startType: StartType,
     val parentBuildId: String?,
     val parentTaskId: String?,
-    val channelCode: ChannelCode
+    val channelCode: ChannelCode,
+    val retryFailedContainer: Boolean
 ) {
 
     /**
@@ -90,15 +92,27 @@ class StartBuildContext(
     }
 
     fun needSkipTaskWhenRetry(stage: Stage, taskId: String?): Boolean {
-        return if (stage.finally) {
-            false // finally stage 不会跳过
-        } else if (stage.id!! == retryStartTaskId) { // 失败重试的Stage，不会跳过
-            false
-        } else if (retryStartTaskId.isNullOrBlank()) { // rebuild or start 不会跳过
-            false
-        } else { // 当前插件不是要失败重试的插件，会跳过
-            retryStartTaskId != taskId
+        return when {
+            stage.finally -> {
+                false // finally stage 不会跳过
+            }
+            stage.id!! == retryStartTaskId -> { // 失败重试的Stage，不会跳过
+                false
+            }
+            retryStartTaskId.isNullOrBlank() -> { // rebuild or start 不会跳过
+                false
+            }
+            else -> { // 当前插件不是要失败重试的插件，会跳过
+                retryStartTaskId != taskId
+            }
         }
+    }
+
+    /**
+     * 是否是要重试的失败容器
+     */
+    fun isRetryFailedContainer(container: Container): Boolean {
+        return retryFailedContainer && BuildStatus.parse(container.status).isSuccess()
     }
 
     companion object {
@@ -133,7 +147,8 @@ class StartBuildContext(
                     ChannelCode.valueOf(params[PIPELINE_START_CHANNEL].toString())
                 } else {
                     ChannelCode.BS
-                }
+                },
+                retryFailedContainer = params[PIPELINE_RETRY_ALL_FAILED_CONTAINER]?.toString()?.toBoolean() == true
             )
         }
     }

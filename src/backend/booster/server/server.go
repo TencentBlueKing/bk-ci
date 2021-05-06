@@ -226,7 +226,7 @@ func (s *Server) initDistccEngine(r crm.ResourceManager) (engine.Engine, error) 
 
 	pwd, err := encrypt.DesDecryptFromBase([]byte(s.conf.EngineDistCCConfig.MySQLPwd))
 	if err != nil {
-		blog.Errorf("init engine(%s), decode mysql pwd failed: %v", err)
+		blog.Errorf("init engine(%s), decode mysql pwd failed: %v", distcc.EngineName, err)
 		return nil, err
 	}
 
@@ -288,7 +288,7 @@ func (s *Server) initDisttaskEngine(cr crm.ResourceManager, k8sCr crm.ResourceMa
 
 	pwd, err := encrypt.DesDecryptFromBase([]byte(s.conf.EngineDisttaskConfig.MySQLPwd))
 	if err != nil {
-		blog.Errorf("init engine(%s), decode mysql pwd failed: %v", err)
+		blog.Errorf("init engine(%s), decode mysql pwd failed: %v", disttask.EngineName, err)
 		return nil, err
 	}
 
@@ -335,7 +335,7 @@ func (s *Server) initDistccMacEngine(r direct.ResourceManager) (engine.Engine, e
 
 	pwd, err := encrypt.DesDecryptFromBase([]byte(s.conf.EngineDistCCMacConfig.MySQLPwd))
 	if err != nil {
-		blog.Errorf("init engine(%s), decode mysql pwd failed: %v", err)
+		blog.Errorf("init engine(%s), decode mysql pwd failed: %v", distcc_mac.EngineName, err)
 		return nil, err
 	}
 
@@ -387,7 +387,7 @@ func (s *Server) initApisEngine(k8sCr crm.ResourceManager, dr direct.ResourceMan
 
 	pwd, err := encrypt.DesDecryptFromBase([]byte(s.conf.EngineApisJobConfig.MySQLPwd))
 	if err != nil {
-		blog.Errorf("init engine(%s), decode mysql pwd failed: %v", err)
+		blog.Errorf("init engine(%s), decode mysql pwd failed: %v", apisjob.EngineName, err)
 		return nil, err
 	}
 
@@ -428,7 +428,7 @@ func (s *Server) initFastbuildEngine(r direct.ResourceManager) (engine.Engine, e
 
 	pwd, err := encrypt.DesDecryptFromBase([]byte(s.conf.EngineFastBuildConfig.MySQLPwd))
 	if err != nil {
-		blog.Errorf("init engine(%s), decode mysql pwd failed: %v", err)
+		blog.Errorf("init engine(%s), decode mysql pwd failed: %v", fastbuild.EngineName, err)
 		return nil, err
 	}
 

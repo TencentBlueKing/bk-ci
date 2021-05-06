@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.control.command.stage.impl
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.control.FastKillUtils
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
@@ -125,7 +126,7 @@ class StartContainerStageCmd(
         commandContext.containers.forEach { container ->
             if (container.status.isCancel()) {
                 commandContext.cancelContainerNum++
-            } else if (container.status.isFailure()) {
+            } else if (ControlUtils.checkContainerFailure(container)) {
                 commandContext.failureContainerNum++
             } else if (container.status == BuildStatus.SKIP) {
                 commandContext.skipContainerNum++

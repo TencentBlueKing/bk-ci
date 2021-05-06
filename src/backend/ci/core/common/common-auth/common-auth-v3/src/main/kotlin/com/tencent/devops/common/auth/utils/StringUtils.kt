@@ -23,47 +23,31 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.auth.api
+package com.tencent.devops.common.auth.utils
 
-import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
-import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.core.MediaType
+object StringUtils {
+    fun obj2List(str: String): List<String> {
+        val list = str.substringBefore("]").substringAfter("[").split(",")
+        val newList = mutableListOf<String>()
+        list.map {
+            newList.add(it.trim())
+        }
+        return newList
+    }
 
-@Api(tags = ["AUTH_RESOURCE_CALLBACK"], description = "权限-资源-回调接口")
-@Path("/service/auth/resource")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface AuthResourceCallBackResource {
-
-    @POST
-    @Path("/projects")
-    @ApiOperation("项目列表")
-    fun projectInfo(
-        @ApiParam(value = "回调信息")
-        callBackInfo: CallbackRequestDTO,
-        @HeaderParam("Authorization")
-        @ApiParam("token")
-        token: String
-    ): CallbackBaseResponseDTO?
-
-    @POST
-    @Path("/instances/list")
-    @ApiOperation("特定资源列表")
-    fun resourceList(
-        @ApiParam(value = "回调信息")
-        callBackInfo: CallbackRequestDTO,
-        @HeaderParam("Authorization")
-        @ApiParam("token")
-        token: String
-    ): CallbackBaseResponseDTO?
+    fun removeAllElement(set: Set<String>): Set<String> {
+        if (set.contains("*")) {
+            val newSet = mutableSetOf<String>()
+            set.map {
+                if (it != "*") {
+                    newSet.add(it)
+                }
+                return newSet
+            }
+        }
+        return set
+    }
 }

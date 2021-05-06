@@ -836,15 +836,12 @@ class PipelineRuntimeService @Autowired constructor(
                         return@nextContainer
                     }
                 }
-//                if (BuildStatus.parse(container.status).isFailure() &&
-//                    !retryStage && !retryStartTaskId.isNullOrBlank() &&
-//                    lastTimeBuildContainerRecords.isNotEmpty()) {
-//                    if (null == findTaskRecord(lastTimeBuildTaskRecords, container, retryStartTaskId)) {
-//                        logger.info("[$buildId|RETRY_SKIP_JOB|j($containerId)|${container.name}")
-//                        containerSeq++
-//                        return@nextContainer
-//                    }
-//                }
+
+                if (context.isRetryFailedContainer(container)) {
+                    logger.info("[$buildId|RETRY_SKIP_SUCCESSFUL_JOB|j(${container.containerId})|${container.name}")
+                    context.containerSeq++
+                    return@nextContainer
+                }
 
                 // --- 第3层循环：Element遍历处理 ---
                 val containerElements = container.elements
@@ -1428,7 +1425,7 @@ class PipelineRuntimeService @Autowired constructor(
             lastTimeBuildTaskRecords.forEach {
                 if (it.containerId == container.id && retryStartTaskId == it.taskId) {
                     target = it
-                    logger.info("found|container=${container.name}|retryStartTaskId=$retryStartTaskId")
+                    logger.info("[${it.buildId}|found|j(${container.id})|${container.name}|retryId=$retryStartTaskId")
                     return@findOutRetryTask
                 }
             }
