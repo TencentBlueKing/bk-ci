@@ -190,7 +190,7 @@
         "baseInfo": "Basic information",
         "group": "Group",
         "buildNumberFormat": "Build number format",
-        "validatebuildNum": "only supports [a-z A-Z 0-9 . - _ : + ? $ {} ()]",
+        "validatebuildNum": "Only supports [a-z A-Z 0-9 . - _ : + ? $ {} ()]",
         "runLock": "Locking behavior",
         "namePlaceholder": "Please enter a name for this pipeline within 40 letters",
         "descPlaceholder": "Please add a description within 100 letters",
