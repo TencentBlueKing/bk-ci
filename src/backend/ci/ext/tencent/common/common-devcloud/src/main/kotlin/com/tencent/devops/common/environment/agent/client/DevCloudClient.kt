@@ -30,8 +30,8 @@ package com.tencent.devops.common.environment.agent.client
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.bk.devops.plugin.docker.pojo.job.request.JobRequest
-import com.tencent.bk.devops.plugin.docker.pojo.job.request.JobResponse
+import com.tencent.devops.common.environment.agent.pojo.devcloud.JobRequest
+import com.tencent.devops.common.environment.agent.pojo.devcloud.JobResponse
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -46,7 +46,8 @@ import com.tencent.devops.common.environment.agent.pojo.devcloud.ErrorCodeEnum
 import com.tencent.devops.common.environment.agent.pojo.devcloud.Params
 import com.tencent.devops.common.environment.agent.pojo.devcloud.TaskStatus
 import com.tencent.devops.common.environment.agent.utils.SmartProxyUtil
-import com.tencent.devops.dispatcher.devcloud.pojo.devcloud.DevCloudJobReq
+import com.tencent.devops.common.environment.agent.pojo.devcloud.DevCloudJobReq
+import com.tencent.devops.common.environment.agent.pojo.devcloud.VolumeDetail
 import okhttp3.Headers
 import okhttp3.MediaType
 import okhttp3.Request
@@ -588,6 +589,102 @@ class DevCloudClient {
                     DevCloudContainerStatus.EXCEPTION
                 }
                 else -> DevCloudContainerStatus.RUNNING
+            }
+        }
+    }
+
+    fun createCfs(staffName: String, name: String, volume: Int, description: String): Pair<String, Int> {
+        val url = devCloudUrl + "/api/v2.1/cfs"
+
+        val requestData = mapOf(
+            "name" to name,
+            "volume" to volume,
+            "description" to description
+        )
+        val body = ObjectMapper().writeValueAsString(requestData)
+        logger.info("request url: $url")
+        logger.info("request body: $body")
+        val request = Request.Builder()
+            .url(url)
+            // .headers(Headers.of(getHeaders(devCloudAppId, devCloudToken, staffName)))
+            .headers(Headers.of(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, staffName, smartProxyToken)))
+            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body.toString()))
+            .build()
+        OkhttpUtils.doHttp(request).use { response ->
+            val responseContent = response.body()!!.string()
+            if (!response.isSuccessful) {
+                throw RuntimeException("Fail to createImageVersions")
+            }
+            logger.info("response: $responseContent")
+            val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseContent)
+            val code = responseData["actionCode"] as Int
+            if (200 == code) {
+                val dataMap = responseData["data"] as Map<String, Any>
+                return Pair((dataMap["taskId"] as Int).toString(), dataMap["cfsId"] as Int)
+            } else {
+                val msg = responseData["actionMessage"] as String
+                throw OperationException(msg)
+            }
+        }
+    }
+
+    fun getCfsDetail(staffName: String, volumeId: Int): VolumeDetail {
+        val url = devCloudUrl + "/api/v2.1/cfs/" + volumeId
+        logger.info("request url: $url")
+        val request = Request.Builder()
+            .url(url)
+            // .headers(Headers.of(getHeaders(devCloudAppId, devCloudToken, staffName)))
+            .headers(Headers.of(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, staffName, smartProxyToken)))
+            .get()
+            .build()
+        OkhttpUtils.doHttp(request).use { response ->
+            val responseContent = response.body()!!.string()
+            if (!response.isSuccessful) {
+                logger.error("Fail to get cfs detail, error code: ${response.code()}")
+                throw RuntimeException("Fail to get cfs detail")
+            }
+            logger.info("response: $responseContent")
+            val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseContent)
+            // val volumeDetail: VolumeDetail = ObjectMapper.readValue(ObjectMapper.writeValueAsString(responseData["data"]))
+            val volumeDetail: VolumeDetail = JsonUtil.to(responseData["data"].toString(), VolumeDetail::class.java)
+            return if (volumeDetail.defaultMountIp.isNullOrBlank()) {
+                VolumeDetail(
+                    volumeDetail.id,
+                    volumeDetail.name,
+                    volumeDetail.volume,
+                    volumeDetail.description,
+                    volumeDetail.mountTargets[0].ip,
+                    volumeDetail.mountTargets
+                )
+            } else {
+                volumeDetail
+            }
+        }
+    }
+
+    fun deleteCfs(userId: String, volumeId: Int?): String {
+        val url = devCloudUrl + "/api/v2.1/cfs/" + volumeId
+        logger.info("request url: $url")
+        val request = Request.Builder()
+            .url(url)
+            // .headers(Headers.of(getHeaders(devCloudAppId, devCloudToken, userId)))
+            .headers(Headers.of(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, userId, smartProxyToken)))
+            .delete()
+            .build()
+        OkhttpUtils.doHttp(request).use { response ->
+            val responseContent = response.body()!!.string()
+            if (!response.isSuccessful) {
+                throw RuntimeException("Fail to delete cfs")
+            }
+            logger.info("response: $responseContent")
+            val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseContent)
+            val code = responseData["actionCode"] as Int
+            if (200 == code) {
+                val dataMap = responseData["data"] as Map<String, Any>
+                return (dataMap["taskId"] as Int).toString()
+            } else {
+                val msg = responseData["actionMessage"] as String
+                throw OperationException(msg)
             }
         }
     }

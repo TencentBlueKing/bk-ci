@@ -49,9 +49,18 @@ data class DevCloudContainer(
 data class Params(
     val env: Map<String, String>?,
     val command: List<String>?,
-    val labels: Map<String, String>?,
+    val nfsVolume: NfsVolume? = null,
+    val labels: Map<String, String>? = emptyMap(),
     val ipEnabled: Boolean = true
 )
+
+data class NfsVolume(
+    val server: String,
+    val path: String,
+    val mountPath: String
+) {
+    constructor() : this("", "", "")
+}
 
 enum class ContainerType(private val type: String) {
     DEV("dev"),
@@ -63,12 +72,6 @@ enum class ContainerType(private val type: String) {
         return type
     }
 }
-
-data class Registry(
-    val host: String,
-    val username: String,
-    val password: String
-)
 
 data class Ports(
     val protocol: String?,

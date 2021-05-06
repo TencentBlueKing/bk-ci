@@ -1,6 +1,4 @@
-package com.tencent.bk.devops.plugin.docker.pojo.job.request
-
-import com.tencent.devops.dispatcher.devcloud.pojo.devcloud.Registry
+package com.tencent.devops.common.environment.agent.pojo.devcloud
 
 data class JobRequest(
     val alias: String? = null,

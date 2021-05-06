@@ -1,4 +1,4 @@
-package com.tencent.bk.devops.plugin.docker.pojo.job.request
+package com.tencent.devops.common.environment.agent.pojo.devcloud
 
 data class JobResponse (
     val actionCode: Int,
