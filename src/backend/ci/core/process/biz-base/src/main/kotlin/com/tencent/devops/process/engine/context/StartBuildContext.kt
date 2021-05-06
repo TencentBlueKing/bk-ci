@@ -111,7 +111,15 @@ class StartBuildContext(
     /**
      * 是否是要重试的失败容器
      */
-    fun isRetryFailedContainer(container: Container): Boolean {
+    fun isRetryFailedContainer(stage: Stage, container: Container): Boolean {
+        if (stage.finally) { // 当前是finallyStage
+            if (stage.id == retryStartTaskId) { // finallyStage的重试
+                return retryFailedContainer && BuildStatus.parse(container.status).isSuccess() // 只重试失败的Job
+            } else {
+                return false
+            }
+        }
+        // 其他
         return retryFailedContainer && BuildStatus.parse(container.status).isSuccess()
     }
 

@@ -837,7 +837,11 @@ class PipelineRuntimeService @Autowired constructor(
                     }
                 }
 
-                if (context.isRetryFailedContainer(container)) {
+                /*
+                    #3138 整合重试Stage下所有失败Job的功能，并对finallyStage做了特殊处理：
+                    finallyStage如果不是属于重试的Stage，则需要将所有状态重置，不允许跳过
+                */
+                if (context.isRetryFailedContainer(container = container, stage = stage)) {
                     logger.info("[$buildId|RETRY_SKIP_SUCCESSFUL_JOB|j(${container.containerId})|${container.name}")
                     context.containerSeq++
                     return@nextContainer
