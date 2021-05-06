@@ -99,6 +99,7 @@ class UpdateStateForStageCmdFinally(
 
         // 中断的失败事件或者FastKill快速失败，或者 #3138 stage cancel 则直接寻找FinallyStage
         val gotoFinally = commandContext.buildStatus.isFailure() ||
+            commandContext.buildStatus.isCancel() ||
             commandContext.fastKill ||
             event.source == BS_STAGE_CANCELED_END_SOURCE
 
@@ -231,8 +232,9 @@ class UpdateStateForStageCmdFinally(
                 if (commandContext.previousStageStatus == BuildStatus.STAGE_SUCCESS) {
                     // #3138 如果上游流水线STAGE成功，则继承
                     commandContext.buildStatus = BuildStatus.STAGE_SUCCESS
-                } else if (commandContext.previousStageStatus?.isFailure() == true) {
-                    // #3138 如果上游流水线失败，不管 finally stage 成功还是失败，流水线最终状态为失败
+                } else if (commandContext.previousStageStatus?.isFailure() == true ||
+                    commandContext.previousStageStatus?.isCancel() == true) {
+                    // #3138 如果上游流水线失败/取消，则流水线最终状态为失败/取消， 否则为finallyStage的状态
                     commandContext.buildStatus = commandContext.previousStageStatus!!
                     commandContext.latestSummary += "|previousStageStatus=${commandContext.buildStatus}"
                 }

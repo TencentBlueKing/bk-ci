@@ -245,4 +245,12 @@ class PipelineStageService @Autowired constructor(
         }
         return null
     }
+
+    fun getPendingStage(buildId: String): PipelineBuildStage? {
+        var pendingStage = pipelineBuildStageDao.getByStatus(dslContext, buildId, BuildStatus.RUNNING)
+        if (pendingStage == null) {
+            pendingStage = pipelineBuildStageDao.getByStatus(dslContext, buildId, BuildStatus.QUEUE)
+        }
+        return pendingStage
+    }
 }

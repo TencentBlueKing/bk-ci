@@ -137,7 +137,7 @@ class PipelineBuildDetailService @Autowired constructor(
             if (!newVarName.isNullOrBlank()) {
                 newParams.add(
                     BuildFormProperty(
-                        id = newVarName!!,
+                        id = newVarName,
                         required = it.required,
                         type = it.type,
                         defaultValue = it.defaultValue,
@@ -367,7 +367,8 @@ class PipelineBuildDetailService @Autowired constructor(
             }
 
             override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
-                if (container.status == BuildStatus.PREPARE_ENV.name) {
+                val status = BuildStatus.parse(container.status)
+                if (status == BuildStatus.PREPARE_ENV) {
                     if (container.startEpoch == null) {
                         container.systemElapsed = 0
                     } else {
@@ -387,6 +388,10 @@ class PipelineBuildDetailService @Autowired constructor(
                     stage.elapsed = containerElapsed
 
                     update = true
+                }
+                // #3138 状态实时刷新
+                if (status.isRunning()) {
+                    container.status = buildStatus.name
                 }
                 return Traverse.CONTINUE
             }
