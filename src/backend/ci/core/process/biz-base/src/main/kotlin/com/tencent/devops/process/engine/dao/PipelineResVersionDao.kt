@@ -49,8 +49,26 @@ class PipelineResVersionDao @Autowired constructor(private val objectMapper: Obj
         versionName: String = "init",
         model: Model
     ) {
+        val modelString = objectMapper.writeValueAsString(model)
+        create(
+            dslContext = dslContext,
+            pipelineId = pipelineId,
+            creator = creator,
+            version = version,
+            versionName = versionName,
+            modelString = modelString
+        )
+    }
+
+    fun create(
+        dslContext: DSLContext,
+        pipelineId: String,
+        creator: String,
+        version: Int,
+        versionName: String = "init",
+        modelString: String
+    ) {
         with(T_PIPELINE_RESOURCE_VERSION) {
-            val modelString = objectMapper.writeValueAsString(model)
             dslContext.insertInto(
                 this,
                 PIPELINE_ID,

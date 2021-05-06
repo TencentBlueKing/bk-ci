@@ -136,7 +136,7 @@
                             handler: () => {
                                 this.toApplyPermission(this.$permissionActionMap.execute, {
                                     id: this.routerParams.pipelineId,
-                                    name: this.routerParams.pipelineId
+                                    type: this.$permissionResourceTypeMap.PIPELINE_DEFAULT
                                 })
                             },
                             text: this.$t('applyPermission')

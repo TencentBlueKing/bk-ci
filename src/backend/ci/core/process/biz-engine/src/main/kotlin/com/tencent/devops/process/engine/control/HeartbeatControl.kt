@@ -91,20 +91,27 @@ class HeartbeatControl @Autowired constructor(
                 return
             }
 
+        // 心跳监测是定时的消息处理，当流水线当前结束，在此时间点内又进行重试，会导致上一次的心跳监测消息处理误判，增加次数判断
+        if (container.executeCount != event.executeCount) {
+            LOG.info("ENGINE|${event.buildId}|HEARTBEAT_MONITOR_EXIT|" +
+                "executeCount(${event.executeCount} != ${container.executeCount})")
+            return
+        }
+
         var found = false
         // #2365 在运行中的插件中记录心跳超时信息
         val runningTask =
-            pipelineRuntimeService.getRunningTask(projectId = event.projectId, buildId = event.buildId)
+            pipelineRuntimeService.getRunningTask(projectId = container.projectId, buildId = container.buildId)
         runningTask.forEach { taskMap ->
-            if (event.containerId == taskMap["containerId"] && taskMap["taskId"] != null) {
+            if (container.containerId == taskMap["containerId"] && taskMap["taskId"] != null) {
                 found = true
                 val executeCount = taskMap["executeCount"]?.toString()?.toInt() ?: 1
                 buildLogPrinter.addRedLine(
-                    buildId = event.buildId,
+                    buildId = container.buildId,
                     message =
                     "Agent心跳超时/Agent's heartbeat lost(${TimeUnit.MILLISECONDS.toSeconds(elapse)} sec)",
                     tag = taskMap["taskId"].toString(),
-                    jobId = event.containerId,
+                    jobId = container.containerId,
                     executeCount = executeCount
                 )
             }
@@ -113,10 +120,10 @@ class HeartbeatControl @Autowired constructor(
         if (!found) {
             // #2365 在Set Up Job位置记录心跳超时信息
             buildLogPrinter.addRedLine(
-                buildId = event.buildId,
+                buildId = container.buildId,
                 message = "Agent心跳超时/Agent's heartbeat lost(${TimeUnit.MILLISECONDS.toSeconds(elapse)} sec)",
-                tag = VMUtils.genStartVMTaskId(event.containerId),
-                jobId = event.containerId,
+                tag = VMUtils.genStartVMTaskId(container.containerId),
+                jobId = container.containerId,
                 executeCount = container.executeCount
             )
         }
@@ -125,12 +132,12 @@ class HeartbeatControl @Autowired constructor(
         pipelineEventDispatcher.dispatch(
             PipelineBuildContainerEvent(
                 source = "heartbeat_timeout",
-                projectId = event.projectId,
-                pipelineId = event.pipelineId,
+                projectId = container.projectId,
+                pipelineId = container.pipelineId,
                 userId = event.userId,
-                buildId = event.buildId,
+                buildId = container.buildId,
                 stageId = container.stageId,
-                containerId = event.containerId,
+                containerId = container.containerId,
                 containerType = container.containerType,
                 actionType = ActionType.TERMINATE,
                 reason = "Agent心跳超时/Agent Dead，请检查构建机状态",

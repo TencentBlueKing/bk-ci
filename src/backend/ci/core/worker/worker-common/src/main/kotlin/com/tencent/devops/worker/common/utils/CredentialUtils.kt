@@ -72,7 +72,6 @@ object CredentialUtils {
             }
 
             val credential = result.data!!
-            logger.info("Get the credential($credential)")
             val list = ArrayList<String>()
 
             list.add(decode(credential.v1, credential.publicKey, pair.privateKey))
@@ -85,10 +84,9 @@ object CredentialUtils {
             if (!credential.v4.isNullOrEmpty()) {
                 list.add(decode(credential.v4!!, credential.publicKey, pair.privateKey))
             }
-            logger.info("Get the credential($list)")
             return Pair(list, credential.credentialType)
         } catch (ignored: Exception) {
-            logger.warn("Fail to get the credential($credentialId)", ignored)
+            logger.warn("Fail to get the credential($credentialId), $ignored")
             if (showErrorLog) {
                 LoggerService.addRedLine("获取凭证（$credentialId）失败， 原因：${ignored.message}")
             }

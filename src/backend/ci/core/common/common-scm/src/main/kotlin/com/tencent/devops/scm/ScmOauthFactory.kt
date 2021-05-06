@@ -112,7 +112,14 @@ object ScmOauthFactory {
                     )
                 }
                 val gitConfig = SpringContextUtil.getBean(GitConfig::class.java)
-                CodeGitlabScmImpl(projectName, branchName, url, token, gitConfig)
+                CodeGitlabScmImpl(
+                    projectName = projectName,
+                    branchName = branchName,
+                    url = url,
+                    token = token,
+                    gitConfig = gitConfig,
+                    event = event
+                )
             }
             else -> throw TaskExecuteException(
                 errorCode = ErrorCode.USER_INPUT_INVAILD,

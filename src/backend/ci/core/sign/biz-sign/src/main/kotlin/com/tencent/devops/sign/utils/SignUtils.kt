@@ -66,7 +66,7 @@ object SignUtils {
      *  @return 本层app包签名结果
      *
      */
-    @Suppress("NestedBlockDepth")
+    @Suppress("ALL")
     fun resignAppWildcard(
         appDir: File,
         certId: String,
@@ -126,7 +126,7 @@ object SignUtils {
      *  @return 本层app包签名结果
      *
      */
-    @Suppress("ComplexMethod", "NestedBlockDepth")
+    @Suppress("ALL", "RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
     fun resignApp(
         appDir: File,
         certId: String,
@@ -209,7 +209,7 @@ object SignUtils {
      *  @return 本层framework包签名结果
      *
      */
-    @Suppress("RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+    @Suppress("ALL", "RECEIVER_NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
     fun resignFramework(
         frameworkDir: File,
         certId: String,
@@ -373,8 +373,8 @@ object SignUtils {
 
             // 将com.apple.developer.associated-domains字段变成数组
             try {
-                val removeCmd =
-                    "/usr/bin/plutil -remove \"com\\.apple\\.developer\\.associated-domains\" $entitlementsFile"
+                val removeCmd = "/usr/bin/plutil -remove " +
+                    "\"com\\.apple\\.developer\\.associated-domains\" $entitlementsFile"
                 logger.info("[add UniversalLink in entitlements] $removeCmd")
                 runtimeExec(removeCmd)
             } catch (e: Exception) {
@@ -387,9 +387,8 @@ object SignUtils {
                 }
                 sb.appendln("</array>")
 
-                val insertCmd =
-                    "/usr/bin/plutil -insert " +
-                            "\"com\\.apple\\.developer\\.associated-domains\" -xml \"$sb\" $entitlementsFile"
+                val insertCmd = "/usr/bin/plutil -insert " +
+                    "\"com\\.apple\\.developer\\.associated-domains\" -xml \"$sb\" $entitlementsFile"
                 logger.info("[add UniversalLink in entitlements] $insertCmd")
                 runtimeExec(insertCmd)
             }
@@ -403,8 +402,8 @@ object SignUtils {
 
             // 将com.apple.security.application-groups字段变成数组插入
             try {
-                val removeCmd =
-                    "/usr/bin/plutil -remove \"com\\.apple\\.security\\.application-groups\" $entitlementsFile"
+                val removeCmd = "/usr/bin/plutil -remove " +
+                    "\"com\\.apple\\.security\\.application-groups\" $entitlementsFile"
                 logger.info("[add UniversalLink in entitlements] $removeCmd")
                 runtimeExec(removeCmd)
             } catch (e: Exception) {
@@ -417,9 +416,8 @@ object SignUtils {
                 }
                 sb.appendln("</array>")
 
-                val insertCmd =
-                    "/usr/bin/plutil -insert " +
-                            "\"com\\.apple\\.security\\.application-groups\" -xml \"$sb\" $entitlementsFile"
+                val insertCmd = "/usr/bin/plutil -insert " +
+                    "\"com\\.apple\\.security\\.application-groups\" -xml \"$sb\" $entitlementsFile"
                 logger.info("[add UniversalLink in entitlements] $insertCmd")
                 runtimeExec(insertCmd)
             }
