@@ -30,6 +30,7 @@ package com.tencent.devops.store.service.atom.impl
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
@@ -57,6 +58,7 @@ import com.tencent.devops.store.pojo.common.KEY_UPDATE_TIME
 import com.tencent.devops.store.pojo.common.StoreVersion
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomService
+import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.atom.MarketAtomEnvService
 import com.tencent.devops.store.utils.StoreUtils
 import com.tencent.devops.store.utils.VersionUtils
@@ -83,6 +85,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
     private val atomDao: AtomDao,
     private val marketAtomDao: MarketAtomDao,
     private val atomService: AtomService,
+    private val marketAtomCommonService: MarketAtomCommonService,
     private val redisOperation: RedisOperation
 ) : MarketAtomEnvService {
 
@@ -245,7 +248,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             version = atomEnv.version,
             initProjectCode = atomEnv.projectCode!!,
             jobType = atomEnv.jobType,
-            buildLessRunFlag = atomEnv.buildLessRunFlag
+            buildLessRunFlag = atomEnv.buildLessRunFlag,
+            inputTypeInfos = marketAtomCommonService.generateInputTypeInfos(atomEnv.props)
         )
         if (!testFlag) {
             // 将db中的环境信息写入缓存
@@ -265,6 +269,25 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             return Result(atomResult.status, atomResult.message ?: "")
         }
         val atom = atomResult.data ?: return Result(data = null)
+        if (atom.htmlTemplateVersion == FrontendTypeEnum.HISTORY.typeVersion) {
+            // 如果是历史老插件则直接返回环境信息
+            return Result(
+                AtomEnv(
+                    atomId = atom.id,
+                    atomCode = atom.atomCode,
+                    atomName = atom.name,
+                    atomStatus = AtomStatusEnum.getAtomStatus(atom.atomStatus.toInt()),
+                    creator = atom.creator,
+                    version = atom.version,
+                    summary = atom.summary,
+                    docsLink = atom.docsLink,
+                    props = if (atom.props != null) JsonUtil.toJson(atom.props!!) else null,
+                    buildLessRunFlag = atom.buildLessRunFlag,
+                    createTime = atom.createTime,
+                    updateTime = atom.updateTime
+                )
+            )
+        }
         val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
             dslContext = dslContext,
             storeCode = atomCode,
@@ -306,7 +329,6 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             atomDefaultFlag = atomDefaultFlag,
             atomStatusList = atomStatusList
         )
-        logger.info("the atomEnvInfoRecord is :$atomEnvInfoRecord")
         return Result(
             if (atomEnvInfoRecord == null) {
                 null

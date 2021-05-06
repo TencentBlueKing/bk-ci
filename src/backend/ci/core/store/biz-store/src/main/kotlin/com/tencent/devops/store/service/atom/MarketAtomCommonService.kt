@@ -69,4 +69,6 @@ interface MarketAtomCommonService {
         buildLessRunFlag: Boolean? = null,
         latestFlag: Boolean? = null
     )
+
+    fun generateInputTypeInfos(props: String?): Map<String, String>?
 }

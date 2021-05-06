@@ -44,5 +44,7 @@ data class AtomRunInfo(
     @ApiModelProperty("Job类型", required = false)
     var jobType: JobTypeEnum?,
     @ApiModelProperty("无构建环境插件是否可以在有构建环境运行标识", required = false)
-    var buildLessRunFlag: Boolean?
+    var buildLessRunFlag: Boolean?,
+    @ApiModelProperty("输入字段类型信息数据", required = false)
+    var inputTypeInfos: Map<String, String>?
 )

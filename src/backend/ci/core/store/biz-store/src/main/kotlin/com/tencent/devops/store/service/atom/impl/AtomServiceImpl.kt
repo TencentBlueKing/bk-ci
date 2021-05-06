@@ -388,7 +388,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     props = atomDao.convertString(pipelineAtomRecord.props),
                     data = atomDao.convertString(pipelineAtomRecord.data),
                     recommendFlag = atomFeature?.recommendFlag,
-                    frontendType = FrontendTypeEnum.getFrontendTypeObj(pipelineAtomRecord.htmlTemplateVersion)
+                    frontendType = FrontendTypeEnum.getFrontendTypeObj(pipelineAtomRecord.htmlTemplateVersion),
+                    createTime = pipelineAtomRecord.createTime.timestampmilli(),
+                    updateTime = pipelineAtomRecord.updateTime.timestampmilli()
                 )
             }
         )
