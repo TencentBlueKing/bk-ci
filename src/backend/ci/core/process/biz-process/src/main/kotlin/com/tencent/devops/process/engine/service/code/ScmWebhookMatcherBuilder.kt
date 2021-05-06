@@ -32,7 +32,6 @@ import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
 import com.tencent.devops.process.pojo.code.git.GitEvent
 import com.tencent.devops.process.pojo.code.github.GithubEvent
 import com.tencent.devops.process.pojo.code.svn.SvnCommitEvent
-import com.tencent.devops.process.pojo.scm.code.GitlabCommitEvent
 
 interface ScmWebhookMatcherBuilder {
 
@@ -43,7 +42,7 @@ interface ScmWebhookMatcherBuilder {
         pipelineWebhookService: PipelineWebhookService
     ): ScmWebhookMatcher
 
-    fun createGitlabWebHookMatcher(event: GitlabCommitEvent): ScmWebhookMatcher
+    fun createGitlabWebHookMatcher(event: GitEvent): ScmWebhookMatcher
 
     fun createGithubWebHookMatcher(event: GithubEvent): ScmWebhookMatcher
 }

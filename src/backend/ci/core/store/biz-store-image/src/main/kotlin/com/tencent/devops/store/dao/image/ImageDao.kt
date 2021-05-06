@@ -61,12 +61,14 @@ import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Field
 import org.jooq.Record
 import org.jooq.Record10
 import org.jooq.Record15
 import org.jooq.Record5
 import org.jooq.Record9
 import org.jooq.Result
+import org.jooq.SelectOnConditionStep
 import org.jooq.conf.ParamType
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -270,13 +272,38 @@ class ImageDao {
         val d = TImageFeature.T_IMAGE_FEATURE.`as`("d")
         // 公共镜像查询条件组装
         val publicImageCondition =
-            queryPublicImageCondition(a, d, agentType, isContainAgentType, classifyId, recommendFlag)
+            queryPublicImageCondition(
+                a = a,
+                d = d,
+                agentType = agentType,
+                isContainAgentType = isContainAgentType,
+                classifyId = classifyId,
+                recommendFlag = recommendFlag
+            )
         // 普通镜像查询条件组装
         val normalImageConditions =
-            queryNormalImageCondition(a, c, d, projectCode, agentType, isContainAgentType, classifyId, recommendFlag)
+            queryNormalImageCondition(
+                a = a,
+                c = c,
+                d = d,
+                projectCode = projectCode,
+                agentType = agentType,
+                isContainAgentType = isContainAgentType,
+                classifyId = classifyId,
+                recommendFlag = recommendFlag
+            )
         // 开发者测试镜像查询条件组装
         val initTestImageCondition =
-            queryInitTestImageCondition(a, c, d, projectCode, agentType, isContainAgentType, classifyId, recommendFlag)
+            queryTestImageCondition(
+                a = a,
+                c = c,
+                d = d,
+                projectCode = projectCode,
+                agentType = agentType,
+                isContainAgentType = isContainAgentType,
+                classifyId = classifyId,
+                recommendFlag = recommendFlag
+            )
         // 公共镜像和普通镜像需排除初始化项目下面有处于测试中或者审核中的镜像
         publicImageCondition.add(
             a.IMAGE_CODE.notIn(
@@ -336,7 +363,7 @@ class ImageDao {
             queryNormalImageCondition(a, c, d, projectCode, agentType, isContainAgentType, classifyId, recommendFlag)
         // 开发者测试镜像查询条件组装
         val initTestImageCondition =
-            queryInitTestImageCondition(a, c, d, projectCode, agentType, isContainAgentType, classifyId, recommendFlag)
+            queryTestImageCondition(a, c, d, projectCode, agentType, isContainAgentType, classifyId, recommendFlag)
         // 公共镜像和普通镜像需排除初始化项目下面有处于测试中或者审核中的镜像
         publicImageCondition.add(
             a.IMAGE_CODE.notIn(
@@ -356,7 +383,37 @@ class ImageDao {
         )
         val labelNames = dslContext.select(DSL.groupConcatDistinct(DSL.concat(f.LABEL_NAME)))
             .from(e).join(f).on(e.LABEL_ID.eq(f.ID)).where(a.ID.eq(e.IMAGE_ID)).asField<String>("labelNames")
-        val t = dslContext.select(
+        val t = getJobImageBaseStep(dslContext, a, b, d, labelNames)
+            .join(c)
+            .on(a.IMAGE_CODE.eq(c.STORE_CODE))
+            .where(normalImageConditions)
+            .union(
+                getJobImageBaseStep(dslContext, a, b, d, labelNames)
+                    .where(publicImageCondition)
+            )
+            .union(
+                getJobImageBaseStep(dslContext, a, b, d, labelNames)
+                    .join(c)
+                    .on(a.IMAGE_CODE.eq(c.STORE_CODE))
+                    .where(initTestImageCondition)
+            )
+            .asTable("t")
+        val baseStep = dslContext.select().from(t).orderBy(t.field("weight").desc(), t.field("imageName").asc())
+        return if (null != page && null != pageSize) {
+            baseStep.limit((page - 1) * pageSize + (offsetNum ?: 0), pageSize).fetch()
+        } else {
+            baseStep.fetch()
+        }
+    }
+
+    private fun getJobImageBaseStep(
+        dslContext: DSLContext,
+        a: TImage,
+        b: TClassify,
+        d: TImageFeature,
+        labelNames: Field<String>?
+    ): SelectOnConditionStep<Record> {
+        return dslContext.select(
             a.ID.`as`("imageId"),
             a.IMAGE_CODE.`as`("imageCode"),
             a.IMAGE_NAME.`as`("imageName"),
@@ -391,100 +448,8 @@ class ImageDao {
             .from(a)
             .join(b)
             .on(a.CLASSIFY_ID.eq(b.ID))
-            .join(c)
-            .on(a.IMAGE_CODE.eq(c.STORE_CODE))
             .leftJoin(d)
             .on(a.IMAGE_CODE.eq(d.IMAGE_CODE))
-            .where(normalImageConditions)
-            .union(
-                dslContext.select(
-                    a.ID.`as`("imageId"),
-                    a.IMAGE_CODE.`as`("imageCode"),
-                    a.IMAGE_NAME.`as`("imageName"),
-                    a.VERSION.`as`("version"),
-                    a.IMAGE_STATUS.`as`("imageStatus"),
-                    b.ID.`as`("classifyId"),
-                    b.CLASSIFY_CODE.`as`("classifyCode"),
-                    b.CLASSIFY_NAME.`as`("classifyName"),
-                    a.LOGO_URL.`as`("logoUrl"),
-                    a.ICON.`as`("icon"),
-                    a.SUMMARY.`as`("summary"),
-                    a.PUBLISHER.`as`("publisher"),
-                    a.PUB_TIME.`as`("pubTime"),
-                    a.CREATOR.`as`("creator"),
-                    a.CREATE_TIME.`as`("createTime"),
-                    a.LATEST_FLAG.`as`("latestFlag"),
-                    a.AGENT_TYPE_SCOPE.`as`("agentTypeScope"),
-                    a.IMAGE_SOURCE_TYPE.`as`("imageSourceType"),
-                    a.IMAGE_REPO_URL.`as`("imageRepoUrl"),
-                    a.IMAGE_REPO_NAME.`as`("imageRepoName"),
-                    a.IMAGE_TAG.`as`("imageTag"),
-                    a.IMAGE_SIZE.`as`("imageSize"),
-                    a.MODIFIER.`as`("modifier"),
-                    a.UPDATE_TIME.`as`("updateTime"),
-                    d.CERTIFICATION_FLAG.`as`("certificationFlag"),
-                    d.PUBLIC_FLAG.`as`("publicFlag"),
-                    d.IMAGE_TYPE.`as`("imageType"),
-                    d.WEIGHT.`as`("weight"),
-                    d.RECOMMEND_FLAG.`as`("recommendFlag"),
-                    labelNames
-                )
-                    .from(a)
-                    .join(b)
-                    .on(a.CLASSIFY_ID.eq(b.ID))
-                    .leftJoin(d)
-                    .on(a.IMAGE_CODE.eq(d.IMAGE_CODE))
-                    .where(publicImageCondition)
-            )
-            .union(
-                dslContext.select(
-                    a.ID.`as`("imageId"),
-                    a.IMAGE_CODE.`as`("imageCode"),
-                    a.IMAGE_NAME.`as`("imageName"),
-                    a.VERSION.`as`("version"),
-                    a.IMAGE_STATUS.`as`("imageStatus"),
-                    b.ID.`as`("classifyId"),
-                    b.CLASSIFY_CODE.`as`("classifyCode"),
-                    b.CLASSIFY_NAME.`as`("classifyName"),
-                    a.LOGO_URL.`as`("logoUrl"),
-                    a.ICON.`as`("icon"),
-                    a.SUMMARY.`as`("summary"),
-                    a.PUBLISHER.`as`("publisher"),
-                    a.PUB_TIME.`as`("pubTime"),
-                    a.CREATOR.`as`("creator"),
-                    a.CREATE_TIME.`as`("createTime"),
-                    a.LATEST_FLAG.`as`("latestFlag"),
-                    a.AGENT_TYPE_SCOPE.`as`("agentTypeScope"),
-                    a.IMAGE_SOURCE_TYPE.`as`("imageSourceType"),
-                    a.IMAGE_REPO_URL.`as`("imageRepoUrl"),
-                    a.IMAGE_REPO_NAME.`as`("imageRepoName"),
-                    a.IMAGE_TAG.`as`("imageTag"),
-                    a.IMAGE_SIZE.`as`("imageSize"),
-                    a.MODIFIER.`as`("modifier"),
-                    a.UPDATE_TIME.`as`("updateTime"),
-                    d.CERTIFICATION_FLAG.`as`("certificationFlag"),
-                    d.PUBLIC_FLAG.`as`("publicFlag"),
-                    d.IMAGE_TYPE.`as`("imageType"),
-                    d.WEIGHT.`as`("weight"),
-                    d.RECOMMEND_FLAG.`as`("recommendFlag"),
-                    labelNames
-                )
-                    .from(a)
-                    .join(b)
-                    .on(a.CLASSIFY_ID.eq(b.ID))
-                    .join(c)
-                    .on(a.IMAGE_CODE.eq(c.STORE_CODE))
-                    .leftJoin(d)
-                    .on(a.IMAGE_CODE.eq(d.IMAGE_CODE))
-                    .where(initTestImageCondition)
-            )
-            .asTable("t")
-        val baseStep = dslContext.select().from(t).orderBy(t.field("weight").desc(), t.field("imageName").asc())
-        return if (null != page && null != pageSize) {
-            baseStep.limit((page - 1) * pageSize + (offsetNum ?: 0), pageSize).fetch()
-        } else {
-            baseStep.fetch()
-        }
     }
 
     private fun setQueryImageBaseCondition(
@@ -517,7 +482,14 @@ class ImageDao {
         classifyId: String?,
         recommendFlag: Boolean?
     ): MutableList<Condition> {
-        val conditions = setQueryImageBaseCondition(a, d, agentType, isContainAgentType, classifyId, recommendFlag)
+        val conditions = setQueryImageBaseCondition(
+            a = a,
+            d = d,
+            agentType = agentType,
+            isContainAgentType = isContainAgentType,
+            classifyId = classifyId,
+            recommendFlag = recommendFlag
+        )
         conditions.add(a.IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte())) // 只查已发布的
         conditions.add(d.PUBLIC_FLAG.eq(true)) // 查公共镜像（所有项目都可用）
         conditions.add(a.LATEST_FLAG.eq(true)) // 只查最新版本的镜像
@@ -534,7 +506,14 @@ class ImageDao {
         classifyId: String?,
         recommendFlag: Boolean?
     ): MutableList<Condition> {
-        val conditions = setQueryImageBaseCondition(a, d, agentType, isContainAgentType, classifyId, recommendFlag)
+        val conditions = setQueryImageBaseCondition(
+            a = a,
+            d = d,
+            agentType = agentType,
+            isContainAgentType = isContainAgentType,
+            classifyId = classifyId,
+            recommendFlag = recommendFlag
+        )
         conditions.add(a.IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte())) // 只查已发布的
         conditions.add(d.PUBLIC_FLAG.eq(false)) // 查普通镜像
         conditions.add(a.LATEST_FLAG.eq(true)) // 只查最新版本的镜像
@@ -543,7 +522,7 @@ class ImageDao {
         return conditions
     }
 
-    private fun queryInitTestImageCondition(
+    private fun queryTestImageCondition(
         a: TImage,
         c: TStoreProjectRel,
         d: TImageFeature,
@@ -553,7 +532,14 @@ class ImageDao {
         classifyId: String?,
         recommendFlag: Boolean?
     ): MutableList<Condition> {
-        val conditions = setQueryImageBaseCondition(a, d, agentType, isContainAgentType, classifyId, recommendFlag)
+        val conditions = setQueryImageBaseCondition(
+            a = a,
+            d = d,
+            agentType = agentType,
+            isContainAgentType = isContainAgentType,
+            classifyId = classifyId,
+            recommendFlag = recommendFlag
+        )
         // 只查测试中和审核中的插件
         conditions.add(
             a.IMAGE_STATUS.`in`(
@@ -564,15 +550,8 @@ class ImageDao {
             )
         )
         conditions.add(c.PROJECT_CODE.eq(projectCode))
-        // 新增镜像时关联的项目或者申请成为协作者时关联的调试项目
-        conditions.add(
-            c.TYPE.`in`(
-                listOf(
-                    StoreProjectTypeEnum.INIT.type.toByte(),
-                    StoreProjectTypeEnum.TEST.type.toByte()
-                )
-            )
-        )
+        // 镜像的调试项目
+        conditions.add(c.TYPE.eq(StoreProjectTypeEnum.TEST.type.toByte()))
         conditions.add(c.STORE_TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
         return conditions
     }
@@ -927,7 +906,7 @@ class ImageDao {
         conditions.add(tImage.IMAGE_STATUS.`in`(imageStatusSet))
         // 镜像
         conditions.add(tStoreProjectRel.STORE_TYPE.eq(StoreTypeEnum.IMAGE.type.toByte()))
-        // 调试项目信息
+        // 初始化项目信息
         conditions.add(tStoreProjectRel.TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
         val baseStep = dslContext.select(
             tImage.ID.`as`(KEY_IMAGE_ID),

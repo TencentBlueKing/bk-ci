@@ -130,14 +130,17 @@ class SignServiceImpl @Autowired constructor(
             signInfoService.finishZip(resignId, signedIpaFile, ipaSignInfo, taskExecuteCount)
 
             // 生产元数据
-            val newInfoPlist = parsInfoPlist(findInfoPlist(ipaUnzipDir))
+            val newInfoPlist = parsInfoPlist(findInfoPlist(ipaUnzipDir), findZhStrings(ipaUnzipDir))
             val properties = getProperties(ipaSignInfo, newInfoPlist)
 
             // 归档IPA包
             val archiveResult = archiveService.archive(signedIpaFile, ipaSignInfo, properties)
             if (!archiveResult) {
                 logger.error("[$resignId]|[${ipaSignInfo.buildId}] archive signed ipa failed.")
-                throw ErrorCodeException(errorCode = SignMessageCode.ERROR_ARCHIVE_SIGNED_IPA, defaultMessage = "归档IPA包失败")
+                throw ErrorCodeException(
+                    errorCode = SignMessageCode.ERROR_ARCHIVE_SIGNED_IPA,
+                    defaultMessage = "归档IPA包失败"
+                )
             }
             signInfoService.finishArchive(resignId, ipaSignInfo, taskExecuteCount)
 
@@ -149,9 +152,23 @@ class SignServiceImpl @Autowired constructor(
             signInfoService.failResign(resignId, ipaSignInfo, taskExecuteCount, t.message ?: "Unknown error")
             finished = true
         } finally {
-            if (!finished) signInfoService.failResign(resignId, ipaSignInfo, taskExecuteCount, "Task exit with unknown error")
+            if (!finished) signInfoService.failResign(
+                resignId,
+                ipaSignInfo,
+                taskExecuteCount,
+                "Task exit with unknown error"
+            )
         }
         return finished
+    }
+
+    private fun findZhStrings(ipaUnzipDir: File): File? {
+        val file = File(ipaUnzipDir, "payload/zh-Hans.lproj/InfoPlist.strings")
+        return if (file.exists()) {
+            file
+        } else {
+            null
+        }
     }
 
     override fun getSignStatus(resignId: String): EnumResignStatus {
@@ -335,7 +352,8 @@ class SignServiceImpl @Autowired constructor(
     * 解析IPA包Info.plist的信息
     * */
     private fun parsInfoPlist(
-        infoPlist: File
+        infoPlist: File,
+        zhStrings: File?
     ): IpaInfoPlist {
         try {
             val rootDict = PropertyListParser.parse(infoPlist) as NSDictionary
@@ -345,7 +363,7 @@ class SignServiceImpl @Autowired constructor(
             }
             var parameters = rootDict.objectForKey("CFBundleIdentifier") as NSString
             val bundleIdentifier = parameters.toString()
-            // 应用名称
+            // 应用标题
             if (!rootDict.containsKey("CFBundleName")) throw RuntimeException("no CFBundleName find in plist")
             parameters = rootDict.objectForKey("CFBundleName") as NSString
             val appTitle = parameters.toString()
@@ -374,13 +392,25 @@ class SignServiceImpl @Autowired constructor(
             } catch (e: Exception) {
                 ""
             }
+            // 应用名称
+            val appName = try {
+                val nameDictionary = if (zhStrings != null) {
+                    PropertyListParser.parse(zhStrings) as NSDictionary
+                } else {
+                    rootDict
+                }
+                nameDictionary.objectForKey("CFBundleDisplayName").toString()
+            } catch (e: Exception) {
+                ""
+            }
 
             return IpaInfoPlist(
                 bundleIdentifier = bundleIdentifier,
                 appTitle = appTitle,
                 bundleVersion = bundleVersion,
                 bundleVersionFull = bundleVersionFull,
-                scheme = scheme
+                scheme = scheme,
+                appName = appName
             )
         } catch (e: Exception) {
             throw ErrorCodeException(
@@ -409,6 +439,7 @@ class SignServiceImpl @Autowired constructor(
         properties["source"] = "pipeline"
         properties["ipa.sign.status"] = "true"
         properties["appScheme"] = ipaInfoPlist.scheme
+        properties["appName"] = ipaInfoPlist.appName
         return properties
     }
 
