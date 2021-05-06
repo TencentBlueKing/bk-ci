@@ -60,8 +60,8 @@ class AuthDeptServiceImpl @Autowired constructor(
     @Value("\${esb.secret:#{null}}")
     val appSecret: String? = null
 
-    @Value("\${bk.paas.host:#{null}}")
-    val iamHost: String? = null
+    @Value("\${bk.user.host:#{null}}")
+    val bkUserHost: String? = null
 
     private val deptUserCache = CacheBuilder.newBuilder()
         .maximumSize(500)
@@ -181,10 +181,10 @@ class AuthDeptServiceImpl @Autowired constructor(
      * 生成请求url
      */
     private fun getAuthRequestUrl(uri: String): String {
-        return if (iamHost?.endsWith("/")!!) {
-            iamHost + uri
+        return if (bkUserHost?.endsWith("/")!!) {
+            bkUserHost + uri
         } else {
-            "$iamHost/$uri"
+            "$bkUserHost/$uri"
         }
     }
 
