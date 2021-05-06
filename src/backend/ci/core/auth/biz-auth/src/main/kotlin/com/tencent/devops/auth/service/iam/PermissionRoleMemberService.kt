@@ -28,13 +28,27 @@
 
 package com.tencent.devops.auth.service.iam
 
+import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerGroupMemberVo
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
 
 interface PermissionRoleMemberService {
-    fun createRoleMember(userId: String, projectId: Int, roleId: Int, members: List<RoleMemberDTO>, managerGroup: Boolean)
+    fun createRoleMember(
+        userId: String,
+        projectId: Int,
+        roleId: Int,
+        members: List<RoleMemberDTO>,
+        managerGroup: Boolean
+    )
 
-    fun deleteRoleMember(userId: String, projectId: Int, roleId: Int, members: RoleMemberDTO, managerGroup: Boolean)
+    fun deleteRoleMember(
+        userId: String,
+        projectId: Int,
+        roleId: Int,
+        id: String,
+        type: ManagerScopesEnum,
+        managerGroup: Boolean
+    )
 
     fun getRoleMember(projectId: Int, roleId: Int, page: Int, pageSize: Int): ManagerGroupMemberVo
 }

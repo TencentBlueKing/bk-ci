@@ -28,6 +28,7 @@
 
 package com.tencent.devops.auth.api.user
 
+import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerGroupMemberVo
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
@@ -105,8 +106,11 @@ interface UserProjectMemberResource {
         @ApiParam(name = "是否为管理员分组", required = true)
         @QueryParam("managerGroup")
         managerGroup: Boolean,
-        @ApiParam("待删除用户", required = true)
-        @QueryParam("members")
-        members: RoleMemberDTO
+        @ApiParam("待删除用户或组织Id", required = true)
+        @QueryParam("id")
+        members: String,
+        @ApiParam("组员类型 user:单用户, dept:组织", required = true)
+        @QueryParam("type")
+        type: ManagerScopesEnum
     ): Result<Boolean>
 }

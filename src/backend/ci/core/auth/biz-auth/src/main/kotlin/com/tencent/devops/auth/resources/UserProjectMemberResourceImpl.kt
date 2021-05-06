@@ -28,6 +28,7 @@
 
 package com.tencent.devops.auth.resources
 
+import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.manager.vo.ManagerGroupMemberVo
 import com.tencent.devops.auth.api.user.UserProjectMemberResource
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
@@ -72,13 +73,15 @@ class UserProjectMemberResourceImpl @Autowired constructor(
         projectId: Int,
         roleId: Int,
         managerGroup: Boolean,
-        members: RoleMemberDTO
+        members: String,
+        type: ManagerScopesEnum
     ): Result<Boolean> {
         Result(permissionRoleMemberService.deleteRoleMember(
             userId = userId,
             projectId = projectId,
             roleId = roleId,
-            members = members,
+            id = members,
+            type = type,
             managerGroup = managerGroup
         ))
         return Result(true)

@@ -82,14 +82,16 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
         userId: String,
         projectId: Int,
         roleId: Int,
-        members: RoleMemberDTO,
+        id: String,
+        type: ManagerScopesEnum,
         managerGroup: Boolean
     ) {
         permissionGradeService.checkGradeManagerUser(userId, projectId)
 
-        iamManagerService.deleteRoleGroupMember(roleId, ManagerScopesEnum.getType(members.type), members.id)
-        if (managerGroup && members.type == ManagerScopesEnum.USER) {
-            iamManagerService.deleteGradeManagerRoleMember(members.id, projectId)
+        iamManagerService.deleteRoleGroupMember(roleId, ManagerScopesEnum.getType(type), id)
+        // 如果是删除用户,且用户是管理员需同步删除该用户分分级管理员权限
+        if (managerGroup && type == ManagerScopesEnum.USER) {
+            iamManagerService.deleteGradeManagerRoleMember(id, projectId)
         }
     }
 
