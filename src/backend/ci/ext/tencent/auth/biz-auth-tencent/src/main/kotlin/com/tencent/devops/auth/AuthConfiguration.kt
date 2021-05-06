@@ -29,13 +29,11 @@ package com.tencent.devops.auth
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.bk.sdk.iam.service.ManagerService
+import com.tencent.bk.sdk.iam.service.impl.ApigwHttpClientServiceImpl
+import com.tencent.bk.sdk.iam.service.impl.ManagerServiceImpl
 import com.tencent.devops.auth.service.AuthDeptServiceImpl
-import com.tencent.devops.auth.service.TxPermissionGradeServiceImpl
-import com.tencent.devops.auth.service.TxPermissionRoleMemberImpl
-import com.tencent.devops.auth.service.TxPermissionRoleServiceImpl
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -49,27 +47,30 @@ import org.springframework.core.Ordered
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class AuthConfiguration {
 
-    @Bean
-    @ConditionalOnMissingBean
-    fun txPermissionGradeServiceImpl(
-        iamManagerService: ManagerService
-    ) = TxPermissionGradeServiceImpl(iamManagerService)
+    @Value("\${auth.url:}")
+    val iamBaseUrl = ""
+
+    @Value("\${auth.appCode:}")
+    val systemId = ""
+
+    @Value("\${auth.appCode:}")
+    val appCode = ""
+
+    @Value("\${auth.appSecret:}")
+    val appSecret = ""
+
+    @Value("\${auth.apigwUrl:#{null}}")
+    val iamApigw = ""
 
     @Bean
     @ConditionalOnMissingBean
-    fun txPermissionRoleMemberImpl(
-        iamManagerService: ManagerService,
-        permissionGradeService: TxPermissionGradeServiceImpl,
-        client: Client
-    ) = TxPermissionRoleMemberImpl(iamManagerService, permissionGradeService, client)
+    fun iamConfiguration() = IamConfiguration(systemId, appCode, appSecret, iamBaseUrl, iamApigw)
 
     @Bean
-    @ConditionalOnMissingBean
-    fun txPermissionRoleServiceImpl(
-        iamManagerService: ManagerService,
-        permissionGradeService: TxPermissionGradeServiceImpl,
-        iamConfiguration: IamConfiguration
-    ) = TxPermissionRoleServiceImpl(iamManagerService, permissionGradeService, iamConfiguration)
+    fun apigwHttpClientServiceImpl() = ApigwHttpClientServiceImpl(iamConfiguration())
+
+    @Bean
+    fun iamManagerService() = ManagerServiceImpl(apigwHttpClientServiceImpl(), iamConfiguration())
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
