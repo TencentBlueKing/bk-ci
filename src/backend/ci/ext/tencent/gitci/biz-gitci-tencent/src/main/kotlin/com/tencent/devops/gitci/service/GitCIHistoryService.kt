@@ -123,10 +123,9 @@ class GitCIHistoryService @Autowired constructor(
             val buildHistory = getBuildHistory(
                 buildId = it.buildId,
                 buildHistoryList = buildHistoryList,
-                commitMsg = commitMsg,
                 status = status
             ) ?: return@forEach
-            val gitRequestEvent = gitRequestEventDao.get(dslContext, it.eventId) ?: return@forEach
+            val gitRequestEvent = gitRequestEventDao.get(dslContext, it.eventId, commitMsg) ?: return@forEach
             // 如果是来自fork库的分支，单独标识
             val realEvent = GitCommonUtils.checkAndGetForkBranch(gitRequestEvent, client)
             val pipeline =
@@ -209,33 +208,18 @@ class GitCIHistoryService @Autowired constructor(
     private fun getBuildHistory(
         buildId: String,
         buildHistoryList: List<BuildHistory>,
-        commitMsg: String?,
         status: BuildStatus?
     ): BuildHistory? {
-        buildHistoryList.forEach {
-            var flag: Boolean
-            if (it.id == buildId) {
-                flag = true
-            } else {
+        buildHistoryList.forEach { build ->
+            if (build.id != buildId) {
                 return@forEach
             }
-            if (!commitMsg.isNullOrBlank()) {
-                run loop@{
-                    it.material?.forEach { item ->
-                        if (!item.newCommitComment.isNullOrBlank() && item.newCommitComment == commitMsg) {
-                            flag = true
-                            return@loop
-                        }
-                    }
-                    flag = false
+            if (status != null) {
+                if (build.status != status.statusName) {
+                    return@forEach
                 }
             }
-            if (status != null) {
-                flag = (it.status == status.statusName)
-            }
-            if (flag) {
-                return it
-            }
+            return build
         }
         return null
     }

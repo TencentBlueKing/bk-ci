@@ -88,12 +88,16 @@ class GitRequestEventDao {
 
     fun get(
         dslContext: DSLContext,
-        id: Long
+        id: Long,
+        commitMsg: String? = null
     ): GitRequestEvent? {
         with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
-            val record = dslContext.selectFrom(this)
+            val dsl = dslContext.selectFrom(this)
                 .where(ID.eq(id))
-                .fetchOne()
+            if (commitMsg != null) {
+                dsl.and(COMMIT_MSG.like("%$commitMsg%"))
+            }
+            val record = dsl.fetchOne()
             return if (record == null) {
                 null
             } else {
