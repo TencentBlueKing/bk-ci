@@ -653,8 +653,13 @@ class PipelineRepositoryService constructor(
                 manualStartup = canManualStartup,
                 canElementSkip = canElementSkip,
                 buildNo = buildNo,
-                taskCount = taskCount
+                taskCount = taskCount,
+                latestVersion = model.latestVersion
             )
+            if (version == 0) {
+                // 传过来的latestVersion已经不是最新
+                throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_IS_NOT_THE_LATEST)
+            }
             pipelineResDao.create(
                 dslContext = transactionContext,
                 pipelineId = pipelineId,

@@ -105,7 +105,8 @@ class PipelineInfoDao {
         manualStartup: Boolean? = null,
         canElementSkip: Boolean? = null,
         buildNo: BuildNo? = null,
-        taskCount: Int = 0
+        taskCount: Int = 0,
+        latestVersion: Int = 0
     ): Int {
         val count = with(T_PIPELINE_INFO) {
 
@@ -130,20 +131,31 @@ class PipelineInfoDao {
             if (taskCount > 0) {
                 update.set(TASK_COUNT, taskCount)
             }
-
+            val conditions = ArrayList<Condition>(2)
+            conditions.add(PIPELINE_ID.eq(pipelineId))
+            if (latestVersion > 0) {
+                conditions.add(VERSION.eq(latestVersion))
+            }
             update.set(UPDATE_TIME, LocalDateTime.now())
                 .set(LAST_MODIFY_USER, userId)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(conditions)
                 .execute()
         }
-
+        if (count < 1) {
+            logger.warn("Update the pipeline $pipelineId with the latest version($latestVersion) failed")
+            // 版本号为0则为更新失败, 异常在业务层抛出, 只有pipelineId和version不符合的情况会走这里, 统一成一个异常应该問題ありません
+            return 0
+        }
         val version = with(T_PIPELINE_INFO) {
             dslContext.select(VERSION)
                 .from(this)
                 .where(PIPELINE_ID.eq(pipelineId))
                 .fetchOne(0, Int::class.java)
         }
-        logger.info("Update the pipeline $pipelineId add new version($version) and result=${count == 1}")
+        logger.info(
+            "Update the pipeline $pipelineId add new version($version) old version($latestVersion) " +
+                "and result=${count == 1}"
+        )
         return version
     }
 
