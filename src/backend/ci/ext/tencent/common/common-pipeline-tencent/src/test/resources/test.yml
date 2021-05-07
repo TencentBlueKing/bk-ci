@@ -67,3 +67,17 @@ stages:
         depend-on:
           - job_id_2
           - job_id_3
+      job_id_5:
+        name: my_job_5
+        runs-on:
+         - agentless
+        container:
+          image: mirrors.tencent.com/ci/tlinux_ci:0.5.0.4
+        steps:
+          - name: agentless-task1
+            uses: UploadArtifactory@1.*
+            with:
+              path: test.txt
+            timeout-minutes: 480
+            continue-on-error: false
+            retry-times: 0

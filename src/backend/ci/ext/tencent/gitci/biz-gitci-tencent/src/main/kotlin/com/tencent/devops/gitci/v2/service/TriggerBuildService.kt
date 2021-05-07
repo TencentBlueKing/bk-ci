@@ -96,6 +96,8 @@ import com.tencent.devops.gitci.utils.GitCIParameterUtils
 import com.tencent.devops.gitci.utils.GitCIPipelineUtils
 import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.process.pojo.BuildId
+import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.process.pojo.setting.Subscription
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.BK_CI_REF
 import com.tencent.devops.scm.pojo.BK_CI_REPOSITORY
@@ -158,6 +160,22 @@ class TriggerBuildService @Autowired constructor(
         logger.info("Git request gitBuildId:$gitBuildId, pipeline:$pipeline, model: $model")
 
         return startBuild(pipeline, event, gitProjectConf, model, gitBuildId)
+    }
+
+    private fun createPipelineSetting(
+        event: GitRequestEvent,
+        pipelineId: String,
+        landunProjectId: String,
+        yaml: ScriptBuildYaml
+    ): PipelineSetting {
+        yaml.notices
+        return PipelineSetting(
+            projectId = landunProjectId,
+            pipelineId = pipelineId,
+            failSubscription = Subscription(
+
+            )
+        )
     }
 
     private fun createPipelineModel(
