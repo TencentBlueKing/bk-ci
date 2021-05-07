@@ -29,6 +29,9 @@ package com.tencent.devops.scm
 
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitDiff
+import com.tencent.devops.scm.pojo.GitMrChangeInfo
+import com.tencent.devops.scm.pojo.GitMrInfo
+import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
 
 @Suppress("ALL")
@@ -65,4 +68,10 @@ interface IScm {
 
     fun getCommits(branch: String?, all: Boolean, page: Int, size: Int): List<GitCommit> = emptyList()
     fun getCommitDiff(sha: String): List<GitDiff> = emptyList()
+
+    fun getMergeRequestChangeInfo(mrId: Long): GitMrChangeInfo? = null
+
+    fun getMrInfo(mrId: Long): GitMrInfo? = null
+
+    fun getMrReviewInfo(mrId: Long): GitMrReviewInfo? = null
 }

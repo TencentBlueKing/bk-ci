@@ -27,12 +27,11 @@
 
 package com.tencent.devops.process.engine.service
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.process.engine.dao.PipelineResDao
+import com.tencent.devops.process.engine.dao.PipelineResVersionDao
 import com.tencent.devops.store.api.common.ServiceStoreStatisticResource
 import com.tencent.devops.store.pojo.common.StoreStatisticPipelineNumUpdate
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -48,7 +47,7 @@ import java.util.concurrent.Executors
  */
 @Service
 class PipelineAtomStatisticsService @Autowired constructor(
-    private val pipelineResDao: PipelineResDao,
+    private val pipelineResVersionDao: PipelineResVersionDao,
     private val dslContext: DSLContext,
     private val client: Client
 ) {
@@ -66,7 +65,7 @@ class PipelineAtomStatisticsService @Autowired constructor(
         deleteFlag: Boolean = false
     ) {
         val pipelineNumUpdateList = mutableListOf<StoreStatisticPipelineNumUpdate>()
-        val currentVersionModelStr = getVersionModelString(pipelineId, version)
+        val currentVersionModelStr = getVersionModelString(pipelineId, version) ?: return
         val currentVersionModel = JsonUtil.to(currentVersionModelStr, Model::class.java)
         // 获取当前流水线版本模型中插件的集合（去掉重复插件）
         val currentVersionAtomSet = getModelAtomSet(currentVersionModel)
@@ -76,13 +75,10 @@ class PipelineAtomStatisticsService @Autowired constructor(
             }
             else -> {
                 if (version == null) {
-                    throw ErrorCodeException(
-                        errorCode = CommonMessageCode.PARAMETER_IS_NULL,
-                        params = arrayOf("version")
-                    )
+                    return
                 }
                 if (version > 1) {
-                    val lastVersionModelStr = getVersionModelString(pipelineId, version - 1)
+                    val lastVersionModelStr = getVersionModelString(pipelineId, version - 1) ?: return
                     val lastVersionModel = JsonUtil.to(lastVersionModelStr, Model::class.java)
                     // 获取上一个流水线版本模型中插件的集合（去掉重复插件）
                     val lastVersionAtomSet = getModelAtomSet(lastVersionModel)
@@ -141,11 +137,7 @@ class PipelineAtomStatisticsService @Autowired constructor(
         return modelAtomSet
     }
 
-    private fun getVersionModelString(pipelineId: String, version: Int?): String {
-        return (pipelineResDao.getVersionModelString(dslContext, pipelineId, version)
-            ?: throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                params = arrayOf("$pipelineId:$version")
-            ))
+    private fun getVersionModelString(pipelineId: String, version: Int?): String? {
+        return pipelineResVersionDao.getVersionModelString(dslContext, pipelineId, version)
     }
 }

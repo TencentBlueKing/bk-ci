@@ -22,7 +22,7 @@
                     </bk-table-column>
                     <bk-table-column :label="$t('restore.createTime')" prop="createTime">
                         <template slot-scope="props">
-                            <span>{{ convertTime(props.row.updateTime) }}</span>
+                            <span>{{ convertTime(props.row.createTime) }}</span>
                         </template>
                     </bk-table-column>
                     <bk-table-column :label="$t('lastUpdater')" prop="creator"></bk-table-column>
@@ -74,7 +74,7 @@
             latestPipelineVersionInfo () {
                 if (!this.getPipelineList.length) return
                 const latestPipeline = this.getPipelineList.find(v => v.pipelineId === this.pipelineId)
-                return `${this.$t('version')} ${latestPipeline.pipelineVersion} ${this.$t('save') + this.$t('at')} ${convertTime(latestPipeline.deploymentTime)}`
+                return latestPipeline ? `${this.$t('version')} ${latestPipeline.pipelineVersion} ${this.$t('save') + this.$t('at')} ${convertTime(latestPipeline.deploymentTime)}` : this.$t('pipelinesEdit')
             }
         },
         methods: {

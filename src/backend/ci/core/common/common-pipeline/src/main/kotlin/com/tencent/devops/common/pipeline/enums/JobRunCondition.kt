@@ -32,8 +32,11 @@ package com.tencent.devops.common.pipeline.enums
  * @version 1.0
  */
 enum class JobRunCondition {
-    STAGE_RUNNING, // Stage开始运行时
+    STAGE_RUNNING, // 当前Stage开始运行时
     CUSTOM_VARIABLE_MATCH, // 自定义变量全部满足时运行
     CUSTOM_VARIABLE_MATCH_NOT_RUN, // 自定义变量全部满足时不运行
-    CUSTOM_CONDITION_MATCH // 满足以下自定义条件时运行
+    CUSTOM_CONDITION_MATCH, // 满足以下自定义条件时运行
+    PREVIOUS_STAGE_SUCCESS, // 上游 Stage 成功时
+    PREVIOUS_STAGE_FAILED, // 上游 Stage 失败时
+    PREVIOUS_STAGE_CANCEL // 上游 Stage 取消时
 }

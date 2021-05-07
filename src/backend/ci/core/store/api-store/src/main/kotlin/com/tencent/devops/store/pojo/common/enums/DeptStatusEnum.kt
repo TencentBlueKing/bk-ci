@@ -32,8 +32,6 @@ enum class DeptStatusEnum(val status: Int) {
     APPROVED(1), // 审核通过
     REJECT(2); // 审核驳回
 
-    override fun toString() = status.toString()
-
     companion object {
         fun getStatus(status: Int): String {
             return when (status) {
