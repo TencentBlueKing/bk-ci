@@ -26,6 +26,7 @@
  */
 
 package com.tencent.devops.experience.constant
+
 /**
  * 流水线微服务模块请求返回状态码
  * 返回码制定规则（除开0代表成功外，为了兼容历史接口成功状态都是返回0）：
@@ -56,4 +57,5 @@ object ExperienceMessageCode {
     const val USER_NEED_EXP_GROUP_X_PERMISSION = "2101010" // 体验：用户没有体验组的{0}权限
     const val EXP_META_DATA_PIPELINE_ID_NOT_EXISTS = "2101011" // 体验：体验未与流水线绑定
     const val USER_NOT_IN_EXP_GROUP = "2101012" // 体验：用户{0}不在体验用户名单中
+    const val OUTER_LOGIN_ERROR = "2101013" // 外部用户登录错误
 }
