@@ -53,6 +53,7 @@ import com.tencent.devops.common.websocket.pojo.WebSocketType
 import com.tencent.devops.process.engine.control.CallBackControl
 import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.engine.pojo.event.PipelineCreateEvent
+import com.tencent.devops.process.engine.service.AgentPipelineRefService
 import com.tencent.devops.process.engine.service.PipelineAtomStatisticsService
 import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.engine.utils.RepositoryUtils
@@ -74,6 +75,7 @@ class MQPipelineCreateListener @Autowired constructor(
     private val webSocketDispatcher: WebSocketDispatcher,
     private val redisOperation: RedisOperation,
     private val callBackControl: CallBackControl,
+    private val agentPipelineRefService: AgentPipelineRefService,
     private val objectMapper: ObjectMapper,
     pipelineEventDispatcher: PipelineEventDispatcher
 ) : BaseListener<PipelineCreateEvent>(pipelineEventDispatcher) {
@@ -88,6 +90,11 @@ class MQPipelineCreateListener @Autowired constructor(
                 watcher.stop()
                 watcher.start("updateAtomPipelineNum")
                 pipelineAtomStatisticsService.updateAtomPipelineNum(event.pipelineId, event.version ?: 1)
+                watcher.stop()
+                watcher.start("updateAgentPipelineRef")
+                with(event) {
+                    agentPipelineRefService.updateAgentPipelineRef(userId, "create_pipeline", projectId, pipelineId)
+                }
                 watcher.stop()
             }
             if (event.source == "createWebhook") {
@@ -111,7 +118,7 @@ class MQPipelineCreateListener @Autowired constructor(
             is CodeGitlabWebHookTriggerElement -> Triple(
                 RepositoryConfigUtils.buildConfig(e),
                 ScmType.CODE_GITLAB,
-                null
+                e.eventType
             )
             is CodeSVNWebHookTriggerElement -> Triple(RepositoryConfigUtils.buildConfig(e), ScmType.CODE_SVN, null)
             is CodeGithubWebHookTriggerElement -> Triple(RepositoryConfigUtils.buildConfig(e), ScmType.GITHUB, null)
@@ -126,7 +133,7 @@ class MQPipelineCreateListener @Autowired constructor(
                 ) {
                     RepositoryConfigUtils.replaceCodeProp(
                         repositoryConfig = RepositoryConfigUtils.buildConfig(e),
-                        variables = event.variables as Map<String, String>
+                        variables = event.variables!!.map { it.key to it.value.toString() }.toMap()
                     )
                 } else {
                     RepositoryConfigUtils.buildConfig(e)
@@ -179,7 +186,9 @@ class MQPipelineCreateListener @Autowired constructor(
                             repoHashId = repositoryConfig.repositoryHashId,
                             repoName = repositoryConfig.repositoryName,
                             taskId = e.id
-                        ), codeEventType = eventType, variables = event.variables as Map<String, String>,
+                        ),
+                        codeEventType = eventType,
+                        variables = event.variables!!.map { it.key to it.value.toString() }.toMap(),
                         // TODO 此处需做成传入参数
                         createPipelineFlag = true
                     )

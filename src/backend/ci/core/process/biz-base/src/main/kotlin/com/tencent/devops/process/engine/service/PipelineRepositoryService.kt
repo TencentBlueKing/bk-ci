@@ -74,6 +74,7 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.engine.pojo.event.PipelineCreateEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineDeleteEvent
+import com.tencent.devops.process.engine.pojo.event.PipelineRestoreEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineUpdateEvent
 import com.tencent.devops.process.plugin.load.ElementBizRegistrar
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
@@ -338,11 +339,13 @@ class PipelineRepositoryService constructor(
                     ), eventType)
                 }
                 is CodeGitlabWebHookTriggerElement -> {
-                    Pair(RepositoryConfig(
-                        repositoryHashId = e.repositoryHashId,
-                        repositoryName = e.repositoryName,
-                        repositoryType = e.repositoryType ?: RepositoryType.ID
-                    ), CodeEventType.PUSH)
+                    Pair(
+                        RepositoryConfig(
+                            repositoryHashId = e.repositoryHashId,
+                            repositoryName = e.repositoryName,
+                            repositoryType = e.repositoryType ?: RepositoryType.ID
+                        ), e.eventType ?: CodeEventType.PUSH
+                    )
                 }
                 is CodeGithubWebHookTriggerElement -> {
                     Pair(RepositoryConfig(
@@ -564,10 +567,10 @@ class PipelineRepositoryService constructor(
                             ""
                         }
 
-                        // 渠道为工蜂或者开源扫描只需为流水线模型保留一个版本
-                        val filterList = listOf(ChannelCode.GIT, ChannelCode.GONGFENGSCAN)
-                        val maxPipelineResNum = if (channelCode in filterList) {
-                            1
+                        // 特定渠道保留特定版本
+                        val filterList = versionConfigure.specChannels.split(",")
+                        val maxPipelineResNum = if (channelCode.name in filterList) {
+                            versionConfigure.specChannelMaxKeepNum
                         } else {
                             versionConfigure.maxKeepNum
                         }
@@ -662,6 +665,28 @@ class PipelineRepositoryService constructor(
                 version = version,
                 model = model
             )
+            if (version > 1 && pipelineResVersionDao.getVersionModelString(
+                    dslContext = transactionContext,
+                    pipelineId = pipelineId,
+                    version = version - 1
+                ) == null
+            ) {
+                // 当ResVersion表中缺失上一个有效版本时需从Res表迁移数据（版本间流水线模型对比有用）
+                val lastVersionModelStr = pipelineResDao.getVersionModelString(
+                    dslContext = dslContext,
+                    pipelineId = pipelineId,
+                    version = version - 1
+                )
+                if (!lastVersionModelStr.isNullOrEmpty()) {
+                    pipelineResVersionDao.create(
+                        dslContext = transactionContext,
+                        pipelineId = pipelineId,
+                        creator = userId,
+                        version = version - 1,
+                        modelString = lastVersionModelStr
+                    )
+                }
+            }
             pipelineModelTaskDao.deletePipelineTasks(
                 dslContext = transactionContext,
                 projectId = projectId,
@@ -1098,6 +1123,16 @@ class PipelineRepositoryService constructor(
             )
             pipelineModelTaskDao.batchSave(transactionContext, tasks)
         }
+
+        pipelineEventDispatcher.dispatch(
+            PipelineRestoreEvent(
+                source = "restore_pipeline",
+                projectId = projectId,
+                pipelineId = pipelineId,
+                userId = userId
+            )
+        )
+
         return existModel
     }
 

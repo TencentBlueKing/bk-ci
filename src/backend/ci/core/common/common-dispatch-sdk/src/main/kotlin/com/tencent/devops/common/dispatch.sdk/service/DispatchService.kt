@@ -28,29 +28,28 @@
 package com.tencent.devops.common.dispatch.sdk.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.ApiUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
-import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.dispatch.sdk.pojo.RedisBuild
 import com.tencent.devops.common.dispatch.sdk.pojo.SecretInfo
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.monitoring.api.service.DispatchReportResource
 import com.tencent.devops.monitoring.pojo.DispatchStatus
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
-import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import org.slf4j.LoggerFactory
 import java.util.Date
 
@@ -167,30 +166,20 @@ class DispatchService constructor(
 
     fun onContainerFailure(event: PipelineAgentStartupEvent, e: BuildFailureException) {
         logger.warn("[${event.buildId}|${event.vmSeqId}] Container startup failure")
-        pipelineEventDispatcher.dispatch(
-            PipelineBuildContainerEvent(
-                source = "container_startup_sdk",
+        try {
+            client.get(ServiceBuildResource::class).setVMStatus(
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,
                 buildId = event.buildId,
-                userId = event.userId,
-                stageId = event.stageId,
-                containerId = event.containerId,
-                containerType = event.containerType,
-                actionType = ActionType.TERMINATE
+                vmSeqId = event.vmSeqId,
+                status = BuildStatus.FAILED,
+                errorType = e.errorType,
+                errorCode = e.errorCode,
+                errorMsg = e.formatErrorMessage
             )
-        )
-
-        client.get(ServiceBuildResource::class).setVMStatus(
-            projectId = event.projectId,
-            pipelineId = event.pipelineId,
-            buildId = event.buildId,
-            vmSeqId = event.vmSeqId,
-            status = BuildStatus.FAILED,
-            errorType = e.errorType,
-            errorCode = e.errorCode,
-            errorMsg = e.formatErrorMessage
-        )
+        } catch (ignore: ClientException) {
+            logger.error("SystemErrorLogMonitor|onContainerFailure|${event.buildId}|error=${e.message},${e.errorCode}")
+        }
     }
 
     fun redispatch(event: PipelineAgentStartupEvent) {

@@ -432,4 +432,50 @@ class NodeService @Autowired constructor(
                 records = nodeInfos.map { NodeStringIdUtils.getNodeBaseInfo(it) }
         )
     }
+
+    fun extListNodes(userId: String, projectId: String): List<NodeWithPermission> {
+        val nodeRecordList = nodeDao.listThirdpartyNodes(dslContext, projectId)
+        if (nodeRecordList.isEmpty()) {
+            return emptyList()
+        }
+        return nodeRecordList.map {
+            val nodeStringId = NodeStringIdUtils.getNodeStringId(it)
+            NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName)
+            NodeWithPermission(
+                nodeHashId = HashUtil.encodeLongId(it.nodeId),
+                nodeId = nodeStringId,
+                name = it.nodeName,
+                ip = it.nodeIp,
+                nodeStatus = it.nodeStatus,
+                agentStatus = getAgentStatus(it),
+                nodeType = it.nodeType,
+                osName = it.osName,
+                createdUser = it.createdUser,
+                operator = it.operator,
+                bakOperator = it.bakOperator,
+                canUse = false,
+                canEdit = false,
+                canDelete = false,
+                gateway = "",
+                displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName),
+                createTime = if (null == it.createdTime) {
+                    ""
+                } else {
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.createdTime)
+                },
+                lastModifyTime = if (null == it.lastModifyTime) {
+                    ""
+                } else {
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastModifyTime)
+                },
+                lastModifyUser = it.lastModifyUser ?: "",
+                pipelineRefCount = it.pipelineRefCount ?: 0,
+                lastBuildTime = if (null == it.lastBuildTime) {
+                    ""
+                } else {
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastBuildTime)
+                }
+            )
+        }
+    }
 }
