@@ -32,6 +32,7 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -99,7 +100,8 @@ object ModelUtils {
 
     fun refreshCanRetry(model: Model, canRetry: Boolean) {
         model.stages.forEach { s ->
-            s.canRetry = (s.canRetry ?: false) && canRetry
+            s.canRetry = (BuildStatus.parse(s.status).isFailure() ||
+                BuildStatus.parse(s.status).isCancel()) && canRetry
             s.containers.forEach { c ->
                 initContainerOldData(c)
                 if (c is VMBuildContainer) {
