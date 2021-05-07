@@ -84,6 +84,7 @@ import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_SUGGEST
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.engine.context.StartBuildContext
 import com.tencent.devops.process.engine.control.DependOnUtils
 import com.tencent.devops.process.engine.control.VmOperateTaskGenerator
 import com.tencent.devops.process.engine.dao.PipelineBuildContainerDao
@@ -127,17 +128,8 @@ import com.tencent.devops.process.utils.MINORVERSION
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_BUILD_REMARK
-import com.tencent.devops.process.utils.PIPELINE_RETRY_ALL_FAILED_CONTAINER
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
-import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
-import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
-import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
-import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_ID
-import com.tencent.devops.process.utils.PIPELINE_START_PARENT_BUILD_TASK_ID
-import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
-import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
-import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PIPELINE_VERSION
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_COMMIT_MESSAGE
@@ -745,33 +737,8 @@ class PipelineRuntimeService @Autowired constructor(
         // 2019-12-16 产品 rerun 需求
         val pipelineId = pipelineInfo.pipelineId
         val buildId = params[PIPELINE_RETRY_BUILD_ID]?.toString() ?: buildIdGenerator.getNextId()
-        val startType = StartType.valueOf(params[PIPELINE_START_TYPE] as String)
-        val parentBuildId = params[PIPELINE_START_PARENT_BUILD_ID]?.toString()
 
-        val parentTaskId = params[PIPELINE_START_PARENT_BUILD_TASK_ID]?.toString()
-        val channelCode = if (params[PIPELINE_START_CHANNEL] != null) {
-            ChannelCode.valueOf(params[PIPELINE_START_CHANNEL].toString())
-        } else ChannelCode.BS
-
-        var taskCount = 0
-        val userId = params[PIPELINE_START_USER_ID].toString()
-        val triggerUser = params[PIPELINE_START_USER_NAME].toString()
-        // 原子重试
-        val retryStartTaskId = params[PIPELINE_RETRY_START_TASK_ID]?.toString()
-        val retryFailedContainer = params[PIPELINE_RETRY_ALL_FAILED_CONTAINER]?.toString()?.toBoolean() == true
-
-        val (actionType, retryCount, isStageRetry) = if (params[PIPELINE_RETRY_COUNT] != null) {
-            val i = try {
-                params[PIPELINE_RETRY_COUNT].toString().trim().toInt()
-            } catch (ignored: NumberFormatException) {
-                0
-            }
-            Triple(ActionType.RETRY, i, retryStartTaskId?.startsWith("stage-") == true)
-        } else {
-            Triple(ActionType.START, 0, false)
-        }
-
-        var firstTaskId = if (params[PIPELINE_START_TASK_ID] != null) params[PIPELINE_START_TASK_ID].toString() else ""
+        val context = StartBuildContext.init(params)
 
         val updateExistsRecord: MutableList<TPipelineBuildTaskRecord> = mutableListOf()
         val defaultStageTagId = stageTagService.getDefaultStageTag().data?.id
@@ -788,19 +755,17 @@ class PipelineRuntimeService @Autowired constructor(
         val updateStageExistsRecord: MutableList<TPipelineBuildStageRecord> = mutableListOf()
         val updateContainerExistsRecord: MutableList<TPipelineBuildContainerRecord> = mutableListOf()
 
-        var containerSeq = 0
         var currentBuildNo = buildNo
         // --- 第1层循环：Stage遍历处理 ---
         fullModel.stages.forEachIndexed nextStage@{ index, stage ->
-            val stageId = stage.id!!
+//            val stageId = stage.id!!
             var needUpdateStage = false
-            // 当前 stage 是否是重试的 stage
-            val retryStage = stageId == retryStartTaskId
 
             // #2318 如果是stage重试不是当前stage，并且当前stage已经是完成状态，则直接跳过
-            if (isStageRetry && !retryStage && BuildStatus.parse(stage.status).isFinish()) {
-                logger.info("[$buildId|RETRY|#$stageId|${stage.status}| is not in retry STAGE($retryStartTaskId)")
-                containerSeq += stage.containers.size // Job跳过计数也需要增加
+            if (context.needSkipWhenStageFailRetry(stage)) {
+//            if (isStageRetry && !retryStage && BuildStatus.parse(stage.status).isFinish()) {
+                logger.info("[$buildId|RETRY|#${stage.id!!}|${stage.status}|NOT_RETRY_STAGE")
+                context.containerSeq += stage.containers.size // Job跳过计数也需要增加
                 return@nextStage
             }
 
@@ -811,14 +776,10 @@ class PipelineRuntimeService @Autowired constructor(
                 var needStartVM = false // 是否需要启动构建
                 var needUpdateContainer = false
                 var taskSeq = 0
-                // 构建机环境处理，需要先创建一个的启动构建机原子任务
-                val containerId = container.id!!
-                val containerHashId = container.containerId ?: ""
-                val containerType = container.getClassType()
 
                 if (container is TriggerContainer) { // 寻找触发点
                     val buildNoObj = container.buildNo
-                    if (buildNoObj != null && actionType == ActionType.START) {
+                    if (buildNoObj != null && context.actionType == ActionType.START) {
                         val buildNoType = buildNoObj.buildNoType
                         if (buildNoType == BuildNoType.CONSISTENT) {
                             if (currentBuildNo != null) {
@@ -841,20 +802,20 @@ class PipelineRuntimeService @Autowired constructor(
                         }
                     }
                     container.elements.forEach { atomElement ->
-                        if (firstTaskId.isBlank() && atomElement.isElementEnable()) {
-                            firstTaskId = atomElement.findFirstTaskIdByStartType(startType)
+                        if (context.firstTaskId.isBlank() && atomElement.isElementEnable()) {
+                            context.firstTaskId = atomElement.findFirstTaskIdByStartType(context.startType)
                         }
                     }
-                    containerSeq++
+                    context.containerSeq++
                     return@nextContainer
                 } else if (container is NormalContainer) {
                     if (!ContainerUtils.isNormalContainerEnable(container)) {
-                        containerSeq++
+                        context.containerSeq++
                         return@nextContainer
                     }
                 } else if (container is VMBuildContainer) {
                     if (!ContainerUtils.isVMBuildContainerEnable(container)) {
-                        containerSeq++
+                        context.containerSeq++
                         return@nextContainer
                     }
                 }
@@ -863,20 +824,26 @@ class PipelineRuntimeService @Autowired constructor(
                     如果是插件失败重试，并且当前的Job状态是失败的，则检查重试的插件是不是属于该失败Job:
                     如果不属于，则表示该Job在本次重试不会被执行到，则不做处理，保持原状态, 跳过
                  */
-                if (BuildStatus.parse(container.status).isFailure() &&
-                    !retryStage && !retryStartTaskId.isNullOrBlank() &&
+                if (context.needSkipContainerWhenFailRetry(stage, container) &&
                     lastTimeBuildContainerRecords.isNotEmpty()) {
-                    if (null == findTaskRecord(lastTimeBuildTaskRecords, container, retryStartTaskId)) {
-                        logger.info("[$buildId|RETRY_SKIP_JOB|j($containerId)|${container.name}")
-                        containerSeq++
+                    if (null == findTaskRecord(
+                            lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
+                            container = container,
+                            retryStartTaskId = context.retryStartTaskId)) {
+
+                        logger.info("[$buildId|RETRY_SKIP_JOB|j(${container.id!!})|${container.name}")
+                        context.containerSeq++
                         return@nextContainer
                     }
                 }
 
-                if (retryFailedContainer && BuildStatus.parse(container.status).isSuccess()) {
-                    logger.info("[$buildId|RETRY_SKIP_SUCCESSFUL_JOB|" +
-                        "retryFailed($retryFailedContainer)|j($containerId)|${container.name}")
-                    containerSeq++
+                /*
+                    #3138 整合重试Stage下所有失败Job的功能，并对finallyStage做了特殊处理：
+                    finallyStage如果不是属于重试的Stage，则需要将所有状态重置，不允许跳过
+                */
+                if (context.isRetryFailedContainer(container = container, stage = stage)) {
+                    logger.info("[$buildId|RETRY_SKIP_SUCCESSFUL_JOB|j(${container.containerId})|${container.name}")
+                    context.containerSeq++
                     return@nextContainer
                 }
 
@@ -892,7 +859,7 @@ class PipelineRuntimeService @Autowired constructor(
                         }
                     }
 
-                    val status = atomElement.initStatus(params = params)
+                    val status = atomElement.initStatus(params = params, finallyStage = stage.finally)
 
                     if (status.isFinish()) {
                         logger.info("[$buildId|${atomElement.id}] status=$status")
@@ -902,16 +869,16 @@ class PipelineRuntimeService @Autowired constructor(
 
                     // 全新构建
                     if (lastTimeBuildTaskRecords.isEmpty()) {
-                        taskCount++
+                        context.taskCount++
                         buildTaskList.add(
                             PipelineBuildTask(
                                 projectId = pipelineInfo.projectId,
                                 pipelineId = pipelineInfo.pipelineId,
                                 buildId = buildId,
-                                stageId = stageId,
-                                containerId = containerId,
-                                containerHashId = containerHashId,
-                                containerType = containerType,
+                                stageId = stage.id!!,
+                                containerId = container.id!!,
+                                containerHashId = container.containerId ?: "",
+                                containerType = container.getClassType(),
                                 taskSeq = taskSeq,
                                 taskId = atomElement.id!!,
                                 taskName = if (atomElement.name.length > 128) {
@@ -923,7 +890,7 @@ class PipelineRuntimeService @Autowired constructor(
                                 taskParams = atomElement.genTaskParams(),
                                 additionalOptions = atomElement.additionalOptions,
                                 executeCount = 1,
-                                starter = userId,
+                                starter = context.userId,
                                 approver = null,
                                 subBuildId = null,
                                 atomCode = atomElement.getAtomCode()
@@ -932,7 +899,8 @@ class PipelineRuntimeService @Autowired constructor(
                         needUpdateContainer = true
                     } else {
                         // 如果是失败的插件重试，并且当前插件不是要重试的插件，则检查其之前的状态，如果已经执行过，则跳过
-                        if (!retryStage && !retryStartTaskId.isNullOrBlank() && retryStartTaskId != atomElement.id) {
+                        if (context.needSkipTaskWhenRetry(stage, atomElement.id)) {
+//                        if (!retryStage && !retryStartTaskId.isNullOrBlank() && retryStartTaskId != atomElement.id) {
                             val target = findTaskRecord(
                                 lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
                                 container = container,
@@ -956,7 +924,7 @@ class PipelineRuntimeService @Autowired constructor(
                             stage = stage,
                             container = container,
                             retryStartTaskId = atomElement.id!!,
-                            retryCount = retryCount,
+                            retryCount = context.retryCount,
                             atomElement = atomElement
                         )
 
@@ -968,7 +936,7 @@ class PipelineRuntimeService @Autowired constructor(
                                 if (pair != null) {
                                     setRetryBuildTask(
                                         target = pair.first,
-                                        retryCount = retryCount,
+                                        retryCount = context.retryCount,
                                         stage = stage,
                                         container = container,
                                         atomElement = pair.second
@@ -990,16 +958,15 @@ class PipelineRuntimeService @Autowired constructor(
                     supplyVMTask(
                         stage = stage,
                         container = container,
-                        containerSeq = containerSeq,
+                        containerSeq = context.containerSeq,
                         startVMTaskSeq = startVMTaskSeq,
                         lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
                         updateExistsRecord = updateExistsRecord,
                         buildTaskList = buildTaskList,
                         pipelineInfo = pipelineInfo,
-                        retryCount = retryCount,
+                        retryCount = context.retryCount,
                         buildId = buildId,
-                        stageId = stageId,
-                        userId = userId
+                        userId = context.userId
                     )
                 }
 
@@ -1007,7 +974,7 @@ class PipelineRuntimeService @Autowired constructor(
                     if (lastTimeBuildContainerRecords.isNotEmpty()) {
                         run findHistoryContainer@{
                             lastTimeBuildContainerRecords.forEach {
-                                if (it.containerId == containerId && it.status != BuildStatus.SKIP.ordinal) {
+                                if (it.containerId == container.id) { // #958 在Element.initStatus 位置确认重试插件
                                     it.status = BuildStatus.QUEUE.ordinal
                                     it.executeCount += 1
                                     updateContainerExistsRecord.add(it)
@@ -1019,12 +986,14 @@ class PipelineRuntimeService @Autowired constructor(
                         ModelUtils.initContainerOldData(container)
                         val controlOption = when (container) {
                             is NormalContainer -> PipelineBuildContainerControlOption(
-                                container.jobControlOption!!,
-                                container.mutexGroup
+                                jobControlOption = container.jobControlOption!!,
+                                inFinallyStage = stage.finally,
+                                mutexGroup = container.mutexGroup
                             )
                             is VMBuildContainer -> PipelineBuildContainerControlOption(
-                                container.jobControlOption!!,
-                                container.mutexGroup
+                                jobControlOption = container.jobControlOption!!,
+                                inFinallyStage = stage.finally,
+                                mutexGroup = container.mutexGroup
                             )
                             else -> null
                         }
@@ -1033,10 +1002,10 @@ class PipelineRuntimeService @Autowired constructor(
                                 projectId = pipelineInfo.projectId,
                                 pipelineId = pipelineInfo.pipelineId,
                                 buildId = buildId,
-                                stageId = stageId,
-                                containerId = containerId,
-                                containerType = containerType,
-                                seq = containerSeq,
+                                stageId = stage.id!!,
+                                containerId = container.id!!,
+                                containerType = container.getClassType(),
+                                seq = context.containerSeq,
                                 status = BuildStatus.QUEUE,
                                 controlOption = controlOption
                             )
@@ -1044,7 +1013,7 @@ class PipelineRuntimeService @Autowired constructor(
                     }
                     needUpdateStage = true
                 }
-                containerSeq++
+                context.containerSeq++
             }
 
             // 非触发Stage填充默认参数
@@ -1058,6 +1027,7 @@ class PipelineRuntimeService @Autowired constructor(
                         manualTrigger = false,
                         triggerUsers = null
                     ),
+                    finally = stage.finally,
                     fastKill = stage.fastKill
                 )
                 if (stage.name.isNullOrBlank()) stage.name = stage.id
@@ -1074,7 +1044,7 @@ class PipelineRuntimeService @Autowired constructor(
                 if (needUpdateStage) {
                     run findHistoryStage@{
                         lastTimeBuildStageRecords.forEach {
-                            if (it.stageId == stageId) {
+                            if (it.stageId == stage.id!!) {
                                 it.status = BuildStatus.QUEUE.ordinal
                                 it.executeCount += 1
                                 updateStageExistsRecord.add(it)
@@ -1089,7 +1059,7 @@ class PipelineRuntimeService @Autowired constructor(
                         projectId = pipelineInfo.projectId,
                         pipelineId = pipelineInfo.pipelineId,
                         buildId = buildId,
-                        stageId = stageId,
+                        stageId = stage.id!!,
                         seq = index,
                         status = BuildStatus.QUEUE,
                         controlOption = stageOption
@@ -1116,15 +1086,15 @@ class PipelineRuntimeService @Autowired constructor(
                     buildId = buildId,
                     version = params[PIPELINE_VERSION] as Int,
                     buildNum = buildNum,
-                    trigger = startType.name,
+                    trigger = context.startType.name,
                     status = startBuildStatus,
-                    startUser = userId,
-                    triggerUser = triggerUser,
-                    taskCount = taskCount,
-                    firstTaskId = firstTaskId,
-                    channelCode = channelCode,
-                    parentBuildId = parentBuildId,
-                    parentTaskId = parentTaskId,
+                    startUser = context.userId,
+                    triggerUser = context.triggerUser,
+                    taskCount = context.taskCount,
+                    firstTaskId = context.firstTaskId,
+                    channelCode = context.channelCode,
+                    parentBuildId = context.parentBuildId,
+                    parentTaskId = context.parentTaskId,
                     webhookType = params[PIPELINE_WEBHOOK_TYPE] as String?,
                     webhookInfo = getWebhookInfo(params),
                     buildMsg = getBuildMsg(params[PIPELINE_BUILD_MSG] as String?)
@@ -1133,8 +1103,8 @@ class PipelineRuntimeService @Autowired constructor(
                 buildDetailDao.create(
                     dslContext = transactionContext,
                     buildId = buildId,
-                    startUser = userId,
-                    startType = startType,
+                    startUser = context.userId,
+                    startType = context.startType,
                     buildNum = buildNum,
                     model = JsonUtil.toJson(fullModel),
                     buildStatus = BuildStatus.QUEUE
@@ -1149,7 +1119,7 @@ class PipelineRuntimeService @Autowired constructor(
                     value = buildNum
                 )
                 // 写入BuildNo
-                if (currentBuildNo != null && actionType == ActionType.START) {
+                if (currentBuildNo != null && context.actionType == ActionType.START) {
                     buildVariableService.setVariable(
                         projectId = pipelineInfo.projectId,
                         pipelineId = pipelineId,
@@ -1203,17 +1173,17 @@ class PipelineRuntimeService @Autowired constructor(
                 source = "startBuild",
                 projectId = pipelineInfo.projectId,
                 pipelineId = pipelineInfo.pipelineId,
-                userId = userId,
+                userId = context.userId,
                 buildId = buildId,
-                taskId = firstTaskId,
+                taskId = context.firstTaskId,
                 status = startBuildStatus,
-                actionType = actionType
+                actionType = context.actionType
             ), // 监控事件
             PipelineBuildMonitorEvent(
                 source = "startBuild",
                 projectId = pipelineInfo.projectId,
                 pipelineId = pipelineInfo.pipelineId,
-                userId = userId,
+                userId = context.userId,
                 buildId = buildId,
                 buildStatus = startBuildStatus
             ), // #3400 点启动处于DETAIL界面，以操作人视角，没有刷历史列表的必要，在buildStart真正启动时也会有HISTORY，减少负载
@@ -1221,7 +1191,7 @@ class PipelineRuntimeService @Autowired constructor(
                 source = "startBuild",
                 projectId = pipelineInfo.projectId,
                 pipelineId = pipelineInfo.pipelineId,
-                userId = userId,
+                userId = context.userId,
                 buildId = buildId,
                 // 刷新历史列表和详情页面
                 refreshTypes = RefreshType.DETAIL.binary
@@ -1230,10 +1200,10 @@ class PipelineRuntimeService @Autowired constructor(
                 source = "startQueue",
                 projectId = pipelineInfo.projectId,
                 pipelineId = pipelineInfo.pipelineId,
-                userId = userId,
+                userId = context.userId,
                 buildId = buildId,
-                actionType = actionType,
-                triggerType = startType.name
+                actionType = context.actionType,
+                triggerType = context.startType.name
             )
         )
 
@@ -1311,7 +1281,6 @@ class PipelineRuntimeService @Autowired constructor(
         pipelineInfo: PipelineInfo,
         retryCount: Int,
         buildId: String,
-        stageId: String,
         userId: String
     ) {
         if (startVMTaskSeq <= 0) {
@@ -1326,7 +1295,7 @@ class PipelineRuntimeService @Autowired constructor(
                     projectId = pipelineInfo.projectId,
                     pipelineId = pipelineInfo.pipelineId,
                     buildId = buildId,
-                    stageId = stageId,
+                    stageId = stage.id!!,
                     container = container,
                     taskSeq = startVMTaskSeq,
                     userId = userId,
@@ -1338,7 +1307,7 @@ class PipelineRuntimeService @Autowired constructor(
                     projectId = pipelineInfo.projectId,
                     pipelineId = pipelineInfo.pipelineId,
                     buildId = buildId,
-                    stageId = stageId,
+                    stageId = stage.id!!,
                     container = container,
                     containerSeq = containerSeq,
                     taskSeq = startVMTaskSeq,
@@ -1460,7 +1429,7 @@ class PipelineRuntimeService @Autowired constructor(
             lastTimeBuildTaskRecords.forEach {
                 if (it.containerId == container.id && retryStartTaskId == it.taskId) {
                     target = it
-                    logger.info("found|container=${container.name}|retryStartTaskId=$retryStartTaskId")
+                    logger.info("[${it.buildId}|found|j(${container.id})|${container.name}|retryId=$retryStartTaskId")
                     return@findOutRetryTask
                 }
             }
