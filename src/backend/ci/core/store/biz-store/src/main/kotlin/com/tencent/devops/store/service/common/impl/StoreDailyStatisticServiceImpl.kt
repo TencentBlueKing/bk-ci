@@ -71,7 +71,8 @@ class StoreDailyStatisticServiceImpl @Autowired constructor(
             val dailySuccessRate =
                 if (totalNum > 0) String.format("%.2f", dailySuccessNum.toDouble() * 100 / totalNum)
                     .toDouble() else null
-            val dailyFailRate = if (dailySuccessRate != null) 100 - dailySuccessRate else null
+            val dailyFailRate =
+                if (dailySuccessRate != null) String.format("%.2f", 100 - dailySuccessRate).toDouble() else null
             storeDailyStatisticList.add(
                 StoreDailyStatistic(
                     totalDownloads = dailyStatisticRecord.totalDownloads,

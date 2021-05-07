@@ -613,6 +613,8 @@
         "copyJobFail": "Duplicate job failed",
         "copyStage": "Duplicate stage",
         "copyStageFail": "Duplicate stage failed",
+        "retryAllJobs": "Retry all jobs",
+        "retryFailJobs": "Retry failed jobs only",
         "stageManualTriggerUserNoEmptyTips": "Enter at least 1 stage owner",
         "triggerTooltips": " Click builds to trigger the configurable recommended version and pipeline variables",
         "userTime": "User time",
