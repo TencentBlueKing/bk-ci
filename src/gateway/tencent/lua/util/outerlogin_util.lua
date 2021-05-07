@@ -34,7 +34,7 @@ function _M:getProfile(otoken)
         httpc:set_timeout(3000)
         httpc:connect(config.outerlogin.host, config.outerlogin.port)
         --- 发送请求
-        local res, err = httpc:request({path = "/api/open/experiences/outerAuth?token=" .. otoken, method = "GET"})
+        local res, err = httpc:request({path = "/ms/experience/api/open/experiences/outerAuth?token=" .. otoken, method = "GET"})
 
         --- 设置HTTP保持连接
         httpc:set_keepalive(60000, 5)
