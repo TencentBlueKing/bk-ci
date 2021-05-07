@@ -16,14 +16,24 @@ import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 import javax.ws.rs.core.Response
 
 @RestResource
 class OpenExperienceResourceImpl @Autowired constructor(
     private val redisOperation: RedisOperation
 ) : OpenExperienceResource {
-    override fun outerLogin(params: OuterLoginParam): Result<String> {
-        // IP 限频 TODO
+    override fun outerLogin(realIp: String, params: OuterLoginParam): Result<String> {
+        if (getIpLimit(realIp)) {
+            logger.warn("over limit , ip : {}", realIp)
+            throw ErrorCodeException(
+                statusCode = Response.Status.BAD_REQUEST.statusCode,
+                errorCode = ExperienceMessageCode.OUTER_LOGIN_ERROR,
+                defaultMessage = "登录错误"
+            )
+        }
+
         val data = ProfileLogin()
         data.username = params.username
         data.password = params.password
@@ -52,6 +62,14 @@ class OpenExperienceResourceImpl @Autowired constructor(
                 defaultMessage = "登录错误"
             )
         }
+    }
+
+    private fun getIpLimit(realIp: String): Boolean {
+        val nowMinute = LocalDateTime.now().plusMinutes(1).withSecond(0)
+        val limitKey = "e:out:l:ip:$realIp:${df.format(nowMinute)}"
+        val limit = redisOperation.increment(limitKey, 1)
+        redisOperation.expire(limitKey, 60)
+        return limit ?: 0 > 5
     }
 
     override fun outerAuth(token: String): Result<OuterProfileVO> {
@@ -83,5 +101,6 @@ class OpenExperienceResourceImpl @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(OpenExperienceResourceImpl::class.java)
         private const val secretKey = "sd&t6y978*)hU(g9712U^Y&*HJT^G()Yuihyuib{L"
+        private val df = DateTimeFormatter.ofPattern("HHmmss")
     }
 }
