@@ -68,7 +68,6 @@ import com.tencent.devops.process.pojo.code.github.GithubEvent
 import com.tencent.devops.process.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.process.pojo.code.github.GithubPushEvent
 import com.tencent.devops.process.pojo.code.svn.SvnCommitEvent
-import com.tencent.devops.process.pojo.scm.code.GitlabCommitEvent
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
@@ -151,7 +150,7 @@ class PipelineBuildWebhookService @Autowired constructor(
         logger.info("Trigger gitlab build($e)")
 
         val event = try {
-            objectMapper.readValue(e, GitlabCommitEvent::class.java)
+            objectMapper.readValue(e, GitEvent::class.java)
         } catch (e: Exception) {
             logger.warn("Fail to parse the gitlab web hook commit event", e)
             return false

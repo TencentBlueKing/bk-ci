@@ -153,7 +153,8 @@ object ScmFactory {
                     branchName = branchName,
                     url = url,
                     token = token,
-                    gitConfig = gitConfig
+                    gitConfig = gitConfig,
+                    event = event
                 )
             }
             else -> throw TaskExecuteException(

@@ -43,7 +43,12 @@ interface MarketAtomEnvService {
     /**
      * 根据插件代码和版本号查看插件执行环境信息
      */
-    fun getMarketAtomEnvInfo(projectCode: String, atomCode: String, version: String): Result<AtomEnv?>
+    fun getMarketAtomEnvInfo(
+        projectCode: String,
+        atomCode: String,
+        version: String,
+        atomStatus: Byte? = null
+    ): Result<AtomEnv?>
 
     /**
      * 更新插件执行环境信息
