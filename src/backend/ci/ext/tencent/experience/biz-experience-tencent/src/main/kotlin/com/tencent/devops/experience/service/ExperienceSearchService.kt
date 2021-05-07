@@ -86,7 +86,8 @@ class ExperienceSearchService @Autowired constructor(
             lastDownloadHashId = it.lastDownloadHashId,
             bundleIdentifier = it.bundleIdentifier,
             version = it.version,
-            versionTitle = it.versionTitle
+            versionTitle = it.versionTitle,
+            appScheme = it.appScheme
         )
     }
 
@@ -112,7 +113,8 @@ class ExperienceSearchService @Autowired constructor(
                 expired = now.isAfter(it.endDate),
                 lastDownloadHashId = lastDownloadMap[it.projectId + it.bundleIdentifier + it.platform]
                     ?.let { l -> HashUtil.encodeLongId(l) } ?: "",
-                bundleIdentifier = it.bundleIdentifier
+                bundleIdentifier = it.bundleIdentifier,
+                appScheme = it.scheme
             )
         }.toList()
     }

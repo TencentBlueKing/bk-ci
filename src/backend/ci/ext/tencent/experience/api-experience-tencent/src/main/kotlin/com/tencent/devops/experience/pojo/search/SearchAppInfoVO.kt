@@ -51,5 +51,7 @@ data class SearchAppInfoVO(
     @ApiModelProperty("版本体验版本号", required = true)
     val version: String? = null,
     @ApiModelProperty("版本标题", required = true)
-    val versionTitle: String? = null
+    val versionTitle: String? = null,
+    @ApiModelProperty("应用Scheme", required = false)
+    val appScheme: String
 )
