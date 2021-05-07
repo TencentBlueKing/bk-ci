@@ -38,7 +38,6 @@ import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
-import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
@@ -110,7 +109,7 @@ class UpdateStateForStageCmdFinally(
                 LOG.info("ENGINE|${stage.buildId}|${event.source}|STAGE_FAST_KILL|${stage.stageId}|" +
                     "${commandContext.buildStatus}|${commandContext.latestSummary}")
 
-                return cancelBuild(commandContext = commandContext)
+                return finishBuild(commandContext = commandContext)
             }
         } else {
             nextStage = pipelineStageService.getStageBySeq(buildId = event.buildId, stageSeq = stage.seq + 1)
@@ -201,22 +200,6 @@ class UpdateStateForStageCmdFinally(
                 buildId = buildId,
                 stageId = stageId,
                 actionType = ActionType.START
-            )
-        )
-    }
-
-    /**
-     * 将[commandContext]中参数，发送取消构建事件
-     */
-    private fun cancelBuild(commandContext: StageContext) {
-        pipelineEventDispatcher.dispatch(
-            PipelineBuildCancelEvent(
-                source = commandContext.latestSummary,
-                projectId = commandContext.event.projectId,
-                pipelineId = commandContext.event.pipelineId,
-                userId = commandContext.event.userId,
-                buildId = commandContext.event.buildId,
-                status = commandContext.buildStatus
             )
         )
     }
