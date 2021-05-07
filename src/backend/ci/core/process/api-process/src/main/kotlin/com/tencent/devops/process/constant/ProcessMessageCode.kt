@@ -195,6 +195,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_IS_RUNNING_LOCK = "2101198" // 流水线正在运行中，锁定
     const val ERROR_PIPELINE_TIMER_SCM_NO_CHANGE = "2101190" // 流水线定时触发时代码没有变更
     const val ERROR_PIPELINE_SUMMARY_NOT_FOUND = "2101191" // 异常：流水线的基础构建数据Summary不存在，请联系管理员
+    const val ERROR_PIPELINE_IS_NOT_THE_LATEST = "2101192" // 异常：保存已拒绝，因为保存流水线时已不是最新版本
 
     // callback error
     const val ERROR_CALLBACK_URL_INVALID = "2101180" // 回调的url非法
