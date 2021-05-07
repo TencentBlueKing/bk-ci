@@ -35,6 +35,7 @@ import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.common.ci.OBJECT_KIND_PUSH
 import com.tencent.devops.common.ci.OBJECT_KIND_TAG_PUSH
+import com.tencent.devops.common.ci.image.BuildType
 import com.tencent.devops.common.ci.image.Credential
 import com.tencent.devops.common.ci.image.Pool
 import com.tencent.devops.common.ci.task.DockerRunDevCloudTask
@@ -67,6 +68,8 @@ import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.option.StageControlOption
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
+import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
@@ -240,13 +243,20 @@ class TriggerBuildService @Autowired constructor(
                             password = job.container!!.credentials?.password ?: ""
                         ),
                         macOS = null,
-                        third = null
+                        third = null,
+                        buildType = BuildType.DOCKER_VM
                     )
                 }
 
                 // 假设都没有配置，使用默认镜像
                 else -> {
-                    Pool(buildConfig.registryImage, Credential("", ""), null, null)
+                    Pool(
+                        container = buildConfig.registryImage,
+                        credential = Credential("", ""),
+                        macOS = null,
+                        third = null,
+                        buildType = BuildType.DOCKER_VM
+                    )
                 }
             }
 
@@ -316,13 +326,15 @@ class TriggerBuildService @Autowired constructor(
                 runCondition = JobRunCondition.CUSTOM_CONDITION_MATCH,
                 customCondition = job.ifField.toString(),
                 dependOnType = DependOnType.ID,
-                dependOnId = job.dependOn
+                dependOnId = job.dependOn,
+                continueWhenFailed = job.continueOnError
             )
         } else {
             JobControlOption(
                 timeout = job.timeoutMinutes,
                 dependOnType = DependOnType.ID,
-                dependOnId = job.dependOn
+                dependOnId = job.dependOn,
+                continueWhenFailed = job.continueOnError
             )
         }
     }
@@ -338,6 +350,17 @@ class TriggerBuildService @Autowired constructor(
         // 解析job steps
         job.steps!!.forEach { step ->
             // bash
+            val additionalOptions = ElementAdditionalOptions(
+                continueWhenFailed = step.continueOnError ?: false,
+                timeout = step.timeoutMinutes?.toLong(),
+                retryWhenFailed = step.retryTimes != null,
+                retryCount = step.retryTimes?.toInt() ?: 0,
+                enableCustomEnv = step.env != null,
+                customEnv = emptyList(),
+                runCondition = RunCondition.CUSTOM_CONDITION_MATCH,
+                customCondition = step.ifFiled
+            )
+
             val element: Element = if (step.run != null) {
                 LinuxScriptElement(
                     name = step.name ?: "执行Linux脚本",
@@ -345,7 +368,8 @@ class TriggerBuildService @Autowired constructor(
                     // todo: 如何判断类型
                     scriptType = BuildScriptType.SHELL,
                     script = step.run!!,
-                    continueNoneZero = step.continueOnError
+                    continueNoneZero = false,
+                    additionalOptions = additionalOptions
                 )
             } else {
                 val data = mutableMapOf<String, Any>()
@@ -355,7 +379,8 @@ class TriggerBuildService @Autowired constructor(
                     id = step.id,
                     atomCode = step.uses!!.split('@')[0],
                     version = step.uses!!.split('@')[1],
-                    data = data
+                    data = data,
+                    additionalOptions = additionalOptions
                 )
             }
 
