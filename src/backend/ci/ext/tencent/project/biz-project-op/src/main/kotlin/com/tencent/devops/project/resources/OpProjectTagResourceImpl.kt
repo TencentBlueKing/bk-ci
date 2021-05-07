@@ -30,8 +30,8 @@ package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
 import com.tencent.devops.project.api.op.OpProjectTagResource
-import com.tencent.devops.project.api.op.pojo.OpProjectTagUpdateDTO
 import com.tencent.devops.project.service.ProjectTagService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -39,15 +39,15 @@ import org.springframework.beans.factory.annotation.Autowired
 class OpProjectTagResourceImpl @Autowired constructor(
     val projectTagService: ProjectTagService
 ) : OpProjectTagResource {
-    override fun setTagByProject(opProjectTagUpdateDTO: OpProjectTagUpdateDTO): Result<Boolean> {
+    override fun setTagByProject(opProjectTagUpdateDTO: ProjectTagUpdateDTO): Result<Boolean> {
         return projectTagService.updateTagByProject(opProjectTagUpdateDTO)
     }
 
-    override fun setTagByOrg(opProjectTagUpdateDTO: OpProjectTagUpdateDTO): Result<Boolean> {
+    override fun setTagByOrg(opProjectTagUpdateDTO: ProjectTagUpdateDTO): Result<Boolean> {
         return projectTagService.updateTagByOrg(opProjectTagUpdateDTO)
     }
 
-    override fun setTagByChannel(opProjectTagUpdateDTO: OpProjectTagUpdateDTO): Result<Boolean> {
+    override fun setTagByChannel(opProjectTagUpdateDTO: ProjectTagUpdateDTO): Result<Boolean> {
         return projectTagService.updateTagByChannel(opProjectTagUpdateDTO)
     }
 }
