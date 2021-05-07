@@ -1,5 +1,20 @@
 <template>
-    <selector :popover-min-width="popoverMinWidth" :tools="tools" :name="name" :edit="edit" :placeholder="isLoading ? $t('editPage.loadingData') : placeholder" :handle-change="handleChange" :list="list" :toggle-visible="toggleVisible" :is-loading="isLoading" :value="value" :searchable="searchable" :multi-select="multiSelect" :disabled="disabled || isLoading">
+    <selector :popover-min-width="popoverMinWidth"
+        :tools="tools"
+        :name="name"
+        :edit="edit"
+        :placeholder="isLoading ? $t('editPage.loadingData') : placeholder"
+        :handle-change="handleChange"
+        :list="list"
+        :toggle-visible="toggleVisible"
+        :is-loading="isLoading"
+        :value="value"
+        :searchable="searchable"
+        :multi-select="multiSelect"
+        :disabled="disabled || isLoading"
+        :search-url="searchUrl"
+        :replace-key="replaceKey"
+    >
         <template v-if="hasAddItem">
             <div class="bk-selector-create-item">
                 <a :href="urlParse(webUrl + itemTargetUrl, { projectId })" target="_blank">
@@ -62,7 +77,9 @@
             },
             popoverMinWidth: {
                 type: Number
-            }
+            },
+            searchUrl: String,
+            replaceKey: String
         },
         data () {
             return {

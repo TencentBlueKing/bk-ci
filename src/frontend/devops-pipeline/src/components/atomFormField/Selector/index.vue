@@ -1,21 +1,5 @@
 <template>
-    <bk-select
-        :value="value"
-        :loading="isLoading"
-        :disabled="disabled"
-        :searchable="searchable"
-        :multiple="multiSelect"
-        :clearable="clearable"
-        @toggle="toggleVisible"
-        :placeholder="placeholder"
-        :search-key="displayKey"
-        @change="onChange"
-        :popover-options="popoverOptions"
-        :enable-virtual-scroll="list.length > 3000"
-        :list="list"
-        :id-key="settingKey"
-        :display-key="displayKey"
-    >
+    <bk-select @toggle="toggleVisible" @change="onChange" v-bind="selectProps">
         <bk-option
             v-for="item in list"
             :key="item[settingKey]"
@@ -73,7 +57,9 @@
             settingKey: {
                 type: String,
                 default: 'id'
-            }
+            },
+            searchUrl: String,
+            replaceKey: String
         },
         computed: {
             popoverOptions () {
@@ -86,6 +72,26 @@
                         }
                     }
                 }
+            },
+
+            selectProps () {
+                const props = {
+                    value: this.value,
+                    loading: this.isLoading,
+                    disabled: this.disabled,
+                    searchable: this.searchable,
+                    multiple: this.multiSelect,
+                    clearable: this.clearable,
+                    placeholder: this.placeholder,
+                    'search-key': this.displayKey,
+                    'popover-options': this.popoverOptions,
+                    'enable-virtual-scroll': this.list.length > 3000,
+                    list: this.list,
+                    'id-key': this.settingKey,
+                    'display-key': this.displayKey
+                }
+                if (this.searchUrl) props['remote-method'] = this.remoteMethod
+                return props
             }
         },
         methods: {
@@ -96,6 +102,16 @@
             },
             editItem (index) {
                 this.edit(index)
+            },
+            async remoteMethod (name) {
+                try {
+                    const regExp = new RegExp(this.replaceKey, 'g')
+                    const url = this.searchUrl.replace(regExp, name)
+                    const data = this.$http.get(url)
+                    return data
+                } catch (error) {
+                    console.error(error)
+                }
             }
         }
     }
