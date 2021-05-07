@@ -82,8 +82,6 @@ class AuthConfiguration {
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login")
     fun deptService(
         redisOperation: RedisOperation,
-        objectMapper: ObjectMapper,
-        authTokenApi: AuthTokenApi,
-        authServiceCode: PipelineAuthServiceCode
-    ) = AuthDeptServiceImpl(redisOperation, objectMapper, authTokenApi, authServiceCode)
+        objectMapper: ObjectMapper
+    ) = AuthDeptServiceImpl(redisOperation, objectMapper)
 }
