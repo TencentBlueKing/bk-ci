@@ -29,7 +29,6 @@ package com.tencent.devops.scm.resources
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.api.ServiceScmResource
@@ -84,7 +83,8 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: ScmS
         passPhrase: String?,
         token: String?,
         region: CodeSvnRegion?,
-        userName: String?
+        userName: String?,
+        search: String?
     ): Result<List<String>> {
         logger.info(
             "Start to list the branches of " +
@@ -98,7 +98,9 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: ScmS
                 privateKey = privateKey,
                 passPhrase = passPhrase,
                 token = token,
-                region = region, userName = userName
+                region = region,
+                userName = userName,
+                search = search
             )
         )
     }
@@ -108,12 +110,22 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: ScmS
         url: String,
         type: ScmType,
         token: String,
-        userName: String
+        userName: String,
+        search: String?
     ): Result<List<String>> {
         logger.info(
             "Start to list the branches of (projectName=$projectName, url=$url, type=$type, username=$userName)"
         )
-        return Result(scmService.listTags(projectName, url, type, token, userName))
+        return Result(
+            scmService.listTags(
+                projectName = projectName,
+                url = url,
+                type = type,
+                token = token,
+                userName = userName,
+                search = search
+            )
+        )
     }
 
     override fun checkPrivateKeyAndToken(
@@ -205,7 +217,10 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: ScmS
     override fun addCommitCheck(
         request: CommitCheckRequest
     ): Result<Boolean> {
-        logger.info("Start to add the commit check of request(${JsonUtil.skipLogFields(request)})")
+        logger.info(
+            "Start to add the commit check of request" +
+                "(projectName=${request.projectName}, url=${request.url}, type=${request.url})"
+        )
         scmService.addCommitCheck(request)
         return Result(true)
     }
