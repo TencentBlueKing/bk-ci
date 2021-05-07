@@ -109,7 +109,8 @@ object ShellUtil {
             prefix = prefix,
             errorMessage = errorMessage,
             print2Logger = print2Logger,
-            executeErrorMessage = ""
+            executeErrorMessage = "",
+            buildId = buildId
         )
     }
 
