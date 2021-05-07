@@ -84,7 +84,7 @@ class AuthDeptServiceImpl @Autowired constructor(
         return getDeptInfo(search)
     }
 
-    override fun getDeptByParent(parentId: Int, accessToken: String?, userId: String): DeptInfoVo {
+    override fun getDeptByParent(parentId: Int, accessToken: String?, userId: String, pageSize: Int?): DeptInfoVo {
         val search = SearchDeptEntity(
             bk_app_code = appCode!!,
             bk_app_secret = appSecret!!,
@@ -93,7 +93,8 @@ class AuthDeptServiceImpl @Autowired constructor(
             lookupField = PARENT,
             exactLookups = parentId,
             fuzzyLookups = null,
-            accessToken = accessToken
+            accessToken = accessToken,
+            pageSize = pageSize ?: null
         )
         return getDeptInfo(search)
     }
