@@ -27,16 +27,11 @@
 
 package com.tencent.devops.project.service
 
-import com.tencent.devops.common.archive.client.BkRepoClient
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
-import com.tencent.devops.project.service.s3.S3Service
-import com.tencent.devops.project.service.tof.TOFService
 import com.tencent.devops.project.util.ProjectUtils.packagingBean
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -45,14 +40,10 @@ import org.springframework.stereotype.Service
 
 @Service
 class ProjectS3Service @Autowired constructor(
-    private val s3Service: S3Service,
     private val projectDao: ProjectDao,
-    private val tofService: TOFService,
     private val dslContext: DSLContext,
-    private val redisOperation: RedisOperation,
-    private val repoGray: RepoGray,
-    private val bkRepoClient: BkRepoClient,
-    private val projectService: ProjectService
+    private val projectService: ProjectService,
+    val projectTagService: ProjectTagService
 ) {
 
     companion object {
@@ -60,7 +51,7 @@ class ProjectS3Service @Autowired constructor(
     }
 
     fun createCodeCCScanProject(userId: String, projectCreateInfo: ProjectCreateInfo): ProjectVO {
-        logger.info("start to create public scan project!")
+        logger.info("start to create public scan project $projectCreateInfo!")
         var publicScanProject = projectDao.getByEnglishName(dslContext, projectCreateInfo.englishName)
         if (null != publicScanProject) {
             return packagingBean(publicScanProject, setOf())
@@ -79,6 +70,9 @@ class ProjectS3Service @Autowired constructor(
                     projectId = projectCreateInfo.englishName,
                     channel = ProjectChannelCode.CODECC
             )
+
+            // codecc任务自动将流量指向auto集群
+            projectTagService.updateTagByProject(projectCreateInfo.englishName)
         } catch (e: Throwable) {
             logger.error("Create project failed,", e)
             throw e

@@ -67,6 +67,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.MessageProperties
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.File
 import java.io.InputStream
@@ -86,7 +87,8 @@ class ProjectLocalService @Autowired constructor(
     private val gray: Gray,
     private val jmxApi: ProjectJmxApi,
     private val projectService: ProjectService,
-    private val projectIamV0Service: ProjectIamV0Service
+    private val projectIamV0Service: ProjectIamV0Service,
+    private val projectTagService: ProjectTagService
 ) {
     private var authUrl: String = "${bkAuthProperties.url}/projects"
 
@@ -520,6 +522,10 @@ class ProjectLocalService @Autowired constructor(
                 projectId = projectCode,
                 channel = ProjectChannelCode.GITCI
             )
+
+            // GitCI项目自动把流量指向auto集群
+            projectTagService.updateTagByProject(projectCreateInfo.englishName)
+
         } catch (e: Throwable) {
             logger.error("Create project failed,", e)
             throw e
