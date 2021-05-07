@@ -45,6 +45,7 @@ data class SearchDeptEntity(
     @ApiModelProperty("模糊查找内容列表")
     @JsonProperty("fuzzy_lookups")
     val fuzzyLookups: Any? = null,
+    val accessToken: String? = null,
     override var bk_app_code: String,
     override var bk_app_secret: String,
     override var bk_username: String,

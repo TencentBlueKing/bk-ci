@@ -37,6 +37,7 @@ data class SearchDeptUserEntity(
     val id: Int,
     @ApiModelProperty("是否级联查询部门用户")
     val recursive: Boolean,
+    val accessToken: String? = null,
     override var bk_app_code: String,
     override var bk_app_secret: String,
     override var bk_username: String,

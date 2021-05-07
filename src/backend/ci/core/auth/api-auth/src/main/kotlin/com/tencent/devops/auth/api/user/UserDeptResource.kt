@@ -28,12 +28,15 @@
 package com.tencent.devops.auth.api.user
 
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ACCESS_TOKEN
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -49,6 +52,12 @@ interface UserDeptResource {
     @Path("levels/{level}")
     @ApiOperation("按组织级别获取组织列表")
     fun getDeptByLevel(
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("access_token")
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String?,
         @PathParam("level")
         @ApiParam("组织级别", required = true)
         level: Int
@@ -58,6 +67,12 @@ interface UserDeptResource {
     @Path("parents/{parentId}")
     @ApiOperation("按组织级别获取组织列表")
     fun getDeptByParent(
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("access_token")
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String?,
         @PathParam("parentId")
         @ApiParam("父组织Id", required = true)
         parentId: Int
