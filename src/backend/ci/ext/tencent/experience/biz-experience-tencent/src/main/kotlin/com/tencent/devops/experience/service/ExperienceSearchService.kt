@@ -40,9 +40,11 @@ import com.tencent.devops.experience.pojo.search.SearchRecommendVO
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
 
 @Service
 class ExperienceSearchService @Autowired constructor(
+    val experienceBaseService: ExperienceBaseService,
     val experiencePublicDao: ExperiencePublicDao,
     val experienceDao: ExperienceDao,
     val experienceSearchRecommendDao: ExperienceSearchRecommendDao,
@@ -54,37 +56,63 @@ class ExperienceSearchService @Autowired constructor(
         experienceName: String,
         experiencePublic: Boolean
     ): Result<List<SearchAppInfoVO>> {
-        val record =
-            if (experiencePublic) {
-                experiencePublicDao.listLikeExperienceName(
-                    dslContext = dslContext,
-                    experienceName = experienceName.trim(),
-                    platform = PlatformEnum.of(platform)?.name
-                ).map {
-                    SearchAppInfoVO(
-                        experienceHashId = HashUtil.encodeLongId(it.recordId),
-                        experienceName = it.experienceName,
-                        createTime = it.updateTime.timestampmilli(),
-                        size = it.size,
-                        logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl)
-                    )
-                }.toList()
-            } else {
-                experienceDao.listLikeExperienceName(
-                    dslContext = dslContext,
-                    experienceName = experienceName,
-                    platform = PlatformEnum.of(platform)?.name
-                ).map {
-                    SearchAppInfoVO(
-                        experienceHashId = HashUtil.encodeLongId(it.id),
-                        experienceName = it.experienceName,
-                        createTime = it.updateTime.timestampmilli(),
-                        size = it.size,
-                        logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl)
-                    )
-                }.toList()
-            }
+        val record = if (experiencePublic) {
+            publicSearch(userId, experienceName, platform)
+        } else {
+            privateSearch(userId, platform, experienceName)
+        }
         return Result(record)
+    }
+
+    private fun privateSearch(
+        userId: String,
+        platform: Int?,
+        experienceName: String
+    ) = experienceBaseService.list(
+        userId = userId,
+        offset = 0,
+        limit = 100,
+        groupByBundleId = false,
+        platform = platform,
+        experienceName = experienceName
+    ).records.map {
+        SearchAppInfoVO(
+            experienceHashId = it.experienceHashId,
+            experienceName = it.experienceName,
+            createTime = it.createDate,
+            size = it.size,
+            logoUrl = it.logoUrl,
+            expired = it.expired,
+            lastDownloadHashId = it.lastDownloadHashId,
+            bundleIdentifier = it.bundleIdentifier
+        )
+    }
+
+    private fun publicSearch(
+        userId: String,
+        experienceName: String,
+        platform: Int?
+    ): List<SearchAppInfoVO> {
+        val lastDownloadMap = experienceBaseService.getLastDownloadMap(userId)
+        val now = LocalDateTime.now()
+
+        return experiencePublicDao.listLikeExperienceName(
+            dslContext = dslContext,
+            experienceName = experienceName.trim(),
+            platform = PlatformEnum.of(platform)?.name
+        ).map {
+            SearchAppInfoVO(
+                experienceHashId = HashUtil.encodeLongId(it.recordId),
+                experienceName = it.experienceName,
+                createTime = it.updateTime.timestampmilli(),
+                size = it.size,
+                logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl),
+                expired = now.isAfter(it.endDate),
+                lastDownloadHashId = lastDownloadMap[it.projectId + it.bundleIdentifier + it.platform]
+                    ?.let { l -> HashUtil.encodeLongId(l) } ?: "",
+                bundleIdentifier = it.bundleIdentifier
+            )
+        }.toList()
     }
 
     fun recommends(userId: String, platform: Int?): Result<List<SearchRecommendVO>> {
