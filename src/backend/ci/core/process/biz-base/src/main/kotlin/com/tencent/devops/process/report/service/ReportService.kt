@@ -78,7 +78,37 @@ class ReportService @Autowired constructor(
             "[$buildId]|pipelineId=$pipelineId|projectId=$projectId|taskId=$taskId" +
                 "|indexFile=$indexFile|name=$name|reportType=$reportType|indexFilePath=$indexFilePath"
         )
-        reportDao.create(dslContext, projectId, pipelineId, buildId, taskId, indexFilePath, name, reportType.name)
+
+//        if (!reportDao.exists(
+//                dslContext = dslContext,
+//                projectId = projectId,
+//                pipelineId = pipelineId,
+//                buildId = buildId,
+//                name = name
+//            )
+//        ) {
+            reportDao.create(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                elementId = taskId,
+                indexFile = indexFilePath,
+                name = name,
+                type = reportType.name
+            )
+//        } else {
+//            reportDao.update(
+//                dslContext = dslContext,
+//                projectId = projectId,
+//                pipelineId = pipelineId,
+//                buildId = buildId,
+//                elementId = taskId,
+//                indexFile = indexFilePath,
+//                name = name,
+//                type = reportType
+//            )
+//        }
 
         if (reportEmail != null) {
             sendEmail(reportEmail.receivers, reportEmail.title, reportEmail.html)

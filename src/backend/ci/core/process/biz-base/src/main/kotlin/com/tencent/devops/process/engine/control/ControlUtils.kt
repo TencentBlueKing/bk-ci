@@ -41,7 +41,6 @@ import com.tencent.devops.process.utils.TASK_FAIL_RETRY_MAX_COUNT
 import com.tencent.devops.process.utils.TASK_FAIL_RETRY_MIN_COUNT
 import org.slf4j.LoggerFactory
 
-@Suppress("ALL")
 object ControlUtils {
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -201,7 +200,7 @@ object ControlUtils {
         var skip = when (runCondition) {
             JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN -> true // 条件匹配就跳过
             JobRunCondition.CUSTOM_VARIABLE_MATCH -> false // 条件全匹配就运行
-            JobRunCondition.CUSTOM_CONDITION_MATCH -> {    // 满足以下自定义条件时运行
+            JobRunCondition.CUSTOM_CONDITION_MATCH -> { // 满足以下自定义条件时运行
                 return !evalExpression(customCondition, buildId, variables, buildLogPrinter)
             }
             else -> return false // 其它类型直接返回不跳过
