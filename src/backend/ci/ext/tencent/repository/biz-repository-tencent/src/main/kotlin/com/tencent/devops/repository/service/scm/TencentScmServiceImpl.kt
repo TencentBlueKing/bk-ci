@@ -110,7 +110,8 @@ class TencentScmServiceImpl @Autowired constructor(val client: Client) : IScmSer
         token: String?,
         region: CodeSvnRegion?,
         userName: String?,
-        search: String?
+        search: String?,
+        full: Boolean
     ): List<String> {
 
         return client.getScm(ServiceScmResource::class).listBranches(
@@ -122,7 +123,8 @@ class TencentScmServiceImpl @Autowired constructor(val client: Client) : IScmSer
             token = token,
             region = region,
             userName = userName,
-            search = search
+            search = search,
+            full = full
         ).data!!
     }
 
@@ -132,7 +134,8 @@ class TencentScmServiceImpl @Autowired constructor(val client: Client) : IScmSer
         type: ScmType,
         token: String,
         userName: String,
-        search: String?
+        search: String?,
+        full: Boolean
     ): List<String> {
         return client.getScm(ServiceScmResource::class).listTags(
             projectName = projectName,
@@ -140,7 +143,8 @@ class TencentScmServiceImpl @Autowired constructor(val client: Client) : IScmSer
             type = type,
             token = token,
             userName = userName,
-            search = search
+            search = search,
+            full = full
         ).data!!
     }
 

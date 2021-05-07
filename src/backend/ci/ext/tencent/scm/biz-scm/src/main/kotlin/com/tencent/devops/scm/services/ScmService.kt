@@ -93,7 +93,8 @@ class ScmService @Autowired constructor(
         token: String?,
         region: CodeSvnRegion?,
         userName: String?,
-        search: String? = null
+        search: String? = null,
+        full: Boolean
     ): List<String> {
         logger.info("[$projectName|$url|$type|$userName] Start to list branches")
         val startEpoch = System.currentTimeMillis()
@@ -108,7 +109,7 @@ class ScmService @Autowired constructor(
                 token = token,
                 region = region,
                 userName = userName
-            ).getBranches(search)
+            ).getBranches(search = search, full = full)
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list branches")
         }
@@ -120,7 +121,8 @@ class ScmService @Autowired constructor(
         type: ScmType,
         token: String,
         userName: String,
-        search: String? = null
+        search: String? = null,
+        full: Boolean
     ): List<String> {
         logger.info("[$projectName|$url|$type|$userName] Start to list tags")
         val startEpoch = System.currentTimeMillis()
@@ -135,7 +137,7 @@ class ScmService @Autowired constructor(
                 token = token,
                 region = null,
                 userName = userName
-            ).getTags(search)
+            ).getTags(search = search, full = full)
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list tags")
         }
