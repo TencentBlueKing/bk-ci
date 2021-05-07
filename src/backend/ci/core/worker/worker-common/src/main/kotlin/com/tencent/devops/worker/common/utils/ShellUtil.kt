@@ -215,7 +215,8 @@ object ShellUtil {
         prefix: String = "",
         errorMessage: String? = null,
         print2Logger: Boolean = true,
-        executeErrorMessage: String? = null
+        executeErrorMessage: String? = null,
+        buildId: String? = null
     ): String {
         try {
             return CommandLineUtils.execute(
@@ -223,7 +224,8 @@ object ShellUtil {
                 workspace = sourceDir,
                 print2Logger = print2Logger,
                 prefix = prefix,
-                executeErrorMessage = executeErrorMessage
+                executeErrorMessage = executeErrorMessage,
+                buildId = buildId
             )
         } catch (ignored: Throwable) {
             val errorInfo = errorMessage ?: "Fail to run the command $command"
