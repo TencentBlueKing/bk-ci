@@ -45,7 +45,12 @@ data class SearchDeptEntity(
     @ApiModelProperty("模糊查找内容列表")
     @JsonProperty("fuzzy_lookups")
     val fuzzyLookups: Any? = null,
+    @ApiModelProperty("用户登录态信息")
+    @JsonProperty("access_token")
     val accessToken: String? = null,
+    @ApiModelProperty("分页大小")
+    @JsonProperty("page_size")
+    val pageSize: Int? = 200,
     override var bk_app_code: String,
     override var bk_app_secret: String,
     override var bk_username: String,

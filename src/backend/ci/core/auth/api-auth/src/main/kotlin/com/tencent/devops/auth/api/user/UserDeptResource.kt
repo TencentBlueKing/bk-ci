@@ -40,6 +40,7 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_DEPT"], description = "组织架构")
@@ -75,6 +76,9 @@ interface UserDeptResource {
         accessToken: String?,
         @PathParam("parentId")
         @ApiParam("父组织Id", required = true)
-        parentId: Int
+        parentId: Int,
+        @QueryParam("pageSize")
+        @ApiParam("父组织Id", required = false)
+        pageSize: Int?
     ): Result<DeptInfoVo>
 }
