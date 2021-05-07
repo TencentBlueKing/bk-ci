@@ -27,6 +27,8 @@
 
 package com.tencent.devops.worker.common.task
 
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.env.BuildEnv
@@ -44,6 +46,34 @@ abstract class ITask {
         buildVariables: BuildVariables,
         workspace: File
     ) {
+        val params = buildTask.params
+        if (params != null && null != params["additionalOptions"]) {
+            val additionalOptionsStr = params["additionalOptions"]
+            val additionalOptions = JsonUtil.toOrNull(additionalOptionsStr, ElementAdditionalOptions::class.java)
+            if (additionalOptions?.enableCustomEnv == true && additionalOptions.customEnv?.isNotEmpty() == true) {
+                val variables = buildVariables.variables.toMutableMap()
+                additionalOptions.customEnv!!.filter { !it.key.isNullOrBlank() }.forEach {
+                    variables[it.key!!] = it.value ?: ""
+                }
+                return execute(
+                    buildTask,
+                    BuildVariables(
+                        buildId = buildVariables.buildId,
+                        vmSeqId = buildVariables.vmSeqId,
+                        vmName = buildVariables.vmName,
+                        projectId = buildVariables.projectId,
+                        pipelineId = buildVariables.pipelineId,
+                        variables = variables,
+                        buildEnvs = buildVariables.buildEnvs,
+                        containerId = buildVariables.containerId,
+                        containerHashId = buildVariables.containerHashId,
+                        variablesWithType = buildVariables.variablesWithType,
+                        timeoutMills = buildVariables.timeoutMills
+                    ),
+                    workspace
+                )
+            }
+        }
         execute(buildTask, buildVariables, workspace)
     }
 

@@ -46,6 +46,7 @@ import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_SOURCE_REPO_NAME
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_BRANCH
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_PROJECT_ID
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_REPO_NAME
+import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_MANUAL_UNLOCK
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_BRANCH
@@ -223,13 +224,18 @@ class GitWebHookStartParam(
 
     @Suppress("ALL")
     private fun mrStartParam(startParams: MutableMap<String, Any>) {
-        val mrRequestId = matcher.getMergeRequestId()
+        val gitMrEvent = matcher.event as GitMergeRequestEvent
+        val mrRequestId = if (repo is CodeGitlabRepository) {
+            gitMrEvent.object_attributes.iid
+        } else {
+            gitMrEvent.object_attributes.id
+        }
         // MR提交人
         val gitScmService = SpringContextUtil.getBean(GitScmService::class.java)
         val mrInfo = gitScmService.getMergeRequestInfo(projectId, mrRequestId, repo)
         val reviewers = gitScmService.getMergeRequestReviewersInfo(projectId, mrRequestId, repo)?.reviewers
 
-        startParams[PIPELINE_WEBHOOK_MR_ID] = mrRequestId!!
+        startParams[PIPELINE_WEBHOOK_MR_ID] = mrRequestId
         startParams[PIPELINE_WEBHOOK_MR_COMMITTER] = mrInfo?.author?.username ?: ""
 
         startParams[BK_REPO_GIT_WEBHOOK_MR_AUTHOR] = mrInfo?.author?.username ?: ""

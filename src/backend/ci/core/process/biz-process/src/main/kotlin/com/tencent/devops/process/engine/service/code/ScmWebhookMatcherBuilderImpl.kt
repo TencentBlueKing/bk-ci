@@ -25,28 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.auth.utlis
+package com.tencent.devops.process.engine.service.code
 
-object StringUtils {
-    fun obj2List(str: String): List<String> {
-        val list = str.substringBefore("]").substringAfter("[").split(",")
-        val newList = mutableListOf<String>()
-        list.map {
-            newList.add(it.trim())
-        }
-        return newList
-    }
+import com.tencent.devops.process.engine.service.PipelineWebhookService
+import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
+import com.tencent.devops.process.pojo.code.git.GitEvent
+import com.tencent.devops.process.pojo.code.github.GithubEvent
+import com.tencent.devops.process.pojo.code.svn.SvnCommitEvent
+import org.springframework.stereotype.Service
 
-    fun removeAllElement(set: Set<String>): Set<String> {
-        if (set.contains("*")) {
-            val newSet = mutableSetOf<String>()
-            set.map {
-                if (it != "*") {
-                    newSet.add(it)
-                }
-                return newSet
-            }
-        }
-        return set
-    }
+@Service
+class ScmWebhookMatcherBuilderImpl : ScmWebhookMatcherBuilder {
+    override fun createGitWebHookMatcher(event: GitEvent): ScmWebhookMatcher = GitWebHookMatcher(event)
+
+    override fun createSvnWebHookMatcher(
+        event: SvnCommitEvent,
+        pipelineWebhookService: PipelineWebhookService
+    ): ScmWebhookMatcher = SvnWebHookMatcher(event, pipelineWebhookService)
+
+    override fun createGitlabWebHookMatcher(event: GitEvent): ScmWebhookMatcher = GitlabWebHookMatcher(event)
+
+    override fun createGithubWebHookMatcher(event: GithubEvent): ScmWebhookMatcher = GithubWebHookMatcher(event)
 }
