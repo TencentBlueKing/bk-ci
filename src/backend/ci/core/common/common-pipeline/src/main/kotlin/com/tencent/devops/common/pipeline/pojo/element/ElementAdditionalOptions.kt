@@ -42,7 +42,10 @@ data class ElementAdditionalOptions(
     val otherTask: String? = null,
     val customVariables: List<NameAndValue>? = null,
     val customCondition: String? = "",
-    val elementPostInfo: ElementPostInfo? = null
+    val elementPostInfo: ElementPostInfo? = null,
+
+    val enableCustomEnv: Boolean? = false, // 是否设置自定义环境变量
+    val customEnv: List<NameAndValue>? = null
 )
 
 enum class RunCondition {

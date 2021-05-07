@@ -37,7 +37,6 @@ import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildStageDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
-import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import org.jooq.DSLContext
@@ -208,29 +207,50 @@ class PipelineStageService @Autowired constructor(
 
     fun cancelStage(userId: String, buildStage: PipelineBuildStage) {
 
-        with(buildStage) {
-            pipelineBuildDetailService.stageCancel(buildId = buildId, stageId = stageId)
+        pipelineBuildDetailService.stageCancel(buildId = buildStage.buildId, stageId = buildStage.stageId)
 
-            dslContext.transaction { configuration ->
-                val context = DSL.using(configuration)
-                pipelineBuildStageDao.updateStatus(
-                    dslContext = context, buildId = buildId, stageId = stageId, buildStatus = BuildStatus.REVIEW_ABORT
-                )
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            pipelineBuildStageDao.updateStatus(
+                dslContext = context,
+                buildId = buildStage.buildId,
+                stageId = buildStage.stageId,
+                buildStatus = BuildStatus.STAGE_SUCCESS
+            )
 
-                pipelineBuildDao.updateStageCancelStatus(dslContext = context, buildId = buildId)
-            }
-
-            pipelineEventDispatcher.dispatch(
-                PipelineBuildFinishEvent(
-                    source = BS_STAGE_CANCELED_END_SOURCE,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    userId = userId,
-                    buildId = buildId,
-                    status = BuildStatus.STAGE_SUCCESS
-                )
-            // #3400 FinishEvent会刷新HISTORY列表的Stage状态
+            pipelineBuildDao.updateStatus(
+                dslContext = context, buildId = buildStage.buildId,
+                oldBuildStatus = BuildStatus.STAGE_SUCCESS, newBuildStatus = BuildStatus.RUNNING
             )
         }
+        // #3138 Stage Cancel 需要走finally Stage流程
+        pipelineEventDispatcher.dispatch(
+            PipelineBuildStageEvent(
+                source = BS_STAGE_CANCELED_END_SOURCE,
+                projectId = buildStage.projectId,
+                pipelineId = buildStage.pipelineId,
+                userId = userId,
+                buildId = buildStage.buildId,
+                stageId = buildStage.stageId,
+                actionType = ActionType.END
+            )
+            // #3400 FinishEvent会刷新HISTORY列表的Stage状态
+        )
+    }
+
+    fun getLastStage(buildId: String): PipelineBuildStage? {
+        val result = pipelineBuildStageDao.getMaxStage(dslContext, buildId)
+        if (result != null) {
+            return pipelineBuildStageDao.convert(result)
+        }
+        return null
+    }
+
+    fun getPendingStage(buildId: String): PipelineBuildStage? {
+        var pendingStage = pipelineBuildStageDao.getByStatus(dslContext, buildId, BuildStatus.RUNNING)
+        if (pendingStage == null) {
+            pendingStage = pipelineBuildStageDao.getByStatus(dslContext, buildId, BuildStatus.QUEUE)
+        }
+        return pendingStage
     }
 }

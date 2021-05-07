@@ -202,7 +202,12 @@ object AtomUtils {
                     errorCode = ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID,
                     params = arrayOf(atomName)
                 )
-            validateAtomParam(atomInputParamMap, atomRunInfo, inputTypeConfigMap, atomName)
+            validateAtomParam(
+                atomInputParamMap = atomInputParamMap,
+                atomRunInfo = atomRunInfo,
+                inputTypeConfigMap = inputTypeConfigMap,
+                atomName = atomName
+            )
         }
         return true
     }
