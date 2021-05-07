@@ -47,5 +47,9 @@ data class SearchAppInfoVO(
     @ApiModelProperty("上次下载的体验ID", required = true)
     val lastDownloadHashId: String,
     @ApiModelProperty("版本体验BundleIdentifier", required = true)
-    val bundleIdentifier: String
+    val bundleIdentifier: String,
+    @ApiModelProperty("版本体验版本号", required = true)
+    val version: String,
+    @ApiModelProperty("版本标题", required = true)
+    val versionTitle: String
 )
