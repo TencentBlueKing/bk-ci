@@ -53,9 +53,10 @@ object ExperienceMessageCode {
     const val EXP_REMOVED = "2106006" // 体验：体验已下架
     const val EXP_FILE_NOT_FOUND = "2106007" // 体验：体验的文件不存在
     const val EXP_NOT_EXISTS = "2106008" // 体验：体验不存在
+    const val OUTER_LOGIN_ERROR = "2106009" // 外部用户登录错误
+
     const val USER_NEED_EXP_X_PERMISSION = "2101009" // 体验: 用户没有体验的{0}权限
     const val USER_NEED_EXP_GROUP_X_PERMISSION = "2101010" // 体验：用户没有体验组的{0}权限
     const val EXP_META_DATA_PIPELINE_ID_NOT_EXISTS = "2101011" // 体验：体验未与流水线绑定
     const val USER_NOT_IN_EXP_GROUP = "2101012" // 体验：用户{0}不在体验用户名单中
-    const val OUTER_LOGIN_ERROR = "2101013" // 外部用户登录错误
 }
