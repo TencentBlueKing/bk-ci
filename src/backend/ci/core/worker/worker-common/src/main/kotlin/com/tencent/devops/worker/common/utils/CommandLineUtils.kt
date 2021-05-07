@@ -138,7 +138,9 @@ object CommandLineUtils {
             val value = tmpLine.removePrefix(prefix)
             val keyValue = value.split("::")
             if (keyValue.size >= 2) {
-                File(workspace, resultLogFile).appendText("${keyValue[0]}=${value.removePrefix("${keyValue[0]}::")}\n")
+                File(workspace, resultLogFile).appendText(
+                    "${keyValue[0]}=${value.removePrefix("${keyValue[0]}::")}\n"
+                )
             }
         }
     }
