@@ -251,8 +251,7 @@
                     })
                     if (insertStageIsFinally) {
                         const element = document.getElementsByClassName('bk-tab-section')[0]
-                        console.log(element, element.scrollWidth)
-                        element && (element.scrollLeft = element.scrollWidth)
+                        element && (element.scrollLeft = element.scrollWidth + 300)
                     }
                     setInertStageIndex({
                         insertStageIndex: insertStageIndex + 1
@@ -310,7 +309,7 @@
         flex: 1;
         overflow: auto;
         .scroll-wraper {
-            padding: 30px 0 40px 30px;
+            padding: 20px 0 40px 30px;
             min-height: 100%;
         }
         &:before {
