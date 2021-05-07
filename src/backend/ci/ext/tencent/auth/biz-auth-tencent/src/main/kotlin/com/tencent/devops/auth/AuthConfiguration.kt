@@ -36,6 +36,8 @@ import com.tencent.bk.sdk.iam.service.impl.ManagerServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.PolicyServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.TokenServiceImpl
 import com.tencent.devops.auth.service.AuthDeptServiceImpl
+import com.tencent.devops.common.auth.api.AuthTokenApi
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -93,6 +95,8 @@ class AuthConfiguration {
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
     fun deptService(
         redisOperation: RedisOperation,
-        objectMapper: ObjectMapper
-    ) = AuthDeptServiceImpl(redisOperation, objectMapper)
+        objectMapper: ObjectMapper,
+        authTokenApi: AuthTokenApi,
+        authServiceCode: PipelineAuthServiceCode
+    ) = AuthDeptServiceImpl(redisOperation, objectMapper, authTokenApi, authServiceCode)
 }
