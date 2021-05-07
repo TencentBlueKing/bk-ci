@@ -28,6 +28,6 @@ if x_ckey ~= nil then
     local staff_info = itloginUtil:get_staff_info(x_ckey)
     ngx.header["X-DEVOPS-UID"] = staff_info.EnglishName
 else
-    local outer_profile = {}
-    ngx.header["X-DEVOPS-UID"] = outer_profile.username
+    local outer_profile = outerloginUtil:getProfile(x_otoken)
+    ngx.header["X-DEVOPS-UID"] = outer_profile.data.username
 end
