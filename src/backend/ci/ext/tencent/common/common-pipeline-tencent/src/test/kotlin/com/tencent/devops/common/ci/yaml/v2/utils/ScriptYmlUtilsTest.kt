@@ -68,6 +68,8 @@ class ScriptYmlUtilsTest {
             PreScriptBuildYaml::class.java
         )
 
+        val normalize = ScriptYmlUtils.normalizeGitCiYaml(obj)
+
         println("1111")
     }
 
