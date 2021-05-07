@@ -3,8 +3,10 @@
         <li v-for="(statistic, index) in statisticList" :key="index" class="static-item">
             <icon :name="statistic.name" class="item-icon" size="64"></icon>
             <h5 class="item-title">
-                <span :class="['item-name', { 'g-store-text-underline': statistic.tips }]" v-bk-tooltips="{ content: statistic.tips, disabled: !statistic.tips }">{{ statistic.label }}</span>
-                <p class="item-value">{{ statistic.value }}</p>
+                <span :class="['item-name', { 'g-store-text-underline': statistic.tips }]"
+                    v-bk-tooltips="{ content: statistic.tips, disabled: !statistic.tips }"
+                >{{ statistic.label }}</span>
+                <p :class="{ 'item-value': true, 'statistic-link': statistic.linkName }" @click="goToLink(statistic.linkName)">{{ statistic.value }}</p>
             </h5>
         </li>
     </ul>
@@ -43,6 +45,12 @@
                 })
             },
 
+            goToLink (name) {
+                if (name) {
+                    this.$router.push({ name, params: { code: this.detail.atomCode, type: 'atom' } })
+                }
+            },
+
             getAtomData () {
                 return this.$store.dispatch('store/requestAtomStatistic', {
                     storeCode: this.detail.atomCode,
@@ -50,7 +58,11 @@
                 }).then((res) => {
                     this.statisticList = [
                         { name: 'install-num', label: this.$t('store.安装量'), value: res.downloads },
-                        { name: 'pipeline-count', label: this.$t('store.流水线个数'), value: res.pipelineCnt },
+                        { name: 'pipeline-count',
+                          label: this.$t('store.流水线个数'),
+                          value: res.pipelineCnt,
+                          linkName: 'statisticPipeline'
+                        },
                         { name: 'comment-num', label: this.$t('store.评论数'), value: res.commentCnt },
                         { name: 'rate', label: this.$t('store.评分'), value: res.score || '--' },
                         { name: 'icon-success-rate', label: this.$t('store.成功率'), value: ![undefined, null].includes(res.successRate) ? `${res.successRate}%` : '--', tips: this.$t('store.最近三个月内的执行成功率') }
@@ -101,6 +113,15 @@
                     font-size: .26rem;
                     line-height: .3rem;
                     margin-top: .03rem;
+                    box-sizing: border-box;
+                    height: .3rem;
+                }
+                .statistic-link {
+                    cursor: pointer;
+                    color: #3a84ff;
+                    &:hover {
+                        border-bottom: 1px solid #3a84ff;
+                    }
                 }
             }
         }

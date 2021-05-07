@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.engine.extend
 
-import com.tencent.devops.common.api.constant.KEY_INPUT
+import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
@@ -58,6 +58,7 @@ import com.tencent.devops.process.pojo.config.TaskCommonSettingConfig
 import com.tencent.devops.process.utils.KEY_JOB
 import com.tencent.devops.process.utils.KEY_STAGE
 import com.tencent.devops.process.utils.KEY_TASK
+import com.tencent.devops.store.pojo.common.KEY_INPUT
 import com.tencent.devops.store.pojo.common.StoreVersion
 import org.slf4j.LoggerFactory
 
@@ -69,7 +70,6 @@ open class DefaultModelCheckPlugin constructor(
     open val taskCommonSettingConfig: TaskCommonSettingConfig
 ) : ModelCheckPlugin {
 
-    @Suppress("ALL")
     override fun checkModelIntegrity(model: Model, projectId: String?) {
         // 检查流水线名称
         PipelineUtils.checkPipelineName(model.name)
@@ -107,7 +107,8 @@ open class DefaultModelCheckPlugin constructor(
 
         val elementCnt = mutableMapOf<String, Int>()
         val containerCnt = mutableMapOf<String, Int>()
-        stages.forEach { s ->
+        val lastPosition = model.stages.size - 1
+        model.stages.forEachIndexed { nowPosition, s ->
             val containers = s.containers
             // 判断stage下container数量是否超过系统限制
             if (containers.size > stageCommonSettingConfig.maxJobNum) {
@@ -122,75 +123,115 @@ open class DefaultModelCheckPlugin constructor(
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
                 )
             }
+
+            if (s.finally) { // finallyStage只能存在于最后一个
+                if (nowPosition < lastPosition) {
+                    throw ErrorCodeException(
+                        defaultMessage = "流水线: 每个Model只能包含一个FinallyStage，并且处于最后位置",
+                        errorCode = ProcessMessageCode.ERROR_FINALLY_STAGE
+                    )
+                }
+            }
+
             if (s.stageControlOption?.manualTrigger == true && s.stageControlOption?.triggerUsers?.isEmpty() == true) {
                 throw ErrorCodeException(
                     defaultMessage = "手动触发的Stage没有未配置可执行人",
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_STAGE_NO_TRIGGER_USER
                 )
             }
-            s.containers.forEach { c ->
-                val tasks = c.elements
-                // 判断job下task数量是否超过系统限制
-                if (tasks.size > jobCommonSettingConfig.maxTaskNum) {
-                    throw ErrorCodeException(
-                        errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_COMPONENT_NUM_TOO_LARGE,
-                        params = arrayOf(KEY_TASK, jobCommonSettingConfig.maxTaskNum.toString())
-                    )
-                }
-                val cCnt = containerCnt.computeIfPresent(c.getClassType()) { _, oldValue -> oldValue + 1 }
-                    ?: containerCnt.computeIfAbsent(c.getClassType()) { 1 } // 第一次时出现1次
-                ContainerBizRegistrar.getPlugin(c)?.check(c, cCnt)
-                val atomVersions = mutableSetOf<StoreVersion>()
-                val atomInputParamMap = mutableMapOf<String, Any>()
-                c.elements.forEach { e ->
-                    val eCnt = elementCnt.computeIfPresent(e.getAtomCode()) { _, oldValue -> oldValue + 1 }
-                        ?: elementCnt.computeIfAbsent(e.getAtomCode()) { 1 } // 第一次时出现1次
-                    ElementBizRegistrar.getPlugin(e)?.check(e, eCnt)
-                    var version = e.version
-                    if (version.isBlank()) {
-                        version = "1.*"
-                    }
-                    val atomCode = e.getAtomCode()
-                    atomVersions.add(StoreVersion(atomCode, e.name, version))
-                    // 获取插件的输入参数
-                    val atomInputDataMap = when (e) {
-                        is MarketBuildAtomElement -> {
-                            e.data[KEY_INPUT]
-                        }
-                        is MarketBuildLessAtomElement -> {
-                            e.data[KEY_INPUT]
-                        }
-                        else -> {
-                            // 获取老插件的输入参数
-                            val baseFields = Element::class.java.declaredFields.filter { it.name != "Companion" }
-                            val filterFieldNames = baseFields.map { it.name }.toMutableSet()
-                            filterFieldNames.addAll(
-                                setOf(
-                                    "@type",
-                                    "classType",
-                                    "elementEnable",
-                                    "atomCode",
-                                    "taskAtom"
-                                )
-                            )
-                            JsonUtil.toMap(e).filter { it.key !in filterFieldNames }
-                        }
-                    }
-                    if (atomInputDataMap != null) {
-                        atomInputParamMap[atomCode] = atomInputDataMap
-                    }
-                }
-                if (!projectId.isNullOrEmpty() && atomVersions.isNotEmpty()) {
-                    AtomUtils.checkModelAtoms(
-                        projectCode = projectId,
-                        atomVersions = atomVersions,
-                        atomInputParamMap = atomInputParamMap,
-                        inputTypeConfigMap = AtomUtils.getInputTypeConfigMap(taskCommonSettingConfig),
-                        client = client
-                    )
-                }
+            val atomVersions = mutableSetOf<StoreVersion>()
+            val atomInputParamMap = mutableMapOf<String, Any>()
+            checkElements(
+                stage = s,
+                containerCnt = containerCnt,
+                elementCnt = elementCnt,
+                atomVersions = atomVersions,
+                atomInputParamMap = atomInputParamMap
+            )
+            if (!projectId.isNullOrEmpty() && atomVersions.isNotEmpty()) {
+                AtomUtils.checkModelAtoms(
+                    projectCode = projectId,
+                    atomVersions = atomVersions,
+                    atomInputParamMap = atomInputParamMap,
+                    inputTypeConfigMap = AtomUtils.getInputTypeConfigMap(taskCommonSettingConfig),
+                    client = client
+                )
             }
             DependOnUtils.checkRepeatedJobId(stage)
+        }
+    }
+
+    private fun checkElements(
+        stage: Stage,
+        containerCnt: MutableMap<String, Int>,
+        elementCnt: MutableMap<String, Int>,
+        atomVersions: MutableSet<StoreVersion>,
+        atomInputParamMap: MutableMap<String, Any>
+    ) {
+        stage.containers.forEach { c ->
+            val tasks = c.elements
+            // 判断job下task数量是否超过系统限制
+            if (tasks.size > jobCommonSettingConfig.maxTaskNum) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_COMPONENT_NUM_TOO_LARGE,
+                    params = arrayOf(KEY_TASK, jobCommonSettingConfig.maxTaskNum.toString())
+                )
+            }
+            val cCnt = containerCnt.computeIfPresent(c.getClassType()) { _, oldValue -> oldValue + 1 }
+                ?: containerCnt.computeIfAbsent(c.getClassType()) { 1 } // 第一次时出现1次
+            ContainerBizRegistrar.getPlugin(c)?.check(c, cCnt)
+            Preconditions.checkTrue(
+                c.elements.isNotEmpty(), ErrorCodeException(
+                    defaultMessage = "流水线: Model信息不完整，Stage[{0}] Job[{1}]下没有插件",
+                    errorCode = ProcessMessageCode.ERROR_EMPTY_JOB, params = arrayOf(stage.name!!, c.name)
+                )
+            )
+            c.elements.forEach { e ->
+                val eCnt = elementCnt.computeIfPresent(e.getAtomCode()) { _, oldValue -> oldValue + 1 }
+                    ?: elementCnt.computeIfAbsent(e.getAtomCode()) { 1 } // 第一次时出现1次
+                ElementBizRegistrar.getPlugin(e)?.check(e, eCnt)
+                addAtomInputDataInfo(e, atomVersions, atomInputParamMap)
+            }
+        }
+    }
+
+    private fun addAtomInputDataInfo(
+        e: Element,
+        atomVersions: MutableSet<StoreVersion>,
+        atomInputParamMap: MutableMap<String, Any>
+    ) {
+        var version = e.version
+        if (version.isBlank()) {
+            version = "1.*"
+        }
+        val atomCode = e.getAtomCode()
+        atomVersions.add(StoreVersion(atomCode, e.name, version))
+        // 获取插件的输入参数
+        val atomInputDataMap = when (e) {
+            is MarketBuildAtomElement -> {
+                e.data[KEY_INPUT]
+            }
+            is MarketBuildLessAtomElement -> {
+                e.data[KEY_INPUT]
+            }
+            else -> {
+                // 获取老插件的输入参数
+                val baseFields = Element::class.java.declaredFields.filter { it.name != "Companion" }
+                val filterFieldNames = baseFields.map { it.name }.toMutableSet()
+                filterFieldNames.addAll(
+                    setOf(
+                        "@type",
+                        "classType",
+                        "elementEnable",
+                        "atomCode",
+                        "taskAtom"
+                    )
+                )
+                JsonUtil.toMap(e).filter { it.key !in filterFieldNames }
+            }
+        }
+        if (atomInputDataMap != null) {
+            atomInputParamMap[atomCode] = atomInputDataMap
         }
     }
 
@@ -204,7 +245,7 @@ open class DefaultModelCheckPlugin constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(DefaultModelCheckPlugin::class.java)
-        @Suppress("ALL")
+
         private fun isThirdPartyAgentEmpty(vmBuildContainer: VMBuildContainer): Boolean {
             // Old logic
             if (vmBuildContainer.thirdPartyAgentId.isNullOrBlank() &&
@@ -278,7 +319,13 @@ open class DefaultModelCheckPlugin constructor(
         }
     }
 
-    override fun checkJob(jobContainer: Container, projectId: String, pipelineId: String, userId: String) {
+    override fun checkJob(
+        jobContainer: Container,
+        projectId: String,
+        pipelineId: String,
+        userId: String,
+        finallyStage: Boolean
+    ) {
         if (jobContainer is VMBuildContainer && jobContainer.baseOS == VMBaseOS.WINDOWS) {
             if (isThirdPartyAgentEmpty(jobContainer)) {
                 throw ErrorCodeException(
@@ -288,14 +335,43 @@ open class DefaultModelCheckPlugin constructor(
             }
         }
 
+        checkJobCondition(finallyStage = finallyStage, jobContainer = jobContainer)
+    }
+
+    private fun checkJobCondition(finallyStage: Boolean, jobContainer: Container) {
+
         val jobControlOption = when (jobContainer) {
             is VMBuildContainer -> jobContainer.jobControlOption
             is NormalContainer -> jobContainer.jobControlOption
             else -> null
         }
 
-        if (jobControlOption?.runCondition == JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN ||
-            jobControlOption?.runCondition == JobRunCondition.CUSTOM_VARIABLE_MATCH
+        if (jobControlOption?.runCondition == null) {
+            return
+        }
+
+        // 非finallyStage下不允许有finallyStageJobRunConditionSet下的条件
+        if (finallyStage) {
+            if (!finallyStageJobRunConditionSet.contains(jobControlOption.runCondition)) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_FINALLY_STAGE_JOB_CONDITION,
+                    defaultMessage = "流水线: [{0}]下的Job运行条件配置错误: {1}",
+                    params = arrayOf(jobContainer.name, jobControlOption.runCondition.name)
+                )
+            }
+            return
+        } else {
+            if (!normalStageJobRunConditionSet.contains(jobControlOption.runCondition)) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_NORMAL_STAGE_JOB_CONDITION,
+                    defaultMessage = "流水线: [{0}]下的Job运行条件配置错误: {1}",
+                    params = arrayOf(jobContainer.name, jobControlOption.runCondition.name)
+                )
+            }
+        }
+
+        if (jobControlOption.runCondition == JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN ||
+            jobControlOption.runCondition == JobRunCondition.CUSTOM_VARIABLE_MATCH
         ) {
             if (jobControlOption.customVariables == null ||
                 jobControlOption.customVariables!!.isEmpty()
@@ -307,4 +383,18 @@ open class DefaultModelCheckPlugin constructor(
             }
         }
     }
+
+    private val finallyStageJobRunConditionSet = setOf(
+        JobRunCondition.PREVIOUS_STAGE_CANCEL,
+        JobRunCondition.PREVIOUS_STAGE_FAILED,
+        JobRunCondition.PREVIOUS_STAGE_SUCCESS,
+        JobRunCondition.STAGE_RUNNING
+    )
+
+    private val normalStageJobRunConditionSet = setOf(
+        JobRunCondition.CUSTOM_CONDITION_MATCH,
+        JobRunCondition.CUSTOM_VARIABLE_MATCH,
+        JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN,
+        JobRunCondition.STAGE_RUNNING
+    )
 }

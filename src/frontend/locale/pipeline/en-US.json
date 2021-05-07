@@ -123,6 +123,8 @@
     "exportPipelineSuccess": "Export Pipeline Success",
     "sizeLimit": "Maximum file size: {0}MB",
     "fileUploadSuccess": "Upload Sucessful",
+    "empty": "No data",
+    "link": "link",
     "execDetail": {
         "log": "Log",
         "setting": "Configuration",
@@ -130,7 +132,9 @@
         "showTime": "Show timestamp",
         "hideTime": "Hide timestamp",
         "downLoadLog": "Download log",
-        "emptyLog": "The log content is empty"
+        "emptyLog": "The log content is empty",
+        "report": "report",
+        "artifactory": "artifactory"
     },
     "timeMap": {
         "days": "days ",
