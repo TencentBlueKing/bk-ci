@@ -49,7 +49,7 @@ data class SearchAppInfoVO(
     @ApiModelProperty("版本体验BundleIdentifier", required = true)
     val bundleIdentifier: String,
     @ApiModelProperty("版本体验版本号", required = true)
-    val version: String,
+    val version: String? = null,
     @ApiModelProperty("版本标题", required = true)
-    val versionTitle: String
+    val versionTitle: String? = null
 )
