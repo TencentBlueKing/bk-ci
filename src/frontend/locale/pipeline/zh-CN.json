@@ -123,6 +123,8 @@
     "exportPipelineSuccess": "导出流水线成功",
     "sizeLimit": "最大上传{0}MB的文件",
     "fileUploadSuccess": "上传成功",
+    "empty": "暂无数据",
+    "link": "链接",
     "execDetail": {
         "log": "日志",
         "setting": "配置",
@@ -130,7 +132,9 @@
         "showTime": "显示时间戳",
         "hideTime": "隐藏时间戳",
         "downLoadLog": "下载日志",
-        "emptyLog": "日志内容为空"
+        "emptyLog": "日志内容为空",
+        "report": "报告",
+        "artifactory": "构件"
     },
     "timeMap": {
         "days": "天",

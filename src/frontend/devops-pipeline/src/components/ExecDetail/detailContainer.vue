@@ -54,8 +54,9 @@
 
 <style lang="scss" scoped>
     /deep/ .head-tab {
-        font-size: 14px;
+        font-size: 0;
         span {
+            font-size: 14px;
             cursor: pointer;
             font-weight: normal;
             padding: 4px 12px;

@@ -31,6 +31,7 @@ import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 
 /**
  * Container事件
@@ -47,6 +48,7 @@ data class PipelineBuildContainerEvent(
     val stageId: String,
     val containerId: String,
     val containerType: String,
+    val previousStageStatus: BuildStatus? = null, // 此仅在Stage下发处才会赋值，Job内/Task回调 等都会为null
     override var actionType: ActionType,
     override var delayMills: Int = 0,
     val reason: String? = null,
