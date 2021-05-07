@@ -31,7 +31,7 @@ class OpenExperienceResourceImpl @Autowired constructor(
             val profile = api.v1LoginLogin(data)
             val outerProfileVO = OuterProfileVO(
                 username = profile.username + "_outer",
-                logo = profile.logo
+                logo = "https://www.tencent.com/img/index/tencent_logo.png"
             )
 
             val token = DigestUtils.md5Hex(profile.username + profile.id + System.currentTimeMillis() + secretKey)
