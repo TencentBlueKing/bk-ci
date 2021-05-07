@@ -76,7 +76,7 @@ object CommandLineUtils {
                     tmpLine = it.onParseLine(tmpLine)
                 }
                 if (print2Logger) {
-                    appendVariableToFile(resultLogFile, tmpLine)
+                    appendVariableToFile(executor.workingDirectory, resultLogFile, tmpLine)
                     LoggerService.addNormalLine(tmpLine)
                 } else {
                     result.append(tmpLine).append("\n")
@@ -96,7 +96,7 @@ object CommandLineUtils {
                     tmpLine = it.onParseLine(tmpLine)
                 }
                 if (print2Logger) {
-                    appendVariableToFile(resultLogFile, tmpLine)
+                    appendVariableToFile(executor.workingDirectory, resultLogFile, tmpLine)
                     LoggerService.addRedLine(tmpLine)
                 } else {
                     result.append(tmpLine).append("\n")
@@ -128,7 +128,7 @@ object CommandLineUtils {
         return result.toString()
     }
 
-    private fun appendVariableToFile(resultLogFile: String?, tmpLine: String) {
+    private fun appendVariableToFile(workspace: File?, resultLogFile: String?, tmpLine: String) {
         if (resultLogFile == null) {
             return
         }
@@ -138,7 +138,7 @@ object CommandLineUtils {
             val value = tmpLine.removePrefix(prefix)
             val keyValue = value.split("::")
             if (keyValue.size >= 2) {
-                File(resultLogFile).appendText("${keyValue[0]}=${value.removePrefix("${keyValue[0]}::")}\n")
+                File(workspace, resultLogFile).appendText("${keyValue[0]}=${value.removePrefix("${keyValue[0]}::")}\n")
             }
         }
     }
