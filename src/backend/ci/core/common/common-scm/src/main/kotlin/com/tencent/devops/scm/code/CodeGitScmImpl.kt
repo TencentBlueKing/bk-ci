@@ -74,11 +74,21 @@ class CodeGitScmImpl constructor(
         )
     }
 
-    override fun getBranches() =
-        gitApi.listBranches(apiUrl, token, projectName)
+    override fun getBranches(search: String?) =
+        gitApi.listBranches(
+            host = apiUrl,
+            token = token,
+            projectName = projectName,
+            search = search
+        )
 
-    override fun getTags() =
-        gitApi.listTags(apiUrl, token, projectName)
+    override fun getTags(search: String?) =
+        gitApi.listTags(
+            host = apiUrl,
+            token = token,
+            projectName = projectName,
+            search = search
+        )
 
     override fun checkTokenAndPrivateKey() {
         if (privateKey == null) {

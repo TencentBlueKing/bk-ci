@@ -74,13 +74,17 @@ open class GitApi {
         private const val OPERATION_MR_REVIEW = "查询项目合并请求"
     }
 
-    fun listBranches(host: String, token: String, projectName: String): List<String> {
+    fun listBranches(host: String, token: String, projectName: String, search: String? = null): List<String> {
         logger.info("Start to list branches of host $host by project $projectName")
         var page = 1
         val result = mutableListOf<GitBranch>()
         while (true) {
+            var searchReq = "page=$page&per_page=100&order_by=updated&sort=desc"
+            if (!search.isNullOrBlank()) {
+                searchReq = "$searchReq&search=$search"
+            }
             val request =
-                get(host, token, "projects/${urlEncode(projectName)}/repository/branches", "page=$page&per_page=100")
+                get(host, token, "projects/${urlEncode(projectName)}/repository/branches", searchReq)
             page++
             val pageResult = JsonUtil.getObjectMapper().readValue<List<GitBranch>>(getBody(OPERATION_BRANCH, request))
             result.addAll(pageResult)
@@ -93,12 +97,16 @@ open class GitApi {
         }
     }
 
-    fun listTags(host: String, token: String, projectName: String): List<String> {
+    fun listTags(host: String, token: String, projectName: String, search: String? = null): List<String> {
         var page = 1
         val result = mutableListOf<GitTag>()
         while (true) {
+            var searchReq = "page=$page&per_page=100&order_by=updated&sort=desc"
+            if (!search.isNullOrBlank()) {
+                searchReq = "$searchReq&search=$search"
+            }
             val request =
-                get(host, token, "projects/${urlEncode(projectName)}/repository/tags", "page=$page&per_page=100")
+                get(host, token, "projects/${urlEncode(projectName)}/repository/tags", searchReq)
             page++
             val pageResult: List<GitTag> = JsonUtil.getObjectMapper().readValue(getBody(OPERATION_TAG, request))
             result.addAll(pageResult)

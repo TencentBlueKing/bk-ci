@@ -84,19 +84,23 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: IScm
         passPhrase: String?,
         token: String?,
         region: CodeSvnRegion?,
-        userName: String?
+        userName: String?,
+        search: String?
     ): Result<List<String>> {
         logger.info("listBranches|(projectName=$projectName, url=$url, type=$type, region=$region, username=$userName)")
-        return Result(scmService.listBranches(
-            projectName = projectName,
-            url = url,
-            type = type,
-            privateKey = privateKey,
-            passPhrase = passPhrase,
-            token = token,
-            region = region,
-            userName = userName
-        ))
+        return Result(
+            scmService.listBranches(
+                projectName = projectName,
+                url = url,
+                type = type,
+                privateKey = privateKey,
+                passPhrase = passPhrase,
+                token = token,
+                region = region,
+                userName = userName,
+                search = search
+            )
+        )
     }
 
     override fun listTags(
@@ -104,16 +108,20 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: IScm
         url: String,
         type: ScmType,
         token: String,
-        userName: String
+        userName: String,
+        search: String?
     ): Result<List<String>> {
         logger.info("listTags|projectName=$projectName, url=$url, type=$type, username=$userName")
-        return Result(scmService.listTags(
-            projectName = projectName,
-            url = url,
-            type = type,
-            token = token,
-            userName = userName
-        ))
+        return Result(
+            scmService.listTags(
+                projectName = projectName,
+                url = url,
+                type = type,
+                token = token,
+                userName = userName,
+                search = search
+            )
+        )
     }
 
     override fun checkPrivateKeyAndToken(

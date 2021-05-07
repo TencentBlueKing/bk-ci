@@ -41,8 +41,8 @@ interface IScm {
     val url: String
 
     fun getLatestRevision(): RevisionInfo
-    fun getBranches(): List<String>
-    fun getTags(): List<String>
+    fun getBranches(search: String? = null): List<String>
+    fun getTags(search: String? = null): List<String>
     // This is to check if the token & private key legal
     fun checkTokenAndPrivateKey()
 
