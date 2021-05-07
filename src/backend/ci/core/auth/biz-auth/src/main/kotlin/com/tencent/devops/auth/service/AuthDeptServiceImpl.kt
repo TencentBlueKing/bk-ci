@@ -40,6 +40,8 @@ import com.tencent.devops.auth.entity.SearchDeptUserEntity
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.auth.api.AuthTokenApi
+import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.redis.RedisOperation
 import okhttp3.MediaType
 import okhttp3.Request
@@ -51,7 +53,9 @@ import java.util.concurrent.TimeUnit
 
 class AuthDeptServiceImpl @Autowired constructor(
     val redisOperation: RedisOperation,
-    val objectMapper: ObjectMapper
+    val objectMapper: ObjectMapper,
+    val authTokenApi: AuthTokenApi,
+    val authServiceCode: AuthServiceCode
 ) : DeptService {
 
     @Value("\${esb.code:#{null}}")
@@ -68,28 +72,30 @@ class AuthDeptServiceImpl @Autowired constructor(
         .expireAfterWrite(1, TimeUnit.HOURS)
         .build<String/*deptId*/, List<String>>()
 
-    override fun getDeptByLevel(level: Int): DeptInfoVo {
+    override fun getDeptByLevel(level: Int, accessToken: String?, userId: String): DeptInfoVo {
         val search = SearchDeptEntity(
             bk_app_code = appCode!!,
             bk_app_secret = appSecret!!,
-            bk_username = "",
+            bk_username = userId,
             fields = DEPT_LABEL,
             lookupField = LEVEL,
             exactLookups = level,
-            fuzzyLookups = null
+            fuzzyLookups = null,
+            accessToken = accessToken
         )
         return getDeptInfo(search)
     }
 
-    override fun getDeptByParent(parentId: Int): DeptInfoVo {
+    override fun getDeptByParent(parentId: Int, accessToken: String?, userId: String): DeptInfoVo {
         val search = SearchDeptEntity(
             bk_app_code = appCode!!,
             bk_app_secret = appSecret!!,
-            bk_username = "",
+            bk_username = userId,
             fields = DEPT_LABEL,
             lookupField = PARENT,
             exactLookups = parentId,
-            fuzzyLookups = null
+            fuzzyLookups = null,
+            accessToken = accessToken
         )
         return getDeptInfo(search)
     }
@@ -105,12 +111,14 @@ class AuthDeptServiceImpl @Autowired constructor(
     }
 
     private fun getAndRefreshDeptUser(deptId: Int) : List<String> {
+        val accessToken = authTokenApi.getAccessToken(authServiceCode)
         val search = SearchDeptUserEntity(
             id = deptId,
             recursive = true,
             bk_app_code = appCode!!,
             bk_app_secret = appSecret!!,
-            bk_username = ""
+            bk_username = "",
+            accessToken = accessToken
         )
         val url = getAuthRequestUrl(LIST_DEPARTMENT_PROFILES)
         val content = objectMapper.writeValueAsString(search)
@@ -132,6 +140,7 @@ class AuthDeptServiceImpl @Autowired constructor(
     private fun getDeptInfo(search: SearchDeptEntity): DeptInfoVo {
         val url = getAuthRequestUrl(LIST_DEPARTMENTS)
         val content = objectMapper.writeValueAsString(search)
+        logger.info("getDeptInfo url: $url, body: ${JsonUtil.toJson(search)}")
         val mediaType = MediaType.parse("application/json; charset=utf-8")
         val requestBody = RequestBody.create(mediaType, content)
         val request = Request.Builder().url(url)

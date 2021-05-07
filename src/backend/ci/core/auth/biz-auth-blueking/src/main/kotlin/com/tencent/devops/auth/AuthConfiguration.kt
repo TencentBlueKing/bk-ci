@@ -32,6 +32,8 @@ import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.service.impl.ApigwHttpClientServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.ManagerServiceImpl
 import com.tencent.devops.auth.service.AuthDeptServiceImpl
+import com.tencent.devops.common.auth.api.AuthTokenApi
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.auth.service.IamEsbService
 import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.beans.factory.annotation.Value
@@ -80,6 +82,8 @@ class AuthConfiguration {
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login")
     fun deptService(
         redisOperation: RedisOperation,
-        objectMapper: ObjectMapper
-    ) = AuthDeptServiceImpl(redisOperation, objectMapper)
+        objectMapper: ObjectMapper,
+        authTokenApi: AuthTokenApi,
+        authServiceCode: PipelineAuthServiceCode
+    ) = AuthDeptServiceImpl(redisOperation, objectMapper, authTokenApi, authServiceCode)
 }

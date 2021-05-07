@@ -38,11 +38,11 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserDeptResourceImpl @Autowired constructor(
     val deptService: DeptService
 ): UserDeptResource {
-    override fun getDeptByLevel(level: Int): Result<DeptInfoVo> {
-        return Result(deptService.getDeptByLevel(level))
+    override fun getDeptByLevel(userId: String, accessToken: String?, level: Int): Result<DeptInfoVo> {
+        return Result(deptService.getDeptByLevel(level, accessToken, userId))
     }
 
-    override fun getDeptByParent(parentId: Int): Result<DeptInfoVo> {
-        return Result(deptService.getDeptByParent(parentId))
+    override fun getDeptByParent(userId: String, accessToken: String?, parentId: Int): Result<DeptInfoVo> {
+        return Result(deptService.getDeptByParent(parentId, accessToken, userId))
     }
 }
