@@ -29,11 +29,14 @@ package com.tencent.devops.repository.service.scm
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.api.ServiceScmResource
 import com.tencent.devops.scm.enums.CodeSvnRegion
+import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitDiff
+import com.tencent.devops.scm.pojo.GitMrChangeInfo
+import com.tencent.devops.scm.pojo.GitMrInfo
+import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import org.springframework.beans.factory.annotation.Autowired
@@ -260,5 +263,47 @@ class TencentScmServiceImpl @Autowired constructor(val client: Client) : IScmSer
         userName: String
     ): List<GitDiff> {
         throw NotSupportedException("TencentScmServiceImpl not support getCommitDiff")
+    }
+
+    override fun getMergeRequestChangeInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        mrId: Long
+    ): GitMrChangeInfo? {
+        return client.getScm(ServiceScmResource::class).getMergeRequestChangeInfo(
+            projectName = projectName,
+            url = url,
+            type = type,
+            token = token,
+            mrId = mrId
+        ).data
+    }
+
+    override fun getMrInfo(projectName: String, url: String, type: ScmType, token: String?, mrId: Long): GitMrInfo? {
+        return client.getScm(ServiceScmResource::class).getMrInfo(
+            projectName = projectName,
+            url = url,
+            type = type,
+            token = token,
+            mrId = mrId
+        ).data
+    }
+
+    override fun getMrReviewInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        mrId: Long
+    ): GitMrReviewInfo? {
+        return client.getScm(ServiceScmResource::class).getMrReviewInfo(
+            projectName = projectName,
+            url = url,
+            type = type,
+            token = token,
+            mrId = mrId
+        ).data
     }
 }

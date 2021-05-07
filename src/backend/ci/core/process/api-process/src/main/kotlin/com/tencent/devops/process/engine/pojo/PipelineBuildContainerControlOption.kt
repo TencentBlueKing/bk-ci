@@ -27,8 +27,8 @@
 
 package com.tencent.devops.process.engine.pojo
 
-import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.container.MutexGroup
+import com.tencent.devops.common.pipeline.option.JobControlOption
 
 /**
  *
@@ -36,5 +36,6 @@ import com.tencent.devops.common.pipeline.container.MutexGroup
  */
 data class PipelineBuildContainerControlOption(
     val jobControlOption: JobControlOption,
+    val inFinallyStage: Boolean = false,
     val mutexGroup: MutexGroup? = null
 )

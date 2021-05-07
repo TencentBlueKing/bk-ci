@@ -49,13 +49,23 @@ class GitUtilsTest {
     fun getGitApiUrl() {
         val apiUrl = "http://aaa.com/api/v3"
         val repoApiUrl = "http://github.com/api/v3"
+        val httpsApiUrl = "https://aaa.com/api/v3"
+        val httpsRepoApiUrl = "https://github.com/api/v3"
         var actual = GitUtils.getGitApiUrl(apiUrl, "http://github.com/Tencent/bk-ci.git")
         assertEquals(repoApiUrl, actual)
         actual = GitUtils.getGitApiUrl(apiUrl, "http://aaa.com/Tencent/bk-ci.git")
         assertEquals(apiUrl, actual)
+        actual = GitUtils.getGitApiUrl(apiUrl, "https://aaa.com/Tencent/bk-ci.git")
+        assertEquals(apiUrl, actual)
+        actual = GitUtils.getGitApiUrl(apiUrl, "https://github.com/Tencent/bk-ci.git")
+        assertEquals(repoApiUrl, actual)
         val errorApiUrl = "api/v3"
         actual = GitUtils.getGitApiUrl(errorApiUrl, "http://aaa.com/Tencent/bk-ci.git")
         assertEquals(apiUrl, actual)
+        actual = GitUtils.getGitApiUrl(errorApiUrl, "https://aaa.com/Tencent/bk-ci.git")
+        assertEquals(httpsApiUrl, actual)
+        actual = GitUtils.getGitApiUrl(errorApiUrl, "https://github.com/Tencent/bk-ci.git")
+        assertEquals(httpsRepoApiUrl, actual)
     }
 
     @Test

@@ -85,6 +85,7 @@ const val PIPELINE_START_TASK_ID = "BK_CI_START_TASK_ID" // "pipeline.start.task
 const val PIPELINE_RETRY_COUNT = "BK_CI_RETRY_COUNT" // "pipeline.retry.count"
 const val PIPELINE_RETRY_BUILD_ID = "BK_CI_RETRY_BUILD_ID" // "pipeline.retry.build.id"
 const val PIPELINE_RETRY_START_TASK_ID = "BK_CI_RETRY_TASK_ID" // "pipeline.retry.start.task.id"
+const val PIPELINE_RETRY_ALL_FAILED_CONTAINER = "BK_CI_RETRY_ALL_FAILED_CONTAINER"
 
 const val BK_CI_BUILD_FAIL_TASKS = "BK_CI_BUILD_FAIL_TASKS"
 const val BK_CI_BUILD_FAIL_TASKNAMES = "BK_CI_BUILD_FAIL_TASKNAMES"
