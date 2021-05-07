@@ -35,7 +35,6 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
-import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -135,19 +134,22 @@ class ModelUtilsTest {
         val containers = mutableListOf<Container>()
         val stages = mutableListOf<Stage>()
         val model = Model(name = "test", desc = "description", stages = stages)
-        stages.add(Stage(containers = containers, id = "1"))
+        stages.add(Stage(containers = containers, id = "1", canRetry = true))
         val noRetryElement = ManualReviewUserTaskElement()
         containers.add(NormalContainer(elements = listOf(noRetryElement)))
-        ModelUtils.refreshCanRetry(model = model, canRetry = true, status = BuildStatus.FAILED)
+        ModelUtils.refreshCanRetry(model = model, canRetry = true)
         assertFalse(noRetryElement.canRetry!!)
+        assertTrue(stages[0].canRetry!!)
 
         noRetryElement.additionalOptions = elementAdditionalOptions(enable = true)
-        ModelUtils.refreshCanRetry(model = model, canRetry = true, status = BuildStatus.FAILED)
+        stages[0].canRetry = false
+        ModelUtils.refreshCanRetry(model = model, canRetry = true)
         assertFalse(noRetryElement.canRetry!!)
+        assertFalse(stages[0].canRetry!!)
 
         // 状态是成功的 则不允许 重试
         noRetryElement.additionalOptions = elementAdditionalOptions(enable = true)
-        ModelUtils.refreshCanRetry(model = model, canRetry = true, status = BuildStatus.SUCCEED)
+        ModelUtils.refreshCanRetry(model = model, canRetry = true)
         assertFalse(noRetryElement.canRetry!!)
 
         val retryElement = LinuxScriptElement(script = "pwd",
@@ -155,17 +157,21 @@ class ModelUtilsTest {
             continueNoneZero = false)
         val elements = mutableListOf(retryElement)
         containers.add(VMBuildContainer(baseOS = VMBaseOS.MACOS, elements = elements))
-        ModelUtils.refreshCanRetry(model = model, canRetry = true, status = BuildStatus.FAILED)
+        ModelUtils.refreshCanRetry(model = model, canRetry = true)
         assertFalse(noRetryElement.canRetry!!)
 
         retryElement.canRetry = true
-        ModelUtils.refreshCanRetry(model = model, canRetry = true, status = BuildStatus.FAILED)
+        ModelUtils.refreshCanRetry(model = model, canRetry = true)
         assertTrue(retryElement.canRetry!!)
 
         // 默认允许重试
         retryElement.additionalOptions = elementAdditionalOptions(enable = true)
-        ModelUtils.refreshCanRetry(model = model, canRetry = true, status = BuildStatus.FAILED)
+        ModelUtils.refreshCanRetry(model = model, canRetry = true)
         assertTrue(retryElement.canRetry!!)
+        // 不允许重试
+        ModelUtils.refreshCanRetry(model = model, canRetry = false)
+        assertFalse(retryElement.canRetry!!)
+        assertFalse(stages[0].canRetry!!)
 
         val preTaskFailedRun = LinuxScriptElement(script = "cd ..",
             scriptType = BuildScriptType.SHELL,
@@ -175,7 +181,7 @@ class ModelUtilsTest {
             continueWhenFailed = false)
         elements.add(preTaskFailedRun)
         // 通过前面插件即使失败也运行，让前置失败的插件不能重试
-        ModelUtils.refreshCanRetry(model = model, canRetry = true, status = BuildStatus.FAILED)
+        ModelUtils.refreshCanRetry(model = model, canRetry = true)
         assertFalse(retryElement.canRetry!!)
         assertFalse(preTaskFailedRun.canRetry!!)
 
@@ -184,7 +190,11 @@ class ModelUtilsTest {
             runCondition = RunCondition.PRE_TASK_FAILED_BUT_CANCEL,
             continueWhenFailed = true)
 
-        ModelUtils.refreshCanRetry(model = model, canRetry = true, status = BuildStatus.FAILED)
+        ModelUtils.refreshCanRetry(model = model, canRetry = true)
+        assertFalse(retryElement.canRetry!!)
+        assertFalse(preTaskFailedRun.canRetry!!)
+
+        ModelUtils.refreshCanRetry(model = model, canRetry = false)
         assertFalse(retryElement.canRetry!!)
         assertFalse(preTaskFailedRun.canRetry!!)
     }

@@ -114,13 +114,10 @@ class PipelineBuildDetailService @Autowired constructor(
 
         val model = JsonUtil.to(record.model, Model::class.java)
 
-        // 构建机环境的会因为构建号不一样工作空间可能被覆盖的问题, 所以构建号不同不允许重试
-        val canRetry =
-            buildSummaryRecord?.buildNum == buildInfo.buildNum && buildInfo.status.isFailure() // 并且是失败后
-
         // 判断需要刷新状态，目前只会改变canRetry状态
         if (refreshStatus) {
-            ModelUtils.refreshCanRetry(model, canRetry, buildInfo.status)
+            val canRetry = buildInfo.status.isFailure() || buildInfo.status.isCancel() // 已经失败或者取消
+            ModelUtils.refreshCanRetry(model, canRetry)
         }
 
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
