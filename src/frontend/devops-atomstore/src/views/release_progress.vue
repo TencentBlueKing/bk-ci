@@ -244,7 +244,7 @@
                 return [
                     { name: this.$t('store.工作台') },
                     { name: this.$t('store.流水线插件'), to: { name: 'atomWork' } },
-                    { name: this.versionDetail.atomCode, to: { name: 'overView', params: { code: this.versionDetail.atomCode, type: 'atom' } } },
+                    { name: this.versionDetail.atomCode, to: { name: 'statisticData', params: { code: this.versionDetail.atomCode, type: 'atom' } } },
                     { name: this.curTitle }
                 ]
             }
