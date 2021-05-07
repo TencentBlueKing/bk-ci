@@ -114,7 +114,9 @@ class ExperienceSearchService @Autowired constructor(
                 lastDownloadHashId = lastDownloadMap[it.projectId + it.bundleIdentifier + it.platform]
                     ?.let { l -> HashUtil.encodeLongId(l) } ?: "",
                 bundleIdentifier = it.bundleIdentifier,
-                appScheme = it.scheme
+                appScheme = it.scheme,
+                type = it.type,
+                externalUrl = it.externalLink
             )
         }.toList()
     }

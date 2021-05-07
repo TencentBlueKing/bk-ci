@@ -32,6 +32,8 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("版本体验-搜索-APP信息")
 data class SearchAppInfoVO(
+    @ApiModelProperty("类型", required = true)
+    val type: Int? = null,
     @ApiModelProperty("版本体验ID", required = true)
     val experienceHashId: String,
     @ApiModelProperty("体验名称", required = true)
@@ -53,5 +55,7 @@ data class SearchAppInfoVO(
     @ApiModelProperty("版本标题", required = true)
     val versionTitle: String? = null,
     @ApiModelProperty("应用Scheme", required = false)
-    val appScheme: String
+    val appScheme: String,
+    @ApiModelProperty("外部链接", required = false)
+    val externalUrl: String? = null
 )
