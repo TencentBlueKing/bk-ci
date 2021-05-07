@@ -171,29 +171,33 @@ class PipelineBuildStageDao {
         }
     }
 
-    fun convert(tTPipelineBuildStageRecord: TPipelineBuildStageRecord): PipelineBuildStage? {
-        return with(tTPipelineBuildStageRecord) {
-            val controlOption = if (!conditions.isNullOrBlank()) {
-                JsonUtil.to(conditions, PipelineBuildStageControlOption::class.java)
-            } else {
-                PipelineBuildStageControlOption(
-                    StageControlOption(timeout = Timeout.DEFAULT_STAGE_TIMEOUT_HOURS)
+    fun convert(tTPipelineBuildStageRecord: TPipelineBuildStageRecord?): PipelineBuildStage? {
+        if (tTPipelineBuildStageRecord != null) {
+            return with(tTPipelineBuildStageRecord) {
+                val controlOption = if (!conditions.isNullOrBlank()) {
+                    JsonUtil.to(conditions, PipelineBuildStageControlOption::class.java)
+                } else {
+                    PipelineBuildStageControlOption(
+                        StageControlOption(timeout = Timeout.DEFAULT_STAGE_TIMEOUT_HOURS)
+                    )
+                }
+
+                PipelineBuildStage(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    stageId = stageId,
+                    seq = seq,
+                    status = BuildStatus.values()[status],
+                    startTime = startTime,
+                    endTime = endTime,
+                    cost = cost ?: 0,
+                    executeCount = executeCount ?: 1,
+                    controlOption = controlOption
                 )
             }
-
-            PipelineBuildStage(
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                stageId = stageId,
-                seq = seq,
-                status = BuildStatus.values()[status],
-                startTime = startTime,
-                endTime = endTime,
-                cost = cost ?: 0,
-                executeCount = executeCount ?: 1,
-                controlOption = controlOption
-            )
+        } else {
+            return null
         }
     }
 
@@ -246,6 +250,22 @@ class PipelineBuildStageDao {
                     )
                 )
                 .where(BUILD_ID.eq(buildId)).and(STAGE_ID.eq(stageId)).execute()
+        }
+    }
+
+    fun getMaxStage(dslContext: DSLContext, buildId: String): TPipelineBuildStageRecord? {
+        return with(T_PIPELINE_BUILD_STAGE) {
+            dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId)).orderBy(SEQ.desc()).limit(1).fetchAny()
+        }
+    }
+
+    fun getByStatus(dslContext: DSLContext, buildId: String, status: BuildStatus): PipelineBuildStage? {
+        with(T_PIPELINE_BUILD_STAGE) {
+            val data = dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId)).and(STATUS.eq(status.ordinal))
+                .orderBy(SEQ.desc()).limit(1).fetchAny()
+            return convert(data)
         }
     }
 
