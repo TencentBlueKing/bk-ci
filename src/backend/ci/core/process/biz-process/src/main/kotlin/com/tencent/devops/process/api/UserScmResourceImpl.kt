@@ -79,8 +79,18 @@ class UserScmResourceImpl @Autowired constructor(
     ): Result<List<String>> {
         val result = mutableListOf<String>()
         val repositoryConfig = getRepositoryConfig(repositoryId, repositoryType)
-        val branches = scmProxyService.listBranches(projectId, repositoryConfig).data ?: listOf()
-        val tags = scmProxyService.listTags(projectId, repositoryConfig).data ?: listOf()
+        val branches = scmProxyService.listBranches(
+            projectId = projectId,
+            repositoryConfig = repositoryConfig,
+            search = search,
+            full = false
+        ).data ?: listOf()
+        val tags = scmProxyService.listTags(
+            projectId = projectId,
+            repositoryConfig = repositoryConfig,
+            search = search,
+            full = false
+        ).data ?: listOf()
         result.addAll(branches)
         result.addAll(tags)
         return Result(result)

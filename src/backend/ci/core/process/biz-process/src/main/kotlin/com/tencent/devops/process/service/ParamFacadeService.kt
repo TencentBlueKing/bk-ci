@@ -99,7 +99,7 @@ class ParamFacadeService @Autowired constructor(
         val options = refs.map {
             BuildFormValue(it, it)
         }
-        val searchUrl = "/user/scm/$projectId/${formProperty.repoHashId}/refs?search={words}"
+        val searchUrl = "/ms/process/api/user/scm/$projectId/${formProperty.repoHashId}/refs?search={words}"
         val replaceKey = "{words}"
         return copyFormProperty(
             property = formProperty,

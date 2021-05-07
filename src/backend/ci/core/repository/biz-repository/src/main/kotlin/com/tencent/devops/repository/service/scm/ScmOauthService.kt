@@ -90,7 +90,8 @@ class ScmOauthService @Autowired constructor(
         token: String?,
         region: CodeSvnRegion?,
         userName: String?,
-        search: String?
+        search: String?,
+        full: Boolean
     ): List<String> {
         logger.info("[$projectName|$url|$type|$userName] Start to list the branches")
         val startEpoch = System.currentTimeMillis()
@@ -106,7 +107,7 @@ class ScmOauthService @Autowired constructor(
                 region = region,
                 userName = userName,
                 event = null
-            ).getBranches(search)
+            ).getBranches(search = search, full = full)
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list branches")
         }
@@ -118,7 +119,8 @@ class ScmOauthService @Autowired constructor(
         type: ScmType,
         token: String,
         userName: String,
-        search: String?
+        search: String?,
+        full: Boolean
     ): List<String> {
         logger.info("[$projectName|$url|$type|$userName] Start to list tags")
         val startEpoch = System.currentTimeMillis()
@@ -134,7 +136,7 @@ class ScmOauthService @Autowired constructor(
                 region = null,
                 userName = userName,
                 event = null)
-                .getTags(search)
+                .getTags(search = search, full = full)
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list tags")
         }
