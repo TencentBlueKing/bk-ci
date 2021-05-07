@@ -10,6 +10,7 @@ import javax.ws.rs.GET
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPEN_EXPERIENCE"], description = "版本体验-公开接口")
@@ -28,6 +29,7 @@ interface OpenExperienceResource {
     @Path("/outerAuth")
     @GET
     fun outerAuth(
+        @QueryParam("token")
         token: String
     ): Result<OuterProfileVO>
 }

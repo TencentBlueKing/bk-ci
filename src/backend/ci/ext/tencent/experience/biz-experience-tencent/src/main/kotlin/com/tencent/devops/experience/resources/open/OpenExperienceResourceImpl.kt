@@ -23,13 +23,14 @@ class OpenExperienceResourceImpl @Autowired constructor(
     private val redisOperation: RedisOperation
 ) : OpenExperienceResource {
     override fun outerLogin(params: OuterLoginParam): Result<String> {
+        // IP 限频 TODO
         val data = ProfileLogin()
         data.username = params.username
         data.password = params.password
         try {
             val profile = api.v1LoginLogin(data)
             val outerProfileVO = OuterProfileVO(
-                username = profile.username,
+                username = profile.username + "_outer",
                 logo = profile.logo
             )
 
@@ -52,7 +53,6 @@ class OpenExperienceResourceImpl @Autowired constructor(
             )
         }
     }
-
 
     override fun outerAuth(token: String): Result<OuterProfileVO> {
         val profileStr = redisOperation.get(redisKey(token))

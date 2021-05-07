@@ -15,24 +15,19 @@
 -- NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
 -- WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 -- SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-local x_ckey = ngx.var.http_x_ckey
-local querysArgs = urlUtil:parseUrl(ngx.var.request_uri)
-local ckey = querysArgs["cKey"]
+local x_ckey = ngx.var.http_x_ckey -- 内部用户
+local x_otoken = ngx.var.http_x_otoken -- 外部用户
 
-if ckey == nil and x_ckey == nil then
-    ngx.log(ngx.STDERR, "request does not has header=x-ckey or arg_cKey.")
+if x_ckey == nil and x_otoken == nil then
+    ngx.log(ngx.STDERR, "request does not has header=x-ckey or header=x-otoken")
     ngx.exit(401)
     return
 end
 
-local real_ckey = nil
-
-if x_ckey ~= nil then real_ckey = x_ckey end
-
-if ckey ~= nil then real_ckey = ckey end
-
---- 请求itlogin后台查询用户信息
-local staff_info = itloginUtil:get_staff_info(real_ckey)
-
---- 设置sid
-ngx.header["X-DEVOPS-UID"] = staff_info.EnglishName
+if x_ckey ~= nil then
+    local staff_info = itloginUtil:get_staff_info(x_ckey)
+    ngx.header["X-DEVOPS-UID"] = staff_info.EnglishName
+else
+    local outer_profile = {}
+    ngx.header["X-DEVOPS-UID"] = outer_profile.username
+end
