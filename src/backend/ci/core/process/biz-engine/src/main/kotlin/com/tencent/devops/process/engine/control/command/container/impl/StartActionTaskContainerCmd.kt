@@ -218,7 +218,8 @@ class StartActionTaskContainerCmd(
                 additionalOptions = additionalOptions,
                 containerFinalStatus = containerContext.buildStatus,
                 variables = containerContext.variables,
-                hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer
+                hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer,
+                buildLogPrinter = buildLogPrinter
             ) -> { // 检查条件跳过
                 val taskStatus = BuildStatusSwitcher.readyToSkipWhen(containerContext.buildStatus.isFailure())
                 LOG.warn("ENGINE|$buildId|$source|CONTAINER_SKIP_TASK|$stageId|j($containerId)|$taskId|$taskStatus")
@@ -240,6 +241,8 @@ class StartActionTaskContainerCmd(
         }
 
         if (toDoTask != null) {
+            // 进入预队列
+            pipelineRuntimeService.updateTaskStatus(toDoTask, userId = starter, buildStatus = BuildStatus.QUEUE_CACHE)
             containerContext.buildStatus = BuildStatus.RUNNING
             containerContext.event.actionType = ActionType.START // 未开始的需要开始
         }

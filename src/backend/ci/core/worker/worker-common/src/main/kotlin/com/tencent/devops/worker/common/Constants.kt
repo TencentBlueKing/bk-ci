@@ -27,6 +27,8 @@
 
 package com.tencent.devops.worker.common
 
+const val BUILD_ID = "devops.build.id"
+
 const val BUILD_TYPE = "build.type"
 
 const val WORKSPACE_ENV = "WORKSPACE"
@@ -38,6 +40,12 @@ const val CLEAN_WORKSPACE = "DEVOPS_CLEAN_WORKSPACE"
 const val JAVA_PATH_ENV = "bk_java_path"
 
 const val NODEJS_PATH_ENV = "bk_nodejs_path"
+
+const val LOG_DEBUG_FLAG = "##[debug]"
+
+const val LOG_ERROR_FLAG = "##[error]"
+
+const val LOG_WARN_FLAG = "##[warning]"
 
 const val LOG_SUBTAG_FLAG = "##subTag##"
 

@@ -35,8 +35,12 @@ import com.tencent.devops.scm.code.git.CodeGitCredentialSetter
 import com.tencent.devops.scm.code.git.api.GitApi
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.ScmException
+import com.tencent.devops.scm.pojo.GitMrChangeInfo
+import com.tencent.devops.scm.pojo.GitMrInfo
+import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import com.tencent.devops.scm.utils.code.git.GitUtils.urlEncode
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
 import org.slf4j.LoggerFactory
@@ -88,7 +92,7 @@ class CodeTGitScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to list all branches", ignored)
             throw ScmException(
-                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.TGIT_TOKEN_EMPTY),
+                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.TGIT_TOKEN_EMPTY),
                 ScmType.CODE_TGIT.name
             )
         }
@@ -102,7 +106,7 @@ class CodeTGitScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the private key of git", ignored)
             throw ScmException(
-                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.TGIT_SECRET_WRONG),
+                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.TGIT_SECRET_WRONG),
                 ScmType.CODE_TGIT.name
             )
         }
@@ -135,7 +139,7 @@ class CodeTGitScmImpl constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the username and password of git", ignored)
             throw ScmException(
-                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.TGIT_LOGIN_FAIL),
+                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.TGIT_LOGIN_FAIL),
                 ScmType.CODE_TGIT.name
             )
         }
@@ -156,9 +160,9 @@ class CodeTGitScmImpl constructor(
         }
         try {
             gitApi.addWebhook(apiUrl, token, projectName, hookUrl, event, gitConfig.tGitHookSecret)
-        } catch (e: ScmException) {
+        } catch (ignored: Throwable) {
             throw ScmException(
-                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_FAIL),
+                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_FAIL),
                 ScmType.CODE_TGIT.name
             )
         }
@@ -173,10 +177,10 @@ class CodeTGitScmImpl constructor(
         block: Boolean
     ) {
         if (token.isEmpty()) {
-            throw ScmException(scmType = ScmType.CODE_TGIT.name,
-                message = MessageCodeUtil.getCodeLanMessage(
-                    messageCode = RepositoryMessageCode.GIT_TOKEN_EMPTY,
-                    defaultMessage = RepositoryMessageCode.GIT_TOKEN_EMPTY))
+            throw ScmException(
+                MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_EMPTY),
+                ScmType.CODE_TGIT.name
+            )
         }
         try {
             gitApi.addCommitCheck(
@@ -190,11 +194,11 @@ class CodeTGitScmImpl constructor(
                 description = description,
                 block = block
             )
-        } catch (e: ScmException) {
-            throw ScmException(scmType = ScmType.CODE_TGIT.name,
-                message = MessageCodeUtil.getCodeLanMessage(
-                    messageCode = RepositoryMessageCode.GIT_TOKEN_FAIL,
-                    defaultMessage = RepositoryMessageCode.GIT_TOKEN_FAIL))
+        } catch (ignored: Throwable) {
+            throw ScmException(
+                ignored.message ?: MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_FAIL),
+                ScmType.CODE_TGIT.name
+            )
         }
     }
 
@@ -206,6 +210,33 @@ class CodeTGitScmImpl constructor(
 
     override fun unlock(repoName: String, applicant: String, subpath: String) {
         logger.info("Git can not unlock")
+    }
+
+    override fun getMergeRequestChangeInfo(mrId: Long): GitMrChangeInfo {
+        val url = "projects/${urlEncode(projectName)}/merge_request/$mrId/changes"
+        return gitApi.getMergeRequestChangeInfo(
+            host = apiUrl,
+            token = token,
+            url = url
+        )
+    }
+
+    override fun getMrInfo(mrId: Long): GitMrInfo {
+        val url = "projects/${urlEncode(projectName)}/merge_request/$mrId"
+        return gitApi.getMrInfo(
+            host = apiUrl,
+            token = token,
+            url = url
+        )
+    }
+
+    override fun getMrReviewInfo(mrId: Long): GitMrReviewInfo {
+        val url = "projects/${urlEncode(projectName)}/merge_request/$mrId/review"
+        return gitApi.getMrReviewInfo(
+            host = apiUrl,
+            token = token,
+            url = url
+        )
     }
 
     companion object {

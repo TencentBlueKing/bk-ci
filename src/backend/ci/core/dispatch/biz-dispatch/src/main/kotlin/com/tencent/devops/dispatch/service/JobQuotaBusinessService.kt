@@ -79,9 +79,9 @@ class JobQuotaBusinessService @Autowired constructor(
      * job启动时记录
      */
     fun insertRunningJob(projectId: String, vmType: JobQuotaVmType, buildId: String, vmSeqId: String) {
-        runningJobsDao.insert(dslContext, projectId, vmType, buildId, vmSeqId)
-        redisOperation.sadd(QUOTA_PROJECT_ALL_KEY, projectId) // 所有项目集合
-        checkWarning(projectId, vmType)
+//        runningJobsDao.insert(dslContext, projectId, vmType, buildId, vmSeqId)
+//        redisOperation.sadd(QUOTA_PROJECT_ALL_KEY, projectId) // 所有项目集合
+//        checkWarning(projectId, vmType)
     }
 
     /**
@@ -89,7 +89,7 @@ class JobQuotaBusinessService @Autowired constructor(
      * vmSeqId可能为空
      */
     fun deleteRunningJob(projectId: String, buildId: String, vmSeqId: String?) {
-        jobAgentFinish(projectId, buildId, vmSeqId)
+//        jobAgentFinish(projectId, buildId, vmSeqId)
     }
 
     private fun jobAgentFinish(projectId: String, buildId: String, vmSeqId: String?) {
@@ -123,14 +123,14 @@ class JobQuotaBusinessService @Autowired constructor(
      * agent成功启动时更新
      */
     fun updateAgentStartTime(projectId: String, buildId: String, vmSeqId: String) {
-        runningJobsDao.updateAgentStartTime(dslContext, projectId, buildId, vmSeqId)
+//        runningJobsDao.updateAgentStartTime(dslContext, projectId, buildId, vmSeqId)
     }
 
     /**
      * agent结束时更新
      */
     fun updateRunningTime(projectId: String, buildId: String, vmSeqId: String) {
-        jobAgentFinish(projectId, buildId, vmSeqId)
+//        jobAgentFinish(projectId, buildId, vmSeqId)
     }
 
     /**
@@ -158,37 +158,38 @@ class JobQuotaBusinessService @Autowired constructor(
      * 获取项目当月所有JOB已运行的时间，返回已运行的时间
      */
     fun getProjectRunningJobTime(projectId: String, vmType: JobQuotaVmType): Long {
-        if (vmType == JobQuotaVmType.ALL) {
-            // 所有运行中的耗时
-            var runningTotalTime = 0L
-            JobQuotaVmType.values().filter { it != JobQuotaVmType.ALL }.forEach { type ->
-                val runningJobs = runningJobsDao.getProjectRunningJobs(dslContext, projectId, type)
-                runningJobs.filter { it?.agentStartTime != null }.forEach {
-                    val duration: Duration = Duration.between(it!!.agentStartTime, LocalDateTime.now())
-                    runningTotalTime += duration.toMillis()
-                }
-            }
-
-            // 所有已经结束的耗时
-            val finishRunJobTime = redisOperation.get(getProjectRunningTimeKey(projectId))
-            runningTotalTime += (finishRunJobTime ?: "0").toLong()
-
-            return runningTotalTime
-        } else {
-            // 运行中的耗时
-            val runningJobs = runningJobsDao.getProjectRunningJobs(dslContext, projectId, vmType)
-            var runningTotalTime = 0L
-            runningJobs.filter { it?.agentStartTime != null }.forEach {
-                val duration: Duration = Duration.between(it!!.agentStartTime, LocalDateTime.now())
-                runningTotalTime += duration.toMillis()
-            }
-
-            // 所有已经结束的耗时
-            val finishRunJobTime = redisOperation.get(getProjectVmTypeRunningTimeKey(projectId, vmType))
-            runningTotalTime += (finishRunJobTime ?: "0").toLong()
-
-            return runningTotalTime
-        }
+//        if (vmType == JobQuotaVmType.ALL) {
+//            // 所有运行中的耗时
+//            var runningTotalTime = 0L
+//            JobQuotaVmType.values().filter { it != JobQuotaVmType.ALL }.forEach { type ->
+//                val runningJobs = runningJobsDao.getProjectRunningJobs(dslContext, projectId, type)
+//                runningJobs.filter { it?.agentStartTime != null }.forEach {
+//                    val duration: Duration = Duration.between(it!!.agentStartTime, LocalDateTime.now())
+//                    runningTotalTime += duration.toMillis()
+//                }
+//            }
+//
+//            // 所有已经结束的耗时
+//            val finishRunJobTime = redisOperation.get(getProjectRunningTimeKey(projectId))
+//            runningTotalTime += (finishRunJobTime ?: "0").toLong()
+//
+//            return runningTotalTime
+//        } else {
+//            // 运行中的耗时
+//            val runningJobs = runningJobsDao.getProjectRunningJobs(dslContext, projectId, vmType)
+//            var runningTotalTime = 0L
+//            runningJobs.filter { it?.agentStartTime != null }.forEach {
+//                val duration: Duration = Duration.between(it!!.agentStartTime, LocalDateTime.now())
+//                runningTotalTime += duration.toMillis()
+//            }
+//
+//            // 所有已经结束的耗时
+//            val finishRunJobTime = redisOperation.get(getProjectVmTypeRunningTimeKey(projectId, vmType))
+//            runningTotalTime += (finishRunJobTime ?: "0").toLong()
+//
+//            return runningTotalTime
+//        }
+        return 0
     }
 
     fun getProjectRunningJobStatus(projectId: String, vmType: JobQuotaVmType): JobQuotaStatus {
@@ -571,53 +572,53 @@ class JobQuotaBusinessService @Autowired constructor(
      */
     @Scheduled(cron = "0 0 1 * * ?")
     fun clearTimeOutJobRecord() {
-        LOG.info("start to clear timeout job record")
-        val redisLock = RedisLock(redisOperation, TIMER_OUT_LOCK_KEY, 60L)
-        try {
-            val lockSuccess = redisLock.tryLock()
-            if (lockSuccess) {
-                LOG.info("<<< Clear Pipeline Quota Start >>>")
-                doClear()
-            } else {
-                LOG.info("<<< Clear Pipeline Quota Job Has Running, Do Not Start>>>")
-            }
-        } catch (e: Throwable) {
-            LOG.error("Clear pipeline quota exception:", e)
-        } finally {
-            redisLock.unlock()
-        }
+//        LOG.info("start to clear timeout job record")
+//        val redisLock = RedisLock(redisOperation, TIMER_OUT_LOCK_KEY, 60L)
+//        try {
+//            val lockSuccess = redisLock.tryLock()
+//            if (lockSuccess) {
+//                LOG.info("<<< Clear Pipeline Quota Start >>>")
+//                doClear()
+//            } else {
+//                LOG.info("<<< Clear Pipeline Quota Job Has Running, Do Not Start>>>")
+//            }
+//        } catch (e: Throwable) {
+//            LOG.error("Clear pipeline quota exception:", e)
+//        } finally {
+//            redisLock.unlock()
+//        }
     }
 
     fun restoreProjectJobTime(projectId: String?, vmType: JobQuotaVmType) {
-        if (projectId == null && vmType == JobQuotaVmType.ALL) {
-            doRestore() // restore all
-            return
-        }
-        if (projectId == null && vmType != JobQuotaVmType.ALL) { // restore all project with vmType
-            val projectSet = redisOperation.getSetMembers(QUOTA_PROJECT_ALL_KEY)
-            if (null != projectSet && projectSet.isNotEmpty()) {
-                projectSet.forEach { project ->
-                    restoreWithVmType(project, vmType)
-                }
-            }
-            return
-        }
-        if (projectId != null && vmType != JobQuotaVmType.ALL) { // restore project with vmType
-            restoreWithVmType(projectId, vmType)
-            return
-        }
+//        if (projectId == null && vmType == JobQuotaVmType.ALL) {
+//            doRestore() // restore all
+//            return
+//        }
+//        if (projectId == null && vmType != JobQuotaVmType.ALL) { // restore all project with vmType
+//            val projectSet = redisOperation.getSetMembers(QUOTA_PROJECT_ALL_KEY)
+//            if (null != projectSet && projectSet.isNotEmpty()) {
+//                projectSet.forEach { project ->
+//                    restoreWithVmType(project, vmType)
+//                }
+//            }
+//            return
+//        }
+//        if (projectId != null && vmType != JobQuotaVmType.ALL) { // restore project with vmType
+//            restoreWithVmType(projectId, vmType)
+//            return
+//        }
     }
 
     private fun restoreWithVmType(project: String, vmType: JobQuotaVmType) {
-        val time = redisOperation.get(getProjectVmTypeRunningTimeKey(project, vmType)) ?: "0"
-        val totalTime = redisOperation.get(getProjectRunningTimeKey(project)) ?: "0"
-        val reduiceTime = (totalTime.toLong() - time.toLong())
-        redisOperation.set(getProjectRunningTimeKey(project), if (reduiceTime < 0) {
-            "0"
-        } else {
-            reduiceTime.toString()
-        })
-        redisOperation.set(getProjectVmTypeRunningTimeKey(project, vmType), "0")
+//        val time = redisOperation.get(getProjectVmTypeRunningTimeKey(project, vmType)) ?: "0"
+//        val totalTime = redisOperation.get(getProjectRunningTimeKey(project)) ?: "0"
+//        val reduiceTime = (totalTime.toLong() - time.toLong())
+//        redisOperation.set(getProjectRunningTimeKey(project), if (reduiceTime < 0) {
+//            "0"
+//        } else {
+//            reduiceTime.toString()
+//        })
+//        redisOperation.set(getProjectVmTypeRunningTimeKey(project, vmType), "0")
     }
 
     /**
@@ -626,33 +627,33 @@ class JobQuotaBusinessService @Autowired constructor(
     @Scheduled(cron = "0 0 0 1 * ?")
     fun restoreTimeMonthly() {
         LOG.info("start to clear time monthly")
-        val redisLock = RedisLock(redisOperation, TIMER_RESTORE_LOCK_KEY, 60L)
-        try {
-            val lockSuccess = redisLock.tryLock()
-            if (lockSuccess) {
-                LOG.info("<<< Restore time monthly Start >>>")
-                doRestore()
-                jobQuotaProjectRunTimeDao.delete(dslContext)
-            } else {
-                LOG.info("<<< Restore time monthly Has Running, Do Not Start>>>")
-            }
-        } catch (e: Throwable) {
-            LOG.error("Restore time monthly exception:", e)
-        } finally {
-            redisLock.unlock()
-        }
+//        val redisLock = RedisLock(redisOperation, TIMER_RESTORE_LOCK_KEY, 60L)
+//        try {
+//            val lockSuccess = redisLock.tryLock()
+//            if (lockSuccess) {
+//                LOG.info("<<< Restore time monthly Start >>>")
+//                doRestore()
+//                jobQuotaProjectRunTimeDao.delete(dslContext)
+//            } else {
+//                LOG.info("<<< Restore time monthly Has Running, Do Not Start>>>")
+//            }
+//        } catch (e: Throwable) {
+//            LOG.error("Restore time monthly exception:", e)
+//        } finally {
+//            redisLock.unlock()
+//        }
     }
 
     private fun doRestore() {
-        val projectSet = redisOperation.getSetMembers(QUOTA_PROJECT_ALL_KEY)
-        if (null != projectSet && projectSet.isNotEmpty()) {
-            JobQuotaVmType.values().filter { it != JobQuotaVmType.ALL }.forEach { type ->
-                projectSet.forEach { project ->
-                    redisOperation.set(getProjectVmTypeRunningTimeKey(project, type), "0")
-                    redisOperation.set(getProjectRunningTimeKey(project), "0")
-                }
-            }
-        }
+//        val projectSet = redisOperation.getSetMembers(QUOTA_PROJECT_ALL_KEY)
+//        if (null != projectSet && projectSet.isNotEmpty()) {
+//            JobQuotaVmType.values().filter { it != JobQuotaVmType.ALL }.forEach { type ->
+//                projectSet.forEach { project ->
+//                    redisOperation.set(getProjectVmTypeRunningTimeKey(project, type), "0")
+//                    redisOperation.set(getProjectRunningTimeKey(project), "0")
+//                }
+//            }
+//        }
     }
 
     private fun doClear() {
@@ -719,34 +720,34 @@ class JobQuotaBusinessService @Autowired constructor(
 
     @Scheduled(cron = "0 0 2 * * ?")
     fun statistics() {
-        LOG.info("Count project run time into db.")
-        val projectSet = redisOperation.getSetMembers(QUOTA_PROJECT_ALL_KEY)
-        if (null != projectSet && projectSet.isNotEmpty()) {
-            val redisLock = RedisLock(redisOperation, TIMER_COUNT_TIME_LOCK_KEY, 600L)
-            try {
-                val lockSuccess = redisLock.tryLock()
-                if (lockSuccess) {
-                    LOG.info("<<< Count project run time into db start >>>")
-                    JobQuotaVmType.values().filter { it != JobQuotaVmType.ALL }.forEach { type ->
-                        projectSet.forEach { project ->
-                            jobQuotaProjectRunTimeDao.add(
-                                dslContext = dslContext,
-                                projectId = project,
-                                jobQuotaVmType = type,
-                                runTime = (redisOperation.get(getProjectVmTypeRunningTimeKey(project, type))
-                                    ?: "0").toLong()
-                            )
-                        }
-                    }
-                } else {
-                    LOG.info("<<< Count project run time into db Has Running, Do Not Start>>>")
-                }
-            } catch (e: Throwable) {
-                LOG.error("Count project run time into db exception:", e)
-            } finally {
-                redisLock.unlock()
-            }
-        }
+//        LOG.info("Count project run time into db.")
+//        val projectSet = redisOperation.getSetMembers(QUOTA_PROJECT_ALL_KEY)
+//        if (null != projectSet && projectSet.isNotEmpty()) {
+//            val redisLock = RedisLock(redisOperation, TIMER_COUNT_TIME_LOCK_KEY, 600L)
+//            try {
+//                val lockSuccess = redisLock.tryLock()
+//                if (lockSuccess) {
+//                    LOG.info("<<< Count project run time into db start >>>")
+//                    JobQuotaVmType.values().filter { it != JobQuotaVmType.ALL }.forEach { type ->
+//                        projectSet.forEach { project ->
+//                            jobQuotaProjectRunTimeDao.add(
+//                                dslContext = dslContext,
+//                                projectId = project,
+//                                jobQuotaVmType = type,
+//                                runTime = (redisOperation.get(getProjectVmTypeRunningTimeKey(project, type))
+//                                    ?: "0").toLong()
+//                            )
+//                        }
+//                    }
+//                } else {
+//                    LOG.info("<<< Count project run time into db Has Running, Do Not Start>>>")
+//                }
+//            } catch (e: Throwable) {
+//                LOG.error("Count project run time into db exception:", e)
+//            } finally {
+//                redisLock.unlock()
+//            }
+//        }
     }
 
     companion object {

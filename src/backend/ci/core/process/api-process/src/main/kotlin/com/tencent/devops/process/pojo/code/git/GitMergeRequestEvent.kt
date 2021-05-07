@@ -62,5 +62,5 @@ data class GitMRAttributes(
     val last_commit: GitCommit,
     val url: String,
     val action: String,
-    val extension_action: String
+    val extension_action: String?
 )

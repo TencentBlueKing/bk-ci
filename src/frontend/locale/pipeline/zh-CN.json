@@ -123,6 +123,8 @@
     "exportPipelineSuccess": "导出流水线成功",
     "sizeLimit": "最大上传{0}MB的文件",
     "fileUploadSuccess": "上传成功",
+    "empty": "暂无数据",
+    "link": "链接",
     "execDetail": {
         "log": "日志",
         "setting": "配置",
@@ -130,7 +132,9 @@
         "showTime": "显示时间戳",
         "hideTime": "隐藏时间戳",
         "downLoadLog": "下载日志",
-        "emptyLog": "日志内容为空"
+        "emptyLog": "日志内容为空",
+        "report": "报告",
+        "artifactory": "构件"
     },
     "timeMap": {
         "days": "天",
@@ -484,6 +488,7 @@
         "paramsInvalidMsg": "流水线执行参数出错"
     },
     "details": {
+        "pipelineVersionDiffTips": "流水线编排版本号已发生变化",
         "executeDetail": "执行详情",
         "partView": "查看构件",
         "codeRecords": "代码变更记录",
@@ -612,6 +617,8 @@
         "copyJobFail": "复制job失败",
         "copyStage": "复制stage",
         "copyStageFail": "复制stage失败",
+        "retryAllJobs": "重新运行Stage下所有Job",
+        "retryFailJobs": "重新运行Stage下所有失败Job",
         "stageManualTriggerUserNoEmptyTips": "请输入至少一名审核人",
         "triggerTooltips": "点击构建触发可配置推荐版本号、流水线变量",
         "userTime": "用户耗时",

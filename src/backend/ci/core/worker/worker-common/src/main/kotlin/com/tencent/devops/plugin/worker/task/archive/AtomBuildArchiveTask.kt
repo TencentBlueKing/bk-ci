@@ -40,6 +40,7 @@ import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.store.pojo.atom.AtomEnv
+import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
@@ -136,8 +137,12 @@ class AtomBuildArchiveTask : ITask() {
     }
 
     private fun atomEnv(projectId: String, atomCode: String, atomVersion: String): AtomEnv {
-        val atomEnvResult = atomApi.getAtomEnv(projectId, atomCode, atomVersion)
-
+        val atomEnvResult = atomApi.getAtomEnv(
+            projectCode = projectId,
+            atomCode = atomCode,
+            atomVersion = atomVersion,
+            atomStatus = AtomStatusEnum.BUILDING.status.toByte()
+        )
         return atomEnvResult.data ?: throw TaskExecuteException(
             errorMsg = "can not found any $atomCode env",
             errorType = ErrorType.USER,

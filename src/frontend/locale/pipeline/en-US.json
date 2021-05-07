@@ -123,6 +123,8 @@
     "exportPipelineSuccess": "Export Pipeline Success",
     "sizeLimit": "Maximum file size: {0}MB",
     "fileUploadSuccess": "Upload Sucessful",
+    "empty": "No data",
+    "link": "link",
     "execDetail": {
         "log": "Log",
         "setting": "Configuration",
@@ -130,7 +132,9 @@
         "showTime": "Show timestamp",
         "hideTime": "Hide timestamp",
         "downLoadLog": "Download log",
-        "emptyLog": "The log content is empty"
+        "emptyLog": "The log content is empty",
+        "report": "report",
+        "artifactory": "artifactory"
     },
     "timeMap": {
         "days": "days ",
@@ -482,6 +486,7 @@
         "paramsInvalidMsg": "Params Invalid"
     },
     "details": {
+        "pipelineVersionDiffTips": "The pipeline config version has changed",
         "executeDetail": "Build detail",
         "partView": "Artifacts",
         "codeRecords": "Commits",
@@ -610,6 +615,8 @@
         "copyJobFail": "Duplicate job failed",
         "copyStage": "Duplicate stage",
         "copyStageFail": "Duplicate stage failed",
+        "retryAllJobs": "Retry all jobs",
+        "retryFailJobs": "Retry failed jobs only",
         "stageManualTriggerUserNoEmptyTips": "Enter at least 1 stage owner",
         "triggerTooltips": " Click builds to trigger the configurable recommended version and pipeline variables",
         "userTime": "User time",
