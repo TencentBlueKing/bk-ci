@@ -52,7 +52,6 @@ import com.tencent.devops.common.api.util.VersionUtil
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_ICON
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_NO
-import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_USER_ID
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
@@ -165,9 +164,9 @@ class AppArtifactoryResourceImpl @Autowired constructor(
     ): Result<FileDetailForApp> {
         checkParameters(userId, projectId, path)
         val fileDetail = bkRepoService.show(userId, projectId, artifactoryType, path)
-        val pipelineId = fileDetail.meta[ARCHIVE_PROPS_PIPELINE_ID] ?: StringUtils.EMPTY
+        val pipelineId = fileDetail.meta["pipelineId"] ?: StringUtils.EMPTY
         if (!pipelineService.hasPermission(userId, projectId, pipelineId, AuthPermission.VIEW)) {
-            logger.error("no permission, user:$userId , project:$projectId , pipeline:$pipelineId")
+            logger.error("no permission , user:$userId , project:$projectId , pipeline:$pipelineId")
             throw ErrorCodeException(
                 statusCode = 403,
                 errorCode = CommonMessageCode.PERMISSION_DENIED,
