@@ -44,7 +44,7 @@ interface ModelCheckPlugin {
      */
     fun checkModelIntegrity(model: Model, projectId: String?)
 
-    fun checkJob(jobContainer: Container, projectId: String, pipelineId: String, userId: String)
+    fun checkJob(jobContainer: Container, projectId: String, pipelineId: String, userId: String, finallyStage: Boolean)
 
     /**
      * 清理Model--不删除里面的Element内的逻辑

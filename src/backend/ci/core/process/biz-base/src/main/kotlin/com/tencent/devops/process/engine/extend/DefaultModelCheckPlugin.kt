@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.extend
 
+import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
@@ -53,7 +54,6 @@ import org.slf4j.LoggerFactory
 
 open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelCheckPlugin {
 
-    @Suppress("ALL")
     override fun checkModelIntegrity(model: Model, projectId: String?) {
 
         // 检查流水线名称
@@ -78,38 +78,36 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
         val elementCnt = mutableMapOf<String, Int>()
         val containerCnt = mutableMapOf<String, Int>()
         val storeAtomList = mutableListOf<String>()
-        model.stages.forEach { s ->
+        val lastPosition = model.stages.size - 1
+        model.stages.forEachIndexed { nowPosition, s ->
             if (s.containers.isEmpty()) {
                 throw ErrorCodeException(
                     defaultMessage = "流水线Stage为空",
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
                 )
             }
+
+            if (s.finally) { // finallyStage只能存在于最后一个
+                if (nowPosition < lastPosition) {
+                    throw ErrorCodeException(
+                        defaultMessage = "流水线: 每个Model只能包含一个FinallyStage，并且处于最后位置",
+                        errorCode = ProcessMessageCode.ERROR_FINALLY_STAGE
+                    )
+                }
+            }
+
             if (s.stageControlOption?.manualTrigger == true && s.stageControlOption?.triggerUsers?.isEmpty() == true) {
                 throw ErrorCodeException(
                     defaultMessage = "手动触发的Stage没有未配置可执行人",
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_STAGE_NO_TRIGGER_USER
                 )
             }
-            s.containers.forEach { c ->
-                val cCnt = containerCnt.computeIfPresent(c.getClassType()) { _, oldValue -> oldValue + 1 }
-                    ?: containerCnt.computeIfAbsent(c.getClassType()) { 1 } // 第一次时出现1次
-                ContainerBizRegistrar.getPlugin(c)?.check(c, cCnt)
-                c.elements.forEach { e ->
-                    val eCnt = elementCnt.computeIfPresent(e.getAtomCode()) { _, oldValue -> oldValue + 1 }
-                        ?: elementCnt.computeIfAbsent(e.getAtomCode()) { 1 } // 第一次时出现1次
-                    ElementBizRegistrar.getPlugin(e)?.check(e, eCnt)
-                    if (isStoreAtom(e)) {
-                        storeAtomList.add(e.getAtomCode())
-                        checkoutAtomExist(e)
-                    }
-                }
-            }
-            DependOnUtils.checkRepeatedJobId(stage)
+            checkElements(s, containerCnt, elementCnt, storeAtomList)
+            DependOnUtils.checkRepeatedJobId(s)
         }
 
         if (storeAtomList.isNotEmpty() && !projectId.isNullOrEmpty()) {
-            val projectInstallCheck = AtomUtils.isProjectInstallAtom(storeAtomList, projectId!!, client)
+            val projectInstallCheck = AtomUtils.isProjectInstallAtom(storeAtomList, projectId, client)
             if (projectInstallCheck.isNotEmpty()) {
                 logger.warn("save model project not install atom  $projectId| ${model.name}| $storeAtomList")
                 val unInstallAtom = projectInstallCheck.joinToString(",")
@@ -118,6 +116,32 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
                     errorCode = ProcessMessageCode.MODEL_ATOMCODE_PROJECT_NOT_INSTALL,
                     params = arrayOf(unInstallAtom)
                 )
+            }
+        }
+    }
+
+    private fun checkElements(
+        stage: Stage,
+        containerCnt: MutableMap<String, Int>,
+        elementCnt: MutableMap<String, Int>,
+        storeAtomList: MutableList<String>
+    ) {
+        stage.containers.forEach { c ->
+            val cCnt = containerCnt.computeIfPresent(c.getClassType()) { _, oldValue -> oldValue + 1 }
+                ?: containerCnt.computeIfAbsent(c.getClassType()) { 1 } // 第一次时出现1次
+            ContainerBizRegistrar.getPlugin(c)?.check(c, cCnt)
+            Preconditions.checkTrue(c.elements.isNotEmpty(), ErrorCodeException(
+                defaultMessage = "流水线: Model信息不完整，Stage[{0}] Job[{1}]下没有插件",
+                errorCode = ProcessMessageCode.ERROR_EMPTY_JOB, params = arrayOf(stage.name!!, c.name)
+            ))
+            c.elements.forEach { e ->
+                val eCnt = elementCnt.computeIfPresent(e.getAtomCode()) { _, oldValue -> oldValue + 1 }
+                    ?: elementCnt.computeIfAbsent(e.getAtomCode()) { 1 } // 第一次时出现1次
+                ElementBizRegistrar.getPlugin(e)?.check(e, eCnt)
+                if (isStoreAtom(e)) {
+                    storeAtomList.add(e.getAtomCode())
+                    checkoutAtomExist(e)
+                }
             }
         }
     }
@@ -132,7 +156,7 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
 
     companion object {
         private val logger = LoggerFactory.getLogger(DefaultModelCheckPlugin::class.java)
-        @Suppress("ALL")
+
         private fun isThirdPartyAgentEmpty(vmBuildContainer: VMBuildContainer): Boolean {
             // Old logic
             if (vmBuildContainer.thirdPartyAgentId.isNullOrBlank() &&
@@ -225,7 +249,13 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
         }
     }
 
-    override fun checkJob(jobContainer: Container, projectId: String, pipelineId: String, userId: String) {
+    override fun checkJob(
+        jobContainer: Container,
+        projectId: String,
+        pipelineId: String,
+        userId: String,
+        finallyStage: Boolean
+    ) {
         if (jobContainer is VMBuildContainer && jobContainer.baseOS == VMBaseOS.WINDOWS) {
             if (isThirdPartyAgentEmpty(jobContainer)) {
                 throw ErrorCodeException(
@@ -235,14 +265,43 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
             }
         }
 
+        checkJobCondition(finallyStage = finallyStage, jobContainer = jobContainer)
+    }
+
+    private fun checkJobCondition(finallyStage: Boolean, jobContainer: Container) {
+
         val jobControlOption = when (jobContainer) {
             is VMBuildContainer -> jobContainer.jobControlOption
             is NormalContainer -> jobContainer.jobControlOption
             else -> null
         }
 
-        if (jobControlOption?.runCondition == JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN ||
-            jobControlOption?.runCondition == JobRunCondition.CUSTOM_VARIABLE_MATCH
+        if (jobControlOption?.runCondition == null) {
+            return
+        }
+
+        // 非finallyStage下不允许有finallyStageJobRunConditionSet下的条件
+        if (finallyStage) {
+            if (!finallyStageJobRunConditionSet.contains(jobControlOption.runCondition)) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_FINALLY_STAGE_JOB_CONDITION,
+                    defaultMessage = "流水线: [{0}]下的Job运行条件配置错误: {1}",
+                    params = arrayOf(jobContainer.name, jobControlOption.runCondition.name)
+                )
+            }
+            return
+        } else {
+            if (!normalStageJobRunConditionSet.contains(jobControlOption.runCondition)) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_NORMAL_STAGE_JOB_CONDITION,
+                    defaultMessage = "流水线: [{0}]下的Job运行条件配置错误: {1}",
+                    params = arrayOf(jobContainer.name, jobControlOption.runCondition.name)
+                )
+            }
+        }
+
+        if (jobControlOption.runCondition == JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN ||
+            jobControlOption.runCondition == JobRunCondition.CUSTOM_VARIABLE_MATCH
         ) {
             if (jobControlOption.customVariables == null ||
                 jobControlOption.customVariables!!.isEmpty()
@@ -254,4 +313,18 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
             }
         }
     }
+
+    private val finallyStageJobRunConditionSet = setOf(
+        JobRunCondition.PREVIOUS_STAGE_CANCEL,
+        JobRunCondition.PREVIOUS_STAGE_FAILED,
+        JobRunCondition.PREVIOUS_STAGE_SUCCESS,
+        JobRunCondition.STAGE_RUNNING
+    )
+
+    private val normalStageJobRunConditionSet = setOf(
+        JobRunCondition.CUSTOM_CONDITION_MATCH,
+        JobRunCondition.CUSTOM_VARIABLE_MATCH,
+        JobRunCondition.CUSTOM_VARIABLE_MATCH_NOT_RUN,
+        JobRunCondition.STAGE_RUNNING
+    )
 }
