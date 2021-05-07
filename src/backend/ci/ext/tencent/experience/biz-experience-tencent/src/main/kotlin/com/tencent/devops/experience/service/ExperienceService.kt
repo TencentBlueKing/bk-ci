@@ -58,11 +58,13 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.wechatwork.WechatWorkService
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.ExperienceMessageCode
+import com.tencent.devops.experience.constant.ExperienceOuterType
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.constant.ProductCategoryEnum
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceGroupDao
 import com.tencent.devops.experience.dao.ExperienceInnerDao
+import com.tencent.devops.experience.dao.ExperienceOuterDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.dao.GroupDao
 import com.tencent.devops.experience.pojo.Experience
@@ -103,6 +105,7 @@ class ExperienceService @Autowired constructor(
     private val experiencePublicDao: ExperiencePublicDao,
     private val experienceGroupDao: ExperienceGroupDao,
     private val experienceInnerDao: ExperienceInnerDao,
+    private val experienceOuterDao: ExperienceOuterDao,
     private val groupDao: GroupDao,
     private val groupService: GroupService,
     private val experienceDownloadService: ExperienceDownloadService,
@@ -370,6 +373,7 @@ class ExperienceService @Autowired constructor(
         val fileSize = fileDetail.size
         val scheme = propertyMap[ARCHIVE_PROPS_APP_SCHEME] ?: ""
         val appName = StringUtils.defaultIfBlank(experience.experienceName, propertyMap[ARCHIVE_PROPS_APP_NAME])
+        val outers = regex.split(experience.outerUsers)
 
         val experienceId = experienceDao.create(
             dslContext = dslContext,
@@ -385,7 +389,6 @@ class ExperienceService @Autowired constructor(
             endDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(experience.expireDate), ZoneId.systemDefault()),
             experienceGroups = "[]",
             innerUsers = "[]",
-            outerUsers = experience.outerUsers,
             notifyTypes = objectMapper.writeValueAsString(experience.notifyTypes),
             enableWechatGroup = experience.enableWechatGroups,
             wechatGroups = experience.wechatGroups ?: "",
@@ -408,6 +411,9 @@ class ExperienceService @Autowired constructor(
         }
         experience.innerUsers.forEach {
             experienceInnerDao.create(dslContext, experienceId, it)
+        }
+        outers.forEach {
+            experienceOuterDao.create(dslContext, experienceId, it, ExperienceOuterType.QQ)
         }
 
         // 公开体验表
@@ -474,7 +480,8 @@ class ExperienceService @Autowired constructor(
 
     fun edit(userId: String, projectId: String, experienceHashId: String, experience: ExperienceUpdate) {
         val experienceRecord = getExperienceId4Update(experienceHashId, userId, projectId)
-
+        val experienceId = getExperienceId4Update(experienceHashId, userId, projectId)
+        val outers = regex.split(experience.outerUsers)
         val isPublic = isPublicGroupAndCheck(experience.experienceGroups)
 
         experienceDao.update(
@@ -485,7 +492,6 @@ class ExperienceService @Autowired constructor(
             endDate = LocalDateTime.ofInstant(Instant.ofEpochSecond(experience.expireDate), ZoneId.systemDefault()),
             experienceGroups = "[]",
             innerUsers = "[]",
-            outerUsers = experience.outerUsers,
             notifyTypes = objectMapper.writeValueAsString(experience.notifyTypes),
             enableWechatGroup = experience.enableWechatGroups,
             wechatGroups = experience.wechatGroups ?: "",
@@ -510,6 +516,12 @@ class ExperienceService @Autowired constructor(
         experienceInnerDao.deleteByRecordId(dslContext, experienceRecord.id, experience.innerUsers)
         experience.innerUsers.forEach {
             experienceInnerDao.create(dslContext, experienceRecord.id, it)
+        }
+
+        // 更新外部人员
+        experienceOuterDao.deleteByRecordId(dslContext, experienceId, outers.toList())
+        outers.forEach {
+            experienceOuterDao.create(dslContext, experienceId, it, ExperienceOuterType.QQ)
         }
 
         if (isPublic) {

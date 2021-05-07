@@ -41,7 +41,9 @@ import com.tencent.devops.common.auth.code.ExperienceAuthServiceCode
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.ExperienceMessageCode
+import com.tencent.devops.experience.constant.ExperienceOuterType
 import com.tencent.devops.experience.dao.ExperienceGroupInnerDao
+import com.tencent.devops.experience.dao.ExperienceGroupOuterDao
 import com.tencent.devops.experience.dao.GroupDao
 import com.tencent.devops.experience.pojo.Group
 import com.tencent.devops.experience.pojo.GroupCreate
@@ -67,6 +69,7 @@ class GroupService @Autowired constructor(
     private val bsAuthProjectApi: AuthProjectApi,
     private val experienceServiceCode: ExperienceAuthServiceCode,
     private val experienceGroupInnerDao: ExperienceGroupInnerDao,
+    private val experienceGroupOuterDao: ExperienceGroupOuterDao,
     private val experienceBaseService: ExperienceBaseService
 ) {
 
@@ -168,8 +171,7 @@ class GroupService @Autowired constructor(
             )
         }
 
-        val outerUsers = regex.split(group.outerUsers)
-        val outerUsersCount = outerUsers.filter { it.isNotBlank() && it.isNotEmpty() }.size
+        val outer = regex.split(group.outerUsers)
         val innerUsersCount = group.innerUsers.size
 
         val groupId = groupDao.create(
@@ -178,15 +180,17 @@ class GroupService @Autowired constructor(
             name = group.name,
             innerUsers = "[]",
             innerUsersCount = innerUsersCount,
-            outerUsers = group.outerUsers,
-            outerUsersCount = outerUsersCount,
             remark = group.remark,
             creator = userId,
             updator = userId
         )
 
-        for (innerUser in group.innerUsers) {
-            experienceGroupInnerDao.create(dslContext, groupId, innerUser)
+        // 增加权限
+        group.innerUsers.forEach {
+            experienceGroupInnerDao.create(dslContext, groupId, it)
+        }
+        outer.forEach {
+            experienceGroupOuterDao.create(dslContext, groupId, it, ExperienceOuterType.QQ)
         }
 
         createResource(userId = userId, projectId = projectId, groupId = groupId, groupName = group.name)
@@ -247,14 +251,8 @@ class GroupService @Autowired constructor(
             )
         }
 
-        val outerUsers = regex.split(group.outerUsers)
-        val outerUsersCount = outerUsers.filter { it.isNotBlank() && it.isNotEmpty() }.size
+        val outer = regex.split(group.outerUsers)
         val innerUsersCount = group.innerUsers.size
-
-        experienceGroupInnerDao.deleteByGroupId(dslContext, groupId)
-        for (innerUser in group.innerUsers) {
-            experienceGroupInnerDao.create(dslContext, groupId, innerUser)
-        }
 
         groupDao.update(
             dslContext = dslContext,
@@ -262,11 +260,20 @@ class GroupService @Autowired constructor(
             name = group.name,
             innerUsers = "[]",
             innerUsersCount = innerUsersCount,
-            outerUsers = group.outerUsers,
-            outerUsersCount = outerUsersCount,
             remark = group.remark,
             updator = userId
         )
+
+        // 更新权限
+        experienceGroupInnerDao.deleteByGroupId(dslContext, groupId)
+        group.innerUsers.forEach {
+            experienceGroupInnerDao.create(dslContext, groupId, it)
+        }
+        experienceGroupOuterDao.deleteByGroupId(dslContext, groupId)
+        outer.forEach {
+            experienceGroupOuterDao.create(dslContext, groupId, it, ExperienceOuterType.QQ)
+        }
+
         modifyResource(projectId = projectId, groupId = groupId, groupName = group.name)
     }
 
