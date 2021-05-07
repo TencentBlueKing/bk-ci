@@ -151,6 +151,7 @@ class AuthDeptServiceImpl @Autowired constructor(
                 throw RemoteServiceException("get dept fail, response: ($it)")
             }
             val responseStr = it.body()!!.string()
+            logger.info("getDeptInfo response: $responseStr")
             val responseDTO = JsonUtil.fromJson(responseStr, ResponseDTO::class.java)
             if (responseDTO.code != 0L || responseDTO.result == false) {
                 // 请求错误
