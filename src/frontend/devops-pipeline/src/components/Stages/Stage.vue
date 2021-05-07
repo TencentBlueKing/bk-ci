@@ -13,14 +13,11 @@
             <span @click.stop v-if="showCheckedToatal" class="check-total-stage">
                 <bk-checkbox class="atom-canskip-checkbox" v-model="stage.runStage" :disabled="stageDisabled"></bk-checkbox>
             </span>
-            <!-- <span class="stage-single-retry" v-if="canStageRetry" @click.stop="singleRetry(stage.id)">{{ $t('retry') }}</span> -->
             <span v-if="canStageRetry" @click.stop="() => showRetryStageDialog = true" class="stage-single-retry">
                 {{ $t('retry') }}
             </span>
             <span class="stage-entry-btns">
                 <span :title="$t('editPage.copyStage')" v-if="!stage.isError && showCopyStage" class="bk-icon copy-stage" @click.stop="copyStage">
-                    <!-- <span v-if="showCopyStage" class="stage-entry-btns">
-                        <span :title="$t('editPage.copyStage')" v-if="!stage.isError" class="bk-icon copy-stage" @click.stop="copyStage"> -->
                     <Logo name="copy" size="16"></Logo>
                 </span>
                 <i @click.stop="deleteStageHandler" class="add-plus-icon close" />
@@ -49,15 +46,13 @@
                 <i :class="{ [iconCls]: true, 'active': isAddMenuShow }" />
                 <template v-if="isAddMenuShow">
                     <cruve-line class="add-connector connect-line left" :width="60" :height="cruveHeight"></cruve-line>
-                    <span class="insert-tip insert-stage direction line-add">
-                        <div @click.stop="appendStage(false)">
-                            <i class="tip-icon" />
+                    <span class="insert-stage direction">
+                        <div class="click-item" @click.stop="appendStage(false)">
                             <span>
                                 {{ $t('editPage.insertStage') }}
                             </span>
                         </div>
-                        <div :class="{ 'disabled-item': hasFinallyStage }" @click.stop="appendStage(true)">
-                            <i class="tip-icon" />
+                        <div :class="{ 'disabled-item': hasFinallyStage, 'click-item': true }" @click.stop="appendStage(true)">
                             <span>
                                 {{ $t('editPage.insertFinallyStage') }}
                             </span>
@@ -74,15 +69,13 @@
             <span v-bk-clickoutside="toggleLastMenu" v-if="isLastStage && !isFinallyStage && editable" @click="toggleLastMenu(!lastAddMenuShow)" class="append-stage pointer">
                 <i class="add-plus-icon" />
                 <template v-if="lastAddMenuShow">
-                    <span class="insert-tip insert-stage direction line-add">
-                        <div @click.stop="appendStage(false, true)">
-                            <i class="tip-icon" />
+                    <span class="insert-stage direction">
+                        <div class="click-item" @click.stop="appendStage(false, true)">
                             <span>
                                 {{ $t('editPage.insertStage') }}
                             </span>
                         </div>
-                        <div :class="{ 'disabled-item': hasFinallyStage }" @click.stop="appendStage(true)">
-                            <i class="tip-icon" />
+                        <div :class="{ 'click-item': true, 'disabled-item': hasFinallyStage }" @click.stop="appendStage(true)">
                             <span>
                                 {{ $t('editPage.insertFinallyStage') }}
                             </span>
@@ -174,7 +167,7 @@
                 }
             },
             canStageRetry () {
-                return this.stage.status === 'FAILED' || this.stage.status === 'CANCELED'
+                return this.stage.canRetry === true
             },
             showCopyStage () {
                 return !this.isTriggerStage && !this.isFinallyStage && this.editable
@@ -729,40 +722,27 @@
         }
 
         .insert-stage {
+            position: absolute;
             display: block;
-            max-width: 150px;
-            width: 140px;
-            height: 46px;
-            border-radius: 10px;
-            .tip-icon {
-                display: inline-block;
-            }
-            div {
-                margin: 4px;
-            }
-            &:hover {
-                border-color: $primaryColor;
-                color: $primaryColor;
-                background-color: white;
-                &.direction:after {
-                    background-color: white;
-                    border-right-color: $borderColor;
-                    border-bottom-color: $borderColor;
-                }
-                // div {
-                //     background-color: #c4cdd6;
-                // }
-                .tip-icon {
-                    @include add-plus-icon($primaryColor, $primaryColor, white, 8px, false);
-                    display: inline-block;
+            width: 160px;
+            background-color: #ffffff;
+            border: 1px solid #dcdee5;
+            .click-item {
+                padding: 0 15px;
+                font-size: 12px;
+                line-height: 32px;
+                
+                &:hover, :hover {
+                    color: #3c96ff;
+                    background-color: #eaf3ff;
                 }
             }
             .disabled-item {
                 cursor: not-allowed;
                 color: #c4cdd6;
-                .tip-icon {
-                    @include add-plus-icon( #c4cdd6,  #c4cdd6,  #c4cdd6, 8px, false);
-                    display: inline-block;
+                &:hover, :hover {
+                    color: #c4cdd6;
+                    background-color: #ffffff;
                 }
             }
         }
