@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.engine.atom
 
-import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.KEY_CODE_EDITOR
 import com.tencent.devops.common.api.constant.KEY_DEFAULT
@@ -48,23 +47,13 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.pojo.config.TaskCommonSettingConfig
-import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
-import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.StoreVersion
-import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.Response
 
 object AtomUtils {
-
-    private const val cacheSize = 10000L
-    private const val cacheHours = 24L
-    private val atomCache = CacheBuilder.newBuilder()
-        .maximumSize(cacheSize)
-        .expireAfterWrite(cacheHours, TimeUnit.HOURS)
-        .build<String, String>()
 
     /**
      * 解析出Container中的市场插件，如果市场插件相应版本找不到就抛出异常
