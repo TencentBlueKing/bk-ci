@@ -36,6 +36,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.config.JobCommonSettingConfig
@@ -145,30 +146,15 @@ class PipelineSettingFacadeService @Autowired constructor(
 
     fun getCommonSetting(userId: String): PipelineCommonSetting {
         val inputComponentCommonSettings = mutableListOf<TaskComponentCommonSetting>()
-        inputComponentCommonSettings.add(
-            TaskComponentCommonSetting(
-                componentType = KEY_INPUT,
-                maxSize = taskCommonSettingConfig.maxInputComponentSize
+        val inputTypeConfigMap = AtomUtils.getInputTypeConfigMap(taskCommonSettingConfig)
+        inputTypeConfigMap.forEach { (componentType, maxSize) ->
+            inputComponentCommonSettings.add(
+                TaskComponentCommonSetting(
+                    componentType = componentType,
+                    maxSize = maxSize
+                )
             )
-        )
-        inputComponentCommonSettings.add(
-            TaskComponentCommonSetting(
-                componentType = KEY_TEXTAREA,
-                maxSize = taskCommonSettingConfig.maxTextareaComponentSize
-            )
-        )
-        inputComponentCommonSettings.add(
-            TaskComponentCommonSetting(
-                componentType = KEY_CODE_EDITOR,
-                maxSize = taskCommonSettingConfig.maxCodeEditorComponentSize
-            )
-        )
-        inputComponentCommonSettings.add(
-            TaskComponentCommonSetting(
-                componentType = KEY_DEFAULT,
-                maxSize = taskCommonSettingConfig.maxDefaultInputComponentSize
-            )
-        )
+        }
         val outputComponentCommonSettings = listOf(
             TaskComponentCommonSetting(
                 componentType = KEY_DEFAULT,
@@ -184,7 +170,7 @@ class PipelineSettingFacadeService @Autowired constructor(
         return PipelineCommonSetting(
             maxStageNum = pipelineCommonSettingConfig.maxStageNum,
             stageCommonSetting = StageCommonSetting(
-                maxJobNum = stageCommonSettingConfig.maxStageNum,
+                maxJobNum = stageCommonSettingConfig.maxJobNum,
                 jobCommonSetting = JobCommonSetting(
                     maxTaskNum = jobCommonSettingConfig.maxTaskNum,
                     taskCommonSetting = taskCommonSetting

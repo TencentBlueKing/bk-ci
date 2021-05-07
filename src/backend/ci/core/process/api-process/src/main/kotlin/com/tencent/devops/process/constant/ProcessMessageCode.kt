@@ -108,7 +108,9 @@ object ProcessMessageCode {
     const val MODEL_DEFAULT_ATOMCODE_NOT_EXSIT = "2101061" // Model内包含不存在的内置插件
     const val ERROR_ATOM_RUN_BUILD_ENV_INVALID = "2101062" // 流水线: 插件[{0}]不能在该环境下运行
     const val ERROR_TEMPLATE_PIPELINE_IS_INSTANCING = "2101063" // 流水线: 模板下的流水线实例{0}正在更新中，请稍后再试
-    const val ERROR_PIPELINE_MODEL_COMPONENT_NUM_TOO_LARGE = "2101064" // 流水线: 流水线下{0}数量太多，系统规定的数量最大为：{1}
+    const val ERROR_PIPELINE_MODEL_TOO_LARGE = "2101064" // 流水线: 流水线模型太大，模型最大不能超过[{2}]个字符
+    const val ERROR_PIPELINE_MODEL_COMPONENT_NUM_TOO_LARGE = "2101065" // 流水线: 流水线下{0}数量太多，系统规定的数量最大为：{1}
+    const val ERROR_ATOM_PARAM_VALUE_TOO_LARGE = "2101066" // 流水线: 插件[{0}]的参数[{1}]值太大，该参数不能超过[{2}]个字符
 
     const val ERROR_PIPELINE_NOT_EXISTS = "2101038" // 流水线不存在
     const val ERROR_PIPELINE_MODEL_NOT_EXISTS = "2101039" // 流水线的模型不存在

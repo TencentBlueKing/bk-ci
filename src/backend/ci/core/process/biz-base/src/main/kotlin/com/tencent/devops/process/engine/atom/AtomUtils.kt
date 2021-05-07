@@ -28,6 +28,12 @@
 package com.tencent.devops.process.engine.atom
 
 import com.google.common.cache.CacheBuilder
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.KEY_CODE_EDITOR
+import com.tencent.devops.common.api.constant.KEY_DEFAULT
+import com.tencent.devops.common.api.constant.KEY_INPUT
+import com.tencent.devops.common.api.constant.KEY_TEXTAREA
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -41,12 +47,15 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.pojo.config.TaskCommonSettingConfig
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
+import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.StoreVersion
 import java.util.concurrent.TimeUnit
+import javax.ws.rs.core.Response
 
 object AtomUtils {
 
@@ -166,29 +175,70 @@ object AtomUtils {
     private fun isHisAtomElement(element: Element) =
         element !is MarketBuildAtomElement && element !is MarketBuildLessAtomElement
 
-    fun isAtomExist(atomCode: String, client: Client): Boolean {
-        return if (atomCache.getIfPresent(atomCode) != null) {
-            true
-        } else {
-            val result = client.get(ServiceMarketAtomResource::class).getAtomByCode(atomCode = atomCode, username = "")
-            if (result.data != null && result.isOk()) {
-                atomCache.put(atomCode, result.data!!.name)
-                true
-            } else {
-                false
-            }
-        }
+    fun getInputTypeConfigMap(taskCommonSettingConfig: TaskCommonSettingConfig): Map<String, Int> {
+        return mapOf(
+            KEY_INPUT to taskCommonSettingConfig.maxInputComponentSize,
+            KEY_TEXTAREA to taskCommonSettingConfig.maxTextareaComponentSize,
+            KEY_CODE_EDITOR to taskCommonSettingConfig.maxCodeEditorComponentSize,
+            KEY_DEFAULT to taskCommonSettingConfig.maxDefaultInputComponentSize
+        )
     }
 
-    fun isProjectInstallAtom(atomCodes: List<String>, projectCode: String, client: Client): List<String> {
-        val atomInfos = client.get(ServiceAtomResource::class).getInstalledAtoms(projectCode).data
-            ?: return atomCodes
-        val projectInstallAtoms = atomInfos.map { it.atomCode }
-        val unInstallAtom = atomCodes.filter { !projectInstallAtoms.contains(it) }
-        return if (unInstallAtom.isNotEmpty()) {
-            client.get(ServiceAtomResource::class).findUnDefaultAtomName(unInstallAtom).data ?: emptyList()
-        } else {
-            emptyList()
+    fun checkModelAtoms(
+        projectCode: String,
+        atomVersions: Set<StoreVersion>,
+        atomInputParamMap: Map<String, Any>?,
+        inputTypeConfigMap: Map<String, Int>,
+        client: Client
+    ): Boolean {
+        if (atomVersions.isEmpty()) {
+            return true
+        }
+        // 批量获取插件运行时信息
+        val atomRunInfoResult = try {
+            client.get(ServiceMarketAtomEnvResource::class).batchGetAtomRunInfos(projectCode, atomVersions)
+        } catch (ignored: Exception) {
+            throw ErrorCodeException(
+                statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                errorCode = CommonMessageCode.SYSTEM_ERROR
+            )
+        }
+        val atomRunInfoMap = atomRunInfoResult.data
+        atomVersions.forEach { atomVersion ->
+            val atomCode = atomVersion.storeCode
+            val version = atomVersion.version
+            val atomName = atomVersion.storeName
+            val atomRunInfo = atomRunInfoMap?.get("$atomCode:$version")
+                ?: throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID,
+                    params = arrayOf(atomName)
+                )
+            validateAtomParam(atomInputParamMap, atomRunInfo, inputTypeConfigMap, atomName)
+        }
+        return true
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun validateAtomParam(
+        atomInputParamMap: Map<String, Any>?,
+        atomRunInfo: AtomRunInfo,
+        inputTypeConfigMap: Map<String, Int>,
+        atomName: String
+    ) {
+        val atomCode = atomRunInfo.atomCode
+        val atomParamDataMap = atomInputParamMap?.get(atomCode) as? Map<String, Any>
+        if (atomParamDataMap?.isNotEmpty() == true) {
+            val inputTypeInfos = atomRunInfo.inputTypeInfos
+            atomParamDataMap.forEach { (paramName, paramValue) ->
+                val inputType = inputTypeInfos?.get(paramName)
+                val maxInputTypeSize = inputTypeConfigMap[inputType] ?: inputTypeConfigMap[KEY_DEFAULT]
+                if (paramValue.toString().length > maxInputTypeSize!!) {
+                    throw ErrorCodeException(
+                        errorCode = ProcessMessageCode.ERROR_ATOM_PARAM_VALUE_TOO_LARGE,
+                        params = arrayOf(atomName, paramName, maxInputTypeSize.toString())
+                    )
+                }
+            }
         }
     }
 }
