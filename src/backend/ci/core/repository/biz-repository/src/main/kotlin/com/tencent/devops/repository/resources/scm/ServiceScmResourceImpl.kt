@@ -32,9 +32,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.scm.ServiceScmResource
-import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.scm.enums.CodeSvnRegion
+import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
@@ -85,7 +85,8 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: IScm
         token: String?,
         region: CodeSvnRegion?,
         userName: String?,
-        search: String?
+        search: String?,
+        full: Boolean?
     ): Result<List<String>> {
         logger.info("listBranches|(projectName=$projectName, url=$url, type=$type, region=$region, username=$userName)")
         return Result(
@@ -98,7 +99,8 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: IScm
                 token = token,
                 region = region,
                 userName = userName,
-                search = search
+                search = search,
+                full = full ?: true
             )
         )
     }
@@ -109,7 +111,8 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: IScm
         type: ScmType,
         token: String,
         userName: String,
-        search: String?
+        search: String?,
+        full: Boolean?
     ): Result<List<String>> {
         logger.info("listTags|projectName=$projectName, url=$url, type=$type, username=$userName")
         return Result(
@@ -119,7 +122,8 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: IScm
                 type = type,
                 token = token,
                 userName = userName,
-                search = search
+                search = search,
+                full = full ?: true
             )
         )
     }

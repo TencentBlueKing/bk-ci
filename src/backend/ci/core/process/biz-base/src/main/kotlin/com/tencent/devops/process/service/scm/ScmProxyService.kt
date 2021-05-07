@@ -221,7 +221,8 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
     fun listBranches(
         projectId: String,
         repositoryConfig: RepositoryConfig,
-        search: String? = null
+        search: String? = null,
+        full: Boolean = true
     ): Result<List<String>> {
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig)
@@ -237,7 +238,8 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                     token = null,
                     region = repo.region,
                     userName = credInfo.username,
-                    search = search
+                    search = search,
+                    full = full
                 )
             }
             is CodeGitRepository -> {
@@ -253,7 +255,8 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                         token = credInfo.first,
                         region = null,
                         userName = repo.userName,
-                        search = search
+                        search = search,
+                        full = full
                     )
                 } else {
                     val credInfo = getCredential(projectId, repo)
@@ -266,7 +269,8 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                         token = credInfo.privateKey,
                         region = null,
                         userName = credInfo.username,
-                        search = search
+                        search = search,
+                        full = full
                     )
                 }
             }
@@ -281,7 +285,8 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                     token = credInfo.privateKey,
                     region = null,
                     userName = credInfo.username,
-                    search = search
+                    search = search,
+                    full = full
                 )
             }
             else -> {
@@ -293,7 +298,8 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
     fun listTags(
         projectId: String,
         repositoryConfig: RepositoryConfig,
-        search: String? = null
+        search: String? = null,
+        full: Boolean = true
     ): Result<List<String>> {
         checkRepoID(repositoryConfig)
         val repo = getRepo(projectId, repositoryConfig)
@@ -314,7 +320,8 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                         type = ScmType.CODE_GIT,
                         token = credInfo.first,
                         userName = repo.userName,
-                        search = search
+                        search = search,
+                        full = full
                     )
                 } else {
                     val credInfo = getCredential(projectId, repo)
@@ -324,7 +331,8 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                         type = ScmType.CODE_GIT,
                         token = credInfo.privateKey,
                         userName = credInfo.username,
-                        search = search
+                        search = search,
+                        full = full
                     )
                 }
             }
@@ -336,7 +344,8 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
                     type = ScmType.CODE_GITLAB,
                     token = credInfo.privateKey,
                     userName = credInfo.username,
-                    search = search
+                    search = search,
+                    full = full
                 )
             }
             else -> {

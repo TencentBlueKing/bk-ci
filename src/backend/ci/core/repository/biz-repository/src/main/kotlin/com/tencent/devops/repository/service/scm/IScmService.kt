@@ -61,7 +61,8 @@ interface IScmService {
         token: String?,
         region: CodeSvnRegion?,
         userName: String?,
-        search: String? = null
+        search: String? = null,
+        full: Boolean = true
     ): List<String>
 
     fun deleteBranch(
@@ -82,7 +83,8 @@ interface IScmService {
         type: ScmType,
         token: String,
         userName: String,
-        search: String? = null
+        search: String? = null,
+        full: Boolean = true
     ): List<String>
 
     fun checkPrivateKeyAndToken(
