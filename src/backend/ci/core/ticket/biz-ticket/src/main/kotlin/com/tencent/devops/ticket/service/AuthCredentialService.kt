@@ -30,6 +30,7 @@ package com.tencent.devops.ticket.service
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
+import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
@@ -39,10 +40,12 @@ import org.springframework.stereotype.Service
 
 @Service
 class AuthCredentialService @Autowired constructor(
-    private val credentialService: CredentialService
+    private val credentialService: CredentialService,
+    private val authTokenApi: AuthTokenApi
 ) {
 
-    fun getCredential(projectId: String, offset: Int, limit: Int): ListInstanceResponseDTO? {
+    fun getCredential(projectId: String, offset: Int, limit: Int, token: String): ListInstanceResponseDTO? {
+        authTokenApi.checkToken(token)
         val credentialInfos = credentialService.serviceList(projectId, offset, limit)
         val result = ListInstanceInfo()
         if (credentialInfos?.records == null) {
@@ -60,7 +63,8 @@ class AuthCredentialService @Autowired constructor(
         return result.buildListInstanceResult(entityInfo, credentialInfos.count)
     }
 
-    fun getCredentialInfo(ids: List<Any>?): FetchInstanceInfoResponseDTO? {
+    fun getCredentialInfo(ids: List<Any>?, token: String): FetchInstanceInfoResponseDTO? {
+        authTokenApi.checkToken(token)
         val credentialInfos = credentialService.getCredentialByIds(null, ids!!.toSet() as Set<String>)
         val result = FetchInstanceInfo()
         if (credentialInfos == null || credentialInfos.isEmpty()) {
@@ -78,12 +82,19 @@ class AuthCredentialService @Autowired constructor(
         return result.buildFetchInstanceResult(entityInfo)
     }
 
-    fun searchCredential(projectId: String, keyword: String, limit: Int, offset: Int): SearchInstanceInfo {
+    fun searchCredential(
+        projectId: String,
+        keyword: String,
+        limit: Int,
+        offset: Int,
+        token: String
+    ): SearchInstanceInfo {
+        authTokenApi.checkToken(token)
         val credentialInfos = credentialService.searchByCredentialId(
-                                projectId = projectId,
-                                offset = offset,
-                                limit = limit,
-                                credentialId = keyword)
+            projectId = projectId,
+            offset = offset,
+            limit = limit,
+            credentialId = keyword)
         val result = SearchInstanceInfo()
         if (credentialInfos?.records == null) {
             logger.info("$projectId 项目下无证书")

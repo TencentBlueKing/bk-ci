@@ -118,7 +118,7 @@ class MQPipelineCreateListener @Autowired constructor(
             is CodeGitlabWebHookTriggerElement -> Triple(
                 RepositoryConfigUtils.buildConfig(e),
                 ScmType.CODE_GITLAB,
-                null
+                e.eventType
             )
             is CodeSVNWebHookTriggerElement -> Triple(RepositoryConfigUtils.buildConfig(e), ScmType.CODE_SVN, null)
             is CodeGithubWebHookTriggerElement -> Triple(RepositoryConfigUtils.buildConfig(e), ScmType.GITHUB, null)
@@ -133,7 +133,7 @@ class MQPipelineCreateListener @Autowired constructor(
                 ) {
                     RepositoryConfigUtils.replaceCodeProp(
                         repositoryConfig = RepositoryConfigUtils.buildConfig(e),
-                        variables = event.variables as Map<String, String>
+                        variables = event.variables!!.map { it.key to it.value.toString() }.toMap()
                     )
                 } else {
                     RepositoryConfigUtils.buildConfig(e)
@@ -186,7 +186,9 @@ class MQPipelineCreateListener @Autowired constructor(
                             repoHashId = repositoryConfig.repositoryHashId,
                             repoName = repositoryConfig.repositoryName,
                             taskId = e.id
-                        ), codeEventType = eventType, variables = event.variables as Map<String, String>,
+                        ),
+                        codeEventType = eventType,
+                        variables = event.variables!!.map { it.key to it.value.toString() }.toMap(),
                         // TODO 此处需做成传入参数
                         createPipelineFlag = true
                     )

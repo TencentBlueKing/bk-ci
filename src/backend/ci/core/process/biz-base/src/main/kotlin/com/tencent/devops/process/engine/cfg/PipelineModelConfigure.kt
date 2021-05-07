@@ -30,6 +30,10 @@ package com.tencent.devops.process.engine.cfg
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.extend.ModelCheckPlugin
 import com.tencent.devops.process.engine.extend.DefaultModelCheckPlugin
+import com.tencent.devops.process.pojo.config.JobCommonSettingConfig
+import com.tencent.devops.process.pojo.config.PipelineCommonSettingConfig
+import com.tencent.devops.process.pojo.config.StageCommonSettingConfig
+import com.tencent.devops.process.pojo.config.TaskCommonSettingConfig
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -45,7 +49,19 @@ class PipelineModelConfigure {
 
     @Bean
     @ConditionalOnMissingBean(ModelCheckPlugin::class)
-    fun modelCheckPlugin(@Autowired client: Client) = DefaultModelCheckPlugin(client)
+    fun modelCheckPlugin(
+        @Autowired client: Client,
+        @Autowired pipelineCommonSettingConfig: PipelineCommonSettingConfig,
+        @Autowired stageCommonSettingConfig: StageCommonSettingConfig,
+        @Autowired jobCommonSettingConfig: JobCommonSettingConfig,
+        @Autowired taskCommonSettingConfig: TaskCommonSettingConfig
+    ) = DefaultModelCheckPlugin(
+        client = client,
+        pipelineCommonSettingConfig = pipelineCommonSettingConfig,
+        stageCommonSettingConfig = stageCommonSettingConfig,
+        jobCommonSettingConfig = jobCommonSettingConfig,
+        taskCommonSettingConfig = taskCommonSettingConfig
+    )
 
     @Bean
     fun pipelineIdGenerator() = PipelineIdGenerator()

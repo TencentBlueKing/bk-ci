@@ -35,6 +35,9 @@ import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.repository.service.scm.IScmOauthService
 import com.tencent.devops.scm.enums.CodeSvnRegion
+import com.tencent.devops.scm.pojo.GitMrChangeInfo
+import com.tencent.devops.scm.pojo.GitMrInfo
+import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import org.slf4j.LoggerFactory
@@ -174,6 +177,60 @@ class ServiceScmOauthResourceImpl @Autowired constructor(private val scmOauthSer
         logger.info("Start to add the commit check of request(${JsonUtil.skipLogFields(request)})")
         scmOauthService.addCommitCheck(request)
         return Result(true)
+    }
+
+    override fun getMergeRequestChangeInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        mrId: Long
+    ): Result<GitMrChangeInfo?> {
+        return Result(
+            scmOauthService.getMergeRequestChangeInfo(
+                projectName = projectName,
+                url = url,
+                type = type,
+                token = token,
+                mrId = mrId
+            )
+        )
+    }
+
+    override fun getMrInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        mrId: Long
+    ): Result<GitMrInfo?> {
+        return Result(
+            scmOauthService.getMrInfo(
+                projectName = projectName,
+                url = url,
+                type = type,
+                token = token,
+                mrId = mrId
+            )
+        )
+    }
+
+    override fun getMrReviewInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        mrId: Long
+    ): Result<GitMrReviewInfo?> {
+        return Result(
+            scmOauthService.getMrReviewInfo(
+                projectName = projectName,
+                url = url,
+                type = type,
+                token = token,
+                mrId = mrId
+            )
+        )
     }
 
     companion object {

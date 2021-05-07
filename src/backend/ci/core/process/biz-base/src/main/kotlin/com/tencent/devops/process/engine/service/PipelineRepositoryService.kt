@@ -339,11 +339,13 @@ class PipelineRepositoryService constructor(
                     ), eventType)
                 }
                 is CodeGitlabWebHookTriggerElement -> {
-                    Pair(RepositoryConfig(
-                        repositoryHashId = e.repositoryHashId,
-                        repositoryName = e.repositoryName,
-                        repositoryType = e.repositoryType ?: RepositoryType.ID
-                    ), CodeEventType.PUSH)
+                    Pair(
+                        RepositoryConfig(
+                            repositoryHashId = e.repositoryHashId,
+                            repositoryName = e.repositoryName,
+                            repositoryType = e.repositoryType ?: RepositoryType.ID
+                        ), e.eventType ?: CodeEventType.PUSH
+                    )
                 }
                 is CodeGithubWebHookTriggerElement -> {
                     Pair(RepositoryConfig(

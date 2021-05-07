@@ -30,6 +30,7 @@ package com.tencent.devops.repository.service
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
+import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
@@ -39,10 +40,12 @@ import org.springframework.stereotype.Service
 
 @Service
 class RepositoryAuthService @Autowired constructor(
-    val repositoryService: RepositoryService
+    val repositoryService: RepositoryService,
+    val authTokenApi: AuthTokenApi
 ) {
 
-    fun getRepository(projectId: String, offset: Int, limit: Int): ListInstanceResponseDTO? {
+    fun getRepository(projectId: String, offset: Int, limit: Int, token: String): ListInstanceResponseDTO? {
+        authTokenApi.checkToken(token)
         val repositoryInfos =
             repositoryService.listByProject(setOf(projectId), null, offset, limit)
         val result = ListInstanceInfo()
@@ -61,7 +64,8 @@ class RepositoryAuthService @Autowired constructor(
         return result.buildListInstanceResult(entityInfo, repositoryInfos.count)
     }
 
-    fun getRepositoryInfo(hashId: List<Any>?): FetchInstanceInfoResponseDTO? {
+    fun getRepositoryInfo(hashId: List<Any>?, token: String): FetchInstanceInfoResponseDTO? {
+        authTokenApi.checkToken(token)
         val repositoryInfos =
             repositoryService.getInfoByHashIds(hashId as List<String>)
         val result = FetchInstanceInfo()
@@ -80,8 +84,15 @@ class RepositoryAuthService @Autowired constructor(
         return result.buildFetchInstanceResult(entityInfo)
     }
 
-    fun searchRepositoryInstances(projectId: String, keyword: String, limit: Int, offset: Int): SearchInstanceInfo {
+    fun searchRepositoryInstances(
+        projectId: String,
+        keyword: String,
+        limit: Int,
+        offset: Int,
+        token: String
+    ): SearchInstanceInfo {
         logger.info("searchInstance keyword[$keyword] projectId[$projectId], limit[$limit] , offset[$offset]")
+        authTokenApi.checkToken(token)
         val repositoryRecords = repositoryService.searchByAliasName(
             projectId = projectId,
             limit = limit,

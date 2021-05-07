@@ -25,18 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.auth.utlis
+package com.tencent.devops.process.pojo.setting
 
-import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthResourceType
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-object ActionUtils {
-
-    fun buildAction(authResourceType: AuthResourceType, permission: AuthPermission): String {
-        return if (permission == AuthPermission.LIST) {
-            "${authResourceType.value}_${AuthPermission.VIEW.value}"
-        } else {
-            "${authResourceType.value}_${permission.value}"
-        }
-    }
-}
+@ApiModel("流水线job公共配置信息")
+data class JobCommonSetting(
+    @ApiModelProperty("每个job最大task个数", required = true)
+    val maxTaskNum: Int,
+    @ApiModelProperty("task公共配置", required = true)
+    val taskCommonSetting: TaskCommonSetting
+)

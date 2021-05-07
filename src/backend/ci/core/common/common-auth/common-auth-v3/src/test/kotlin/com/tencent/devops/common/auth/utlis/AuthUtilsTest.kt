@@ -31,6 +31,7 @@ import com.tencent.bk.sdk.iam.constants.ExpressionOperationEnum
 import com.tencent.bk.sdk.iam.dto.action.ActionPolicyDTO
 import com.tencent.bk.sdk.iam.dto.expression.ExpressionDTO
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.utils.AuthUtils
 import org.junit.Assert
 import org.junit.Before
 import org.junit.Test

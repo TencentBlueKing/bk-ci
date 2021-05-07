@@ -30,6 +30,9 @@ package com.tencent.devops.repository.service.scm
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.enums.CodeSvnRegion
+import com.tencent.devops.scm.pojo.GitMrChangeInfo
+import com.tencent.devops.scm.pojo.GitMrInfo
+import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 
@@ -92,4 +95,28 @@ interface IScmOauthService {
     fun addCommitCheck(
         request: CommitCheckRequest
     )
+
+    fun getMergeRequestChangeInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        mrId: Long
+    ): GitMrChangeInfo?
+
+    fun getMrInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        mrId: Long
+    ): GitMrInfo?
+
+    fun getMrReviewInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        mrId: Long
+    ): GitMrReviewInfo?
 }

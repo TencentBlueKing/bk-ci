@@ -13,7 +13,9 @@
             <span @click.stop v-if="showCheckedToatal" class="check-total-stage">
                 <bk-checkbox class="atom-canskip-checkbox" v-model="stage.runStage" :disabled="stageDisabled"></bk-checkbox>
             </span>
-            <span class="stage-single-retry" v-if="canStageRetry" @click.stop="singleRetry(stage.id)">{{ $t('retry') }}</span>
+            <span v-if="canStageRetry" @click.stop="() => showRetryStageDialog = true" class="stage-single-retry">
+                {{ $t('retry') }}
+            </span>
             <span v-if="showCopyStage" class="stage-entry-btns">
                 <span :title="$t('editPage.copyStage')" v-if="!stage.isError" class="bk-icon copy-stage" @click.stop="copyStage">
                     <Logo name="copy" size="16"></Logo>
@@ -62,6 +64,19 @@
                 <i class="add-plus-icon" />
             </span>
         </template>
+        <bk-dialog
+            v-model="showRetryStageDialog"
+            render-directive="if"
+            ext-cls="stage-retry-dialog"
+            :width="400"
+            :auto-close="false"
+            @confirm="confirmRetry"
+        >
+            <bk-radio-group v-model="failedContainer">
+                <bk-radio :value="false">{{ $t('editPage.retryAllJobs') }}</bk-radio>
+                <bk-radio :value="true">{{ $t('editPage.retryFailJobs') }}</bk-radio>
+            </bk-radio-group>
+        </bk-dialog>
     </div>
 </template>
 
@@ -108,7 +123,9 @@
         data () {
             return {
                 isAddMenuShow: false,
-                cruveHeight: 0
+                cruveHeight: 0,
+                failedContainer: false,
+                showRetryStageDialog: false
             }
         },
         computed: {
@@ -290,6 +307,10 @@
                 'toggleReviewDialog',
                 'toggleStageReviewPanel'
             ]),
+            confirmRetry () {
+                this.showRetryStageDialog = false
+                this.singleRetry(this.stage.id)
+            },
             async singleRetry (stageId) {
                 let message, theme
                 try {
@@ -298,7 +319,8 @@
                         projectId: this.$route.params.projectId,
                         pipelineId: this.$route.params.pipelineId,
                         buildId: this.$route.params.buildNo,
-                        taskId: stageId
+                        taskId: stageId,
+                        failedContainer: this.failedContainer
                     })
                     if (res.id) {
                         message = this.$t('subpage.retrySuc')
@@ -655,6 +677,15 @@
                 position: absolute;
                 right: -$angleSize;
                 top: -$angleSize;
+            }
+        }
+    }
+    .stage-retry-dialog {
+        .bk-form-radio {
+            display: block;
+            margin-top: 15px;
+            .bk-radio-text {
+                font-size: 14px;
             }
         }
     }

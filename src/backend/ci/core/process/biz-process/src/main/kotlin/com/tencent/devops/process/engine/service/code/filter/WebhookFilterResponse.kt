@@ -25,28 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.auth.utlis
+package com.tencent.devops.process.engine.service.code.filter
 
-object StringUtils {
-    fun obj2List(str: String): List<String> {
-        val list = str.substringBefore("]").substringAfter("[").split(",")
-        val newList = mutableListOf<String>()
-        list.map {
-            newList.add(it.trim())
-        }
-        return newList
+/**
+ * webhook过滤器返回结果
+ */
+class WebhookFilterResponse {
+    private val params = mutableMapOf<String, String>()
+
+    fun addParam(key: String, value: String) {
+        params[key] = value
     }
 
-    fun removeAllElement(set: Set<String>): Set<String> {
-        if (set.contains("*")) {
-            val newSet = mutableSetOf<String>()
-            set.map {
-                if (it != "*") {
-                    newSet.add(it)
-                }
-                return newSet
-            }
-        }
-        return set
+    fun getParam(): Map<String, String> {
+        return params
     }
 }
