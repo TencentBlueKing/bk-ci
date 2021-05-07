@@ -414,6 +414,7 @@
                     insertStageIsFinally: isFinally
                 })
                 showStageSelectPopup(false)
+                this.toggleAddMenu(false)
             },
             showStageSelectPopup (isParallel) {
                 this.toggleStageSelectPopup({
