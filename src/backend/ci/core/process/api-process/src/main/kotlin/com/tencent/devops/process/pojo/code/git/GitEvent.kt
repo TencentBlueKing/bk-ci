@@ -30,6 +30,7 @@ package com.tencent.devops.process.pojo.code.git
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
+import com.tencent.devops.process.pojo.code.WebHookEvent
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "object_kind")
 @JsonSubTypes(
@@ -37,7 +38,7 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo
     JsonSubTypes.Type(value = GitTagPushEvent::class, name = GitTagPushEvent.classType),
     JsonSubTypes.Type(value = GitMergeRequestEvent::class, name = GitMergeRequestEvent.classType)
 )
-abstract class GitEvent
+abstract class GitEvent : WebHookEvent
 
 @Suppress("ALL")
 @JsonIgnoreProperties(ignoreUnknown = true)

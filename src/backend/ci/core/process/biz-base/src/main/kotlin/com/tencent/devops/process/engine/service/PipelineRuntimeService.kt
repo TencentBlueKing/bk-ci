@@ -127,6 +127,7 @@ import com.tencent.devops.process.utils.MINORVERSION
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_BUILD_REMARK
+import com.tencent.devops.process.utils.PIPELINE_RETRY_ALL_FAILED_CONTAINER
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
@@ -757,6 +758,7 @@ class PipelineRuntimeService @Autowired constructor(
         val triggerUser = params[PIPELINE_START_USER_NAME].toString()
         // 原子重试
         val retryStartTaskId = params[PIPELINE_RETRY_START_TASK_ID]?.toString()
+        val retryFailedContainer = params[PIPELINE_RETRY_ALL_FAILED_CONTAINER]?.toString()?.toBoolean() == true
 
         val (actionType, retryCount, isStageRetry) = if (params[PIPELINE_RETRY_COUNT] != null) {
             val i = try {
@@ -869,6 +871,13 @@ class PipelineRuntimeService @Autowired constructor(
                         containerSeq++
                         return@nextContainer
                     }
+                }
+
+                if (retryFailedContainer && BuildStatus.parse(container.status).isSuccess()) {
+                    logger.info("[$buildId|RETRY_SKIP_SUCCESSFUL_JOB|" +
+                        "retryFailed($retryFailedContainer)|j($containerId)|${container.name}")
+                    containerSeq++
+                    return@nextContainer
                 }
 
                 // --- 第3层循环：Element遍历处理 ---

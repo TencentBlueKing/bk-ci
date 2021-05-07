@@ -79,7 +79,10 @@ class BluekingV3AuthAutoConfiguration {
 
     @Bean
     @Primary
-    fun authTokenApi() = BluekingV3AuthTokenApi()
+    fun authTokenApi(
+        redisOperation: RedisOperation,
+        tokenServiceImpl: TokenServiceImpl
+    ) = BluekingV3AuthTokenApi(redisOperation, tokenServiceImpl)
 
     @Bean
     @ConditionalOnMissingBean

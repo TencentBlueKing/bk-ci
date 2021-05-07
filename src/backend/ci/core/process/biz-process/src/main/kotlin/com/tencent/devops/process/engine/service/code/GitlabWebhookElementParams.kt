@@ -46,11 +46,28 @@ class GitlabWebhookElementParams : ScmWebhookElementParams<CodeGitlabWebHookTrig
                 variables = variables
             )
         )
+        params.excludeUsers = if (element.excludeUsers == null || element.excludeUsers!!.isEmpty()) {
+            ""
+        } else {
+            EnvUtils.parseEnv(element.excludeUsers!!.joinToString(","), variables)
+        }
         if (element.branchName == null) {
             return null
         }
         params.branchName = EnvUtils.parseEnv(element.branchName!!, variables)
         params.codeType = CodeType.GITLAB
+        params.eventType = element.eventType
+        params.block = element.block ?: false
+        params.branchName = EnvUtils.parseEnv(element.branchName!!, variables)
+        params.eventType = element.eventType
+        params.excludeBranchName = EnvUtils.parseEnv(element.excludeBranchName ?: "", variables)
+        params.includePaths = EnvUtils.parseEnv(element.includePaths ?: "", variables)
+        params.excludePaths = EnvUtils.parseEnv(element.excludePaths ?: "", variables)
+        params.codeType = CodeType.GITLAB
+        params.tagName = EnvUtils.parseEnv(element.tagName ?: "", variables)
+        params.excludeTagName = EnvUtils.parseEnv(element.excludeTagName ?: "", variables)
+        params.excludeSourceBranchName = EnvUtils.parseEnv(element.excludeSourceBranchName ?: "", variables)
+        params.includeSourceBranchName = EnvUtils.parseEnv(element.includeSourceBranchName ?: "", variables)
         return params
     }
 }

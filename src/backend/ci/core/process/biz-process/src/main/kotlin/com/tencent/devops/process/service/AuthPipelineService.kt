@@ -30,6 +30,7 @@ package com.tencent.devops.process.service
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
+import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
@@ -41,12 +42,20 @@ import org.springframework.stereotype.Service
 
 @Service
 class AuthPipelineService @Autowired constructor(
-    val client: Client
+    val client: Client,
+    val authTokenApi: AuthTokenApi
 ) {
-    fun searchPipeline(projectId: String, keyword: String, limit: Int, offset: Int): SearchInstanceInfo {
+    fun searchPipeline(
+        projectId: String,
+        keyword: String,
+        limit: Int,
+        offset: Int,
+        token: String
+    ): SearchInstanceInfo {
+        authTokenApi.checkToken(token)
         val pipelineInfos =
-                client.get(ServiceAuthPipelineResource::class)
-                        .searchPipelineInstances(projectId, offset, limit, keyword).data
+            client.get(ServiceAuthPipelineResource::class)
+                .searchPipelineInstances(projectId, offset, limit, keyword).data
         val result = SearchInstanceInfo()
         if (pipelineInfos?.records == null) {
             logger.info("$projectId 项目下无流水线")
@@ -63,10 +72,11 @@ class AuthPipelineService @Autowired constructor(
         return result.buildSearchInstanceResult(entityInfo, pipelineInfos.count)
     }
 
-    fun getPipeline(projectId: String, offset: Int, limit: Int): ListInstanceResponseDTO? {
+    fun getPipeline(projectId: String, offset: Int, limit: Int, token: String): ListInstanceResponseDTO? {
+        authTokenApi.checkToken(token)
         val pipelineInfos =
-                client.get(ServiceAuthPipelineResource::class)
-                        .pipelineList(projectId, offset, limit).data
+            client.get(ServiceAuthPipelineResource::class)
+                .pipelineList(projectId, offset, limit).data
         val result = ListInstanceInfo()
         if (pipelineInfos?.records == null) {
             logger.info("$projectId 项目下无流水线")
@@ -83,10 +93,11 @@ class AuthPipelineService @Autowired constructor(
         return result.buildListInstanceResult(entityInfo, pipelineInfos.count)
     }
 
-    fun getPipelineInfo(ids: List<Any>?): FetchInstanceInfoResponseDTO? {
+    fun getPipelineInfo(ids: List<Any>?, token: String): FetchInstanceInfoResponseDTO? {
+        authTokenApi.checkToken(token)
         val pipelineInfos =
-                client.get(ServiceAuthPipelineResource::class)
-                        .pipelineInfos(ids!!.toSet() as Set<String>).data
+            client.get(ServiceAuthPipelineResource::class)
+                .pipelineInfos(ids!!.toSet() as Set<String>).data
         val result = FetchInstanceInfo()
 
         if (pipelineInfos == null || pipelineInfos.isEmpty()) {

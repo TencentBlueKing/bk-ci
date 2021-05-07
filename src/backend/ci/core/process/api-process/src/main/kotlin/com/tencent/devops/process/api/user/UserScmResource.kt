@@ -100,4 +100,22 @@ interface UserScmResource {
         @QueryParam("repositoryType")
         repositoryType: RepositoryType?
     ): Result<List<String>>
+
+    @ApiOperation("列出仓库分支和tag集合")
+    @GET
+    @Path("/{projectId}/{repositoryId}/refs")
+    fun listRefs(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("repo hash id", required = true)
+        @PathParam("repositoryId")
+        repositoryId: String,
+        @ApiParam("代码库请求类型", required = false)
+        @QueryParam("repositoryType")
+        repositoryType: RepositoryType?,
+        @ApiParam("搜索条件", required = false)
+        @QueryParam("search")
+        search: String?
+    ): Result<List<String>>
 }
