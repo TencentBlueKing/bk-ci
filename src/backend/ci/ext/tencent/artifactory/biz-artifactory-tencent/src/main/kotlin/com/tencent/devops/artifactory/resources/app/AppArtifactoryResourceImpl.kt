@@ -41,7 +41,9 @@ import com.tencent.devops.artifactory.service.PipelineService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoAppService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoSearchService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoService
+import com.tencent.devops.artifactory.util.UrlUtil
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
@@ -49,6 +51,8 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.VersionUtil
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_ICON
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_NO
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_USER_ID
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
@@ -56,6 +60,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.apache.commons.lang3.StringUtils
+import org.apache.commons.lang3.math.NumberUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.BadRequestException
@@ -160,9 +165,9 @@ class AppArtifactoryResourceImpl @Autowired constructor(
     ): Result<FileDetailForApp> {
         checkParameters(userId, projectId, path)
         val fileDetail = bkRepoService.show(userId, projectId, artifactoryType, path)
-        val pipelineId = fileDetail.meta["pipelineId"] ?: StringUtils.EMPTY
+        val pipelineId = fileDetail.meta[ARCHIVE_PROPS_PIPELINE_ID] ?: StringUtils.EMPTY
         if (!pipelineService.hasPermission(userId, projectId, pipelineId, AuthPermission.VIEW)) {
-            logger.error("no permission , user:$userId , project:$projectId , pipeline:$pipelineId")
+            logger.error("no permission, user:$userId , project:$projectId , pipeline:$pipelineId")
             throw ErrorCodeException(
                 statusCode = 403,
                 errorCode = CommonMessageCode.PERMISSION_DENIED,
@@ -180,20 +185,21 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         return Result(
             FileDetailForApp(
                 name = fileDetail.name,
-                platform = if (fileDetail.name.endsWith(".apk")) "ANDROID" else "iPhone、iPad",
+                platform = if (fileDetail.name.endsWith(".apk")) PlatformEnum.ANDROID.name else PlatformEnum.IOS.name,
                 size = fileDetail.size,
                 createdTime = fileDetail.createdTime,
                 projectName = projectId,
                 pipelineName = pipelineInfo?.pipelineName ?: StringUtils.EMPTY,
                 creator = fileDetail.meta[ARCHIVE_PROPS_USER_ID] ?: StringUtils.EMPTY,
                 bundleIdentifier = fileDetail.meta[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER] ?: StringUtils.EMPTY,
-                logoUrl = fileDetail.meta[ARCHIVE_PROPS_APP_ICON] ?: backUpIcon.value,
+                logoUrl = UrlUtil.toOuterPhotoAddr(fileDetail.meta[ARCHIVE_PROPS_APP_ICON] ?: backUpIcon.value),
                 path = fileDetail.path,
                 fullName = fileDetail.fullName,
                 fullPath = fileDetail.fullPath,
                 artifactoryType = artifactoryType,
                 modifiedTime = fileDetail.modifiedTime,
-                md5 = fileDetail.checksums.md5
+                md5 = fileDetail.checksums.md5,
+                buildNum = NumberUtils.toInt(fileDetail.meta[ARCHIVE_PROPS_BUILD_NO], 0)
             )
         )
     }

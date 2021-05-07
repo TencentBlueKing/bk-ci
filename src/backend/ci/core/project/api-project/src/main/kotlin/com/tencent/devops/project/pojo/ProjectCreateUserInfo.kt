@@ -23,33 +23,22 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.store.service.template.impl
+package com.tencent.devops.project.pojo
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.process.api.template.ServiceTemplateResource
-import com.tencent.devops.store.service.template.TemplateModelService
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Service
-class TemplateModelServiceImpl : TemplateModelService {
-
-    @Autowired
-    private lateinit var client: Client
-
-    override fun getTemplateModel(templateCode: String): Result<Model?> {
-        val result = client.get(ServiceTemplateResource::class).getTemplateDetailInfo(templateCode)
-        return if (result.isNotOk()) {
-            // 抛出错误提示
-            Result(result.status, result.message ?: "")
-        } else {
-            val templateDetailInfo = result.data
-            val templateModel = templateDetailInfo?.templateModel
-            Result(templateModel)
-        }
-    }
-}
+@ApiModel
+data class ProjectCreateUserInfo(
+    @ApiModelProperty("操作用户")
+    val createUserId: String,
+    @ApiModelProperty("角色名称")
+    val roleName: String?,
+    @ApiModelProperty("角色Id")
+    val roleId: Int?,
+    @ApiModelProperty("多目标用户id")
+    val userIds: List<String>? = emptyList()
+)

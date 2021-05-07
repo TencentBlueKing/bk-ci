@@ -33,6 +33,7 @@ import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceGroupDao
 import com.tencent.devops.experience.dao.ExperienceGroupInnerDao
 import com.tencent.devops.experience.dao.ExperienceInnerDao
+import com.tencent.devops.experience.dao.ExperienceLastDownloadDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -46,6 +47,7 @@ class ExperienceBaseService @Autowired constructor(
     private val experienceInnerDao: ExperienceInnerDao,
     private val experienceDao: ExperienceDao,
     private val experiencePublicDao: ExperiencePublicDao,
+    private val experienceLastDownloadDao: ExperienceLastDownloadDao,
     private val dslContext: DSLContext
 ) {
     /**
@@ -54,7 +56,7 @@ class ExperienceBaseService @Autowired constructor(
     fun getRecordIdsByUserId(
         userId: String,
         groupIdType: GroupIdTypeEnum
-    ): Set<Long> {
+    ): MutableSet<Long> {
         val recordIds = mutableSetOf<Long>()
         val groupIds = mutableSetOf<Long>()
         if (groupIdType == GroupIdTypeEnum.JUST_PRIVATE || groupIdType == GroupIdTypeEnum.ALL) {
@@ -73,7 +75,21 @@ class ExperienceBaseService @Autowired constructor(
      * 判断用户是否能体验
      */
     fun userCanExperience(userId: String, experienceId: Long): Boolean {
-        val isPublic = lazy { experiencePublicDao.countByRecordId(dslContext, experienceId)?.value1() ?: 0 > 0 }
+        val isPublic = lazy { isPublic(experienceId) }
+        val isInPrivate = lazy { isInPrivate(experienceId, userId) }
+
+        return isPublic.value || isInPrivate.value
+    }
+
+    fun isPublic(experienceId: Long) =
+        experiencePublicDao.countByRecordId(dslContext, experienceId)?.value1() ?: 0 > 0
+
+    fun isPrivate(experienceId: Long): Boolean {
+        return experienceGroupDao.listGroupIdsByRecordId(dslContext, experienceId)
+            .filterNot { it.value1() == ExperienceConstant.PUBLIC_GROUP }.count() > 0
+    }
+
+    fun isInPrivate(experienceId: Long, userId: String): Boolean {
         val inGroup = lazy {
             getGroupIdToUserIdsMap(experienceId).values.asSequence().flatMap { it.asSequence() }.toSet()
                 .contains(userId)
@@ -84,7 +100,7 @@ class ExperienceBaseService @Autowired constructor(
         }
         val isCreator = lazy { experienceDao.get(dslContext, experienceId).creator == userId }
 
-        return isPublic.value || inGroup.value || isInnerUser.value || isCreator.value
+        return inGroup.value || isInnerUser.value || isCreator.value
     }
 
     /**
@@ -112,5 +128,14 @@ class ExperienceBaseService @Autowired constructor(
             groupIdToUserIds[ExperienceConstant.PUBLIC_GROUP] = ExperienceConstant.PUBLIC_INNER_USERS
         }
         return groupIdToUserIds
+    }
+
+    /**
+     * 获取上次下载的 map<projectId+bundleId+platform , experienceId>
+     */
+    fun getLastDownloadMap(userId: String): Map<String, Long> {
+        return experienceLastDownloadDao.listByUserId(dslContext, userId)?.map {
+            it.projectId + it.bundleIdentifier + it.platform to it.lastDonwloadRecordId
+        }?.toMap() ?: emptyMap()
     }
 }

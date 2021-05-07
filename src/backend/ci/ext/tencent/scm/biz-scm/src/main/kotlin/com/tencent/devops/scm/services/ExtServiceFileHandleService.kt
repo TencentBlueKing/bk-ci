@@ -40,7 +40,7 @@ import java.nio.charset.Charset
 @Service("SERVICE_FILE_HANDLE")
 class ExtServiceFileHandleService @Autowired constructor(
     private val redisOperation: RedisOperation
-) : AbstractFileHandleService() {
+) : AbstractFileHandleService {
 
     private val logger = LoggerFactory.getLogger(ExtServiceFileHandleService::class.java)
 

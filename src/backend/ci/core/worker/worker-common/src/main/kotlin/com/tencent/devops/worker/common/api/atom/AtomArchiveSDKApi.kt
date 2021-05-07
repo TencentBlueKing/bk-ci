@@ -41,7 +41,12 @@ interface AtomArchiveSDKApi : WorkerRestApiSDK {
     /**
      * 获取插件信息
      */
-    fun getAtomEnv(projectCode: String, atomCode: String, atomVersion: String): Result<AtomEnv>
+    fun getAtomEnv(
+        projectCode: String,
+        atomCode: String,
+        atomVersion: String,
+        atomStatus: Byte? = null
+    ): Result<AtomEnv>
 
     /**
      * 更新插件执行环境信息

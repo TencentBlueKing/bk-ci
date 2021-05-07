@@ -44,7 +44,12 @@ class UserPipelineResourceImpl @Autowired constructor(
     val bkRepoPipelineDirService: BkRepoPipelineDirService
 ) : UserPipelineResource {
 
-    override fun hasPermissionList(userId: String, projectId: String, path: String, permission: Permission): Result<List<FileInfo>> {
+    override fun hasPermissionList(
+        userId: String,
+        projectId: String,
+        path: String,
+        permission: Permission
+    ): Result<List<FileInfo>> {
         checkParam(userId, projectId, path)
         val bkAuthPermission = when (permission) {
             Permission.VIEW -> AuthPermission.VIEW

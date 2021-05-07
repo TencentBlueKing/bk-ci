@@ -122,4 +122,5 @@ object StoreMessageCode {
     const val USER_UPLOAD_PACKAGE_INVALID = "2120906" // 研发商店：请确认上传的包是否正确
     const val USER_SENSITIVE_CONF_EXIST = "2120907" // 研发商店：字段名{0}已存在
     const val USER_START_CODECC_TASK_FAIL = "2120908" // 研发商店：启动代码扫描任务失败
+    const val USER_CHANGE_TEST_PROJECT_FAIL = "2120909" // 研发商店：用户[{0}]没有项目[{1}]下的流水线新增/修改/执行权限，请先给用户赋权
 }

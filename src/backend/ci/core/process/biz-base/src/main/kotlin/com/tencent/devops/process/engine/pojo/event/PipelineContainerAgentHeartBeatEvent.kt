@@ -46,5 +46,6 @@ data class PipelineContainerAgentHeartBeatEvent(
     val buildId: String,
     val containerId: String,
     override var actionType: ActionType = ActionType.REFRESH,
-    override var delayMills: Int = 120000
+    override var delayMills: Int = 120000,
+    val executeCount: Int = 1
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)

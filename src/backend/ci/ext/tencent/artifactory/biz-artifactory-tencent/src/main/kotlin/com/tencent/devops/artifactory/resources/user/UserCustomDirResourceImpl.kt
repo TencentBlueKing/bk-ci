@@ -36,7 +36,6 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
 
@@ -44,7 +43,13 @@ import java.io.InputStream
 class UserCustomDirResourceImpl @Autowired constructor(
     val bkRepoCustomDirService: BkRepoCustomDirService
 ) : UserCustomDirResource {
-    override fun deploy(userId: String, projectId: String, path: String, inputStream: InputStream, disposition: FormDataContentDisposition): Result<Boolean> {
+    override fun deploy(
+        userId: String,
+        projectId: String,
+        path: String,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition
+    ): Result<Boolean> {
         checkParam(userId, projectId, path)
         bkRepoCustomDirService.deploy(userId, projectId, path, inputStream, disposition)
         return Result(true)
@@ -99,9 +104,5 @@ class UserCustomDirResourceImpl @Autowired constructor(
         if (path.isBlank()) {
             throw ParamBlankException("Invalid path")
         }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(this::class.java)
     }
 }

@@ -31,7 +31,6 @@ import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
-import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
@@ -79,17 +78,22 @@ class ArchiveServiceImpl @Autowired constructor(
         headers[AUTH_HEADER_DEVOPS_PROJECT_ID] = ipaSignInfo.projectId
         headers[AUTH_HEADER_DEVOPS_PIPELINE_ID] = ipaSignInfo.pipelineId ?: ""
         headers[AUTH_HEADER_DEVOPS_BUILD_ID] = ipaSignInfo.buildId ?: ""
-        val request = Request.Builder()
-            .url(url)
-            .headers(Headers.of(headers))
-            .post(requestBody)
-            .build()
-        OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
-            if (!response.isSuccessful) {
-                logger.error("artifactory upload file failed. url:$url. response:$responseContent")
-                throw RemoteServiceException("artifactory upload file failed. url:$url. response:$responseContent")
+        try {
+            val request = Request.Builder()
+                .url(url)
+                .headers(Headers.of(headers))
+                .post(requestBody)
+                .build()
+            OkhttpUtils.doHttp(request).use { response ->
+                val responseContent = response.body()!!.string()
+                if (!response.isSuccessful) {
+                    logger.error("artifactory upload file failed. url:$url. response:$responseContent")
+                    return false
+                }
             }
+        } catch (e: Exception) {
+            logger.error("artifactory upload file with error. url:$url", e)
+            return false
         }
         return true
     }

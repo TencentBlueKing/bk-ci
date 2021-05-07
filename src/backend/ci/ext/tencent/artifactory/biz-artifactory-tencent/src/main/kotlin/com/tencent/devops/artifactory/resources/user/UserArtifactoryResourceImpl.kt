@@ -59,12 +59,22 @@ class UserArtifactoryResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun list(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): Result<List<FileInfo>> {
+    override fun list(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): Result<List<FileInfo>> {
         checkParameters(userId, projectId, path)
         return Result(bkRepoService.list(userId, projectId, artifactoryType, path))
     }
 
-    override fun getOwnFileList(userId: String, projectId: String, page: Int?, pageSize: Int?): Result<FileInfoPage<FileInfo>> {
+    override fun getOwnFileList(
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<FileInfoPage<FileInfo>> {
         checkParameters(userId, projectId)
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 20
@@ -73,7 +83,13 @@ class UserArtifactoryResourceImpl @Autowired constructor(
         return Result(FileInfoPage(0L, pageNotNull, pageSizeNotNull, result.second, result.first))
     }
 
-    override fun search(userId: String, projectId: String, page: Int?, pageSize: Int?, searchProps: SearchProps): Result<FileInfoPage<FileInfo>> {
+    override fun search(
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?,
+        searchProps: SearchProps
+    ): Result<FileInfoPage<FileInfo>> {
         checkParameters(userId, projectId)
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 10000
@@ -81,38 +97,74 @@ class UserArtifactoryResourceImpl @Autowired constructor(
         return Result(FileInfoPage(0L, pageNotNull, pageSizeNotNull, result.second, result.first))
     }
 
-    override fun searchFileAndProperty(userId: String, projectId: String, searchProps: SearchProps): Result<FileInfoPage<FileInfo>> {
+    override fun searchFileAndProperty(
+        userId: String,
+        projectId: String,
+        searchProps: SearchProps
+    ): Result<FileInfoPage<FileInfo>> {
         checkParameters(userId, projectId)
         val result = bkRepoSearchService.searchFileAndProperty(userId, projectId, searchProps)
         return Result(FileInfoPage(result.second.size.toLong(), 0, 0, result.second, result.first))
     }
 
-    override fun show(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): Result<FileDetail> {
+    override fun show(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): Result<FileDetail> {
         checkParameters(userId, projectId, path)
         return Result(bkRepoService.show(userId, projectId, artifactoryType, path))
     }
 
-    override fun properties(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): Result<List<Property>> {
+    override fun properties(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): Result<List<Property>> {
         checkParameters(userId, projectId, path)
         return Result(bkRepoService.getProperties(projectId, artifactoryType, path))
     }
 
-    override fun folderSize(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): Result<FolderSize> {
+    override fun folderSize(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): Result<FolderSize> {
         checkParameters(userId, projectId, path)
         return Result(bkRepoService.folderSize(userId, projectId, artifactoryType, path))
     }
 
-    override fun downloadUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): Result<Url> {
+    override fun downloadUrl(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): Result<Url> {
         checkParameters(userId, projectId, path)
         return Result(bkRepoDownloadService.getDownloadUrl(userId, projectId, artifactoryType, path))
     }
 
-    override fun ioaUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): Result<Url> {
+    override fun ioaUrl(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): Result<Url> {
         checkParameters(userId, projectId, path)
         return Result(bkRepoDownloadService.getDownloadUrl(userId, projectId, artifactoryType, path))
     }
 
-    override fun shareUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String, ttl: Int, downloadUsers: String): Result<Boolean> {
+    override fun shareUrl(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String,
+        ttl: Int,
+        downloadUsers: String
+    ): Result<Boolean> {
         checkParameters(userId, projectId, path)
         if (ttl < 0) {
             throw InvalidParamException("Invalid ttl")
@@ -124,7 +176,12 @@ class UserArtifactoryResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun externalUrl(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): Result<Url> {
+    override fun externalUrl(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): Result<Url> {
         checkParameters(userId, projectId, path)
         if (!path.endsWith(".ipa") && !path.endsWith(".apk")) {
             throw BadRequestException("Path must end with ipa or apk")
@@ -132,12 +189,23 @@ class UserArtifactoryResourceImpl @Autowired constructor(
         return Result(bkRepoDownloadService.getExternalUrl(userId, projectId, artifactoryType, path))
     }
 
-    override fun getFilePipelineInfo(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): Result<FilePipelineInfo> {
+    override fun getFilePipelineInfo(
+        userId: String,
+        projectId: String,
+        artifactoryType: ArtifactoryType,
+        path: String
+    ): Result<FilePipelineInfo> {
         checkParameters(userId, projectId, path)
         return Result(bkRepoService.getFilePipelineInfo(userId, projectId, artifactoryType, path))
     }
 
-    override fun copyToCustom(userId: String, projectId: String, pipelineId: String, buildId: String, copyToCustomReq: CopyToCustomReq): Result<Boolean> {
+    override fun copyToCustom(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        copyToCustomReq: CopyToCustomReq
+    ): Result<Boolean> {
         checkParameters(userId, projectId)
         bkRepoService.copyToCustom(userId, projectId, pipelineId, buildId, copyToCustomReq)
         return Result(true)

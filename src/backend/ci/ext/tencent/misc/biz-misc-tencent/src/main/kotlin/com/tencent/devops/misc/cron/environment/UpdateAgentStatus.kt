@@ -46,8 +46,8 @@ class UpdateAgentStatus @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(UpdateAgentStatus::class.java)
-        private val LOCK_KEY = "env_cron_updateAgentStatus"
-        private val LOCK_VALUE = "env_cron_updateAgentStatus"
+        private const val LOCK_KEY = "env_cron_updateAgentStatus"
+        private const val LOCK_VALUE = "env_cron_updateAgentStatus"
     }
 
     @Scheduled(initialDelay = 10000, fixedDelay = 15000)
