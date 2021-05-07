@@ -601,7 +601,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     atomId = id,
                     atomName = atomUpdateRequest.name,
                     jobType = atomUpdateRequest.jobType,
-                    buildLessRunFlag = atomUpdateRequest.buildLessRunFlag
+                    buildLessRunFlag = atomUpdateRequest.buildLessRunFlag,
+                    props = atomUpdateRequest.props
                 )
             }
             Result(true)

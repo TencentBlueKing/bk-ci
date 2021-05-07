@@ -322,7 +322,8 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         atomName: String?,
         jobType: JobTypeEnum?,
         buildLessRunFlag: Boolean?,
-        latestFlag: Boolean?
+        latestFlag: Boolean?,
+        props: String?
     ) {
         val atomRecord = atomDao.getPipelineAtom(dslContext, atomId) ?: return
         val atomCode = atomRecord.atomCode
@@ -334,6 +335,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             if (atomName != null) atomRunInfo.atomName = atomName
             if (jobType != null) atomRunInfo.jobType = jobType
             if (buildLessRunFlag != null) atomRunInfo.buildLessRunFlag = buildLessRunFlag
+            if (props != null) atomRunInfo.inputTypeInfos = generateInputTypeInfos(props)
             // 更新插件当前版本号的缓存信息
             redisOperation.hset(
                 key = atomRunInfoKey,

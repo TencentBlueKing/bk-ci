@@ -67,7 +67,8 @@ interface MarketAtomCommonService {
         atomName: String? = null,
         jobType: JobTypeEnum? = null,
         buildLessRunFlag: Boolean? = null,
-        latestFlag: Boolean? = null
+        latestFlag: Boolean? = null,
+        props: String? = null
     )
 
     fun generateInputTypeInfos(props: String?): Map<String, String>?
