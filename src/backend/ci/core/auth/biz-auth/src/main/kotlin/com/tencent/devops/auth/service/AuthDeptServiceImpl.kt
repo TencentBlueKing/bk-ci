@@ -53,9 +53,7 @@ import java.util.concurrent.TimeUnit
 
 class AuthDeptServiceImpl @Autowired constructor(
     val redisOperation: RedisOperation,
-    val objectMapper: ObjectMapper,
-    val authTokenApi: AuthTokenApi,
-    val authServiceCode: AuthServiceCode
+    val objectMapper: ObjectMapper
 ) : DeptService {
 
     @Value("\${esb.code:#{null}}")
@@ -111,7 +109,8 @@ class AuthDeptServiceImpl @Autowired constructor(
     }
 
     private fun getAndRefreshDeptUser(deptId: Int) : List<String> {
-        val accessToken = authTokenApi.getAccessToken(authServiceCode)
+        // TODO: 获取accessToken
+        val accessToken = ""
         val search = SearchDeptUserEntity(
             id = deptId,
             recursive = true,
