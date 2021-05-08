@@ -33,15 +33,15 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("日志状态")
 enum class LogStatus(private val status: Int) {
-    @ApiModelProperty("正常结束")
+    @ApiModelProperty("查询成功")
     SUCCEED(0),
     @ApiModelProperty("日志为空")
     EMPTY(1),
-    @ApiModelProperty("日志被清除")
+    @ApiModelProperty("日志已过期")
     CLEAN(2),
-    @ApiModelProperty("日志被关闭")
+    @ApiModelProperty("日志已清理")
     CLOSED(3),
-    @ApiModelProperty("其他异常")
+    @ApiModelProperty("查询异常")
     FAIL(999);
 
     @JsonValue

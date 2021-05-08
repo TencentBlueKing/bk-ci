@@ -29,8 +29,10 @@ package com.tencent.devops.process.report.dao
 
 import com.tencent.devops.model.process.tables.TReport
 import com.tencent.devops.model.process.tables.records.TReportRecord
+import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -74,6 +76,51 @@ class ReportDao {
                 .returning(ID)
                 .fetchOne()
             return record.id
+        }
+    }
+
+    fun exists(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        name: String
+    ): Boolean {
+        with(TReport.T_REPORT) {
+            val count = dslContext.select(DSL.count(ID))
+                .from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(BUILD_ID.eq(buildId))
+                .and(NAME.eq(name))
+                .fetchOne(0, Int::class.java)
+
+            return count != null && count > 0
+        }
+    }
+
+    fun update(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        elementId: String,
+        indexFile: String,
+        name: String,
+        type: ReportTypeEnum
+    ): Int {
+        with(TReport.T_REPORT) {
+            return dslContext.update(this)
+                .set(ELEMENT_ID, elementId)
+                .set(INDEX_FILE, indexFile)
+                .set(NAME, name)
+                .set(TYPE, type.name)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(BUILD_ID.eq(buildId))
+                .and(NAME.eq(name))
+                .execute()
         }
     }
 

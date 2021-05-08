@@ -35,8 +35,9 @@ import com.tencent.devops.store.service.common.StoreLogService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserStoreLogResourceImpl @Autowired constructor(private val storeLogService: StoreLogService) :
-    UserStoreLogResource {
+class UserStoreLogResourceImpl @Autowired constructor(
+    private val storeLogService: StoreLogService
+) : UserStoreLogResource {
 
     override fun getInitLogs(
         userId: String,
@@ -44,8 +45,7 @@ class UserStoreLogResourceImpl @Autowired constructor(private val storeLogServic
         projectCode: String,
         pipelineId: String,
         buildId: String,
-        isAnalysis: Boolean?,
-        queryKeywords: String?,
+        debug: Boolean?,
         tag: String?,
         executeCount: Int?
     ): Result<QueryLogs?> {
@@ -55,8 +55,7 @@ class UserStoreLogResourceImpl @Autowired constructor(private val storeLogServic
             projectCode = projectCode,
             pipelineId = pipelineId,
             buildId = buildId,
-            isAnalysis = isAnalysis,
-            queryKeywords = queryKeywords,
+            debug = debug,
             tag = tag,
             executeCount = executeCount
         )
@@ -69,8 +68,7 @@ class UserStoreLogResourceImpl @Autowired constructor(private val storeLogServic
         pipelineId: String,
         buildId: String,
         start: Long,
-        isAnalysis: Boolean?,
-        queryKeywords: String?,
+        debug: Boolean?,
         tag: String?,
         executeCount: Int?
     ): Result<QueryLogs?> {
@@ -81,8 +79,7 @@ class UserStoreLogResourceImpl @Autowired constructor(private val storeLogServic
             pipelineId = pipelineId,
             buildId = buildId,
             start = start,
-            isAnalysis = isAnalysis,
-            queryKeywords = queryKeywords,
+            debug = debug,
             tag = tag,
             executeCount = executeCount
         )
@@ -94,6 +91,7 @@ class UserStoreLogResourceImpl @Autowired constructor(private val storeLogServic
         projectCode: String,
         pipelineId: String,
         buildId: String,
+        debug: Boolean?,
         num: Int?,
         fromStart: Boolean?,
         start: Long,
@@ -107,6 +105,7 @@ class UserStoreLogResourceImpl @Autowired constructor(private val storeLogServic
             projectCode = projectCode,
             pipelineId = pipelineId,
             buildId = buildId,
+            debug = debug,
             num = num,
             fromStart = fromStart,
             start = start,

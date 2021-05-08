@@ -145,7 +145,11 @@ object ScmWebhookParamsFactory {
                 ).getStartParams(element)
             is CodeGitlabWebHookTriggerElement ->
                 GitlabWebHookStartParam(
-                    matcher = matcher
+                    projectId = projectId,
+                    repo = repo,
+                    params = params,
+                    matcher = matcher as GitWebHookMatcher,
+                    matchResult = matchResult
                 ).getStartParams(element)
             is CodeTGitWebHookTriggerElement ->
                 TGitWebHookStartParam(
