@@ -30,6 +30,7 @@ package com.tencent.devops.process.api
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserScmResource
 import com.tencent.devops.process.service.scm.ScmProxyService
@@ -76,7 +77,7 @@ class UserScmResourceImpl @Autowired constructor(
         repositoryId: String,
         repositoryType: RepositoryType?,
         search: String?
-    ): Result<List<String>> {
+    ): Result<List<BuildFormValue>> {
         val result = mutableListOf<String>()
         val repositoryConfig = getRepositoryConfig(repositoryId, repositoryType)
         val branches = scmProxyService.listBranches(
@@ -93,6 +94,8 @@ class UserScmResourceImpl @Autowired constructor(
         ).data ?: listOf()
         result.addAll(branches)
         result.addAll(tags)
-        return Result(result)
+        return Result(
+            result.map { BuildFormValue(it, it) }
+        )
     }
 }

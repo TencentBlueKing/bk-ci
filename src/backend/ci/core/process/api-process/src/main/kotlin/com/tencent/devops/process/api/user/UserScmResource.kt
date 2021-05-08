@@ -29,6 +29,7 @@ package com.tencent.devops.process.api.user
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.scm.pojo.RevisionInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -117,5 +118,5 @@ interface UserScmResource {
         @ApiParam("搜索条件", required = false)
         @QueryParam("search")
         search: String?
-    ): Result<List<String>>
+    ): Result<List<BuildFormValue>>
 }
