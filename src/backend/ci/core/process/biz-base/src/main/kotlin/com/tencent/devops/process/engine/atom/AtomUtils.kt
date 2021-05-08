@@ -156,12 +156,17 @@ object AtomUtils {
                 version = "1.*"
             }
             val atomCode = element.getAtomCode()
-            atomVersions.add(StoreVersion(atomCode, element.name, version))
+            atomVersions.add(StoreVersion(
+                storeCode = atomCode,
+                storeName = element.name,
+                version = version,
+                historyFlag = false
+            ))
         }
         return atomVersions
     }
 
-    private fun isHisAtomElement(element: Element) =
+    fun isHisAtomElement(element: Element) =
         element !is MarketBuildAtomElement && element !is MarketBuildLessAtomElement
 
     fun getInputTypeConfigMap(taskCommonSettingConfig: TaskCommonSettingConfig): Map<String, Int> {
