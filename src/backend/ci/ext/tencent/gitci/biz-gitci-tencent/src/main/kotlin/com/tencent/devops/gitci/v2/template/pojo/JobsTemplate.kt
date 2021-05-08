@@ -25,31 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.v2
+package com.tencent.devops.gitci.v2.template.pojo
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.ci.v2.PreJob
 
-/**
- * model
- *
- * WARN: 请谨慎修改这个类 , 不要随意添加或者删除变量 , 否则可能导致依赖yaml的功能(gitci,prebuild等)异常
- */
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class PreTemplateScriptBuildYaml(
-    val version: String?,
-    val name: String?,
-    val label: String? = null,
-    val triggerOn: PreTriggerOn?,
-    val variables: Map<String, Any>?,
-    val stages: List<Map<String, Any>>?,
-    val jobs: Map<String, Any>? = null,
-    val steps: List<Map<String, Any>>? = null,
-    @JsonProperty("on-fail")
-    val onFail: OnFail?,
-    val extends: Extends?,
-    val resources: Resources?,
-    val notices: List<Notices>?
+data class JobsTemplate(
+    val parameters: List<Parameters>?,
+    val jobs: Map<String, PreJob>
 )

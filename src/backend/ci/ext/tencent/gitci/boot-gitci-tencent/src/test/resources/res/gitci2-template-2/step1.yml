@@ -1,0 +1,11 @@
+parameters:
+- name: username
+  type: string
+  default: world
+
+steps:
+- template: templates/step6.yml
+  parameters:
+    username: STEP6
+- run: |
+    echo "step2: ${{ parameters.username }}!"

@@ -416,13 +416,19 @@ class GitService @Autowired constructor(
         return false
     }
 
-    fun getGitCIFileContent(gitProjectId: Long, filePath: String, token: String, ref: String): String {
+    fun getGitCIFileContent(
+        gitProjectId: Long,
+        filePath: String,
+        token: String,
+        ref: String,
+        isAccessToken: Boolean = true
+    ): String {
         logger.info("[$gitProjectId|$filePath|$ref] Start to get the git file content")
         val startEpoch = System.currentTimeMillis()
         try {
             val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/blobs/" +
                 "${URLEncoder.encode(ref, "UTF-8")}?filepath=${URLEncoder.encode(filePath, "UTF-8")}" +
-                "&access_token=$token"
+                if (isAccessToken){"&access_token=$token"}else{"&private_token=$token"}
             logger.info("request url: $url")
             val request = Request.Builder()
                 .url(url)
@@ -558,14 +564,20 @@ class GitService @Autowired constructor(
         }
     }
 
-    fun getGitCIFileTree(gitProjectId: Long, path: String, token: String, ref: String): List<GitFileInfo> {
+    fun getGitCIFileTree(
+        gitProjectId: Long,
+        path: String,
+        token: String,
+        ref: String,
+        useAccessToken:Boolean = true
+    ): List<GitFileInfo> {
         logger.info("[$gitProjectId|$path|$ref] Start to get the git file tree")
         val startEpoch = System.currentTimeMillis()
         try {
             val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/tree" +
                 "?path=${URLEncoder.encode(path, "UTF-8")}" +
                 "&ref_name=${URLEncoder.encode(ref, "UTF-8")}" +
-                "&access_token=$token"
+                if (useAccessToken){"&access_token=$token"}else{"&private_token=$token"}
             logger.info("request url: $url")
             val request = Request.Builder()
                 .url(url)
@@ -1034,10 +1046,16 @@ class GitService @Autowired constructor(
         }
     }
 
-    fun getGitCIProjectInfo(gitProjectId: String, token: String): Result<GitCIProjectInfo?> {
+    fun getGitCIProjectInfo(
+        gitProjectId: String,
+        token: String,
+        useAccessToken:Boolean = true
+    ): Result<GitCIProjectInfo?> {
         logger.info("[gitProjectId=$gitProjectId]|getGitCIProjectInfo")
         val encodeId = URLEncoder.encode(gitProjectId, "utf-8") // 如果id为NAMESPACE_PATH则需要encode
-        val url = StringBuilder("$gitCIUrl/api/v3/projects/$encodeId?access_token=$token")
+        val str= "$gitCIUrl/api/v3/projects/$encodeId?"+if (useAccessToken)
+        {"access_token=$token"}else{"private_token=$token"}
+        val url = StringBuilder(str)
         val request = Request.Builder()
             .url(url.toString())
             .get()

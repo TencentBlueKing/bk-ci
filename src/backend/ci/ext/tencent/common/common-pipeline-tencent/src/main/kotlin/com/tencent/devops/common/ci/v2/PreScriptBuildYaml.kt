@@ -50,7 +50,7 @@ data class PreScriptBuildYaml(
     @JsonProperty("on-fail")
     var onFail: OnFail?,
     var extends: Extends?,
-    var resource: Resources?,
+    var resources: Resources?,
     var notices: List<Notices>?,
     var finally: List<PreStage>?
 )

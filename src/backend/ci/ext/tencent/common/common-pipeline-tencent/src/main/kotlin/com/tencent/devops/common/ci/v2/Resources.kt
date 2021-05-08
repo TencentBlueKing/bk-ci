@@ -29,6 +29,7 @@ package com.tencent.devops.common.ci.v2
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonInclude
+import com.fasterxml.jackson.annotation.JsonProperty
 
 /**
  * model
@@ -42,5 +43,13 @@ data class Resources(
 data class Repositories(
     val repository: String?,
     val name: String?,
-    val ref: String?
+    val ref: String?,
+    val credentials: ResCredentials?
+)
+
+data class ResCredentials(
+    @JsonProperty("personal-access-token")
+    val personalAccessToken: String?,
+    @JsonProperty("use-actor-oauth")
+    val useActorOauth: Boolean?
 )

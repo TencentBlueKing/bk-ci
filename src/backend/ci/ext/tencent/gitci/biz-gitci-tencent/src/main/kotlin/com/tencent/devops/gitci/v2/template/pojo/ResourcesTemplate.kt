@@ -25,11 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.v2.templates
+package com.tencent.devops.gitci.v2.template.pojo
 
-import com.tencent.devops.common.ci.v2.Variable
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.tencent.devops.common.ci.v2.Resources
 
-data class VariablesTemplate(
-    val parameters: List<Parameters>?,
-    val variables: Map<String, Variable>
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class ResourcesTemplate(
+    val resources: Resources?
 )

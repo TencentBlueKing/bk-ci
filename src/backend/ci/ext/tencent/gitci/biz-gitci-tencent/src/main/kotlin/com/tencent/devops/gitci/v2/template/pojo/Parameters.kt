@@ -25,11 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.v2.templates
+package com.tencent.devops.gitci.v2.template.pojo
 
-import com.tencent.devops.common.ci.v2.PreJob
-
-data class JobsTemplate(
-    val parameters: List<Parameters>?,
-    val jobs: Map<String, PreJob>
+data class Parameters(
+    val name: String,
+    val type: String,
+    val default: String,
+    val values: List<String>?
 )
+
+enum class ParametersType(val value: String) {
+    STRING("string"),
+    NUMBER("number"),
+    BOOLEAN("boolean"),
+    OBJECT("object"),
+    TASK("task"),
+    TASKLIST("taskList"),
+    JOB("job"),
+    JOBLIST("jobList"),
+    STAGE("stage"),
+    STAGELIST("stageList")
+}

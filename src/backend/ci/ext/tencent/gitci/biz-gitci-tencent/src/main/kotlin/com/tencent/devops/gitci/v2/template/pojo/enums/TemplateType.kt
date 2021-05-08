@@ -25,11 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.v2.templates
+package com.tencent.devops.gitci.v2.template.pojo.enums
 
-import com.tencent.devops.common.ci.v2.PreStage
-
-data class StagesTemplate(
-    val parameters: List<Parameters>?,
-    val stages: List<PreStage>
-)
+enum class TemplateType {
+    VARIABLE,
+    STAGE,
+    JOB,
+    STEP,
+    PIPELINE
+}
