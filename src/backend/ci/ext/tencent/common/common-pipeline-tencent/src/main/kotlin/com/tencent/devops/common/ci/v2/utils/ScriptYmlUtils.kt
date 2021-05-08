@@ -247,15 +247,6 @@ object ScriptYmlUtils {
 
         val jobs = mutableListOf<Job>()
         preJobs.forEach { (t, u) ->
-            val container = if (u.runsOn != null && u.container == null) {
-                Container(
-                    image = "http://mirrors.tencent.com/ci/tlinux3_ci:0.1.1.0",
-                    credentials = null
-                )
-            } else {
-                u.container
-            }
-
             val services = mutableListOf<Service>()
             u.services?.forEach { key, value ->
                 services.add(
@@ -271,7 +262,10 @@ object ScriptYmlUtils {
                     id = t,
                     name = u.name,
                     runsOn = u.runsOn ?: listOf(JobRunsOnType.DOCKER_ON_VM.type),
-                    container = container,
+                    container = u.container ?: Container(
+                        image = "http://mirrors.tencent.com/ci/tlinux3_ci:0.1.1.0",
+                        credentials = null
+                    ),
                     services = services,
                     ifField = u.ifField,
                     steps = formatSteps(u.steps),
@@ -375,7 +369,8 @@ object ScriptYmlUtils {
             extends = preScriptBuildYaml.extends,
             resource = preScriptBuildYaml.resources,
             notices = preScriptBuildYaml.notices,
-            stages = stages
+            stages = stages,
+            finally = preStages2Stages(preScriptBuildYaml.finally)
         )
     }
 

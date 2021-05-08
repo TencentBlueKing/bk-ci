@@ -27,13 +27,25 @@
 
 package com.tencent.devops.process
 
+import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.NameAndValue
+import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.container.NormalContainer
+import com.tencent.devops.common.pipeline.container.Stage
+import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
+import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.option.JobControlOption
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.ElementPostInfo
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainerControlOption
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -52,11 +64,142 @@ open class TestBase {
         const val stageId = "stage-1"
         const val firstContainerId = "1"
         const val firstContainerIdInt = 1
+        const val atomCode = "atomCode"
+        const val userId = "user0"
     }
 
     @Before
     open fun setUp() {
         variables.clear()
+    }
+
+    fun genModel(stageSize: Int, jobSize: Int, elementSize: Int, needFinally: Boolean = false): Model {
+        val stages = genStages(stageSize, jobSize, elementSize, needFinally)
+        return Model(name = "DefaultModelCheckPluginTest", desc = "unit test", stages = stages)
+    }
+
+    fun genStages(stageSize: Int, jobSize: Int, elementSize: Int, needFinally: Boolean = false): List<Stage> {
+        val stags = mutableListOf<Stage>()
+        stags.add(
+            Stage(
+                containers = genContainers(
+                    seq = 0,
+                    jobSize = jobSize,
+                    elementSize = elementSize
+                ),
+                id = "stage-trigger"
+            )
+        )
+        for (seq in 1..stageSize) {
+            val stageId = "stage-$seq"
+            stags.add(
+                Stage(
+                    containers = genContainers(
+                        seq = seq,
+                        jobSize = jobSize,
+                        elementSize = elementSize
+                    ),
+                    id = stageId
+                )
+            )
+        }
+        if (needFinally) {
+            stags.add(
+                Stage(
+                    containers = genContainers(
+                        seq = Int.MAX_VALUE,
+                        jobSize = jobSize,
+                        elementSize = elementSize
+                    ),
+                    id = "stage-finally"
+                )
+            )
+        }
+        return stags
+    }
+
+    fun genContainers(seq: Int, jobSize: Int, elementSize: Int): List<Container> {
+        val jobs = mutableListOf<Container>()
+        when (seq) {
+            0 -> {
+                val elements = mutableListOf<Element>(
+                    ManualTriggerElement(canElementSkip = true, useLatestParameters = true)
+                )
+                jobs.add(TriggerContainer(id = "1", name = "trigger", elements = elements))
+            }
+            Int.MAX_VALUE -> { // finally
+                for (i in 1..jobSize) {
+                    if (i % 2 == 0) {
+                        jobs.add(genNormal(elementSize))
+                    } else {
+                        jobs.add(genVm(elementSize, baseOS = VMBaseOS.MACOS))
+                    }
+                }
+            }
+            else -> {
+                for (i in 1..jobSize) {
+                    when {
+                        i % 3 == 0 -> {
+                            jobs.add(genVm(elementSize, baseOS = VMBaseOS.LINUX))
+                        }
+                        i % 3 == 2 -> {
+                            jobs.add(genVm(elementSize, baseOS = VMBaseOS.WINDOWS))
+                        }
+                        else -> {
+                            jobs.add(genVm(elementSize, baseOS = VMBaseOS.MACOS))
+                        }
+                    }
+                }
+            }
+        }
+        return jobs
+    }
+
+    fun genNormal(elementSize: Int): Container {
+        val normalContainer = NormalContainer()
+        if (elementSize > 0) {
+            normalContainer.elements = genRandomElements(buildLess = true, elementSize = elementSize)
+        }
+        return normalContainer
+    }
+
+    fun genVm(elementSize: Int, baseOS: VMBaseOS): Container {
+        val vmBuildContainer =
+            if (baseOS == VMBaseOS.WINDOWS) {
+                VMBuildContainer(baseOS = baseOS, thirdPartyAgentEnvId = "12")
+            } else {
+                VMBuildContainer(baseOS = baseOS)
+            }
+        if (elementSize > 0) {
+            vmBuildContainer.elements = genRandomElements(buildLess = false, elementSize = elementSize)
+        }
+        return vmBuildContainer
+    }
+
+    fun genRandomElements(buildLess: Boolean = false, elementSize: Int): List<Element> {
+        val list = mutableListOf<Element>()
+        for (seq in 1..elementSize) {
+            if (buildLess) {
+                list.add(
+                    MarketBuildLessAtomElement(
+                        name = "${Math.random()} name",
+                        id = "e-${UUIDUtil.generate()}",
+                        atomCode = atomCode,
+                        data = mapOf("input" to mapOf(), "output" to mapOf<String, String>())
+                    )
+                )
+            } else {
+                list.add(
+                    MarketBuildAtomElement(
+                        name = "${Math.random()} name",
+                        id = "e-${UUIDUtil.generate()}",
+                        atomCode = atomCode,
+                        data = mapOf("input" to mapOf(), "output" to mapOf<String, String>())
+                    )
+                )
+            }
+        }
+        return list
     }
 
     fun genVmBuildContainer(

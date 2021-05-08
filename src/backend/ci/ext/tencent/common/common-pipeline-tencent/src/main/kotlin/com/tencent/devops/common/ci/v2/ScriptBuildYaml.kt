@@ -49,5 +49,6 @@ data class ScriptBuildYaml(
     val onFail: OnFail?,
     val extends: Extends?,
     val resource: Resources?,
-    val notices: List<Notices>?
+    val notices: List<Notices>?,
+    var finally: List<Stage>?
 )

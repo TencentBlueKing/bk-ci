@@ -51,5 +51,6 @@ data class PreScriptBuildYaml(
     var onFail: OnFail?,
     var extends: Extends?,
     var resources: Resources?,
-    var notices: List<Notices>?
+    var notices: List<Notices>?,
+    var finally: List<PreStage>?
 )

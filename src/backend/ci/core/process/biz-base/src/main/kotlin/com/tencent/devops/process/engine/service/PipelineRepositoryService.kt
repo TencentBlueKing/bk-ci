@@ -339,11 +339,13 @@ class PipelineRepositoryService constructor(
                     ), eventType)
                 }
                 is CodeGitlabWebHookTriggerElement -> {
-                    Pair(RepositoryConfig(
-                        repositoryHashId = e.repositoryHashId,
-                        repositoryName = e.repositoryName,
-                        repositoryType = e.repositoryType ?: RepositoryType.ID
-                    ), CodeEventType.PUSH)
+                    Pair(
+                        RepositoryConfig(
+                            repositoryHashId = e.repositoryHashId,
+                            repositoryName = e.repositoryName,
+                            repositoryType = e.repositoryType ?: RepositoryType.ID
+                        ), e.eventType ?: CodeEventType.PUSH
+                    )
                 }
                 is CodeGithubWebHookTriggerElement -> {
                     Pair(RepositoryConfig(
@@ -380,7 +382,7 @@ class PipelineRepositoryService constructor(
         }
 
         // 统一发事件
-        val variables = container.params.map { it.id to it.defaultValue.toString() }.toMap()
+        val variables = container.params.associate { it.id to it.defaultValue.toString() }
         svnRepoEventTypeMap.values.forEach { e ->
             logger.info("[$pipelineId]-initTriggerContainer,element is WebHook, add WebHook by mq")
             pipelineEventDispatcher.dispatch(
@@ -455,7 +457,11 @@ class PipelineRepositoryService constructor(
             }
 
             modelCheckPlugin.checkJob(
-                projectId = projectId, pipelineId = pipelineId, jobContainer = c, userId = userId
+                projectId = projectId,
+                pipelineId = pipelineId,
+                jobContainer = c,
+                userId = userId,
+                finallyStage = stage.finally
             )
 
             var taskSeq = 0

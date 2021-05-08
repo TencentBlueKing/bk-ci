@@ -79,11 +79,11 @@ class DevCloudClient {
     @Value("\${devCloud.smartProxyToken}")
     val smartProxyToken: String = ""
 
-    @Value("\${devCloud.cpu}")
-    var cpu: Int = 32
+    @Value("\${devCloud.cpu:16}")
+    var cpu: Int = 16
 
-    @Value("\${devCloud.memory}")
-    var memory: String = "65535M"
+    @Value("\${devCloud.memory:32768M}")
+    var memory: String = "32768M"
 
     fun createContainer(dispatchMessage: DispatchMessage, devCloudContainer: DevCloudContainer): Pair<String, String> {
         val url = devCloudUrl + "/api/v2.1/containers"
