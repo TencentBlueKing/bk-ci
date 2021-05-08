@@ -22,7 +22,7 @@ class OuterLoginFilter @Autowired constructor(
     private val experienceOuterService: ExperienceOuterService
 ) : ContainerRequestFilter {
     @Context
-    private val resourceInfo: ResourceInfo? = null
+    private var resourceInfo: ResourceInfo? = null
 
     @SuppressWarnings("NestedBlockDepth")
     override fun filter(requestContext: ContainerRequestContext?) {
@@ -30,7 +30,7 @@ class OuterLoginFilter @Autowired constructor(
             val headers = requestContext.headers
             if (headers[AUTH_HEADER_DEVOPS_ORGANIZATION_NAME]?.contains(ORGANIZATION_OUTER) == true) {
                 // 安全过滤
-                resourceInfo.resourceMethod.parameterAnnotations.forEach {
+                resourceInfo!!.resourceMethod.parameterAnnotations.forEach {
                     it.forEach { annotation ->
                         if (annotation is HeaderParam) {
                             logger.info("HeaderParam : ${annotation.value}")
