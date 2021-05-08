@@ -202,7 +202,7 @@ class TriggerBuildService @Autowired constructor(
         }
 
         yaml.finally?.forEach {
-            stageList.add(createStage(it, event, gitProjectConf))
+            stageList.add(createStage(it, event, gitProjectConf, true))
         }
 
         return Model(
@@ -218,7 +218,8 @@ class TriggerBuildService @Autowired constructor(
     private fun createStage(
         stage: com.tencent.devops.common.ci.v2.Stage,
         event: GitRequestEvent,
-        gitProjectConf: GitRepositoryConf
+        gitProjectConf: GitRepositoryConf,
+        finalStage: Boolean = false
     ): Stage {
         val containerList = mutableListOf<Container>()
         stage.jobs.forEachIndexed { jobIndex, job ->
@@ -249,7 +250,8 @@ class TriggerBuildService @Autowired constructor(
             tag = listOf(stage.label),
             fastKill = stage.fastKill,
             stageControlOption = stageControlOption,
-            containers = containerList
+            containers = containerList,
+            finally = finalStage
         )
     }
 
