@@ -25,9 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.pojo
+package com.tencent.devops.artifactory.service
 
-data class CreateShortUrlRequest(
-    val url: String,
-    val ttl: Int
-)
+import com.tencent.devops.artifactory.dao.ShortUrlDao
+import com.tencent.devops.artifactory.pojo.FileGatewayInfo
+import com.tencent.devops.common.redis.RedisOperation
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
+
+@Service
+class FileGatewayService @Autowired constructor(
+    val redisOperation: RedisOperation,
+    private val shortUrlDao: ShortUrlDao
+) {
+    @Value("\${artifactory.fileGateway:}")
+    private lateinit var fileGateway: String
+
+    fun getFileGateway(projectId: String): FileGatewayInfo {
+        val fileGateway = if (redisOperation.isMember(redisKey, projectId)) {
+            fileGateway
+        } else {
+            ""
+        }
+        return FileGatewayInfo(fileGateway)
+    }
+
+    companion object {
+        private const val redisKey = "artifactory:fileGatewayGray:projects"
+    }
+}

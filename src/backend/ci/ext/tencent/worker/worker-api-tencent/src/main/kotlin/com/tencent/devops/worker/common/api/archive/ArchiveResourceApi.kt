@@ -58,6 +58,8 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         return path.removeSuffix("/").split("/").last()
     }
 
+
+
     override fun getFileDownloadUrls(
         userId: String,
         projectId: String,
@@ -116,7 +118,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
     }
 
     override fun uploadCustomize(file: File, destPath: String, buildVariables: BuildVariables) {
-        if (bkrepoResourceApi.useBkRepo()) {
+        if (bkrepoResourceApi.tokenAccess()) {
             val relativePath = destPath.removePrefix("/").removePrefix("./").removeSuffix("/")
             val destFullPath = "/$relativePath/${file.name}"
             val token = bkrepoResourceApi.createBkRepoTemporaryToken(
@@ -140,7 +142,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
     }
 
     override fun uploadPipeline(file: File, buildVariables: BuildVariables) {
-        if (bkrepoResourceApi.useBkRepo()) {
+        if (bkrepoResourceApi.tokenAccess()) {
             val destFullPath = "/${buildVariables.pipelineId}/${buildVariables.buildId}/${file.name}"
             val token = bkrepoResourceApi.createBkRepoTemporaryToken(
                 projectId = buildVariables.projectId,
@@ -202,7 +204,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         uri: String,
         destPath: File
     ) {
-        if (bkrepoResourceApi.useBkRepo()) {
+        if (bkrepoResourceApi.tokenAccess()) {
             val token = bkrepoResourceApi.createBkRepoTemporaryToken(
                 projectId = projectId,
                 repoName = "custom",
@@ -223,7 +225,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         uri: String,
         destPath: File
     ) {
-        if (bkrepoResourceApi.useBkRepo()) {
+        if (bkrepoResourceApi.tokenAccess()) {
             val token = bkrepoResourceApi.createBkRepoTemporaryToken(
                 projectId = projectId,
                 repoName = "pipeline",

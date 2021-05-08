@@ -27,7 +27,6 @@
 
 package com.tencent.devops.artifactory.pojo
 
-data class CreateShortUrlRequest(
-    val url: String,
-    val ttl: Int
+data class FileGatewayInfo(
+    val fileGateway: String
 )
