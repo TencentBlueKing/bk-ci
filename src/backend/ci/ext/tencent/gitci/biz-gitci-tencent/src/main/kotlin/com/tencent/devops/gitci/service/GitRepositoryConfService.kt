@@ -128,6 +128,6 @@ class GitRepositoryConfService @Autowired constructor(
     private fun requestGitProjectInfo(gitProjectId: Long): GitCIProjectInfo? {
         val serviceGitResource = client.getScm(ServiceGitResource::class)
         val accessToken = serviceGitResource.getToken(gitProjectId).data?.accessToken ?: return null
-        return serviceGitResource.getProjectInfo(accessToken, gitProjectId).data
+        return serviceGitResource.getProjectInfo(accessToken, gitProjectId.toString()).data
     }
 }

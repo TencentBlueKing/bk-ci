@@ -25,28 +25,64 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.v2.templates
+package com.tencent.devops.gitci.v2.template.pojo
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.common.ci.v2.Extends
-import com.tencent.devops.common.ci.v2.Notices
-import com.tencent.devops.common.ci.v2.OnFail
-import com.tencent.devops.common.ci.v2.PreJob
-import com.tencent.devops.common.ci.v2.PreStage
-import com.tencent.devops.common.ci.v2.Resources
-import com.tencent.devops.common.ci.v2.Step
-import com.tencent.devops.common.ci.v2.Variable
+class TemplateGraph<T>(
+    private val adj: MutableMap<String, MutableList<String>> = mutableMapOf()
+) {
 
-data class PipelineTemplate(
-    val parameters: List<Parameters>?,
-    var label: String? = null,
-    var variables: Map<String, Variable>?,
-    var stages: List<PreStage>? = null,
-    var jobs: Map<String, PreJob>? = null,
-    var steps: List<Step>? = null,
-    @JsonProperty("on-fail")
-    var onFail: OnFail?,
-    var extends: Extends?,
-    var resource: Resources?,
-    var notices: List<Notices>?
-)
+    fun addEdge(fromPath: String, toPath: String) {
+        if (adj[fromPath] != null) {
+            adj[fromPath]!!.add(toPath)
+        } else {
+            adj[fromPath] = mutableListOf(toPath)
+        }
+    }
+
+    fun hasCyclic(): Boolean {
+        val visited = adj.map { it.key to false }.toMap().toMutableMap()
+        val recStack = adj.map { it.key to false }.toMap().toMutableMap()
+
+        for (i in adj.keys) {
+            if (hasCyclicUtil(i, visited, recStack)) {
+                return true
+            }
+        }
+        return false
+    }
+
+    private fun hasCyclicUtil(
+        i: String,
+        visited: MutableMap<String, Boolean>,
+        recStack: MutableMap<String, Boolean>
+    ): Boolean {
+
+        if (recStack[i] == null || visited[i] == null) {
+            return false
+        }
+
+        if (recStack[i]!!) {
+            return true
+        }
+
+        if (visited[i]!!) {
+            return false
+        }
+
+        visited[i] = true
+
+        recStack[i] = true
+
+        val children = adj[i]!!
+
+        for (c in children) {
+            if (hasCyclicUtil(c, visited, recStack)) {
+                return true
+            }
+        }
+
+        recStack[i] = false
+
+        return false
+    }
+}

@@ -25,10 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.v2.templates
+package com.tencent.devops.gitci.v2.template.pojo
 
-// @JsonIgnoreProperties(ignoreUnknown = true)
-data class StepsTemplate(
+import com.tencent.devops.common.ci.v2.Variable
+
+data class VariablesTemplate(
     val parameters: List<Parameters>?,
-    val steps: List<Map<String, Any>>
+    val variables: Map<String, Variable>
 )

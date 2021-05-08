@@ -1,0 +1,16 @@
+parameters:
+- name: username
+  type: string
+  default: world
+- name: stagename
+  type: String
+  default: STAGENAME
+
+stages:
+- name: "stage_template_2"
+  jobs:
+    res_job_id_stage_template_1_1:
+      name: my_job_1
+      steps:
+      - run: |
+          echo "hello ${{ parameters.username }}"

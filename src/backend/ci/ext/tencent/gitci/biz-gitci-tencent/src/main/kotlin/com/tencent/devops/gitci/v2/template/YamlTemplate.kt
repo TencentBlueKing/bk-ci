@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci.v2.utils
+package com.tencent.devops.gitci.v2.template
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
@@ -37,20 +37,28 @@ import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreScriptBuildYaml
 import com.tencent.devops.common.ci.v2.PreStage
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
+import com.tencent.devops.common.ci.v2.Resources
 import com.tencent.devops.common.ci.v2.Service
 import com.tencent.devops.common.ci.v2.ServiceWith
 import com.tencent.devops.common.ci.v2.Step
 import com.tencent.devops.common.ci.v2.Strategy
 import com.tencent.devops.common.ci.v2.Variable
-import com.tencent.devops.common.ci.v2.templates.ParametersTemplateNull
-import com.tencent.devops.common.ci.v2.templates.PipelineTemplate
-import com.tencent.devops.common.ci.v2.templates.TemplateGraph
-import com.tencent.devops.common.ci.v2.templates.TemplateType
+import com.tencent.devops.gitci.v2.template.pojo.ParametersTemplateNull
+import com.tencent.devops.gitci.v2.template.pojo.PipelineTemplate
+import com.tencent.devops.gitci.v2.template.pojo.TemplateGraph
+import com.tencent.devops.gitci.v2.template.pojo.enums.TemplateType
+import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
+import com.tencent.devops.common.ci.v2.utils.YamlCommonUtils
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.gitci.v2.template.pojo.ResourcesTemplate
+import com.tencent.devops.gitci.v2.template.pojo.enums.ResourceCredentialType
 
-class YamlTemplateUtils(
+class YamlTemplate(
     val yamlObject: PreTemplateScriptBuildYaml,
-    val templates: Map<String, String?>,
-    val rootPath: String
+    val templates: MutableMap<String, String?>,
+    val rootPath: String,
+    val projectId: Long,
+    val userId: String
 ) {
     // 添加图防止模版的循环嵌套
     var varTemplateGraph = TemplateGraph<String>()
@@ -67,25 +75,27 @@ class YamlTemplateUtils(
                 triggerOn = triggerOn,
                 onFail = onFail,
                 extends = extends,
-                resource = resource,
+                resources = resources,
                 notices = notices
             )
         }
-
+        if (yamlObject.resources != null) {
+            addResourcesTemplates(rootPath, "", yamlObject.resources)
+        }
         if (yamlObject.extends != null) {
-            replaceExtends(yamlObject.extends, preYamlObject)
+            replaceExtends(yamlObject.extends!!, preYamlObject)
         }
         if (yamlObject.variables != null) {
-            replaceVariables(yamlObject.variables, preYamlObject)
+            replaceVariables(yamlObject.variables!!, preYamlObject)
         }
         if (yamlObject.stages != null) {
-            replaceStages(yamlObject.stages, preYamlObject)
+            replaceStages(yamlObject.stages!!, preYamlObject)
         }
         if (yamlObject.jobs != null) {
-            replaceJobs(yamlObject.jobs, preYamlObject)
+            replaceJobs(yamlObject.jobs!!, preYamlObject)
         }
         if (yamlObject.steps != null) {
-            replaceSteps(yamlObject.steps, preYamlObject)
+            replaceSteps(yamlObject.steps!!, preYamlObject)
         }
 
         return preYamlObject
@@ -99,6 +109,9 @@ class YamlTemplateUtils(
         val parameters = extend.parameters
         val template = parseTemplateParameters(path, templates[path], parameters)
         val templateObject = YamlUtil.getObjectMapper().readValue(template, PipelineTemplate::class.java)
+        if (templateObject.resources != null) {
+            addResourcesTemplates(path, template)
+        }
         with(templateObject) {
             preYamlObject.label = label
             if (variables != null) {
@@ -106,7 +119,7 @@ class YamlTemplateUtils(
             }
             preYamlObject.onFail = onFail
             preYamlObject.extends = extends
-            preYamlObject.resource = resource
+            preYamlObject.resources = resources
             preYamlObject.notices = notices
             if (stages != null) {
                 replaceStages(stages!!.map { JsonUtil.toMap(it) }, preYamlObject)
@@ -126,7 +139,7 @@ class YamlTemplateUtils(
     ) {
         val variableMap = mutableMapOf<String, Variable>()
         variables.forEach { (key, value) ->
-            val newVariable = replaceVariableTemplate(mapOf(key to value), templates, rootPath)
+            val newVariable = replaceVariableTemplate(mapOf(key to value), rootPath)
             if (key == "template") {
                 val interSet = newVariable.keys intersect variables.keys
                 if (interSet.isNullOrEmpty() || (interSet.size == 1 && interSet.last() == "template")) {
@@ -149,7 +162,7 @@ class YamlTemplateUtils(
     ) {
         val stageList = mutableListOf<PreStage>()
         stages.forEach { stage ->
-            stageList.addAll(replaceStageTemplate(listOf(stage), templates, rootPath))
+            stageList.addAll(replaceStageTemplate(listOf(stage), rootPath))
         }
         preYamlObject.stages = stageList
     }
@@ -161,7 +174,7 @@ class YamlTemplateUtils(
         val jobMap = mutableMapOf<String, PreJob>()
         jobs.forEach { (key, value) ->
             // 检查根文件处job_id重复
-            val newJob = replaceJobTemplate(mapOf(key to value), templates, rootPath)
+            val newJob = replaceJobTemplate(mapOf(key to value), rootPath)
             if (key == "template") {
                 val interSet = newJob.keys intersect jobs.keys
                 if (interSet.isNullOrEmpty() || (interSet.size == 1 && interSet.last() == "template")) {
@@ -184,7 +197,7 @@ class YamlTemplateUtils(
     ) {
         val stepList = mutableListOf<Step>()
         steps.forEach { step ->
-            stepList.addAll(replaceStepTemplate(listOf(step), templates, rootPath))
+            stepList.addAll(replaceStepTemplate(listOf(step), rootPath))
         }
         preYamlObject.steps = stepList
     }
@@ -192,10 +205,13 @@ class YamlTemplateUtils(
     // 进行模板替换
     private fun replaceVariableTemplate(
         variables: Map<String, Any>,
-        templates: Map<String, String?>,
         fromPath: String
     ): Map<String, Variable> {
         val variableMap = mutableMapOf<String, Variable>()
+        if (fromPath != rootPath) {
+            // 拉取远程库文件
+            addResourcesTemplates(fromPath, templates[fromPath])
+        }
         variables.forEach { (key, value) ->
             if (key == "template") {
                 val toPathList = value as List<Map<String, Any>>
@@ -207,6 +223,11 @@ class YamlTemplateUtils(
                         key = "parameters",
                         map = item
                     )
+
+                    if (toPath.contains("@")) {
+                        replaceResTemplateFile(toPath)
+                    }
+
                     val template =
                         parseTemplateParameters(
                             path = toPath,
@@ -218,7 +239,6 @@ class YamlTemplateUtils(
 
                     val newVar = replaceVariableTemplate(
                         variables = templateObject["variables"] as Map<String, Any>,
-                        templates = templates,
                         fromPath = toPath
                     )
                     // 检测variable是否存在重复的key
@@ -240,10 +260,13 @@ class YamlTemplateUtils(
 
     private fun replaceStageTemplate(
         stages: List<Map<String, Any>>,
-        templates: Map<String, String?>,
         fromPath: String
     ): List<PreStage> {
         val stageList = mutableListOf<PreStage>()
+        if (fromPath != rootPath) {
+            // 拉取远程库文件
+            addResourcesTemplates(fromPath, templates[fromPath])
+        }
         stages.forEach { stage ->
             if ("template" in stage.keys) {
                 val toPath = stage["template"].toString()
@@ -253,18 +276,22 @@ class YamlTemplateUtils(
                     key = "parameters",
                     map = stage
                 )
+
+                if (toPath.contains("@")) {
+                    replaceResTemplateFile(toPath)
+                }
+
                 val template = parseTemplateParameters(toPath, templates[toPath], parameters)
                 val templateObject =
                     YamlUtil.getObjectMapper().readValue(template, object : TypeReference<Map<String, Any>>() {})
                 stageList.addAll(
                     replaceStageTemplate(
                         stages = templateObject["stages"] as List<Map<String, Any>>,
-                        templates = templates,
                         fromPath = toPath
                     )
                 )
             } else {
-                stageList.add(getStage(stage, templates))
+                stageList.add(getStage(stage))
             }
         }
         return stageList
@@ -272,10 +299,13 @@ class YamlTemplateUtils(
 
     private fun replaceJobTemplate(
         jobs: Map<String, Any>,
-        templates: Map<String, String?>,
         fromPath: String
     ): Map<String, PreJob> {
         val jobMap = mutableMapOf<String, PreJob>()
+        if (fromPath != rootPath) {
+            // 拉取远程库文件
+            addResourcesTemplates(fromPath, templates[fromPath])
+        }
         jobs.forEach { (key, value) ->
             if (key == "template") {
                 val toPathList = value as List<Map<String, Any>>
@@ -287,6 +317,11 @@ class YamlTemplateUtils(
                         key = "parameters",
                         map = item
                     )
+
+                    if (toPath.contains("@")) {
+                        replaceResTemplateFile(toPath)
+                    }
+
                     val template =
                         parseTemplateParameters(
                             path = toPath,
@@ -298,7 +333,6 @@ class YamlTemplateUtils(
 
                     val newJob = replaceJobTemplate(
                         jobs = templateObject["jobs"] as Map<String, Any>,
-                        templates = templates,
                         fromPath = toPath
                     )
                     // 检测job是否存在重复的key
@@ -312,7 +346,7 @@ class YamlTemplateUtils(
                     }
                 }
             } else {
-                jobMap[key] = getJob((value as Map<String, Any>), templates)
+                jobMap[key] = getJob((value as Map<String, Any>))
             }
         }
         return jobMap
@@ -320,10 +354,13 @@ class YamlTemplateUtils(
 
     private fun replaceStepTemplate(
         steps: List<Map<String, Any>>,
-        templates: Map<String, String?>,
         fromPath: String
     ): List<Step> {
         val stepList = mutableListOf<Step>()
+        if (fromPath != rootPath) {
+            // 拉取远程库文件
+            addResourcesTemplates(fromPath, templates[fromPath])
+        }
         steps.forEach { step ->
             if ("template" in step.keys) {
                 val toPath = step["template"].toString()
@@ -333,6 +370,11 @@ class YamlTemplateUtils(
                     key = "parameters",
                     map = step
                 )
+
+                if (toPath.contains("@")) {
+                    replaceResTemplateFile(toPath)
+                }
+
                 val template = parseTemplateParameters(toPath, templates[toPath], parameters)
                 val templateObject =
                     YamlUtil.getObjectMapper().readValue(template, object : TypeReference<Map<String, Any>>() {})
@@ -340,7 +382,6 @@ class YamlTemplateUtils(
                 stepList.addAll(
                     replaceStepTemplate(
                         steps = templateObject["steps"] as List<Map<String, Any>>,
-                        templates = templates,
                         fromPath = toPath
                     )
                 )
@@ -349,6 +390,25 @@ class YamlTemplateUtils(
             }
         }
         return stepList
+    }
+
+    // 对远程仓库中的模板进行远程仓库替换
+    private fun replaceResTemplateFile(toPath: String) {
+        val news = templates.filter { it.key.contains("@${toPath.split("@")[1]}") }.map {
+            it.key.split("@")[0] to it.value
+        }.toMap().toMutableMap()
+        templates[toPath] = YamlCommonUtils.toYamlNotNull(
+            YamlTemplate(
+                yamlObject = YamlUtil.getObjectMapper().readValue(
+                    templates[toPath],
+                    PreTemplateScriptBuildYaml::class.java
+                ),
+                templates = news,
+                rootPath = toPath.split("@")[0],
+                projectId = projectId,
+                userId = userId
+            ).replace()
+        )
     }
 
     // 将路径加入图中并且做循环嵌套检测
@@ -450,7 +510,7 @@ class YamlTemplateUtils(
         )
     }
 
-    private fun getJob(job: Map<String, Any>, templates: Map<String, String?>): PreJob {
+    private fun getJob(job: Map<String, Any>): PreJob {
         return PreJob(
             name = job["name"]?.toString(),
             runsOn = if (job["runs-on"] == null) {
@@ -475,7 +535,7 @@ class YamlTemplateUtils(
                 val steps = job["steps"] as List<Map<String, Any>>
                 val list = mutableListOf<Step>()
                 steps.forEach {
-                    list.addAll(replaceStepTemplate(listOf(it), templates, rootPath))
+                    list.addAll(replaceStepTemplate(listOf(it), rootPath))
                 }
                 list
             },
@@ -499,7 +559,7 @@ class YamlTemplateUtils(
         )
     }
 
-    private fun getStage(stage: Map<String, Any>, templates: Map<String, String?>): PreStage {
+    private fun getStage(stage: Map<String, Any>): PreStage {
         return PreStage(
             name = stage["name"]?.toString(),
             id = stage["id"]?.toString(),
@@ -513,7 +573,7 @@ class YamlTemplateUtils(
                 val map = mutableMapOf<String, PreJob>()
                 jobs.forEach { (key, value) ->
                     // 检查根文件处jobId重复
-                    val newJob = replaceJobTemplate(mapOf(key to value), templates, rootPath)
+                    val newJob = replaceJobTemplate(mapOf(key to value), rootPath)
                     if (key == "template") {
                         val interSet = newJob.keys intersect jobs.keys
                         if (interSet.isNullOrEmpty() || (interSet.size == 1 && interSet.last() == "template")) {
@@ -574,6 +634,82 @@ class YamlTemplateUtils(
             fastKill = getNullValue("fast-kill", strategyMap)?.toBoolean(),
             maxParallel = getNullValue("max-parallel", strategyMap)
         )
+    }
+
+    // 获取远程仓库
+    private fun getResources(path: String, template: String): ResourcesTemplate {
+        return try {
+            YamlUtil.getObjectMapper().readValue(template, ResourcesTemplate::class.java)
+        } catch (e: Exception) {
+            throw RuntimeException("$path wrong format！ ${e.message}")
+        }
+    }
+
+    private fun addResourcesTemplates(path: String, template: String?, oldResources: Resources? = null) {
+        if (template == null) {
+            throw RuntimeException("template file: $path not find")
+        }
+        val resources = if (oldResources != null) {
+            oldResources.repositories
+        } else {
+            getResources(path, template).resources?.repositories
+        }
+        if (resources.isNullOrEmpty()) {
+            return
+        }
+        resources.forEach { res ->
+            var userTicket = false
+            var oauth = false
+            if (res.credentials?.useActorOauth != null) {
+                oauth = res.credentials?.useActorOauth!!
+            }
+            val key = if (!oauth && res.credentials?.personalAccessToken != null) {
+                getKey(res.credentials?.personalAccessToken!!)
+            } else {
+                ""
+            }
+            if (key == "" || key == res.credentials?.personalAccessToken) {
+                userTicket = true
+            }
+            val resMap = SpringContextUtil.getBean(YamlTemplateService::class.java).getResTemplates(
+                gitProjectId = projectId,
+                userId = userId,
+                repo = res.repository!!,
+                ref = res.ref!!,
+                credentialType = if (oauth) {
+                    ResourceCredentialType.OAUTH
+                } else {
+                    ResourceCredentialType.PRIVATE_KEY
+                },
+                key = key,
+                userTicket = userTicket,
+                name = res.name!!
+            )
+            setTemplates(resMap)
+        }
+    }
+
+    private fun getKey(personalAccessToken: String): String {
+        return if (personalAccessToken.contains("\${{") && personalAccessToken.contains("}}")) {
+            val str = personalAccessToken.split("\${{")[1].split("}}")[0]
+            if (str.startsWith("settings.")) {
+                str.removePrefix("settings.")
+            } else {
+                throw RuntimeException("\${{}} only support settings")
+            }
+        } else {
+            personalAccessToken
+        }
+    }
+
+    private fun setTemplates(newTemplates: Map<String, String?>) {
+        newTemplates.forEach { (key, value) ->
+            if (templates.containsKey(key)) {
+                throw RuntimeException("template $key duplicate")
+            } else {
+                templates[key] = value
+            }
+        }
     }
 
     private fun <T> transNullValue(key: String, map: Map<String, Any?>): T? {

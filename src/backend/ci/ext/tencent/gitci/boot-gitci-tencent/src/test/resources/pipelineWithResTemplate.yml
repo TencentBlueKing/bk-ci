@@ -1,0 +1,49 @@
+version: v2.0
+
+resources:
+  repositories:
+    - repository: ruotiantang/gitci2-template-1
+      name: repoA
+      ref: master  # 可选
+      credentials:
+        personal-access-token: v994gkKTk8wNb-LXD-gx
+
+#variables:
+#  DEPLOY_TYPE:
+#    value: dev
+#  APPROVE:
+#    value: ${{ sss }}_${{ approve22 }}
+#  GIT_USERNAME:
+#    value: user1
+#    readonly: true
+#  template:
+#    - name: templates/variables.yml
+#      parameters:
+#        username: VARIABLES
+
+#stages:
+#  - name: "stage1"
+#    id: abc
+#    label: ${{ varivable.approve }}
+#    if: [envs.BK_CI_EVENT == 'push' || varivable.approve]
+#    jobs:
+#      job_id_2:
+#        name: my_job_2
+#        steps:
+#          - template: templates/step1.yml@repoA
+#            parameters:
+#              username: RES_STEP
+#        depend-on:
+#          - job_id_1
+#      template:
+#        - name: templates/job1.yml@repoA
+#          parameters:
+#            username: RES_JOB
+#  - template: templates/stage1.yml@repoA
+#    parameters:
+#      username: RES_STAGE
+
+steps:
+  - template: templates/step1.yml@repoA
+    parameters:
+      username: RES_STEP

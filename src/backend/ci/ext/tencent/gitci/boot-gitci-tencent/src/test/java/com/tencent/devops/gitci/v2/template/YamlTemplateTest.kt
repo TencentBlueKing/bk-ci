@@ -25,13 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci
+package com.tencent.devops.gitci.v2.template
 
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.ci.v2.utils.YamlCommonUtils
-import com.tencent.devops.common.ci.v2.utils.YamlTemplateUtils
 import org.junit.Test
 
 import org.springframework.core.io.ClassPathResource
@@ -39,9 +38,10 @@ import java.io.BufferedReader
 import java.io.InputStream
 import java.io.InputStreamReader
 
-class YamlTemplateUtilsTest {
+class YamlTemplateTest {
+
     // 综合测试
-    val testYaml = "pipelineWithTemplate.yml"
+    val testYaml = "pipelineWithResTemplate.yml"
     val templateYamlList = listOf(
         "templates/stages.yml",
         "templates/jobs.yml",
@@ -69,6 +69,7 @@ class YamlTemplateUtilsTest {
         "cyclic/step/templates/step7.yml",
         "cyclic/step/templates/step8.yml"
     )
+
 //    // 测试step循环嵌套
 //    val testYaml = "/cyclic/step/pipeline.yml"
 //    val templateYamlList = listOf(
@@ -112,10 +113,12 @@ class YamlTemplateUtilsTest {
 
         println(
             YamlCommonUtils.toYamlNotNull(
-                YamlTemplateUtils(
+                TestYamlTemplate(
                     yamlObject = preTemplateYamlObject,
-                    templates = getAllTemplates(),
-                    rootPath = testYaml
+                    templates = getAllTemplates().toMutableMap(),
+                    rootPath = testYaml,
+                    userId = "ruotiantang",
+                    projectId = 580280
                 ).replace()
             )
         )

@@ -1,0 +1,32 @@
+resources:
+  repositories:
+    - repository: ruotiantang/gitci2-template-2
+      name: repoB
+      ref: master  # 可选
+      credentials:
+        personal-access-token: v994gkKTk8wNb-LXD-gx
+
+parameters:
+- name: username
+  type: string
+  default: world
+- name: stagename
+  type: String
+  default: STAGENAME
+
+stages:
+- name: "res_stage_template_1"
+  jobs:
+    res_job_id_stage_template_1_1:
+      name: my_job_1
+      steps:
+      - run: |
+          echo "hello ${{ parameters.username }}"
+    res_job_id_stage_template_1_2:
+      name: my_job_2
+      steps:
+      - run: |
+          echo "stage1, ${{ parameters.stagename }}"
+- template: templates/stage2.yml@repoB
+  parameters:
+    username: RES_STAGE1

@@ -148,8 +148,12 @@ class ServiceGitResourceImpl @Autowired constructor(
         return Result(gitService.getProject(accessToken, userId))
     }
 
-    override fun getProjectInfo(accessToken: String, gitProjectId: Long): Result<GitCIProjectInfo?> {
-        return gitService.getGitCIProjectInfo(gitProjectId.toString(), accessToken)
+    override fun getProjectInfo(
+        accessToken: String,
+        gitProjectId: String,
+        useAccessToken:Boolean
+    ): Result<GitCIProjectInfo?> {
+        return gitService.getGitCIProjectInfo(gitProjectId, accessToken,useAccessToken)
     }
 
     override fun getProjectList(accessToken: String, userId: String, page: Int?, pageSize: Int?): Result<List<Project>> {
@@ -180,8 +184,14 @@ class ServiceGitResourceImpl @Autowired constructor(
         return Result(gitService.getToken(gitProjectId.toString()))
     }
 
-    override fun getGitCIFileContent(gitProjectId: Long, filePath: String, token: String, ref: String): Result<String> {
-        return Result(gitService.getGitCIFileContent(gitProjectId, filePath, token, ref))
+    override fun getGitCIFileContent(
+        gitProjectId: Long,
+        filePath: String,
+        token: String,
+        ref: String,
+        useAccessToken:Boolean
+    ): Result<String> {
+        return Result(gitService.getGitCIFileContent(gitProjectId, filePath, token, ref, useAccessToken))
     }
 
     override fun getGitCIMrChanges(gitProjectId: Long, mergeRequestId: Long, token: String): Result<GitMrChangeInfo> {
@@ -218,8 +228,14 @@ class ServiceGitResourceImpl @Autowired constructor(
         return Result(gitService.getCommitRefs(gitProjectId, commitId, type, token))
     }
 
-    override fun getGitCIFileTree(gitProjectId: Long, path: String, token: String, ref: String): Result<List<GitFileInfo>> {
-        return Result(gitService.getGitCIFileTree(gitProjectId, path, token, ref))
+    override fun getGitCIFileTree(
+        gitProjectId: Long,
+        path: String,
+        token: String,
+        ref: String,
+        useAccessToken:Boolean
+    ): Result<List<GitFileInfo>> {
+        return Result(gitService.getGitCIFileTree(gitProjectId, path, token, ref, useAccessToken))
     }
 
     override fun getRedirectUrl(authParamJsonStr: String): Result<String> {
