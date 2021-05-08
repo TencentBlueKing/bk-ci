@@ -33,6 +33,7 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
@@ -64,5 +65,14 @@ interface ServiceGitCiResource {
         @ApiParam("gitProjectId", required = true)
         @QueryParam("gitProjectId")
         gitProjectId: String
+    ): Result<Boolean>
+
+    @ApiOperation("获取项目的token")
+    @DELETE
+    @Path("/clearToken")
+    fun clearToken(
+        @ApiParam("token", required = true)
+        @QueryParam("token")
+        token: String
     ): Result<Boolean>
 }
