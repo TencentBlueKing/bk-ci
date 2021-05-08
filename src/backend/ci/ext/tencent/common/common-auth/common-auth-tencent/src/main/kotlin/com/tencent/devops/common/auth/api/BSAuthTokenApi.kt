@@ -92,6 +92,10 @@ class BSAuthTokenApi @Autowired constructor(
         }
     }
 
+    override fun checkToken(token: String): Boolean {
+        return false
+    }
+
     private fun createAccessToken(appCode: String, appSecret: String): BkAuthTokenCreate {
         val url = "${bkAuthProperties.url}/oauth/token"
         val bkAuthTokenRequest = BkAuthTokenCreateRequest(
