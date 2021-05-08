@@ -28,6 +28,7 @@
 
 package com.tencent.devops.process.permission
 
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
@@ -39,6 +40,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 class V3PipelinePermissionServiceImpl @Autowired constructor(
     val authPermissionApi: AuthPermissionApi,
+    val authProjectApi: AuthProjectApi,
     val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode
 ): PipelinePermissionService {
     // 一般为校验用户是否有某项目下的创建逻辑
@@ -74,26 +76,48 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
     }
 
     override fun validPipelinePermission(userId: String, projectId: String, pipelineId: String, permission: AuthPermission, message: String?) {
-        TODO("Not yet implemented")
+        val permissionCheck = authPermissionApi.validateUserResourcePermission(
+            user = userId,
+            projectCode = projectId,
+            resourceCode = pipelineId,
+            permission = permission,
+            resourceType = AuthResourceType.PIPELINE_DEFAULT,
+            serviceCode = bsPipelineAuthServiceCode
+        )
+        if (!permissionCheck) {
+            throw PermissionForbiddenException(message)
+        }
     }
 
     override fun getResourceByPermission(userId: String, projectId: String, permission: AuthPermission): List<String> {
-        TODO("Not yet implemented")
+        return authPermissionApi.getUserResourceByPermission(
+            user = userId,
+            serviceCode = bsPipelineAuthServiceCode,
+            projectCode = projectId,
+            permission = permission,
+            supplier = null,
+            resourceType = AuthResourceType.PIPELINE_DEFAULT
+        )
     }
 
     override fun createResource(userId: String, projectId: String, pipelineId: String, pipelineName: String) {
-        TODO("Not yet implemented")
+        return
     }
 
     override fun modifyResource(projectId: String, pipelineId: String, pipelineName: String) {
-        TODO("Not yet implemented")
+        return
     }
 
     override fun deleteResource(projectId: String, pipelineId: String) {
-        TODO("Not yet implemented")
+        return
     }
 
     override fun isProjectUser(userId: String, projectId: String, group: BkAuthGroup?): Boolean {
-        TODO("Not yet implemented")
+        return authProjectApi.isProjectUser(
+            user = userId,
+            projectCode = projectId,
+            group = group,
+            serviceCode = bsPipelineAuthServiceCode
+        )
     }
 }
