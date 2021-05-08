@@ -34,7 +34,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
-//@RestResource
+@RestResource
 class ServicePermissionAuthResourceImpl @Autowired constructor(
     val permissionService: PermissionService
 ) : ServicePermissionAuthResource {

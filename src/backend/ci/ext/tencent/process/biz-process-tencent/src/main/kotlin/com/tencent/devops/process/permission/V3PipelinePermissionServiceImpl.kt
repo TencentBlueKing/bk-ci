@@ -36,13 +36,19 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 
 class V3PipelinePermissionServiceImpl @Autowired constructor(
     val authPermissionApi: AuthPermissionApi,
     val authProjectApi: AuthProjectApi,
-    val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode
-): PipelinePermissionService {
+    val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
+    val dslContext: DSLContext,
+    val pipelineInfoDao: PipelineInfoDao
+) : PipelinePermissionService {
+    // TODO: 为解决pipelineId较长的问题，此处校验时需将pipelineId转为Id, 获取实例时,需将ID转化为pipelineId
+
     // 一般为校验用户是否有某项目下的创建逻辑
     override fun checkPipelinePermission(
         userId: String,
@@ -65,10 +71,12 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
         pipelineId: String,
         permission: AuthPermission
     ): Boolean {
+        val iamId = findInstanceId(pipelineId)
+
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
             projectCode = projectId,
-            resourceCode = pipelineId,
+            resourceCode = iamId,
             permission = permission,
             resourceType = AuthResourceType.PIPELINE_DEFAULT,
             serviceCode = bsPipelineAuthServiceCode
@@ -76,6 +84,10 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
     }
 
     override fun validPipelinePermission(userId: String, projectId: String, pipelineId: String, permission: AuthPermission, message: String?) {
+        val iamId = findInstanceId(pipelineId)
+        if (iamId.isNullOrEmpty()) {
+            throw PermissionForbiddenException("流水线不存在")
+        }
         val permissionCheck = authPermissionApi.validateUserResourcePermission(
             user = userId,
             projectCode = projectId,
@@ -90,7 +102,7 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
     }
 
     override fun getResourceByPermission(userId: String, projectId: String, permission: AuthPermission): List<String> {
-        return authPermissionApi.getUserResourceByPermission(
+        val iamInstanceList = authPermissionApi.getUserResourceByPermission(
             user = userId,
             serviceCode = bsPipelineAuthServiceCode,
             projectCode = projectId,
@@ -98,6 +110,14 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
             supplier = null,
             resourceType = AuthResourceType.PIPELINE_DEFAULT
         )
+        val pipelineIds = mutableListOf<String>()
+        if (iamInstanceList.contains("*")) {
+            pipelineInfoDao.searchByPipelineName(dslContext, projectId)?.map { pipelineIds.add(it.pipelineId) }
+        } else {
+            // TODO: 根据ID 列表查pipeline信息
+
+        }
+        return pipelineIds
     }
 
     override fun createResource(userId: String, projectId: String, pipelineId: String, pipelineName: String) {
@@ -119,5 +139,11 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
             group = group,
             serviceCode = bsPipelineAuthServiceCode
         )
+    }
+
+    private fun findInstanceId(pipelineId: String): String {
+        val pipelineInfo = pipelineInfoDao.getPipelineInfo(dslContext, pipelineId)
+            ?: throw PermissionForbiddenException("流水线$pipelineId 不存在")
+        return pipelineInfo.id.toString()
     }
 }

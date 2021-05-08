@@ -36,7 +36,7 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
-//@RestResource
+@RestResource
 class ServiceProjectAuthResourceImpl @Autowired constructor(
     val permissionProjectService: PermissionProjectService
 ) : ServiceProjectAuthResource {

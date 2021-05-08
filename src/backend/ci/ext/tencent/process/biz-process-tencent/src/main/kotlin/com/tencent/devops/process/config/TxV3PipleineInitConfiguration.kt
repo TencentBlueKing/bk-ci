@@ -30,8 +30,10 @@ package com.tencent.devops.process.config
 import com.tencent.devops.common.auth.api.v3.TxV3BSAuthProjectApi
 import com.tencent.devops.common.auth.api.v3.TxV3BsAuthPermissionApi
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
+import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.permission.V3PipelinePermissionServiceImpl
+import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
@@ -49,7 +51,15 @@ class TxV3PipleineInitConfiguration {
     fun projectPermissionService(
         txV3BsAuthPermission: TxV3BsAuthPermissionApi,
         txV3BSAuthProjectApi: TxV3BSAuthProjectApi,
-        bsPipelineAuthServiceCode: BSPipelineAuthServiceCode
+        bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
+        dslContext: DSLContext,
+        pipelineInfoDao: PipelineInfoDao
     ): PipelinePermissionService =
-        V3PipelinePermissionServiceImpl(txV3BsAuthPermission, txV3BSAuthProjectApi, bsPipelineAuthServiceCode)
+        V3PipelinePermissionServiceImpl(
+            authPermissionApi = txV3BsAuthPermission,
+            authProjectApi = txV3BSAuthProjectApi,
+            bsPipelineAuthServiceCode = bsPipelineAuthServiceCode,
+            dslContext = dslContext,
+            pipelineInfoDao = pipelineInfoDao
+        )
 }
