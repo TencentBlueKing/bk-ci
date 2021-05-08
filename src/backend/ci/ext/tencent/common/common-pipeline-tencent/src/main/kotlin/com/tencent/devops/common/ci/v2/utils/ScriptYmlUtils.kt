@@ -369,7 +369,8 @@ object ScriptYmlUtils {
             extends = preScriptBuildYaml.extends,
             resource = preScriptBuildYaml.resource,
             notices = preScriptBuildYaml.notices,
-            stages = stages
+            stages = stages,
+            finally = preStages2Stages(preScriptBuildYaml.finally)
         )
     }
 

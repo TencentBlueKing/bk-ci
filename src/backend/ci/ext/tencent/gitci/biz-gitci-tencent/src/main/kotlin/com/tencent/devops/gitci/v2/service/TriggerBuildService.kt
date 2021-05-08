@@ -200,37 +200,11 @@ class TriggerBuildService @Autowired constructor(
 
         // 其他的stage
         yaml.stages.forEachIndexed { stageIndex, stage ->
-            val containerList = mutableListOf<Container>()
-            stage.jobs.forEachIndexed { jobIndex, job ->
-                var elementList = mutableListOf<Element>()
+            stageList.add(createStage(stage, event, gitProjectConf))
+        }
 
-                if (job.runsOn[0] == JobRunsOnType.DOCKER_ON_VM.type) {
-                    // 构建环境容器每个job的第一个插件都是拉代码
-                    elementList.add(createGitCodeElement(event, gitProjectConf))
-                    elementList = makeElementList(job, gitProjectConf, event.userId)
-                    addVmBuildContainer(job, elementList, containerList, jobIndex)
-                } else {
-                    elementList = makeElementList(job, gitProjectConf, event.userId)
-                    addNormalContainer(job, elementList, containerList, jobIndex)
-                }
-            }
-
-            // 根据if设置stageController
-            var stageControlOption = StageControlOption()
-            if (stage.ifField != null) {
-                stageControlOption = StageControlOption(
-                    runCondition = StageRunCondition.CUSTOM_CONDITION_MATCH,
-                    customCondition = stage.ifField.toString()
-                )
-            }
-
-            stageList.add(Stage(
-                id = stage.id,
-                tag = listOf(stage.label),
-                fastKill = stage.fastKill,
-                stageControlOption = stageControlOption,
-                containers = containerList
-            ))
+        yaml.finally?.forEach {
+            stageList.add(createStage(it, event, gitProjectConf))
         }
 
         return Model(
@@ -240,6 +214,44 @@ class TriggerBuildService @Autowired constructor(
             labels = emptyList(),
             instanceFromTemplate = false,
             pipelineCreator = event.userId
+        )
+    }
+
+    private fun createStage(
+        stage: com.tencent.devops.common.ci.v2.Stage,
+        event: GitRequestEvent,
+        gitProjectConf: GitRepositoryConf
+    ): Stage {
+        val containerList = mutableListOf<Container>()
+        stage.jobs.forEachIndexed { jobIndex, job ->
+            var elementList = mutableListOf<Element>()
+
+            if (job.runsOn[0] == JobRunsOnType.DOCKER_ON_VM.type) {
+                // 构建环境容器每个job的第一个插件都是拉代码
+                elementList.add(createGitCodeElement(event, gitProjectConf))
+                elementList = makeElementList(job, gitProjectConf, event.userId)
+                addVmBuildContainer(job, elementList, containerList, jobIndex)
+            } else {
+                elementList = makeElementList(job, gitProjectConf, event.userId)
+                addNormalContainer(job, elementList, containerList, jobIndex)
+            }
+        }
+
+        // 根据if设置stageController
+        var stageControlOption = StageControlOption()
+        if (stage.ifField != null) {
+            stageControlOption = StageControlOption(
+                runCondition = StageRunCondition.CUSTOM_CONDITION_MATCH,
+                customCondition = stage.ifField.toString()
+            )
+        }
+
+        return Stage(
+            id = stage.id,
+            tag = listOf(stage.label),
+            fastKill = stage.fastKill,
+            stageControlOption = stageControlOption,
+            containers = containerList
         )
     }
 
