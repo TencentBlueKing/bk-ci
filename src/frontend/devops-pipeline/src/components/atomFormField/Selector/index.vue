@@ -117,15 +117,22 @@
             editItem (index) {
                 this.edit(index)
             },
-            async remoteMethod (name) {
-                try {
-                    const regExp = new RegExp(this.replaceKey, 'g')
-                    const url = this.searchUrl.replace(regExp, name)
-                    const data = await this.$ajax.get(url)
-                    this.listData = this.getResponseData(data)
-                } catch (error) {
-                    console.log(error)
-                }
+            remoteMethod (name) {
+                return new Promise((resolve, reject) => {
+                    clearTimeout(this.remoteMethod.timeId)
+                    this.remoteMethod.timeId = setTimeout(async () => {
+                        try {
+                            const regExp = new RegExp(this.replaceKey, 'g')
+                            const url = this.searchUrl.replace(regExp, name)
+                            const data = await this.$ajax.get(url)
+                            this.listData = this.getResponseData(data)
+                            resolve()
+                        } catch (error) {
+                            console.error(error)
+                            reject(error)
+                        }
+                    }, 500)
+                })
             }
         }
     }
