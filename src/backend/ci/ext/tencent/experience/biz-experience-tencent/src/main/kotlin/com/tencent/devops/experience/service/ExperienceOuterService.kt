@@ -1,6 +1,7 @@
 package com.tencent.devops.experience.service
 
 import com.tencent.bkuser.ApiException
+import com.tencent.bkuser.api.ProfilesApi
 import com.tencent.bkuser.api.V1Api
 import com.tencent.bkuser.model.Profile
 import com.tencent.bkuser.model.ProfileLogin
@@ -42,7 +43,7 @@ class ExperienceOuterService @Autowired constructor(
             val data = ProfileLogin()
             data.username = params.username
             data.password = params.password
-            val profile = api.v1LoginLogin(data)
+            val profile = loginApi.v1LoginLogin(data)
 
             // 判断账号没有被封
             if (profile.status != Profile.StatusEnum.NORMAL) {
@@ -91,19 +92,14 @@ class ExperienceOuterService @Autowired constructor(
             )
         }
 
-        // TODO TOKEN对应的账号被封
-        val canCheck = redisOperation.execute(RedisCallback {
-            it.stringCommands().set(
-                token.toByteArray(),
-                "1".toByteArray(),
-                Expiration.seconds(10),
-                RedisStringCommands.SetOption.SET_IF_ABSENT
-            )
-        })
-
-        // 获取账号信息
         try {
-            return JsonUtil.getObjectMapper().readValue<OuterProfileVO>(profileStr, OuterProfileVO::class.java)
+            // 获取账号信息
+            val profileVO = JsonUtil.getObjectMapper().readValue<OuterProfileVO>(profileStr, OuterProfileVO::class.java)
+
+            // TOKEN对应的账号是否正常
+            checkNormal(token, profileVO)
+
+            return profileVO
         } catch (e: Exception) {
             logger.warn("decode profile failed , token:{}", token, e)
             throw ErrorCodeException(
@@ -118,6 +114,36 @@ class ExperienceOuterService @Autowired constructor(
         redisOperation.expire(redisKey(token), expireSecs)
     }
 
+    fun outerList(): List<String> {
+        return profileApi.v2ProfilesList(
+            null, null, null, null, null, null,
+            null, null, null, null, null, null, null, null
+        ).results.map { it.username }
+    }
+
+    private fun checkNormal(token: String, profileVO: OuterProfileVO) {
+        val checkNow = redisOperation.execute(RedisCallback {
+            it.stringCommands().set(
+                token.toByteArray(),
+                "1".toByteArray(),
+                Expiration.seconds(30),
+                RedisStringCommands.SetOption.SET_IF_ABSENT
+            )
+        })
+        if (checkNow == true) {
+            val profilesRead = profileApi.v2ProfilesRead(profileVO.username, "status", "username")
+            if (null == profilesRead || profilesRead.status != Profile.StatusEnum.NORMAL) {
+                logger.warn("v2ProfilesRead , status is not normal , token:{}", token)
+                throw ErrorCodeException(
+                    statusCode = Response.Status.BAD_REQUEST.statusCode,
+                    errorCode = ExperienceMessageCode.OUTER_LOGIN_ERROR,
+                    defaultMessage = "账号已被封禁"
+                )
+            }
+        }
+    }
+
+
     private fun getIpLimit(realIp: String): Boolean {
         val nowMinute = LocalDateTime.now().plusMinutes(1).withSecond(0)
         val limitKey = "e:out:l:ip:$realIp:${df.format(nowMinute)}"
@@ -126,7 +152,8 @@ class ExperienceOuterService @Autowired constructor(
         return limit ?: 0 > 5
     }
 
-    private val api = V1Api()
+    private val loginApi = V1Api()
+    private val profileApi = ProfilesApi()
     private fun redisKey(token: String) = "e:out:l:$token"
 
     companion object {

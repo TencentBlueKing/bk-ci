@@ -217,4 +217,13 @@ interface UserExperienceResource {
         @PathParam("experienceHashId")
         experienceHashId: String
     ): Result<Url>
+
+    @ApiOperation("列出外部用户列表")
+    @Path("/outer/list")
+    @GET
+    fun outerList(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<List<String>>
 }

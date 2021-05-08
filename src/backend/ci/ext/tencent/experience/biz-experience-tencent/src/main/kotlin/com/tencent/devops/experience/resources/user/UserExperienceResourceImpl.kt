@@ -41,13 +41,15 @@ import com.tencent.devops.experience.pojo.ExperienceUserCount
 import com.tencent.devops.experience.pojo.Url
 import com.tencent.devops.experience.pojo.enums.ArtifactoryType
 import com.tencent.devops.experience.service.ExperienceDownloadService
+import com.tencent.devops.experience.service.ExperienceOuterService
 import com.tencent.devops.experience.service.ExperienceService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserExperienceResourceImpl @Autowired constructor(
     private val experienceService: ExperienceService,
-    private val experienceDownloadService: ExperienceDownloadService
+    private val experienceDownloadService: ExperienceDownloadService,
+    private val experienceOuterService: ExperienceOuterService
 ) : UserExperienceResource {
     override fun hasArtifactoryPermission(
         userId: String,
@@ -128,6 +130,10 @@ class UserExperienceResourceImpl @Autowired constructor(
         checkParam(userId, projectId)
         val url = experienceService.downloadUrl(userId, projectId, experienceHashId)
         return Result(Url(url))
+    }
+
+    override fun outerList(userId: String): Result<List<String>> {
+        return Result(experienceOuterService.outerList())
     }
 
     fun checkParam(userId: String, projectId: String) {

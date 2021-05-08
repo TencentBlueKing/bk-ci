@@ -31,19 +31,19 @@ class OuterLoginFilter @Autowired constructor(
             val headers = requestContext.headers
             if (headers[AUTH_HEADER_DEVOPS_ORGANIZATION_NAME]?.contains(ORGANIZATION_OUTER) == true) {
                 // 路径过滤
-//                val resourceMethod = resourceInfo!!.resourceMethod
-//                if (resourceMethod.annotations.filterIsInstance<AllowOuter>().isEmpty()) {
-//                    logger.warn(
-//                        "this method is not allowed by outer , class:{} , method:{}",
-//                        resourceMethod.declaringClass,
-//                        resourceMethod.name
-//                    )
-//                    throw ErrorCodeException(
-//                        statusCode = Response.Status.FORBIDDEN.statusCode,
-//                        errorCode = ExperienceMessageCode.OUTER_ACCESS_FAILED,
-//                        defaultMessage = "无法访问"
-//                    )
-//                }
+                val resourceMethod = resourceInfo!!.resourceMethod
+                if (resourceMethod.annotations.filterIsInstance<AllowOuter>().isEmpty()) {
+                    logger.warn(
+                        "this method is not allowed by outer , class:{} , method:{}",
+                        resourceMethod.declaringClass,
+                        resourceMethod.name
+                    )
+                    throw ErrorCodeException(
+                        statusCode = Response.Status.FORBIDDEN.statusCode,
+                        errorCode = ExperienceMessageCode.OUTER_ACCESS_FAILED,
+                        defaultMessage = "无法访问"
+                    )
+                }
                 // 续期token
                 headers[HEADER_O_TOKEN]?.get(0)?.let {
                     experienceOuterService.renewToken(it)
