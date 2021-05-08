@@ -166,7 +166,7 @@ object AtomUtils {
         return atomVersions
     }
 
-    private fun isHisAtomElement(element: Element) =
+    fun isHisAtomElement(element: Element) =
         element !is MarketBuildAtomElement && element !is MarketBuildLessAtomElement
 
     fun getInputTypeConfigMap(taskCommonSettingConfig: TaskCommonSettingConfig): Map<String, Int> {

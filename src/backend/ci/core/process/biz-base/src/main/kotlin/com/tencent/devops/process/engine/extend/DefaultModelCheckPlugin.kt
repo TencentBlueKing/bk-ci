@@ -205,7 +205,12 @@ open class DefaultModelCheckPlugin constructor(
             version = "1.*"
         }
         val atomCode = e.getAtomCode()
-        atomVersions.add(StoreVersion(atomCode, e.name, version))
+        atomVersions.add(StoreVersion(
+            storeCode = atomCode,
+            storeName = e.name,
+            version = version,
+            historyFlag = AtomUtils.isHisAtomElement(e)
+        ))
         // 获取插件的输入参数
         val atomInputDataMap = when (e) {
             is MarketBuildAtomElement -> {
