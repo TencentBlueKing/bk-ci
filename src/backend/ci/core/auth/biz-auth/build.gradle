@@ -34,4 +34,5 @@ dependencies {
     compile project(":core:auth:api-auth")
     compile project(":core:auth:model-auth")
     testCompile project(":core:common:common-test")
+    compile project(":core:project:api-project")
 }
