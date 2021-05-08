@@ -44,6 +44,7 @@ import com.tencent.devops.experience.dao.ExperienceGroupInnerDao
 import com.tencent.devops.experience.dao.ExperienceGroupOuterDao
 import com.tencent.devops.experience.dao.ExperienceInnerDao
 import com.tencent.devops.experience.dao.ExperienceLastDownloadDao
+import com.tencent.devops.experience.dao.ExperienceOuterDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.pojo.AppExperience
 import com.tencent.devops.experience.pojo.enums.Source
@@ -64,6 +65,7 @@ class ExperienceBaseService @Autowired constructor(
     private val experienceGroupInnerDao: ExperienceGroupInnerDao,
     private val experienceGroupOuterDao: ExperienceGroupOuterDao,
     private val experienceInnerDao: ExperienceInnerDao,
+    private val experienceOuterDao: ExperienceOuterDao,
     private val experienceDao: ExperienceDao,
     private val experiencePublicDao: ExperiencePublicDao,
     private val experienceLastDownloadDao: ExperienceLastDownloadDao,
@@ -77,11 +79,12 @@ class ExperienceBaseService @Autowired constructor(
         limit: Int,
         groupByBundleId: Boolean,
         platform: Int? = null,
-        experienceName: String? = null
+        experienceName: String? = null,
+        isOuter: Boolean = false
     ): Pagination<AppExperience> {
         val expireTime = DateUtil.today()
 
-        var recordIds = getRecordIdsByUserId(userId, GroupIdTypeEnum.JUST_PRIVATE)
+        var recordIds = getRecordIdsByUserId(userId, GroupIdTypeEnum.JUST_PRIVATE, isOuter)
 
         if (groupByBundleId) {
             recordIds = experienceDao.listIdsGroupByBundleId(
@@ -154,10 +157,10 @@ class ExperienceBaseService @Autowired constructor(
         val groupIds = mutableSetOf<Long>()
         if (groupIdType == GroupIdTypeEnum.JUST_PRIVATE || groupIdType == GroupIdTypeEnum.ALL) {
             if (isOuter) {
-                groupIds.addAll(experienceGroupInnerDao.listGroupIdsByUserId(dslContext, userId).map { it.value1() }
+                groupIds.addAll(experienceGroupOuterDao.listGroupIdsByUserId(dslContext, userId).map { it.value1() }
                     .toMutableSet())
             } else {
-                groupIds.addAll(experienceGroupOuterDao.listGroupIdsByUserId(dslContext, userId).map { it.value1() }
+                groupIds.addAll(experienceGroupInnerDao.listGroupIdsByUserId(dslContext, userId).map { it.value1() }
                     .toMutableSet())
             }
         }
@@ -172,9 +175,9 @@ class ExperienceBaseService @Autowired constructor(
     /**
      * 判断用户是否能体验
      */
-    fun userCanExperience(userId: String, experienceId: Long): Boolean {
+    fun userCanExperience(userId: String, experienceId: Long, isOuter: Boolean = false): Boolean {
         val isPublic = lazy { isPublic(experienceId) }
-        val isInPrivate = lazy { isInPrivate(experienceId, userId) }
+        val isInPrivate = lazy { isInPrivate(experienceId, userId, isOuter) }
 
         return isPublic.value || isInPrivate.value
     }
@@ -187,14 +190,19 @@ class ExperienceBaseService @Autowired constructor(
             .filterNot { it.value1() == ExperienceConstant.PUBLIC_GROUP }.count() > 0
     }
 
-    fun isInPrivate(experienceId: Long, userId: String): Boolean {
+    fun isInPrivate(experienceId: Long, userId: String, isOuter: Boolean = false): Boolean {
         val inGroup = lazy {
             getGroupIdToUserIdsMap(experienceId).values.asSequence().flatMap { it.asSequence() }.toSet()
                 .contains(userId)
         }
         val isInnerUser = lazy {
-            experienceInnerDao.listUserIdsByRecordId(dslContext, experienceId).map { it.value1() }.toSet()
-                .contains(userId)
+            if (isOuter) {
+                experienceOuterDao.listUserIdsByRecordId(dslContext, experienceId).map { it.value1() }.toSet()
+                    .contains(userId)
+            } else {
+                experienceInnerDao.listUserIdsByRecordId(dslContext, experienceId).map { it.value1() }.toSet()
+                    .contains(userId)
+            }
         }
         val isCreator = lazy { experienceDao.get(dslContext, experienceId).creator == userId }
 
@@ -218,9 +226,17 @@ class ExperienceBaseService @Autowired constructor(
             var userIds = groupIdToUserIds[it.groupId]
             if (null == userIds) {
                 userIds = mutableSetOf()
+                groupIdToUserIds[it.groupId] = userIds
             }
             userIds.add(it.userId)
-            groupIdToUserIds[it.groupId] = userIds
+        }
+        experienceGroupOuterDao.listByGroupIds(dslContext, groupIds).forEach {
+            var userIds = groupIdToUserIds[it.groupId]
+            if (null == userIds) {
+                userIds = mutableSetOf()
+                groupIdToUserIds[it.groupId] = userIds!!
+            }
+            userIds!!.add(it.outer)
         }
         if (groupIds.contains(ExperienceConstant.PUBLIC_GROUP)) {
             groupIdToUserIds[ExperienceConstant.PUBLIC_GROUP] = ExperienceConstant.PUBLIC_INNER_USERS

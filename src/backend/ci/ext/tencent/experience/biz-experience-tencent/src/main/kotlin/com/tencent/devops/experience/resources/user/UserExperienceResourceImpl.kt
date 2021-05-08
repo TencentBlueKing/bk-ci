@@ -49,12 +49,21 @@ class UserExperienceResourceImpl @Autowired constructor(
     private val experienceService: ExperienceService,
     private val experienceDownloadService: ExperienceDownloadService
 ) : UserExperienceResource {
-    override fun hasArtifactoryPermission(userId: String, projectId: String, path: String, artifactoryType: ArtifactoryType): Result<Boolean> {
+    override fun hasArtifactoryPermission(
+        userId: String,
+        projectId: String,
+        path: String,
+        artifactoryType: ArtifactoryType
+    ): Result<Boolean> {
         checkParam(userId, projectId)
         return Result(experienceService.hasArtifactoryPermission(userId, projectId, path, artifactoryType))
     }
 
-    override fun list(userId: String, projectId: String, expired: Boolean?): Result<List<ExperienceSummaryWithPermission>> {
+    override fun list(
+        userId: String,
+        projectId: String,
+        expired: Boolean?
+    ): Result<List<ExperienceSummaryWithPermission>> {
         checkParam(userId, projectId)
         return Result(experienceService.list(userId, projectId, expired))
     }
@@ -70,7 +79,12 @@ class UserExperienceResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun edit(userId: String, projectId: String, experienceHashId: String, experience: ExperienceUpdate): Result<Boolean> {
+    override fun edit(
+        userId: String,
+        projectId: String,
+        experienceHashId: String,
+        experience: ExperienceUpdate
+    ): Result<Boolean> {
         checkParam(userId, projectId, experienceHashId)
         experienceService.edit(userId, projectId, experienceHashId, experience)
         return Result(true)
@@ -88,12 +102,19 @@ class UserExperienceResourceImpl @Autowired constructor(
         return Result(result)
     }
 
-    override fun downloadUserCount(userId: String, projectId: String, experienceHashId: String, page: Int?, pageSize: Int?): Result<Page<ExperienceUserCount>> {
+    override fun downloadUserCount(
+        userId: String,
+        projectId: String,
+        experienceHashId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<ExperienceUserCount>> {
         checkParam(userId, projectId)
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: -1
         val offset = if (pageSizeNotNull == -1) -1 else (pageNotNull - 1) * pageSizeNotNull
-        val result = experienceDownloadService.downloadUserCount(userId, projectId, experienceHashId, pageNotNull, offset)
+        val result =
+            experienceDownloadService.downloadUserCount(userId, projectId, experienceHashId, pageNotNull, offset)
         return Result(Page(pageNotNull, pageSizeNotNull, result.first, result.second))
     }
 

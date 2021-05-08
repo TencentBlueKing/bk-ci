@@ -29,6 +29,7 @@ package com.tencent.devops.experience.dao
 
 import com.tencent.devops.experience.constant.ExperienceOuterType
 import com.tencent.devops.model.experience.tables.TExperienceGroupOuter
+import com.tencent.devops.model.experience.tables.records.TExperienceGroupOuterRecord
 import org.jooq.DSLContext
 import org.jooq.Record1
 import org.jooq.Result
@@ -75,6 +76,14 @@ class ExperienceGroupOuterDao {
             dslContext.select(GROUP_ID)
                 .from(this)
                 .where(OUTER.eq(outer))
+                .fetch()
+        }
+    }
+
+    fun listByGroupIds(dslContext: DSLContext, groupIds: Set<Long>): Result<TExperienceGroupOuterRecord> {
+        return with(TExperienceGroupOuter.T_EXPERIENCE_GROUP_OUTER) {
+            dslContext.selectFrom(this)
+                .where(GROUP_ID.`in`(groupIds))
                 .fetch()
         }
     }

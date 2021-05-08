@@ -30,6 +30,8 @@ package com.tencent.devops.experience.dao
 import com.tencent.devops.experience.constant.ExperienceOuterType
 import com.tencent.devops.model.experience.tables.TExperienceOuter
 import org.jooq.DSLContext
+import org.jooq.Record1
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -66,6 +68,15 @@ class ExperienceOuterDao {
                 .where(RECORD_ID.eq(experienceId))
                 .and(OUTER.notIn(outers))
                 .execute()
+        }
+    }
+
+    fun listUserIdsByRecordId(dslContext: DSLContext, recordId: Long): Result<Record1<String>> {
+        return with(TExperienceOuter.T_EXPERIENCE_OUTER) {
+            dslContext.select(OUTER)
+                .from(this)
+                .where(RECORD_ID.eq(recordId))
+                .fetch()
         }
     }
 }
