@@ -44,7 +44,7 @@ class BkCalendarProcessorService : ProcessorService {
 
     override fun getRuleValue(ruleName: String, pipelineId: String?): String? {
         return when {
-            ruleName == "DAY_OF_MONTH" -> {
+            ruleName == "MONTH_OF_YEAR" -> {
                 (calendar.get(Calendar.MONTH) + 1).toString()
             }
             ruleName.startsWith(FORMAT_DATE_NAME) -> {

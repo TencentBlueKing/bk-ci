@@ -32,11 +32,13 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.engine.dao.PipelineRuleDao
 import com.tencent.devops.process.engine.service.rule.processor.ProcessorService
 import com.tencent.devops.process.pojo.pipeline.PipelineRule
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -45,10 +47,14 @@ import java.util.regex.Pattern
 @Service
 class PipelineRuleService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val pipelineRuleDao: PipelineRuleDao
+    private val pipelineRuleDao: PipelineRuleDao,
+    private val redisOperation: RedisOperation
 ) {
 
-    private val logger = LoggerFactory.getLogger(PipelineRuleService::class.java)
+    companion object {
+        private const val PIPELINE_RULE_PROCESSOR_KEY_PREFIX = "PIPELINE_RULE_PROCESSOR_KEY"
+        private val logger = LoggerFactory.getLogger(PipelineRuleService::class.java)
+    }
 
     fun savePipelineRule(
         userId: String,
@@ -62,11 +68,15 @@ class PipelineRuleService @Autowired constructor(
         if (nameCount > 0) {
             // 抛出错误提示
             throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                errorCode = CommonMessageCode.PARAMETER_IS_EXIST,
                 params = arrayOf("$ruleName+$busCode")
             )
         }
-        pipelineRuleDao.add(dslContext, pipelineRule, userId)
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            pipelineRuleDao.add(context, pipelineRule, userId)
+            redisOperation.hset(getPipelineRuleProcessorKey(busCode), ruleName, pipelineRule.processor)
+        }
         return true
     }
 
@@ -86,17 +96,33 @@ class PipelineRuleService @Autowired constructor(
             if (null != rule && !(ruleName == rule.ruleName && busCode == rule.busCode)) {
                 // 抛出错误提示
                 throw ErrorCodeException(
-                    errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                    errorCode = CommonMessageCode.PARAMETER_IS_EXIST,
                     params = arrayOf("$ruleName+$busCode")
                 )
             }
         }
-        pipelineRuleDao.update(dslContext = dslContext, ruleId = ruleId, pipelineRule = pipelineRule, userId = userId)
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            pipelineRuleDao.update(
+                dslContext = context,
+                ruleId = ruleId,
+                pipelineRule = pipelineRule,
+                userId = userId
+            )
+            redisOperation.hset(getPipelineRuleProcessorKey(busCode), ruleName, pipelineRule.processor)
+        }
         return true
     }
 
     fun deletePipelineRule(userId: String, ruleId: String): Boolean {
-        pipelineRuleDao.delete(dslContext, ruleId)
+        val pipelineRule = getPipelineRule(userId, ruleId) ?: return true
+        val ruleName = pipelineRule.ruleName
+        val busCode = pipelineRule.busCode
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            redisOperation.hdelete(getPipelineRuleProcessorKey(busCode), ruleName)
+            pipelineRuleDao.delete(context, ruleId)
+        }
         return true
     }
 
@@ -115,6 +141,23 @@ class PipelineRuleService @Autowired constructor(
             null
         }
     }
+
+    fun getPipelineRuleProcessor(
+        busCode: String,
+        ruleName: String
+    ): String? {
+        var processor = redisOperation.hget(getPipelineRuleProcessorKey(busCode), ruleName)
+        if (processor.isNullOrEmpty()) {
+            val pipelineRuleRecord = pipelineRuleDao.getPipelineRuleByName(dslContext, ruleName, busCode)
+            if (pipelineRuleRecord != null) {
+                processor = pipelineRuleRecord.processor
+                redisOperation.hset(getPipelineRuleProcessorKey(busCode), ruleName, processor)
+            }
+        }
+        return processor
+    }
+
+    private fun getPipelineRuleProcessorKey(busCode: String) = "$PIPELINE_RULE_PROCESSOR_KEY_PREFIX:$busCode"
 
     fun getPipelineRules(
         userId: String,
@@ -170,10 +213,12 @@ class PipelineRuleService @Autowired constructor(
         busCode: String
     ): MutableMap<String, String> {
         val ruleNameList = getRuleNameList(ruleStr)
-        val pipelineRuleRecords = pipelineRuleDao.getPipelineRulesByBusCode(dslContext, busCode, ruleNameList)
         val validRuleProcessorMap = mutableMapOf<String, String>()
-        pipelineRuleRecords?.forEach { ruleRecord ->
-            validRuleProcessorMap[ruleRecord.ruleName] = ruleRecord.processor
+        ruleNameList.forEach { ruleName ->
+            val processor = getPipelineRuleProcessor(busCode, ruleName)
+            if (!processor.isNullOrEmpty()) {
+                validRuleProcessorMap[ruleName] = processor
+            }
         }
         // 判断用户填的规则是否合法
         if (ruleNameList.size != validRuleProcessorMap.size) {
@@ -195,31 +240,27 @@ class PipelineRuleService @Autowired constructor(
         busCode: String,
         validRuleProcessorMap: MutableMap<String, String>
     ) {
-        val commonRuleNameList = mutableListOf<String>()
+        val commonRuleNameMap = mutableMapOf<String, String>()
         ruleNameList.forEach { ruleName ->
             val pattern = Pattern.compile("(?<=:\")(.+?)(?=\")")
             val matcher = pattern.matcher(ruleName)
             if (matcher.find()) {
                 val content = matcher.group()
                 val commonRuleName = ruleName.replace(":\"$content\"", ":\"(.+?)\"")
-                commonRuleNameList.add(commonRuleName)
+                commonRuleNameMap[ruleName] = commonRuleName
             }
         }
         // 判断通用规则是否存在
-        if (commonRuleNameList.isNotEmpty()) {
-            val realCommonRuleRecords = pipelineRuleDao.getPipelineRulesByBusCode(
-                dslContext = dslContext,
-                busCode = busCode,
-                ruleNameList = commonRuleNameList
-            )
-            if (realCommonRuleRecords != null && realCommonRuleRecords.isNotEmpty) {
-                val realCommonRuleNameList = mutableListOf<String>()
-                realCommonRuleRecords.forEach { realCommonRuleRecord ->
-                    realCommonRuleNameList.add(realCommonRuleRecord.ruleName)
-                    validRuleProcessorMap[realCommonRuleRecord.ruleName] = realCommonRuleRecord.processor
+        if (commonRuleNameMap.isNotEmpty()) {
+            val realCommonRuleNameList = mutableListOf<String>()
+            commonRuleNameMap.forEach { (ruleName, commonRuleName) ->
+                val processor = getPipelineRuleProcessor(busCode, commonRuleName)
+                if (!processor.isNullOrEmpty()) {
+                    realCommonRuleNameList.add(ruleName)
+                    validRuleProcessorMap[ruleName] = processor
                 }
-                ruleNameList.removeAll(realCommonRuleNameList)
             }
+            ruleNameList.removeAll(realCommonRuleNameList)
         }
     }
 

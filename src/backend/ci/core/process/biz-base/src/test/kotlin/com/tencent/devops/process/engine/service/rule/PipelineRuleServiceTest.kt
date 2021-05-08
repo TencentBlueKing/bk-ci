@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.service.rule
 
 import com.nhaarman.mockito_kotlin.mock
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.dao.PipelineRuleDao
 import org.jooq.DSLContext
 import org.junit.Assert
@@ -38,10 +39,12 @@ internal class PipelineRuleServiceTest {
 
     private val dslContext: DSLContext = mock()
     private val pipelineRuleDao: PipelineRuleDao = mock()
+    private val redisOperation: RedisOperation = mock()
 
     private val pipelineRuleService = PipelineRuleService(
         dslContext = dslContext,
-        pipelineRuleDao = pipelineRuleDao
+        pipelineRuleDao = pipelineRuleDao,
+        redisOperation = redisOperation
     )
 
     @Test
