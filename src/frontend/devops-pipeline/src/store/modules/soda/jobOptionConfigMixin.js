@@ -64,7 +64,39 @@ const jobOptionConfigMixin = {
                         return !(mutexGroup && mutexGroup.queueEnable)
                     }
                 }
-            }
+            },
+            normalRunConditionList: [
+                {
+                    id: 'STAGE_RUNNING',
+                    name: this.$t('storeMap.stageRunning')
+                },
+                {
+                    id: 'CUSTOM_VARIABLE_MATCH',
+                    name: this.$t('storeMap.varMatch')
+                },
+                {
+                    id: 'CUSTOM_VARIABLE_MATCH_NOT_RUN',
+                    name: this.$t('storeMap.varNotMatch')
+                }
+            ],
+            finallyRunConditionList: [
+                {
+                    id: 'STAGE_RUNNING',
+                    name: this.$t('storeMap.stageRunning')
+                },
+                {
+                    id: 'PREVIOUS_STAGE_SUCCESS',
+                    name: this.$t('storeMap.preStageSuccess')
+                },
+                {
+                    id: 'PREVIOUS_STAGE_FAILED',
+                    name: this.$t('storeMap.preStageFail')
+                },
+                {
+                    id: 'PREVIOUS_STAGE_CANCEL',
+                    name: this.$t('storeMap.preStageCancel')
+                }
+            ]
         }
     },
     computed: {
@@ -125,20 +157,7 @@ const jobOptionConfigMixin = {
                     component: 'selector',
                     label: this.$t('storeMap.jobRunCondition'),
                     default: 'STAGE_RUNNING',
-                    list: [
-                        {
-                            id: 'STAGE_RUNNING',
-                            name: this.$t('storeMap.stageRunning')
-                        },
-                        {
-                            id: 'CUSTOM_VARIABLE_MATCH',
-                            name: this.$t('storeMap.varMatch')
-                        },
-                        {
-                            id: 'CUSTOM_VARIABLE_MATCH_NOT_RUN',
-                            name: this.$t('storeMap.varNotMatch')
-                        }
-                    ]
+                    list: this.stage.finally ? this.finallyRunConditionList : this.normalRunConditionList
                 },
                 customVariables: {
                     rule: {},
