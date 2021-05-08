@@ -46,8 +46,4 @@ class MockAuthTokenApi : AuthTokenApi {
     private fun getAccessToken(): String {
         return refreshAccessToken()
     }
-
-    override fun checkToken(token: String): Boolean {
-        return true
-    }
 }
