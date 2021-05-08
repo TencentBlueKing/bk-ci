@@ -31,12 +31,13 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.service.impl.ApigwHttpClientServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.ManagerServiceImpl
-import com.tencent.devops.common.auth.api.BSAuthPermissionApi
 import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.api.BSAuthResourceApi
 import com.tencent.devops.common.auth.api.BSAuthTokenApi
 import com.tencent.devops.common.auth.api.BSCCProjectApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
+import com.tencent.devops.common.auth.api.v3.TxV3BSAuthProjectApi
+import com.tencent.devops.common.auth.api.v3.TxV3BsAuthPermissionApi
 import com.tencent.devops.common.auth.code.BSArtifactoryAuthServiceCode
 import com.tencent.devops.common.auth.code.BSBcsAuthServiceCode
 import com.tencent.devops.common.auth.code.BSCodeAuthServiceCode
@@ -50,6 +51,7 @@ import com.tencent.devops.common.auth.code.BSTicketAuthServiceCode
 import com.tencent.devops.common.auth.code.BSVSAuthServiceCode
 import com.tencent.devops.common.auth.code.BSWetestAuthServiceCode
 import com.tencent.devops.common.auth.jmx.JmxAuthApi
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -99,23 +101,15 @@ class TxV3AuthAutoConfiguration {
 
     @Bean
     @Primary
-    fun bsAuthProjectApi(
-        bkAuthProperties: BkAuthProperties,
-        objectMapper: ObjectMapper,
-        bsAuthTokenApi: BSAuthTokenApi,
-        bsCCProjectApi: BSCCProjectApi
-    ) =
-        BSAuthProjectApi(bkAuthProperties, objectMapper, bsAuthTokenApi, bsCCProjectApi)
+    fun txV3BsAuthProjectApi(
+        client: Client
+    ) = TxV3BSAuthProjectApi(client)
 
     @Bean
     @Primary
-    fun bsAuthPermissionApi(
-        bkAuthProperties: BkAuthProperties,
-        objectMapper: ObjectMapper,
-        bsAuthTokenApi: BSAuthTokenApi,
-        jmxAuthApi: JmxAuthApi
-    ) =
-        BSAuthPermissionApi(bkAuthProperties, objectMapper, bsAuthTokenApi, jmxAuthApi)
+    fun txV3BsAuthPermissionApi(
+        client: Client
+    ) = TxV3BsAuthPermissionApi(client)
 
     @Bean
     @Primary

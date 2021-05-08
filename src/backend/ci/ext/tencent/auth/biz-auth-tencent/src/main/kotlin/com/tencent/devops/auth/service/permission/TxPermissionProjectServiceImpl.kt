@@ -36,9 +36,9 @@ import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
 import com.tencent.devops.auth.service.DeptService
-import com.tencent.devops.auth.service.PermissionProjectService
 import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
+import com.tencent.devops.auth.service.iam.impl.AbsPermissionProjectService
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -61,8 +61,15 @@ class TxPermissionProjectServiceImpl @Autowired constructor(
     val client: Client,
     val iamConfiguration: IamConfiguration,
     val deptService: DeptService
-) : PermissionProjectService {
-
+) : AbsPermissionProjectService(
+    permissionRoleService = permissionRoleService,
+    permissionRoleMemberService = permissionRoleMemberService,
+    authHelper = authHelper,
+    policyService = policyService,
+    client = client,
+    iamConfiguration = iamConfiguration,
+    deptService = deptService
+) {
     private val projectIdCache = CacheBuilder.newBuilder()
         .maximumSize(5000)
         .expireAfterWrite(24, TimeUnit.HOURS)

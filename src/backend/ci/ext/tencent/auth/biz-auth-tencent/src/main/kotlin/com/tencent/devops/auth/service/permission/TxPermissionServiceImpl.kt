@@ -27,29 +27,33 @@
 
 package com.tencent.devops.auth.service.permission
 
-import com.tencent.devops.auth.service.PermissionService
+import com.tencent.bk.sdk.iam.config.IamConfiguration
+import com.tencent.bk.sdk.iam.helper.AuthHelper
+import com.tencent.bk.sdk.iam.service.PolicyService
+import com.tencent.devops.auth.service.iam.impl.AbsPermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class TxPermissionServiceImpl @Autowired constructor(
-    val redisOperation: RedisOperation
-) : PermissionService {
-    override fun validateUserResourcePermission(userId: String, resourceType: String, projectCode: String, permission: String): Boolean {
-        return true
+    val authHelper: AuthHelper,
+    val policyService: PolicyService,
+    val iamConfiguration: IamConfiguration
+) : AbsPermissionService(authHelper, policyService, iamConfiguration) {
+    override fun validateUserResourcePermission(userId: String, action: String): Boolean {
+        return super.validateUserResourcePermission(userId, action)
     }
 
-    override fun validateUserResourcePermissionByRelation(userId: String, resourceType: String, projectCode: String, permission: String, relationResourceType: String?): Boolean {
-        return true
+    override fun validateUserResourcePermissionByRelation(userId: String, action: String, projectCode: String, resourceCode: String, resourceType: String, relationResourceType: String?): Boolean {
+        return super.validateUserResourcePermissionByRelation(userId, action, projectCode, resourceCode, resourceType, relationResourceType)
     }
 
-    override fun getUserResourceByPermission(userId: String, serviceCode: String, resourceType: String, projectCode: String, permission: String): List<String> {
-        return super.getUserResourceByPermission(userId, serviceCode, resourceType, projectCode, permission)
+    override fun getUserResourceByAction(userId: String, action: String, projectCode: String, resourceType: String): List<String> {
+        return super.getUserResourceByAction(userId, action, projectCode, resourceType)
     }
 
-    override fun getUserResourcesByPermissions(userId: String, serviceCode: String, resourceType: String, projectCode: String, permission: Set<AuthPermission>): Map<AuthPermission, List<String>> {
-        return emptyMap()
+    override fun getUserResourcesByActions(userId: String, actions: List<String>, projectCode: String, resourceType: String): Map<AuthPermission, List<String>> {
+        return super.getUserResourcesByActions(userId, actions, projectCode, resourceType)
     }
 }

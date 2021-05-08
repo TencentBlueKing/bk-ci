@@ -27,6 +27,8 @@
 
 package com.tencent.devops.process.config
 
+import com.tencent.devops.common.auth.api.v3.TxV3BsAuthPermissionApi
+import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.permission.V3PipelinePermissionServiceImpl
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -44,5 +46,7 @@ class TxV3PipleineInitConfiguration {
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
     fun projectPermissionService(
-    ): PipelinePermissionService = V3PipelinePermissionServiceImpl()
+        txV3BsAuthPermission : TxV3BsAuthPermissionApi,
+        bsPipelineAuthServiceCode: BSPipelineAuthServiceCode
+    ): PipelinePermissionService = V3PipelinePermissionServiceImpl(txV3BsAuthPermission, bsPipelineAuthServiceCode)
 }

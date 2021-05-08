@@ -41,6 +41,7 @@ dependencies {
     compile project(":core:process:model-process")
     compile project(":ext:tencent:process:api-process-tencent")
     compile project(":core:process:api-process")
+    compile project(":core:auth:api-auth")
     compile project(":ext:tencent:external:api-external")
     compile project(":ext:tencent:scm:api-scm")
     compile project(":core:process:biz-process")

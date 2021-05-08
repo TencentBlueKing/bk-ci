@@ -43,10 +43,10 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-//@Api(tags = ["AUTH_SERVICE_PROJECT"], description = "权限校验--项目相关")
-//@Path("/service/auth/project")
-//@Produces(MediaType.APPLICATION_JSON)
-//@Consumes(MediaType.APPLICATION_JSON)
+@Api(tags = ["AUTH_SERVICE_PROJECT"], description = "权限校验--项目相关")
+@Path("/service/auth/project")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
 interface ServiceProjectAuthResource {
 
     @GET

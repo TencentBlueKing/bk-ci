@@ -29,18 +29,48 @@
 package com.tencent.devops.process.permission
 
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
+import com.tencent.devops.common.client.Client
 import org.springframework.beans.factory.annotation.Autowired
 
 class V3PipelinePermissionServiceImpl @Autowired constructor(
-
+    val authPermissionApi: AuthPermissionApi,
+    val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode
 ): PipelinePermissionService {
-    override fun checkPipelinePermission(userId: String, projectId: String, permission: AuthPermission): Boolean {
-        TODO("Not yet implemented")
+    // 一般为校验用户是否有某项目下的创建逻辑
+    override fun checkPipelinePermission(
+        userId: String,
+        projectId: String,
+        permission: AuthPermission
+    ): Boolean {
+        return authPermissionApi.validateUserResourcePermission(
+            user = userId,
+            serviceCode = bsPipelineAuthServiceCode,
+            resourceType = AuthResourceType.PIPELINE_DEFAULT,
+            permission = permission,
+            projectCode = projectId
+        )
     }
 
-    override fun checkPipelinePermission(userId: String, projectId: String, pipelineId: String, permission: AuthPermission): Boolean {
-        TODO("Not yet implemented")
+    // 校验用户是否有某项目下某流水线的指定权限
+    override fun checkPipelinePermission(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        permission: AuthPermission
+    ): Boolean {
+        return authPermissionApi.validateUserResourcePermission(
+            user = userId,
+            projectCode = projectId,
+            resourceCode = pipelineId,
+            permission = permission,
+            resourceType = AuthResourceType.PIPELINE_DEFAULT,
+            serviceCode = bsPipelineAuthServiceCode
+        )
     }
 
     override fun validPipelinePermission(userId: String, projectId: String, pipelineId: String, permission: AuthPermission, message: String?) {
