@@ -141,7 +141,7 @@ class BluekingV3AuthPermissionApi @Autowired constructor(
         return if (resourceType == AuthResourceType.PROJECT) {
             AuthUtils.getProjects(expression)
         } else {
-            val instancesList = AuthUtils.getResourceInstance(expression, projectCode, resourceType)
+            val instancesList = AuthUtils.getResourceInstance(expression, projectCode, resourceType.value)
             if (!instancesList.contains("*")) {
                 instancesList.toList()
             } else {

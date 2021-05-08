@@ -93,7 +93,7 @@ object AuthUtils {
     }
 
     // 无content怎么处理 一层怎么处理,二层怎么处理。 默认只有两层。
-    fun getResourceInstance(expression: ExpressionDTO, projectId: String, resourceType: AuthResourceType): Set<String> {
+    fun getResourceInstance(expression: ExpressionDTO, projectId: String, resourceType: String): Set<String> {
         val instantList = mutableSetOf<String>()
         // 项目下无限制 {"field":"pipeline._bk_iam_path_","op":"starts_with","value":"/project,test1/"}
         if (expression.content == null || expression.content.isEmpty()) {
@@ -128,7 +128,7 @@ object AuthUtils {
         childExpression: List<ExpressionDTO>,
         parentExpression: ExpressionDTO,
         projectId: String,
-        resourceType: AuthResourceType
+        resourceType: String
     ): Set<String> {
         val instantList = mutableSetOf<String>()
         when (parentExpression.operator) {
@@ -156,7 +156,7 @@ object AuthUtils {
     private fun getInstanceByContent(
         childExpression: List<ExpressionDTO>,
         projectId: String,
-        resourceType: AuthResourceType,
+        resourceType: String,
         type: ExpressionOperationEnum
     ): Set<String> {
         var cacheList = mutableSetOf<String>()
@@ -238,7 +238,7 @@ object AuthUtils {
         }
     }
 
-    fun getInstanceByField(expression: ExpressionDTO, projectId: String, resourceType: AuthResourceType): Set<String> {
+    fun getInstanceByField(expression: ExpressionDTO, projectId: String, resourceType: String): Set<String> {
         val instanceList = mutableSetOf<String>()
         val value = expression.value
 
@@ -272,8 +272,8 @@ object AuthUtils {
         return Pair(true, instanceList)
     }
 
-    private fun checkField(field: String, resourceType: AuthResourceType): Boolean {
-        if (field.contains(resourceType.value)) {
+    private fun checkField(field: String, resourceType: String): Boolean {
+        if (field.contains(resourceType)) {
             return true
         }
         return false
