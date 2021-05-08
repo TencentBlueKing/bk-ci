@@ -32,6 +32,7 @@ import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceGroupDao
 import com.tencent.devops.experience.dao.ExperienceGroupInnerDao
+import com.tencent.devops.experience.dao.ExperienceGroupOuterDao
 import com.tencent.devops.experience.dao.ExperienceInnerDao
 import com.tencent.devops.experience.dao.ExperienceLastDownloadDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
@@ -44,6 +45,7 @@ import org.springframework.stereotype.Service
 class ExperienceBaseService @Autowired constructor(
     private val experienceGroupDao: ExperienceGroupDao,
     private val experienceGroupInnerDao: ExperienceGroupInnerDao,
+    private val experienceGroupOuterDao: ExperienceGroupOuterDao,
     private val experienceInnerDao: ExperienceInnerDao,
     private val experienceDao: ExperienceDao,
     private val experiencePublicDao: ExperiencePublicDao,
@@ -55,13 +57,19 @@ class ExperienceBaseService @Autowired constructor(
      */
     fun getRecordIdsByUserId(
         userId: String,
-        groupIdType: GroupIdTypeEnum
+        groupIdType: GroupIdTypeEnum,
+        isOuter: Boolean = false
     ): MutableSet<Long> {
         val recordIds = mutableSetOf<Long>()
         val groupIds = mutableSetOf<Long>()
         if (groupIdType == GroupIdTypeEnum.JUST_PRIVATE || groupIdType == GroupIdTypeEnum.ALL) {
-            groupIds.addAll(experienceGroupInnerDao.listGroupIdsByUserId(dslContext, userId).map { it.value1() }
-                .toMutableSet())
+            if (isOuter) {
+                groupIds.addAll(experienceGroupInnerDao.listGroupIdsByUserId(dslContext, userId).map { it.value1() }
+                    .toMutableSet())
+            } else {
+                groupIds.addAll(experienceGroupOuterDao.listGroupIdsByUserId(dslContext, userId).map { it.value1() }
+                    .toMutableSet())
+            }
         }
         if (groupIdType == GroupIdTypeEnum.JUST_PUBLIC || groupIdType == GroupIdTypeEnum.ALL) {
             groupIds.add(ExperienceConstant.PUBLIC_GROUP)

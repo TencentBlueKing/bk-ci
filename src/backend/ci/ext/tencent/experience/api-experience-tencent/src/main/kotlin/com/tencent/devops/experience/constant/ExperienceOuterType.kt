@@ -30,7 +30,7 @@ package com.tencent.devops.experience.constant
 enum class ExperienceOuterType(
     val id: Int
 ) {
-    QQ(1),
+    BK(1),
 
     ;
 }

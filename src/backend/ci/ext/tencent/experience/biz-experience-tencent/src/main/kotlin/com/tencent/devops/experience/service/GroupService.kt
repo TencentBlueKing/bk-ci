@@ -190,7 +190,7 @@ class GroupService @Autowired constructor(
             experienceGroupInnerDao.create(dslContext, groupId, it)
         }
         outer.forEach {
-            experienceGroupOuterDao.create(dslContext, groupId, it, ExperienceOuterType.QQ)
+            experienceGroupOuterDao.create(dslContext, groupId, it, ExperienceOuterType.BK)
         }
 
         createResource(userId = userId, projectId = projectId, groupId = groupId, groupName = group.name)
@@ -271,7 +271,7 @@ class GroupService @Autowired constructor(
         }
         experienceGroupOuterDao.deleteByGroupId(dslContext, groupId)
         outer.forEach {
-            experienceGroupOuterDao.create(dslContext, groupId, it, ExperienceOuterType.QQ)
+            experienceGroupOuterDao.create(dslContext, groupId, it, ExperienceOuterType.BK)
         }
 
         modifyResource(projectId = projectId, groupId = groupId, groupName = group.name)

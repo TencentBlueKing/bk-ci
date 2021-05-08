@@ -345,6 +345,7 @@ class ExperienceService @Autowired constructor(
         return propertyMap
     }
 
+    @SuppressWarnings("ComplexMethod")
     private fun createExperience(
         projectId: String,
         experience: ExperienceCreate,
@@ -413,7 +414,7 @@ class ExperienceService @Autowired constructor(
             experienceInnerDao.create(dslContext, experienceId, it)
         }
         outers.forEach {
-            experienceOuterDao.create(dslContext, experienceId, it, ExperienceOuterType.QQ)
+            experienceOuterDao.create(dslContext, experienceId, it, ExperienceOuterType.BK)
         }
 
         // 公开体验表
@@ -480,7 +481,6 @@ class ExperienceService @Autowired constructor(
 
     fun edit(userId: String, projectId: String, experienceHashId: String, experience: ExperienceUpdate) {
         val experienceRecord = getExperienceId4Update(experienceHashId, userId, projectId)
-        val experienceId = getExperienceId4Update(experienceHashId, userId, projectId)
         val outers = regex.split(experience.outerUsers)
         val isPublic = isPublicGroupAndCheck(experience.experienceGroups)
 
@@ -519,9 +519,9 @@ class ExperienceService @Autowired constructor(
         }
 
         // 更新外部人员
-        experienceOuterDao.deleteByRecordId(dslContext, experienceId, outers.toList())
+        experienceOuterDao.deleteByRecordId(dslContext, experienceRecord.id, outers.toList())
         outers.forEach {
-            experienceOuterDao.create(dslContext, experienceId, it, ExperienceOuterType.QQ)
+            experienceOuterDao.create(dslContext, experienceRecord.id, it, ExperienceOuterType.BK)
         }
 
         if (isPublic) {
@@ -623,8 +623,9 @@ class ExperienceService @Autowired constructor(
             throw RuntimeException("元数据buildNo不存在")
         }
 
-        val remark =
-            if (experience.description.isNullOrBlank()) "构建号#${propertyMap[ARCHIVE_PROPS_BUILD_NO]!!}" else experience.description
+        val remark = if (experience.description.isNullOrBlank()) {
+            "构建号#${propertyMap[ARCHIVE_PROPS_BUILD_NO]!!}"
+        } else experience.description
 
         val experienceCreate = ExperienceCreate(
             name = path.split("/").last(),
@@ -787,13 +788,15 @@ class ExperienceService @Autowired constructor(
 
     private fun getInnerUrl(projectId: String, experienceId: Long): String {
         val experienceHashId = HashUtil.encodeLongId(experienceId)
-        return "${HomeHostUtil.innerServerHost()}/console/experience/$projectId/experienceDetail/$experienceHashId/detail"
+        return HomeHostUtil.innerServerHost() +
+                "/console/experience/$projectId/experienceDetail/$experienceHashId/detail"
     }
 
     private fun getShortExternalUrl(experienceId: Long): String {
         val experienceHashId = HashUtil.encodeLongId(experienceId)
         val url =
-            "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
+            HomeHostUtil.outerServerHost() +
+                    "/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
         return client.get(ServiceShortUrlResource::class)
             .createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 30)).data!!
     }

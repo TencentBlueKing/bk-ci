@@ -30,4 +30,5 @@ if x_ckey ~= nil then
 else
     local outer_profile = outerloginUtil:getProfile(x_otoken)
     ngx.header["X-DEVOPS-UID"] = outer_profile.data.username
+    ngx.header["X-DEVOPS-ORGANIZATION-NAME"] = "outer"
 end
