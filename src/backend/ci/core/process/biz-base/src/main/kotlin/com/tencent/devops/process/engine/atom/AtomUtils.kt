@@ -156,7 +156,12 @@ object AtomUtils {
                 version = "1.*"
             }
             val atomCode = element.getAtomCode()
-            atomVersions.add(StoreVersion(atomCode, element.name, version))
+            atomVersions.add(StoreVersion(
+                storeCode = atomCode,
+                storeName = element.name,
+                version = version,
+                historyFlag = false
+            ))
         }
         return atomVersions
     }
