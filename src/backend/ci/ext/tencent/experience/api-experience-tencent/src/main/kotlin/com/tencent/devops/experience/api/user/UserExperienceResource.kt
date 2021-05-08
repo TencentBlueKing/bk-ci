@@ -39,6 +39,7 @@ import com.tencent.devops.experience.pojo.ExperienceUpdate
 import com.tencent.devops.experience.pojo.ExperienceUserCount
 import com.tencent.devops.experience.pojo.Url
 import com.tencent.devops.experience.pojo.enums.ArtifactoryType
+import com.tencent.devops.experience.pojo.outer.OuterSelectorVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -225,5 +226,5 @@ interface UserExperienceResource {
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
-    ): Result<List<String>>
+    ): Result<List<OuterSelectorVO>>
 }
