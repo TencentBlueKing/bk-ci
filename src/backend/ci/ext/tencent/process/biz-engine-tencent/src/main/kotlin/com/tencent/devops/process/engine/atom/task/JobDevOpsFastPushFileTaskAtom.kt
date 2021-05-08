@@ -41,13 +41,11 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.job.JobClient
 import com.tencent.devops.common.job.api.pojo.EnvSet
 import com.tencent.devops.common.job.api.pojo.FastPushFileRequest
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.element.JobDevOpsFastPushFileElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.ServiceNodeResource
-import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.bkjob.ClearJobTempFileEvent
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_ENV_ID_IS_NULL
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_ENV_NAME_IS_NULL
@@ -84,8 +82,6 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
     private val jobClient: JobClient,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val buildLogPrinter: BuildLogPrinter,
-    private val redisOperation: RedisOperation,
-    private val repoGray: RepoGray,
     private val bkRepoClient: BkRepoClient
 ) : IAtomTask<JobDevOpsFastPushFileElement> {
     override fun getParamElement(task: PipelineBuildTask): JobDevOpsFastPushFileElement {
@@ -101,7 +97,6 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
         runVariables: Map<String, String>,
         force: Boolean
     ): AtomResponse {
-
         val taskInstanceId = task.taskParams[JOB_TASK_ID]?.toString()?.toLong()
             ?: return if (force) defaultFailAtomResponse else AtomResponse(task.status)
 
@@ -185,8 +180,6 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
         val containerId = task.containerHashId
         val executeCount = task.executeCount ?: 1
         val srcPath = parseVariable(param.srcPath, runVariables)
-        val isRepoGray = repoGray.isGray(projectId, redisOperation)
-        buildLogPrinter.addLine(buildId, "use bkrepo: $isRepoGray", taskId, containerId, executeCount)
 
         // 下载所有文件
         var count = 0
@@ -196,29 +189,16 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
         srcPath.split(",").map {
             it.trim().removePrefix("/").removePrefix("./")
         }.forEach { path ->
-            if (isRepoGray) {
-                val fileList = bkRepoClient.matchBkRepoFile(userId, path, projectId, pipelineId, buildId, isCustom)
-                val repoName = if (isCustom) "custom" else "pipeline"
-                fileList.forEach { bkrepoFile ->
-                    buildLogPrinter.addLine(buildId, "匹配到文件：(${bkrepoFile.displayPath})", taskId, containerId, executeCount)
-                    count++
-                    val destFile = File(destPath, File(bkrepoFile.displayPath).name)
-                    bkRepoClient.downloadFile(userId, projectId, repoName, bkrepoFile.fullPath, destFile)
-                    localFileList.add(destFile.absolutePath)
-                    logger.info("save file : ${destFile.canonicalPath} (${destFile.length()})")
-                }
-            } else {
-                val fileList = matchFile(path, projectId, pipelineId, buildId, isCustom)
-                fileList.forEach { jfrogFile ->
-                    buildLogPrinter.addLine(buildId, "匹配到文件：(${jfrogFile.uri})", taskId, containerId, executeCount)
-                    count++
-                    val url = if (isCustom) "$gatewayUrl/jfrog/storage/service/custom/$projectId${jfrogFile.uri}"
-                    else "$gatewayUrl/jfrog/storage/service/archive/$projectId/$pipelineId/$buildId${jfrogFile.uri}"
-                    val destFile = File(destPath, File(jfrogFile.uri).name)
-                    OkhttpUtils.downloadFile(url, destFile)
-                    localFileList.add(destFile.absolutePath)
-                    logger.info("save file : ${destFile.canonicalPath} (${destFile.length()})")
-                }
+            val fileList = bkRepoClient.matchBkRepoFile(userId, path, projectId, pipelineId, buildId, isCustom)
+            val repoName = if (isCustom) "custom" else "pipeline"
+            fileList.forEach { bkrepoFile ->
+                buildLogPrinter.addLine(buildId, "匹配到文件：(${bkrepoFile.displayPath})", taskId, containerId,
+                    executeCount)
+                count++
+                val destFile = File(destPath, File(bkrepoFile.displayPath).name)
+                bkRepoClient.downloadFile(userId, projectId, repoName, bkrepoFile.fullPath, destFile)
+                localFileList.add(destFile.absolutePath)
+                logger.info("save file : ${destFile.canonicalPath} (${destFile.length()})")
             }
         }
         if (count == 0) throw TaskExecuteException(
@@ -303,7 +283,8 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
         }
         val projectId = task.projectId
         val targetPath = parseVariable(param.targetPath, runVariables)
-        buildLogPrinter.addLine(buildId, "distribute files to target path : $targetPath", taskId, containerId, executeCount)
+        buildLogPrinter.addLine(buildId, "distribute files to target path : $targetPath", taskId, containerId,
+            executeCount)
 
         val targetEnvType = parseVariable(param.targetEnvType, runVariables)
 
@@ -343,7 +324,8 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
                 }
                 val targetEnvName =
                     parseVariable(param.targetEnvName!!.joinToString(","), runVariables).split(",").map { it.trim() }
-                val envIdList = checkAuth(buildId, taskId, containerId, executeCount, operator, projectId, targetEnvName, client)
+                val envIdList = checkAuth(buildId, taskId, containerId, executeCount, operator, projectId,
+                    targetEnvName, client)
                 EnvSet(envIdList, listOf(), listOf())
             }
             else -> {
@@ -364,13 +346,15 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
 
         checkEnvNodeExists(buildId, taskId, containerId, executeCount, operator, projectId, envSet, client)
 
-        // val fileSource = "{\"files\":[\"$srcPath\"],\"envSet\":{\"nodeHashIds\":[\"$srcNodeId\"]},\"account\":\"$srcAccount\"}"
+        /* val fileSource = "{\"files\":[\"$srcPath\"],\"envSet\":{\"nodeHashIds\":[\"$srcNodeId\"]}," +
+            "\"account\":\"$srcAccount\"}" */
         val fastPushFileReq = FastPushFileRequest(
             operator, listOf(fileSource), targetPath, envSet,
             targetAccount, timeout
         )
         val taskInstanceId = jobClient.fastPushFileDevops(fastPushFileReq, projectId)
-        buildLogPrinter.addLine(buildId, "查看结果: ${jobClient.getDetailUrl(projectId, taskInstanceId)}", task.taskId, containerId, executeCount)
+        buildLogPrinter.addLine(buildId, "查看结果: ${jobClient.getDetailUrl(projectId, taskInstanceId)}", task.taskId,
+            containerId, executeCount)
         val startTime = System.currentTimeMillis()
 
         val buildStatus = checkStatus(
@@ -490,7 +474,8 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
         val noExistsEnvNames = envNameList.subtract(envNameExistsList)
         if (noExistsEnvNames.isNotEmpty()) {
             logger.warn("The envNames not exists, name:$noExistsEnvNames")
-            buildLogPrinter.addRedLine(buildId, "以下这些环境名称不存在,请重新修改流水线！$noExistsEnvNames", taskId, containerId, executeCount)
+            buildLogPrinter.addRedLine(buildId, "以下这些环境名称不存在,请重新修改流水线！$noExistsEnvNames", taskId, containerId,
+                executeCount)
             throw BuildTaskException(
                 errorType = ErrorType.USER,
                 errorCode = ERROR_BUILD_TASK_ENV_NAME_NOT_EXISTS.toInt(),
@@ -600,8 +585,12 @@ class JobDevOpsFastPushFileTaskAtom @Autowired constructor(
     }
 
     // 获取所有的文件和文件夹
-    private fun getAllFiles(projectId: String, pipelineId: String, buildId: String, isCustom: Boolean): JfrogFilesData {
-
+    private fun getAllFiles(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        isCustom: Boolean
+    ): JfrogFilesData {
         val cusListFilesUrl = "$gatewayUrl/jfrog/api/service/custom/$projectId?list&deep=1&listFolders=1"
         val listFilesUrl = "$gatewayUrl/jfrog/api/service/archive"
 

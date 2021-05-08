@@ -32,15 +32,11 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.archive.client.BkRepoClient
-import com.tencent.devops.common.archive.client.JfrogClient
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.element.JobCloudsFastPushElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.common.service.gray.RepoGray
-import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.bkjob.ClearJobTempFileEvent
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
@@ -72,9 +68,6 @@ class JobCloudsFastPushTaskAtom @Autowired constructor(
     private val jobFastPushFile: JobFastPushFile,
     private val buildLogPrinter: BuildLogPrinter,
     private val client: Client,
-    private val commonConfig: CommonConfig,
-    private val redisOperation: RedisOperation,
-    private val repoGray: RepoGray,
     private val bkRepoClient: BkRepoClient
 ) : IAtomTask<JobCloudsFastPushElement> {
 
@@ -182,13 +175,17 @@ class JobCloudsFastPushTaskAtom @Autowired constructor(
         }
 
         if (!BuildStatus.isFinish(buildStatus)) { // 未结束--返回后消息会有下一次轮循
-            buildLogPrinter.addLine(buildId, "[Loop]从云石中转服务器分发至目标服务器/send cloudStone Transfer file to TargetSvr status: $buildStatus", taskId, containerId, executeCount)
+            buildLogPrinter.addLine(buildId,
+                "[Loop]从云石中转服务器分发至目标服务器/send cloudStone Transfer file to TargetSvr status: $buildStatus",
+                taskId, containerId, executeCount)
             return AtomResponse(buildStatus)
         }
 
         task.taskParams[LAST_STATUS] = buildStatus.name
         if (BuildStatus.isFailure(buildStatus)) { // 步骤2失败，终止
-            buildLogPrinter.addRedLine(buildId, "从云石中转服务器分发至目标服务器失败/send cloudStone Transfer file to TargetSvr fail", taskId, containerId, executeCount)
+            buildLogPrinter.addRedLine(buildId,
+                "从云石中转服务器分发至目标服务器失败/send cloudStone Transfer file to TargetSvr fail", taskId, containerId,
+                executeCount)
             return if (buildStatus == BuildStatus.FAILED)
                 AtomResponse(
                     buildStatus = BuildStatus.FAILED,
@@ -200,7 +197,9 @@ class JobCloudsFastPushTaskAtom @Autowired constructor(
                 AtomResponse(buildStatus)
             }
         }
-        buildLogPrinter.addLine(buildId, "从云石中转服务器分发至目标服务器成功/send cloudStone Transfer file to TargetSvr done", taskId, containerId, executeCount)
+        buildLogPrinter.addLine(buildId,
+            "从云石中转服务器分发至目标服务器成功/send cloudStone Transfer file to TargetSvr done", taskId, containerId,
+            executeCount)
 
         return AtomResponse(BuildStatus.SUCCEED)
     }
@@ -234,10 +233,12 @@ class JobCloudsFastPushTaskAtom @Autowired constructor(
         clearTempFile(task) // 清理临时文件
 
         if (BuildStatus.isFailure(firstStatus)) { // 如果失败则结束
-            buildLogPrinter.addRedLine(buildId, "文件分至云石中转服务器失败/send file to [cloudStone TransferSvr] fail", taskId, containerId, executeCount)
+            buildLogPrinter.addRedLine(buildId, "文件分至云石中转服务器失败/send file to [cloudStone TransferSvr] fail",
+                taskId, containerId, executeCount)
             return AtomResponse(firstStatus)
         } else if (BuildStatus.isFinish(firstStatus)) { // 成功了，继续
-            buildLogPrinter.addLine(buildId, "文件分发至云石中转服务器完成/send file to [cloudStone TransferSvr] done", taskId, containerId, executeCount)
+            buildLogPrinter.addLine(buildId, "文件分发至云石中转服务器完成/send file to [cloudStone TransferSvr] done",
+                taskId, containerId, executeCount)
         }
 
         // 分发文件
@@ -246,10 +247,14 @@ class JobCloudsFastPushTaskAtom @Autowired constructor(
             return AtomResponse(secondStatus)
         }
         if (BuildStatus.isFailure(secondStatus)) {
-            buildLogPrinter.addRedLine(buildId, "从云石中转服务器分发至目标服务器失败/send cloudStone Transfer file to TargetSvr fail", taskId, containerId, executeCount)
+            buildLogPrinter.addRedLine(buildId,
+                "从云石中转服务器分发至目标服务器失败/send cloudStone Transfer file to TargetSvr fail",
+                taskId, containerId, executeCount)
             return AtomResponse(secondStatus)
         } else if (BuildStatus.isFinish(secondStatus)) { // 成功了，继续
-            buildLogPrinter.addLine(buildId, "从云石中转服务器分发至目标服务器成功/send cloudStone Transfer file to TargetSvr done", taskId, containerId, executeCount)
+            buildLogPrinter.addLine(buildId,
+                "从云石中转服务器分发至目标服务器成功/send cloudStone Transfer file to TargetSvr done",
+                taskId, containerId, executeCount)
         }
 
         return AtomResponse(secondStatus)
@@ -278,41 +283,30 @@ class JobCloudsFastPushTaskAtom @Autowired constructor(
         var count = 0
 
         try {
-            val isRepoGray = repoGray.isGray(projectId, redisOperation)
-            buildLogPrinter.addLine(buildId, "use bkrepo: $isRepoGray", taskId, containerId, executeCount)
-            if (isRepoGray) {
-                regexPathsStr.split(",").forEach { regex ->
-                    val files = bkRepoClient.downloadFileByPattern(
-                        userId = userId,
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        buildId = buildId,
-                        repoName = if (isCustom) "custom" else "pipeline",
-                        pathPattern = regex.trim(),
-                        destPath = workspace.canonicalPath
-                    )
-                    count += files.size
-                    files.forEach { file ->
-                        localFileList.add(file.absolutePath)
-                        cloudStoneFileList.add("$cloudStonePath/${file.name}")
-                    }
-                }
-            } else {
-                val jfrogClinet = JfrogClient(commonConfig.devopsHostGateway!!, projectId, pipelineId, buildId)
-                regexPathsStr.split(",").forEach { regex ->
-                    val files = jfrogClinet.downloadFile(regex.trim(), isCustom, workspace.canonicalPath)
-                    count += files.size
-                    files.forEach { file ->
-                        localFileList.add(file.absolutePath)
-                        cloudStoneFileList.add("$cloudStonePath/${file.name}")
-                    }
+            regexPathsStr.split(",").forEach { regex ->
+                val files = bkRepoClient.downloadFileByPattern(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    repoName = if (isCustom) "custom" else "pipeline",
+                    pathPattern = regex.trim(),
+                    destPath = workspace.canonicalPath
+                )
+                count += files.size
+                files.forEach { file ->
+                    localFileList.add(file.absolutePath)
+                    cloudStoneFileList.add("$cloudStonePath/${file.name}")
                 }
             }
 
-            buildLogPrinter.addLine(buildId, "Param cloudStonePath=$cloudStonePath", taskId, containerId, executeCount)
+            buildLogPrinter.addLine(buildId, "Param cloudStonePath=$cloudStonePath", taskId, containerId,
+                executeCount)
             buildLogPrinter.addLine(buildId, "Param isCustom=$isCustom", taskId, containerId, executeCount)
-            buildLogPrinter.addLine(buildId, "Param cloudStoneFileList=$cloudStoneFileList", taskId, containerId, executeCount)
-            buildLogPrinter.addLine(buildId, "$count 个文件将被分发/$count file(s) will be distribute...", taskId, containerId, executeCount)
+            buildLogPrinter.addLine(buildId, "Param cloudStoneFileList=$cloudStoneFileList", taskId, containerId,
+                executeCount)
+            buildLogPrinter.addLine(buildId, "$count 个文件将被分发/$count file(s) will be distribute...", taskId,
+                containerId, executeCount)
             if (count == 0) {
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
@@ -344,7 +338,8 @@ class JobCloudsFastPushTaskAtom @Autowired constructor(
                 )
             )
 
-            buildLogPrinter.addLine(buildId, "开始传输文件至云石服务器/start send file to cloud stone", taskId, containerId, executeCount)
+            buildLogPrinter.addLine(buildId, "开始传输文件至云石服务器/start send file to cloud stone", taskId,
+                containerId, executeCount)
 
             val starter = OPERATOR
             val taskInstanceId = jobFastPushFile.fastPushFile(
@@ -409,7 +404,8 @@ class JobCloudsFastPushTaskAtom @Autowired constructor(
             null
         }
         // 分发文件
-        buildLogPrinter.addLine(buildId, "从云石中转服务器分发至目标服务器/send cloudStone Transfer file to TargetSvr...", taskId, containerId, executeCount)
+        buildLogPrinter.addLine(buildId, "从云石中转服务器分发至目标服务器/send cloudStone Transfer file to TargetSvr...",
+            taskId, containerId, executeCount)
         val secondId = jobCloudsFastPushFile.cloudsFastPushFile(
             buildId = buildId,
             operator = starter,

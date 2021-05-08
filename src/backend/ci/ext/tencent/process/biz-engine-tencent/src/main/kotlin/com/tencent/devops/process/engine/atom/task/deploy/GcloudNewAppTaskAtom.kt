@@ -31,7 +31,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.archive.client.BkRepoClient
-import com.tencent.devops.common.archive.client.JfrogClient
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.gcloud.HistoryTaskGcloudClient
 import com.tencent.devops.common.gcloud.api.pojo.CommonParam
@@ -42,12 +41,9 @@ import com.tencent.devops.common.gcloud.api.pojo.history.NewUploadTaskParam
 import com.tencent.devops.common.gcloud.api.pojo.history.PrePublishParam
 import com.tencent.devops.common.gcloud.api.pojo.history.QueryVersionParam
 import com.tencent.devops.common.gcloud.api.pojo.history.UploadUpdateFileParam
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.element.GcloudAppElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.common.service.gray.RepoGray
-import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.plugin.api.ServiceGcloudConfResource
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
@@ -66,9 +62,6 @@ class GcloudNewAppTaskAtom @Autowired constructor(
     private val client: Client,
     private val objectMapper: ObjectMapper,
     private val buildLogPrinter: BuildLogPrinter,
-    private val commonConfig: CommonConfig,
-    private val redisOperation: RedisOperation,
-    private val repoGray: RepoGray,
     private val bkRepoClient: BkRepoClient
 ) : IAtomTask<GcloudAppElement> {
 
@@ -144,25 +137,15 @@ class GcloudNewAppTaskAtom @Autowired constructor(
         }
         val isCustom = fileSource.toUpperCase() == "CUSTOMIZE"
         val destPath = Files.createTempDirectory("gcloud").toAbsolutePath().toString()
-
-        val isRepoGray = repoGray.isGray(projectId, redisOperation)
-        buildLogPrinter.addLine(buildId, "use bkrepo: $isRepoGray", taskId, task.containerHashId, task.executeCount
-            ?: 1)
-
-        val downloadFileList = if (isRepoGray) {
-            bkRepoClient.downloadFileByPattern(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                buildId = buildId,
-                repoName = if (isCustom) "custom" else "pipeline",
-                pathPattern = filePath,
-                destPath = destPath
-            )
-        } else {
-            val jfrogClient = JfrogClient(commonConfig.devopsHostGateway ?: "", projectId, pipelineId, buildId)
-            jfrogClient.downloadFile(filePath, isCustom, destPath)
-        }
+        val downloadFileList = bkRepoClient.downloadFileByPattern(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            repoName = if (isCustom) "custom" else "pipeline",
+            pathPattern = filePath,
+            destPath = destPath
+        )
 
         // 获取accessId和accessKey
         val keyPair = gcloudUtil.getAccesIdAndToken(projectId, ticketId)
