@@ -1340,10 +1340,11 @@ class GitService @Autowired constructor(
                 .build()
 
             OkhttpUtils.doHttp(request).use { response ->
+                logger.info("Clear token response code: ${response.code()}")
                 return response.isSuccessful
             }
         } finally {
-            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the token")
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to clear the token")
         }
     }
 }
