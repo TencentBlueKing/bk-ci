@@ -24,13 +24,13 @@ import org.springframework.beans.factory.annotation.Autowired
 import java.util.concurrent.TimeUnit
 
 open class AbsPermissionProjectService @Autowired constructor(
-    val permissionRoleService: PermissionRoleService,
-    val permissionRoleMemberService: PermissionRoleMemberService,
-    val authHelper: AuthHelper,
-    val policyService: PolicyService,
-    val client: Client,
-    val iamConfiguration: IamConfiguration,
-    val deptService: DeptService
+    open val permissionRoleService: PermissionRoleService,
+    open val permissionRoleMemberService: PermissionRoleMemberService,
+    open val authHelper: AuthHelper,
+    open val policyService: PolicyService,
+    open val client: Client,
+    open val iamConfiguration: IamConfiguration,
+    open val deptService: DeptService
 ) : PermissionProjectService {
 
     private val projectIdCache = CacheBuilder.newBuilder()

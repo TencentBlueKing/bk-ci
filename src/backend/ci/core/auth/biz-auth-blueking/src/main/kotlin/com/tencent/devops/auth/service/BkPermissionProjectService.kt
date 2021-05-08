@@ -15,13 +15,13 @@ import org.springframework.stereotype.Service
 
 @Service
 class BkPermissionProjectService @Autowired constructor(
-    val permissionRoleService: PermissionRoleService,
-    val permissionRoleMemberService: PermissionRoleMemberService,
-    val authHelper: AuthHelper,
-    val policyService: PolicyService,
-    val client: Client,
-    val iamConfiguration: IamConfiguration,
-    val deptService: DeptService
+    override val permissionRoleService: PermissionRoleService,
+    override val permissionRoleMemberService: PermissionRoleMemberService,
+    override val authHelper: AuthHelper,
+    override val policyService: PolicyService,
+    override val client: Client,
+    override val iamConfiguration: IamConfiguration,
+    override val deptService: DeptService
 ) : AbsPermissionProjectService(
     permissionRoleService = permissionRoleService,
     permissionRoleMemberService = permissionRoleMemberService,
