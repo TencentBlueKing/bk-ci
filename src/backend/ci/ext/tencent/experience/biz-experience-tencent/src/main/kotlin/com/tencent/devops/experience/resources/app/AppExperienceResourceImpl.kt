@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.app.AppExperienceResource
+import com.tencent.devops.experience.filter.annotions.AllowOuter
 import com.tencent.devops.experience.pojo.AppExperience
 import com.tencent.devops.experience.pojo.AppExperienceDetail
 import com.tencent.devops.experience.pojo.AppExperienceSummary
@@ -60,6 +61,7 @@ class AppExperienceResourceImpl @Autowired constructor(
         return Result(result.records)
     }
 
+    @AllowOuter
     override fun listV2(
         userId: String,
         platform: Int,
@@ -73,6 +75,7 @@ class AppExperienceResourceImpl @Autowired constructor(
         return Result(result)
     }
 
+    @AllowOuter
     override fun detail(
         userId: String,
         platform: Int,
@@ -85,6 +88,7 @@ class AppExperienceResourceImpl @Autowired constructor(
         return Result(result)
     }
 
+    @AllowOuter
     override fun changeLog(
         userId: String,
         organization: String?,
@@ -97,6 +101,7 @@ class AppExperienceResourceImpl @Autowired constructor(
         return Result(result)
     }
 
+    @AllowOuter
     override fun downloadUrl(userId: String, organization: String?, experienceHashId: String): Result<DownloadUrl> {
         checkParam(userId, experienceHashId)
         val result = experienceAppService.downloadUrl(userId, experienceHashId, organization)

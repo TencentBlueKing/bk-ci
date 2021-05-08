@@ -30,6 +30,7 @@ package com.tencent.devops.experience.resources.app
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.app.AppExperienceSearchResource
+import com.tencent.devops.experience.filter.annotions.AllowOuter
 import com.tencent.devops.experience.pojo.search.SearchAppInfoVO
 import com.tencent.devops.experience.pojo.search.SearchRecommendVO
 import com.tencent.devops.experience.service.ExperienceSearchService
@@ -40,6 +41,7 @@ class AppExperienceSearchResourceImpl @Autowired constructor(
     val experienceSearchService: ExperienceSearchService
 ) : AppExperienceSearchResource {
 
+    @AllowOuter
     override fun search(
         userId: String,
         platform: Int?,
@@ -47,7 +49,7 @@ class AppExperienceSearchResourceImpl @Autowired constructor(
         experienceName: String,
         experiencePublic: Boolean
     ): Result<List<SearchAppInfoVO>> {
-        return experienceSearchService.search(userId, platform, experienceName, experiencePublic,organization)
+        return experienceSearchService.search(userId, platform, experienceName, experiencePublic, organization)
     }
 
     override fun recommends(userId: String, platform: Int?): Result<List<SearchRecommendVO>> {
