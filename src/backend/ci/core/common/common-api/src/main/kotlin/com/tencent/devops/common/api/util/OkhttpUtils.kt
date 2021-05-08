@@ -135,7 +135,7 @@ object OkhttpUtils {
     private fun getBuilder(url: String, headers: Map<String, String>? = null): Request.Builder {
         val builder = Request.Builder()
         builder.url(url)
-        if (headers?.isNotEmpty() == false) {
+        if (headers?.isNotEmpty() == true) {
             headers.forEach { (key, value) ->
                 builder.addHeader(key, value)
             }
