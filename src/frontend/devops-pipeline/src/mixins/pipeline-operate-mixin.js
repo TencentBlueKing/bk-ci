@@ -445,7 +445,6 @@ export default {
             const { pipelineSetting, checkPipelineInvalid, pipeline } = this
             const { inValid, message } = checkPipelineInvalid(pipeline.stages, pipelineSetting)
             const { projectId, pipelineId } = this.$route.params
-            console.log(pipeline.stages, inValid, message, '222222222')
             if (inValid) {
                 throw new Error(message)
             }
