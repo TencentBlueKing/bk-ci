@@ -77,7 +77,7 @@ const customeRules = {
     },
     buildNumRule: {
         validate: function (value, args) {
-            return /^[\w\-{}()+?.:$]{1,256}$/.test(value)
+            return /^[\w\s-{}()+?.:$]{1,256}$/.test(value)
         }
     }
 }
