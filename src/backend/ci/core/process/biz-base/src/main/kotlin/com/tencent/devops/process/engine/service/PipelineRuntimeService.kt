@@ -801,6 +801,7 @@ class PipelineRuntimeService @Autowired constructor(
                                 ?: buildNoObj.buildNo
                         }
                     }
+                    container.executeCount = context.retryCount + 1
                     container.elements.forEach { atomElement ->
                         if (context.firstTaskId.isBlank() && atomElement.isElementEnable()) {
                             context.firstTaskId = atomElement.findFirstTaskIdByStartType(context.startType)
