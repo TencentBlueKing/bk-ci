@@ -1,9 +1,11 @@
 package com.tencent.devops.experience.filter
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_NAME
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.experience.constant.ExperienceConstant.HEADER_O_TOKEN
 import com.tencent.devops.experience.constant.ExperienceConstant.ORGANIZATION_OUTER
+import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.filter.annotions.AllowOuter
 import com.tencent.devops.experience.service.ExperienceOuterService
 import org.slf4j.LoggerFactory
@@ -28,10 +30,20 @@ class OuterLoginFilter @Autowired constructor(
         if (null != requestContext && null != resourceInfo) {
             val headers = requestContext.headers
             if (headers[AUTH_HEADER_DEVOPS_ORGANIZATION_NAME]?.contains(ORGANIZATION_OUTER) == true) {
-                // 安全过滤
-                if (resourceInfo!!.resourceMethod.annotations.filterIsInstance<AllowOuter>().isEmpty()) {
-                    requestContext.abortWith(Response.status(Response.Status.FORBIDDEN).entity("无法访问").build())
-                }
+                // 路径过滤
+//                val resourceMethod = resourceInfo!!.resourceMethod
+//                if (resourceMethod.annotations.filterIsInstance<AllowOuter>().isEmpty()) {
+//                    logger.warn(
+//                        "this method is not allowed by outer , class:{} , method:{}",
+//                        resourceMethod.declaringClass,
+//                        resourceMethod.name
+//                    )
+//                    throw ErrorCodeException(
+//                        statusCode = Response.Status.FORBIDDEN.statusCode,
+//                        errorCode = ExperienceMessageCode.OUTER_ACCESS_FAILED,
+//                        defaultMessage = "无法访问"
+//                    )
+//                }
                 // 续期token
                 headers[HEADER_O_TOKEN]?.get(0)?.let {
                     experienceOuterService.renewToken(it)

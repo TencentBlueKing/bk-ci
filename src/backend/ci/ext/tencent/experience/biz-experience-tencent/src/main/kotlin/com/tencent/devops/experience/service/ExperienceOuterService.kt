@@ -2,6 +2,7 @@ package com.tencent.devops.experience.service
 
 import com.tencent.bkuser.ApiException
 import com.tencent.bkuser.api.V1Api
+import com.tencent.bkuser.model.Profile
 import com.tencent.bkuser.model.ProfileLogin
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
@@ -13,6 +14,9 @@ import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.data.redis.connection.RedisStringCommands
+import org.springframework.data.redis.core.RedisCallback
+import org.springframework.data.redis.core.types.Expiration
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -23,6 +27,7 @@ class ExperienceOuterService @Autowired constructor(
     private val redisOperation: RedisOperation
 ) {
     fun outerLogin(realIp: String, params: OuterLoginParam): String {
+        // IP 限制频率
         if (getIpLimit(realIp)) {
             logger.warn("over limit , ip : {}", realIp)
             throw ErrorCodeException(
@@ -32,16 +37,28 @@ class ExperienceOuterService @Autowired constructor(
             )
         }
 
-        val data = ProfileLogin()
-        data.username = params.username
-        data.password = params.password
         try {
+            // 登录账号
+            val data = ProfileLogin()
+            data.username = params.username
+            data.password = params.password
             val profile = api.v1LoginLogin(data)
+
+            // 判断账号没有被封
+            if (profile.status != Profile.StatusEnum.NORMAL) {
+                logger.warn("profile status is not normal , status : {}", profile.status)
+                throw ErrorCodeException(
+                    statusCode = Response.Status.BAD_REQUEST.statusCode,
+                    errorCode = ExperienceMessageCode.OUTER_LOGIN_ERROR,
+                    defaultMessage = "账号已被封禁"
+                )
+            }
+
+            // 设置token , 存放信息
             val outerProfileVO = OuterProfileVO(
                 username = profile.username,
                 logo = "https://www.tencent.com/img/index/tencent_logo.png"
             )
-
             val token = DigestUtils.md5Hex(profile.username + profile.id + System.currentTimeMillis() + secretKey)
             redisOperation.set(redisKey(token), JsonUtil.toJson(outerProfileVO), expireSecs)
             return token
@@ -63,6 +80,7 @@ class ExperienceOuterService @Autowired constructor(
     }
 
     fun outerAuth(token: String): OuterProfileVO {
+        // token过期
         val profileStr = redisOperation.get(redisKey(token))
         if (StringUtils.isBlank(profileStr)) {
             logger.warn("get profile by token failed , token:{}", token)
@@ -72,6 +90,18 @@ class ExperienceOuterService @Autowired constructor(
                 defaultMessage = "登录过期,请重新登录"
             )
         }
+
+        // TODO TOKEN对应的账号被封
+        val canCheck = redisOperation.execute(RedisCallback {
+            it.stringCommands().set(
+                token.toByteArray(),
+                "1".toByteArray(),
+                Expiration.seconds(10),
+                RedisStringCommands.SetOption.SET_IF_ABSENT
+            )
+        })
+
+        // 获取账号信息
         try {
             return JsonUtil.getObjectMapper().readValue<OuterProfileVO>(profileStr, OuterProfileVO::class.java)
         } catch (e: Exception) {
@@ -79,7 +109,7 @@ class ExperienceOuterService @Autowired constructor(
             throw ErrorCodeException(
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
                 errorCode = ExperienceMessageCode.OUTER_LOGIN_ERROR,
-                defaultMessage = "登录过期,请重新登录"
+                defaultMessage = "账号信息异常,请重新登录"
             )
         }
     }
