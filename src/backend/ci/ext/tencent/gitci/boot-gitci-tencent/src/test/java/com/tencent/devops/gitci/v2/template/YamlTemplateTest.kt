@@ -113,7 +113,7 @@ class YamlTemplateTest {
 
         println(
             YamlCommonUtils.toYamlNotNull(
-                TestYamlTemplate(
+                YamlTemplate(
                     yamlObject = preTemplateYamlObject,
                     templates = getAllTemplates().toMutableMap(),
                     rootPath = testYaml,
