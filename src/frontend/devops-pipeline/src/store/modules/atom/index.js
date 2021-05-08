@@ -61,9 +61,9 @@ export default {
         importedPipelineJson: null,
         atomVersionChangedKeys: [],
         pipelineLimit: {
-            stageLimit: 3,
-            jobLimit: 4,
-            atomLimit: 5
+            stageLimit: 50,
+            jobLimit: 50,
+            atomLimit: 50
         }
     },
     mutations,
