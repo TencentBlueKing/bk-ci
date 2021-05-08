@@ -1,7 +1,7 @@
 <template>
     <bk-select @toggle="toggleVisible" @change="onChange" v-bind="selectProps">
         <bk-option
-            v-for="item in list"
+            v-for="item in listData"
             :key="item[settingKey]"
             :id="item[settingKey]"
             :name="item[displayKey]"
@@ -59,7 +59,13 @@
                 default: 'id'
             },
             searchUrl: String,
-            replaceKey: String
+            replaceKey: String,
+            dataPath: String
+        },
+        data () {
+            return {
+                listData: []
+            }
         },
         computed: {
             popoverOptions () {
@@ -86,12 +92,20 @@
                     'search-key': this.displayKey,
                     'popover-options': this.popoverOptions,
                     'enable-virtual-scroll': this.list.length > 3000,
-                    list: this.list,
+                    list: this.listData,
                     'id-key': this.settingKey,
                     'display-key': this.displayKey
                 }
                 if (this.searchUrl) props['remote-method'] = this.remoteMethod
                 return props
+            }
+        },
+        watch: {
+            list: {
+                handler (list) {
+                    this.listData = list
+                },
+                immediate: true
             }
         },
         methods: {
@@ -107,10 +121,10 @@
                 try {
                     const regExp = new RegExp(this.replaceKey, 'g')
                     const url = this.searchUrl.replace(regExp, name)
-                    const data = this.$http.get(url)
-                    return data
+                    const data = await this.$ajax.get(url)
+                    this.listData = this.getResponseData(data)
                 } catch (error) {
-                    console.error(error)
+                    console.log(error)
                 }
             }
         }

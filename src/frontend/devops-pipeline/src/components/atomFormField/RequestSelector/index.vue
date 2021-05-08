@@ -14,6 +14,7 @@
         :disabled="disabled || isLoading"
         :search-url="searchUrl"
         :replace-key="replaceKey"
+        :data-path="dataPath"
     >
         <template v-if="hasAddItem">
             <div class="bk-selector-create-item">
@@ -79,7 +80,8 @@
                 type: Number
             },
             searchUrl: String,
-            replaceKey: String
+            replaceKey: String,
+            dataPath: String
         },
         data () {
             return {
