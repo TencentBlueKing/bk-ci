@@ -214,7 +214,6 @@
                     viewSetting.currentViewId = currentViewId || viewSetting.currentViewId || 'myPipeline'
                     if (!currentViewId) {
                         this.$router.replace({
-                            name: 'pipelinesList',
                             params: {
                                 type: viewSetting.currentViewId
                             }
