@@ -172,9 +172,7 @@ class TriggerBuildService @Autowired constructor(
         return PipelineSetting(
             projectId = landunProjectId,
             pipelineId = pipelineId,
-            failSubscription = Subscription(
-
-            )
+            failSubscription = Subscription()
         )
     }
 

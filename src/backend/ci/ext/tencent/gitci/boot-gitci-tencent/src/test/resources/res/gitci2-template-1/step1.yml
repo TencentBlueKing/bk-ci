@@ -4,22 +4,22 @@ resources:
       name: repoB
       ref: master  # 可选
       credentials:
-        personal-access-token: v994gkKTk8wNb-LXD-gx
+        personal-access-token: xxx
 
 parameters:
-- name: username
-  type: string
-  default: world
-- name: stepname
-  type: String
-  default: STEPNAME
+  - name: username
+    type: string
+    default: world
+  - name: stepname
+    type: String
+    default: STEPNAME
 
 steps:
-- run: |
-    echo "hello template ${{ parameters.username }}!"
-- template: templates/step1.yml@repoB
-  parameters:
-    username:  RES_STEP1
-- template: templates/step3.yml
-  parameters:
-    username:  RES_STEP3
+  - run: |
+      echo "res_repoA_step_id_1 username ${{ parameters.username }}!"
+  - template: templates/step1.yml@repoB
+    parameters:
+      username: RES_REPOA_STEP1
+  - template: templates/step3.yml
+    parameters:
+      username: RES_REPOA_STEP1_STEP3

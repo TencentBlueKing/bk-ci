@@ -44,6 +44,6 @@ object YamlCommonUtils {
     fun toYamlNotNull(bean: Any): String {
         val objectMapper = getObjectMapper()
         objectMapper.setSerializationInclusion(JsonInclude.Include.NON_NULL)
-        return YamlUtil.getObjectMapper().writeValueAsString(bean)!!
+        return objectMapper.writeValueAsString(bean)!!
     }
 }

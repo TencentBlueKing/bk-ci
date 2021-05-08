@@ -51,5 +51,6 @@ data class PreTemplateScriptBuildYaml(
     val onFail: OnFail?,
     val extends: Extends?,
     val resources: Resources?,
-    val notices: List<Notices>?
+    val notices: List<Notices>?,
+    var finally: List<PreStage>?
 )

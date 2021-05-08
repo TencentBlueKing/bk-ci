@@ -29,7 +29,6 @@ package com.tencent.devops.gitci.v2.service
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.gitci.pojo.GitRequestEvent
-import com.tencent.devops.gitci.v2.service.trigger.V2RequestTrigger
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
@@ -183,7 +182,6 @@ class ScmService @Autowired constructor(
     ): GitCIProjectInfo? {
         return client.getScm(ServiceGitResource::class).getProjectInfo(token, gitProjectId, useAccessToken).data
     }
-
 
     // 获取项目ID，兼容没有source字段的旧数据，和fork库中源项目id不同的情况
     fun getProjectId(isFork: Boolean = false, gitRequestEvent: GitRequestEvent): Long {

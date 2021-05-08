@@ -1,0 +1,23 @@
+resources:
+  repositories:
+    - repository: ruotiantang/gitci2-template-2
+      name: repoB
+      ref: master  # 可选
+      credentials:
+        personal-access-token: xxx
+
+parameters:
+  - name: username
+    type: string
+    default: world
+
+variables:
+  RES_REPOA_VAR1_USERNAME:
+    value: ${{ parameters.username }}
+  template:
+    - name: templates/variable2.yml
+      parameters:
+        username: RES_REPOA_VARIABLES
+    - name: templates/variable1.yml@repoB
+      parameters:
+        username: RES_REPOA_VARIABLES

@@ -30,7 +30,6 @@ package com.tencent.devops.gitci.v2.template
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
-import com.tencent.devops.common.ci.v2.utils.YamlCommonUtils
 import org.junit.Test
 
 import org.springframework.core.io.ClassPathResource
@@ -41,7 +40,7 @@ import java.io.InputStreamReader
 class YamlTemplateTest {
 
     // 综合测试
-    val testYaml = "pipelineWithResTemplate.yml"
+    val testYaml = "pipelineWithTemplate.yml"
     val templateYamlList = listOf(
         "templates/stages.yml",
         "templates/jobs.yml",
@@ -111,17 +110,19 @@ class YamlTemplateTest {
         val yaml = ScriptYmlUtils.formatYaml(sb.toString())
         val preTemplateYamlObject = YamlUtil.getObjectMapper().readValue(yaml, PreTemplateScriptBuildYaml::class.java)
 
-        println(
-            YamlCommonUtils.toYamlNotNull(
-                YamlTemplate(
-                    yamlObject = preTemplateYamlObject,
-                    templates = getAllTemplates().toMutableMap(),
-                    rootPath = testYaml,
-                    userId = "ruotiantang",
-                    projectId = 580280
-                ).replace()
-            )
-        )
+//        println(
+//            YamlCommonUtils.toYamlNotNull(
+//                YamlTemplate(
+//                    yamlObject = preTemplateYamlObject,
+//                    templates = mutableMapOf("root" to getAllTemplates().toMutableMap()),
+//                    rootPath = testYaml,
+//                    userId = "ruotiantang",
+//                    projectId = 580280,
+//                    repo = "root",
+//                    repoTemplateGraph = TemplateGraph()
+//                ).replace()
+//            )
+//        )
     }
 
     private fun getAllTemplates(): Map<String, String?> {

@@ -27,27 +27,10 @@
 
 package com.tencent.devops.gitci.v2.template.pojo
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.common.ci.v2.Extends
-import com.tencent.devops.common.ci.v2.Notices
-import com.tencent.devops.common.ci.v2.OnFail
-import com.tencent.devops.common.ci.v2.PreJob
-import com.tencent.devops.common.ci.v2.PreStage
-import com.tencent.devops.common.ci.v2.Resources
-import com.tencent.devops.common.ci.v2.Step
-import com.tencent.devops.common.ci.v2.Variable
-
-data class PipelineTemplate(
-    val parameters: List<Parameters>?,
-    var label: String? = null,
-    var variables: Map<String, Variable>?,
-    var stages: List<PreStage>? = null,
-    var jobs: Map<String, PreJob>? = null,
-    var steps: List<Step>? = null,
-    @JsonProperty("on-fail")
-    var onFail: OnFail?,
-    var extends: Extends?,
-    var resources: Resources?,
-    var notices: List<Notices>?,
-    var finally: List<PreStage>?
+/**
+ * 存放所有用来替换的模板库
+ */
+data class Templates(
+    var repo: String,
+    var tamplates: MutableMap<String, String?>
 )

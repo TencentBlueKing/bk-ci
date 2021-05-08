@@ -48,6 +48,7 @@ import com.tencent.devops.gitci.v2.listener.V2GitCIRequestDispatcher
 import com.tencent.devops.gitci.v2.listener.V2GitCIRequestTriggerEvent
 import com.tencent.devops.gitci.v2.service.ScmService
 import com.tencent.devops.gitci.v2.template.YamlTemplate
+import com.tencent.devops.gitci.v2.template.pojo.TemplateGraph
 import com.tencent.devops.gitci.v2.utils.V2WebHookMatcher
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import org.jooq.DSLContext
@@ -215,10 +216,12 @@ class V2RequestTrigger @Autowired constructor(
         // 替换yaml文件中的模板引用
         val preYamlObject = YamlTemplate(
             yamlObject = preTemplateYamlObject,
-            templates = templates.toMutableMap(),
+            templates = mutableMapOf("root" to templates.toMutableMap()),
             rootPath = filePath,
             projectId = scmService.getProjectId(isFork, gitRequestEvent),
-            userId = gitRequestEvent.userId
+            userId = gitRequestEvent.userId,
+            repo = "root",
+            repoTemplateGraph = TemplateGraph()
         ).replace()
 
         return YamlObjects(preYaml = preYamlObject, normalYaml = ScriptYmlUtils.normalizeGitCiYaml(preYamlObject))

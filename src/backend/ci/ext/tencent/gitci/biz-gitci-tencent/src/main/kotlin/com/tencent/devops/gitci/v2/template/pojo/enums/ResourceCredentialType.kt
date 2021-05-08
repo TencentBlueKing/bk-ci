@@ -27,7 +27,7 @@
 
 package com.tencent.devops.gitci.v2.template.pojo.enums
 
-enum class ResourceCredentialType(val value:String) {
+enum class ResourceCredentialType(val value: String) {
     PRIVATE_KEY("personal-access-token"),
     OAUTH("use-actor-oauth")
 }

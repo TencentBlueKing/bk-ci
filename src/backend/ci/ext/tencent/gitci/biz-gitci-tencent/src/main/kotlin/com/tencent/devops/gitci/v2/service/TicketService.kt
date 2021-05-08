@@ -27,17 +27,15 @@
 
 package com.tencent.devops.gitci.v2.service
 
-import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.ticket.api.ServiceCredentialResource
-import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.util.*
+import java.util.Base64
 
 @Service
 class TicketService(
@@ -118,6 +116,6 @@ class TicketService(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(ScmService::class.java)
+        private val logger = LoggerFactory.getLogger(TicketService::class.java)
     }
 }

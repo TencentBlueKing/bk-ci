@@ -4,9 +4,9 @@ parameters:
     default: world
 
 variables:
-  cyc_USERNAME1:
+  RES_REPOB_VAR1_USERNAME:
     value: ${{ parameters.username }}
   template:
-    - name: cyclic/variable/templates/variable2.yml
+    - name: templates/variable2.yml
       parameters:
-        username: CYC_VARIABLES2
+        username: RES_REPOB_VARIABLES

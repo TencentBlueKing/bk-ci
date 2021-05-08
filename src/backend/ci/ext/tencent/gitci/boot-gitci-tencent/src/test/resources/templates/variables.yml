@@ -1,7 +1,7 @@
 parameters:
-- name: username
-  type: string
-  default: world
+  - name: username
+    type: string
+    default: world
 
 variables:
   USERNAME:

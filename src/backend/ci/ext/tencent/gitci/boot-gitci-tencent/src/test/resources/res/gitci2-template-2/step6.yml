@@ -5,4 +5,4 @@ parameters:
 
 steps:
 - run: |
-    echo "step6: ${{ parameters.username }}!"
+    echo "res_repoB_step_id_6 username ${{ parameters.username }}!"
