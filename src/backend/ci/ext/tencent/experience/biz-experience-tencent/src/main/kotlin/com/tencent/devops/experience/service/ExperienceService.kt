@@ -232,7 +232,7 @@ class ExperienceService @Autowired constructor(
             expireDate = experienceRecord.endDate.timestamp(),
             experienceGroups = groupList,
             innerUsers = innerUserIds,
-            outerUsers = experienceRecord.outerUsers,
+            outerUsers = setOf(),// TODO
             notifyTypes = objectMapper.readValue(experienceRecord.notifyTypes),
             enableWechatGroups = experienceRecord.enableWechatGroups ?: true,
             wechatGroups = experienceRecord.wechatGroups ?: "",
@@ -374,7 +374,6 @@ class ExperienceService @Autowired constructor(
         val fileSize = fileDetail.size
         val scheme = propertyMap[ARCHIVE_PROPS_APP_SCHEME] ?: ""
         val appName = StringUtils.defaultIfBlank(experience.experienceName, propertyMap[ARCHIVE_PROPS_APP_NAME])
-        val outers = regex.split(experience.outerUsers)
 
         val experienceId = experienceDao.create(
             dslContext = dslContext,
@@ -413,7 +412,7 @@ class ExperienceService @Autowired constructor(
         experience.innerUsers.forEach {
             experienceInnerDao.create(dslContext, experienceId, it)
         }
-        outers.forEach {
+        experience.outerUsers.forEach {
             experienceOuterDao.create(dslContext, experienceId, it, ExperienceOuterType.BK)
         }
 
@@ -481,7 +480,6 @@ class ExperienceService @Autowired constructor(
 
     fun edit(userId: String, projectId: String, experienceHashId: String, experience: ExperienceUpdate) {
         val experienceRecord = getExperienceId4Update(experienceHashId, userId, projectId)
-        val outers = regex.split(experience.outerUsers)
         val isPublic = isPublicGroupAndCheck(experience.experienceGroups)
 
         experienceDao.update(
@@ -519,8 +517,8 @@ class ExperienceService @Autowired constructor(
         }
 
         // 更新外部人员
-        experienceOuterDao.deleteByRecordId(dslContext, experienceRecord.id, outers.toList())
-        outers.forEach {
+        experienceOuterDao.deleteByRecordId(dslContext, experienceRecord.id, experience.outerUsers)
+        experience.outerUsers.forEach {
             experienceOuterDao.create(dslContext, experienceRecord.id, it, ExperienceOuterType.BK)
         }
 
@@ -839,7 +837,7 @@ class ExperienceService @Autowired constructor(
                 expireDate = experienceRecord.endDate.timestamp(),
                 experienceGroups = groups.map { HashUtil.encodeLongId(it.value1()) }.toSet(),
                 innerUsers = innerUsers.map { userId }.toSet(),
-                outerUsers = experienceRecord.outerUsers,
+                outerUsers = setOf(),// TODO
                 notifyTypes = objectMapper.readValue(experienceRecord.notifyTypes),
                 enableWechatGroups = experienceRecord.wechatGroups.isNotBlank(),
                 wechatGroups = experienceRecord.wechatGroups,
