@@ -86,9 +86,10 @@ class LambdaMQConfiguration {
     ): SimpleMessageListenerContainer {
         val container = SimpleMessageListenerContainer(connectionFactory)
         container.setQueueNames(buildFinishLambdaQueue.name)
-        container.setConcurrentConsumers(10)
-        container.setMaxConcurrentConsumers(10)
+        container.setConcurrentConsumers(30)
+        container.setMaxConcurrentConsumers(30)
         container.setAmqpAdmin(rabbitAdmin)
+        container.setPrefetchCount(1)
 
         val adapter = MessageListenerAdapter(lambdaBuildFinishListener, lambdaBuildFinishListener::execute.name)
         adapter.setMessageConverter(messageConverter)
@@ -127,9 +128,10 @@ class LambdaMQConfiguration {
     ): SimpleMessageListenerContainer {
         val container = SimpleMessageListenerContainer(connectionFactory)
         container.setQueueNames(buildElementFinishLambdaQueue.name)
-        container.setConcurrentConsumers(10)
-        container.setMaxConcurrentConsumers(10)
+        container.setConcurrentConsumers(30)
+        container.setMaxConcurrentConsumers(30)
         container.setAmqpAdmin(rabbitAdmin)
+        container.setPrefetchCount(1)
 
         val adapter = MessageListenerAdapter(lambdaBuildTaskFinishListener, lambdaBuildTaskFinishListener::execute.name)
         adapter.setMessageConverter(messageConverter)

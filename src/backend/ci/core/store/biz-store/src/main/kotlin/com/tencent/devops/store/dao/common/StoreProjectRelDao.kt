@@ -88,13 +88,13 @@ class StoreProjectRelDao {
 
     fun getTestProjectCodesByStoreCode(
         dslContext: DSLContext,
-        projectCode: String,
+        storeCode: String,
         storeType: StoreTypeEnum
     ): Result<Record1<String>>? {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
             return dslContext.select(PROJECT_CODE).from(this)
                 .where(
-                    PROJECT_CODE.eq(projectCode)
+                    STORE_CODE.eq(storeCode)
                         .and(STORE_TYPE.eq(storeType.type.toByte()))
                         .and(TYPE.eq(StoreProjectTypeEnum.TEST.type.toByte()))
                 )
@@ -310,9 +310,9 @@ class StoreProjectRelDao {
     }
 
     /**
-     * 判断项目是否为原生初始化项目有或者申请插件协作者指定的调试项目
+     * 判断项目是否为调试项目
      */
-    fun isInitTestProjectCode(
+    fun isTestProjectCode(
         dslContext: DSLContext,
         storeCode: String,
         storeType: StoreTypeEnum,
@@ -324,9 +324,7 @@ class StoreProjectRelDao {
                 .where(STORE_CODE.eq(storeCode))
                 .and(STORE_TYPE.eq(storeType.type.toByte()))
                 .and(PROJECT_CODE.eq(projectCode))
-                .and(TYPE.`in`(
-                    listOf(StoreProjectTypeEnum.INIT.type.toByte(), StoreProjectTypeEnum.TEST.type.toByte())
-                ))
+                .and(TYPE.eq(StoreProjectTypeEnum.TEST.type.toByte()))
                 .fetchOne(0, Long::class.java) != 0L
         }
     }
@@ -430,5 +428,47 @@ class StoreProjectRelDao {
             .and(tStoreProjectRel.STORE_TYPE.eq(storeType.type.toByte()))
             .and(tStoreProjectRel.TYPE.eq(StoreProjectTypeEnum.TEST.type.toByte()))
             .fetch()
+    }
+
+    fun countInstallNumByCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: Byte,
+        startTime: LocalDateTime? = null,
+        endTime: LocalDateTime? = null
+    ): Int {
+        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_CODE.eq(storeCode))
+            conditions.add(STORE_TYPE.eq(storeType))
+            conditions.add(TYPE.eq(StoreProjectTypeEnum.COMMON.type.toByte()))
+            if (startTime != null) {
+                conditions.add(CREATE_TIME.ge(startTime))
+            }
+            if (endTime != null) {
+                conditions.add(CREATE_TIME.lt(endTime))
+            }
+            return dslContext.selectCount().from(this).where(conditions)
+                .fetchOne(0, Int::class.java)
+        }
+    }
+
+    /**
+     * 获取该项目可用的组件
+     */
+    fun getValidStoreCodesByProject(
+        dslContext: DSLContext,
+        projectCode: String,
+        storeCodes: Collection<String>,
+        storeType: StoreTypeEnum
+    ): Result<Record1<String>>? {
+        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            return dslContext.select(STORE_CODE).from(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(STORE_CODE.`in`(storeCodes))
+                .and(STORE_TYPE.eq(storeType.type.toByte()))
+                .groupBy(STORE_CODE)
+                .fetch()
+        }
     }
 }

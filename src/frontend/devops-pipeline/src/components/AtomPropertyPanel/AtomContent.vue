@@ -37,6 +37,8 @@
                 </form-field>
             </div>
             <div class="atom-form-content">
+                <bk-alert class="atom-changed-prop" type="warning" :title="$t('editPage.atomPropChangedTip')" v-if="atomVersionChangedKeys.length"></bk-alert>
+
                 <div class="no-atom-tips" v-if="!atom && atomCode">
                     <div class="no-atom-tips-icon">
                         <i class="bk-icon icon-info-circle-shape" size="14" />
@@ -124,6 +126,7 @@
     import ReferenceVariable from './ReferenceVariable'
     import NormalAtomV2 from './NormalAtomV2'
     import CodeGitWebHookTrigger from './CodeGitWebHookTrigger'
+    import CodeGitlabWebHookTrigger from './CodeGitlabWebHookTrigger'
     import SubPipelineCall from './SubPipelineCall'
     import ManualReviewUserTask from './ManualReviewUserTask'
     import Logo from '@/components/Logo'
@@ -191,7 +194,8 @@
                 'getContainers',
                 'getStage',
                 'isTriggerContainer',
-                'isNewAtomTemplate'
+                'isNewAtomTemplate',
+                'atomVersionChangedKeys'
             ]),
             ...mapState('atom', [
                 'globalEnvs',
@@ -341,6 +345,7 @@
                     reportArchive: ReportArchive,
                     reportArchiveService: ReportArchive,
                     codeGitWebHookTrigger: CodeGitWebHookTrigger,
+                    codeGitlabWebHookTrigger: CodeGitlabWebHookTrigger,
                     codeSVNWebHookTrigger: CodeSvnWebHookTrigger,
                     GITHUB: PullGithub,
                     codeGithubWebHookTrigger: CodeGithubWebHookTrigger,
@@ -532,7 +537,7 @@
                 const hasVaildRule = ruleList.some(item =>
                     item.taskId === this.element.atomCode
                     && (item.ruleList.every(rule => !rule.gatewayId)
-                    || item.ruleList.some(rule => this.element.name.indexOf(rule.gatewayId) > -1))
+                        || item.ruleList.some(rule => this.element.name.indexOf(rule.gatewayId) > -1))
                 )
                 return hasVaildRule
             },
@@ -595,6 +600,9 @@
         button {
             margin-right: 6px;
         }
+    }
+    .atom-changed-prop {
+        margin-bottom: 8px;
     }
     .no-atom-tips {
         display: flex;

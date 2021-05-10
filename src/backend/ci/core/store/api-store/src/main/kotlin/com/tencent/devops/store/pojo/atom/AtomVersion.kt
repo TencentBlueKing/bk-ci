@@ -29,6 +29,7 @@ package com.tencent.devops.store.pojo.atom
 
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.store.pojo.common.Label
+import com.tencent.devops.store.pojo.common.StoreDailyStatistic
 import com.tencent.devops.store.pojo.common.StoreUserCommentInfo
 import io.swagger.annotations.ApiModelProperty
 
@@ -63,9 +64,7 @@ data class AtomVersion(
     val description: String?,
     @ApiModelProperty("版本号")
     val version: String?,
-    @ApiModelProperty("插件状态，INIT：初始化|COMMITTING：提交中|BUILDING：构建中|BUILD_FAIL：构建失败|TESTING：测试中|" +
-        "AUDITING：审核中|AUDIT_REJECT：审核驳回|RELEASED：已发布|GROUNDING_SUSPENSION：上架中止|UNDERCARRIAGING：下架中|" +
-        "UNDERCARRIAGED：已下架", required = true)
+    @ApiModelProperty("插件状态", required = true)
     val atomStatus: String,
     @ApiModelProperty("发布类型")
     val releaseType: String?,
@@ -112,5 +111,7 @@ data class AtomVersion(
     @ApiModelProperty("yaml可用标识 true：是，false：否")
     val yamlFlag: Boolean? = null,
     @ApiModelProperty("是否可编辑")
-    val editFlag: Boolean? = null
+    val editFlag: Boolean? = null,
+    @ApiModelProperty("每日统计信息列表")
+    val dailyStatisticList: List<StoreDailyStatistic>? = null
 )

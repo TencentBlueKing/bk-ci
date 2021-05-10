@@ -35,8 +35,10 @@ import com.tencent.devops.model.store.tables.TStoreBuildInfo
 import com.tencent.devops.model.store.tables.TStorePipelineRel
 import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
+import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Result
@@ -116,6 +118,36 @@ class AtomCommonDao : AbstractStoreCommonDao() {
             arrayListOf(language, JS)
         } else {
             arrayListOf(language)
+        }
+    }
+
+    override fun getNewestStoreBaseInfoByCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeStatus: Byte?
+    ): StoreBaseInfo? {
+        return with(TAtom.T_ATOM) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(ATOM_CODE.eq(storeCode))
+            if (storeStatus != null) {
+                conditions.add(ATOM_STATUS.eq(storeStatus))
+            }
+            val atomRecord = dslContext.selectFrom(this)
+                .where(conditions)
+                .orderBy(CREATE_TIME.desc())
+                .limit(1)
+                .fetchOne()
+            if (atomRecord != null) {
+                StoreBaseInfo(
+                    storeId = atomRecord.id,
+                    storeCode = atomRecord.atomCode,
+                    storeName = atomRecord.name,
+                    version = atomRecord.version,
+                    publicFlag = atomRecord.defaultFlag
+                )
+            } else {
+                null
+            }
         }
     }
 }

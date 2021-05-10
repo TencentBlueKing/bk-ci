@@ -27,6 +27,7 @@
 
 package com.tencent.devops.experience.api.op
 
+import ExperiencePublicExternalAdd
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.enums.PlatformEnum
@@ -142,5 +143,16 @@ interface OpExperienceResource {
         @ApiParam(value = "搜索推荐ID", required = true)
         @QueryParam("id")
         id: Long
+    ): Result<String>
+
+    @ApiOperation("新增外部链接公开体验")
+    @Path("/public/addExternal")
+    @POST
+    fun addExternal(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "外部体验参数")
+        externalAdd: ExperiencePublicExternalAdd
     ): Result<String>
 }

@@ -216,4 +216,9 @@ object ProcessMessageCode {
 
     // 人工审核插件编辑时输入参数错误
     const val ERROR_PARAM_MANUALREVIEW = "2101105"
+
+    // 标签与标签组错误21014开头
+    const val ERROR_GROUP_COUNT_EXCEEDS_LIMIT = "2101401" // 一个项目标签组不能超过10个
+    const val ERROR_LABEL_COUNT_EXCEEDS_LIMIT = "2101402" // 同一分组下最多可添加12个标签
+    const val ERROR_LABEL_NAME_TOO_LONG = "2101403" // 一个标签最多输入20个字符
 }
