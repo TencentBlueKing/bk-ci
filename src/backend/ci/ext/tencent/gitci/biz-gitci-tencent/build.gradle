@@ -42,12 +42,14 @@ dependencies {
     compile project(":ext:tencent:gitci:api-gitci-tencent")
     compile project(":ext:tencent:project:api-project-tencent")
     compile project(":ext:tencent:project:api-project-op")
+    compile project(":ext:tencent:environment:api-environment-tencent")
     compile project(":core:store:api-store")
     compile project(":core:project:api-project")
     compile project(":ext:tencent:gitci:model-gitci-tencent")
     compile project(":ext:tencent:scm:api-scm")
     compile project(":core:repository:api-repository")
 
+    compile project(":ext:tencent:notify:api-notify-tencent")
     compile "com.zaxxer:HikariCP"
     compile "mysql:mysql-connector-java"
     compile "org.apache.commons:commons-exec"

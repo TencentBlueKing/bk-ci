@@ -30,6 +30,7 @@ package com.tencent.devops.gitci.service
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.pojo.GitRepositoryConf
+import com.tencent.devops.gitci.pojo.RtxCustomProperty
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
@@ -65,7 +66,11 @@ class GitRepositoryConfService @Autowired constructor(
                     createTime = null,
                     updateTime = null,
                     projectCode = null,
-                    limitConcurrentJobs = null
+                    limitConcurrentJobs = null,
+                    rtxCustomProperty = RtxCustomProperty(true, setOf()),
+                    rtxGroupProperty = null,
+                    emailProperty = null,
+                    onlyFailedNotify = true
                 )
             )
         } else {

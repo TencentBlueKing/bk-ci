@@ -63,5 +63,15 @@ data class GitRepositoryConf(
     @ApiModelProperty("修改时间")
     val updateTime: Long?,
     @ApiModelProperty("蓝盾项目Code")
-    val projectCode: String?
+    val projectCode: String?,
+    @ApiModelProperty("企业微信客服通知")
+    val rtxCustomProperty: RtxCustomProperty?,
+    @ApiModelProperty("企业微信群通知")
+    val rtxGroupProperty: RtxGroupProperty?,
+    @ApiModelProperty("邮件通知")
+    val emailProperty: EmailProperty?,
+    @ApiModelProperty("是否只在失败时通知")
+    val onlyFailedNotify: Boolean? = true,
+    @ApiModelProperty("是否开启Mr锁定")
+    val enableMrBlock: Boolean? = true
 ) : Repository(gitProjectId, name, url, homepage, gitHttpUrl, gitSshUrl)

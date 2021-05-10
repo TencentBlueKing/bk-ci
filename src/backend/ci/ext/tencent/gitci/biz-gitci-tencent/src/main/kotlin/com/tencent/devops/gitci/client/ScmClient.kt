@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.gitci.pojo.GitRepositoryConf
+import com.tencent.devops.gitci.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.CommitCheckRequest
@@ -43,13 +44,14 @@ import java.util.Collections
 class ScmClient @Autowired constructor(
     private val client: Client
 ) {
+    // 用来进行展示状态的CommitCheck
     fun pushCommitCheck(
         commitId: String,
         description: String,
         mergeRequestId: Long,
         buildId: String,
         userId: String,
-        status: String,
+        status: GitCICommitCheckState,
         context: String,
         gitProjectConf: GitRepositoryConf
     ) = try {
@@ -67,7 +69,7 @@ class ScmClient @Autowired constructor(
             token = token,
             region = null,
             commitId = commitId,
-            state = status,
+            state = status.value,
             targetUrl = gitProjectConf.homepage + "/ci/pipelines#/build/" + buildId + "?buildNum=" + buildNum,
             context = context,
             description = description,
@@ -79,6 +81,45 @@ class ScmClient @Autowired constructor(
         client.getScm(ServiceGitResource::class).addCommitCheck(request)
     } catch (e: Exception) {
         logger.error("user $userId buildId $buildId pushCommitCheck error.", e)
+    }
+
+    // 用来进行锁定提交的CommitCheck
+    // 有流水线前锁定的key为 noPipelineBuildEvent
+    // 有流水线后锁定的key为 pipelineId(buildId)
+    fun pushCommitCheckWithBlock(
+        commitId: String,
+        mergeRequestId: Long,
+        userId: String,
+        context: String,
+        state: GitCICommitCheckState,
+        block: Boolean,
+        gitProjectConf: GitRepositoryConf
+    ) = try {
+        val titleData = mutableListOf<String>()
+        val resultMap = mutableMapOf<String, MutableList<List<String>>>()
+
+        val token = getAccessToken(gitProjectConf.gitProjectId).first
+        val request = CommitCheckRequest(
+            projectName = gitProjectConf.gitProjectId.toString(),
+            url = gitProjectConf.gitHttpUrl,
+            type = ScmType.CODE_GIT,
+            privateKey = null,
+            passPhrase = null,
+            token = token,
+            region = null,
+            commitId = commitId,
+            state = state.value,
+            targetUrl = "",
+            context = context,
+            description = "",
+            block = block,
+            mrRequestId = mergeRequestId,
+            reportData = Pair(titleData, resultMap)
+        )
+        logger.info("user $userId pushCommitCheckWithBlock: $request")
+        client.getScm(ServiceGitResource::class).addCommitCheck(request)
+    } catch (e: Exception) {
+        logger.error("user $userId pushCommitCheckWithBlock error.", e)
     }
 
     private fun getAccessToken(gitProjectId: Long): Pair<String, String?> {

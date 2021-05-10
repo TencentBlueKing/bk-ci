@@ -40,6 +40,7 @@ import com.tencent.devops.gitci.pojo.GitCITriggerLock
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.pojo.GitRepositoryConf
 import com.tencent.devops.gitci.pojo.GitRequestEvent
+import com.tencent.devops.gitci.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.gitci.pojo.enums.TriggerReason
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
@@ -129,7 +130,7 @@ abstract class BaseBuildService<T> @Autowired constructor(
                     mergeRequestId = event.mergeRequestId ?: 0L,
                     buildId = buildId,
                     userId = event.userId,
-                    status = "pending",
+                    status = GitCICommitCheckState.PENDING,
                     context = "${pipeline.displayName}(${pipeline.filePath})",
                     gitProjectConf = gitProjectConf
                 )
