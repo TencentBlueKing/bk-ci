@@ -60,6 +60,9 @@ interface GitCILogResource {
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
+        @ApiParam("是否包含调试日志", required = false)
+        @QueryParam("debug")
+        debug: Boolean? = false,
         @ApiParam("对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,
@@ -87,6 +90,9 @@ interface GitCILogResource {
         @ApiParam("起始行号", required = true)
         @QueryParam("start")
         start: Long,
+        @ApiParam("是否包含调试日志", required = false)
+        @QueryParam("debug")
+        debug: Boolean? = false,
         @ApiParam("对应elementId", required = false)
         @QueryParam("tag")
         tag: String?,

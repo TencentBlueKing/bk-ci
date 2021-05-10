@@ -32,6 +32,9 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.api.ServiceScmOauthResource
 import com.tencent.devops.scm.enums.CodeSvnRegion
+import com.tencent.devops.scm.pojo.GitMrChangeInfo
+import com.tencent.devops.scm.pojo.GitMrInfo
+import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import org.springframework.beans.factory.annotation.Autowired
@@ -148,6 +151,48 @@ class TencentScmOauthServiceImpl @Autowired constructor(val client: Client) : IS
             userName = userName,
             event = event
         )
+    }
+
+    override fun getMergeRequestChangeInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        mrId: Long
+    ): GitMrChangeInfo? {
+        return client.getScm(ServiceScmOauthResource::class).getMergeRequestChangeInfo(
+            projectName = projectName,
+            url = url,
+            type = type,
+            token = token,
+            mrId = mrId
+        ).data
+    }
+
+    override fun getMrInfo(projectName: String, url: String, type: ScmType, token: String?, mrId: Long): GitMrInfo? {
+        return client.getScm(ServiceScmOauthResource::class).getMrInfo(
+            projectName = projectName,
+            url = url,
+            type = type,
+            token = token,
+            mrId = mrId
+        ).data
+    }
+
+    override fun getMrReviewInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        mrId: Long
+    ): GitMrReviewInfo? {
+        return client.getScm(ServiceScmOauthResource::class).getMrReviewInfo(
+            projectName = projectName,
+            url = url,
+            type = type,
+            token = token,
+            mrId = mrId
+        ).data
     }
 
     override fun addCommitCheck(request: CommitCheckRequest) {

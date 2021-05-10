@@ -44,7 +44,6 @@ import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
-import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
@@ -83,7 +82,6 @@ class TxProjectServiceImpl @Autowired constructor(
     private val s3Service: S3Service,
     private val tofService: TOFService,
     private val bkRepoClient: BkRepoClient,
-    private val repoGray: RepoGray,
     private val projectPaasCCService: ProjectPaasCCService,
     private val bkAuthProperties: BkAuthProperties,
     private val bsAuthProjectApi: AuthProjectApi,
