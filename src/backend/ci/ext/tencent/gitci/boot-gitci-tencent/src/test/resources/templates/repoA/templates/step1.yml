@@ -17,9 +17,9 @@ parameters:
 steps:
   - run: |
       echo "res_repoA_step_id_1 username ${{ parameters.username }}!"
-  - template: templates/step1.yml@repoB
+  - template: step1.yml@repoB
     parameters:
       username: RES_REPOA_STEP1
-  - template: templates/step3.yml
+  - template: step3.yml
     parameters:
       username: RES_REPOA_STEP1_STEP3

@@ -12,6 +12,6 @@ jobs:
     steps:
       - run: |
           echo "res_repoA_job_id_3"
-      - template: templates/step3.yml
+      - template: step3.yml
         parameters:
           username: RES_REPOA_JOB3_STEP3

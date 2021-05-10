@@ -41,9 +41,9 @@ data class Resources(
 )
 
 data class Repositories(
-    val repository: String?,
-    val name: String?,
-    val ref: String?,
+    val repository: String,
+    val name: String,
+    val ref: String? = "master",
     val credentials: ResCredentials?
 )
 

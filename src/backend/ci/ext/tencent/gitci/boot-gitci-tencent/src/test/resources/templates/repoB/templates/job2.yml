@@ -13,6 +13,6 @@ jobs:
       - run: |
           echo "res_repoB_job_id_2"
   template:
-    - name: templates/job3.yml
+    - name: job3.yml
       parameters:
         username: RES_REPOB_JOB3

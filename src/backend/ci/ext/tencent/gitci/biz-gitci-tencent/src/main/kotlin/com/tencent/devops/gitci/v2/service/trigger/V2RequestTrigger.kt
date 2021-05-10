@@ -208,19 +208,19 @@ class V2RequestTrigger @Autowired constructor(
         logger.info("input yamlStr: $yamlStr")
 
         val yaml = ScriptYmlUtils.formatYaml(yamlStr)
-        // 拉取所有的模板文件
-        val templates = getAllTemplates(isFork, gitToken, forkGitToken, gitRequestEvent)
+
         val preTemplateYamlObject = YamlUtil.getObjectMapper().readValue(yaml, PreTemplateScriptBuildYaml::class.java)
         // 校验是否符合规范
         ScriptYmlUtils.checkStage(preTemplateYamlObject)
         // 替换yaml文件中的模板引用
         val preYamlObject = YamlTemplate(
             yamlObject = preTemplateYamlObject,
-            templates = mutableMapOf("root" to templates.toMutableMap()),
-            rootPath = filePath,
-            projectId = scmService.getProjectId(isFork, gitRequestEvent),
-            userId = gitRequestEvent.userId,
-            repo = "root",
+            filePath = filePath,
+            triggerProjectId = scmService.getProjectId(isFork, gitRequestEvent),
+            triggerUserId = gitRequestEvent.userId,
+            triggerRef = gitRequestEvent.branch,
+            triggerToken = gitToken.accessToken,
+            repo = null,
             repoTemplateGraph = TemplateGraph()
         ).replace()
 

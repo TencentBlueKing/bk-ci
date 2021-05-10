@@ -47,24 +47,38 @@ class YamlTemplateService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(YamlTemplateService::class.java)
-        private const val ciFileName = ".ci.yml"
-        private const val templateDirectoryName = ".ci/templates"
-        private const val ciFileExtension = ".yml"
+        private const val templateDirectory = ".ci/templates/"
     }
 
-    fun getResTemplates(
+    fun getTemplate(
+        token: String,
+        fileName: String,
+        gitProjectId: Long,
+        userId: String,
+        ref: String
+    ): String {
+        return scmService.getYamlFromGit(
+            token = token,
+            gitProjectId = gitProjectId,
+            ref = ref,
+            fileName = templateDirectory + fileName,
+            useAccessToken = true
+        )
+    }
+
+    fun getResTemplate(
         gitProjectId: Long,
         repo: String,
-        name: String,
-        ref: String,
+        ref: String? = "master",
         credentialType: ResourceCredentialType,
-        key: String,
-        userTicket: Boolean,
-        userId: String
-    ): Map<String, String?> {
+        personalAccessToken: String?,
+        userId: String,
+        fileName: String
+    ): String {
         when (credentialType) {
             ResourceCredentialType.PRIVATE_KEY -> {
-                val token = if (!userTicket) {
+                val key = getKey(personalAccessToken)
+                val token = if (!(key == "" || key == personalAccessToken)) {
                     val ticket = ticketService.getCredential("git_$gitProjectId", credentialId = key)
                     if (ticket["type"] != CredentialType.ACCESSTOKEN.name) {
                         throw RuntimeException("Not Support this credentialType: ${ticket["type"]}")
@@ -78,37 +92,49 @@ class YamlTemplateService @Autowired constructor(
                     gitProjectId = repo,
                     useAccessToken = false
                 )?.gitProjectId ?: throw RuntimeException("Cant find project $repo")
-                return scmService.getAllTemplates(
+                return scmService.getYamlFromGit(
                     token = token,
                     gitProjectId = targetProjectId.toLong(),
-                    filePath = templateDirectoryName,
-                    ref = ref,
-                    useAccessToken = false,
-                    removePrefix = ".ci/",
-                    addLastFix = "@$name"
+                    ref = ref!!,
+                    fileName = templateDirectory + fileName,
+                    useAccessToken = false
                 )
             }
             ResourceCredentialType.OAUTH -> {
-                val accessToken = client.get(ServiceOauthResource::class).gitGet(userId).data ?: throw
-                RuntimeException("$userId hasn't oauth")
+                val accessToken = client.get(ServiceOauthResource::class).gitGet(userId).data
+                    ?: throw RuntimeException("$userId hasn't oauth")
                 val targetProjectId = scmService.getProjectInfo(
                     token = accessToken.accessToken,
                     gitProjectId = repo,
                     useAccessToken = true
                 )?.gitProjectId ?: throw RuntimeException("Cant find project $repo")
-                return scmService.getAllTemplates(
+                return scmService.getYamlFromGit(
                     token = accessToken.accessToken,
                     gitProjectId = targetProjectId.toLong(),
-                    filePath = templateDirectoryName,
-                    ref = ref,
-                    useAccessToken = true,
-                    removePrefix = ".ci/",
-                    addLastFix = "@$name"
+                    ref = ref!!,
+                    fileName = templateDirectory + fileName,
+                    useAccessToken = false
                 )
             }
             else -> {
                 throw RuntimeException("Not Support this credentialType")
             }
+        }
+    }
+
+    private fun getKey(personalAccessToken: String?): String {
+        if (personalAccessToken == null) {
+            return ""
+        }
+        return if (personalAccessToken.contains("\${{") && personalAccessToken.contains("}}")) {
+            val str = personalAccessToken.split("\${{")[1].split("}}")[0]
+            if (str.startsWith("settings.")) {
+                str.removePrefix("settings.")
+            } else {
+                throw RuntimeException("\${{}} only support settings")
+            }
+        } else {
+            personalAccessToken
         }
     }
 }

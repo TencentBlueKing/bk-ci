@@ -27,23 +27,24 @@
 
 package com.tencent.devops.gitci.v2.template.pojo
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.fasterxml.jackson.annotation.JsonInclude
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.ci.v2.Extends
 import com.tencent.devops.common.ci.v2.Notices
 import com.tencent.devops.common.ci.v2.OnFail
-import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreStage
+import com.tencent.devops.common.ci.v2.PreTriggerOn
 import com.tencent.devops.common.ci.v2.Resources
-import com.tencent.devops.common.ci.v2.Step
-import com.tencent.devops.common.ci.v2.Variable
 
-data class PipelineTemplate(
-    val parameters: List<Parameters>?,
+// 不用被模板替换的流水线变量，直接通过Yaml生成Object
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
+data class NoReplaceTemplate(
+    var version: String?,
+    var name: String?,
     var label: String? = null,
-    var variables: Map<String, Variable>?,
-    var stages: List<PreStage>? = null,
-    var jobs: Map<String, PreJob>? = null,
-    var steps: List<Step>? = null,
+    var triggerOn: PreTriggerOn?,
     @JsonProperty("on-fail")
     var onFail: OnFail?,
     var extends: Extends?,

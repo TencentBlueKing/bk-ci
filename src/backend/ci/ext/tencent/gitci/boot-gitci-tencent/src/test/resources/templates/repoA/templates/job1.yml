@@ -1,3 +1,11 @@
+resources:
+  repositories:
+    - repository: ruotiantang/gitci2-template-2
+      name: repoB
+      ref: master  # 可选
+      credentials:
+        personal-access-token: xxx
+
 parameters:
   - name: username
     type: string
@@ -13,10 +21,10 @@ jobs:
       - run: |
           echo "res_repoA_job_id_1"
   template:
-    - name: templates/job2.yml@repoB
+    - name: job2.yml@repoB
       parameters:
         username: RES_JOB2
-    - name: templates/job2.yml
+    - name: job2.yml
   res_repoA_job_id_2:
     name: res_repoA_job_id_2
     steps:

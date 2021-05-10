@@ -1,10 +1,10 @@
-#resources:
-#  repositories:
-#    - repository: ruotiantang/gitci2-template-2
-#      name: repoB
-#      ref: master  # 可选
-#      credentials:
-#        personal-access-token: xxx
+resources:
+  repositories:
+    - repository: ruotiantang/gitci2-template-2
+      name: repoB
+      ref: master  # 可选
+      credentials:
+        personal-access-token: xxx
 
 parameters:
   - name: username
@@ -17,6 +17,6 @@ parameters:
 steps:
   - run: |
       echo "res_repoA_step_id_3 username ${{ parameters.username }}!"
-  - template: templates/step1.yml@repoB
+  - template: step1.yml@repoB
     parameters:
       username: RES_REPOA_STEP3

@@ -72,8 +72,7 @@ class GitCILogService @Autowired constructor(
             buildId = buildId,
             tag = tag,
             jobId = jobId,
-            executeCount = executeCount,
-            queryKeywords = null
+            executeCount = executeCount
         ).data!!
     }
 
@@ -95,8 +94,7 @@ class GitCILogService @Autowired constructor(
             start = start,
             tag = tag,
             jobId = jobId,
-            executeCount = executeCount,
-            queryKeywords = null
+            executeCount = executeCount
         ).data!!
     }
 

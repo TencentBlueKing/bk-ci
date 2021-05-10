@@ -33,10 +33,10 @@ variables:
     value: user1
     readonly: true
   template:
-    - name: templates/variables.yml
+    - name: variables.yml
       parameters:
         username: VARIABLES
-    - name: templates/variable1.yml@repoA
+    - name: variable1.yml@repoA
       parameters:
         username: RES_VARIABLE
 
@@ -73,7 +73,7 @@ stages:
             continue-on-error: false
             retry-times: 0
             env:
-          - template: templates/steps.yml
+          - template: steps.yml
             parameters:
               username: STEP
           - run: |
@@ -93,22 +93,22 @@ stages:
         steps:
           - run: |
               echo "root_stage_id_1, root_job_id_2"
-          - template: templates/step1.yml@repoA
+          - template: step1.yml@repoA
             parameters:
               username: RES_STEP
         depend-on:
           - job_id_1
       template:
-        - name: templates/jobs.yml
+        - name: jobs.yml
           parameters:
             username: JOB
-        - name: templates/job1.yml@repoA
+        - name: job1.yml@repoA
           parameters:
             username: RES_JOB
-  - template: templates/stages.yml
+  - template: stages.yml
     parameters:
       username: STAGE
-  - template: templates/stage1.yml@repoA
+  - template: stage1.yml@repoA
     parameters:
       username: RES_STAGE
 
@@ -121,15 +121,17 @@ on-fail:
     - run: |
         echo "do something when the upstream fails"
 
+
+
 #extends:
-#  template: templates/pipeline.yml
+#  template: pipeline.yml@repoC
 #  parameters:
 #    repo: "hello/my-first-repo"
 
 resources:
   repositories:
     - repository: ruotiantang/gitci2-template-1
-      name: repoA
+      name: repoC
       ref: master  # 可选
       credentials:
         personal-access-token: xxx

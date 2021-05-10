@@ -27,6 +27,6 @@ stages:
         steps:
           - run: |
               echo "res_repoA_stage_id_2_job_id_2 stagename ${{ parameters.stagename }}"
-          - template: templates/step4.yml
+          - template: step4.yml
             parameters:
               username: RES_REPOA_STAGE2_JOB2_STEP3

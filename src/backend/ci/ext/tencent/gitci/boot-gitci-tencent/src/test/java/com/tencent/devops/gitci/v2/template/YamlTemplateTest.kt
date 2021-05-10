@@ -30,6 +30,8 @@ package com.tencent.devops.gitci.v2.template
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
+import com.tencent.devops.common.ci.v2.utils.YamlCommonUtils
+import com.tencent.devops.gitci.v2.template.pojo.TemplateGraph
 import org.junit.Test
 
 import org.springframework.core.io.ClassPathResource
@@ -41,58 +43,6 @@ class YamlTemplateTest {
 
     // 综合测试
     val testYaml = "pipelineWithTemplate.yml"
-    val templateYamlList = listOf(
-        "templates/stages.yml",
-        "templates/jobs.yml",
-        "templates/steps.yml",
-        "templates/pipeline.yml",
-        "templates/variables.yml",
-        "cyclic/variable/templates/variable1.yml",
-        "cyclic/variable/templates/variable2.yml",
-        "cyclic/stage/templates/stage1.yml",
-        "cyclic/stage/templates/stage2.yml",
-        "cyclic/job/templates/job1.yml",
-        "cyclic/job/templates/job2.yml",
-        "cyclic/job/templates/job3.yml",
-        "cyclic/job/templates/job4.yml",
-        "cyclic/job/templates/job5.yml",
-        "cyclic/step/templates/step1.yml",
-        "cyclic/step/templates/step2.yml",
-        "cyclic/step/templates/step3.yml",
-        "cyclic/step/templates/step1.yml",
-        "cyclic/step/templates/step2.yml",
-        "cyclic/step/templates/step3.yml",
-        "cyclic/step/templates/step4.yml",
-        "cyclic/step/templates/step5.yml",
-        "cyclic/step/templates/step6.yml",
-        "cyclic/step/templates/step7.yml",
-        "cyclic/step/templates/step8.yml"
-    )
-
-//    // 测试step循环嵌套
-//    val testYaml = "/cyclic/step/pipeline.yml"
-//    val templateYamlList = listOf(
-//        "cyclic/step/templates/step1.yml",
-//        "cyclic/step/templates/step2.yml",
-//        "cyclic/step/templates/step3.yml",
-//        "cyclic/step/templates/step4.yml",
-//        "cyclic/step/templates/step5.yml",
-//        "cyclic/step/templates/step6.yml",
-//        "cyclic/step/templates/step7.yml",
-//        "cyclic/step/templates/step8.yml"
-//    )
-//    // 测试job循环嵌套
-//    val testYaml = "/cyclic/job/pipeline.yml"
-//    val templateYamlList = listOf(
-//        "cyclic/job/templates/job1.yml",
-//        "cyclic/job/templates/job2.yml",
-//        "cyclic/job/templates/job3.yml",
-//        "cyclic/job/templates/job4.yml",
-//        "cyclic/job/templates/job5.yml",
-//        "cyclic/step/templates/step1.yml",
-//        "cyclic/step/templates/step2.yml",
-//        "cyclic/step/templates/step3.yml"
-//    )
 
     @Test
     fun test() {
@@ -110,37 +60,19 @@ class YamlTemplateTest {
         val yaml = ScriptYmlUtils.formatYaml(sb.toString())
         val preTemplateYamlObject = YamlUtil.getObjectMapper().readValue(yaml, PreTemplateScriptBuildYaml::class.java)
 
-//        println(
-//            YamlCommonUtils.toYamlNotNull(
-//                YamlTemplate(
-//                    yamlObject = preTemplateYamlObject,
-//                    templates = mutableMapOf("root" to getAllTemplates().toMutableMap()),
-//                    rootPath = testYaml,
-//                    userId = "ruotiantang",
-//                    projectId = 580280,
-//                    repo = "root",
-//                    repoTemplateGraph = TemplateGraph()
-//                ).replace()
-//            )
-//        )
-    }
-
-    private fun getAllTemplates(): Map<String, String?> {
-        val pathList = templateYamlList
-        val yamlList = mutableMapOf<String, String>()
-        pathList.forEach {
-            val classPathResource = ClassPathResource(it)
-            val inputStream: InputStream = classPathResource.inputStream
-            val isReader = InputStreamReader(inputStream)
-
-            val reader = BufferedReader(isReader)
-            val sb = StringBuffer()
-            var str: String?
-            while (reader.readLine().also { str = it } != null) {
-                sb.append(str).append("\n")
-            }
-            yamlList[it] = sb.toString()
-        }
-        return yamlList
+        println(
+            YamlCommonUtils.toYamlNotNull(
+                YamlTemplate(
+                    yamlObject = preTemplateYamlObject,
+                    filePath = testYaml,
+                    triggerUserId = "ruotiantang",
+                    triggerProjectId = 580280,
+                    triggerToken = "",
+                    triggerRef = "master",
+                    repo = null,
+                    repoTemplateGraph = TemplateGraph()
+                ).replace()
+            )
+        )
     }
 }

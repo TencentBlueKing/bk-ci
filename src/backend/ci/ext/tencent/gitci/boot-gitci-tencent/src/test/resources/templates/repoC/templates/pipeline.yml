@@ -38,9 +38,9 @@ variables:
     value: user1
     readonly: true
   template:
-    - name: variables.yml
-      parameters:
-        username: VARIABLES
+#    - name: variables.yml
+#      parameters:
+#        username: VARIABLES
     - name: variable1.yml@repoA
       parameters:
         username: RES_VARIABLE
@@ -78,9 +78,9 @@ stages:
             continue-on-error: false
             retry-times: 0
             env:
-          - template: steps.yml
-            parameters:
-              username: STEP
+#          - template: steps.yml
+#            parameters:
+#              username: STEP
           - run: |
               echo "root_step_1"
         timeout-minutes: 480
@@ -104,15 +104,15 @@ stages:
         depend-on:
           - job_id_1
       template:
-        - name: jobs.yml
-          parameters:
-            username: JOB
+#        - name: jobs.yml
+#          parameters:
+#            username: JOB
         - name: job1.yml@repoA
           parameters:
             username: RES_JOB
-  - template: stages.yml
-    parameters:
-      username: STAGE
+#  - template: stages.yml
+#    parameters:
+#      username: STAGE
   - template: stage1.yml@repoA
     parameters:
       username: RES_STAGE

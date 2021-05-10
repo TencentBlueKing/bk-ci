@@ -100,66 +100,13 @@ class ScmService @Autowired constructor(
         }
     }
 
-    fun getAllTemplates(
-        token: String,
-        gitProjectId: Long,
-        filePath: String,
-        removePrefix: String,
-        addLastFix: String,
-        ref: String,
-        useAccessToken: Boolean
-    ): Map<String, String?> {
-        val templateFileList = getCIYamlList(token, gitProjectId, filePath, ref, useAccessToken)
-        val templates = mutableMapOf<String, String?>()
-        templateFileList.forEach { fileName ->
-            templates[fileName.removePrefix(removePrefix) + addLastFix] = getYamlFromGit(
-                token, gitProjectId, fileName, ref, useAccessToken
-            )
-        }
-        return templates
-    }
-
-    fun getCIYamlList(
-        token: String,
-        gitProjectId: Long,
-        filePath: String,
-        ref: String,
-        useAccessToken: Boolean
-    ): MutableList<String> {
-        val ciFileList = getFileTreeFromGit(token, gitProjectId, filePath, ref, useAccessToken)
-            .filter { it.name.endsWith(ciFileExtension) }
-        return ciFileList.map { filePath + File.separator + it.name }.toMutableList()
-    }
-
-    fun getFileTreeFromGit(
-        token: String,
-        gitProjectId: Long,
-        filePath: String,
-        ref: String,
-        useAccessToken: Boolean
-    ): List<GitFileInfo> {
-        return try {
-            val result = client.getScm(ServiceGitResource::class).getGitCIFileTree(
-                gitProjectId = gitProjectId,
-                path = filePath,
-                token = token,
-                ref = getTriggerBranch(ref),
-                useAccessToken = useAccessToken
-            )
-            result.data!!
-        } catch (e: Throwable) {
-            logger.error("Get yaml from git failed", e)
-            emptyList()
-        }
-    }
-
     fun getYamlFromGit(
         token: String,
         gitProjectId: Long,
         fileName: String,
         ref: String,
         useAccessToken: Boolean
-    ): String? {
+    ): String {
         return try {
             val result = client.getScm(ServiceGitResource::class).getGitCIFileContent(
                 gitProjectId = gitProjectId,
@@ -168,10 +115,13 @@ class ScmService @Autowired constructor(
                 ref = getTriggerBranch(ref),
                 useAccessToken = useAccessToken
             )
-            result.data
+            if (result.data == null) {
+                throw RuntimeException("yaml $fileName is null")
+            }
+            result.data!!
         } catch (e: Throwable) {
             logger.error("Get yaml from git failed", e)
-            null
+            throw RuntimeException("Get yaml $fileName from git failed ${e.message}")
         }
     }
 

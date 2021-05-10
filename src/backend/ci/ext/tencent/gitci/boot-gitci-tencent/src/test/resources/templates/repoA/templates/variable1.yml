@@ -15,9 +15,9 @@ variables:
   RES_REPOA_VAR1_USERNAME:
     value: ${{ parameters.username }}
   template:
-    - name: templates/variable2.yml
+    - name: variable2.yml
       parameters:
         username: RES_REPOA_VARIABLES
-    - name: templates/variable1.yml@repoB
+    - name: variable1.yml@repoB
       parameters:
         username: RES_REPOA_VARIABLES

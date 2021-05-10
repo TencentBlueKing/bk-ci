@@ -27,12 +27,12 @@ stages:
         steps:
           - run: |
               echo "res_repoA_stage_id_1_job_id_2 stagename ${{ parameters.stagename }}"
-          - template: templates/step4.yml
+          - template: step4.yml
             parameters:
               username: RES_REPOA_STAGE1_JOB2_STEP3
-  - template: templates/stage2.yml
+  - template: stage2.yml
     parameters:
       username: RES_PEPOA_STAGE1
-  - template: templates/stage2.yml@repoB
+  - template: stage2.yml@repoB
     parameters:
       username: RES_PEPOA_STAGE1

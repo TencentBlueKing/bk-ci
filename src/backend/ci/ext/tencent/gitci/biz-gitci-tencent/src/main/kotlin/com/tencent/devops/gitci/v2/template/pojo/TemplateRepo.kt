@@ -27,8 +27,21 @@
 
 package com.tencent.devops.gitci.v2.template.pojo
 
-// @JsonIgnoreProperties(ignoreUnknown = true)
-data class StepsTemplate(
-    val parameters: List<Parameters>?,
-    val steps: List<Map<String, Any>>
+/**
+ * 模板替换中的模板库
+ * 用来保存库信息和库中的模板，供模板替换使用
+ */
+data class TemplateRepo(
+    // 代码库的命名空间
+    var repo: String,
+    // 代码库在模板中的名称
+    var repoName: String,
+    // 代码库的分支
+    var repoRef: String? = "master",
+    // 是否使用OAUTH拉取模板
+    var useOauth: Boolean,
+    // 用户自己的private.key
+    var privateKey: String?,
+    // 代码库中的模板
+    var templates: MutableMap<String, String>
 )
