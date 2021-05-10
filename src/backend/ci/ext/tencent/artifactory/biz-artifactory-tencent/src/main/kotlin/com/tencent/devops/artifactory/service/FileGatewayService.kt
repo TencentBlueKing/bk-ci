@@ -36,8 +36,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class FileGatewayService @Autowired constructor(
-    val redisOperation: RedisOperation,
-    private val shortUrlDao: ShortUrlDao
+    val redisOperation: RedisOperation
 ) {
     @Value("\${artifactory.fileGateway:}")
     private lateinit var fileGateway: String
