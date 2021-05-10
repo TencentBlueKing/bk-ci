@@ -1,7 +1,7 @@
 <template>
     <div :class="[{ 'pipeline-drag': editable && !isTriggerStage, 'readonly': !editable || stageDisabled }, 'pipeline-stage']" ref="stageRef">
         <span :class="{ 'stage-review-logo': true, 'pointer': true }" v-bk-tooltips.top="reviewTooltip" @click.stop="startNextStage">
-            <logo v-if="!isTriggerStage" :name="reviewStatausIcon" size="28" />
+            <logo v-if="!isTriggerStage && !isFinallyStage" :name="reviewStatausIcon" size="28" />
         </span>
         <bk-button :class="['pipeline-stage-entry', [stageStatusCls], { 'editable-stage-entry': editable, 'stage-disabled': stageDisabled }]" @click.stop="showStagePanel">
             <span :title="stageTitle" :class="{ 'stage-entry-name': true, 'skip-name': stageDisabled || stage.status === 'SKIP', 'show-right-icon': (showCheckedToatal || canStageRetry) }">
@@ -16,8 +16,8 @@
             <span v-if="canStageRetry" @click.stop="() => showRetryStageDialog = true" class="stage-single-retry">
                 {{ $t('retry') }}
             </span>
-            <span v-if="showCopyStage" class="stage-entry-btns">
-                <span :title="$t('editPage.copyStage')" v-if="!stage.isError" class="bk-icon copy-stage" @click.stop="copyStage">
+            <span class="stage-entry-btns">
+                <span :title="$t('editPage.copyStage')" v-if="!stage.isError && showCopyStage" class="bk-icon copy-stage" @click.stop="copyStage">
                     <Logo name="copy" size="16"></Logo>
                 </span>
                 <i @click.stop="deleteStageHandler" class="add-plus-icon close" />
@@ -46,11 +46,17 @@
                 <i :class="{ [iconCls]: true, 'active': isAddMenuShow }" />
                 <template v-if="isAddMenuShow">
                     <cruve-line class="add-connector connect-line left" :width="60" :height="cruveHeight"></cruve-line>
-                    <span class="insert-tip direction line-add" @click.stop="showStageSelectPopup(false)">
-                        <i class="tip-icon" />
-                        <span>
-                            {{ $t('editPage.insert') }}
-                        </span>
+                    <span class="insert-stage direction">
+                        <div class="click-item" @click.stop="appendStage(false)">
+                            <span>
+                                {{ $t('editPage.insertStage') }}
+                            </span>
+                        </div>
+                        <div :class="{ 'disabled-item': hasFinallyStage, 'click-item': true }" @click.stop="appendStage(true)">
+                            <span>
+                                {{ $t('editPage.insertFinallyStage') }}
+                            </span>
+                        </div>
                     </span>
                     <div @click.stop="showStageSelectPopup(true)" class="insert-tip parallel-add" :style="`top: ${cruveHeight}px`">
                         <i class="tip-icon" />
@@ -60,8 +66,22 @@
                     </div>
                 </template>
             </span>
-            <span v-if="isLastStage && editable" @click="appendStage" class="append-stage pointer">
+            <span v-bk-clickoutside="toggleLastMenu" v-if="isLastStage && !isFinallyStage && editable" @click="toggleLastMenu(!lastAddMenuShow)" class="append-stage pointer">
                 <i class="add-plus-icon" />
+                <template v-if="lastAddMenuShow">
+                    <span class="insert-stage direction">
+                        <div class="click-item" @click.stop="appendStage(false, true)">
+                            <span>
+                                {{ $t('editPage.insertStage') }}
+                            </span>
+                        </div>
+                        <div :class="{ 'click-item': true, 'disabled-item': hasFinallyStage }" @click.stop="appendStage(true)">
+                            <span>
+                                {{ $t('editPage.insertFinallyStage') }}
+                            </span>
+                        </div>
+                    </span>
+                </template>
             </span>
         </template>
         <bk-dialog
@@ -123,6 +143,7 @@
         data () {
             return {
                 isAddMenuShow: false,
+                lastAddMenuShow: false,
                 cruveHeight: 0,
                 failedContainer: false,
                 showRetryStageDialog: false
@@ -134,7 +155,8 @@
                 'pipeline'
             ]),
             ...mapGetters('atom', [
-                'isTriggerContainer'
+                'isTriggerContainer',
+                'hasFinallyStage'
             ]),
             isStageError () {
                 try {
@@ -145,10 +167,10 @@
                 }
             },
             canStageRetry () {
-                return this.stage.status === 'FAILED' || this.stage.status === 'CANCELED'
+                return this.stage.canRetry === true
             },
             showCopyStage () {
-                return !this.isTriggerStage && this.editable
+                return !this.isTriggerStage && !this.isFinallyStage && this.editable
             },
             isFirstStage () {
                 return this.stageIndex === 0
@@ -158,6 +180,9 @@
             },
             isTriggerStage () {
                 return this.checkIsTriggerStage(this.stage)
+            },
+            isFinallyStage () {
+                return this.stage.finally === true
             },
             stageTitle () {
                 return this.stage ? this.stage.name : 'stage'
@@ -192,7 +217,7 @@
             },
             dragOptions () {
                 return {
-                    group: 'pipeline-job',
+                    group: this.stage.finally ? 'finally-stage-job' : 'pipeline-job',
                     ghostClass: 'sortable-ghost-atom',
                     chosenClass: 'sortable-chosen-atom',
                     animation: 130,
@@ -298,6 +323,7 @@
             ...mapActions('pipelines', ['requestRetryPipeline']),
             ...mapActions('atom', [
                 'setInertStageIndex',
+                'setInsertStageIsFinally',
                 'togglePropertyPanel',
                 'toggleStageSelectPopup',
                 'setPipelineContainer',
@@ -373,16 +399,22 @@
                 const relatedelement = relatedContext.element || {}
                 const isRelatedTrigger = relatedelement['@type'] === 'trigger'
                 const isTriggerStage = this.checkIsTriggerStage(relatedelement)
+                const isFinallyStage = relatedelement.finally === true
 
-                return !isTrigger && !isRelatedTrigger && !isTriggerStage
+                return !isTrigger && !isRelatedTrigger && !isTriggerStage && !isFinallyStage
             },
 
-            appendStage () {
-                const { stageIndex, setInertStageIndex, showStageSelectPopup } = this
+            appendStage (isFinally = false, fromLast = false) {
+                const { stageIndex, setInertStageIndex, setInsertStageIsFinally, hasFinallyStage, showStageSelectPopup } = this
+                if (isFinally && hasFinallyStage) return
                 setInertStageIndex({
-                    insertStageIndex: stageIndex + 1
+                    insertStageIndex: isFinally ? this.stageLength : (fromLast ? stageIndex + 1 : stageIndex)
+                })
+                setInsertStageIsFinally({
+                    insertStageIsFinally: isFinally
                 })
                 showStageSelectPopup(false)
+                this.toggleAddMenu(false)
             },
             showStageSelectPopup (isParallel) {
                 this.toggleStageSelectPopup({
@@ -390,6 +422,7 @@
                     isAddParallelContainer: isParallel
                 })
             },
+            
             toggleAddMenu (isAddMenuShow) {
                 if (!this.editable) return
                 const { stageIndex, setInertStageIndex } = this
@@ -399,6 +432,11 @@
                         insertStageIndex: stageIndex
                     })
                 }
+            },
+
+            toggleLastMenu (isAddMenuShow) {
+                if (!this.editable) return
+                this.lastAddMenuShow = typeof isAddMenuShow === 'boolean' ? isAddMenuShow : false
             },
 
             startNextStage () {
@@ -622,6 +660,10 @@
             .add-plus-icon {
                 box-shadow: 0px 2px 4px 0px rgba(60, 150, 255, 0.2);
             }
+            .line-add {
+                top: -46px;
+                left: -16px;
+            }
         }
 
         .add-menu {
@@ -637,7 +679,7 @@
                 z-index: 4;
             }
             .line-add {
-                top: -30px;
+                top: -46px;
                 left: -16px;
             }
             .parallel-add {
@@ -677,6 +719,32 @@
                 position: absolute;
                 right: -$angleSize;
                 top: -$angleSize;
+            }
+        }
+
+        .insert-stage {
+            position: absolute;
+            display: block;
+            width: 160px;
+            background-color: #ffffff;
+            border: 1px solid #dcdee5;
+            .click-item {
+                padding: 0 15px;
+                font-size: 12px;
+                line-height: 32px;
+                
+                &:hover, :hover {
+                    color: #3c96ff;
+                    background-color: #eaf3ff;
+                }
+            }
+            .disabled-item {
+                cursor: not-allowed;
+                color: #c4cdd6;
+                &:hover, :hover {
+                    color: #c4cdd6;
+                    background-color: #ffffff;
+                }
             }
         }
     }

@@ -50,9 +50,7 @@ object AgentEnv {
     private const val AGENT_SECRET_KEY = "devops.agent.secret.key"
     private const val DOCKER_AGENT_SECRET_KEY = "devops_agent_secret_key"
     private const val AGENT_GATEWAY = "landun.gateway"
-    private const val AGENT_FILE_GATEWAY = "landun.fileGateway"
     private const val DOCKER_GATEWAY = "devops_gateway"
-    private const val DOCKER_FILE_GATEWAY = "devops_file_gateway"
     private const val AGENT_ENV = "landun.env"
     private const val AGENT_LOG_SAVE_MODE = "devops_log_save_mode"
 
@@ -60,7 +58,6 @@ object AgentEnv {
     private var agentId: String? = null
     private var secretKey: String? = null
     private var gateway: String? = null
-    private var fileGateway: String? = null
     private var os: OSType? = null
     private var env: Env? = null
     private var logMode: LogMode? = null
@@ -141,25 +138,6 @@ object AgentEnv {
             }
         }
         return secretKey!!
-    }
-
-    fun getFileGateway(): String {
-        if (fileGateway.isNullOrBlank()) {
-            synchronized(this) {
-                if (fileGateway.isNullOrBlank()) {
-                    try {
-                        fileGateway = getProperty(if (isDockerEnv()) DOCKER_FILE_GATEWAY else AGENT_FILE_GATEWAY)
-                        if (gateway.isNullOrBlank()) {
-                            return getGateway()
-                        }
-                    } catch (t: Throwable) {
-                        gateway = System.getProperty("devops.gateway", "")
-                    }
-                    logger.info("file gateway: $fileGateway")
-                }
-            }
-        }
-        return if (fileGateway.isNullOrBlank()) getGateway() else fileGateway!!
     }
 
     fun getGateway(): String {

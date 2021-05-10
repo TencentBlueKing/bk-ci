@@ -91,13 +91,15 @@
                 const dragContext = event.draggedContext || {}
                 const element = dragContext.element || {}
                 const isTrigger = element.containers[0]['@type'] === 'trigger'
+                const isFinally = element.finally === true
 
                 const relatedContext = event.relatedContext || {}
                 const relatedelement = relatedContext.element || {}
                 const isRelatedTrigger = relatedelement['@type'] === 'trigger'
                 const isTriggerStage = relatedelement.containers && relatedelement.containers[0]['@type'] === 'trigger'
+                const isRelatedFinally = relatedelement.finally === true
 
-                return !isTrigger && !isRelatedTrigger && !isTriggerStage
+                return !isTrigger && !isRelatedTrigger && !isTriggerStage && !isFinally && !isRelatedFinally
             }
         }
     }

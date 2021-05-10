@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_VM_SEQ_ID
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.api.utils.ThirdPartyAgentBuildInfoUtils
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
@@ -194,7 +195,6 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         private val retryCodes = arrayOf(502, 503, 504)
         val logger = LoggerFactory.getLogger(AbstractBuildResourceApi::class.java)!!
         private val gateway = AgentEnv.getGateway()
-        private val fileGateway = AgentEnv.getFileGateway()
 
         private val buildArgs: Map<String, String> by lazy {
             initBuildArgs()
@@ -290,7 +290,6 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         useFileGateway: Boolean = false
     ): Request {
         val url = buildUrl(path, useFileGateway)
-        logger.info("the url is $url")
         return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).put(requestBody).build()
     }
 
@@ -311,8 +310,8 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
     private fun buildUrl(path: String, useFileGateway: Boolean = false): String {
         return if (path.startsWith("http://") || path.startsWith("https://")) {
             path
-        } else if (useFileGateway) {
-            fixUrl(fileGateway, path)
+        } else if (useFileGateway && !CommonEnv.fileGateway.isNullOrBlank()) {
+            fixUrl(CommonEnv.fileGateway!!, path)
         } else {
             fixUrl(gateway, path)
         }

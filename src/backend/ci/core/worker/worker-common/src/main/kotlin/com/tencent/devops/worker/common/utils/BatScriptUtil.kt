@@ -82,7 +82,8 @@ object BatScriptUtil {
                 workspace = dir,
                 print2Logger = print2Logger,
                 prefix = prefix,
-                executeErrorMessage = ""
+                executeErrorMessage = "",
+                buildId = buildId
             )
         } catch (ignore: Throwable) {
             val errorInfo = errorMessage ?: "Fail to execute bat script $script"

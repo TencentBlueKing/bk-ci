@@ -33,9 +33,6 @@ import com.google.common.io.Files
 import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
-import com.tencent.devops.common.archive.client.JfrogService
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.plugin.pojo.luna.LunaUploadParam
 import okhttp3.MediaType
@@ -53,10 +50,7 @@ import java.util.Locale
 
 @Service
 class LunaService @Autowired constructor(
-    private val jfrogService: JfrogService,
     private val buildLogPrinter: BuildLogPrinter,
-    private val redisOperation: RedisOperation,
-    private val repoGray: RepoGray,
     private val bkRepoClient: BkRepoClient
 ) {
 
@@ -77,27 +71,15 @@ class LunaService @Autowired constructor(
 
         val tmpFolder = Files.createTempDir()
         try {
-            val isRepoGray = repoGray.isGray(fileParams.projectId, redisOperation)
-            buildLogPrinter.addLine(
-                buildId = fileParams.buildId,
-                message = "use bkrepo: $isRepoGray",
-                tag = elementId,
-                jobId = containerId,
-                executeCount = executeCount
+            val files = bkRepoClient.downloadFileByPattern(
+                userId = "",
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                repoName = if (isCustom) "custom" else "pipeline",
+                pathPattern = regexPath,
+                destPath = tmpFolder.canonicalPath
             )
-            val files = if (isRepoGray) {
-                bkRepoClient.downloadFileByPattern(
-                    userId = "",
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    repoName = if (isCustom) "custom" else "pipeline",
-                    pathPattern = regexPath,
-                    destPath = tmpFolder.canonicalPath
-                )
-            } else {
-                jfrogService.downloadFile(fileParams, tmpFolder.canonicalPath)
-            }
             if (files.isEmpty()) {
                 logger.error("No file matches the regex: $fileParams")
                 buildLogPrinter.addLine(
@@ -157,9 +139,12 @@ class LunaService @Autowired constructor(
                                 val dateFormat = SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'", Locale.US)
                                 val dateStr = dateFormat.format(file.lastModified())
                                 val url = if (lunaUploadParam.para.destFileDir.isNullOrBlank()) {
-                                    "$LUNA_URL${urlEncode(file.canonicalPath.removePrefix(zipFileDecompressPath)).replace("%2F", "/")}"
+                                    "$LUNA_URL${urlEncode(file.canonicalPath.removePrefix(zipFileDecompressPath))
+                                        .replace("%2F", "/")}"
                                 } else {
-                                    "$LUNA_URL${urlEncode(lunaUploadParam.para.destFileDir!!).replace("%2F", "/").removePrefix("/")}/${urlEncode(file.canonicalPath.removePrefix(zipFileDecompressPath)).replace("%2F", "/")}"
+                                    "$LUNA_URL${urlEncode(lunaUploadParam.para.destFileDir!!).replace("%2F", "/")
+                                        .removePrefix("/")}/${urlEncode(
+                                        file.canonicalPath.removePrefix(zipFileDecompressPath)).replace("%2F", "/")}"
                                 }
                                 logger.info("Upload file to luna, url: $url")
 
@@ -175,7 +160,8 @@ class LunaService @Autowired constructor(
                                     .build()
                             }
                             OkhttpUtils.doHttp(request).use { res ->
-                                val response = res.body()!!.string() // {"ret":-1, "msg":"file content md5 check failed"}
+                                // {"ret":-1, "msg":"file content md5 check failed"}
+                                val response = res.body()!!.string()
                                 val responseData: Map<String, Any> = jacksonObjectMapper().readValue(response)
                                 val code = responseData["ret"] as Int
                                 if (0 != code) {
@@ -221,108 +207,3 @@ class LunaService @Autowired constructor(
     private fun urlEncode(s: String) =
         URLEncoder.encode(s, "UTF-8")
 }
-
-// fun main(args: Array<String>) {
-//     FileUtil.unzipFile("/Users/johuang/Workspace/BKCI/trunk/project_example/test.zip", "/Users/johuang/Workspace/BKCI/trunk/project_example/hello111/")
-//    val uploadParams = LunaUploadParam(
-//            "johuang",
-//            LunaUploadParam.CommonParam(
-//                    "Origin_776",
-//                    "LbfvWVJk",
-//                    "中文/zh"
-//            ),
-//            ArtifactorySearchParam(
-//                    "",
-//                    "",
-//                    "",
-//                    "",
-//                    true,
-//                    ""
-//            )
-//    )
-//    pushFile(uploadParams)
-// }
-
-//
-// private fun urlEncode(s: String) =
-//        URLEncoder.encode(s, "UTF-8")
-//
-//
-//
-// fun pushFile(lunaUploadParam: LunaUploadParam): String {
-//    val fileParams = lunaUploadParam.fileParams
-//    println("Luna upload param for build(${fileParams.buildId}): $lunaUploadParam")
-//
-//    val zipFile = File("/Users/johuang/tmp/test.tar.gz")
-//    val zipFileDecompressPath = (zipFile.parent + "/temp/")
-//    try {
-//
-//        FileUtil.unzipTgzFile(zipFile.canonicalPath, zipFileDecompressPath)
-//        val fileDir = File(zipFileDecompressPath)
-//        val fileTree: FileTreeWalk = fileDir.walk()
-//        fileTree.maxDepth(Int.MAX_VALUE)
-//                .filter { it.isFile }
-//                .forEach { file ->
-//                    println("Upload file to luna, fileName: ${file.name}")
-//                    val request = with(lunaUploadParam) {
-// //                        val body = MultipartBody.Builder()
-// //                                .setType(MultipartBody.FORM)
-// //                                .addFormDataPart("file",file.name, RequestBody.create(MediaType.parse("application/octet-stream"), file))
-// //                                .build()
-//                        val mediaType = MediaType.parse("application/octet-stream")
-//                        val requestBody = object : RequestBody() {
-//                            override fun writeTo(sink: BufferedSink?) {
-//                                val source = Okio.source(file.inputStream())
-//                                sink!!.writeAll(source)
-//                            }
-//
-//                            override fun contentType(): MediaType? {
-//                                return mediaType
-//                            }
-//                        }
-//
-//                        val dateFormat = SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'", Locale.US)
-//                        val dateStr = dateFormat.format(file.lastModified())
-//                        val url = "http://100.115.8.10:8080/shupload/${urlEncode(lunaUploadParam.para.destFileDir).replace("%2F", "/")}/${urlEncode(file.canonicalPath.removePrefix(zipFileDecompressPath)).replace("%2F", "/")}"
-//                        println(url)
-//                        val md5 = FileUtil.getSHA1(file)
-//                        val size =  file.length().toString()
-//                        println(size)
-//                        println(md5)
-//                        Request.Builder()
-//                                .header("access-path", lunaUploadParam.para.appName)
-//                                .header("access-token", lunaUploadParam.para.appSecret)
-//                                .header("file-md5", md5)
-//                                .header("Content-Type", "application/octet-stream")
-//                                .header("Content-Length", file.length().toString())
-//                                .header("Last-Modifed", dateStr)
-//                                .url(url)
-//                                .post(requestBody)
-//                                .build()
-//
-//
-//                    }
-//                    OkhttpUtils.doHttp(request).use { res ->
-//                        val response = res.body()!!.string()
-//                        println("upload (${fileParams.buildId}): $response")
-//                    }
-//                }
-//    } catch (e: Exception) {
-//        println("$e")
-//    } finally {
-// //        zipFile.deleteRecursively()
-//        File(zipFileDecompressPath).deleteRecursively()
-//    }
-//    return "success"
-// }
-
-/*
-
-curl -i -H "access-token: LbfvWVJk" \
--H "access-path: Origin_776" \
--H "file-md5: 85fde31e9db186c6fa8ea528ac403db3" \
--H "Content-Type: application/octet-stream" \
--H "Last-Modifed: Wed, 05 Dec 2018 12:00:00 GMT" \
--X POST --data "ied.com" http://100.115.8.10:8080/shupload/path/to/file
-
- */
