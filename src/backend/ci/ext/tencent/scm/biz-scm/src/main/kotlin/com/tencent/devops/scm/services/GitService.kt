@@ -106,6 +106,7 @@ class GitService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(GitService::class.java)
         private val gitOauthApi = GitOauthApi()
+        private const val MAX_FILE_SIZE = 1 * 1024 * 1024
     }
 
     @Value("\${gitCI.clientId}")
@@ -632,7 +633,7 @@ class GitService @Autowired constructor(
                     .build()
             }
             OkhttpUtils.doHttp(request).use {
-                val data = it.body()!!.string()
+                val data = it.stringLimit(readLimit = MAX_FILE_SIZE, errorMsg = "请求文件不能超过1M")
                 if (!it.isSuccessful) throw RuntimeException("fail to get git file content with: $url($data)")
                 return data
             }
@@ -664,7 +665,7 @@ class GitService @Autowired constructor(
             val projectFileUrl = "$apiUrl/projects/$encodeProjectName/repository/files/$encodeFilePath?ref=$encodeRef"
             logger.info(projectFileUrl)
             OkhttpUtils.doGet(projectFileUrl, headers).use { response ->
-                val body = response.body()!!.string()
+                val body = response.stringLimit(readLimit = MAX_FILE_SIZE, errorMsg = "请求文件不能超过1M")
                 val fileInfo = objectMapper.readValue(body, GitlabFileInfo::class.java)
                 return String(Base64.getDecoder().decode(fileInfo.content))
             }
