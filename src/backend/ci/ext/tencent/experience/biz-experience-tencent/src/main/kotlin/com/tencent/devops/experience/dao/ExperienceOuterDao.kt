@@ -27,7 +27,6 @@
 
 package com.tencent.devops.experience.dao
 
-import com.tencent.devops.experience.constant.ExperienceOuterType
 import com.tencent.devops.model.experience.tables.TExperienceOuter
 import org.jooq.DSLContext
 import org.jooq.Record1
@@ -40,8 +39,7 @@ class ExperienceOuterDao {
     fun create(
         dslContext: DSLContext,
         experienceId: Long,
-        outer: String,
-        outerType: ExperienceOuterType
+        outer: String
     ) {
         val now = LocalDateTime.now()
         with(TExperienceOuter.T_EXPERIENCE_OUTER) {
@@ -49,13 +47,11 @@ class ExperienceOuterDao {
                 this,
                 RECORD_ID,
                 OUTER,
-                TYPE,
                 CREATE_TIME,
                 UPDATE_TIME
             ).values(
                 experienceId,
                 outer,
-                outerType.id,
                 now,
                 now
             ).execute()

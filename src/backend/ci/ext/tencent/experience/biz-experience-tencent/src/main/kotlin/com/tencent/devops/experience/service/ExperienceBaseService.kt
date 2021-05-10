@@ -192,7 +192,7 @@ class ExperienceBaseService @Autowired constructor(
 
     fun isInPrivate(experienceId: Long, userId: String, isOuter: Boolean = false): Boolean {
         val inGroup = lazy {
-            getGroupIdToUserIdsMap(experienceId).values.asSequence().flatMap { it.asSequence() }.toSet()
+            getGroupIdToUserIdsMap(experienceId, isOuter).values.asSequence().flatMap { it.asSequence() }.toSet()
                 .contains(userId)
         }
         val isInnerUser = lazy {
@@ -212,16 +212,21 @@ class ExperienceBaseService @Autowired constructor(
     /**
      * 获取体验对应的<组号,用户列表>
      */
-    fun getGroupIdToUserIdsMap(experienceId: Long): MutableMap<Long, MutableSet<String>> {
+    fun getGroupIdToUserIdsMap(experienceId: Long, isOuter: Boolean = false): MutableMap<Long, MutableSet<String>> {
         val groupIds = experienceGroupDao.listGroupIdsByRecordId(dslContext, experienceId).map { it.value1() }.toSet()
-        return getGroupIdToUserIds(groupIds)
+        return if (isOuter) getGroupIdToOuters(groupIds) else getGroupIdToInnerUserIds(groupIds)
     }
 
     /**
-     * 根据组号获取<组号,用户列表>
+     * 内部用户,根据组号获取<组号,用户列表>
      */
-    fun getGroupIdToUserIds(groupIds: Set<Long>): MutableMap<Long, MutableSet<String>> {
+    fun getGroupIdToInnerUserIds(groupIds: Set<Long>): MutableMap<Long, MutableSet<String>> {
         val groupIdToUserIds = mutableMapOf<Long, MutableSet<String>>()
+
+        if (groupIds.contains(ExperienceConstant.PUBLIC_GROUP)) {
+            groupIdToUserIds[ExperienceConstant.PUBLIC_GROUP] = ExperienceConstant.PUBLIC_INNER_USERS
+        }
+
         experienceGroupInnerDao.listByGroupIds(dslContext, groupIds).forEach {
             var userIds = groupIdToUserIds[it.groupId]
             if (null == userIds) {
@@ -230,16 +235,21 @@ class ExperienceBaseService @Autowired constructor(
             }
             userIds.add(it.userId)
         }
+        return groupIdToUserIds
+    }
+
+    /**
+     * 外部用户,根据组号获取<组号,用户列表>
+     */
+    fun getGroupIdToOuters(groupIds: Set<Long>): MutableMap<Long, MutableSet<String>> {
+        val groupIdToUserIds = mutableMapOf<Long, MutableSet<String>>()
         experienceGroupOuterDao.listByGroupIds(dslContext, groupIds).forEach {
             var userIds = groupIdToUserIds[it.groupId]
             if (null == userIds) {
                 userIds = mutableSetOf()
-                groupIdToUserIds[it.groupId] = userIds!!
+                groupIdToUserIds[it.groupId] = userIds
             }
-            userIds!!.add(it.outer)
-        }
-        if (groupIds.contains(ExperienceConstant.PUBLIC_GROUP)) {
-            groupIdToUserIds[ExperienceConstant.PUBLIC_GROUP] = ExperienceConstant.PUBLIC_INNER_USERS
+            userIds.add(it.outer)
         }
         return groupIdToUserIds
     }

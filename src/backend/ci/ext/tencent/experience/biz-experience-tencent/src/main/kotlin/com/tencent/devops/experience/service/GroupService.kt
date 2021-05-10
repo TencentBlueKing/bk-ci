@@ -41,7 +41,6 @@ import com.tencent.devops.common.auth.code.ExperienceAuthServiceCode
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.ExperienceMessageCode
-import com.tencent.devops.experience.constant.ExperienceOuterType
 import com.tencent.devops.experience.dao.ExperienceGroupInnerDao
 import com.tencent.devops.experience.dao.ExperienceGroupOuterDao
 import com.tencent.devops.experience.dao.GroupDao
@@ -100,7 +99,8 @@ class GroupService @Autowired constructor(
         )
         val groupIds = groups.map { it.id }.toSet()
 
-        val groupIdToUserIds = experienceBaseService.getGroupIdToUserIds(groupIds)
+        val groupIdToInnerUserIds = experienceBaseService.getGroupIdToInnerUserIds(groupIds)
+        val groupIdToOuters = experienceBaseService.getGroupIdToOuters(groupIds)
 
         val list = groups.map {
             val canEdit = groupPermissionListMap[AuthPermission.EDIT]?.contains(it.id) ?: false
@@ -108,10 +108,10 @@ class GroupService @Autowired constructor(
             GroupSummaryWithPermission(
                 groupHashId = HashUtil.encodeLongId(it.id),
                 name = it.name,
-                innerUsersCount = groupIdToUserIds[it.id]?.size ?: 0,
+                innerUsersCount = groupIdToInnerUserIds[it.id]?.size ?: 0,
                 outerUsersCount = it.outerUsersCount,
-                innerUsers = groupIdToUserIds[it.id] ?: emptySet(),
-                outerUsers = it.outerUsers,
+                innerUsers = groupIdToInnerUserIds[it.id] ?: emptySet(),
+                outerUsers = groupIdToOuters[it.id] ?: emptySet(),
                 creator = it.creator,
                 remark = it.remark ?: "",
                 permissions = GroupPermission(canEdit, canDelete)
@@ -127,7 +127,7 @@ class GroupService @Autowired constructor(
                     innerUsersCount = 1,
                     outerUsersCount = 0,
                     innerUsers = ExperienceConstant.PUBLIC_INNER_USERS,
-                    outerUsers = "",
+                    outerUsers = emptySet(),
                     creator = "admin",
                     remark = "",
                     permissions = GroupPermission(canEdit = false, canDelete = false)
@@ -190,7 +190,7 @@ class GroupService @Autowired constructor(
             experienceGroupInnerDao.create(dslContext, groupId, it)
         }
         outer.forEach {
-            experienceGroupOuterDao.create(dslContext, groupId, it, ExperienceOuterType.BK)
+            experienceGroupOuterDao.create(dslContext, groupId, it)
         }
 
         createResource(userId = userId, projectId = projectId, groupId = groupId, groupName = group.name)
@@ -271,7 +271,7 @@ class GroupService @Autowired constructor(
         }
         experienceGroupOuterDao.deleteByGroupId(dslContext, groupId)
         outer.forEach {
-            experienceGroupOuterDao.create(dslContext, groupId, it, ExperienceOuterType.BK)
+            experienceGroupOuterDao.create(dslContext, groupId, it)
         }
 
         modifyResource(projectId = projectId, groupId = groupId, groupName = group.name)

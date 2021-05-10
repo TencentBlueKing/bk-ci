@@ -58,7 +58,6 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.wechatwork.WechatWorkService
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.ExperienceMessageCode
-import com.tencent.devops.experience.constant.ExperienceOuterType
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.constant.ProductCategoryEnum
 import com.tencent.devops.experience.dao.ExperienceDao
@@ -413,7 +412,7 @@ class ExperienceService @Autowired constructor(
             experienceInnerDao.create(dslContext, experienceId, it)
         }
         experience.outerUsers.forEach {
-            experienceOuterDao.create(dslContext, experienceId, it, ExperienceOuterType.BK)
+            experienceOuterDao.create(dslContext, experienceId, it)
         }
 
         // 公开体验表
@@ -519,7 +518,7 @@ class ExperienceService @Autowired constructor(
         // 更新外部人员
         experienceOuterDao.deleteByRecordId(dslContext, experienceRecord.id, experience.outerUsers)
         experience.outerUsers.forEach {
-            experienceOuterDao.create(dslContext, experienceRecord.id, it, ExperienceOuterType.BK)
+            experienceOuterDao.create(dslContext, experienceRecord.id, it)
         }
 
         if (isPublic) {
