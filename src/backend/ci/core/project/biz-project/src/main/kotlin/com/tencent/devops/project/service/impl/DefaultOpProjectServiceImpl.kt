@@ -154,4 +154,8 @@ class DefaultOpProjectServiceImpl @Autowired constructor(
         logger.info("[synProjectInit]| isRefresh=$isRefresh| do nothing")
         return Result(emptyList())
     }
+
+    override fun setGrayExt(projectCodeList: List<String>, operateFlag: Int) {
+        return
+    }
 }
