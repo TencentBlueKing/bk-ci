@@ -215,7 +215,8 @@ class StartActionTaskContainerCmd(
                 additionalOptions = additionalOptions,
                 containerFinalStatus = containerContext.buildStatus,
                 variables = containerContext.variables,
-                hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer
+                hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer,
+                buildLogPrinter = buildLogPrinter
             ) -> { // 检查条件跳过
                 val taskStatus = BuildStatusSwitcher.readyToSkipWhen(containerContext.buildStatus.isFailure())
                 LOG.warn("ENGINE|$buildId|$source|CONTAINER_SKIP_TASK|$stageId|j($containerId)|$taskId|$taskStatus")

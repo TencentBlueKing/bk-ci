@@ -382,7 +382,7 @@ class PipelineRepositoryService constructor(
         }
 
         // 统一发事件
-        val variables = container.params.map { it.id to it.defaultValue.toString() }.toMap()
+        val variables = container.params.associate { it.id to it.defaultValue.toString() }
         svnRepoEventTypeMap.values.forEach { e ->
             logger.info("[$pipelineId]-initTriggerContainer,element is WebHook, add WebHook by mq")
             pipelineEventDispatcher.dispatch(
@@ -457,7 +457,11 @@ class PipelineRepositoryService constructor(
             }
 
             modelCheckPlugin.checkJob(
-                projectId = projectId, pipelineId = pipelineId, jobContainer = c, userId = userId
+                projectId = projectId,
+                pipelineId = pipelineId,
+                jobContainer = c,
+                userId = userId,
+                finallyStage = stage.finally
             )
 
             var taskSeq = 0
@@ -649,8 +653,13 @@ class PipelineRepositoryService constructor(
                 manualStartup = canManualStartup,
                 canElementSkip = canElementSkip,
                 buildNo = buildNo,
-                taskCount = taskCount
+                taskCount = taskCount,
+                latestVersion = model.latestVersion
             )
+            if (version == 0) {
+                // 传过来的latestVersion已经不是最新
+                throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_IS_NOT_THE_LATEST)
+            }
             pipelineResDao.create(
                 dslContext = transactionContext,
                 pipelineId = pipelineId,
