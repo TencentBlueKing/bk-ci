@@ -80,10 +80,7 @@ jobs:
             ${{ runner.os }}-gradle-
       - name: Gradle Build Backend Service
         working-directory: src/backend/ci
-        run: |
-          ./gradlew clean test build :core:worker:worker-agent:shadowJar -DmavenRepoUrl="https://maven.aliyun.com/nexus/content/groups/public/"
-        ls -al release
-
+        run: ./gradlew clean test build :core:worker:worker-agent:shadowJar -DmavenRepoUrl="https://maven.aliyun.com/nexus/content/groups/public/"
       - name: Create artifact - Step1:init
         run: |
           mkdir -p bkci/frontend
