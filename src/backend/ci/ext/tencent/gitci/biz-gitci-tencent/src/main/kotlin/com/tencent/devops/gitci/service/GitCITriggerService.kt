@@ -371,19 +371,6 @@ class GitCITriggerService @Autowired constructor(
                         gitProjectId = gitRequestEvent.gitProjectId
                     )
                 }
-                val (yamlObject, normalizedYaml) =
-                    prepareCIBuildYaml(gitRequestEvent, originYaml, filePath, buildPipeline.pipelineId)
-                        ?: return@forEach
-                // 若是Yaml格式没问题，则取Yaml中的流水线名称，并修改当前流水线名称
-                displayName =
-                    if (!yamlObject.name.isNullOrBlank()) {
-                        yamlObject.name!!
-                    } else {
-                        filePath.removeSuffix(ciFileExtension)
-                    }
-                buildPipeline.displayName = displayName
-
-                val matcher = GitCIWebHookMatcher(event)
 
                 // 流水线未启用则跳过
                 if (!buildPipeline.enabled) {
