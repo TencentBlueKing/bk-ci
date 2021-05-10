@@ -95,12 +95,6 @@ class UserEnvironmentResourceImpl @Autowired constructor(
             }
         }
 
-        if (NodeSource.EXISTING == environment.source || NodeSource.CMDB == environment.source) {
-            if (environment.nodeHashIds == null || environment.nodeHashIds!!.isEmpty()) {
-                throw ErrorCodeException(errorCode = EnvironmentMessageCode.ERROR_ENV_NODE_HASH_ID_ILLEGAL)
-            }
-        }
-
         return Result(envService.createEnvironment(userId, projectId, environment))
     }
 
