@@ -170,12 +170,17 @@ object AtomUtils {
         element !is MarketBuildAtomElement && element !is MarketBuildLessAtomElement
 
     fun getInputTypeConfigMap(taskCommonSettingConfig: TaskCommonSettingConfig): Map<String, Int> {
-        return mapOf(
+        val inputTypeConfigMap = mutableMapOf(
             KEY_INPUT to taskCommonSettingConfig.maxInputComponentSize,
             KEY_TEXTAREA to taskCommonSettingConfig.maxTextareaComponentSize,
             KEY_CODE_EDITOR to taskCommonSettingConfig.maxCodeEditorComponentSize,
             KEY_DEFAULT to taskCommonSettingConfig.maxDefaultInputComponentSize
         )
+        val multipleInputComponents = taskCommonSettingConfig.multipleInputComponents.split(",")
+        multipleInputComponents.forEach {
+            inputTypeConfigMap[it] = taskCommonSettingConfig.maxMultipleInputComponentSize
+        }
+        return inputTypeConfigMap
     }
 
     fun checkModelAtoms(
@@ -203,16 +208,14 @@ object AtomUtils {
             val version = atomVersion.version
             val atomName = atomVersion.storeName
             val atomRunInfo = atomRunInfoMap?.get("$atomCode:$version")
-                ?: throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID,
-                    params = arrayOf(atomName)
+            if (atomRunInfo != null) {
+                validateAtomParam(
+                    atomInputParamMap = atomInputParamMap,
+                    atomRunInfo = atomRunInfo,
+                    inputTypeConfigMap = inputTypeConfigMap,
+                    atomName = atomName
                 )
-            validateAtomParam(
-                atomInputParamMap = atomInputParamMap,
-                atomRunInfo = atomRunInfo,
-                inputTypeConfigMap = inputTypeConfigMap,
-                atomName = atomName
-            )
+            }
         }
         return true
     }

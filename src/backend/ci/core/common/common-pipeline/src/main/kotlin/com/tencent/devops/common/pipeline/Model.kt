@@ -52,7 +52,9 @@ data class Model(
     @ApiModelProperty("源模版ID", required = false)
     var srcTemplateId: String? = null,
     @ApiModelProperty("模板ID", required = false)
-    var templateId: String? = null
+    var templateId: String? = null,
+    @ApiModelProperty("提示", required = false)
+    var tips: String? = null
 ) {
     /**
      * 删除相关原子

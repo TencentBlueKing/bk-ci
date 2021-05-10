@@ -37,7 +37,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.process.TestBase
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.pojo.config.JobCommonSettingConfig
 import com.tencent.devops.process.pojo.config.PipelineCommonSettingConfig
 import com.tencent.devops.process.pojo.config.StageCommonSettingConfig
@@ -51,7 +50,6 @@ import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.StoreUserCommentInfo
-import com.tencent.devops.store.pojo.common.StoreVersion
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import org.junit.Assert
 import org.junit.Before
@@ -164,6 +162,8 @@ class DefaultModelCheckPluginTest : TestBase() {
         whenever(taskCommonSettingConfig.maxTextareaComponentSize).thenReturn(4096)
         whenever(taskCommonSettingConfig.maxCodeEditorComponentSize).thenReturn(16384)
         whenever(taskCommonSettingConfig.maxDefaultInputComponentSize).thenReturn(1024)
+        whenever(taskCommonSettingConfig.multipleInputComponents).thenReturn("dynamic-parameter")
+        whenever(taskCommonSettingConfig.maxMultipleInputComponentSize).thenReturn(4000)
         whenever(taskCommonSettingConfig.maxDefaultOutputComponentSize).thenReturn(4000)
     }
 

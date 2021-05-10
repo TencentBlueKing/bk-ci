@@ -123,9 +123,9 @@ object ProcessMessageCode {
     const val ERROR_FINALLY_STAGE_JOB_CONDITION = "2101065" // 流水线: finally stage下的[{0}]Job运行条件配置错误: {1}
     const val ERROR_NORMAL_STAGE_JOB_CONDITION = "2101066" // 流水线: 普通stage下的[{0}]Job运行条件配置错误: {0}
     const val ERROR_EMPTY_JOB = "2101067" // 流水线: Model信息不完整，Stage[{0}] Job[{1}]下没有插件
-    const val ERROR_PIPELINE_MODEL_TOO_LARGE = "2101068" // 流水线: 流水线模型太大，模型最大不能超过[{2}]个字符
-    const val ERROR_PIPELINE_MODEL_COMPONENT_NUM_TOO_LARGE = "2101069" // 流水线: 流水线下{0}数量太多，系统规定的数量最大为：{1}
-    const val ERROR_ATOM_PARAM_VALUE_TOO_LARGE = "2101070" // 流水线: 插件[{0}]的参数[{1}]值太大，该参数不能超过[{2}]个字符
+    const val ERROR_PIPELINE_MODEL_TOO_LARGE = "2101068" // 流水线: 流水线模型太大，模型最大不能超过[{0}]个字符
+    const val ERROR_PIPELINE_MODEL_COMPONENT_NUM_TOO_LARGE = "2101069" // 流水线: 流水线下{0}的{1}数量太多，系统规定的数量最大为：{2}
+    const val ERROR_ATOM_PARAM_VALUE_TOO_LARGE = "2101070" // 流水线: 插件[{0}]的参数[{1}]值太大，该参数的值不能超过[{2}]个字符
 
     // 通用参数错误
     const val ERROR_RETRY_3_FAILED = "2101989" // 重试3次失败

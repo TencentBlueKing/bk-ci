@@ -241,10 +241,11 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             val historyFlag = atomVersion.historyFlag
             val defaultAtomFlag =
                 defaultAtomCodeList?.contains(atomCode) ?: redisOperation.isMember(storePublicFlagKey, atomCode)
-            if (!defaultAtomFlag || !historyFlag) {
+            if (!(defaultAtomFlag || historyFlag)) {
                 // 默认插件和内置插件无需校验可见范围
                 validateAtomCodeList.add(atomCode)
-            } else if (!(!defaultAtomFlag && historyFlag)) {
+            }
+            if (!(!defaultAtomFlag && historyFlag)) {
                 // 过滤调那些没有存在db中的内置插件
                 filterAtomVersions.add(atomVersion)
             }
