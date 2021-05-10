@@ -168,7 +168,8 @@ class DockerHostClient @Autowired constructor(
             } else {
                 ImageRDTypeEnum.getImageRDTypeByName(dispatchType.imageRDType!!).name
             },
-            containerHashId = dispatchMessage.containerHashId
+            containerHashId = dispatchMessage.containerHashId,
+            customBuildEnv = dispatchMessage.customBuildEnv
         )
 
         pipelineDockerTaskSimpleDao.createOrUpdate(
