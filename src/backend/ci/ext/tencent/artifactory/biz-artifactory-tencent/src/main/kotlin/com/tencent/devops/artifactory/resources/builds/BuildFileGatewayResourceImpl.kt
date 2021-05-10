@@ -31,7 +31,6 @@ import com.tencent.devops.artifactory.api.builds.BuildFileGatewayResource
 import com.tencent.devops.artifactory.pojo.FileGatewayInfo
 import com.tencent.devops.artifactory.service.FileGatewayService
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
 
 @RestResource

@@ -27,7 +27,6 @@
 
 package com.tencent.devops.artifactory.service
 
-import com.tencent.devops.artifactory.dao.ShortUrlDao
 import com.tencent.devops.artifactory.pojo.FileGatewayInfo
 import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.beans.factory.annotation.Autowired

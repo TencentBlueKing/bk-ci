@@ -58,8 +58,6 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         return path.removeSuffix("/").split("/").last()
     }
 
-
-
     override fun getFileDownloadUrls(
         userId: String,
         projectId: String,
