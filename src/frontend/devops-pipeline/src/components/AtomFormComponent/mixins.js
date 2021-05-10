@@ -71,7 +71,7 @@ export default {
                         return response.data
                     case response.data && response.data.record && Array.isArray(response.data.record):
                         return response.data.record
-                    default:
+                    default: {
                         const path = dataPath.split('.')
                         let result = response
                         let pos = 0
@@ -85,6 +85,7 @@ export default {
                         } else {
                             throw Error(this.$t('editPage.failToGetData'))
                         }
+                    }
                 }
             } catch (e) {
                 console.error(e)

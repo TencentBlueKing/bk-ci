@@ -80,7 +80,9 @@ open class GitWebHookMatcher(val event: GitEvent) : ScmWebhookMatcher {
         with(webHookParams) {
             logger.info("do git match for pipeline($pipelineId): ${repository.aliasName}, $branchName, $eventType")
 
-            if (repository !is CodeGitRepository && repository !is CodeTGitRepository) {
+            if (repository !is CodeGitRepository &&
+                repository !is CodeTGitRepository
+            ) {
                 logger.warn("Is not code repo for git web hook for repo and pipeline: $repository, $pipelineId")
                 return ScmWebhookMatcher.MatchResult(isMatch = false, failedReason = REPOSITORY_TYPE_NOT_MATCH)
             }

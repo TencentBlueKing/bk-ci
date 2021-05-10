@@ -27,7 +27,7 @@
 
 package com.tencent.devops.artifactory.pojo
 
-class CreateShortUrlRequest(
+data class CreateShortUrlRequest(
     val url: String,
     val ttl: Int
 )

@@ -38,6 +38,9 @@ import com.tencent.devops.scm.exception.GitApiException
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.pojo.CommitCheckRequest
+import com.tencent.devops.scm.pojo.GitMrChangeInfo
+import com.tencent.devops.scm.pojo.GitMrInfo
+import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.utils.QualityUtils
 import com.tencent.devops.scm.utils.code.svn.SvnUtils
 import org.slf4j.LoggerFactory
@@ -162,7 +165,8 @@ class ScmService @Autowired constructor(
             ).checkTokenAndPrivateKey()
         } catch (e: Throwable) {
             logger.warn(
-                "Fail to check the private key (projectName=$projectName, type=$type, region=$region, username=$userName",
+                "Fail to check the private key " +
+                    "(projectName=$projectName, type=$type, region=$region, username=$userName)",
                 e
             )
             return TokenCheckResult(false, e.message ?: "Fail to check the svn private key")
@@ -182,7 +186,7 @@ class ScmService @Autowired constructor(
         region: CodeSvnRegion?,
         repoUsername: String
     ): TokenCheckResult {
-        logger.info("[$projectName|$url|$type|$username|$password|$region|$repoUsername] Start to check the username and password")
+        logger.info("[$projectName|$url|$type|$username|$repoUsername] Start to check the username and password")
         val startEpoch = System.currentTimeMillis()
         try {
             ScmFactory.getScm(
@@ -198,7 +202,8 @@ class ScmService @Autowired constructor(
             ).checkTokenAndUsername()
         } catch (e: Throwable) {
             logger.warn(
-                "Fail to check the private key (projectName=$projectName, type=$type, username=$username, region=$region, repoUsername=$repoUsername",
+                "Fail to check the private key " +
+                    "(projectName=$projectName, type=$type, username=$username, repoUsername=$repoUsername)",
                 e
             )
             return TokenCheckResult(false, e.message ?: "Fail to check the svn private key")
@@ -373,6 +378,69 @@ class ScmService @Autowired constructor(
             region = svnRegion,
             userName = userName
         ).unlock(repName, userName, subPath)
+    }
+
+    fun getMergeRequestChangeInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        mrId: Long
+    ): GitMrChangeInfo? {
+        return ScmFactory.getScm(
+            projectName = projectName,
+            url = url,
+            type = type,
+            branchName = null,
+            privateKey = null,
+            passPhrase = null,
+            token = token,
+            region = null,
+            userName = null
+        )
+            .getMergeRequestChangeInfo(mrId = mrId)
+    }
+
+    fun getMrInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        mrId: Long
+    ): GitMrInfo? {
+        return ScmFactory.getScm(
+            projectName = projectName,
+            url = url,
+            type = type,
+            branchName = null,
+            privateKey = null,
+            passPhrase = null,
+            token = token,
+            region = null,
+            userName = null
+        )
+            .getMrInfo(mrId = mrId)
+    }
+
+    fun getMrReviewInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        mrId: Long
+    ): GitMrReviewInfo? {
+        return ScmFactory.getScm(
+            projectName = projectName,
+            url = url,
+            type = type,
+            branchName = null,
+            privateKey = null,
+            passPhrase = null,
+            token = token,
+            region = null,
+            userName = null
+        )
+            .getMrReviewInfo(mrId = mrId)
     }
 
     companion object {

@@ -36,8 +36,8 @@ import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.devops.common.api.util.OwnerUtils
 import com.tencent.devops.common.auth.code.AuthServiceCode
-import com.tencent.devops.common.auth.utlis.ActionUtils
-import com.tencent.devops.common.auth.utlis.AuthUtils
+import com.tencent.devops.common.auth.utils.ActionUtils
+import com.tencent.devops.common.auth.utils.AuthUtils
 import com.tencent.devops.common.redis.RedisOperation
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

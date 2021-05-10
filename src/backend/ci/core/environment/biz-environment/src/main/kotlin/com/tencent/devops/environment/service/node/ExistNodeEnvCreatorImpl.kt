@@ -63,6 +63,19 @@ class ExistNodeEnvCreatorImpl @Autowired constructor(
             throw IllegalArgumentException("wrong nodeSourceType [${envCreateInfo.source}] in [${id()}]")
         }
 
+        if (envCreateInfo.nodeHashIds == null || envCreateInfo.nodeHashIds!!.isEmpty()) {
+            var envId = 0L
+            dslContext.transaction { configuration ->
+                val context = DSL.using(configuration)
+                envId = envDao.create(
+                    context, userId, projectId, envCreateInfo.name, envCreateInfo.desc,
+                    envCreateInfo.envType.name, ObjectMapper().writeValueAsString(envCreateInfo.envVars)
+                )
+                environmentPermissionService.createEnv(userId, projectId, envId, envCreateInfo.name)
+            }
+            return EnvironmentId(HashUtil.encodeLongId(envId))
+        }
+
         val nodeLongIds = envCreateInfo.nodeHashIds!!.map { HashUtil.decodeIdToLong(it) }
 
         // 检查 node 权限
