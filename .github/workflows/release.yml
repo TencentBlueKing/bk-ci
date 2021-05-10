@@ -78,9 +78,9 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
-      - name: Gradle Build
+      - name: Gradle Build Backend Service
         working-directory: src/backend/ci
-        run: ./gradlew clean test build -DmavenRepoUrl="http://maven.aliyun.com/nexus/content/groups/public/"
+        run: ./gradlew clean test build :core:worker:worker-agent:shadowJar -DmavenRepoUrl="http://maven.aliyun.com/nexus/content/groups/public/"
       - name: Create artifact - Step1:init
         run: |
           mkdir -p bkci/frontend
