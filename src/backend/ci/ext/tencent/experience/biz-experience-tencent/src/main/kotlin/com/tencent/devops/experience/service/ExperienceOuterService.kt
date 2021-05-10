@@ -141,15 +141,24 @@ class ExperienceOuterService @Autowired constructor(
         ).results.map { it.username }
     }
 
-    private fun isBlackIp(realIp: String): Boolean {
+    fun isBlackIp(realIp: String?): Boolean {
+        if (realIp == null) {
+            logger.warn("Can not get client real ip")
+            throw ErrorCodeException(
+                statusCode = Response.Status.BAD_REQUEST.statusCode,
+                errorCode = ExperienceMessageCode.OUTER_LOGIN_ERROR,
+                defaultMessage = "无法获取IP , 请联系相关人员排查"
+            )
+        }
         return redisOperation.isMember("e:out:l:black:ip", realIp)
     }
 
     private fun checkNormal(token: String, profileVO: OuterProfileVO) {
+        val checkKey = "e:out:check:$token"
         val checkNow = redisOperation.execute(RedisCallback {
             it.stringCommands().set(
-                token.toByteArray(),
-                "1".toByteArray(),
+                checkKey.toByteArray(),
+                "0".toByteArray(),
                 Expiration.seconds(30),
                 RedisStringCommands.SetOption.SET_IF_ABSENT
             )
@@ -157,7 +166,18 @@ class ExperienceOuterService @Autowired constructor(
         if (checkNow == true) {
             val profilesRead = profileApi.v2ProfilesRead(profileVO.username, "status", "username")
             if (null == profilesRead || profilesRead.status != Profile.StatusEnum.NORMAL) {
+                redisOperation.set(checkKey, "1") // 将缓存置为不正常用户
                 logger.warn("v2ProfilesRead , status is not normal , token:{}", token)
+                throw ErrorCodeException(
+                    statusCode = Response.Status.BAD_REQUEST.statusCode,
+                    errorCode = ExperienceMessageCode.OUTER_LOGIN_ERROR,
+                    defaultMessage = "账号已被封禁"
+                )
+            }
+        } else {
+            val checkResult = redisOperation.get(checkKey)
+            if (checkResult == "1") {
+                logger.warn("v2ProfilesRead, redis , status is not normal , token:{}", token)
                 throw ErrorCodeException(
                     statusCode = Response.Status.BAD_REQUEST.statusCode,
                     errorCode = ExperienceMessageCode.OUTER_LOGIN_ERROR,

@@ -73,7 +73,6 @@ class GroupService @Autowired constructor(
 ) {
 
     private val resourceType = AuthResourceType.EXPERIENCE_GROUP
-    private val regex = Pattern.compile("[,;]")
 
     fun list(
         userId: String,
@@ -109,7 +108,7 @@ class GroupService @Autowired constructor(
                 groupHashId = HashUtil.encodeLongId(it.id),
                 name = it.name,
                 innerUsersCount = groupIdToInnerUserIds[it.id]?.size ?: 0,
-                outerUsersCount = it.outerUsersCount,
+                outerUsersCount = groupIdToOuters[it.id]?.size ?: 0,
                 innerUsers = groupIdToInnerUserIds[it.id] ?: emptySet(),
                 outerUsers = groupIdToOuters[it.id] ?: emptySet(),
                 creator = it.creator,
@@ -171,7 +170,6 @@ class GroupService @Autowired constructor(
             )
         }
 
-        val outer = regex.split(group.outerUsers)
         val innerUsersCount = group.innerUsers.size
 
         val groupId = groupDao.create(
@@ -189,7 +187,7 @@ class GroupService @Autowired constructor(
         group.innerUsers.forEach {
             experienceGroupInnerDao.create(dslContext, groupId, it)
         }
-        outer.forEach {
+        group.outerUsers.forEach {
             experienceGroupOuterDao.create(dslContext, groupId, it)
         }
 
@@ -204,11 +202,12 @@ class GroupService @Autowired constructor(
         val groupId = HashUtil.decodeIdToLong(groupHashId)
         val groupRecord = groupDao.get(dslContext, groupId)
         val userIds = experienceGroupInnerDao.listByGroupIds(dslContext, setOf(groupId)).map { it.userId }.toSet()
+        val outers = experienceGroupOuterDao.listByGroupIds(dslContext, setOf(groupId)).map { it.outer }.toSet()
         return Group(
             groupHashId = groupHashId,
             name = groupRecord.name,
             innerUsers = userIds,
-            outerUsers = groupRecord.outerUsers,
+            outerUsers = outers,
             remark = groupRecord.remark ?: ""
         )
     }
@@ -222,7 +221,7 @@ class GroupService @Autowired constructor(
 
         val groupRecord = groupDao.get(dslContext, groupId)
         val innerUsers = experienceGroupInnerDao.listByGroupIds(dslContext, setOf(groupId)).map { it.userId }.toSet()
-        val outerUsers = regex.split(groupRecord.outerUsers).toSet()
+        val outerUsers = experienceGroupOuterDao.listByGroupIds(dslContext, setOf(groupId)).map { it.outer }.toSet()
         return GroupUsers(innerUsers, outerUsers)
     }
 
@@ -251,7 +250,6 @@ class GroupService @Autowired constructor(
             )
         }
 
-        val outer = regex.split(group.outerUsers)
         val innerUsersCount = group.innerUsers.size
 
         groupDao.update(
@@ -270,7 +268,7 @@ class GroupService @Autowired constructor(
             experienceGroupInnerDao.create(dslContext, groupId, it)
         }
         experienceGroupOuterDao.deleteByGroupId(dslContext, groupId)
-        outer.forEach {
+        group.outerUsers.forEach {
             experienceGroupOuterDao.create(dslContext, groupId, it)
         }
 

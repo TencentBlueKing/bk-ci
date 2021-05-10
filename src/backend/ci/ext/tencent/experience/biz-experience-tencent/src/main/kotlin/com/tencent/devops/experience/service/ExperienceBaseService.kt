@@ -192,7 +192,12 @@ class ExperienceBaseService @Autowired constructor(
 
     fun isInPrivate(experienceId: Long, userId: String, isOuter: Boolean = false): Boolean {
         val inGroup = lazy {
-            getGroupIdToUserIdsMap(experienceId, isOuter).values.asSequence().flatMap { it.asSequence() }.toSet()
+            val groupIds = getGroupIdsByRecordId(experienceId)
+            if (isOuter) {
+                getGroupIdToOuters(groupIds)
+            } else {
+                getGroupIdToInnerUserIds(groupIds)
+            }.values.asSequence().flatMap { it.asSequence() }.toSet()
                 .contains(userId)
         }
         val isInnerUser = lazy {
@@ -210,11 +215,10 @@ class ExperienceBaseService @Autowired constructor(
     }
 
     /**
-     * 获取体验对应的<组号,用户列表>
+     * 根据体验获取组号列表
      */
-    fun getGroupIdToUserIdsMap(experienceId: Long, isOuter: Boolean = false): MutableMap<Long, MutableSet<String>> {
-        val groupIds = experienceGroupDao.listGroupIdsByRecordId(dslContext, experienceId).map { it.value1() }.toSet()
-        return if (isOuter) getGroupIdToOuters(groupIds) else getGroupIdToInnerUserIds(groupIds)
+    fun getGroupIdsByRecordId(experienceId: Long): Set<Long> {
+        return experienceGroupDao.listGroupIdsByRecordId(dslContext, experienceId).map { it.value1() }.toSet()
     }
 
     /**

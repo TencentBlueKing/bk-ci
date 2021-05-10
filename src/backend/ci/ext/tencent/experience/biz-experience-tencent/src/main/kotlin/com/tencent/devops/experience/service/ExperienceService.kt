@@ -193,28 +193,30 @@ class ExperienceService @Autowired constructor(
         val canExperience = if (checkPermission) experienceBaseService.userCanExperience(userId, experienceId) else true
         val url = if (canExperience && online && !isExpired) getShortExternalUrl(experienceId) else null
 
-        val groupIdToUserIds = experienceBaseService.getGroupIdToUserIdsMap(experienceId)
+        val groupIds = experienceBaseService.getGroupIdsByRecordId(experienceId)
+        val groupIdToInnerUserIds = experienceBaseService.getGroupIdToInnerUserIds(groupIds)
+        val groupIdToOuters = experienceBaseService.getGroupIdToOuters(groupIds)
         val innerUserIds =
             experienceInnerDao.listUserIdsByRecordId(dslContext, experienceId).map { it.value1() }.toSet()
 
-        val groupList = groupDao.list(dslContext, groupIdToUserIds.keys).map {
+        val groupList = groupDao.list(dslContext, groupIds).map {
             Group(
                 groupHashId = HashUtil.encodeLongId(it.id),
                 name = it.name,
-                innerUsers = groupIdToUserIds[it.id]?.toSet() ?: emptySet(),
-                outerUsers = it.outerUsers,
+                innerUsers = groupIdToInnerUserIds[it.id] ?: emptySet(),
+                outerUsers = groupIdToOuters[it.id] ?: emptySet(),
                 remark = it.remark ?: ""
             )
         }
 
-        if (groupIdToUserIds.keys.contains(ExperienceConstant.PUBLIC_GROUP)) {
+        if (groupIdToInnerUserIds.keys.contains(ExperienceConstant.PUBLIC_GROUP)) {
             groupList.add(
                 index = 0,
                 element = Group(
                     groupHashId = HashUtil.encodeLongId(ExperienceConstant.PUBLIC_GROUP),
                     name = ExperienceConstant.PUBLIC_NAME,
                     innerUsers = ExperienceConstant.PUBLIC_INNER_USERS,
-                    outerUsers = "",
+                    outerUsers = emptySet(),
                     remark = ""
                 )
             )
@@ -671,7 +673,8 @@ class ExperienceService @Autowired constructor(
         val notifyTypeList = objectMapper.readValue<Set<NotifyType>>(experienceRecord.notifyTypes)
 
         val extraUsers = experienceInnerDao.listUserIdsByRecordId(dslContext, experienceId).map { it.value1() }.toSet()
-        val groupIdToUserIdsMap = experienceBaseService.getGroupIdToUserIdsMap(experienceId)
+        val groupIdToUserIdsMap =
+            experienceBaseService.getGroupIdToInnerUserIds(experienceBaseService.getGroupIdsByRecordId(experienceId))
 
         val receivers = mutableSetOf<String>()
         receivers.addAll(extraUsers)

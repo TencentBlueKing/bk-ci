@@ -1,6 +1,7 @@
 package com.tencent.devops.experience.filter
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_NAME
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_REAL_IP
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.experience.constant.ExperienceConstant.HEADER_O_TOKEN
@@ -30,6 +31,16 @@ class OuterLoginFilter @Autowired constructor(
         if (null != requestContext && null != resourceInfo) {
             val headers = requestContext.headers
             if (headers[AUTH_HEADER_DEVOPS_ORGANIZATION_NAME]?.contains(ORGANIZATION_OUTER) == true) {
+                // IP黑名单过滤
+                val realIp = requestContext.getHeaderString(AUTH_HEADER_DEVOPS_REAL_IP)
+                if (experienceOuterService.isBlackIp(realIp)) {
+                    logger.warn("it is black ip , ip:{}", realIp)
+                    throw ErrorCodeException(
+                        statusCode = Response.Status.FORBIDDEN.statusCode,
+                        errorCode = ExperienceMessageCode.OUTER_ACCESS_FAILED,
+                        defaultMessage = "无法访问"
+                    )
+                }
                 // 路径过滤
                 val resourceMethod = resourceInfo!!.resourceMethod
                 if (resourceMethod.annotations.filterIsInstance<AllowOuter>().isEmpty()) {
