@@ -80,7 +80,9 @@ jobs:
             ${{ runner.os }}-gradle-
       - name: Gradle Build Backend Service
         working-directory: src/backend/ci
-        run: ./gradlew clean test build :core:worker:worker-agent:shadowJar -DmavenRepoUrl="http://maven.aliyun.com/nexus/content/groups/public/"
+        run: |
+          ./gradlew clean test build :core:worker:worker-agent:shadowJar \
+        -DmavenRepoUrl="https://maven.aliyun.com/nexus/content/groups/public/"
       - name: Create artifact - Step1:init
         run: |
           mkdir -p bkci/frontend
@@ -89,7 +91,7 @@ jobs:
           mkdir -p bkci/agent-package/script/linux
           mkdir -p bkci/agent-package/upgrade
           mkdir -p bkci/agent-package/jar
-      
+
       - name: Create artifact - Step2:Microservices
         run: |
           cp -rf support-files/agent-package/script/* bkci/agent-package/script/
@@ -114,7 +116,7 @@ jobs:
         with:
           name: agent
           path: bkci/agent-package/upgrade/
-      
+
       - name: Create artifact - Step4:Frontend
         uses: actions/download-artifact@v1
         with:
@@ -150,7 +152,7 @@ jobs:
           release_name: bk-ci ${{ github.ref }}
           draft: true
           prerelease: true
-      
+
       - run: tar czvf bkci.tar.gz  bkci
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
