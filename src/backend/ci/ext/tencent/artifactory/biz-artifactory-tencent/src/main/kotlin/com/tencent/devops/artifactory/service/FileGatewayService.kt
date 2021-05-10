@@ -30,7 +30,6 @@ package com.tencent.devops.artifactory.service
 import com.tencent.devops.artifactory.dao.ShortUrlDao
 import com.tencent.devops.artifactory.pojo.FileGatewayInfo
 import com.tencent.devops.common.redis.RedisOperation
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -44,7 +43,8 @@ class FileGatewayService @Autowired constructor(
     private lateinit var fileGateway: String
 
     fun getFileGateway(projectId: String): FileGatewayInfo {
-        val fileGateway = if (redisOperation.isMember(redisKey, projectId)) {
+        val allGray = redisOperation.get(FILE_GATEWAY_ALL_GRAY_KEY) == "true"
+        val fileGateway = if (allGray || redisOperation.isMember(FILE_GATEWAY_GRAY_KEY, projectId)) {
             fileGateway
         } else {
             ""
@@ -53,6 +53,7 @@ class FileGatewayService @Autowired constructor(
     }
 
     companion object {
-        private const val redisKey = "artifactory:fileGatewayGray:projects"
+        private const val FILE_GATEWAY_GRAY_KEY = "artifactory:fileGatewayGray:projects"
+        private const val FILE_GATEWAY_ALL_GRAY_KEY = "artifactory:fileGatewayGray:all"
     }
 }
