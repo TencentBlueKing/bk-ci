@@ -25,9 +25,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.pojo
+package com.tencent.devops.worker.common.api.pojo
 
-data class CreateShortUrlRequest(
-    val url: String,
-    val ttl: Int
+data class FileGatewayInfo(
+    val fileGateway: String
 )
