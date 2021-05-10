@@ -203,16 +203,14 @@ object AtomUtils {
             val version = atomVersion.version
             val atomName = atomVersion.storeName
             val atomRunInfo = atomRunInfoMap?.get("$atomCode:$version")
-                ?: throw ErrorCodeException(
-                    errorCode = ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID,
-                    params = arrayOf(atomName)
+            if (atomRunInfo != null) {
+                validateAtomParam(
+                    atomInputParamMap = atomInputParamMap,
+                    atomRunInfo = atomRunInfo,
+                    inputTypeConfigMap = inputTypeConfigMap,
+                    atomName = atomName
                 )
-            validateAtomParam(
-                atomInputParamMap = atomInputParamMap,
-                atomRunInfo = atomRunInfo,
-                inputTypeConfigMap = inputTypeConfigMap,
-                atomName = atomName
-            )
+            }
         }
         return true
     }
