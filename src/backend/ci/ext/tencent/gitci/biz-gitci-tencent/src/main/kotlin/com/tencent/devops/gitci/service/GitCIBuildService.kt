@@ -79,6 +79,8 @@ import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.gitci.pojo.BuildConfig
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
+import com.tencent.devops.gitci.pojo.enums.GitCICommitCheckState
+import com.tencent.devops.gitci.pojo.enums.TriggerReason
 import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitPushEvent
@@ -145,10 +147,85 @@ class GitCIBuildService @Autowired constructor(
         return startBuild(pipeline, event, gitProjectConf, model, gitBuildId)
     }
 
+    private fun addCommitCheck(
+        buildId: String,
+        pipeline: GitProjectPipeline,
+        event: GitRequestEvent,
+        gitProjectConf: GitRepositoryConf
+    ) {
+        // 锁定mr构建提交，人工触发时不推送构建消息
+        if (event.objectKind == OBJECT_KIND_MERGE_REQUEST) {
+            scmClient.pushCommitCheckWithBlock(
+                commitId = event.commitId,
+                mergeRequestId = event.mergeRequestId ?: 0L,
+                userId = event.userId,
+                block = true,
+                state = GitCICommitCheckState.PENDING,
+                context = "${pipeline.displayName}(${pipeline.filePath})",
+                gitProjectConf = gitProjectConf
+            )
+        } else if (event.objectKind != OBJECT_KIND_MANUAL) {
+            scmClient.pushCommitCheck(
+                commitId = event.commitId,
+                description = event.description ?: "",
+                mergeRequestId = event.mergeRequestId ?: 0L,
+                buildId = buildId,
+                userId = event.userId,
+                status = GitCICommitCheckState.PENDING,
+                context = "${pipeline.displayName}(${pipeline.filePath})",
+                gitProjectConf = gitProjectConf
+            )
+        }
+    }
+
+    private fun unblockCommitCheck(
+        pipeline: GitProjectPipeline,
+        event: GitRequestEvent,
+        gitProjectConf: GitRepositoryConf
+    ) {
+        scmClient.pushCommitCheckWithBlock(
+            commitId = event.commitId,
+            mergeRequestId = event.mergeRequestId ?: 0L,
+            userId = event.userId,
+            block = false,
+            state = GitCICommitCheckState.FAILURE,
+            context = "${pipeline.displayName}(${pipeline.filePath})",
+            gitProjectConf = gitProjectConf
+        )
+    }
+
+    private fun deletePipeline(
+        pipeline: GitProjectPipeline,
+        processClient: ServicePipelineResource,
+        event: GitRequestEvent,
+        gitProjectConf: GitRepositoryConf,
+        gitBuildId: Long
+    ) {
+        try {
+            gitPipelineResourceDao.deleteByPipelineId(dslContext, pipeline.pipelineId)
+            processClient.delete(
+                event.userId,
+                gitProjectConf.projectCode!!,
+                pipeline.pipelineId,
+                channelCode
+            )
+        } catch (e: Exception) {
+            logger.error(
+                "failed to delete pipeline resource gitBuildId:$gitBuildId, pipeline: $pipeline",
+                e
+            )
+        }
+    }
+
     fun retry(userId: String, gitProjectId: Long, pipelineId: String, buildId: String, taskId: String?): BuildId {
         logger.info("retry pipeline, gitProjectId: $gitProjectId, pipelineId: $pipelineId, buildId: $buildId")
-        val pipeline = gitPipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId) ?: throw CustomException(Response.Status.FORBIDDEN, "流水线不存在或已删除，如有疑问请联系蓝盾助手")
-        val gitEventBuild = gitRequestEventBuildDao.getByBuildId(dslContext, buildId) ?: throw CustomException(Response.Status.NOT_FOUND, "构建任务不存在，无法重试")
+        val pipeline =
+            gitPipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId) ?: throw CustomException(
+                Response.Status.FORBIDDEN,
+                "流水线不存在或已删除，如有疑问请联系蓝盾助手"
+            )
+        val gitEventBuild = gitRequestEventBuildDao.getByBuildId(dslContext, buildId)
+            ?: throw CustomException(Response.Status.NOT_FOUND, "构建任务不存在，无法重试")
         val newBuildId = client.get(ServiceBuildResource::class).retry(
             userId = userId,
             projectId = GitCIPipelineUtils.genGitProjectCode(pipeline.gitProjectId),
@@ -167,7 +244,11 @@ class GitCIBuildService @Autowired constructor(
 
     fun manualShutdown(userId: String, gitProjectId: Long, pipelineId: String, buildId: String): Boolean {
         logger.info("manualShutdown, gitProjectId: $gitProjectId, pipelineId: $pipelineId, buildId: $buildId")
-        val pipeline = gitPipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId) ?: throw CustomException(Response.Status.FORBIDDEN, "流水线不存在或已删除，如有疑问请联系蓝盾助手")
+        val pipeline =
+            gitPipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId) ?: throw CustomException(
+                Response.Status.FORBIDDEN,
+                "流水线不存在或已删除，如有疑问请联系蓝盾助手"
+            )
 
         return client.get(ServiceBuildResource::class).manualShutdown(
             userId = userId,
@@ -189,7 +270,8 @@ class GitCIBuildService @Autowired constructor(
         // 第一个stage，触发类
         val manualTriggerElement = ManualTriggerElement("手动触发", "T-1-1-1")
         val params = createPipelineParams(gitProjectConf, yaml, event)
-        val triggerContainer = TriggerContainer("0", "构建触发", listOf(manualTriggerElement), null, null, null, null, params)
+        val triggerContainer =
+            TriggerContainer("0", "构建触发", listOf(manualTriggerElement), null, null, null, null, params)
         val stage1 = Stage(listOf(triggerContainer), "stage-1")
         stageList.add(stage1)
 
@@ -225,7 +307,12 @@ class GitCIBuildService @Autowired constructor(
         )
     }
 
-    private fun addNormalContainer(job: Job, elementList: List<Element>, containerList: MutableList<Container>, jobIndex: Int) {
+    private fun addNormalContainer(
+        job: Job,
+        elementList: List<Element>,
+        containerList: MutableList<Container>,
+        jobIndex: Int
+    ) {
         val displayName = if (!job.job.displayName.isNullOrBlank()) {
             job.job.displayName!!
         } else if (!job.job.name.isNullOrBlank()) {
@@ -233,24 +320,31 @@ class GitCIBuildService @Autowired constructor(
         } else {
             ""
         }
-        containerList.add(NormalContainer(
-            containerId = null,
-            id = null,
-            name = "Job_${jobIndex + 1} $displayName",
-            elements = elementList,
-            status = null,
-            startEpoch = null,
-            systemElapsed = null,
-            elementElapsed = null,
-            enableSkip = false,
-            conditions = null,
-            canRetry = false,
-            jobControlOption = null,
-            mutexGroup = null
-        ))
+        containerList.add(
+            NormalContainer(
+                containerId = null,
+                id = null,
+                name = "Job_${jobIndex + 1} $displayName",
+                elements = elementList,
+                status = null,
+                startEpoch = null,
+                systemElapsed = null,
+                elementElapsed = null,
+                enableSkip = false,
+                conditions = null,
+                canRetry = false,
+                jobControlOption = null,
+                mutexGroup = null
+            )
+        )
     }
 
-    private fun addVmBuildContainer(job: Job, elementList: List<Element>, containerList: MutableList<Container>, jobIndex: Int) {
+    private fun addVmBuildContainer(
+        job: Job,
+        elementList: List<Element>,
+        containerList: MutableList<Container>,
+        jobIndex: Int
+    ) {
         var osType = VMBaseOS.LINUX
         val containerPool =
             when {
@@ -327,7 +421,12 @@ class GitCIBuildService @Autowired constructor(
         containerList.add(vmContainer)
     }
 
-    private fun makeElementList(job: Job, elementList: MutableList<Element>, gitProjectConf: GitRepositoryConf, userId: String) {
+    private fun makeElementList(
+        job: Job,
+        elementList: MutableList<Element>,
+        gitProjectConf: GitRepositoryConf,
+        userId: String
+    ) {
         job.job.steps.forEach {
             val element = it.covertToElement(getCiBuildConf(buildConfig))
             elementList.add(element)
@@ -421,11 +520,13 @@ class GitCIBuildService @Autowired constructor(
         yaml.services!!.forEachIndexed { index, it ->
             // 判断镜像格式是否合法
             val (imageName, imageTag) = it.parseImage()
-            val record = gitServicesConfDao.get(dslContext, imageName, imageTag) ?: throw RuntimeException("Git CI没有此镜像版本记录. ${it.image}")
+            val record = gitServicesConfDao.get(dslContext, imageName, imageTag)
+                ?: throw RuntimeException("Git CI没有此镜像版本记录. ${it.image}")
             if (!record.enable) {
                 throw RuntimeException("镜像版本不可用")
             }
-            val serviceJobDevCloudInput = it.getServiceInput(record.repoUrl, record.repoUsername, record.repoPwd, record.env)
+            val serviceJobDevCloudInput =
+                it.getServiceInput(record.repoUrl, record.repoUsername, record.repoPwd, record.env)
 
             val servicesElement = MarketBuildAtomElement(
                 name = "创建${it.getType()}服务",
@@ -456,7 +557,11 @@ class GitCIBuildService @Autowired constructor(
         }
     }
 
-    private fun createPipelineParams(gitProjectConf: GitRepositoryConf, yaml: CIBuildYaml, event: GitRequestEvent): MutableList<BuildFormProperty> {
+    private fun createPipelineParams(
+        gitProjectConf: GitRepositoryConf,
+        yaml: CIBuildYaml,
+        event: GitRequestEvent
+    ): MutableList<BuildFormProperty> {
         val result = mutableListOf<BuildFormProperty>()
         gitProjectConf.env?.forEach {
             val value = gitCIParameterUtils.encrypt(it.value)
@@ -483,7 +588,8 @@ class GitCIBuildService @Autowired constructor(
         // 通用参数
         startParams[BK_CI_RUN] = "true"
         startParams[BK_CI_REPO_OWNER] = GitCommonUtils.getRepoOwner(gitProjectConf.gitHttpUrl)
-        startParams[BK_CI_REPOSITORY] = GitCommonUtils.getRepoOwner(gitProjectConf.gitHttpUrl) + "/" + gitProjectConf.name
+        startParams[BK_CI_REPOSITORY] =
+            GitCommonUtils.getRepoOwner(gitProjectConf.gitHttpUrl) + "/" + gitProjectConf.name
         startParams[BK_REPO_GIT_WEBHOOK_EVENT_TYPE] = event.objectKind
         startParams[BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_BRANCH] = event.branch
         startParams[BK_REPO_GIT_WEBHOOK_COMMIT_ID] = event.commitId
@@ -548,20 +654,22 @@ class GitCIBuildService @Autowired constructor(
         startParams.putAll(vars ?: mapOf())
 
         startParams.forEach {
-            result.add(BuildFormProperty(
-                id = it.key,
-                required = false,
-                type = BuildFormPropertyType.STRING,
-                defaultValue = it.value,
-                options = null,
-                desc = null,
-                repoHashId = null,
-                relativePath = null,
-                scmType = null,
-                containerType = null,
-                glob = null,
-                properties = null
-            ))
+            result.add(
+                BuildFormProperty(
+                    id = it.key,
+                    required = false,
+                    type = BuildFormPropertyType.STRING,
+                    defaultValue = it.value,
+                    options = null,
+                    desc = null,
+                    repoHashId = null,
+                    relativePath = null,
+                    scmType = null,
+                    containerType = null,
+                    glob = null,
+                    properties = null
+                )
+            )
         }
 
         return result

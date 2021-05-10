@@ -49,6 +49,7 @@ dependencies {
     compile project(":ext:tencent:scm:api-scm")
     compile project(":core:repository:api-repository")
 
+    compile project(":ext:tencent:notify:api-notify-tencent")
     compile "com.zaxxer:HikariCP"
     compile "mysql:mysql-connector-java"
     compile "org.apache.commons:commons-exec"
