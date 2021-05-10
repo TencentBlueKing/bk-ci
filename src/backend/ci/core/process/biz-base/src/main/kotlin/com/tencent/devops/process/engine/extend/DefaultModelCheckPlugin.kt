@@ -86,7 +86,7 @@ open class DefaultModelCheckPlugin constructor(
         if (stages.size > pipelineCommonSettingConfig.maxStageNum) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_COMPONENT_NUM_TOO_LARGE,
-                params = arrayOf(KEY_STAGE, pipelineCommonSettingConfig.maxStageNum.toString())
+                params = arrayOf("", KEY_STAGE, pipelineCommonSettingConfig.maxStageNum.toString())
             )
         }
         val stage = stages.getOrNull(0)
@@ -114,7 +114,11 @@ open class DefaultModelCheckPlugin constructor(
             if (containers.size > stageCommonSettingConfig.maxJobNum) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_COMPONENT_NUM_TOO_LARGE,
-                    params = arrayOf(KEY_JOB, stageCommonSettingConfig.maxJobNum.toString())
+                    params = arrayOf(
+                        s.name ?: "stage_$nowPosition",
+                        KEY_JOB,
+                        stageCommonSettingConfig.maxJobNum.toString()
+                    )
                 )
             }
             if (containers.isEmpty()) {
@@ -174,7 +178,7 @@ open class DefaultModelCheckPlugin constructor(
             if (tasks.size > jobCommonSettingConfig.maxTaskNum) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_COMPONENT_NUM_TOO_LARGE,
-                    params = arrayOf(KEY_TASK, jobCommonSettingConfig.maxTaskNum.toString())
+                    params = arrayOf(c.name, KEY_TASK, jobCommonSettingConfig.maxTaskNum.toString())
                 )
             }
             val cCnt = containerCnt.computeIfPresent(c.getClassType()) { _, oldValue -> oldValue + 1 }

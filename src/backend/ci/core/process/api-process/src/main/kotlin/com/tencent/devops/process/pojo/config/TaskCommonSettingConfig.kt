@@ -39,18 +39,24 @@ class TaskCommonSettingConfig {
     @Value("\${pipeline.setting.common.stage.job.task.maxOutputNum:50}")
     val maxOutputNum: Int = 50
 
-    @Value("\${pipeline.setting.common.stage.job.task.inputComponent.input:1024}")
+    @Value("\${pipeline.setting.common.stage.job.task.inputComponent.input.size:1024}")
     val maxInputComponentSize: Int = 1024
 
-    @Value("\${pipeline.setting.common.stage.job.task.inputComponent.textarea:4096}")
+    @Value("\${pipeline.setting.common.stage.job.task.inputComponent.textarea.size:4096}")
     val maxTextareaComponentSize: Int = 4096
 
-    @Value("\${pipeline.setting.common.stage.job.task.inputComponent.codeEditor:16384}")
+    @Value("\${pipeline.setting.common.stage.job.task.inputComponent.codeEditor.size:16384}")
     val maxCodeEditorComponentSize: Int = 16384
 
-    @Value("\${pipeline.setting.common.stage.job.task.inputComponent.default:1024}")
+    @Value("\${pipeline.setting.common.stage.job.task.inputComponent.default.size:1024}")
     val maxDefaultInputComponentSize: Int = 1024
 
-    @Value("\${pipeline.setting.common.stage.job.task.outputComponent.default:4000}")
+    @Value("\${pipeline.setting.common.stage.job.task.inputComponent.multiple.member:dynamic-parameter}")
+    val multipleInputComponents: String = "dynamic-parameter"
+
+    @Value("\${pipeline.setting.common.stage.job.task.inputComponent.multiple.size:4000}")
+    val maxMultipleInputComponentSize: Int = 4000
+
+    @Value("\${pipeline.setting.common.stage.job.task.outputComponent.default.size:4000}")
     val maxDefaultOutputComponentSize: Int = 4000
 }
