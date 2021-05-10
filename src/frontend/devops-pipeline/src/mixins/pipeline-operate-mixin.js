@@ -520,7 +520,7 @@ export default {
                     theme: 'success'
                 })
                 const { pipeline } = this
-                if(!this.isTemplatePipeline && pipeline.latestVersion && !isNaN(pipeline.latestVersion)) {
+                if (!this.isTemplatePipeline && pipeline.latestVersion && !isNaN(pipeline.latestVersion)) {
                     ++pipeline.latestVersion
                 }
                 this.fetchPipelineList()
