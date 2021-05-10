@@ -38,6 +38,7 @@ import com.tencent.devops.common.ci.OBJECT_KIND_TAG_PUSH
 import com.tencent.devops.common.ci.image.BuildType
 import com.tencent.devops.common.ci.image.Credential
 import com.tencent.devops.common.ci.image.Pool
+import com.tencent.devops.common.ci.image.PoolType
 import com.tencent.devops.common.ci.task.DockerRunDevCloudTask
 import com.tencent.devops.common.ci.task.GitCiCodeRepoInput
 import com.tencent.devops.common.ci.task.GitCiCodeRepoTask
@@ -47,6 +48,7 @@ import com.tencent.devops.common.ci.v2.Job
 import com.tencent.devops.common.ci.v2.JobRunsOnType
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
+import com.tencent.devops.common.ci.yaml.ResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
@@ -74,9 +76,15 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.pipeline.type.DispatchType
+import com.tencent.devops.common.pipeline.type.agent.AgentType
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.gitci.GitCIDispatchType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.environment.api.thirdPartyAgent.ServicePreBuildAgentResource
+import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
 import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.gitci.dao.GitCIServicesConfDao
 import com.tencent.devops.gitci.dao.GitCISettingDao
@@ -223,15 +231,10 @@ class TriggerBuildService @Autowired constructor(
     ): Stage {
         val containerList = mutableListOf<Container>()
         stage.jobs.forEachIndexed { jobIndex, job ->
-            var elementList = mutableListOf<Element>()
-
+            val elementList = makeElementList(job, gitProjectConf, event.userId)
             if (job.runsOn[0] == JobRunsOnType.DOCKER_ON_VM.type) {
-                // 构建环境容器每个job的第一个插件都是拉代码
-                elementList.add(createGitCodeElement(event, gitProjectConf))
-                elementList = makeElementList(job, gitProjectConf, event.userId)
                 addVmBuildContainer(job, elementList, containerList, jobIndex)
             } else {
-                elementList = makeElementList(job, gitProjectConf, event.userId)
                 addNormalContainer(job, elementList, containerList, jobIndex)
             }
         }
@@ -290,6 +293,29 @@ class TriggerBuildService @Autowired constructor(
                 }
             }
 
+/*        val listPreAgentResult =
+            client.get(ServicePreBuildAgentResource::class).listPreBuildAgent(userId, getUserProjectId(userId), os)
+        if (listPreAgentResult.isNotOk()) {
+            logger.error("list prebuild agent failed")
+            throw OperationException("list prebuild agent failed")
+        }
+        val preAgents = listPreAgentResult.data!!
+
+        val dispatchType = getDispatchType(job, startUpReq, agentInfo)
+
+        val vmBaseOS = if (vmType == ResourceType.REMOTE) {
+            when (dispatchType) {
+                is ThirdPartyAgentIDDispatchType -> {
+                    job.job.pool?.os ?: VMBaseOS.LINUX
+                }
+                is ThirdPartyAgentEnvDispatchType -> {
+                    job.job.pool?.os ?: VMBaseOS.LINUX
+                }
+                is MacOSDispatchType -> VMBaseOS.MACOS
+                else -> VMBaseOS.LINUX
+            }
+        } else VMBaseOS.valueOf(agentInfo.os)*/
+
         val vmContainer = VMBuildContainer(
             id = job.id,
             name = "Job_${jobIndex + 1} ${job.name ?: ""}",
@@ -321,6 +347,29 @@ class TriggerBuildService @Autowired constructor(
             }
         )
         containerList.add(vmContainer)
+    }
+
+    fun getDispatchType(job: com.tencent.devops.common.ci.yaml.Job, agentInfo: ThirdPartyAgentStaticInfo): DispatchType {
+        return when (job.job.resourceType) {
+            ResourceType.LOCAL, null -> {
+                ThirdPartyAgentIDDispatchType(
+                    displayName = agentInfo.agentId,
+                    workspace = "",
+                    agentType = AgentType.ID
+                )
+            }
+
+            ResourceType.REMOTE -> {
+                with(job.job.pool) {
+                    if (this == null) {
+                        logger.error("getDispatchType , remote , pool is null")
+                        throw OperationException("当 resourceType = REMOTE, pool参数不能为空")
+                    }
+
+                    (this.type ?: PoolType.DockerOnVm).toDispatchType(this)
+                }
+            }
+        }
     }
 
     private fun addNormalContainer(
