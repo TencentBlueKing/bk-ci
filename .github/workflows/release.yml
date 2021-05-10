@@ -81,7 +81,8 @@ jobs:
       - name: Gradle Build Backend Service
         working-directory: src/backend/ci
         run: |
-          ./gradlew clean test build :core:worker:worker-agent:shadowJar -DmavenRepoUrl="https://maven.aliyun.com/nexus/content/groups/public/"
+          ./gradlew clean test build :core:worker:worker-agent:shadowJar \
+        -DmavenRepoUrl="https://maven.aliyun.com/nexus/content/groups/public/"
         ls -al release
 
       - name: Create artifact - Step1:init
