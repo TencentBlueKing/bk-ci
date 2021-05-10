@@ -25,19 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.utils
+package com.tencent.devops.process.engine.service.code.filter
 
-import java.nio.charset.Charset
-import java.util.Base64
+import com.tencent.devops.scm.utils.code.git.GitUtils
 
-object StringUtils {
-    fun decodeAuth(token: String): Pair<String, String> {
-        val str = if (token.contains("Basic ")) {
-            token.substringAfter("Basic ")
-        } else {
-            token
-        }
-        val decodeStr = String(Base64.getDecoder().decode(str), Charset.forName("UTF-8"))
-        return Pair(decodeStr.substringBefore(":"), decodeStr.substringAfter(":"))
+class UrlFilter(
+    private val pipelineId: String,
+    private val triggerOnUrl: String,
+    private val repositoryUrl: String
+) : WebhookFilter {
+
+    override fun doFilter(response: WebhookFilterResponse): Boolean {
+        val triggerRepository = GitUtils.getDomainAndRepoName(triggerOnUrl)
+        val repository = GitUtils.getDomainAndRepoName(repositoryUrl)
+
+        return triggerRepository.first == repository.first && triggerRepository.second == repository.second
     }
 }

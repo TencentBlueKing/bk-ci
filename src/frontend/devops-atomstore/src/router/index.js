@@ -34,7 +34,9 @@ const manage = () => import(/* webpackChunkName: 'manage' */ '@/views/manage/ind
 const detail = () => import(/* webpackChunkName: 'detail' */ '@/views/manage/detail/index.vue') // 研发商店管理页面
 const show = () => import(/* webpackChunkName: 'detail' */ '@/views/manage/detail/show.vue') // 研发商店管理页面
 const edit = () => import(/* webpackChunkName: 'detail' */ '@/views/manage/detail/edit.vue') // 研发商店管理页面
-const overView = () => import(/* webpackChunkName: 'overView' */ '@/views/manage/over-view.vue') // 研发商店管理页面
+const overView = () => import(/* webpackChunkName: 'overView' */ '@/views/manage/over-view/index.vue') // 研发商店管理页面
+const statisticData = () => import(/* webpackChunkName: 'overView' */ '@/views/manage/over-view/statistic-data.vue') // 研发商店管理页面
+const statisticPipeline = () => import(/* webpackChunkName: 'overView' */ '@/views/manage/over-view/statistic-pipeline.vue') // 研发商店管理页面
 const approval = () => import(/* webpackChunkName: 'approval' */ '@/views/manage/approval.vue') // 研发商店管理页面
 const setting = () => import(/* webpackChunkName: 'setting' */ '@/views/manage/setting/index.vue') // 研发商店管理页面
 const memberSetting = () => import(/* webpackChunkName: 'setting' */ '@/views/manage/setting/member-setting.vue') // 研发商店管理页面
@@ -175,7 +177,19 @@ const routes = [
                     {
                         path: 'overview',
                         name: 'overView',
-                        component: overView
+                        component: overView,
+                        children: [
+                            {
+                                path: 'statisticData',
+                                name: 'statisticData',
+                                component: statisticData
+                            },
+                            {
+                                path: 'statisticPipeline',
+                                name: 'statisticPipeline',
+                                component: statisticPipeline
+                            }
+                        ]
                     },
                     {
                         path: 'approval',

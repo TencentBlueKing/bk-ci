@@ -54,6 +54,9 @@ data class Model(
     @ApiModelProperty("模板ID", required = false)
     var templateId: String? = null
 ) {
+    @ApiModelProperty("提交时流水线最新版本号", required = false)
+    var latestVersion: Int = 0
+
     /**
      * 删除相关原子
      */

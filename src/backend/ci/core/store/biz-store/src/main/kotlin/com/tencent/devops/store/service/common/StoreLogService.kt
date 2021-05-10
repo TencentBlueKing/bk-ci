@@ -43,8 +43,7 @@ interface StoreLogService {
         projectCode: String,
         pipelineId: String,
         buildId: String,
-        isAnalysis: Boolean?,
-        queryKeywords: String?,
+        debug: Boolean?,
         tag: String?,
         executeCount: Int?
     ): Result<QueryLogs?>
@@ -56,8 +55,7 @@ interface StoreLogService {
         pipelineId: String,
         buildId: String,
         start: Long,
-        isAnalysis: Boolean?,
-        queryKeywords: String?,
+        debug: Boolean?,
         tag: String?,
         executeCount: Int?
     ): Result<QueryLogs?>
@@ -68,6 +66,7 @@ interface StoreLogService {
         projectCode: String,
         pipelineId: String,
         buildId: String,
+        debug: Boolean?,
         num: Int?,
         fromStart: Boolean?,
         start: Long,

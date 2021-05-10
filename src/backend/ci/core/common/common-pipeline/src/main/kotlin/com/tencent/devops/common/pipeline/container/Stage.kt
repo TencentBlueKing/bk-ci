@@ -53,6 +53,10 @@ data class Stage(
     val customBuildEnv: Map<String, String>? = null,
     @ApiModelProperty("是否启用容器失败快速终止阶段", required = false)
     val fastKill: Boolean? = false,
+    @ApiModelProperty("标识是否为FinallyStage，每个Model只能包含一个FinallyStage，并且处于最后位置", required = false)
+    val finally: Boolean = false,
+    @ApiModelProperty("当前Stage是否能重试", required = false)
+    var canRetry: Boolean? = false,
     @ApiModelProperty("流程控制选项", required = true)
     var stageControlOption: StageControlOption? = null // 为了兼容旧数据，所以定义为可空以及var
 )

@@ -210,6 +210,7 @@ export default {
         }
     },
     hasBuildNo: state => stages => stages[0].containers[0].buildNo,
+    hasFinallyStage: state => state.pipeline.stages[state.pipeline.stages.length - 1].finally === true,
     userParams: state => {
         return state.pipeline ? state.pipeline.stages[0].containers[0].params : []
     },

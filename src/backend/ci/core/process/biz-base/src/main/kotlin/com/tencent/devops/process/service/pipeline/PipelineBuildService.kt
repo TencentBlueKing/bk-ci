@@ -387,7 +387,8 @@ class PipelineBuildService(
                         elementItemList = elementItemList,
                         originalElementList = originalElementList,
                         finalElementList = finalElementList,
-                        startValues = startValues
+                        startValues = startValues,
+                        finallyStage = stage.finally
                     )
                 }
                 container.elements = finalElementList

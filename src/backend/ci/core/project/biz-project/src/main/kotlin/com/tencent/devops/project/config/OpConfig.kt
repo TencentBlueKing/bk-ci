@@ -30,7 +30,6 @@ package com.tencent.devops.project.config
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.gray.MacOSGray
-import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectLabelRelDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
@@ -55,7 +54,6 @@ class OpConfig {
         @Autowired projectDispatcher: ProjectDispatcher,
         @Autowired redisOperation: RedisOperation,
         @Autowired gray: Gray,
-        @Autowired repoGray: RepoGray,
         @Autowired macosGray: MacOSGray
     ) = DefaultOpProjectServiceImpl(
         dslContext = dslContext,
@@ -64,7 +62,6 @@ class OpConfig {
         projectDispatcher = projectDispatcher,
         redisOperation = redisOperation,
         gray = gray,
-        repoGray = repoGray,
         macosGray = macosGray
     )
 }

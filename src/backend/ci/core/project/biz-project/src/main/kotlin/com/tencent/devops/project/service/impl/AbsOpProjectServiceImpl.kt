@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.gray.MacOSGray
-import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.ProjectInfoResponse
@@ -62,7 +61,6 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
     private val projectLabelRelDao: ProjectLabelRelDao,
     private val redisOperation: RedisOperation,
     private val gray: Gray,
-    private val repoGray: RepoGray,
     private val macosGray: MacOSGray,
     private val projectDispatcher: ProjectDispatcher
 ) : OpProjectService {
@@ -78,9 +76,11 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
         for (item in projectCodeList) {
             if (1 == operateFlag) {
                 gray.addGrayProject(item, redisOperation) // 添加项目为灰度项目
+                setGrayExt(projectCodeList, operateFlag)
 //                redisOperation.addSetValue(gray.getGrayRedisKey(), item) // 添加项目为灰度项目
             } else if (2 == operateFlag) {
                 gray.removeGrayProject(item, redisOperation) // 取消项目为灰度项目
+                setGrayExt(projectCodeList, operateFlag)
 //                redisOperation.removeSetMember(gray.getGrayRedisKey(), item) // 取消项目为灰度项目
             }
         }
@@ -95,38 +95,14 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
         for (item in projectCodeList) {
             if (1 == operateFlag) {
                 gray.addCodeCCGrayProject(item, redisOperation) // 添加项目为灰度项目
+                setGrayExt(projectCodeList, operateFlag)
             } else if (2 == operateFlag) {
                 gray.removeCodeCCGrayProject(item, redisOperation) // 取消项目为灰度项目
+                setGrayExt(projectCodeList, operateFlag)
             }
         }
         val projectCodeSet = grayProjectSet()
         logger.info("the set projectSet is: $projectCodeSet")
-        return true
-    }
-
-    override fun setRepoGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean {
-        logger.info("Set bkrepo gray project:the projectCodeList is: $projectCodeList,operateFlag is:$operateFlag")
-        for (item in projectCodeList) {
-            if (1 == operateFlag) {
-                repoGray.addGrayProject(item, redisOperation)
-//                redisOperation.addSetValue(repoGray.getRepoGrayRedisKey(), item)
-            } else if (2 == operateFlag) {
-                repoGray.removeGrayProject(item, redisOperation)
-//                redisOperation.removeSetMember(repoGray.getRepoGrayRedisKey(), item)
-            }
-        }
-        return true
-    }
-
-    override fun setRepoNotGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean {
-        logger.info("setRepoNotGrayProject, projectCodeList: $projectCodeList, operateFlag: $operateFlag")
-        for (item in projectCodeList) {
-            if (1 == operateFlag) {
-                repoGray.addNotGrayProject(item, redisOperation)
-            } else if (2 == operateFlag) {
-                repoGray.removeNotGrayProject(item, redisOperation)
-            }
-        }
         return true
     }
 
@@ -411,7 +387,7 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
 
     private fun macosGrayProjectSet() = macosGray.grayProjectSet(redisOperation)
 
-    private fun repoGrayProjectSet() = repoGray.grayProjectSet(redisOperation)
+    private fun repoGrayProjectSet() = setOf<String>()
 
     private fun getProjectInfoResponse(projectData: TProjectRecord, grayProjectSet: Set<String>): ProjectInfoResponse {
         return ProjectInfoResponse(
@@ -489,6 +465,8 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             pipelineLimit = projectData.pipelineLimit
         )
     }
+
+    abstract fun setGrayExt(projectCodeList: List<String>, operateFlag: Int)
 
     companion object {
         val logger = LoggerFactory.getLogger(this::class.java)!!

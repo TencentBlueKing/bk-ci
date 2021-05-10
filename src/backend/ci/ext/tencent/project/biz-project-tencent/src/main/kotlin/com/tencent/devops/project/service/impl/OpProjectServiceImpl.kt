@@ -36,7 +36,6 @@ import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.gray.MacOSGray
-import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
 import com.tencent.devops.project.constant.ProjectMessageCode
@@ -46,15 +45,18 @@ import com.tencent.devops.project.dao.ProjectLocalDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.service.ProjectPaasCCService
+import com.tencent.devops.project.service.ProjectTagService
 import com.tencent.devops.project.service.tof.TOFService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 import org.springframework.util.CollectionUtils
@@ -71,22 +73,27 @@ class OpProjectServiceImpl @Autowired constructor(
     private val paasCCService: ProjectPaasCCService,
     private val bkAuthProjectApi: AuthProjectApi,
     private val bsAuthTokenApi: AuthTokenApi,
-    repoGray: RepoGray,
     macosGray: MacOSGray,
     private val tofService: TOFService,
-    private val bsPipelineAuthServiceCode: AuthServiceCode
+    private val bsPipelineAuthServiceCode: AuthServiceCode,
+    private val projectTagService: ProjectTagService
 ) : AbsOpProjectServiceImpl(
     dslContext,
     projectDao,
     projectLabelRelDao,
     redisOperation,
     gray,
-    repoGray,
     macosGray,
     projectDispatcher
 ) {
 
     private final val redisProjectKey = "BK:PROJECT:INFO:"
+
+    @Value("\${prod.tag:#{null}}")
+    private val prodTag: String? = null
+
+    @Value("\${gray.tag:#{null}}")
+    private val grayTag: String? = null
 
     override fun updateProjectFromOp(
         userId: String,
@@ -298,5 +305,37 @@ class OpProjectServiceImpl @Autowired constructor(
         logger.warn("syn fail list: $failList")
         logger.info("syn project time: ${endTime - startTime}, syn project count: ${synProject.size} ")
         return Result(synProject)
+    }
+
+    override fun setGrayExt(projectCodeList: List<String>, operateFlag: Int) {
+        val routerTag = when (operateFlag) {
+            grayLable -> {
+                grayTag
+            }
+            prodLable -> {
+                prodTag
+            }
+            else -> {
+                null
+            }
+        }
+
+        if (routerTag.isNullOrEmpty()) {
+            return
+        }
+        val projectTagUpdateDTO = ProjectTagUpdateDTO(
+            routerTag = routerTag!!,
+            bgId = null,
+            deptId = null,
+            centerId = null,
+            projectCodeList = projectCodeList,
+            channel = null
+        )
+        projectTagService.updateTagByProject(projectTagUpdateDTO)
+    }
+
+    companion object {
+        final const val grayLable = 1
+        final const val prodLable = 2
     }
 }

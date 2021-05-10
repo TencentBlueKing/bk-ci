@@ -63,12 +63,13 @@ class BlueShieldWebSocket {
             case 'NAV':
                 this.handleNotify(data)
                 break
-            case 'IFRAME':
+            case 'IFRAME': {
                 if (!location.href.includes(page)) return
                 const iframe = document.getElementById('iframe-box')
                 const iframeWindow = iframe.contentWindow
                 iframeWindow.postMessage(data, '*')
                 break
+            }
             case 'AMD':
                 if (location.href.includes(page)) window.postMessage(data)
                 break
@@ -104,12 +105,14 @@ class BlueShieldWebSocket {
         const projectId = cookie.get(X_DEVOPS_PROJECT_ID)
         const data = JSON.stringify({ sessionId: this.uuid, userId: this.userName, page: router.path, showProjectList, projectId })
 
-        if (hasWebSocket) setTimeout(() => {
-            this.ensureSendMessage(() => {
-                this.stompClient.send('/app/changePage', {}, data)
-                this.hasConnect = true
-            })
-        }, 5)
+        if (hasWebSocket) {
+            setTimeout(() => {
+                this.ensureSendMessage(() => {
+                    this.stompClient.send('/app/changePage', {}, data)
+                    this.hasConnect = true
+                })
+            }, 5)
+        }
     }
 
     loginOut (from) {

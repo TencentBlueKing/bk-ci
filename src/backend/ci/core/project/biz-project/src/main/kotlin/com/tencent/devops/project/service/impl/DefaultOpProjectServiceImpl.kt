@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.gray.MacOSGray
-import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectLabelRelDao
@@ -55,7 +54,6 @@ class DefaultOpProjectServiceImpl @Autowired constructor(
     private val projectDispatcher: ProjectDispatcher,
     private val redisOperation: RedisOperation,
     gray: Gray,
-    repoGray: RepoGray,
     macosGray: MacOSGray
 ) : AbsOpProjectServiceImpl(
     dslContext,
@@ -63,7 +61,6 @@ class DefaultOpProjectServiceImpl @Autowired constructor(
     projectLabelRelDao,
     redisOperation,
     gray,
-    repoGray,
     macosGray,
     projectDispatcher
 ) {
@@ -156,5 +153,9 @@ class DefaultOpProjectServiceImpl @Autowired constructor(
     override fun synProjectInit(isRefresh: Boolean?): Result<List<String>> {
         logger.info("[synProjectInit]| isRefresh=$isRefresh| do nothing")
         return Result(emptyList())
+    }
+
+    override fun setGrayExt(projectCodeList: List<String>, operateFlag: Int) {
+        return
     }
 }

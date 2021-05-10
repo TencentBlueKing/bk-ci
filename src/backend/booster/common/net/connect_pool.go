@@ -178,7 +178,7 @@ func (cb *circuitBreaker) check(wg *sync.WaitGroup) {
 
 func (cb *circuitBreaker) doSuccess() {
 	cb.failureTime = 0
-	cb.successTime += 1
+	cb.successTime++
 	if cb.status == cbClose && cb.successTime >= cb.breakerTryTimes {
 		cb.status = cbOpen
 	}
@@ -187,7 +187,7 @@ func (cb *circuitBreaker) doSuccess() {
 
 func (cb *circuitBreaker) doFailure() {
 	cb.successTime = 0
-	cb.failureTime += 1
+	cb.failureTime++
 	if cb.status == cbOpen && cb.failureTime >= cb.breakerFailTimes {
 		cb.status = cbClose
 	}
