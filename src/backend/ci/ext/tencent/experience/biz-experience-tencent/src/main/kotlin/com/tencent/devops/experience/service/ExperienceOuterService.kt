@@ -28,13 +28,33 @@ class ExperienceOuterService @Autowired constructor(
     private val redisOperation: RedisOperation
 ) {
     fun outerLogin(realIp: String, params: OuterLoginParam): String {
-        // IP 限制频率
-        if (getIpLimit(realIp)) {
-            logger.warn("over limit , ip : {}", realIp)
+        // IP黑名单
+        if (isBlackIp(realIp)) {
+            logger.warn("it is black ip : {}", realIp)
             throw ErrorCodeException(
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
                 errorCode = ExperienceMessageCode.OUTER_LOGIN_ERROR,
                 defaultMessage = "登录错误"
+            )
+        }
+
+        // IP 限制频率
+        if (isIpLimit(realIp)) {
+            logger.warn("over limit , ip : {}", realIp)
+            throw ErrorCodeException(
+                statusCode = Response.Status.BAD_REQUEST.statusCode,
+                errorCode = ExperienceMessageCode.OUTER_LOGIN_ERROR,
+                defaultMessage = "登录IP频繁,请稍后重试"
+            )
+        }
+
+        // 账号频率限制
+        if (isAccountLimit(params.username)) {
+            logger.warn("over limit , account : {}", params.username)
+            throw ErrorCodeException(
+                statusCode = Response.Status.BAD_REQUEST.statusCode,
+                errorCode = ExperienceMessageCode.OUTER_LOGIN_ERROR,
+                defaultMessage = "登录账号频繁,请稍后重试"
             )
         }
 
@@ -121,6 +141,10 @@ class ExperienceOuterService @Autowired constructor(
         ).results.map { it.username }
     }
 
+    private fun isBlackIp(realIp: String): Boolean {
+        return redisOperation.isMember("e:out:l:black:ip", realIp)
+    }
+
     private fun checkNormal(token: String, profileVO: OuterProfileVO) {
         val checkNow = redisOperation.execute(RedisCallback {
             it.stringCommands().set(
@@ -143,13 +167,20 @@ class ExperienceOuterService @Autowired constructor(
         }
     }
 
-
-    private fun getIpLimit(realIp: String): Boolean {
+    private fun isIpLimit(realIp: String): Boolean {
         val nowMinute = LocalDateTime.now().plusMinutes(1).withSecond(0)
         val limitKey = "e:out:l:ip:$realIp:${df.format(nowMinute)}"
         val limit = redisOperation.increment(limitKey, 1)
         redisOperation.expire(limitKey, 60)
-        return limit ?: 0 > 5
+        return limit ?: 0 > 10 // 60s内只能登录10次
+    }
+
+    private fun isAccountLimit(username: String): Boolean {
+        val nowMinute = LocalDateTime.now().plusMinutes(1).withSecond(0)
+        val limitKey = "e:out:l:ip:$username:${df.format(nowMinute)}"
+        val limit = redisOperation.increment(limitKey, 1)
+        redisOperation.expire(limitKey, 60)
+        return limit ?: 0 > 5 // 60s内只能登录5次
     }
 
     private val loginApi = V1Api()
