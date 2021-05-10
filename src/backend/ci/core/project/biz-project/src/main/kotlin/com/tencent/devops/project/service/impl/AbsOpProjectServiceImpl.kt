@@ -76,9 +76,11 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
         for (item in projectCodeList) {
             if (1 == operateFlag) {
                 gray.addGrayProject(item, redisOperation) // 添加项目为灰度项目
+                setGrayExt(projectCodeList, operateFlag)
 //                redisOperation.addSetValue(gray.getGrayRedisKey(), item) // 添加项目为灰度项目
             } else if (2 == operateFlag) {
                 gray.removeGrayProject(item, redisOperation) // 取消项目为灰度项目
+                setGrayExt(projectCodeList, operateFlag)
 //                redisOperation.removeSetMember(gray.getGrayRedisKey(), item) // 取消项目为灰度项目
             }
         }
@@ -93,8 +95,10 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
         for (item in projectCodeList) {
             if (1 == operateFlag) {
                 gray.addCodeCCGrayProject(item, redisOperation) // 添加项目为灰度项目
+                setGrayExt(projectCodeList, operateFlag)
             } else if (2 == operateFlag) {
                 gray.removeCodeCCGrayProject(item, redisOperation) // 取消项目为灰度项目
+                setGrayExt(projectCodeList, operateFlag)
             }
         }
         val projectCodeSet = grayProjectSet()
