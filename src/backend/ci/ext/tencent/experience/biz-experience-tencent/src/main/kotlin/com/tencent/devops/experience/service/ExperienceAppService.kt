@@ -59,7 +59,6 @@ import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
-import org.jooq.Result
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.concurrent.Executors
@@ -86,95 +85,13 @@ class ExperienceAppService(
         groupByBundleId: Boolean,
         platform: Int? = null
     ): Pagination<AppExperience> {
-        val expireTime = DateUtil.today()
-
-        var recordIds = experienceBaseService.getRecordIdsByUserId(userId, GroupIdTypeEnum.JUST_PRIVATE)
-
-        if (groupByBundleId) {
-            recordIds = experienceDao.listIdsGroupByBundleId(
-                dslContext,
-                recordIds,
-                expireTime,
-                true
-            ).map { it.value1() }.toMutableSet()
-        }
-
-        val platformStr = PlatformEnum.of(platform)?.name
-
-        val records = experienceDao.listByIds(
-            dslContext,
-            recordIds,
-            platformStr,
-            expireTime,
-            true,
-            offset,
-            limit
+        return experienceBaseService.list(
+            userId = userId,
+            offset = offset,
+            limit = limit,
+            groupByBundleId = groupByBundleId,
+            platform = platform
         )
-
-        // 同步图片
-        syncIcon(records)
-
-        val lastDownloadMap = experienceBaseService.getLastDownloadMap(userId)
-        val now = LocalDateTime.now()
-
-        val result = records.map {
-            AppExperience(
-                experienceHashId = HashUtil.encodeLongId(it.id),
-                platform = PlatformEnum.valueOf(it.platform),
-                source = Source.valueOf(it.source),
-                logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl),
-                name = it.projectId,
-                version = it.version,
-                bundleIdentifier = it.bundleIdentifier,
-                experienceName = it.experienceName ?: it.projectId,
-                versionTitle = it.versionTitle ?: it.name,
-                categoryId = if (it.category == null || it.category < 0) ProductCategoryEnum.LIFE.id else it.category,
-                productOwner = objectMapper.readValue(it.productOwner),
-                size = it.size,
-                createDate = it.createTime.timestampmilli(),
-                appScheme = it.scheme,
-                lastDownloadHashId = lastDownloadMap[it.projectId + it.bundleIdentifier + it.platform]
-                    ?.let { l -> HashUtil.encodeLongId(l) } ?: "",
-                expired = now.isAfter(it.endDate)
-            )
-        }
-
-        val hasNext = if (result.size < limit) {
-            false
-        } else {
-            experienceDao.countByIds(dslContext, recordIds, platformStr, expireTime, true) > offset + limit
-        }
-
-        return Pagination(hasNext, result)
-    }
-
-    private fun syncIcon(records: Result<TExperienceRecord>) {
-        // 同步图片
-        val projectToIcon = mutableMapOf<String, String>()
-        val unSyncIconProjectIds = mutableSetOf<String>()
-        records.forEach {
-            if (StringUtils.isBlank(it.logoUrl)) {
-                unSyncIconProjectIds.add(it.projectId)
-            } else {
-                projectToIcon[it.projectId] = it.logoUrl
-            }
-        }
-        if (unSyncIconProjectIds.isNotEmpty()) {
-            val projectList =
-                client.get(ServiceProjectResource::class).listByProjectCode(unSyncIconProjectIds).data ?: listOf()
-            projectList.forEach {
-                projectToIcon[it.projectCode] = it.logoAddr ?: ""
-            }
-            unSyncIconProjectIds.forEach {
-                experienceDao.updateIconByProjectIds(dslContext, it, projectToIcon[it] ?: "")
-            }
-
-            records.forEach {
-                if (StringUtils.isBlank(it.logoUrl)) {
-                    it.logoUrl = projectToIcon[it.projectId] ?: ""
-                }
-            }
-        }
     }
 
     @SuppressWarnings("ComplexMethod")
