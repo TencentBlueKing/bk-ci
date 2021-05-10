@@ -11,3 +11,4 @@ require (
 )
 
 replace github.com/influxdata/telegraf => github.com/ci-plugins/telegraf v1.99.0
+replace golang.zx2c4.com/wireguard v0.0.20200121 => golang.zx2c4.com/wireguard v0.0.0-20200121152719-05b03c675090
