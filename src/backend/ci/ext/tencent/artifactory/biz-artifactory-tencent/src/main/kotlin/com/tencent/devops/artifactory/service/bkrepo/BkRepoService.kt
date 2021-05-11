@@ -118,7 +118,8 @@ class BkRepoService @Autowired constructor(
         artifactoryType: ArtifactoryType,
         path: String
     ): FolderSize {
-        logger.info("folderSize, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, path: $path")
+        logger.info("folderSize, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType," +
+            " path: $path")
         val sizeInfo = bkRepoClient.getFileSize(userId, projectId, RepoUtils.getRepoByType(artifactoryType), path)
         return FolderSize(sizeInfo.size)
     }
@@ -129,7 +130,8 @@ class BkRepoService @Autowired constructor(
         tag: String,
         properties: Map<String, String>
     ) {
-        logger.info("setDockerProperties, projectId: $projectId, imageName: $imageName, String: $String, properties: $properties")
+        logger.info("setDockerProperties, projectId: $projectId, imageName: $imageName, String: $String," +
+            " properties: $properties")
         throw OperationException("not supported")
     }
 
@@ -139,7 +141,8 @@ class BkRepoService @Autowired constructor(
         argPath: String,
         properties: Map<String, String>
     ) {
-        logger.info("setProperties, projectId: $projectId, artifactoryType: $artifactoryType, argPath: $argPath, properties: $properties")
+        logger.info("setProperties, projectId: $projectId, artifactoryType: $artifactoryType, argPath: $argPath," +
+            " properties: $properties")
         if (properties.isEmpty()) {
             logger.info("property empty")
             return
@@ -215,7 +218,8 @@ class BkRepoService @Autowired constructor(
                 targetBuildId = (targetBuild ?: throw BadRequestException("构建不存在($crossBuildNo)")).id
             }
         }
-        logger.info("targetProjectId: $targetProjectId, targetPipelineId: $targetPipelineId, targetBuildId: $targetBuildId")
+        logger.info("targetProjectId: $targetProjectId, targetPipelineId: $targetPipelineId," +
+            " targetBuildId: $targetBuildId")
 
         val regex = Pattern.compile(",|;")
         val pathArray = regex.split(argPath)
@@ -224,11 +228,9 @@ class BkRepoService @Autowired constructor(
         pathArray.forEach { path ->
             val absPath = "/${JFrogUtil.normalize(path).removePrefix("/")}"
             val filePath = if (artifactoryType == ArtifactoryType.PIPELINE) {
-                "/$targetPipelineId/$targetBuildId/${
-                    JFrogUtil.getParentFolder(absPath).removePrefix("/")
-                }" // /$projectId/$pipelineId/$buildId/path/
+                "/$targetPipelineId/$targetBuildId/${JFrogUtil.getParentFolder(absPath).removePrefix("/")}"
             } else {
-                "/${JFrogUtil.getParentFolder(absPath).removePrefix("/")}" // /path/
+                "/${JFrogUtil.getParentFolder(absPath).removePrefix("/")}"
             }
             val fileName = JFrogUtil.getFileName(path) // *.txt
 
@@ -265,7 +267,8 @@ class BkRepoService @Autowired constructor(
         pipelineId: String,
         buildId: String
     ): List<AppFileInfo> {
-        logger.info("getBuildFileList, userId: $userId, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId")
+        logger.info("getBuildFileList, userId: $userId, projectId: $projectId, pipelineId: $pipelineId," +
+            " buildId: $buildId")
         pipelineService.validatePermission(
             userId,
             projectId,
@@ -328,7 +331,8 @@ class BkRepoService @Autowired constructor(
                 var bundleIdentifier: String? = null
                 if (it.properties != null) {
                     for (property in it.properties!!) {
-                        if (property.key == ARCHIVE_PROPS_PIPELINE_ID && pipelineCanDownloadList.contains(property.value)) {
+                        if (property.key == ARCHIVE_PROPS_PIPELINE_ID
+                            && pipelineCanDownloadList.contains(property.value)) {
                             canDownload = true
                         }
 
@@ -375,11 +379,13 @@ class BkRepoService @Autowired constructor(
         artifactoryType: ArtifactoryType,
         path: String
     ): FilePipelineInfo {
-        logger.info("getFilePipelineInfo, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, path: $path")
+        logger.info("getFilePipelineInfo, userId: $userId, projectId: $projectId," +
+            " artifactoryType: $artifactoryType, path: $path")
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
         val metadataMap =
             bkRepoClient.listMetadata("", projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
-        if (!metadataMap.containsKey(ARCHIVE_PROPS_PIPELINE_ID) || metadataMap[ARCHIVE_PROPS_PIPELINE_ID].isNullOrBlank()) {
+        if (!metadataMap.containsKey(ARCHIVE_PROPS_PIPELINE_ID)
+            || metadataMap[ARCHIVE_PROPS_PIPELINE_ID].isNullOrBlank()) {
             throw RuntimeException("元数据(pipelineId)不存在")
         }
         val pipelineId = metadataMap[ARCHIVE_PROPS_PIPELINE_ID]
@@ -469,8 +475,10 @@ class BkRepoService @Autowired constructor(
                                 fullPath = it.fullPath,
                                 size = it.size,
                                 folder = it.folder,
-                                modifiedTime = LocalDateTime.parse(it.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME)
-                                    .timestamp(),
+                                modifiedTime = LocalDateTime.parse(
+                                    it.lastModifiedDate,
+                                    DateTimeFormatter.ISO_DATE_TIME
+                                ).timestamp(),
                                 artifactoryType = RepoUtils.getTypeByRepo(it.repoName),
                                 properties = properties,
                                 appVersion = appVersion,
@@ -544,7 +552,8 @@ class BkRepoService @Autowired constructor(
         buildId: String,
         copyToCustomReq: CopyToCustomReq
     ) {
-        logger.info("copyToCustom, userId: $userId, projectId: $projectId, pipelineId: $pipelineId, buildId: $buildId, copyToCustomReq: $copyToCustomReq")
+        logger.info("copyToCustom, userId: $userId, projectId: $projectId, pipelineId: $pipelineId," +
+            " buildId: $buildId, copyToCustomReq: $copyToCustomReq")
         copyToCustomReq.check()
         pipelineService.validatePermission(userId, projectId)
 
@@ -579,7 +588,8 @@ class BkRepoService @Autowired constructor(
         targetProjectId: String,
         targetPath: String
     ): Count {
-        logger.info("acrossProjectCopy, projectId: $projectId, artifactoryType: $artifactoryType, path: $path, targetProjectId: $targetProjectId, targetPath: $targetPath")
+        logger.info("acrossProjectCopy, projectId: $projectId, artifactoryType: $artifactoryType, path: $path," +
+            " targetProjectId: $targetProjectId, targetPath: $targetPath")
         var userId = ""
         val absPath = "/${PathUtils.normalize(path).removePrefix("/")}"
         val pathNamePair = if (absPath.endsWith("/")) {
@@ -626,7 +636,8 @@ class BkRepoService @Autowired constructor(
         fullPath: String,
         ttl: Int
     ): String {
-        logger.info("externalDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, fullPath: $fullPath, ttl: $ttl")
+        logger.info("externalDownloadUrl, userId: $userId, projectId: $projectId," +
+            " artifactoryType: $artifactoryType, fullPath: $fullPath, ttl: $ttl")
         val shareUri = bkRepoClient.createShareUri(
             userId = userId,
             projectId = projectId,
@@ -636,7 +647,8 @@ class BkRepoService @Autowired constructor(
             downloadIps = listOf(),
             timeoutInSeconds = ttl.toLong()
         )
-        return StringUtil.chineseUrlEncode("${HomeHostUtil.getHost(commonConfig.devopsOuterHostGateWay!!)}/bkrepo/api/external/repository$shareUri")
+        return StringUtil.chineseUrlEncode("${HomeHostUtil.getHost(commonConfig.devopsOuterHostGateWay!!)
+        }/bkrepo/api/external/repository$shareUri?download=true")
     }
 
     fun internalDownloadUrl(
@@ -646,7 +658,8 @@ class BkRepoService @Autowired constructor(
         path: String,
         ttl: Int
     ): String {
-        logger.info("internalDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, path: $path, ttl: $ttl")
+        logger.info("internalDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType," +
+            " path: $path, ttl: $ttl")
         val shareUri = bkRepoClient.createShareUri(
             userId = userId,
             projectId = projectId,
@@ -656,7 +669,8 @@ class BkRepoService @Autowired constructor(
             downloadIps = listOf(),
             timeoutInSeconds = ttl.toLong()
         )
-        return "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}/bkrepo/api/external/repository$shareUri"
+        return "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}" +
+            "/bkrepo/api/external/repository$shareUri?download=true"
     }
 
     fun internalTemporaryAccessDownloadUrls(
@@ -667,7 +681,8 @@ class BkRepoService @Autowired constructor(
         ttl: Int,
         permits: Int?
     ): List<String> {
-        logger.info("internalTemporaryAccessDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, pathSet: $pathSet, ttl: $ttl")
+        logger.info("internalTemporaryAccessDownloadUrl, userId: $userId, projectId: $projectId," +
+            " artifactoryType: $artifactoryType, pathSet: $pathSet, ttl: $ttl")
         return bkRepoClient.createTemporaryAccessUrls(
             userId = userId,
             projectId = projectId,
