@@ -849,7 +849,7 @@ class BkRepoClient constructor(
                 throw RuntimeException("create share uri failed: ${responseData.message}")
             }
 
-            return responseData.data!!.map { it.url }
+            return responseData.data!!.map { "${it.url}?download=true" }
         }
     }
 
