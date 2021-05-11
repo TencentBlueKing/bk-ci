@@ -75,4 +75,16 @@ class ExperienceOuterDao {
                 .fetch()
         }
     }
+
+    fun listRecordIdsByOuter(
+        dslContext: DSLContext,
+        outer: String
+    ): Result<Record1<Long>> {
+        return with(TExperienceOuter.T_EXPERIENCE_OUTER) {
+            dslContext.select(RECORD_ID)
+                .from(this)
+                .where(OUTER.eq(outer))
+                .fetch()
+        }
+    }
 }

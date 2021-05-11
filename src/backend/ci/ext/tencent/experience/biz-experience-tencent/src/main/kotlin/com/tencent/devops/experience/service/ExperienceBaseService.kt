@@ -168,7 +168,11 @@ class ExperienceBaseService @Autowired constructor(
             groupIds.add(ExperienceConstant.PUBLIC_GROUP)
         }
         recordIds.addAll(experienceGroupDao.listRecordIdByGroupIds(dslContext, groupIds).map { it.value1() }.toSet())
-        recordIds.addAll(experienceInnerDao.listRecordIdsByUserId(dslContext, userId).map { it.value1() }.toSet())
+        if (isOuter) {
+            recordIds.addAll(experienceOuterDao.listRecordIdsByOuter(dslContext, userId).map { it.value1() }.toSet())
+        } else {
+            recordIds.addAll(experienceInnerDao.listRecordIdsByUserId(dslContext, userId).map { it.value1() }.toSet())
+        }
         return recordIds
     }
 
