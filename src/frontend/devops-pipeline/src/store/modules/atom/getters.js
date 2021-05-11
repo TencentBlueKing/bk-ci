@@ -161,7 +161,7 @@ export default {
             let timerTriggerCount = 0
             let remoteTriggerCount = 0
             
-            if (!/^[\w-{}() +?.:$"]{1,256}$/.test(pipelineSetting.buildNumRule) && pipelineSetting.buildNumRule) {
+            if (pipelineSetting && pipelineSetting.buildNumRule && !/^[\w-{}() +?.:$"]{1,256}$/.test(pipelineSetting.buildNumRule)) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('settings.correctBuildNumber'))
             }
 

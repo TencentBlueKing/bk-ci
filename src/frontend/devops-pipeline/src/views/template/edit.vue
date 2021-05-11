@@ -180,8 +180,9 @@
             },
             savePipeline () {
                 try {
-                    const { checkPipelineInvalid, pipeline } = this
-                    const { inValid, message } = checkPipelineInvalid(pipeline.stages)
+                    const { checkPipelineInvalid, pipeline, pipelineSetting } = this
+                    console.log(this, 'pipelineSetting')
+                    const { inValid, message } = checkPipelineInvalid(pipeline.stages, pipelineSetting)
                     if (inValid) {
                         throw new Error(message)
                     }

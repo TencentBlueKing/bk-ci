@@ -443,6 +443,7 @@ export default {
         },
         async savePipelineAndSetting () {
             const { pipelineSetting, checkPipelineInvalid, pipeline } = this
+            console.log(this, '111')
             const { inValid, message } = checkPipelineInvalid(pipeline.stages, pipelineSetting)
             const { projectId, pipelineId } = this.$route.params
             if (inValid) {
