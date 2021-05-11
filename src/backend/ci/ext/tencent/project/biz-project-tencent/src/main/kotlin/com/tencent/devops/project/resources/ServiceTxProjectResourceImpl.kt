@@ -52,6 +52,7 @@ import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.ProjectTagService
 import com.tencent.devops.project.service.TxProjectPermissionService
 import com.tencent.devops.project.service.iam.ProjectIamV0Service
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 
@@ -66,7 +67,7 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
     private val projectTagService: ProjectTagService
 ) : ServiceTxProjectResource {
 
-    @Value("auto:tag")
+    @Value("\${auto.tag:#{null}}")
     val autoTag: String? = null
 
     override fun addManagerForProject(userId: String, addManagerRequest: AddManagerRequest): Result<Boolean> {
@@ -207,6 +208,7 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
             routerTag == autoTag
         ) {
             channelCode = ProjectChannelCode.AUTO
+            logger.info("create $userId ${projectCreateInfo.englishName} $routerTag")
             ProjectCreateExtInfo(
                 needAuth = false,
                 needValidate = true
@@ -341,5 +343,9 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
             organizationId = organizationId,
             projectId = projectCode
         ))
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(ServiceTxProjectResourceImpl::class.java)
     }
 }
