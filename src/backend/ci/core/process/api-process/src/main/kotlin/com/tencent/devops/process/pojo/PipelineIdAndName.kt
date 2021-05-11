@@ -31,7 +31,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("流水线名称与Id")
-data class PipelineIdAndName (
+data class PipelineIdAndName(
     @ApiModelProperty("流水线Id")
     val pipelineId: String,
     @ApiModelProperty("流水线名称")

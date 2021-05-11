@@ -54,7 +54,7 @@ class UserPipelineInfoResourceImpl @Autowired constructor(
         pipelineInfos.records.map {
             pipelineIdAndName.add(
                 PipelineIdAndName(
-                    pipelineId =  it.pipelineId,
+                    pipelineId = it.pipelineId,
                     pipelineName = it.pipelineName
                 )
             )
