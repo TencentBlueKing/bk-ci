@@ -8,5 +8,7 @@ data class OuterProfileVO(
     @ApiModelProperty("用户名")
     val username: String,
     @ApiModelProperty("头像")
-    val logo: String
+    val logo: String,
+    @ApiModelProperty("邮箱")
+    val email: String
 )

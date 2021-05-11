@@ -79,7 +79,8 @@ class ExperienceOuterService @Autowired constructor(
             // 设置token , 存放信息
             val outerProfileVO = OuterProfileVO(
                 username = profile.username,
-                logo = "https://www.tencent.com/img/index/tencent_logo.png"
+                logo = logo,
+                email = profile.email
             )
             val token = DigestUtils.md5Hex(profile.username + profile.id + System.currentTimeMillis() + secretKey)
             redisOperation.set(redisKey(token), JsonUtil.toJson(outerProfileVO), expireSecs)
@@ -214,5 +215,7 @@ class ExperienceOuterService @Autowired constructor(
         private val df = DateTimeFormatter.ofPattern("HHmmss")
         private const val expireSecs: Long = 30 * 24 * 60 * 60
         private const val domain = "app.devops"
+        private const val logo = "https://bkdevops.qq.com/bkrepo/api/external/generic/bkdevops/app-icon/app-icon/" +
+                "apk/0022123439edd60968def405096e1b88f32f7a23f770f09d43bf3ebda810cc08.png"
     }
 }

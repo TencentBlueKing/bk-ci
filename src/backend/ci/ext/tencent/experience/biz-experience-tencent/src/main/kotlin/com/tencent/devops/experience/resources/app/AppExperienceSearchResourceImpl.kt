@@ -52,6 +52,7 @@ class AppExperienceSearchResourceImpl @Autowired constructor(
         return experienceSearchService.search(userId, platform, experienceName, experiencePublic, organization)
     }
 
+    @AllowOuter
     override fun recommends(userId: String, platform: Int?): Result<List<SearchRecommendVO>> {
         return experienceSearchService.recommends(userId, platform)
     }

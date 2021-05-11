@@ -36,7 +36,8 @@ if x_ckey ~= nil then
             avatars = "https://" .. config.externalHost .. "/avatars/" .. staff_info.EnglishName,
             departmentId = staff_info.DepartmentId,
             staffId = staff_info.StaffId,
-            departmentName = staff_info.DepartmentName
+            departmentName = staff_info.DepartmentName,
+            email = staff_info.EnglishName .. '@tencent.com'
         }
     }
 else
