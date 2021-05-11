@@ -45,7 +45,6 @@ import org.springframework.stereotype.Component
 /**
  * Pipeline专用权限校验接口
  */
-@Component
 class EnvironmentPermissionServiceImpl @Autowired constructor(
     private val authResourceApi: AuthResourceApi,
     private val authPermissionApi: AuthPermissionApi,
