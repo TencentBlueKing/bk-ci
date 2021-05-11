@@ -50,7 +50,8 @@ else
             avatars = outer_profile.data.logo,
             departmentId = 0,
             staffId = 0,
-            departmentName = "outer"
+            departmentName = "outer",
+            email = outer_profile.data.email
         }
     }
 end
