@@ -34,10 +34,12 @@ import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.scm.api.ServiceGitCiResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
 /**
  * Pipeline专用权限校验接口
  */
+@Component
 class GitCIEnvironmentPermissionServiceImpl @Autowired constructor(
     val client: Client
 ) : EnvironmentPermissionService {

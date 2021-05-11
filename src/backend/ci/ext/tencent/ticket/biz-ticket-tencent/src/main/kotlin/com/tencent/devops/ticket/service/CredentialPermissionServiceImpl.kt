@@ -38,7 +38,9 @@ import com.tencent.devops.ticket.dao.CredentialDao
 import com.tencent.devops.ticket.service.CredentialPermissionService.Companion.CredentialResourceType
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
+@Component
 class CredentialPermissionServiceImpl @Autowired constructor(
     private val authResourceApi: AuthResourceApi,
     private val authPermissionApi: AuthPermissionApi,
