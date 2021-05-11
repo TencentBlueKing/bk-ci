@@ -302,7 +302,7 @@ class BkRepoDownloadService @Autowired constructor(
                 downloadIps = listOf(),
                 timeoutInSeconds = (ttl ?: 24 * 3600).toLong()
             )
-            resultList.add("${RegionUtil.getRegionUrl(region)}/bkrepo/api/external/repository$shareUri?download=true")
+            resultList.add("${RegionUtil.getRegionUrl(region)}/bkrepo/api/external/repository$shareUri&download=true")
         }
         return resultList
     }
