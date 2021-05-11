@@ -209,7 +209,7 @@ class ExperienceOuterService @Autowired constructor(
     private val loginApi = V1Api()
     private val profileApi = ProfilesApi()
     private fun redisKey(token: String) = "e:out:l:$token"
-    private fun logo() = "https://${HomeHostUtil.outerServerHost()}/app/download/devops_app.png"
+    private fun logo() = "${HomeHostUtil.outerServerHost()}/app/download/devops_app.png"
 
     companion object {
         private val logger = LoggerFactory.getLogger(ExperienceOuterService::class.java)
