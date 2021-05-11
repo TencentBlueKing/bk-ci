@@ -347,6 +347,10 @@
     }
     .content-row {
         font-size: 14px;
+        max-width: 260px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
         &:first-child {
             padding-top: 25px;
         }

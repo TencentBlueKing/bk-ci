@@ -80,7 +80,7 @@
                         </a>
                         <span v-else>{{ row.buildCount }}</span>
                     </td>
-                    <td>{{ row.feConfig && row.feConfig.content[0].value }}</td>
+                    <td class="latest-build-number" :title="row.feConfig && row.feConfig.content[0].value">{{ row.feConfig && row.feConfig.content[0].value }}</td>
                     <td>{{ calcLatestStartBuildTime(row) }}</td>
                     <td>{{ row.creator }}</td>
                     <td>
@@ -196,5 +196,12 @@
             z-index: 2;
             opacity: 0.6;
         }
+    }
+    .latest-build-number {
+        max-width: 110px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        padding-right: 25px !important;
     }
 </style>
