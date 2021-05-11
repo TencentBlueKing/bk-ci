@@ -68,7 +68,6 @@ import com.tencent.devops.gitci.pojo.git.GitPushEvent
 import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
 import com.tencent.devops.gitci.pojo.v2.V2BuildYaml
 import com.tencent.devops.gitci.service.trigger.RequestTriggerFactory
-import com.tencent.devops.gitci.utils.GitCIWebHookMatcher
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.GitFileInfo
