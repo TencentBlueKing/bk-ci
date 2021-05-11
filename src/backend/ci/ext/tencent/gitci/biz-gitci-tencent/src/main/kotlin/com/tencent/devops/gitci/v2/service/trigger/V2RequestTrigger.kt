@@ -107,7 +107,8 @@ class V2RequestTrigger @Autowired constructor(
             if (!yamlObject.name.isNullOrBlank()) yamlObject.name!! else filePath.removeSuffix(".yml")
 
         if (isMatch(event, yamlObjects)) {
-            logger.info("Matcher is true, display the event, gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}, dispatched pipeline: $gitProjectPipeline")
+            logger.info("Matcher is true, display the event, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
+                "eventId: ${gitRequestEvent.id}, dispatched pipeline: $gitProjectPipeline")
             val gitBuildId = gitRequestEventBuildDao.save(
                 dslContext = dslContext,
                 eventId = gitRequestEvent.id!!,
@@ -217,8 +218,8 @@ class V2RequestTrigger @Autowired constructor(
         val yaml = ScriptYmlUtils.formatYaml(yamlStr)
 
         val preTemplateYamlObject = YamlUtil.getObjectMapper().readValue(yaml, PreTemplateScriptBuildYaml::class.java)
-        // 校验是否符合规范
-        ScriptYmlUtils.checkStage(preTemplateYamlObject)
+        // 检查Yaml语法的格式问题
+        ScriptYmlUtils.checkYaml(preTemplateYamlObject)
         // 替换yaml文件中的模板引用
         val preYamlObject = try {
             YamlTemplate(
@@ -253,30 +254,9 @@ class V2RequestTrigger @Autowired constructor(
             return null
         }
 
-        return YamlObjects(preYaml = preYamlObject, normalYaml = ScriptYmlUtils.normalizeGitCiYaml(preYamlObject))
-    }
-
-    private fun getAllTemplates(
-        isFork: Boolean,
-        gitToken: GitToken,
-        forkGitToken: GitToken?,
-        gitRequestEvent: GitRequestEvent
-    ): Map<String, String?> {
-        val token = if (isFork) {
-            forkGitToken!!
-        } else {
-            gitToken
-        }
-        val templateFileList = scmService.getCIYamlList(token, gitRequestEvent, isFork)
-        val templates = mutableMapOf<String, String?>()
-        templateFileList.forEach { filePath ->
-            templates[filePath.removePrefix("$templateDirectoryName/")] = scmService.getYamlFromGit(
-                gitToken = token,
-                gitRequestEvent = gitRequestEvent,
-                fileName = filePath,
-                isMrEvent = isFork
-            )
-        }
-        return templates
+        return YamlObjects(
+            preYaml = preYamlObject,
+            normalYaml = ScriptYmlUtils.normalizeGitCiYaml(preYamlObject, filePath)
+        )
     }
 }

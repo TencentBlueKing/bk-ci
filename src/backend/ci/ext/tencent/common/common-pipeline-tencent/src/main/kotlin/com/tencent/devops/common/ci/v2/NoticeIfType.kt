@@ -27,23 +27,9 @@
 
 package com.tencent.devops.common.ci.v2
 
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonInclude
-import com.fasterxml.jackson.annotation.JsonProperty
-
-/**
- * model
- */
-@JsonInclude(JsonInclude.Include.NON_NULL)
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class Notices(
-    val type: String,
-    val title: String?,
-    val content: String?,
-    val receivers: Set<String>?,
-    val ccs: Set<String>?,
-    @JsonProperty("if")
-    val ifField: NoticeIfType?,
-    @JsonProperty("chat-id")
-    val chatId: Set<String>?
-)
+enum class NoticeIfType {
+    SUCCESS,
+    FAILURE,
+    CANCELLED,
+    ALWAYS
+}

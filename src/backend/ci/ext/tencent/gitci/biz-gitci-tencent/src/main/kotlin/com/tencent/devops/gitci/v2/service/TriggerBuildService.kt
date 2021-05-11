@@ -119,6 +119,7 @@ import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_TARGET_URL
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_URL
 import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_NAME
 import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_URL
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -644,6 +645,8 @@ class TriggerBuildService @Autowired constructor(
         when (originEvent) {
             is GitPushEvent -> {
                 startParams[BK_CI_REF] = originEvent.ref
+                addContext(yaml, originEvent, startParams, event)
+
 //                startParams[BK_REPO_GIT_WEBHOOK_PUSH_BEFORE_COMMIT] = originEvent.before
 //                startParams[BK_REPO_GIT_WEBHOOK_PUSH_AFTER_COMMIT] = originEvent.after
 //                startParams[BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT] = originEvent.total_commits_count.toString()
@@ -651,6 +654,8 @@ class TriggerBuildService @Autowired constructor(
             }
             is GitTagPushEvent -> {
                 startParams[BK_CI_REF] = originEvent.ref
+                addContext(yaml, originEvent, startParams, event)
+
 //                startParams[BK_REPO_GIT_WEBHOOK_TAG_NAME] = event.branch
 //                startParams[BK_REPO_GIT_WEBHOOK_TAG_OPERATION] = originEvent.operation_kind ?: ""
 //                startParams[BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT] = originEvent.total_commits_count.toString()
@@ -677,6 +682,8 @@ class TriggerBuildService @Autowired constructor(
 //                startParams[BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION] = originEvent.object_attributes.description
 //                startParams[BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE] = originEvent.object_attributes.assignee_id.toString()
                 startParams[BK_REPO_GIT_WEBHOOK_MR_IID] = originEvent.object_attributes.iid.toString()
+
+                addContext(yaml, originEvent, startParams, event)
             }
         }
 
@@ -704,6 +711,53 @@ class TriggerBuildService @Autowired constructor(
         }
 
         return result
+    }
+
+    private fun addContext(
+        yaml: ScriptBuildYaml,
+        originEvent: GitEvent,
+        startParams: MutableMap<String, String>,
+        event: GitRequestEvent
+    ) {
+        // 上下文
+        startParams["ci.pipeline_name"] = yaml.name ?: ""
+        startParams["ci.actor"] = event.userId
+        startParams["ci.build_url"] = "https://git-ci.woa.com/" // FIXME
+
+        val gitProjectName = when (originEvent){
+            is GitPushEvent -> {
+                startParams["ci.ref"] = originEvent.ref
+                GitUtils.getProjectName(originEvent.repository.git_http_url)
+            }
+            is GitTagPushEvent -> {
+                startParams["ci.ref"] = originEvent.ref
+                GitUtils.getProjectName(originEvent.repository.git_http_url)
+            }
+            is GitMergeRequestEvent -> {
+                startParams["ci.head_ref"] = originEvent.object_attributes.target_branch
+                startParams["ci.base_ref"] = originEvent.object_attributes.source_branch
+                GitUtils.getProjectName(originEvent.object_attributes.source.http_url)
+            }
+            else -> {
+                return
+            }
+        }
+
+        startParams["ci.repo"] = gitProjectName
+        val repoName = gitProjectName.split("/")
+        startParams["ci.repo_name"] = if (repoName.size >= 2) {
+            gitProjectName.removePrefix(repoName[0] + "/")
+        } else {
+            gitProjectName
+        }
+        startParams["ci.repo_group"] = repoName[0]
+        startParams["ci.event"] = GitPushEvent.classType
+        startParams["ci.event_content"] = event.event
+
+        startParams["ci.sha"] = event.commitId
+        startParams["ci.sha_short"] = event.commitId.substring(0, 8)
+        startParams["ci.commit_message"] = event.commitMsg.toString()
+
     }
 
     private fun putVariables2StartParams(
