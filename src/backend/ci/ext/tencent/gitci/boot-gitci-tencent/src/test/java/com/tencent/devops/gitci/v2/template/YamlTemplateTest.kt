@@ -60,7 +60,7 @@ class YamlTemplateTest {
         val yaml = ScriptYmlUtils.formatYaml(sb.toString())
         val preTemplateYamlObject = YamlUtil.getObjectMapper().readValue(yaml, PreTemplateScriptBuildYaml::class.java)
 
-        println(
+//        println(
 //            YamlCommonUtils.toYamlNotNull(
 //                YamlTemplate(
 //                    yamlObject = preTemplateYamlObject,
@@ -73,6 +73,6 @@ class YamlTemplateTest {
 //                    repoTemplateGraph = TemplateGraph()
 //                ).replace()
 //            )
-        )
+//        )
     }
 }

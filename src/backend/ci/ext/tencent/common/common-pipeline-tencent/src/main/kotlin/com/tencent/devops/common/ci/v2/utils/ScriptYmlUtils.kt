@@ -363,7 +363,7 @@ object ScriptYmlUtils {
     /**
      * 预处理对象转化为合法对象
      */
-    fun normalizeGitCiYaml(preScriptBuildYaml: PreScriptBuildYaml): ScriptBuildYaml {
+    fun normalizeGitCiYaml(preScriptBuildYaml: PreScriptBuildYaml, filePath: String): ScriptBuildYaml {
         val stages = formatStage(
             preScriptBuildYaml
         )
@@ -388,7 +388,9 @@ object ScriptYmlUtils {
         }
 
         return ScriptBuildYaml(
-            name = preScriptBuildYaml.name,
+            name = if (!preScriptBuildYaml.name.isNullOrBlank()) {
+                preScriptBuildYaml.name!!
+            } else { filePath.removeSuffix(".yml") },
             version = preScriptBuildYaml.version,
             triggerOn = thisTriggerOn,
             variables = preScriptBuildYaml.variables,

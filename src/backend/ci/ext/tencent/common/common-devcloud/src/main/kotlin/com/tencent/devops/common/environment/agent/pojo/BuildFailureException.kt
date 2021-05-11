@@ -25,9 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":core:common:common-service")
-    compile project(":core:common:common-pipeline")
-    compile("org.json:json")
-    compile("org.apache.commons:commons-lang3:$commonLang3Version")
-}
+package com.tencent.devops.common.environment.agent.pojo
+
+import com.tencent.devops.common.api.pojo.ErrorType
+
+class BuildFailureException(
+    val errorType: ErrorType,
+    val errorCode: Int,
+    val formatErrorMessage: String,
+    errorMessage: String
+) : Exception(errorMessage)

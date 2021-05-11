@@ -35,8 +35,7 @@ import com.tencent.devops.common.environment.agent.pojo.devcloud.JobResponse
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.dispatch.sdk.BuildFailureException
-import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
+import com.tencent.devops.common.environment.agent.pojo.BuildFailureException
 import com.tencent.devops.common.environment.agent.pojo.devcloud.Action
 import com.tencent.devops.common.environment.agent.pojo.devcloud.DevCloudContainer
 import com.tencent.devops.common.environment.agent.pojo.devcloud.DevCloudContainerStatus

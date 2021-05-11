@@ -107,7 +107,8 @@ class V2RequestTrigger @Autowired constructor(
             if (!yamlObject.name.isNullOrBlank()) yamlObject.name!! else filePath.removeSuffix(".yml")
 
         if (isMatch(event, yamlObjects)) {
-            logger.info("Matcher is true, display the event, gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}, dispatched pipeline: $gitProjectPipeline")
+            logger.info("Matcher is true, display the event, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
+                "eventId: ${gitRequestEvent.id}, dispatched pipeline: $gitProjectPipeline")
             val gitBuildId = gitRequestEventBuildDao.save(
                 dslContext = dslContext,
                 eventId = gitRequestEvent.id!!,
@@ -253,6 +254,9 @@ class V2RequestTrigger @Autowired constructor(
             return null
         }
 
-        return YamlObjects(preYaml = preYamlObject, normalYaml = ScriptYmlUtils.normalizeGitCiYaml(preYamlObject))
+        return YamlObjects(
+            preYaml = preYamlObject,
+            normalYaml = ScriptYmlUtils.normalizeGitCiYaml(preYamlObject, filePath)
+        )
     }
 }
