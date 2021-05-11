@@ -27,6 +27,7 @@
 
 package com.tencent.devops.gitci.v2.template
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.Container
 import com.tencent.devops.common.ci.v2.Credentials
@@ -45,7 +46,7 @@ object YamlObjects {
         )
     }
 
-    fun getStep(step: Map<String, Any>): Step {
+    fun getStep(fromPath: String, step: Map<String, Any>): Step {
         return Step(
             name = step["name"]?.toString(),
             id = step["id"]?.toString(),
@@ -54,7 +55,7 @@ object YamlObjects {
             with = if (step["with"] == null) {
                 mapOf()
             } else {
-                step["with"] as Map<String, Any>
+                transValue<Map<String, Any>>(fromPath, "with", step["with"])
             },
             timeoutMinutes = getNullValue("timeout-minutes", step)?.toInt(),
             continueOnError = getNullValue("continue-on-error", step)?.toBoolean(),
@@ -64,15 +65,16 @@ object YamlObjects {
         )
     }
 
-    fun getService(service: Any): Map<String, Service> {
-        val serviceMap = service as Map<String, Any?>
+    fun getService(fromPath: String, service: Any): Map<String, Service> {
+        val serviceMap = transValue<Map<String, Any?>>(fromPath, "services", service)
         val newServiceMap = mutableMapOf<String, Service>()
-        serviceMap.forEach { key, value ->
-            val with = (value as Map<String, Any>)["with"] as Map<String, Any>
+        serviceMap.forEach { (key, value) ->
+            val newValue = transValue<Map<String, Any>>(fromPath, "services", value)
+            val with = transValue<Map<String, Any>>(fromPath, "with", newValue["with"])
             newServiceMap.putAll(
                 mapOf(
                     key to Service(
-                        image = getNotNullValue(key = "image", mapName = "Container", map = value),
+                        image = getNotNullValue(key = "image", mapName = "Container", map = newValue),
                         with = ServiceWith(
                             password = getNotNullValue(key = "password", mapName = "with", map = with)
                         )
@@ -83,14 +85,15 @@ object YamlObjects {
         return newServiceMap
     }
 
-    fun getContainer(container: Any): Container {
-        val containerMap = container as Map<String, Any?>
+    fun getContainer(fromPath: String, container: Any): Container {
+        val containerMap = transValue<Map<String, Any?>>(fromPath, "container", container)
         return Container(
             image = getNotNullValue(key = "image", mapName = "Container", map = containerMap),
             credentials = if (containerMap["credentials"] == null) {
                 null
             } else {
-                val credentialsMap = containerMap["credentials"] as Map<String, String>
+                val credentialsMap =
+                    transValue<Map<String, String>>(fromPath, "credentials", containerMap["credentials"])
                 Credentials(
                     username = credentialsMap["username"]!!,
                     password = credentialsMap["password"]!!
@@ -99,8 +102,8 @@ object YamlObjects {
         )
     }
 
-    fun getStrategy(strategy: Any?): Strategy {
-        val strategyMap = strategy as Map<String, Any?>
+    fun getStrategy(fromPath: String, strategy: Any?): Strategy {
+        val strategyMap = transValue<Map<String, Any?>>(fromPath, "strategy", strategy)
         return Strategy(
             matrix = strategyMap["matrix"],
             fastKill = getNullValue("fast-kill", strategyMap)?.toBoolean(),
@@ -110,17 +113,32 @@ object YamlObjects {
 
     inline fun <reified T> getObjectFromYaml(path: String, template: String): T {
         return try {
-            YamlUtil.getObjectMapper().readValue(template, T::class.java)
+            YamlUtil.getObjectMapper().readValue(template, object : TypeReference<T>() {})
         } catch (e: Exception) {
-            throw RuntimeException("$path wrong format！ ${e.message}")
+            throw RuntimeException("File： $path format error！ ${e.message}")
         }
     }
 
-    fun <T> transNullValue(key: String, map: Map<String, Any?>): T? {
+    private fun <T> transValue(file: String, type: String, value: Any?): T {
+        if (value == null) {
+            throw RuntimeException("%s template format error in file: %s".format(type, file))
+        }
+        return try {
+            value as T
+        } catch (e: Exception) {
+            throw RuntimeException("%s template format error in file: %s".format(type, file))
+        }
+    }
+
+    fun <T> transNullValue(file: String, type: String, key: String, map: Map<String, Any?>): T? {
         return if (map[key] == null) {
             null
         } else {
-            map[key] as T
+            return try {
+                map[key] as T
+            } catch (e: Exception) {
+                throw RuntimeException("%s template format error in file: %s".format(type, file))
+            }
         }
     }
 

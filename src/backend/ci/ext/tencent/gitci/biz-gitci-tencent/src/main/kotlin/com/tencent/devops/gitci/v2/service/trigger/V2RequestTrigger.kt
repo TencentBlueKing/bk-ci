@@ -75,6 +75,9 @@ class V2RequestTrigger @Autowired constructor(
         private const val ciFileName = ".ci.yml"
         private const val templateDirectoryName = ".ci/templates"
         private const val ciFileExtension = ".yml"
+
+        // 针对filePath可能为空的情况下创建一个模板替换的根目录名称
+        private const val GIT_CI_TEMPLATE_ROOT_FILE = "GIT_CI_TEMPLATE_ROOT_FILE"
     }
 
     override fun triggerBuild(
@@ -173,9 +176,11 @@ class V2RequestTrigger @Autowired constructor(
                 gitToken = gitToken,
                 forkGitToken = forkGitToken,
                 yamlStr = originYaml,
-                filePath = filePath ?: "root",
+                filePath = filePath ?: GIT_CI_TEMPLATE_ROOT_FILE,
                 gitRequestEvent = gitRequestEvent,
-                gitProjectId = gitRequestEvent.gitProjectId
+                gitProjectId = gitRequestEvent.gitProjectId,
+                pipelineId = pipelineId,
+                originYaml = originYaml
             )
         } catch (e: Throwable) {
             logger.error("git ci yaml is invalid", e)
@@ -203,8 +208,10 @@ class V2RequestTrigger @Autowired constructor(
         yamlStr: String,
         filePath: String,
         gitRequestEvent: GitRequestEvent,
-        gitProjectId: Long? = null
-    ): YamlObjects {
+        gitProjectId: Long? = null,
+        originYaml: String?,
+        pipelineId: String?
+    ): YamlObjects? {
         logger.info("input yamlStr: $yamlStr")
 
         val yaml = ScriptYmlUtils.formatYaml(yamlStr)
@@ -213,16 +220,38 @@ class V2RequestTrigger @Autowired constructor(
         // 校验是否符合规范
         ScriptYmlUtils.checkStage(preTemplateYamlObject)
         // 替换yaml文件中的模板引用
-        val preYamlObject = YamlTemplate(
-            yamlObject = preTemplateYamlObject,
-            filePath = filePath,
-            triggerProjectId = scmService.getProjectId(isFork, gitRequestEvent),
-            triggerUserId = gitRequestEvent.userId,
-            triggerRef = gitRequestEvent.branch,
-            triggerToken = gitToken.accessToken,
-            repo = null,
-            repoTemplateGraph = TemplateGraph()
-        ).replace()
+        val preYamlObject = try {
+            YamlTemplate(
+                yamlObject = preTemplateYamlObject,
+                filePath = filePath,
+                triggerProjectId = scmService.getProjectId(isFork, gitRequestEvent),
+                triggerUserId = gitRequestEvent.userId,
+                triggerRef = gitRequestEvent.branch,
+                triggerToken = gitToken.accessToken,
+                repo = null,
+                repoTemplateGraph = TemplateGraph()
+            ).replace()
+        } catch (e: Exception) {
+            logger.error("git ci yaml template replace error", e)
+            val message = if (e is StackOverflowError) {
+                "Yaml file has circular dependency"
+            } else {
+                e.message.toString()
+            }
+            gitRequestEventNotBuildDao.save(
+                dslContext = dslContext,
+                eventId = gitRequestEvent.id!!,
+                pipelineId = pipelineId,
+                filePath = filePath,
+                originYaml = originYaml,
+                parsedYaml = null,
+                normalizedYaml = null,
+                reason = TriggerReason.GIT_CI_YAML_TEMPLATE_ERROR.name,
+                reasonDetail = message,
+                gitProjectId = gitRequestEvent.gitProjectId
+            )
+            return null
+        }
 
         return YamlObjects(preYaml = preYamlObject, normalYaml = ScriptYmlUtils.normalizeGitCiYaml(preYamlObject))
     }
