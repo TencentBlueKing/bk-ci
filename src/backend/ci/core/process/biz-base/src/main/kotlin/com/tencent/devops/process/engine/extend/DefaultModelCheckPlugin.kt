@@ -59,6 +59,7 @@ import com.tencent.devops.process.utils.KEY_JOB
 import com.tencent.devops.process.utils.KEY_STAGE
 import com.tencent.devops.process.utils.KEY_TASK
 import com.tencent.devops.store.pojo.common.KEY_INPUT
+import com.tencent.devops.store.pojo.common.StoreParam
 import com.tencent.devops.store.pojo.common.StoreVersion
 import org.slf4j.LoggerFactory
 
@@ -144,19 +145,19 @@ open class DefaultModelCheckPlugin constructor(
                 )
             }
             val atomVersions = mutableSetOf<StoreVersion>()
-            val atomInputParamMap = mutableMapOf<String, Any>()
+            val atomInputParamList = mutableListOf<StoreParam>()
             checkElements(
                 stage = s,
                 containerCnt = containerCnt,
                 elementCnt = elementCnt,
                 atomVersions = atomVersions,
-                atomInputParamMap = atomInputParamMap
+                atomInputParamList = atomInputParamList
             )
             if (!projectId.isNullOrEmpty() && atomVersions.isNotEmpty()) {
                 AtomUtils.checkModelAtoms(
                     projectCode = projectId,
                     atomVersions = atomVersions,
-                    atomInputParamMap = atomInputParamMap,
+                    atomInputParamList = atomInputParamList,
                     inputTypeConfigMap = AtomUtils.getInputTypeConfigMap(taskCommonSettingConfig),
                     client = client
                 )
@@ -170,7 +171,7 @@ open class DefaultModelCheckPlugin constructor(
         containerCnt: MutableMap<String, Int>,
         elementCnt: MutableMap<String, Int>,
         atomVersions: MutableSet<StoreVersion>,
-        atomInputParamMap: MutableMap<String, Any>
+        atomInputParamList: MutableList<StoreParam>
     ) {
         stage.containers.forEach { c ->
             val tasks = c.elements
@@ -194,27 +195,30 @@ open class DefaultModelCheckPlugin constructor(
                 val eCnt = elementCnt.computeIfPresent(e.getAtomCode()) { _, oldValue -> oldValue + 1 }
                     ?: elementCnt.computeIfAbsent(e.getAtomCode()) { 1 } // 第一次时出现1次
                 ElementBizRegistrar.getPlugin(e)?.check(e, eCnt)
-                addAtomInputDataInfo(e, atomVersions, atomInputParamMap)
+                addAtomInputDataInfo(e, atomVersions, atomInputParamList)
             }
         }
     }
 
+    @Suppress("UNCHECKED_CAST")
     private fun addAtomInputDataInfo(
         e: Element,
         atomVersions: MutableSet<StoreVersion>,
-        atomInputParamMap: MutableMap<String, Any>
+        atomInputParamList: MutableList<StoreParam>
     ) {
         var version = e.version
         if (version.isBlank()) {
             version = "1.*"
         }
         val atomCode = e.getAtomCode()
-        atomVersions.add(StoreVersion(
-            storeCode = atomCode,
-            storeName = e.name,
-            version = version,
-            historyFlag = AtomUtils.isHisAtomElement(e)
-        ))
+        atomVersions.add(
+            StoreVersion(
+                storeCode = atomCode,
+                storeName = e.name,
+                version = version,
+                historyFlag = AtomUtils.isHisAtomElement(e)
+            )
+        )
         // 获取插件的输入参数
         val atomInputDataMap = when (e) {
             is MarketBuildAtomElement -> {
@@ -238,9 +242,16 @@ open class DefaultModelCheckPlugin constructor(
                 )
                 JsonUtil.toMap(e).filter { it.key !in filterFieldNames }
             }
-        }
+        } as? Map<String, Any?>
         if (atomInputDataMap != null) {
-            atomInputParamMap[atomCode] = atomInputDataMap
+            atomInputParamList.add(
+                StoreParam(
+                    storeCode = atomCode,
+                    storeName = e.name,
+                    version = version,
+                    inputParam = atomInputDataMap
+                )
+            )
         }
     }
 

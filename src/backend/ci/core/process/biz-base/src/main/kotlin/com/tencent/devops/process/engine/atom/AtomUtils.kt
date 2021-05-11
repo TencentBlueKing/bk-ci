@@ -50,6 +50,7 @@ import com.tencent.devops.process.pojo.config.TaskCommonSettingConfig
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
 import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
+import com.tencent.devops.store.pojo.common.StoreParam
 import com.tencent.devops.store.pojo.common.StoreVersion
 import javax.ws.rs.core.Response
 
@@ -186,7 +187,7 @@ object AtomUtils {
     fun checkModelAtoms(
         projectCode: String,
         atomVersions: Set<StoreVersion>,
-        atomInputParamMap: Map<String, Any>?,
+        atomInputParamList: MutableList<StoreParam>,
         inputTypeConfigMap: Map<String, Int>,
         client: Client
     ): Boolean {
@@ -203,14 +204,14 @@ object AtomUtils {
             )
         }
         val atomRunInfoMap = atomRunInfoResult.data
-        atomVersions.forEach { atomVersion ->
-            val atomCode = atomVersion.storeCode
-            val version = atomVersion.version
-            val atomName = atomVersion.storeName
+        atomInputParamList.forEach { storeParam ->
+            val atomCode = storeParam.storeCode
+            val version = storeParam.version
+            val atomName = storeParam.storeName
             val atomRunInfo = atomRunInfoMap?.get("$atomCode:$version")
             if (atomRunInfo != null) {
                 validateAtomParam(
-                    atomInputParamMap = atomInputParamMap,
+                    atomParamDataMap = storeParam.inputParam,
                     atomRunInfo = atomRunInfo,
                     inputTypeConfigMap = inputTypeConfigMap,
                     atomName = atomName
@@ -222,16 +223,17 @@ object AtomUtils {
 
     @Suppress("UNCHECKED_CAST")
     private fun validateAtomParam(
-        atomInputParamMap: Map<String, Any>?,
+        atomParamDataMap: Map<String, Any?>?,
         atomRunInfo: AtomRunInfo,
         inputTypeConfigMap: Map<String, Int>,
         atomName: String
     ) {
-        val atomCode = atomRunInfo.atomCode
-        val atomParamDataMap = atomInputParamMap?.get(atomCode) as? Map<String, Any>
         if (atomParamDataMap?.isNotEmpty() == true) {
             val inputTypeInfos = atomRunInfo.inputTypeInfos
             atomParamDataMap.forEach { (paramName, paramValue) ->
+                if (paramValue == null) {
+                    return@forEach
+                }
                 val inputType = inputTypeInfos?.get(paramName)
                 val maxInputTypeSize = inputTypeConfigMap[inputType] ?: inputTypeConfigMap[KEY_DEFAULT]
                 if (paramValue.toString().length > maxInputTypeSize!!) {
