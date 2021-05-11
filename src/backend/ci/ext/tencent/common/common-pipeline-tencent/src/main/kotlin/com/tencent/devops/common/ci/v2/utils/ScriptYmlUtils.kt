@@ -211,13 +211,6 @@ object ScriptYmlUtils {
                                 id = randomString(jobNamespace),
                                 name = "job1",
                                 runsOn = RunsOn(),
-                                container = Container(
-                                    "",
-                                    Credentials(
-                                        "",
-                                        ""
-                                    )
-                                ),
                                 steps = formatSteps(preScriptBuildYaml.steps)
                             )
                         )
@@ -265,10 +258,6 @@ object ScriptYmlUtils {
                     id = t,
                     name = u.name,
                     runsOn = formatRunsOn(u.runsOn),
-                    container = u.container ?: Container(
-                        image = "http://mirrors.tencent.com/ci/tlinux3_ci:0.1.1.0",
-                        credentials = null
-                    ),
                     services = services,
                     ifField = u.ifField,
                     steps = formatSteps(u.steps),
