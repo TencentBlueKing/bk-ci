@@ -8,6 +8,7 @@ import com.tencent.bkuser.model.ProfileLogin
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.pojo.outer.OuterLoginParam
 import com.tencent.devops.experience.pojo.outer.OuterProfileVO
@@ -215,7 +216,6 @@ class ExperienceOuterService @Autowired constructor(
         private val df = DateTimeFormatter.ofPattern("HHmmss")
         private const val expireSecs: Long = 30 * 24 * 60 * 60
         private const val domain = "app.devops"
-        private const val logo = "https://bkdevops.qq.com/bkrepo/api/external/generic/bkdevops/app-icon/app-icon/" +
-                "apk/0022123439edd60968def405096e1b88f32f7a23f770f09d43bf3ebda810cc08.png"
+        private val logo = "https://${HomeHostUtil.outerServerHost()}/app/download/devops_app.png"
     }
 }
