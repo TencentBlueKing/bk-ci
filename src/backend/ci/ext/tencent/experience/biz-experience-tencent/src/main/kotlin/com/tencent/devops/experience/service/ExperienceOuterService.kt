@@ -63,6 +63,7 @@ class ExperienceOuterService @Autowired constructor(
             val data = ProfileLogin()
             data.username = params.username
             data.password = params.password
+            data.domain = domain
             val profile = loginApi.v1LoginLogin(data)
 
             // 判断账号没有被封
@@ -212,5 +213,6 @@ class ExperienceOuterService @Autowired constructor(
         private const val secretKey = "sd&t6y978*)hU(g9712U^Y&*HJT^G()Yuihyuib{L"
         private val df = DateTimeFormatter.ofPattern("HHmmss")
         private const val expireSecs: Long = 30 * 24 * 60 * 60
+        private const val domain = "app.devops"
     }
 }
