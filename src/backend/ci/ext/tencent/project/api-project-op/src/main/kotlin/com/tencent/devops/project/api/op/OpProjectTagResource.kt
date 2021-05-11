@@ -29,7 +29,7 @@
 package com.tencent.devops.project.api.op
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.project.api.pojo.ProjectTagUpdateDTO
+import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
