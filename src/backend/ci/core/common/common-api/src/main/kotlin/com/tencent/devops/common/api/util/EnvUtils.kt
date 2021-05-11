@@ -51,7 +51,7 @@ object EnvUtils {
     ): String {
         val newValue = StringBuilder()
         var index = 0
-        while (index < value!!.length) {
+        while (index < value.length) {
             val c = value[index]
             if (checkPrefix(c, index, value)) {
                 val inside = StringBuilder()
@@ -77,7 +77,7 @@ object EnvUtils {
     ): String {
         val newValue = StringBuilder()
         var index = 0
-        while (index < command!!.length) {
+        while (index < command.length) {
             val c = command[index]
             if (c == '$' && (index + 1) < command.length && command[index + 1] == '{') {
                 val inside = StringBuilder()

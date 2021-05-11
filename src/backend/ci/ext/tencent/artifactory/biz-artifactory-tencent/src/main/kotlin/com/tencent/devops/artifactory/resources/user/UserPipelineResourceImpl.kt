@@ -31,23 +31,17 @@ import com.tencent.devops.artifactory.api.user.UserPipelineResource
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.enums.Permission
 import com.tencent.devops.artifactory.service.PipelineService
-import com.tencent.devops.artifactory.service.artifactory.ArtifactoryPipelineDirService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoPipelineDirService
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserPipelineResourceImpl @Autowired constructor(
     val pipelineService: PipelineService,
-    val bkRepoPipelineDirService: BkRepoPipelineDirService,
-    val artifactoryPipelineDirService: ArtifactoryPipelineDirService,
-    val redisOperation: RedisOperation,
-    val repoGray: RepoGray
+    val bkRepoPipelineDirService: BkRepoPipelineDirService
 ) : UserPipelineResource {
 
     override fun hasPermissionList(
@@ -64,11 +58,7 @@ class UserPipelineResourceImpl @Autowired constructor(
             Permission.LIST -> AuthPermission.LIST
             Permission.EXECUTE -> AuthPermission.EXECUTE
         }
-        return if (repoGray.isGray(projectId, redisOperation)) {
-            Result(bkRepoPipelineDirService.list(userId, projectId, path, bkAuthPermission))
-        } else {
-            Result(artifactoryPipelineDirService.list(userId, projectId, path, bkAuthPermission))
-        }
+        return Result(bkRepoPipelineDirService.list(userId, projectId, path, bkAuthPermission))
     }
 
     private fun checkParam(userId: String, projectId: String) {

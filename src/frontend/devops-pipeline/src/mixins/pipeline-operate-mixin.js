@@ -519,6 +519,10 @@ export default {
                     message: this.$t('saveSuc'),
                     theme: 'success'
                 })
+                const { pipeline } = this
+                if (!this.isTemplatePipeline && pipeline.latestVersion && !isNaN(pipeline.latestVersion)) {
+                    ++pipeline.latestVersion
+                }
                 this.fetchPipelineList()
                 return {
                     code: 0,

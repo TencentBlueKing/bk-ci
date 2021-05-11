@@ -71,7 +71,8 @@ class PipelineElementService @Autowired constructor(
         elementItemList: MutableList<ElementBaseInfo>,
         originalElementList: List<Element>,
         finalElementList: MutableList<Element>,
-        startValues: Map<String, String>? = null
+        startValues: Map<String, String>? = null,
+        finallyStage: Boolean
     ): MutableList<Element> {
         logger.info("handlePostElements projectId:$projectId,elementItemList:$elementItemList")
         val allPostElements = mutableListOf<ElementPostInfo>()
@@ -136,7 +137,8 @@ class PipelineElementService @Autowired constructor(
                 elementPostInfo = elementPostInfo,
                 originalElementList = originalElementList,
                 startValues = startValues,
-                finalElementList = finalElementList
+                finalElementList = finalElementList,
+                finallyStage = finallyStage
             )
         }
         return finalElementList
@@ -146,7 +148,8 @@ class PipelineElementService @Autowired constructor(
         elementPostInfo: ElementPostInfo,
         originalElementList: List<Element>,
         startValues: Map<String, String>?,
-        finalElementList: MutableList<Element>
+        finalElementList: MutableList<Element>,
+        finallyStage: Boolean
     ) {
         val originAtomElement = originalElementList[elementPostInfo.parentElementJobIndex]
         var originElementId = originAtomElement.id
@@ -156,7 +159,7 @@ class PipelineElementService @Autowired constructor(
             originAtomElement.id = originElementId
         } else {
             if (startValues != null) {
-                val status = originAtomElement.initStatus(params = startValues)
+                val status = originAtomElement.initStatus(params = startValues, finallyStage = finallyStage)
                 // 如果原插件执行时选择跳过，那么插件的post操作也要跳過
                 if (status == BuildStatus.SKIP) {
                     elementStatus = BuildStatus.SKIP.name

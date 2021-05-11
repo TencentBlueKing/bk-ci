@@ -25,45 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.api
+package com.tencent.devops.artifactory.api.builds
 
-import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
-import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
+import com.tencent.devops.artifactory.pojo.FileGatewayInfo
+import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
+import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.POST
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
-import javax.ws.rs.HeaderParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["AUTH_RESOURCE_CALLBACK"], description = "权限-资源-回调接口")
-@Path("/service/auth/resource")
+@Api(tags = ["BUILD_URL"], description = "文件网关")
+@Path("/build/fileGateway")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface AuthResourceCallBackResource {
+interface BuildFileGatewayResource {
 
-    @POST
-    @Path("/projects")
-    @ApiOperation("项目列表")
-    fun projectInfo(
-        @ApiParam(value = "回调信息")
-        callBackInfo: CallbackRequestDTO,
-        @HeaderParam("Authorization")
-        @ApiParam("token")
-        token: String
-    ): CallbackBaseResponseDTO?
-
-    @POST
-    @Path("/instances/list")
-    @ApiOperation("特定资源列表")
-    fun resourceList(
-        @ApiParam(value = "回调信息")
-        callBackInfo: CallbackRequestDTO,
-        @HeaderParam("Authorization")
-        @ApiParam("token")
-        token: String
-    ): CallbackBaseResponseDTO?
+    @ApiOperation("获取项目文件网关配置")
+    @Path("/get")
+    @GET
+    fun getFileGateway(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_PROJECT_ID)
+        projectId: String
+    ): Result<FileGatewayInfo>
 }

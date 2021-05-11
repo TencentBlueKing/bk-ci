@@ -33,8 +33,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.archive.client.BkRepoClient
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.web.RestResource
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
@@ -42,9 +40,7 @@ import java.io.InputStream
 
 @RestResource
 class UserTencentFileResourceImpl @Autowired constructor(
-    val bkRepoCustomDirService: BkRepoCustomDirService,
-    val redisOperation: RedisOperation,
-    val repoGray: RepoGray
+    val bkRepoCustomDirService: BkRepoCustomDirService
 ) : UserTencentFileResource {
 
     override fun uploadToPath(userId: String, projectId: String, path: String, inputStream: InputStream, disposition: FormDataContentDisposition): Result<Boolean> {

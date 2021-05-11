@@ -25,28 +25,55 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.auth.utlis
+package com.tencent.devops.common.api.expression
 
-object StringUtils {
-    fun obj2List(str: String): List<String> {
-        val list = str.substringBefore("]").substringAfter("[").split(",")
-        val newList = mutableListOf<String>()
-        list.map {
-            newList.add(it.trim())
+import org.junit.Assert.assertEquals
+import org.junit.Assert.fail
+import org.junit.Test
+
+class SemanticAnalysisTest {
+
+    @Test
+    fun analysis1() {
+        val str = "a == a"
+        val items = Lex(str.toList().toMutableList()).getToken()
+        try {
+            assertEquals(true, SemanticAnalysis(items).analysis())
+        } catch (e: Exception) {
+            fail()
         }
-        return newList
     }
 
-    fun removeAllElement(set: Set<String>): Set<String> {
-        if (set.contains("*")) {
-            val newSet = mutableSetOf<String>()
-            set.map {
-                if (it != "*") {
-                    newSet.add(it)
-                }
-                return newSet
-            }
+    @Test
+    fun analysis2() {
+        val str = " a==a "
+        val items = Lex(str.toList().toMutableList()).getToken()
+        try {
+            assertEquals(true, SemanticAnalysis(items).analysis())
+        } catch (e: Exception) {
+            fail()
         }
-        return set
+    }
+
+    @Test
+    fun analysis3() {
+        val str = "'push'==  'push' && (true && (bbb != aaa && 1 <= 2 )) && (( !true == false) || (!false != false ))  "
+        val items = Lex(str.toList().toMutableList()).getToken()
+        try {
+            assertEquals(true, SemanticAnalysis(items).analysis())
+        } catch (e: Exception) {
+            fail()
+        }
+    }
+
+    @Test
+    fun analysis4() {
+        val str = "'push'== 'push' && (true && (bbb != aaa && 1 >= 2 )) && (( !true == false) || (!false != false )) "
+        val items = Lex(str.toList().toMutableList()).getToken()
+        try {
+            assertEquals(false, SemanticAnalysis(items).analysis())
+        } catch (e: Exception) {
+            fail()
+        }
     }
 }
