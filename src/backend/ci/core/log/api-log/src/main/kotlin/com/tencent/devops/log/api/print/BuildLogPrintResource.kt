@@ -47,7 +47,7 @@ import javax.ws.rs.core.MediaType
  *
  * Powered By Tencent
  */
-@Api(tags = ["BUILD_LOG"], description = "构建-日志资源")
+@Api(tags = ["BUILD_LOG_PRINT"], description = "构建-日志资源")
 @Path("/build/logs")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)

@@ -67,7 +67,10 @@ class LogStatusDao {
                 executeCount ?: 1,
                 finish,
                 logStorageMode?.name ?: LogStorageMode.UPLOAD.name
-            ).onDuplicateKeyUpdate().set(FINISHED, finish).execute()
+            ).onDuplicateKeyUpdate()
+                .set(FINISHED, finish)
+                .set(MODE, logStorageMode?.name ?: LogStorageMode.UPLOAD.name)
+                .execute()
         }
     }
 

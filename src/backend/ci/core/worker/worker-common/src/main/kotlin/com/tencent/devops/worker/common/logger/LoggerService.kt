@@ -56,7 +56,6 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 
-@Suppress("ALL")
 object LoggerService {
 
     private val logResourceApi = ApiFactory.create(LogSDKApi::class)
@@ -268,22 +267,24 @@ object LoggerService {
     }
 
     fun archiveLogFiles() {
-        logger.info("Start to archive log files because of LogMode[${AgentEnv.getLogMode()}]")
+        logger.info("Start to archive log files with LogMode[${AgentEnv.getLogMode()}]")
         try {
+            var archivedCount = 0
             // 将所有日志存储状态为LOCAL的插件进行文件归档
             elementId2LogProperty.forEach { (elementId, property) ->
                 if (property.logStorageMode != LogStorageMode.LOCAL) return@forEach
                 logger.info("Archive task[$elementId] build log file(${property.logFile.absolutePath})")
                 ArchiveUtils.archiveLogFile(property.logFile, property.childPath, buildVariables!!)
                 property.logStorageMode = LogStorageMode.ARCHIVED
+                archivedCount++
             }
-            logger.info("Finished archiving log ${elementId2LogProperty.size} files")
+            logger.info("Finished archiving log $archivedCount files")
 
             // 同步所有存储状态到
             logResourceApi.updateStorageMode(elementId2LogProperty.values.toList(), executeCount)
             logger.info("Finished update mode to log service.")
         } catch (e: Exception) {
-            logger.warn("Fail to finish the logs", e)
+            logger.warn("Fail to archive log files", e)
         }
     }
 
@@ -348,7 +349,7 @@ object LoggerService {
     ) {
         try {
             currentTaskLineNo = 0
-            logger.info("Start to finish the log")
+            logger.info("Start to finish the log, property: ${elementId2LogProperty[tag]}")
             val result = logResourceApi.finishLog(
                 tag = tag,
                 jobId = jobId,
