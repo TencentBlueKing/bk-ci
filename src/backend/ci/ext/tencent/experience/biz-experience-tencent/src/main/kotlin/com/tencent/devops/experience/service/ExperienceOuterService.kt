@@ -78,7 +78,7 @@ class ExperienceOuterService @Autowired constructor(
 
             // 设置token , 存放信息
             val outerProfileVO = OuterProfileVO(
-                username = profile.username,
+                username = profile.username.replace("@$domain", ""),
                 logo = logo,
                 email = profile.email
             )
@@ -138,9 +138,9 @@ class ExperienceOuterService @Autowired constructor(
 
     fun outerList(): List<String> {
         return profileApi.v2ProfilesList(
-            null, null, null, null, null, null,
+            null, null, null, null, "domain", listOf(domain),
             null, null, null, null, null, null, null, null
-        ).results.map { it.username }
+        ).results.map { it.username.replace("@$domain", "") }
     }
 
     fun isBlackIp(realIp: String?): Boolean {
@@ -166,7 +166,7 @@ class ExperienceOuterService @Autowired constructor(
             )
         })
         if (checkNow == true) {
-            val profilesRead = profileApi.v2ProfilesRead(profileVO.username, "status", "username")
+            val profilesRead = profileApi.v2ProfilesRead("${profileVO.username}@$domain", "status", "username")
             if (null == profilesRead || profilesRead.status != Profile.StatusEnum.NORMAL) {
                 redisOperation.set(checkKey, "1") // 将缓存置为不正常用户
                 logger.warn("v2ProfilesRead , status is not normal , token:{}", token)
