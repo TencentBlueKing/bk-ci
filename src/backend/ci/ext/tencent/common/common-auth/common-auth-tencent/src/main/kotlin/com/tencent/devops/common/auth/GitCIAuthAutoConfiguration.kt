@@ -69,12 +69,12 @@ class GitCIAuthAutoConfiguration {
 
     @Bean
     @Primary
-    fun bsAuthTokenApi(bkAuthProperties: BkAuthProperties, objectMapper: ObjectMapper, redisOperation: RedisOperation) =
+    fun authTokenApi(bkAuthProperties: BkAuthProperties, objectMapper: ObjectMapper, redisOperation: RedisOperation) =
         BSAuthTokenApi(bkAuthProperties, objectMapper, redisOperation)
 
     @Bean
     @Primary
-    fun bsAuthPermissionApi(
+    fun authPermissionApi(
         bkAuthProperties: BkAuthProperties,
         objectMapper: ObjectMapper,
         bsAuthTokenApi: BSAuthTokenApi,
@@ -84,7 +84,7 @@ class GitCIAuthAutoConfiguration {
 
     @Bean
     @Primary
-    fun bsAuthResourceApi(
+    fun authResourceApi(
         bkAuthProperties: BkAuthProperties,
         objectMapper: ObjectMapper,
         bsAuthTokenApi: BSAuthTokenApi
@@ -93,7 +93,7 @@ class GitCIAuthAutoConfiguration {
 
     @Bean
     @Primary
-    fun bsAuthProjectApi(
+    fun authProjectApi(
         bkAuthProperties: BkAuthProperties,
         objectMapper: ObjectMapper,
         bsAuthTokenApi: BSAuthTokenApi,
