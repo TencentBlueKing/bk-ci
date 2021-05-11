@@ -349,7 +349,13 @@ object LoggerService {
         try {
             currentTaskLineNo = 0
             logger.info("Start to finish the log")
-            val result = logResourceApi.finishLog(tag, jobId, executeCount, subTag)
+            val result = logResourceApi.finishLog(
+                tag = tag,
+                jobId = jobId,
+                executeCount = executeCount,
+                subTag = subTag,
+                logMode = elementId2LogProperty[tag]?.logStorageMode
+            )
             if (result.isNotOk()) {
                 logger.error("Fail to send the log status ：${result.message}")
             }

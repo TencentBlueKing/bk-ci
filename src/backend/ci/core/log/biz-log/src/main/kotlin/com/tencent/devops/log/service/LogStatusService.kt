@@ -27,6 +27,7 @@
 
 package com.tencent.devops.log.service
 
+import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.log.dao.LogStatusDao
@@ -75,6 +76,24 @@ class LogStatusService @Autowired constructor(
             executeCount = executeCount,
             modeList = modeList
         )
+    }
+
+    fun getStorageMode(
+        buildId: String,
+        tag: String,
+        executeCount: Int
+    ): QueryLogStatus {
+        val record =  logStatusDao.getStorageMode(
+            dslContext = dslContext,
+            buildId = buildId,
+            tag = tag,
+            executeCount = executeCount
+        )
+        return if (record != null) {
+            QueryLogStatus(buildId, record.finished, LogStorageMode.parse(record.mode))
+        } else {
+            QueryLogStatus(buildId, false, LogStorageMode.UPLOAD)
+        }
     }
 
     fun isFinish(

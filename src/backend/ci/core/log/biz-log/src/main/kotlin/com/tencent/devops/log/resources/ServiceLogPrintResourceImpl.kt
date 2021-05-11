@@ -33,6 +33,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.print.ServiceLogPrintResource
 import com.tencent.devops.common.log.pojo.LogEvent
 import com.tencent.devops.common.log.pojo.LogStatusEvent
+import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.log.service.BuildLogPrintService
 import org.springframework.beans.factory.annotation.Autowired
@@ -89,7 +90,8 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
         tag: String?,
         subTag: String?,
         jobId: String?,
-        executeCount: Int?
+        executeCount: Int?,
+        logStorageMode: LogStorageMode?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
             throw ParamBlankException("无效的构建ID")
@@ -100,7 +102,8 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
             tag = tag ?: "",
             subTag = subTag,
             jobId = jobId ?: "",
-            executeCount = executeCount
+            executeCount = executeCount,
+            logStorageMode = logStorageMode
         ))
     }
 }

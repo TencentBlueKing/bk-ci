@@ -25,27 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.api.log
+package com.tencent.devops.common.log.pojo
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
+import com.tencent.devops.common.log.pojo.enums.LogStatus
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
-import com.tencent.devops.common.log.pojo.message.LogMessage
-import com.tencent.devops.worker.common.api.WorkerRestApiSDK
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-interface LogSDKApi : WorkerRestApiSDK {
-    fun addLogMultiLine(logMessages: List<LogMessage>): Result<Boolean>
-
-    fun finishLog(
-        tag: String?,
-        jobId: String?,
-        executeCount: Int?,
-        subTag: String?,
-        logMode: LogStorageMode?
-    ): Result<Boolean>
-
-    fun updateStorageMode(
-        propertyList: List<TaskBuildLogProperty>,
-        executeCount: Int?
-    ): Result<Boolean>
-}
+/**
+ *
+ * Powered By Tencent
+ */
+@ApiModel("日志状态查询模型")
+data class QueryLogStatus(
+    @ApiModelProperty("构建ID", required = true)
+    val buildId: String,
+    @ApiModelProperty("是否结束", required = true)
+    var finished: Boolean,
+    @ApiModelProperty("日志存储状态", required = false)
+    var logMode: LogStorageMode
+)

@@ -119,6 +119,7 @@ class LogServiceLuceneImpl constructor(
                 subTag = subTag,
                 jobId = jobId,
                 executeCount = executeCount,
+                logStorageMode = logStorageMode,
                 finish = finished
             )
         }

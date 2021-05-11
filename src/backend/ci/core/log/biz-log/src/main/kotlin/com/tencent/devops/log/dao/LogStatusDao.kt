@@ -27,6 +27,7 @@
 
 package com.tencent.devops.log.dao
 
+import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.model.log.tables.TLogStatus
 import com.tencent.devops.model.log.tables.records.TLogStatusRecord
@@ -119,6 +120,21 @@ class LogStatusDao {
                 .and(SUB_TAG.eq(subTags ?: ""))
                 .and(EXECUTE_COUNT.eq(executeCount ?: 1))
                 .fetchOne()?.finished ?: false
+        }
+    }
+
+    fun getStorageMode(
+        dslContext: DSLContext,
+        buildId: String,
+        tag: String,
+        executeCount: Int?
+    ): TLogStatusRecord? {
+        with(TLogStatus.T_LOG_STATUS) {
+            return dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId))
+                .and(TAG.eq(tag))
+                .and(EXECUTE_COUNT.eq(executeCount ?: 1))
+                .fetchAny()
         }
     }
 

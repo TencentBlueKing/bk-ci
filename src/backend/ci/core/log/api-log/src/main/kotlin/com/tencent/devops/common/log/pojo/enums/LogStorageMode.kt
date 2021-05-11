@@ -35,5 +35,15 @@ enum class LogStorageMode {
     @ApiModelProperty("本地保存")
     LOCAL,
     @ApiModelProperty("仓库已归档")
-    ARCHIVED
+    ARCHIVED;
+
+    companion object {
+        fun parse(modeName: String?): LogStorageMode {
+            return when (modeName) {
+                LOCAL.name -> LOCAL
+                ARCHIVED.name -> ARCHIVED
+                else -> UPLOAD
+            }
+        }
+    }
 }

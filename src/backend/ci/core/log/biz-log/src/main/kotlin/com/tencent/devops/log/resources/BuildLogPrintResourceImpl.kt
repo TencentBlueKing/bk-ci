@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.log.pojo.LogEvent
 import com.tencent.devops.common.log.pojo.LogStatusEvent
 import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
+import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.print.BuildLogPrintResource
 import com.tencent.devops.common.log.pojo.message.LogMessage
@@ -89,7 +90,8 @@ class BuildLogPrintResourceImpl @Autowired constructor(
         tag: String?,
         subTag: String?,
         jobId: String?,
-        executeCount: Int?
+        executeCount: Int?,
+        logMode: String?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
             throw ParamBlankException("无效的构建ID")
@@ -100,7 +102,8 @@ class BuildLogPrintResourceImpl @Autowired constructor(
             tag = tag ?: "",
             subTag = subTag,
             jobId = jobId ?: "",
-            executeCount = executeCount
+            executeCount = executeCount,
+            logStorageMode = LogStorageMode.parse(logMode)
         ))
     }
 
@@ -110,7 +113,8 @@ class BuildLogPrintResourceImpl @Autowired constructor(
         tag: String?,
         subTag: String?,
         jobId: String?,
-        executeCount: Int?
+        executeCount: Int?,
+        logMode: String?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
             throw ParamBlankException("无效的构建ID")
@@ -121,7 +125,8 @@ class BuildLogPrintResourceImpl @Autowired constructor(
             tag = tag ?: "",
             subTag = subTag,
             jobId = jobId ?: "",
-            executeCount = executeCount
+            executeCount = executeCount,
+            logStorageMode = LogStorageMode.parse(logMode)
         ))
     }
 
