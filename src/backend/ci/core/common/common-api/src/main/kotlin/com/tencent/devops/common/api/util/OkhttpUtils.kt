@@ -27,6 +27,8 @@
 
 package com.tencent.devops.common.api.util
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_HTTP_RESPONSE_BODY_TOO_LARGE
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import okhttp3.Headers
 import okhttp3.MediaType
@@ -37,6 +39,7 @@ import okhttp3.RequestBody
 import okhttp3.Response
 import org.slf4j.LoggerFactory
 import org.springframework.util.FileCopyUtils
+import java.io.CharArrayWriter
 import java.io.File
 import java.io.FileOutputStream
 import java.io.UnsupportedEncodingException
@@ -258,6 +261,28 @@ object OkhttpUtils {
             return sslContext.socketFactory
         } catch (ingored: Exception) {
             throw RemoteServiceException(ingored.message!!)
+        }
+    }
+
+    fun Response.stringLimit(readLimit: Int, errorMsg: String? = null): String {
+        val buf = CharArray(1024)
+        var totalBytesRead = 0
+        var len: Int
+        val result = CharArrayWriter()
+        body()!!.charStream().use { inStream ->
+            result.use { outStream ->
+                while ((inStream.read(buf).also { len = it }) != -1) {
+                    totalBytesRead += len
+                    if (totalBytesRead >= readLimit) {
+                        throw ErrorCodeException(
+                            errorCode = ERROR_HTTP_RESPONSE_BODY_TOO_LARGE,
+                            defaultMessage = errorMsg ?: "response body cannot be exceeded $readLimit"
+                        )
+                    }
+                    outStream.write(buf, 0, len)
+                }
+                return String(outStream.toCharArray())
+            }
         }
     }
 }
