@@ -62,12 +62,8 @@ import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.service.BuildStartupParamService
 import com.tencent.devops.process.service.BuildVariableService
-import com.tencent.devops.process.service.ProjectCacheService
 import com.tencent.devops.process.service.scm.ScmProxyService
-import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_TIME_START
-import com.tencent.devops.process.utils.PROJECT_NAME
-import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -85,7 +81,6 @@ class BuildStartControl @Autowired constructor(
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
     private val pipelineStageService: PipelineStageService,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val projectCacheService: ProjectCacheService,
     private val buildDetailService: PipelineBuildDetailService,
     private val buildStartupParamService: BuildStartupParamService,
     private val buildVariableService: BuildVariableService,
