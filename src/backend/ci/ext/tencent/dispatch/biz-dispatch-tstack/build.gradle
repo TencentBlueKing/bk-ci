@@ -28,4 +28,5 @@
 dependencies {
     compile project(":core:dispatch:biz-dispatch")
     compile project(":ext:tencent:dispatch:api-dispatch-tstack")
+    compile project(":ext:tencent:common:common-auth:common-auth-tencent")
 }
