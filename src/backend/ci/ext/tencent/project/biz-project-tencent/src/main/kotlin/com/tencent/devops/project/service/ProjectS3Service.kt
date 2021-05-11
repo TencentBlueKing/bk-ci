@@ -72,7 +72,7 @@ class ProjectS3Service @Autowired constructor(
             )
 
             // codecc任务自动将流量指向auto集群
-            projectTagService.updateTagByProject(projectCreateInfo.englishName)
+            projectTagService.updateTagByProject(projectCreateInfo.englishName, null)
         } catch (e: Throwable) {
             logger.error("Create project failed,", e)
             throw e

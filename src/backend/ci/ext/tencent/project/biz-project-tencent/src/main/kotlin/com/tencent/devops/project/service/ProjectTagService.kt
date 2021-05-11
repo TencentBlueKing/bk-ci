@@ -81,14 +81,20 @@ class ProjectTagService @Autowired constructor(
     }
 
     fun updateTagByProject(
-        projectCode: String
+        projectCode: String,
+        tag: String? = null
     ): Boolean {
         if (autoTag.isNullOrEmpty()) {
             return true
         }
-        logger.info("updateTagByProject: $projectCode| $autoTag")
+        val routerTag = if (tag.isNullOrEmpty()) {
+            autoTag
+        } else {
+            tag
+        }
+        logger.info("updateTagByProject: $projectCode| $routerTag")
         val projectTagUpdate = ProjectTagUpdateDTO(
-            routerTag = autoTag,
+            routerTag = routerTag,
             projectCodeList = arrayListOf(projectCode),
             bgId = null,
             centerId = null,

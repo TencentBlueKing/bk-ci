@@ -92,6 +92,9 @@ class ProjectLocalService @Autowired constructor(
 ) {
     private var authUrl: String = "${bkAuthProperties.url}/projects"
 
+    @Value("\${gitCI.tag:#{null}}")
+    private val gitCI: String? = null
+
     fun listForApp(
         userId: String,
         offset: Int,
@@ -523,8 +526,8 @@ class ProjectLocalService @Autowired constructor(
                 channel = ProjectChannelCode.GITCI
             )
 
-            // GitCI项目自动把流量指向auto集群
-            projectTagService.updateTagByProject(projectCreateInfo.englishName)
+            // GitCI项目自动把流量指向gitCI集群, 注意此tag写死在代码内,若对应集群的consulTag调整需要变更代码
+            projectTagService.updateTagByProject(projectCreateInfo.englishName, gitCI)
 
         } catch (e: Throwable) {
             logger.error("Create project failed,", e)
