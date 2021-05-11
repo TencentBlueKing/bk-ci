@@ -73,7 +73,7 @@
     "pipelineNameInputTips": "请输入流水线名称,不超过40个字符",
     "pipelineDesc": "描述",
     "pipelineDescInputTips": "请输入100字符以内的描述内容",
-    "buildDescInputTips": "$(Date:yyyyMMdd)$(Rev:.r)",
+    "buildDescInputTips": "${{DATE:\"yyyy-MM-dd HH:mm:ss\"}}",
     "buildNumRuleWarn": "超出长度限制的部分会被截断",
     "nameInputTips": "请输入名称",
     "loadingTips": "数据加载中，请稍候",
