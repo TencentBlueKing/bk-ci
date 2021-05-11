@@ -36,7 +36,7 @@ data class PreJob(
     // val job: JobDetail,
     val name: String?,
     @JsonProperty("runs-on")
-    val runsOn: List<String>?,
+    val runsOn: Any?,
     val container: Container?,
     val services: Map<String, Service>? = null,
     @JsonProperty("if")

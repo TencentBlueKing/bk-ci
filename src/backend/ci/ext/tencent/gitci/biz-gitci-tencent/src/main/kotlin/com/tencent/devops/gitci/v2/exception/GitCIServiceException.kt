@@ -25,15 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.v2.template.pojo.enums
+package com.tencent.devops.gitci.v2.exception
 
-/**
- * 模板类型，text为展示内容，content为模板在Yaml中的关键字
- */
-enum class TemplateType(val text: String, val content: String) {
-    VARIABLE("variable", "variables"),
-    STAGE("stage", "stages"),
-    JOB("job", "jobs"),
-    STEP("step", "steps"),
-    EXTEND("extend", "extend")
-}
+import com.tencent.devops.common.api.pojo.ErrorType
+
+open class GitCIServiceException(
+    val errorType: ErrorType,
+    val errorCode: Int,
+    errorMsg: String
+) : Exception(errorMsg)

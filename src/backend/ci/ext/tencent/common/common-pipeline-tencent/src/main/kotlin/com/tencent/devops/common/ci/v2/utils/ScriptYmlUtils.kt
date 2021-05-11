@@ -54,6 +54,7 @@ import com.tencent.devops.common.ci.v2.JobRunsOnType
 import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreStage
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
+import com.tencent.devops.common.ci.v2.RunsOn
 import com.tencent.devops.common.ci.v2.Service
 import com.tencent.devops.common.ci.v2.Step
 import org.slf4j.LoggerFactory
@@ -209,14 +210,7 @@ object ScriptYmlUtils {
                             Job(
                                 id = randomString(jobNamespace),
                                 name = "job1",
-                                runsOn = listOf(JobRunsOnType.DOCKER_ON_VM.type),
-                                container = Container(
-                                    "",
-                                    Credentials(
-                                        "",
-                                        ""
-                                    )
-                                ),
+                                runsOn = RunsOn(),
                                 steps = formatSteps(preScriptBuildYaml.steps)
                             )
                         )
@@ -257,15 +251,13 @@ object ScriptYmlUtils {
                 ))
             }
 
+
+
             jobs.add(
                 Job(
                     id = t,
                     name = u.name,
-                    runsOn = u.runsOn ?: listOf(JobRunsOnType.DOCKER_ON_VM.type),
-                    container = u.container ?: Container(
-                        image = "http://mirrors.tencent.com/ci/tlinux3_ci:0.1.1.0",
-                        credentials = null
-                    ),
+                    runsOn = formatRunsOn(u.runsOn),
                     services = services,
                     ifField = u.ifField,
                     steps = formatSteps(u.steps),
@@ -279,6 +271,20 @@ object ScriptYmlUtils {
         }
 
         return jobs
+    }
+
+    private fun formatRunsOn(preRunsOn: Any?): RunsOn {
+        if (preRunsOn == null) {
+            return RunsOn()
+        }
+
+        return try {
+            YamlUtil.getObjectMapper().readValue(preRunsOn.toString(), RunsOn::class.java)
+        } catch (e: Exception) {
+            RunsOn(
+                poolName = preRunsOn.toString()
+            )
+        }
     }
 
     private fun formatSteps(oldSteps: List<Step>?): List<Step> {

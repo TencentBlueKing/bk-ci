@@ -25,15 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.v2.template.pojo.enums
+package com.tencent.devops.common.environment.agent.client
 
-/**
- * 模板类型，text为展示内容，content为模板在Yaml中的关键字
- */
-enum class TemplateType(val text: String, val content: String) {
-    VARIABLE("variable", "variables"),
-    STAGE("stage", "stages"),
-    JOB("job", "jobs"),
-    STEP("step", "steps"),
-    EXTEND("extend", "extend")
-}
+import com.tencent.devops.common.api.pojo.Zone
+import com.tencent.devops.common.pipeline.type.DispatchType
+
+data class DispatchMessage(
+    val id: String,
+    val secretKey: String,
+    val gateway: String,
+    val projectId: String,
+    val pipelineId: String,
+    val buildId: String,
+    val dispatchMessage: String,
+    val userId: String,
+    val vmSeqId: String,
+    val channelCode: String,
+    val vmNames: String,
+    val atoms: Map<String, String> = mapOf(),
+    val zone: Zone?,
+    val containerHashId: String?,
+    val executeCount: Int?,
+    val containerId: String,
+    val containerType: String,
+    val stageId: String,
+    val dispatchType: DispatchType?
+)

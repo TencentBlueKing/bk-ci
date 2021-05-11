@@ -37,8 +37,8 @@ data class Job(
     val id: String? = "",
     val name: String?,
     @JsonProperty("runs-on")
-    val runsOn: List<String> = listOf(JobRunsOnType.DOCKER_ON_VM.type),
-    val container: Container?,
+    val runsOn: RunsOn = RunsOn(),
+    // val container: Container?,
     val services: List<Service>? = null,
     @JsonProperty("if")
     val ifField: String? = null,
@@ -80,7 +80,18 @@ data class Strategy(
     val maxParallel: String?
 )
 
+data class RunsOn(
+    @JsonProperty("self-hosted")
+    val selfHosted: Boolean = false,
+    @JsonProperty("pool-name")
+    val poolName: String = JobRunsOnType.DOCKER.type,
+    val container: Container = Container(
+        image = "http://mirrors.tencent.com/ci/tlinux3_ci:0.1.1.0",
+        credentials = null
+    )
+)
+
 enum class JobRunsOnType(val type: String) {
-    DOCKER_ON_VM("docker-on-vm"),
-    SERVER("server")
+    DOCKER("docker"),
+    AGENT_LESS("agentless")
 }
