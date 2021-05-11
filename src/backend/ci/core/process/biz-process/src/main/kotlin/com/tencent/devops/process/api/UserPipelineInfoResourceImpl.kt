@@ -47,7 +47,11 @@ class UserPipelineInfoResourceImpl @Autowired constructor(
         return Result(result)
     }
 
-    override fun searchByName(userId: String, projectId: String, pipelineName: String): Result<List<PipelineIdAndName>> {
+    override fun searchByName(
+        userId: String,
+        projectId: String,
+        pipelineName: String
+    ): Result<List<PipelineIdAndName>> {
         checkParam(userId, projectId)
         val pipelineInfos = pipelineListFacadeService.searchByPipelineName(projectId, pipelineName, null, null)
         val pipelineIdAndName = mutableListOf<PipelineIdAndName>()
