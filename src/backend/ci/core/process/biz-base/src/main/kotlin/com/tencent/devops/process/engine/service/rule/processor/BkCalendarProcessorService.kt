@@ -39,7 +39,7 @@ class BkCalendarProcessorService : ProcessorService {
     companion object {
         private val logger = LoggerFactory.getLogger(BkCalendarProcessorService::class.java)
         private val calendar = Calendar.getInstance()
-        private const val FORMAT_DATE_NAME = "FORMAT_DATE:"
+        private const val FORMAT_DATE_NAME = "DATE:"
     }
 
     override fun getRuleValue(ruleName: String, pipelineId: String?): String? {
