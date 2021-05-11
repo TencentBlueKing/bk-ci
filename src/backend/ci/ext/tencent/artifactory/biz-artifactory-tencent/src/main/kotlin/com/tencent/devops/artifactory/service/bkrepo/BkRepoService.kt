@@ -637,7 +637,7 @@ class BkRepoService @Autowired constructor(
             timeoutInSeconds = ttl.toLong()
         )
         return StringUtil.chineseUrlEncode("${HomeHostUtil.getHost(commonConfig.devopsOuterHostGateWay!!)
-        }/bkrepo/api/external/repository$shareUri?download=true")
+        }/bkrepo/api/external/repository$shareUri&download=true")
     }
 
     fun internalDownloadUrl(
@@ -658,7 +658,7 @@ class BkRepoService @Autowired constructor(
             timeoutInSeconds = ttl.toLong()
         )
         return "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}" +
-            "/bkrepo/api/external/repository$shareUri?download=true"
+            "/bkrepo/api/external/repository$shareUri&download=true"
     }
 
     fun internalTemporaryAccessDownloadUrls(
