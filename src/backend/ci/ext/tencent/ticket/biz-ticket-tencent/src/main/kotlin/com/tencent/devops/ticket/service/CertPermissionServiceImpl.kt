@@ -37,7 +37,6 @@ import com.tencent.devops.common.auth.code.TicketAuthServiceCode
 import com.tencent.devops.ticket.dao.CertDao
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
 
 class CertPermissionServiceImpl @Autowired constructor(
     private val authResourceApi: AuthResourceApi,

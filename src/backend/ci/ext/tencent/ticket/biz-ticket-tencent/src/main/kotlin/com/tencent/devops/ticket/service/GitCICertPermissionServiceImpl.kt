@@ -34,7 +34,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.scm.api.ServiceGitCiResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
 
 class GitCICertPermissionServiceImpl @Autowired constructor(
     val client: Client
