@@ -36,5 +36,10 @@ enum class GitCINotifyTemplateEnum(val templateCode: String) {
     /**
      * 工蜂CI构建失败消息模板
      */
-    GITCI_BUILD_FAILED_TEMPLATE("GITCI_BUILD_FAILED_TEMPLATE")
+    GITCI_BUILD_FAILED_TEMPLATE("GITCI_BUILD_FAILED_TEMPLATE"),
+
+    /**
+     * 工蜂CI-V2 构建消息模板
+     */
+    GITCI_V2_BUILD_TEMPLATE("GITCI_V2_BUILD_TEMPLATE")
 }

@@ -143,7 +143,7 @@ notices:
       - user2
     ccs:
       - user3
-    if: ${{ failure() }}
+    if: SUCCESS
   - type: wework-message
     title: this is a wework-message notice
     content: this is a wework-message notice,content is hello.
@@ -151,6 +151,7 @@ notices:
       - user1
       - user2
   - type: wework-chat
-    chat-id: xxxxxxxxxx
+    chat-id:
+      - xxxxxxxx
     content: this is a wework-chat notice,content is hello.
 

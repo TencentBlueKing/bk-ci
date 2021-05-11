@@ -44,6 +44,10 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.gitci.v2.template.pojo.NoReplaceTemplate
 import com.tencent.devops.gitci.v2.template.pojo.enums.ResourceCredentialType
 import org.slf4j.LoggerFactory
+import org.springframework.core.io.ClassPathResource
+import java.io.BufferedReader
+import java.io.InputStream
+import java.io.InputStreamReader
 
 class YamlTemplate(
     // 发起者的库ID,用户名,分支

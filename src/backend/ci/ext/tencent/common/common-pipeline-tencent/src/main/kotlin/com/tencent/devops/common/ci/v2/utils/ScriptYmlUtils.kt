@@ -51,6 +51,7 @@ import com.tencent.devops.common.ci.v2.Container
 import com.tencent.devops.common.ci.v2.Credentials
 import com.tencent.devops.common.ci.v2.Job
 import com.tencent.devops.common.ci.v2.JobRunsOnType
+import com.tencent.devops.common.ci.v2.Notices
 import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreStage
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
@@ -186,6 +187,11 @@ object ScriptYmlUtils {
         return sb.toString()
     }
 
+    fun checkYaml(preScriptBuildYaml: PreTemplateScriptBuildYaml) {
+        checkStage(preScriptBuildYaml)
+        checkNotice(preScriptBuildYaml.notices)
+    }
+
     fun checkStage(preScriptBuildYaml: PreTemplateScriptBuildYaml) {
         if ((preScriptBuildYaml.stages != null && preScriptBuildYaml.jobs != null) ||
             (preScriptBuildYaml.stages != null && preScriptBuildYaml.steps != null) ||
@@ -195,6 +201,20 @@ object ScriptYmlUtils {
             (preScriptBuildYaml.extends != null && preScriptBuildYaml.steps != null)
         ) {
             throw CustomException(Response.Status.BAD_REQUEST, "extend, stages, jobs, steps不能并列存在，只能存在其一!")
+        }
+    }
+
+    fun checkNotice(notices: List<Notices>?) {
+        val types = setOf("email", "wework-message", "wework-chat")
+        if (notices == null) {
+            return
+        }
+        notices.forEach {
+            if (it.type !in types) {
+                throw CustomException(
+                    Response.Status.BAD_REQUEST, "通知类型只能为 email, wework-message, wework-chat 中的一种"
+                )
+            }
         }
     }
 
@@ -248,7 +268,8 @@ object ScriptYmlUtils {
                         serviceId = key,
                         image = value.image,
                         with = value.with
-                ))
+                    )
+                )
             }
 
 
