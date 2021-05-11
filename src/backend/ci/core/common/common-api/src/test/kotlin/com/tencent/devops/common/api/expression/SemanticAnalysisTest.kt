@@ -25,9 +25,55 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.worker.common.env
+package com.tencent.devops.common.api.expression
 
-enum class LogMode {
-    UPLOAD,
-    LOCAL
+import org.junit.Assert.assertEquals
+import org.junit.Assert.fail
+import org.junit.Test
+
+class SemanticAnalysisTest {
+
+    @Test
+    fun analysis1() {
+        val str = "a == a"
+        val items = Lex(str.toList().toMutableList()).getToken()
+        try {
+            assertEquals(true, SemanticAnalysis(items).analysis())
+        } catch (e: Exception) {
+            fail()
+        }
+    }
+
+    @Test
+    fun analysis2() {
+        val str = " a==a "
+        val items = Lex(str.toList().toMutableList()).getToken()
+        try {
+            assertEquals(true, SemanticAnalysis(items).analysis())
+        } catch (e: Exception) {
+            fail()
+        }
+    }
+
+    @Test
+    fun analysis3() {
+        val str = "'push'==  'push' && (true && (bbb != aaa && 1 <= 2 )) && (( !true == false) || (!false != false ))  "
+        val items = Lex(str.toList().toMutableList()).getToken()
+        try {
+            assertEquals(true, SemanticAnalysis(items).analysis())
+        } catch (e: Exception) {
+            fail()
+        }
+    }
+
+    @Test
+    fun analysis4() {
+        val str = "'push'== 'push' && (true && (bbb != aaa && 1 >= 2 )) && (( !true == false) || (!false != false )) "
+        val items = Lex(str.toList().toMutableList()).getToken()
+        try {
+            assertEquals(false, SemanticAnalysis(items).analysis())
+        } catch (e: Exception) {
+            fail()
+        }
+    }
 }

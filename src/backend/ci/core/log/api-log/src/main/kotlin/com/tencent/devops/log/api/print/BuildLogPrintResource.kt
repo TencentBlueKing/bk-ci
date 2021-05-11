@@ -29,6 +29,7 @@ package com.tencent.devops.log.api.print
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -115,7 +116,10 @@ interface BuildLogPrintResource {
         jobId: String?,
         @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
-        executeCount: Int?
+        executeCount: Int?,
+        @ApiParam("日志存储模式", required = false)
+        @QueryParam("logMode")
+        logMode: String?
     ): Result<Boolean>
 
     @ApiOperation("更新日志状态")
@@ -139,6 +143,23 @@ interface BuildLogPrintResource {
         jobId: String?,
         @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
-        executeCount: Int?
+        executeCount: Int?,
+        @ApiParam("日志存储模式", required = false)
+        @QueryParam("logMode")
+        logMode: String?
+    ): Result<Boolean>
+
+    @ApiOperation("更新日志存储模式的流转状态")
+    @POST
+    @Path("/mode")
+    fun updateLogStorageMode(
+        @ApiParam("构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
+        buildId: String,
+        @ApiParam("执行次数", required = false)
+        @QueryParam("executeCount")
+        executeCount: Int?,
+        @ApiParam("所有插件的日志存储结果", required = true)
+        propertyList: List<TaskBuildLogProperty>
     ): Result<Boolean>
 }

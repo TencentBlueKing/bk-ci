@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.control.command.stage.impl
 
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
@@ -42,7 +43,9 @@ import org.springframework.stereotype.Service
 class CheckInterruptStageCmd : StageCmd {
 
     override fun canExecute(commandContext: StageContext): Boolean {
-        return commandContext.cmdFlowState == CmdFlowState.CONTINUE && !commandContext.buildStatus.isFinish()
+        return commandContext.stage.controlOption?.finally != true &&
+            commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
+            !commandContext.buildStatus.isFinish()
     }
 
     override fun execute(commandContext: StageContext) {
@@ -71,7 +74,7 @@ class CheckInterruptStageCmd : StageCmd {
     private fun parseFastKill(commandContext: StageContext): Boolean {
         if (commandContext.stage.controlOption?.fastKill == true) {
             commandContext.containers.forEach { container ->
-                if (container.status.isFailure() || container.status.isCancel()) {
+                if (ControlUtils.checkContainerFailure(container) || container.status.isCancel()) {
                     commandContext.fastKill = true // 设置标志快速失败
                     return container.status.isFailure()
                 }

@@ -31,11 +31,14 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.log.pojo.LogEvent
 import com.tencent.devops.common.log.pojo.LogStatusEvent
+import com.tencent.devops.common.log.pojo.TaskBuildLogProperty
+import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.print.BuildLogPrintResource
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.log.meta.Ansi
 import com.tencent.devops.log.service.BuildLogPrintService
+import com.tencent.devops.log.service.LogStatusService
 import org.springframework.beans.factory.annotation.Autowired
 
 /**
@@ -44,7 +47,8 @@ import org.springframework.beans.factory.annotation.Autowired
  */
 @RestResource
 class BuildLogPrintResourceImpl @Autowired constructor(
-    private val buildLogPrintService: BuildLogPrintService
+    private val buildLogPrintService: BuildLogPrintService,
+    private val logStatusService: LogStatusService
 ) : BuildLogPrintResource {
 
     override fun addLogLine(buildId: String, logMessage: LogMessage): Result<Boolean> {
@@ -86,7 +90,8 @@ class BuildLogPrintResourceImpl @Autowired constructor(
         tag: String?,
         subTag: String?,
         jobId: String?,
-        executeCount: Int?
+        executeCount: Int?,
+        logMode: String?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
             throw ParamBlankException("无效的构建ID")
@@ -97,7 +102,8 @@ class BuildLogPrintResourceImpl @Autowired constructor(
             tag = tag ?: "",
             subTag = subTag,
             jobId = jobId ?: "",
-            executeCount = executeCount
+            executeCount = executeCount,
+            logStorageMode = LogStorageMode.parse(logMode)
         ))
     }
 
@@ -107,7 +113,8 @@ class BuildLogPrintResourceImpl @Autowired constructor(
         tag: String?,
         subTag: String?,
         jobId: String?,
-        executeCount: Int?
+        executeCount: Int?,
+        logMode: String?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
             throw ParamBlankException("无效的构建ID")
@@ -118,7 +125,24 @@ class BuildLogPrintResourceImpl @Autowired constructor(
             tag = tag ?: "",
             subTag = subTag,
             jobId = jobId ?: "",
-            executeCount = executeCount
+            executeCount = executeCount,
+            logStorageMode = LogStorageMode.parse(logMode)
         ))
+    }
+
+    override fun updateLogStorageMode(
+        buildId: String,
+        executeCount: Int?,
+        propertyList: List<TaskBuildLogProperty>
+    ): Result<Boolean> {
+        if (buildId.isBlank()) {
+            throw ParamBlankException("无效的构建ID")
+        }
+        logStatusService.updateStorageMode(
+            buildId = buildId,
+            executeCount = executeCount ?: 1,
+            propertyList = propertyList
+        )
+        return Result(true)
     }
 }

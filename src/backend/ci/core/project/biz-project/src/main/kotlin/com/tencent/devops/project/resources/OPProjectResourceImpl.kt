@@ -194,15 +194,11 @@ class OPProjectResourceImpl @Autowired constructor(
     }
 
     override fun setRepoGrayProject(projectGraySetRequest: OpProjectGraySetRequest): Result<Boolean> {
-        return Result(data = opProjectService.setRepoGrayProject(
-            projectCodeList = projectGraySetRequest.projectCodeList,
-            operateFlag = projectGraySetRequest.operateFlag))
+        return Result(true)
     }
 
     override fun setRepoNotGrayProject(projectGraySetRequest: OpProjectGraySetRequest): Result<Boolean> {
-        return Result(data = opProjectService.setRepoNotGrayProject(
-            projectCodeList = projectGraySetRequest.projectCodeList,
-            operateFlag = projectGraySetRequest.operateFlag))
+        return Result(true)
     }
 
     override fun setMacOSGrayProject(projectGraySetRequest: OpProjectGraySetRequest): Result<Boolean> {

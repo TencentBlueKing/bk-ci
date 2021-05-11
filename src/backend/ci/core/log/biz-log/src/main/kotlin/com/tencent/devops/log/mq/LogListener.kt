@@ -103,6 +103,7 @@ class LogListener @Autowired constructor(
                         tag = tag,
                         subTag = subTag,
                         jobId = jobId,
+                        logStorageMode = logStorageMode,
                         executeCount = executeCount,
                         retryTime = retryTime - 1,
                         delayMills = getNextDelayMills(retryTime)
