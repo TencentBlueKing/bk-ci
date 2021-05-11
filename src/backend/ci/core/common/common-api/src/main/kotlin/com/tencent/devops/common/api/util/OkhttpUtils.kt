@@ -269,18 +269,20 @@ object OkhttpUtils {
         var totalBytesRead = 0
         var len: Int
         val result = CharArrayWriter()
-        body()!!.charStream().use { stream ->
-            while ((stream.read(buf).also { len = it }) != -1) {
-                totalBytesRead += len
-                if (totalBytesRead >= readLimit) {
-                    throw ErrorCodeException(
-                        errorCode = ERROR_HTTP_RESPONSE_BODY_TOO_LARGE,
-                        defaultMessage = errorMsg ?: "response body cannot be exceeded $readLimit"
-                    )
+        body()!!.charStream().use { inStream ->
+            result.use { outStream ->
+                while ((inStream.read(buf).also { len = it }) != -1) {
+                    totalBytesRead += len
+                    if (totalBytesRead >= readLimit) {
+                        throw ErrorCodeException(
+                            errorCode = ERROR_HTTP_RESPONSE_BODY_TOO_LARGE,
+                            defaultMessage = errorMsg ?: "response body cannot be exceeded $readLimit"
+                        )
+                    }
+                    outStream.write(buf, 0, len)
                 }
-                result.write(buf, 0, len)
+                return String(outStream.toCharArray())
             }
         }
-        return String(result.toCharArray())
     }
 }
