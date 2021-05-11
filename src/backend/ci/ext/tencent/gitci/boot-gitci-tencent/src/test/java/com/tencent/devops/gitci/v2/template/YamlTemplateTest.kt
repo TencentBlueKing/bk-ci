@@ -60,19 +60,19 @@ class YamlTemplateTest {
         val yaml = ScriptYmlUtils.formatYaml(sb.toString())
         val preTemplateYamlObject = YamlUtil.getObjectMapper().readValue(yaml, PreTemplateScriptBuildYaml::class.java)
 
-        println(
-            YamlCommonUtils.toYamlNotNull(
-                YamlTemplate(
-                    yamlObject = preTemplateYamlObject,
-                    filePath = testYaml,
-                    triggerUserId = "ruotiantang",
-                    triggerProjectId = 580280,
-                    triggerToken = "",
-                    triggerRef = "master",
-                    repo = null,
-                    repoTemplateGraph = TemplateGraph()
-                ).replace()
-            )
-        )
+//        println(
+//            YamlCommonUtils.toYamlNotNull(
+//                YamlTemplate(
+//                    yamlObject = preTemplateYamlObject,
+//                    filePath = testYaml,
+//                    triggerUserId = "ruotiantang",
+//                    triggerProjectId = 580280,
+//                    triggerToken = "",
+//                    triggerRef = "master",
+//                    repo = null,
+//                    repoTemplateGraph = TemplateGraph()
+//                ).replace()
+//            )
+//        )
     }
 }
