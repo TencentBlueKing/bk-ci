@@ -80,7 +80,7 @@ class ExperienceOuterService @Autowired constructor(
             // 设置token , 存放信息
             val outerProfileVO = OuterProfileVO(
                 username = profile.username.replace("@$domain", ""),
-                logo = logo,
+                logo = logo(),
                 email = profile.email
             )
             val token = DigestUtils.md5Hex(profile.username + profile.id + System.currentTimeMillis() + secretKey)
@@ -209,6 +209,7 @@ class ExperienceOuterService @Autowired constructor(
     private val loginApi = V1Api()
     private val profileApi = ProfilesApi()
     private fun redisKey(token: String) = "e:out:l:$token"
+    private fun logo() = "https://${HomeHostUtil.outerServerHost()}/app/download/devops_app.png"
 
     companion object {
         private val logger = LoggerFactory.getLogger(ExperienceOuterService::class.java)
@@ -216,6 +217,5 @@ class ExperienceOuterService @Autowired constructor(
         private val df = DateTimeFormatter.ofPattern("HHmmss")
         private const val expireSecs: Long = 30 * 24 * 60 * 60
         private const val domain = "app.devops"
-        private val logo = "https://${HomeHostUtil.outerServerHost()}/app/download/devops_app.png"
     }
 }
