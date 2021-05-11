@@ -40,12 +40,10 @@ import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
 /**
  * Pipeline专用权限校验接口
  */
-@Service
 class EnvironmentPermissionServiceImpl @Autowired constructor(
     private val authResourceApi: AuthResourceApi,
     private val authPermissionApi: AuthPermissionApi,
@@ -333,6 +331,6 @@ class EnvironmentPermissionServiceImpl @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        val logger = LoggerFactory.getLogger(EnvironmentPermissionServiceImpl::class.java)
     }
 }

@@ -29,7 +29,9 @@ package com.tencent.devops.process
 
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.process.permission.GitCiPipelinePermissionServiceImpl
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -48,4 +50,11 @@ class TxPipelineEngineConfiguration {
 
     @Bean
     fun managerService(client: Client) = ManagerService(client)
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
+    fun gitCIPipelinePermissionServiceImpl(
+        client: Client
+    ) = GitCiPipelinePermissionServiceImpl(client)
+
 }
