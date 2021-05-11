@@ -133,8 +133,8 @@ class TriggerBuildService @Autowired constructor(
     private val gitCISettingDao: GitCISettingDao,
     private val gitCIParameterUtils: GitCIParameterUtils,
     private val gitServicesConfDao: GitCIServicesConfDao,
+    private val scmClient: ScmClient,
     redisOperation: RedisOperation,
-    scmClient: ScmClient,
     gitPipelineResourceDao: GitPipelineResourceDao,
     gitRequestEventBuildDao: GitRequestEventBuildDao,
     gitRequestEventNotBuildDao: GitRequestEventNotBuildDao
@@ -411,27 +411,54 @@ class TriggerBuildService @Autowired constructor(
                 customCondition = step.ifFiled
             )
 
-            val element: Element = if (step.run != null) {
-                LinuxScriptElement(
-                    name = step.name ?: "执行Linux脚本",
-                    id = step.id,
-                    // todo: 如何判断类型
-                    scriptType = BuildScriptType.SHELL,
-                    script = step.run!!,
-                    continueNoneZero = false,
-                    additionalOptions = additionalOptions
-                )
-            } else {
-                val data = mutableMapOf<String, Any>()
-                data["input"] = step.with!!
-                MarketBuildAtomElement(
-                    name = step.name ?: "插件市场第三方构建环境类插件",
-                    id = step.id,
-                    atomCode = step.uses!!.split('@')[0],
-                    version = step.uses!!.split('@')[1],
-                    data = data,
-                    additionalOptions = additionalOptions
-                )
+            val element: Element = when {
+                step.run != null -> {
+                    LinuxScriptElement(
+                        name = step.name ?: "执行Linux脚本",
+                        id = step.id,
+                        // todo: 如何判断类型
+                        scriptType = BuildScriptType.SHELL,
+                        script = step.run!!,
+                        continueNoneZero = false,
+                        additionalOptions = additionalOptions
+                    )
+                }
+                step.checkout != null -> {
+                    // checkout插件装配
+                    val inputMap = mutableMapOf<String, Any>()
+                    inputMap.putAll(step.with!!)
+                    // 拉取本地工程代码
+                    if (step.checkout == "self") {
+                        inputMap["accessToken"] = scmClient.getAccessToken(gitProjectConf.gitProjectId)
+                        inputMap["repositoryUrl"] = gitProjectConf.gitHttpUrl
+                    } else {
+                        inputMap["repositoryUrl"] = step.checkout!!
+                    }
+
+                    val data = mutableMapOf<String, Any>()
+                    data["input"] = inputMap
+
+                    MarketBuildAtomElement(
+                        name = step.name ?: "拉代码插件",
+                        id = step.id,
+                        atomCode = "checkout",
+                        version = "1.latest",
+                        data = data,
+                        additionalOptions = additionalOptions
+                    )
+                }
+                else -> {
+                    val data = mutableMapOf<String, Any>()
+                    data["input"] = step.with!!
+                    MarketBuildAtomElement(
+                        name = step.name ?: "插件市场第三方构建环境类插件",
+                        id = step.id,
+                        atomCode = step.uses!!.split('@')[0],
+                        version = step.uses!!.split('@')[1],
+                        data = data,
+                        additionalOptions = additionalOptions
+                    )
+                }
             }
 
             elementList.add(element)

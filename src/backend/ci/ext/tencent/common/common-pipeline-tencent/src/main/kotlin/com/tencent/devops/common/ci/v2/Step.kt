@@ -43,5 +43,6 @@ data class Step(
     @JsonProperty("retry-times")
     val retryTimes: String?,
     val env: Any?,
-    val run: String?
+    val run: String?,
+    val checkout: String?
 )

@@ -309,7 +309,8 @@ object ScriptYmlUtils {
                     continueOnError = it.continueOnError,
                     retryTimes = it.retryTimes,
                     env = it.env,
-                    run = it.run
+                    run = it.run,
+                    checkout = it.checkout
                 )
             )
         }

@@ -61,7 +61,8 @@ object YamlObjects {
             continueOnError = getNullValue("continue-on-error", step)?.toBoolean(),
             retryTimes = step["retry-times"]?.toString(),
             env = step["env"]?.toString(),
-            run = step["run"]?.toString()
+            run = step["run"]?.toString(),
+            checkout = step["checkout"]?.toString()
         )
     }
 
