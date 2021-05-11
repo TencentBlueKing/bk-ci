@@ -442,15 +442,13 @@ class BuildStartControl @Autowired constructor(
                 allVariable = startParams, projectId = projectId,
                 pipelineId = pipelineId, buildId = buildId, model = model
             )
-
-            val projectName = projectCacheService.getProjectName(projectId) ?: ""
-            val map = mapOf(
-                PIPELINE_BUILD_ID to buildId,
-                PROJECT_NAME to projectId,
-                PROJECT_NAME_CHINESE to projectName,
-                PIPELINE_TIME_START to System.currentTimeMillis().toString()
+            buildVariableService.setVariable(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                varName = PIPELINE_TIME_START,
+                varValue = System.currentTimeMillis().toString()
             )
-            buildVariableService.batchUpdateVariable(projectId, pipelineId, buildId, map)
         }
 
         if (model.stages.size == 1) { // 空节点

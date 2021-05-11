@@ -190,7 +190,7 @@ class PipelineRuleService @Autowired constructor(
         )
     }
 
-    fun parsePipelineRule(pipelineId: String, busCode: String, ruleStr: String): String {
+    fun parsePipelineRule(pipelineId: String, buildId: String, busCode: String, ruleStr: String): String {
         val validRuleProcessorMap = validateRuleStr(ruleStr, busCode)
         val validRuleValueMap = mutableMapOf<String, String>()
         validRuleProcessorMap.map { validRule ->
@@ -198,7 +198,7 @@ class PipelineRuleService @Autowired constructor(
             val ruleName = validRule.key
             val processorName = validRule.value
             val processor = SpringContextUtil.getBean(ProcessorService::class.java, processorName)
-            val ruleValue = processor.getRuleValue(ruleName, pipelineId)
+            val ruleValue = processor.getRuleValue(ruleName, pipelineId, buildId)
             validRuleValueMap[ruleName] = ruleValue ?: ""
         }
         return generateReplaceRuleStr(ruleStr, validRuleValueMap)
