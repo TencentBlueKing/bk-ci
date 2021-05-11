@@ -199,11 +199,7 @@ class PipelineRuleService @Autowired constructor(
             val processorName = validRule.value
             val processor = SpringContextUtil.getBean(ProcessorService::class.java, processorName)
             val ruleValue = processor.getRuleValue(ruleName, pipelineId)
-                ?: throw ErrorCodeException(
-                    errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                    params = arrayOf("$ruleStr(error rule:$ruleName)")
-                )
-            validRuleValueMap[ruleName] = ruleValue
+            validRuleValueMap[ruleName] = ruleValue ?: ""
         }
         return generateReplaceRuleStr(ruleStr, validRuleValueMap)
     }

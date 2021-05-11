@@ -27,47 +27,24 @@
 
 package com.tencent.devops.process.engine.service.rule.processor
 
-import org.slf4j.LoggerFactory
+import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
+import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.lang.reflect.Modifier
-import java.util.Calendar
 
-@Service("DefaultCalendarProcessor")
-class DefaultCalendarProcessorService : ProcessorService {
+@Service("BkVarProcessor")
+class BkVarProcessorService : ProcessorService {
 
-    companion object {
+    @Autowired
+    private lateinit var dslContext: DSLContext
 
-        private val logger = LoggerFactory.getLogger(DefaultCalendarProcessorService::class.java)
-
-        private val calendar = Calendar.getInstance()
-
-        @JvmField
-        val publicFieldNameMap = getCalendarPublicFieldNameMap()
-
-        @JvmStatic
-        private fun getCalendarPublicFieldNameMap(): Map<String, Any?> {
-            // 获取Calendar类公共字段集合
-            val declaredFields = Calendar::class.java.declaredFields
-            val fieldNameMap = mutableMapOf<String, Any?>()
-            declaredFields.forEach { field ->
-                try {
-                    val m = field.modifiers
-                    val flag = Modifier.isPublic(m)
-                    if (flag) {
-                        fieldNameMap[field.name] = field.get(Calendar::class.java)
-                    }
-                } catch (ingored: Exception) {
-                    logger.warn("${field.name} get value error.", ingored)
-                }
-            }
-            return fieldNameMap
-        }
-    }
+    @Autowired
+    private lateinit var pipelineBuildVarDao: PipelineBuildVarDao
 
     override fun getRuleValue(ruleName: String, pipelineId: String?, buildId: String?): String? {
-        val ruleValue = publicFieldNameMap[ruleName]
-        return if (ruleValue != null && ruleValue is Int) {
-            calendar.get(ruleValue).toString()
+        return if (buildId != null) {
+            val varMap = pipelineBuildVarDao.getVars(dslContext, buildId, ruleName)
+            varMap[ruleName]
         } else {
             null
         }
