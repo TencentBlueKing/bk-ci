@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_REDIS_KEY
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.project.api.op.pojo.OpProjectTagUpdateDTO
+import com.tencent.devops.project.api.pojo.ProjectTagUpdateDTO
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectTagDao
 import org.jooq.DSLContext
@@ -57,8 +57,11 @@ class ProjectTagService @Autowired constructor(
     @Value("\${system.router}")
     val routerTagList: String = ""
 
+    @Value("\${auto.tag:#{null}}")
+    private val autoTag: String? = null
+
     fun updateTagByProject(
-        opProjectTagUpdateDTO: OpProjectTagUpdateDTO
+        opProjectTagUpdateDTO: ProjectTagUpdateDTO
     ): Result<Boolean> {
         logger.info("updateTagByProject: $opProjectTagUpdateDTO")
         checkRouteTag(opProjectTagUpdateDTO.routerTag)
@@ -78,8 +81,33 @@ class ProjectTagService @Autowired constructor(
         return Result(true)
     }
 
+    fun updateTagByProject(
+        projectCode: String,
+        tag: String? = null
+    ): Boolean {
+        val routerTag = if (tag.isNullOrEmpty()) {
+            autoTag
+        } else {
+            tag
+        }
+        if (autoTag.isNullOrEmpty()) {
+            return true
+        }
+        logger.info("updateTagByProject: $projectCode| $routerTag")
+        val projectTagUpdate = ProjectTagUpdateDTO(
+            routerTag = routerTag!!,
+            projectCodeList = arrayListOf(projectCode),
+            bgId = null,
+            centerId = null,
+            deptId = null,
+            channel = null
+        )
+        updateTagByProject(projectTagUpdate)
+        return true
+    }
+
     fun updateTagByOrg(
-        opProjectTagUpdateDTO: OpProjectTagUpdateDTO
+        opProjectTagUpdateDTO: ProjectTagUpdateDTO
     ): Result<Boolean> {
         logger.info("updateTagByOrg: $opProjectTagUpdateDTO")
         checkRouteTag(opProjectTagUpdateDTO.routerTag)
@@ -110,7 +138,7 @@ class ProjectTagService @Autowired constructor(
     }
 
     fun updateTagByChannel(
-        opProjectTagUpdateDTO: OpProjectTagUpdateDTO
+        opProjectTagUpdateDTO: ProjectTagUpdateDTO
     ): Result<Boolean> {
         logger.info("updateTagByChannel: $opProjectTagUpdateDTO")
         checkRouteTag(opProjectTagUpdateDTO.routerTag)
@@ -160,7 +188,7 @@ class ProjectTagService @Autowired constructor(
         }
     }
 
-    private fun checkOrg(opProjectTagUpdateDTO: OpProjectTagUpdateDTO) {
+    private fun checkOrg(opProjectTagUpdateDTO: ProjectTagUpdateDTO) {
         if (opProjectTagUpdateDTO.bgId == null &&
             opProjectTagUpdateDTO.deptId == null &&
             opProjectTagUpdateDTO.centerId == null
