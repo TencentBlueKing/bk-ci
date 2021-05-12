@@ -27,16 +27,10 @@
 
 package com.tencent.devops.auth.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
-import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 
-@ConditionalOnMissingBean
 class DefaultDeptServiceImpl @Autowired constructor(
-    val redisOperation: RedisOperation,
-    val objectMapper: ObjectMapper
 ) : DeptService {
 
     override fun getDeptByLevel(level: Int, accessToken: String?, userId: String): DeptInfoVo? {
