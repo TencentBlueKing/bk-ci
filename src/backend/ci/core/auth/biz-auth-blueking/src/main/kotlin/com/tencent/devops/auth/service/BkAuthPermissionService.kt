@@ -6,7 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class BkAuthPermissionService @Autowired constructor(
 
 ): PermissionService {
-    override fun validateUserResourcePermission(userId: String, action: String): Boolean {
+    override fun validateUserActionPermission(userId: String, action: String): Boolean {
         return true
     }
 
