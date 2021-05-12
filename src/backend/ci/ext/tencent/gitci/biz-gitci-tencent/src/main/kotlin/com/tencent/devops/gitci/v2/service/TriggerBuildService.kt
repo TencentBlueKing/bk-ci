@@ -436,6 +436,9 @@ class TriggerBuildService @Autowired constructor(
                         inputMap["repositoryUrl"] = step.checkout!!
                     }
 
+                    // 拼装插件固定参数
+                    inputMap["repositoryType"] = "URL"
+
                     val data = mutableMapOf<String, Any>()
                     data["input"] = inputMap
 
