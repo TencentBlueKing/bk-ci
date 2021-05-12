@@ -171,7 +171,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                 // 检查yml版本，根据yml版本选择不同的实现
                 val ymlVersion = ScriptYmlUtils.parseVersion(event.normalizedYaml)
                 val isV2 = (ymlVersion != null && ymlVersion.version == "v2.0")
-
+                // v1 校验是否发送通知
                 if (!isV2 && !checkIsSendNotify(conf = gitProjectConf, state = state.value)) {
                     return
                 }
@@ -718,9 +718,9 @@ class GitCIBuildFinishListener @Autowired constructor(
         if (startParams == null || startParams.isEmpty()) {
             return receivers.toMutableSet()
         }
-        val paramMap = startParams.map {
+        val paramMap = startParams.associate {
             it.key to it.value.toString()
-        }.toMap()
+        }
         return receivers.map { receiver ->
             EnvUtils.parseEnv(receiver, paramMap)
         }.toMutableSet()

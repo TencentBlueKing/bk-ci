@@ -84,6 +84,57 @@ class GitRequestEventBuildDao {
         }
     }
 
+    fun saveWhole(
+        dslContext: DSLContext,
+        eventId: Long,
+        originYaml: String,
+        parsedYaml: String,
+        normalizedYaml: String,
+        gitProjectId: Long,
+        branch: String,
+        objectKind: String,
+        triggerUser: String,
+        description: String?,
+        sourceGitProjectId: Long?,
+        pipelineId: String,
+        buildId: String
+    ): Long {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            val record = dslContext.insertInto(
+                this,
+                EVENT_ID,
+                ORIGIN_YAML,
+                PARSED_YAML,
+                NORMALIZED_YAML,
+                GIT_PROJECT_ID,
+                BRANCH,
+                OBJECT_KIND,
+                DESCRIPTION,
+                TRIGGER_USER,
+                CREATE_TIME,
+                SOURCE_GIT_PROJECT_ID,
+                PIPELINE_ID,
+                BUILD_ID
+            ).values(
+                eventId,
+                originYaml,
+                parsedYaml,
+                normalizedYaml,
+                gitProjectId,
+                branch,
+                objectKind,
+                description,
+                triggerUser,
+                LocalDateTime.now(),
+                sourceGitProjectId,
+                pipelineId,
+                buildId
+            ).returning(ID)
+                .fetchOne()
+            return record.id
+        }
+    }
+
     fun retryUpdate(
         dslContext: DSLContext,
         gitBuildId: Long
@@ -143,8 +194,10 @@ class GitRequestEventBuildDao {
     ): Record? {
         val t1 = TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD.`as`("t1")
         val t2 = TGitRequestEvent.T_GIT_REQUEST_EVENT.`as`("t2")
-        return dslContext.select(t2.OBJECT_KIND, t2.COMMIT_ID, t2.GIT_PROJECT_ID, t2.MERGE_REQUEST_ID, t2
-            .DESCRIPTION, t2.EVENT, t2.SOURCE_GIT_PROJECT_ID, t1.PIPELINE_ID)
+        return dslContext.select(
+            t2.OBJECT_KIND, t2.COMMIT_ID, t2.GIT_PROJECT_ID, t2.MERGE_REQUEST_ID, t2
+                .DESCRIPTION, t2.EVENT, t2.SOURCE_GIT_PROJECT_ID, t1.PIPELINE_ID
+        )
             .from(t2).leftJoin(t1).on(t1.EVENT_ID.eq(t2.ID))
             .where(t1.BUILD_ID.eq(buildId))
             .fetchOne()
@@ -379,6 +432,19 @@ class GitRequestEventBuildDao {
                 dsl.and(OBJECT_KIND.eq(event))
             }
             return dsl.orderBy(EVENT_ID.desc())
+                .fetch()
+        }
+    }
+
+    fun getEventsByPipelineId(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        pipelineId: String
+    ): List<TGitRequestEventBuildRecord> {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            return dslContext.selectFrom(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .and(PIPELINE_ID.eq(pipelineId))
                 .fetch()
         }
     }
