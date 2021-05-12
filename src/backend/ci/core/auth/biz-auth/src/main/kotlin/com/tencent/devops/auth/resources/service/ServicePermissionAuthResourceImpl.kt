@@ -27,8 +27,8 @@
 
 package com.tencent.devops.auth.resources.service
 
-import com.tencent.devops.auth.service.PermissionService
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
+import com.tencent.devops.auth.service.PermissionService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
@@ -38,33 +38,26 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServicePermissionAuthResourceImpl @Autowired constructor(
     val permissionService: PermissionService
 ) : ServicePermissionAuthResource {
-    override fun validateUserResourcePermission(
-        userId: String,
-        resourceType: String,
-        projectCode: String,
-        permission: String
-    ): Result<Boolean> {
-        return Result(permissionService.validateUserResourcePermission(
-            userId = userId,
-            resourceType = resourceType,
-            projectCode = projectCode,
-            permission = permission
-        ))
+
+    override fun validateUserResourcePermission(userId: String, action: String): Result<Boolean> {
+        return Result(permissionService.validateUserResourcePermission(userId, action))
     }
 
     override fun validateUserResourcePermissionByRelation(
         userId: String,
-        resourceType: String,
+        action: String,
         projectCode: String,
-        permission: String,
+        resourceCode: String,
+        resourceType: String,
         relationResourceType: String?
     ): Result<Boolean> {
         return Result(
             permissionService.validateUserResourcePermissionByRelation(
                 userId = userId,
-                resourceType = resourceType,
+                action = action,
                 projectCode = projectCode,
-                permission = permission,
+                resourceCode = resourceCode,
+                resourceType = resourceType,
                 relationResourceType = relationResourceType
             )
         )
@@ -72,34 +65,32 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
 
     override fun getUserResourceByPermission(
         userId: String,
-        serviceCode: String,
-        resourceType: String,
+        action: String,
         projectCode: String,
-        permission: String
+        resourceType: String
     ): Result<List<String>> {
-        return Result(permissionService.getUserResourceByPermission(
-            userId = userId,
-            serviceCode = serviceCode,
-            resourceType = resourceType,
-            projectCode = projectCode,
-            permission = permission
-        ))
+        return Result(
+            permissionService.getUserResourceByAction(
+                userId = userId,
+                action = action,
+                projectCode = projectCode,
+                resourceType = resourceType
+            )
+        )
     }
 
     override fun getUserResourcesByPermissions(
         userId: String,
-        serviceCode: String,
-        resourceType: String,
+        actions: List<String>,
         projectCode: String,
-        permission: Set<AuthPermission>
+        resourceType: String
     ): Result<Map<AuthPermission, List<String>>> {
         return Result(
-            permissionService.getUserResourcesByPermissions(
+            permissionService.getUserResourcesByActions(
                 userId = userId,
-                serviceCode = serviceCode,
-                resourceType = resourceType,
+                actions = actions,
                 projectCode = projectCode,
-                permission = permission
+                resourceType = resourceType
             )
         )
     }

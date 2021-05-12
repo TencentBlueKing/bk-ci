@@ -27,40 +27,41 @@
 
 package com.tencent.devops.auth.service
 
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
 
 interface PermissionService {
     fun validateUserResourcePermission(
         userId: String,
-        resourceType: String,
+        action: String
+    ): Boolean
+
+    fun validateUserResourcePermission(
+        userId: String,
+        action: String,
         projectCode: String,
-        permission: String
+        resourceType: String?
     ): Boolean
 
     fun validateUserResourcePermissionByRelation(
         userId: String,
-        resourceType: String,
+        action: String,
         projectCode: String,
-        permission: String,
+        resourceCode: String,
+        resourceType: String,
         relationResourceType: String?
     ): Boolean
 
-    fun getUserResourceByPermission(
+    fun getUserResourceByAction(
         userId: String,
-        serviceCode: String,
-        resourceType: String,
+        action: String,
         projectCode: String,
-        permission: String
-    ): List<String> {
-        TODO("Not yet implemented")
-    }
+        resourceType: String
+    ): List<String>
 
-    fun getUserResourcesByPermissions(
+    fun getUserResourcesByActions(
         userId: String,
-        serviceCode: String,
-        resourceType: String,
+        actions: List<String>,
         projectCode: String,
-        permission: Set<AuthPermission>
+        resourceType: String
     ): Map<AuthPermission, List<String>>
 }

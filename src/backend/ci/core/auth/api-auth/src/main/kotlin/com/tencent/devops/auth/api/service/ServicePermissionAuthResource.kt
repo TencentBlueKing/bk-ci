@@ -55,15 +55,9 @@ interface ServicePermissionAuthResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("待校验用户ID", required = true)
         userId: String,
-        @QueryParam("resourceType")
+        @QueryParam("action")
         @ApiParam("资源类型", required = true)
-        resourceType: String,
-        @PathParam("projectCode")
-        @ApiParam("项目Code", required = true)
-        projectCode: String,
-        @QueryParam("permission")
-        @ApiParam("权限Action", required = true)
-        permission: String
+        action: String
     ): Result<Boolean>
 
     @GET
@@ -73,15 +67,18 @@ interface ServicePermissionAuthResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("待校验用户ID", required = true)
         userId: String,
-        @QueryParam("resourceType")
-        @ApiParam("资源类型", required = true)
-        resourceType: String,
+        @QueryParam("action")
+        @ApiParam("action类型", required = true)
+        action: String,
         @PathParam("projectCode")
         @ApiParam("项目Code", required = true)
         projectCode: String,
-        @QueryParam("permission")
-        @ApiParam("权限Action", required = true)
-        permission: String,
+        @QueryParam("resourceCode")
+        @ApiParam("资源code", required = true)
+        resourceCode: String,
+        @QueryParam("resourceType")
+        @ApiParam("资源类型", required = true)
+        resourceType: String,
         @QueryParam("relationResourceType")
         @ApiParam("关联资源,一般为Project", required = false)
         relationResourceType: String? = null
@@ -94,16 +91,15 @@ interface ServicePermissionAuthResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("待校验用户ID", required = true)
         userId: String,
-        serviceCode: String,
-        @QueryParam("resourceType")
-        @ApiParam("资源类型", required = true)
-        resourceType: String,
+        @QueryParam("action")
+        @ApiParam("action类型")
+        action: String,
         @PathParam("projectCode")
         @ApiParam("项目Code", required = true)
         projectCode: String,
-        @QueryParam("permission")
-        @ApiParam("权限Action", required = true)
-        permission: String
+        @QueryParam("resourceType")
+        @ApiParam("资源类型")
+        resourceType: String
     ): Result<List<String>>
 
 
@@ -114,15 +110,14 @@ interface ServicePermissionAuthResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("待校验用户ID", required = true)
         userId: String,
-        serviceCode: String,
-        @QueryParam("resourceType")
-        @ApiParam("资源类型", required = true)
-        resourceType: String,
+        @QueryParam("action")
+        @ApiParam("action类型")
+        action: List<String>,
         @PathParam("projectCode")
         @ApiParam("项目Code", required = true)
         projectCode: String,
-        @QueryParam("permission")
-        @ApiParam("权限Action集合", required = true)
-        permission: Set<AuthPermission>
+        @QueryParam("resourceType")
+        @ApiParam("资源类型")
+        resourceType: String
     ): Result<Map<AuthPermission, List<String>>>
 }
