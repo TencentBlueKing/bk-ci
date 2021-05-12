@@ -51,13 +51,31 @@ interface ServicePermissionAuthResource {
     @GET
     @Path("/projects/{projectCode}/action/validate")
     @ApiOperation("校验用户是否有action的权限")
-    fun validateUserResourcePermission(
+    fun validateUserActionPermission(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("待校验用户ID", required = true)
         userId: String,
         @QueryParam("action")
         @ApiParam("资源类型", required = true)
         action: String
+    ): Result<Boolean>
+
+    @GET
+    @Path("/projects/{projectCode}/action/validate")
+    @ApiOperation("校验用户是否有action的权限")
+    fun validateUserResourcePermission(
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @ApiParam("待校验用户ID", required = true)
+        userId: String,
+        @QueryParam("action")
+        @ApiParam("资源类型", required = true)
+        action: String,
+        @QueryParam("projectCode")
+        @ApiParam("项目编码", required = true)
+        projectCode: String,
+        @QueryParam("resourceCode")
+        @ApiParam("资源编码", required = false)
+        resourceCode: String?
     ): Result<Boolean>
 
     @GET

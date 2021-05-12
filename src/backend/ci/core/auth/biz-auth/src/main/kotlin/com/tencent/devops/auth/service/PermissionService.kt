@@ -30,7 +30,7 @@ package com.tencent.devops.auth.service
 import com.tencent.devops.common.auth.api.AuthPermission
 
 interface PermissionService {
-    fun validateUserResourcePermission(
+    fun validateUserActionPermission(
         userId: String,
         action: String
     ): Boolean
