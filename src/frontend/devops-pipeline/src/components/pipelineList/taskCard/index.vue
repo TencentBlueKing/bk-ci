@@ -51,6 +51,7 @@
                         :
                         <span
                             class="row-value"
+                            :title="row.value"
                             :class="!cindex ? config.status : ''"
                         >{{ row.value }}</span>
                     </p>
