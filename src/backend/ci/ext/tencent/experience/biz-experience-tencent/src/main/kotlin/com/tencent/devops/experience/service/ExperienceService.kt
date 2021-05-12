@@ -199,6 +199,7 @@ class ExperienceService @Autowired constructor(
         val groupIdToOuters = experienceBaseService.getGroupIdToOuters(groupIds)
         val innerUserIds =
             experienceInnerDao.listUserIdsByRecordId(dslContext, experienceId).map { it.value1() }.toSet()
+        val outers = experienceOuterDao.listUserIdsByRecordId(dslContext, experienceId).map { it.value1() }.toSet()
 
         val groupList = groupDao.list(dslContext, groupIds).map {
             Group(
@@ -234,7 +235,7 @@ class ExperienceService @Autowired constructor(
             expireDate = experienceRecord.endDate.timestamp(),
             experienceGroups = groupList,
             innerUsers = innerUserIds,
-            outerUsers = setOf(),// TODO
+            outerUsers = outers,
             notifyTypes = objectMapper.readValue(experienceRecord.notifyTypes),
             enableWechatGroups = experienceRecord.enableWechatGroups ?: true,
             wechatGroups = experienceRecord.wechatGroups ?: "",
@@ -843,6 +844,7 @@ class ExperienceService @Autowired constructor(
             return null
         } else {
             val innerUsers = experienceInnerDao.listUserIdsByRecordId(dslContext, experienceRecord.id)
+            val outers = experienceOuterDao.listUserIdsByRecordId(dslContext, experienceRecord.id)
             val groups = experienceGroupDao.listGroupIdsByRecordId(dslContext, experienceRecord.id)
 
             return ExperienceCreate(
@@ -852,8 +854,8 @@ class ExperienceService @Autowired constructor(
                 remark = experienceRecord.remark,
                 expireDate = experienceRecord.endDate.timestamp(),
                 experienceGroups = groups.map { HashUtil.encodeLongId(it.value1()) }.toSet(),
-                innerUsers = innerUsers.map { userId }.toSet(),
-                outerUsers = setOf(),// TODO
+                innerUsers = innerUsers.map { it.value1() }.toSet(),
+                outerUsers = outers.map { it.value1() }.toSet(),
                 notifyTypes = objectMapper.readValue(experienceRecord.notifyTypes),
                 enableWechatGroups = experienceRecord.wechatGroups.isNotBlank(),
                 wechatGroups = experienceRecord.wechatGroups,
