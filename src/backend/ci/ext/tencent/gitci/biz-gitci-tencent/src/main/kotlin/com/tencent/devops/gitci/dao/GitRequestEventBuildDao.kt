@@ -79,7 +79,7 @@ class GitRequestEventBuildDao {
                 LocalDateTime.now(),
                 sourceGitProjectId
             ).returning(ID)
-                .fetchOne()
+                .fetchOne()!!
             return record.id
         }
     }
@@ -98,7 +98,7 @@ class GitRequestEventBuildDao {
         sourceGitProjectId: Long?,
         pipelineId: String,
         buildId: String
-    ): Long {
+    ) {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             val record = dslContext.insertInto(
                 this,
@@ -129,9 +129,7 @@ class GitRequestEventBuildDao {
                 sourceGitProjectId,
                 pipelineId,
                 buildId
-            ).returning(ID)
-                .fetchOne()
-            return record.id
+            )
         }
     }
 
