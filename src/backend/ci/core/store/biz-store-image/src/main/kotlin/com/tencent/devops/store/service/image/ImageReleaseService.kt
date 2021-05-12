@@ -40,6 +40,7 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.CheckImageInitPipelineReq
+import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.image.api.ServiceImageResource
@@ -157,8 +158,11 @@ abstract class ImageReleaseService {
 
     private val logger = LoggerFactory.getLogger(ImageReleaseService::class.java)
 
-    @Value("\${store.imageApproveSwitch}")
+    @Value("\${store.imageApproveSwitch:close}")
     protected lateinit var imageApproveSwitch: String
+
+    @Value("\${store.imageAgentTypes:DOCKER}")
+    protected lateinit var imageAgentTypes: String
 
     fun addMarketImage(
         accessToken: String,
@@ -1160,5 +1164,17 @@ abstract class ImageReleaseService {
         )
     }
 
-    abstract fun getImageAgentTypes(userId: String): List<ImageAgentTypeInfo>
+    fun getImageAgentTypes(userId: String): List<ImageAgentTypeInfo> {
+        val types = imageAgentTypes.split(",")
+        val imageAgentTypes = mutableListOf<ImageAgentTypeInfo>()
+        types.forEach { type ->
+            val buildType = BuildType.valueOf(type)
+            val i18nTypeName = MessageCodeUtil.getCodeLanMessage(
+                messageCode = "${StoreMessageCode.MSG_CODE_BUILD_TYPE_PREFIX}${buildType.name}",
+                defaultMessage = buildType.value
+            )
+            imageAgentTypes.add(ImageAgentTypeInfo(buildType.name, i18nTypeName))
+        }
+        return imageAgentTypes
+    }
 }
