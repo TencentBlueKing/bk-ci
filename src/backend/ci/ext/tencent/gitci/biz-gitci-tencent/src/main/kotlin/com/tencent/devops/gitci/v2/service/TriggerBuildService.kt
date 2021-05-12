@@ -73,6 +73,7 @@ import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.agent.AgentType
@@ -192,11 +193,25 @@ class TriggerBuildService @Autowired constructor(
 
         val stageList = mutableListOf<Stage>()
 
-        // 第一个stage，触发类
+        // 第一个stage，触发类，可能会包含定时触发
+        val triggerElementList = mutableListOf<Element>()
         val manualTriggerElement = ManualTriggerElement("手动触发", "T-1-1-1")
+        triggerElementList.add(manualTriggerElement)
+
+        if (yaml.triggerOn?.schedules != null &&
+            yaml.triggerOn?.schedules!!.cron != null) {
+            triggerElementList.add(TimerTriggerElement(
+                id = "T-1-1-2",
+                name = "定时触发",
+                advanceExpression = listOf(yaml.triggerOn!!.schedules!!.cron!!
+                )
+            ))
+        }
+
         val params = createPipelineParams(yaml, gitProjectConf, event)
         val triggerContainer =
-            TriggerContainer("0", "构建触发", listOf(manualTriggerElement), null, null, null, null, params)
+            TriggerContainer("0", "构建触发", triggerElementList, null, null, null, null, params)
+
         val stage1 = Stage(listOf(triggerContainer), "stage-1")
         stageList.add(stage1)
 
@@ -435,6 +450,9 @@ class TriggerBuildService @Autowired constructor(
                     } else {
                         inputMap["repositoryUrl"] = step.checkout!!
                     }
+
+                    // 拼装插件固定参数
+                    inputMap["repositoryType"] = "URL"
 
                     val data = mutableMapOf<String, Any>()
                     data["input"] = inputMap

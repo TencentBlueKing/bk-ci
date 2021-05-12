@@ -51,7 +51,7 @@ class ScriptYmlUtilsTest {
 
     @Test
     fun formatYaml() {
-        val classPathResource = ClassPathResource("test.yml")
+        val classPathResource = ClassPathResource("Sample1.yml")
         val inputStream: InputStream = classPathResource.inputStream
         val isReader = InputStreamReader(inputStream)
 
