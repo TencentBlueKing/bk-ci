@@ -46,5 +46,5 @@ pipeline:
 scm:
   external:
     tGit:
-      hookSecret: kS4v~1DsSZRrL001erafd@c
-      enableHookSecret: true
+      hookSecret: 
+      enableHookSecret: false
