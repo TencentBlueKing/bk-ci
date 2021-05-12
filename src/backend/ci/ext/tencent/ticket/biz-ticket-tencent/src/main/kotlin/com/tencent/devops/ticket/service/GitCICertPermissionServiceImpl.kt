@@ -27,6 +27,7 @@
 
 package com.tencent.devops.ticket.service
 
+import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.utils.GitCIUtils
@@ -37,7 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 class GitCICertPermissionServiceImpl @Autowired constructor(
     val client: Client
-): CertPermissionService {
+) : CertPermissionService {
     override fun validatePermission(
         userId: String,
         projectId: String,
@@ -66,7 +67,8 @@ class GitCICertPermissionServiceImpl @Autowired constructor(
     override fun validatePermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
         val gitProjectId = GitCIUtils.getGitCiProjectId(projectId)
         logger.info("GitCICredentialPermission user:$userId projectId: $projectId gitProject: $gitProjectId")
-        return client.get(ServiceGitCiResource::class).checkUserGitAuth(userId, gitProjectId).data ?: false
+        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
+            userId, "", gitProjectId, null).data ?: false
     }
 
     override fun validatePermission(

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.environment.permission.impl
 
+import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.utils.GitCIUtils
 import com.tencent.devops.common.client.Client
@@ -101,8 +102,9 @@ class GitCIEnvironmentPermissionServiceImpl @Autowired constructor(
 
     private fun checkPermission(userId: String, projectId: String): Boolean {
         val gitProjectId = GitCIUtils.getGitCiProjectId(projectId)
-        logger.info("GitCIEnvironmentPermission $userId $projectId $gitProjectId")
-        return client.get(ServiceGitCiResource::class).checkUserGitAuth(userId, gitProjectId).data ?: false
+        logger.info("GitCIEnvironmentPermission user:$userId projectId: $projectId gitProject: $gitProjectId")
+        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
+            userId, "", gitProjectId, null).data ?: false
     }
 
     companion object {

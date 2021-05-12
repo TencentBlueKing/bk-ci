@@ -1,5 +1,6 @@
 package com.tencent.devops.process.permission
 
+import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -19,7 +20,8 @@ class GitCiPipelinePermissionServiceImpl @Autowired constructor(
         permission: AuthPermission
     ): Boolean {
         val gitProjectId = GitCIUtils.getGitCiProjectId(projectId)
-        return client.get(ServiceGitCiResource::class).checkUserGitAuth(userId, gitProjectId).data ?: false
+        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
+            userId, "", gitProjectId, null).data ?: false
     }
 
     override fun checkPipelinePermission(
@@ -66,7 +68,8 @@ class GitCiPipelinePermissionServiceImpl @Autowired constructor(
 
     override fun isProjectUser(userId: String, projectId: String, group: BkAuthGroup?): Boolean {
         val gitProjectId = GitCIUtils.getGitCiProjectId(projectId)
-        return client.get(ServiceGitCiResource::class).checkUserGitAuth(userId, gitProjectId).data ?: false
+        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
+            userId, "", gitProjectId, null).data ?: false
     }
 
 }

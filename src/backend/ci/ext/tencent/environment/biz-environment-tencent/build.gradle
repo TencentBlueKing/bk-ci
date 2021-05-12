@@ -32,6 +32,7 @@ dependencies {
     compile project(":ext:tencent:common:common-devcloud")
     compile project(":core:notify:api-notify")
     compile project(":ext:tencent:scm:api-scm")
+    compile project(":core:auth:api-auth")
     compile project(":ext:tencent:environment:api-environment-tencent")
     compile project(":ext:tencent:auth:sdk-auth-tencent")
     compile project(":ext:tencent:common:common-auth:common-auth-tencent")
