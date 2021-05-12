@@ -24,33 +24,33 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.openapi.resources.apigw.v3
 
-package com.tencent.devops.auth
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.openapi.api.apigw.v3.ApigwMarketTemplateResourceV3
+import com.tencent.devops.store.api.template.ServiceTemplateResource
+import com.tencent.devops.store.pojo.template.InstallTemplateReq
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
-import com.tencent.devops.auth.service.BkAuthPermissionProjectService
-import com.tencent.devops.auth.service.BkAuthPermissionService
-import com.tencent.devops.common.auth.service.IamEsbService
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+@RestResource
+class ApigwMarketTemplateResourceV3Impl @Autowired constructor(
+    private val client: Client
+) : ApigwMarketTemplateResourceV3 {
 
-@Suppress("ALL")
-@Configuration
-@ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class AuthConfiguration {
+    override fun installTemplateFromStore(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        installTemplateReq: InstallTemplateReq
+    ): Result<Boolean> {
+        // 可见与可安装鉴权在store服务marketTemplateService中已实现
+        return client.get(ServiceTemplateResource::class).installTemplate(userId, installTemplateReq)
+    }
 
-    @Bean
-    fun iamEsbService() = IamEsbService()
-
-    @Bean
-    @ConditionalOnMissingBean
-    fun permissionService() = BkAuthPermissionService()
-
-    @Bean
-    @ConditionalOnMissingBean
-    fun permissionProjectService() = BkAuthPermissionProjectService()
+    companion object {
+        private val logger = LoggerFactory.getLogger(ApigwMarketTemplateResourceV3Impl::class.java)
+    }
 }
