@@ -82,6 +82,7 @@ import com.tencent.devops.store.pojo.image.request.ImageFeatureCreateRequest
 import com.tencent.devops.store.pojo.image.request.ImageStatusInfoUpdateRequest
 import com.tencent.devops.store.pojo.image.request.MarketImageRelRequest
 import com.tencent.devops.store.pojo.image.request.MarketImageUpdateRequest
+import com.tencent.devops.store.pojo.image.response.ImageAgentTypeInfo
 import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import org.jooq.DSLContext
@@ -1158,4 +1159,6 @@ abstract class ImageReleaseService {
             JsonUtil.to(image.agentTypeScope, object : TypeReference<List<ImageAgentTypeEnum>>() {})
         )
     }
+
+    abstract fun getImageAgentTypes(userId: String): List<ImageAgentTypeInfo>
 }

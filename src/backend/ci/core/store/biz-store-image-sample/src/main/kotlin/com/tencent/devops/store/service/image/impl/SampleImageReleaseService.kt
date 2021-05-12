@@ -40,9 +40,12 @@ import com.tencent.devops.common.api.constant.NUM_TWO
 import com.tencent.devops.common.api.constant.SUCCESS
 import com.tencent.devops.common.api.constant.TEST
 import com.tencent.devops.common.api.constant.UNDO
+import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
+import com.tencent.devops.store.pojo.image.response.ImageAgentTypeInfo
 import com.tencent.devops.store.service.image.ImageReleaseService
 
 class SampleImageReleaseService : ImageReleaseService() {
@@ -94,5 +97,14 @@ class SampleImageReleaseService : ImageReleaseService() {
     override fun getAllowReleaseStatus(isNormalUpgrade: Boolean?): ImageStatusEnum {
         // 开源版镜像发布不需要审核，只有处于测试中的镜像才允许发布
         return ImageStatusEnum.TESTING
+    }
+
+    override fun getImageAgentTypes(userId: String): List<ImageAgentTypeInfo> {
+        val type = BuildType.DOCKER
+        val i18nTypeName = MessageCodeUtil.getCodeLanMessage(
+            messageCode = "${StoreMessageCode.MSG_CODE_BUILD_TYPE_PREFIX}${type.name}",
+            defaultMessage = type.value
+        )
+        return listOf(ImageAgentTypeInfo(type.name, i18nTypeName))
     }
 }
