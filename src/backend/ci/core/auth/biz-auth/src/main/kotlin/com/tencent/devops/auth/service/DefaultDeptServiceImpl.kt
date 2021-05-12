@@ -25,29 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.resources
+package com.tencent.devops.auth.service
 
-import com.tencent.devops.auth.api.user.UserDeptResource
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
-import com.tencent.devops.auth.service.DeptService
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 
-@RestResource
-class UserDeptResourceImpl @Autowired constructor(
-    val deptService: DeptService
-): UserDeptResource {
-    override fun getDeptByLevel(userId: String, accessToken: String?, level: Int): Result<DeptInfoVo?> {
-        return Result(deptService.getDeptByLevel(level, accessToken, userId))
+@ConditionalOnMissingBean
+class DefaultDeptServiceImpl @Autowired constructor(
+    val redisOperation: RedisOperation,
+    val objectMapper: ObjectMapper
+) : DeptService {
+
+    override fun getDeptByLevel(level: Int, accessToken: String?, userId: String): DeptInfoVo? {
+        return null
     }
 
-    override fun getDeptByParent(
-        userId: String,
-        accessToken: String?,
-        parentId: Int,
-        pageSize: Int?
-    ): Result<DeptInfoVo?> {
-        return Result(deptService.getDeptByParent(parentId, accessToken, userId, pageSize))
+    override fun getDeptByParent(parentId: Int, accessToken: String?, userId: String, pageSize: Int?): DeptInfoVo? {
+        return null
+    }
+
+    override fun getDeptUser(deptId: Int): List<String> {
+        return emptyList()
     }
 }

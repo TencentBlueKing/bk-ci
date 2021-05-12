@@ -67,7 +67,10 @@ open class AbsPermissionProjectService @Autowired constructor(
                 // 如果为组织需要获取组织对应的用户
                 if (memberInfo.type == ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)) {
                     logger.info("[IAM] $projectCode $iamProjectId ,role ${it.id}| dept ${memberInfo.id}")
-                    members.addAll(deptService.getDeptUser(memberInfo.id.toInt()))
+                    val deptUsers = deptService.getDeptUser(memberInfo.id.toInt()) ?: null
+                    if (deptUsers != null) {
+                        members.addAll(deptUsers)
+                    }
                 } else {
                     members.add(memberInfo.id)
                 }
