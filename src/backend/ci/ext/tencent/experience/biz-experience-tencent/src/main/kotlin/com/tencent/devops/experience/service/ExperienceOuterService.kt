@@ -137,11 +137,13 @@ class ExperienceOuterService @Autowired constructor(
         redisOperation.expire(redisKey(token), expireSecs)
     }
 
-    fun outerList(): List<String> {
+    fun outerList(projectId: String): List<String> {
         return profileApi.v2ProfilesList(
-            null, null, null, null, "domain", listOf(domain),
+            null, null, null, listOf("username", "departments"), "domain", listOf(domain),
             null, null, null, null, null, null, null, null
-        ).results.map { it.username.replace("@$domain", "") }
+        ).results
+            .filter { it.departments?.filter { d -> d.fullName == projectId }?.any() ?: false }
+            .map { it.username.replace("@$domain", "") }
     }
 
     fun isBlackIp(realIp: String?): Boolean {

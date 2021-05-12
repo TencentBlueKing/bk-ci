@@ -133,8 +133,8 @@ class UserExperienceResourceImpl @Autowired constructor(
         return Result(Url(url))
     }
 
-    override fun outerList(userId: String): Result<List<OuterSelectorVO>> {
-        return Result(experienceOuterService.outerList().map { OuterSelectorVO(it) })
+    override fun outerList(userId: String, projectId: String): Result<List<OuterSelectorVO>> {
+        return Result(experienceOuterService.outerList(projectId).map { OuterSelectorVO(it) })
     }
 
     fun checkParam(userId: String, projectId: String) {
