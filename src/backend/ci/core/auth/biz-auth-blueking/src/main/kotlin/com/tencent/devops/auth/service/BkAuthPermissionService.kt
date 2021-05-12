@@ -1,0 +1,50 @@
+package com.tencent.devops.auth.service
+
+import com.tencent.devops.common.auth.api.AuthPermission
+import org.springframework.beans.factory.annotation.Autowired
+
+class BkAuthPermissionService @Autowired constructor(
+
+): PermissionService {
+    override fun validateUserResourcePermission(userId: String, action: String): Boolean {
+        return true
+    }
+
+    override fun validateUserResourcePermission(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resourceType: String?
+    ): Boolean {
+        return true
+    }
+
+    override fun validateUserResourcePermissionByRelation(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resourceCode: String,
+        resourceType: String,
+        relationResourceType: String?
+    ): Boolean {
+        return true
+    }
+
+    override fun getUserResourceByAction(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resourceType: String
+    ): List<String> {
+        return emptyList()
+    }
+
+    override fun getUserResourcesByActions(
+        userId: String,
+        actions: List<String>,
+        projectCode: String,
+        resourceType: String
+    ): Map<AuthPermission, List<String>> {
+        return emptyMap()
+    }
+}
