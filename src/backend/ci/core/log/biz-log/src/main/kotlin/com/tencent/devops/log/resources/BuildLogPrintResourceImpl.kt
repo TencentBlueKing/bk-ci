@@ -27,7 +27,6 @@
 
 package com.tencent.devops.log.resources
 
-import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.log.pojo.LogEvent
 import com.tencent.devops.common.log.pojo.LogStatusEvent
@@ -159,5 +158,4 @@ class BuildLogPrintResourceImpl @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(BuildLogPrintResourceImpl::class.java)
     }
-
 }
