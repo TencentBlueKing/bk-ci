@@ -346,7 +346,7 @@ abstract class ImageService @Autowired constructor() {
                     modifier = it[KEY_MODIFIER] as String,
                     createTime = (it[KEY_CREATE_TIME] as LocalDateTime).timestampmilli(),
                     updateTime = (it[KEY_UPDATE_TIME] as LocalDateTime).timestampmilli(),
-                    isInstalled = null
+                    installedFlag = null
                 )
             )
         }
