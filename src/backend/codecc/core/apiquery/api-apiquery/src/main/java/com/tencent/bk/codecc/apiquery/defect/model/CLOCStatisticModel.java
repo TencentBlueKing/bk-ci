@@ -49,6 +49,9 @@ public class CLOCStatisticModel extends StatisticModel {
     @JsonProperty("sum_comment")
     private Long sumComment;
 
+    @JsonProperty("sum_efficient_comment")
+    private Long sumEfficientComment = 0L;
+
     @JsonProperty("language")
     private String language;
 

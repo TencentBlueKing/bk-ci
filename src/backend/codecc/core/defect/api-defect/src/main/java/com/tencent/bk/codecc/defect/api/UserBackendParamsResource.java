@@ -27,7 +27,7 @@
 package com.tencent.bk.codecc.defect.api;
 
 import com.tencent.bk.codecc.defect.vo.common.BackendParamsVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 
@@ -49,5 +49,5 @@ public interface UserBackendParamsResource
     @ApiOperation("查询后端配置参数")
     @Path("/")
     @GET
-    CodeCCResult<BackendParamsVO> getParams();
+    Result<BackendParamsVO> getParams();
 }

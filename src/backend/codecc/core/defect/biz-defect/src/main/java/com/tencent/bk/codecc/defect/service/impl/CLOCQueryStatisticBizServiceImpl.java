@@ -16,6 +16,7 @@ import com.tencent.bk.codecc.defect.dao.mongorepository.CLOCDefectRepository;
 import com.tencent.bk.codecc.defect.dao.mongorepository.CLOCStatisticRepository;
 import com.tencent.bk.codecc.defect.model.CLOCStatisticEntity;
 import com.tencent.bk.codecc.defect.service.IQueryStatisticBizService;
+import com.tencent.bk.codecc.defect.vo.CLOCDefectQueryRspInfoVO;
 import com.tencent.devops.common.api.analysisresult.BaseLastAnalysisResultVO;
 import com.tencent.devops.common.api.analysisresult.CLOCLastAnalysisResultVO;
 import com.tencent.devops.common.api.analysisresult.ToolLastAnalysisResultVO;
@@ -44,22 +45,12 @@ public class CLOCQueryStatisticBizServiceImpl implements IQueryStatisticBizServi
     CLOCDefectRepository clocDefectRepository;
 
     @Override
-    public BaseLastAnalysisResultVO processBiz(ToolLastAnalysisResultVO arg) {
+    public BaseLastAnalysisResultVO processBiz(ToolLastAnalysisResultVO arg, boolean isLast) {
         log.info("get cloc statistic list, taskId: {} | buildId: {}", arg.getTaskId(), arg.getBuildId());
         String buildId = arg.getBuildId();
-        CLOCStatisticEntity lastClocStatisticEntity =
-                clocStatisticRepository.findFirstByTaskIdOrderByUpdatedDateDesc(arg.getTaskId());
 
-        List<CLOCStatisticEntity> clocStatisticEntityList;
-        // 如果当前不是第一次分析并且之前分析有buildId
-        if (lastClocStatisticEntity != null && StringUtils.isNotBlank(lastClocStatisticEntity.getBuildId())) {
-            log.info("query cloc statistic info, buildId: {}", buildId);
-            buildId = lastClocStatisticEntity.getBuildId();
-            clocStatisticEntityList = clocStatisticRepository.findByTaskIdAndBuildId(arg.getTaskId(), buildId);
-        } else {
-            log.info("query old cloc statistic info, taskId: {}", arg.getTaskId());
-            clocStatisticEntityList = clocStatisticRepository.findByTaskId(arg.getTaskId());
-        }
+        List<CLOCStatisticEntity> clocStatisticEntityList =
+                clocStatisticRepository.findByTaskIdAndToolNameAndBuildId(arg.getTaskId(), arg.getToolName(), buildId);
 
         long sumCode = 0;
         long sumBlank = 0;
@@ -105,4 +96,5 @@ public class CLOCQueryStatisticBizServiceImpl implements IQueryStatisticBizServi
 
         return clocLastAnalysisResultVO;
     }
+
 }

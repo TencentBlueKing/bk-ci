@@ -75,4 +75,16 @@ public class QueryTaskListReqVO extends CommonPageVO
 
     @ApiModelProperty(value = "个性化触发扫描任务来源列表")
     private String customTaskSource;
+
+    @ApiModelProperty(value = "开始时间")
+    private Long startTime;
+
+    @ApiModelProperty(value = "结束时间")
+    private Long endTime;
+
+    @ApiModelProperty(value = "初始化天数")
+    private Integer initDay;
+
+    @ApiModelProperty(value = "用户名")
+    private String userId;
 }

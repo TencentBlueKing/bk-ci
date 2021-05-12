@@ -1,7 +1,7 @@
 package com.tencent.bk.codecc.defect.service;
 
 import com.tencent.bk.codecc.defect.vo.coderepository.UploadRepositoriesVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 
 /**
  * 上报仓库信息服务
@@ -17,5 +17,5 @@ public interface UploadRepositoriesService
      * @param uploadRepositoriesVO
      * @return
      */
-    CodeCCResult uploadRepositories(UploadRepositoriesVO uploadRepositoriesVO);
+    Result uploadRepositories(UploadRepositoriesVO uploadRepositoriesVO);
 }

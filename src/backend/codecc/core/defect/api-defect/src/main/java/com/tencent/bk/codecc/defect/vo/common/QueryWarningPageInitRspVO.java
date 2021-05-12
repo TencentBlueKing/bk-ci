@@ -72,6 +72,9 @@ public class QueryWarningPageInitRspVO
     @ApiModelProperty("已忽略告警数")
     private int ignoreCount;
 
+    @ApiModelProperty("已屏蔽告警数")
+    private int maskCount;
+
     @ApiModelProperty("新增文件数")
     private int newCount;
 

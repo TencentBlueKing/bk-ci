@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: bkci-codecc-apiquery
+  name: bkci-codecc-apiquery
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: bkci-codecc-apiquery
+  template:
+    metadata:
+      labels:
+        app: bkci-codecc-apiquery
+    spec:
+      dnsPolicy: ClusterFirstWithHostNet
+      hostAliases:
+        - ip: "{{ .Values.host.BK_CI_PRIVATE_IP }}"
+          hostnames:
+            - "{{ .Values.env.BK_CI_PRIVATE_HOST }}"
+      containers:
+        - image: {{ .Values.image.hub }}/bkci-codecc-apiquery:{{ .Values.image.tag }}
+          name: bkci-codecc-apiquery
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          workingDir: /data/docker/bkci/codecc/backend/
+          command: ['/bin/sh','-c','/data/docker/bkci/codecc/backend/module_run_codecc.sh']
+          env:
+            - name: CONSUL_SERVER
+              value: {{ .Values.consul.server }}
+            - name: NODE_IP
+              valueFrom:
+                fieldRef:
+                    fieldPath: status.hostIP

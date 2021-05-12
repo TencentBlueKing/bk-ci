@@ -26,12 +26,22 @@
 
 package com.tencent.bk.codecc.task.service.impl;
 
+import com.google.common.collect.Lists;
 import com.tencent.bk.codecc.task.dao.mongorepository.BaseDataRepository;
 import com.tencent.bk.codecc.task.model.BaseDataEntity;
 import com.tencent.bk.codecc.task.service.BaseDataService;
-import com.tencent.bk.codecc.task.vo.BaseDataVO;
+import com.tencent.devops.common.api.BaseDataVO;
+import com.tencent.devops.common.api.OpenSourceCheckerSetVO;
+import com.tencent.devops.common.api.exception.CodeCCException;
+import com.tencent.devops.common.constant.ComConstants;
+import com.tencent.devops.common.constant.CommonMessageCode;
+import java.util.Arrays;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.bson.types.ObjectId;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -44,12 +54,16 @@ import java.util.stream.Collectors;
  * @version V1.0
  * @date 2019/5/28
  */
+@Slf4j
 @Service
 public class BaseDataServiceImpl implements BaseDataService
 {
 
     @Autowired
     private BaseDataRepository baseDataRepository;
+
+    @Autowired
+    private RedisTemplate<String, String> redisTemplate;
 
     @Override
     public List<BaseDataVO> findBaseDataInfoByTypeAndCode(String paramType, String paramCode)
@@ -100,4 +114,143 @@ public class BaseDataServiceImpl implements BaseDataService
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public int batchSave(String userId, List<BaseDataVO> baseDataVOList) {
+        baseDataVOList.forEach(baseDataVO -> {
+            BaseDataEntity entity = new BaseDataEntity();
+            BeanUtils.copyProperties(baseDataVO, entity);
+            entity.setCreatedDate(System.currentTimeMillis());
+            entity.setUpdatedDate(System.currentTimeMillis());
+            entity.setCreatedBy(userId);
+            entity.setUpdatedBy(userId);
+            baseDataRepository.save(entity);
+        });
+        return baseDataVOList.size();
+    }
+
+    @Override
+    public int deleteById(String id) {
+        baseDataRepository.delete(new ObjectId(id));
+        return 0;
+    }
+
+    /**
+     * 更新屏蔽用户名单
+     *
+     * @param baseDataVO vo
+     * @return boolean
+     */
+    @Override
+    public Boolean updateExcludeUserMember(BaseDataVO baseDataVO, String userName) {
+        if (baseDataVO == null) {
+            log.error("updateExcludeUserMember req body is null!");
+            throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, new String[]{"baseDataVO"}, null);
+        }
+
+        String paramValue = baseDataVO.getParamValue();
+        if (StringUtils.isNotBlank(paramValue)) {
+            BaseDataEntity entity = baseDataRepository.findFirstByParamType(ComConstants.KEY_EXCLUDE_USER_LIST);
+            if (entity == null) {
+                entity = new BaseDataEntity();
+                entity.setParamType(ComConstants.KEY_EXCLUDE_USER_LIST);
+                entity.setParamCode(ComConstants.KEY_EXCLUDE_USER_LIST);
+                entity.setCreatedBy(userName);
+                entity.setCreatedDate(System.currentTimeMillis());
+            }
+
+            entity.setParamValue(paramValue);
+            entity.setUpdatedBy(userName);
+            entity.setUpdatedDate(System.currentTimeMillis());
+            baseDataRepository.save(entity);
+            return true;
+        }
+        return false;
+    }
+
+
+    /**
+     * 获取屏蔽用户名单
+     *
+     * @return list
+     */
+    @Override
+    public List<String> queryMemberListByParamType(String paramType) {
+        BaseDataEntity entity = baseDataRepository.findFirstByParamType(paramType);
+        if (null == entity) {
+            return Lists.newArrayList();
+        }
+        String excludeUserStr = entity.getParamValue();
+        List<String> userList;
+        if (StringUtils.isBlank(excludeUserStr)) {
+            userList = Lists.newArrayList();
+        } else {
+            userList = Lists.newArrayList(excludeUserStr.split(ComConstants.SEMICOLON));
+        }
+        return userList;
+    }
+
+
+    /**
+     * 更新管理员名单
+     *
+     * @param baseDataVO vo
+     * @param userName   user
+     * @return boolean
+     */
+    @Override
+    public Boolean updateAdminMember(BaseDataVO baseDataVO, String userName) {
+        if (baseDataVO == null) {
+            log.error("updateAdminMember req body is null!");
+            throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, new String[]{"baseDataVO"}, null);
+        }
+
+        String paramValue = baseDataVO.getParamValue();
+        if (StringUtils.isNotBlank(paramValue)) {
+            BaseDataEntity entity = baseDataRepository.findFirstByParamType(ComConstants.KEY_ADMIN_MEMBER);
+            long currentTimeMillis = System.currentTimeMillis();
+            if (entity == null) {
+                entity = new BaseDataEntity();
+                entity.setParamType(ComConstants.KEY_ADMIN_MEMBER);
+                entity.setParamCode(ComConstants.KEY_ADMIN_MEMBER);
+                entity.setCreatedBy(userName);
+                entity.setCreatedDate(currentTimeMillis);
+            }
+
+            entity.setParamValue(paramValue);
+            entity.setUpdatedBy(userName);
+            entity.setUpdatedDate(currentTimeMillis);
+            baseDataRepository.save(entity);
+
+            // 刷新到Redis
+            String lastAdminMember = redisTemplate.opsForValue().get(ComConstants.KEY_ADMIN_MEMBER);
+            log.info("lastAdminMember: {}", lastAdminMember);
+            redisTemplate.opsForValue().set(ComConstants.KEY_ADMIN_MEMBER, paramValue);
+            return true;
+        }
+        return false;
+    }
+
+    @Override
+    public List<BaseDataVO> findBaseData() {
+        List<BaseDataVO> baseDataVOList = new ArrayList<>();
+        List<BaseDataEntity> baseDataEntityList =
+                baseDataRepository.findByParamTypeIn(Arrays.asList("LANG", ComConstants.KEY_TOOL_ORDER));
+        baseDataEntityList.forEach(baseDataEntity -> {
+            if (baseDataEntity != null) {
+                BaseDataVO baseDataVO = new BaseDataVO();
+                BeanUtils.copyProperties(baseDataEntity, baseDataVO);
+                List<OpenSourceCheckerSetVO> openSourceCheckerSetVOList = new ArrayList<>();
+                if (baseDataEntity.getOpenSourceCheckerSets() != null) {
+                    baseDataEntity.getOpenSourceCheckerSets().forEach(openSourceCheckerSet -> {
+                        OpenSourceCheckerSetVO openSourceCheckerSetVO = new OpenSourceCheckerSetVO();
+                        BeanUtils.copyProperties(openSourceCheckerSet, openSourceCheckerSetVO);
+                        openSourceCheckerSetVOList.add(openSourceCheckerSetVO);
+                    });
+                }
+                baseDataVO.setOpenSourceCheckerListVO(openSourceCheckerSetVOList);
+                baseDataVOList.add(baseDataVO);
+            }
+        });
+        return baseDataVOList;
+    }
 }

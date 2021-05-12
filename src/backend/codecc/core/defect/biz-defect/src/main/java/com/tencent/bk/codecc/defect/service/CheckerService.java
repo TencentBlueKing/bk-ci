@@ -57,6 +57,14 @@ public interface CheckerService
     Map<String, CheckerDetailVO> queryAllChecker(String toolName);
 
     /**
+     * 多工具查询单个工具的所有规则信息详情
+     *
+     * @param toolNameSet
+     * @return
+     */
+    Map<String, CheckerDetailVO> queryAllChecker(List<String> toolNameSet, String checkerSet);
+
+    /**
      * 查询打开的规则
      *
      * @param taskId
@@ -94,6 +102,14 @@ public interface CheckerService
      */
     Set<String> queryPkgRealCheckers(String pkgId, String toolName, TaskDetailVO taskDetailVO);
 
+    /**
+     * 查询指定规则包的真实规则名（工具可识别的规则名）
+     *
+     * @param pkgId
+     * @param taskDetailVO
+     * @return
+     */
+    Set<String> queryPkgRealCheckers(String pkgId, List<String> toolNameSet, TaskDetailVO taskDetailVO);
 
     /**
      * 更新规则配置参数
@@ -155,4 +171,12 @@ public interface CheckerService
      * @param toolConfigInfoVO 工具配置信息
      */
     int getCcnThreshold(ToolConfigInfoVO toolConfigInfoVO);
+
+    /**
+     * 根据checkerKey和ToolName更新规则详情
+     *
+     * @param checkerDetailVO
+     * @return
+     */
+    boolean updateCheckerByCheckerKey(CheckerDetailVO checkerDetailVO);
 }

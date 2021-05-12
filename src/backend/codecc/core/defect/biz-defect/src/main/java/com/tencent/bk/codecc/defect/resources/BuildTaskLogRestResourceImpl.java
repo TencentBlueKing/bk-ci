@@ -28,9 +28,10 @@ package com.tencent.bk.codecc.defect.resources;
 
 import com.tencent.bk.codecc.defect.api.BuildTaskLogRestResource;
 import com.tencent.bk.codecc.defect.service.TaskLogService;
+import com.tencent.bk.codecc.defect.vo.TaskLogRepoInfoVO;
 import com.tencent.bk.codecc.defect.vo.TaskLogVO;
 import com.tencent.bk.codecc.defect.vo.UploadTaskLogStepVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.service.BizServiceFactory;
 import com.tencent.devops.common.service.IBizService;
@@ -57,14 +58,13 @@ public class BuildTaskLogRestResourceImpl implements BuildTaskLogRestResource {
     private TaskLogService taskLogService;
 
     @Override
-    public CodeCCResult uploadTaskLog(UploadTaskLogStepVO uploadTaskLogStepVO)
-    {
+    public Result uploadTaskLog(UploadTaskLogStepVO uploadTaskLogStepVO) {
         if (StringUtils.isNotEmpty(uploadTaskLogStepVO.getToolName())) {
             uploadTaskLogStepVO.setToolName(uploadTaskLogStepVO.getToolName().toUpperCase());
         }
         logger.info("recv task: {}, step: {}, flag: {}, start: {}, end: {}", uploadTaskLogStepVO.getStreamName(),
                 uploadTaskLogStepVO.getStepNum(), uploadTaskLogStepVO.getFlag(),
-            uploadTaskLogStepVO.getStartTime(), uploadTaskLogStepVO.getEndTime());
+                uploadTaskLogStepVO.getStartTime(), uploadTaskLogStepVO.getEndTime());
         IBizService taskLogService = bizServiceFactory.createBizService(uploadTaskLogStepVO.getToolName(),
                 ComConstants.BusinessType.ANALYZE_TASK.value(), IBizService.class);
         return taskLogService.processBiz(uploadTaskLogStepVO);
@@ -72,19 +72,21 @@ public class BuildTaskLogRestResourceImpl implements BuildTaskLogRestResource {
 
 
     @Override
-    public CodeCCResult<Boolean> uploadDirStructSuggestParam(UploadTaskLogStepVO uploadTaskLogStepVO)
-    {
-        if (StringUtils.isNotEmpty(uploadTaskLogStepVO.getToolName()))
-        {
+    public Result<Boolean> uploadDirStructSuggestParam(UploadTaskLogStepVO uploadTaskLogStepVO) {
+        if (StringUtils.isNotEmpty(uploadTaskLogStepVO.getToolName())) {
             uploadTaskLogStepVO.setToolName(uploadTaskLogStepVO.getToolName().toUpperCase());
         }
-        return new CodeCCResult<>(taskLogService.uploadDirStructSuggestParam(uploadTaskLogStepVO));
+        return new Result<>(taskLogService.uploadDirStructSuggestParam(uploadTaskLogStepVO));
     }
 
     @Override
-    public CodeCCResult<TaskLogVO> getBuildTaskLog(long taskId, String toolName, String buildId)
-    {
-        return new CodeCCResult<>(taskLogService.getBuildTaskLog(taskId, toolName.toUpperCase(), buildId));
+    public Result<TaskLogVO> getBuildTaskLog(long taskId, String toolName, String buildId) {
+        return new Result<>(taskLogService.getBuildTaskLog(taskId, toolName.toUpperCase(), buildId));
+    }
+
+    @Override
+    public Result<TaskLogRepoInfoVO> getLastAnalyzeRepoInfo(Long taskId, String toolName) {
+        return new Result<>(taskLogService.getLastAnalyzeRepoInfo(taskId, toolName));
     }
 
 }

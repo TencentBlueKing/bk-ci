@@ -9,6 +9,7 @@ import com.tencent.devops.common.api.exception.CodeCCException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.constant.ComConstants
 import com.tencent.devops.common.constant.CommonMessageCode
 import com.tencent.devops.common.util.HttpPathUrlUtil
 import com.tencent.devops.repository.api.ExternalCodeccRepoResource
@@ -36,15 +37,19 @@ class PipelineScmServiceImpl @Autowired constructor(
     @Value("\${codecc.privatetoken:#{null}}")
     lateinit var codeccToken: String
 
-    @Value("\${devopsGateway.idchost:#{null}}")
+    @Value("\${bkci.public.url:#{null}}")
     lateinit var devopsHost: String
+
+    @Value("\${codecc.public.url:#{null}}")
+    lateinit var codeccHost: String
 
     override fun getFileContent(
             taskId: Long, repoId: String?, filePath: String,
-            reversion: String?, branch: String?, subModule: String?
+            reversion: String?, branch: String?, subModule: String?, createFrom: String
     ): String? {
-        logger.info("start to get file content: $taskId, $repoId, $filePath, $reversion, $branch, $subModule")
-        val fileContentResult = if (repoId.isNullOrBlank()) {
+        logger.info("start to get file content: $taskId, $repoId, $filePath, $reversion, $branch, $subModule, $createFrom")
+
+        val fileContentResult = if (ComConstants.BsTaskCreateFrom.GONGFENG_SCAN.value().equals(createFrom, true)) {
             val repoUrl = client.get(ServiceTaskRestResource::class.java).getGongfengRepoUrl(taskId)
             logger.info("gongfeng project url is: ${repoUrl.data}")
             if (repoUrl.isNotOk() || repoUrl.data == null) {
@@ -57,7 +62,7 @@ class PipelineScmServiceImpl @Autowired constructor(
                 fileContentResp = client.getDevopsService(ExternalCodeccRepoResource::class.java).getGitFileContentCommon(
                         repoUrl = repoUrl.data!!,
                         filePath = filePath.removePrefix("/"),
-                        ref = branch,
+                        ref = if(!reversion.isNullOrBlank()) reversion else branch,
                         //todo 要区分情景
                         token = codeccToken!!
                 )
@@ -74,12 +79,30 @@ class PipelineScmServiceImpl @Autowired constructor(
             if (reversion.isNullOrBlank()) {
                 return null
             }
-            var response = doGetFileContentV2(repoId, filePath, reversion, branch, subModule)
+            var response = doGetFileContentV2(repoId!!, filePath, reversion, branch, subModule)
 
             // svn路径变更可能拿不到文件内容,需要用最新的reversion
             if (response.data.isNullOrBlank() && branch.isNullOrBlank() && NumberUtils.isNumber(reversion)) {
                 response = doGetFileContentV2(repoId, filePath, "-1", branch, subModule)
             }
+
+            // svn路径带域名的需要特殊处理
+            if (response.data.isNullOrBlank() && branch.isNullOrBlank() && NumberUtils.isNumber(reversion)) {
+                // 倒叙遍历，去掉路径带域名前面的部分
+                val reversedFilePathList = mutableListOf<String>()
+                run breaking@{
+                    filePath.split("/").reversed().forEach {
+                        // 路径包含域名则退出
+                        if (it.endsWith(".com")) {
+                            return@breaking
+                        }
+                        reversedFilePathList.add(it)
+                    }
+                }
+                val noHostPath = reversedFilePathList.reversed().joinToString("/")
+                response = doGetFileContent(repoId, noHostPath, reversion, branch, subModule)
+            }
+
             response
         }
 
@@ -105,6 +128,24 @@ class PipelineScmServiceImpl @Autowired constructor(
         } catch (e: Throwable) {
             ""
         }
+    }
+
+    private fun doGetFileContent(repoId: String, filePath: String,
+                                   reversion: String?, branch: String?, subModule: String?): Result<String> {
+        try {
+            return client.getDevopsService(ExternalCodeccRepoResource::class.java).getFileContent(
+                repoId = repoId,
+                filePath = filePath.removePrefix("/"),
+                reversion = reversion,
+                branch = branch,
+                subModule = subModule ?: "",
+                repositoryType = RepositoryType.ID
+            )
+        } catch (e: Exception) {
+            logger.error("get file content v2 fail!, repoId: {}, filePath: {}, reversion: {}, branch: {}, subModule: {}, ", repoId, filePath, reversion,
+                branch, subModule ?: "", e)
+        }
+        return Result("")
     }
 
     private fun doGetFileContentV2(repoId: String, filePath: String,
@@ -143,12 +184,20 @@ class PipelineScmServiceImpl @Autowired constructor(
     }
 
     override fun getOauthUrl(userId: String, projectId: String, taskId: Long, toolName: String): String {
+        val createFrom = client.get(ServiceTaskRestResource::class.java).getTaskInfoById(taskId).data?.createFrom
+        logger.info("Oauth get task create from, {} {}", createFrom, codeccHost)
+        val redirectUrl = if (createFrom == ComConstants.BsTaskCreateFrom.GONGFENG_SCAN.value()) {
+            HttpPathUrlUtil.getCodeccTargetUrl(codeccHost, projectId, taskId)
+        } else {
+            HttpPathUrlUtil.getTargetUrl(devopsHost, projectId, taskId, toolName)
+        }
+
         val authParams = mapOf(
                 "projectId" to projectId,
                 "userId" to userId,
                 "randomStr" to "BK_DEVOPS__${RandomStringUtils.randomAlphanumeric(8)}",
                 "redirectUrlType" to "spec",
-                "redirectUrl" to HttpPathUrlUtil.getTargetUrl(devopsHost, projectId, taskId, toolName)
+                "redirectUrl" to redirectUrl
         )
         val authParamJsonStr = URLEncoder.encode(JsonUtil.toJson(authParams), "UTF-8")
         logger.info("getAuthUrl authParamJsonStr is: $authParamJsonStr")
