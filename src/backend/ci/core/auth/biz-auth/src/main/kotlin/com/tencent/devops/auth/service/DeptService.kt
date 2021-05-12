@@ -30,9 +30,9 @@ package com.tencent.devops.auth.service
 import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 
 interface DeptService {
-    fun getDeptByLevel(level: Int, accessToken: String?, userId: String): DeptInfoVo
+    fun getDeptByLevel(level: Int, accessToken: String?, userId: String): DeptInfoVo?
 
-    fun getDeptByParent(parentId: Int, accessToken: String?, userId: String, pageSize: Int?): DeptInfoVo
+    fun getDeptByParent(parentId: Int, accessToken: String?, userId: String, pageSize: Int?): DeptInfoVo?
 
-    fun getDeptUser(deptId: Int): List<String>
+    fun getDeptUser(deptId: Int): List<String>?
 }

@@ -62,7 +62,7 @@ interface UserDeptResource {
         @PathParam("level")
         @ApiParam("组织级别", required = true)
         level: Int
-    ): Result<DeptInfoVo>
+    ): Result<DeptInfoVo?>
 
     @GET
     @Path("parents/{parentId}")
@@ -80,5 +80,5 @@ interface UserDeptResource {
         @QueryParam("pageSize")
         @ApiParam("父组织Id", required = false)
         pageSize: Int?
-    ): Result<DeptInfoVo>
+    ): Result<DeptInfoVo?>
 }
