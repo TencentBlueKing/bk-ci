@@ -135,5 +135,7 @@ class BuildLogPrintService @Autowired constructor(
         }
     }
 
-    private val logger = LoggerFactory.getLogger(BuildLogPrintService::class.java)
+    companion object {
+        private val logger = LoggerFactory.getLogger(BuildLogPrintService::class.java)
+    }
 }
