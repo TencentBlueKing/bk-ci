@@ -54,7 +54,7 @@ class ExperienceOuterDao {
                 outer,
                 now,
                 now
-            ).execute()
+            ).onConflictDoNothing().execute()
         }
     }
 
