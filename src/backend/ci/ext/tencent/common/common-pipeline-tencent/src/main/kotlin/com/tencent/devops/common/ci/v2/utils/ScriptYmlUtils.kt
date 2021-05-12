@@ -103,6 +103,16 @@ object ScriptYmlUtils {
         return YamlUtil.getObjectMapper().readValue(obj, YmlVersion::class.java)
     }
 
+    fun isV2Version(yamlStr: String?):Boolean{
+        if (yamlStr == null) {
+            return false
+        }
+        val yaml = Yaml()
+        val obj = YamlUtil.toYaml(yaml.load(yamlStr) as Any)
+        val version =  YamlUtil.getObjectMapper().readValue(obj, YmlVersion::class.java)
+        return version == null || version.version == "v2.0"
+    }
+
     fun parseVariableValue(value: String?, settingMap: Map<String, String?>): String? {
         if (value == null || value.isEmpty()) {
             return ""

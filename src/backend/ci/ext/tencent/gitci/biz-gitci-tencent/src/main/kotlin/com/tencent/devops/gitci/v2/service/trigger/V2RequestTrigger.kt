@@ -31,9 +31,6 @@ import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.ci.v2.utils.YamlCommonUtils
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.gitci.dao.GitCIServicesConfDao
-import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
@@ -59,14 +56,11 @@ import org.springframework.stereotype.Component
 
 @Component
 class V2RequestTrigger @Autowired constructor(
-    private val client: Client,
     private val dslContext: DSLContext,
     private val scmService: ScmService,
-    private val gitCISettingDao: GitCISettingDao,
-    private val gitServicesConfDao: GitCIServicesConfDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
-    private val repositoryConfService: GitRepositoryConfService,
+    private val gitBasicSettingService: GitRepositoryConfService,
     private val rabbitTemplate: RabbitTemplate
 ) : RequestTriggerInterface<YamlObjects> {
 
@@ -133,7 +127,7 @@ class V2RequestTrigger @Autowired constructor(
                     gitBuildId = gitBuildId
                 )
             )
-            repositoryConfService.updateGitCISetting(gitRequestEvent.gitProjectId)
+            gitBasicSettingService.updateGitCISetting(gitRequestEvent.gitProjectId)
         } else {
             logger.warn("Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}")
             gitRequestEventNotBuildDao.save(

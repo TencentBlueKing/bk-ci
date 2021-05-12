@@ -30,37 +30,45 @@ package com.tencent.devops.gitci.resources.user
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.gitci.api.user.UserGitRepositoryConfResource
-import com.tencent.devops.gitci.pojo.GitRepositoryConf
-import com.tencent.devops.gitci.service.GitRepositoryConfService
+import com.tencent.devops.gitci.api.user.UserGitBasicSettingResource
+import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
+import com.tencent.devops.gitci.v2.service.GitCIBasicSettingService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
-class UserGitRepositoryConfResourceImpl @Autowired constructor(
-    private val repositoryService: GitRepositoryConfService,
-    private val repositoryConfService: GitRepositoryConfService
-) : UserGitRepositoryConfResource {
+class UserGitBasicSettingResourceImpl @Autowired constructor(
+    private val gitCIBasicSettingService: GitCIBasicSettingService
+) : UserGitBasicSettingResource {
 
     override fun disableGitCI(userId: String, gitProjectId: Long): Result<Boolean> {
         checkParam(userId, gitProjectId)
-        return Result(repositoryService.disableGitCI(gitProjectId))
+        return Result(gitCIBasicSettingService.updateProjectSetting(gitProjectId = gitProjectId, enableCi = false))
     }
 
-    override fun getGitCIConf(userId: String, gitProjectId: Long): Result<GitRepositoryConf?> {
+    override fun getGitCIConf(userId: String, gitProjectId: Long): Result<GitCIBasicSetting?> {
         checkParam(userId, gitProjectId)
-        return Result(repositoryService.getGitCIConf(gitProjectId))
+        return Result(gitCIBasicSettingService.getGitCIConf(gitProjectId))
     }
 
-    override fun saveGitCIConf(userId: String, repositoryConf: GitRepositoryConf): Result<Boolean> {
-        checkParam(userId, repositoryConf.gitProjectId)
-        return Result(repositoryService.saveGitCIConf(userId, repositoryConf))
+    override fun saveGitCIConf(userId: String, gitCIBasicSetting: GitCIBasicSetting): Result<Boolean> {
+        checkParam(userId, gitCIBasicSetting.gitProjectId)
+        return Result(gitCIBasicSettingService.saveGitCIConf(userId, gitCIBasicSetting))
+    }
+
+    override fun updateEnableUser(userId: String, gitProjectId: Long, enableUserId: String): Result<Boolean> {
+        return Result(
+            gitCIBasicSettingService.updateProjectSetting(
+                gitProjectId = gitProjectId,
+                enableUserId = enableUserId
+            )
+        )
     }
 
     private fun checkParam(userId: String, gitProjectId: Long) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
         }
-        if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
+        if (!gitCIBasicSettingService.initGitCISetting(userId, gitProjectId)) {
             throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")
         }
     }

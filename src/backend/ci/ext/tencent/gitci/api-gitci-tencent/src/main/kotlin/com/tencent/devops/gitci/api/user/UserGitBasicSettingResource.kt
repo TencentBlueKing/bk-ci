@@ -30,7 +30,7 @@ package com.tencent.devops.gitci.api.user
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.gitci.pojo.GitRepositoryConf
+import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -42,17 +42,18 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.GET
 import javax.ws.rs.DELETE
 import javax.ws.rs.PathParam
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_GIT_CI_SETTING"], description = "user-setting页面")
-@Path("/user/repository")
+@Path("/user/setting")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserGitRepositoryConfResource {
+interface UserGitBasicSettingResource {
 
     @ApiOperation("关闭工蜂CI功能")
     @DELETE
-    @Path("/disable/{gitProjectId}")
+    @Path("/{gitProjectId}/disable")
     fun disableGitCI(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -64,7 +65,7 @@ interface UserGitRepositoryConfResource {
 
     @ApiOperation("查询工蜂CI项目配置")
     @GET
-    @Path("/enable/{gitProjectId}")
+    @Path("/{gitProjectId}")
     fun getGitCIConf(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -72,16 +73,30 @@ interface UserGitRepositoryConfResource {
         @ApiParam(value = "gitProjectId", required = true)
         @PathParam("gitProjectId")
         gitProjectId: Long
-    ): Result<GitRepositoryConf?>
+    ): Result<GitCIBasicSetting?>
 
     @ApiOperation("保存工蜂CI配置")
     @POST
-    @Path("/settings/save")
+    @Path("/save")
     fun saveGitCIConf(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("工蜂项目配置", required = true)
-        repositoryConf: GitRepositoryConf
+        repositoryConf: GitCIBasicSetting
+    ): Result<Boolean>
+
+    @ApiOperation("修改项目启动人")
+    @POST
+    @Path("/{gitProjectId}/user")
+    fun updateEnableUser(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "gitProjectId", required = true)
+        @PathParam("gitProjectId")
+        gitProjectId: Long,
+        @QueryParam("enableUserId")
+        enableUserId: String
     ): Result<Boolean>
 }

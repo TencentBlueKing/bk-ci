@@ -25,25 +25,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.listener
+package com.tencent.devops.gitci.pojo.v2
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.gitci.constant.MQ
-import com.tencent.devops.gitci.pojo.GitProjectPipeline
-import com.tencent.devops.gitci.pojo.GitRequestEvent
-import com.tencent.devops.gitci.pojo.git.GitEvent
-import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
+import com.tencent.devops.gitci.pojo.Repository
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Event(MQ.EXCHANGE_GITCI_MR_CONFLICT_CHECK_EVENT, MQ.ROUTE_GITCI_MR_CONFLICT_CHECK_EVENT)
-data class GitCIMrConflictCheckEvent(
-    val token: String,
-    val gitRequestEvent: GitRequestEvent,
-    val event: GitEvent,
-    val path2PipelineExists: Map<String, GitProjectPipeline>,
-    val gitProjectConf: GitCIBasicSetting,
-    // 单位为ms，冲突检查超时时间120s
-    var retryTime: Int = 24,
-    val delayMills: Int = 5 * 1000,
-    // 当前not build库中的ID，方便修改状态
-    val notBuildRecordId: Long
-)
+@ApiModel("蓝盾工蜂项目配置V2")
+data class GitCIBasicSetting(
+    @ApiModelProperty("工蜂项目ID")
+    override val gitProjectId: Long,
+    @ApiModelProperty("工蜂项目名")
+    override val name: String,
+    @ApiModelProperty("工蜂项目url")
+    override val url: String,
+    @ApiModelProperty("homepage")
+    override val homepage: String,
+    @ApiModelProperty("gitHttpUrl")
+    override val gitHttpUrl: String,
+    @ApiModelProperty("gitSshUrl")
+    override val gitSshUrl: String,
+    @ApiModelProperty("是否启用CI")
+    val enableCi: Boolean,
+    @ApiModelProperty("Build pushed branches")
+    val buildPushedBranches: Boolean = true,
+    @ApiModelProperty("Build pushed pull request")
+    val buildPushedPullRequest: Boolean = true,
+    @ApiModelProperty("创建时间")
+    val createTime: Long?,
+    @ApiModelProperty("修改时间")
+    val updateTime: Long?,
+    @ApiModelProperty("蓝盾项目Code")
+    val projectCode: String?,
+    @ApiModelProperty("是否开启Mr锁定")
+    val enableMrBlock: Boolean = true,
+    @ApiModelProperty("工蜂CI开启人")
+    val enableUserId: String
+) : Repository(gitProjectId, name, url, homepage, gitHttpUrl, gitSshUrl)

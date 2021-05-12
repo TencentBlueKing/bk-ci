@@ -28,7 +28,6 @@
 package com.tencent.devops.gitci.listener
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import org.jooq.DSLContext

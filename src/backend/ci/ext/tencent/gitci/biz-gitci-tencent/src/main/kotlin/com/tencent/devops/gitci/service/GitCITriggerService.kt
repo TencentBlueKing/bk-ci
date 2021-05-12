@@ -55,7 +55,6 @@ import com.tencent.devops.gitci.listener.GitCIRequestDispatcher
 import com.tencent.devops.gitci.listener.GitCIRequestTriggerEvent
 import com.tencent.devops.gitci.pojo.EnvironmentVariables
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
-import com.tencent.devops.gitci.pojo.GitRepositoryConf
 import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.gitci.pojo.TriggerBuildReq
 import com.tencent.devops.gitci.pojo.enums.GitCICommitCheckState
@@ -66,8 +65,10 @@ import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitPushEvent
 import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
+import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.gitci.pojo.v2.V2BuildYaml
 import com.tencent.devops.gitci.service.trigger.RequestTriggerFactory
+import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.GitFileInfo
@@ -94,10 +95,10 @@ class GitCITriggerService @Autowired constructor(
     private val gitRequestEventDao: GitRequestEventDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
-    private val gitCISettingDao: GitCISettingDao,
+    private val gitCISettingDao: GitCIBasicSettingDao,
+    private val gitCIV1SettingDao: GitCISettingDao,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitServicesConfDao: GitCIServicesConfDao,
-    private val repositoryConfService: GitRepositoryConfService,
     private val rabbitTemplate: RabbitTemplate,
     private val requestTriggerFactory: RequestTriggerFactory
 ) {
@@ -235,7 +236,7 @@ class GitCITriggerService @Autowired constructor(
         gitRequestEvent: GitRequestEvent,
         event: GitEvent,
         path2PipelineExists: Map<String, GitProjectPipeline>,
-        gitProjectConf: GitRepositoryConf
+        gitProjectConf: GitCIBasicSetting
     ): Boolean {
         val isMrEvent = event is GitMergeRequestEvent
         // mr提交锁定,这时还没有流水线，所以提交的是无流水线锁
@@ -402,7 +403,8 @@ class GitCITriggerService @Autowired constructor(
                         event = event,
                         originYaml = originYaml,
                         filePath = filePath
-                    )) {
+                    )
+                ) {
                     return@forEach
                 }
 
@@ -639,7 +641,7 @@ class GitCITriggerService @Autowired constructor(
         gitRequestEvent: GitRequestEvent,
         event: GitEvent,
         path2PipelineExists: Map<String, GitProjectPipeline>,
-        gitProjectConf: GitRepositoryConf
+        gitProjectConf: GitCIBasicSetting
     ): Boolean {
         val gitToken = client.getScm(ServiceGitResource::class).getToken(gitRequestEvent.gitProjectId).data!!
         logger.info("get token form scm, token: $gitToken")
@@ -711,7 +713,7 @@ class GitCITriggerService @Autowired constructor(
         gitRequestEvent: GitRequestEvent,
         event: GitEvent,
         path2PipelineExists: Map<String, GitProjectPipeline>,
-        gitProjectConf: GitRepositoryConf,
+        gitProjectConf: GitCIBasicSetting,
         // 是否是最后一次的检查
         isEndCheck: Boolean = false,
         notBuildRecordId: Long
@@ -838,7 +840,7 @@ class GitCITriggerService @Autowired constructor(
     private fun blockCommitCheck(
         isMrEvent: Boolean,
         event: GitRequestEvent,
-        gitProjectConf: GitRepositoryConf,
+        gitProjectConf: GitCIBasicSetting,
         block: Boolean,
         state: GitCICommitCheckState,
         context: String
@@ -854,7 +856,7 @@ class GitCITriggerService @Autowired constructor(
                 block = block,
                 state = state,
                 context = context,
-                gitProjectConf = gitProjectConf
+                gitCIBasicSetting = gitProjectConf
             )
         }
     }
@@ -863,7 +865,7 @@ class GitCITriggerService @Autowired constructor(
         if (gitProjectId == null) {
             return yaml
         }
-        val gitProjectConf = gitCISettingDao.getSetting(dslContext, gitProjectId) ?: return yaml
+        val gitProjectConf = gitCIV1SettingDao.getSetting(dslContext, gitProjectId) ?: return yaml
         logger.info("gitProjectConf: $gitProjectConf")
         if (null == gitProjectConf.env) {
             return yaml
@@ -1167,7 +1169,10 @@ class GitCITriggerService @Autowired constructor(
 
     fun getYamlV2(gitProjectId: Long, buildId: String): V2BuildYaml? {
         logger.info("get yaml by buildId:($buildId), gitProjectId: $gitProjectId")
-        gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(Response.Status.FORBIDDEN, "项目未开启工蜂CI，无法查询")
+        gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(
+            Response.Status.FORBIDDEN,
+            "项目未开启工蜂CI，无法查询"
+        )
         val eventBuild = gitRequestEventBuildDao.getByBuildId(dslContext, buildId) ?: return null
         return V2BuildYaml(parsedYaml = eventBuild.parsedYaml, originYaml = eventBuild.originYaml)
     }

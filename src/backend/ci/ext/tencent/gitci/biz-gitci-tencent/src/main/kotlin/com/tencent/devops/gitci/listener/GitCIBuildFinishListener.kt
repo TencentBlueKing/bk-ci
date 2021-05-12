@@ -54,14 +54,15 @@ import com.tencent.devops.gitci.pojo.enums.GitCINotifyTemplateEnum
 import com.tencent.devops.gitci.pojo.enums.GitCINotifyType
 import com.tencent.devops.gitci.pojo.rtxCustom.MessageType
 import com.tencent.devops.gitci.pojo.rtxCustom.ReceiverType
+import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.gitci.utils.GitCommonUtils
+import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
 import com.tencent.devops.model.gitci.tables.records.TGitPipelineResourceRecord
 import com.tencent.devops.model.gitci.tables.records.TGitRequestEventBuildRecord
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
-import io.swagger.util.Yaml
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.ExchangeTypes
@@ -80,6 +81,7 @@ class GitCIBuildFinishListener @Autowired constructor(
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitCISettingDao: GitCISettingDao,
+    private val gitCIBasicSettingDao: GitCIBasicSettingDao,
     private val client: Client,
     private val scmClient: ScmClient,
     private val dslContext: DSLContext
@@ -132,7 +134,10 @@ class GitCIBuildFinishListener @Autowired constructor(
                 }
 
                 val gitProjectConf = gitCISettingDao.getSetting(dslContext, gitProjectId)
-                    ?: throw OperationException("git ci projectCode not exist")
+                val v2GitSetting = gitCIBasicSettingDao.getSetting(dslContext, gitProjectId)
+                if (gitProjectConf == null && v2GitSetting == null) {
+                    throw OperationException("git ci all projectCode not exist")
+                }
 
                 val description = if (record["DESCRIPTION"] != null) {
                     record["DESCRIPTION"] as String
@@ -141,38 +146,37 @@ class GitCIBuildFinishListener @Autowired constructor(
                 val pipeline = gitPipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId)
                     ?: throw OperationException("git ci pipeline not exist")
 
-                // 推送结束构建消息,当人工触发时不推送CommitCheck消息
-                if (objectKind == OBJECT_KIND_MERGE_REQUEST) {
-                    scmClient.pushCommitCheckWithBlock(
-                        commitId = commitId,
-                        mergeRequestId = mergeRequestId,
-                        userId = buildFinishEvent.userId,
-                        context = "${pipeline.displayName}(${pipeline.filePath})",
-                        block = false,
-                        state = state,
-                        gitProjectConf = gitProjectConf
-                    )
-                } else if (objectKind != OBJECT_KIND_MANUAL) {
-                    scmClient.pushCommitCheck(
-                        commitId = commitId,
-                        description = description,
-                        mergeRequestId = mergeRequestId,
-                        buildId = buildFinishEvent.buildId,
-                        userId = buildFinishEvent.userId,
-                        status = state,
-                        context = "${pipeline.displayName}(${pipeline.filePath})",
-                        gitProjectConf = gitProjectConf
-                    )
-                }
-
                 val event = gitRequestEventBuildDao.getByBuildId(dslContext, buildFinishEvent.buildId)
                     ?: throw OperationException("git ci buildEvent not exist")
 
                 // 检查yml版本，根据yml版本选择不同的实现
-                val ymlVersion = ScriptYmlUtils.parseVersion(event.normalizedYaml)
-                val isV2 = (ymlVersion != null && ymlVersion.version == "v2.0")
+                val isV2 = ScriptYmlUtils.isV2Version(event.normalizedYaml)
+
+                if (isV2) {
+                    if (v2GitSetting == null) {
+                        throw OperationException("git ci v2 projectCode not exist")
+                    }
+                } else {
+                    if (gitProjectConf == null) {
+                        throw OperationException("git ci projectCode not exist")
+                    }
+                }
+
+                // 推送结束构建消息,当人工触发时不推送CommitCheck消息
+                pushCommitCheck(
+                    objectKind = objectKind,
+                    commitId = commitId,
+                    mergeRequestId = mergeRequestId,
+                    buildFinishEvent = buildFinishEvent,
+                    pipeline = pipeline,
+                    state = state,
+                    gitCIBasicSetting = v2GitSetting!!,
+                    description = description
+                )
+
+                // 发送通知兼容v1的老数据
                 // v1 校验是否发送通知
-                if (!isV2 && !checkIsSendNotify(conf = gitProjectConf, state = state.value)) {
+                if (!isV2 && !checkIsSendNotify(gitProjectConf!!, state.value)) {
                     return
                 }
 
@@ -184,7 +188,11 @@ class GitCIBuildFinishListener @Autowired constructor(
 
                 val buildInfo = client.get(ServiceBuildResource::class)
                     .getBatchBuildStatus(
-                        projectId = gitProjectConf.projectCode!!,
+                        projectId = if (isV2) {
+                            v2GitSetting.projectCode!!
+                        } else {
+                            gitProjectConf!!.projectCode!!
+                        },
                         buildId = setOf(buildFinishEvent.buildId),
                         channelCode = ChannelCode.GIT
                     ).data
@@ -207,7 +215,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                             mergeRequestId = mergeRequestId,
                             commitId = commitId,
                             state = state.value,
-                            conf = gitProjectConf,
+                            conf = v2GitSetting,
                             event = event,
                             pipeline = pipeline,
                             build = buildInfo.first(),
@@ -226,7 +234,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                         mergeRequestId = mergeRequestId,
                         commitId = commitId,
                         state = state.value,
-                        conf = gitProjectConf,
+                        conf = gitProjectConf!!,
                         event = event,
                         pipeline = pipeline,
                         build = buildInfo.first()
@@ -235,6 +243,40 @@ class GitCIBuildFinishListener @Autowired constructor(
             }
         } catch (e: Throwable) {
             logger.error("Fail to push commit check build(${buildFinishEvent.buildId})", e)
+        }
+    }
+
+    private fun pushCommitCheck(
+        objectKind: String,
+        commitId: String,
+        mergeRequestId: Long,
+        buildFinishEvent: PipelineBuildFinishBroadCastEvent,
+        pipeline: TGitPipelineResourceRecord,
+        state: GitCICommitCheckState,
+        gitCIBasicSetting: GitCIBasicSetting,
+        description: String
+    ) {
+        if (objectKind == OBJECT_KIND_MERGE_REQUEST) {
+            scmClient.pushCommitCheckWithBlock(
+                commitId = commitId,
+                mergeRequestId = mergeRequestId,
+                userId = buildFinishEvent.userId,
+                context = "${pipeline.displayName}(${pipeline.filePath})",
+                block = false,
+                state = state,
+                gitCIBasicSetting = gitCIBasicSetting
+            )
+        } else if (objectKind != OBJECT_KIND_MANUAL) {
+            scmClient.pushCommitCheck(
+                commitId = commitId,
+                description = description,
+                mergeRequestId = mergeRequestId,
+                buildId = buildFinishEvent.buildId,
+                userId = buildFinishEvent.userId,
+                status = state,
+                context = "${pipeline.displayName}(${pipeline.filePath})",
+                gitCIBasicSetting = gitCIBasicSetting
+            )
         }
     }
 
@@ -554,6 +596,17 @@ class GitCIBuildFinishListener @Autowired constructor(
         }
     }
 
+    private fun getProjectName(conf: GitCIBasicSetting): String {
+        return try {
+            val names = conf.homepage.split("/")
+            val userName = names[names.lastIndex - 1]
+            val projectName = names.last()
+            "$userName/$projectName"
+        } catch (e: Exception) {
+            conf.name
+        }
+    }
+
     private fun sendNotifyV2(
         gitProjectId: Long,
         sourceProjectId: Long?,
@@ -561,7 +614,7 @@ class GitCIBuildFinishListener @Autowired constructor(
         commitId: String,
         state: String,
         notifyType: GitCINotifyType?,
-        conf: GitRepositoryConf,
+        conf: GitCIBasicSetting,
         receivers: Set<String>,
         ccs: MutableSet<String>,
         chatIds: Set<String>,
