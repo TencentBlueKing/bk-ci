@@ -16,7 +16,14 @@
 -- WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 -- SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 local x_ckey = ngx.var.http_x_ckey -- 内部用户
+if nil == x_ckey then
+    x_ckey = ngx.var.arg_cKey
+end
+
 local x_otoken = ngx.var.http_x_otoken -- 外部用户
+if nil == x_otoken then
+    x_otoken = ngx.var.arg_oToken
+end
 
 if x_ckey == nil and x_otoken == nil then
     ngx.log(ngx.STDERR, "request does not has header=x-ckey or header=x-otoken")
