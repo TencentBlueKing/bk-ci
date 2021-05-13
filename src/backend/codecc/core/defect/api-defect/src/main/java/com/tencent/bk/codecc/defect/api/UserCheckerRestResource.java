@@ -29,7 +29,8 @@ package com.tencent.bk.codecc.defect.api;
 import com.tencent.bk.codecc.defect.vo.*;
 import com.tencent.bk.codecc.defect.vo.checkerset.*;
 import com.tencent.bk.codecc.defect.vo.enums.CheckerListSortType;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.checkerset.CheckerSetVO;
+import com.tencent.devops.common.api.pojo.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -40,8 +41,8 @@ import javax.ws.rs.core.MediaType;
 
 import java.util.List;
 
-import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEADER_DEVOPS_PROJECT_ID;
-import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEADER_DEVOPS_USER_ID;
+import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_PROJECT_ID;
+import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_USER_ID;
 
 /**
  * 配置规则包服务
@@ -59,7 +60,7 @@ public interface UserCheckerRestResource
     @ApiOperation("获取配置规则包")
     @Path("/tasks/{taskId}/toolName/{toolName}/checkers")
     @GET
-    CodeCCResult<GetCheckerListRspVO> checkerPkg(
+    Result<GetCheckerListRspVO> checkerPkg(
             @ApiParam(value = "任务Id", required = true)
             @PathParam("taskId")
                     Long taskId,
@@ -72,8 +73,8 @@ public interface UserCheckerRestResource
     @ApiOperation("打开或者关闭配置规则包")
     @Path("/tasks/{taskId}/toolName/{toolName}/checkers/configuration")
     @POST
-    CodeCCResult<Boolean> configCheckerPkg(
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
+    Result<Boolean> configCheckerPkg(
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
                     String user,
             @ApiParam(value = "任务Id", required = true)
             @PathParam("taskId")
@@ -88,7 +89,7 @@ public interface UserCheckerRestResource
     @ApiOperation("修改规则集")
     @Path("/tasks/{taskId}/tools/{toolName}/checkerSets/{checkerSetId}")
     @PUT
-    CodeCCResult<Boolean> updateCheckerSet(
+    Result<Boolean> updateCheckerSet(
             @ApiParam(value = "任务Id", required = true)
             @PathParam("taskId")
                     Long taskId,
@@ -100,9 +101,9 @@ public interface UserCheckerRestResource
                     String checkerSetId,
             @ApiParam(value = "修改规则集请求参数", required = true)
                     UpdateCheckerSetReqVO updateCheckerSetReqVO,
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
                     String user,
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_PROJECT_ID)
+            @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
                     String projectId
     );
 
@@ -110,8 +111,8 @@ public interface UserCheckerRestResource
     @ApiOperation("任务关联规则集")
     @Path("/tasks/{taskId}/checkerSets/relationship")
     @POST
-    CodeCCResult<Boolean> addCheckerSet2Task(
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
+    Result<Boolean> addCheckerSet2Task(
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
                     String user,
             @ApiParam(value = "任务Id", required = true)
             @PathParam("taskId")
@@ -124,13 +125,13 @@ public interface UserCheckerRestResource
     @ApiOperation("查询用户创建的规则集列表")
     @Path("/tools/{toolName}/userCreatedCheckerSets")
     @GET
-    CodeCCResult<UserCreatedCheckerSetsVO> getUserCreatedCheckerSet(
+    Result<UserCreatedCheckerSetsVO> getUserCreatedCheckerSet(
             @ApiParam(value = "工具名称", required = true)
             @PathParam("toolName")
                     String toolName,
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
                     String user,
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_PROJECT_ID)
+            @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
                     String projectId
     );
 
@@ -138,10 +139,10 @@ public interface UserCheckerRestResource
     @ApiOperation("查询规则集指定版本的差异")
     @Path("/tools/{toolName}/checkerSets/{checkerSetId}/versions/difference")
     @POST
-    CodeCCResult<CheckerSetDifferenceVO> getCheckerSetVersionDifference(
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
+    Result<CheckerSetDifferenceVO> getCheckerSetVersionDifference(
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
                     String user,
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_PROJECT_ID)
+            @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
                     String projectId,
             @ApiParam(value = "工具名称", required = true)
             @PathParam("toolName")
@@ -156,7 +157,7 @@ public interface UserCheckerRestResource
     @ApiOperation("更新规则参数配置")
     @Path("/taskId/{taskId}/tools/{toolName}/param/{paramValue}")
     @PUT
-    CodeCCResult<Boolean>  updateCheckerConfigParam(
+    Result<Boolean>  updateCheckerConfigParam(
             @ApiParam(value = "任务Id", required = true)
             @PathParam("taskId")
                     Long taskId,
@@ -169,7 +170,7 @@ public interface UserCheckerRestResource
             @ApiParam(value = "参数值", required = true)
             @PathParam("paramValue")
                     String paramValue,
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
                     String user
     );
 
@@ -177,7 +178,7 @@ public interface UserCheckerRestResource
     @ApiOperation("获取规则详情")
     @Path("/detail/toolName/{toolName}")
     @GET
-    CodeCCResult<CheckerDetailVO>  queryCheckerDetail(
+    Result<CheckerDetailVO>  queryCheckerDetail(
             @ApiParam(value = "工具名称", required = true)
             @PathParam("toolName")
                     String toolName,
@@ -189,11 +190,11 @@ public interface UserCheckerRestResource
     @ApiOperation("获取规则详情")
     @Path("/list")
     @POST
-    CodeCCResult<List<CheckerDetailVO>> queryCheckerDetailList(
+    Result<List<CheckerDetailVO>> queryCheckerDetailList(
             @ApiParam(value = "规则清单查询条件", required = true)
                     CheckerListQueryReq checkerListQueryReq,
             @ApiParam(value = "项目id", required = true)
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_PROJECT_ID)
+            @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
             String projectId,
             @ApiParam("页数")
             @QueryParam("pageNum")
@@ -211,19 +212,31 @@ public interface UserCheckerRestResource
     @ApiOperation("获取规则数量")
     @Path("/count")
     @POST
-    CodeCCResult<List<CheckerCommonCountVO>> queryCheckerCountList(
+    Result<List<CheckerCommonCountVO>> queryCheckerCountList(
             @ApiParam(value = "规则数量查询条件", required = true)
             CheckerListQueryReq checkerListQueryReq,
             @ApiParam(value = "项目id", required = true)
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_PROJECT_ID)
+            @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
                     String projectId);
 
     @ApiOperation("获取规则详情")
     @Path("/toolName/{toolName}/queryChecker")
     @GET
-    CodeCCResult<List<CheckerDetailVO>> queryCheckerByTool(
+    Result<List<CheckerDetailVO>> queryCheckerByTool(
         @ApiParam(value = "工具名称", required = true)
         @PathParam("toolName")
             String toolName
     );
+
+    /**
+     * 根据checkerKey和ToolName更新规则详情
+     *
+     * @param checkerDetailVO
+     * @return
+     */
+    @ApiOperation("编辑规则详情")
+    @Path("/update")
+    @POST
+    Result<Boolean> updateCheckerByCheckerKey(
+            @ApiParam(value = "规则详情请求体", required = true) CheckerDetailVO checkerDetailVO);
 }

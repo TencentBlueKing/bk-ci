@@ -17,14 +17,13 @@ import com.tencent.bk.codecc.defect.dao.mongotemplate.CLOCStatisticsDao;
 import com.tencent.bk.codecc.defect.model.CLOCDefectEntity;
 import com.tencent.bk.codecc.defect.model.CLOCStatisticEntity;
 import com.tencent.bk.codecc.defect.service.CLOCUploadStatisticService;
-import com.tencent.bk.codecc.defect.utils.CommonKafkaClient;
 import com.tencent.bk.codecc.defect.vo.CLOCLanguageVO;
 import com.tencent.bk.codecc.defect.vo.UploadCLOCStatisticVO;
 import com.tencent.bk.codecc.task.api.ServiceTaskRestResource;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.bk.codecc.task.vo.ToolConfigParamJsonVO;
 import com.tencent.devops.common.api.checkerset.CheckerSetVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
@@ -61,15 +60,12 @@ public class CLOCUploadStatisticServiceImpl implements CLOCUploadStatisticServic
     @Autowired
     private CLOCStatisticRepository clocStatisticRepository;
 
-    @Autowired
-    private CommonKafkaClient commonKafkaClient;
-
     @Override
-    public CodeCCResult uploadStatistic(UploadCLOCStatisticVO uploadCLOCStatisticVO)
+    public Result uploadStatistic(UploadCLOCStatisticVO uploadCLOCStatisticVO)
     {
         log.info("start to upload cloc statistic info!");
         Long taskId = uploadCLOCStatisticVO.getTaskId();
-        CodeCCResult<TaskDetailVO> taskDetailResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
+        Result<TaskDetailVO> taskDetailResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
         if (taskDetailResult.isNotOk() || null == taskDetailResult.getData())
         {
             log.error("query task info fail when upload cloc statistic info!");
@@ -77,7 +73,7 @@ public class CLOCUploadStatisticServiceImpl implements CLOCUploadStatisticServic
         }
         TaskDetailVO taskDetailVO = taskDetailResult.getData();
         //先删除该task_id下面的
-        clocStatisticsDao.batchDisableClocStatistic(taskId);
+        clocStatisticsDao.batchDisableClocStatistic(taskId, uploadCLOCStatisticVO.getToolName());
         //更新统计信息
         List<CLOCLanguageVO> languageCodeList = uploadCLOCStatisticVO.getLanguageCodeList();
         if (CollectionUtils.isNotEmpty(languageCodeList))
@@ -87,7 +83,7 @@ public class CLOCUploadStatisticServiceImpl implements CLOCUploadStatisticServic
             {
                 CLOCStatisticEntity clocStatisticEntity = new CLOCStatisticEntity();
                 clocStatisticEntity.setTaskId(uploadCLOCStatisticVO.getTaskId());
-                clocStatisticEntity.setToolName(ComConstants.Tool.CLOC.name());
+                clocStatisticEntity.setToolName(uploadCLOCStatisticVO.getToolName());
                 clocStatisticEntity.setLanguage(clocLanguageVO.getLanguage());
                 clocStatisticEntity.setSumCode(clocLanguageVO.getCodeSum());
                 clocStatisticEntity.setSumBlank(clocLanguageVO.getBlankSum());
@@ -100,7 +96,7 @@ public class CLOCUploadStatisticServiceImpl implements CLOCUploadStatisticServic
             });
         }
 
-        return new CodeCCResult(CommonMessageCode.SUCCESS, "upload CLOC analysis statistic ok");
+        return new Result(CommonMessageCode.SUCCESS, "upload CLOC analysis statistic ok");
     }
 
     /**
@@ -115,13 +111,14 @@ public class CLOCUploadStatisticServiceImpl implements CLOCUploadStatisticServic
      * @param uploadCLOCStatisticVO cloc 视图信息
      */
     @Override
-    public CodeCCResult<CommonMessageCode> uploadNewStatistic(UploadCLOCStatisticVO uploadCLOCStatisticVO, Map<String, List<CLOCDefectEntity>> clocLanguageMap, String buildId, String streamName)
+    public Result<CommonMessageCode> uploadNewStatistic(UploadCLOCStatisticVO uploadCLOCStatisticVO, Map<String, List<CLOCDefectEntity>> clocLanguageMap, String buildId, String streamName)
     {
         long taskId = uploadCLOCStatisticVO.getTaskId();
+        String toolName = uploadCLOCStatisticVO.getToolName();
         final List<CLOCLanguageVO> languageCodeList = uploadCLOCStatisticVO.getLanguageCodeList();
         // 获取当前task上一次构建ID
         CLOCStatisticEntity lastClocStatisticEntity =
-                clocStatisticRepository.findFirstByTaskIdOrderByUpdatedDateDesc(taskId);
+                clocStatisticRepository.findFirstByTaskIdAndToolNameOrderByUpdatedDateDesc(taskId, toolName);
         String lastBuildId = null;
         List<CLOCStatisticEntity> lastClocStatisticEntityList = Collections.emptyList();
         if (lastClocStatisticEntity != null && StringUtils.isNotBlank(lastClocStatisticEntity.getBuildId()))
@@ -131,7 +128,7 @@ public class CLOCUploadStatisticServiceImpl implements CLOCUploadStatisticServic
         else if (lastClocStatisticEntity != null && StringUtils.isBlank(lastClocStatisticEntity.getBuildId()))
         {
             // 兼容旧逻辑产生的数据中没有 build_id、create_time 字段
-            lastClocStatisticEntityList = clocStatisticRepository.findByTaskId(taskId);
+            lastClocStatisticEntityList = clocStatisticRepository.findByTaskIdAndToolName(taskId, toolName);
         }
         log.info("get last cloc statistic buildId! taskId: {} | buildId: {} | currBuildId: {}", taskId, lastBuildId, buildId);
 
@@ -139,7 +136,7 @@ public class CLOCUploadStatisticServiceImpl implements CLOCUploadStatisticServic
         if (StringUtils.isNotBlank(lastBuildId))
         {
             log.info("begin find cloc statistic info: taskId: {}, lastBuildId: {}", taskId, lastBuildId);
-            lastClocStatisticEntityList = clocStatisticRepository.findByTaskIdAndBuildId(taskId, lastBuildId);
+            lastClocStatisticEntityList = clocStatisticRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, lastBuildId);
         }
         log.info("get last cloc statistic buildId! taskId: {} | buildId: {} | currBuildId: {}, info: {}",
                 taskId, lastBuildId, buildId, lastClocStatisticEntityList.size());
@@ -159,7 +156,7 @@ public class CLOCUploadStatisticServiceImpl implements CLOCUploadStatisticServic
                 cloctStatistic.setCreatedDate(stepStatistic.getCreatedDate());
             }
             cloctStatistic.setUpdatedDate(currentTime);
-            cloctStatistic.setToolName(ComConstants.Tool.CLOC.name());
+            cloctStatistic.setToolName(uploadCLOCStatisticVO.getToolName());
             cloctStatistic.setLanguage(stepStatistic.getLanguage());
 
             // 如果本次告警没有这种语言的话，代码行数全为0，如果有的话则在下面的循环中赋值
@@ -186,7 +183,7 @@ public class CLOCUploadStatisticServiceImpl implements CLOCUploadStatisticServic
                 clocStatistic.setCreatedDate(currentTime);
             }
             clocStatistic.setUpdatedDate(currentTime);
-            clocStatistic.setToolName(ComConstants.Tool.CLOC.name());
+            clocStatistic.setToolName(uploadCLOCStatisticVO.getToolName());
             clocStatistic.setLanguage(stepLanguageVO.getLanguage());
             clocStatistic.setSumBlank(stepLanguageVO.getBlankSum());
             clocStatistic.setSumCode(stepLanguageVO.getCodeSum());
@@ -208,18 +205,18 @@ public class CLOCUploadStatisticServiceImpl implements CLOCUploadStatisticServic
 
         clocStatisticsDao.batchUpsertCLOCStatistic(currStatisticMap.values());
 
-        //推送数据到数据平台
-        commonKafkaClient.pushCLOCStatisticToKafka(currStatisticMap.values());
         //如果本次为首次上报，且上报语言内容为空，则插入一条其他语言的记录
-        if(MapUtils.isEmpty(currStatisticMap) && MapUtils.isEmpty(clocLanguageMap)) {
-            log.info("first upload and empty upload need to insert others language, task id: {}, build id: {}", taskId, buildId);
+        if (MapUtils.isEmpty(currStatisticMap)
+                && MapUtils.isEmpty(clocLanguageMap)) {
+            log.info("first upload and empty upload need to insert others language,"
+                            + " task id: {}, build id: {}", taskId, buildId);
             CLOCStatisticEntity clocStatisticEntity = new CLOCStatisticEntity();
             clocStatisticEntity.setTaskId(taskId);
             clocStatisticEntity.setStreamName(streamName);
             clocStatisticEntity.setBuildId(buildId);
             clocStatisticEntity.setCreatedDate(currentTime);
             clocStatisticEntity.setUpdatedDate(currentTime);
-            clocStatisticEntity.setToolName(ComConstants.Tool.CLOC.name());
+            clocStatisticEntity.setToolName(uploadCLOCStatisticVO.getToolName());
             clocStatisticEntity.setLanguage("OTHERS");
             clocStatisticEntity.setSumBlank(0L);
             clocStatisticEntity.setSumCode(0L);
@@ -231,8 +228,9 @@ public class CLOCUploadStatisticServiceImpl implements CLOCUploadStatisticServic
             clocStatisticEntity.setFileNumChange(0L);
             clocStatisticRepository.save(clocStatisticEntity);
         }
-        return new CodeCCResult(CommonMessageCode.SUCCESS, "upload new defect statistic success");
+        return new Result(CommonMessageCode.SUCCESS, "upload new defect statistic success");
     }
+
 
     /**
      * 根据语言设置规则集
@@ -240,7 +238,8 @@ public class CLOCUploadStatisticServiceImpl implements CLOCUploadStatisticServic
      * @param taskDetailVO
      * @param languages
      */
-    private void setCheckerSetsAccordingToLanguage(TaskDetailVO taskDetailVO, List<String> languages) {
+    private void setCheckerSetsAccordingToLanguage(TaskDetailVO taskDetailVO,
+            List<String> languages) {
         List<CheckerSetVO> checkerSetVOList = new ArrayList<>();
         List<ToolConfigParamJsonVO> paramJsonVOList = new ArrayList<>();
         if (CollectionUtils.isNotEmpty(languages)) {

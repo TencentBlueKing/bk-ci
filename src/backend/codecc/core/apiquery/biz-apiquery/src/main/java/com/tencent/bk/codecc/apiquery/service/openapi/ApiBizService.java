@@ -14,10 +14,10 @@ package com.tencent.bk.codecc.apiquery.service.openapi;
 
 
 import com.tencent.bk.codecc.apiquery.vo.TaskToolInfoReqVO;
+import com.tencent.bk.codecc.apiquery.vo.op.TaskDefectSummaryVO;
 import com.tencent.bk.codecc.apiquery.vo.openapi.CheckerDefectStatVO;
 import com.tencent.bk.codecc.apiquery.vo.openapi.TaskOverviewDetailRspVO;
 import com.tencent.devops.common.api.pojo.Page;
-import org.springframework.data.domain.Sort;
 
 /**
  * OpenApi业务接口
@@ -46,5 +46,9 @@ public interface ApiBizService
      */
     Page<CheckerDefectStatVO> statCheckerDefect(TaskToolInfoReqVO reqVO, Integer pageNum, Integer pageSize);
 
+    Page<TaskDefectSummaryVO> queryTaskDefectSum(TaskToolInfoReqVO reqVO, Integer pageNum, Integer pageSize,
+            String sortField, String sortType);
+
+    void exportDimensionToFile(TaskToolInfoReqVO reqVO, String fileIndex);
 
 }

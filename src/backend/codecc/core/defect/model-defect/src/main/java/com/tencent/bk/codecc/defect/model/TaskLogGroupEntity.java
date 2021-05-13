@@ -52,4 +52,6 @@ public class TaskLogGroupEntity
     private String buildId;
 
     private String buildNum;
+
+    private int flag;
 }

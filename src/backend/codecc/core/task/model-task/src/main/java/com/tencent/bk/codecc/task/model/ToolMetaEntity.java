@@ -128,7 +128,7 @@ public class ToolMetaEntity extends CommonEntity
     private String dockerTriggerShell;
 
     /**
-     * docker镜像存放URL，如：xxx.xxx.xxx.com/paas/public/xxxx_codecc_tools
+     * docker镜像存放URL，如：xxx.xxx.xxx.com/paas/public/tlinux2.2_codecc_tools
      */
     @Field("docker_image_url")
     private String dockerImageURL;
@@ -137,6 +137,7 @@ public class ToolMetaEntity extends CommonEntity
      * docker镜像版本
      */
     @Field("docker_image_version")
+    @Deprecated
     private String dockerImageVersion;
 
     /**
@@ -194,8 +195,27 @@ public class ToolMetaEntity extends CommonEntity
     private List<String> toolHistoryVersion;
 
     /**
+     * 用户自定义关注的工具信息
+     */
+    @Field("custom_tool_info")
+    private String customToolInfo;
+
+    /**
      * 最新的工具镜像版本（hash值）
      */
     @Field("tool_image_revision")
+    @Deprecated
     private String toolImageRevision;
+
+    /**
+     * 工具版本列表，T-测试版本，G-灰度版本，P-正式发布版本
+     */
+    @Field("tool_versions")
+    private List<ToolVersionEntity> toolVersions;
+
+    /**
+     * 上一个工具版本列表，T-测试版本，G-灰度版本，P-正式发布版本
+     */
+    @Field("last_tool_versions")
+    private List<ToolVersionEntity> lastToolVersions;
 }

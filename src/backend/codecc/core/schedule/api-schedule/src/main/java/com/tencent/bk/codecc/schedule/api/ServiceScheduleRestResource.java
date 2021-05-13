@@ -27,7 +27,7 @@
 package com.tencent.bk.codecc.schedule.api;
 
 import com.tencent.bk.codecc.schedule.vo.FreeVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -53,7 +53,7 @@ public interface ServiceScheduleRestResource
     @ApiOperation(value = "释放任务分析资源")
     @Path("/free")
     @POST
-    CodeCCResult<Boolean> free(
+    Result<Boolean> free(
             @ApiParam(value = "释放任务分析资源的请求信息", required = true)
                     FreeVO freeVO);
 }

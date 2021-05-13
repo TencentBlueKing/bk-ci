@@ -13,6 +13,8 @@
 package com.tencent.bk.codecc.defect.service;
 
 import com.tencent.bk.codecc.defect.vo.CodeRepoVO;
+import com.tencent.bk.codecc.defect.vo.admin.DeptTaskDefectReqVO;
+import com.tencent.devops.common.api.QueryTaskListReqVO;
 
 import java.util.Map;
 import java.util.Set;
@@ -23,8 +25,7 @@ import java.util.Set;
  * @date 2019/12/3
  * @version V1.0
  */
-public interface CodeRepoService
-{
+public interface CodeRepoService {
     /**
      * 根据任务id和构建id查询代码库信息
      * @param taskId
@@ -40,4 +41,24 @@ public interface CodeRepoService
      */
     Map<Long, Set<CodeRepoVO>> getCodeRepoListByTaskIds(Set<Long> taskIds);
 
+    /**
+     * 初始化代码仓库及分支名数据
+     *
+     * @param reqVO     请求体
+     * @param pageNum   页码
+     * @param pageSize  每页数量
+     * @param sortField 排序字段
+     * @param sortType  排序类型
+     * @return
+     */
+    Boolean initCodeRepoStatistic(DeptTaskDefectReqVO reqVO, Integer pageNum, Integer pageSize, String sortField,
+            String sortType);
+
+    /**
+     * 初始化新增代码库/代码分支数数据
+     *
+     * @param reqVO 请求体
+     * @return
+     */
+    Boolean initCodeRepoStatTrend(QueryTaskListReqVO reqVO);
 }

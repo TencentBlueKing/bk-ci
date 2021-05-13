@@ -37,21 +37,21 @@ class CommonMessageQueueConfig {
 
     @Bean
     fun expiredTaskQueueBind(
-            @Autowired expiredTaskQueue: Queue,
-            @Autowired expiredTaskExchange: CustomExchange
+        @Autowired expiredTaskQueue: Queue,
+        @Autowired expiredTaskExchange: CustomExchange
     ): Binding {
         return BindingBuilder.bind(expiredTaskQueue).
-                to(expiredTaskExchange).with(ROUTE_EXPIRED_TASK_STATUS).noargs()
+        to(expiredTaskExchange).with(ROUTE_EXPIRED_TASK_STATUS).noargs()
     }
 
 
     @Bean
     fun expiredTaskListenerContainer(
-            @Autowired connectionFactory: ConnectionFactory,
-            @Autowired expiredTaskQueue: Queue,
-            @Autowired rabbitAdmin: RabbitAdmin,
-            @Autowired expiredTaskHandleComponent: ExpireTaskHandleComponent,
-            @Autowired messageConverter: Jackson2JsonMessageConverter
+        @Autowired connectionFactory: ConnectionFactory,
+        @Autowired expiredTaskQueue: Queue,
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired expiredTaskHandleComponent: ExpireTaskHandleComponent,
+        @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
         val container = SimpleMessageListenerContainer(connectionFactory)
         container.setQueueNames(expiredTaskQueue.name)

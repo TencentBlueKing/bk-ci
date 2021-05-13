@@ -2,11 +2,7 @@ dependencies {
     compile project(":core:defect:biz-defect")
     compile group: 'com.tencent.bk.devops.ci.log', name: 'api-log', version: version, changing: true
     compile group: 'com.tencent.bk.devops.ci.quality', name: 'api-quality', version: version, changing: true
-    compile(group: 'com.tencent.bk.devops.ci.process', name: 'api-process', version: version, changing: true) {
-        exclude group: 'com.tencent.bk.devops.ci.scm', module: 'api-scm'
-        exclude group: 'com.tencent.bk.devops.ci.measure', module: 'api-measure'
-        exclude group: 'com.tencent.bk.devops.ci.image', module: 'api-image'
-    }
+    compile group: 'com.tencent.bk.devops.ci.process', name: 'api-process', version: version, changing: true
     compile group: 'com.tencent.bk.devops.ci.repository', name: 'api-repository', version: version, changing: true
     compile group: 'com.tencent.bk.devops.ci.plugin', name: 'api-plugin', version: version, changing: true
     compile group: 'com.tencent.bk.devops.ci.plugin', name: 'api-codecc', version: version, changing: true
