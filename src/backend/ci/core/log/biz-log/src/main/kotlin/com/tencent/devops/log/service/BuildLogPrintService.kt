@@ -65,8 +65,6 @@ class BuildLogPrintService @Autowired constructor(
 
     fun dispatchEvent(event: ILogEvent) {
         try {
-            // 如果配置了长度限制才做截断处理
-            if (event is LogEvent && logServiceConfig.lineMaxLength != null) fixEvent(event)
             val eventType = event::class.java.annotations.find { s -> s is Event } as Event
             rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event) { message ->
                 // 事件中的变量指定
@@ -112,18 +110,6 @@ class BuildLogPrintService @Autowired constructor(
         logPrintBean.savePrintTaskCount(logExecutorService.taskCount)
         logPrintBean.savePrintActiveCount(logExecutorService.activeCount)
         logPrintBean.savePrintQueueSize(logExecutorService.queue.size)
-    }
-
-    private fun fixEvent(logEvent: LogEvent) {
-        // 字符数超过32766时analyzer索引分析将失效，同时为保护系统稳定性，若配置值为空或负数则限制为32KB
-        val maxLength = if (logServiceConfig.lineMaxLength == null || logServiceConfig.lineMaxLength!! <= 0) {
-            32766
-        } else {
-            logServiceConfig.lineMaxLength!!
-        }
-        logEvent.logs.forEach {
-            it.message = CommonUtils.interceptStringInLength(it.message, maxLength) ?: ""
-        }
     }
 
     private fun isEnabled(value: String?): Boolean {

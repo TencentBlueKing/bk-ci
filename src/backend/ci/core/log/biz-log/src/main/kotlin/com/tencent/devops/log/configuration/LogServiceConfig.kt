@@ -37,12 +37,6 @@ import org.springframework.stereotype.Component
 class LogServiceConfig {
 
     /**
-     * 单行日志的上限截断
-     */
-    @Value("\${log.limit.lineMaxLength:#{null}}")
-    val lineMaxLength: Int? = null
-
-    /**
      * 日志打印异步线程池大小
      */
     @Value("\${log.limit.corePoolSize:#{null}}")
