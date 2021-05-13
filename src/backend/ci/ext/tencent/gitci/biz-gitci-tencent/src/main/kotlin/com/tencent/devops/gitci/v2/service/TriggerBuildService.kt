@@ -141,10 +141,11 @@ class TriggerBuildService @Autowired constructor(
     private val scmClient: ScmClient,
     redisOperation: RedisOperation,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
-    gitRequestEventNotBuildDao: GitRequestEventNotBuildDao
+    gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
+    gitCIEventSaveService: GitCIEventSaveService
 ) : V2BaseBuildService<ScriptBuildYaml>(
     client, scmClient, dslContext, redisOperation, gitPipelineResourceDao,
-    gitRequestEventBuildDao, gitRequestEventNotBuildDao
+    gitRequestEventBuildDao, gitRequestEventNotBuildDao, gitCIEventSaveService
 ) {
     private val channelCode = ChannelCode.GIT
 

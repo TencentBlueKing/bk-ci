@@ -35,7 +35,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
-import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.gitci.pojo.GitCITriggerLock
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.pojo.GitRepositoryConf
@@ -61,7 +60,6 @@ abstract class BaseBuildService<T> @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
-    private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val gitCIEventSaveService: GitCIEventSaveService
 ) {
     companion object {
