@@ -15,13 +15,16 @@ package com.tencent.bk.codecc.quartz.job;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tencent.bk.codecc.quartz.pojo.QuartzJobContext;
-import com.tencent.bk.codecc.task.pojo.*;
+import com.tencent.bk.codecc.task.pojo.CodeCCAccountAuthInfo;
+import com.tencent.bk.codecc.task.pojo.CodeCCCodeScan;
+import com.tencent.bk.codecc.task.pojo.CodeCCPipelineReq;
+import com.tencent.bk.codecc.task.pojo.CodeCCRuntimeParam;
+import com.tencent.bk.codecc.task.pojo.TriggerPipelineReq;
 import com.tencent.devops.common.util.OkhttpUtils;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -43,7 +46,7 @@ public class TriggerCustomPipelineScheduleTask implements IScheduleTask {
     @Override
     public void executeTask(@NotNull QuartzJobContext quartzJobContext) {
         Map<String, Object> jobCustomParam = quartzJobContext.getJobCustomParam();
-        if(null == jobCustomParam) {
+        if (null == jobCustomParam) {
             logger.info("job custom param is null");
             return;
         }
@@ -61,14 +64,14 @@ public class TriggerCustomPipelineScheduleTask implements IScheduleTask {
         String passWord = (String) jobCustomParam.get("passWord");
 
         CodeCCRuntimeParam runtimeParam = new CodeCCRuntimeParam(paramCode, paramValue, paramDesc);
-        CodeCCAccountAuthInfo codeCCAuthInfo = new CodeCCAccountAuthInfo(userName, passWord, null);
+        CodeCCAccountAuthInfo codeCCAuthInfo = new CodeCCAccountAuthInfo(userName, passWord, null, null);
         CodeCCPipelineReq codeCCPipelineReq = new CodeCCPipelineReq(Collections.singletonList(runtimeParam), null,
                 codeCCAuthInfo, new CodeCCCodeScan(), null, null);
         TriggerPipelineReq triggerPipelineReq = new TriggerPipelineReq(gitUrl, branch, null, null,
-                null, false, false, codeCCPipelineReq);
+                null, false, false, false, null, null, codeCCPipelineReq);
 
-        String url = String.format("%s/v2/apigw-app/codecc/task/pipelines/custom/trigger/new?app_code=%s&app_secret=%s",
-                apigwPath, appCode, appSecret);
+        String str = "%s/v2/apigw-app/codecc/task/pipelines/custom/trigger/new?app_code=%s&app_secret=%s";
+        final String url = String.format(str, apigwPath, appCode, appSecret);
         String body;
         try {
             body = objectMapper.writeValueAsString(triggerPipelineReq);

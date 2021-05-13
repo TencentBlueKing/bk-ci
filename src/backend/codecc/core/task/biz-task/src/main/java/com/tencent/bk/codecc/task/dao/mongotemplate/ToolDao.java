@@ -26,8 +26,10 @@
 
 package com.tencent.bk.codecc.task.dao.mongotemplate;
 
+import com.google.common.collect.Lists;
 import com.tencent.bk.codecc.task.model.ToolCheckerSetEntity;
 import com.tencent.bk.codecc.task.model.ToolConfigInfoEntity;
+import com.tencent.bk.codecc.task.model.ToolCountScriptEntity;
 import com.tencent.bk.codecc.task.vo.ToolConfigBaseVO;
 import com.tencent.devops.common.constant.ComConstants;
 import org.apache.commons.collections.CollectionUtils;
@@ -37,6 +39,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.BulkOperations;
 import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.Aggregation;
+import org.springframework.data.mongodb.core.aggregation.AggregationResults;
+import org.springframework.data.mongodb.core.aggregation.GroupOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.data.mongodb.core.query.Update;
@@ -45,6 +50,7 @@ import org.springframework.stereotype.Repository;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 代码检查任务持久层代码
@@ -226,4 +232,49 @@ public class ToolDao
 
     }
 
+
+    /**
+     * 根据工具名分组 查询工具数量
+     *
+     * @param taskIdList taskId集合
+     * @param endTime    结束时间
+     * @return list
+     */
+    public List<ToolCountScriptEntity> findDailyToolCount(List<Long> taskIdList, long endTime) {
+        Criteria criteria = new Criteria();
+        List<Criteria> criteriaList = Lists.newArrayList();
+
+        // taskId
+        if (CollectionUtils.isNotEmpty(taskIdList)) {
+            criteriaList.add(Criteria.where("task_id").in(taskIdList));
+        }
+        // 有效状态
+        List<Integer> effectiveStatus = ComConstants.FOLLOW_STATUS.getEffectiveStatus();
+        criteriaList.add(Criteria.where("follow_status").in(effectiveStatus));
+        // 时间
+        criteriaList.add(Criteria.where("create_date").lte(endTime));
+
+        if (CollectionUtils.isNotEmpty(criteriaList)) {
+            criteria.andOperator(criteriaList.toArray(new Criteria[0]));
+        }
+
+        // 按工具名分组统计工具数
+        GroupOperation group = Aggregation.group("tool_name").first("tool_name").as("tool_name").count().as("count");
+        Aggregation aggregation = Aggregation.newAggregation(Aggregation.match(criteria), group);
+        AggregationResults<ToolCountScriptEntity> queryResults =
+                mongoTemplate.aggregate(aggregation, "t_tool_config", ToolCountScriptEntity.class);
+
+        return queryResults.getMappedResults();
+    }
+
+    public void removeByIds(Collection<String> idList) {
+        if (CollectionUtils.isEmpty(idList)) {
+            return;
+        }
+
+        Query query = new Query();
+        List<ObjectId> objectIdList = idList.stream().map(id -> new ObjectId(id)).collect(Collectors.toList());
+        query.addCriteria(Criteria.where("_id").in(objectIdList));
+        mongoTemplate.remove(query, ToolConfigInfoEntity.class);
+    }
 }

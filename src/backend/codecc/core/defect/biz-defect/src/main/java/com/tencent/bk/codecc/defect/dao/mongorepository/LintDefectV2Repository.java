@@ -27,10 +27,13 @@
 package com.tencent.bk.codecc.defect.dao.mongorepository;
 
 import com.tencent.bk.codecc.defect.model.LintDefectV2Entity;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -54,6 +57,16 @@ public interface LintDefectV2Repository extends MongoRepository<LintDefectV2Enti
      * @return
      */
     List<LintDefectV2Entity> findByTaskIdAndToolNameAndStatus(long taskId, String toolName, int status);
+
+    /**
+     * 通过任务Id、工具名称、状态查询Lint文件信息
+     *
+     * @param taskId
+     * @param toolNameSet
+     * @param status
+     * @return
+     */
+    List<LintDefectV2Entity> findByTaskIdAndToolNameInAndStatus(long taskId, List<String> toolNameSet, int status);
 
     /**
      * 通过任务id、工具名、文件路径查询告警文件清单
@@ -98,4 +111,29 @@ public interface LintDefectV2Repository extends MongoRepository<LintDefectV2Enti
     List<LintDefectV2Entity> findByEntityIdIn(Set<String> entityIds);
 
     List<LintDefectV2Entity> findByTaskIdAndStatus(long taskId, int status);
+
+    /**
+     * 通过任务Id、工具名称、已关闭的告警
+     *
+     * @param taskId
+     * @param toolName
+     * @return
+     */
+    @Query(fields = "{'severity':1, 'status':1}", value = "{'task_id': ?0, 'tool_name': ?1, 'status': {'$gt':1}}")
+    List<LintDefectV2Entity> findCloseDefectByTaskIdAndToolName(long taskId, String toolName);
+
+    @Query(fields = "{'severity':1, 'author':1, 'line_update_time':1}", value = "{'task_id': ?0, 'tool_name': ?1, 'status': ?2}")
+    Page<LintDefectV2Entity> findByTaskIdAndToolNameAndStatus(long taskId, String toolName, int status, Pageable pageable);
+
+    List<LintDefectV2Entity> findByTaskIdAndToolNameInAndStatus(Long taskId, List<String> toolNameList, int status);
+
+    Integer countByTaskIdAndToolNameInAndStatusAndSeverity(Long taskId,
+                                                           List<String> toolNameList,
+                                                           int status,
+                                                           int severity);
+
+    Integer countByTaskIdAndToolNameAndStatusAndSeverity(Long taskId,
+                                                         String toolNameList,
+                                                         int status,
+                                                         int severity);
 }

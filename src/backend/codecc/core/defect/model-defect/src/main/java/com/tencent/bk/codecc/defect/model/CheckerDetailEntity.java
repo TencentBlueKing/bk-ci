@@ -27,6 +27,7 @@
 package com.tencent.bk.codecc.defect.model;
 
 import com.tencent.codecc.common.db.CommonEntity;
+import com.tencent.devops.common.constant.ComConstants;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.data.annotation.Transient;
@@ -212,4 +213,12 @@ public class CheckerDetailEntity extends CommonEntity
     @Field("right_example")
     private String rightExample;
 
+    /**
+     * 规则版本：T-测试/G-灰度/P-正式
+     * 测试版本规则只能在测试项目看到和选择到，灰度版本规则只能在灰度项目看到和选择到。
+     * 包含了测试规则的规则集就是测试版本的规则集，只能在测试项目被选择到；
+     * 包含了灰度规则的规则集就是灰度版本的规则集，只能在灰度项目被选择到。
+     */
+    @Field("checker_version")
+    private int checkerVersion;
 }

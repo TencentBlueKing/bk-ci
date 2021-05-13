@@ -18,7 +18,9 @@ import com.tencent.bk.codecc.defect.vo.common.CommonDefectQueryRspVO;
 import com.tencent.bk.codecc.defect.vo.common.DefectQueryReqVO;
 import com.tencent.bk.codecc.defect.vo.common.QueryWarningPageInitRspVO;
 import com.tencent.devops.common.constant.ComConstants;
+import com.tencent.devops.common.constant.ComConstants.Tool;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -101,7 +103,7 @@ public class CLOCQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
     }
 
     @Override
-    public QueryWarningPageInitRspVO processQueryWarningPageInitRequest(Long taskId, String toolName, Set<String> statusSet)
+    public QueryWarningPageInitRspVO processQueryWarningPageInitRequest(Long taskId, String toolName, String dimension, Set<String> statusSet, String checkerSet)
     {
         return new QueryWarningPageInitRspVO();
     }
@@ -111,6 +113,7 @@ public class CLOCQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
     {
         return new ToolDefectRspVO();
     }
+
 
     /**
      * 按语言聚类CLOC扫描结果
@@ -122,7 +125,7 @@ public class CLOCQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
     {
         String lastBuildId = null;
         CLOCStatisticEntity lastStatisticEntity =
-                clocStatisticRepository.findFirstByTaskIdOrderByUpdatedDateDesc(taskId);
+                clocStatisticRepository.findFirstByTaskIdAndToolNameOrderByUpdatedDateDesc(taskId, Tool.CLOC.name());
 
         if (lastStatisticEntity != null && StringUtils.isNotBlank(lastStatisticEntity.getBuildId()))
         {
@@ -138,11 +141,12 @@ public class CLOCQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
         List<CLOCStatisticEntity> clocStatisticEntities;
         if (StringUtils.isNotBlank(lastBuildId))
         {
-            clocStatisticEntities = clocStatisticRepository.findByTaskIdAndBuildId(taskId, lastBuildId);
+            clocStatisticEntities = clocStatisticRepository.findByTaskIdAndToolNameAndBuildId(
+                    taskId, Tool.CLOC.name(), lastBuildId);
         }
         else
         {
-            clocStatisticEntities = clocStatisticRepository.findByTaskId(taskId);
+            clocStatisticEntities = clocStatisticRepository.findByTaskIdAndToolName(taskId, Tool.CLOC.name());
         }
 
         if (CollectionUtils.isEmpty(clocStatisticEntities))
@@ -250,8 +254,8 @@ public class CLOCQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
         clocDefectQueryRspVO.setOtherInfo(otherInfo);
 
         clocDefectQueryRspVO.setTaskId(taskId);
-        clocDefectQueryRspVO.setNameEn(ComConstants.Tool.CLOC.name());
-        clocDefectQueryRspVO.setToolName(ComConstants.Tool.CLOC.name());
+        clocDefectQueryRspVO.setNameEn(Tool.CLOC.name());
+        clocDefectQueryRspVO.setToolName(Tool.CLOC.name());
         // 按照代码行百分比排序，注入各语言统计信息
         clocDefectQueryRspInfoVOS = clocDefectQueryRspInfoVOS.stream()
                 .sorted((x, y) -> -(x.getProportion() - y.getProportion()))
@@ -267,13 +271,13 @@ public class CLOCQueryWarningBizServiceImpl extends AbstractQueryWarningBizServi
      */
     private void generateFileTree(CLOCDefectTreeRespVO clocDefectTreeRespVO, long taskId)
     {
-        List<String> toolNames = Collections.singletonList(ComConstants.Tool.CLOC.name());
+        List<String> toolNames = Arrays.asList(Tool.CLOC.name(), null);
 
         // 生成文件树
         CLOCTreeNodeVO root = (CLOCTreeNodeVO) treeService.getTreeNode(taskId, toolNames);
         clocDefectTreeRespVO.setClocTreeNodeVO(root);
-        clocDefectTreeRespVO.setNameEn(ComConstants.Tool.CLOC.name());
-        clocDefectTreeRespVO.setToolName(ComConstants.Tool.CLOC.name());
+        clocDefectTreeRespVO.setNameEn(Tool.CLOC.name());
+        clocDefectTreeRespVO.setToolName(Tool.CLOC.name());
         clocDefectTreeRespVO.setTaskId(taskId);
 
         // 注入代码库信息

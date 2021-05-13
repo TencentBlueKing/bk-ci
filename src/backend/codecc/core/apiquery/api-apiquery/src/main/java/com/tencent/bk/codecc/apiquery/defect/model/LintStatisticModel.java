@@ -27,10 +27,9 @@
 package com.tencent.bk.codecc.apiquery.defect.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.util.List;
 
 /**
  * 任务分析记录持久化对象
@@ -74,6 +73,33 @@ public class LintStatisticModel extends StatisticModel
 
     @JsonProperty("total_defect_count")
     private Long totalDefectCount;
+
+    @JsonProperty("normal_fixed_count")
+    private long normalFixedCount;
+
+    @JsonProperty("prompt_fixed_count")
+    private long promptFixedCount;
+
+    @JsonProperty("serious_fixed_count")
+    private long seriousFixedCount;
+
+    @JsonProperty("normal_ignore_count")
+    private long normalIgnoreCount;
+
+    @JsonProperty("prompt_ignore_count")
+    private long promptIgnoreCount;
+
+    @JsonProperty("serious_ignore_count")
+    private long seriousIgnoreCount;
+
+    @JsonProperty("normal_mask_count")
+    private long normalMaskCount;
+
+    @JsonProperty("prompt_mask_count")
+    private long promptMaskCount;
+
+    @JsonProperty("serious_mask_count")
+    private long seriousMaskCount;
 
     @JsonProperty("author_statistic")
     private List<NotRepairedAuthorModel> authorStatistic;

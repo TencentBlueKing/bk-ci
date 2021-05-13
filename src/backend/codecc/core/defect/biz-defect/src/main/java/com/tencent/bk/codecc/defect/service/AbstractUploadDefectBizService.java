@@ -27,12 +27,15 @@
 package com.tencent.bk.codecc.defect.service;
 
 import com.tencent.bk.codecc.defect.component.ScmJsonComponent;
+import com.tencent.bk.codecc.defect.dao.mongorepository.ToolBuildInfoRepository;
+import com.tencent.bk.codecc.defect.model.incremental.ToolBuildInfoEntity;
 import com.tencent.bk.codecc.defect.vo.UploadDefectVO;
 import com.tencent.bk.codecc.task.api.ServiceTaskRestResource;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.client.Client;
+import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.service.IBizService;
 import com.tencent.devops.common.util.CompressionUtils;
@@ -67,13 +70,13 @@ public abstract class AbstractUploadDefectBizService implements IBizService<Uplo
 
     public TaskDetailVO getTaskDetail(long taskId)
     {
-        CodeCCResult<TaskDetailVO> taskDetailVOCodeCCResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
-        if (taskDetailVOCodeCCResult.isNotOk() || null == taskDetailVOCodeCCResult.getData())
+        Result<TaskDetailVO> taskDetailVOResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
+        if (taskDetailVOResult.isNotOk() || null == taskDetailVOResult.getData())
         {
             log.error("task info is empty! task id: {}: {}", taskId);
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
         }
-        TaskDetailVO taskDetailVO = taskDetailVOCodeCCResult.getData();
+        TaskDetailVO taskDetailVO = taskDetailVOResult.getData();
         return taskDetailVO;
     }
 }
