@@ -7,6 +7,7 @@ import com.tencent.bkuser.model.Profile
 import com.tencent.bkuser.model.ProfileLogin
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.experience.constant.ExperienceMessageCode
@@ -16,6 +17,7 @@ import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.redis.connection.RedisStringCommands
 import org.springframework.data.redis.core.RedisCallback
 import org.springframework.data.redis.core.types.Expiration
@@ -26,8 +28,13 @@ import javax.ws.rs.core.Response
 
 @Service
 class ExperienceOuterService @Autowired constructor(
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val loginApi: V1Api,
+    private val profileApi: ProfilesApi
 ) {
+    @Value("\${outer.api.host:#{null}}")
+    private var outApiHost: String? = null
+
     fun outerLogin(realIp: String, params: OuterLoginParam): String {
         // IP黑名单
         if (isBlackIp(realIp)) {
@@ -83,7 +90,7 @@ class ExperienceOuterService @Autowired constructor(
                 logo = logo(),
                 email = profile.email
             )
-            val token = DigestUtils.md5Hex(profile.username + profile.id + System.currentTimeMillis() + secretKey)
+            val token = DigestUtils.md5Hex(profile.username + profile.id + UUIDUtil.generate())
             redisOperation.set(redisKey(token), JsonUtil.toJson(outerProfileVO), expireSecs)
             return token
         } catch (e: ApiException) {
@@ -208,14 +215,11 @@ class ExperienceOuterService @Autowired constructor(
         return limit ?: 0 > 5 // 60s内只能登录5次
     }
 
-    private val loginApi = V1Api()
-    private val profileApi = ProfilesApi()
     private fun redisKey(token: String) = "e:out:l:$token"
     private fun logo() = "${HomeHostUtil.outerServerHost()}/app/download/devops_app.png"
 
     companion object {
         private val logger = LoggerFactory.getLogger(ExperienceOuterService::class.java)
-        private const val secretKey = "sd&t6y978*)hU(g9712U^Y&*HJT^G()Yuihyuib{L"
         private val df = DateTimeFormatter.ofPattern("HHmmss")
         private const val expireSecs: Long = 30 * 24 * 60 * 60
         private const val domain = "app.devops"
