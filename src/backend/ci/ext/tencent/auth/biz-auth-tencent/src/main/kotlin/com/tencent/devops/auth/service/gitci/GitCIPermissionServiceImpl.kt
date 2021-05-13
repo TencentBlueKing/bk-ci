@@ -4,6 +4,7 @@ import com.tencent.devops.auth.service.PermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.utils.GitCIUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.scm.api.ServiceGitCiResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -22,6 +23,11 @@ class GitCIPermissionServiceImpl @Autowired constructor(
         projectCode: String,
         resourceType: String?
     ): Boolean {
+        // 操作类action需要校验用户oauth, 查看类的无需oauth校验
+        if (!checkListOrViewAction(action)) {
+            client.get(ServiceOauthResource::class).gitGet(userId).data ?: return false
+        }
+
         val gitProjectId = GitCIUtils.getGitCiProjectId(projectCode)
         logger.info("GitCICertPermissionServiceImpl user:$userId projectId: $projectCode gitProject: $gitProjectId")
         return client.get(ServiceGitCiResource::class).checkUserGitAuth(userId, gitProjectId).data ?: false
@@ -56,6 +62,13 @@ class GitCIPermissionServiceImpl @Autowired constructor(
         resourceType: String
     ): Map<AuthPermission, List<String>> {
         return emptyMap()
+    }
+
+    private fun checkListOrViewAction(action: String) : Boolean {
+        if (action.contains(AuthPermission.LIST.value) || action.contains(AuthPermission.VIEW.value)) {
+            return true
+        }
+        return false
     }
 
     companion object {
