@@ -111,10 +111,10 @@ open class ScriptTask : ITask() {
             // 成功失败都写入环境变量
             addEnv(ScriptEnvUtils.getEnv(buildId, workspace))
             ScriptEnvUtils.cleanWhenEnd(buildId, workspace)
-        }
 
-        // 设置质量红线指标信息
-        setGatewayValue(workspace)
+            // 设置质量红线指标信息
+            setGatewayValue(workspace)
+        }
     }
 
     open fun takeBuildEnvs(
