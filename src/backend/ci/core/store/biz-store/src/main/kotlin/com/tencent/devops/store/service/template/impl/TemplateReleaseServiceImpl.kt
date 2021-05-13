@@ -125,6 +125,12 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
                 data = false
             )
         }
+        val projectCode = marketTemplateRelRequest.projectCode
+        // 校验模板是否合法
+        val checkResult = client.get(ServiceTemplateResource::class).checkTemplate(userId, templateCode, projectCode)
+        if (checkResult.isNotOk()) {
+            return checkResult
+        }
         dslContext.transaction { t ->
             val context = DSL.using(t)
             val templateId = UUIDUtil.generate()
@@ -134,7 +140,7 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
                 dslContext = context,
                 userId = userId,
                 storeCode = templateCode,
-                projectCode = marketTemplateRelRequest.projectCode,
+                projectCode = projectCode,
                 type = StoreProjectTypeEnum.INIT.type.toByte(),
                 storeType = StoreTypeEnum.TEMPLATE.type.toByte()
             )
