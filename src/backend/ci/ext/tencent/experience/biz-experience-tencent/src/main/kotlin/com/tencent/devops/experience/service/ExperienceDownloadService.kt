@@ -328,7 +328,8 @@ class ExperienceDownloadService @Autowired constructor(
                     expireTime = LocalDateTime.now(),
                     online = true,
                     offset = 0,
-                    limit = experienceIdsByBundleId.size
+                    limit = experienceIdsByBundleId.size,
+                    experienceName = null
                 ).asSequence().map {
                     DownloadRecordVO(
                         experienceHashId = HashUtil.encodeLongId(it.id),

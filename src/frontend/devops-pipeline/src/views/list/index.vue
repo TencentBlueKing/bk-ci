@@ -212,9 +212,9 @@
                     this.$store.commit('pipelines/showPageLoading', true)
                     const viewSetting = await this.requestViewSettingInfo({ projectId: this.projectId })
                     viewSetting.currentViewId = currentViewId || viewSetting.currentViewId || 'myPipeline'
+
                     if (!currentViewId) {
                         this.$router.replace({
-                            name: 'pipelinesList',
                             params: {
                                 type: viewSetting.currentViewId
                             }

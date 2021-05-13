@@ -163,12 +163,18 @@ class SignServiceImpl @Autowired constructor(
     }
 
     private fun findZhStrings(ipaUnzipDir: File): File? {
-        val file = File(ipaUnzipDir, "payload/zh-Hans.lproj/InfoPlist.strings")
-        return if (file.exists()) {
-            file
-        } else {
-            null
+        val dir = File(ipaUnzipDir, "payload")
+        if (!dir.exists() || !dir.isDirectory) return null
+        val appPattern = Pattern.compile(".+\\.app")
+        dir.listFiles().forEach {
+            if (appPattern.matcher(it.name).matches()) {
+                val matchFile = File(it, "/zh-Hans.lproj/InfoPlist.strings")
+                if (it.isDirectory && matchFile.exists() && matchFile.isFile) {
+                    return matchFile
+                }
+            }
         }
+        return null
     }
 
     override fun getSignStatus(resignId: String): EnumResignStatus {

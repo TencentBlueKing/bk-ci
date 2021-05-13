@@ -458,8 +458,7 @@ class PreBuildService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            isAnalysis = false,
-            queryKeywords = null,
+            debug = debugLog,
             tag = null,
             jobId = null,
             executeCount = null
@@ -493,8 +492,7 @@ class PreBuildService @Autowired constructor(
             pipelineId = prebuildProjRecord.pipelineId,
             buildId = buildId,
             start = start,
-            isAnalysis = false,
-            queryKeywords = null,
+            debug = debugLog,
             tag = null,
             jobId = null,
             executeCount = null

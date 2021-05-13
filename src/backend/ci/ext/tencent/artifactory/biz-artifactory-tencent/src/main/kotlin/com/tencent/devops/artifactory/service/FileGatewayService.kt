@@ -25,27 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.pojo
+package com.tencent.devops.artifactory.service
 
-import com.tencent.devops.environment.pojo.enums.EnvType
-import com.tencent.devops.environment.pojo.enums.NodeSource
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.artifactory.pojo.FileGatewayInfo
+import com.tencent.devops.common.redis.RedisOperation
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 
-@ApiModel("环境信息")
-data class EnvCreateInfo(
-    @ApiModelProperty("环境名称", required = true)
-    val name: String,
-    @ApiModelProperty("环境描述", required = true)
-    val desc: String,
-    @ApiModelProperty("环境类型（开发环境{DEV}|测试环境{TEST}|构建环境{BUILD}）", required = true)
-    val envType: EnvType,
-    @ApiModelProperty("环境变量", required = false)
-    val envVars: List<EnvVar>?,
-    @ApiModelProperty("节点来源（已有节点{EXISTING}|快速生成{CREATE}）", required = true)
-    val source: NodeSource,
-    @ApiModelProperty("节点 HashId 列表", required = false)
-    val nodeHashIds: List<String>?,
-    @ApiModelProperty("BCS VM 参数，节点来源为“快速生成”时必填", required = false)
-    val bcsVmParam: BcsVmParam? = null
-)
+@Service
+class FileGatewayService @Autowired constructor(
+    val redisOperation: RedisOperation
+) {
+    @Value("\${artifactory.fileGateway:}")
+    private lateinit var fileGateway: String
+
+    fun getFileGateway(projectId: String): FileGatewayInfo {
+        val allGray = redisOperation.get(FILE_GATEWAY_ALL_GRAY_KEY) == "true"
+        val fileGateway = if (allGray || redisOperation.isMember(FILE_GATEWAY_GRAY_KEY, projectId)) {
+            fileGateway
+        } else {
+            ""
+        }
+        return FileGatewayInfo(fileGateway)
+    }
+
+    companion object {
+        private const val FILE_GATEWAY_GRAY_KEY = "artifactory:fileGatewayGray:projects"
+        private const val FILE_GATEWAY_ALL_GRAY_KEY = "artifactory:fileGatewayGray:all"
+    }
+}
