@@ -32,9 +32,6 @@ class ExperienceOuterService @Autowired constructor(
     private val loginApi: V1Api,
     private val profileApi: ProfilesApi
 ) {
-    @Value("\${outer.api.host:#{null}}")
-    private var outApiHost: String? = null
-
     fun outerLogin(realIp: String, params: OuterLoginParam): String {
         // IP黑名单
         if (isBlackIp(realIp)) {
