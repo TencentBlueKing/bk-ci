@@ -68,6 +68,7 @@ import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCICommitRef
+import com.tencent.devops.scm.pojo.GitCICreateFile
 import com.tencent.devops.scm.pojo.GitCIFileCommit
 import com.tencent.devops.scm.pojo.GitCIMrInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
@@ -428,7 +429,7 @@ class GitService @Autowired constructor(
         try {
             val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/blobs/" +
                 "${URLEncoder.encode(ref, "UTF-8")}?filepath=${URLEncoder.encode(filePath, "UTF-8")}" +
-                if (isAccessToken){"&access_token=$token"}else{"&private_token=$token"}
+                if (isAccessToken) { "&access_token=$token" } else { "&private_token=$token" }
             logger.info("request url: $url")
             val request = Request.Builder()
                 .url(url)
@@ -510,8 +511,8 @@ class GitService @Autowired constructor(
 
     fun getCommits(
         gitProjectId: Long,
-        filePath: String,
-        branch: String,
+        filePath: String?,
+        branch: String?,
         token: String,
         since: String?,
         until: String?,
@@ -521,11 +522,27 @@ class GitService @Autowired constructor(
         logger.info("[$gitProjectId|$filePath|$branch|$since|$until] Start to get the git commits")
         val startEpoch = System.currentTimeMillis()
         try {
-            val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/commits" +
-                    "?ref_name=${URLEncoder.encode(branch, "UTF-8")}" +
-                    "&path=${URLEncoder.encode(filePath, "UTF-8")}" +
-                    if (since != null) { "&since=${since.replace("+", "%2B")}" } else { "" } +
-                    if (until != null) { "&until=${until.replace("+", "%2B")}" } else { "" } +
+            val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/commits?" +
+                    if (branch != null) {
+                        "?ref_name=${URLEncoder.encode(branch, "UTF-8")}"
+                    } else {
+                        ""
+                    } +
+                    if (filePath != null) {
+                        "&path=${URLEncoder.encode(filePath, "UTF-8")}"
+                    } else {
+                        ""
+                    } +
+                    if (since != null) {
+                        "&since=${since.replace("+", "%2B")}"
+                    } else {
+                        ""
+                    } +
+                    if (until != null) {
+                        "&until=${until.replace("+", "%2B")}"
+                    } else {
+                        ""
+                    } +
                     "&page=$page" + "&per_page=$perPage" +
                     "&access_token=$token"
             logger.info("request url: $url")
@@ -540,6 +557,30 @@ class GitService @Autowired constructor(
             }
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git commits")
+        }
+    }
+
+    fun gitCodeCreateFile(gitProjectId: String, token: String, gitCICreateFile: GitCICreateFile): Boolean {
+        logger.info("[$gitProjectId|$token] Start to create file")
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/files?access_token=$token"
+            val request = Request.Builder()
+                .url(url)
+                .post(
+                    RequestBody.create(
+                        MediaType.parse("application/json;charset=utf-8"),
+                        JsonUtil.toJson(gitCICreateFile)
+                    )
+                )
+                .build()
+            OkhttpUtils.doHttp(request).use {
+                val data = it.body()!!.string()
+                if (!it.isSuccessful) throw RuntimeException("fail to create file: $data")
+                return true
+            }
+        } finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to create file")
         }
     }
 
@@ -569,7 +610,7 @@ class GitService @Autowired constructor(
         path: String,
         token: String,
         ref: String,
-        useAccessToken:Boolean = true
+        useAccessToken: Boolean = true
     ): List<GitFileInfo> {
         logger.info("[$gitProjectId|$path|$ref] Start to get the git file tree")
         val startEpoch = System.currentTimeMillis()
@@ -577,7 +618,7 @@ class GitService @Autowired constructor(
             val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/tree" +
                 "?path=${URLEncoder.encode(path, "UTF-8")}" +
                 "&ref_name=${URLEncoder.encode(ref, "UTF-8")}" +
-                if (useAccessToken){"&access_token=$token"}else{"&private_token=$token"}
+                if (useAccessToken) { "&access_token=$token" } else { "&private_token=$token" }
             logger.info("request url: $url")
             val request = Request.Builder()
                 .url(url)
@@ -1049,12 +1090,11 @@ class GitService @Autowired constructor(
     fun getGitCIProjectInfo(
         gitProjectId: String,
         token: String,
-        useAccessToken:Boolean = true
+        useAccessToken: Boolean = true
     ): Result<GitCIProjectInfo?> {
         logger.info("[gitProjectId=$gitProjectId]|getGitCIProjectInfo")
         val encodeId = URLEncoder.encode(gitProjectId, "utf-8") // 如果id为NAMESPACE_PATH则需要encode
-        val str= "$gitCIUrl/api/v3/projects/$encodeId?"+if (useAccessToken)
-        {"access_token=$token"}else{"private_token=$token"}
+        val str = "$gitCIUrl/api/v3/projects/$encodeId?" + if (useAccessToken) { "access_token=$token" } else { "private_token=$token" }
         val url = StringBuilder(str)
         val request = Request.Builder()
             .url(url.toString())

@@ -69,6 +69,9 @@ import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.gitci.pojo.v2.V2BuildYaml
 import com.tencent.devops.gitci.service.trigger.RequestTriggerFactory
 import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
+import com.tencent.devops.gitci.v2.listener.V2GitCIRequestDispatcher
+import com.tencent.devops.gitci.v2.listener.V2GitCIRequestTriggerEvent
+import com.tencent.devops.gitci.v2.service.OauthService
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.GitFileInfo
@@ -100,7 +103,8 @@ class GitCITriggerService @Autowired constructor(
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitServicesConfDao: GitCIServicesConfDao,
     private val rabbitTemplate: RabbitTemplate,
-    private val requestTriggerFactory: RequestTriggerFactory
+    private val requestTriggerFactory: RequestTriggerFactory,
+    private val oauthService: OauthService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCITriggerService::class.java)
@@ -148,34 +152,79 @@ class GitCITriggerService @Autowired constructor(
                 gitProjectId = gitRequestEvent.gitProjectId
             )
         }
-        val (yamlObject, normalizedYaml) =
-            prepareCIBuildYaml(gitRequestEvent, originYaml, existsPipeline.filePath, existsPipeline.pipelineId)
-                ?: return false
 
-        val gitBuildId = gitRequestEventBuildDao.save(
-            dslContext = dslContext,
-            eventId = gitRequestEvent.id!!,
-            originYaml = originYaml!!,
-            parsedYaml = originYaml,
-            normalizedYaml = normalizedYaml,
-            gitProjectId = gitRequestEvent.gitProjectId,
-            branch = gitRequestEvent.branch,
-            objectKind = gitRequestEvent.objectKind,
-            description = triggerBuildReq.customCommitMsg,
-            triggerUser = gitRequestEvent.userId,
-            sourceGitProjectId = gitRequestEvent.sourceGitProjectId
-        )
-        dispatchEvent(
-            GitCIRequestTriggerEvent(
-                pipeline = buildPipeline,
-                event = gitRequestEvent,
-                yaml = yamlObject,
-                originYaml = originYaml,
+        if (!ScriptYmlUtils.isV2Version(originYaml)) {
+            val (yamlObject, normalizedYaml) =
+                prepareCIBuildYaml(gitRequestEvent, originYaml, existsPipeline.filePath, existsPipeline.pipelineId)
+                    ?: return false
+
+            val gitBuildId = gitRequestEventBuildDao.save(
+                dslContext = dslContext,
+                eventId = gitRequestEvent.id!!,
+                originYaml = originYaml!!,
+                parsedYaml = originYaml,
                 normalizedYaml = normalizedYaml,
-                gitBuildId = gitBuildId
+                gitProjectId = gitRequestEvent.gitProjectId,
+                branch = gitRequestEvent.branch,
+                objectKind = gitRequestEvent.objectKind,
+                description = triggerBuildReq.customCommitMsg,
+                triggerUser = gitRequestEvent.userId,
+                sourceGitProjectId = gitRequestEvent.sourceGitProjectId
             )
-        )
-        return true
+            dispatchEvent(
+                GitCIRequestTriggerEvent(
+                    pipeline = buildPipeline,
+                    event = gitRequestEvent,
+                    yaml = yamlObject,
+                    originYaml = originYaml,
+                    normalizedYaml = normalizedYaml,
+                    gitBuildId = gitBuildId
+                )
+            )
+            return true
+        } else {
+            // v2 先做OAuth校验
+            val triggerUser = gitRequestEvent.userId
+            val token = oauthService.getOauthToken(triggerUser) ?: throw CustomException(
+                Response.Status.FORBIDDEN,
+                "用户${gitRequestEvent.userId} 无OAuth权限"
+            )
+            val objects = requestTriggerFactory.v2RequestTrigger.prepareCIBuildYaml(
+                gitToken = token,
+                forkGitToken = null,
+                gitRequestEvent = gitRequestEvent,
+                isMr = false,
+                originYaml = originYaml,
+                filePath = existsPipeline.filePath,
+                pipelineId = existsPipeline.pipelineId
+            ) ?: return false
+
+            val gitBuildId = gitRequestEventBuildDao.save(
+                dslContext = dslContext,
+                eventId = gitRequestEvent.id!!,
+                originYaml = originYaml!!,
+                parsedYaml = YamlUtil.toYaml(objects.preYaml),
+                normalizedYaml = YamlUtil.toYaml(objects.normalYaml),
+                gitProjectId = gitRequestEvent.gitProjectId,
+                branch = gitRequestEvent.branch,
+                objectKind = gitRequestEvent.objectKind,
+                description = triggerBuildReq.customCommitMsg,
+                triggerUser = gitRequestEvent.userId,
+                sourceGitProjectId = gitRequestEvent.sourceGitProjectId
+            )
+            V2GitCIRequestDispatcher.dispatch(
+                rabbitTemplate,
+                V2GitCIRequestTriggerEvent(
+                    pipeline = buildPipeline,
+                    event = gitRequestEvent,
+                    yaml = objects.normalYaml,
+                    originYaml = originYaml,
+                    normalizedYaml = YamlUtil.toYaml(objects.normalYaml),
+                    gitBuildId = gitBuildId
+                )
+            )
+            return true
+        }
     }
 
     fun externalCodeGitBuild(token: String, e: String): Boolean {

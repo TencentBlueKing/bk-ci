@@ -42,6 +42,7 @@ import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.gitci.pojo.enums.TriggerReason
 import com.tencent.devops.gitci.pojo.git.GitEvent
+import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.service.GitRepositoryConfService
 import com.tencent.devops.gitci.utils.GitCIWebHookMatcher
 import com.tencent.devops.repository.pojo.oauth.GitToken
@@ -78,7 +79,7 @@ class RequestTrigger @Autowired constructor(
             gitToken = gitToken,
             forkGitToken = forkGitToken,
             gitRequestEvent = gitRequestEvent,
-            event = event,
+            isMr = (event is GitMergeRequestEvent),
             originYaml = originYaml,
             filePath = filePath,
             pipelineId = gitProjectPipeline.pipelineId
@@ -144,7 +145,7 @@ class RequestTrigger @Autowired constructor(
         gitToken: GitToken,
         forkGitToken: GitToken?,
         gitRequestEvent: GitRequestEvent,
-        event: GitEvent,
+        isMr: Boolean,
         originYaml: String?,
         filePath: String?,
         pipelineId: String?
@@ -155,7 +156,7 @@ class RequestTrigger @Autowired constructor(
         }
 
         val yamlObject = try {
-            createCIBuildYaml(originYaml!!, gitRequestEvent.gitProjectId)
+            createCIBuildYaml(originYaml, gitRequestEvent.gitProjectId)
         } catch (e: Throwable) {
             logger.error("git ci yaml is invalid", e)
             gitRequestEventNotBuildDao.save(

@@ -27,11 +27,11 @@
 
 package com.tencent.devops.gitci.v2.template
 
-import com.tencent.devops.common.client.Client
+import com.tencent.devops.gitci.v2.service.GitCIBasicSettingService
+import com.tencent.devops.gitci.v2.service.OauthService
 import com.tencent.devops.gitci.v2.service.ScmService
 import com.tencent.devops.gitci.v2.service.TicketService
 import com.tencent.devops.gitci.v2.template.pojo.enums.ResourceCredentialType
-import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -40,8 +40,9 @@ import java.lang.RuntimeException
 
 @Service
 class YamlTemplateService @Autowired constructor(
-    private val client: Client,
+    private val oauthService: OauthService,
     private val scmService: ScmService,
+    private val gitCIBasicSettingService: GitCIBasicSettingService,
     private val ticketService: TicketService
 ) {
 
@@ -85,7 +86,17 @@ class YamlTemplateService @Autowired constructor(
                     }
                     ticket["v1"]!!
                 } else {
-                    key
+                    // 空值的key使用开启人的Oauth
+                    if (key == "") {
+                        val enableUserId =
+                            gitCIBasicSettingService.getGitCIConf(gitProjectId)?.enableUserId ?: throw RuntimeException(
+                                "GitCi Project $gitProjectId not enable"
+                            )
+                        oauthService.getOauthToken(enableUserId)?.accessToken
+                            ?: throw RuntimeException("$enableUserId hasn't oauth")
+                    } else {
+                        key
+                    }
                 }
                 val targetProjectId = scmService.getProjectInfo(
                     token = token,
@@ -101,15 +112,15 @@ class YamlTemplateService @Autowired constructor(
                 )
             }
             ResourceCredentialType.OAUTH -> {
-                val accessToken = client.get(ServiceOauthResource::class).gitGet(userId).data
+                val accessToken = oauthService.getOauthToken(userId)?.accessToken
                     ?: throw RuntimeException("$userId hasn't oauth")
                 val targetProjectId = scmService.getProjectInfo(
-                    token = accessToken.accessToken,
+                    token = accessToken,
                     gitProjectId = repo,
                     useAccessToken = true
                 )?.gitProjectId ?: throw RuntimeException("Cant find project $repo")
                 return scmService.getYamlFromGit(
-                    token = accessToken.accessToken,
+                    token = accessToken,
                     gitProjectId = targetProjectId.toLong(),
                     ref = ref!!,
                     fileName = templateDirectory + fileName,

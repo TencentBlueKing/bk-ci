@@ -87,7 +87,7 @@ class V2RequestTrigger @Autowired constructor(
             gitToken = gitToken,
             forkGitToken = forkGitToken,
             gitRequestEvent = gitRequestEvent,
-            event = event,
+            isMr = (event is GitMergeRequestEvent),
             originYaml = originYaml,
             filePath = filePath,
             pipelineId = gitProjectPipeline.pipelineId
@@ -101,8 +101,10 @@ class V2RequestTrigger @Autowired constructor(
             if (!yamlObject.name.isNullOrBlank()) yamlObject.name!! else filePath.removeSuffix(".yml")
 
         if (isMatch(event, yamlObjects)) {
-            logger.info("Matcher is true, display the event, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
-                "eventId: ${gitRequestEvent.id}, dispatched pipeline: $gitProjectPipeline")
+            logger.info(
+                "Matcher is true, display the event, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
+                        "eventId: ${gitRequestEvent.id}, dispatched pipeline: $gitProjectPipeline"
+            )
             val gitBuildId = gitRequestEventBuildDao.save(
                 dslContext = dslContext,
                 eventId = gitRequestEvent.id!!,
@@ -155,7 +157,7 @@ class V2RequestTrigger @Autowired constructor(
         gitToken: GitToken,
         forkGitToken: GitToken?,
         gitRequestEvent: GitRequestEvent,
-        event: GitEvent,
+        isMr: Boolean,
         originYaml: String?,
         filePath: String?,
         pipelineId: String?
@@ -163,7 +165,7 @@ class V2RequestTrigger @Autowired constructor(
         if (originYaml.isNullOrBlank()) {
             return null
         }
-        val isFork = (event is GitMergeRequestEvent) && gitRequestEvent.sourceGitProjectId != null &&
+        val isFork = (isMr) && gitRequestEvent.sourceGitProjectId != null &&
                 gitRequestEvent.sourceGitProjectId != gitRequestEvent.gitProjectId
         val yamlObjects = try {
             createCIBuildYaml(

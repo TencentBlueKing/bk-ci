@@ -25,34 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.service.trigger
+package com.tencent.devops.gitci.v2.service
 
-import com.tencent.devops.gitci.pojo.GitProjectPipeline
-import com.tencent.devops.gitci.pojo.GitRequestEvent
-import com.tencent.devops.gitci.pojo.git.GitEvent
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-interface RequestTriggerInterface<T> {
+@Service
+class OauthService @Autowired constructor(
+    private val client: Client
+) {
 
-    fun triggerBuild(
-        gitToken: GitToken,
-        forkGitToken: GitToken?,
-        gitRequestEvent: GitRequestEvent,
-        gitProjectPipeline: GitProjectPipeline,
-        event: GitEvent,
-        originYaml: String?,
-        filePath: String
-    ): Boolean
+    fun checkOauth(
+        userId: String
+    ): Boolean {
+        client.get(ServiceOauthResource::class).gitGet(userId).data ?: return false
+        return true
+    }
 
-    fun isMatch(event: GitEvent, ymlObject: T): Boolean
-
-    fun prepareCIBuildYaml(
-        gitToken: GitToken,
-        forkGitToken: GitToken?,
-        gitRequestEvent: GitRequestEvent,
-        isMr: Boolean,
-        originYaml: String?,
-        filePath: String?,
-        pipelineId: String?
-    ): T?
+    fun getOauthToken(
+        userId: String
+    ): GitToken? {
+        return client.get(ServiceOauthResource::class).gitGet(userId).data
+    }
 }

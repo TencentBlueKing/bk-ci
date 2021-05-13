@@ -25,34 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.service.trigger
+package com.tencent.devops.scm.pojo
 
-import com.tencent.devops.gitci.pojo.GitProjectPipeline
-import com.tencent.devops.gitci.pojo.GitRequestEvent
-import com.tencent.devops.gitci.pojo.git.GitEvent
-import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.fasterxml.jackson.annotation.JsonProperty
 
-interface RequestTriggerInterface<T> {
-
-    fun triggerBuild(
-        gitToken: GitToken,
-        forkGitToken: GitToken?,
-        gitRequestEvent: GitRequestEvent,
-        gitProjectPipeline: GitProjectPipeline,
-        event: GitEvent,
-        originYaml: String?,
-        filePath: String
-    ): Boolean
-
-    fun isMatch(event: GitEvent, ymlObject: T): Boolean
-
-    fun prepareCIBuildYaml(
-        gitToken: GitToken,
-        forkGitToken: GitToken?,
-        gitRequestEvent: GitRequestEvent,
-        isMr: Boolean,
-        originYaml: String?,
-        filePath: String?,
-        pipelineId: String?
-    ): T?
-}
+data class GitCICreateFile(
+    @JsonProperty("file_path")
+    val filePath: String,
+    @JsonProperty("branch_name")
+    val branch: String,
+    @JsonProperty("encoding")
+    val encoding: GitCodeFileEncoding = GitCodeFileEncoding.TEXT,
+    @JsonProperty("content")
+    val content: String,
+    @JsonProperty("commit_message")
+    val commitMessage: String
+)

@@ -29,14 +29,13 @@ package com.tencent.devops.gitci.v2.service
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.gitci.pojo.GitRequestEvent
-import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitResource
+import com.tencent.devops.scm.pojo.Commit
+import com.tencent.devops.scm.pojo.GitCICreateFile
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
-import com.tencent.devops.scm.pojo.GitFileInfo
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.io.File
 
 @Service
 class ScmService @Autowired constructor(
@@ -48,56 +47,6 @@ class ScmService @Autowired constructor(
         private const val ciFileName = ".ci.yml"
         private const val templateDirectoryName = ".ci/templates"
         private const val ciFileExtension = ".yml"
-    }
-
-    fun getCIYamlList(
-        gitToken: GitToken,
-        gitRequestEvent: GitRequestEvent,
-        isFork: Boolean = false
-    ): MutableList<String> {
-        val ciFileList = getFileTreeFromGit(gitToken, gitRequestEvent, templateDirectoryName, isFork)
-            .filter { it.name.endsWith(ciFileExtension) }
-        return ciFileList.map { templateDirectoryName + File.separator + it.name }.toMutableList()
-    }
-
-    fun getFileTreeFromGit(
-        gitToken: GitToken,
-        gitRequestEvent: GitRequestEvent,
-        filePath: String,
-        isFork: Boolean = false
-    ): List<GitFileInfo> {
-        return try {
-            val result = client.getScm(ServiceGitResource::class).getGitCIFileTree(
-                gitProjectId = getProjectId(isFork, gitRequestEvent),
-                path = filePath,
-                token = gitToken.accessToken,
-                ref = getTriggerBranch(gitRequestEvent)
-            )
-            result.data!!
-        } catch (e: Throwable) {
-            logger.error("Get yaml from git failed", e)
-            emptyList()
-        }
-    }
-
-    fun getYamlFromGit(
-        gitToken: GitToken,
-        gitRequestEvent: GitRequestEvent,
-        fileName: String,
-        isMrEvent: Boolean = false
-    ): String? {
-        return try {
-            val result = client.getScm(ServiceGitResource::class).getGitCIFileContent(
-                gitProjectId = getProjectId(isMrEvent, gitRequestEvent),
-                filePath = fileName,
-                token = gitToken.accessToken,
-                ref = getTriggerBranch(gitRequestEvent)
-            )
-            result.data
-        } catch (e: Throwable) {
-            logger.error("Get yaml from git failed", e)
-            null
-        }
     }
 
     fun getYamlFromGit(
@@ -131,6 +80,36 @@ class ScmService @Autowired constructor(
         useAccessToken: Boolean
     ): GitCIProjectInfo? {
         return client.getScm(ServiceGitResource::class).getProjectInfo(token, gitProjectId, useAccessToken).data
+    }
+
+    fun getCommits(
+        token: String,
+        gitProjectId: Long,
+        filePath: String?,
+        branch: String?,
+        since: String?,
+        until: String?,
+        page: Int,
+        perPage: Int
+    ): List<Commit>? {
+        return client.getScm(ServiceGitResource::class).getCommits(
+            gitProjectId = gitProjectId,
+            filePath = filePath,
+            branch = branch,
+            token = token,
+            since = since,
+            until = until,
+            page = page,
+            perPage = perPage
+        ).data
+    }
+
+    fun createNewFile(
+        token: String,
+        gitProjectId: String,
+        gitCICreateFile: GitCICreateFile
+    ): Boolean {
+        return client.getScm(ServiceGitResource::class).gitCICreateFile(token, gitProjectId, gitCICreateFile).data!!
     }
 
     // 获取项目ID，兼容没有source字段的旧数据，和fork库中源项目id不同的情况
