@@ -39,7 +39,6 @@ import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineModelTaskRecord
-import com.tencent.devops.process.dao.PipelineTaskDao
 import com.tencent.devops.process.engine.common.Timeout.MAX_MINUTES
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
@@ -71,7 +70,6 @@ class PipelineTaskService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val objectMapper: ObjectMapper,
     private val pipelineInfoDao: PipelineInfoDao,
-    private val pipelineTaskDao: PipelineTaskDao,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelineModelTaskDao: PipelineModelTaskDao,
     private val buildLogPrinter: BuildLogPrinter,
@@ -81,7 +79,7 @@ class PipelineTaskService @Autowired constructor(
 ) {
 
     fun list(projectId: String, pipelineIds: Collection<String>): Map<String, List<PipelineModelTask>> {
-        return pipelineTaskDao.list(dslContext, projectId, pipelineIds)?.map {
+        return pipelineModelTaskDao.listByPipelineIds(dslContext, projectId, pipelineIds)?.map {
             PipelineModelTask(
                 projectId = it.projectId,
                 pipelineId = it.pipelineId,
@@ -269,8 +267,8 @@ class PipelineTaskService @Autowired constructor(
         try {
             val failTask = pipelineVariableService.getVariable(buildId, BK_CI_BUILD_FAIL_TASKS)
             val failTaskNames = pipelineVariableService.getVariable(buildId, BK_CI_BUILD_FAIL_TASKNAMES)
-            val newFailTask = failTask!!.replace(failTaskRecord!!, "")
-            val newFailTaskNames = failTaskNames!!.replace(failTaskNameRecord!!, "")
+            val newFailTask = failTask!!.replace(failTaskRecord, "")
+            val newFailTaskNames = failTaskNames!!.replace(failTaskNameRecord, "")
             if (newFailTask != failTask || newFailTaskNames != failTaskNames) {
                 val valueMap = mutableMapOf<String, Any>()
                 valueMap[BK_CI_BUILD_FAIL_TASKS] = newFailTask

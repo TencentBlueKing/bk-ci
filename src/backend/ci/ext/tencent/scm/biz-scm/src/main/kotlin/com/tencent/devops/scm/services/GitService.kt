@@ -1329,4 +1329,24 @@ class GitService @Autowired constructor(
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to unlock webhook lock")
         }
     }
+
+    fun clearToken(token: String): Boolean {
+        logger.info("Start to clear the token: $token")
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val tokenUrl = "$gitCIOauthUrl/oauth/token" +
+                "?client_id=$gitCIClientId&client_secret=$gitCIClientSecret&access_token=$token"
+            val request = Request.Builder()
+                .url(tokenUrl)
+                .delete(RequestBody.create(MediaType.parse("application/x-www-form-urlencoded;charset=utf-8"), ""))
+                .build()
+
+            OkhttpUtils.doHttp(request).use { response ->
+                logger.info("Clear token response code: ${response.code()}")
+                return response.isSuccessful
+            }
+        } finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to clear the token")
+        }
+    }
 }

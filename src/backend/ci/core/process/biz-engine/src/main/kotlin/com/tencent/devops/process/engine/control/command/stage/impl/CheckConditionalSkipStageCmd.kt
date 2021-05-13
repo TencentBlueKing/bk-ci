@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.control.command.stage.impl
 
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.control.command.CmdFlowState
@@ -40,11 +41,15 @@ import org.springframework.stereotype.Service
  * Stage的按条件跳过命令处理
  */
 @Service
-class CheckConditionalSkipStageCmd : StageCmd {
+class CheckConditionalSkipStageCmd constructor(
+    private val buildLogPrinter: BuildLogPrinter
+) : StageCmd {
 
     override fun canExecute(commandContext: StageContext): Boolean {
         // 仅在初次进入Container
-        return commandContext.cmdFlowState == CmdFlowState.CONTINUE && commandContext.buildStatus.isReadyToRun()
+        return commandContext.stage.controlOption?.finally != true &&
+            commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
+            commandContext.buildStatus.isReadyToRun()
     }
 
     override fun execute(commandContext: StageContext) {
@@ -74,7 +79,12 @@ class CheckConditionalSkipStageCmd : StageCmd {
         if (controlOption != null) {
             val conditions = controlOption.customVariables ?: emptyList()
             skip = ControlUtils.checkStageSkipCondition(
-                conditions, variables, stage.buildId, runCondition = controlOption.runCondition
+                conditions = conditions,
+                variables = variables,
+                buildId = stage.buildId,
+                runCondition = controlOption.runCondition,
+                customCondition = controlOption.customCondition,
+                buildLogPrinter = buildLogPrinter
             )
         }
         if (skip) {

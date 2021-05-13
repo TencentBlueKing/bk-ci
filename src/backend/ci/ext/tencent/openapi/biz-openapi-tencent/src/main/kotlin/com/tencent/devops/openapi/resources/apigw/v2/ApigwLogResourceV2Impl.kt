@@ -46,14 +46,13 @@ class ApigwLogResourceV2Impl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        isAnalysis: Boolean?,
-        queryKeywords: String?,
+        debug: Boolean?,
         elementId: String?,
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
         logger.info(
-            "getInitLogs project[$projectId] pipelineId[$pipelineId] buildId[$buildId] queryKeywords[$queryKeywords] " +
+            "getInitLogs project[$projectId] pipelineId[$pipelineId] buildId[$buildId] debug[$debug] " +
                 "elementId[$elementId] jobId[$jobId]"
         )
         return client.get(ServiceLogResource::class).getInitLogs(
@@ -63,8 +62,7 @@ class ApigwLogResourceV2Impl @Autowired constructor(
             tag = elementId,
             jobId = jobId,
             executeCount = executeCount,
-            isAnalysis = isAnalysis,
-            queryKeywords = queryKeywords
+            debug = debug
         )
     }
 

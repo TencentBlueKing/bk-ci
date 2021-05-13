@@ -36,21 +36,25 @@ import com.tencent.bkrepo.common.query.model.PageLimit
 import com.tencent.bkrepo.common.query.model.QueryModel
 import com.tencent.bkrepo.common.query.model.Rule
 import com.tencent.bkrepo.common.query.model.Sort
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_APP_TITLE
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_FULL_IMAGE
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_IMAGE
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_NAME
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_SCHEME
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
+import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.archive.pojo.BkRepoAccessToken
 import com.tencent.devops.worker.common.api.archive.pojo.BkRepoResponse
 import com.tencent.devops.worker.common.api.archive.pojo.TokenType
+import com.tencent.devops.worker.common.api.pojo.FileGatewayInfo
 import com.tencent.devops.worker.common.api.pojo.QueryData
 import com.tencent.devops.worker.common.api.pojo.QueryNodeInfo
 import com.tencent.devops.worker.common.utils.IosUtils
@@ -63,17 +67,28 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import java.net.URLEncoder
 import java.util.Base64
+import java.util.Locale
 
 class BkRepoResourceApi : AbstractBuildResourceApi() {
-    fun useBkRepo(): Boolean {
+
+    private fun getFileGateway(): String? {
         return try {
-            val request = buildGet("/dummy", useFileGateway = true)
-            val host = request.url().host()
-            host.contains("bkrepo", true)
+            val path = "/artifactory/api/build/fileGateway/get"
+            val request = buildGet(path)
+            val response = request(request, "获取构建机基本信息失败")
+            val fileGatewayResult = objectMapper.readValue<Result<FileGatewayInfo>>(response)
+            fileGatewayResult.data!!.fileGateway
         } catch (e: Exception) {
-            logger.warn("check useBkRepo error, cause: ${e.message}")
-            false
+            logger.warn("get file gateway exception", e)
+            null
         }
+    }
+
+    fun tokenAccess(): Boolean {
+        if (CommonEnv.fileGateway == null) {
+            CommonEnv.fileGateway = getFileGateway()
+        }
+        return CommonEnv.fileGateway != null && CommonEnv.fileGateway!!.contains("bkrepo", true)
     }
 
     fun createBkRepoTemporaryToken(projectId: String, repoName: String, path: String, type: TokenType): String {
@@ -203,17 +218,20 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
                         ARCHIVE_PROPS_APP_APP_TITLE to (map["appTitle"] ?: ""),
                         ARCHIVE_PROPS_APP_IMAGE to (map["image"] ?: ""),
                         ARCHIVE_PROPS_APP_FULL_IMAGE to (map["fullImage"] ?: ""),
-                        ARCHIVE_PROPS_APP_SCHEME to (map["scheme"] ?: "")
+                        ARCHIVE_PROPS_APP_SCHEME to (map["scheme"] ?: ""),
+                        ARCHIVE_PROPS_APP_NAME to (map["appName"] ?: "")
                     )
                     result
                 }
                 file.name.endsWith(".apk") -> {
                     val apkFile = ApkFile(file)
+                    apkFile.preferredLocale = Locale.SIMPLIFIED_CHINESE
                     val meta = apkFile.apkMeta
                     val result = mutableMapOf(
                         ARCHIVE_PROPS_APP_VERSION to meta.versionName,
                         ARCHIVE_PROPS_APP_APP_TITLE to meta.name,
-                        ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER to meta.packageName
+                        ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER to meta.packageName,
+                        ARCHIVE_PROPS_APP_NAME to (meta.label ?: "")
                     )
                     result
                 }
@@ -274,15 +292,23 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         val repoRule = Rule.QueryRule("repoName", repoNames, OperationType.IN)
         var ruleList = mutableListOf<Rule>(projectRule, repoRule, Rule.QueryRule("folder", false, OperationType.EQ))
         if (filePaths.isNotEmpty()) {
-            val filePathRule = Rule.NestedRule(filePaths.map { Rule.QueryRule("path", it, OperationType.EQ) }.toMutableList(), Rule.NestedRule.RelationType.OR)
+            val filePathRule = Rule.NestedRule(
+                filePaths.map { Rule.QueryRule("path", it, OperationType.EQ) }.toMutableList(),
+                Rule.NestedRule.RelationType.OR
+            )
             ruleList.add(filePathRule)
         }
         if (fileNames.isNotEmpty()) {
-            val fileNameRule = Rule.NestedRule(fileNames.map { Rule.QueryRule("name", it, OperationType.MATCH) }.toMutableList(), Rule.NestedRule.RelationType.OR)
+            val fileNameRule = Rule.NestedRule(
+                fileNames.map { Rule.QueryRule("name", it, OperationType.MATCH) }.toMutableList(),
+                Rule.NestedRule.RelationType.OR
+            )
             ruleList.add(fileNameRule)
         }
         if (metadata.isNotEmpty()) {
-            val metadataRule = Rule.NestedRule(metadata.map { Rule.QueryRule("metadata.${it.key}", it.value, OperationType.EQ) }.toMutableList(), Rule.NestedRule.RelationType.AND)
+            val metadataRule =
+                Rule.NestedRule(metadata.map { Rule.QueryRule("metadata.${it.key}", it.value, OperationType.EQ) }
+                    .toMutableList(), Rule.NestedRule.RelationType.AND)
             ruleList.add(metadataRule)
         }
         var rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)

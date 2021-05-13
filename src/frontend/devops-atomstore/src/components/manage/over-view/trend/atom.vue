@@ -14,8 +14,8 @@
             </bk-select>
         </header>
 
-        <bk-exception class="exception-wrap-item exception-part" type="empty" v-if="isEmpty"></bk-exception>
-        <canvas class="store-chart" v-else></canvas>
+        <bk-exception class="exception-wrap-item exception-part" type="empty" v-show="isEmpty"></bk-exception>
+        <canvas class="store-chart" v-show="!isEmpty"></canvas>
     </article>
 </template>
 
@@ -117,7 +117,7 @@
                         break
                 }
                 this.isEmpty = paintData.length <= 0
-                if (!this.isEmpty) this.$nextTick(() => method(paintData))
+                if (!this.isEmpty) method(paintData)
             },
 
             paintInstall (dailyStatisticList) {

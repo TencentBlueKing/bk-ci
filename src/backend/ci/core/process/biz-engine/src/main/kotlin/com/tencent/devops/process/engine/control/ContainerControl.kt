@@ -46,6 +46,7 @@ import com.tencent.devops.process.engine.control.command.container.impl.Containe
 import com.tencent.devops.process.engine.control.command.container.impl.StartActionTaskContainerCmd
 import com.tencent.devops.process.engine.control.command.container.impl.UpdateStateContainerCmdFinally
 import com.tencent.devops.process.engine.control.lock.ContainerIdLock
+import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.service.BuildVariableService
@@ -86,7 +87,19 @@ class ContainerControl @Autowired constructor(
             try {
                 containerIdLock.lock()
                 watcher.start("execute")
-                execute(watcher)
+                watcher.start("getContainer")
+                val container = pipelineRuntimeService.getContainer(buildId, stageId, containerId) ?: run {
+                    LOG.warn("ENGINE|$buildId|$source|$stageId|j($containerId)|bad container")
+                    return
+                }
+                // 防止关键信息传入错误信息，做一次更正
+                val fixEvent = this.copy(
+                    stageId = container.stageId,
+                    pipelineId = container.pipelineId,
+                    containerType = container.containerType,
+                    projectId = container.projectId
+                )
+                container.execute(watcher, fixEvent)
             } finally {
                 containerIdLock.unlock()
                 watcher.stop()
@@ -95,33 +108,27 @@ class ContainerControl @Autowired constructor(
         }
     }
 
-    private fun PipelineBuildContainerEvent.execute(watcher: Watcher) {
-
-        watcher.start("getContainer")
-        val container = pipelineRuntimeService.getContainer(buildId, stageId, containerId) ?: run {
-            LOG.warn("ENGINE|$buildId|$source|$stageId|j($containerId)|bad container")
-            return
-        }
+    private fun PipelineBuildContainer.execute(watcher: Watcher, event: PipelineBuildContainerEvent) {
 
         watcher.start("init_context")
         val variables = buildVariableService.getAllVariable(buildId)
-        val mutexGroup = mutexControl.decorateMutexGroup(container.controlOption?.mutexGroup, variables)
+        val mutexGroup = mutexControl.decorateMutexGroup(controlOption?.mutexGroup, variables)
 
         // 当build的状态是结束的时候，直接返回
-        if (container.status.isFinish()) {
-            LOG.info("ENGINE|$buildId|$source|$stageId|j($containerId)|status=${container.status}|concurrent")
+        if (status.isFinish()) {
+            LOG.info("ENGINE|$buildId|${event.source}|$stageId|j($containerId)|status=$status|concurrent")
             mutexControl.releaseContainerMutex(
                 projectId = projectId,
                 buildId = buildId,
                 stageId = stageId,
                 containerId = containerId,
-                mutexGroup = container.controlOption?.mutexGroup
+                mutexGroup = controlOption?.mutexGroup
             )
             return
         }
 
-        if (container.status == BuildStatus.UNEXEC) {
-            LOG.warn("ENGINE|UN_EXPECT_STATUS|$buildId|$source|$stageId|j($containerId)|status=${container.status}")
+        if (status == BuildStatus.UNEXEC) {
+            LOG.warn("ENGINE|UN_EXPECT_STATUS|$buildId|${event.source}|$stageId|j($containerId)|status=$status")
         }
 
         // 已按任务序号递增排序，如未排序要注意
@@ -129,11 +136,11 @@ class ContainerControl @Autowired constructor(
         val executeCount = buildVariableService.getBuildExecuteCount(buildId)
 
         val context = ContainerContext(
-            buildStatus = container.status, // 初始状态为容器状态，中间流转会切换状态，并最张赋值给容器状态
+            buildStatus = this.status, // 初始状态为容器状态，中间流转会切换状态，并最张赋值给容器状态
             mutexGroup = mutexGroup,
-            event = this,
-            container = container,
-            latestSummary = reason ?: "init",
+            event = event,
+            container = this,
+            latestSummary = event.reason ?: "init",
             watcher = watcher,
             containerTasks = containerTasks,
             variables = variables,
@@ -141,7 +148,7 @@ class ContainerControl @Autowired constructor(
         )
         watcher.stop()
 
-        val commandList = listOf<ContainerCmd>(
+        val commandList = listOf(
             commandCache.get(CheckDependOnContainerCmd::class.java), // 检查DependOn依赖处理
             commandCache.get(CheckConditionalSkipContainerCmd::class.java), // 检查条件跳过处理
             commandCache.get(CheckPauseContainerCmd::class.java), // 检查暂停处理

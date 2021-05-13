@@ -32,6 +32,7 @@ import com.tencent.devops.common.pipeline.utils.HeartBeatUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.event.PipelineContainerAgentHeartBeatEvent
+import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -40,6 +41,7 @@ import java.util.concurrent.TimeUnit
 @Component
 class BuildingHeartBeatUtils @Autowired constructor(
     private val redisOperation: RedisOperation,
+    private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineEventDispatcher: PipelineEventDispatcher
 ) {
 
@@ -66,6 +68,8 @@ class BuildingHeartBeatUtils @Autowired constructor(
     }
 
     fun dispatchHeartbeatEvent(buildInfo: BuildInfo, containerId: String) {
+        val ctr = pipelineRuntimeService.getContainer(buildInfo.buildId, stageId = null, containerId = containerId)
+            ?: return
         pipelineEventDispatcher.dispatch(
             PipelineContainerAgentHeartBeatEvent(
                 source = "buildVMStarted",
@@ -73,7 +77,8 @@ class BuildingHeartBeatUtils @Autowired constructor(
                 pipelineId = buildInfo.pipelineId,
                 userId = buildInfo.startUser,
                 buildId = buildInfo.buildId,
-                containerId = containerId
+                containerId = containerId,
+                executeCount = ctr.executeCount
             )
         )
     }

@@ -40,8 +40,10 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_APP_TITLE
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_ICON
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_NAME
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_SCHEME
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_NO
@@ -84,6 +86,7 @@ import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -353,7 +356,10 @@ class ExperienceService @Autowired constructor(
             client.get(ServiceArtifactoryResource::class).show(projectId, artifactoryType, experience.path).data
 
         if (null == fileDetail) {
-            logger.error("null file detail , projectId:$projectId , artifactoryType:$artifactoryType , path:${experience.path}")
+            logger.error(
+                "null file detail , projectId:$projectId , " +
+                        "artifactoryType:$artifactoryType , path:${experience.path}"
+            )
             return -1L
         }
 
@@ -364,6 +370,20 @@ class ExperienceService @Autowired constructor(
         val logoUrl = propertyMap[ARCHIVE_PROPS_APP_ICON]!!
         val fileSize = fileDetail.size
         val scheme = propertyMap[ARCHIVE_PROPS_APP_SCHEME] ?: ""
+        val experienceName = when {
+            StringUtils.isNotBlank(experience.experienceName) -> {
+                experience.experienceName!!
+            }
+            StringUtils.isNotBlank(propertyMap[ARCHIVE_PROPS_APP_NAME]) -> {
+                propertyMap[ARCHIVE_PROPS_APP_NAME]!!
+            }
+            StringUtils.isNotBlank(propertyMap[ARCHIVE_PROPS_APP_APP_TITLE]) -> {
+                propertyMap[ARCHIVE_PROPS_APP_APP_TITLE]!!
+            }
+            else -> {
+                projectId
+            }
+        }
 
         val experienceId = experienceDao.create(
             dslContext = dslContext,
@@ -387,7 +407,7 @@ class ExperienceService @Autowired constructor(
             source = source.name,
             creator = userId,
             updator = userId,
-            experienceName = experience.experienceName ?: projectId,
+            experienceName = experienceName,
             versionTitle = experience.versionTitle ?: experience.name,
             category = experience.categoryId ?: ProductCategoryEnum.LIFE.id,
             productOwner = objectMapper.writeValueAsString(experience.productOwner ?: emptyList<String>()),
@@ -409,7 +429,7 @@ class ExperienceService @Autowired constructor(
             onlinePublicExperience(
                 projectId = projectId,
                 size = fileSize,
-                experienceName = experience.experienceName ?: projectId,
+                experienceName = experienceName,
                 categoryId = experience.categoryId ?: ProductCategoryEnum.LIFE.id,
                 expireDate = experience.expireDate,
                 experienceId = experienceId,
@@ -510,9 +530,9 @@ class ExperienceService @Autowired constructor(
             onlinePublicExperience(
                 projectId = projectId,
                 size = experienceRecord.size,
-                experienceName = experienceRecord.experienceName,
-                categoryId = experienceRecord.category,
-                expireDate = experienceRecord.endDate.timestamp(),
+                experienceName = experience.experienceName ?: projectId,
+                categoryId = experience.categoryId ?: ProductCategoryEnum.LIFE.id,
+                expireDate = experience.expireDate,
                 experienceId = experienceRecord.id,
                 platform = PlatformEnum.valueOf(experienceRecord.platform),
                 appBundleIdentifier = experienceRecord.bundleIdentifier,

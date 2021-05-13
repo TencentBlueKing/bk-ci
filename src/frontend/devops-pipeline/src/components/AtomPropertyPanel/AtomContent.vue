@@ -46,7 +46,7 @@
                     <p>{{ $t('editPage.noAtomVersion') }}</p>
                 </div>
 
-                <div class="quality-setting-tips" v-if="showSetRuleTips">
+                <!-- <div class="quality-setting-tips" v-if="showSetRuleTips">
                     <div class="quality-setting-desc">
                         {{ $t('details.quality.canSet') }}
                         <span class="quality-rule-link" @click="toSetRule()">{{ $t('details.quality.settingNow') }}
@@ -55,7 +55,7 @@
                     </div>
                     <div class="refresh-btn" v-if="isSetted && !refreshLoading" @click="refresh()">{{ $t('details.quality.reflashSetting') }}</div>
                     <i class="devops-icon icon-circle-2-1 executing-job" v-if="isSetted && refreshLoading"></i>
-                </div>
+                </div> -->
                 <qualitygate-tips v-if="showRuleList" :relative-rule-list="renderRelativeRuleList"></qualitygate-tips>
 
                 <div v-if="atom" :class="{ 'atom-form-box': true, 'readonly': !editable && !isRemoteAtom }">
@@ -126,6 +126,7 @@
     import ReferenceVariable from './ReferenceVariable'
     import NormalAtomV2 from './NormalAtomV2'
     import CodeGitWebHookTrigger from './CodeGitWebHookTrigger'
+    import CodeGitlabWebHookTrigger from './CodeGitlabWebHookTrigger'
     import SubPipelineCall from './SubPipelineCall'
     import ManualReviewUserTask from './ManualReviewUserTask'
     import Logo from '@/components/Logo'
@@ -344,6 +345,7 @@
                     reportArchive: ReportArchive,
                     reportArchiveService: ReportArchive,
                     codeGitWebHookTrigger: CodeGitWebHookTrigger,
+                    codeGitlabWebHookTrigger: CodeGitlabWebHookTrigger,
                     codeSVNWebHookTrigger: CodeSvnWebHookTrigger,
                     GITHUB: PullGithub,
                     codeGithubWebHookTrigger: CodeGithubWebHookTrigger,

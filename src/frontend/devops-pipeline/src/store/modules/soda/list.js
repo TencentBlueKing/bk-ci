@@ -26,34 +26,6 @@ const pipelinePrefix = `/${PROCESS_API_URL_PREFIX}/user/pipelines/`
 const buildPrefix = `/${PROCESS_API_URL_PREFIX}/user/builds/`
 
 const state = {
-    pipelineList: [],
-    curPipeline: {}
-}
-
-const getters = {
-    getPipelineList: state => state.pipelineList,
-    getCurPipeline: state => state.curPipeline
-}
-
-const mutations = {
-    /**
-     * 更新 store.pipeline 中的 pipelineList
-     *
-     * @param {Object} state store state
-     * @param {Array} list pipelineList 列表
-     */
-    updatePipelineList (state, list) {
-        state.pipelineList.splice(0, state.pipelineList.length, ...list)
-    },
-    /**
-     * 更新 store.pipeline 中的 curPipeline
-     *
-     * @param {Object} state store state
-     * @param {Object} obj curPipeline 对象
-     */
-    updateCurPipeline (state, obj) {
-        state.curPipeline = obj
-    }
 }
 
 const actions = {
@@ -145,7 +117,5 @@ const actions = {
 export default {
     namespaced: true,
     state,
-    getters,
-    mutations,
     actions
 }
