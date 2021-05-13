@@ -68,9 +68,7 @@ class StartBuildContext(
      * 检查Stage是否属于失败重试[stageRetry]时，当前[stage]是否需要跳过
      */
     fun needSkipWhenStageFailRetry(stage: Stage): Boolean {
-        return if (stage.finally) { // finally stage 不会跳过
-            false
-        } else if (stage.id!! == retryStartTaskId) { // 当前stage是要失败重试的不会跳过
+        return if (needRerun(stage)) { // finally stage 不会跳过, 当前stage是要失败重试的不会跳过
             false
         } else if (!stageRetry) { // 不是stage失败重试的动作也不会跳过
             false
@@ -80,11 +78,9 @@ class StartBuildContext(
     }
 
     fun needSkipContainerWhenFailRetry(stage: Stage, container: Container): Boolean {
-        return if (stage.finally) { // finally stage 不会跳过
+        return if (needRerun(stage)) { // finally stage 不会跳过, 当前stage是要失败重试的不会跳过，不会跳过
             false
         } else if (!BuildStatus.parse(container.status).isFailure()) { // 非失败不会跳过
-            false
-        } else if (stage.id!! == retryStartTaskId) { // 失败重试的Stage，不会跳过
             false
         } else { // 插件失败重试的，会跳过
             !retryStartTaskId.isNullOrBlank()
@@ -113,14 +109,18 @@ class StartBuildContext(
      */
     fun isRetryFailedContainer(stage: Stage, container: Container): Boolean {
         if (stage.finally) { // 当前是finallyStage
-            if (stage.id == retryStartTaskId) { // finallyStage的重试
-                return retryFailedContainer && BuildStatus.parse(container.status).isSuccess() // 只重试失败的Job
+            return if (stage.id == retryStartTaskId) { // finallyStage的重试
+                retryFailedContainer && BuildStatus.parse(container.status).isSuccess() // 只重试失败的Job
             } else {
-                return false
+                false
             }
         }
         // 其他
         return retryFailedContainer && BuildStatus.parse(container.status).isSuccess()
+    }
+
+    fun needRerun(stage: Stage): Boolean {
+        return stage.finally || stage.id!! == retryStartTaskId
     }
 
     companion object {

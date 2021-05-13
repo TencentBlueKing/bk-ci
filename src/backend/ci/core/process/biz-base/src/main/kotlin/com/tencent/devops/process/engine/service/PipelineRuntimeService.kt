@@ -860,7 +860,7 @@ class PipelineRuntimeService @Autowired constructor(
                         }
                     }
 
-                    val status = atomElement.initStatus(params = params, finallyStage = stage.finally)
+                    val status = atomElement.initStatus(params = params, rerun = context.needRerun(stage))
 
                     if (status.isFinish()) {
                         logger.info("[$buildId|${atomElement.id}] status=$status")
