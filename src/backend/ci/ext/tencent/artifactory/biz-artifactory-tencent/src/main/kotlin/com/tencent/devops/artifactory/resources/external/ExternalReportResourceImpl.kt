@@ -28,21 +28,15 @@
 package com.tencent.devops.artifactory.resources.external
 
 import com.tencent.devops.artifactory.api.external.ExternalReportResource
-import com.tencent.devops.artifactory.service.artifactory.ArtifactoryReportService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoReportService
 import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 
 @RestResource
 class ExternalReportResourceImpl @Autowired constructor(
-    private val artifactoryReportService: ArtifactoryReportService,
-    private val bkRepoReportService: BkRepoReportService,
-    val redisOperation: RedisOperation,
-    val repoGray: RepoGray
+    private val bkRepoReportService: BkRepoReportService
 ) : ExternalReportResource {
 
     @Value("\${artifactory.report.email.suffix:#{null}}")
@@ -81,10 +75,6 @@ class ExternalReportResourceImpl @Autowired constructor(
         if (path.isBlank()) {
             throw ParamBlankException("Invalid path")
         }
-        if (repoGray.isGray(projectId, redisOperation)) {
-            bkRepoReportService.get(projectId, pipelineId, buildId, elementId, path)
-        } else {
-            artifactoryReportService.get(projectId, pipelineId, buildId, elementId, path)
-        }
+        bkRepoReportService.get(projectId, pipelineId, buildId, elementId, path)
     }
 }

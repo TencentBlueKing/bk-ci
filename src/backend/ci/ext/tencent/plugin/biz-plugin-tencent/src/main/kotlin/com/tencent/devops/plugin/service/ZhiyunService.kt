@@ -33,11 +33,8 @@ import com.google.common.io.Files
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
-import com.tencent.devops.common.archive.client.JfrogService
-import com.tencent.devops.common.pipeline.zhiyun.ZhiyunConfig
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.zhiyun.ZhiyunConfig
 import com.tencent.devops.model.plugin.tables.TPluginZhiyunProduct
 import com.tencent.devops.plugin.dao.ZhiyunProductDao
 import com.tencent.devops.plugin.pojo.zhiyun.ZhiyunProduct
@@ -54,16 +51,12 @@ import org.springframework.stereotype.Service
 @Service
 class ZhiyunService @Autowired constructor(
     private val objectMapper: ObjectMapper,
-    private val jfrogService: JfrogService,
     private val zhiyunProductDao: ZhiyunProductDao,
     private val dslContext: DSLContext,
     private val buildLogPrinter: BuildLogPrinter,
     private val zhiyunConfig: ZhiyunConfig,
-    private val redisOperation: RedisOperation,
-    private val repoGray: RepoGray,
     private val bkRepoClient: BkRepoClient
 ) {
-
     companion object {
         private val logger = LoggerFactory.getLogger(ZhiyunService::class.java)
     }
@@ -74,34 +67,29 @@ class ZhiyunService @Autowired constructor(
 
         val tmpFolder = Files.createTempDir()
         try {
-            val isRepoGray = repoGray.isGray(fileParams.projectId, redisOperation)
-            buildLogPrinter.addLine(fileParams.buildId, "use bkrepo: $isRepoGray", fileParams.elementId, fileParams.containerId, fileParams.executeCount)
-
-            val matchFiles = if (isRepoGray) {
-                bkRepoClient.downloadFileByPattern(
-                    userId = "",
-                    projectId = fileParams.projectId,
-                    pipelineId = fileParams.pipelineId,
-                    buildId = fileParams.buildId,
-                    repoName = if (fileParams.custom) "custom" else "pipeline",
-                    pathPattern = fileParams.regexPath,
-                    destPath = tmpFolder.canonicalPath
-                )
-            } else {
-                jfrogService.downloadFile(fileParams, tmpFolder.canonicalPath)
-            }
-            if (matchFiles.isEmpty()) throw OperationException("There is 0 file find in ${fileParams.regexPath}(custom: ${fileParams.custom})")
+            val matchFiles = bkRepoClient.downloadFileByPattern(
+                userId = "",
+                projectId = fileParams.projectId,
+                pipelineId = fileParams.pipelineId,
+                buildId = fileParams.buildId,
+                repoName = if (fileParams.custom) "custom" else "pipeline",
+                pathPattern = fileParams.regexPath,
+                destPath = tmpFolder.canonicalPath
+            )
+            if (matchFiles.isEmpty()) throw OperationException("0 file find in ${fileParams.regexPath}" +
+                "(custom: ${fileParams.custom})")
             val resultList = mutableListOf<String>()
             matchFiles.forEach { file ->
                 try {
-                    buildLogPrinter.addLine(fileParams.buildId, "start to upload file to zhi yun: ${file.canonicalPath}",
+                    buildLogPrinter.addLine(fileParams.buildId, "start upload file to zhiyun: ${file.canonicalPath}",
                         fileParams.elementId, fileParams.containerId, fileParams.executeCount)
                     val request = with(zhiyunUploadParam) {
-                        buildLogPrinter.addLine(fileParams.buildId, "zhi yun upload file params: $para",
+                        buildLogPrinter.addLine(fileParams.buildId, "zhiyun upload file params: $para",
                             fileParams.elementId, fileParams.containerId, fileParams.executeCount)
                         val body = MultipartBody.Builder()
                             .setType(MultipartBody.FORM)
-                            .addFormDataPart("tarball", file.name, RequestBody.create(MediaType.parse("application/octet-stream"), file))
+                            .addFormDataPart("tarball", file.name,
+                                RequestBody.create(MediaType.parse("application/octet-stream"), file))
                             .addFormDataPart("caller", zhiyunConfig.caller)
                             .addFormDataPart("password", zhiyunConfig.password)
                             .addFormDataPart("operator", operator)

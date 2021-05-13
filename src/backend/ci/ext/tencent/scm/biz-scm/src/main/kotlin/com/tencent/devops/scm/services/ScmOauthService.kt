@@ -37,6 +37,9 @@ import com.tencent.devops.scm.exception.GitApiException
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.pojo.CommitCheckRequest
+import com.tencent.devops.scm.pojo.GitMrChangeInfo
+import com.tencent.devops.scm.pojo.GitMrInfo
+import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.utils.QualityUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -154,7 +157,8 @@ class ScmOauthService @Autowired constructor(
                 .checkTokenAndPrivateKey()
         } catch (e: Throwable) {
             logger.warn(
-                "Fail to check the private key (projectName=$projectName, type=$type, region=$region, username=$userName",
+                "Fail to check the private key " +
+                    "(projectName=$projectName, type=$type, region=$region, username=$userName)",
                 e
             )
             return TokenCheckResult(false, e.message ?: "Fail to check the svn private key")
@@ -278,6 +282,72 @@ class ScmOauthService @Autowired constructor(
             )
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to add commit check")
         }
+    }
+
+    fun getMergeRequestChangeInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        mrId: Long
+    ): GitMrChangeInfo? {
+        return ScmOauthFactory.getScm(
+            projectName = projectName,
+            url = url,
+            type = type,
+            branchName = null,
+            privateKey = null,
+            passPhrase = null,
+            token = token,
+            region = null,
+            userName = null,
+            event = null
+        )
+            .getMergeRequestChangeInfo(mrId = mrId)
+    }
+
+    fun getMrInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        mrId: Long
+    ): GitMrInfo? {
+        return ScmOauthFactory.getScm(
+            projectName = projectName,
+            url = url,
+            type = type,
+            branchName = null,
+            privateKey = null,
+            passPhrase = null,
+            token = token,
+            region = null,
+            userName = null,
+            event = null
+        )
+            .getMrInfo(mrId = mrId)
+    }
+
+    fun getMrReviewInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?,
+        mrId: Long
+    ): GitMrReviewInfo? {
+        return ScmOauthFactory.getScm(
+            projectName = projectName,
+            url = url,
+            type = type,
+            branchName = null,
+            privateKey = null,
+            passPhrase = null,
+            token = token,
+            region = null,
+            userName = null,
+            event = null
+        )
+            .getMrReviewInfo(mrId = mrId)
     }
 
     companion object {

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.atom.parser
 
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.ci.image.Credential
 import com.tencent.devops.common.ci.image.Pool
@@ -38,6 +39,7 @@ import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcTy
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.pipeline.type.idc.IDCDispatchType
+import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.util.CommonUtils
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
@@ -56,7 +58,8 @@ import org.springframework.stereotype.Component
 class DispatchTypeParserTxImpl @Autowired constructor(
     private val client: Client,
     @Qualifier(value = "commonDispatchTypeParser")
-    private val commonDispatchTypeParser: DispatchTypeParser
+    private val commonDispatchTypeParser: DispatchTypeParser,
+    private val buildVariableService: BuildVariableService
 ) : DispatchTypeParser {
 
     private val logger = LoggerFactory.getLogger(DispatchTypeParserTxImpl::class.java)
@@ -93,7 +96,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                     // 第三方镜像
                     if (dispatchType is PublicDevCloudDispathcType) {
                         // 在商店发布的第三方源镜像，带凭证
-                        genThirdDevCloudDispatchMessage(dispatchType, projectId)
+                        genThirdDevCloudDispatchMessage(dispatchType, projectId, buildId)
                     } else if (dispatchType is IDCDispatchType) {
                         dispatchType.image = dispatchType.value
                     } else {
@@ -120,7 +123,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
             } else {
                 // 第三方镜像 DevCloud
                 if (dispatchType is PublicDevCloudDispathcType) {
-                    genThirdDevCloudDispatchMessage(dispatchType, projectId)
+                    genThirdDevCloudDispatchMessage(dispatchType, projectId, buildId)
                 }
             }
             logger.info("DispatchTypeParserTxImpl:AfterTransfer:dispatchType=(${JsonUtil.toJson(dispatchType)})")
@@ -129,7 +132,11 @@ class DispatchTypeParserTxImpl @Autowired constructor(
         }
     }
 
-    private fun genThirdDevCloudDispatchMessage(dispatchType: PublicDevCloudDispathcType, projectId: String) {
+    private fun genThirdDevCloudDispatchMessage(
+        dispatchType: PublicDevCloudDispathcType,
+        projectId: String,
+        buildId: String
+    ) {
         var user = ""
         var password = ""
         var credentialProject = projectId
@@ -138,10 +145,13 @@ class DispatchTypeParserTxImpl @Autowired constructor(
         }
         // 通过凭证获取账号密码
         if (!dispatchType.credentialId.isNullOrBlank()) {
+            val realCredentialId = EnvUtils.parseEnv(
+                command = dispatchType.credentialId!!,
+                data = buildVariableService.getAllVariable(buildId))
             val ticketsMap = CommonUtils.getCredential(
                 client = client,
                 projectId = credentialProject,
-                credentialId = dispatchType.credentialId!!,
+                credentialId = realCredentialId,
                 type = CredentialType.USERNAME_PASSWORD
             )
             user = ticketsMap["v1"] as String

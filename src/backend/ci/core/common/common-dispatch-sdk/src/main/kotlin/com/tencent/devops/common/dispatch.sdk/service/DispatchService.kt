@@ -105,7 +105,8 @@ class DispatchService constructor(
             containerId = event.containerId,
             containerType = event.containerType,
             stageId = event.stageId,
-            dispatchType = event.dispatchType
+            dispatchType = event.dispatchType,
+            customBuildEnv = event.customBuildEnv
         )
     }
 
