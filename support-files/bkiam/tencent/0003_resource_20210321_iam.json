@@ -7,7 +7,7 @@
         "id": "bk_ci",
         "name": "持续集成平台",
         "name_en": "bkci",
-        "clients": "bkci",
+        "clients": "bkci,bk_ci",
         "provider_config": {
           "host": "http://dev.devops.oa.com/ms/auth",
           "auth": "basic",
@@ -148,7 +148,7 @@
     {
       "operation": "upsert_resource_type",
       "data": {
-        "id": "group",
+        "id": "quality_group",
         "name": "质量红线通知组",
         "name_en": "Group",
         "parents": [{"system_id": "bk_ci", "id": "project"}],

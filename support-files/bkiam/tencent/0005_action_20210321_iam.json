@@ -1313,7 +1313,7 @@
     {
       "operation": "upsert_action",
       "data": {
-        "id": "group_create",
+        "id": "quality_group_create",
         "name": "创建质量红线通知组",
         "name_en": "Group Create",
         "type": "create",
@@ -1338,14 +1338,14 @@
     {
       "operation": "upsert_action",
       "data": {
-        "id": "group_delete",
+        "id": "quality_group_delete",
         "name": "删除质量红线通知组",
         "name_en": "Group Delete",
         "type": "delete",
         "related_resource_types": [
           {
             "system_id": "bk_ci",
-            "id": "group",
+            "id": "quality_group",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci",
@@ -1356,7 +1356,7 @@
         ],
         "related_actions": [
           "project_view",
-          "group_use"
+          "quality_group_use"
         ],
         "version": 1
       }
@@ -1364,14 +1364,14 @@
     {
       "operation": "upsert_action",
       "data": {
-        "id": "group_update",
+        "id": "quality_group_update",
         "name": "编辑质量红线通知组",
         "name_en": "Group Update",
         "type": "edit",
         "related_resource_types": [
           {
             "system_id": "bk_ci",
-            "id": "group",
+            "id": "quality_group",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci",
@@ -1382,7 +1382,7 @@
         ],
         "related_actions": [
           "project_view",
-          "group_use"
+          "quality_group_use"
         ],
         "version": 1
       }
@@ -1390,14 +1390,14 @@
     {
       "operation": "upsert_action",
       "data": {
-        "id": "group_use",
+        "id": "quality_group_use",
         "name": "使用质量红线通知组",
         "name_en": "Group USE",
         "type": "execute",
         "related_resource_types": [
           {
             "system_id": "bk_ci",
-            "id": "group",
+            "id": "quality_group",
             "related_instance_selections": [
               {
                 "system_id": "bk_ci",

@@ -57,7 +57,7 @@
                 "required": false
               },
               {
-                "id": "group_create",
+                "id": "quality_group_create",
                 "required": false
               },
               {
@@ -224,15 +224,15 @@
                 "id": "group",
                 "actions": [
                   {
-                    "id": "group_delete",
+                    "id": "quality_group_delete",
                     "required": false
                   },
                   {
-                    "id": "group_update",
+                    "id": "quality_group_update",
                     "required": false
                   },
                   {
-                    "id": "group_use",
+                    "id": "quality_group_use",
                     "required": false
                   }
                 ]

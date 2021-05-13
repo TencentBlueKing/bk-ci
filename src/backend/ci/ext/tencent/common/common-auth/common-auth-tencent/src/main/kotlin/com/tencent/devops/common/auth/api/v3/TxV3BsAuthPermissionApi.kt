@@ -181,7 +181,7 @@ class TxV3BsAuthPermissionApi @Autowired constructor(
             AuthResourceType.EXPERIENCE_GROUP -> "experience_group"
             AuthResourceType.EXPERIENCE_TASK -> "experience_task"
             AuthResourceType.QUALITY_GROUP -> "rule"
-            AuthResourceType.QUALITY_RULE -> "group"
+            AuthResourceType.QUALITY_RULE -> "quality_group"
             else -> resourceType.value
         }
     }

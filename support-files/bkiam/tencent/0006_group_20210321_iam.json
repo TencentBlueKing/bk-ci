@@ -216,16 +216,16 @@
               "id": "rule_use"
             },
             {
-              "id": "group_create"
+              "id": "quality_group_create"
             },
             {
-              "id": "group_delete"
+              "id": "quality_group_delete"
             },
             {
-              "id": "group_update"
+              "id": "quality_group_update"
             },
             {
-              "id": "group_use"
+              "id": "quality_group_use"
             }
           ]
         }
