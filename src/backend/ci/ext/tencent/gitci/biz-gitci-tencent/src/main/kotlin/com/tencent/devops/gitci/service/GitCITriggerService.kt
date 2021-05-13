@@ -71,6 +71,7 @@ import com.tencent.devops.gitci.service.trigger.RequestTriggerFactory
 import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
 import com.tencent.devops.gitci.v2.listener.V2GitCIRequestDispatcher
 import com.tencent.devops.gitci.v2.listener.V2GitCIRequestTriggerEvent
+import com.tencent.devops.gitci.v2.service.GitCIEventSaveService
 import com.tencent.devops.gitci.v2.service.OauthService
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitResource
@@ -104,7 +105,8 @@ class GitCITriggerService @Autowired constructor(
     private val gitServicesConfDao: GitCIServicesConfDao,
     private val rabbitTemplate: RabbitTemplate,
     private val requestTriggerFactory: RequestTriggerFactory,
-    private val oauthService: OauthService
+    private val oauthService: OauthService,
+    private val gitCIEventSaveService: GitCIEventSaveService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCITriggerService::class.java)
@@ -140,8 +142,8 @@ class GitCITriggerService @Autowired constructor(
         // 如果当前文件没有内容直接不触发
         if (originYaml.isNullOrBlank()) {
             logger.warn("Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}")
-            gitRequestEventNotBuildDao.save(
-                dslContext = dslContext,
+            gitCIEventSaveService.saveNotBuildEvent(
+                userId = gitRequestEvent.userId,
                 eventId = gitRequestEvent.id!!,
                 pipelineId = if (buildPipeline.pipelineId.isBlank()) null else buildPipeline.pipelineId,
                 filePath = buildPipeline.filePath,
@@ -336,8 +338,8 @@ class GitCITriggerService @Autowired constructor(
         // 如果没有Yaml文件则直接不触发
         if (yamlPathList.isEmpty()) {
             logger.error("gitProjectId: ${gitRequestEvent.gitProjectId} cannot found ci yaml from git")
-            gitRequestEventNotBuildDao.save(
-                dslContext = dslContext,
+            gitCIEventSaveService.saveNotBuildEvent(
+                userId = gitRequestEvent.userId,
                 eventId = gitRequestEvent.id!!,
                 pipelineId = null,
                 filePath = null,
@@ -364,8 +366,8 @@ class GitCITriggerService @Autowired constructor(
                 checkYmlVersion(yamlPathList, gitRequestEvent, forkGitToken?.accessToken, gitToken.accessToken)
             checkMap.forEach { (filePath, isTrigger) ->
                 if (!isTrigger) {
-                    gitRequestEventNotBuildDao.save(
-                        dslContext = dslContext,
+                    gitCIEventSaveService.saveNotBuildEvent(
+                        userId = gitRequestEvent.userId,
                         eventId = gitRequestEvent.id!!,
                         pipelineId = null,
                         filePath = filePath,
@@ -408,8 +410,8 @@ class GitCITriggerService @Autowired constructor(
                         "Matcher is false, return, " +
                                 "gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}"
                     )
-                    gitRequestEventNotBuildDao.save(
-                        dslContext = dslContext,
+                    gitCIEventSaveService.saveNotBuildEvent(
+                        userId = gitRequestEvent.userId,
                         eventId = gitRequestEvent.id!!,
                         pipelineId = if (buildPipeline.pipelineId.isBlank()) null else buildPipeline.pipelineId,
                         filePath = buildPipeline.filePath,
@@ -427,8 +429,8 @@ class GitCITriggerService @Autowired constructor(
                         "Pipeline is not enabled, return, " +
                                 "gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}"
                     )
-                    gitRequestEventNotBuildDao.save(
-                        dslContext = dslContext,
+                    gitCIEventSaveService.saveNotBuildEvent(
+                        userId = gitRequestEvent.userId,
                         eventId = gitRequestEvent.id!!,
                         pipelineId = buildPipeline.pipelineId,
                         filePath = buildPipeline.filePath,
@@ -499,7 +501,8 @@ class GitCITriggerService @Autowired constructor(
                         "Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
                                 "eventId: ${gitRequestEvent.id}"
                     )
-                    gitRequestEventNotBuildDao.save(
+                    gitCIEventSaveService.saveNotBuildEvent(
+                userId = event.userId,
                         dslContext = dslContext,
                         eventId = gitRequestEvent.id!!,
                         pipelineId = if (buildPipeline.pipelineId.isBlank()) null else buildPipeline.pipelineId,
@@ -573,8 +576,8 @@ class GitCITriggerService @Autowired constructor(
             createCIBuildYaml(originYaml!!, gitRequestEvent.gitProjectId)
         } catch (e: Throwable) {
             logger.error("git ci yaml is invalid", e)
-            gitRequestEventNotBuildDao.save(
-                dslContext = dslContext,
+            gitCIEventSaveService.saveNotBuildEvent(
+                userId = gitRequestEvent.userId,
                 eventId = gitRequestEvent.id!!,
                 pipelineId = pipelineId,
                 filePath = filePath,
@@ -596,8 +599,8 @@ class GitCITriggerService @Autowired constructor(
         val gitProjectSetting = gitCISettingDao.getSetting(dslContext, gitRequestEvent.gitProjectId)
         if (null == gitProjectSetting) {
             logger.info("git ci is not enabled, git project id: ${gitRequestEvent.gitProjectId}")
-            gitRequestEventNotBuildDao.save(
-                dslContext = dslContext,
+            gitCIEventSaveService.saveNotBuildEvent(
+                userId = gitRequestEvent.userId,
                 eventId = gitRequestEvent.id!!,
                 pipelineId = null,
                 filePath = null,
@@ -611,8 +614,8 @@ class GitCITriggerService @Autowired constructor(
         }
         if (!gitProjectSetting.enableCi) {
             logger.warn("git ci is disabled, git project id: ${gitRequestEvent.gitProjectId}, name: ${gitProjectSetting.name}")
-            gitRequestEventNotBuildDao.save(
-                dslContext = dslContext,
+            gitCIEventSaveService.saveNotBuildEvent(
+                userId = gitRequestEvent.userId,
                 eventId = gitRequestEvent.id!!,
                 pipelineId = null,
                 filePath = null,
@@ -628,8 +631,8 @@ class GitCITriggerService @Autowired constructor(
             is GitPushEvent -> {
                 if (!gitProjectSetting.buildPushedBranches) {
                     logger.warn("git ci conf buildPushedBranches is false, git project id: ${gitRequestEvent.gitProjectId}, name: ${gitProjectSetting.name}")
-                    gitRequestEventNotBuildDao.save(
-                        dslContext = dslContext,
+                    gitCIEventSaveService.saveNotBuildEvent(
+                        userId = gitRequestEvent.userId,
                         eventId = gitRequestEvent.id!!,
                         pipelineId = null,
                         filePath = null,
@@ -645,8 +648,8 @@ class GitCITriggerService @Autowired constructor(
             is GitTagPushEvent -> {
                 if (!gitProjectSetting.buildPushedBranches) {
                     logger.warn("git ci conf buildPushedBranches is false, git project id: ${gitRequestEvent.gitProjectId}, name: ${gitProjectSetting.name}")
-                    gitRequestEventNotBuildDao.save(
-                        dslContext = dslContext,
+                    gitCIEventSaveService.saveNotBuildEvent(
+                        userId = gitRequestEvent.userId,
                         eventId = gitRequestEvent.id!!,
                         pipelineId = null,
                         filePath = null,
@@ -662,8 +665,8 @@ class GitCITriggerService @Autowired constructor(
             is GitMergeRequestEvent -> {
                 if (!gitProjectSetting.buildPushedPullRequest) {
                     logger.warn("git ci conf buildPushedPullRequest is false, git project id: ${gitRequestEvent.gitProjectId}, name: ${gitProjectSetting.name}")
-                    gitRequestEventNotBuildDao.save(
-                        dslContext = dslContext,
+                    gitCIEventSaveService.saveNotBuildEvent(
+                        userId = gitRequestEvent.userId,
                         eventId = gitRequestEvent.id!!,
                         pipelineId = null,
                         filePath = null,
@@ -707,8 +710,8 @@ class GitCITriggerService @Autowired constructor(
         when (mrInfo.mergeStatus) {
             GitCiMergeStatus.MERGE_STATUS_UNCHECKED.value -> {
                 // 第一次未检查完则改变状态为正在检查供用户查看
-                val recordId = gitRequestEventNotBuildDao.save(
-                    dslContext = dslContext,
+                val recordId = gitCIEventSaveService.saveNotBuildEvent(
+                    userId = gitRequestEvent.userId,
                     eventId = gitRequestEvent.id!!,
                     pipelineId = null,
                     filePath = null,
@@ -733,8 +736,8 @@ class GitCITriggerService @Autowired constructor(
             }
             GitCiMergeStatus.MERGE_STATUS_CAN_NOT_BE_MERGED.value -> {
                 logger.warn("git ci mr request has conflict , git project id: $projectId, mr request id: $mrRequestId")
-                gitRequestEventNotBuildDao.save(
-                    dslContext = dslContext,
+                gitCIEventSaveService.saveNotBuildEvent(
+                    userId = gitRequestEvent.userId,
                     eventId = gitRequestEvent.id!!,
                     pipelineId = null,
                     filePath = null,

@@ -187,6 +187,110 @@ class GitCIV2RequestService @Autowired constructor(
         )
     }
 
+    fun getRequestMap(userId: String, requestIds: Set<Int>): Map<String, GitRequestHistory> {
+
+        val requestList = gitRequestEventDao.getRequestsById(
+            dslContext = dslContext,
+            requestIds = requestIds
+        )
+        if (requestList.isEmpty()) {
+            return emptyMap()
+        }
+        val resultMap = mutableMapOf<String, GitRequestHistory>()
+        requestList.forEach { event ->
+            // 如果是来自fork库的分支，单独标识
+            val realEvent = GitCommonUtils.checkAndGetForkBranch(event, client)
+            val gitProjectId = event.gitProjectId
+            val requestHistory = GitRequestHistory(
+                id = realEvent.id ?: return@forEach,
+                gitProjectId = event.gitProjectId,
+                commitId = realEvent.commitId,
+                commitMsg = realEvent.commitMsg,
+                branch = realEvent.branch,
+                objectKind = realEvent.objectKind,
+                commitTimeStamp = realEvent.commitTimeStamp,
+                userId = realEvent.userId,
+                description = realEvent.description,
+                targetBranch = realEvent.targetBranch,
+                mrTitle = realEvent.mrTitle,
+                operationKind = realEvent.operationKind,
+                mergeRequestId = realEvent.mergeRequestId,
+                totalCommitCount = realEvent.totalCommitCount,
+                buildRecords = mutableListOf()
+            )
+
+            // 已触发的所有记录
+            val buildsList = gitRequestEventBuildDao.getRequestBuildsByEventId(dslContext, realEvent.id!!)
+            logger.info("Get build list requestBuildsList: $buildsList")
+            val builds = buildsList.map { it.buildId }.toSet()
+            val buildList = client.get(ServiceBuildResource::class)
+                .getBatchBuildStatus("git_$gitProjectId", builds, channelCode).data
+            if (buildList?.isEmpty() == false) {
+                logger.info("Get build history list buildHistoryList: $buildList")
+                val records = mutableListOf<GitCIBuildHistory>()
+                buildsList.forEach nextBuild@{
+                    try {
+                        val history = getBuildHistory(buildList, it.buildId ?: return@nextBuild)
+                        val pipeline = pipelineResourceDao.getPipelineById(dslContext, gitProjectId, it.pipelineId)
+                            ?: return@nextBuild
+                        records.add(
+                            GitCIBuildHistory(
+                                displayName = pipeline.displayName,
+                                pipelineId = pipeline.pipelineId,
+                                gitRequestEvent = realEvent,
+                                buildHistory = history,
+                                reason = TriggerReason.TRIGGER_SUCCESS.name,
+                                reasonDetail = null
+                            )
+                        )
+                    } catch (e: Exception) {
+                        logger.error(
+                            "Load gitProjectId: ${it.gitProjectId}, eventId: ${it.eventId}, pipelineId: ${it.pipelineId} failed with error: ",
+                            e
+                        )
+                        return@nextBuild
+                    }
+                }
+                requestHistory.buildRecords.addAll(records)
+            } else {
+                logger.info("Get branch build history list return empty, gitProjectId: $gitProjectId")
+            }
+            // -------
+
+            // 未触发的所有记录
+            val noBuildList = gitRequestEventNotBuildDao.getRequestNoBuildsByEventId(dslContext, event.id!!)
+            logger.info("Get no build list requestBuildsList: $noBuildList, gitProjectId: $gitProjectId")
+            val records = mutableListOf<GitCIBuildHistory>()
+
+            // 取所有记录的非空流水线ID，查出对应流水线
+            val pipelineIds: List<String> = noBuildList.filter {
+                !it.pipelineId.isNullOrBlank()
+            }.map { it.pipelineId }
+            val pipelineMap = pipelineResourceDao.getPipelinesInIds(dslContext, gitProjectId, pipelineIds).map {
+                it.pipelineId to it
+            }.toMap()
+
+            noBuildList.forEach nextBuild@{
+                val pipeline = if (it.pipelineId.isNullOrBlank()) null else pipelineMap[it.pipelineId]
+                records.add(
+                    GitCIBuildHistory(
+                        displayName = pipeline?.displayName,
+                        pipelineId = pipeline?.pipelineId,
+                        gitRequestEvent = event,
+                        buildHistory = null,
+                        reason = it.reason,
+                        reasonDetail = it.reasonDetail
+                    )
+                )
+            }
+            requestHistory.buildRecords.addAll(records)
+            // -------
+
+            resultMap[event.id.toString()] = requestHistory
+        }
+        return resultMap
+    }
+
     private fun getBuildHistory(buildHistoryList: List<BuildHistory>, buildIdIt: String): BuildHistory? {
         buildHistoryList.forEach {
             if (it.id == buildIdIt) {

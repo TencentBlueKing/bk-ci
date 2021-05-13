@@ -43,6 +43,7 @@ import com.tencent.devops.gitci.service.GitRepositoryConfService
 import com.tencent.devops.gitci.service.trigger.RequestTriggerInterface
 import com.tencent.devops.gitci.v2.listener.V2GitCIRequestDispatcher
 import com.tencent.devops.gitci.v2.listener.V2GitCIRequestTriggerEvent
+import com.tencent.devops.gitci.v2.service.GitCIEventSaveService
 import com.tencent.devops.gitci.v2.service.ScmService
 import com.tencent.devops.gitci.v2.template.YamlTemplate
 import com.tencent.devops.gitci.v2.template.pojo.TemplateGraph
@@ -61,7 +62,8 @@ class V2RequestTrigger @Autowired constructor(
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val gitBasicSettingService: GitRepositoryConfService,
-    private val rabbitTemplate: RabbitTemplate
+    private val rabbitTemplate: RabbitTemplate,
+    private val gitCIEventSaveService: GitCIEventSaveService
 ) : RequestTriggerInterface<YamlObjects> {
 
     companion object {
@@ -132,8 +134,8 @@ class V2RequestTrigger @Autowired constructor(
             gitBasicSettingService.updateGitCISetting(gitRequestEvent.gitProjectId)
         } else {
             logger.warn("Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}")
-            gitRequestEventNotBuildDao.save(
-                dslContext = dslContext,
+            gitCIEventSaveService.saveNotBuildEvent(
+                userId = gitRequestEvent.userId,
                 eventId = gitRequestEvent.id!!,
                 pipelineId = if (gitProjectPipeline.pipelineId.isBlank()) null else gitProjectPipeline.pipelineId,
                 filePath = gitProjectPipeline.filePath,
@@ -181,8 +183,8 @@ class V2RequestTrigger @Autowired constructor(
             )
         } catch (e: Throwable) {
             logger.error("git ci yaml is invalid", e)
-            gitRequestEventNotBuildDao.save(
-                dslContext = dslContext,
+            gitCIEventSaveService.saveNotBuildEvent(
+                userId = gitRequestEvent.userId,
                 eventId = gitRequestEvent.id!!,
                 pipelineId = pipelineId,
                 filePath = filePath,
@@ -235,8 +237,8 @@ class V2RequestTrigger @Autowired constructor(
             } else {
                 e.message.toString()
             }
-            gitRequestEventNotBuildDao.save(
-                dslContext = dslContext,
+            gitCIEventSaveService.saveNotBuildEvent(
+                userId = gitRequestEvent.userId,
                 eventId = gitRequestEvent.id!!,
                 pipelineId = pipelineId,
                 filePath = filePath,
