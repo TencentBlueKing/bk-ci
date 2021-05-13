@@ -31,6 +31,8 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.List;
+
 /**
  * DUPC最近一次分析结果
  *
@@ -40,7 +42,7 @@ import lombok.EqualsAndHashCode;
 @Data
 @EqualsAndHashCode(callSuper = true)
 @ApiModel("ccn类工具最近一次分析结果")
-public class CCNLastAnalysisResultVO extends BaseLastAnalysisResultVO
+public class CCNLastAnalysisResultVO extends BaseRiskAnalysisResultVO
 {
     /**
      * 本次分析的平均圈复杂度
@@ -53,4 +55,40 @@ public class CCNLastAnalysisResultVO extends BaseLastAnalysisResultVO
      */
     @ApiModelProperty("本次分析的平均圈复杂度变化")
     private Float averageCCNChange;
+
+    /**
+     * 本次分析的低级别风险函数数量
+     */
+    @ApiModelProperty("本次分析的低级别风险函数数量")
+    private Integer lowCount;
+
+    /**
+     * 千行超标复杂度
+     */
+    @ApiModelProperty("千行超标复杂度")
+    private Double averageThousandDefect;
+
+    /**
+     * 千行超标复杂度变化趋势
+     */
+    @ApiModelProperty("千行超标复杂度变化趋势")
+    private Double averageThousandDefectChange;
+
+    /**
+     * 新告警处理人统计
+     */
+    @ApiModelProperty("新告警处理人统计")
+    private List<BaseRiskNotRepairedAuthorVO> newAuthorStatistic;
+
+    /**
+     * 存量告警处理人统计
+     */
+    @ApiModelProperty("存量告警处理人统计")
+    private List<BaseRiskNotRepairedAuthorVO> existAuthorStatistic;
+
+    /**
+     * 新增低风险告警数
+     */
+    @ApiModelProperty("新增低风险告警数")
+    private int newlowCount;
 }

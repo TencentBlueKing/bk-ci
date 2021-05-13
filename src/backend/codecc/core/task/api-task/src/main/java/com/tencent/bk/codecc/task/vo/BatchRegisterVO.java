@@ -123,4 +123,16 @@ public class BatchRegisterVO extends CommonVO
      */
     @ApiModelProperty(value = "工具清单", required = true)
     private List<ToolConfigInfoVO> tools;
+
+    /**
+     * 代码库用户名凭证
+     */
+    @ApiModelProperty(value = "用户名", required = false)
+    private String userName;
+
+    /**
+     * 密码
+     */
+    @ApiModelProperty(value = "密码", required = false)
+    private String passWord;
 }

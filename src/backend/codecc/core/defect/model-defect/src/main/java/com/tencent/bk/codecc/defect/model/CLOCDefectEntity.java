@@ -15,6 +15,7 @@ package com.tencent.bk.codecc.defect.model;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.tencent.codecc.common.db.CommonEntity;
 import lombok.Data;
+import org.springframework.data.annotation.Transient;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
@@ -29,8 +30,10 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @Data
 @Document(collection = "t_cloc_defect")
 @CompoundIndexes({
-        @CompoundIndex(name = "task_id_1_file_name_1", def = "{'task_id': 1, 'file_name': 1}"),
-        @CompoundIndex(name = "task_id_1_status_1", def = "{'task_id': 1, 'status': 1}", background = true)
+        @CompoundIndex(name = "task_id_1_tool_name_1_file_name_1",
+                def = "{'task_id': 1, 'tool_name': 1, 'file_name': 1}", background = true),
+        @CompoundIndex(name = "task_id_1_tool_name_1_status_1",
+                def = "{'task_id': 1, 'tool_name': 1, 'status': 1}", background = true)
 })
 public class CLOCDefectEntity extends CommonEntity
 {
@@ -44,6 +47,9 @@ public class CLOCDefectEntity extends CommonEntity
     @JsonProperty("filePath")
     private String fileName;
 
+    @Field("rel_path")
+    private String relPath;
+
     @Field("tool_name")
     private String toolName;
 
@@ -56,10 +62,15 @@ public class CLOCDefectEntity extends CommonEntity
     @Field("comment")
     private Long comment;
 
+    @Field("efficient_comment")
+    private Long efficientComment;
+
     @Field("language")
     private String language;
 
     @Field("status")
     private String status;
 
+    @Transient
+    private Long lines;
 }

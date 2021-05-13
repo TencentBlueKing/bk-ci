@@ -148,4 +148,9 @@ public class LintDefectVO
     @ApiModelProperty("告警评论")
     private CodeCommentVO codeComment;
 
+    @ApiModelProperty("版本号")
+    private String revision;
+
+    @ApiModelProperty("工具名")
+    private String toolName;
 }

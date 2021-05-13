@@ -1,8 +1,8 @@
 package com.tencent.bk.codecc.apiquery.filter
 
 import com.tencent.bk.codecc.apiquery.utils.ApiGatewayPubFile
-import com.tencent.devops.common.api.auth.CODECC_AUTH_HEADER_DEVOPS_APP_CODE
-import com.tencent.devops.common.api.auth.CODECC_AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.RequestFilter
 import io.jsonwebtoken.Jwts
@@ -27,8 +27,8 @@ import javax.ws.rs.ext.Provider
 class ApiFilter : ContainerRequestFilter {
     fun verifyJWT(requestContext: ContainerRequestContext): Boolean {
         val uriPath = requestContext.uriInfo.requestUri.path
-        //op开头的接口不鉴权
-        if(uriPath.startsWith("/api/op")){
+        // op开头的接口不鉴权
+        if (uriPath.startsWith("/api/op")) {
             logger.info("op interface no need for jwt auth")
             return true
         }
@@ -42,7 +42,6 @@ class ApiFilter : ContainerRequestFilter {
                 .build())
             return false
         }
-
 
         val apiType = if (uriPath.startsWith("/api/apigw-app")) "apigw-app" else "apigw-user"
 
@@ -62,11 +61,11 @@ class ApiFilter : ContainerRequestFilter {
                 } else {
                     if (!appCode.isNullOrBlank()) {
                         // 将appCode头部置空
-                        requestContext.headers[CODECC_AUTH_HEADER_DEVOPS_APP_CODE]?.set(0, null)
-                        if (requestContext.headers[CODECC_AUTH_HEADER_DEVOPS_APP_CODE] != null) {
-                            requestContext.headers[CODECC_AUTH_HEADER_DEVOPS_APP_CODE]?.set(0, appCode)
+                        requestContext.headers[AUTH_HEADER_DEVOPS_APP_CODE]?.set(0, null)
+                        if (requestContext.headers[AUTH_HEADER_DEVOPS_APP_CODE] != null) {
+                            requestContext.headers[AUTH_HEADER_DEVOPS_APP_CODE]?.set(0, appCode)
                         } else {
-                            requestContext.headers.add(CODECC_AUTH_HEADER_DEVOPS_APP_CODE, appCode)
+                            requestContext.headers.add(AUTH_HEADER_DEVOPS_APP_CODE, appCode)
                         }
                     }
                 }
@@ -83,11 +82,11 @@ class ApiFilter : ContainerRequestFilter {
                 // 名字为空或者没有通过认证的时候，直接失败
                 if (username.isNotBlank() && verified) {
                     // 将头部置空
-                    requestContext.headers[CODECC_AUTH_HEADER_DEVOPS_USER_ID]?.set(0, null)
-                    if (requestContext.headers[CODECC_AUTH_HEADER_DEVOPS_USER_ID] != null) {
-                        requestContext.headers[CODECC_AUTH_HEADER_DEVOPS_USER_ID]?.set(0, username)
+                    requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID]?.set(0, null)
+                    if (requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID] != null) {
+                        requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID]?.set(0, username)
                     } else {
-                        requestContext.headers.add(CODECC_AUTH_HEADER_DEVOPS_USER_ID, username)
+                        requestContext.headers.add(AUTH_HEADER_DEVOPS_USER_ID, username)
                     }
                 } else if (apiType == "apigw-user") {
                     requestContext.abortWith(Response.status(Response.Status.BAD_REQUEST)

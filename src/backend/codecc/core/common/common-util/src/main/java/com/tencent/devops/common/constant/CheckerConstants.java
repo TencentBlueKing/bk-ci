@@ -274,7 +274,7 @@ public interface CheckerConstants
     }
 
     /**
-     * 规则是否打开，2=>打开 1=>关闭；
+     * 规则是否打开，0=>打开 1=>关闭；
      */
     enum CheckerOpenStatus
     {

@@ -39,7 +39,8 @@ class MicroServiceTarget<T> constructor(
         private val serviceName: String,
         private val type: Class<T>,
         private val consulClient: ConsulDiscoveryClient,
-        private val tag: String?
+        private val tag: String?,
+        private val commonUrlPrefix: String = "/api"
 ) : FeignTarget<T> {
 
     private val errorInfo =
@@ -98,5 +99,5 @@ class MicroServiceTarget<T> constructor(
 
     override fun name() = serviceName
 
-    private fun ServiceInstance.url() = "${if (isSecure) "https" else "http"}://$host:$port/api"
+    private fun ServiceInstance.url() = "${if (isSecure) "https" else "http"}://$host:$port$commonUrlPrefix"
 }

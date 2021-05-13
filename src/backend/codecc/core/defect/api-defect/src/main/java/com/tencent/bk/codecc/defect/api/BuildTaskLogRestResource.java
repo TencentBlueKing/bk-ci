@@ -26,15 +26,18 @@
 
 package com.tencent.bk.codecc.defect.api;
 
+import com.tencent.bk.codecc.defect.vo.TaskLogRepoInfoVO;
 import com.tencent.bk.codecc.defect.vo.TaskLogVO;
 import com.tencent.bk.codecc.defect.vo.UploadTaskLogStepVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.annotation.ServiceInterface;
+import com.tencent.devops.common.api.pojo.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import java.util.Map;
 
 /**
  * 分析任务构建机接口
@@ -52,7 +55,7 @@ public interface BuildTaskLogRestResource
     @ApiOperation("上报任务分析记录")
     @Path("/")
     @POST
-    CodeCCResult uploadTaskLog(
+    Result uploadTaskLog(
             @ApiParam(value = "上传分析任务详情", required = true)
                     UploadTaskLogStepVO uploadTaskLogStepVO
     );
@@ -61,14 +64,14 @@ public interface BuildTaskLogRestResource
     @ApiOperation("批量获取最新分析记录")
     @Path("/suggest/param")
     @PUT
-    CodeCCResult<Boolean> uploadDirStructSuggestParam(
+    Result<Boolean> uploadDirStructSuggestParam(
             @ApiParam(value = "上传参数建议值信息", required = true)
                     UploadTaskLogStepVO uploadTaskLogStepVO);
 
     @ApiOperation("获取当前构建的分析记录")
     @Path("/taskId/{taskId}/toolName/{toolName}/buildId/{buildId}")
     @GET
-    CodeCCResult<TaskLogVO> getBuildTaskLog(
+    Result<TaskLogVO> getBuildTaskLog(
             @ApiParam(value = "任务id", required = true)
             @PathParam("taskId")
                     long taskId,
@@ -79,4 +82,15 @@ public interface BuildTaskLogRestResource
             @PathParam("buildId")
                     String buildId
     );
+
+    @ApiOperation("批量获取最新分析的代码库信息(上次执行时间和上次版本库信息)")
+    @Path("/taskId/{taskId}/toolName/{toolName}/latest/repo")
+    @PUT
+    Result<TaskLogRepoInfoVO> getLastAnalyzeRepoInfo(
+            @ApiParam(value = "任务ID", required = true)
+            @PathParam("taskId")
+                    Long taskId,
+            @ApiParam(value = "工具名称", required = true)
+            @PathParam("toolName")
+                    String toolName);
 }

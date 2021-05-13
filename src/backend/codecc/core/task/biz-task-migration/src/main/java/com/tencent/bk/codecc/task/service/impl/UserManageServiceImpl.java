@@ -31,7 +31,7 @@ import com.tencent.bk.codecc.task.vo.DevopsProjectOrgVO;
 import com.tencent.bk.codecc.task.vo.DevopsProjectVO;
 import com.tencent.bk.codecc.task.vo.UserVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.project.api.service.ServiceProjectResource;
@@ -47,8 +47,8 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEADER_DEVOPS_ACCESS_TOKEN;
-import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEADER_DEVOPS_USER_ID;
+import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_ACCESS_TOKEN;
+import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_USER_ID;
 
 /**
  * 用户管理逻辑处理实现类
@@ -64,15 +64,15 @@ public class UserManageServiceImpl implements UserManageService
     private Client client;
 
     @Override
-    public CodeCCResult<UserVO> getInfo(String userId)
+    public Result<UserVO> getInfo(String userId)
     {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-        String bkToken = request.getHeader(CODECC_AUTH_HEADER_DEVOPS_ACCESS_TOKEN);
+        String bkToken = request.getHeader(AUTH_HEADER_DEVOPS_ACCESS_TOKEN);
         UserVO userVO = new UserVO();
         userVO.setUsername(userId);
         userVO.setAuthenticated(true);
         userVO.setBkToken(bkToken);
-        return new CodeCCResult<>(userVO);
+        return new Result<>(userVO);
     }
 
     @Override

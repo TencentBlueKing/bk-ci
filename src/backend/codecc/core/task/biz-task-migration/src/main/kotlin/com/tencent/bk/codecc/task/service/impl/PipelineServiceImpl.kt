@@ -33,7 +33,6 @@ import com.google.common.cache.CacheLoader
 import com.tencent.bk.codecc.defect.api.ServiceReportTaskLogRestResource
 import com.tencent.bk.codecc.defect.vo.UploadTaskLogStepVO
 import com.tencent.bk.codecc.task.constant.TaskConstants
-import com.tencent.bk.codecc.task.constant.TaskMessageCode
 import com.tencent.bk.codecc.task.dao.mongorepository.BaseDataRepository
 import com.tencent.bk.codecc.task.dao.mongorepository.TaskRepository
 import com.tencent.bk.codecc.task.model.GongfengPublicProjEntity
@@ -53,7 +52,6 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.CodeCCException
 import com.tencent.devops.common.api.exception.StreamException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.EncodeUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.constant.ComConstants
 import com.tencent.devops.common.constant.CommonMessageCode
@@ -89,25 +87,27 @@ import com.tencent.devops.plugin.codecc.pojo.CodeccBuildInfo
 import com.tencent.devops.plugin.codecc.pojo.coverity.ProjectLanguage
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
-import com.tencent.devops.project.api.service.service.ServicePublicScanResource
-import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.api.scm.ServiceScmResource
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.repository.pojo.GithubRepository
-import com.tencent.devops.scm.api.ServiceGitResource
+import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
+import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import net.sf.json.JSONArray
+import org.apache.commons.lang.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.BeanUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Async
 import org.springframework.stereotype.Service
-import java.util.Objects
+import java.util.*
 import java.util.concurrent.TimeUnit
+import kotlin.collections.ArrayList
+import kotlin.collections.HashMap
 import kotlin.collections.set
 
 /**
@@ -297,56 +297,28 @@ open class PipelineServiceImpl @Autowired constructor(
     }
 
     override fun createGongfengDevopsProject(newProject: GongfengPublicProjModel): String {
-        val projectCreateInfo = ProjectCreateInfo(
-            projectName = "CODE_${newProject.id}",
-            englishName = "CODE_${newProject.id}",
-            projectType = 5,
-            description = "public scan of gongfeng project/description: ${EncodeUtils.decodeX(
-                newProject.description
-                    ?: ""
-            )}",
-            bgId = 0L,
-            bgName = "",
-            deptId = 0L,
-            deptName = "",
-            centerId = 0L,
-            centerName = "",
-            secrecy = false,
-            kind = 0
+        // TODO("not implemented")
+        return ""
+    }
+
+    override fun installAtom(userName: String, projectIds: ArrayList<String>, atomCode: String): Boolean {
+        val result = client.getDevopsService(ServiceMarketAtomResource::class.java).installAtom(
+                userName,
+                ChannelCode.GONGFENGSCAN,
+                InstallAtomReq(projectIds, atomCode)
         )
-        logger.info("start to create public scan project")
-        val result = client.getDevopsService(ServicePublicScanResource::class.java).createCodeCCScanProject(
-            newProject.owner!!.userName, projectCreateInfo
-        )
-        if (result.isNotOk() || null == result.data) {
-            throw CodeCCException(CommonMessageCode.BLUE_SHIELD_INTERNAL_ERROR)
+
+        if (result.isNotOk() || result.data == null) {
+            logger.info("install atom for open scan project fail, userName: $userName | projects: $projectIds, atomCode: $atomCode")
+            return false
         }
-        return result.data!!.projectId
+
+        return result.data!!
     }
 
     override fun createActiveProjDevopsProject(activeProjParseModel: ActiveProjParseModel): String {
-        val projectCreateInfo = ProjectCreateInfo(
-            projectName = "CODE_${activeProjParseModel.id}",
-            englishName = "CODE_${activeProjParseModel.id}",
-            projectType = 5,
-            description = "public scan of active project: ${activeProjParseModel.id}",
-            bgId = 0L,
-            bgName = "",
-            deptId = 0L,
-            deptName = "",
-            centerId = 0L,
-            centerName = "",
-            secrecy = false,
-            kind = 0
-        )
-        logger.info("start to create public scan project")
-        val result = client.getDevopsService(ServicePublicScanResource::class.java).createCodeCCScanProject(
-            activeProjParseModel.creator, projectCreateInfo
-        )
-        if (result.isNotOk() || null == result.data) {
-            throw CodeCCException(CommonMessageCode.BLUE_SHIELD_INTERNAL_ERROR)
-        }
-        return result.data!!.projectId
+        // TODO("not implemented")
+        return ""
     }
 
     override fun createGongfengDevopsPipeline(
@@ -355,49 +327,49 @@ open class PipelineServiceImpl @Autowired constructor(
     ): String {
         return with(gongfengPublicProjModel) {
             createGongfengCommonPipeline(
-                httpRepoUrl = httpUrlToRepo,
-                id = id,
-                pipelineDesc = description,
-                owner = owner?.userName,
-                projectId = projectId,
-                type = "normal",
-                branchName = (gongfengPublicProjModel.defaultBranch ?: "master"),
-                dispatchRoute = ComConstants.CodeCCDispatchRoute.OPENSOURCE
+                    httpRepoUrl = httpUrlToRepo,
+                    id = id,
+                    pipelineDesc = description,
+                    owner = owner?.userName,
+                    projectId = projectId,
+                    type = "normal",
+                    branchName = (gongfengPublicProjModel.defaultBranch ?: "master"),
+                    dispatchRoute = ComConstants.CodeCCDispatchRoute.OPENSOURCE
             )
         }
     }
 
     override fun createGongfengActivePipeline(
-        activeProjParseModel: ActiveProjParseModel,
-        projectId: String, taskName: String, taskId: Long
+            activeProjParseModel: ActiveProjParseModel,
+            projectId: String, taskName: String, taskId: Long
     ): String {
         return with(activeProjParseModel) {
             createGongfengCommonPipeline(
-                httpRepoUrl = "$gitCodePath/$gitPath",
-                id = id,
-                pipelineDesc = "工蜂活跃项目$id",
-                owner = activeProjParseModel.creator,
-                projectId = projectId,
-                type = "active",
-                dispatchRoute = ComConstants.CodeCCDispatchRoute.OPENSOURCE
+                    httpRepoUrl = "$gitCodePath/$gitPath",
+                    id = id,
+                    pipelineDesc = "工蜂活跃项目$id",
+                    owner = activeProjParseModel.creator,
+                    projectId = projectId,
+                    type = "active",
+                    dispatchRoute = ComConstants.CodeCCDispatchRoute.OPENSOURCE
             )
         }
     }
-
+    
     override fun updateExistsCommonPipeline(
-        gongfengPublicProjEntity: GongfengPublicProjEntity,
-        projectId: String, taskId: Long, pipelineId: String, owner: String,
-        dispatchRoute: ComConstants.CodeCCDispatchRoute
+            gongfengPublicProjEntity: GongfengPublicProjEntity,
+            projectId: String, taskId: Long, pipelineId: String, owner: String,
+            dispatchRoute: ComConstants.CodeCCDispatchRoute, commitId: String?
     ): Boolean {
         /**
          * 第一个stage的内容
          */
         val elementFirst = ManualTriggerElement(
-            name = "手动触发",
-            id = null,
-            status = null,
-            canElementSkip = false,
-            useLatestParameters = false
+                name = "手动触发",
+                id = null,
+                status = null,
+                canElementSkip = false,
+                useLatestParameters = false
         )
 
         val paramList = listOf(
@@ -429,7 +401,8 @@ open class PipelineServiceImpl @Autowired constructor(
             templateParams = null,
             buildNo = null,
             canRetry = null,
-            containerId = null
+            containerId = null,
+            jobId = null
         )
 
         val stageFirst = Stage(
@@ -452,35 +425,68 @@ open class PipelineServiceImpl @Autowired constructor(
             )
         )
 
-        val gitElement: Element = MarketBuildAtomElement(
-            name = "拉取代码",
-            atomCode = "gitCodeRepoCommon",
-            version = (pluginVersionCache.get("GIT") ?: "2.*"),
-            data = mapOf(
-                "input" to
-                    mapOf(
-                        "username" to codeccPublicAccount,
-                        "password" to codeccPublicPassword,
-                        "refName" to (gongfengPublicProjEntity.defaultBranch ?: "master"),
-                        "commitId" to "",
-                        "enableAutoCrlf" to false,
-                        "enableGitClean" to true,
-                        "enableSubmodule" to false,
-                        "enableSubmoduleRemote" to false,
-                        "enableVirtualMergeBranch" to false,
-                        "excludePath" to "",
-                        "fetchDepth" to "",
-                        "includePath" to "",
-                        "localPath" to "",
-                        "paramMode" to "SIMPLE",
-                        "pullType" to "BRANCH",
-                        "repositoryUrl" to gongfengPublicProjEntity.httpUrlToRepo,
-                        "strategy" to "FRESH_CHECKOUT",
-                        "tagName" to ""
-                    ),
-                "output" to mapOf()
+        val gitElement: Element = if (StringUtils.isBlank(commitId)) {
+            MarketBuildAtomElement(
+                    name = "拉取代码",
+                    atomCode = "gitCodeRepoCommon",
+                    version = (pluginVersionCache.get("GIT") ?: "2.*"),
+                    data = mapOf(
+                            "input" to
+                                    mapOf(
+                                            "username" to codeccPublicAccount,
+                                            "password" to codeccPublicPassword,
+                                            "refName" to (gongfengPublicProjEntity.defaultBranch
+                                                    ?: "master"),
+                                            "commitId" to "",
+                                            "enableAutoCrlf" to false,
+                                            "enableGitClean" to true,
+                                            "enableSubmodule" to false,
+                                            "enableSubmoduleRemote" to false,
+                                            "enableVirtualMergeBranch" to false,
+                                            "excludePath" to "",
+                                            "fetchDepth" to "",
+                                            "includePath" to "",
+                                            "localPath" to "",
+                                            "paramMode" to "SIMPLE",
+                                            "pullType" to "BRANCH",
+                                            "repositoryUrl" to gongfengPublicProjEntity.httpUrlToRepo,
+                                            "strategy" to "FRESH_CHECKOUT",
+                                            "tagName" to ""
+                                    ),
+                            "output" to mapOf()
+                    )
             )
-        )
+        } else {
+            MarketBuildAtomElement(
+                    name = "拉取代码",
+                    atomCode = "gitCodeRepoCommon",
+                    version = (pluginVersionCache.get("GIT") ?: "2.*"),
+                    data = mapOf(
+                            "input" to
+                                    mapOf(
+                                            "username" to codeccPublicAccount,
+                                            "password" to codeccPublicPassword,
+                                            "refName" to "",
+                                            "commitId" to commitId,
+                                            "enableAutoCrlf" to false,
+                                            "enableGitClean" to true,
+                                            "enableSubmodule" to false,
+                                            "enableSubmoduleRemote" to false,
+                                            "enableVirtualMergeBranch" to false,
+                                            "excludePath" to "",
+                                            "fetchDepth" to "",
+                                            "includePath" to "",
+                                            "localPath" to "",
+                                            "paramMode" to "SIMPLE",
+                                            "pullType" to "BRANCH",
+                                            "repositoryUrl" to gongfengPublicProjEntity.httpUrlToRepo,
+                                            "strategy" to "FRESH_CHECKOUT",
+                                            "tagName" to ""
+                                    ),
+                            "output" to mapOf()
+                    )
+            )
+        }
 
 
         gitElement.additionalOptions = ElementAdditionalOptions(
@@ -497,7 +503,9 @@ open class PipelineServiceImpl @Autowired constructor(
                     value = "true"
                 )
             ),
-            customCondition = ""
+            customCondition = "",
+            pauseBeforeExec = false,
+            subscriptionPauseUser = ""
         )
 
         val codeccElement: Element =
@@ -534,7 +542,9 @@ open class PipelineServiceImpl @Autowired constructor(
                     value = "true"
                 )
             ),
-            customCondition = ""
+            customCondition = "",
+            pauseBeforeExec = false,
+            subscriptionPauseUser = ""
         )
 
         val judgeElement = LinuxScriptElement(
@@ -587,7 +597,9 @@ open class PipelineServiceImpl @Autowired constructor(
                         value = "true"
                     )
                 ),
-                customCondition = ""
+                customCondition = "",
+                pauseBeforeExec = false,
+                subscriptionPauseUser = ""
             )
         }
 
@@ -610,7 +622,8 @@ open class PipelineServiceImpl @Autowired constructor(
             thirdPartyWorkspace = null,
             dockerBuildVersion = imageName,
             dispatchType = CodeCCDispatchType(
-                codeccTaskId = dispatchRoute.flag()
+                codeccTaskId = dispatchRoute.flag(),
+                extraInfo = mapOf()
             ),
             canRetry = null,
             enableExternal = null,
@@ -648,70 +661,69 @@ open class PipelineServiceImpl @Autowired constructor(
         )
 
         val pipelineCreateResult = client.getDevopsService(ServicePipelineResource::class.java).edit(
-            userId = owner.split(",")[0],
-            projectId = projectId,
-            pipelineId = pipelineId,
-            pipeline = pipelineModel,
-            channelCode = ChannelCode.GONGFENGSCAN
+                userId = owner.split(",")[0],
+                projectId = projectId,
+                pipelineId = pipelineId,
+                pipeline = pipelineModel,
+                channelCode = ChannelCode.GONGFENGSCAN
         )
         return if (pipelineCreateResult.isOk()) pipelineCreateResult.data
-            ?: throw CodeCCException(CommonMessageCode.BLUE_SHIELD_INTERNAL_ERROR) else throw CodeCCException(
-            CommonMessageCode.BLUE_SHIELD_INTERNAL_ERROR
+                ?: throw CodeCCException(CommonMessageCode.BLUE_SHIELD_INTERNAL_ERROR) else throw CodeCCException(
+                CommonMessageCode.BLUE_SHIELD_INTERNAL_ERROR
         )
     }
 
-    private fun createGongfengCommonPipeline(
-        httpRepoUrl: String?, id: Int,
-        pipelineDesc: String?, owner: String?, projectId: String,
-        type: String, branchName: String = "master",
-        dispatchRoute: ComConstants.CodeCCDispatchRoute
-    ): String {
+    override fun updateExistsCommonPipeline(
+            gongfengId: Int, url: String,
+            projectId: String, taskId: Long, pipelineId: String, owner: String,
+            dispatchRoute: ComConstants.CodeCCDispatchRoute, commitId: String?
+    ): Boolean {
         /**
          * 第一个stage的内容
          */
         val elementFirst = ManualTriggerElement(
-            name = "手动触发",
-            id = null,
-            status = null,
-            canElementSkip = false,
-            useLatestParameters = false
+                name = "手动触发",
+                id = null,
+                status = null,
+                canElementSkip = false,
+                useLatestParameters = false
         )
 
         val paramList = listOf(
-            BuildFormProperty(
-                id = "scheduledTriggerPipeline",
-                required = false,
-                type = BuildFormPropertyType.STRING,
-                defaultValue = 0,
-                options = null,
-                desc = "是否是手动触发定时开源扫描流水线",
-                repoHashId = null,
-                relativePath = null,
-                scmType = null,
-                containerType = null,
-                glob = null,
-                properties = null
-            )
+                BuildFormProperty(
+                        id = "scheduledTriggerPipeline",
+                        required = false,
+                        type = BuildFormPropertyType.STRING,
+                        defaultValue = 0,
+                        options = null,
+                        desc = "是否是手动触发定时开源扫描流水线",
+                        repoHashId = null,
+                        relativePath = null,
+                        scmType = null,
+                        containerType = null,
+                        glob = null,
+                        properties = null
+                )
         )
 
         val containerFirst = TriggerContainer(
-            id = null,
-            name = "demo",
-            elements = arrayListOf(elementFirst),
-            status = null,
-            startEpoch = null,
-            systemElapsed = null,
-            elementElapsed = null,
-            params = paramList,
-            templateParams = null,
-            buildNo = null,
-            canRetry = null,
-            containerId = null
+                id = null,
+                name = "demo",
+                elements = arrayListOf(elementFirst),
+                status = null,
+                startEpoch = null,
+                systemElapsed = null,
+                elementElapsed = null,
+                params = paramList,
+                templateParams = null,
+                buildNo = null,
+                canRetry = null,
+                containerId = null
         )
 
         val stageFirst = Stage(
-            containers = arrayListOf(containerFirst),
-            id = null
+                containers = arrayListOf(containerFirst),
+                id = null
         )
 
         /**
@@ -719,224 +731,247 @@ open class PipelineServiceImpl @Autowired constructor(
          */
         //用于判断是否需要过滤的插件
         val filterElement: Element = MarketBuildAtomElement(
-            name = "动态判断是否需要扫描",
-            atomCode = "CodeCCFilter",
-            data = mapOf(
-                "input" to mapOf(
-                    "gongfengProjectId" to id.toString()
-                ),
-                "output" to mapOf()
-            )
+                name = "动态判断是否需要扫描",
+                atomCode = "CodeCCFilter",
+                data = mapOf(
+                        "input" to mapOf(
+                                "gongfengProjectId" to gongfengId.toString()
+                        ),
+                        "output" to mapOf()
+                )
         )
 
         val gitElement: Element = MarketBuildAtomElement(
-            name = "拉取代码",
-            atomCode = "gitCodeRepoCommon",
-            version = (pluginVersionCache.get("GIT") ?: "2.*"),
-            data = mapOf(
-                "input" to
-                    if (type == "normal")
-                        mapOf(
-                            "username" to codeccPublicAccount,
-                            "password" to codeccPublicPassword,
-                            "refName" to branchName,
-                            "commitId" to "",
-                            "enableAutoCrlf" to false,
-                            "enableGitClean" to true,
-                            "enableSubmodule" to false,
-                            "enableSubmoduleRemote" to false,
-                            "enableVirtualMergeBranch" to false,
-                            "excludePath" to "",
-                            "fetchDepth" to "",
-                            "includePath" to "",
-                            "localPath" to "",
-                            "paramMode" to "SIMPLE",
-                            "pullType" to "BRANCH",
-                            "repositoryUrl" to httpRepoUrl,
-                            "strategy" to "FRESH_CHECKOUT",
-                            "tagName" to ""
-                        )
-                    else
-                        mapOf(
-                            "accessToken" to client.getDevopsService(ServiceGitResource::class.java).getToken(id.toLong()).data?.accessToken,
-                            "branchName" to "master",
-                            "commitId" to "",
-                            "enableAutoCrlf" to false,
-                            "enableGitClean" to true,
-                            "enableSubmodule" to false,
-                            "enableSubmoduleRemote" to false,
-                            "enableVirtualMergeBranch" to false,
-                            "excludePath" to "",
-                            "fetchDepth" to "",
-                            "includePath" to "",
-                            "localPath" to "",
-                            "paramMode" to "SIMPLE",
-                            "pullType" to "BRANCH",
-                            "repositoryUrl" to httpRepoUrl,
-                            "strategy" to "FRESH_CHECKOUT",
-                            "tagName" to ""
-                        ),
-                "output" to mapOf()
-            )
-
+                name = "拉取代码",
+                atomCode = "gitCodeRepoCommon",
+                version = (pluginVersionCache.get("GIT") ?: "2.*"),
+                data = mapOf(
+                        "input" to
+                                mapOf(
+                                        "username" to codeccPublicAccount,
+                                        "password" to codeccPublicPassword,
+                                        "refName" to if (StringUtils.isBlank(commitId)) {
+                                            ("master")
+                                        } else {
+                                            ""
+                                        },
+                                        "commitId" to commitId,
+                                        "enableAutoCrlf" to false,
+                                        "enableGitClean" to true,
+                                        "enableSubmodule" to false,
+                                        "enableSubmoduleRemote" to false,
+                                        "enableVirtualMergeBranch" to false,
+                                        "excludePath" to "",
+                                        "fetchDepth" to "",
+                                        "includePath" to "",
+                                        "localPath" to "",
+                                        "paramMode" to "SIMPLE",
+                                        "pullType" to if (StringUtils.isBlank(commitId)) {
+                                            "BRANCH"
+                                        } else {
+                                            "COMMIT_ID"
+                                        },
+                                        "repositoryUrl" to url,
+                                        "strategy" to "FRESH_CHECKOUT",
+                                        "tagName" to ""
+                                ),
+                        "output" to mapOf()
+                )
         )
 
+
         gitElement.additionalOptions = ElementAdditionalOptions(
-            enable = true,
-            continueWhenFailed = true,
-            retryWhenFailed = false,
-            retryCount = 1,
-            timeout = 900L,
-            runCondition = RunCondition.CUSTOM_VARIABLE_MATCH,
-            otherTask = "",
-            customVariables = listOf(
-                NameAndValue(
-                    key = "BK_CI_CODECC_SCAN_FILTER_PASS",
-                    value = "true"
-                )
-            ),
-            customCondition = ""
+                enable = true,
+                continueWhenFailed = true,
+                retryWhenFailed = false,
+                retryCount = 1,
+                timeout = 900L,
+                runCondition = RunCondition.CUSTOM_VARIABLE_MATCH,
+                otherTask = "",
+                customVariables = listOf(
+                        NameAndValue(
+                                key = "BK_CI_CODECC_SCAN_FILTER_PASS",
+                                value = "true"
+                        )
+                ),
+                customCondition = "",
+            pauseBeforeExec = false,
+            subscriptionPauseUser = ""
         )
 
         val codeccElement: Element =
-            MarketBuildAtomElement(
-                name = "CodeCC代码检查(New)",
-                atomCode = "CodeccCheckAtomDebug",
-                version = (pluginVersionCache.get("CODECC") ?: "4.*"),
-                data = mapOf(
-                    "input" to mapOf(
-                        "languages" to listOf<String>(),
-                        "tools" to listOf("CLOC"),
-                        "asynchronous" to "false",
-                        "openScanPrj" to true
-                    ),
-                    "output" to mapOf()
+                MarketBuildAtomElement(
+                        name = "CodeCC代码检查(New)",
+                        atomCode = "CodeccCheckAtomDebug",
+                        version = (pluginVersionCache.get("CODECC") ?: "4.*"),
+                        data = mapOf(
+                                "input" to mapOf(
+                                        "languages" to listOf<String>(),
+                                        "tools" to listOf("CLOC"),
+                                        "asynchronous" to "false",
+                                        "openScanPrj" to true
+                                ),
+                                "output" to mapOf()
+                        )
                 )
-            )
 
         codeccElement.additionalOptions = ElementAdditionalOptions(
-            enable = true,
-            continueWhenFailed = true,
-            retryWhenFailed = false,
-            retryCount = 1,
-            timeout = 900L,
-            runCondition = RunCondition.CUSTOM_VARIABLE_MATCH,
-            otherTask = "",
-            customVariables = listOf(
-                NameAndValue(
-                    key = "BK_CI_GIT_REPO_BRANCH",
-                    value = branchName
+                enable = true,
+                continueWhenFailed = true,
+                retryWhenFailed = false,
+                retryCount = 1,
+                timeout = 900L,
+                runCondition = RunCondition.CUSTOM_VARIABLE_MATCH,
+                otherTask = "",
+                customVariables = listOf(
+                        NameAndValue(
+                                key = "BK_CI_GIT_REPO_BRANCH",
+                                value = ("master")
+                        ),
+                        NameAndValue(
+                                key = "BK_CI_CODECC_SCAN_FILTER_PASS",
+                                value = "true"
+                        )
                 ),
-                NameAndValue(
-                    key = "BK_CI_CODECC_SCAN_FILTER_PASS",
-                    value = "true"
-                )
-            ),
-            customCondition = ""
+                customCondition = "",
+                pauseBeforeExec = false,
+                subscriptionPauseUser = ""
+        )
+
+        val judgeElement = LinuxScriptElement(
+                name = "判断是否推送",
+                scriptType = BuildScriptType.SHELL,
+                script = "# 您可以通过setEnv函数设置插件间传递的参数\n# setEnv \"FILENAME\" \"package.zip\"\n# 然后在后续的插件的表单中使用\${FILENAME}引用这个变量\n\n# 您可以在质量红线中创建自定义指标，然后通过setGateValue函数设置指标值\n# setGateValue \"CodeCoverage\" \$myValue\n# 然后在质量红线选择相应指标和阈值。若不满足，流水线在执行时将会被卡住\n\n# cd \${WORKSPACE} 可进入当前工作空间目录\necho \$BK_CI_GIT_REPO_BRANCH\necho \$BK_CI_CODECC_TASK_STATUS\nif [ \$BK_CI_GIT_REPO_BRANCH ] && [ \$BK_CI_GIT_REPO_BRANCH = 'master' ]\nthen\n    if [ ! \$BK_CI_CODECC_TASK_STATUS ]\n    then\n        setEnv BK_CI_CODECC_MESSAGE_PUSH 'true'\n    fi\nfi\necho \$BK_CI_CODECC_MESSAGE_PUSH\n",
+                continueNoneZero = false,
+                enableArchiveFile = false,
+                archiveFile = ""
         )
 
         val notifyElement = MarketBuildLessAtomElement(
-            name = "企业微信机器人推送",
-            atomCode = "WechatWorkRobot",
-            data = mapOf(
-                "input" to mapOf(
-                    "inputWebhook" to "e01e5f25-4362-4c6f-b163-18b4c529163b",
-                    "inputChatid" to "",
-                    "inputMsgtype" to "text",
-                    "inputTextContent" to "【开源扫描构建失败提醒】\n蓝盾项目id:\${BK_CI_PROJECT_NAME}\n流水线id: \${BK_CI_PIPELINE_ID}\n构建id: \${BK_CI_BUILD_ID}\n构建机日志路径: /data/landun/logs/\${BK_CI_BUILD_ID}/1",
-                    "inputTextMentionedList" to "",
-                    "inputMarkdownContent" to "",
-                    "inputImageBase64" to "",
-                    "inputImageMd5" to "",
-                    "inputNewsTitle" to "",
-                    "inputNewsDescription" to "",
-                    "inputNewsUrl" to "",
-                    "inputNewsPicurl" to "",
-                    "inputRetry" to 1
+                name = "企业微信机器人推送",
+                atomCode = "WechatWorkRobot",
+                data = mapOf(
+                        "input" to mapOf(
+                                "inputWebhook" to "e01e5f25-4362-4c6f-b163-18b4c529163b",
+                                "inputChatid" to "",
+                                "inputMsgtype" to "text",
+                                "inputTextContent" to "【开源扫描构建失败提醒】\n蓝盾项目id:\${BK_CI_PROJECT_NAME}\n流水线id: \${BK_CI_PIPELINE_ID}\n构建id: \${BK_CI_BUILD_ID}\n构建机日志路径: /data/landun/logs/\${BK_CI_BUILD_ID}/1",
+                                "inputTextMentionedList" to "",
+                                "inputMarkdownContent" to "",
+                                "inputImageBase64" to "",
+                                "inputImageMd5" to "",
+                                "inputNewsTitle" to "",
+                                "inputNewsDescription" to "",
+                                "inputNewsUrl" to "",
+                                "inputNewsPicurl" to "",
+                                "inputRetry" to 1
 
-                ),
-                "output" to mapOf()
-            )
+                        ),
+                        "output" to mapOf()
+                )
         )
 
         with(notifyElement) {
             executeCount = 1
             canRetry = false
             additionalOptions = ElementAdditionalOptions(
-                enable = true,
-                continueWhenFailed = false,
-                retryWhenFailed = false,
-                retryCount = 1,
-                timeout = 600,
-                runCondition = RunCondition.PRE_TASK_FAILED_ONLY,
-                otherTask = "",
-                customVariables = listOf(),
-                customCondition = ""
+                    enable = true,
+                    continueWhenFailed = false,
+                    retryWhenFailed = false,
+                    retryCount = 1,
+                    timeout = 900,
+                    runCondition = RunCondition.CUSTOM_VARIABLE_MATCH,
+                    otherTask = "",
+                    customVariables = listOf(
+                            NameAndValue(
+                                    key = "BK_CI_CODECC_MESSAGE_PUSH",
+                                    value = "true"
+                            )
+                    ),
+                    customCondition = "",
+                    pauseBeforeExec = false,
+                    subscriptionPauseUser = ""
             )
         }
 
         val containerSecond = VMBuildContainer(
-            id = null,
-            name = "demo",
-            elements = listOf(filterElement, gitElement, codeccElement, notifyElement),
-            status = null,
-            startEpoch = null,
-            systemElapsed = null,
-            elementElapsed = null,
-            baseOS = VMBaseOS.valueOf("LINUX"),
-            vmNames = emptySet(),
-            maxQueueMinutes = null,
-            maxRunningMinutes = 80,
-            buildEnv = null,
-            customBuildEnv = null,
-            thirdPartyAgentId = null,
-            thirdPartyAgentEnvId = null,
-            thirdPartyWorkspace = null,
-            dockerBuildVersion = imageName,
-            dispatchType = CodeCCDispatchType(
-                codeccTaskId = dispatchRoute.flag()
-            ),
-            canRetry = null,
-            enableExternal = null,
-            containerId = null,
-            jobControlOption = JobControlOption(
-                enable = true,
-                timeout = 900,
-                runCondition = JobRunCondition.STAGE_RUNNING,
-                customVariables = null,
-                customCondition = null
-            ),
-            mutexGroup = null,
-            tstackAgentId = null
+                id = null,
+                name = "demo",
+                elements = listOf(filterElement, gitElement, codeccElement, judgeElement, notifyElement),
+                status = null,
+                startEpoch = null,
+                systemElapsed = null,
+                elementElapsed = null,
+                baseOS = VMBaseOS.valueOf("LINUX"),
+                vmNames = emptySet(),
+                maxQueueMinutes = null,
+                maxRunningMinutes = 80,
+                buildEnv = null,
+                customBuildEnv = null,
+                thirdPartyAgentId = null,
+                thirdPartyAgentEnvId = null,
+                thirdPartyWorkspace = null,
+                dockerBuildVersion = imageName,
+                dispatchType = CodeCCDispatchType(
+                        codeccTaskId = dispatchRoute.flag(),
+                        extraInfo = mapOf()
+                ),
+                canRetry = null,
+                enableExternal = null,
+                containerId = null,
+                jobControlOption = JobControlOption(
+                        enable = true,
+                        timeout = 600,
+                        runCondition = JobRunCondition.STAGE_RUNNING,
+                        customVariables = null,
+                        customCondition = null
+                ),
+                mutexGroup = null,
+                tstackAgentId = null
         )
         val stageSecond = Stage(
-            containers = arrayListOf(containerSecond),
-            id = null
+                containers = arrayListOf(containerSecond),
+                id = null
         )
 
         logger.info(
-            "assemble pipeline parameter successfully! gongfeng " +
-                "project id: $id"
+                "assemble pipeline parameter successfully! gongfeng " +
+                        "project id: $gongfengId"
         )
         /**
          * 总流水线拼装
          */
         val pipelineModel = Model(
-            name = "CODEPIPELINE_$id",
-            desc = pipelineDesc,
-            stages = arrayListOf(stageFirst, stageSecond),
-            labels = emptyList(),
-            instanceFromTemplate = null,
-            pipelineCreator = null,
-            srcTemplateId = null
+                name = "CODEPIPELINE_$gongfengId",
+                desc = "",
+                stages = arrayListOf(stageFirst, stageSecond),
+                labels = emptyList(),
+                instanceFromTemplate = null,
+                pipelineCreator = null,
+                srcTemplateId = null
         )
 
-        val pipelineCreateResult = client.getDevopsService(ServicePipelineResource::class.java).create(
-            owner
-                ?: "codecc-admin", projectId, pipelineModel, ChannelCode.GONGFENGSCAN
+        val pipelineCreateResult = client.getDevopsService(ServicePipelineResource::class.java).edit(
+                userId = owner.split(",")[0],
+                projectId = projectId,
+                pipelineId = pipelineId,
+                pipeline = pipelineModel,
+                channelCode = ChannelCode.GONGFENGSCAN
         )
-        return if (pipelineCreateResult.isOk()) pipelineCreateResult.data?.id
-            ?: "" else throw CodeCCException(CommonMessageCode.BLUE_SHIELD_INTERNAL_ERROR)
+        return if (pipelineCreateResult.isOk()) pipelineCreateResult.data
+                ?: throw CodeCCException(CommonMessageCode.BLUE_SHIELD_INTERNAL_ERROR) else throw CodeCCException(
+                CommonMessageCode.BLUE_SHIELD_INTERNAL_ERROR
+        )
+    }
+
+    private fun createGongfengCommonPipeline(
+            httpRepoUrl: String?, id: Int,
+            pipelineDesc: String?, owner: String?, projectId: String,
+            type: String, branchName: String = "master",
+            dispatchRoute: ComConstants.CodeCCDispatchRoute
+    ): String {
+        // TODO("not implemented")
+        return ""
     }
 
     /**
@@ -1023,7 +1058,8 @@ open class PipelineServiceImpl @Autowired constructor(
                         templateParams = container.templateParams,
                         buildNo = container.buildNo,
                         canRetry = container.canRetry,
-                        containerId = container.containerId
+                        containerId = container.containerId,
+                        jobId = null
                     )
                 } else {
                     container
@@ -1194,182 +1230,18 @@ open class PipelineServiceImpl @Autowired constructor(
     }
 
     /**
-     * 修改codecc原子语言，渠道为CODECC
-     *
-     * @param taskInfoEntity
-     */
-    override fun updateBsPipelineLang(taskInfoEntity: TaskInfoEntity, userName: String) {
-        if (userName.isBlank()) {
-            return
-        }
-        var channelCode = ChannelCode.CODECC_EE
-        if (taskInfoEntity.nameEn.startsWith(ComConstants.OLD_CODECC_ENNAME_PREFIX)) {
-            channelCode = ChannelCode.CODECC
-        }
-
-        val codeLang = taskInfoEntity.codeLang
-        val projectId = taskInfoEntity.projectId
-        val pipelineId = taskInfoEntity.pipelineId
-        val data = client.getDevopsService(ServicePipelineResource::class.java)
-            .get(userName, projectId, pipelineId, channelCode).data
-
-        if (Objects.isNull(data)) {
-            throw CodeCCException(CommonMessageCode.BLUE_SHIELD_INTERNAL_ERROR)
-        }
-
-        val model = data as Model
-        val newModel = getUpdateModel(model, codeLang)
-        val edit = client.getDevopsService(ServicePipelineResource::class.java)
-            .edit(userName, projectId, pipelineId, newModel, channelCode)
-        if (Objects.nonNull(edit) && edit.data != true) {
-            throw CodeCCException(CommonMessageCode.BLUE_SHIELD_INTERNAL_ERROR)
-        }
-        logger.info("update codecc task schedule successfully! project id: $projectId, pipeline id: $pipelineId")
-    }
-
-    private fun getUpdateModel(data: Model?, codeLang: Long): Model {
-        return with(data as Model)
-        {
-            val stageList = kotlin.collections.mutableListOf<Stage>()
-            stages.forEachIndexed { stageIndex, stage ->
-                val newStage = if (stageIndex == 1) {
-                    val containerList = kotlin.collections.mutableListOf<Container>()
-                    stage.containers.forEachIndexed { containerIndex, container ->
-                        val newContainer: Container = if (container is VMBuildContainer && containerIndex == 0) {
-                            val elementList = kotlin.collections.mutableListOf<Element>()
-                            container.elements.forEachIndexed { index, element ->
-                                val newElement: Element = if (index == 1 && element is LinuxCodeCCScriptElement) {
-                                    LinuxCodeCCScriptElement(
-                                        name = element.name,
-                                        id = element.id,
-                                        status = element.status,
-                                        scriptType = element.scriptType,
-                                        script = element.script,
-                                        codeCCTaskName = element.codeCCTaskName,
-                                        codeCCTaskCnName = element.codeCCTaskCnName,
-                                        languages = convertCodeLangToBs(codeLang),
-                                        asynchronous = element.asynchronous,
-                                        scanType = element.scanType,
-                                        path = element.path,
-                                        compilePlat = element.compilePlat,
-                                        tools = element.tools,
-                                        pyVersion = element.pyVersion,
-                                        eslintRc = element.eslintRc,
-                                        phpcsStandard = element.phpcsStandard,
-                                        goPath = element.goPath
-                                    )
-                                } else {
-                                    element
-                                }
-                                elementList.add(newElement)
-                            }
-
-                            VMBuildContainer(
-                                containerId = container.containerId,
-                                id = container.id,
-                                name = container.name,
-                                elements = elementList,
-                                status = container.status,
-                                startEpoch = container.startEpoch,
-                                systemElapsed = container.systemElapsed,
-                                elementElapsed = container.elementElapsed,
-                                baseOS = container.baseOS,
-                                vmNames = container.vmNames,
-                                maxQueueMinutes = container.maxQueueMinutes,
-                                maxRunningMinutes = container.maxRunningMinutes,
-                                buildEnv = container.buildEnv,
-                                customBuildEnv = container.customBuildEnv,
-                                thirdPartyAgentId = container.thirdPartyAgentId,
-                                thirdPartyAgentEnvId = container.thirdPartyAgentEnvId,
-                                thirdPartyWorkspace = container.thirdPartyWorkspace,
-                                dockerBuildVersion = container.dockerBuildVersion,
-                                tstackAgentId = null,
-                                canRetry = container.canRetry,
-                                enableExternal = container.enableExternal,
-                                jobControlOption = container.jobControlOption,
-                                mutexGroup = container.mutexGroup,
-                                dispatchType = container.dispatchType
-                            )
-                        } else {
-                            container
-                        }
-                        containerList.add(newContainer)
-                    }
-
-                    Stage(containers = containerList, id = stage.id)
-                } else {
-                    stage
-                }
-                stageList.add(newStage)
-            }
-            Model(name, desc, stageList, labels, instanceFromTemplate, pipelineCreator)
-        }
-    }
-
-    /**
-     * 修改codecc原子语言，渠道为BS
-     *
-     * @param taskInfoEntity
-     * @param userName
-     */
-    override fun updateBsPipelineLangBSChannelCode(taskInfoEntity: TaskInfoEntity, userName: String) {
-        if (Objects.isNull(taskInfoEntity) || userName.isBlank()) {
-            return
-        }
-
-        val codeLang = taskInfoEntity.codeLang
-        val projectId = taskInfoEntity.projectId
-        val pipelineId = taskInfoEntity.pipelineId
-
-        val modelResult = client.getDevopsService(ServicePipelineResource::class.java)
-            .get(userName, projectId, pipelineId, ChannelCode.BS)
-
-        if (Objects.isNull(modelResult) || Objects.isNull(modelResult.data)) {
-            logger.error("get pipeline model info fail! project id: $projectId, pipeline id: $pipelineId")
-            throw CodeCCException(CommonMessageCode.BLUE_SHIELD_INTERNAL_ERROR)
-        }
-
-        //在Model中定位到代码检查原子的element，并修改语言
-        val linuxElement = modelResult.data!!.stages
-            .flatMap { stage -> stage.containers }
-            .flatMap { container -> container.elements }
-            .firstOrNull { element -> element is LinuxPaasCodeCCScriptElement } as LinuxPaasCodeCCScriptElement
-        if (linuxElement.codeCCTaskName.isNullOrBlank()) {
-            logger.error("can not find qualified element! project id: $projectId, pipeline id: $pipelineId")
-            throw CodeCCException(TaskMessageCode.ELEMENT_NOT_FIND)
-        }
-
-        /*val modelJson = JSONObject.fromObject(modelResult.data)
-        // 设置语言：定位到第二个stage下面的第一个container，下面的第二个element
-        Optional.ofNullable(modelJson)
-            .map { it.getJSONArray("stages").getJSONObject(1) }
-            .map { it.getJSONArray("containers").getJSONObject(0) }
-            .map { it.getJSONArray("elements").getJSONObject(1) }
-            .orElse(JSONObject())["languages"] = convertCodeLangToBs(codeLang)
-        val model = JsonUtil.to(JsonUtil.toJson(modelJson), Model::class.java)*/
-        val model = modelResult.data as Model
-        val newModel = getUpdateModel(model, codeLang)
-        val edit = client.getDevopsService(ServicePipelineResource::class.java)
-            .edit(userName, projectId, pipelineId, newModel, ChannelCode.BS)
-        if (Objects.nonNull(edit) && edit.data != true) {
-            logger.error("update pipeline info fail! project id: $projectId, pipeline id: $pipelineId")
-            throw CodeCCException(CommonMessageCode.BLUE_SHIELD_INTERNAL_ERROR)
-        }
-    }
-
-    /**
      * 将codecc平台的项目语言转换为蓝盾平台的codecc原子语言
      */
     @Suppress("CAST_NEVER_SUCCEEDS")
-    private fun convertCodeLangToBs(langCode: Long): List<ProjectLanguage> {
+    override fun localConvertDevopsCodeLang(langCode: Long): List<String> {
         val metadataList = metaService.queryMetadatas(ComConstants.METADATA_TYPE)[ComConstants.METADATA_TYPE]
         val languageList = metadataList?.filter { metadataVO ->
             (metadataVO.key.toLong() and langCode) != 0L
         }
             ?.map { metadataVO ->
-                ProjectLanguage.valueOf(JSONArray.fromObject(metadataVO.aliasNames)[0].toString())
+                JSONArray.fromObject(metadataVO.aliasNames)[0].toString()
             }
-        return if (languageList.isNullOrEmpty()) listOf(ProjectLanguage.OTHERS) else languageList
+        return if (languageList.isNullOrEmpty()) listOf(ComConstants.CodeLang.OTHERS.langName()) else languageList
     }
 
     @Throws(StreamException::class)
@@ -1389,19 +1261,41 @@ open class PipelineServiceImpl @Autowired constructor(
         }.ifEmpty { return 0L }.reduce { acc, l -> acc or l }
     }
 
-    /**
-     * 将codecc平台的项目语言转换为蓝盾平台的codecc原子语言
-     */
-    @Suppress("CAST_NEVER_SUCCEEDS")
-    override fun localConvertDevopsCodeLang(langCode: Long): List<com.tencent.bk.codecc.task.enums.ProjectLanguage> {
-        val metadataList = metaService.queryMetadatas(ComConstants.METADATA_TYPE)[ComConstants.METADATA_TYPE]
-        val languageList = metadataList?.filter { metadataVO ->
-            (metadataVO.key.toLong() and langCode) != 0L
+
+    @Throws(StreamException::class)
+    override fun convertDevopsCodeLangToCodeCCWithOthers(codeLang: String): Long? {
+        if (codeLang.isBlank()) {
+            return 0L
         }
-            ?.map { metadataVO ->
-                com.tencent.bk.codecc.task.enums.ProjectLanguage.valueOf(JSONArray.fromObject(metadataVO.aliasNames)[0].toString())
-            }
-        return if (languageList.isNullOrEmpty()) listOf(com.tencent.bk.codecc.task.enums.ProjectLanguage.OTHERS) else languageList
+        val metaLangList = baseDataRepository.findAllByParamType(ComConstants.KEY_CODE_LANG)
+        val reqLangList = objectMapper.readValue<List<String>>(codeLang, object : TypeReference<List<String>>() {
+
+        })
+        var filteredReqLangList = reqLangList
+
+        val filteredMetaLangList = metaLangList.filter { metaLang ->
+            val langArray = JSONArray.fromObject(metaLang.paramExtend2)
+            filteredReqLangList = reqLangList.filterNot { langArray.toList().contains(it) }
+            langArray.any { reqLangList.contains(it as String) }
+        }
+        val otherBaseData = metaLangList.find { metaLang ->
+            val langArray = JSONArray.fromObject(metaLang.paramExtend2)
+            langArray.toList().contains("OTHERS")
+        }
+        return if(!filteredReqLangList.isNullOrEmpty() && null != otherBaseData){
+            filteredMetaLangList.map { metaLang ->
+                metaLang.paramCode.toLong()
+            }.ifEmpty { return 0L }.reduce { acc, l -> acc or l } or otherBaseData!!.paramCode.toLong()
+        } else {
+            filteredMetaLangList.map { metaLang ->
+                metaLang.paramCode.toLong()
+            }.ifEmpty { return 0L }.reduce { acc, l -> acc or l }
+        }
+    }
+
+    override fun convertCodeCCLangToString(codeLang: Long): Set<String> {
+        val metadataList = metaService.queryMetadatas(ComConstants.METADATA_TYPE)[ComConstants.METADATA_TYPE]
+        return metadataList?.filter { (it.key.toLong() and codeLang) != 0L }?.map { it.langFullKey }?.toSet()?: setOf()
     }
 
     override fun modifyCodeCCTiming(
@@ -1465,7 +1359,8 @@ open class PipelineServiceImpl @Autowired constructor(
                                     templateParams = container.templateParams,
                                     buildNo = container.buildNo,
                                     canRetry = container.canRetry,
-                                    containerId = container.containerId
+                                    containerId = container.containerId,
+                                    jobId = null
                                 )
                             } else {
                                 container
@@ -1549,7 +1444,8 @@ open class PipelineServiceImpl @Autowired constructor(
                                     templateParams = container.templateParams,
                                     buildNo = container.buildNo,
                                     canRetry = container.canRetry,
-                                    containerId = container.containerId
+                                    containerId = container.containerId,
+                                    jobId = null
                                 )
                             } else {
                                 container
@@ -1737,7 +1633,7 @@ open class PipelineServiceImpl @Autowired constructor(
                                             script = script ?: element.script,
                                             codeCCTaskName = element.codeCCTaskName,
                                             codeCCTaskCnName = element.codeCCTaskCnName,
-                                            languages = convertCodeLangToBs(taskInfoEntity.codeLang),
+                                            languages = localConvertDevopsCodeLang(taskInfoEntity.codeLang).map { ProjectLanguage.valueOf(it) },
                                             asynchronous = element.asynchronous,
                                             scanType = element.scanType,
                                             path = element.path,
@@ -1864,6 +1760,49 @@ open class PipelineServiceImpl @Autowired constructor(
             throw CodeCCException(CommonMessageCode.BLUE_SHIELD_INTERNAL_ERROR)
         }
         return result.data as Model
+    }
+
+
+    /**
+     * 更新流水线插件版本
+     */
+    override fun updatePluginVersion(userId: String, projectId : String, pipelineId : String){
+        val pipelineModelResult = client.getDevopsService(ServicePipelineResource::class.java).get(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            channelCode = ChannelCode.GONGFENGSCAN
+        )
+        if(pipelineModelResult.isNotOk() || null == pipelineModelResult.data){
+            logger.info("get pipeline model fail! pipeline id: $pipelineId")
+            return
+        }
+        val pipelineModel = pipelineModelResult.data
+        pipelineModel!!.stages.forEach { stage ->
+            val containerList = mutableListOf<Container>()
+            stage.containers.forEach { container ->
+                val elementList = mutableListOf<Element>()
+                container.elements.forEach { element ->
+                    if(element is MarketBuildAtomElement){
+                        //拉取代码原子更新版本
+                        if(element.getAtomCode() == "gitCodeRepoCommon"){
+                            element.version = (pluginVersionCache.get("GIT") ?: "2.*")
+                        }
+                        //代码扫描原子更新版本
+                        if(element.getAtomCode() == "CodeccCheckAtomDebug"){
+                            element.version = (pluginVersionCache.get("CODECC") ?: "4.*")
+                        }
+                    }
+                }
+            }
+        }
+        client.getDevopsService(ServicePipelineResource::class.java).edit(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            pipeline = pipelineModel,
+            channelCode = ChannelCode.GONGFENGSCAN
+        )
     }
 
     companion object {

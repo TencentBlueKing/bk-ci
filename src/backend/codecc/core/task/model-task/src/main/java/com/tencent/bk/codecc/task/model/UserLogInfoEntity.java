@@ -40,6 +40,7 @@ public class UserLogInfoEntity extends CommonEntity
     private String url;
 
     @Field("login_date")
+    @Indexed(background = true)
     private LocalDate loginDate;
 
     @Field("login_time")

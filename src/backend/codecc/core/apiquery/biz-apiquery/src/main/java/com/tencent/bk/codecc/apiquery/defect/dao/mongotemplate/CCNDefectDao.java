@@ -26,7 +26,10 @@
 
 package com.tencent.bk.codecc.apiquery.defect.dao.mongotemplate;
 
+import com.tencent.bk.codecc.apiquery.defect.model.CCNDefectModel;
 import com.tencent.bk.codecc.apiquery.defect.model.CCNStatisticModel;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Sort;
@@ -37,10 +40,13 @@ import org.springframework.data.mongodb.core.aggregation.GroupOperation;
 import org.springframework.data.mongodb.core.aggregation.MatchOperation;
 import org.springframework.data.mongodb.core.aggregation.SortOperation;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 /**
  * 圈复杂度持久代码
@@ -84,4 +90,35 @@ public class CCNDefectDao
                 mongoTemplate.aggregate(agg, "t_ccn_statistic", CCNStatisticModel.class);
         return queryResult.getMappedResults();
     }
+
+
+    /**
+     * 根据任务ID，作者和路径列表查询
+     *
+     * @param taskId   任务ID
+     * @param author   作者
+     * @param fileList 路径列表
+     * @return list
+     */
+    public List<CCNDefectModel> findByTaskIdAndAuthorAndRelPaths(Long taskId, String author, Set<String> fileList) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("task_id").is(taskId));
+
+        // 作者过滤
+        if (StringUtils.isNotEmpty(author)) {
+            query.addCriteria(Criteria.where("author").is(author));
+        }
+
+        //路径过滤
+        List<Criteria> criteriaList = new ArrayList<>();
+        List<Criteria> orCriteriaList = new ArrayList<>();
+        if (CollectionUtils.isNotEmpty(fileList)) {
+            fileList.forEach(file -> criteriaList.add(Criteria.where("rel_path").regex(file)));
+            orCriteriaList.add(new Criteria().orOperator(criteriaList.toArray(new Criteria[0])));
+            query.addCriteria(new Criteria().andOperator(orCriteriaList.toArray(new Criteria[0])));
+        }
+
+        return mongoTemplate.find(query, CCNDefectModel.class, "t_ccn_defect");
+    }
+
 }

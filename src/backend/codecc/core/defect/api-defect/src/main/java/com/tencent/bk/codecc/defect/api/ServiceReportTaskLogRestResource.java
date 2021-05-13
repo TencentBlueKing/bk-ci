@@ -28,7 +28,7 @@ package com.tencent.bk.codecc.defect.api;
 
 import com.tencent.bk.codecc.defect.vo.UploadTaskLogStepVO;
 import com.tencent.devops.common.api.annotation.ServiceInterface;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -52,7 +52,7 @@ public interface ServiceReportTaskLogRestResource
     @ApiOperation("上报任务分析记录")
     @Path("/")
     @POST
-    CodeCCResult uploadTaskLog(
+    Result uploadTaskLog(
             @ApiParam(value = "上传分析任务详情", required = true)
                     UploadTaskLogStepVO uploadTaskLogStepVO
     );

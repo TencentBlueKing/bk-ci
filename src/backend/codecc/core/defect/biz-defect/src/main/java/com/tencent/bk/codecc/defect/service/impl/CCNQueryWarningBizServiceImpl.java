@@ -26,6 +26,9 @@
 
 package com.tencent.bk.codecc.defect.service.impl;
 
+import static com.tencent.devops.common.constant.ComConstants.MASK_STATUS;
+
+import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.tencent.bk.codecc.defect.dao.mongorepository.BuildDefectRepository;
 import com.tencent.bk.codecc.defect.dao.mongorepository.CCNDefectRepository;
@@ -36,7 +39,6 @@ import com.tencent.bk.codecc.defect.model.CCNDefectEntity;
 import com.tencent.bk.codecc.defect.model.StatisticEntity;
 import com.tencent.bk.codecc.defect.service.AbstractQueryWarningBizService;
 import com.tencent.bk.codecc.defect.service.CheckerService;
-import com.tencent.bk.codecc.defect.service.PipelineService;
 import com.tencent.bk.codecc.defect.service.TreeService;
 import com.tencent.bk.codecc.defect.service.newdefectjudge.NewDefectJudgeService;
 import com.tencent.bk.codecc.defect.utils.ThirdPartySystemCaller;
@@ -55,14 +57,21 @@ import com.tencent.bk.codecc.task.api.ServiceTaskRestResource;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.bk.codecc.task.vo.ToolConfigInfoVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.ComConstants;
+import com.tencent.devops.common.constant.ComConstants.DefectStatus;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.service.BizServiceFactory;
 import com.tencent.devops.common.util.DateTimeUtils;
-import com.tencent.devops.common.util.GitUtil;
 import com.tencent.devops.common.util.PathUtils;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeSet;
+import java.util.stream.Collectors;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -73,14 +82,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.stream.Collectors;
 
 /**
  * 圈复杂度告警管理服务实现
@@ -132,7 +133,7 @@ public class CCNQueryWarningBizServiceImpl extends AbstractQueryWarningBizServic
 
         CCNDefectQueryRspVO ccnFileQueryRspVO = new CCNDefectQueryRspVO();
         // 从Task服务获取任务信息
-        CodeCCResult<TaskDetailVO> taskInfoResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
+        Result<TaskDetailVO> taskInfoResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
         if (taskInfoResult.isNotOk() || null == taskInfoResult.getData()) {
             log.error("get task info fail! stream name is: {}, msg: {}", taskId, taskInfoResult.getMessage());
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
@@ -150,14 +151,16 @@ public class CCNQueryWarningBizServiceImpl extends AbstractQueryWarningBizServic
         ccnFileQueryRspVO.setCcnThreshold(ccnThreshold);
 
         // 根据根据前端传入的条件过滤告警，并分类统计
-        Set<String> defectPaths = filterDefectByCondition(taskId, originalCCNDefectList, queryWarningReq, ccnFileQueryRspVO);
+        Set<String> defectPaths =
+            filterDefectByCondition(taskId, originalCCNDefectList, null, queryWarningReq, ccnFileQueryRspVO, null);
 
-        StatisticEntity statisticEntity = ccnStatisticRepository.findFirstByTaskIdAndToolNameOrderByTimeDesc(taskId, ComConstants.Tool.CCN.name());
+        StatisticEntity statisticEntity =
+            ccnStatisticRepository.findFirstByTaskIdAndToolNameOrderByTimeDesc(taskId, ComConstants.Tool.CCN.name());
         List<CCNDefectVO> ccnDefectVOS = originalCCNDefectList.stream().map(ccnDefectEntity ->
         {
             CCNDefectVO ccnDefectVO = new CCNDefectVO();
             BeanUtils.copyProperties(ccnDefectEntity, ccnDefectVO);
-            ccnDefectVO.setMark(convertMarkStatus(ccnDefectVO.getMark(), ccnDefectVO.getMarkTime(), statisticEntity));
+            ccnDefectVO.setMark(convertMarkStatus(ccnDefectVO.getMark(), ccnDefectVO.getMarkTime(), statisticEntity.getTime()));
             return ccnDefectVO;
         }).collect(Collectors.toList());
 
@@ -185,7 +188,7 @@ public class CCNQueryWarningBizServiceImpl extends AbstractQueryWarningBizServic
         verifyFilePathIsValid(queryWarningDetailReq.getFilePath(), ccnDefectEntity.getFilePath());
 
         //根据文件路径从分析集群获取文件内容
-        String content = getFileContent(taskId, userId, ccnDefectEntity.getUrl(), ccnDefectEntity.getRepoId(),
+        String content = getFileContent(taskId, null, userId, ccnDefectEntity.getUrl(), ccnDefectEntity.getRepoId(),
             ccnDefectEntity.getRelPath(), ccnDefectEntity.getRevision(), ccnDefectEntity.getBranch(), ccnDefectEntity.getSubModule());
         content = trimCodeSegment(content, ccnDefectEntity.getStartLines(), ccnDefectEntity.getEndLines(), ccnDefectQueryRspVO);
 
@@ -215,14 +218,16 @@ public class CCNQueryWarningBizServiceImpl extends AbstractQueryWarningBizServic
         ccnDefectQueryRspVO.setFileName(filePath.substring(fileNameIndex + 1));
         ccnDefectQueryRspVO.setFileContent(content);
 
+        ccnDefectQueryRspVO.setRevision(ccnDefectEntity.getRevision());
+
         return ccnDefectQueryRspVO;
     }
 
     @Override
-    public QueryWarningPageInitRspVO processQueryWarningPageInitRequest(Long taskId, String toolName, Set<String> statusSet)
+    public QueryWarningPageInitRspVO processQueryWarningPageInitRequest(Long taskId, String toolName, String dimension, Set<String> statusSet, String checkerSet)
     {
         List<CCNDefectEntity> ccnDefectEntityList = ccnDefectRepository.findByTaskIdAndStatus(
-                taskId, ComConstants.DefectStatus.NEW.value());
+                taskId, DefectStatus.NEW.value());
 
         Set<String> authorSet = new TreeSet<>();
         Set<String> defectPaths = new TreeSet<>();
@@ -288,10 +293,12 @@ public class CCNQueryWarningBizServiceImpl extends AbstractQueryWarningBizServic
         return toolDefectRspVO;
     }
 
-
     @Override
-    public Set<String> filterDefectByCondition(long taskId, List<?> defectList, DefectQueryReqVO queryWarningReq, CommonDefectQueryRspVO defectQueryRspVO)
-    {
+    public Set<String> filterDefectByCondition(long taskId, List<?> defectList,
+                                               Set<String> allChecker,
+                                               DefectQueryReqVO queryWarningReq,
+                                               CommonDefectQueryRspVO defectQueryRspVO,
+                                               List<String> toolNameSet) {
         Set<String> severity = queryWarningReq.getSeverity();
         Set<String> conditionDefectType = queryWarningReq.getDefectType();
         String buildId = queryWarningReq.getBuildId();
@@ -300,7 +307,10 @@ public class CCNQueryWarningBizServiceImpl extends AbstractQueryWarningBizServic
         if (CollectionUtils.isEmpty(condStatusList))
         {
             condStatusList = new HashSet<>(1);
-            condStatusList.add(String.valueOf(ComConstants.DefectStatus.NEW.value()));
+            condStatusList.add(String.valueOf(DefectStatus.NEW.value()));
+        }
+        if (condStatusList.contains(String.valueOf(DefectStatus.PATH_MASK.value()))) {
+            condStatusList.add(String.valueOf(DefectStatus.CHECKER_MASK.value()));
         }
 
         // 获取风险系数值
@@ -314,7 +324,7 @@ public class CCNQueryWarningBizServiceImpl extends AbstractQueryWarningBizServic
         Set<String> currentBuildEntityIds = Sets.newHashSet();
         if (StringUtils.isNotEmpty(buildId))
         {
-            if (defectCommitSuccess(taskId, ComConstants.Tool.CCN.name(), buildId))
+            if (taskLogService.defectCommitSuccess(taskId, Lists.newArrayList(ComConstants.Tool.CCN.name()), buildId, getSubmitStepNum()).get(ComConstants.Tool.CCN.name()))
             {
                 List<BuildDefectEntity> buildFiles = buildDefectRepository.findByTaskIdAndToolNameAndBuildId(taskId, ComConstants.Tool.CCN.name(), buildId);
                 if (CollectionUtils.isNotEmpty(buildFiles))
@@ -339,6 +349,7 @@ public class CCNQueryWarningBizServiceImpl extends AbstractQueryWarningBizServic
         int existCount = 0;
         int fixCount = 0;
         int ignoreCount = 0;
+        int maskCount = 0;
 
         // 过滤计数
         Iterator<CCNDefectEntity> it = (Iterator<CCNDefectEntity>) defectList.iterator();
@@ -358,17 +369,21 @@ public class CCNQueryWarningBizServiceImpl extends AbstractQueryWarningBizServic
 
             // 根据状态过滤，注：已修复和其他状态（忽略，路径屏蔽，规则屏蔽）不共存，已忽略状态优先于屏蔽
             int status = ccnDefectEntity.getStatus();
-            if (ComConstants.DefectStatus.NEW.value() == status)
+            if (DefectStatus.NEW.value() == status)
             {
                 existCount++;
             }
-            else if ((ComConstants.DefectStatus.FIXED.value() & status) > 0)
+            else if ((DefectStatus.FIXED.value() & status) > 0)
             {
                 fixCount++;
             }
-            else if ((ComConstants.DefectStatus.IGNORE.value() & status) > 0)
+            else if ((DefectStatus.IGNORE.value() & status) > 0)
             {
                 ignoreCount++;
+            }
+            else if ((DefectStatus.PATH_MASK.value() & status) > 0
+                    || (DefectStatus.CHECKER_MASK.value() & status) > 0) {
+                maskCount++;
             }
             // 严重程度条件不为空且与当前数据的严重程度不匹配时，判断为true移除，否则false不移除
             if (notMatchStatus)
@@ -438,6 +453,7 @@ public class CCNQueryWarningBizServiceImpl extends AbstractQueryWarningBizServic
         ccnFileQueryRspVO.setExistCount(existCount);
         ccnFileQueryRspVO.setFixCount(fixCount);
         ccnFileQueryRspVO.setIgnoreCount(ignoreCount);
+        ccnFileQueryRspVO.setMaskCount(maskCount);
         ccnFileQueryRspVO.setNewDefectCount(newDefectCount);
         ccnFileQueryRspVO.setHistoryDefectCount(historyDefectCount);
         ccnFileQueryRspVO.setTotalCount(totalCheckerCount);

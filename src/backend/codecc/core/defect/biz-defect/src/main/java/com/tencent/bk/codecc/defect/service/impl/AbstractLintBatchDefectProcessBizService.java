@@ -10,12 +10,13 @@ import com.tencent.bk.codecc.defect.service.AbstractBatchDefectProcessBizService
 import com.tencent.bk.codecc.defect.service.CheckerService;
 import com.tencent.bk.codecc.defect.service.TaskLogService;
 import com.tencent.bk.codecc.defect.service.newdefectjudge.NewDefectJudgeService;
+import com.tencent.bk.codecc.defect.utils.ParamUtils;
 import com.tencent.bk.codecc.defect.vo.BatchDefectProcessReqVO;
 import com.tencent.bk.codecc.defect.vo.TaskLogVO;
 import com.tencent.bk.codecc.defect.vo.common.DefectQueryReqVO;
 import com.tencent.bk.codecc.task.api.ServiceTaskRestResource;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.ComConstants;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Lint类工具告警批量处理抽象类
@@ -59,22 +61,30 @@ public abstract class AbstractLintBatchDefectProcessBizService extends AbstractB
     @Override
     protected List getDefectsByQueryCond(long taskId, DefectQueryReqVO defectQueryReqVO)
     {
-        String toolName = defectQueryReqVO.getToolName();
+        List<String> toolNameSet = ParamUtils.getToolsByDimension(defectQueryReqVO.getToolName(), defectQueryReqVO.getDimension(), taskId);
+
+        if (CollectionUtils.isEmpty(toolNameSet)) {
+            return new ArrayList();
+        }
 
         String buildId = defectQueryReqVO.getBuildId();
         Set<String> conditionDefectType = defectQueryReqVO.getDefectType();
 
         //获取任务信息
-        CodeCCResult<TaskDetailVO> taskInfoResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
+        Result<TaskDetailVO> taskInfoResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
         TaskDetailVO taskDetailVO = taskInfoResult.getData();
 
         //1.获取相同包id下的规则集合
-        Set<String> pkgChecker = multitoolCheckerService.queryPkgRealCheckers(defectQueryReqVO.getPkgId(), toolName, taskDetailVO);
+        Set<String> pkgChecker = multitoolCheckerService.queryPkgRealCheckers(defectQueryReqVO.getPkgId(), toolNameSet, taskDetailVO);
 
         Set<String> defectIdSet = new HashSet<>();
-        if (StringUtils.isNotEmpty(buildId) && defectCommitSuccess(taskId, toolName, buildId))
+
+        if (StringUtils.isNotEmpty(buildId))
         {
-            List<BuildDefectEntity> buildFiles = buildDefectRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
+            Map<String, Boolean> toolDefectResultMap = taskLogService.defectCommitSuccess(taskId, toolNameSet, buildId, ComConstants.Step4MutliTool.COMMIT.value());
+            List<String> successTools = toolDefectResultMap.entrySet().stream().filter(Map.Entry::getValue).map(Map.Entry::getKey).collect(Collectors.toList());
+
+            List<BuildDefectEntity> buildFiles = buildDefectRepository.findByTaskIdAndToolNameInAndBuildId(taskId, successTools, buildId);
             if (CollectionUtils.isNotEmpty(buildFiles))
             {
                 for (BuildDefectEntity buildDefectEntity : buildFiles)
@@ -89,13 +99,13 @@ public abstract class AbstractLintBatchDefectProcessBizService extends AbstractB
                 && !conditionDefectType.containsAll(Sets.newHashSet(ComConstants.DefectType.NEW.stringValue(), ComConstants.DefectType.HISTORY.stringValue())))
         {
             // 查询新老告警判定时间
-            newDefectJudgeTime = newDefectJudgeService.getNewDefectJudgeTime(taskId, toolName, taskDetailVO);
+            newDefectJudgeTime = newDefectJudgeService.getNewDefectJudgeTime(taskId, taskDetailVO);
         }
 
         Map<String, Boolean> filedMap = new HashMap<>();
         filedMap.put("_id", true);
         filedMap.put("status", true);
-        List<LintDefectV2Entity> defectEntityList = lintDefectV2Dao.findDefectByCondition(taskId, defectQueryReqVO, defectIdSet, pkgChecker, newDefectJudgeTime, filedMap);
+        List<LintDefectV2Entity> defectEntityList = lintDefectV2Dao.findDefectByCondition(taskId, defectQueryReqVO, defectIdSet, pkgChecker, newDefectJudgeTime, filedMap, toolNameSet);
 
         return defectEntityList;
     }
@@ -128,23 +138,5 @@ public abstract class AbstractLintBatchDefectProcessBizService extends AbstractB
             }
         }
         return defecEntityList;
-    }
-
-    public boolean defectCommitSuccess(long taskId, String toolName, String buildId)
-    {
-        boolean result = false;
-        TaskLogVO taskLogVO = taskLogService.getBuildTaskLog(taskId, toolName, buildId);
-        if (taskLogVO != null && CollectionUtils.isNotEmpty(taskLogVO.getStepArray()))
-        {
-            for (TaskLogVO.TaskUnit taskUnit : taskLogVO.getStepArray())
-            {
-                if (ComConstants.Step4MutliTool.COMMIT.value() == taskUnit.getStepNum() && ComConstants.StepFlag.SUCC.value() == taskUnit.getFlag())
-                {
-                    result = true;
-                    break;
-                }
-            }
-        }
-        return result;
     }
 }

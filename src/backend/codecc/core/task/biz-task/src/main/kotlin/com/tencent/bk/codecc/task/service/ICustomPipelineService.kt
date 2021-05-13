@@ -11,7 +11,7 @@ interface ICustomPipelineService {
     fun handleWithCheckProjPipeline(
         triggerPipelineReq: TriggerPipelineOldReq,
         userId: String
-    ) : CustomProjEntity
+    ): CustomProjEntity
 
     /**
      * 新建个性化触发流水线
@@ -31,12 +31,12 @@ interface ICustomPipelineService {
     /**
      * 获取流水线启动参数
      */
-    fun getParamMap(customProjEntity: CustomProjEntity) : MutableMap<String, String>
+    fun getParamMap(customProjEntity: CustomProjEntity): MutableMap<String, String>
 
     /**
      * 获取对应个性化业务类
      */
-    fun getCustomProjEntity(triggerPipelineReq: TriggerPipelineOldReq) : CustomProjEntity?
+    fun getCustomProjEntity(triggerPipelineReq: TriggerPipelineOldReq): CustomProjEntity?
 
     /**
      * 更新个性化触发流水线
@@ -46,6 +46,6 @@ interface ICustomPipelineService {
         taskId: Long,
         userId: String?,
         projectId: String,
-        pipelineId : String
+        pipelineId: String
     )
 }
