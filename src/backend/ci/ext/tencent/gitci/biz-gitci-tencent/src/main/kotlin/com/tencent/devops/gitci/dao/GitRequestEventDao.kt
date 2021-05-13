@@ -260,4 +260,44 @@ class GitRequestEventDao {
                 .where(ID.`in`(ids)).execute()
         }
     }
+
+    /**
+     * 根据ID批量查询
+     */
+    fun getRequestsById(
+        dslContext: DSLContext,
+        requestIds: Set<Int>
+    ): List<GitRequestEvent> {
+        with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
+            val records = dslContext.selectFrom(this)
+                .where(ID.`in`(requestIds))
+                .orderBy(ID.desc())
+                .fetch()
+            val result = mutableListOf<GitRequestEvent>()
+            records.forEach {
+                result.add(
+                    GitRequestEvent(
+                        id = it.id,
+                        objectKind = it.objectKind,
+                        operationKind = it.operationKind,
+                        extensionAction = it.extensionAction,
+                        gitProjectId = it.gitProjectId,
+                        sourceGitProjectId = it.sourceGitProjectId,
+                        branch = it.branch,
+                        targetBranch = it.targetBranch,
+                        commitId = it.commitId,
+                        commitMsg = it.commitMsg,
+                        commitTimeStamp = it.commitTimestamp,
+                        userId = it.userName,
+                        totalCommitCount = it.totalCommitCount,
+                        mergeRequestId = it.mergeRequestId,
+                        event = "", // record.event,
+                        description = it.description,
+                        mrTitle = it.mrTitle
+                    )
+                )
+            }
+            return result
+        }
+    }
 }

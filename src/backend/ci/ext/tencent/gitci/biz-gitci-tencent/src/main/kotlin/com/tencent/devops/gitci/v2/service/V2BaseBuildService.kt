@@ -60,7 +60,8 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
-    private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao
+    private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
+    private val gitCIEventSaveService: GitCIEventSaveService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(V2BaseBuildService::class.java)
@@ -150,8 +151,8 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
                 e
             )
             val build = gitRequestEventBuildDao.getByGitBuildId(dslContext, gitBuildId)
-            gitRequestEventNotBuildDao.save(
-                dslContext = dslContext,
+            gitCIEventSaveService.saveNotBuildEvent(
+                userId = event.userId,
                 eventId = event.id!!,
                 pipelineId = pipeline.pipelineId,
                 filePath = pipeline.filePath,
