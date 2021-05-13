@@ -42,15 +42,15 @@ pipeline:
       stage:
         maxJobNum: 20
         job: 
-          maxTaskNum: 20
+          maxTaskNum: 50
           task:
-            maxInputNum: 50
-            maxOutputNum: 50
+            maxInputNum: 100
+            maxOutputNum: 100
             inputComponent:
                        input: 
                           size: 1024
                        textarea: 
-                          size: 4096
+                          size: 16384
                        codeEditor: 
                           size: 16384
                        default: 

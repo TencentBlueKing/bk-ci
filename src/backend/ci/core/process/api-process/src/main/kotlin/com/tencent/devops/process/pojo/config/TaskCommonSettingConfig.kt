@@ -33,17 +33,17 @@ import org.springframework.stereotype.Component
 @Component
 class TaskCommonSettingConfig {
 
-    @Value("\${pipeline.setting.common.stage.job.task.maxInputNum:50}")
-    val maxInputNum: Int = 50
+    @Value("\${pipeline.setting.common.stage.job.task.maxInputNum:100}")
+    val maxInputNum: Int = 100
 
-    @Value("\${pipeline.setting.common.stage.job.task.maxOutputNum:50}")
-    val maxOutputNum: Int = 50
+    @Value("\${pipeline.setting.common.stage.job.task.maxOutputNum:100}")
+    val maxOutputNum: Int = 100
 
     @Value("\${pipeline.setting.common.stage.job.task.inputComponent.input.size:1024}")
     val maxInputComponentSize: Int = 1024
 
-    @Value("\${pipeline.setting.common.stage.job.task.inputComponent.textarea.size:4096}")
-    val maxTextareaComponentSize: Int = 4096
+    @Value("\${pipeline.setting.common.stage.job.task.inputComponent.textarea.size:16384}")
+    val maxTextareaComponentSize: Int = 16384
 
     @Value("\${pipeline.setting.common.stage.job.task.inputComponent.codeEditor.size:16384}")
     val maxCodeEditorComponentSize: Int = 16384

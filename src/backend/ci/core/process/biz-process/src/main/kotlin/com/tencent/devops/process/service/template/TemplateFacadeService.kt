@@ -1911,6 +1911,17 @@ class TemplateFacadeService @Autowired constructor(
         checkPipelineParam(template)
     }
 
+    fun checkTemplate(templateId: String, projectId: String? = null): Boolean {
+        val templateRecord = templateDao.getLatestTemplate(dslContext, templateId)
+        val modelStr = templateRecord.template
+        if (modelStr != null) {
+            val model = JsonUtil.to(modelStr, Model::class.java)
+            checkTemplate(model, projectId)
+        }
+        return true
+    }
+
+
     /**
      * 模板的流水线变量和模板常量不能相同
      */
