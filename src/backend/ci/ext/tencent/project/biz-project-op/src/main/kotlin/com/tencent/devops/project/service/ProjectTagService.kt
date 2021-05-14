@@ -37,10 +37,10 @@ import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_REDIS_KEY
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.project.api.op.pojo.OpProjectTagUpdateDTO
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectTagDao
 import com.tencent.devops.project.pojo.ProjectExtSystemTagDTO
+import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -63,50 +63,50 @@ class ProjectTagService @Autowired constructor(
     val routerTagList: String = ""
 
     fun updateTagByProject(
-        opProjectTagUpdateDTO: OpProjectTagUpdateDTO
+        projectTagUpdateDTO: ProjectTagUpdateDTO
     ): Result<Boolean> {
-        logger.info("updateTagByProject: $opProjectTagUpdateDTO")
-        checkRouteTag(opProjectTagUpdateDTO.routerTag)
-        checkProject(opProjectTagUpdateDTO.projectCodeList)
+        logger.info("updateTagByProject: $projectTagUpdateDTO")
+        checkRouteTag(projectTagUpdateDTO.routerTag)
+        checkProject(projectTagUpdateDTO.projectCodeList)
         projectTagDao.updateProjectTags(
             dslContext = dslContext,
-            projectIds = opProjectTagUpdateDTO.projectCodeList!!,
-            routerTag = opProjectTagUpdateDTO.routerTag
+            projectIds = projectTagUpdateDTO.projectCodeList!!,
+            routerTag = projectTagUpdateDTO.routerTag
         )
         executePool.submit {
             refreshRouterByProject(
-                routerTag = opProjectTagUpdateDTO.routerTag,
+                routerTag = projectTagUpdateDTO.routerTag,
                 redisOperation = redisOperation,
-                projectCodeIds = opProjectTagUpdateDTO.projectCodeList!!
+                projectCodeIds = projectTagUpdateDTO.projectCodeList!!
             )
         }
         return Result(true)
     }
 
     fun updateTagByOrg(
-        opProjectTagUpdateDTO: OpProjectTagUpdateDTO
+        projectTagUpdateDTO: ProjectTagUpdateDTO
     ): Result<Boolean> {
-        logger.info("updateTagByOrg: $opProjectTagUpdateDTO")
-        checkRouteTag(opProjectTagUpdateDTO.routerTag)
-        checkOrg(opProjectTagUpdateDTO)
+        logger.info("updateTagByOrg: $projectTagUpdateDTO")
+        checkRouteTag(projectTagUpdateDTO.routerTag)
+        checkOrg(projectTagUpdateDTO)
         projectTagDao.updateOrgTags(
             dslContext = dslContext,
-            routerTag = opProjectTagUpdateDTO.routerTag,
-            bgId = opProjectTagUpdateDTO.bgId,
-            centerId = opProjectTagUpdateDTO.centerId,
-            deptId = opProjectTagUpdateDTO.deptId
+            routerTag = projectTagUpdateDTO.routerTag,
+            bgId = projectTagUpdateDTO.bgId,
+            centerId = projectTagUpdateDTO.centerId,
+            deptId = projectTagUpdateDTO.deptId
         )
 
         val projectCodes = projectDao.listByGroupId(
             dslContext = dslContext,
-            bgId = opProjectTagUpdateDTO.bgId,
-            centerId = opProjectTagUpdateDTO.centerId,
-            deptId = opProjectTagUpdateDTO.deptId
+            bgId = projectTagUpdateDTO.bgId,
+            centerId = projectTagUpdateDTO.centerId,
+            deptId = projectTagUpdateDTO.deptId
         ).map { it.englishName }
 
         executePool.submit {
             refreshRouterByProject(
-                routerTag = opProjectTagUpdateDTO.routerTag,
+                routerTag = projectTagUpdateDTO.routerTag,
                 redisOperation = redisOperation,
                 projectCodeIds = projectCodes
             )
@@ -115,22 +115,22 @@ class ProjectTagService @Autowired constructor(
     }
 
     fun updateTagByChannel(
-        opProjectTagUpdateDTO: OpProjectTagUpdateDTO
+        projectTagUpdateDTO: ProjectTagUpdateDTO
     ): Result<Boolean> {
-        logger.info("updateTagByChannel: $opProjectTagUpdateDTO")
-        checkRouteTag(opProjectTagUpdateDTO.routerTag)
-        checkChannel(opProjectTagUpdateDTO.channel)
+        logger.info("updateTagByChannel: $projectTagUpdateDTO")
+        checkRouteTag(projectTagUpdateDTO.routerTag)
+        checkChannel(projectTagUpdateDTO.channel)
         projectTagDao.updateChannelTags(
             dslContext = dslContext,
-            routerTag = opProjectTagUpdateDTO.routerTag,
-            channel = opProjectTagUpdateDTO.channel!!
+            routerTag = projectTagUpdateDTO.routerTag,
+            channel = projectTagUpdateDTO.channel!!
         )
 
         executePool.submit {
             refreshRouterByChannel(
-                routerTag = opProjectTagUpdateDTO.routerTag,
+                routerTag = projectTagUpdateDTO.routerTag,
                 redisOperation = redisOperation,
-                channel = opProjectTagUpdateDTO.channel!!,
+                channel = projectTagUpdateDTO.channel!!,
                 dslContext = dslContext
             )
         }
@@ -198,10 +198,10 @@ class ProjectTagService @Autowired constructor(
         }
     }
 
-    private fun checkOrg(opProjectTagUpdateDTO: OpProjectTagUpdateDTO) {
-        if (opProjectTagUpdateDTO.bgId == null &&
-            opProjectTagUpdateDTO.deptId == null &&
-            opProjectTagUpdateDTO.centerId == null
+    private fun checkOrg(projectTagUpdateDTO: ProjectTagUpdateDTO) {
+        if (projectTagUpdateDTO.bgId == null &&
+            projectTagUpdateDTO.deptId == null &&
+            projectTagUpdateDTO.centerId == null
         ) {
             throw ParamBlankException("Invalid project org")
         }
