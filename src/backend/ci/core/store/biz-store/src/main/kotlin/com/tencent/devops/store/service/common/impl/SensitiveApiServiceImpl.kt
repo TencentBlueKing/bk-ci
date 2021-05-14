@@ -171,13 +171,13 @@ class SensitiveApiServiceImpl @Autowired constructor(
             dslContext = dslContext,
             id = id
         ) ?: throw ErrorCodeException(
-            errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+            errorCode = StoreMessageCode.SENSITIVE_API_NOT_EXIST,
             params = arrayOf("id"),
-            defaultMessage = "参数id不能为空"
+            defaultMessage = "研发商店：敏感API[$id]不存在"
         )
         if (record.apiStatus == ApiStatusEnum.PASS.name) {
             throw ErrorCodeException(
-                errorCode = StoreMessageCode.API_PASS_IS_NOT_ALLOW_CANCEL,
+                errorCode = StoreMessageCode.SENSITIVE_API_PASSED_IS_NOT_ALLOW_CANCEL,
                 defaultMessage = "研发商店：敏感API已经审批通过不能取消"
             )
         }
@@ -202,13 +202,13 @@ class SensitiveApiServiceImpl @Autowired constructor(
                 dslContext = dslContext,
                 id = id
             ) ?: throw ErrorCodeException(
-                errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                errorCode = StoreMessageCode.SENSITIVE_API_NOT_EXIST,
                 params = arrayOf("id"),
-                defaultMessage = "参数id不能为空"
+                defaultMessage = "研发商店：敏感API[$id]不存在"
             )
             if (record.apiStatus == ApiStatusEnum.CANCEL.name) {
                 throw ErrorCodeException(
-                    errorCode = StoreMessageCode.API_APPROVE_IS_NOT_ALLOW_PASS,
+                    errorCode = StoreMessageCode.SENSITIVE_API_APPROVED_IS_NOT_ALLOW_PASS,
                     defaultMessage = "研发商店：敏感API已经取消不能审批"
                 )
             }
