@@ -17,12 +17,12 @@
 -- SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 local x_ckey = ngx.var.http_x_ckey -- 内部用户
 if nil == x_ckey then
-    x_ckey = urlUtil:parseUrl(ngx.var.request_uri)["ckey"]
+    x_ckey = urlUtil:parseUrl(ngx.var.request_uri)["cKey"]
 end
 
 local x_otoken = ngx.var.http_x_otoken -- 外部用户
 if nil == x_otoken then
-    x_otoken = urlUtil:parseUrl(ngx.var.request_uri)["otoken"]
+    x_otoken = urlUtil:parseUrl(ngx.var.request_uri)["oToken"]
 end
 
 if x_ckey == nil and x_otoken == nil then
