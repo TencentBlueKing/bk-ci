@@ -679,6 +679,8 @@
         "selectOptions": "下拉选项",
         "optionsDesc": "用换行符分隔选项，选项不能包含英文逗号，重复的选项将只会显示一个, 选项支持【{id}={name} | {id}】两种格式",
         "optionTips": "多行记录请换行输入",
+        "chineseName": "中文名称",
+        "chineseNameTips": "请输入中文名称",
         "svnParams": "请选择svn代码库",
         "relativePath": "代码库相对目录",
         "relativePathTips": "请填写代码库相对目录,如为空则会拉取所选代码库的根路径下的子目录",

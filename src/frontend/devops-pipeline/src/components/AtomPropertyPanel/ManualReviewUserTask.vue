@@ -1,6 +1,7 @@
 <template>
     <div class="bk-form bk-form-vertical">
         <form-field v-for="(obj, key) in atomPropsModel" :key="key" :desc="obj.desc" :required="obj.required" :label="obj.label" :is-error="errors.has(key)" :error-msg="errors.first(key)">
+            {{ obj.component }}
             <component
                 :is="obj.component"
                 v-bind="obj"
