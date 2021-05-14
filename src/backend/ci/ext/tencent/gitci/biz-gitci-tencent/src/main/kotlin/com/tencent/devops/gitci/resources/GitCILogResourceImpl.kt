@@ -44,6 +44,7 @@ class GitCILogResourceImpl @Autowired constructor(
         gitProjectId: Long,
         pipelineId: String,
         buildId: String,
+        debug: Boolean?,
         tag: String?,
         jobId: String?,
         executeCount: Int?
@@ -53,6 +54,7 @@ class GitCILogResourceImpl @Autowired constructor(
             gitProjectId = gitProjectId,
             pipelineId = pipelineId,
             buildId = buildId,
+            debug = debug,
             tag = tag,
             jobId = jobId,
             executeCount = executeCount
@@ -64,6 +66,7 @@ class GitCILogResourceImpl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         start: Long,
+        debug: Boolean?,
         tag: String?,
         jobId: String?,
         executeCount: Int?
@@ -74,6 +77,7 @@ class GitCILogResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             start = start,
+            debug = debug,
             tag = tag,
             jobId = jobId,
             executeCount = executeCount

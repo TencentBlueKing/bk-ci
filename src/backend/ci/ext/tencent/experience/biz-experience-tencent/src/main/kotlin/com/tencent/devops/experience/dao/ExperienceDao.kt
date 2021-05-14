@@ -122,7 +122,6 @@ class ExperienceDao {
         endDate: LocalDateTime,
         experienceGroups: String,
         innerUsers: String,
-        outerUsers: String,
         notifyTypes: String,
         enableWechatGroup: Boolean,
         wechatGroups: String,
@@ -184,7 +183,7 @@ class ExperienceDao {
                 endDate,
                 experienceGroups,
                 innerUsers,
-                outerUsers,
+                "",
                 notifyTypes,
                 enableWechatGroup,
                 wechatGroups,
@@ -229,7 +228,6 @@ class ExperienceDao {
         endDate: LocalDateTime,
         experienceGroups: String,
         innerUsers: String,
-        outerUsers: String,
         notifyTypes: String,
         enableWechatGroup: Boolean,
         wechatGroups: String,
@@ -247,7 +245,7 @@ class ExperienceDao {
                 .set(END_DATE, endDate)
                 .set(EXPERIENCE_GROUPS, experienceGroups)
                 .set(INNER_USERS, innerUsers)
-                .set(OUTER_USERS, outerUsers)
+                .set(OUTER_USERS, "")
                 .set(NOTIFY_TYPES, notifyTypes)
                 .set(ENABLE_WECHAT_GROUPS, enableWechatGroup)
                 .set(WECHAT_GROUPS, wechatGroups)
@@ -313,12 +311,14 @@ class ExperienceDao {
         expireTime: LocalDateTime,
         online: Boolean,
         offset: Int,
-        limit: Int
+        limit: Int,
+        experienceName: String?
     ): Result<TExperienceRecord> {
         return with(TExperience.T_EXPERIENCE) {
             dslContext.selectFrom(this)
                 .where(ID.`in`(ids))
                 .let { if (null == platform) it else it.and(PLATFORM.eq(platform)) }
+                .let { if (null == experienceName) it else it.and(EXPERIENCE_NAME.like("%$experienceName%")) }
                 .and(END_DATE.gt(expireTime))
                 .and(ONLINE.eq(online))
                 .orderBy(CREATE_TIME.desc())

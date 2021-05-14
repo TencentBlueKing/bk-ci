@@ -39,6 +39,7 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.api.util.OkhttpUtils.stringLimit
 import com.tencent.devops.common.api.util.script.CommonScriptUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
@@ -106,6 +107,7 @@ class GitService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(GitService::class.java)
         private val gitOauthApi = GitOauthApi()
+        private const val MAX_FILE_SIZE = 1 * 1024 * 1024
     }
 
     @Value("\${gitCI.clientId}")
@@ -632,7 +634,7 @@ class GitService @Autowired constructor(
                     .build()
             }
             OkhttpUtils.doHttp(request).use {
-                val data = it.body()!!.string()
+                val data = it.stringLimit(readLimit = MAX_FILE_SIZE, errorMsg = "请求文件不能超过1M")
                 if (!it.isSuccessful) throw RuntimeException("fail to get git file content with: $url($data)")
                 return data
             }
@@ -664,7 +666,7 @@ class GitService @Autowired constructor(
             val projectFileUrl = "$apiUrl/projects/$encodeProjectName/repository/files/$encodeFilePath?ref=$encodeRef"
             logger.info(projectFileUrl)
             OkhttpUtils.doGet(projectFileUrl, headers).use { response ->
-                val body = response.body()!!.string()
+                val body = response.stringLimit(readLimit = MAX_FILE_SIZE, errorMsg = "请求文件不能超过1M")
                 val fileInfo = objectMapper.readValue(body, GitlabFileInfo::class.java)
                 return String(Base64.getDecoder().decode(fileInfo.content))
             }
@@ -1325,6 +1327,26 @@ class GitService @Autowired constructor(
             )
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to unlock webhook lock")
+        }
+    }
+
+    fun clearToken(token: String): Boolean {
+        logger.info("Start to clear the token: $token")
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val tokenUrl = "$gitCIOauthUrl/oauth/token" +
+                "?client_id=$gitCIClientId&client_secret=$gitCIClientSecret&access_token=$token"
+            val request = Request.Builder()
+                .url(tokenUrl)
+                .delete(RequestBody.create(MediaType.parse("application/x-www-form-urlencoded;charset=utf-8"), ""))
+                .build()
+
+            OkhttpUtils.doHttp(request).use { response ->
+                logger.info("Clear token response code: ${response.code()}")
+                return response.isSuccessful
+            }
+        } finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to clear the token")
         }
     }
 }

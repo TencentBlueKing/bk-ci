@@ -59,6 +59,7 @@ class GitCILogService @Autowired constructor(
         gitProjectId: Long,
         pipelineId: String,
         buildId: String,
+        debug: Boolean?,
         tag: String?,
         jobId: String?,
         executeCount: Int?
@@ -73,7 +74,7 @@ class GitCILogService @Autowired constructor(
             tag = tag,
             jobId = jobId,
             executeCount = executeCount,
-            queryKeywords = null
+            debug = debug
         ).data!!
     }
 
@@ -82,6 +83,7 @@ class GitCILogService @Autowired constructor(
         pipelineId: String,
         buildId: String,
         start: Long,
+        debug: Boolean?,
         tag: String?,
         jobId: String?,
         executeCount: Int?
@@ -96,7 +98,7 @@ class GitCILogService @Autowired constructor(
             tag = tag,
             jobId = jobId,
             executeCount = executeCount,
-            queryKeywords = null
+            debug = debug
         ).data!!
     }
 
