@@ -41,6 +41,7 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.experience.constant.ExperienceConditionEnum
+import com.tencent.devops.experience.constant.ExperienceConstant.ORGANIZATION_OUTER
 import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.constant.ProductCategoryEnum
@@ -83,24 +84,32 @@ class ExperienceAppService(
         offset: Int,
         limit: Int,
         groupByBundleId: Boolean,
-        platform: Int? = null
+        platform: Int? = null,
+        organization: String? = null
     ): Pagination<AppExperience> {
         return experienceBaseService.list(
             userId = userId,
             offset = offset,
             limit = limit,
             groupByBundleId = groupByBundleId,
-            platform = platform
+            platform = platform,
+            isOuter = organization == ORGANIZATION_OUTER
         )
     }
 
     @SuppressWarnings("ComplexMethod")
-    fun detail(userId: String, experienceHashId: String, platform: Int, appVersion: String?): AppExperienceDetail {
+    fun detail(
+        userId: String,
+        experienceHashId: String,
+        platform: Int,
+        appVersion: String?,
+        organization: String?
+    ): AppExperienceDetail {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
         val isOldVersion = VersionUtil.compare(appVersion, "2.0.0") < 0
 
         val isPublic = experienceBaseService.isPublic(experienceId)
-        val isInPrivate = experienceBaseService.isInPrivate(experienceId, userId)
+        val isInPrivate = experienceBaseService.isInPrivate(experienceId, userId, organization == ORGANIZATION_OUTER)
 
         // 新版本且没权限
         if (!isOldVersion && !isPublic && !isInPrivate) {
@@ -198,7 +207,8 @@ class ExperienceAppService(
         userId: String,
         experienceHashId: String,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        organization: String?
     ): Pagination<ExperienceChangeLog> {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
         val experience = experienceDao.get(dslContext, experienceId)
@@ -210,7 +220,8 @@ class ExperienceAppService(
                 platform = experience.platform,
                 page = if (page <= 0) 1 else page,
                 pageSize = if (pageSize <= 0) 10 else pageSize,
-                isOldVersion = false
+                isOldVersion = false,
+                isOuter = organization == ORGANIZATION_OUTER
             )
         val hasNext = if (changeLog.size < pageSize) {
             false
@@ -233,9 +244,10 @@ class ExperienceAppService(
         platform: String?,
         page: Int,
         pageSize: Int,
-        isOldVersion: Boolean
+        isOldVersion: Boolean,
+        isOuter: Boolean = false
     ): List<ExperienceChangeLog> {
-        val recordIds = experienceBaseService.getRecordIdsByUserId(userId, GroupIdTypeEnum.JUST_PRIVATE)
+        val recordIds = experienceBaseService.getRecordIdsByUserId(userId, GroupIdTypeEnum.JUST_PRIVATE, isOuter)
         val now = LocalDateTime.now()
         val lastDownloadRecord = platform?.let {
             experienceLastDownloadDao.get(
@@ -296,9 +308,13 @@ class ExperienceAppService(
         }
     }
 
-    fun downloadUrl(userId: String, experienceHashId: String): DownloadUrl {
+    fun downloadUrl(userId: String, experienceHashId: String, organization: String?): DownloadUrl {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
-        return experienceDownloadService.getExternalDownloadUrl(userId, experienceId)
+        return experienceDownloadService.getExternalDownloadUrl(
+            userId = userId,
+            experienceId = experienceId,
+            isOuter = organization == ORGANIZATION_OUTER
+        )
     }
 
     fun history(userId: String, appVersion: String?, projectId: String): List<AppExperienceSummary> {

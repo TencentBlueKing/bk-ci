@@ -149,7 +149,7 @@ class ExperienceTaskAtom @Autowired constructor(
             expireDate = expireDate,
             experienceGroups = experienceGroups,
             innerUsers = innerUsers,
-            outerUsers = outerUsers,
+            outerUsers = emptySet(),
             notifyTypes = notifyTypeSet,
             enableWechatGroups = enableGroupId,
             wechatGroups = groupId,
