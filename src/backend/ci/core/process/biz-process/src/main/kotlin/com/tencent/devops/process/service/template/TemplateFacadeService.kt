@@ -1921,7 +1921,6 @@ class TemplateFacadeService @Autowired constructor(
         return true
     }
 
-
     /**
      * 模板的流水线变量和模板常量不能相同
      */
