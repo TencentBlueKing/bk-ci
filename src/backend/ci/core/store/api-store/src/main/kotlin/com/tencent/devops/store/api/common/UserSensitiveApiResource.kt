@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.SensitiveApiApplyReq
 import com.tencent.devops.store.pojo.common.SensitiveApiInfo
+import com.tencent.devops.store.pojo.common.SensitiveApiNameInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -66,8 +67,11 @@ interface UserSensitiveApiResource {
         storeType: StoreTypeEnum,
         @ApiParam("组件标识", required = true)
         @PathParam("storeCode")
-        storeCode: String
-    ): Result<List<String>>
+        storeCode: String,
+        @ApiParam("组件标识", required = true)
+        @QueryParam("language")
+        language: String
+    ): Result<List<SensitiveApiNameInfo>>
 
     @ApiOperation("敏感API申请")
     @Path("apply")

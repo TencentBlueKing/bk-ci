@@ -35,5 +35,7 @@ data class SensitiveApiApplyReq(
     @ApiModelProperty("api列表", required = true)
     val apiNameList: List<String>,
     @ApiModelProperty("申请说明", required = true)
-    val applyDesc: String
+    val applyDesc: String,
+    @ApiModelProperty("插件使用的语言", required = true)
+    val language: String
 )

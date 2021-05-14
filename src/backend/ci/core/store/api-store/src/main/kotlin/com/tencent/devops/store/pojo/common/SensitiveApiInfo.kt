@@ -41,6 +41,8 @@ data class SensitiveApiInfo(
     val storeCode: String,
     @ApiModelProperty("API名称", required = true)
     val apiName: String,
+    @ApiModelProperty("API别名,不同语言SDK中敏感API对应的方法名", required = true)
+    val aliasName: String,
     @ApiModelProperty("API等级 NORMAL: 普通 SENSITIVE: 敏感", required = true)
     val apiLevel: String,
     @ApiModelProperty("API状态 WAIT:待审批，PASS:通过，REFUSE:拒绝, CANCEL: 取消", required = true)

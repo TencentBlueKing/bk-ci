@@ -33,6 +33,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.UserSensitiveApiResource
 import com.tencent.devops.store.pojo.common.SensitiveApiApplyReq
 import com.tencent.devops.store.pojo.common.SensitiveApiInfo
+import com.tencent.devops.store.pojo.common.SensitiveApiNameInfo
 import com.tencent.devops.store.pojo.common.SensitiveApiSearchDTO
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.SensitiveApiService
@@ -45,12 +46,14 @@ class UserSensitiveApiResourceImpl @Autowired constructor(
     override fun unApprovalApiList(
         userId: String,
         storeType: StoreTypeEnum,
-        storeCode: String
-    ): Result<List<String>> {
+        storeCode: String,
+        language: String
+    ): Result<List<SensitiveApiNameInfo>> {
         return sensitiveApiService.unApprovalApiList(
             userId = userId,
             storeType = storeType,
-            storeCode = storeCode
+            storeCode = storeCode,
+            language = language
         )
     }
 

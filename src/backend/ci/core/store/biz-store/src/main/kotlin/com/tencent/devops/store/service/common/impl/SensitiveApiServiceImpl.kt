@@ -29,13 +29,13 @@ package com.tencent.devops.store.service.common.impl
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.PageUtil.DEFAULT_PAGE_SIZE
 import com.tencent.devops.common.api.util.UUIDUtil
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.common.SensitiveApiDao
@@ -44,6 +44,7 @@ import com.tencent.devops.store.pojo.common.SensitiveApiApproveReq
 import com.tencent.devops.store.pojo.common.SensitiveApiConfig
 import com.tencent.devops.store.pojo.common.SensitiveApiCreateDTO
 import com.tencent.devops.store.pojo.common.SensitiveApiInfo
+import com.tencent.devops.store.pojo.common.SensitiveApiNameInfo
 import com.tencent.devops.store.pojo.common.SensitiveApiSearchDTO
 import com.tencent.devops.store.pojo.common.SensitiveApiUpdateDTO
 import com.tencent.devops.store.pojo.common.enums.ApiLevelEnum
@@ -72,18 +73,10 @@ class SensitiveApiServiceImpl @Autowired constructor(
     override fun unApprovalApiList(
         userId: String,
         storeType: StoreTypeEnum,
-        storeCode: String
-    ): Result<List<String>> {
-        val businessConfigRecord = businessConfigDao.get(
-            dslContext = dslContext,
-            business = BusinessEnum.ATOM.name,
-            feature = BUSINESS_CONFIG_FEATURE,
-            businessValue = BUSINESS_CONFIG_VALUE
-        ) ?: return Result(emptyList())
-        val sensitiveApiConfigList = JsonUtil.to(
-            json = businessConfigRecord.configValue,
-            typeReference = object : TypeReference<List<SensitiveApiConfig>>() {}
-        )
+        storeCode: String,
+        language: String
+    ): Result<List<SensitiveApiNameInfo>> {
+        val sensitiveApiConfigList = getSensitiveApiConfig()
         val approvedApiList = sensitiveApiDao.getApprovedApiNameList(
             dslContext = dslContext,
             storeCode = storeCode,
@@ -91,8 +84,21 @@ class SensitiveApiServiceImpl @Autowired constructor(
         )
         return Result(
             sensitiveApiConfigList.filter { !approvedApiList.contains(it.apiName) }
-                .map { it.apiName }
+                .map { SensitiveApiNameInfo(it.apiName, it.aliasNames[language] ?: it.apiName) }
                 .toList()
+        )
+    }
+
+    private fun getSensitiveApiConfig(): List<SensitiveApiConfig> {
+        val businessConfigRecord = businessConfigDao.get(
+            dslContext = dslContext,
+            business = BusinessEnum.ATOM.name,
+            feature = BUSINESS_CONFIG_FEATURE,
+            businessValue = BUSINESS_CONFIG_VALUE
+        ) ?: return emptyList()
+        return JsonUtil.to(
+            json = businessConfigRecord.configValue,
+            typeReference = object : TypeReference<List<SensitiveApiConfig>>() {}
         )
     }
 
@@ -104,24 +110,28 @@ class SensitiveApiServiceImpl @Autowired constructor(
     ): Result<Boolean> {
         with(sensitiveApiApplyReq) {
             if (sensitiveApiApplyReq.applyDesc.isBlank()) {
-                return MessageCodeUtil.generateResponseDataObject(
-                    messageCode = CommonMessageCode.PARAMETER_IS_NULL,
-                    params = arrayOf("applyDesc"),
-                    data = false
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.PARAMETER_IS_NULL,
+                    params = arrayOf("applyDesc")
                 )
             }
-            val sensitiveApiCreateDTOs = apiNameList.filter { it.isNotBlank() }.map { apiName ->
-                SensitiveApiCreateDTO(
-                    id = UUIDUtil.generate(),
-                    userId = userId,
-                    storeType = storeType,
-                    storeCode = storeCode,
-                    apiName = apiName,
-                    applyDesc = applyDesc,
-                    apiStatus = ApiStatusEnum.WAIT,
-                    apiLevel = ApiLevelEnum.SENSITIVE
-                )
-            }
+            val sensitiveApiNameMap = getSensitiveApiConfig().associateBy { it.apiName }
+            val sensitiveApiCreateDTOs =
+                apiNameList.filter { it.isNotBlank() }
+                    .filter { sensitiveApiNameMap.containsKey(it) }
+                    .map { apiName ->
+                        SensitiveApiCreateDTO(
+                            id = UUIDUtil.generate(),
+                            userId = userId,
+                            storeType = storeType,
+                            storeCode = storeCode,
+                            apiName = apiName,
+                            aliasName = sensitiveApiNameMap[apiName]!!.aliasNames[language] ?: apiName,
+                            applyDesc = applyDesc,
+                            apiStatus = ApiStatusEnum.WAIT,
+                            apiLevel = ApiLevelEnum.SENSITIVE
+                        )
+                    }
             sensitiveApiDao.create(
                 dslContext = dslContext,
                 sensitiveApiCreateDTOs = sensitiveApiCreateDTOs
@@ -151,7 +161,6 @@ class SensitiveApiServiceImpl @Autowired constructor(
         return Result(Page(pageNotNull, pageSizeNotNull, count, record))
     }
 
-    @Suppress("ReturnCount")
     override fun cancel(
         userId: String,
         storeType: StoreTypeEnum,
@@ -161,15 +170,15 @@ class SensitiveApiServiceImpl @Autowired constructor(
         val record = sensitiveApiDao.get(
             dslContext = dslContext,
             id = id
-        ) ?: return MessageCodeUtil.generateResponseDataObject(
-            messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+        ) ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.PARAMETER_IS_NULL,
             params = arrayOf("id"),
-            data = false
+            defaultMessage = "参数id不能为空"
         )
         if (record.apiStatus == ApiStatusEnum.PASS.name) {
-            return MessageCodeUtil.generateResponseDataObject(
-                messageCode = StoreMessageCode.API_PASS_IS_NOT_ALLOW_CANCEL,
-                data = false
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.API_PASS_IS_NOT_ALLOW_CANCEL,
+                defaultMessage = "研发商店：敏感API已经审批通过不能取消"
             )
         }
         val updateDTO = SensitiveApiUpdateDTO(
@@ -184,7 +193,6 @@ class SensitiveApiServiceImpl @Autowired constructor(
         return Result(true)
     }
 
-    @Suppress("ReturnCount")
     override fun approve(
         userId: String,
         sensitiveApiApproveReq: SensitiveApiApproveReq
@@ -193,15 +201,15 @@ class SensitiveApiServiceImpl @Autowired constructor(
             val record = sensitiveApiDao.get(
                 dslContext = dslContext,
                 id = id
-            ) ?: return MessageCodeUtil.generateResponseDataObject(
-                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+            ) ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_NULL,
                 params = arrayOf("id"),
-                data = false
+                defaultMessage = "参数id不能为空"
             )
             if (record.apiStatus == ApiStatusEnum.CANCEL.name) {
-                return MessageCodeUtil.generateResponseDataObject(
-                    messageCode = StoreMessageCode.API_APPROVE_IS_NOT_ALLOW_PASS,
-                    data = false
+                throw ErrorCodeException(
+                    errorCode = StoreMessageCode.API_APPROVE_IS_NOT_ALLOW_PASS,
+                    defaultMessage = "研发商店：敏感API已经取消不能审批"
                 )
             }
             val updateDTO = SensitiveApiUpdateDTO(
