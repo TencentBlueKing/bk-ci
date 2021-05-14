@@ -55,7 +55,6 @@ import com.tencent.devops.experience.pojo.enums.ProjectGroup
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.regex.Pattern
 import javax.ws.rs.core.Response
 
 @Service
