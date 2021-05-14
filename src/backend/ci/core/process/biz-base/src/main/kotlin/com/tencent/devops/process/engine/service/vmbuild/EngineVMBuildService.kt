@@ -444,6 +444,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 endBuild = true
             )
             LOG.info("ENGINE|$buildId|Agent|END_JOB|${task.stageId}|j($vmSeqId)|${task.taskId}|${task.taskName}")
+            buildExtService.endBuild(task)
             true
         }
     }

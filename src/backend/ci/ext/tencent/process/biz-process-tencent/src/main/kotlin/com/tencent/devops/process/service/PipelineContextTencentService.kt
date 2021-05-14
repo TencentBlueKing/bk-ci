@@ -37,8 +37,8 @@ import org.springframework.stereotype.Service
 @Suppress("ALL")
 @Service
 class PipelineContextTencentService@Autowired constructor(
-    private val pipelineBuildDetailService: PipelineBuildDetailService,
-    private val buildVariableService: BuildVariableService,
+    pipelineBuildDetailService: PipelineBuildDetailService,
+    buildVariableService: BuildVariableService,
     private val client: Client
 ): PipelineContextService(pipelineBuildDetailService, buildVariableService) {
 
