@@ -32,6 +32,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_REDIS_KEY
 import com.tencent.devops.common.redis.RedisOperation
@@ -154,14 +155,14 @@ class ProjectTagService @Autowired constructor(
                 newRouteMap.putAll(routerMap)
                 newRouteMap[extSystemTag.system] = extSystemTag.routerTag
             }
-            logger.info("setExtSystemRoute ${it.englishName} ${newRouteMap.toString()}")
+            logger.info("setExtSystemRoute ${it.englishName} ${JsonUtil.toJson(newRouteMap)}")
             projectTagDao.updateExtSystemProjectTags(
                 dslContext = dslContext,
                 projectCode = it.englishName,
-                routerTag = newRouteMap.toString()
+                routerTag = JsonUtil.toJson(newRouteMap)
             )
             if (extSystemTag.system == "codecc") {
-                redisOperation.hset(PROJECT_TAG_REDIS_KEY, it.englishName, extSystemTag.routerTag)
+                redisOperation.hset(PROJECT_TAG_CODECC_REDIS_KEY, it.englishName, extSystemTag.routerTag)
             } else if (extSystemTag.system == "repo") {
                 redisOperation.hset(PROJECT_TAG_REPO_REDIS_KEY, it.englishName, extSystemTag.routerTag)
             }
