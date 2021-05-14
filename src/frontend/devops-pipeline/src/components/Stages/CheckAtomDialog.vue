@@ -36,12 +36,12 @@
                             <vuex-input
                                 :data-vv-scope="`param-${paramIndex}`"
                                 :disabled="true"
-                                :desc-tooltips="param.desc"
+                                :desc-tooltips="param.desc ? param.key : param.desc"
                                 :handle-change="(name, value) => handleParamChange(name, value, paramIndex)"
                                 v-validate.initial="`required|unique:${data.params.map(p => p.key).join(&quot;,&quot;)}|max: 50|${snonVarRule}`"
                                 name="key"
                                 :placeholder="isMetadataVar ? $t('view.key') : 'Key'"
-                                :value="param.key" />
+                                :value="param.desc ? param.desc : param.key" />
                         </form-field>
                         <span :class="{ 'default-required': true ,'is-required': param.required }" />
                         <div :class="{ 'bk-form-item': true, 'required-error-item': param.required && !param.value.length && isShowReuired && !isBooleanParam(param.valueType) }">
