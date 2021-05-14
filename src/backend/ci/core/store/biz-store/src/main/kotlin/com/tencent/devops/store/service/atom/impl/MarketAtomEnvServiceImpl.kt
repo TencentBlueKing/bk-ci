@@ -110,20 +110,15 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
     ): Result<Map<String, AtomRunInfo>?> {
         logger.info("batchGetAtomRunInfos projectCode:$projectCode,atomVersions:$atomVersions")
         // 1、校验插件在项目下是否可用
-        val atomCodeMap = mutableMapOf<String, String>()
-        val atomCodeList = mutableListOf<String>()
-        atomVersions.forEach { atomVersion ->
-            atomCodeMap[atomVersion.storeCode] = atomVersion.storeName
-            atomCodeList.add(atomVersion.storeCode)
-        }
         val storePublicFlagKey = StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name)
         // 获取从db查询默认插件开关，开关打开则实时从db查
         val queryDefaultAtomSwitchOptional = cache.get("queryDefaultAtomSwitch")
         val queryDefaultAtomSwitch = if (queryDefaultAtomSwitchOptional.isPresent) {
             queryDefaultAtomSwitchOptional.get()
         } else false
-        // 获取需要校验的插件（默认公共插件无需校验）
-        val validateAtomCodeList = if (queryDefaultAtomSwitch || !redisOperation.hasKey(storePublicFlagKey)) {
+        val filterAtomVersions = mutableSetOf<StoreVersion>()
+        val validateAtomCodeList = mutableListOf<String>()
+        if (queryDefaultAtomSwitch || !redisOperation.hasKey(storePublicFlagKey)) {
             logger.info("$storePublicFlagKey is not exist!")
             if (queryDefaultAtomSwitch && redisOperation.hasKey(storePublicFlagKey)) {
                 redisOperation.delete(storePublicFlagKey)
@@ -134,18 +129,38 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             if (!queryDefaultAtomSwitch) {
                 redisOperation.sadd(storePublicFlagKey, *defaultAtomCodeList.toTypedArray())
             }
-            atomCodeList.filter { !defaultAtomCodeList.contains(it) }.toMutableList()
+            handleAtomVersions(
+                atomVersions = atomVersions,
+                storePublicFlagKey = storePublicFlagKey,
+                validateAtomCodeList = validateAtomCodeList,
+                filterAtomVersions = filterAtomVersions,
+                defaultAtomCodeList = defaultAtomCodeList
+            )
         } else {
-            atomCodeList.filter { !redisOperation.isMember(storePublicFlagKey, it) }.toMutableList()
+            handleAtomVersions(
+                atomVersions = atomVersions,
+                storePublicFlagKey = storePublicFlagKey,
+                validateAtomCodeList = validateAtomCodeList,
+                filterAtomVersions = filterAtomVersions
+            )
         }
-        val validAtomCodeList = storeProjectRelDao.getValidStoreCodesByProject(
-            dslContext = dslContext,
-            projectCode = projectCode,
-            storeCodes = validateAtomCodeList,
-            storeType = StoreTypeEnum.ATOM
-        )?.map { it.value1() } ?: emptyList()
-        // 判断是否存在不可用插件
-        validateAtomCodeList.removeAll(validAtomCodeList)
+        val atomCodeMap = mutableMapOf<String, String>()
+        val atomCodeList = mutableListOf<String>()
+        filterAtomVersions.forEach { atomVersion ->
+            val storeCode = atomVersion.storeCode
+            atomCodeMap[storeCode] = atomVersion.storeName
+            atomCodeList.add(storeCode)
+        }
+        if (validateAtomCodeList.isNotEmpty()) {
+            val validAtomCodeList = storeProjectRelDao.getValidStoreCodesByProject(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                storeCodes = validateAtomCodeList,
+                storeType = StoreTypeEnum.ATOM
+            )?.map { it.value1() } ?: emptyList()
+            // 判断是否存在不可用插件
+            validateAtomCodeList.removeAll(validAtomCodeList)
+        }
         if (validateAtomCodeList.isNotEmpty()) {
             // 存在不可用插件，给出错误提示
             val inValidAtomNameList = mutableListOf<String>()
@@ -171,7 +186,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             storeCodeList = atomCodeList
         )?.map { it.value1() }
         val atomRunInfoMap = mutableMapOf<String, AtomRunInfo>()
-        atomVersions.forEach { atomVersion ->
+        filterAtomVersions.forEach { atomVersion ->
             val atomCode = atomVersion.storeCode
             val atomName = atomVersion.storeName
             val version = atomVersion.version
@@ -180,8 +195,8 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                 key = "$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode",
                 hashKey = VersionUtils.convertLatestVersion(version)
             )
-            val testFlag =
-                testAtomCodes?.contains(atomCode) == true && (atomVersionTestFlag == null || atomVersionTestFlag.toBoolean())
+            val testAtomFlag = testAtomCodes?.contains(atomCode) == true
+            val testFlag = testAtomFlag && (atomVersionTestFlag == null || atomVersionTestFlag.toBoolean())
             logger.info("batchGetAtomRunInfos atomCode:$atomCode,version:$version,testFlag:$testFlag")
             // 如果当前的项目属于插件的调试项目且插件当前大版本有测试中的版本则实时去db查
             val atomRunInfoName = "$atomCode:$version"
@@ -212,6 +227,29 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             }
         }
         return Result(atomRunInfoMap)
+    }
+
+    private fun handleAtomVersions(
+        atomVersions: Set<StoreVersion>,
+        storePublicFlagKey: String,
+        validateAtomCodeList: MutableList<String>,
+        filterAtomVersions: MutableSet<StoreVersion>,
+        defaultAtomCodeList: MutableList<String>? = null
+    ) {
+        atomVersions.forEach { atomVersion ->
+            val atomCode = atomVersion.storeCode
+            val historyFlag = atomVersion.historyFlag
+            val defaultAtomFlag =
+                defaultAtomCodeList?.contains(atomCode) ?: redisOperation.isMember(storePublicFlagKey, atomCode)
+            if (!(defaultAtomFlag || historyFlag)) {
+                // 默认插件和内置插件无需校验可见范围
+                validateAtomCodeList.add(atomCode)
+            }
+            if (!(!defaultAtomFlag && historyFlag)) {
+                // 过滤调那些没有存在db中的内置插件
+                filterAtomVersions.add(atomVersion)
+            }
+        }
     }
 
     private fun queryAtomRunInfoFromDb(

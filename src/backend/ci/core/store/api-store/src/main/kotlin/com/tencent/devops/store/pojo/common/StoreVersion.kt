@@ -37,5 +37,7 @@ data class StoreVersion(
     @ApiModelProperty("组件名称", required = true)
     var storeName: String,
     @ApiModelProperty("版本号", required = true)
-    var version: String
+    var version: String,
+    @ApiModelProperty("是否是旧版本", required = true)
+    var historyFlag: Boolean
 )
