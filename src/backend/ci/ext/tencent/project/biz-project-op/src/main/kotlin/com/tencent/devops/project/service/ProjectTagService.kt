@@ -28,6 +28,8 @@
 
 package com.tencent.devops.project.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.Watcher
@@ -37,6 +39,7 @@ import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.project.api.op.pojo.OpProjectTagUpdateDTO
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectTagDao
+import com.tencent.devops.project.pojo.ProjectExtSystemTagDTO
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -49,7 +52,8 @@ class ProjectTagService @Autowired constructor(
     val dslContext: DSLContext,
     val projectTagDao: ProjectTagDao,
     val redisOperation: RedisOperation,
-    val projectDao: ProjectDao
+    val projectDao: ProjectDao,
+    val objectMapper: ObjectMapper
 ) {
 
     private val executePool = Executors.newFixedThreadPool(1)
@@ -128,6 +132,38 @@ class ProjectTagService @Autowired constructor(
                 channel = opProjectTagUpdateDTO.channel!!,
                 dslContext = dslContext
             )
+        }
+        return Result(true)
+    }
+
+    fun updateExtSystemRouterTag(extSystemTag: ProjectExtSystemTagDTO): Result<Boolean> {
+        logger.info("updateTagByProject: $extSystemTag")
+        checkRouteTag(extSystemTag.routerTag)
+        checkProject(extSystemTag.projectCodeList)
+        val projectInfos = projectTagDao.getExtSystemRouterTag(dslContext, extSystemTag.projectCodeList)
+            ?: return Result(false)
+        projectInfos.forEach {
+            val extSystemRouter = it.otherRouterTags
+            val routerMap = objectMapper.readValue<Map<String, String>>(extSystemRouter)
+            val newRouteMap = mutableMapOf<String, String>()
+            // 如果有对应系统的router则替换，否则直接加
+            if (extSystemRouter.isNullOrEmpty()) {
+                newRouteMap[extSystemTag.system] = extSystemTag.routerTag
+            } else {
+                newRouteMap.putAll(routerMap)
+                newRouteMap[extSystemTag.system] = extSystemTag.routerTag
+            }
+            logger.info("setExtSystemRoute ${it.englishName} ${newRouteMap.toString()}")
+            projectTagDao.updateExtSystemProjectTags(
+                dslContext = dslContext,
+                projectCode = it.englishName,
+                routerTag = newRouteMap.toString()
+            )
+            if (extSystemTag.system == "codecc") {
+                redisOperation.hset(PROJECT_TAG_REDIS_KEY, it.englishName, extSystemTag.routerTag)
+            } else if (extSystemTag.system == "repo") {
+                redisOperation.hset(PROJECT_TAG_REPO_REDIS_KEY, it.englishName, extSystemTag.routerTag)
+            }
         }
         return Result(true)
     }
@@ -215,5 +251,7 @@ class ProjectTagService @Autowired constructor(
 
     companion object {
         val logger = LoggerFactory.getLogger(ProjectTagService::class.java)
+        const val PROJECT_TAG_CODECC_REDIS_KEY = "project:setting:tag:codecc:v2"
+        const val PROJECT_TAG_REPO_REDIS_KEY = "project:setting:tag:repo:v2"
     }
 }

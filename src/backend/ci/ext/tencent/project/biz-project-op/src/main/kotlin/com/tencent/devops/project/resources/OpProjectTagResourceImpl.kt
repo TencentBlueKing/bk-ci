@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.op.OpProjectTagResource
 import com.tencent.devops.project.api.op.pojo.OpProjectTagUpdateDTO
+import com.tencent.devops.project.pojo.ProjectExtSystemTagDTO
 import com.tencent.devops.project.service.ProjectTagService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -49,5 +50,9 @@ class OpProjectTagResourceImpl @Autowired constructor(
 
     override fun setTagByChannel(opProjectTagUpdateDTO: OpProjectTagUpdateDTO): Result<Boolean> {
         return projectTagService.updateTagByChannel(opProjectTagUpdateDTO)
+    }
+
+    override fun setExtSystemTagByProject(extSystemTagDTO: ProjectExtSystemTagDTO): Result<Boolean> {
+        return projectTagService.updateExtSystemRouterTag(extSystemTagDTO)
     }
 }

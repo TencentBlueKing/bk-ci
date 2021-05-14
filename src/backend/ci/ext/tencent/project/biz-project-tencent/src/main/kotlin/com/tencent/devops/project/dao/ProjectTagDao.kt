@@ -50,6 +50,17 @@ class ProjectTagDao {
         }
     }
 
+    fun updateExtSystemProjectTags(
+        dslContext: DSLContext,
+        routerTag: String,
+        projectCode: String
+    ) {
+        with(Tables.T_PROJECT) {
+            dslContext.update(this).set(OTHER_ROUTER_TAGS, routerTag)
+                .where(ENGLISH_NAME.eq(ENGLISH_NAME)).execute()
+        }
+    }
+
     fun updateChannelTags(
         dslContext: DSLContext,
         routerTag: String,
@@ -97,6 +108,15 @@ class ProjectTagDao {
     ): Result<TProjectRecord> {
         with(TProject.T_PROJECT) {
             return dslContext.selectFrom(this).where(CHANNEL.eq(channel)).limit(limit).offset(offset).fetch()
+        }
+    }
+
+    fun getExtSystemRouterTag(
+        dslContext: DSLContext,
+        projectIds: List<String>
+    ): Result<TProjectRecord>? {
+        with(TProject.T_PROJECT) {
+            return dslContext.selectFrom(this).where(PROJECT_ID.`in`(projectIds)).fetch()
         }
     }
 }
