@@ -390,8 +390,8 @@ class TriggerBuildService @Autowired constructor(
         if (job.runsOn.poolName.startsWith("macos")) {
             return MacOSDispatchType(
                 macOSEvn = "",
-                systemVersion = "",
-                xcodeVersion = ""
+                systemVersion = "10.15",
+                xcodeVersion = "12.4"
             )
         }
 
