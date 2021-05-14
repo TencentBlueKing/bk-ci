@@ -44,10 +44,6 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.gitci.v2.template.pojo.NoReplaceTemplate
 import com.tencent.devops.gitci.v2.template.pojo.enums.ResourceCredentialType
 import org.slf4j.LoggerFactory
-import org.springframework.core.io.ClassPathResource
-import java.io.BufferedReader
-import java.io.InputStream
-import java.io.InputStreamReader
 
 class YamlTemplate(
     // 发起者的库ID,用户名,分支
@@ -64,7 +60,12 @@ class YamlTemplate(
     // 文件对象
     var yamlObject: PreTemplateScriptBuildYaml?,
     // 当前库信息(发起库没有库信息)
-    val repo: Repositories?
+    val repo: Repositories?,
+
+    // 每个文件使用的模板个数（不能超过10）
+    val templateNumb: MutableMap<String, Int> = mutableMapOf(),
+    // 嵌套的总模板深度（不能超过5）
+    var templateDeep: Int = 0
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(YamlTemplate::class.java)
@@ -82,12 +83,19 @@ class YamlTemplate(
         // 分隔远程库和文件关键字
         private const val FILE_REPO_SPLIT = "@"
 
+        // 模板最多引用数和最大深度
+        private const val MAX_TEMPLATE_NUMB = 10
+        private const val MAX_TEMPLATE_DEEP = 5
+
         // 异常模板
-        private const val TEMPLATE_ID_DUPLICATE = "%s template id %s Duplicate"
-        private const val TRANS_AS_ERROR = "%s template format error in file: %s"
-        private const val REPO_NOT_FOUND_ERROR = "file %s used repo: %s not in resources"
-        private const val REPO_CYCLE_ERROR = "repo : %s and %s has repo circular dependency"
-        private const val TEMPLATE_CYCLE_ERROR = "template yml file : %s in %s has %S circular dependency"
+        private const val TEMPLATE_ID_DUPLICATE = "%s 类型的模板存在ID %s 与被替换文件重复"
+        private const val TRANS_AS_ERROR = "文件： %s 中关键字： %s 格式错误"
+        private const val REPO_NOT_FOUND_ERROR = "文件： %s 中引用的远程仓库：%s 没有在Resource关键字中定义"
+        private const val REPO_CYCLE_ERROR = "远程仓库： %s 和 %s 存在远程仓库的循环依赖"
+        private const val TEMPLATE_CYCLE_ERROR = "模板文件： %s 在文件 %s 存在 %s 类型的循环依赖"
+        private const val TEMPLATE_NUMB_BEYOND = "文件：%s 引用的模板总数超过每个文件最大引用限制： $MAX_TEMPLATE_NUMB"
+        private const val TEMPLATE_DEEP_BEYOND = "文件：%s 引用的模板嵌套深度超过了最大嵌套限制： $MAX_TEMPLATE_DEEP"
+        private const val TEMPLATE_FORMAT_ERROR = "模板文件格式错误： %s"
     }
 
     // 存储当前库的模板信息，减少重复获取 key: templatePath value： template
@@ -150,6 +158,8 @@ class YamlTemplate(
         extend: Extends,
         preYamlObject: PreScriptBuildYaml
     ) {
+        // extend引用深度增加
+        addAndCheckTemplateDeep()
         val toPath = extend.template
         val parameters = extend.parameters
         // 根据远程模板获取
@@ -183,8 +193,13 @@ class YamlTemplate(
         val newYaml = YamlObjects.getObjectFromYaml<NoReplaceTemplate>(toPath, YamlUtil.toYaml(templateObject))
         preYamlObject.label = newYaml.label
         preYamlObject.onFail = newYaml.onFail
-        // todo: 规范格式，extend后不能接extend模板
-//        preYamlObject.extends = newYaml.extends
+        if (newYaml.extends != null) {
+            error(TEMPLATE_FORMAT_ERROR.format("extend "))
+        }
+        // extend后不能接extend模板
+        if (newYaml.extends != null) {
+            error(TEMPLATE_FORMAT_ERROR.format("extend关键字不能嵌套extend关键字使用"))
+        }
         preYamlObject.resources = newYaml.resources
         preYamlObject.notices = newYaml.notices
         preYamlObject.finally = newYaml.finally
@@ -212,6 +227,8 @@ class YamlTemplate(
             } else {
                 variableMap.putAll(newVariable)
             }
+            // 每个参数独立计算模板深度
+            refreshTemplateDeep()
         }
         preYamlObject.variables = variableMap
     }
@@ -223,6 +240,8 @@ class YamlTemplate(
         val stageList = mutableListOf<PreStage>()
         stages.forEach { stage ->
             stageList.addAll(replaceStageTemplate(listOf(stage), filePath))
+            // 每个参数独立计算模板深度
+            refreshTemplateDeep()
         }
         preYamlObject.stages = stageList
     }
@@ -245,6 +264,8 @@ class YamlTemplate(
             } else {
                 jobMap.putAll(newJob)
             }
+            // 每个参数独立计算模板深度
+            refreshTemplateDeep()
         }
         preYamlObject.jobs = jobMap
     }
@@ -256,6 +277,8 @@ class YamlTemplate(
         val stepList = mutableListOf<Step>()
         steps.forEach { step ->
             stepList.addAll(replaceStepTemplate(listOf(step), filePath))
+            // 每个参数独立计算模板深度
+            refreshTemplateDeep()
         }
         preYamlObject.steps = stepList
     }
@@ -268,7 +291,14 @@ class YamlTemplate(
         val variableMap = mutableMapOf<String, Variable>()
         variables.forEach { (key, value) ->
             // 如果是模板文件则进行模板替换
+            // 每一层只进行一次深度统计
+            val deepFlag = false
             if (key == TEMPLATE_KEY) {
+                if (!deepFlag) {
+                    addAndCheckTemplateDeep()
+                }
+                // 每个文件做数量统计
+                addAndCheckTemplateNumb(fromPath)
                 val toPathList = transValue<List<Map<String, Any>>>(fromPath, TemplateType.VARIABLE.text, value)
                 toPathList.forEach { item ->
                     val toPath = item[OBJECT_TEMPLATE_PATH].toString()
@@ -316,7 +346,14 @@ class YamlTemplate(
     ): List<PreStage> {
         val stageList = mutableListOf<PreStage>()
         stages.forEach { stage ->
+            // 每一层只进行一次深度统计
+            val deepFlag = false
             if (TEMPLATE_KEY in stage.keys) {
+                if (!deepFlag) {
+                    addAndCheckTemplateDeep()
+                }
+                // 每个文件做数量统计
+                addAndCheckTemplateNumb(fromPath)
                 val toPath = stage[TEMPLATE_KEY].toString()
                 saveAndCheckCyclicTemplate(fromPath, toPath, TemplateType.STAGE)
 
@@ -351,7 +388,14 @@ class YamlTemplate(
     ): Map<String, PreJob> {
         val jobMap = mutableMapOf<String, PreJob>()
         jobs.forEach { (key, value) ->
+            // 每一层只进行一次深度统计
+            val deepFlag = false
             if (key == TEMPLATE_KEY) {
+                if (!deepFlag) {
+                    addAndCheckTemplateDeep()
+                }
+                // 每个文件做数量统计
+                addAndCheckTemplateNumb(fromPath)
                 val toPathList = transValue<List<Map<String, Any>>>(fromPath, TemplateType.JOB.text, value)
                 toPathList.forEach { item ->
                     val toPath = item[OBJECT_TEMPLATE_PATH].toString()
@@ -398,7 +442,14 @@ class YamlTemplate(
     ): List<Step> {
         val stepList = mutableListOf<Step>()
         steps.forEach { step ->
+            // 每一层只进行一次深度统计
+            val deepFlag = false
             if (TEMPLATE_KEY in step.keys) {
+                if (!deepFlag) {
+                    addAndCheckTemplateDeep()
+                }
+                // 每个文件做数量统计
+                addAndCheckTemplateNumb(fromPath)
                 val toPath = step[TEMPLATE_KEY].toString()
                 saveAndCheckCyclicTemplate(fromPath, toPath, TemplateType.STEP)
 
@@ -490,7 +541,8 @@ class YamlTemplate(
             triggerRef = triggerRef,
             triggerToken = triggerToken,
             repo = toRepo,
-            repoTemplateGraph = repoTemplateGraph
+            repoTemplateGraph = repoTemplateGraph,
+            templateDeep = templateDeep
         ).replace(parameters = parameters)
         // 替换后的远程模板去除不必要参数
         resYamlObject.resources = null
@@ -694,13 +746,35 @@ class YamlTemplate(
 //        return sb.toString()
 //    }
 
+    private fun addAndCheckTemplateNumb(file: String) {
+        if (templateNumb.containsKey(file)) {
+            templateNumb[file] = templateNumb[file]!! + 1
+        } else {
+            templateNumb[file] = 1
+        }
+        if (templateNumb[file]!! > MAX_TEMPLATE_NUMB) {
+            error(TEMPLATE_NUMB_BEYOND.format(file))
+        }
+    }
+
+    private fun addAndCheckTemplateDeep() {
+        templateDeep++
+        if (templateDeep > MAX_TEMPLATE_DEEP) {
+            error(TEMPLATE_DEEP_BEYOND.format(filePath))
+        }
+    }
+
+    private fun refreshTemplateDeep() {
+        templateDeep = 0
+    }
+
     private fun setTemplate(path: String, template: String) {
         templates[path] = template
     }
 
     private fun <T> transValue(file: String, type: String, value: Any?): T {
         if (value == null) {
-            throw RuntimeException(TRANS_AS_ERROR.format(type, file))
+            throw RuntimeException(TRANS_AS_ERROR.format(file, type))
         }
         return try {
             value as T
@@ -710,7 +784,7 @@ class YamlTemplate(
             } else {
                 "${repo.repository}/$templateDirectory$file"
             }
-            throw RuntimeException(TRANS_AS_ERROR.format(type, newFile))
+            throw RuntimeException(TRANS_AS_ERROR.format(newFile, type))
         }
     }
 
