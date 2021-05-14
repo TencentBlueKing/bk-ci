@@ -25,27 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.pojo
+package com.tencent.devops.store.pojo.common
 
-import com.tencent.devops.environment.pojo.enums.EnvType
-import com.tencent.devops.environment.pojo.enums.NodeSource
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("环境信息")
-data class EnvCreateInfo(
-    @ApiModelProperty("环境名称", required = true)
-    val name: String,
-    @ApiModelProperty("环境描述", required = true)
-    val desc: String,
-    @ApiModelProperty("环境类型（开发环境{DEV}|测试环境{TEST}|构建环境{BUILD}）", required = true)
-    val envType: EnvType,
-    @ApiModelProperty("环境变量", required = false)
-    val envVars: List<EnvVar>?,
-    @ApiModelProperty("节点来源（已有节点{EXISTING}|快速生成{CREATE}）", required = true)
-    val source: NodeSource,
-    @ApiModelProperty("节点 HashId 列表", required = false)
-    val nodeHashIds: List<String>?,
-    @ApiModelProperty("BCS VM 参数，节点来源为“快速生成”时必填", required = false)
-    val bcsVmParam: BcsVmParam? = null
+@ApiModel("组件参数信息")
+data class StoreParam(
+    @ApiModelProperty("组件代码", required = true)
+    var storeCode: String,
+    @ApiModelProperty("组件名称", required = true)
+    var storeName: String,
+    @ApiModelProperty("版本号", required = true)
+    var version: String,
+    @ApiModelProperty("输入参数", required = false)
+    var inputParam: Map<String, Any?>?
 )

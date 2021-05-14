@@ -27,10 +27,7 @@
 
 package com.tencent.devops.process.service.pipeline
 
-import com.tencent.devops.common.api.constant.KEY_CODE_EDITOR
 import com.tencent.devops.common.api.constant.KEY_DEFAULT
-import com.tencent.devops.common.api.constant.KEY_INPUT
-import com.tencent.devops.common.api.constant.KEY_TEXTAREA
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
