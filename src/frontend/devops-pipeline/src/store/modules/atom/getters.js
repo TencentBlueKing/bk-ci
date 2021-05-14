@@ -201,7 +201,7 @@ export default {
             if (codeccCount > 1) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.oneCodecc'))
             } else if (manualTriggerCount > 1) {
-                throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.oneManualTrigger') + '444')
+                throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.oneManualTrigger'))
             } else if (timerTriggerCount > 1) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.oneTimerTrigger'))
             } else if (remoteTriggerCount > 1) {
