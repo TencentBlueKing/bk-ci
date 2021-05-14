@@ -64,7 +64,7 @@ import org.springframework.core.Ordered
 @Configuration
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class LogConfiguration {
+class LogInitConfiguration {
     @Bean
     fun managerService(client: Client) = ManagerService(client)
 }
