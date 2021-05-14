@@ -25,15 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":core:environment:biz-environment")
-    compile project(":ext:tencent:common:common-bcs")
-    compile project(":ext:tencent:common:common-devcloud")
-    compile project(":core:notify:api-notify")
-    compile project(":ext:tencent:scm:api-scm")
-    compile project(":core:auth:api-auth")
-    compile project(":ext:tencent:environment:api-environment-tencent")
-    compile project(":ext:tencent:auth:sdk-auth-tencent")
-    compile project(":ext:tencent:common:common-auth:common-auth-tencent")
+package com.tencent.devops.auth.service
+
+import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
+
+interface PermissionProjectService {
+
+    fun getProjectUsers(serviceCode: String, projectCode: String, group: BkAuthGroup?): List<String>
+
+    fun getProjectGroupAndUserList(serviceCode: String, projectCode: String): List<BkAuthGroupAndUserList>
+
+    fun getUserProjects(userId: String): List<String>
+
+    fun isProjectUser(userId: String, projectCode: String, group: BkAuthGroup?): Boolean
+
+    fun createProjectUser(userId: String, projectCode: String, role: String): Boolean
+
+    fun getProjectRoles(projectCode: String, projectId: String): List<BKAuthProjectRolesResources>
 }

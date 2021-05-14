@@ -27,11 +27,9 @@
 
 package com.tencent.devops.common.gcloud.api.pojo
 
-import org.springframework.stereotype.Component
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.api.param.ReqParam
 
-@Component
 data class NewResourceParam(
     @field:JsonProperty("AppVersionStr")
     val appVersionStr: String,

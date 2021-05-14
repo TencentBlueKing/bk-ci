@@ -28,9 +28,18 @@
 package com.tencent.devops.environment
 
 import com.tencent.devops.auth.service.ManagerService
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthResourceApi
+import com.tencent.devops.common.auth.code.EnvironmentAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.environment.dao.EnvDao
+import com.tencent.devops.environment.dao.NodeDao
+import com.tencent.devops.environment.permission.impl.EnvironmentPermissionServiceImpl
+import com.tencent.devops.environment.permission.impl.GitCIEnvironmentPermissionServiceImpl
 import com.tencent.devops.environment.service.TencentAgentUrlServiceImpl
+import org.jooq.DSLContext
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.context.annotation.Primary
@@ -47,4 +56,30 @@ class TencentServiceConfig {
 
     @Bean
     fun managerService(client: Client) = ManagerService(client)
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
+    fun gitCIEnvironmentPermissionServiceImpl(
+        client: Client
+    ) = GitCIEnvironmentPermissionServiceImpl(client)
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
+    fun environmentPermissionServiceImpl(
+        authResourceApi: AuthResourceApi,
+        authPermissionApi: AuthPermissionApi,
+        environmentAuthServiceCode: EnvironmentAuthServiceCode,
+        managerService: ManagerService,
+        envDao: EnvDao,
+        nodeDao: NodeDao,
+        dslContext: DSLContext
+    ) = EnvironmentPermissionServiceImpl(
+        authResourceApi = authResourceApi,
+        authPermissionApi = authPermissionApi,
+        environmentAuthServiceCode = environmentAuthServiceCode,
+        managerService = managerService,
+        envDao = envDao,
+        nodeDao = nodeDao,
+        dslContext = dslContext
+    )
 }

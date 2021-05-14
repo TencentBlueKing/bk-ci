@@ -24,16 +24,33 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.openapi.resources.apigw.v3
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":core:environment:biz-environment")
-    compile project(":ext:tencent:common:common-bcs")
-    compile project(":ext:tencent:common:common-devcloud")
-    compile project(":core:notify:api-notify")
-    compile project(":ext:tencent:scm:api-scm")
-    compile project(":core:auth:api-auth")
-    compile project(":ext:tencent:environment:api-environment-tencent")
-    compile project(":ext:tencent:auth:sdk-auth-tencent")
-    compile project(":ext:tencent:common:common-auth:common-auth-tencent")
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.openapi.api.apigw.v3.ApigwMarketTemplateResourceV3
+import com.tencent.devops.store.api.template.ServiceTemplateResource
+import com.tencent.devops.store.pojo.template.InstallTemplateReq
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class ApigwMarketTemplateResourceV3Impl @Autowired constructor(
+    private val client: Client
+) : ApigwMarketTemplateResourceV3 {
+
+    override fun installTemplateFromStore(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        installTemplateReq: InstallTemplateReq
+    ): Result<Boolean> {
+        // 可见与可安装鉴权在store服务marketTemplateService中已实现
+        return client.get(ServiceTemplateResource::class).installTemplate(userId, installTemplateReq)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ApigwMarketTemplateResourceV3Impl::class.java)
+    }
 }

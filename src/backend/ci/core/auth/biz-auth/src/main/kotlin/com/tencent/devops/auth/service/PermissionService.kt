@@ -25,15 +25,43 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":core:environment:biz-environment")
-    compile project(":ext:tencent:common:common-bcs")
-    compile project(":ext:tencent:common:common-devcloud")
-    compile project(":core:notify:api-notify")
-    compile project(":ext:tencent:scm:api-scm")
-    compile project(":core:auth:api-auth")
-    compile project(":ext:tencent:environment:api-environment-tencent")
-    compile project(":ext:tencent:auth:sdk-auth-tencent")
-    compile project(":ext:tencent:common:common-auth:common-auth-tencent")
+package com.tencent.devops.auth.service
+
+import com.tencent.devops.common.auth.api.AuthPermission
+
+interface PermissionService {
+    fun validateUserActionPermission(
+        userId: String,
+        action: String
+    ): Boolean
+
+    fun validateUserResourcePermission(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resourceType: String?
+    ): Boolean
+
+    fun validateUserResourcePermissionByRelation(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resourceCode: String,
+        resourceType: String,
+        relationResourceType: String?
+    ): Boolean
+
+    fun getUserResourceByAction(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resourceType: String
+    ): List<String>
+
+    fun getUserResourcesByActions(
+        userId: String,
+        actions: List<String>,
+        projectCode: String,
+        resourceType: String
+    ): Map<AuthPermission, List<String>>
 }
