@@ -17,7 +17,7 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-import { mapActions, mapGetters } from 'vuex'
+import { mapActions, mapGetters, mapState } from 'vuex'
 import Accordion from '@/components/atomFormField/Accordion'
 import EnumInput from '@/components/atomFormField/EnumInput'
 import VuexInput from '@/components/atomFormField/VuexInput'
@@ -98,8 +98,18 @@ const atomMixin = {
             'isThirdPartyContainer',
             'atomVersionChangedKeys'
         ]),
+        ...mapState('atom', [
+            'pipelineCommonSetting'
+        ]),
         isThirdParty () {
             return this.isThirdPartyContainer(this.container)
+        },
+        atomInputLimit () {
+            try {
+                return this.pipelineCommonSetting.stageCommonSetting.jobCommonSetting.taskCommonSetting.inputComponentCommonSettings || []
+            } catch (error) {
+                return []
+            }
         }
     },
     methods: {
@@ -207,19 +217,9 @@ const atomMixin = {
          * 获取每种类型最大长度限制
          */
         getMaxLengthByType (type) {
-            let length = 1024
-            switch (type) {
-                case 'vuex-input':
-                    length = 1024
-                    break
-                case 'vuex-textarea':
-                    length = 1024 * 4
-                    break
-                case 'atom-ace-editor':
-                    length = 1024 * 16
-                    break
-            }
-            return length
+            const defaultLength = 1024
+            const componentItem = this.atomInputLimit.find(item => item.componentType === type) || {}
+            return componentItem.maxSize || defaultLength
         }
     }
 }

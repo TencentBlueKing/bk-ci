@@ -17,7 +17,8 @@
             ...mapActions('atom', [
                 'fetchContainers',
                 'fetchAtoms',
-                'fetchStageTagList'
+                'fetchStageTagList',
+                'fetchCommonSetting'
             ]),
             fetchData () {
                 const projectCode = this.$route.params.projectId
@@ -28,6 +29,7 @@
                     projectCode
                 })
                 this.fetchStageTagList()
+                this.fetchCommonSetting()
             }
         }
     }

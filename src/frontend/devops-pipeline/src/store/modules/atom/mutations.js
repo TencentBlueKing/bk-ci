@@ -21,6 +21,7 @@ import Vue from 'vue'
 import {
     SET_STAGE_TAG_LIST,
     SET_PIPELINE_STAGE,
+    SET_COMMON_SETTING,
     SET_PIPELINE_CONTAINER,
     SET_TEMPLATE,
     SET_ATOMS,
@@ -94,6 +95,18 @@ export default {
     },
     [SET_PIPELINE_STAGE]: (state, stages) => {
         state.pipeline.stages = stages
+    },
+    [SET_COMMON_SETTING]: (state, setting) => {
+        state.pipelineCommonSetting = setting || {}
+        try {
+            state.pipelineLimit = {
+                stageLimit: setting.maxStageNum,
+                jobLimit: setting.stageCommonSetting.maxJobNum,
+                atomLimit: setting.stageCommonSetting.jobCommonSetting.maxTaskNum
+            }
+        } catch (err) {
+            console.error('commom setting error', err)
+        }
     },
     [SET_PIPELINE_CONTAINER]: (state, { oldContainers, containers }) => {
         const stages = state.pipeline.stages || []
