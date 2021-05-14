@@ -36,7 +36,7 @@ class OuterLoginFilter @Autowired constructor(
                 if (experienceOuterService.isBlackIp(realIp)) {
                     logger.warn("it is black ip , ip:{}", realIp)
                     throw ErrorCodeException(
-                        statusCode = Response.Status.FORBIDDEN.statusCode,
+                        statusCode = Response.Status.UNAUTHORIZED.statusCode,
                         errorCode = ExperienceMessageCode.OUTER_ACCESS_FAILED,
                         defaultMessage = "无法访问"
                     )
@@ -50,7 +50,7 @@ class OuterLoginFilter @Autowired constructor(
                         resourceMethod.name
                     )
                     throw ErrorCodeException(
-                        statusCode = Response.Status.FORBIDDEN.statusCode,
+                        statusCode = Response.Status.UNAUTHORIZED.statusCode,
                         errorCode = ExperienceMessageCode.OUTER_ACCESS_FAILED,
                         defaultMessage = "无法访问"
                     )

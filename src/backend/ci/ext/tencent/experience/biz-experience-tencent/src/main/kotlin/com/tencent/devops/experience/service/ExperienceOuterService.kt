@@ -17,7 +17,6 @@ import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.data.redis.connection.RedisStringCommands
 import org.springframework.data.redis.core.RedisCallback
 import org.springframework.data.redis.core.types.Expiration
@@ -37,7 +36,7 @@ class ExperienceOuterService @Autowired constructor(
         if (isBlackIp(realIp)) {
             logger.warn("it is black ip : {}", realIp)
             throw ErrorCodeException(
-                statusCode = Response.Status.BAD_REQUEST.statusCode,
+                statusCode = Response.Status.UNAUTHORIZED.statusCode,
                 errorCode = ExperienceMessageCode.OUTER_LOGIN_ERROR,
                 defaultMessage = "登录错误"
             )
@@ -75,7 +74,7 @@ class ExperienceOuterService @Autowired constructor(
             if (profile.status != Profile.StatusEnum.NORMAL) {
                 logger.warn("profile status is not normal , status : {}", profile.status)
                 throw ErrorCodeException(
-                    statusCode = Response.Status.BAD_REQUEST.statusCode,
+                    statusCode = Response.Status.UNAUTHORIZED.statusCode,
                     errorCode = ExperienceMessageCode.OUTER_LOGIN_ERROR,
                     defaultMessage = "账号已被封禁"
                 )
@@ -113,7 +112,7 @@ class ExperienceOuterService @Autowired constructor(
         if (StringUtils.isBlank(profileStr)) {
             logger.warn("get profile by token failed , token:{}", token)
             throw ErrorCodeException(
-                statusCode = Response.Status.BAD_REQUEST.statusCode,
+                statusCode = Response.Status.UNAUTHORIZED.statusCode,
                 errorCode = ExperienceMessageCode.OUTER_LOGIN_ERROR,
                 defaultMessage = "登录过期,请重新登录"
             )
@@ -130,7 +129,7 @@ class ExperienceOuterService @Autowired constructor(
         } catch (e: Exception) {
             logger.warn("decode profile failed , token:{}", token, e)
             throw ErrorCodeException(
-                statusCode = Response.Status.BAD_REQUEST.statusCode,
+                statusCode = Response.Status.UNAUTHORIZED.statusCode,
                 errorCode = ExperienceMessageCode.OUTER_LOGIN_ERROR,
                 defaultMessage = "账号信息异常,请重新登录"
             )
@@ -154,7 +153,7 @@ class ExperienceOuterService @Autowired constructor(
         if (realIp == null) {
             logger.warn("Can not get client real ip")
             throw ErrorCodeException(
-                statusCode = Response.Status.BAD_REQUEST.statusCode,
+                statusCode = Response.Status.UNAUTHORIZED.statusCode,
                 errorCode = ExperienceMessageCode.OUTER_LOGIN_ERROR,
                 defaultMessage = "无法获取IP , 请联系相关人员排查"
             )
@@ -173,12 +172,16 @@ class ExperienceOuterService @Autowired constructor(
             )
         })
         if (checkNow == true) {
-            val profilesRead = profileApi.v2ProfilesRead("${profileVO.username}@$domain", "status", "username")
+            val profilesRead = try {
+                profileApi.v2ProfilesRead("${profileVO.username}@$domain", "status", "username")
+            } catch (e: Exception) {
+                null
+            }
             if (null == profilesRead || profilesRead.status != Profile.StatusEnum.NORMAL) {
                 redisOperation.set(checkKey, "1") // 将缓存置为不正常用户
                 logger.warn("v2ProfilesRead , status is not normal , token:{}", token)
                 throw ErrorCodeException(
-                    statusCode = Response.Status.BAD_REQUEST.statusCode,
+                    statusCode = Response.Status.UNAUTHORIZED.statusCode,
                     errorCode = ExperienceMessageCode.OUTER_LOGIN_ERROR,
                     defaultMessage = "账号已被封禁"
                 )
@@ -188,7 +191,7 @@ class ExperienceOuterService @Autowired constructor(
             if (checkResult == "1") {
                 logger.warn("v2ProfilesRead, redis , status is not normal , token:{}", token)
                 throw ErrorCodeException(
-                    statusCode = Response.Status.BAD_REQUEST.statusCode,
+                    statusCode = Response.Status.UNAUTHORIZED.statusCode,
                     errorCode = ExperienceMessageCode.OUTER_LOGIN_ERROR,
                     defaultMessage = "账号已被封禁"
                 )
