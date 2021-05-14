@@ -62,7 +62,7 @@ function _M:get_staff_info(ckey)
         --- 判断返回的状态码是否是200
         if res.status ~= 200 then
             ngx.log(ngx.STDERR, "failed to request ckey info, status: ", res.status)
-            ngx.exit(500)
+            ngx.exit(res.status)
             return
         end
 

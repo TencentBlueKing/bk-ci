@@ -61,7 +61,10 @@ class BkRepoAppService @Autowired constructor(
         ttl: Int,
         directed: Boolean
     ): Url {
-        logger.info("getExternalDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl, directed: $directed")
+        logger.info(
+            "getExternalDownloadUrl, userId: $userId, projectId: $projectId, " +
+                "artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl, directed: $directed"
+        )
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         when (artifactoryType) {
             ArtifactoryType.CUSTOM_DIR -> {
@@ -115,7 +118,10 @@ class BkRepoAppService @Autowired constructor(
         ttl: Int,
         directed: Boolean
     ): Url {
-        logger.info("getExternalPlistDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl, directed: $directed")
+        logger.info(
+            "getExternalPlistDownloadUrl, userId: $userId, projectId: $projectId, " +
+                "artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl, directed: $directed"
+        )
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         when (artifactoryType) {
             ArtifactoryType.CUSTOM_DIR -> {
@@ -142,7 +148,10 @@ class BkRepoAppService @Autowired constructor(
             }
         }
         val url =
-            StringUtil.chineseUrlEncode("${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories/$projectId/$artifactoryType/filePlist?path=$normalizedPath")
+            StringUtil.chineseUrlEncode(
+                "${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories/$projectId/" +
+                    "$artifactoryType/filePlist?path=$normalizedPath"
+            )
         return Url(url)
     }
 
@@ -155,7 +164,10 @@ class BkRepoAppService @Autowired constructor(
         directed: Boolean,
         experienceHashId: String?
     ): String {
-        logger.info("getPlistFile, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, argPath: $argPath, directed: $directed, experienceHashId: $experienceHashId")
+        logger.info(
+            "getPlistFile, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
+                "argPath: $argPath, directed: $directed, experienceHashId: $experienceHashId"
+        )
         val userName = if (experienceHashId != null) {
             val experience = client.get(ServiceExperienceResource::class).get(userId, projectId, experienceHashId)
             if (experience.isOk() && experience.data != null) {
@@ -187,36 +199,37 @@ class BkRepoAppService @Autowired constructor(
             }
         }
         return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-                "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" \"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n" +
-                "<plist version=\"1.0\">\n" +
-                "<dict>\n" +
-                "    <key>items</key>\n" +
-                "    <array>\n" +
-                "        <dict>\n" +
-                "            <key>assets</key>\n" +
-                "            <array>\n" +
-                "                <dict>\n" +
-                "                    <key>kind</key>\n" +
-                "                    <string>software-package</string>\n" +
-                "                    <key>url</key>\n" +
-                "                    <string>${ipaExternalDownloadUrlEncode.replace("&download=true", "")}</string>\n" +
-                "                </dict>\n" +
-                "            </array>\n" +
-                "            <key>metadata</key>\n" +
-                "            <dict>\n" +
-                "                <key>bundle-identifier</key>\n" +
-                "                <string>$bundleIdentifier</string>\n" +
-                "                <key>bundle-version</key>\n" +
-                "                <string>$appVersion</string>\n" +
-                "                <key>title</key>\n" +
-                "                <string>$appTitle</string>\n" +
-                "                <key>kind</key>\n" +
-                "                <string>software</string>\n" +
-                "            </dict>\n" +
-                "        </dict>\n" +
-                "    </array>\n" +
-                "</dict>\n" +
-                "</plist>"
+            "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" " +
+            "\"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n" +
+            "<plist version=\"1.0\">\n" +
+            "<dict>\n" +
+            "    <key>items</key>\n" +
+            "    <array>\n" +
+            "        <dict>\n" +
+            "            <key>assets</key>\n" +
+            "            <array>\n" +
+            "                <dict>\n" +
+            "                    <key>kind</key>\n" +
+            "                    <string>software-package</string>\n" +
+            "                    <key>url</key>\n" +
+            "                    <string>${ipaExternalDownloadUrlEncode.replace("&download=true", "")}</string>\n" +
+            "                </dict>\n" +
+            "            </array>\n" +
+            "            <key>metadata</key>\n" +
+            "            <dict>\n" +
+            "                <key>bundle-identifier</key>\n" +
+            "                <string>$bundleIdentifier</string>\n" +
+            "                <key>bundle-version</key>\n" +
+            "                <string>$appVersion</string>\n" +
+            "                <key>title</key>\n" +
+            "                <string>$appTitle</string>\n" +
+            "                <key>kind</key>\n" +
+            "                <string>software</string>\n" +
+            "            </dict>\n" +
+            "        </dict>\n" +
+            "    </array>\n" +
+            "</dict>\n" +
+            "</plist>"
     }
 
     companion object {

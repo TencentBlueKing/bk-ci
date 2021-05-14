@@ -45,4 +45,6 @@ dependencies {
     compile project(":core:notify:api-notify")
     compile project(":ext:tencent:project:api-project-tencent")
     compile project(":ext:tencent:experience:model-experience-tencent")
+
+    compile fileTree(dir: 'lib', includes: ['*.jar'])
 }
