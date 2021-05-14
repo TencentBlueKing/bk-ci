@@ -26,12 +26,13 @@
 
 package com.tencent.devops.common.web.security.filter
 
-import com.tencent.devops.common.api.auth.CODECC_AUTH_HEADER_DEVOPS_PROJECT_ID
-import com.tencent.devops.common.api.auth.CODECC_AUTH_HEADER_DEVOPS_TASK_ID
-import com.tencent.devops.common.api.auth.CODECC_AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_TASK_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.exception.CodeCCException
 import com.tencent.devops.common.api.exception.UnauthorizedException
 import com.tencent.devops.common.auth.api.external.AuthExPermissionApi
+import com.tencent.devops.common.auth.api.external.AuthTaskService
 import com.tencent.devops.common.auth.api.pojo.external.CodeCCAuthAction
 import com.tencent.devops.common.auth.api.pojo.external.model.BkAuthExResourceActionModel
 import com.tencent.devops.common.auth.api.util.PermissionUtil
@@ -40,6 +41,7 @@ import com.tencent.devops.common.constant.CommonMessageCode
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
+import java.util.regex.Pattern
 import javax.ws.rs.container.ContainerRequestContext
 import javax.ws.rs.container.ContainerRequestFilter
 
@@ -53,46 +55,57 @@ class PermissionAuthFilter(
 
     override fun filter(requestContext: ContainerRequestContext) {
         val authExPermissionApi = SpringContextUtil.getBean(AuthExPermissionApi::class.java)
-        val user = requestContext.getHeaderString(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
-        logger.debug("========filter================user:$user");
+        val authTaskService = SpringContextUtil.getBean(AuthTaskService::class.java)
+
+        val user = requestContext.getHeaderString(AUTH_HEADER_DEVOPS_USER_ID)
+
         // 如果是管理员就直接校验通过
         if (authExPermissionApi.isAdminMember(user)) {
             return
         }
 
 
-        val taskId = requestContext.getHeaderString(CODECC_AUTH_HEADER_DEVOPS_TASK_ID)
-        val projectId = requestContext.getHeaderString(CODECC_AUTH_HEADER_DEVOPS_PROJECT_ID)
+        val taskId = requestContext.getHeaderString(AUTH_HEADER_DEVOPS_TASK_ID)
+        val projectId = requestContext.getHeaderString(AUTH_HEADER_DEVOPS_PROJECT_ID)
         if (user.isNullOrBlank() || taskId.isNullOrBlank() || projectId.isNullOrBlank()) {
             logger.error("insufficient param info! user: $user, taskId: $taskId, projectId: $projectId")
             throw UnauthorizedException("insufficient param info!")
         }
 
-        val taskCreateFrom = authExPermissionApi.getTaskCreateFrom(taskId.toLong())
-        logger.info("task create from: $taskCreateFrom, user: $user")
+        val taskCreateFrom = authTaskService.getTaskCreateFrom(taskId.toLong())
+        logger.info("task create from: $taskCreateFrom, user: $user， projectId: $projectId")
         val result = when (taskCreateFrom) {
             ComConstants.BsTaskCreateFrom.BS_PIPELINE.value() -> {
-                val pipelieActions = PermissionUtil.getPipelinePermissionsFromActions(actions)
-                val pipelinePermissionAuthResult= authExPermissionApi.validatePipelineBatchPermission(
-                    user,
-                    taskId,
-                    projectId,
-                    pipelieActions
-                )
-                var pipelineAuthPass = true
-                pipelinePermissionAuthResult.forEach {
-                    if (it.isPass == false){
-                        pipelineAuthPass = false
+                val pipelineAuthResults: MutableList<BkAuthExResourceActionModel> = mutableListOf()
+                // 工蜂CI项目没有在蓝鲸权限中心注册过，需要走Oauth鉴权与工蜂权限对齐
+                if (Pattern.compile("^git_[0-9]+$").matcher(projectId).find()) {
+                    logger.info("auth gongfeng ci project, taskId: {} | projectId: {} | user: {}", taskId, projectId, user)
+                    val isPass = authExPermissionApi.validateGongfengPermission(user, taskId, projectId, actions)
+                    pipelineAuthResults.add(BkAuthExResourceActionModel("pipeline_auth", null, null,
+                            isPass))
+                } else {
+                    // 普通流水线在蓝鲸权限中心鉴权
+                    val pipelieActions = PermissionUtil.getPipelinePermissionsFromActions(actions)
+                    val pipelinePermissionAuthResult = authExPermissionApi.validatePipelineBatchPermission(
+                            user,
+                            taskId,
+                            projectId,
+                            pipelieActions
+                    )
+                    var pipelineAuthPass = true
+                    pipelinePermissionAuthResult.forEach {
+                        if (it.isPass == false) {
+                            pipelineAuthPass = false
+                        }
                     }
-                }
-                var pipelineAuthResults: MutableList<BkAuthExResourceActionModel> = mutableListOf()
-                if (pipelineAuthPass){
-                    pipelineAuthResults.add(BkAuthExResourceActionModel("pipeline_auth", null, null,
-                            true))
-                }
-                else{
-                    pipelineAuthResults.add(BkAuthExResourceActionModel("pipeline_auth", null, null,
-                            false))
+
+                    if (pipelineAuthPass) {
+                        pipelineAuthResults.add(BkAuthExResourceActionModel("pipeline_auth", null, null,
+                                true))
+                    } else {
+                        pipelineAuthResults.add(BkAuthExResourceActionModel("pipeline_auth", null, null,
+                                false))
+                    }
                 }
                 pipelineAuthResults
             }

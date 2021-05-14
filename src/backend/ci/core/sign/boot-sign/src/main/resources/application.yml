@@ -1,4 +1,6 @@
 spring:
+  main:
+    allow-bean-definition-overriding: true
   application:
     name: sign${service-suffix}
     desc: DevOps Sign Service

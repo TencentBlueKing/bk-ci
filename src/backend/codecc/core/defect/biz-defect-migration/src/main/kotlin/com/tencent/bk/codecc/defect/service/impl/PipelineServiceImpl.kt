@@ -34,8 +34,7 @@ import com.tencent.bk.codecc.defect.model.TaskLogEntity
 import com.tencent.bk.codecc.defect.service.PipelineService
 import com.tencent.bk.codecc.defect.service.RedLineReportService
 import com.tencent.bk.codecc.defect.service.SnapShotService
-import com.tencent.devops.common.api.CodeRepoVO
-import com.tencent.bk.codecc.task.api.ServiceTaskRestResource
+import com.tencent.bk.codecc.defect.vo.TaskPersonalStatisticRefreshReq
 import com.tencent.bk.codecc.task.api.ServiceToolRestResource
 import com.tencent.bk.codecc.task.enums.EmailType
 import com.tencent.bk.codecc.task.pojo.EmailNotifyModel
@@ -46,9 +45,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.constant.ComConstants
 import com.tencent.devops.common.constant.CommonMessageCode
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.web.mq.EXCHANGE_CODECC_GENERAL_NOTIFY
-import com.tencent.devops.common.web.mq.ROUTE_CODECC_EMAIL_NOTIFY
-import com.tencent.devops.common.web.mq.ROUTE_CODECC_RTX_NOTIFY
+import com.tencent.devops.common.web.mq.*
 import com.tencent.devops.plugin.api.ExternalCodeccResource
 import com.tencent.devops.plugin.api.ServiceCodeccResource
 import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
@@ -69,7 +66,8 @@ open class PipelineServiceImpl @Autowired constructor(
     private val snapShotService: SnapShotService,
     private val redLineReportService: RedLineReportService,
     private val rabbitTemplate: RabbitTemplate,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val taskLogOverviewServiceImpl: TaskLogOverviewServiceImpl
 ) : PipelineService {
 
     override fun getBuildIdInfo(buildId: String): BuildEntity? {
@@ -107,25 +105,20 @@ open class PipelineServiceImpl @Autowired constructor(
             return
         }
 
-        if(ComConstants.BsTaskCreateFrom.GONGFENG_SCAN.value() == taskDetailVO.createFrom)
-        {
-            logger.info("task from gongfeng scan not need for devops handle back")
-            return
-        }
-
-
         val resultMessage = if (resultStatus != "success") taskStep.msg else ""
-
-
         val snapShotEntity = snapShotService.saveToolBuildSnapShot(
             taskId, taskDetailVO.projectId, taskDetailVO.pipelineId, buildId, resultStatus,
             resultMessage, toolName
         )
 
-        val effectiveTools = taskDetailVO.toolConfigInfoList.filter { toolConfigInfoVO ->
-            toolConfigInfoVO.followStatus != ComConstants.FOLLOW_STATUS.WITHDRAW.value()
-        }.map { toolConfigInfoVO ->
-            toolConfigInfoVO.toolName
+        var effectiveTools = taskLogOverviewServiceImpl.getActualExeTools(taskId, buildId)
+
+        if (effectiveTools.isNullOrEmpty()) {
+            effectiveTools = taskDetailVO.toolConfigInfoList.filter { toolConfigInfoVO ->
+                toolConfigInfoVO.followStatus != ComConstants.FOLLOW_STATUS.WITHDRAW.value()
+            }.map { toolConfigInfoVO ->
+                toolConfigInfoVO.toolName
+            }
         }
 
         //如果接入的工具没有全部生成快照，就不需要发送给蓝盾
@@ -134,12 +127,42 @@ open class PipelineServiceImpl @Autowired constructor(
             return
         }
 
-        val emailNotifyModel = EmailNotifyModel(taskId, buildId, EmailType.INSTANT)
-        //发送邮件
-        rabbitTemplate.convertAndSend(EXCHANGE_CODECC_GENERAL_NOTIFY, ROUTE_CODECC_EMAIL_NOTIFY, emailNotifyModel)
-        val rtxNotifyModel = RtxNotifyModel(taskId, resultStatus == ComConstants.RDMCoverityStatus.success.name)
-        //发送企业微信
-        rabbitTemplate.convertAndSend(EXCHANGE_CODECC_GENERAL_NOTIFY, ROUTE_CODECC_RTX_NOTIFY, rtxNotifyModel)
+        val isGrayToolTask: Boolean = !taskDetailVO.projectId.isNullOrBlank()
+                && taskDetailVO.projectId.startsWith(ComConstants.GRAY_PROJECT_PREFIX)
+
+        if (isGrayToolTask) {
+            logger.info(
+                "gray tool task not send any notify, task id: {}, project id: {}",
+                taskId,
+                taskDetailVO.projectId
+            )
+        } else {
+            //发送邮件
+            val emailNotifyModel = EmailNotifyModel(taskId, buildId, EmailType.INSTANT)
+            rabbitTemplate.convertAndSend(
+                EXCHANGE_CODECC_GENERAL_NOTIFY,
+                ROUTE_CODECC_EMAIL_NOTIFY,
+                emailNotifyModel
+            )
+            //发送企业微信
+            val rtxRetStatus = resultStatus == ComConstants.RDMCoverityStatus.success.name
+            val rtxNotifyModel = RtxNotifyModel(taskId, rtxRetStatus, buildId)
+            rabbitTemplate.convertAndSend(
+                EXCHANGE_CODECC_GENERAL_NOTIFY,
+                ROUTE_CODECC_RTX_NOTIFY,
+                rtxNotifyModel
+            )
+        }
+
+        if(ComConstants.BsTaskCreateFrom.GONGFENG_SCAN.value() == taskDetailVO.createFrom)
+        {
+            logger.info("task from gongfeng scan not need for devops handle back")
+            return
+        }
+
+        // 更新个人待处理信息
+        val request = TaskPersonalStatisticRefreshReq(taskId, "from pipeline service #handleDevopsCallBack")
+        rabbitTemplate.convertAndSend(EXCHANGE_TASK_PERSONAL, ROUTE_TASK_PERSONAL, request)
 
         logger.info("all tool completed! ready to send report! build id is {}", buildId)
 
@@ -183,12 +206,12 @@ open class PipelineServiceImpl @Autowired constructor(
     }*/
 
     override fun stopRunningTask(
-            projectId: String,
-            pipelineId: String,
-            taskId: Long?,
-            buildId: String,
-            userName: String,
-            nameEn: String
+        projectId: String,
+        pipelineId: String,
+        taskId: Long?,
+        buildId: String,
+        userName: String,
+        nameEn: String
     ) {
         logger.info("execute pipeline task! task id: $taskId")
         if (projectId.isBlank() || pipelineId.isBlank() || null == taskId) {

@@ -46,6 +46,7 @@ public class CLOCAnalyzeTaskBizServiceImpl extends AbstractAnalyzeTaskBizService
         {
             log.info("begin to set cloc full scan type, task_id: {}", uploadTaskLogStepVO.getTaskId());
             clearForceFullScan(uploadTaskLogStepVO.getTaskId(), uploadTaskLogStepVO.getToolName());
+            uploadTaskLogStepVO.setFinish(true);
         }
     }
 

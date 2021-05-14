@@ -13,6 +13,7 @@
 package com.tencent.bk.codecc.apiquery.vo;
 
 import com.tencent.devops.common.api.CommonVO;
+import com.tencent.devops.common.api.checkerset.CheckerSetVO;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -82,11 +83,17 @@ public class TaskInfoExtVO extends CommonVO
     @ApiModelProperty("接入的工具列表")
     private List<ToolConfigInfoVO> toolConfigInfoList;
 
+    @ApiModelProperty("接入的工具数")
+    private Integer taskToolCount;
+
     @ApiModelProperty("规则数")
     private Integer checkerCount;
 
     @ApiModelProperty("规则集")
     private List<CheckerSetVO> checkerSetList;
+
+    @ApiModelProperty("规则集数")
+    private Integer checkerSetCount;
 
     @ApiModelProperty("分析次数")
     private Integer analyzeCount;
@@ -94,5 +101,6 @@ public class TaskInfoExtVO extends CommonVO
     @ApiModelProperty("跟进描述")
     private String description;
 
-
+    @ApiModelProperty("最近分析状态")
+    private String analyzeDate;
 }

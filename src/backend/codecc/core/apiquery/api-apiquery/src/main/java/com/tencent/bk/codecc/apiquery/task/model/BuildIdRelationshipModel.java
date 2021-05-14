@@ -54,6 +54,9 @@ public class BuildIdRelationshipModel {
     @JsonProperty("build_id")
     private String buildId;
 
+    @JsonProperty("build_num")
+    private String buildNum;
+
     @JsonProperty("status")
     private Integer status;
 

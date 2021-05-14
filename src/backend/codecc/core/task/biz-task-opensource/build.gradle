@@ -1,0 +1,4 @@
+dependencies {
+    compile project(":core:task:biz-task-migration")
+    compile project(":core:task:api-task-opensource")
+}

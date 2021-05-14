@@ -28,7 +28,7 @@ package com.tencent.bk.codecc.task.service;
 
 import com.tencent.bk.codecc.task.vo.DevopsProjectOrgVO;
 import com.tencent.bk.codecc.task.vo.DevopsProjectVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 
 import java.util.List;
 
@@ -40,7 +40,7 @@ import java.util.List;
  */
 public interface UserManageService
 {
-    CodeCCResult getInfo(String userId);
+    Result getInfo(String userId);
 
     /**
      * 获取项目信息

@@ -27,11 +27,14 @@
 package com.tencent.bk.codecc.defect.service.impl;
 
 import com.tencent.bk.codecc.defect.dao.mongorepository.CommonStatisticRepository;
+import com.tencent.bk.codecc.defect.dao.mongorepository.ToolBuildStackRepository;
 import com.tencent.bk.codecc.defect.model.CommonStatisticEntity;
+import com.tencent.bk.codecc.defect.model.incremental.ToolBuildStackEntity;
 import com.tencent.bk.codecc.defect.service.IQueryStatisticBizService;
 import com.tencent.devops.common.api.analysisresult.BaseLastAnalysisResultVO;
 import com.tencent.devops.common.api.analysisresult.CommonLastAnalysisResultVO;
 import com.tencent.devops.common.api.analysisresult.ToolLastAnalysisResultVO;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -45,38 +48,85 @@ import java.util.Objects;
  * @date 2019/6/8
  */
 @Service("CommonQueryStatisticBizService")
-public class CommonQueryStatisticBizServiceImpl implements IQueryStatisticBizService
-{
+public class CommonQueryStatisticBizServiceImpl implements IQueryStatisticBizService {
     @Autowired
     private CommonStatisticRepository commonStatisticRepository;
 
+    @Autowired
+    private ToolBuildStackRepository toolBuildStackRepository;
+
     @Override
-    public BaseLastAnalysisResultVO processBiz(ToolLastAnalysisResultVO arg)
-    {
+    public BaseLastAnalysisResultVO processBiz(ToolLastAnalysisResultVO arg, boolean isLast) {
         long taskId = arg.getTaskId();
         String toolName = arg.getToolName();
+        String buildId = arg.getBuildId();
 
-        CommonStatisticEntity statisticEntity = commonStatisticRepository.findFirstByTaskIdAndToolNameOrderByTimeDesc(taskId, toolName);
+        CommonStatisticEntity statisticEntity;
+        if (isLast) {
+            statisticEntity = commonStatisticRepository.findFirstByTaskIdAndToolNameOrderByTimeDesc(taskId, toolName);
+        } else {
+            statisticEntity = commonStatisticRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
+        }
+
         CommonLastAnalysisResultVO lastAnalysisResultVO = new CommonLastAnalysisResultVO();
-        if (statisticEntity != null)
-        {
+        if (statisticEntity != null) {
             BeanUtils.copyProperties(statisticEntity, lastAnalysisResultVO);
-            if(Objects.isNull(lastAnalysisResultVO.getNewCount()))
-            {
+            if (Objects.isNull(lastAnalysisResultVO.getNewCount())) {
                 lastAnalysisResultVO.setNewCount(0);
             }
-            if(Objects.isNull(lastAnalysisResultVO.getExcludeCount()))
-            {
+            if (Objects.isNull(lastAnalysisResultVO.getExcludeCount())) {
                 lastAnalysisResultVO.setExcludeCount(0);
             }
-            if(Objects.isNull(lastAnalysisResultVO.getFixedCount())){
+            if (Objects.isNull(lastAnalysisResultVO.getFixedCount())) {
                 lastAnalysisResultVO.setFixedCount(0);
             }
-            if(Objects.isNull(lastAnalysisResultVO.getExistCount())){
+            if (Objects.isNull(lastAnalysisResultVO.getExistCount())) {
                 lastAnalysisResultVO.setExistCount(0);
+            }
+            if (Objects.isNull(lastAnalysisResultVO.getCloseCount())) {
+                lastAnalysisResultVO.setCloseCount(0);
+            }
+
+            if (isLast) {
+                setDefectChange(lastAnalysisResultVO, taskId, toolName, buildId);
             }
         }
         lastAnalysisResultVO.setPattern(toolName);
         return lastAnalysisResultVO;
+    }
+
+    /**
+     * 计算最近两次遗留告警数的差值，得出趋势
+     *
+     * @param lastAnalysisResultVO
+     * @param taskId
+     * @param toolName
+     * @param buildId
+     */
+    private void setDefectChange(CommonLastAnalysisResultVO lastAnalysisResultVO, long taskId, String toolName,
+                                 String buildId) {
+        ToolBuildStackEntity toolBuildStackEntity =
+                toolBuildStackRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
+
+        if (toolBuildStackEntity == null) {
+            return;
+        }
+
+        //若上次构建Id为null，则为首次
+        if (StringUtils.isEmpty(toolBuildStackEntity.getBaseBuildId())) {
+            lastAnalysisResultVO.setDefectChange(lastAnalysisResultVO.getExistCount());
+        } else {
+            String preBuildId = toolBuildStackEntity.getBaseBuildId();
+            CommonStatisticEntity preStatisticEntity =
+                    commonStatisticRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, preBuildId);
+
+            if (preStatisticEntity != null && preStatisticEntity.getExistCount() != null) {
+                Integer defectChange = lastAnalysisResultVO.getExistCount() - preStatisticEntity.getExistCount();
+                lastAnalysisResultVO.setDefectChange(defectChange);
+            } else {
+                //找不到上次构建，也当首次处理
+                lastAnalysisResultVO.setDefectChange(lastAnalysisResultVO.getExistCount());
+            }
+        }
     }
 }

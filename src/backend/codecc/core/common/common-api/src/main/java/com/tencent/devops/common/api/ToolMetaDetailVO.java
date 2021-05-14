@@ -30,9 +30,11 @@ import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import org.jboss.logging.Field;
 
 import javax.validation.constraints.Pattern;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 工具完整信息对象
@@ -66,11 +68,17 @@ public class ToolMetaDetailVO extends ToolMetaBaseVO
     @ApiModelProperty(value = "docker启动运行的命令，命令由工具开发者提供，并支持带选项--json传入input.json", required = true)
     private String dockerTriggerShell;
 
-    @ApiModelProperty(value = "docker镜像存放URL，如：xxx.xxx.xxx.com/paas/public/xxxx_codecc_tools", required = true)
+    @ApiModelProperty(value = "docker镜像存放URL，如：xxx.xxx.xxx.com/paas/public/tlinux2.2_codecc_tools", required = true)
     private String dockerImageURL;
 
     @ApiModelProperty(value = "docker镜像版本", required = true)
     private String dockerImageVersion;
+
+    @ApiModelProperty(value = "docker镜像版本类型", required = true)
+    private String dockerImageVersionType;
+
+    @ApiModelProperty(value = "工具外部docker镜像版本号，用于关联第三方直接提供的docker镜像版本")
+    private String foreignDockerImageVersion;
 
     @ApiModelProperty(value = "docker镜像仓库账号")
     private String dockerImageAccount;
@@ -99,6 +107,9 @@ public class ToolMetaDetailVO extends ToolMetaBaseVO
     @ApiModelProperty(value = "工具支持的参数列表")
     private List<ToolOption> toolOptions;
 
+    @ApiModelProperty(value = "用户自定义关注的工具信息")
+    private CustomToolInfo customToolInfo;
+    
     @Data
     public static class ToolOption
     {
@@ -129,5 +140,14 @@ public class ToolMetaDetailVO extends ToolMetaBaseVO
     {
         private String name;
         private String id;
+    }
+
+    @Data
+    public static class CustomToolInfo {
+        @ApiModelProperty(value = "工具上报关注参数")
+        private Map<String, String> customToolParam;
+
+        @ApiModelProperty(value = "上报告警统计维度")
+        private Map<String, String> customToolDimension;
     }
 }

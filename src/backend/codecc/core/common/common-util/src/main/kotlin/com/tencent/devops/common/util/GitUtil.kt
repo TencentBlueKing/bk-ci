@@ -7,6 +7,9 @@ import java.net.URLEncoder
 
 object GitUtil {
 
+    private const val HTTP_PREFIX = "http://git.code.oa.com/"
+    private const val SSH_PREFIX = "git@git.code.oa.com:"
+
     fun urlDecode(s: String) = URLDecoder.decode(s, "UTF-8")
 
     fun urlEncode(s: String) = URLEncoder.encode(s, "UTF-8")
@@ -21,11 +24,14 @@ object GitUtil {
         }
     }
 
+    fun getUrl(projectName: String) =
+        "git@git.code.oa.com:$projectName.git"
+
     fun getProjectName(gitUrl: String): String {
         return if (gitUrl.startsWith("http")) {
             URL(gitUrl).path.removeSuffix(".git").removePrefix("/")
         } else {
-            gitUrl.substring(gitUrl.indexOf(".com" + 5)).removeSuffix(".git")
+            gitUrl.removePrefix(SSH_PREFIX).removeSuffix(".git")
         }
     }
 }
