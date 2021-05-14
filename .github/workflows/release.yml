@@ -139,7 +139,8 @@ jobs:
       - name: Create Slim Package dir
         id: create-slim-dir
         run: |
-          mkdir -p ci
+          src_dir="bkci" slim_dir="ci"
+          mkdir -p "$slim_dir"
           svcs=$(ls "$src_dir"/*/boot*.jar | sed -r 's/^.*boot-|.jar$//g'| grep -wv agentless)
           #svcs="artifactory assembly auth dispatch dispatch dockerhost environment image log misc monitoring notify openapi plugin process project quality repository sign store ticket websocket"
           for ms in $svcs; do
