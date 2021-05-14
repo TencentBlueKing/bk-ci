@@ -29,10 +29,19 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineBuildExtService
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
 @Suppress("ALL")
-class PipelineBuildExtServiceImpl : PipelineBuildExtService {
+@Service
+class PipelineBuildExtServiceImpl@Autowired constructor(
+    private val pipelineContextService: PipelineContextService
+) : PipelineBuildExtService {
     override fun buildExt(task: PipelineBuildTask): Map<String, String> {
-        return emptyMap()
+        return pipelineContextService.buildContext(task.buildId, task.containerId)
+    }
+
+    override fun endBuild(task: PipelineBuildTask) {
+        return
     }
 }
