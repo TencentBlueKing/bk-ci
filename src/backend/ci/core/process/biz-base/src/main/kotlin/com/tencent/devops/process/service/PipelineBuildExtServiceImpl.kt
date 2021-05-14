@@ -35,4 +35,8 @@ class PipelineBuildExtServiceImpl : PipelineBuildExtService {
     override fun buildExt(task: PipelineBuildTask): Map<String, String> {
         return emptyMap()
     }
+
+    override fun endBuild(task: PipelineBuildTask) {
+        return
+    }
 }
