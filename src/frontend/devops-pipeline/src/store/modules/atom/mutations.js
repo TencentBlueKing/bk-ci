@@ -41,6 +41,7 @@ import {
     ADD_STAGE,
     CONTAINER_TYPE_SELECTION_VISIBLE,
     SET_INSERT_STAGE_INDEX,
+    SET_INSERT_STAGE_ISFINALLY,
     UPDATE_ATOM,
     SET_PIPELINE_EDITING,
     SET_PIPELINE,
@@ -201,6 +202,10 @@ export default {
         Object.assign(state, payload)
         return state
     },
+    [SET_INSERT_STAGE_ISFINALLY]: (state, payload) => {
+        Object.assign(state, payload)
+        return state
+    },
     [UPDATE_ATOM_TYPE] (state, { container, atomCode, version, atomIndex }) {
         const key = getAtomModalKey(atomCode, version)
         const atomModal = state.atomModalMap[key]
@@ -307,12 +312,13 @@ export default {
     [UPDATE_STAGE]: (state, { stage, newParam }) => {
         Object.assign(stage, newParam)
     },
-    [ADD_STAGE]: (state, { stages, insertStageIndex }) => {
+    [ADD_STAGE]: (state, { stages, insertStageIndex, insertStageIsFinally = false }) => {
         stages.splice(insertStageIndex, 0, {
             id: `s-${hashID(32)}`,
-            name: `stage-${insertStageIndex + 1}`,
+            name: insertStageIsFinally === true ? 'Finally' : `stage-${insertStageIndex + 1}`,
             tag: [...state.defaultStageTags],
-            containers: []
+            containers: [],
+            finally: insertStageIsFinally === true || undefined
         })
         return state
     },

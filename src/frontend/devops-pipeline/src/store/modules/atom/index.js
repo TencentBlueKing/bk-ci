@@ -47,6 +47,7 @@ export default {
         isStagePopupShow: false,
         isAddParallelContainer: false,
         insertStageIndex: null,
+        insertStageIsFinally: false,
         buildParamsMap: {},
         execDetail: null,
         globalEnvs: null,
