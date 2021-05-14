@@ -78,14 +78,16 @@ public class GongfengStatProjDao
                         .set("visibility_level", statProjEntity.getVisibilityLevel())
                         .set("belong", statProjEntity.getBelong())
                         .set("owners", statProjEntity.getOwners())
+                        .set("current_owners", statProjEntity.getCurrentOwners())
+                        .set("current_owners_org_paths", statProjEntity.getCurrentOwnersOrgPaths())
                         .set("created_at", statProjEntity.getCreatedAt())
                         .set("creator", statProjEntity.getCreator())
                         .set("url", statProjEntity.getUrl())
                         .set("archived", statProjEntity.getArchived())
                         .set("is_sensitive", statProjEntity.getIsSensitive())
                         .set("sensitive_reason", statProjEntity.getSensitiveReason())
-                        .set("public_visibility", statProjEntity.getPublicVisibility());
-
+                        .set("public_visibility", statProjEntity.getPublicVisibility())
+                        .set("synchronize_time", statProjEntity.getSynchronizeTime());
                 ops.upsert(query, update);
             }
             ops.execute();

@@ -28,12 +28,13 @@ package com.tencent.bk.codecc.task.resources;
 
 import com.tencent.bk.codecc.task.api.ServiceToolMetaRestResource;
 import com.tencent.bk.codecc.task.service.ToolMetaService;
-import com.tencent.devops.common.api.RefreshToolImageRevisionReqVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.RefreshDockerImageHashReqVO;
+import com.tencent.devops.common.api.ToolMetaDetailVO;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.web.RestResource;
-import org.springframework.beans.factory.annotation.Autowired;
-
 import java.util.List;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * 工具元数据注册接口
@@ -48,17 +49,25 @@ public class ServiceToolMetaRestResourceImpl implements ServiceToolMetaRestResou
     private ToolMetaService toolMetaService;
 
     @Override
-    public CodeCCResult<Boolean> validateToolType(String toolType) {
-        return new CodeCCResult<>(toolMetaService.validateToolType(toolType));
+    public Result<Boolean> validateToolType(String toolType) {
+        return new Result<>(toolMetaService.validateToolType(toolType));
     }
 
     @Override
-    public CodeCCResult<Boolean> validateLanguage(List<String> languages) {
-        return new CodeCCResult<>(toolMetaService.validateLanguage(languages));
+    public Result<Boolean> validateLanguage(List<String> languages) {
+        return new Result<>(toolMetaService.validateLanguage(languages));
     }
 
     @Override
-    public CodeCCResult<Boolean> refreshToolImageRevision(RefreshToolImageRevisionReqVO refreshToolImageRevisionReqVO) {
-        return new CodeCCResult<>(toolMetaService.refreshToolImageRevision(refreshToolImageRevisionReqVO));
+    public Result<ToolMetaDetailVO> obtainToolDetail(String toolName) {
+        if (StringUtils.isBlank(toolName)) {
+            return new Result<>(null);
+        }
+        return new Result<>(toolMetaService.obtainToolMetaData(toolName));
+    }
+
+    @Override
+    public Result<Boolean> refreshDockerImageHash(RefreshDockerImageHashReqVO refreshDockerImageHashReqVO) {
+        return new Result<>(toolMetaService.refreshDockerImageHash(refreshDockerImageHashReqVO));
     }
 }

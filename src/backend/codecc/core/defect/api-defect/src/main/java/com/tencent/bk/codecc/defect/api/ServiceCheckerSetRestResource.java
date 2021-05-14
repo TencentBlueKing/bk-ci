@@ -26,9 +26,10 @@
 
 package com.tencent.bk.codecc.defect.api;
 
+import com.tencent.bk.codecc.defect.vo.CheckerSetListQueryReq;
 import com.tencent.bk.codecc.task.vo.TaskBaseVO;
 import com.tencent.devops.common.api.checkerset.*;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -39,8 +40,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEADER_DEVOPS_PROJECT_ID;
-import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEADER_DEVOPS_USER_ID;
+import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_PROJECT_ID;
+import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_USER_ID;
 
 /**
  * 规则集接口
@@ -57,16 +58,16 @@ public interface ServiceCheckerSetRestResource
     @ApiOperation("根据分类获取规则集清单")
     @Path("/categoryList")
     @GET
-    CodeCCResult<Map<String, List<CheckerSetVO>>> getCheckerSetListByCategory(
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_PROJECT_ID)
+    Result<Map<String, List<CheckerSetVO>>> getCheckerSetListByCategory(
+            @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
                     String projectId
     );
 
     @ApiOperation("任务关联规则集")
     @Path("/project/{projectId}/tasks/{taskId}/checkerSets/relationship")
     @POST
-    CodeCCResult<Boolean> batchRelateTaskAndCheckerSet(
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
+    Result<Boolean> batchRelateTaskAndCheckerSet(
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
                     String user,
             @ApiParam(value = "项目Id", required = true)
             @PathParam("projectId")
@@ -84,7 +85,7 @@ public interface ServiceCheckerSetRestResource
     @ApiOperation("根据规则ID列表查询规则集")
     @Path("/project/{projectId}")
     @POST
-    CodeCCResult<List<CheckerSetVO>> queryCheckerSets(
+    Result<List<CheckerSetVO>> queryCheckerSets(
             @ApiParam(value = "规则集列表", required = true)
                     Set<String> checkerSetList,
             @ApiParam(value = "项目Id", required = true)
@@ -94,7 +95,7 @@ public interface ServiceCheckerSetRestResource
     @ApiOperation("根据任务Id查询任务已经关联的规则集列表")
     @Path("/tasks/{taskId}/list")
     @POST
-    CodeCCResult<List<CheckerSetVO>> getCheckerSets(
+    Result<List<CheckerSetVO>> getCheckerSets(
             @ApiParam(value = "任务Id", required = true)
             @PathParam("taskId")
                     Long taskId
@@ -103,7 +104,7 @@ public interface ServiceCheckerSetRestResource
     @ApiOperation("根据任务和语言解绑相应的规则集")
     @Path("/task/{taskId}/codeLang/{codeLang}")
     @POST
-    CodeCCResult<Boolean> updateCheckerSetAndTaskRelation(
+    Result<Boolean> updateCheckerSetAndTaskRelation(
             @ApiParam(value = "任务Id", required = true)
             @PathParam("taskId")
                     Long taskId,
@@ -111,14 +112,14 @@ public interface ServiceCheckerSetRestResource
             @PathParam("codeLang")
                     Long codeLang,
             @ApiParam(value = "项目语言", required = true)
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
                     String user);
 
 
     @ApiOperation("获取规则和规则集数量")
     @Path("/count/task/{taskId}/projectId/{projectId}")
     @POST
-    CodeCCResult<TaskBaseVO> getCheckerAndCheckerSetCount(
+    Result<TaskBaseVO> getCheckerAndCheckerSetCount(
             @ApiParam(value = "任务Id", required = true)
             @PathParam("taskId")
                     Long taskId,
@@ -130,11 +131,11 @@ public interface ServiceCheckerSetRestResource
     @ApiOperation("规则集关联到项目或任务")
     @Path("/{checkerSetId}/relationships")
     @POST
-    CodeCCResult<Boolean> setRelationships(
+    Result<Boolean> setRelationships(
             @ApiParam(value = "规则集Id", required = true)
             @PathParam("checkerSetId")
                     String checkerSetId,
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
                     String user,
             @ApiParam(value = "规则集关联到项目或任务", required = true)
                     CheckerSetRelationshipVO checkerSetRelationshipVO
@@ -143,10 +144,18 @@ public interface ServiceCheckerSetRestResource
     @ApiOperation("根据规则ID列表查询规则集")
     @Path("/project/openscan/{projectId}")
     @POST
-    CodeCCResult<List<CheckerSetVO>> queryCheckerSetsForOpenScan(
+    Result<List<CheckerSetVO>> queryCheckerSetsForOpenScan(
             @ApiParam(value = "规则集列表", required = true)
                     Set<CheckerSetVO> checkerSetList,
             @ApiParam(value = "项目Id", required = true)
             @PathParam("projectId")
                     String projectId);
+
+    @ApiOperation("查询规则集列表")
+    @Path("/list")
+    @POST
+    Result<List<CheckerSetVO>> getCheckerSets(
+        @ApiParam(value = "配置规则包参数", required = true)
+            CheckerSetListQueryReq queryCheckerSetReq
+    );
 }

@@ -25,7 +25,7 @@ import com.tencent.bk.codecc.schedule.vo.TailLogRspVO;
  */
 public interface ScheduleService
 {
-    Boolean push(String streamName, String toolName, String buildId, String createFrom);
+    Boolean push(String streamName, String toolName, String buildId, String createFrom, String projectId);
 
     Boolean dipatch(PushVO pushVO, AnalyzeHostPoolModel mostIdleHost);
 

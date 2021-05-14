@@ -24,4 +24,14 @@ public interface BuildDefectRepository extends MongoRepository<BuildDefectEntity
      * @return
      */
     List<BuildDefectEntity> findByTaskIdAndToolNameAndBuildId(long taskId, String toolName, String buildId);
+
+    /**
+     * 根据工具名称和构建号查询
+     *
+     * @param taskId
+     * @param toolNameSet
+     * @param buildId
+     * @return
+     */
+    List<BuildDefectEntity> findByTaskIdAndToolNameInAndBuildId(long taskId, List<String> toolNameSet, String buildId);
 }

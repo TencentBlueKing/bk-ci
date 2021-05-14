@@ -12,14 +12,16 @@
 
 package com.tencent.bk.codecc.defect.resources;
 
+import com.google.common.collect.Sets;
 import com.tencent.bk.codecc.defect.api.ServiceRepoResource;
 import com.tencent.bk.codecc.defect.service.CodeRepoService;
 import com.tencent.bk.codecc.defect.vo.CodeRepoVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.web.RestResource;
-import org.springframework.beans.factory.annotation.Autowired;
-
+import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
+import org.springframework.beans.factory.annotation.Autowired;
 
 /**
  * 代码库信息接口实现
@@ -34,8 +36,12 @@ public class ServiceRepoResourceImpl implements ServiceRepoResource {
     private CodeRepoService codeRepoService;
 
     @Override
-    public CodeCCResult<Set<CodeRepoVO>> getCodeRepoByTaskIdAndBuildId(Long taskId, String buildId) {
-        return new CodeCCResult<>(codeRepoService.getCodeRepoInfoByTaskId(taskId, buildId));
+    public Result<Set<CodeRepoVO>> getCodeRepoByTaskIdAndBuildId(Long taskId, String buildId) {
+        return new Result<>(codeRepoService.getCodeRepoInfoByTaskId(taskId, buildId));
+    }
+
+    @Override public Result<Map<Long, Set<CodeRepoVO>>> getCodeRepoByTaskIds(Collection<Long> taskIds) {
+        return new Result<>(codeRepoService.getCodeRepoListByTaskIds(Sets.newHashSet(taskIds)));
     }
 
 }

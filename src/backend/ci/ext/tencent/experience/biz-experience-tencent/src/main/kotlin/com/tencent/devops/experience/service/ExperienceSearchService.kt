@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.experience.constant.ExperienceConstant.ORGANIZATION_OUTER
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.dao.ExperienceSearchRecommendDao
@@ -54,12 +55,13 @@ class ExperienceSearchService @Autowired constructor(
         userId: String,
         platform: Int?,
         experienceName: String,
-        experiencePublic: Boolean
+        experiencePublic: Boolean,
+        organization: String?
     ): Result<List<SearchAppInfoVO>> {
         val record = if (experiencePublic) {
             publicSearch(userId, experienceName, platform)
         } else {
-            privateSearch(userId, platform, experienceName)
+            privateSearch(userId, platform, experienceName, organization)
         }
         return Result(record)
     }
@@ -67,14 +69,16 @@ class ExperienceSearchService @Autowired constructor(
     private fun privateSearch(
         userId: String,
         platform: Int?,
-        experienceName: String
+        experienceName: String,
+        organization: String?
     ) = experienceBaseService.list(
         userId = userId,
         offset = 0,
         limit = 100,
         groupByBundleId = false,
         platform = platform,
-        experienceName = experienceName
+        experienceName = experienceName,
+        isOuter = organization == ORGANIZATION_OUTER
     ).records.map {
         SearchAppInfoVO(
             experienceHashId = it.experienceHashId,

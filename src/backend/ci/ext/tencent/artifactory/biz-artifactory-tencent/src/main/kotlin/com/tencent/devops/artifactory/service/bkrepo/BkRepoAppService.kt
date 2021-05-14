@@ -67,7 +67,10 @@ class BkRepoAppService @Autowired constructor(
         ttl: Int,
         directed: Boolean
     ): Url {
-        logger.info("getExternalDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl, directed: $directed")
+        logger.info(
+            "getExternalDownloadUrl, userId: $userId, projectId: $projectId, " +
+                "artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl, directed: $directed"
+        )
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         when (artifactoryType) {
             ArtifactoryType.CUSTOM_DIR -> {
@@ -121,7 +124,10 @@ class BkRepoAppService @Autowired constructor(
         ttl: Int,
         directed: Boolean
     ): Url {
-        logger.info("getExternalPlistDownloadUrl, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl, directed: $directed")
+        logger.info(
+            "getExternalPlistDownloadUrl, userId: $userId, projectId: $projectId, " +
+                "artifactoryType: $artifactoryType, argPath: $argPath, ttl: $ttl, directed: $directed"
+        )
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         when (artifactoryType) {
             ArtifactoryType.CUSTOM_DIR -> {
@@ -148,7 +154,10 @@ class BkRepoAppService @Autowired constructor(
             }
         }
         val url =
-            StringUtil.chineseUrlEncode("${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories/$projectId/$artifactoryType/filePlist?path=$normalizedPath")
+            StringUtil.chineseUrlEncode(
+                "${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories/$projectId/" +
+                    "$artifactoryType/filePlist?path=$normalizedPath"
+            )
         return Url(url)
     }
 
@@ -161,7 +170,10 @@ class BkRepoAppService @Autowired constructor(
         directed: Boolean,
         experienceHashId: String?
     ): String {
-        logger.info("getPlistFile, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, argPath: $argPath, directed: $directed, experienceHashId: $experienceHashId")
+        logger.info(
+            "getPlistFile, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
+                "argPath: $argPath, directed: $directed, experienceHashId: $experienceHashId"
+        )
         val userName = if (experienceHashId != null) {
             val experience = client.get(ServiceExperienceResource::class).get(userId, projectId, experienceHashId)
             if (experience.isOk() && experience.data != null) {

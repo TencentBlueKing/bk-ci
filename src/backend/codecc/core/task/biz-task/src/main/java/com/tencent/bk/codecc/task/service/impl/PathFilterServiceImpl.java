@@ -26,6 +26,8 @@
 
 package com.tencent.bk.codecc.task.service.impl;
 
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.tencent.bk.codecc.defect.api.ServiceDefectTreeResource;
 import com.tencent.bk.codecc.defect.vo.TreeNodeVO;
 import com.tencent.bk.codecc.task.dao.mongorepository.BaseDataRepository;
@@ -41,7 +43,7 @@ import com.tencent.bk.codecc.task.vo.FilterPathOutVO;
 import com.tencent.bk.codecc.task.vo.TreeNodeTaskVO;
 import com.tencent.bk.codecc.task.vo.path.CodeYmlFilterPathVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
@@ -57,11 +59,18 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 
-import static com.tencent.devops.common.constant.ComConstants.*;
+import static com.tencent.devops.common.constant.ComConstants.DISABLE_ACTION;
+import static com.tencent.devops.common.constant.ComConstants.ENABLE_ACTION;
+import static com.tencent.devops.common.constant.ComConstants.FUNC_FILTER_PATH;
 
 /**
  * 路径忽略服务类实现
@@ -119,6 +128,7 @@ public class PathFilterServiceImpl implements PathFilterService
     @OperationHistory(funcId = FUNC_FILTER_PATH, operType = ENABLE_ACTION)
     public Boolean addFilterPaths(FilterPathInputVO filterPathInput, String userName)
     {
+        filterPathInput.setUserName(userName);
         Long taskId = filterPathInput.getTaskId();
         TaskInfoEntity taskEntity = taskRepository.findByTaskId(taskId);
         if (Objects.isNull(taskEntity))
@@ -127,20 +137,9 @@ public class PathFilterServiceImpl implements PathFilterService
             throw new CodeCCException(CommonMessageCode.RECORD_NOT_EXITS, new String[]{String.valueOf(taskId)}, null);
         }
 
-        // 系统默认屏蔽路径
-        List<BaseDataEntity> baseDataEntities = baseDataRepository.findAllByParamType(ComConstants.KEY_DEFAULT_FILTER_PATH);
-        List<String> sysDefaultPathList = null;
-        if (CollectionUtils.isNotEmpty(baseDataEntities))
-        {
-            sysDefaultPathList = baseDataEntities.stream()
-                    .map(BaseDataEntity::getParamValue)
-                    .collect(Collectors.toList());
-        }
-
         FilterPathInputVO addPath = new FilterPathInputVO();
         addPath.setTaskId(filterPathInput.getTaskId());
         addPath.setPathType(filterPathInput.getPathType());
-        filterPathInput.setUserName(userName);
 
         List<String> tools = toolService.getEffectiveToolList(taskEntity);
         filterPathInput.setEffectiveTools(tools);
@@ -148,61 +147,223 @@ public class PathFilterServiceImpl implements PathFilterService
         // 屏蔽默认路径
         if (ComConstants.PATH_TYPE_DEFAULT.equalsIgnoreCase(filterPathInput.getPathType()))
         {
-            List<String> filterDir = filterPathInput.getDefaultFilterPath();
-            verifyDefaultFilterFile(sysDefaultPathList, filterDir);
-            // 前段传什么值就存什么值
-            addPath.setDefaultFilterPath(filterDir);
-            // 通知其他工具维度
-            sendDefaultFiles(filterPathInput, taskEntity.getDefaultFilterPath(), filterDir);
+            processDefaultFilterPath(filterPathInput, taskEntity, addPath);
+        }
+        else if (ComConstants.PATH_TYPE_CODE_YML.equalsIgnoreCase(filterPathInput.getPathType())) {
+            if (!processCodeYmlFilterPath(filterPathInput, taskEntity, addPath, tools)) {
+                return true;
+            }
         }
         else
         {
-            ArrayList<String> customFilterPath = getCustomFilePath(filterPathInput);
-
-            List<String> filterPath = CollectionUtils.isEmpty(taskEntity.getFilterPath()) ?
-                    new ArrayList<>() : taskEntity.getFilterPath();
-
-            if (CollectionUtils.isNotEmpty(filterPath))
-            {
-                for (String path : customFilterPath)
-                {
-                    Iterator<String> iterator = filterPath.iterator();
-                    while (iterator.hasNext())
-                    {
-                        String dbPath = iterator.next();
-                        try{
-                            if (dbPath.matches(path))
-                            {
-                                iterator.remove();
-                            }
-                        } catch (PatternSyntaxException e){
-                            log.error("invalid regex pattern");
-                            iterator.remove();
-                        }
-                    }
-                }
-            }
-
-            filterPath.addAll(customFilterPath);
-            addPath.setFilterDir(filterPath);
-
-            addPath.setTestSourceFilterPath(filterPathInput.getTestSourceFilterPath());
-            addPath.setAutoGenFilterPath(filterPathInput.getAutoGenFilterPath());
-            addPath.setThirdPartyFilterPath(filterPathInput.getThirdPartyFilterPath());
-
-            // 任务通知, 其他工具類也需要屏蔽此路徑
-            if (CollectionUtils.isNotEmpty(filterPathInput.getEffectiveTools()))
-            {
-                rabbitTemplate.convertAndSend(ConstantsKt.EXCHANGE_TASK_FILTER_PATH,
-                        ConstantsKt.ROUTE_ADD_TASK_FILTER_PATH, filterPathInput);
-            }
-
+            processNormalFilterPath(filterPathInput, taskEntity, addPath);
         }
 
         // 设置强制全量扫描标志
         taskService.setForceFullScan(taskEntity);
 
-        return updateFilterPath(addPath, taskEntity.getPipelineId(), userName);
+        return taskDao.updateFilterPath(addPath, userName);
+    }
+
+    /**
+     * 处理普通屏蔽路径
+     *
+     * @param filterPathInput
+     * @param taskEntity
+     * @param addPath
+     */
+    private void processNormalFilterPath(FilterPathInputVO filterPathInput,
+                                         TaskInfoEntity taskEntity, FilterPathInputVO addPath) {
+        ArrayList<String> newFilterPath = getFilePath(filterPathInput);
+
+        List<String> oldFilterPath = CollectionUtils.isEmpty(taskEntity.getFilterPath()) ?
+                new ArrayList<>() : taskEntity.getFilterPath();
+
+        if (CollectionUtils.isNotEmpty(oldFilterPath))
+        {
+            for (String path : newFilterPath)
+            {
+                Iterator<String> iterator = oldFilterPath.iterator();
+                while (iterator.hasNext())
+                {
+                    String dbPath = iterator.next();
+                    try{
+                        if (dbPath.matches(path))
+                        {
+                            iterator.remove();
+                        }
+                    } catch (PatternSyntaxException e){
+                        log.error("invalid regex pattern");
+                        iterator.remove();
+                    }
+                }
+            }
+        }
+
+        oldFilterPath.addAll(newFilterPath);
+        addPath.setFilterDir(oldFilterPath);
+
+        // 任务通知, 其他工具類也需要屏蔽此路徑
+        if (CollectionUtils.isNotEmpty(filterPathInput.getEffectiveTools()))
+        {
+            rabbitTemplate.convertAndSend(ConstantsKt.EXCHANGE_TASK_FILTER_PATH,
+                    ConstantsKt.ROUTE_ADD_TASK_FILTER_PATH, filterPathInput);
+        }
+    }
+
+    /**
+     * 处理code.yml的屏蔽路径
+     *
+     * @param filterPathInput
+     * @param taskEntity
+     * @param addPath
+     * @param tools
+     * @return
+     */
+    private boolean processCodeYmlFilterPath(FilterPathInputVO filterPathInput, TaskInfoEntity taskEntity,
+                                             FilterPathInputVO addPath, List<String> tools) {
+        Long taskId = taskEntity.getTaskId();
+        List<String> hisTestSourceFilterPath = taskEntity.getTestSourceFilterPath();
+        List<String> hisAutoGenFilterPath = taskEntity.getAutoGenFilterPath();
+        List<String> hisThirdPartyFilterPath = taskEntity.getThirdPartyFilterPath();
+        Boolean hisScanTestSource = taskEntity.getScanTestSource();
+
+        List<String> newTestSourceFilterPath = filterPathInput.getTestSourceFilterPath();
+        List<String> newAutoGenFilterPath = filterPathInput.getAutoGenFilterPath();
+        List<String> newThirdPartyFilterPath = filterPathInput.getThirdPartyFilterPath();
+        Boolean newScanTestSource = filterPathInput.getScanTestSource();
+
+        // 判断是否有变更
+        boolean isTestSourceEqual = isEqualCollection(newTestSourceFilterPath, hisTestSourceFilterPath);
+        boolean isGenFilterEqual = isEqualCollection(newAutoGenFilterPath, hisAutoGenFilterPath);
+        boolean isThirdPartyEqual = isEqualCollection(newThirdPartyFilterPath, hisThirdPartyFilterPath);
+
+        boolean isScanTestSourceEqual = (newScanTestSource == null && hisScanTestSource == null)
+                || (newScanTestSource != null && (newScanTestSource.equals(hisScanTestSource)
+                || (newScanTestSource == false && hisScanTestSource == null)));
+        if (isTestSourceEqual && isGenFilterEqual && isThirdPartyEqual && isScanTestSourceEqual) {
+            log.info("code.yml path no change, need not to update...({})", taskId);
+            return false;
+        }
+
+        addPath.setTestSourceFilterPath(newTestSourceFilterPath);
+        addPath.setAutoGenFilterPath(newAutoGenFilterPath);
+        addPath.setThirdPartyFilterPath(newThirdPartyFilterPath);
+        addPath.setScanTestSource(newScanTestSource);
+        addPath.setPathType(ComConstants.PATH_TYPE_CODE_YML);
+
+        /*
+         * 对于.code.yml中的测试代码，也要进行代码规范检查，这里判断是否需要扫描测试代码
+         * 1.任务被标志为扫描测试代码
+         * 2.工具是代码规范工具
+         */
+        BaseDataEntity standardToolsEntity = baseDataRepository
+                .findFirstByParamType(ComConstants.BaseConfig.STANDARD_TOOLS.name());
+        Set<String> standardToolSet = null;
+        if (standardToolsEntity != null && StringUtils.isNotEmpty(standardToolsEntity.getParamValue())) {
+            String[] standardToolArr = standardToolsEntity.getParamValue().split(ComConstants.STRING_SPLIT);
+            standardToolSet = Sets.newHashSet(standardToolArr);
+        }
+        List<String> addTestPathList;
+        List<String> addThirdPathList = minus(newThirdPartyFilterPath, hisThirdPartyFilterPath);
+        List<String> addAutoGenPathList = minus(newAutoGenFilterPath, hisAutoGenFilterPath);
+
+        List<String> delTestPathList;
+        List<String> delThirdPathList = minus(hisThirdPartyFilterPath, newThirdPartyFilterPath);
+        List<String> delAutoGenPathList = minus(hisAutoGenFilterPath, newAutoGenFilterPath);
+        for (String toolName : tools) {
+            boolean isScanTestSource = newScanTestSource != null && newScanTestSource
+                    && CollectionUtils.isNotEmpty(standardToolSet) && standardToolSet.contains(toolName);
+            /*
+             * 1.如果扫描测试代码标志变化，且当前为true，则需要把原来屏蔽告警放出来，并且本次不屏蔽
+             * 2.如果扫描测试代码标志变化，且当前为false，则原来没有屏蔽告警，本次需要屏蔽
+             * 3.如果扫描测试代码标志没变化，且当前为true，则原来没有屏蔽告警，本次也不需要屏蔽
+             * 4.如果扫描测试代码标志没变化，且当前为false，则原来屏蔽告警，本次也需要屏蔽
+             */
+            if (!isScanTestSourceEqual) {
+                if (isScanTestSource) {
+                    addTestPathList = null;
+                    delTestPathList = hisTestSourceFilterPath;
+                } else {
+                    addTestPathList = newTestSourceFilterPath;
+                    delTestPathList = null;
+                }
+            } else {
+                if (isScanTestSource) {
+                    addTestPathList = null;
+                    delTestPathList = null;
+                } else {
+                    addTestPathList = minus(newTestSourceFilterPath, hisTestSourceFilterPath);
+                    delTestPathList = minus(hisTestSourceFilterPath, newTestSourceFilterPath);
+                }
+            }
+
+            filterPathInput.setEffectiveTools(Lists.newArrayList(toolName));
+            if (CollectionUtils.isNotEmpty(delTestPathList) || CollectionUtils.isNotEmpty(delThirdPathList)
+                    || CollectionUtils.isNotEmpty(delAutoGenPathList)) {
+                filterPathInput.setTestSourceFilterPath(delTestPathList);
+                filterPathInput.setAutoGenFilterPath(delAutoGenPathList);
+                filterPathInput.setThirdPartyFilterPath(delThirdPathList);
+                rabbitTemplate.convertAndSend(ConstantsKt.EXCHANGE_TASK_FILTER_PATH,
+                        ConstantsKt.ROUTE_DEL_TASK_FILTER_PATH, filterPathInput);
+            }
+
+            if (CollectionUtils.isNotEmpty(addTestPathList) || CollectionUtils.isNotEmpty(addThirdPathList)
+                    || CollectionUtils.isNotEmpty(addAutoGenPathList)) {
+                filterPathInput.setTestSourceFilterPath(addTestPathList);
+                filterPathInput.setAutoGenFilterPath(addThirdPathList);
+                filterPathInput.setThirdPartyFilterPath(addAutoGenPathList);
+                rabbitTemplate.convertAndSend(ConstantsKt.EXCHANGE_TASK_FILTER_PATH,
+                        ConstantsKt.ROUTE_ADD_TASK_FILTER_PATH, filterPathInput);
+            }
+        }
+        return true;
+    }
+
+    /**
+     * 处理默认屏蔽路径
+     *
+     * @param filterPathInput
+     * @param taskEntity
+     * @param addPath
+     */
+    private void processDefaultFilterPath(FilterPathInputVO filterPathInput, TaskInfoEntity taskEntity,
+                                          FilterPathInputVO addPath) {
+        List<String> filterDir = filterPathInput.getDefaultFilterPath();
+
+        // 前段传什么值就存什么值
+        addPath.setDefaultFilterPath(filterPathInput.getDefaultFilterPath());
+
+        if (CollectionUtils.isEmpty(filterPathInput.getEffectiveTools())) {
+            return;
+        }
+
+        // 获取系统默认屏蔽路径
+        List<BaseDataEntity> baseDataEntities = baseDataRepository.findAllByParamType(ComConstants.KEY_DEFAULT_FILTER_PATH);
+        List<String> sysDefaultPathList = baseDataEntities.stream()
+                .map(BaseDataEntity::getParamValue).collect(Collectors.toList());
+
+        verifyDefaultFilterFile(sysDefaultPathList, filterDir);
+
+        List<String> hisDefaultPath = taskEntity.getDefaultFilterPath() != null
+                ? taskEntity.getDefaultFilterPath() : new ArrayList<>();
+
+        // 提取出增加的屏蔽路径
+        List<String> addFiles = new ArrayList<>(filterDir);
+        addFiles.removeAll(hisDefaultPath);
+        if (CollectionUtils.isNotEmpty(addFiles)) {
+            filterPathInput.setDefaultFilterPath(addFiles);
+            rabbitTemplate.convertAndSend(ConstantsKt.EXCHANGE_TASK_FILTER_PATH,
+                    ConstantsKt.ROUTE_ADD_TASK_FILTER_PATH, filterPathInput);
+        }
+
+        // 提取出删除的屏蔽路径
+        hisDefaultPath.removeAll(filterDir);
+        if (CollectionUtils.isNotEmpty(hisDefaultPath)) {
+            filterPathInput.setDefaultFilterPath(hisDefaultPath);
+            rabbitTemplate.convertAndSend(ConstantsKt.EXCHANGE_TASK_FILTER_PATH,
+                    ConstantsKt.ROUTE_DEL_TASK_FILTER_PATH, filterPathInput);
+        }
     }
 
 
@@ -259,7 +420,7 @@ public class PathFilterServiceImpl implements PathFilterService
             filterPathInput.setFilterDir(filterPath);
         }
 
-        updateFilterPath(filterPathInput, taskEntity.getPipelineId(), userName);
+        taskDao.updateFilterPath(filterPathInput, userName);
 
         // 任务通知, 其他工具類也需要移除屏蔽路徑
         filterPathInput.setDefaultFilterPath(Collections.singletonList(path));
@@ -335,7 +496,7 @@ public class PathFilterServiceImpl implements PathFilterService
             return treeNodeVO;
         }
 
-        CodeCCResult<TreeNodeVO> treeNode = client.get(ServiceDefectTreeResource.class).getTreeNode(taskId, tools);
+        Result<TreeNodeVO> treeNode = client.get(ServiceDefectTreeResource.class).getTreeNode(taskId, tools);
         if (treeNode.isNotOk())
         {
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
@@ -348,83 +509,15 @@ public class PathFilterServiceImpl implements PathFilterService
 
     @Override
     public Boolean codeYmlFilterPath(Long taskId, String userName, CodeYmlFilterPathVO codeYmlFilterPathVO) {
-        log.info("==========codeYmlFilterPath==============taskId:{},userName:{}",taskId,userName);
-        CodeYmlFilterPathVO hisCodeYmlFilterPathVO = listCodeYmlFilterPath(taskId);
-
-        // 判断是否有变更
-        boolean isTestSourceEqual = isEqualCollection(codeYmlFilterPathVO.getTestSourceFilterPath(),
-            hisCodeYmlFilterPathVO.getTestSourceFilterPath());
-
-        boolean isGenFilterEqual = isEqualCollection(codeYmlFilterPathVO.getAutoGenFilterPath(),
-            hisCodeYmlFilterPathVO.getAutoGenFilterPath());
-
-        boolean isThirdPartyEqual = isEqualCollection(codeYmlFilterPathVO.getThirdPartyFilterPath(),
-            hisCodeYmlFilterPathVO.getThirdPartyFilterPath());
-
-        if (isTestSourceEqual && isGenFilterEqual && isThirdPartyEqual)
-        {
-            log.info("task is all empty in code.yml path, do not update...({})", taskId);
-            return true;
-        }
-
-        // 先进行删除操作
-        List<String> removeTestPathList = minus(hisCodeYmlFilterPathVO.getTestSourceFilterPath(), codeYmlFilterPathVO.getTestSourceFilterPath());
-        List<String> removeThirdPathList = minus(hisCodeYmlFilterPathVO.getThirdPartyFilterPath(), codeYmlFilterPathVO.getThirdPartyFilterPath());
-        List<String> removeAutoGenPathList = minus(hisCodeYmlFilterPathVO.getAutoGenFilterPath(), codeYmlFilterPathVO.getAutoGenFilterPath());
-        deleteCodeYmlFilterPath(removeTestPathList, removeThirdPathList, removeAutoGenPathList, taskId, userName);
-
-        // 再进行添加操作
         FilterPathInputVO filterPathVo = new FilterPathInputVO();
         filterPathVo.setTaskId(taskId);
-        filterPathVo.setPathType("CODE_YML");
+        filterPathVo.setPathType(ComConstants.PATH_TYPE_CODE_YML);
         filterPathVo.setTestSourceFilterPath(codeYmlFilterPathVO.getTestSourceFilterPath());
         filterPathVo.setAutoGenFilterPath(codeYmlFilterPathVO.getAutoGenFilterPath());
         filterPathVo.setThirdPartyFilterPath(codeYmlFilterPathVO.getThirdPartyFilterPath());
+        filterPathVo.setScanTestSource(codeYmlFilterPathVO.getScanTestSource());
 
         addFilterPaths(filterPathVo, userName);
-
-        return true;
-    }
-
-    private Boolean deleteCodeYmlFilterPath(List<String> testPathList,
-                                           List<String> thirdPathList,
-                                           List<String> autoGenPathList,
-                                           Long taskId,
-                                           String userName)
-    {
-        if (CollectionUtils.isEmpty(testPathList)
-            && CollectionUtils.isEmpty(thirdPathList)
-            && CollectionUtils.isEmpty(autoGenPathList))
-        {
-            log.info("code yml remove path is empty for task: {}", taskId);
-            return true;
-        }
-
-        TaskInfoEntity taskEntity = taskRepository.findByTaskId(taskId);
-        if (Objects.isNull(taskEntity))
-        {
-            log.error("taskInfo not exists! task id is: {}", taskId);
-            throw new CodeCCException(CommonMessageCode.RECORD_NOT_EXITS, new String[]{String.valueOf(taskId)}, null);
-        }
-
-        // 删除code.yml过滤文件
-        FilterPathInputVO filterPathInput = new FilterPathInputVO();
-        filterPathInput.setTaskId(taskId);
-        filterPathInput.setPathType("CODE_YML");
-        filterPathInput.setUserName(userName);
-        filterPathInput.setTestSourceFilterPath(testPathList);
-        filterPathInput.setAutoGenFilterPath(autoGenPathList);
-        filterPathInput.setThirdPartyFilterPath(thirdPathList);
-
-        List<String> tools = toolService.getEffectiveToolList(taskEntity);
-        if (CollectionUtils.isNotEmpty(tools))
-        {
-            filterPathInput.setEffectiveTools(tools);
-            rabbitTemplate.convertAndSend(ConstantsKt.EXCHANGE_TASK_FILTER_PATH,
-                ConstantsKt.ROUTE_DEL_TASK_FILTER_PATH, filterPathInput);
-        }
-        // 设置强制全量扫描标志
-        taskService.setForceFullScan(taskEntity);
 
         return true;
     }
@@ -432,30 +525,24 @@ public class PathFilterServiceImpl implements PathFilterService
     // 必须顺序、数量完全一样，不去重
     private boolean isEqualCollection(List<String> c1, List<String> c2)
     {
-        if (CollectionUtils.isEmpty(c1) && CollectionUtils.isEmpty(c2))
-        {
+        if (CollectionUtils.isEmpty(c1) && CollectionUtils.isEmpty(c2)) {
             return true;
         }
 
         // 排除其中一个为空的情况
-        if (CollectionUtils.isEmpty(c1))
-        {
+        if (CollectionUtils.isEmpty(c1)) {
             return false;
         }
-        if (CollectionUtils.isEmpty(c2))
-        {
-            return false;
-        }
-
-        if (c1.size() != c2.size())
-        {
+        if (CollectionUtils.isEmpty(c2)) {
             return false;
         }
 
-        for (int i = 0; i < c1.size(); i++)
-        {
-            if (!c1.get(i).equals(c2.get(i)))
-            {
+        if (c1.size() != c2.size()) {
+            return false;
+        }
+
+        for (int i = 0; i < c1.size(); i++) {
+            if (!c1.get(i).equals(c2.get(i))) {
                 return false;
             }
         }
@@ -498,6 +585,7 @@ public class PathFilterServiceImpl implements PathFilterService
         codeYmlFilterPathVo.setAutoGenFilterPath(taskInfo.getAutoGenFilterPath());
         codeYmlFilterPathVo.setTestSourceFilterPath(taskInfo.getTestSourceFilterPath());
         codeYmlFilterPathVo.setThirdPartyFilterPath(taskInfo.getThirdPartyFilterPath());
+        codeYmlFilterPathVo.setScanTestSource(taskInfo.getScanTestSource());
         return codeYmlFilterPathVo;
     }
 
@@ -508,9 +596,9 @@ public class PathFilterServiceImpl implements PathFilterService
      * @return
      */
     @NotNull
-    private ArrayList<String> getCustomFilePath(FilterPathInputVO filterPathInput)
+    private ArrayList<String> getFilePath(FilterPathInputVO filterPathInput)
     {
-        ArrayList<String> customFilterPath = new ArrayList<>();
+        ArrayList<String> filterPath = new ArrayList<>();
 
         List<String> fileDir = filterPathInput.getFilterDir();
         List<String> filterFile = filterPathInput.getFilterFile();
@@ -518,21 +606,21 @@ public class PathFilterServiceImpl implements PathFilterService
         // 手工输入路径
         if (!CollectionUtils.isEmpty(customPath))
         {
-            customFilterPath.addAll(customPath);
+            filterPath.addAll(customPath);
         }
         // 选择屏蔽文件
         if (!CollectionUtils.isEmpty(filterFile))
         {
-            customFilterPath.addAll(filterFile);
+            filterPath.addAll(filterFile);
             //PathUtils.convertPaths(filterFile, customFilterPath, PathUtils.FILE);
         }
         // 选择屏蔽文件夹
         if (!CollectionUtils.isEmpty(fileDir))
         {
-            PathUtils.convertPaths(fileDir, customFilterPath, PathUtils.DIR);
+            PathUtils.convertPaths(fileDir, filterPath, PathUtils.DIR);
         }
 
-        return customFilterPath.stream()
+        return filterPath.stream()
                 .filter(e -> !ComConstants.STRING_PREFIX_OR_SUFFIX.equals(e.trim()))
                 .collect(Collectors.toCollection(ArrayList::new));
     }
@@ -571,71 +659,4 @@ public class PathFilterServiceImpl implements PathFilterService
         }
 
     }
-
-    private Boolean updateFilterPath(FilterPathInputVO filterPathInput, String pipelineId, String userName)
-    {
-        // 删除路径之后，这些文件不应该加入分析[告警/重复率..], 将版本号改成0是判断的一个依据
-        if (StringUtils.isNotBlank(pipelineId))
-        {
-            filterPathInput.setSvnRevision(String.valueOf(0L));
-        }
-
-        // 更新屏蔽路径数据
-        return taskDao.updateFilterPath(filterPathInput, userName);
-    }
-
-
-    private void sendDefaultFiles(FilterPathInputVO filterPathInput, List<String> dbDefaultPath, List<String> filterDir)
-    {
-        if (CollectionUtils.isEmpty(filterPathInput.getEffectiveTools()))
-        {
-            return;
-        }
-        // 处理job消息数据
-        if (CollectionUtils.isEmpty(dbDefaultPath))
-        {
-            dbDefaultPath = new ArrayList<>();
-        }
-
-        // 去重DB中的数据 -- 同步去重后的数据到job模块[添加]
-        List<String> removeDbFiles = new ArrayList<>(filterDir);
-        removeDbFiles.removeAll(dbDefaultPath);
-        if (CollectionUtils.isNotEmpty(removeDbFiles))
-        {
-            rabbitTemplate.convertAndSend(ConstantsKt.EXCHANGE_TASK_FILTER_PATH,
-                    ConstantsKt.ROUTE_ADD_TASK_FILTER_PATH, filterPathInput);
-        }
-
-        // 去重前端中的数据 -- 同步去重后的数据到job模块[删除]
-        List<String> destList = new ArrayList<>(filterDir);
-        dbDefaultPath.removeAll(destList);
-        if (CollectionUtils.isNotEmpty(dbDefaultPath))
-        {
-            filterPathInput.setDefaultFilterPath(dbDefaultPath);
-            rabbitTemplate.convertAndSend(ConstantsKt.EXCHANGE_TASK_FILTER_PATH,
-                    ConstantsKt.ROUTE_DEL_TASK_FILTER_PATH, filterPathInput);
-        }
-    }
-
-
-//    private boolean isSendNotify(String path, List<String> filterPath)
-//    {
-//        // 如果提交的文件夹包含数据库中文件，则直接移除数据库文件而不需要通知移除屏蔽路徑[ 不通知 ]
-//        String key = ".*";
-//        if (path.endsWith(key))
-//        {
-//            Iterator<String> iterator = filterPath.iterator();
-//            while (iterator.hasNext())
-//            {
-//                String dbPath = iterator.next();
-//                if (dbPath.matches(path))
-//                {
-//                    iterator.remove();
-//                }
-//            }
-//        }
-//        return true;
-//    }
-
-
 }

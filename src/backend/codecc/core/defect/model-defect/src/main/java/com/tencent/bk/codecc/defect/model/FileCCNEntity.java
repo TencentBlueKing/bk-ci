@@ -19,7 +19,7 @@ import org.springframework.data.mongodb.core.mapping.Field;
 @EqualsAndHashCode(callSuper = true)
 @Document(collection = "t_file_ccn")
 @CompoundIndexes({
-        @CompoundIndex(name = "taskid_filepath_idx", def = "{'task_id': 1, 'file_path': 1}")
+        @CompoundIndex(name = "taskid_filerelpath_idx", def = "{'task_id': 1, 'file_rel_path': 1}", background = true)
 })
 public class FileCCNEntity extends CommonEntity
 {
@@ -35,6 +35,13 @@ public class FileCCNEntity extends CommonEntity
     @Field("file_path")
     @JsonProperty("file_path")
     private String filePath;
+
+    /**
+     * 文件相对路径
+     */
+    @Field("file_rel_path")
+    @JsonProperty("file_rel_path")
+    private String fileRelPath;
 
     /**
      * 文件所有函数圈复杂度之和

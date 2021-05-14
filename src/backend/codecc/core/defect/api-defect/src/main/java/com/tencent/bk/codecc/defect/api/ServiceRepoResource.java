@@ -12,38 +12,52 @@
 
 package com.tencent.bk.codecc.defect.api;
 
+import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_TASK_ID;
+
 import com.tencent.bk.codecc.defect.vo.CodeRepoVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
+import java.util.Collection;
+import java.util.Map;
 import java.util.Set;
-
-import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEADER_DEVOPS_TASK_ID;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
 
 /**
  * 代码库信息接口
- * 
- * @date 2019/12/3
+ *
  * @version V1.0
+ * @date 2019/12/3
  */
 @Api(tags = {"SERVICE_CODEREPO"}, description = "告警相关接口")
 @Path("/service/repo")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-public interface ServiceRepoResource 
-{
-    @ApiOperation("根据规则包获取规则清单")
+public interface ServiceRepoResource {
+
+    @ApiOperation("获取指定任务的代码库清单")
     @Path("/list")
     @GET
-    CodeCCResult<Set<CodeRepoVO>> getCodeRepoByTaskIdAndBuildId(
+    Result<Set<CodeRepoVO>> getCodeRepoByTaskIdAndBuildId(
             @ApiParam(value = "任务ID", required = true)
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_TASK_ID)
-            Long taskId,
+            @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
+                    Long taskId,
             @ApiParam(value = "构建id", required = true)
             @QueryParam(value = "buildId")
-            String buildId);
+                    String buildId);
+
+    @ApiOperation("获取指定任务的代码库清单")
+    @Path("/lists")
+    @POST
+    Result<Map<Long, Set<CodeRepoVO>>> getCodeRepoByTaskIds(
+            @ApiParam(value = "任务ID", required = true)
+                    Collection<Long> taskIds);
 }

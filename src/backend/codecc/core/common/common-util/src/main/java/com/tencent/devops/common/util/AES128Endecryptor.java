@@ -11,8 +11,7 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 
-public class AES128Endecryptor
-{
+public class AES128Endecryptor {
     private static Logger logger = LoggerFactory.getLogger(AES128Endecryptor.class);
     /**
      * 算法名称
@@ -33,12 +32,10 @@ public class AES128Endecryptor
      * @param value
      * @return
      */
-    public static String encrypt(String key, String initVector, String value)
-    {
+    public static String encrypt(String key, String initVector, String value) {
         String encryptStr;
 
-        try
-        {
+        try {
             IvParameterSpec iv = new IvParameterSpec(initVector.getBytes(StandardCharsets.UTF_8.name()));
             SecretKeySpec skeySpec = new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8.name()), KEY_ALGORITHM);
 
@@ -48,9 +45,7 @@ public class AES128Endecryptor
             byte[] encrypted = cipher.doFinal(value.getBytes());
 
             encryptStr = Base64.encodeBase64String(encrypted);
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             logger.error("encrypt fail.", e);
             throw new CodeCCException(CommonMessageCode.SYSTEM_ERROR);
         }
@@ -69,8 +64,7 @@ public class AES128Endecryptor
     public static String decrypt(String key, String initVector, String encrypted)
     {
         String decryptStr;
-        try
-        {
+        try {
             IvParameterSpec iv = new IvParameterSpec(initVector.getBytes(StandardCharsets.UTF_8.name()));
             SecretKeySpec skeySpec = new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8.name()), KEY_ALGORITHM);
 
@@ -80,9 +74,7 @@ public class AES128Endecryptor
             byte[] original = cipher.doFinal(Base64.decodeBase64(encrypted));
 
             decryptStr = new String(original);
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             logger.error("decrypt fail.", e);
             throw new CodeCCException(CommonMessageCode.SYSTEM_ERROR);
         }
@@ -112,10 +104,8 @@ public class AES128Endecryptor
      * @param encrypted
      * @return
      */
-    public static byte[] decryptAndReturnByte(String key, String initVector, byte[] encrypted)
-    {
-        try
-        {
+    public static byte[] decryptAndReturnByte(String key, String initVector, byte[] encrypted) {
+        try {
             IvParameterSpec iv = new IvParameterSpec(initVector.getBytes(StandardCharsets.UTF_8.name()));
             SecretKeySpec skeySpec = new SecretKeySpec(key.getBytes(StandardCharsets.UTF_8.name()), KEY_ALGORITHM);
 
@@ -123,9 +113,7 @@ public class AES128Endecryptor
             cipher.init(Cipher.DECRYPT_MODE, skeySpec, iv);
 
             return cipher.doFinal(encrypted);
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             logger.error("decrypt fail.", e);
             throw new CodeCCException(CommonMessageCode.SYSTEM_ERROR);
         }

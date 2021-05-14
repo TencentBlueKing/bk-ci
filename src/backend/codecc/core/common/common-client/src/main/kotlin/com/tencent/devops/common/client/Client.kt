@@ -38,6 +38,7 @@ import feign.jackson.JacksonDecoder
 import feign.jackson.JacksonEncoder
 import feign.jaxrs.JAXRSContract
 import feign.okhttp.OkHttpClient
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.consul.discovery.ConsulDiscoveryClient
@@ -49,26 +50,26 @@ import kotlin.reflect.KClass
 
 @Component
 class Client @Autowired constructor(
-        private val consulClient: ConsulDiscoveryClient,
-        private val clientErrorDecoder: ClientErrorDecoder,
-        private val allProperties: AllProperties,
-        objectMapper: ObjectMapper
+    private val consulClient: ConsulDiscoveryClient,
+    private val clientErrorDecoder: ClientErrorDecoder,
+    private val allProperties: AllProperties,
+    objectMapper: ObjectMapper
 ) {
 
     private val interfaces = ConcurrentHashMap<KClass<*>, String>()
 
     private val okHttpClient = okhttp3.OkHttpClient.Builder()
-            .connectTimeout(5L, TimeUnit.SECONDS)
-            .readTimeout(60L, TimeUnit.SECONDS)
-            .writeTimeout(60L, TimeUnit.SECONDS)
-            .build()
+        .connectTimeout(5L, TimeUnit.SECONDS)
+        .readTimeout(60L, TimeUnit.SECONDS)
+        .writeTimeout(60L, TimeUnit.SECONDS)
+        .build()
 
     private val longRunClient = OkHttpClient(
-            okhttp3.OkHttpClient.Builder()
-                    .connectTimeout(10L, TimeUnit.SECONDS)
-                    .readTimeout(30L, TimeUnit.MINUTES)
-                    .writeTimeout(30L, TimeUnit.MINUTES)
-                    .build()
+        okhttp3.OkHttpClient.Builder()
+            .connectTimeout(10L, TimeUnit.SECONDS)
+            .readTimeout(30L, TimeUnit.MINUTES)
+            .writeTimeout(30L, TimeUnit.MINUTES)
+            .build()
     )
 
     private val feignClient = OkHttpClient(okHttpClient)
@@ -79,8 +80,10 @@ class Client @Autowired constructor(
     @Value("\${codecc.quartz.tag:\${spring.cloud.consul.discovery.tags}}")
     private val tag: String? = null
 
-    @Value("\${service-suffix:#{null}}")
-    private val suffix: String? = null
+    @Value("\${service.suffix.codecc:#{null}}")
+    private val serviceSuffix: String? = null
+
+    private val logger = LoggerFactory.getLogger(Client::class.java)
 
     companion object {
 
@@ -92,15 +95,14 @@ class Client @Autowired constructor(
 
     fun <T : Any> getDevopsService(clz: Class<T>): T {
         return Feign.builder()
-                .client(feignClient)
-                .errorDecoder(clientErrorDecoder)
-                .encoder(jacksonEncoder)
-                .decoder(jacksonDecoder)
-                .contract(jaxRsContract)
-                .options(Request.Options(10000, 30000))
-                .requestInterceptor(SpringContextUtil.getBean(RequestInterceptor::class.java, "devopsRequestInterceptor"))
-                .target(DevopsServiceTarget(findServiceName(clz.kotlin), clz, allProperties.devopsDevUrl
-                        ?: ""))
+            .client(feignClient)
+            .errorDecoder(clientErrorDecoder)
+            .encoder(jacksonEncoder)
+            .decoder(jacksonDecoder)
+            .contract(jaxRsContract)
+            .options(Request.Options(10000, 30000))
+            .requestInterceptor(SpringContextUtil.getBean(RequestInterceptor::class.java, "devopsRequestInterceptor"))
+            .target(DevopsServiceTarget(findServiceName(clz.kotlin, ""), clz, allProperties.devopsDevUrl ?: ""))
         // 获取为feign定义的拦截器
 
     }
@@ -109,39 +111,53 @@ class Client @Autowired constructor(
 
     fun <T : Any> get(clz: KClass<T>): T {
         return Feign.builder()
-                .client(feignClient)
-                .errorDecoder(clientErrorDecoder)
-                .encoder(jacksonEncoder)
-                .decoder(jacksonDecoder)
-                .contract(jaxRsContract)
-                .options(Request.Options(10000, 30000))// 10秒连接 30秒收数据
-                .requestInterceptor(SpringContextUtil.getBean(RequestInterceptor::class.java, "normalRequestInterceptor")) // 获取为feign定义的拦截器
-                .target(MicroServiceTarget("${findServiceName(clz)}", clz.java, consulClient, tag))
+            .client(feignClient)
+            .errorDecoder(clientErrorDecoder)
+            .encoder(jacksonEncoder)
+            .decoder(jacksonDecoder)
+            .contract(jaxRsContract)
+            .options(Request.Options(10000, 30000))// 10秒连接 30秒收数据
+            .requestInterceptor(SpringContextUtil.getBean(RequestInterceptor::class.java, "normalRequestInterceptor")) // 获取为feign定义的拦截器
+            .target(MicroServiceTarget(findServiceName(clz, serviceSuffix), clz.java, consulClient, tag))
+    }
+
+    /**
+     * 不带任何公共URL前缀构建feign
+     */
+    fun <T : Any> getNoneUrlPrefix(clz: Class<T>): T {
+        return Feign.builder()
+            .client(feignClient)
+            .errorDecoder(clientErrorDecoder)
+            .encoder(jacksonEncoder)
+            .decoder(jacksonDecoder)
+            .contract(jaxRsContract)
+            .options(Request.Options(10000, 30000))// 10秒连接 30秒收数据
+            .target(MicroServiceTarget("${findServiceName(clz.kotlin)}", clz, consulClient, tag, ""))
     }
 
     fun <T : Any> getWithoutRetry(clz: KClass<T>): T {
         return Feign.builder()
-                .client(longRunClient)
-                .errorDecoder(clientErrorDecoder)
-                .encoder(jacksonEncoder)
-                .decoder(jacksonDecoder)
-                .contract(jaxRsContract)
-                .requestInterceptor(SpringContextUtil.getBean(RequestInterceptor::class.java, "normalRequestInterceptor")) // 获取为feign定义的拦截器
-                .options(Request.Options(10 * 1000, 30 * 60 * 1000))
-                .retryer(object : Retryer {
-                    override fun clone(): Retryer {
-                        return this
-                    }
+            .client(longRunClient)
+            .errorDecoder(clientErrorDecoder)
+            .encoder(jacksonEncoder)
+            .decoder(jacksonDecoder)
+            .contract(jaxRsContract)
+            .requestInterceptor(SpringContextUtil.getBean(RequestInterceptor::class.java, "normalRequestInterceptor")) // 获取为feign定义的拦截器
+            .options(Request.Options(10 * 1000, 30 * 60 * 1000))
+            .retryer(object : Retryer {
+                override fun clone(): Retryer {
+                    return this
+                }
 
-                    override fun continueOrPropagate(e: RetryableException) {
-                        throw e
-                    }
-                })
-                .target(MicroServiceTarget(findServiceName(clz), clz.java, consulClient, tag))
+                override fun continueOrPropagate(e: RetryableException) {
+                    throw e
+                }
+            })
+            .target(MicroServiceTarget(findServiceName(clz, serviceSuffix), clz.java, consulClient, tag))
     }
 
-    private fun findServiceName(clz: KClass<*>): String {
-        return interfaces.getOrPut(clz) {
+    private fun findServiceName(clz: KClass<*>, suffix: String? = null): String {
+        val serviceName = interfaces.getOrPut(clz) {
             val serviceInterface = AnnotationUtils.findAnnotation(clz.java, ServiceInterface::class.java)
             if (serviceInterface != null) {
                 serviceInterface.value
@@ -153,6 +169,12 @@ class Client @Autowired constructor(
                 ?: throw ClientException("无法根据接口[$packageName]分析所属的服务")
                 matches.groupValues[1]
             }
+        }
+
+        return if (suffix.isNullOrBlank()) {
+            serviceName
+        } else {
+            "$serviceName$suffix"
         }
     }
 

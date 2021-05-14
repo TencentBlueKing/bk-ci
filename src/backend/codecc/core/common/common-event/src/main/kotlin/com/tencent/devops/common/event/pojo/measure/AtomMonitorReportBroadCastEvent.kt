@@ -30,7 +30,7 @@ package com.tencent.devops.common.archive.api.pojo
 package com.tencent.devops.common.event.pojo.measure
 >>>>>>> carl/issue_2625_jfrog:src/backend/codecc/core/common/common-event/src/main/kotlin/com/tencent/devops/common/event/pojo/measure/AtomMonitorReportBroadCastEvent.kt
 
-import com.tencent.bk.codecc.idcsync.pojo.AtomMonitorData
+import com.tencent.devops.common.api.pojo.AtomMonitorData
 
 data class AtomMonitorReportBroadCastEvent(
     val monitorData: AtomMonitorData

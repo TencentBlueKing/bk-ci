@@ -47,9 +47,9 @@ public class MongoPageHelper
     /**
      * 分页查询，直接返回集合类型的结果.
      *
-     * @see MongoPageHelper#pageQuery(Query, Class, Function, Integer, Integer, List<Sort.Order>)
+     * @see MongoPageHelper#pageQuery(Query, Class, Function, Integer, Integer, List< Order>)
      */
-    public <T> Page<T> pageQuery(Query query, Class<T> entityClass, Integer pageSize, Integer pageNum, List<Sort.Order> sortList)
+    public <T> Page<T> pageQuery(Query query, Class<T> entityClass, Integer pageSize, Integer pageNum, List<Order> sortList)
     {
         return pageQuery(query, entityClass, Function.identity(), pageSize, pageNum, sortList);
     }
@@ -57,9 +57,9 @@ public class MongoPageHelper
     /**
      * 分页查询，不考虑条件分页，直接使用skip-limit来分页.
      *
-     * @see MongoPageHelper#pageQuery(Query, Class, Function, Integer, Integer, List<Sort.Order>, String)
+     * @see MongoPageHelper#pageQuery(Query, Class, Function, Integer, Integer, List< Order>, String)
      */
-    public <T, R> Page<R> pageQuery(Query query, Class<T> entityClass, Function<T, R> mapper, Integer pageSize, Integer pageNum, List<Sort.Order> sortList)
+    public <T, R> Page<R> pageQuery(Query query, Class<T> entityClass, Function<T, R> mapper, Integer pageSize, Integer pageNum, List<Order> sortList)
     {
         return pageQuery(query, entityClass, mapper, pageSize, pageNum, sortList, null);
     }
