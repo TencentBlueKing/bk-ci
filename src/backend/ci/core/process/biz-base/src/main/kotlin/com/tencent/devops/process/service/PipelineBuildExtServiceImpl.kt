@@ -30,10 +30,8 @@ package com.tencent.devops.process.service
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineBuildExtService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
 @Suppress("ALL")
-@Service
 class PipelineBuildExtServiceImpl@Autowired constructor(
     private val pipelineContextService: PipelineContextService
 ) : PipelineBuildExtService {

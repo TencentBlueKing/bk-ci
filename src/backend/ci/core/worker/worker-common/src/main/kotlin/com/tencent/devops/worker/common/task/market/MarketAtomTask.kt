@@ -515,7 +515,7 @@ open class MarketAtomTask : ITask() {
                     "artifact" -> env[key] = archiveArtifact(output, bkWorkspace, buildVariables)
                 }
 
-                env[key].also { env["steps.${buildTask.elementId ?: ""}.outputs.$key"] = it ?: "" }
+                env["steps.${buildTask.elementId ?: ""}.outputs.$key"] = env[key] ?: ""
 
                 TaskUtil.removeTaskId()
                 if (outputTemplate.containsKey(varKey)) {
@@ -530,12 +530,6 @@ open class MarketAtomTask : ITask() {
                     LoggerService.addYellowLine("output(except): $key=${env[key]}")
                 }
             }
-
-            env.putAll(if (buildTask.elementId.isNullOrBlank()) {
-                emptyMap()
-            } else {
-                contextMap(buildTask)
-            })
 
             if (atomResult.type == "default") {
                 if (env.isNotEmpty()) {
