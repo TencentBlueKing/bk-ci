@@ -1,6 +1,7 @@
 package com.tencent.devops.auth.service.gitci
 
 import com.tencent.devops.auth.service.PermissionService
+import com.tencent.devops.common.api.exception.UnauthorizedException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.utils.GitCIUtils
 import com.tencent.devops.common.client.Client
@@ -25,7 +26,11 @@ class GitCIPermissionServiceImpl @Autowired constructor(
     ): Boolean {
         // 操作类action需要校验用户oauth, 查看类的无需oauth校验
         if (!checkListOrViewAction(action)) {
-            client.get(ServiceOauthResource::class).gitGet(userId).data ?: return false
+            val checkOauth = client.get(ServiceOauthResource::class).gitGet(userId).data
+            if (checkOauth == null) {
+                logger.warn("GitCICertPermissionServiceImpl $userId oauth is empty")
+                throw UnauthorizedException("oauth is empty")
+            }
         }
 
         val gitProjectId = GitCIUtils.getGitCiProjectId(projectCode)
