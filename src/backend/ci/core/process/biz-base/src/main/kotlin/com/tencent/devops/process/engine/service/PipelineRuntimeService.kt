@@ -801,6 +801,7 @@ class PipelineRuntimeService @Autowired constructor(
                                 ?: buildNoObj.buildNo
                         }
                     }
+                    container.executeCount = context.retryCount + 1
                     container.elements.forEach { atomElement ->
                         if (context.firstTaskId.isBlank() && atomElement.isElementEnable()) {
                             context.firstTaskId = atomElement.findFirstTaskIdByStartType(context.startType)
@@ -859,7 +860,7 @@ class PipelineRuntimeService @Autowired constructor(
                         }
                     }
 
-                    val status = atomElement.initStatus(params = params, finallyStage = stage.finally)
+                    val status = atomElement.initStatus(params = params, rerun = context.needRerun(stage))
 
                     if (status.isFinish()) {
                         logger.info("[$buildId|${atomElement.id}] status=$status")

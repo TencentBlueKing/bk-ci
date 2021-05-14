@@ -24,28 +24,33 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.openapi.resources.apigw.v3
 
-package com.tencent.devops.environment.pojo
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.openapi.api.apigw.v3.ApigwMarketTemplateResourceV3
+import com.tencent.devops.store.api.template.ServiceTemplateResource
+import com.tencent.devops.store.pojo.template.InstallTemplateReq
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
-import com.tencent.devops.environment.pojo.enums.EnvType
-import com.tencent.devops.environment.pojo.enums.NodeSource
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+@RestResource
+class ApigwMarketTemplateResourceV3Impl @Autowired constructor(
+    private val client: Client
+) : ApigwMarketTemplateResourceV3 {
 
-@ApiModel("环境信息")
-data class EnvCreateInfo(
-    @ApiModelProperty("环境名称", required = true)
-    val name: String,
-    @ApiModelProperty("环境描述", required = true)
-    val desc: String,
-    @ApiModelProperty("环境类型（开发环境{DEV}|测试环境{TEST}|构建环境{BUILD}）", required = true)
-    val envType: EnvType,
-    @ApiModelProperty("环境变量", required = false)
-    val envVars: List<EnvVar>?,
-    @ApiModelProperty("节点来源（已有节点{EXISTING}|快速生成{CREATE}）", required = true)
-    val source: NodeSource,
-    @ApiModelProperty("节点 HashId 列表", required = false)
-    val nodeHashIds: List<String>?,
-    @ApiModelProperty("BCS VM 参数，节点来源为“快速生成”时必填", required = false)
-    val bcsVmParam: BcsVmParam? = null
-)
+    override fun installTemplateFromStore(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        installTemplateReq: InstallTemplateReq
+    ): Result<Boolean> {
+        // 可见与可安装鉴权在store服务marketTemplateService中已实现
+        return client.get(ServiceTemplateResource::class).installTemplate(userId, installTemplateReq)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ApigwMarketTemplateResourceV3Impl::class.java)
+    }
+}

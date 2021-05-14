@@ -56,6 +56,9 @@ data class Model(
     @ApiModelProperty("提示", required = false)
     var tips: String? = null
 ) {
+    @ApiModelProperty("提交时流水线最新版本号", required = false)
+    var latestVersion: Int = 0
+
     /**
      * 删除相关原子
      */
