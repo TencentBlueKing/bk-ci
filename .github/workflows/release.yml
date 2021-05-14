@@ -167,13 +167,13 @@ jobs:
           draft: true
           prerelease: true
 
-      - run: tar czvf bkci-${{ version }}-slim.tar.gz ci
+      - run: tar czvf bkci-${{ steps.create-artifact.outputs.version }}-slim.tar.gz ci
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./bkci-${{ version }}-slim.tar.gz
-          asset_name: bkci-${{ version }}-slim.tar.gz
+          asset_path: ./bkci-${{ steps.create-artifact.outputs.version }}-slim.tar.gz
+          asset_name: bkci-${{ steps.create-artifact.outputs.version }}-slim.tar.gz
           asset_content_type: application/gzip
