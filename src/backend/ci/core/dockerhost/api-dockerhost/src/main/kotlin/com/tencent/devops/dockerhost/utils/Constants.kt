@@ -59,7 +59,7 @@ const val BK_DISTCC_LOCAL_IP = "BK_DISTCC_LOCAL_IP"
 /**
  * 用于识别dockervm | devcloud |构建机类型
  */
-const val ENV_JOB_BUILD_TYPE = "ENV_JOB_BUILD_TYPE"
+const val ENV_JOB_BUILD_TYPE = "JOB_POOL"
 
 const val ENV_BK_CI_DOCKER_HOST_IP = "BK_CI_DOCKER_HOST_IP" // docker母机IP
 const val ENV_BK_CI_DOCKER_HOST_WORKSPACE = "BK_CI_DOCKER_HOST_WORKSPACE" // docker母机工作空间地址
