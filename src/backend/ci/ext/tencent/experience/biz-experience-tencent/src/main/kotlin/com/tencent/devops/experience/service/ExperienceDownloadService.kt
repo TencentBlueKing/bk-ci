@@ -137,8 +137,8 @@ class ExperienceDownloadService @Autowired constructor(
         return getExternalDownloadUrl(userId, experienceId)
     }
 
-    fun getExternalDownloadUrl(userId: String, experienceId: Long): DownloadUrl {
-        val canExperience = experienceBaseService.userCanExperience(userId, experienceId)
+    fun getExternalDownloadUrl(userId: String, experienceId: Long, isOuter: Boolean = false): DownloadUrl {
+        val canExperience = experienceBaseService.userCanExperience(userId, experienceId, isOuter)
         if (!canExperience) {
             throw ErrorCodeException(
                 statusCode = 403,
