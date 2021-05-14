@@ -84,7 +84,7 @@ class SensitiveApiServiceImpl @Autowired constructor(
         )
         return Result(
             sensitiveApiConfigList.filter { !approvedApiList.contains(it.apiName) }
-                .map { SensitiveApiNameInfo(it.apiName, it.aliasNames[language] ?: it.apiName) }
+                .map { SensitiveApiNameInfo(it.apiName, it.aliasNames?.get(language) ?: it.apiName) }
                 .toList()
         )
     }
@@ -126,7 +126,7 @@ class SensitiveApiServiceImpl @Autowired constructor(
                             storeType = storeType,
                             storeCode = storeCode,
                             apiName = apiName,
-                            aliasName = sensitiveApiNameMap[apiName]!!.aliasNames[language] ?: apiName,
+                            aliasName = sensitiveApiNameMap[apiName]!!.aliasNames?.get(language) ?: apiName,
                             applyDesc = applyDesc,
                             apiStatus = ApiStatusEnum.WAIT,
                             apiLevel = ApiLevelEnum.SENSITIVE
