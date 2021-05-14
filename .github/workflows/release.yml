@@ -144,7 +144,7 @@ jobs:
           svcs=$(ls "$src_dir"/*/boot*.jar | sed -r 's/^.*boot-|.jar$//g'| grep -wv agentless)
           #svcs="artifactory assembly auth dispatch dispatch dockerhost environment image log misc monitoring notify openapi plugin process project quality repository sign store ticket websocket"
           for ms in $svcs; do
-            ./bk-ci-slim.sh "$ms" $src_dir/$ms/boot-$ms.jar "$slim_dir"
+            ./scripts/bk-ci-slim.sh "$ms" $src_dir/$ms/boot-$ms.jar "$slim_dir"
           done
 
           echo "sync files from $src_dir to $slim_dir. exclude agentless/ and boot-jars."
