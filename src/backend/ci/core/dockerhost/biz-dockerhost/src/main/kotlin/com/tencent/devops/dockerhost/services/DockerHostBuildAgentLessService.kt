@@ -32,6 +32,7 @@ import com.github.dockerjava.api.model.Bind
 import com.github.dockerjava.api.model.Binds
 import com.github.dockerjava.api.model.HostConfig
 import com.github.dockerjava.api.model.Volume
+import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.common.ErrorCodeEnum
@@ -46,6 +47,7 @@ import com.tencent.devops.dockerhost.utils.ENTRY_POINT_CMD
 import com.tencent.devops.dockerhost.utils.ENV_BK_CI_DOCKER_HOST_IP
 import com.tencent.devops.dockerhost.utils.ENV_BK_CI_DOCKER_HOST_WORKSPACE
 import com.tencent.devops.dockerhost.utils.ENV_DOCKER_HOST_IP
+import com.tencent.devops.dockerhost.utils.ENV_JOB_BUILD_TYPE
 import com.tencent.devops.dockerhost.utils.ENV_KEY_AGENT_ID
 import com.tencent.devops.dockerhost.utils.ENV_KEY_AGENT_SECRET_KEY
 import com.tencent.devops.dockerhost.utils.ENV_KEY_GATEWAY
@@ -80,7 +82,8 @@ class DockerHostBuildAgentLessService(
                 imageName = imageName,
                 projectId = dockerHostBuildInfo.projectId,
                 agentId = dockerHostBuildInfo.agentId,
-                secretKey = dockerHostBuildInfo.secretKey
+                secretKey = dockerHostBuildInfo.secretKey,
+                buildType = dockerHostBuildInfo.buildType
             )
         } catch (ignored: Throwable) {
             logger.error("[${dockerHostBuildInfo.buildId}]| create Container failed ", ignored)
@@ -106,7 +109,8 @@ class DockerHostBuildAgentLessService(
         imageName: String,
         projectId: String,
         agentId: String,
-        secretKey: String
+        secretKey: String,
+        buildType: BuildType
     ): String {
         val hostWorkspace = getWorkspace(pipelineId, vmSeqId.trim())
         val linkPath = dockerHostWorkSpaceService.createSymbolicLink(hostWorkspace)
@@ -151,7 +155,8 @@ class DockerHostBuildAgentLessService(
                     "$ENV_DOCKER_HOST_IP=${CommonUtils.getInnerIP()}",
                     "$BK_DISTCC_LOCAL_IP=${CommonUtils.getInnerIP()}",
                     "$ENV_BK_CI_DOCKER_HOST_IP=${CommonUtils.getInnerIP()}",
-                    "$ENV_BK_CI_DOCKER_HOST_WORKSPACE=$linkPath"
+                    "$ENV_BK_CI_DOCKER_HOST_WORKSPACE=$linkPath",
+                    "$ENV_JOB_BUILD_TYPE=${buildType.name}"
                 )
             )
             .withHostConfig(
