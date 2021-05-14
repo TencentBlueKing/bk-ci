@@ -4,6 +4,12 @@
 # 建议先行覆盖conf_daemon内容作为模板. 然后重新执行本脚本.
 
 set -eu
+trap "on_ERR;" ERR
+on_ERR (){
+  local fn=$0 ret=$? lineno=${BASH_LINENO:-$LINENO}
+  echo >&2 "ERROR $fn exit with $ret at line $lineno: $(sed -n ${lineno}p $0)."
+}
+
 if [ $# -lt 1 ]; then
   echo "Usage: $0 /path/to/ci-docker-data-root"
   exit 1

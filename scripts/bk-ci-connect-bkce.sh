@@ -1,5 +1,11 @@
 #!/bin/bash
 set -eu
+trap "on_ERR;" ERR
+on_ERR (){
+  local fn=$0 ret=$? lineno=${BASH_LINENO:-$LINENO}
+  echo >&2 "ERROR $fn exit with $ret at line $lineno: $(sed -n ${lineno}p $0)."
+}
+
 set -a
 source ${CTRL_DIR:-/data/install}/load_env.sh
 set +a

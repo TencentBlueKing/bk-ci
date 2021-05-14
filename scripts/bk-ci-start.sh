@@ -3,6 +3,11 @@
 # 兼职启动gateway.
 # shellcheck disable=SC1090
 set -eu
+trap "on_ERR;" ERR
+on_ERR (){
+  local fn=$0 ret=$? lineno=${BASH_LINENO:-$LINENO}
+  echo >&2 "ERROR $fn exit with $ret at line $lineno: $(sed -n ${lineno}p $0)."
+}
 
 if [ $# -lt 1 ]; then
   echo "Usage: $0 MS_NAME [OPTIONS-for-MS_NAME]"

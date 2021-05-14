@@ -3,6 +3,12 @@
 # 安装ci指定模块.
 
 set -eu
+trap "on_ERR;" ERR
+on_ERR (){
+  local fn=$0 ret=$? lineno=${BASH_LINENO:-$LINENO}
+  echo >&2 "ERROR $fn exit with $ret at line $lineno: $(sed -n ${lineno}p $0)."
+}
+
 if [ "${BASH_VERSINFO[0]:-0}" -lt 4 ]; then
   echo >&2 "this script need bash v4.x to run."
   exit 1

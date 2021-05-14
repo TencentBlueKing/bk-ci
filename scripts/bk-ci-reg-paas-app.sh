@@ -1,5 +1,11 @@
 #!/bin/bash
 set -eu
+trap "on_ERR;" ERR
+on_ERR (){
+  local fn=$0 ret=$? lineno=${BASH_LINENO:-$LINENO}
+  echo >&2 "ERROR $fn exit with $ret at line $lineno: $(sed -n ${lineno}p $0)."
+}
+
 source ${CTRL_DIR:-/data/install}/load_env.sh
 cmd_mysql="mysql -h${BK_PAAS_MYSQL_HOST} -u${BK_PAAS_MYSQL_USER} -P $BK_PAAS_MYSQL_PORT open_paas"
 export MYSQL_PWD=$BK_PAAS_MYSQL_PASSWORD

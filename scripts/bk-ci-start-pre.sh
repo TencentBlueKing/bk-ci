@@ -5,9 +5,9 @@
 
 set -eu
 trap "on_ERR;" ERR
-
 on_ERR (){
-  echo "$0:$LINENO ERROR exit code is $?."
+  local fn=$0 ret=$? lineno=${BASH_LINENO:-$LINENO}
+  echo >&2 "ERROR $fn exit with $ret at line $lineno: $(sed -n ${lineno}p $0)."
 }
 
 if [ $# -lt 1 ]; then

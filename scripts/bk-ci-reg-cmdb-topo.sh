@@ -1,6 +1,11 @@
 #!/bin/bash
 
 set -eu
+trap "on_ERR;" ERR
+on_ERR (){
+  local fn=$0 ret=$? lineno=${BASH_LINENO:-$LINENO}
+  echo >&2 "ERROR $fn exit with $ret at line $lineno: $(sed -n ${lineno}p $0)."
+}
 
 die (){ echo >&2 "$@"; exit 1; }
 command -v jq >/dev/null || die "command not found: jq"
