@@ -43,7 +43,7 @@ data class GroupSummaryWithPermission(
     @ApiModelProperty("内部人员")
     val innerUsers: Set<String>,
     @ApiModelProperty("外部人员")
-    val outerUsers: String,
+    val outerUsers: Set<String>,
     @ApiModelProperty("创建者", required = true)
     val creator: String,
     @ApiModelProperty("描述", required = true)

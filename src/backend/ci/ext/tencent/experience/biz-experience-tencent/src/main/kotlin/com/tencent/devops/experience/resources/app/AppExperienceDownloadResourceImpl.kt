@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.app.AppExperienceDownloadResource
+import com.tencent.devops.experience.filter.annotions.AllowOuter
 import com.tencent.devops.experience.pojo.download.CheckVersionParam
 import com.tencent.devops.experience.pojo.download.CheckVersionVO
 import com.tencent.devops.experience.pojo.download.DownloadRecordVO
@@ -41,6 +42,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class AppExperienceDownloadResourceImpl @Autowired constructor(
     private val experienceDownloadService: ExperienceDownloadService
 ) : AppExperienceDownloadResource {
+    @AllowOuter
     override fun checkVersion(
         userId: String,
         platform: Int,
@@ -49,6 +51,7 @@ class AppExperienceDownloadResourceImpl @Autowired constructor(
         return Result(experienceDownloadService.checkVersion(userId, platform, params))
     }
 
+    @AllowOuter
     override fun records(
         userId: String,
         platform: Int,

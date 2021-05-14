@@ -41,8 +41,10 @@ import com.tencent.devops.experience.constant.ProductCategoryEnum
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceGroupDao
 import com.tencent.devops.experience.dao.ExperienceGroupInnerDao
+import com.tencent.devops.experience.dao.ExperienceGroupOuterDao
 import com.tencent.devops.experience.dao.ExperienceInnerDao
 import com.tencent.devops.experience.dao.ExperienceLastDownloadDao
+import com.tencent.devops.experience.dao.ExperienceOuterDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.pojo.AppExperience
 import com.tencent.devops.experience.pojo.enums.Source
@@ -61,7 +63,9 @@ import java.time.LocalDateTime
 class ExperienceBaseService @Autowired constructor(
     private val experienceGroupDao: ExperienceGroupDao,
     private val experienceGroupInnerDao: ExperienceGroupInnerDao,
+    private val experienceGroupOuterDao: ExperienceGroupOuterDao,
     private val experienceInnerDao: ExperienceInnerDao,
+    private val experienceOuterDao: ExperienceOuterDao,
     private val experienceDao: ExperienceDao,
     private val experiencePublicDao: ExperiencePublicDao,
     private val experienceLastDownloadDao: ExperienceLastDownloadDao,
@@ -75,11 +79,12 @@ class ExperienceBaseService @Autowired constructor(
         limit: Int,
         groupByBundleId: Boolean,
         platform: Int? = null,
-        experienceName: String? = null
+        experienceName: String? = null,
+        isOuter: Boolean = false
     ): Pagination<AppExperience> {
         val expireTime = DateUtil.today()
 
-        var recordIds = getRecordIdsByUserId(userId, GroupIdTypeEnum.JUST_PRIVATE)
+        var recordIds = getRecordIdsByUserId(userId, GroupIdTypeEnum.JUST_PRIVATE, isOuter)
 
         if (groupByBundleId) {
             recordIds = experienceDao.listIdsGroupByBundleId(
@@ -145,28 +150,38 @@ class ExperienceBaseService @Autowired constructor(
      */
     fun getRecordIdsByUserId(
         userId: String,
-        groupIdType: GroupIdTypeEnum
+        groupIdType: GroupIdTypeEnum,
+        isOuter: Boolean = false
     ): MutableSet<Long> {
         val recordIds = mutableSetOf<Long>()
         val groupIds = mutableSetOf<Long>()
         if (groupIdType == GroupIdTypeEnum.JUST_PRIVATE || groupIdType == GroupIdTypeEnum.ALL) {
-            groupIds.addAll(experienceGroupInnerDao.listGroupIdsByUserId(dslContext, userId).map { it.value1() }
-                .toMutableSet())
+            if (isOuter) {
+                groupIds.addAll(experienceGroupOuterDao.listGroupIdsByUserId(dslContext, userId).map { it.value1() }
+                    .toMutableSet())
+            } else {
+                groupIds.addAll(experienceGroupInnerDao.listGroupIdsByUserId(dslContext, userId).map { it.value1() }
+                    .toMutableSet())
+            }
         }
         if (groupIdType == GroupIdTypeEnum.JUST_PUBLIC || groupIdType == GroupIdTypeEnum.ALL) {
             groupIds.add(ExperienceConstant.PUBLIC_GROUP)
         }
         recordIds.addAll(experienceGroupDao.listRecordIdByGroupIds(dslContext, groupIds).map { it.value1() }.toSet())
-        recordIds.addAll(experienceInnerDao.listRecordIdsByUserId(dslContext, userId).map { it.value1() }.toSet())
+        if (isOuter) {
+            recordIds.addAll(experienceOuterDao.listRecordIdsByOuter(dslContext, userId).map { it.value1() }.toSet())
+        } else {
+            recordIds.addAll(experienceInnerDao.listRecordIdsByUserId(dslContext, userId).map { it.value1() }.toSet())
+        }
         return recordIds
     }
 
     /**
      * 判断用户是否能体验
      */
-    fun userCanExperience(userId: String, experienceId: Long): Boolean {
+    fun userCanExperience(userId: String, experienceId: Long, isOuter: Boolean = false): Boolean {
         val isPublic = lazy { isPublic(experienceId) }
-        val isInPrivate = lazy { isInPrivate(experienceId, userId) }
+        val isInPrivate = lazy { isInPrivate(experienceId, userId, isOuter) }
 
         return isPublic.value || isInPrivate.value
     }
@@ -179,14 +194,24 @@ class ExperienceBaseService @Autowired constructor(
             .filterNot { it.value1() == ExperienceConstant.PUBLIC_GROUP }.count() > 0
     }
 
-    fun isInPrivate(experienceId: Long, userId: String): Boolean {
+    fun isInPrivate(experienceId: Long, userId: String, isOuter: Boolean = false): Boolean {
         val inGroup = lazy {
-            getGroupIdToUserIdsMap(experienceId).values.asSequence().flatMap { it.asSequence() }.toSet()
+            val groupIds = getGroupIdsByRecordId(experienceId)
+            if (isOuter) {
+                getGroupIdToOuters(groupIds)
+            } else {
+                getGroupIdToInnerUserIds(groupIds)
+            }.values.asSequence().flatMap { it.asSequence() }.toSet()
                 .contains(userId)
         }
         val isInnerUser = lazy {
-            experienceInnerDao.listUserIdsByRecordId(dslContext, experienceId).map { it.value1() }.toSet()
-                .contains(userId)
+            if (isOuter) {
+                experienceOuterDao.listUserIdsByRecordId(dslContext, experienceId).map { it.value1() }.toSet()
+                    .contains(userId)
+            } else {
+                experienceInnerDao.listUserIdsByRecordId(dslContext, experienceId).map { it.value1() }.toSet()
+                    .contains(userId)
+            }
         }
         val isCreator = lazy { experienceDao.get(dslContext, experienceId).creator == userId }
 
@@ -194,28 +219,45 @@ class ExperienceBaseService @Autowired constructor(
     }
 
     /**
-     * 获取体验对应的<组号,用户列表>
+     * 根据体验获取组号列表
      */
-    fun getGroupIdToUserIdsMap(experienceId: Long): MutableMap<Long, MutableSet<String>> {
-        val groupIds = experienceGroupDao.listGroupIdsByRecordId(dslContext, experienceId).map { it.value1() }.toSet()
-        return getGroupIdToUserIds(groupIds)
+    fun getGroupIdsByRecordId(experienceId: Long): Set<Long> {
+        return experienceGroupDao.listGroupIdsByRecordId(dslContext, experienceId).map { it.value1() }.toSet()
     }
 
     /**
-     * 根据组号获取<组号,用户列表>
+     * 内部用户,根据组号获取<组号,用户列表>
      */
-    fun getGroupIdToUserIds(groupIds: Set<Long>): MutableMap<Long, MutableSet<String>> {
+    fun getGroupIdToInnerUserIds(groupIds: Set<Long>): MutableMap<Long, MutableSet<String>> {
         val groupIdToUserIds = mutableMapOf<Long, MutableSet<String>>()
+
+        if (groupIds.contains(ExperienceConstant.PUBLIC_GROUP)) {
+            groupIdToUserIds[ExperienceConstant.PUBLIC_GROUP] = ExperienceConstant.PUBLIC_INNER_USERS
+        }
+
         experienceGroupInnerDao.listByGroupIds(dslContext, groupIds).forEach {
             var userIds = groupIdToUserIds[it.groupId]
             if (null == userIds) {
                 userIds = mutableSetOf()
+                groupIdToUserIds[it.groupId] = userIds
             }
             userIds.add(it.userId)
-            groupIdToUserIds[it.groupId] = userIds
         }
-        if (groupIds.contains(ExperienceConstant.PUBLIC_GROUP)) {
-            groupIdToUserIds[ExperienceConstant.PUBLIC_GROUP] = ExperienceConstant.PUBLIC_INNER_USERS
+        return groupIdToUserIds
+    }
+
+    /**
+     * 外部用户,根据组号获取<组号,用户列表>
+     */
+    fun getGroupIdToOuters(groupIds: Set<Long>): MutableMap<Long, MutableSet<String>> {
+        val groupIdToUserIds = mutableMapOf<Long, MutableSet<String>>()
+        experienceGroupOuterDao.listByGroupIds(dslContext, groupIds).forEach {
+            var userIds = groupIdToUserIds[it.groupId]
+            if (null == userIds) {
+                userIds = mutableSetOf()
+                groupIdToUserIds[it.groupId] = userIds
+            }
+            userIds.add(it.outer)
         }
         return groupIdToUserIds
     }
