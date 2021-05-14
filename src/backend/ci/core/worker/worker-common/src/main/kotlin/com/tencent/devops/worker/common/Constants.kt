@@ -53,7 +53,7 @@ const val LOG_SUBTAG_FINISH_FLAG = "##subTagFinish##"
 
 const val LOG_UPLOAD_BUFFER_SIZE = 200
 
-const val LOG_MESSAGE_LENGTH_LIMIT = 32766
+const val LOG_MESSAGE_LENGTH_LIMIT = 32000
 
 const val LOG_TASK_LINE_LIMIT = 1000000
 

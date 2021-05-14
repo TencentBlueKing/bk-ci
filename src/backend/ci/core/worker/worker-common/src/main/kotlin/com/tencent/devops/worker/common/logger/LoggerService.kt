@@ -351,10 +351,8 @@ object LoggerService {
                 logger.info("Create new build log file(${logProperty.logFile.absolutePath})")
                 elementId2LogProperty[elementId] = logProperty
             }
-            logProperty.logFile.printWriter().use { out ->
-                val dateTime = sdf.format(Date(logMessage.timestamp))
-                out.println("$dateTime : ${logMessage.message}")
-            }
+            val dateTime = sdf.format(Date(logMessage.timestamp))
+            logProperty.logFile.appendText("$dateTime : ${logMessage.message}\n")
         } catch (e: Exception) {
             logger.warn("Fail to save the logs($logMessage)", e)
         }
