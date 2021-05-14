@@ -144,6 +144,7 @@ class ProjectTagService @Autowired constructor(
             ?: return Result(false)
         projectInfos.forEach {
             val extSystemRouter = it.otherRouterTags
+            logger.info("project otherRouterTag ${it.otherRouterTags} ${it.englishName}")
             val routerMap = objectMapper.readValue<Map<String, String>>(extSystemRouter)
             val newRouteMap = mutableMapOf<String, String>()
             // 如果有对应系统的router则替换，否则直接加

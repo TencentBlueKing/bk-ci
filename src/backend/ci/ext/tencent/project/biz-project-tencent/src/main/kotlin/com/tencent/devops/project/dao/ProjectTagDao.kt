@@ -116,7 +116,7 @@ class ProjectTagDao {
         projectIds: List<String>
     ): Result<TProjectRecord>? {
         with(TProject.T_PROJECT) {
-            return dslContext.selectFrom(this).where(PROJECT_ID.`in`(projectIds)).fetch()
+            return dslContext.selectFrom(this).where(ENGLISH_NAME.`in`(projectIds)).fetch()
         }
     }
 }
