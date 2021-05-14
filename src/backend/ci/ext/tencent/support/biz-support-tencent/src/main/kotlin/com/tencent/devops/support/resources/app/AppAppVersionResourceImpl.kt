@@ -35,12 +35,14 @@ import com.tencent.devops.support.services.AppVersionService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class AppAppVersionResourceImpl @Autowired constructor(private val appVersionService: AppVersionService) : AppAppVersionResource {
+class AppAppVersionResourceImpl @Autowired constructor(private val appVersionService: AppVersionService) :
+    AppAppVersionResource {
     override fun getAllAppVersion(channelType: Byte): Result<List<AppVersion>> {
         return Result(data = appVersionService.getAllAppVersionByChannelType(channelType))
     }
 
-    override fun getLastAppVersion(channelType: Byte): Result<AppVersion?> {
+    override fun getLastAppVersion(userId: String, appVersion: String?, channelType: Byte): Result<AppVersion?> {
+        val version = appVersion ?: "1.0.0"
         return Result(data = appVersionService.getLastAppVersion(channelType))
     }
 }
