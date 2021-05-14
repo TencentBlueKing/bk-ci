@@ -172,7 +172,7 @@ class SensitiveApiServiceImpl @Autowired constructor(
             id = id
         ) ?: throw ErrorCodeException(
             errorCode = StoreMessageCode.SENSITIVE_API_NOT_EXIST,
-            params = arrayOf("id"),
+            params = arrayOf(id),
             defaultMessage = "研发商店：敏感API[$id]不存在"
         )
         if (record.apiStatus == ApiStatusEnum.PASS.name) {
@@ -203,7 +203,7 @@ class SensitiveApiServiceImpl @Autowired constructor(
                 id = id
             ) ?: throw ErrorCodeException(
                 errorCode = StoreMessageCode.SENSITIVE_API_NOT_EXIST,
-                params = arrayOf("id"),
+                params = arrayOf(id),
                 defaultMessage = "研发商店：敏感API[$id]不存在"
             )
             if (record.apiStatus == ApiStatusEnum.CANCEL.name) {
