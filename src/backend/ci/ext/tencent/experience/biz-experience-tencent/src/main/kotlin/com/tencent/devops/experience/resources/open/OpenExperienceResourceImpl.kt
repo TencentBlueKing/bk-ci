@@ -19,5 +19,4 @@ class OpenExperienceResourceImpl @Autowired constructor(
     override fun outerAuth(token: String): Result<OuterProfileVO> {
         return Result(experienceOuterService.outerAuth(token))
     }
-
 }
