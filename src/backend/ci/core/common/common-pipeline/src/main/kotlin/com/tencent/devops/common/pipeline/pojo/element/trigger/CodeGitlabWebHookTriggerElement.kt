@@ -50,7 +50,7 @@ data class CodeGitlabWebHookTriggerElement(
     @ApiModelProperty("新版的gitlab代码库名")
     val repositoryName: String? = null,
     @ApiModelProperty("eventType", required = false)
-    val eventType: CodeEventType? = null,
+    val eventType: CodeEventType? = CodeEventType.PUSH,
     @ApiModelProperty("excludeBranch", required = false)
     val excludeBranchName: String?,
     @ApiModelProperty("includePaths", required = false)
