@@ -152,7 +152,8 @@ open class MarketAtomTask : ITask() {
                     atomParams[name] = EnvUtils.parseEnv(
                         command = JsonUtil.toJson(value),
                         data = systemVariables,
-                        contextMap = contextMap(buildTask, workspace)
+                        contextMap = contextMap(buildTask).plus(
+                            "ci.workspace" to workspace.absolutePath)
                     )
                 } else {
                     atomParams[name] = JsonUtil.toJson(value)
@@ -533,11 +534,7 @@ open class MarketAtomTask : ITask() {
             env.putAll(if (buildTask.elementId.isNullOrBlank()) {
                 emptyMap()
             } else {
-                mapOf(
-                    "steps.${buildTask.elementId}.name" to (buildTask.elementName ?: ""),
-                    "steps.${buildTask.elementId}.id" to buildTask.elementId!!,
-                    "steps.${buildTask.elementId}.outcome" to atomResult.status
-                )
+                contextMap(buildTask)
             })
 
             if (atomResult.type == "default") {
@@ -717,9 +714,8 @@ open class MarketAtomTask : ITask() {
 
     private fun getJavaFile() = File(System.getProperty("java.home"), "/bin/java")
 
-    private fun contextMap(buildTask: BuildTask, workspace: File): Map<String, String> {
+    private fun contextMap(buildTask: BuildTask): Map<String, String> {
         return mapOf(
-            "ci.workspace" to workspace.absolutePath,
             "steps.${buildTask.elementId}.name" to (buildTask.elementName ?: ""),
             "steps.${buildTask.elementId}.id" to (buildTask.elementId ?: ""),
             "steps.${buildTask.elementId}.status" to BuildStatus.RUNNING.name
