@@ -5,7 +5,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("项目ext系统consul tag修改入参")
-data class ProjectExtSystemTagDTO (
+data class ProjectExtSystemTagDTO(
     @JsonProperty(value = "routerTag", required = true)
     @ApiModelProperty("项目对应的router tags")
     val routerTag: String,
