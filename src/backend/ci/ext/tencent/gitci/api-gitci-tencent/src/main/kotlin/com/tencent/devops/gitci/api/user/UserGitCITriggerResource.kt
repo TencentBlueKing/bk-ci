@@ -87,14 +87,14 @@ interface UserGitCITriggerResource {
 
     @ApiOperation("根据BuildId查询yaml内容")
     @GET
-    @Path("/getYaml/{gitProjectId}/{buildId}")
+    @Path("/getYaml/{projectId}/{buildId}")
     fun getYamlByBuildId(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "工蜂项目ID", required = true)
-        @PathParam("gitProjectId")
-        gitProjectId: Long,
+        @ApiParam(value = "蓝盾项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
         @ApiParam(value = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String

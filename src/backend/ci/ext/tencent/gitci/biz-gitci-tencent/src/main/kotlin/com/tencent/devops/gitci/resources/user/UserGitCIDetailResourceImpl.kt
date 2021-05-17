@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.user.UserGitCIDetailResource
 import com.tencent.devops.gitci.pojo.GitCIModelDetail
+import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.v2.service.GitCIV2DetailService
 import com.tencent.devops.process.pojo.Report
 import org.springframework.beans.factory.annotation.Autowired
@@ -47,10 +48,11 @@ class UserGitCIDetailResourceImpl @Autowired constructor(
 
     override fun getLatestBuildDetail(
         userId: String,
-        gitProjectId: Long,
+        projectId: String,
         pipelineId: String?,
         buildId: String?
     ): Result<GitCIModelDetail?> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId, gitProjectId)
         return if (!buildId.isNullOrBlank()) {
             Result(gitCIV2DetailService.getBuildDetail(userId, gitProjectId, buildId!!))
@@ -61,12 +63,13 @@ class UserGitCIDetailResourceImpl @Autowired constructor(
 
     override fun search(
         userId: String,
-        gitProjectId: Long,
+        projectId: String,
         pipelineId: String,
         buildId: String,
         page: Int?,
         pageSize: Int?
     ): Result<FileInfoPage<FileInfo>> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId, gitProjectId)
         return Result(gitCIV2DetailService.search(
             userId = userId,
@@ -81,10 +84,11 @@ class UserGitCIDetailResourceImpl @Autowired constructor(
     override fun downloadUrl(
         userId: String,
         gitUserId: String,
-        gitProjectId: Long,
+        projectId: String,
         artifactoryType: ArtifactoryType,
         path: String
     ): Result<Url> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId, gitProjectId)
         return Result(gitCIV2DetailService.downloadUrl(
             userId = userId,
@@ -95,9 +99,9 @@ class UserGitCIDetailResourceImpl @Autowired constructor(
         ))
     }
 
-    override fun getReports(userId: String, gitProjectId: Long, pipelineId: String, buildId: String): Result<List<Report>> {
+    override fun getReports(userId: String, projectId: String, pipelineId: String, buildId: String): Result<List<Report>> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId, gitProjectId)
-
         return Result(gitCIV2DetailService.getReports(userId, gitProjectId, pipelineId, buildId))
     }
 

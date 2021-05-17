@@ -53,14 +53,14 @@ interface UserGitCIPipelineResource {
 
     @ApiOperation("项目下所有流水线概览")
     @GET
-    @Path("/{gitProjectId}/list")
+    @Path("/{projectId}/list")
     fun getPipelineList(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "gitProjectId", required = true)
-        @PathParam("gitProjectId")
-        gitProjectId: Long,
+        @ApiParam(value = "蓝盾项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
         @ApiParam("搜索关键字", required = false)
         @QueryParam("keyword")
         keyword: String?,
@@ -74,14 +74,14 @@ interface UserGitCIPipelineResource {
 
     @ApiOperation("获取指定流水线信息")
     @GET
-    @Path("/{gitProjectId}/{pipelineId}/info")
+    @Path("/{projectId}/{pipelineId}/info")
     fun getPipeline(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "gitProjectId", required = true)
-        @PathParam("gitProjectId")
-        gitProjectId: Long,
+        @ApiParam(value = "蓝盾项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String
@@ -90,14 +90,14 @@ interface UserGitCIPipelineResource {
     @ApiOperation("开启或关闭流水线")
     @POST
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/elements/{elementId}/review")
-    @Path("/{gitProjectId}/{pipelineId}/enable")
+    @Path("/{projectId}/{pipelineId}/enable")
     fun enablePipeline(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "gitProjectId", required = true)
-        @PathParam("gitProjectId")
-        gitProjectId: Long,
+        @ApiParam(value = "蓝盾项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
@@ -108,14 +108,13 @@ interface UserGitCIPipelineResource {
 
     @ApiOperation("获取流水线列表")
     @GET
-    // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/elements/{elementId}/review")
-    @Path("/{gitProjectId}/listInfo")
+    @Path("/{projectId}/listInfo")
     fun listPipelineNames(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "gitProjectId", required = true)
-        @PathParam("gitProjectId")
-        gitProjectId: Long
+        @ApiParam(value = "蓝盾项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
     ): Result<List<GitProjectPipeline>>
 }

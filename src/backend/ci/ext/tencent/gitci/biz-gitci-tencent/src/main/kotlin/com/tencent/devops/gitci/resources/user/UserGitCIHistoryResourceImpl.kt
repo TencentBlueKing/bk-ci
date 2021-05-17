@@ -38,6 +38,7 @@ import com.tencent.devops.gitci.pojo.GitCIBuildBranch
 import com.tencent.devops.gitci.pojo.GitCIBuildHistory
 import com.tencent.devops.gitci.pojo.enums.GitEventEnum
 import com.tencent.devops.gitci.service.GitCIHistoryService
+import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.v2.service.GitCIBasicSettingService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
@@ -49,7 +50,7 @@ class UserGitCIHistoryResourceImpl @Autowired constructor(
 ) : UserGitCIHistoryResource {
     override fun getHistoryBuildList(
         userId: String,
-        gitProjectId: Long,
+        projectId: String,
         page: Int?,
         pageSize: Int?,
         branch: String?,
@@ -60,6 +61,7 @@ class UserGitCIHistoryResourceImpl @Autowired constructor(
         event: GitEventEnum?,
         status: BuildStatus?
     ): Result<Page<GitCIBuildHistory>> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
         if (!gitCIBasicSettingService.initGitCISetting(userId, gitProjectId)) {
             throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")
@@ -82,11 +84,12 @@ class UserGitCIHistoryResourceImpl @Autowired constructor(
 
     override fun getAllBuildBranchList(
         userId: String,
-        gitProjectId: Long,
+        projectId: String,
         page: Int?,
         pageSize: Int?,
         keyword: String?
     ): Result<Page<GitCIBuildBranch>> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
         if (!gitCIBasicSettingService.initGitCISetting(userId, gitProjectId)) {
             throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")

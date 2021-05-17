@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.user.UserGitCIGitCodeResource
+import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.v2.service.OauthService
 import com.tencent.devops.gitci.v2.service.ScmService
 import com.tencent.devops.repository.pojo.git.GitMember
@@ -57,11 +58,12 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
 
     override fun getGitCodeProjectMembers(
         userId: String,
-        gitProjectId: String,
+        projectId: String,
         page: Int,
         pageSize: Int,
         search: String?
     ): Result<List<GitMember>?> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId).toString()
         return Result(
             scmService.getProjectMembers(
                 token = getToken(userId),
@@ -72,7 +74,7 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
 
     override fun getGitCodeCommits(
         userId: String,
-        gitProjectId: Long,
+        projectId: String,
         filePath: String?,
         branch: String?,
         since: String?,
@@ -80,6 +82,7 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
         page: Int,
         perPage: Int
     ): Result<List<Commit>?> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         return Result(
             scmService.getCommits(
                 token = getToken(userId = userId),
@@ -96,9 +99,10 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
 
     override fun gitCodeCreateFile(
         userId: String,
-        gitProjectId: String,
+        projectId: String,
         gitCICreateFile: GitCICreateFile
     ): Result<Boolean> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId).toString()
         return Result(
             scmService.createNewFile(
                 token = getToken(userId = userId),

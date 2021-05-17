@@ -53,14 +53,14 @@ interface UserGitCIBuildResource {
 
     @ApiOperation("重试流水线")
     @POST
-    @Path("/{gitProjectId}/{pipelineId}/{buildId}/retry")
+    @Path("/{projectId}/{pipelineId}/{buildId}/retry")
     fun retry(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("工蜂项目ID", required = true)
-        @PathParam("gitProjectId")
-        gitProjectId: Long,
+        @ApiParam("蓝盾项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
@@ -74,14 +74,14 @@ interface UserGitCIBuildResource {
 
     @ApiOperation("手动停止流水线")
     @DELETE
-    @Path("/{gitProjectId}/{pipelineId}/{buildId}/")
+    @Path("/{projectId}/{pipelineId}/{buildId}/")
     fun manualShutdown(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("工蜂项目ID", required = true)
-        @PathParam("gitProjectId")
-        gitProjectId: Long,
+        @ApiParam("蓝盾项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,

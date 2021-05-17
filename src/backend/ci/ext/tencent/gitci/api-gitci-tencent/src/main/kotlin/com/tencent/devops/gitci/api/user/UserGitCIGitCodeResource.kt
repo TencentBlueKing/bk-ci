@@ -54,26 +54,26 @@ interface UserGitCIGitCodeResource {
 
     @ApiOperation("获取工蜂项目信息")
     @GET
-    @Path("/info")
+    @Path("/projects/info")
     fun getGitCodeProjectInfo(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "gitProjectId", required = true)
+        @ApiParam(value = "工蜂项目路径/id", required = true)
         @QueryParam("gitProjectId")
         gitProjectId: String
     ): Result<GitCIProjectInfo?>
 
     @ApiOperation("获取工蜂项目下所有触发人信息")
     @GET
-    @Path("/members")
+    @Path("/projects/members")
     fun getGitCodeProjectMembers(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "项目ID或者全路径", required = true)
-        @QueryParam("gitProjectId")
-        gitProjectId: String,
+        @ApiParam(value = "蓝盾项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
         @ApiParam(value = "page", required = true)
         @QueryParam("page")
         page: Int = 1,
@@ -87,14 +87,14 @@ interface UserGitCIGitCodeResource {
 
     @ApiOperation("获取工蜂项目所有提交信息")
     @GET
-    @Path("/commits")
+    @Path("/projects/commits")
     fun getGitCodeCommits(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "gitProjectId")
-        @QueryParam("gitProjectId")
-        gitProjectId: Long,
+        @ApiParam(value = "蓝盾项目ID")
+        @QueryParam("projectId")
+        projectId: String,
         @ApiParam(value = "文件路径")
         @QueryParam("filePath")
         filePath: String?,
@@ -117,14 +117,14 @@ interface UserGitCIGitCodeResource {
 
     @ApiOperation("向工蜂项目中创建新文件")
     @POST
-    @Path("/repository/files")
+    @Path("/projects/repository/files")
     fun gitCodeCreateFile(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "gitProjectId")
-        @QueryParam("gitProjectId")
-        gitProjectId: String,
+        @ApiParam(value = "蓝盾项目ID")
+        @QueryParam("projectId")
+        projectId: String,
         @ApiParam(value = "创建文件内容")
         gitCICreateFile: GitCICreateFile
     ): Result<Boolean>

@@ -36,6 +36,7 @@ import com.tencent.devops.gitci.pojo.GitYamlString
 import com.tencent.devops.gitci.pojo.TriggerBuildReq
 import com.tencent.devops.gitci.pojo.v2.V2BuildYaml
 import com.tencent.devops.gitci.service.GitCITriggerService
+import com.tencent.devops.gitci.utils.GitCommonUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -81,7 +82,8 @@ class UserGitCITriggerResourceImpl @Autowired constructor(
         return Result(schema)
     }
 
-    override fun getYamlByBuildId(userId: String, gitProjectId: Long, buildId: String): Result<V2BuildYaml?> {
+    override fun getYamlByBuildId(userId: String, projectId: String, buildId: String): Result<V2BuildYaml?> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId, gitProjectId)
         return Result(gitCITriggerService.getYamlV2(gitProjectId, buildId))
     }

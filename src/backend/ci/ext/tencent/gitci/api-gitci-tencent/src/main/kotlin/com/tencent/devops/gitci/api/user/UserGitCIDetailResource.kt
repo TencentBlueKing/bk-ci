@@ -57,14 +57,14 @@ interface UserGitCIDetailResource {
 
     @ApiOperation("查看指定的构建详情")
     @GET
-    @Path("/detail/{gitProjectId}")
+    @Path("/detail/{projectId}")
     fun getLatestBuildDetail(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "gitProjectId", required = true)
-        @PathParam("gitProjectId")
-        gitProjectId: Long,
+        @ApiParam(value = "蓝盾项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
         @ApiParam(value = "pipelineId", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?,
@@ -74,15 +74,15 @@ interface UserGitCIDetailResource {
     ): Result<GitCIModelDetail?>
 
     @ApiOperation("根据元数据获取文件(有排序),searchProps条件为and")
-    @Path("/artifactories/projects/{gitProjectId}/search")
+    @Path("/artifactories/projects/{projectId}/search")
     @GET
     fun search(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "gitProjectId", required = true)
-        @PathParam("gitProjectId")
-        gitProjectId: Long,
+        @ApiParam(value = "蓝盾项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
         @ApiParam("pipelineId", required = true)
         @QueryParam("pipelineId")
         pipelineId: String,
@@ -98,7 +98,7 @@ interface UserGitCIDetailResource {
     ): Result<FileInfoPage<FileInfo>>
 
     @ApiOperation("创建下载链接")
-    @Path("/artifactories/projects/{gitProjectId}/artifactoryType/{artifactoryType}/downloadUrl")
+    @Path("/artifactories/projects/{projectId}/artifactoryType/{artifactoryType}/downloadUrl")
     @POST
     fun downloadUrl(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -107,9 +107,9 @@ interface UserGitCIDetailResource {
         @ApiParam("工蜂用户ID", required = true, defaultValue = "0")
         @HeaderParam("X-GIT-UID")
         gitUserId: String,
-        @ApiParam(value = "gitProjectId", required = true)
-        @PathParam("gitProjectId")
-        gitProjectId: Long,
+        @ApiParam(value = "蓝盾项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
         @ApiParam("版本仓库类型", required = true)
         @PathParam("artifactoryType")
         artifactoryType: ArtifactoryType,
@@ -119,15 +119,15 @@ interface UserGitCIDetailResource {
     ): Result<Url>
 
     @ApiOperation("获取构建报告列表")
-    @Path("/projects/{gitProjectId}/pipelines/{pipelineId}/builds/{buildId}/report")
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/report")
     @GET
     fun getReports(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "gitProjectId", required = true)
-        @PathParam("gitProjectId")
-        gitProjectId: Long,
+        @ApiParam(value = "蓝盾项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,

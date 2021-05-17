@@ -53,26 +53,26 @@ interface UserGitBasicSettingResource {
 
     @ApiOperation("关闭工蜂CI功能")
     @DELETE
-    @Path("/{gitProjectId}/disable")
+    @Path("/{projectId}/disable")
     fun disableGitCI(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("工蜂项目ID", required = true)
-        @PathParam("gitProjectId")
-        gitProjectId: Long
+        @ApiParam("蓝盾项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
     ): Result<Boolean>
 
     @ApiOperation("查询工蜂CI项目配置")
     @GET
-    @Path("/{gitProjectId}")
+    @Path("/{projectId}")
     fun getGitCIConf(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "gitProjectId", required = true)
-        @PathParam("gitProjectId")
-        gitProjectId: Long
+        @ApiParam(value = "蓝盾项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
     ): Result<GitCIBasicSetting?>
 
     @ApiOperation("保存工蜂CI配置")
@@ -88,14 +88,14 @@ interface UserGitBasicSettingResource {
 
     @ApiOperation("修改项目启动人")
     @POST
-    @Path("/{gitProjectId}/user")
+    @Path("/{projectId}/user")
     fun updateEnableUser(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "gitProjectId", required = true)
-        @PathParam("gitProjectId")
-        gitProjectId: Long,
+        @ApiParam(value = "蓝盾项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
         @QueryParam("enableUserId")
         enableUserId: String
     ): Result<Boolean>

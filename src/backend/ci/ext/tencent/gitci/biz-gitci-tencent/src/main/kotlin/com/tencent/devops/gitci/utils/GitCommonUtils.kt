@@ -39,6 +39,8 @@ object GitCommonUtils {
 //    private const val dockerHubUrl = "https://index.docker.io/v1/"
     private const val dockerHubUrl = ""
 
+    private const val projectPrefix = "git_"
+
     fun getRepoOwner(httpUrl: String): String {
         return when {
             httpUrl.startsWith("http://") -> {
@@ -167,5 +169,17 @@ object GitCommonUtils {
             }
         }
         return branch
+    }
+
+    fun getGitProjectId(projectId: String): Long {
+        if (projectId.startsWith(projectPrefix)) {
+            try {
+                return projectId.removePrefix(projectPrefix).toLong()
+            } catch (e: Exception) {
+                throw RuntimeException("蓝盾项目ID不正确")
+            }
+        } else {
+            throw RuntimeException("蓝盾项目ID不正确")
+        }
     }
 }

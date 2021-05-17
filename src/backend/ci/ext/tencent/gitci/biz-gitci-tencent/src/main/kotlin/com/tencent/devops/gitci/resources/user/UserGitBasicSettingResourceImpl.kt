@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.gitci.api.user.UserGitBasicSettingResource
 import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
+import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.v2.service.GitCIBasicSettingService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
@@ -40,12 +41,14 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
     private val gitCIBasicSettingService: GitCIBasicSettingService
 ) : UserGitBasicSettingResource {
 
-    override fun disableGitCI(userId: String, gitProjectId: Long): Result<Boolean> {
+    override fun disableGitCI(userId: String, projectId: String): Result<Boolean> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId, gitProjectId)
         return Result(gitCIBasicSettingService.updateProjectSetting(gitProjectId = gitProjectId, enableCi = false))
     }
 
-    override fun getGitCIConf(userId: String, gitProjectId: Long): Result<GitCIBasicSetting?> {
+    override fun getGitCIConf(userId: String, projectId: String): Result<GitCIBasicSetting?> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId, gitProjectId)
         return Result(gitCIBasicSettingService.getGitCIConf(gitProjectId))
     }
@@ -55,7 +58,9 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
         return Result(gitCIBasicSettingService.saveGitCIConf(userId, gitCIBasicSetting))
     }
 
-    override fun updateEnableUser(userId: String, gitProjectId: Long, enableUserId: String): Result<Boolean> {
+    override fun updateEnableUser(userId: String, projectId: String, enableUserId: String): Result<Boolean> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
+        checkParam(userId, gitProjectId)
         return Result(
             gitCIBasicSettingService.updateProjectSetting(
                 gitProjectId = gitProjectId,

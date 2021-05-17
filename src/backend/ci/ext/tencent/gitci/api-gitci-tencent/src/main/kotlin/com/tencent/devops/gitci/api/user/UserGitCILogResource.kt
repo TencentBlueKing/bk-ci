@@ -49,11 +49,11 @@ interface UserGitCILogResource {
 
     @ApiOperation("根据构建ID获取初始化所有日志")
     @GET
-    @Path("/{gitProjectId}/{pipelineId}/{buildId}/")
+    @Path("/{projectId}/{pipelineId}/{buildId}/")
     fun getInitLogs(
-        @ApiParam("工蜂项目ID", required = true)
-        @PathParam("gitProjectId")
-        gitProjectId: Long,
+        @ApiParam("蓝盾项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
         @ApiParam(value = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
@@ -76,11 +76,11 @@ interface UserGitCILogResource {
 
     @ApiOperation("获取某行后的日志")
     @GET
-    @Path("/{gitProjectId}/{pipelineId}/{buildId}/after")
+    @Path("/{projectId}/{pipelineId}/{buildId}/after")
     fun getAfterLogs(
         @ApiParam("工蜂项目ID", required = true)
-        @PathParam("gitProjectId")
-        gitProjectId: Long,
+        @PathParam("蓝盾项目ID")
+        projectId: String,
         @ApiParam(value = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
@@ -106,12 +106,12 @@ interface UserGitCILogResource {
 
     @ApiOperation("下载日志接口")
     @GET
-    @Path("/{gitProjectId}/{pipelineId}/{buildId}/download")
+    @Path("/{projectId}/{pipelineId}/{buildId}/download")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun downloadLogs(
         @ApiParam("工蜂项目ID", required = true)
-        @PathParam("gitProjectId")
-        gitProjectId: Long,
+        @PathParam("蓝盾项目ID")
+        projectId: String,
         @ApiParam(value = "流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,

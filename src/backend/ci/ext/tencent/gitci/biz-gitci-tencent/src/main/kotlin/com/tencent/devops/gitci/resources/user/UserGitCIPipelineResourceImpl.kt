@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.user.UserGitCIPipelineResource
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
+import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.v2.service.GitCIBasicSettingService
 import com.tencent.devops.gitci.v2.service.GitCIV2PipelineService
 import org.springframework.beans.factory.annotation.Autowired
@@ -47,67 +48,79 @@ class UserGitCIPipelineResourceImpl @Autowired constructor(
 
     override fun getPipelineList(
         userId: String,
-        gitProjectId: Long,
+        projectId: String,
         keyword: String?,
         page: Int?,
         pageSize: Int?
     ): Result<Page<GitProjectPipeline>> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
         if (!gitCIBasicSettingService.initGitCISetting(userId, gitProjectId)) {
             throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")
         }
-        return Result(pipelineV2Service.getPipelineList(
-            userId = userId,
-            gitProjectId = gitProjectId,
-            keyword = keyword,
-            page = page,
-            pageSize = pageSize
-        ))
+        return Result(
+            pipelineV2Service.getPipelineList(
+                userId = userId,
+                gitProjectId = gitProjectId,
+                keyword = keyword,
+                page = page,
+                pageSize = pageSize
+            )
+        )
     }
 
     override fun getPipeline(
         userId: String,
-        gitProjectId: Long,
+        projectId: String,
         pipelineId: String
     ): Result<GitProjectPipeline?> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
         if (!gitCIBasicSettingService.initGitCISetting(userId, gitProjectId)) {
             throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")
         }
-        return Result(pipelineV2Service.getPipelineListById(
-            userId = userId,
-            gitProjectId = gitProjectId,
-            pipelineId = pipelineId
-        ))
+        return Result(
+            pipelineV2Service.getPipelineListById(
+                userId = userId,
+                gitProjectId = gitProjectId,
+                pipelineId = pipelineId
+            )
+        )
     }
 
     override fun enablePipeline(
         userId: String,
-        gitProjectId: Long,
+        projectId: String,
         pipelineId: String,
         enabled: Boolean
     ): Result<Boolean> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
         if (!gitCIBasicSettingService.initGitCISetting(userId, gitProjectId)) {
             throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")
         }
-        return Result(pipelineV2Service.enablePipeline(
-            userId = userId,
-            gitProjectId = gitProjectId,
-            pipelineId = pipelineId,
-            enabled = enabled
-        ))
+        return Result(
+            pipelineV2Service.enablePipeline(
+                userId = userId,
+                gitProjectId = gitProjectId,
+                pipelineId = pipelineId,
+                enabled = enabled
+            )
+        )
     }
 
-    override fun listPipelineNames(userId: String, gitProjectId: Long): Result<List<GitProjectPipeline>> {
+    override fun listPipelineNames(userId: String, projectId: String): Result<List<GitProjectPipeline>> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
         if (!gitCIBasicSettingService.initGitCISetting(userId, gitProjectId)) {
             throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")
         }
-        return Result(pipelineV2Service.getPipelineListWithoutHistory(
-            userId = userId,
-            gitProjectId = gitProjectId
-        ))
+        return Result(
+            pipelineV2Service.getPipelineListWithoutHistory(
+                userId = userId,
+                gitProjectId = gitProjectId
+            )
+        )
     }
 
     private fun checkParam(userId: String) {

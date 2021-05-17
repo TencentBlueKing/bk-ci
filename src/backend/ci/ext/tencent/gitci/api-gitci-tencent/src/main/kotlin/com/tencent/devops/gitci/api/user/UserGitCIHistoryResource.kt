@@ -55,14 +55,14 @@ interface UserGitCIHistoryResource {
 
     @ApiOperation("构建历史列表")
     @GET
-    @Path("/list/{gitProjectId}")
+    @Path("/list/{projectId}")
     fun getHistoryBuildList(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "gitProjectId", required = true)
-        @PathParam("gitProjectId")
-        gitProjectId: Long,
+        @ApiParam(value = "蓝盾项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,
@@ -94,14 +94,14 @@ interface UserGitCIHistoryResource {
 
     @ApiOperation("获取当前仓库的所有有关构建列表(包括fork库)")
     @GET
-    @Path("/branch/list/{gitProjectId}")
+    @Path("/branch/list/{projectId}")
     fun getAllBuildBranchList(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "gitProjectId", required = true)
-        @PathParam("gitProjectId")
-        gitProjectId: Long,
+        @ApiParam(value = "蓝盾项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,

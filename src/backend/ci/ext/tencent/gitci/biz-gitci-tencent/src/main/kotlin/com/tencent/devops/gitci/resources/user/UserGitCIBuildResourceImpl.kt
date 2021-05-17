@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.user.UserGitCIBuildResource
 import com.tencent.devops.gitci.pojo.v2.GitCIV2Startup
+import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.v2.service.TriggerBuildService
 import com.tencent.devops.process.pojo.BuildId
 import org.springframework.beans.factory.annotation.Autowired
@@ -43,44 +44,52 @@ class UserGitCIBuildResourceImpl @Autowired constructor(
 
     override fun retry(
         userId: String,
-        gitProjectId: Long,
+        projectId: String,
         pipelineId: String,
         buildId: String,
         taskId: String?
     ): Result<BuildId> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId, pipelineId, buildId, gitProjectId)
-        return Result(triggerBuildService.retry(
-            userId = userId,
-            gitProjectId = gitProjectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            taskId = taskId
-        ))
+        return Result(
+            triggerBuildService.retry(
+                userId = userId,
+                gitProjectId = gitProjectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                taskId = taskId
+            )
+        )
     }
 
     override fun manualShutdown(
         userId: String,
-        gitProjectId: Long,
+        projectId: String,
         pipelineId: String,
         buildId: String
     ): Result<Boolean> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId, pipelineId, buildId, gitProjectId)
-        return Result(triggerBuildService.manualShutdown(
-            userId = userId,
-            gitProjectId = gitProjectId,
-            pipelineId = pipelineId,
-            buildId = buildId
-        ))
+        return Result(
+            triggerBuildService.manualShutdown(
+                userId = userId,
+                gitProjectId = gitProjectId,
+                pipelineId = pipelineId,
+                buildId = buildId
+            )
+        )
     }
 
     override fun gitCIStartupPipeline(userId: String, gitCIV2Startup: GitCIV2Startup): Result<BuildId?> {
-        return Result(triggerBuildService.startBuild(
-            pipeline = gitCIV2Startup.pipeline,
-            event = gitCIV2Startup.event,
-            gitCIBasicSetting = gitCIV2Startup.gitCIBasicSetting,
-            model = gitCIV2Startup.model,
-            gitBuildId = gitCIV2Startup.gitBuildId
-        ))
+        return Result(
+            triggerBuildService.startBuild(
+                pipeline = gitCIV2Startup.pipeline,
+                event = gitCIV2Startup.event,
+                gitCIBasicSetting = gitCIV2Startup.gitCIBasicSetting,
+                model = gitCIV2Startup.model,
+                gitBuildId = gitCIV2Startup.gitBuildId
+            )
+        )
     }
 
     private fun checkParam(userId: String, pipelineId: String, buildId: String, gitProjectId: Long) {

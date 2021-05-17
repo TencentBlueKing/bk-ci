@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.user.UserGitCIRequestResource
 import com.tencent.devops.gitci.pojo.GitRequestHistory
+import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.v2.service.GitCIBasicSettingService
 import com.tencent.devops.gitci.v2.service.GitCIV2RequestService
 import org.springframework.beans.factory.annotation.Autowired
@@ -44,7 +45,13 @@ class UserGitCIRequestResourceImpl @Autowired constructor(
     private val gitCIV2RequestService: GitCIV2RequestService,
     private val gitCIBasicSettingService: GitCIBasicSettingService
 ) : UserGitCIRequestResource {
-    override fun getMergeBuildList(userId: String, gitProjectId: Long, page: Int?, pageSize: Int?): Result<Page<GitRequestHistory>> {
+    override fun getMergeBuildList(
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<GitRequestHistory>> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
         if (!gitCIBasicSettingService.initGitCISetting(userId, gitProjectId)) {
             throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")

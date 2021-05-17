@@ -33,6 +33,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.service.GitCILogService
 import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.gitci.api.user.UserGitCILogResource
+import com.tencent.devops.gitci.utils.GitCommonUtils
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
@@ -41,7 +42,7 @@ class UserGitCILogResourceImpl @Autowired constructor(
     private val gitCILogService: GitCILogService
 ) : UserGitCILogResource {
     override fun getInitLogs(
-        gitProjectId: Long,
+        projectId: String,
         pipelineId: String,
         buildId: String,
         debug: Boolean?,
@@ -49,6 +50,7 @@ class UserGitCILogResourceImpl @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(buildId, gitProjectId)
         return Result(gitCILogService.getInitLogs(
             gitProjectId = gitProjectId,
@@ -62,7 +64,7 @@ class UserGitCILogResourceImpl @Autowired constructor(
     }
 
     override fun getAfterLogs(
-        gitProjectId: Long,
+        projectId: String,
         pipelineId: String,
         buildId: String,
         start: Long,
@@ -71,6 +73,7 @@ class UserGitCILogResourceImpl @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(buildId, gitProjectId)
         return Result(gitCILogService.getAfterLogs(
             gitProjectId = gitProjectId,
@@ -85,13 +88,14 @@ class UserGitCILogResourceImpl @Autowired constructor(
     }
 
     override fun downloadLogs(
-        gitProjectId: Long,
+        projectId: String,
         pipelineId: String,
         buildId: String,
         tag: String?,
         jobId: String?,
         executeCount: Int?
     ): Response {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(buildId, gitProjectId)
         return gitCILogService.downloadLogs(
             gitProjectId = gitProjectId,
