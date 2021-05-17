@@ -61,14 +61,14 @@ class PipelineContextService@Autowired constructor(
                 }
 
                 // other job
-                varMap["jobs.${c.jobId ?: ""}.id"] = c.jobId ?: ""
-                varMap["jobs.${c.jobId ?: ""}.name"] = c.name
-                varMap["jobs.${c.jobId ?: ""}.status"] = getJobStatus(c)
-                varMap["jobs.${c.jobId ?: ""}.outcome"] = c.status ?: ""
-                varMap["jobs.${c.jobId ?: ""}.os"] = getOs(c)
-                varMap["jobs.${c.jobId ?: ""}.container.network"] = getNetWork(c)
-                varMap["jobs.${c.jobId ?: ""}.stage_id"] = stage.id ?: ""
-                varMap["jobs.${c.jobId ?: ""}.stage_name"] = stage.name ?: ""
+                varMap["jobs.${c.jobId ?: c.id ?: ""}.id"] = c.jobId ?: ""
+                varMap["jobs.${c.jobId ?: c.id ?: ""}.name"] = c.name
+                varMap["jobs.${c.jobId ?: c.id ?: ""}.status"] = getJobStatus(c)
+                varMap["jobs.${c.jobId ?: c.id ?: ""}.outcome"] = c.status ?: ""
+                varMap["jobs.${c.jobId ?: c.id ?: ""}.os"] = getOs(c)
+                varMap["jobs.${c.jobId ?: c.id ?: ""}.container.network"] = getNetWork(c)
+                varMap["jobs.${c.jobId ?: c.id ?: ""}.stage_id"] = stage.id ?: ""
+                varMap["jobs.${c.jobId ?: c.id ?: ""}.stage_name"] = stage.name ?: ""
 
                 // steps
                 c.elements.forEach { e ->
