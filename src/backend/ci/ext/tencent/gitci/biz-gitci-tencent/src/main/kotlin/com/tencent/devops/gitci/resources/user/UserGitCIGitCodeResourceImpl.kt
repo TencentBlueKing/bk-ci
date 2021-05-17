@@ -44,7 +44,7 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
     private val scmService: ScmService,
     private val oauthService: OauthService
 ) : UserGitCIGitCodeResource {
-    override fun getGitCodeProjectInfo(userId: String, gitProjectId: Long): Result<GitCIProjectInfo?> {
+    override fun getGitCodeProjectInfo(userId: String, gitProjectId: String): Result<GitCIProjectInfo?> {
         return Result(
             scmService.getProjectInfo(
                 token = getToken(userId),

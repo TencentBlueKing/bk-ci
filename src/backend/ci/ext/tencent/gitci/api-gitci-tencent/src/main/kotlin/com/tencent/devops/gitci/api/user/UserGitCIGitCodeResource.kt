@@ -61,7 +61,7 @@ interface UserGitCIGitCodeResource {
         userId: String,
         @ApiParam(value = "gitProjectId", required = true)
         @PathParam("gitProjectId")
-        gitProjectId: Long
+        gitProjectId: String
     ): Result<GitCIProjectInfo?>
 
     @ApiOperation("获取工蜂项目所有提交信息")
