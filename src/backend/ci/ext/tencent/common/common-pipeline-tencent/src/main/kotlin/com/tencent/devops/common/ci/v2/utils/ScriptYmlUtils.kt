@@ -405,7 +405,6 @@ object ScriptYmlUtils {
             version = preScriptBuildYaml.version,
             triggerOn = thisTriggerOn,
             variables = preScriptBuildYaml.variables,
-            onFail = preScriptBuildYaml.onFail,
             extends = preScriptBuildYaml.extends,
             resource = preScriptBuildYaml.resources,
             notices = preScriptBuildYaml.notices,

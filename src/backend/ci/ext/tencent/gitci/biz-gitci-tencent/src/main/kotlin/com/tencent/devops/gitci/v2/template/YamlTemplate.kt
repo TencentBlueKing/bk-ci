@@ -127,7 +127,6 @@ class YamlTemplate(
                 name = name,
                 label = label,
                 triggerOn = triggerOn,
-                onFail = onFail,
                 extends = extends,
                 resources = resources,
                 notices = notices,
@@ -192,7 +191,6 @@ class YamlTemplate(
         // 将不用替换的直接传入
         val newYaml = YamlObjects.getObjectFromYaml<NoReplaceTemplate>(toPath, YamlUtil.toYaml(templateObject))
         preYamlObject.label = newYaml.label
-        preYamlObject.onFail = newYaml.onFail
         if (newYaml.extends != null) {
             error(TEMPLATE_FORMAT_ERROR.format("extend "))
         }

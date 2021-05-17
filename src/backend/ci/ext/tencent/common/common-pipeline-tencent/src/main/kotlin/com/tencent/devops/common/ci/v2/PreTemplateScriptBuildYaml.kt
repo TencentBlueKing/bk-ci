@@ -47,8 +47,6 @@ data class PreTemplateScriptBuildYaml(
     val stages: List<Map<String, Any>>?,
     val jobs: Map<String, Any>? = null,
     val steps: List<Map<String, Any>>? = null,
-    @JsonProperty("on-fail")
-    val onFail: OnFail?,
     val extends: Extends?,
     val resources: Resources?,
     val notices: List<Notices>?,
