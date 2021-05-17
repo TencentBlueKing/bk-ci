@@ -48,6 +48,7 @@ import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.SystemEnums
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.service.ProjectPaasCCService
@@ -307,7 +308,7 @@ class OpProjectServiceImpl @Autowired constructor(
         return Result(synProject)
     }
 
-    override fun setGrayExt(projectCodeList: List<String>, operateFlag: Int) {
+    override fun setGrayExt(projectCodeList: List<String>, operateFlag: Int, system: SystemEnums) {
         val routerTag = when (operateFlag) {
             grayLable -> {
                 grayTag
@@ -323,15 +324,20 @@ class OpProjectServiceImpl @Autowired constructor(
         if (routerTag.isNullOrEmpty()) {
             return
         }
-        val projectTagUpdateDTO = ProjectTagUpdateDTO(
-            routerTag = routerTag!!,
-            bgId = null,
-            deptId = null,
-            centerId = null,
-            projectCodeList = projectCodeList,
-            channel = null
-        )
-        projectTagService.updateTagByProject(projectTagUpdateDTO)
+
+        if (system == SystemEnums.CI) {
+            val projectTagUpdateDTO = ProjectTagUpdateDTO(
+                routerTag = routerTag!!,
+                bgId = null,
+                deptId = null,
+                centerId = null,
+                projectCodeList = projectCodeList,
+                channel = null
+            )
+            projectTagService.updateTagByProject(projectTagUpdateDTO)
+        } else if (system == SystemEnums.CODECC || system == SystemEnums.REPO) {
+
+        }
     }
 
     companion object {
