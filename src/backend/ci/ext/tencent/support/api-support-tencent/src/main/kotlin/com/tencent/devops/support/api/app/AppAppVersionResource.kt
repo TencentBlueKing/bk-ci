@@ -28,6 +28,7 @@
 package com.tencent.devops.support.api.app
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_APP_VERSION
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_NAME
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
@@ -63,6 +64,9 @@ interface AppAppVersionResource {
         @ApiParam("版本号", required = true)
         @HeaderParam(AUTH_HEADER_APP_VERSION)
         appVersion: String?,
+        @ApiParam("组织", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_NAME)
+        organization: String? = null,
         @ApiParam(value = "渠道类型（1:\"安卓\", 2:\"IOS\", 3:\"WEB\"）", required = true)
         @QueryParam(value = "channelType")
         channelType: Byte
