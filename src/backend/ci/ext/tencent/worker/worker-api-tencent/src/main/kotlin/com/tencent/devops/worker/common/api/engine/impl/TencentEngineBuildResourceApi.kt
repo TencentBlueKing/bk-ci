@@ -27,9 +27,13 @@
 
 package com.tencent.devops.worker.common.api.engine.impl
 
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.worker.common.api.ApiPriority
 import com.tencent.devops.worker.common.api.engine.EngineBuildSDKApi
 import com.tencent.devops.worker.common.api.utils.ThirdPartyAgentBuildInfoUtils
+import com.tencent.devops.worker.common.env.AgentEnv
 
 @Suppress("UNUSED")
 @ApiPriority(priority = 9)
@@ -42,5 +46,19 @@ class TencentEngineBuildResourceApi : EngineBuildResourceApi(), EngineBuildSDKAp
 
     override fun getRequestUrl(path: String, retryCount: Int): String {
         return identifyUrl("/ms/engine/$path?retryCount=$retryCount")
+    }
+
+    override fun getCiToken(): String {
+        val projectId = AgentEnv.getProjectId()
+        if (projectId.startsWith("git_")) {
+            val gitProjectId = projectId.removePrefix("git_")
+            val url = "/ms/scm/api/build/gitci/getToken?gitProjectId=$gitProjectId"
+            val request = buildGet(url)
+            val responseContent = request(request, "获取工蜂CI项目Token失败！")
+            val gitToken = objectMapper.readValue<Result<GitToken>>(responseContent)
+            return gitToken.data?.accessToken ?: ""
+        }
+
+        return super.getCiToken()
     }
 }
