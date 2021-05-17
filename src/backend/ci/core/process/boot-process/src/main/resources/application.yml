@@ -1,4 +1,6 @@
 spring:
+  main:
+    allow-bean-definition-overriding: true
   application:
     name: process${service-suffix}
     desc: DevOps Pipeline Service
