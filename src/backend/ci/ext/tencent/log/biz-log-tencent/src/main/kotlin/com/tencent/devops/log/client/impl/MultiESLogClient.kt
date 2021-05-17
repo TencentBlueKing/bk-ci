@@ -51,7 +51,6 @@ import java.util.regex.Pattern
 import kotlin.collections.HashSet
 import kotlin.math.abs
 
-@Component
 class MultiESLogClient constructor(
     private val clients: List<ESClient>,
     private val redisOperation: RedisOperation,

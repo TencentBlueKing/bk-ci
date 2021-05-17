@@ -33,8 +33,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.stereotype.Component
 import java.lang.RuntimeException
 
-@Component
-@ConditionalOnMissingBean
 class LogClientImpl constructor(
     private val client: ESClient
 ) : LogClient {
