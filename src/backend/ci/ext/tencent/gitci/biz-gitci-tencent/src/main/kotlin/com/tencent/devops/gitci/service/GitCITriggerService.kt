@@ -188,7 +188,7 @@ class GitCITriggerService @Autowired constructor(
             // v2 先做OAuth校验
             val triggerUser = gitRequestEvent.userId
             val token = oauthService.getOauthToken(triggerUser) ?: throw CustomException(
-                Response.Status.FORBIDDEN,
+                Response.Status.UNAUTHORIZED,
                 "用户${gitRequestEvent.userId} 无OAuth权限"
             )
             val objects = requestTriggerFactory.v2RequestTrigger.prepareCIBuildYaml(

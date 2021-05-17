@@ -28,6 +28,7 @@
 package com.tencent.devops.scm.api
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -75,4 +76,25 @@ interface ServiceGitCiResource {
         @QueryParam("token")
         token: String
     ): Result<Boolean>
+
+    @ApiOperation("获取GitCode项目成员信息")
+    @GET
+    @Path("/getMembers")
+    fun getMembers(
+        @ApiParam("token", required = true)
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "项目ID或者全路径", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @ApiParam(value = "page", required = true)
+        @QueryParam("page")
+        page: Int = 1,
+        @ApiParam(value = "pageSize", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int = 20,
+        @ApiParam(value = "搜索用户关键字", required = true)
+        @QueryParam("search")
+        search: String?
+    ): Result<List<GitMember>>
 }

@@ -29,6 +29,8 @@ package com.tencent.devops.gitci.v2.service
 
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.gitci.pojo.GitRequestEvent
+import com.tencent.devops.repository.pojo.git.GitMember
+import com.tencent.devops.scm.api.ServiceGitCiResource
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.GitCICreateFile
@@ -110,6 +112,16 @@ class ScmService @Autowired constructor(
         gitCICreateFile: GitCICreateFile
     ): Boolean {
         return client.getScm(ServiceGitResource::class).gitCICreateFile(token, gitProjectId, gitCICreateFile).data!!
+    }
+
+    fun getProjectMembers(
+        token: String,
+        gitProjectId: String,
+        page: Int,
+        pageSize: Int,
+        search: String?
+    ): List<GitMember>? {
+        return client.getScm(ServiceGitCiResource::class).getMembers(token, gitProjectId, page, pageSize, search).data
     }
 
     // 获取项目ID，兼容没有source字段的旧数据，和fork库中源项目id不同的情况
