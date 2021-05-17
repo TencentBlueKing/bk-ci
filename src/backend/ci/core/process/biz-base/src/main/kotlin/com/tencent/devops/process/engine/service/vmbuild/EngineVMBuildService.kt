@@ -310,7 +310,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             else -> {
                 val allVariable = buildVariableService.getAllVariable(buildId)
                 // 构造扩展变量
-                val extMap = buildExtService.buildExt(task)
+                val extMap = buildExtService.buildExt(task, allVariable)
                 val buildVariable = mutableMapOf(
                     PIPELINE_VMSEQ_ID to vmSeqId,
                     PIPELINE_ELEMENT_ID to task.taskId
