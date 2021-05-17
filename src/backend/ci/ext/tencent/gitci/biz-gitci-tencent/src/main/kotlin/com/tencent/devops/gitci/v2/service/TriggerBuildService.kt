@@ -100,7 +100,11 @@ import com.tencent.devops.gitci.utils.GitCIPipelineUtils
 import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.api.user.UserPipelineGroupResource
 import com.tencent.devops.process.pojo.BuildId
+import com.tencent.devops.process.pojo.classify.PipelineGroup
+import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
+import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.Subscription
 import com.tencent.devops.scm.api.ServiceGitResource
@@ -235,6 +239,9 @@ class TriggerBuildService @Autowired constructor(
         gitBasicSetting: GitCIBasicSetting,
         yaml: ScriptBuildYaml
     ): Model {
+        // 流水线插件标签设置
+        val labelList = preparePipelineLabels(event, gitBasicSetting, yaml)
+
         // 预安装插件市场的插件
         installMarketAtom(gitBasicSetting, event.userId, GitCiCodeRepoTask.atomCode)
         installMarketAtom(gitBasicSetting, event.userId, DockerRunDevCloudTask.atomCode)
@@ -289,10 +296,76 @@ class TriggerBuildService @Autowired constructor(
             name = GitCIPipelineUtils.genBKPipelineName(gitBasicSetting.gitProjectId),
             desc = "",
             stages = stageList,
-            labels = emptyList(),
+            labels = labelList,
             instanceFromTemplate = false,
             pipelineCreator = event.userId
         )
+    }
+
+    private fun preparePipelineLabels(
+        event: GitRequestEvent,
+        gitBasicSetting: GitCIBasicSetting,
+        yaml: ScriptBuildYaml
+    ): List<String> {
+        val gitCIPipelineLabels = mutableListOf<String>()
+
+        try {
+            // 获取当前项目下存在的标签组
+            val pipelineGroups = client.get(UserPipelineGroupResource::class)
+                .getGroups(event.userId, gitBasicSetting.projectCode!!)
+                .data
+
+            yaml.label.forEach {
+                // 要设置的标签组不存在，新建标签组和标签（同名）
+                if (!checkPipelineLabel(it, pipelineGroups)) {
+                    client.get(UserPipelineGroupResource::class).addGroup(event.userId, PipelineGroupCreate(
+                        projectId = gitBasicSetting.projectCode!!,
+                        name = it
+                    ))
+
+                    val pipelineGroup = getPipelineGroup(it, event.userId, gitBasicSetting.projectCode!!)
+                    if (pipelineGroup != null) {
+                        client.get(UserPipelineGroupResource::class).addLabel(event.userId, PipelineLabelCreate(
+                            groupId = pipelineGroup.id,
+                            name = it
+                        ))
+                    }
+                }
+
+                // 保证标签已创建成功后，取label加密ID
+                val pipelineGroup = getPipelineGroup(it, event.userId, gitBasicSetting.projectCode!!)
+                gitCIPipelineLabels.add(pipelineGroup!!.labels[0].id)
+            }
+        } catch (e: Exception) {
+            logger.error("${event.userId}|${gitBasicSetting.projectCode!!} preparePipelineLabels error.", e)
+        }
+
+        return gitCIPipelineLabels
+    }
+
+    private fun checkPipelineLabel(gitciPipelineLabel: String, pipelineGroups: List<PipelineGroup>?): Boolean {
+        pipelineGroups?.forEach { pipelineGroup ->
+            pipelineGroup.labels.forEach {
+                if (it.name == gitciPipelineLabel) {
+                    return true
+                }
+            }
+        }
+
+        return false
+    }
+
+    private fun getPipelineGroup(labelGroupName: String, userId: String, projectId: String): PipelineGroup? {
+        val pipelineGroups = client.get(UserPipelineGroupResource::class)
+            .getGroups(userId, projectId)
+            .data
+        pipelineGroups?.forEach {
+            if (it.name == labelGroupName) {
+                return it
+            }
+        }
+
+        return null
     }
 
     private fun createStage(

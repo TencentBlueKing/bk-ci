@@ -41,7 +41,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 data class PreScriptBuildYaml(
     var version: String?,
     var name: String?,
-    var label: String? = null,
+    var label: List<String>? = null,
     var triggerOn: PreTriggerOn?,
     var variables: Map<String, Variable>? = null,
     var stages: List<PreStage>? = null,
