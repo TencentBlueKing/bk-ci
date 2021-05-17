@@ -153,7 +153,7 @@ open class MarketAtomTask : ITask() {
                         command = JsonUtil.toJson(value),
                         data = systemVariables,
                         contextMap = contextMap(buildTask).plus(
-                            "ci.workspace" to workspace.absolutePath)
+                            mapOf("ci.workspace" to workspace.absolutePath))
                     )
                 } else {
                     atomParams[name] = JsonUtil.toJson(value)
