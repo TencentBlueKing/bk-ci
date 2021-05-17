@@ -168,7 +168,7 @@ interface ServiceRepositoryResource {
 
     @ApiOperation("删除代码库")
     @DELETE
-    @Path("/{projectId}/{repositoryHashId}")
+    @Path("/{projectId}/{repositoryHashId}/delete")
     fun delete(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
