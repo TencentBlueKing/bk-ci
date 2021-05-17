@@ -40,6 +40,7 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -97,7 +98,7 @@ interface ApigwRepositoryResourceV3 {
     ): Result<RepositoryId>
 
     @ApiOperation("删除代码库")
-    @POST
+    @DELETE
     @Path("/{projectId}/{repositoryHashId}")
     fun create(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
