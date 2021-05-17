@@ -75,7 +75,7 @@ class ApigwRepositoryResourceV3Impl @Autowired constructor(private val client: C
             permission = Permission.USE)
     }
 
-    override fun create(
+    override fun delete(
         appCode: String?,
         apigwType: String?,
         userId: String,

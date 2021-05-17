@@ -100,7 +100,7 @@ interface ApigwRepositoryResourceV3 {
     @ApiOperation("删除代码库")
     @DELETE
     @Path("/{projectId}/{repositoryHashId}")
-    fun create(
+    fun delete(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
         appCode: String?,
