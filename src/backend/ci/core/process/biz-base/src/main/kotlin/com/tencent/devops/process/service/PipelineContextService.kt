@@ -49,8 +49,8 @@ class PipelineContextService@Autowired constructor(
         modelDetail.model.stages.forEach { stage ->
             stage.containers.forEach { c ->
                 // current job
-                if (c.containerId == containerId) {
-                    varMap["job.id"] = containerId ?: ""
+                if (c.id != null && c.id!! == containerId) {
+                    varMap["job.id"] = c.jobId ?: ""
                     varMap["job.name"] = c.name
                     varMap["job.status"] = getJobStatus(c)
                     varMap["job.outcome"] = c.status ?: ""
@@ -61,21 +61,21 @@ class PipelineContextService@Autowired constructor(
                 }
 
                 // other job
-                varMap["jobs.${c.id}.id"] = c.id ?: ""
-                varMap["jobs.${c.id}.name"] = c.name
-                varMap["jobs.${c.id}.status"] = getJobStatus(c)
-                varMap["jobs.${c.id}.outcome"] = c.status ?: ""
-                varMap["jobs.${c.id}.os"] = getOs(c)
-                varMap["jobs.${c.id}.container.network"] = getNetWork(c)
-                varMap["jobs.${c.id}.stage_id"] = stage.id ?: ""
-                varMap["jobs.${c.id}.stage_name"] = stage.name ?: ""
+                varMap["jobs.${c.jobId ?: ""}.id"] = c.jobId ?: ""
+                varMap["jobs.${c.jobId ?: ""}.name"] = c.name
+                varMap["jobs.${c.jobId ?: ""}.status"] = getJobStatus(c)
+                varMap["jobs.${c.jobId ?: ""}.outcome"] = c.status ?: ""
+                varMap["jobs.${c.jobId ?: ""}.os"] = getOs(c)
+                varMap["jobs.${c.jobId ?: ""}.container.network"] = getNetWork(c)
+                varMap["jobs.${c.jobId ?: ""}.stage_id"] = stage.id ?: ""
+                varMap["jobs.${c.jobId ?: ""}.stage_name"] = stage.name ?: ""
 
                 // steps
                 c.elements.forEach { e ->
-                    varMap["jobs.${c.id}.steps.${e.id}.name"] = e.name
-                    varMap["jobs.${c.id}.steps.${e.id}.id"] = e.id ?: ""
-                    varMap["jobs.${c.id}.steps.${e.id}.status"] = getStepStatus(e)
-                    varMap["jobs.${c.id}.steps.${e.id}.outcome"] = e.status ?: ""
+                    varMap["jobs.${c.jobId ?: ""}.steps.${e.id}.name"] = e.name
+                    varMap["jobs.${c.jobId ?: ""}.steps.${e.id}.id"] = e.id ?: ""
+                    varMap["jobs.${c.jobId ?: ""}.steps.${e.id}.status"] = getStepStatus(e)
+                    varMap["jobs.${c.jobId ?: ""}.steps.${e.id}.outcome"] = e.status ?: ""
                     varMap.putAll(getStepOutput(c, e, buildVar))
                 }
             }
