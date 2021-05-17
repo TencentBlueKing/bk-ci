@@ -78,7 +78,7 @@ class BuildMonitorControl @Autowired constructor(
 
         val buildId = event.buildId
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
-        if (buildInfo == null || buildInfo.status.isFinish()) {
+        if (buildInfo == null || buildInfo.isFinish()) {
             LOG.info("ENGINE|$buildId|${event.source}|BUILD_MONITOR|status=${buildInfo?.status}")
             return true
         }
