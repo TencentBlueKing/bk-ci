@@ -8,9 +8,8 @@ import com.tencent.bk.codecc.apiquery.task.model.TaskInfoModel
 import com.tencent.bk.codecc.apiquery.task.model.ToolConfigInfoModel
 import com.tencent.bk.codecc.apiquery.vo.pipeline.PipelineTaskVO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
-import com.tencent.devops.common.api.auth.CODECC_AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.api.pojo.CodeCCResult
+import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -37,8 +36,8 @@ interface ApigwTaskResource {
         @ApiParam(value = "任务查询请求体", required = true)
         taskQueryReq: TaskQueryReq,
         @ApiParam(value = "应用code", required = false)
-        @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode : String,
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String,
         @ApiParam(value = "页面数", required = false)
         @QueryParam("pageNum")
         pageNum: Int?,
@@ -51,8 +50,7 @@ interface ApigwTaskResource {
         @ApiParam(value = "排序类型", required = false)
         @QueryParam("sortType")
         sortType: String?
-    ): CodeCCResult<Page<TaskInfoModel>>
-
+    ): Result<Page<TaskInfoModel>>
 
     @ApiOperation("获取任务详情信息")
     @Path("/detail/projectId/{projectId}")
@@ -60,10 +58,10 @@ interface ApigwTaskResource {
     fun getTaskDetailListByProjectId(
         @ApiParam(value = "项目id", required = false)
         @PathParam("projectId")
-        projectId : String,
+        projectId: String,
         @ApiParam(value = "应用code", required = false)
-        @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode : String,
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String,
         @ApiParam(value = "页面数", required = false)
         @QueryParam("pageNum")
         pageNum: Int?,
@@ -76,8 +74,7 @@ interface ApigwTaskResource {
         @ApiParam(value = "排序类型", required = false)
         @QueryParam("sortType")
         sortType: String?
-    ): CodeCCResult<Page<TaskInfoModel>>
-
+    ): Result<Page<TaskInfoModel>>
 
     @ApiOperation("获取个性化触发详情信息")
     @Path("/custom")
@@ -86,8 +83,8 @@ interface ApigwTaskResource {
         @ApiParam(value = "任务查询请求体", required = true)
         taskQueryReq: TaskQueryReq,
         @ApiParam(value = "应用code", required = false)
-        @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode : String,
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String,
         @ApiParam(value = "页面数", required = false)
         @QueryParam("pageNum")
         pageNum: Int?,
@@ -100,7 +97,7 @@ interface ApigwTaskResource {
         @ApiParam(value = "排序类型", required = false)
         @QueryParam("sortType")
         sortType: String?
-    ): CodeCCResult<Page<CustomProjModel>>
+    ): Result<Page<CustomProjModel>>
 
     @ApiOperation("获取工具信息")
     @Path("/tool")
@@ -109,8 +106,8 @@ interface ApigwTaskResource {
         @ApiParam(value = "任务查询请求体", required = true)
         taskQueryReq: TaskQueryReq,
         @ApiParam(value = "应用code", required = false)
-        @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode : String,
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String,
         @ApiParam(value = "页面数", required = false)
         @QueryParam("pageNum")
         pageNum: Int?,
@@ -123,7 +120,7 @@ interface ApigwTaskResource {
         @ApiParam(value = "排序类型", required = false)
         @QueryParam("sortType")
         sortType: String?
-    ): CodeCCResult<Page<ToolConfigInfoModel>>
+    ): Result<Page<ToolConfigInfoModel>>
 
     @ApiOperation("根据流水线ID获取任务有效信息")
     @Path("/by/pipelines")
@@ -132,8 +129,8 @@ interface ApigwTaskResource {
         @ApiParam(value = "任务查询请求体", required = true)
         taskQueryReq: TaskQueryReq,
         @ApiParam(value = "应用code", required = false)
-        @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode : String,
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String,
         @ApiParam(value = "页面数")
         @QueryParam("pageNum")
         pageNum: Int?,
@@ -146,7 +143,7 @@ interface ApigwTaskResource {
         @ApiParam(value = "排序类型")
         @QueryParam("sortType")
         sortType: String?
-    ): CodeCCResult<Page<PipelineTaskVO>>
+    ): Result<Page<PipelineTaskVO>>
 
     @ApiOperation("查询任务失败信息")
     @Path("/fail/list")
@@ -169,16 +166,40 @@ interface ApigwTaskResource {
         @ApiParam(value = "排序类型")
         @QueryParam("sortType")
         sortType: String?
-    ) : CodeCCResult<List<TaskFailRecordModel>>
+    ): Result<List<TaskFailRecordModel>>
 
     @ApiOperation("")
     @Path("/buildId")
     @POST
-    fun getbuilIdRelationship(
+    fun getBuildIdRelationship(
         @ApiParam(value = "任务查询请求体", required = true)
         taskQueryReq: TaskQueryReq,
         @ApiParam(value = "应用code", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
-        appCode : String
-    ): CodeCCResult<BuildIdRelationshipModel?>
+        appCode: String
+    ): Result<BuildIdRelationshipModel?>
+
+    @ApiOperation("通过工具名查询任务清单")
+    @Path("/tasks/toolName/{toolName}")
+    @GET
+    fun getTaskListByToolName(
+        @ApiParam(value = "工具名")
+        @PathParam("toolName")
+        toolName: String,
+        @ApiParam(value = "应用code", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
+        appCode: String,
+        @ApiParam(value = "页面数")
+        @QueryParam("pageNum")
+        pageNum: Int?,
+        @ApiParam(value = "页面大小")
+        @QueryParam("pageSize")
+        pageSize: Int?,
+        @ApiParam(value = "排序字段")
+        @QueryParam("sortField")
+        sortField: String?,
+        @ApiParam(value = "排序类型")
+        @QueryParam("sortType")
+        sortType: String?
+    ): Result<Page<Long>>
 }

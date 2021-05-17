@@ -29,7 +29,7 @@ package com.tencent.bk.codecc.task.resources;
 import com.tencent.bk.codecc.task.api.ServicePlatformRestResource;
 import com.tencent.bk.codecc.task.service.PlatformService;
 import com.tencent.bk.codecc.task.vo.PlatformVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.web.RestResource;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -48,21 +48,21 @@ public class ServicePlatformRestResourceImpl implements ServicePlatformRestResou
     private PlatformService platformService;
 
     @Override
-    public CodeCCResult<List<PlatformVO>> getPlatformByToolName(String toolName)
+    public Result<List<PlatformVO>> getPlatformByToolName(String toolName)
     {
-        return new CodeCCResult<>(platformService.getPlatformByToolName(toolName));
+        return new Result<>(platformService.getPlatformByToolName(toolName));
     }
 
     @Override
-    public CodeCCResult<String> getPlatformIp(long taskId, String toolName)
+    public Result<String> getPlatformIp(long taskId, String toolName)
     {
-        return new CodeCCResult<>(platformService.getPlatformIp(taskId, toolName));
+        return new Result<>(platformService.getPlatformIp(taskId, toolName));
     }
 
     @Override
-    public CodeCCResult<PlatformVO> getPlatformByToolNameAndIp(long taskId, String toolName, String ip)
+    public Result<PlatformVO> getPlatformByToolNameAndIp(long taskId, String toolName, String ip)
     {
-        return new CodeCCResult<>(platformService.getPlatformByToolNameAndIp(toolName, ip));
+        return new Result<>(platformService.getPlatformByToolNameAndIp(toolName, ip));
     }
 
 }

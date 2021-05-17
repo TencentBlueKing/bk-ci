@@ -45,6 +45,7 @@ import com.tencent.devops.project.dao.ProjectLocalDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectExtSystemTagDTO
 import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.Result
@@ -336,7 +337,11 @@ class OpProjectServiceImpl @Autowired constructor(
             )
             projectTagService.updateTagByProject(projectTagUpdateDTO)
         } else if (system == SystemEnums.CODECC || system == SystemEnums.REPO) {
-
+            val projectTagUpdateDTO = ProjectExtSystemTagDTO(
+                routerTag = routerTag!!,
+                projectCodeList = projectCodeList,
+                system = system.name
+            )
         }
     }
 

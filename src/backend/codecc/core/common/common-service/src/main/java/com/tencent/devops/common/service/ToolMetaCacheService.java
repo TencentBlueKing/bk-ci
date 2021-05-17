@@ -6,6 +6,7 @@ import org.springframework.scheduling.annotation.Async;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * 工具元数据接口
@@ -64,4 +65,13 @@ public interface ToolMetaCacheService
      * @return
      */
     ToolMetaDetailVO getToolDetailFromCache(String toolName);
+
+
+    /**
+     * 根据工具维度从缓存中获取工具完整信息
+     *
+     * @param dimension
+     * @return
+     */
+    List<String> getToolDetailByDimension(String dimension);
 }

@@ -32,24 +32,16 @@ import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.FileInfoPage
 import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
-import com.tencent.devops.artifactory.service.artifactory.ArtifactoryDownloadService
-import com.tencent.devops.artifactory.service.artifactory.ArtifactorySearchService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoDownloadService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoSearchService
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceIptResourceImpl @Autowired constructor(
     private val bkRepoSearchService: BkRepoSearchService,
-    private val artifactorySearchService: ArtifactorySearchService,
-    private val artifactoryDownloadService: ArtifactoryDownloadService,
-    private val bkRepoDownloadService: BkRepoDownloadService,
-    private val redisOperation: RedisOperation,
-    private val repoGray: RepoGray
+    private val bkRepoDownloadService: BkRepoDownloadService
 ) : ServiceIptResource {
     override fun searchFileAndProperty(
         userId: String,
@@ -58,11 +50,7 @@ class ServiceIptResourceImpl @Autowired constructor(
     ): Result<FileInfoPage<FileInfo>> {
         val pipelineId = searchProps.props["pipelineId"]!!
         val buildId = searchProps.props["buildId"]!!
-        val result = if (repoGray.isGray(projectId, redisOperation)) {
-            bkRepoSearchService.searchFileAndProperty(userId, projectId, searchProps)
-        } else {
-            artifactorySearchService.searchFileAndProperty(userId, projectId, searchProps)
-        }
+        val result = bkRepoSearchService.searchFileAndProperty(userId, projectId, searchProps)
 
         // 获取第三方下载链接
         result.second.forEach {
@@ -71,33 +59,18 @@ class ServiceIptResourceImpl @Autowired constructor(
             } else {
                 it.path
             }
-            it.downloadUrl = if (repoGray.isGray(projectId, redisOperation)) {
-                bkRepoDownloadService.getThirdPartyDownloadUrl(
-                    projectId,
-                    pipelineId,
-                    buildId,
-                    it.artifactoryType,
-                    path,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null
+            it.downloadUrl = bkRepoDownloadService.getThirdPartyDownloadUrl(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                artifactoryType = it.artifactoryType,
+                argPath = path,
+                ttl = null,
+                crossProjectId = null,
+                crossPipineId = null,
+                crossBuildNo = null,
+                region = null
                 ).firstOrNull()
-            } else {
-                artifactoryDownloadService.getThirdPartyDownloadUrl(
-                    projectId,
-                    pipelineId,
-                    buildId,
-                    it.artifactoryType,
-                    path,
-                    null,
-                    null,
-                    null,
-                    null,
-                    null
-                ).firstOrNull()
-            }
         }
 
         return Result(FileInfoPage(result.second.size.toLong(), 0, 0, result.second, result.first))

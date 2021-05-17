@@ -23,6 +23,7 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
 package com.tencent.devops.project.service
@@ -84,17 +85,17 @@ class ProjectTagService @Autowired constructor(
         projectCode: String,
         tag: String? = null
     ): Boolean {
-        if (autoTag.isNullOrEmpty()) {
-            return true
-        }
         val routerTag = if (tag.isNullOrEmpty()) {
             autoTag
         } else {
             tag
         }
+        if (autoTag.isNullOrEmpty()) {
+            return true
+        }
         logger.info("updateTagByProject: $projectCode| $routerTag")
         val projectTagUpdate = ProjectTagUpdateDTO(
-            routerTag = routerTag,
+            routerTag = routerTag!!,
             projectCodeList = arrayListOf(projectCode),
             bgId = null,
             centerId = null,

@@ -49,13 +49,13 @@ import java.util.stream.Collectors;
 @Slf4j
 public class GitRepoApiServiceImpl implements GitRepoApiService {
 
-    @Value("${scm.git.host:#{null}}")
+    @Value("${scm.git.host:http://git.code.oa.com}")
     private String gitHost;
 
-    @Value("${scm.git.file.token:#{null}}")
+    @Value("${scm.git.file.token:1719ff6db1b1afb00e4f01c839260eab}")
     private String gitFileToken;
 
-    @Value("${devopsGateway.idchost:#{null}}")
+    @Value("${bkci.public.url:#{null}}")
     protected String devopsHost;
 
     private static final String GIT_CODECC_TYPE = "ieg_codecc";

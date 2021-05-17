@@ -41,6 +41,7 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.experience.constant.ExperienceConditionEnum
+import com.tencent.devops.experience.constant.ExperienceConstant.ORGANIZATION_OUTER
 import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.constant.ProductCategoryEnum
@@ -59,7 +60,6 @@ import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
-import org.jooq.Result
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.concurrent.Executors
@@ -84,106 +84,32 @@ class ExperienceAppService(
         offset: Int,
         limit: Int,
         groupByBundleId: Boolean,
-        platform: Int? = null
+        platform: Int? = null,
+        organization: String? = null
     ): Pagination<AppExperience> {
-        val expireTime = DateUtil.today()
-
-        var recordIds = experienceBaseService.getRecordIdsByUserId(userId, GroupIdTypeEnum.JUST_PRIVATE)
-
-        if (groupByBundleId) {
-            recordIds = experienceDao.listIdsGroupByBundleId(
-                dslContext,
-                recordIds,
-                expireTime,
-                true
-            ).map { it.value1() }.toMutableSet()
-        }
-
-        val platformStr = PlatformEnum.of(platform)?.name
-
-        val records = experienceDao.listByIds(
-            dslContext,
-            recordIds,
-            platformStr,
-            expireTime,
-            true,
-            offset,
-            limit
+        return experienceBaseService.list(
+            userId = userId,
+            offset = offset,
+            limit = limit,
+            groupByBundleId = groupByBundleId,
+            platform = platform,
+            isOuter = organization == ORGANIZATION_OUTER
         )
-
-        // 同步图片
-        syncIcon(records)
-
-        val lastDownloadMap = experienceBaseService.getLastDownloadMap(userId)
-        val now = LocalDateTime.now()
-
-        val result = records.map {
-            AppExperience(
-                experienceHashId = HashUtil.encodeLongId(it.id),
-                platform = PlatformEnum.valueOf(it.platform),
-                source = Source.valueOf(it.source),
-                logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl),
-                name = it.projectId,
-                version = it.version,
-                bundleIdentifier = it.bundleIdentifier,
-                experienceName = it.experienceName ?: it.projectId,
-                versionTitle = it.versionTitle ?: it.name,
-                categoryId = if (it.category == null || it.category < 0) ProductCategoryEnum.LIFE.id else it.category,
-                productOwner = objectMapper.readValue(it.productOwner),
-                size = it.size,
-                createDate = it.createTime.timestampmilli(),
-                appScheme = it.scheme,
-                lastDownloadHashId = lastDownloadMap[it.projectId + it.bundleIdentifier + it.platform]
-                    ?.let { l -> HashUtil.encodeLongId(l) } ?: "",
-                expired = now.isAfter(it.endDate)
-            )
-        }
-
-        val hasNext = if (result.size < limit) {
-            false
-        } else {
-            experienceDao.countByIds(dslContext, recordIds, platformStr, expireTime, true) > offset + limit
-        }
-
-        return Pagination(hasNext, result)
-    }
-
-    private fun syncIcon(records: Result<TExperienceRecord>) {
-        // 同步图片
-        val projectToIcon = mutableMapOf<String, String>()
-        val unSyncIconProjectIds = mutableSetOf<String>()
-        records.forEach {
-            if (StringUtils.isBlank(it.logoUrl)) {
-                unSyncIconProjectIds.add(it.projectId)
-            } else {
-                projectToIcon[it.projectId] = it.logoUrl
-            }
-        }
-        if (unSyncIconProjectIds.isNotEmpty()) {
-            val projectList =
-                client.get(ServiceProjectResource::class).listByProjectCode(unSyncIconProjectIds).data ?: listOf()
-            projectList.forEach {
-                projectToIcon[it.projectCode] = it.logoAddr ?: ""
-            }
-            unSyncIconProjectIds.forEach {
-                experienceDao.updateIconByProjectIds(dslContext, it, projectToIcon[it] ?: "")
-            }
-
-            records.forEach {
-                if (StringUtils.isBlank(it.logoUrl)) {
-                    it.logoUrl = projectToIcon[it.projectId] ?: ""
-                }
-            }
-        }
     }
 
     @SuppressWarnings("ComplexMethod")
-    fun detail(userId: String, experienceHashId: String, platform: Int, appVersion: String?): AppExperienceDetail {
+    fun detail(
+        userId: String,
+        experienceHashId: String,
+        platform: Int,
+        appVersion: String?,
+        organization: String?
+    ): AppExperienceDetail {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
         val isOldVersion = VersionUtil.compare(appVersion, "2.0.0") < 0
 
         val isPublic = experienceBaseService.isPublic(experienceId)
-        val isInPrivate = experienceBaseService.isInPrivate(experienceId, userId)
+        val isInPrivate = experienceBaseService.isInPrivate(experienceId, userId, organization == ORGANIZATION_OUTER)
 
         // 新版本且没权限
         if (!isOldVersion && !isPublic && !isInPrivate) {
@@ -281,7 +207,8 @@ class ExperienceAppService(
         userId: String,
         experienceHashId: String,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        organization: String?
     ): Pagination<ExperienceChangeLog> {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
         val experience = experienceDao.get(dslContext, experienceId)
@@ -293,7 +220,8 @@ class ExperienceAppService(
                 platform = experience.platform,
                 page = if (page <= 0) 1 else page,
                 pageSize = if (pageSize <= 0) 10 else pageSize,
-                isOldVersion = false
+                isOldVersion = false,
+                isOuter = organization == ORGANIZATION_OUTER
             )
         val hasNext = if (changeLog.size < pageSize) {
             false
@@ -316,9 +244,10 @@ class ExperienceAppService(
         platform: String?,
         page: Int,
         pageSize: Int,
-        isOldVersion: Boolean
+        isOldVersion: Boolean,
+        isOuter: Boolean = false
     ): List<ExperienceChangeLog> {
-        val recordIds = experienceBaseService.getRecordIdsByUserId(userId, GroupIdTypeEnum.JUST_PRIVATE)
+        val recordIds = experienceBaseService.getRecordIdsByUserId(userId, GroupIdTypeEnum.JUST_PRIVATE, isOuter)
         val now = LocalDateTime.now()
         val lastDownloadRecord = platform?.let {
             experienceLastDownloadDao.get(
@@ -379,9 +308,13 @@ class ExperienceAppService(
         }
     }
 
-    fun downloadUrl(userId: String, experienceHashId: String): DownloadUrl {
+    fun downloadUrl(userId: String, experienceHashId: String, organization: String?): DownloadUrl {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
-        return experienceDownloadService.getExternalDownloadUrl(userId, experienceId)
+        return experienceDownloadService.getExternalDownloadUrl(
+            userId = userId,
+            experienceId = experienceId,
+            isOuter = organization == ORGANIZATION_OUTER
+        )
     }
 
     fun history(userId: String, appVersion: String?, projectId: String): List<AppExperienceSummary> {

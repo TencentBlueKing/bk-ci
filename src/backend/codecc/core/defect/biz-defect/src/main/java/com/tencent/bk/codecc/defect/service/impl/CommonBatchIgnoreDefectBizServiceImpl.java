@@ -34,6 +34,8 @@ public class CommonBatchIgnoreDefectBizServiceImpl extends AbstractCommonBatchDe
 
         // 2.异步批量更新tapd告警状态
 //        asynBatchUpdateTapdDefects(taskId, defectKeySet);
+
+        refreshOverviewData(batchDefectProcessReqVO.getTaskId());
     }
 
     /**

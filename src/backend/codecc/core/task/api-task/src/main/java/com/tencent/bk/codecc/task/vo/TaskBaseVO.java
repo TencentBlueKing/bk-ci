@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.CommonVO;
 import com.tencent.devops.common.api.checkerset.CheckerSetVO;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import java.util.Map;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.jboss.logging.Field;
@@ -128,4 +129,7 @@ public class TaskBaseVO extends CommonVO
 
     @ApiModelProperty(value = "个性化项目视图")
     private CustomProjVO customProjInfo;
+
+    @ApiModelProperty(value = "任务扫描的代码库配置信息")
+    private TaskCodeLibraryVO codeLibraryInfo;
 }

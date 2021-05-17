@@ -15,7 +15,7 @@ package com.tencent.bk.codecc.defect.resources;
 import com.tencent.bk.codecc.defect.api.UserRepoRestResource;
 import com.tencent.devops.common.api.CodeRepoVO;
 import com.tencent.bk.codecc.defect.service.PipelineScmService;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.web.RestResource;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -35,13 +35,13 @@ public class UserRepoRestResourceImpl implements UserRepoRestResource
     private PipelineScmService pipelineScmService;
 
     @Override
-    public CodeCCResult<Map<Long, Set<CodeRepoVO>>> getCodeRepoListByTaskIds(Set<Long> taskIds, String projectId)
+    public Result<Map<Long, Set<CodeRepoVO>>> getCodeRepoListByTaskIds(Set<Long> taskIds, String projectId)
     {
-        return new CodeCCResult<>(pipelineScmService.getCodeRepoListByTaskIds(taskIds, projectId));
+        return new Result<>(pipelineScmService.getCodeRepoListByTaskIds(taskIds, projectId));
     }
 
     @Override
-    public CodeCCResult<String> getOauthUrl(String userId, String projectId, long taskId, String toolName) {
-        return new CodeCCResult<>(pipelineScmService.getOauthUrl(userId, projectId, taskId, toolName));
+    public Result<String> getOauthUrl(String userId, String projectId, long taskId, String toolName) {
+        return new Result<>(pipelineScmService.getOauthUrl(userId, projectId, taskId, toolName));
     }
 }

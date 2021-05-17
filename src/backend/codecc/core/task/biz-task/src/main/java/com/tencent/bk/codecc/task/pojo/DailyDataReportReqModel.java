@@ -52,7 +52,7 @@ public class DailyDataReportReqModel
     private String nameCN;
 
     /**
-     * 平台页面url的根节点
+     * 平台页面url的根节点，如http://test2.codecc.oa.com
      */
     private String urlRoot;
 
@@ -82,4 +82,9 @@ public class DailyDataReportReqModel
      * 工具基本信息的映射表
      */
     private Map<String, ToolBaseInfoModel> toolInfoMap;
+
+    /**
+     * 创建来源
+     */
+    private String createFromCn;
 }

@@ -59,16 +59,16 @@ class ProjectS3Service @Autowired constructor(
 
         try {
             val createExt = ProjectCreateExtInfo(
-                    needValidate = false,
-                    needAuth = false
+                needValidate = false,
+                needAuth = false
             )
             projectService.create(
-                    userId = userId,
-                    projectCreateInfo = projectCreateInfo,
-                    accessToken = null,
-                    createExt = createExt,
-                    projectId = projectCreateInfo.englishName,
-                    channel = ProjectChannelCode.CODECC
+                userId = userId,
+                projectCreateInfo = projectCreateInfo,
+                accessToken = null,
+                createExt = createExt,
+                projectId = projectCreateInfo.englishName,
+                channel = ProjectChannelCode.CODECC
             )
 
             // codecc任务自动将流量指向auto集群

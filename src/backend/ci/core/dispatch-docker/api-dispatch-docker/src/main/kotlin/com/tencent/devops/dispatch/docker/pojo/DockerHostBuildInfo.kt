@@ -47,5 +47,6 @@ data class DockerHostBuildInfo(
     val imageType: String?,
     val imagePublicFlag: Boolean?,
     val imageRDType: String?,
-    val containerHashId: String?
+    val containerHashId: String?,
+    val customBuildEnv: Map<String, String>? = null
 )
