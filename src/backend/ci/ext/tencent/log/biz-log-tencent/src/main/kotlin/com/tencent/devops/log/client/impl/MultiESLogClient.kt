@@ -42,6 +42,7 @@ import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Component
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.concurrent.Executors
