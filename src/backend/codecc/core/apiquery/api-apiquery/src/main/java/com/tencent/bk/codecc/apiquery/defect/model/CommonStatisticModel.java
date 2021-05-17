@@ -27,10 +27,10 @@
 package com.tencent.bk.codecc.apiquery.defect.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
+import java.util.Set;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.util.Set;
 
 /**
  * 任务分析记录持久化对象
@@ -75,9 +75,39 @@ public class CommonStatisticModel extends StatisticModel
     @JsonProperty("new_serious_count")
     private Integer newSeriousCount;
 
+    @JsonProperty("normal_fixed_count")
+    private long normalFixedCount;
+
+    @JsonProperty("prompt_fixed_count")
+    private long promptFixedCount;
+
+    @JsonProperty("serious_fixed_count")
+    private long seriousFixedCount;
+
+    @JsonProperty("normal_ignore_count")
+    private long normalIgnoreCount;
+
+    @JsonProperty("prompt_ignore_count")
+    private long promptIgnoreCount;
+
+    @JsonProperty("serious_ignore_count")
+    private long seriousIgnoreCount;
+
+    @JsonProperty("normal_mask_count")
+    private long normalMaskCount;
+
+    @JsonProperty("prompt_mask_count")
+    private long promptMaskCount;
+
+    @JsonProperty("serious_mask_count")
+    private long seriousMaskCount;
+
     @JsonProperty("new_authors")
     private Set<String> newAuthors;
 
     @JsonProperty("exist_authors")
     private Set<String> existAuthors;
+
+    @JsonProperty("checker_statistic")
+    private List<CheckerStatisticModel> checkerStatistic;
 }

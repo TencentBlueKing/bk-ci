@@ -32,9 +32,10 @@ import com.tencent.bk.codecc.defect.vo.checkerset.AddCheckerSet2TaskReqVO;
 import com.tencent.bk.codecc.defect.vo.checkerset.GetCheckerSetsReqVO;
 import com.tencent.bk.codecc.defect.vo.checkerset.PipelineCheckerSetVO;
 import com.tencent.bk.codecc.defect.vo.checkerset.UserCheckerSetsVO;
+import com.tencent.bk.codecc.task.vo.AnalyzeConfigInfoVO;
 import com.tencent.bk.codecc.task.vo.ToolConfigInfoVO;
 import com.tencent.bk.codecc.task.vo.checkerset.ClearTaskCheckerSetReqVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -43,8 +44,8 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 
-import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEADER_DEVOPS_PROJECT_ID;
-import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEADER_DEVOPS_USER_ID;
+import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_PROJECT_ID;
+import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_USER_ID;
 
 /**
  * 多工具规则接口
@@ -62,7 +63,7 @@ public interface ServiceCheckerRestResource
     @ApiOperation("获取打开的规则")
     @Path("/tasks/{taskId}/tools/{toolName}/configuration")
     @POST
-    CodeCCResult<List<CheckerPkgRspVO>> queryCheckerConfiguration(
+    Result<List<CheckerPkgRspVO>> queryCheckerConfiguration(
             @ApiParam(value = "任务ID", required = true)
             @PathParam(value = "taskId")
                     Long taskId,
@@ -79,7 +80,7 @@ public interface ServiceCheckerRestResource
     @ApiOperation("打开或者关闭配置规则包")
     @Path("/tasks/{taskId}/toolName/{toolName}/checkers/configuration")
     @POST
-    CodeCCResult<Boolean> configCheckerPkg(
+    Result<Boolean> configCheckerPkg(
             @ApiParam(value = "任务Id", required = true)
             @PathParam("taskId")
                     Long taskId,
@@ -93,8 +94,8 @@ public interface ServiceCheckerRestResource
     @ApiOperation("任务关联规则集")
     @Path("/tasks/{taskId}/checkerSets/relationship")
     @POST
-    CodeCCResult<Boolean> addCheckerSet2Task(
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
+    Result<Boolean> addCheckerSet2Task(
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
                     String user,
             @ApiParam(value = "任务Id", required = true)
             @PathParam("taskId")
@@ -106,38 +107,38 @@ public interface ServiceCheckerRestResource
     @ApiOperation("查询规则集列表")
     @Path("/tasks/{taskId}/checkerSets")
     @POST
-    CodeCCResult<UserCheckerSetsVO> getCheckerSets(
+    Result<UserCheckerSetsVO> getCheckerSets(
             @ApiParam(value = "查询规则集列表请求参数", required = true)
                     GetCheckerSetsReqVO getCheckerSetsReqVO,
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
                     String user,
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_PROJECT_ID)
+            @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
                     String projectId
     );
 
     @ApiOperation("查询规则集列表")
     @Path("/tools/{toolName}/pipelineCheckerSets")
     @GET
-    CodeCCResult<PipelineCheckerSetVO> getPipelineCheckerSets(
+    Result<PipelineCheckerSetVO> getPipelineCheckerSets(
             @ApiParam(value = "工具名称", required = true)
             @PathParam("toolName")
                     String toolName,
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
                     String user,
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_PROJECT_ID)
+            @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
                     String projectId
     );
 
     @ApiOperation("清除任务和工具关联的规则集")
     @Path("/tasks/{taskId}/checkerSets/relationships")
     @DELETE
-    CodeCCResult<Boolean> clearCheckerSet(
+    Result<Boolean> clearCheckerSet(
             @ApiParam(value = "任务id", required = true)
             @PathParam("taskId")
                     Long taskId,
             @ApiParam(value = "清除规则集ID请求体", required = true)
                     ClearTaskCheckerSetReqVO clearTaskCheckerSetReqVO,
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
                     String user
     );
 

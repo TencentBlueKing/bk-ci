@@ -13,7 +13,6 @@
 package com.tencent.bk.codecc.defect.consumer;
 
 import com.google.common.collect.Lists;
-import com.tencent.bk.codecc.defect.api.ServiceReportTaskLogRestResource;
 import com.tencent.bk.codecc.defect.component.ScmJsonComponent;
 import com.tencent.bk.codecc.defect.dao.mongorepository.CodeRepoInfoRepository;
 import com.tencent.bk.codecc.defect.dao.mongorepository.ToolBuildInfoRepository;
@@ -29,11 +28,10 @@ import com.tencent.bk.codecc.defect.utils.ThirdPartySystemCaller;
 import com.tencent.bk.codecc.defect.vo.UploadTaskLogStepVO;
 import com.tencent.bk.codecc.task.vo.AnalyzeConfigInfoVO;
 import com.tencent.devops.common.api.CodeRepoVO;
-import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.auth.api.external.AuthTaskService;
 import com.tencent.devops.common.constant.ComConstants;
-import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.service.IConsumer;
+import com.tencent.devops.common.web.aop.annotation.EndReport;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
@@ -81,6 +79,7 @@ public abstract class AbstractFastIncrementConsumer implements IConsumer<Analyze
      *
      * @param analyzeConfigInfoVO
      */
+    @EndReport(isOpenSource = false)
     @Override
     public void consumer(AnalyzeConfigInfoVO analyzeConfigInfoVO)
     {
@@ -100,25 +99,67 @@ public abstract class AbstractFastIncrementConsumer implements IConsumer<Analyze
     protected void process(AnalyzeConfigInfoVO analyzeConfigInfoVO)
     {
         // 排队开始
-        uploadTaskLog(analyzeConfigInfoVO, ComConstants.Step4MutliTool.QUEUE.value(), ComConstants.StepFlag.PROCESSING.value(), System.currentTimeMillis(), 0, null);
+        uploadTaskLog(analyzeConfigInfoVO,
+                ComConstants.Step4MutliTool.QUEUE.value(),
+                ComConstants.StepFlag.PROCESSING.value(),
+                System.currentTimeMillis(),
+                0,
+                null,
+                false);
 
         // 排队结束
-        uploadTaskLog(analyzeConfigInfoVO, ComConstants.Step4MutliTool.QUEUE.value(), ComConstants.StepFlag.SUCC.value(), 0, System.currentTimeMillis(), null);
+        uploadTaskLog(analyzeConfigInfoVO,
+                ComConstants.Step4MutliTool.QUEUE.value(),
+                ComConstants.StepFlag.SUCC.value(),
+                0,
+                System.currentTimeMillis(),
+                null,
+                false);
 
         // 下载开始
-        uploadTaskLog(analyzeConfigInfoVO, ComConstants.Step4MutliTool.DOWNLOAD.value(), ComConstants.StepFlag.PROCESSING.value(), System.currentTimeMillis(), 0, null);
+        uploadTaskLog(analyzeConfigInfoVO,
+                ComConstants.Step4MutliTool.DOWNLOAD.value(),
+                ComConstants.StepFlag.PROCESSING.value(),
+                System.currentTimeMillis(),
+                0,
+                null,
+                false);
 
         // 下载结束
-        uploadTaskLog(analyzeConfigInfoVO, ComConstants.Step4MutliTool.DOWNLOAD.value(), ComConstants.StepFlag.SUCC.value(), 0, System.currentTimeMillis(), null);
+        uploadTaskLog(analyzeConfigInfoVO,
+                ComConstants.Step4MutliTool.DOWNLOAD.value(),
+                ComConstants.StepFlag.SUCC.value(),
+                0,
+                System.currentTimeMillis(),
+                null,
+                false);
 
         // 扫描开始
-        uploadTaskLog(analyzeConfigInfoVO, ComConstants.Step4MutliTool.SCAN.value(), ComConstants.StepFlag.PROCESSING.value(), System.currentTimeMillis(), 0, null);
+        uploadTaskLog(analyzeConfigInfoVO,
+                ComConstants.Step4MutliTool.SCAN.value(),
+                ComConstants.StepFlag.PROCESSING.value(),
+                System.currentTimeMillis(),
+                0,
+                null,
+                false);
 
         // 扫描结束
-        uploadTaskLog(analyzeConfigInfoVO, ComConstants.Step4MutliTool.SCAN.value(), ComConstants.StepFlag.SUCC.value(), 0, System.currentTimeMillis(), null);
+        uploadTaskLog(analyzeConfigInfoVO,
+                ComConstants.Step4MutliTool.SCAN.value(),
+                ComConstants.StepFlag.SUCC.value(),
+                0,
+                System.currentTimeMillis(),
+                null,
+                false);
 
         // 生成问题开始
-        uploadTaskLog(analyzeConfigInfoVO, ComConstants.Step4MutliTool.COMMIT.value(), ComConstants.StepFlag.PROCESSING.value(), System.currentTimeMillis(), 0, null);
+        uploadTaskLog(analyzeConfigInfoVO,
+                ComConstants.Step4MutliTool.COMMIT.value(),
+                ComConstants.StepFlag.PROCESSING.value(),
+                System.currentTimeMillis(),
+                0,
+                null,
+                false);
 
         try
         {
@@ -133,12 +174,12 @@ public abstract class AbstractFastIncrementConsumer implements IConsumer<Analyze
             e.printStackTrace();
             log.error("fast increment generate result fail!", e);
             // 发送提单失败的分析记录
-            uploadTaskLog(analyzeConfigInfoVO, ComConstants.Step4MutliTool.COMMIT.value(), ComConstants.StepFlag.FAIL.value(), 0, System.currentTimeMillis(), e.getMessage());
+            uploadTaskLog(analyzeConfigInfoVO, ComConstants.Step4MutliTool.COMMIT.value(), ComConstants.StepFlag.FAIL.value(), 0, System.currentTimeMillis(), e.getMessage(), false);
             return;
         }
 
         // 生成问题结束
-        uploadTaskLog(analyzeConfigInfoVO, ComConstants.Step4MutliTool.COMMIT.value(), ComConstants.StepFlag.SUCC.value(), 0, System.currentTimeMillis(), null);
+        uploadTaskLog(analyzeConfigInfoVO, ComConstants.Step4MutliTool.COMMIT.value(), ComConstants.StepFlag.SUCC.value(), 0, System.currentTimeMillis(), null, true);
     }
 
     /**
@@ -155,7 +196,13 @@ public abstract class AbstractFastIncrementConsumer implements IConsumer<Analyze
      * @param stepFlag
      * @param msg
      */
-    protected void uploadTaskLog(AnalyzeConfigInfoVO analyzeConfigInfoVO, int stepNum, int stepFlag, long startTime, long endTime, String msg)
+    protected void uploadTaskLog(AnalyzeConfigInfoVO analyzeConfigInfoVO,
+                                 int stepNum,
+                                 int stepFlag,
+                                 long startTime,
+                                 long endTime,
+                                 String msg,
+                                 boolean isFinish)
     {
         UploadTaskLogStepVO uploadTaskLogStepVO = new UploadTaskLogStepVO();
         uploadTaskLogStepVO.setTaskId(analyzeConfigInfoVO.getTaskId());
@@ -168,6 +215,7 @@ public abstract class AbstractFastIncrementConsumer implements IConsumer<Analyze
         uploadTaskLogStepVO.setStepNum(stepNum);
         uploadTaskLogStepVO.setPipelineBuildId(analyzeConfigInfoVO.getBuildId());
         uploadTaskLogStepVO.setFastIncrement(true);
+        uploadTaskLogStepVO.setFinish(isFinish);
         thirdPartySystemCaller.uploadTaskLog(uploadTaskLogStepVO);
     }
 

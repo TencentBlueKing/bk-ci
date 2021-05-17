@@ -16,7 +16,7 @@ import com.tencent.bk.codecc.defect.model.DefectEntity;
 import com.tencent.bk.codecc.codeccjob.dao.mongorepository.DefectRepository;
 import com.tencent.bk.codecc.codeccjob.service.AbstractFilterPathBizService;
 import com.tencent.bk.codecc.task.vo.FilterPathInputVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.util.PathUtils;
@@ -43,7 +43,7 @@ public class CommonFilterPathBizServiceImpl extends AbstractFilterPathBizService
     private DefectRepository defectRepository;
 
     @Override
-    public CodeCCResult processBiz(FilterPathInputVO filterPathInputVO)
+    public Result processBiz(FilterPathInputVO filterPathInputVO)
     {
         List<DefectEntity> defectEntityList = defectRepository.findByTaskIdAndToolName(filterPathInputVO.getTaskId(), filterPathInputVO.getToolName());
         if (CollectionUtils.isNotEmpty(defectEntityList))
@@ -89,7 +89,7 @@ public class CommonFilterPathBizServiceImpl extends AbstractFilterPathBizService
 
             defectRepository.save(needUpdateDefectList);
         }
-        return new CodeCCResult(CommonMessageCode.SUCCESS);
+        return new Result(CommonMessageCode.SUCCESS);
     }
 
     protected Boolean checkIfMaskByPath(String filePathname, Set<String> filterPaths)

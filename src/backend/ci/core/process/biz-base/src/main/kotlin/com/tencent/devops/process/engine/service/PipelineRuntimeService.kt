@@ -1073,6 +1073,7 @@ class PipelineRuntimeService @Autowired constructor(
             val transactionContext = DSL.using(configuration)
 
             if (buildHistoryRecord != null) {
+                buildHistoryRecord.endTime = null
                 buildHistoryRecord.status = startBuildStatus.ordinal
                 transactionContext.batchStore(buildHistoryRecord).execute()
                 // 重置状态和人

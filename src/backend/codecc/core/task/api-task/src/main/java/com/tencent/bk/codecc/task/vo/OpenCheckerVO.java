@@ -31,6 +31,8 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import java.util.List;
 
 /**
@@ -48,6 +50,11 @@ public class OpenCheckerVO {
 
     @ApiModelProperty("是否为原生规则")
     private Boolean nativeChecker;
+
+    @ApiModelProperty(value = "规则严重程度，1=>严重，2=>一般，3=>提示", required = true, allowableValues = "{1,2,3}")
+    @Min(1)
+    @Max(3)
+    private Integer severity;
 
     @ApiModelProperty("规则参数选项")
     private List<CheckerOptions> checkerOptions;

@@ -1,6 +1,7 @@
 # Common config Template 重复的通用的配置抽离在到
-
 spring:
+  main:
+    allow-bean-definition-overriding: true
   application:
     version: 4.0.0
 # consul config do not need to change

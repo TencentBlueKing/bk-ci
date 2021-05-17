@@ -264,8 +264,10 @@ public class PathUtils
      * @param filterPaths
      * @return
      */
-    public static boolean checkIfMaskByPath(String path, Set<String> filterPaths)
-    {
+    public static boolean checkIfMaskByPath(String path, Set<String> filterPaths) {
+        if (StringUtils.isEmpty(path)) {
+            return false;
+        }
         try
         {
             for (String regrex : filterPaths)

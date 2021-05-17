@@ -37,4 +37,5 @@ public class RtxNotifyModel
      */
     private Boolean success;
 
+    private String buildId;
 }

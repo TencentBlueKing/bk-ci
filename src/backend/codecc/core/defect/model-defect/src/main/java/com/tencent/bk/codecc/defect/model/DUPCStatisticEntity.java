@@ -26,7 +26,6 @@
 
 package com.tencent.bk.codecc.defect.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
@@ -47,10 +46,10 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @Document(collection = "t_dupc_statistic")
 @CompoundIndexes({
-        @CompoundIndex(name = "task_id_1_tool_name_1", def = "{'task_id': 1, 'tool_name': 1}")
+        @CompoundIndex(name = "task_id_1_tool_name_1", def = "{'task_id': 1, 'tool_name': 1}"),
+        @CompoundIndex(name = "task_id_1_build_id_1", def = "{'task_id': 1, 'build_id': 1}", background = true)
 })
-public class DUPCStatisticEntity extends StatisticEntity
-{
+public class DUPCStatisticEntity extends StatisticEntity {
     /**
      * 本次分析前的遗留告警数
      */
@@ -104,4 +103,34 @@ public class DUPCStatisticEntity extends StatisticEntity
      */
     @Field("dupc_chart")
     private List<DupcChartTrendEntity> dupcChart;
+
+    /**
+     * 新增极高风险告警数
+     */
+    @Field("new_super_high_count")
+    private int newSuperHighCount;
+
+    /**
+     * 新增高风险告警数
+     */
+    @Field("new_high_count")
+    private int newHighCount;
+
+    /**
+     * 新增中风险告警数
+     */
+    @Field("new_medium_count")
+    private int newMediumCount;
+
+    /**
+     * 新告警处理人统计
+     */
+    @Field("new_author_statistic")
+    private List<DUPCNotRepairedAuthorEntity> newAuthorStatistic;
+
+    /**
+     * 存量告警处理人统计
+     */
+    @Field("exist_author_statistic")
+    private List<DUPCNotRepairedAuthorEntity> existAuthorStatistic;
 }

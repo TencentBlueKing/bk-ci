@@ -45,14 +45,15 @@ public class ChunkUploadUtil
      * @param uploadFolder 上传文件的目录
      * @param fileBaseName 上传文件名（不包含目录）
      * @param chunk        分片号
+     * @param buildId
      * @return
      */
-    public static File createChunkFileFolder(String uploadFolder, String fileBaseName, Integer chunk)
+    public static File createChunkFileFolder(String uploadFolder, String fileBaseName, Integer chunk, String buildId)
     {
         //分片文件的名称
         String chunkFileName = String.format("%s%s%d", fileBaseName, ScheduleConstants.CHUNK_FILE_SUFFIX, chunk);
 
-        String fileFolder = md5(fileBaseName);
+        String fileFolder = md5(fileBaseName + buildId);
         log.info("fileFolder={}", fileFolder);
 
         //文件上传路径更新为指定文件信息签名后的临时文件夹，用于后期合并
