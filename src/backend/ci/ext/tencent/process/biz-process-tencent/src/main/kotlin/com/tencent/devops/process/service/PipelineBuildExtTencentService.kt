@@ -51,7 +51,7 @@ class PipelineBuildExtTencentService @Autowired constructor(
     private val redisOperation: RedisOperation
 ) : PipelineBuildExtService {
 
-    override fun buildExt(task: PipelineBuildTask): Map<String, String> {
+    override fun buildExt(task: PipelineBuildTask, variable: Map<String, String>): Map<String, String> {
         val taskType = task.taskType
         val extMap = mutableMapOf<String, String>()
         if (taskType.contains("linuxPaasCodeCCScript") || taskType.contains("linuxScript")) {
@@ -60,7 +60,7 @@ class PipelineBuildExtTencentService @Autowired constructor(
             extMap[PIPELINE_TURBO_TASK_ID] = turboTaskId
         }
 
-        extMap.putAll(pipelineContextTencentService.buildContext(task.buildId, task.containerId))
+        extMap.putAll(pipelineContextTencentService.buildContext(task.buildId, task.containerId, variable))
         val gitToken = pipelineContextTencentService.getGitToken(
             task.projectId,
             task.buildId,

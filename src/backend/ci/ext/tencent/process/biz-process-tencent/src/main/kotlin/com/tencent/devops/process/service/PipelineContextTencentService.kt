@@ -38,9 +38,8 @@ import org.springframework.stereotype.Service
 @Service
 class PipelineContextTencentService@Autowired constructor(
     pipelineBuildDetailService: PipelineBuildDetailService,
-    buildVariableService: BuildVariableService,
     private val client: Client
-): PipelineContextService(pipelineBuildDetailService, buildVariableService) {
+): PipelineContextService(pipelineBuildDetailService) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineContextTencentService::class.java)
