@@ -42,7 +42,15 @@ class AppAppVersionResourceImpl @Autowired constructor(private val appVersionSer
     }
 
     override fun getLastAppVersion(userId: String, appVersion: String?, channelType: Byte): Result<AppVersion?> {
-        val version = appVersion ?: "1.0.0"
+        try {
+            val version = appVersion ?: "1.0.0"
+            val logData = mapOf(
+                "version" to version,
+                "userId" to userId
+
+            )
+        } catch (ignored: Exception) {
+        }
         return Result(data = appVersionService.getLastAppVersion(channelType))
     }
 }
