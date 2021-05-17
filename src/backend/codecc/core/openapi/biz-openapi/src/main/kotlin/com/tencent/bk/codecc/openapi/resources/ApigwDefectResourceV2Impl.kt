@@ -19,14 +19,20 @@ import com.tencent.bk.codecc.task.pojo.TriggerPipelineRsp
 import com.tencent.bk.codecc.task.vo.pipeline.PipelineTaskVO
 import com.tencent.bk.codecc.task.vo.tianyi.QueryMyTasksReqVO
 import com.tencent.bk.codecc.task.vo.tianyi.TaskInfoVO
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.exception.CodeCCException
 import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.api.pojo.CodeCCResult
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.constant.ComConstants
+import com.tencent.devops.common.constant.CommonMessageCode
 import com.tencent.devops.common.web.RestResource
+import io.swagger.annotations.ApiParam
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.domain.Sort
+import javax.ws.rs.HeaderParam
 
 @RestResource
 open class ApigwDefectResourceV2Impl @Autowired constructor(
@@ -39,7 +45,7 @@ open class ApigwDefectResourceV2Impl @Autowired constructor(
 
     override fun getTasksByAuthor(
         reqVO: QueryMyTasksReqVO
-    ): CodeCCResult<Page<TaskInfoVO>> {
+    ): Result<Page<TaskInfoVO>> {
         return client.getWithoutRetry(ServiceTaskRestResource::class).getTasksByAuthor(
             reqVO
         )
@@ -52,7 +58,7 @@ open class ApigwDefectResourceV2Impl @Autowired constructor(
         pageSize: Int?,
         sortField: String?,
         sortType: Sort.Direction?
-    ): CodeCCResult<ToolDefectRspVO> {
+    ): Result<ToolDefectRspVO> {
         return client.getWithoutRetry(ServicePkgDefectRestResource::class).queryToolDefectList(
             taskId, reqVO,
             pageNum, pageSize, sortField, sortType
@@ -60,32 +66,42 @@ open class ApigwDefectResourceV2Impl @Autowired constructor(
     }
 
     override fun queryCodeLineInfo(
-        taskId: Long
-    ): CodeCCResult<ToolClocRspVO> {
-        return client.getWithoutRetry(ServicePkgDefectRestResource::class).queryCodeLine(taskId)
+        taskId: Long,
+        toolName: String
+    ): Result<ToolClocRspVO> {
+        return client.getWithoutRetry(ServicePkgDefectRestResource::class).queryCodeLine(taskId, toolName)
     }
 
-    override fun queryDeptIdByBgId(bgId: Int): CodeCCResult<Set<Int>> {
+    override fun queryDeptIdByBgId(bgId: Int): Result<Set<Int>> {
         return client.getWithoutRetry(ServiceTaskRestResource::class).queryDeptIdByBgId(bgId)
     }
 
-    override fun getPipelineTask(pipelineId: String, user: String): CodeCCResult<PipelineTaskVO> {
+    override fun getPipelineTask(pipelineId: String, user: String?): Result<PipelineTaskVO> {
         return client.getWithoutRetry(ServiceTaskRestResource::class).getPipelineTask(pipelineId, user)
     }
 
     override fun triggerCustomPipeline(
         triggerPipelineReq: TriggerPipelineOldReq,
-        userId : String
-    ) : CodeCCResult<TriggerPipelineOldRsp>{
+        userId: String
+    ): Result<TriggerPipelineOldRsp> {
         return client.getWithoutRetry(ServiceTaskRestResource::class).triggerCustomPipeline(triggerPipelineReq, userId)
     }
 
     override fun triggerCustomPipelineNew(
         triggerPipelineReq: TriggerPipelineReq,
-        appCode : String,
+        appCode: String,
         userId: String
-    ): CodeCCResult<TriggerPipelineRsp> {
-        return client.getWithoutRetry(ServiceTaskRestResource::class).triggerCustomPipelineNew(triggerPipelineReq, appCode, userId)
+    ): Result<TriggerPipelineRsp> {
+        return client.getWithoutRetry(ServiceTaskRestResource::class)
+            .triggerCustomPipelineNew(triggerPipelineReq, appCode, userId)
+    }
+
+    override fun stopRunningApiTask(
+        codeccBuildId: String,
+        appCode: String,
+        userId: String
+    ): Result<Boolean> {
+        return client.getWithoutRetry(ServiceTaskRestResource::class).stopRunningApiTask(codeccBuildId, appCode, userId)
     }
 
     override fun queryTaskOverview(
@@ -93,7 +109,7 @@ open class ApigwDefectResourceV2Impl @Autowired constructor(
         pageNum: Int?,
         pageSize: Int?,
         sortType: Sort.Direction?
-    ): CodeCCResult<TaskOverviewDetailRspVO> {
+    ): Result<TaskOverviewDetailRspVO> {
         return client.getWithoutRetry(ServicePkgDefectRestResource::class).queryTaskOverview(
             reqVO, pageNum, pageSize,
             sortType
@@ -105,7 +121,7 @@ open class ApigwDefectResourceV2Impl @Autowired constructor(
         pageNum: Int?,
         pageSize: Int?,
         sortType: Sort.Direction?
-    ): CodeCCResult<TaskOverviewDetailRspVO> {
+    ): Result<TaskOverviewDetailRspVO> {
         return client.getWithoutRetry(ServicePkgDefectRestResource::class).queryCustomTaskOverview(
             customProjSource,
             pageNum, pageSize, sortType
@@ -113,15 +129,16 @@ open class ApigwDefectResourceV2Impl @Autowired constructor(
     }
 
     override fun authorTransfer(
-        apigw : String,
-        taskId : Long,
-        projectId : String,
-        appCode : String,
-        batchDefectProcessReqVO : BatchDefectProcessReqVO,
-        userId : String
-    ) : CodeCCResult<Boolean> {
+        apigw: String,
+        taskId: Long,
+        projectId: String,
+        appCode: String,
+        batchDefectProcessReqVO: BatchDefectProcessReqVO,
+        userId: String
+    ): Result<Boolean> {
         logger.info("start to author transfer!! task id: $taskId, project id: $projectId")
         batchDefectProcessReqVO.bizType = ComConstants.BusinessType.ASSIGN_DEFECT.value()
-        return client.getWithoutRetry(ServiceDefectRestResource::class).batchDefectProcess(taskId, userId, batchDefectProcessReqVO)
+        return client.getWithoutRetry(ServiceDefectRestResource::class)
+            .batchDefectProcess(taskId, userId, batchDefectProcessReqVO)
     }
 }

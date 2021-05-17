@@ -28,7 +28,7 @@ package com.tencent.bk.codecc.task.api;
 
 import com.tencent.bk.codecc.task.vo.AnalyzeConfigInfoVO;
 import com.tencent.bk.codecc.task.vo.pipeline.PipelineBuildInfoVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -52,7 +52,7 @@ public interface BuildToolRestResource
     @ApiOperation("获取分析配置信息")
     @Path("/config/streamName/{streamName}/toolType/{toolName}")
     @POST
-    CodeCCResult<AnalyzeConfigInfoVO> getAnalyzeConfig(
+    Result<AnalyzeConfigInfoVO> getAnalyzeConfig(
             @ApiParam(value = "任务英文名", required = true)
             @PathParam("streamName")
                     String streamName,

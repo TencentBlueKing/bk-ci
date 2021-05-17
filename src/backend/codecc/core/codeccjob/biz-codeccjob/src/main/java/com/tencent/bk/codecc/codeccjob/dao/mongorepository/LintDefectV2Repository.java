@@ -35,6 +35,7 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -45,7 +46,8 @@ import java.util.Set;
  * @date 2019/5/5
  */
 @Repository
-public interface LintDefectV2Repository extends MongoRepository<LintDefectV2Entity, String> {
+public interface LintDefectV2Repository extends MongoRepository<LintDefectV2Entity, String>
+{
     @Query(fields = "{'author':1}", value = "{'task_id': ?0, 'tool_name': ?1, 'status': ?2, 'author': {'$in': ?3}}")
     List<LintDefectV2Entity> findDefectsNeedTransferAuthor(long taskId, String toolName, int status, Set<String> authorSet);
 

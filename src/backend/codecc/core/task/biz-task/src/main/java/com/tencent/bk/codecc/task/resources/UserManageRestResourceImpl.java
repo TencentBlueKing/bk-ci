@@ -30,7 +30,7 @@ import com.tencent.bk.codecc.task.api.UserManageRestResource;
 import com.tencent.bk.codecc.task.service.UserManageService;
 import com.tencent.bk.codecc.task.vo.DevopsProjectVO;
 import com.tencent.bk.codecc.task.vo.UserVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.web.RestResource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,14 +53,14 @@ public class UserManageRestResourceImpl implements UserManageRestResource
     private UserManageService userManageService;
 
     @Override
-    public CodeCCResult<UserVO> getInfo(String userId)
+    public Result<UserVO> getInfo(String userId)
     {
         return userManageService.getInfo(userId);
     }
 
     @Override
-    public CodeCCResult<List<DevopsProjectVO>> getProjectList(String userId, String accessToken)
+    public Result<List<DevopsProjectVO>> getProjectList(String userId, String accessToken)
     {
-        return new CodeCCResult<>(userManageService.getProjectList(userId, accessToken));
+        return new Result<>(userManageService.getProjectList(userId, accessToken));
     }
 }

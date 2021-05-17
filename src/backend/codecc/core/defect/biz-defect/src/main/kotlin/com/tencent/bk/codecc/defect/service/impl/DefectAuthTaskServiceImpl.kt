@@ -1,6 +1,7 @@
 package com.tencent.bk.codecc.defect.service.impl
 
 import com.tencent.bk.codecc.task.api.ServiceTaskRestResource
+import com.tencent.devops.common.api.QueryTaskListReqVO
 import com.tencent.devops.common.auth.api.external.AuthTaskService
 import com.tencent.devops.common.auth.api.pojo.external.KEY_CREATE_FROM
 import com.tencent.devops.common.auth.api.pojo.external.KEY_PIPELINE_ID
@@ -10,25 +11,22 @@ import com.tencent.devops.common.pojo.GongfengBaseInfo
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.context.annotation.Primary
 import org.springframework.data.redis.core.RedisTemplate
 import org.springframework.stereotype.Component
 
 @Component
+@Primary
 class DefectAuthTaskServiceImpl @Autowired constructor(
-        private val client: Client,
-        private val redisTemplate: RedisTemplate<String, String>
+    private val client: Client,
+    private val redisTemplate: RedisTemplate<String, String>
 ) : AuthTaskService {
-
-
-    override fun getGongfengProjInfo(taskId: Long): GongfengBaseInfo? {
-        return client.get(ServiceTaskRestResource::class.java).getGongfengBaseInfo(taskId).data
-    }
 
     /**
      * 查询任务创建来源
      */
     override fun getTaskCreateFrom(
-            taskId: Long
+        taskId: Long
     ): String {
         var createFrom = redisTemplate.opsForHash<String, String>().get(PREFIX_TASK_INFO + taskId, KEY_CREATE_FROM)
         if (createFrom.isNullOrEmpty()) {
@@ -45,12 +43,16 @@ class DefectAuthTaskServiceImpl @Autowired constructor(
         return createFrom
     }
 
+    override fun getGongfengProjInfo(taskId: Long): GongfengBaseInfo? {
+        // TODO("Not yet implemented")
+        return null
+    }
 
     /**
      * 获取任务所属流水线ID
      */
     override fun getTaskPipelineId(
-            taskId: Long
+        taskId: Long
     ): String {
         var pipelineId = redisTemplate.opsForHash<String, String>().get(PREFIX_TASK_INFO + taskId, KEY_PIPELINE_ID)
         if (pipelineId.isNullOrEmpty()) {
@@ -66,11 +68,42 @@ class DefectAuthTaskServiceImpl @Autowired constructor(
         return pipelineId
     }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(DefectAuthTaskServiceImpl::class.java)
-
-        @Value("\${common.codecc.env:#{null}}")
-        val env: String? = null
+    override fun getGongfengCIProjInfo(gongfengId: Int): GongfengBaseInfo? {
+        // TODO("Not yet implemented")
+        return null
     }
 
+    override fun queryPipelineListForUser(user: String, projectId: String, actions: Set<String>): Set<String> {
+        val request = QueryTaskListReqVO()
+        request.projectId = projectId
+        return client.get(ServiceTaskRestResource::class.java).batchGetTaskList(request).data?.map { it.pipelineId }?.toSet()
+            ?: setOf()
+    }
+
+    override fun queryPipelineListForUser(user: String, projectId: String): Set<String> {
+        val request = QueryTaskListReqVO()
+        request.projectId = projectId
+        request.userId = user
+        return client.get(ServiceTaskRestResource::class.java).batchGetTaskList(request).data?.map { it.pipelineId }?.toSet()
+            ?: setOf()
+    }
+
+    override fun queryTaskListForUser(user: String, projectId: String, actions: Set<String>): Set<String> {
+        val request = QueryTaskListReqVO()
+        request.projectId = projectId
+        return client.get(ServiceTaskRestResource::class.java).batchGetTaskList(request).data?.map { it.taskId.toString() }?.toSet()
+            ?: setOf()
+    }
+
+    override fun queryTaskUserListForAction(taskId: String, projectId: String, actions: Set<String>): List<String> {
+        val result = mutableListOf<String>()
+        val request = QueryTaskListReqVO()
+        request.projectId = projectId
+        client.get(ServiceTaskRestResource::class.java).batchGetTaskList(request).data?.forEach { result.addAll(it.taskOwner) }
+        return result
+    }
+
+    override fun queryTaskListByPipelineIds(pipelineIds: Set<String>): Set<String> {
+        return client.get(ServiceTaskRestResource::class.java).queryTaskListByPipelineIds(pipelineIds).data ?: setOf()
+    }
 }

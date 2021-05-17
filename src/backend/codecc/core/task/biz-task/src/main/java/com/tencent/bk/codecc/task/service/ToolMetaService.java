@@ -26,9 +26,9 @@
 
 package com.tencent.bk.codecc.task.service;
 
-import com.tencent.devops.common.api.RefreshToolImageRevisionReqVO;
+import com.tencent.devops.common.api.RefreshDockerImageHashReqVO;
 import com.tencent.devops.common.api.ToolMetaDetailVO;
-
+import com.tencent.devops.common.constant.ComConstants;
 
 import java.util.List;
 
@@ -53,15 +53,22 @@ public interface ToolMetaService
      * 根据工具名查询工具元数据
      * @return
      */
-    List<ToolMetaDetailVO> queryToolMetaDataList();
+    List<ToolMetaDetailVO> queryToolMetaDataList(String projectId);
 
     Boolean validateToolType(String toolType);
 
     Boolean validateLanguage(List<String> languages);
 
+    ToolMetaDetailVO obtainToolMetaData(String toolName);
+
     /**
      * 刷新工具镜像版本
-     * @param refreshToolImageRevisionReqVO
+     *
+     * @param refreshDockerImageHashReqVO
      */
-    Boolean refreshToolImageRevision(RefreshToolImageRevisionReqVO refreshToolImageRevisionReqVO);
+    Boolean refreshDockerImageHash(RefreshDockerImageHashReqVO refreshDockerImageHashReqVO);
+
+    String updateToolMetaToStatus(String toolName, ComConstants.ToolIntegratedStatus status, String username);
+
+    String revertToolMetaStatus(String toolName, ComConstants.ToolIntegratedStatus status, String username);
 }
