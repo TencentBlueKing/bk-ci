@@ -79,6 +79,7 @@ import org.jooq.DSLContext
 import org.jooq.Record
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
@@ -100,7 +101,8 @@ class PipelineAtomReplaceCronService @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineAtomReplaceCronService::class.java)
-        private const val LOCK_KEY = "pipelineAtomReplace"
+        @Value("\${redisLock.pipelineAtomReplaceLockName:pipelineAtomReplaceLock}")
+        protected lateinit var LOCK_KEY: String
         private const val ITEM_PAGE_SIZE = 10
         private const val DEFAULT_PAGE_SIZE = 100
         private const val PIPELINE_ATOM_REPLACE_PROJECT_ID_KEY = "pipeline:atom:replace:project:id"
