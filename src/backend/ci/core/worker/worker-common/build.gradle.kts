@@ -45,7 +45,7 @@ dependencies {
     api(group = "org.xerial", name = "sqlite-jdbc", version = "3.23.1")
     api("ch.qos.logback:logback-core")
     api("ch.qos.logback:logback-classic")
-    api(fileTree(mapOf("dir" to "lib/KillProcessTree.jar", "include" to listOf("*.jar"))))
+    api(fileTree(mapOf("dir" to "lib", "includes" to listOf("*.jar"))))
 }
 
 configurations.forEach {

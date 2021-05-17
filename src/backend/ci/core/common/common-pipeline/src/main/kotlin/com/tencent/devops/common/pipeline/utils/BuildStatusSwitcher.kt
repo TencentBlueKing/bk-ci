@@ -65,6 +65,19 @@ object BuildStatusSwitcher {
     }
 
     /**
+     * 对于流水线状态来讲，成功要转换为SUCCEED, 失败统一为FAILED，CANCEL取消和STAGE_SUCCESS保持不变
+     */
+    fun fixPipelineFinish(currentBuildStatus: BuildStatus): BuildStatus {
+        var buildStatus = finish(currentBuildStatus)
+        if (buildStatus.isSuccess()) {
+            buildStatus = BuildStatus.SUCCEED
+        } else if (buildStatus.isFailure()) {
+            buildStatus = BuildStatus.FAILED
+        }
+        return buildStatus
+    }
+
+    /**
      * 强制结束构建时，[currentBuildStatus]应该切换成什么状态。
      * 如已经结束，则直接返回[currentBuildStatus],否则返回[BuildStatus.FAILED]
      */

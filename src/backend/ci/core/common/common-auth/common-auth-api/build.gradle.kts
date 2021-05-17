@@ -34,5 +34,5 @@ dependencies {
     api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-base")
     api("com.fasterxml.jackson.module:jackson-module-kotlin")
 
-    api(fileTree(mapOf("dir" to "lib/iam-sdk-1.0.0.jar", "include" to listOf("*.jar"))))
+    api(fileTree(mapOf("dir" to "lib", "includes" to listOf("*.jar"))))
 }

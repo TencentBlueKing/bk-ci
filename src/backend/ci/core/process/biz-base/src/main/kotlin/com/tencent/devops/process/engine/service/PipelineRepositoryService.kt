@@ -747,7 +747,9 @@ class PipelineRepositoryService constructor(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                channelCode = channelCode),
+                channelCode = channelCode,
+                delete = delete
+            ),
             templateId = templateId
         )
     }

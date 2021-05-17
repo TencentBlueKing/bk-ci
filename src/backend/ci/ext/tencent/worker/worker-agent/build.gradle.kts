@@ -39,5 +39,5 @@ dependencies {
 
     api(project(":core:plugin:codecc-plugin:worker-plugin-codecc"))
 
-    api(fileTree(mapOf("dir" to "lib/KillProcessTree.jar", "include" to listOf("*.jar"))))
+    api(fileTree(mapOf("dir" to "lib", "includes" to listOf("*.jar"))))
 }
