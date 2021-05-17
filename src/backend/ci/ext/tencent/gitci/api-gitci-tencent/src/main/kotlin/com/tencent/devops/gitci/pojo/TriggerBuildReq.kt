@@ -51,5 +51,7 @@ data class TriggerBuildReq(
     @ApiModelProperty("yaml")
     val yaml: String?,
     @ApiModelProperty("描述")
-    val description: String?
+    val description: String?,
+    @ApiModelProperty("用户选择的触发CommitId")
+    val commitId: String? = null
 ) : Repository(gitProjectId, name, url, homepage, gitHttpUrl, gitSshUrl)

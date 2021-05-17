@@ -1156,7 +1156,7 @@ class GitCITriggerService @Autowired constructor(
             sourceGitProjectId = null,
             branch = triggerBuildReq.branch.removePrefix("refs/heads/"),
             targetBranch = null,
-            commitId = "",
+            commitId = triggerBuildReq.commitId ?: "",
             commitMsg = triggerBuildReq.customCommitMsg,
             commitTimeStamp = getCommitTimeStamp(null),
             userId = userId,
