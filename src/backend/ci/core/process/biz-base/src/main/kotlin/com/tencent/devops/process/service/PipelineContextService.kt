@@ -81,7 +81,6 @@ class PipelineContextService@Autowired constructor(
             }
         }
 
-
         return varMap
     }
 
