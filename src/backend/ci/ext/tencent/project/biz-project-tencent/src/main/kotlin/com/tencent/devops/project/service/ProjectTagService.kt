@@ -23,19 +23,22 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
 package com.tencent.devops.project.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.consul.ConsulConstants.PROJECT_TAG_REDIS_KEY
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectTagDao
+import com.tencent.devops.project.pojo.ProjectExtSystemTagDTO
 import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -49,7 +52,8 @@ class ProjectTagService @Autowired constructor(
     val dslContext: DSLContext,
     val projectTagDao: ProjectTagDao,
     val redisOperation: RedisOperation,
-    val projectDao: ProjectDao
+    val projectDao: ProjectDao,
+    val objectMapper: ObjectMapper
 ) {
 
     private val executePool = Executors.newFixedThreadPool(1)
@@ -160,6 +164,39 @@ class ProjectTagService @Autowired constructor(
         return Result(true)
     }
 
+    fun updateExtSystemRouterTag(extSystemTag: ProjectExtSystemTagDTO): Result<Boolean> {
+        logger.info("updateTagByProject: $extSystemTag")
+        checkRouteTag(extSystemTag.routerTag)
+        checkProject(extSystemTag.projectCodeList)
+        val projectInfos = projectTagDao.getExtSystemRouterTag(dslContext, extSystemTag.projectCodeList)
+            ?: return Result(false)
+        projectInfos.forEach {
+            val extSystemRouter = it.otherRouterTags
+            logger.info("project otherRouterTag ${it.otherRouterTags} ${it.englishName}")
+            val newRouteMap = mutableMapOf<String, String>()
+            // 如果有对应系统的router则替换，否则直接加
+            if (extSystemRouter.isNullOrEmpty()) {
+                newRouteMap[extSystemTag.system] = extSystemTag.routerTag
+            } else {
+                val routerMap = objectMapper.readValue<Map<String, String>>(extSystemRouter)
+                newRouteMap.putAll(routerMap)
+                newRouteMap[extSystemTag.system] = extSystemTag.routerTag
+            }
+            logger.info("setExtSystemRoute ${it.englishName} ${JsonUtil.toJson(newRouteMap)}")
+            projectTagDao.updateExtSystemProjectTags(
+                dslContext = dslContext,
+                projectCode = it.englishName,
+                routerTag = JsonUtil.toJson(newRouteMap)
+            )
+            if (extSystemTag.system == "codecc") {
+                redisOperation.hset(PROJECT_TAG_CODECC_REDIS_KEY, it.englishName, extSystemTag.routerTag)
+            } else if (extSystemTag.system == "repo") {
+                redisOperation.hset(PROJECT_TAG_REPO_REDIS_KEY, it.englishName, extSystemTag.routerTag)
+            }
+        }
+        return Result(true)
+    }
+
     private fun checkProject(projectIds: List<String>?) {
         if (projectIds == null || projectIds.isEmpty()) {
             throw ParamBlankException("Invalid projectIds")
@@ -243,5 +280,7 @@ class ProjectTagService @Autowired constructor(
 
     companion object {
         val logger = LoggerFactory.getLogger(ProjectTagService::class.java)
+        const val PROJECT_TAG_CODECC_REDIS_KEY = "project:setting:tag:codecc:v2"
+        const val PROJECT_TAG_REPO_REDIS_KEY = "project:setting:tag:repo:v2"
     }
 }

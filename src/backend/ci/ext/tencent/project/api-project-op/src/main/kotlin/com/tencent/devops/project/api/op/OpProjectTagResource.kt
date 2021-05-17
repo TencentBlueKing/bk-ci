@@ -30,6 +30,7 @@ package com.tencent.devops.project.api.op
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
+import com.tencent.devops.project.pojo.ProjectExtSystemTagDTO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -67,5 +68,13 @@ interface OpProjectTagResource {
     fun setTagByChannel(
         @ApiParam(value = "consulTag请求入参", required = true)
         projectTagUpdateDTO: ProjectTagUpdateDTO
+    ): Result<Boolean>
+
+    @ApiOperation("按项目扩展系统设置consul Tag")
+    @PUT
+    @Path("/ext/system/setTagByProject")
+    fun setExtSystemTagByProject(
+        @ApiParam(value = "consulTag请求入参", required = true)
+        opProjectTagUpdateDTO: ProjectExtSystemTagDTO
     ): Result<Boolean>
 }

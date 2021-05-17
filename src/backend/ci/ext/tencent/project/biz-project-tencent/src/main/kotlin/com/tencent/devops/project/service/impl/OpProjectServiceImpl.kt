@@ -342,6 +342,9 @@ class OpProjectServiceImpl @Autowired constructor(
                 projectCodeList = projectCodeList,
                 system = system.name
             )
+            projectTagService.updateExtSystemRouterTag(projectTagUpdateDTO)
+        } else {
+            return
         }
     }
 
