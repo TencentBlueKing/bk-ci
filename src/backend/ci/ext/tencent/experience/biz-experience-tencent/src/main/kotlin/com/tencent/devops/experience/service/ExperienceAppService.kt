@@ -107,9 +107,10 @@ class ExperienceAppService(
     ): AppExperienceDetail {
         val experienceId = HashUtil.decodeIdToLong(experienceHashId)
         val isOldVersion = VersionUtil.compare(appVersion, "2.0.0") < 0
+        val isOuter = organization == ORGANIZATION_OUTER
 
         val isPublic = experienceBaseService.isPublic(experienceId)
-        val isInPrivate = experienceBaseService.isInPrivate(experienceId, userId, organization == ORGANIZATION_OUTER)
+        val isInPrivate = experienceBaseService.isInPrivate(experienceId, userId, isOuter)
 
         // 新版本且没权限
         if (!isOldVersion && !isPublic && !isInPrivate) {
@@ -135,7 +136,7 @@ class ExperienceAppService(
         val versionTitle =
             if (StringUtils.isBlank(experience.versionTitle)) experience.name else experience.versionTitle
         val categoryId = if (experience.category < 0) ProductCategoryEnum.LIFE.id else experience.category
-        val isPrivate = experienceBaseService.isPrivate(experienceId)
+        val isPrivate = experienceBaseService.isPrivate(experienceId, isOuter)
         val experienceCondition = getExperienceCondition(isPublic, isPrivate, isInPrivate)
         val lastDownloadMap = experienceBaseService.getLastDownloadMap(userId)
 
