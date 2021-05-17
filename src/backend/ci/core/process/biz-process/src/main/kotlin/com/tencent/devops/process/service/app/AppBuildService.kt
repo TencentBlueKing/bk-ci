@@ -39,7 +39,6 @@ import com.tencent.devops.process.service.label.PipelineGroupService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.net.URLEncoder
 
 @Suppress("ALL")
 @Service
@@ -92,7 +91,7 @@ class AppBuildService @Autowired constructor(
         files?.records?.forEach {
             val singlePackageVersion =
                 client.get(ServiceArtifactoryResource::class)
-                    .show(projectId, it.artifactoryType, it.path.replace("#","%23"))
+                    .show(projectId, it.artifactoryType, it.path.replace("#", "%23"))
                     .data?.meta?.get(ARCHIVE_PROPS_APP_VERSION)
             if (!singlePackageVersion.isNullOrBlank()) packageVersion.append(singlePackageVersion).append(";")
         }
