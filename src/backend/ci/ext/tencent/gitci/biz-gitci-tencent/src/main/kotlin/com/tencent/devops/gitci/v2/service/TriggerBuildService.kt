@@ -434,7 +434,7 @@ class TriggerBuildService @Autowired constructor(
         } else VMBaseOS.valueOf(agentInfo.os)*/
 
         val vmContainer = VMBuildContainer(
-            id = job.id,
+            jobId = job.id,
             name = "Job_${jobIndex + 1} ${job.name ?: ""}",
             elements = elementList,
             status = null,
