@@ -241,7 +241,7 @@ abstract class AbstractDockerHostBuildService constructor(
         private val step = mutableMapOf<Int, Long>()
         override fun onNext(item: PullResponseItem?) {
             val text = item?.progressDetail
-            if (null != text && text.current != null && text.total != null && text.total != 0L) {
+            if (text?.current != null && text?.total != null && text.total != 0L) {
                 val lays = if (!totalList.contains(text.total!!)) {
                     totalList.add(text.total!!)
                     totalList.size + 1
