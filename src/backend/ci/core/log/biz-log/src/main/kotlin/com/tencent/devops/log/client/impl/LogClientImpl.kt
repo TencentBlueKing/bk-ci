@@ -29,10 +29,12 @@ package com.tencent.devops.log.client.impl
 
 import com.tencent.devops.log.es.ESClient
 import com.tencent.devops.log.client.LogClient
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.stereotype.Component
 import java.lang.RuntimeException
 
 @Component
+@ConditionalOnMissingBean
 class LogClientImpl constructor(
     private val client: ESClient
 ) : LogClient {
