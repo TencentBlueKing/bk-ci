@@ -39,6 +39,7 @@ import com.tencent.devops.process.service.label.PipelineGroupService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.net.URLEncoder
 
 @Suppress("ALL")
 @Service
@@ -63,9 +64,23 @@ class AppBuildService @Autowired constructor(
         // 查web端数据
         var beginTime = System.currentTimeMillis()
         val modelDetail =
-            pipelineBuildFacadeService.getBuildDetail(userId, projectId, pipelineId, buildId, channelCode, checkPermission)
+            pipelineBuildFacadeService.getBuildDetail(
+                userId,
+                projectId,
+                pipelineId,
+                buildId,
+                channelCode,
+                checkPermission
+            )
         val buildStatusWithVars =
-            pipelineBuildFacadeService.getBuildStatusWithVars(userId, projectId, pipelineId, buildId, channelCode, checkPermission)
+            pipelineBuildFacadeService.getBuildStatusWithVars(
+                userId,
+                projectId,
+                pipelineId,
+                buildId,
+                channelCode,
+                checkPermission
+            )
         logger.info("查web端数据: ${System.currentTimeMillis() - beginTime} ms")
         beginTime = System.currentTimeMillis()
 
@@ -76,7 +91,8 @@ class AppBuildService @Autowired constructor(
         val packageVersion = StringBuilder()
         files?.records?.forEach {
             val singlePackageVersion =
-                client.get(ServiceArtifactoryResource::class).show(projectId, it.artifactoryType, it.path)
+                client.get(ServiceArtifactoryResource::class)
+                    .show(projectId, it.artifactoryType, URLEncoder.encode(it.path, "utf-8"))
                     .data?.meta?.get(ARCHIVE_PROPS_APP_VERSION)
             if (!singlePackageVersion.isNullOrBlank()) packageVersion.append(singlePackageVersion).append(";")
         }
