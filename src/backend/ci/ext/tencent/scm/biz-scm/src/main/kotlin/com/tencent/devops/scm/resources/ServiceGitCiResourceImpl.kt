@@ -29,14 +29,17 @@ package com.tencent.devops.scm.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitCiResource
+import com.tencent.devops.scm.services.GitCiService
 import com.tencent.devops.scm.services.GitService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceGitCiResourceImpl @Autowired constructor(
-    private val gitService: GitService
+    private val gitService: GitService,
+    private val gitCiService: GitCiService
 ) : ServiceGitCiResource {
 
     override fun getToken(gitProjectId: String): Result<GitToken> {
@@ -49,5 +52,15 @@ class ServiceGitCiResourceImpl @Autowired constructor(
 
     override fun clearToken(token: String): Result<Boolean> {
         return Result(gitService.clearToken(token))
+    }
+
+    override fun getMembers(
+        token: String,
+        gitProjectId: String,
+        page: Int,
+        pageSize:
+        Int, search: String?
+    ): Result<List<GitMember>> {
+        return Result(gitCiService.getGitCIMembers(token, gitProjectId, page, pageSize, search))
     }
 }

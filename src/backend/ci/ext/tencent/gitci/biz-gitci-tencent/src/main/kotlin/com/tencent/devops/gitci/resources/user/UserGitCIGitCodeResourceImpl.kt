@@ -33,6 +33,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.user.UserGitCIGitCodeResource
 import com.tencent.devops.gitci.v2.service.OauthService
 import com.tencent.devops.gitci.v2.service.ScmService
+import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.GitCICreateFile
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
@@ -48,8 +49,23 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
         return Result(
             scmService.getProjectInfo(
                 token = getToken(userId),
-                gitProjectId = gitProjectId.toString(),
+                gitProjectId = gitProjectId,
                 useAccessToken = true
+            )
+        )
+    }
+
+    override fun getGitCodeProjectMembers(
+        userId: String,
+        gitProjectId: String,
+        page: Int,
+        pageSize: Int,
+        search: String?
+    ): Result<List<GitMember>?> {
+        return Result(
+            scmService.getProjectMembers(
+                token = getToken(userId),
+                gitProjectId = gitProjectId, page = page, pageSize = pageSize, search = search
             )
         )
     }
@@ -94,7 +110,7 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
 
     private fun getToken(userId: String): String {
         val token = oauthService.getOauthToken(userId) ?: throw CustomException(
-            Response.Status.FORBIDDEN,
+            Response.Status.UNAUTHORIZED,
             "用户$userId 无OAuth权限"
         )
         return token.accessToken

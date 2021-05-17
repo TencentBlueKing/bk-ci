@@ -30,6 +30,7 @@ package com.tencent.devops.gitci.api.user
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.GitCICreateFile
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
@@ -41,7 +42,6 @@ import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
@@ -54,19 +54,40 @@ interface UserGitCIGitCodeResource {
 
     @ApiOperation("获取工蜂项目信息")
     @GET
-    @Path("/{gitProjectId}")
+    @Path("/info")
     fun getGitCodeProjectInfo(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam(value = "gitProjectId", required = true)
-        @PathParam("gitProjectId")
+        @QueryParam("gitProjectId")
         gitProjectId: String
     ): Result<GitCIProjectInfo?>
 
+    @ApiOperation("获取工蜂项目下所有触发人信息")
+    @GET
+    @Path("/members")
+    fun getGitCodeProjectMembers(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "项目ID或者全路径", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @ApiParam(value = "page", required = true)
+        @QueryParam("page")
+        page: Int = 1,
+        @ApiParam(value = "pageSize", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int = 20,
+        @ApiParam(value = "搜索用户关键字", required = true)
+        @QueryParam("search")
+        search: String?
+    ): Result<List<GitMember>?>
+
     @ApiOperation("获取工蜂项目所有提交信息")
     @GET
-    @Path("/{gitProjectId}/commits")
+    @Path("/commits")
     fun getGitCodeCommits(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -96,7 +117,7 @@ interface UserGitCIGitCodeResource {
 
     @ApiOperation("向工蜂项目中创建新文件")
     @POST
-    @Path("/{gitProjectId}/repository/files")
+    @Path("/repository/files")
     fun gitCodeCreateFile(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
