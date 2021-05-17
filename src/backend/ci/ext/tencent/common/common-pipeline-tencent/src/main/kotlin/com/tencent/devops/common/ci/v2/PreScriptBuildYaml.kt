@@ -47,8 +47,6 @@ data class PreScriptBuildYaml(
     var stages: List<PreStage>? = null,
     var jobs: Map<String, PreJob>? = null,
     var steps: List<Step>? = null,
-    @JsonProperty("on-fail")
-    var onFail: OnFail?,
     var extends: Extends?,
     var resources: Resources?,
     var notices: List<Notices>?,
