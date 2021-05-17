@@ -43,7 +43,7 @@ import com.tencent.devops.common.ci.v2.Resources
 data class NoReplaceTemplate(
     var version: String?,
     var name: String?,
-    var label: String? = null,
+    var label: List<String>? = null,
     var triggerOn: PreTriggerOn?,
     @JsonProperty("on-fail")
     var onFail: OnFail?,
