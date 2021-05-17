@@ -194,7 +194,7 @@ class StartActionTaskContainerCmd(
     ): PipelineBuildTask? {
         val source = containerContext.event.source
         var toDoTask: PipelineBuildTask? = null
-        val contextMap = pipelineContextService.buildContext(buildId, containerId)
+        val contextMap = pipelineContextService.buildContext(buildId, containerId, containerContext.variables)
         when { // [post action] 包含对应的关机任务，优先开机失败startVMFail=true
             additionalOptions?.elementPostInfo != null -> { // 如果是[post task], elementPostInfo必不为空
                 toDoTask = additionalOptions?.elementPostInfo?.findPostActionTask(

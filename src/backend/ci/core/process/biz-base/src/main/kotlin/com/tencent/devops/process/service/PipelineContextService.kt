@@ -41,12 +41,10 @@ import org.springframework.stereotype.Service
 @Suppress("ALL")
 @Service
 class PipelineContextService@Autowired constructor(
-    private val pipelineBuildDetailService: PipelineBuildDetailService,
-    private val buildVariableService: BuildVariableService
+    private val pipelineBuildDetailService: PipelineBuildDetailService
 ) {
-    fun buildContext(buildId: String, containerId: String?): Map<String, String> {
+    fun buildContext(buildId: String, containerId: String?, buildVar: Map<String, String>): Map<String, String> {
         val modelDetail = pipelineBuildDetailService.get(buildId) ?: return emptyMap()
-        val buildVar = buildVariableService.getAllVariable(buildId)
         val varMap = mutableMapOf<String, String>()
         modelDetail.model.stages.forEach { stage ->
             stage.containers.forEach { c ->
@@ -82,7 +80,6 @@ class PipelineContextService@Autowired constructor(
                 }
             }
         }
-
 
         return varMap
     }
