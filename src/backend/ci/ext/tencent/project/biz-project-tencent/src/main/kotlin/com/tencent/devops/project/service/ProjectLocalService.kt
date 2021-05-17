@@ -528,7 +528,6 @@ class ProjectLocalService @Autowired constructor(
 
             // GitCI项目自动把流量指向gitCI集群, 注意此tag写死在代码内,若对应集群的consulTag调整需要变更代码
             projectTagService.updateTagByProject(projectCreateInfo.englishName, gitCI)
-
         } catch (e: Throwable) {
             logger.error("Create project failed,", e)
             throw e
