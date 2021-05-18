@@ -19,8 +19,25 @@ open class AbsPermissionService @Autowired constructor(
     private val policyService: PolicyService,
     private val iamConfiguration: IamConfiguration
 ) : PermissionService {
-    override fun validateUserResourcePermission(userId: String, action: String): Boolean {
+
+    override fun validateUserActionPermission(userId: String, action: String): Boolean {
         return authHelper.isAllowed(userId, action)
+    }
+
+    override fun validateUserResourcePermission(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resourceType: String?
+    ): Boolean {
+        return validateUserResourcePermissionByRelation(
+            userId = userId,
+            action = action,
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode,
+            relationResourceType = null
+        )
     }
 
     override fun validateUserResourcePermissionByRelation(
