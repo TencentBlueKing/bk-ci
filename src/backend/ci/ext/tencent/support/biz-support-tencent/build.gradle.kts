@@ -39,6 +39,7 @@ dependencies {
     api(project(":ext:tencent:process:api-process-tencent"))
     api(project(":ext:tencent:project:api-project-tencent"))
     api(project(":ext:tencent:support:api-support-tencent"))
+    api(project(":ext:tencent:common:common-kafka-tencent"))
     api("dom4j:dom4j")
     api("commons-codec:commons-codec:1.9")
 //    api("org.ansj:ansj_seg:5.1.6"

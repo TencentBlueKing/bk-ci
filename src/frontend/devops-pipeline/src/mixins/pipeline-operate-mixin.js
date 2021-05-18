@@ -472,7 +472,8 @@ export default {
         },
         async savePipelineAndSetting () {
             const { pipelineSetting, checkPipelineInvalid, pipeline } = this
-            const { inValid, message } = checkPipelineInvalid(pipeline.stages)
+            console.log(this, '111')
+            const { inValid, message } = checkPipelineInvalid(pipeline.stages, pipelineSetting)
             const { projectId, pipelineId } = this.$route.params
             if (inValid) {
                 throw new Error(message)
@@ -529,6 +530,7 @@ export default {
                     data: responses
                 }
             } catch (e) {
+
                 this.handleError(e, [{
                     actionId: this.$permissionActionMap.edit,
                     resourceId: this.$permissionResourceMap.pipeline,
