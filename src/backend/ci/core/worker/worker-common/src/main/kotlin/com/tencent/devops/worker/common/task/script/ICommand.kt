@@ -29,6 +29,7 @@ package com.tencent.devops.worker.common.task.script
 
 import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.store.pojo.app.BuildEnv
+import com.tencent.devops.worker.common.CI_TOKEN_CONTEXT
 import com.tencent.devops.worker.common.WORKSPACE_CONTEXT
 import com.tencent.devops.worker.common.utils.CredentialUtils
 import org.slf4j.LoggerFactory
@@ -61,7 +62,10 @@ interface ICommand {
                     "\${$key}"
                 }
             }
-        }, mapOf(WORKSPACE_CONTEXT to dir.absolutePath))
+        }, mapOf(
+            WORKSPACE_CONTEXT to dir.absolutePath,
+            CI_TOKEN_CONTEXT to (data[CI_TOKEN_CONTEXT] ?: "")
+        ))
     }
 
     companion object {
