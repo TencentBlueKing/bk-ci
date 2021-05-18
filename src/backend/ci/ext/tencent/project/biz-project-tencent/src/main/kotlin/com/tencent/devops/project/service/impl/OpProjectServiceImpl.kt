@@ -45,15 +45,20 @@ import com.tencent.devops.project.dao.ProjectLocalDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectExtSystemTagDTO
+import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.SystemEnums
 import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.service.ProjectPaasCCService
+import com.tencent.devops.project.service.ProjectTagService
 import com.tencent.devops.project.service.tof.TOFService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 import org.springframework.util.CollectionUtils
@@ -72,7 +77,8 @@ class OpProjectServiceImpl @Autowired constructor(
     private val bsAuthTokenApi: AuthTokenApi,
     macosGray: MacOSGray,
     private val tofService: TOFService,
-    private val bsPipelineAuthServiceCode: AuthServiceCode
+    private val bsPipelineAuthServiceCode: AuthServiceCode,
+    private val projectTagService: ProjectTagService
 ) : AbsOpProjectServiceImpl(
     dslContext,
     projectDao,
@@ -84,6 +90,12 @@ class OpProjectServiceImpl @Autowired constructor(
 ) {
 
     private final val redisProjectKey = "BK:PROJECT:INFO:"
+
+    @Value("\${prod.tag:#{null}}")
+    private val prodTag: String? = null
+
+    @Value("\${gray.tag:#{null}}")
+    private val grayTag: String? = null
 
     override fun updateProjectFromOp(
         userId: String,
@@ -295,5 +307,49 @@ class OpProjectServiceImpl @Autowired constructor(
         logger.warn("syn fail list: $failList")
         logger.info("syn project time: ${endTime - startTime}, syn project count: ${synProject.size} ")
         return Result(synProject)
+    }
+
+    override fun setGrayExt(projectCodeList: List<String>, operateFlag: Int, system: SystemEnums) {
+        val routerTag = when (operateFlag) {
+            grayLable -> {
+                grayTag
+            }
+            prodLable -> {
+                prodTag
+            }
+            else -> {
+                null
+            }
+        }
+
+        if (routerTag.isNullOrEmpty()) {
+            return
+        }
+
+        if (system == SystemEnums.CI) {
+            val projectTagUpdateDTO = ProjectTagUpdateDTO(
+                routerTag = routerTag!!,
+                bgId = null,
+                deptId = null,
+                centerId = null,
+                projectCodeList = projectCodeList,
+                channel = null
+            )
+            projectTagService.updateTagByProject(projectTagUpdateDTO)
+        } else if (system == SystemEnums.CODECC || system == SystemEnums.REPO) {
+            val projectTagUpdateDTO = ProjectExtSystemTagDTO(
+                routerTag = routerTag!!,
+                projectCodeList = projectCodeList,
+                system = system.name
+            )
+            projectTagService.updateExtSystemRouterTag(projectTagUpdateDTO)
+        } else {
+            return
+        }
+    }
+
+    companion object {
+        final const val grayLable = 1
+        final const val prodLable = 2
     }
 }

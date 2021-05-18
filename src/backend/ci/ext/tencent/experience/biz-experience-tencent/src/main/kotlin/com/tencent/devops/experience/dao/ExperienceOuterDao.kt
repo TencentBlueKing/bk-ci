@@ -87,4 +87,13 @@ class ExperienceOuterDao {
                 .fetch()
         }
     }
+
+    fun countByRecordId(dslContext: DSLContext, experienceId: Long): Int {
+        return with(TExperienceOuter.T_EXPERIENCE_OUTER) {
+            dslContext.selectCount()
+                .from(this)
+                .where(RECORD_ID.eq(experienceId))
+                .fetchAny()?.value1() ?: 0
+        }
+    }
 }

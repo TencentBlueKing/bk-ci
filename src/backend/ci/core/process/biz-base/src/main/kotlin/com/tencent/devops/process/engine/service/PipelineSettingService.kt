@@ -27,18 +27,31 @@
 
 package com.tencent.devops.process.engine.service
 
+import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.PipelineSettingDao
+import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.Calendar
+import java.util.Date
 import java.util.concurrent.TimeUnit
 
 @Service
 class PipelineSettingService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val pipelineSettingDao: PipelineSettingDao
+    private val pipelineSettingDao: PipelineSettingDao,
+    private val pipelineBuildDao: PipelineBuildDao,
+    private val redisOperation: RedisOperation
 ) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineSettingService::class.java)
+        private const val PIPELINE_CURRENT_DAY_BUILD_COUNT_KEY_PREFIX = "PIPELINE_CURRENT_DAY_BUILD_COUNT"
+    }
 
     fun isQueueTimeout(pipelineId: String, startTime: Long): Boolean {
         val setting = pipelineSettingDao.getSetting(dslContext, pipelineId)
@@ -55,5 +68,62 @@ class PipelineSettingService @Autowired constructor(
                 }
             }
         return System.currentTimeMillis() - startTime > waitQueueTimeMills
+    }
+
+    fun getCurrentDayBuildCount(pipelineId: String): Int {
+        val currentDayStr = DateTimeUtil.formatDate(Date(), DateTimeUtil.YYYY_MM_DD)
+        val currentDayBuildCountKey = getCurrentDayBuildCountKey(pipelineId, currentDayStr)
+        // 判断缓存中是否有值，没有值则从db中实时查
+        return if (!redisOperation.hasKey(currentDayBuildCountKey)) {
+            logger.info("getCurrentDayBuildCount $currentDayBuildCountKey is not exist!")
+            getCurrentDayBuildCountFromDb(currentDayStr, pipelineId)
+        } else {
+            redisOperation.get(currentDayBuildCountKey)!!.toInt()
+        }
+    }
+
+    fun setCurrentDayBuildCount(pipelineId: String): Int {
+        val currentDayStr = DateTimeUtil.formatDate(Date(), DateTimeUtil.YYYY_MM_DD)
+        val currentDayBuildCountKey = getCurrentDayBuildCountKey(pipelineId, currentDayStr)
+        // 判断缓存中是否有值，没有值则从db中实时查
+        return if (!redisOperation.hasKey(currentDayBuildCountKey)) {
+            logger.info("setCurrentDayBuildCount $currentDayBuildCountKey is not exist!")
+            getCurrentDayBuildCountFromDb(currentDayStr, pipelineId)
+        } else {
+            // redis有值则每次自增1
+            redisOperation.increment(currentDayBuildCountKey, 1)
+            redisOperation.get(currentDayBuildCountKey)!!.toInt()
+        }
+    }
+
+    private fun getCurrentDayBuildCountKey(pipelineId: String, currentDayStr: String): String {
+        return "$PIPELINE_CURRENT_DAY_BUILD_COUNT_KEY_PREFIX:$pipelineId:$currentDayStr"
+    }
+
+    private fun getCurrentDayBuildCountFromDb(currentDayStr: String, pipelineId: String): Int {
+        val startTime = DateTimeUtil.stringToLocalDateTime(
+            dateTimeStr = currentDayStr,
+            formatStr = DateTimeUtil.YYYY_MM_DD
+        )
+        val endTime = DateTimeUtil.convertDateToLocalDateTime(
+            DateTimeUtil.getFutureDate(
+                localDateTime = startTime,
+                unit = Calendar.DAY_OF_MONTH,
+                timeSpan = 1
+            )
+        )
+        val count = pipelineBuildDao.countBuildNumByTime(
+            dslContext = dslContext,
+            pipelineId = pipelineId,
+            startTime = startTime,
+            endTime = endTime
+        )
+        // 把当前流水线当日构建次数存入redis，失效期设置为1天
+        redisOperation.set(
+            key = getCurrentDayBuildCountKey(pipelineId, currentDayStr),
+            value = count.toString(),
+            expiredInSecond = TimeUnit.DAYS.toSeconds(1)
+        )
+        return count
     }
 }

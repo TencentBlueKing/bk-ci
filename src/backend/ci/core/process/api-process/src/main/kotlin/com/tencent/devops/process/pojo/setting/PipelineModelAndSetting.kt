@@ -29,10 +29,12 @@ package com.tencent.devops.process.pojo.setting
 
 import com.tencent.devops.common.pipeline.Model
 import io.swagger.annotations.ApiModelProperty
+import javax.validation.Valid
 
 data class PipelineModelAndSetting(
     @ApiModelProperty("流水线模型", required = true)
     val model: Model,
     @ApiModelProperty("流水线设置", required = false)
+    @field:Valid
     val setting: PipelineSetting
 )

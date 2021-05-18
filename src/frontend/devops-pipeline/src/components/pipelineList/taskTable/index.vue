@@ -256,4 +256,11 @@
             opacity: 0.6;
         }
     }
+    .latest-build-number {
+        max-width: 110px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        padding-right: 25px !important;
+    }
 </style>

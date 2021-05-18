@@ -62,15 +62,8 @@ import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.service.BuildStartupParamService
 import com.tencent.devops.process.service.BuildVariableService
-import com.tencent.devops.process.service.ProjectCacheService
 import com.tencent.devops.process.service.scm.ScmProxyService
-import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
-import com.tencent.devops.process.utils.PIPELINE_CREATE_USER
-import com.tencent.devops.process.utils.PIPELINE_ID
 import com.tencent.devops.process.utils.PIPELINE_TIME_START
-import com.tencent.devops.process.utils.PIPELINE_UPDATE_USER
-import com.tencent.devops.process.utils.PROJECT_NAME
-import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -88,7 +81,6 @@ class BuildStartControl @Autowired constructor(
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
     private val pipelineStageService: PipelineStageService,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val projectCacheService: ProjectCacheService,
     private val buildDetailService: PipelineBuildDetailService,
     private val buildStartupParamService: BuildStartupParamService,
     private val buildVariableService: BuildVariableService,
@@ -445,27 +437,13 @@ class BuildStartControl @Autowired constructor(
                 allVariable = startParams, projectId = projectId,
                 pipelineId = pipelineId, buildId = buildId, model = model
             )
-
-            val projectName = projectCacheService.getProjectName(projectId) ?: ""
-            val map = mutableMapOf(
-                PIPELINE_BUILD_ID to buildId,
-                PROJECT_NAME to projectId,
-                PROJECT_NAME_CHINESE to projectName,
-                PIPELINE_TIME_START to System.currentTimeMillis().toString()
+            buildVariableService.setVariable(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                varName = PIPELINE_TIME_START,
+                varValue = System.currentTimeMillis().toString()
             )
-
-            if (startParams[PIPELINE_CREATE_USER].isNullOrBlank() ||
-                startParams[PIPELINE_UPDATE_USER].isNullOrBlank()) {
-                val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId)
-                map[PIPELINE_CREATE_USER] = pipelineInfo!!.creator
-                map[PIPELINE_UPDATE_USER] = pipelineInfo.lastModifyUser
-            }
-
-            if (startParams[PIPELINE_ID].isNullOrBlank()) {
-                map[PIPELINE_ID] = pipelineId
-            }
-
-            buildVariableService.batchUpdateVariable(projectId, pipelineId, buildId, map)
         }
 
         if (model.stages.size == 1) { // 空节点

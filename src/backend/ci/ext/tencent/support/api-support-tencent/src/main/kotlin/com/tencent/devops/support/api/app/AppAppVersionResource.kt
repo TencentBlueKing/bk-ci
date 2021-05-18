@@ -27,17 +27,22 @@
 
 package com.tencent.devops.support.api.app
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_APP_VERSION
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_NAME
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.support.model.app.pojo.AppVersion
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import javax.ws.rs.core.MediaType
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.support.model.app.pojo.AppVersion
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
 /**
  * Created by Freyzheng on 2018/9/26.
@@ -53,6 +58,15 @@ interface AppAppVersionResource {
     @GET
     @Path("/last")
     fun getLastAppVersion(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("版本号", required = true)
+        @HeaderParam(AUTH_HEADER_APP_VERSION)
+        appVersion: String?,
+        @ApiParam("组织", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_NAME)
+        organization: String? = null,
         @ApiParam(value = "渠道类型（1:\"安卓\", 2:\"IOS\", 3:\"WEB\"）", required = true)
         @QueryParam(value = "channelType")
         channelType: Byte
