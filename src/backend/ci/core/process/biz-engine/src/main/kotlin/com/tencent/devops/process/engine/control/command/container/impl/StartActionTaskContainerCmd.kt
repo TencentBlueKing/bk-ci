@@ -202,8 +202,12 @@ class StartActionTaskContainerCmd(
             }
             needTerminate -> { // 构建环境启动失败的，
                 LOG.warn("ENGINE|$buildId|$source|CONTAINER_FAIL_VM|$stageId|j($containerId)|$taskId|$status")
-                // 更新任务状态为跳过
-                pipelineRuntimeService.updateTaskStatus(task = this, userId = starter, buildStatus = BuildStatus.UNEXEC)
+                val taskStatus = if (status == BuildStatus.QUEUE_CACHE) { // 领取过程中被中断标志为失败
+                    BuildStatus.FAILED
+                } else {
+                    BuildStatus.UNEXEC
+                }
+                pipelineRuntimeService.updateTaskStatus(task = this, userId = starter, buildStatus = taskStatus)
                 // 打印构建日志
                 buildLogPrinter.addYellowLine(executeCount = containerContext.executeCount, tag = taskId,
                     buildId = buildId, message = "Terminate Plugin [$taskName]: ${containerContext.latestSummary}!",
