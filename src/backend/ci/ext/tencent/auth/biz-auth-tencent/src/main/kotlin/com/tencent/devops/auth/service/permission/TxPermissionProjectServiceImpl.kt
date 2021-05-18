@@ -142,7 +142,7 @@ class TxPermissionProjectServiceImpl @Autowired constructor(
     }
 
     /**
-     * 判断是否为项目下用户, 若提供角色，则需要判断是否为改角色下用户
+     * 判断是否为项目下用户, 若提供角色，则需要判断是否为该角色下用户
      * 优先判断all_action(项目管理员)
      * 若未提供需判断是否有project_veiws权限
      */

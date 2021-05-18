@@ -40,8 +40,12 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
+import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.BkAuthProperties
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.listener.TxIamV3CreateEvent
 import com.tencent.devops.project.pojo.Result
@@ -50,13 +54,16 @@ import okhttp3.MediaType
 class TxV3ProjectPermissionServiceImpl @Autowired constructor(
     val objectMapper: ObjectMapper,
     val authProperties: BkAuthProperties,
-    val projectDispatcher: ProjectDispatcher
+    val projectDispatcher: ProjectDispatcher,
+    val client: Client
 ) : ProjectPermissionService {
 
     private val authUrl = authProperties.url
 
+    // 校验用户是否是项目成员
     override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String): Boolean {
-        TODO("Not yet implemented")
+        return client.get(ServiceProjectAuthResource::class).isProjectUser(userId, projectCode, null).data
+            ?: false
     }
 
     override fun createResources(
@@ -93,11 +100,12 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
     }
 
     override fun getUserProjects(userId: String): List<String> {
-        TODO("Not yet implemented")
+        return client.get(ServiceProjectAuthResource::class).getUserProjects(userId).data ?: emptyList()
     }
 
     override fun getUserProjectsAvailable(userId: String): Map<String, String> {
-        TODO("Not yet implemented")
+        // TODO:
+        return emptyMap()
     }
 
     override fun verifyUserProjectPermission(
@@ -106,7 +114,14 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
         userId: String,
         permission: AuthPermission
     ): Boolean {
-        TODO("Not yet implemented")
+        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+            userId = userId,
+            projectCode = projectCode,
+            resourceCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            action = permission.value,
+            relationResourceType = null
+        ).data ?: false
     }
 
     fun createResourcesToV0(

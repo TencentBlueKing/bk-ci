@@ -221,7 +221,7 @@
                 ]
               },
               {
-                "id": "group",
+                "id": "quality_group",
                 "actions": [
                   {
                     "id": "quality_group_delete",

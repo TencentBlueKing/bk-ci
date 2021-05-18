@@ -1,8 +1,19 @@
 package com.tencent.devops.ticket
 
 import com.tencent.devops.auth.service.ManagerService
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthResourceApi
+import com.tencent.devops.common.auth.code.TicketAuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.ticket.dao.CertDao
+import com.tencent.devops.ticket.dao.CredentialDao
+import com.tencent.devops.ticket.service.CertPermissionServiceImpl
+import com.tencent.devops.ticket.service.CredentialPermissionServiceImpl
+import com.tencent.devops.ticket.service.TxV3CertPermissionServiceImpl
+import com.tencent.devops.ticket.service.TxV3CredentialPermissionServiceImpl
+import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -40,4 +51,64 @@ import org.springframework.core.Ordered
 class TicketConfiguration {
     @Bean
     fun managerService(client: Client) = ManagerService(client)
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
+    fun certPermissionServiceImpl(
+        authResourceApi: AuthResourceApi,
+        authPermissionApi: AuthPermissionApi,
+        ticketAuthServiceCode: TicketAuthServiceCode,
+        managerService: ManagerService,
+        certDao: CertDao,
+        dslContext: DSLContext
+    ) = CertPermissionServiceImpl(
+        authResourceApi = authResourceApi,
+        authPermissionApi = authPermissionApi,
+        ticketAuthServiceCode = ticketAuthServiceCode,
+        managerService = managerService,
+        certDao = certDao,
+        dslContext = dslContext
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
+    fun credentialPermissionServiceImpl(
+        authResourceApi: AuthResourceApi,
+        authPermissionApi: AuthPermissionApi,
+        ticketAuthServiceCode: TicketAuthServiceCode,
+        managerService: ManagerService,
+        credentialDao: CredentialDao,
+        dslContext: DSLContext
+    ) = CredentialPermissionServiceImpl(
+        authResourceApi = authResourceApi,
+        authPermissionApi = authPermissionApi,
+        ticketAuthServiceCode = ticketAuthServiceCode,
+        managerService = managerService,
+        credentialDao = credentialDao,
+        dslContext = dslContext
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
+    fun txV3CertPermissionServiceImpl(
+        client: Client,
+        certDao: CertDao,
+        dslContext: DSLContext
+    ) = TxV3CertPermissionServiceImpl(
+        client = client,
+        certDao = certDao,
+        dslContext = dslContext
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
+    fun txV3CredentialPermissionServiceImpl(
+        client: Client,
+        credentialDao: CredentialDao,
+        dslContext: DSLContext
+    ) = TxV3CredentialPermissionServiceImpl(
+        client = client,
+        credentialDao = credentialDao,
+        dslContext = dslContext
+    )
 }

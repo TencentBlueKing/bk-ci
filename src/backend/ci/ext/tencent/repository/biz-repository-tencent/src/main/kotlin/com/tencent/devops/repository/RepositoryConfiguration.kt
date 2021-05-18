@@ -1,8 +1,16 @@
 package com.tencent.devops.repository
 
 import com.tencent.devops.auth.service.ManagerService
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthResourceApi
+import com.tencent.devops.common.auth.code.CodeAuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.repository.dao.RepositoryDao
+import com.tencent.devops.repository.service.impl.RepositoryPermissionServiceImpl
+import com.tencent.devops.repository.service.impl.TxV3RepositoryPermissionServiceImpl
+import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -40,4 +48,36 @@ import org.springframework.core.Ordered
 class RepositoryConfiguration {
     @Bean
     fun managerService(client: Client) = ManagerService(client)
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
+    fun repositoryPermissionService(
+        authResourceApi: AuthResourceApi,
+        authPermissionApi: AuthPermissionApi,
+        codeAuthServiceCode: CodeAuthServiceCode,
+        managerService: ManagerService,
+        repositoryDao: RepositoryDao,
+        dslContext: DSLContext
+    ) = RepositoryPermissionServiceImpl(
+        authResourceApi = authResourceApi,
+        authPermissionApi = authPermissionApi,
+        codeAuthServiceCode = codeAuthServiceCode,
+        managerService = managerService,
+        repositoryDao = repositoryDao,
+        dslContext = dslContext
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
+    fun txRepositoryPermissionService(
+        managerService: ManagerService,
+        repositoryDao: RepositoryDao,
+        dslContext: DSLContext,
+        client: Client
+    ) = TxV3RepositoryPermissionServiceImpl(
+        managerService = managerService,
+        repositoryDao = repositoryDao,
+        dslContext = dslContext,
+        client = client
+    )
 }

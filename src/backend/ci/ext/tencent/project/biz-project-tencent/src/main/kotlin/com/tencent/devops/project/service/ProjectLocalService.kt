@@ -688,6 +688,10 @@ class ProjectLocalService @Autowired constructor(
         return roles
     }
 
+    fun updateRelationId(projectCode: String, relationId: String) {
+        projectDao.updateRelationByCode(dslContext, projectCode, relationId)
+    }
+
     private fun createPermission(
         userId: String,
         userList: List<String>?,

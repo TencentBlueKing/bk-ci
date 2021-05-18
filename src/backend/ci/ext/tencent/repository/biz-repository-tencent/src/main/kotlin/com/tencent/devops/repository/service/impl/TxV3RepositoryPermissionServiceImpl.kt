@@ -27,27 +27,23 @@
 
 package com.tencent.devops.repository.service.impl
 
+import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthPermissionApi
-import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.code.CodeAuthServiceCode
+import com.tencent.devops.common.auth.utils.TActionUtils
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.service.RepositoryPermissionService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.context.annotation.Primary
-import org.springframework.stereotype.Service
 
-class RepositoryPermissionServiceImpl @Autowired constructor(
-    private val authResourceApi: AuthResourceApi,
-    private val authPermissionApi: AuthPermissionApi,
-    private val codeAuthServiceCode: CodeAuthServiceCode,
+class TxV3RepositoryPermissionServiceImpl @Autowired constructor(
     private val managerService: ManagerService,
     private val repositoryDao: RepositoryDao,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val client: Client
 ) : RepositoryPermissionService {
 
     override fun validatePermission(
@@ -63,26 +59,31 @@ class RepositoryPermissionServiceImpl @Autowired constructor(
     }
 
     override fun filterRepository(userId: String, projectId: String, authPermission: AuthPermission): List<Long> {
+        val managerIds = mutableListOf<Long>()
         if (managerService.isManagerPermission(
                 userId = userId,
                 projectId = projectId,
                 authPermission = authPermission,
                 resourceType = AuthResourceType.CODE_REPERTORY
             )) {
-            val managerIds = mutableListOf<Long>()
             repositoryDao.listByProject(dslContext, projectId, null)
                 .map { managerIds.add(it.repositoryId.toLong()) }
             return managerIds
         }
 
-        val resourceCodeList = authPermissionApi.getUserResourceByPermission(
-            user = userId,
-            serviceCode = codeAuthServiceCode,
-            resourceType = AuthResourceType.CODE_REPERTORY,
+        val resourceCodeList = client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
+            userId = userId,
             projectCode = projectId,
-            permission = authPermission,
-            supplier = null
-        )
+            resourceType = AuthResourceType.CODE_REPERTORY.value,
+            action = buildRepertory(authPermission)
+        ).data ?: emptyList()
+
+        if (resourceCodeList.contains("*")) {
+            repositoryDao.listByProject(dslContext, projectId, null)
+                .map { managerIds.add(it.repositoryId.toLong()) }
+            return managerIds
+        }
+
         return resourceCodeList.map { it.toLong() }
     }
 
@@ -91,51 +92,40 @@ class RepositoryPermissionServiceImpl @Autowired constructor(
         projectId: String,
         authPermissions: Set<AuthPermission>
     ): Map<AuthPermission, List<Long>> {
+        val actions = mutableListOf<String>()
+        authPermissions.forEach {
+            actions.add(buildRepertory(it))
+        }
 
-        val permissionResourcesMap = authPermissionApi.getUserResourcesByPermissions(
-            user = userId,
-            serviceCode = codeAuthServiceCode,
-            resourceType = AuthResourceType.CODE_REPERTORY,
+        val permissionResourcesMap = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
+            userId = userId,
             projectCode = projectId,
-            permissions = authPermissions,
-            supplier = null
-        )
-        val managerIds = mutableListOf<String>()
-        repositoryDao.listByProject(dslContext, projectId, null)
-            .map { managerIds.add(it.repositoryId.toString()) }
+            action = actions,
+            resourceType = AuthResourceType.CODE_REPERTORY.value
+        ).data ?: emptyMap()
 
-        var isManager = false
-        val managerPermissionMap = mutableMapOf<AuthPermission, List<String>>()
-        permissionResourcesMap.keys.forEach {
-            if (managerService.isManagerPermission(
-                    userId = userId,
-                    projectId = projectId,
-                    authPermission = it,
-                    resourceType = AuthResourceType.CODE_REPERTORY
-                )) {
-                isManager = true
-                if (permissionResourcesMap[it] == null) {
-                    managerPermissionMap[it] = managerIds
-                } else {
-                    val collectionSet = mutableSetOf<String>()
-                    collectionSet.addAll(managerIds.toSet())
-                    collectionSet.addAll(permissionResourcesMap[it]!!.toSet())
-                    managerPermissionMap[it] = collectionSet.toList()
-                }
+        val projectRepositoryIds = repositoryDao.listByProject(dslContext, projectId, null)
+            .map { it.repositoryId }
+
+        val resultMap = mutableMapOf<AuthPermission, List<Long>>()
+
+        permissionResourcesMap.forEach { key, value ->
+            if (value.contains("*")) {
+                resultMap[key] = projectRepositoryIds
             } else {
-                managerPermissionMap[it] = permissionResourcesMap[it] ?: emptyList()
+                if (managerService.isManagerPermission(
+                        userId = userId,
+                        resourceType = AuthResourceType.CODE_REPERTORY,
+                        projectId = projectId,
+                        authPermission = key
+                )) {
+                    resultMap[key] = projectRepositoryIds
+                } else {
+                    resultMap[key] = value.map { it.toLong() }
+                }
             }
         }
-
-        if (isManager) {
-            return managerPermissionMap.mapValues {
-                it.value.map { id -> id.toLong() }
-            }
-        }
-
-        return permissionResourcesMap.mapValues {
-            it.value.map { id -> id.toLong() }
-        }
+        return resultMap
     }
 
     override fun hasPermission(
@@ -153,52 +143,32 @@ class RepositoryPermissionServiceImpl @Autowired constructor(
             return true
         }
 
-        if (repositoryId == null)
-            return authPermissionApi.validateUserResourcePermission(
-                user = userId,
-                serviceCode = codeAuthServiceCode,
-                resourceType = AuthResourceType.CODE_REPERTORY,
-                projectCode = projectId,
-                permission = authPermission
-            )
-        else
-            return authPermissionApi.validateUserResourcePermission(
-                user = userId,
-                serviceCode = codeAuthServiceCode,
-                resourceType = AuthResourceType.CODE_REPERTORY,
-                projectCode = projectId,
-                resourceCode = repositoryId.toString(),
-                permission = authPermission
-            )
+        val resourceCode = repositoryId?.toString() ?: projectId
+
+        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+            userId = userId,
+            projectCode = projectId,
+            resourceType = AuthResourceType.CODE_REPERTORY.toString(),
+            relationResourceType = null,
+            action = buildRepertory(authPermission),
+            resourceCode = resourceCode
+        ).data ?: false
     }
 
     override fun createResource(userId: String, projectId: String, repositoryId: Long, repositoryName: String) {
-        authResourceApi.createResource(
-            user = userId,
-            serviceCode = codeAuthServiceCode,
-            resourceType = AuthResourceType.CODE_REPERTORY,
-            projectCode = projectId,
-            resourceCode = repositoryId.toString(),
-            resourceName = repositoryName
-        )
+        // TODO
+        return
     }
 
     override fun editResource(projectId: String, repositoryId: Long, repositoryName: String) {
-        authResourceApi.modifyResource(
-            serviceCode = codeAuthServiceCode,
-            resourceType = AuthResourceType.CODE_REPERTORY,
-            projectCode = projectId,
-            resourceCode = repositoryId.toString(),
-            resourceName = repositoryName
-        )
+        return
     }
 
     override fun deleteResource(projectId: String, repositoryId: Long) {
-        authResourceApi.deleteResource(
-            serviceCode = codeAuthServiceCode,
-            resourceType = AuthResourceType.CODE_REPERTORY,
-            projectCode = projectId,
-            resourceCode = repositoryId.toString()
-        )
+        return
+    }
+
+    private fun buildRepertory(permission: AuthPermission): String {
+        return TActionUtils.buildAction(permission, AuthResourceType.CODE_REPERTORY)
     }
 }

@@ -309,4 +309,9 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
             projectId = projectCode
         ))
     }
+
+    override fun bindRelationSystem(projectCode: String, relationId: String): Result<Boolean> {
+        projectLocalService.updateRelationId(projectCode, relationId)
+        return Result(true)
+    }
 }
