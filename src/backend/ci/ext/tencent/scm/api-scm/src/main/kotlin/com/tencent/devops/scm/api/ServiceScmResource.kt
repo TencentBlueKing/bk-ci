@@ -116,7 +116,13 @@ interface ServiceScmResource {
         region: CodeSvnRegion?,
         @ApiParam("仓库对应的用户名", required = false)
         @QueryParam("userName")
-        userName: String?
+        userName: String?,
+        @ApiParam("搜索条件", required = false)
+        @QueryParam("search")
+        search: String? = null,
+        @ApiParam("是否拉取全部分支", required = false)
+        @QueryParam("full")
+        full: Boolean? = true
     ): Result<List<String>>
 
     @ApiOperation("List all the branches of repo")
@@ -137,7 +143,13 @@ interface ServiceScmResource {
         token: String,
         @ApiParam("仓库对应的用户名", required = true)
         @QueryParam("userName")
-        userName: String
+        userName: String,
+        @ApiParam("搜索条件", required = false)
+        @QueryParam("search")
+        search: String? = null,
+        @ApiParam("是否拉取全部分支", required = false)
+        @QueryParam("full")
+        full: Boolean? = true
     ): Result<List<String>>
 
     @ApiOperation("Check if the svn private key and passphrase legal")
