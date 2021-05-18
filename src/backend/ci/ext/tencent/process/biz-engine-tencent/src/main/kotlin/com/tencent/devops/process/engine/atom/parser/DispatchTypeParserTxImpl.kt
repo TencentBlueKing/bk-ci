@@ -148,14 +148,16 @@ class DispatchTypeParserTxImpl @Autowired constructor(
             val realCredentialId = EnvUtils.parseEnv(
                 command = dispatchType.credentialId!!,
                 data = buildVariableService.getAllVariable(buildId))
-            val ticketsMap = CommonUtils.getCredential(
-                client = client,
-                projectId = credentialProject,
-                credentialId = realCredentialId,
-                type = CredentialType.USERNAME_PASSWORD
-            )
-            user = ticketsMap["v1"] as String
-            password = ticketsMap["v2"] as String
+            if (realCredentialId.isNotEmpty()) {
+                val ticketsMap = CommonUtils.getCredential(
+                    client = client,
+                    projectId = credentialProject,
+                    credentialId = realCredentialId,
+                    type = CredentialType.USERNAME_PASSWORD
+                )
+                user = ticketsMap["v1"] as String
+                password = ticketsMap["v2"] as String
+            }
         }
         val credential = Credential(user, password)
         val pool = Pool(dispatchType.value, credential, null, true, dispatchType.performanceConfigId)
