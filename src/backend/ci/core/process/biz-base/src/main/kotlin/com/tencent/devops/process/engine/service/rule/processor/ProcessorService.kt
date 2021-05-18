@@ -25,16 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.setting
+package com.tencent.devops.process.engine.service.rule.processor
 
-import com.tencent.devops.common.pipeline.Model
-import io.swagger.annotations.ApiModelProperty
-import javax.validation.Valid
+interface ProcessorService {
 
-data class PipelineModelAndSetting(
-    @ApiModelProperty("流水线模型", required = true)
-    val model: Model,
-    @ApiModelProperty("流水线设置", required = false)
-    @field:Valid
-    val setting: PipelineSetting
-)
+    /**
+     * 根据规则名称获取规则值
+     * @param ruleName 规则名称
+     * @param pipelineId 流水线ID
+     * @param buildId 构建ID
+     * @return 具体规则值
+     */
+    fun getRuleValue(ruleName: String, pipelineId: String? = null, buildId: String? = null): String?
+}
