@@ -638,7 +638,7 @@
 
             routerAtoms (code) {
                 this.$router.push({
-                    name: 'overView',
+                    name: 'statisticData',
                     params: {
                         code,
                         type: 'atom'

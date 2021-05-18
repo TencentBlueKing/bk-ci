@@ -49,5 +49,6 @@ data class DispatchMessage(
     val containerId: String,
     val containerType: String,
     val stageId: String,
-    val dispatchType: DispatchType?
+    val dispatchType: DispatchType?,
+    val customBuildEnv: Map<String, String>? = null
 )

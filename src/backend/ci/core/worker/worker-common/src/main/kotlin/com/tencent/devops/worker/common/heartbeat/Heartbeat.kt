@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.constant.HTTP_500
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.worker.common.logger.LoggerService
-import com.tencent.devops.worker.common.service.ProcessService
+import com.tencent.devops.worker.common.service.EngineService
 import org.slf4j.LoggerFactory
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -54,7 +54,7 @@ object Heartbeat {
             if (running) {
                 try {
                     logger.info("Start to do the heartbeat")
-                    ProcessService.heartbeat()
+                    EngineService.heartbeat()
                     failCnt = 0
                 } catch (e: Exception) {
                     logger.warn("Fail to do the heartbeat", e)
@@ -76,7 +76,7 @@ object Heartbeat {
         executor.scheduleWithFixedDelay({
             if (running) {
                 LoggerService.addRedLine("Job timout: ${TimeUnit.MILLISECONDS.toMinutes(jobTimeoutMills)}min")
-                ProcessService.timeout()
+                EngineService.timeout()
                 exitProcess(99)
             }
         }, jobTimeoutMills, jobTimeoutMills, TimeUnit.MILLISECONDS)

@@ -56,7 +56,7 @@ class SystemDockerEnvGenerator @Autowired constructor(
 
         val hostIp = CommonUtils.getInnerIP()
         val gateway = DockerEnv.getGatway()
-        return listOf(
+        val envList = mutableListOf(
             Env(key = ENV_KEY_PROJECT_ID, value = dockerHostBuildInfo.projectId),
             Env(key = ENV_KEY_AGENT_ID, value = dockerHostBuildInfo.agentId),
             Env(key = ENV_KEY_AGENT_SECRET_KEY, value = dockerHostBuildInfo.secretKey),
@@ -66,7 +66,12 @@ class SystemDockerEnvGenerator @Autowired constructor(
             Env(key = "landun_env", value = dockerHostConfig.landunEnv ?: "prod"),
             Env(key = ENV_DOCKER_HOST_IP, value = hostIp),
             Env(key = ENV_DOCKER_HOST_PORT, value = commonConfig.serverPort.toString()),
-            Env(key = COMMON_DOCKER_SIGN, value = "docker")
-        )
+            Env(key = COMMON_DOCKER_SIGN, value = "docker"))
+
+        dockerHostBuildInfo.customBuildEnv?.forEach { k, v ->
+            envList.add(Env(key = k, value = v))
+        }
+
+        return envList
     }
 }
