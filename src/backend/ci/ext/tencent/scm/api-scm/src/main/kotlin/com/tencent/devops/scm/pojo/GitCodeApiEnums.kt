@@ -35,3 +35,13 @@ enum class GitCodeFileEncoding {
     @SerializedName("base64")
     BASE64
 }
+
+enum class GitCodeBranchesOrder(val value: String) {
+    NAME("name"),
+    UPDATE("update")
+}
+
+enum class GitCodeBranchesSort(val value: String) {
+    ASC("asc"),
+    DESC("desc")
+}

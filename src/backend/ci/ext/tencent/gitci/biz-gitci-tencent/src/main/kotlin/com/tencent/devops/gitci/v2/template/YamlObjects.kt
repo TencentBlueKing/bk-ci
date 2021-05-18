@@ -59,7 +59,7 @@ object YamlObjects {
             },
             timeoutMinutes = getNullValue("timeout-minutes", step)?.toInt(),
             continueOnError = getNullValue("continue-on-error", step)?.toBoolean(),
-            retryTimes = step["retry-times"]?.toString(),
+            retryTimes = getNullValue("retry-times", step)?.toInt(),
             env = step["env"]?.toString(),
             run = step["run"]?.toString(),
             checkout = step["checkout"]?.toString()

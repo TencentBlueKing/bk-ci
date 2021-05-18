@@ -32,6 +32,8 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitCiResource
+import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
+import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.services.GitCiService
 import com.tencent.devops.scm.services.GitService
 import org.springframework.beans.factory.annotation.Autowired
@@ -62,5 +64,17 @@ class ServiceGitCiResourceImpl @Autowired constructor(
         Int, search: String?
     ): Result<List<GitMember>> {
         return Result(gitCiService.getGitCIMembers(token, gitProjectId, page, pageSize, search))
+    }
+
+    override fun getBranches(
+        token: String,
+        gitProjectId: String,
+        page: Int,
+        pageSize: Int,
+        search: String?,
+        orderBy: GitCodeBranchesOrder?,
+        sort: GitCodeBranchesSort?
+    ): Result<List<String>> {
+        return Result(gitCiService.getBranch(token, gitProjectId, page, pageSize, search, orderBy, sort))
     }
 }

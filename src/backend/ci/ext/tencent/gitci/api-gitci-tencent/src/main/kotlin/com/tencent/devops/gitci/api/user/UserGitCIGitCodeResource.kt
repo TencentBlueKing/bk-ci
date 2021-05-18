@@ -34,6 +34,8 @@ import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.GitCICreateFile
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
+import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -128,4 +130,31 @@ interface UserGitCIGitCodeResource {
         @ApiParam(value = "创建文件内容")
         gitCICreateFile: GitCICreateFile
     ): Result<Boolean>
+
+    @ApiOperation("获取项目中的所有分支")
+    @GET
+    @Path("/projects/repository/branches")
+    fun getGitCodeBranches(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "蓝盾项目ID")
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam(value = "搜索条件，模糊匹配分支名")
+        @QueryParam("search")
+        search: String?,
+        @ApiParam(value = "页码", defaultValue = "1")
+        @QueryParam("page")
+        page: Int,
+        @ApiParam(value = "每页数量,最大100", defaultValue = "20")
+        @QueryParam("perPage")
+        perPage: Int,
+        @ApiParam(value = "返回列表的排序字段,可选可选字段:name、updated")
+        @QueryParam("orderBy")
+        orderBy: GitCodeBranchesOrder?,
+        @ApiParam(value = "返回列表的排序字段,可选可选字段:name、updated")
+        @QueryParam("sort")
+        sort: GitCodeBranchesSort?
+    ): Result<List<String>?>
 }

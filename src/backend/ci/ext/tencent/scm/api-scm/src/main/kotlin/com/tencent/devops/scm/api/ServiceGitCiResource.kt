@@ -30,6 +30,8 @@ package com.tencent.devops.scm.api
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
+import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -97,4 +99,31 @@ interface ServiceGitCiResource {
         @QueryParam("search")
         search: String?
     ): Result<List<GitMember>>
+
+    @ApiOperation("获取项目分支信息")
+    @GET
+    @Path("/getBranches")
+    fun getBranches(
+        @ApiParam("token", required = true)
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "项目ID或者全路径", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @ApiParam(value = "page", required = true)
+        @QueryParam("page")
+        page: Int = 1,
+        @ApiParam(value = "pageSize", required = true)
+        @QueryParam("pageSize")
+        pageSize: Int = 20,
+        @ApiParam(value = "搜索用户关键字", required = true)
+        @QueryParam("search")
+        search: String?,
+        @ApiParam(value = "返回列表的排序字段,可选可选字段:name、updated")
+        @QueryParam("orderBy")
+        orderBy: GitCodeBranchesOrder?,
+        @ApiParam(value = "返回列表的排序字段,可选可选字段:name、updated")
+        @QueryParam("sort")
+        sort: GitCodeBranchesSort?
+    ): Result<List<String>>
 }

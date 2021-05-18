@@ -38,6 +38,8 @@ import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.GitCICreateFile
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
+import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
@@ -108,6 +110,29 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
                 token = getToken(userId = userId),
                 gitProjectId = gitProjectId,
                 gitCICreateFile = gitCICreateFile
+            )
+        )
+    }
+
+    override fun getGitCodeBranches(
+        userId: String,
+        projectId: String,
+        search: String?,
+        page: Int,
+        perPage: Int,
+        orderBy: GitCodeBranchesOrder?,
+        sort: GitCodeBranchesSort?
+    ): Result<List<String>?> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId).toString()
+        return Result(
+            scmService.getProjectBranches(
+                token = getToken(userId = userId),
+                gitProjectId = gitProjectId,
+                page = page,
+                pageSize = perPage,
+                orderBy = orderBy,
+                sort = sort,
+                search = search
             )
         )
     }

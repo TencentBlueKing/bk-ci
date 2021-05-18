@@ -575,7 +575,7 @@ class TriggerBuildService @Autowired constructor(
                 }
                 step.checkout != null -> {
                     // checkout插件装配
-                    val inputMap = mutableMapOf<String, Any>()
+                    val inputMap = mutableMapOf<String, Any?>()
                     inputMap.putAll(step.with!!)
                     // 拉取本地工程代码
                     if (step.checkout == "self") {

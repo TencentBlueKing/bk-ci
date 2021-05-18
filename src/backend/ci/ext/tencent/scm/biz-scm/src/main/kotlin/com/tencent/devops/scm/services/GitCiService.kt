@@ -29,17 +29,24 @@ package com.tencent.devops.scm.services
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.google.gson.JsonParser
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.repository.pojo.git.GitMember
+import com.tencent.devops.scm.code.git.api.GitBranch
+import com.tencent.devops.scm.code.git.api.GitBranchCommit
 import com.tencent.devops.scm.code.git.api.GitOauthApi
 import com.tencent.devops.scm.pojo.Commit
+import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
+import com.tencent.devops.scm.pojo.GitCodeBranchesSort
+import io.swagger.annotations.ApiParam
 import okhttp3.Request
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.net.URLEncoder
+import javax.ws.rs.QueryParam
 
 @Service
 class GitCiService {
@@ -85,5 +92,53 @@ class GitCiService {
             if (!it.isSuccessful) throw RuntimeException("fail to get the git projects members with: $url($data)")
             return JsonUtil.to(data, object : TypeReference<List<GitMember>>() {})
         }
+    }
+
+    fun getBranch(
+        token: String,
+        gitProjectId: String,
+        page: Int,
+        pageSize: Int,
+        search: String?,
+        orderBy: GitCodeBranchesOrder?,
+        sort: GitCodeBranchesSort?
+    ): List<String> {
+        val url = "${gitCIUrl}/projects/${URLEncoder.encode(gitProjectId, "utf-8")}" +
+                "/repository/branches?access_token=$token&page=$page&per_page=$pageSize" +
+                if (search != null) {
+                    "&search=$search"
+                } else {
+                    ""
+                } +
+                if (orderBy != null) {
+                    "&order_by=${orderBy.value}"
+                } else {
+                    ""
+                } +
+                if (sort != null) {
+                    "&sort=${sort.value}"
+                } else {
+                    ""
+                }
+        val res = mutableListOf<String>()
+        val request = Request.Builder()
+            .url(url)
+            .get()
+            .build()
+
+        OkhttpUtils.doHttp(request).use { response ->
+            val data = response.body()?.string() ?: return@use
+            val branList = JsonParser.parseString(data).asJsonArray
+            if (!branList.isJsonNull) {
+                branList.forEach {
+                    val branch = it.asJsonObject
+                    if (branch.isJsonNull) {
+                        return@forEach
+                    }
+                    res.add(if (branch["name"].isJsonNull) "" else branch["name"].asString)
+                }
+            }
+        }
+        return res
     }
 }

@@ -35,6 +35,8 @@ import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.GitCICreateFile
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
+import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -122,6 +124,19 @@ class ScmService @Autowired constructor(
         search: String?
     ): List<GitMember>? {
         return client.getScm(ServiceGitCiResource::class).getMembers(token, gitProjectId, page, pageSize, search).data
+    }
+
+    fun getProjectBranches(
+        token: String,
+        gitProjectId: String,
+        page: Int,
+        pageSize: Int,
+        search: String?,
+        orderBy: GitCodeBranchesOrder?,
+        sort: GitCodeBranchesSort?
+    ): List<String>? {
+        return client.getScm(ServiceGitCiResource::class)
+            .getBranches(token, gitProjectId, page, pageSize, search, orderBy, sort).data
     }
 
     // 获取项目ID，兼容没有source字段的旧数据，和fork库中源项目id不同的情况
