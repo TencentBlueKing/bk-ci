@@ -81,6 +81,21 @@ class PipelineContextService@Autowired constructor(
             }
         }
 
+        varMap["ci.pipeline_name"] = modelDetail.pipelineName
+        varMap["ci.actor"] = modelDetail.userId
+        varMap["ci.build_url"] = "https://git-ci.woa.com/" // FIXME
+        varMap["ci.ref"] = buildVar["ci.ref"] ?: ""
+        varMap["ci.head_ref"] = buildVar["ci.head_ref"] ?: ""
+        varMap["ci.base_ref"] = buildVar["ci.base_ref"] ?: ""
+        varMap["ci.repo"] = buildVar["ci.repo"] ?: ""
+        varMap["ci.repo_name"] = buildVar["ci.repo_name"] ?: ""
+        varMap["ci.repo_group"] = buildVar["ci.repo_group"] ?: ""
+        varMap["ci.event"] = buildVar["ci.event"] ?: ""
+        varMap["ci.event_content"] = buildVar["ci.event_content"] ?: ""
+        varMap["ci.sha"] = buildVar["ci.sha"] ?: ""
+        varMap["ci.sha_short"] = buildVar["ci.sha_short"] ?: ""
+        varMap["ci.commit_message"] = buildVar["ci.commit_message"] ?: ""
+
         return varMap
     }
 
