@@ -35,6 +35,7 @@ import com.tencent.devops.common.log.Ansi
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
 import com.tencent.devops.worker.common.Runner
 import com.tencent.devops.worker.common.SLAVE_AGENT_START_FILE
+import com.tencent.devops.worker.common.WORKSPACE_CONTEXT
 import com.tencent.devops.worker.common.WorkspaceInterface
 import com.tencent.devops.worker.common.api.utils.ThirdPartyAgentBuildInfoUtils
 import com.tencent.devops.worker.common.exception.PropertyNotExistException
