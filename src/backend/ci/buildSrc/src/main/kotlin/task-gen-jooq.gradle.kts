@@ -98,6 +98,7 @@ jooq {
                         database.apply {
                             name = "org.jooq.meta.mysql.MySQLDatabase"
                             inputSchema = databaseName
+                            withIncludeRoutines(false) // 兼容"denied to user for table 'proc'"错误
                         }
 
                         strategy.name = "org.jooq.codegen.DefaultGeneratorStrategy"
