@@ -44,18 +44,14 @@ import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
-import com.tencent.devops.common.service.gray.RepoGray
-import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
-import com.tencent.devops.project.pojo.AuthProjectForList
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
-import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.tof.Response
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectPaasCCService
@@ -64,13 +60,13 @@ import com.tencent.devops.project.service.s3.S3Service
 import com.tencent.devops.project.service.tof.TOFService
 import com.tencent.devops.project.util.ImageUtil
 import com.tencent.devops.project.util.ProjectUtils
+import jdk.nashorn.internal.AssertsEnabled
 import okhttp3.Request
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.io.File
-import java.util.ArrayList
 
 @Service
 class TxProjectServiceImpl @Autowired constructor(
@@ -80,7 +76,6 @@ class TxProjectServiceImpl @Autowired constructor(
     private val s3Service: S3Service,
     private val tofService: TOFService,
     private val bkRepoClient: BkRepoClient,
-    private val repoGray: RepoGray,
     private val projectPaasCCService: ProjectPaasCCService,
     private val bkAuthProperties: BkAuthProperties,
     private val bsAuthProjectApi: AuthProjectApi,
@@ -127,7 +122,7 @@ class TxProjectServiceImpl @Autowired constructor(
         return projectVO
     }
 
-    override fun list(userId: String, accessToken: String?): List<ProjectVO> {
+    override fun list(userId: String, accessToken: String?, enabled: Boolean?): List<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         try {
 
@@ -137,7 +132,7 @@ class TxProjectServiceImpl @Autowired constructor(
             }
             logger.info("项目列表：$projects")
             val list = ArrayList<ProjectVO>()
-            projectDao.list(dslContext, projects).map {
+            projectDao.list(dslContext, projects, enabled).map {
                 list.add(ProjectUtils.packagingBean(it, grayProjectSet()))
             }
             return list
@@ -171,39 +166,41 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     override fun deleteAuth(projectId: String, accessToken: String?) {
-        logger.warn("Deleting the project $projectId from auth")
-        try {
-            val url = "$authUrl/$projectId?access_token=$accessToken"
-            val request = Request.Builder().url(url).delete().build()
-            val responseContent = request(request, "Fail to delete the project $projectId")
-            logger.info("Get the delete project $projectId response $responseContent")
-            val response: Response<Any?> = objectMapper.readValue(responseContent)
-            if (response.code.toInt() != 0) {
-                logger.warn("Fail to delete the project $projectId with response $responseContent")
-            }
-            logger.info("Finish deleting the project $projectId from auth")
-        } catch (t: Throwable) {
-            logger.warn("Fail to delete the project $projectId from auth", t)
-        }
+//        logger.warn("Deleting the project $projectId from auth")
+//        try {
+//            val url = "$authUrl/$projectId?access_token=$accessToken"
+//            val request = Request.Builder().url(url).delete().build()
+//            val responseContent = request(request, "Fail to delete the project $projectId")
+//            logger.info("Get the delete project $projectId response $responseContent")
+//            val response: Response<Any?> = objectMapper.readValue(responseContent)
+//            if (response.code.toInt() != 0) {
+//                logger.warn("Fail to delete the project $projectId with response $responseContent")
+//            }
+//            logger.info("Finish deleting the project $projectId from auth")
+//        } catch (t: Throwable) {
+//            logger.warn("Fail to delete the project $projectId from auth", t)
+//        }
+        projectPermissionService.deleteResource(projectId)
     }
 
     override fun getProjectFromAuth(userId: String?, accessToken: String?): List<String> {
-        val url = "$authUrl?access_token=$accessToken"
-        logger.info("Start to get auth projects - ($url)")
-        val request = Request.Builder().url(url).get().build()
-        val responseContent = request(request, MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_QUERY_ERROR))
-        val result = objectMapper.readValue<Result<ArrayList<AuthProjectForList>>>(responseContent)
-        if (result.isNotOk()) {
-            logger.warn("Fail to get the project info with response $responseContent")
-            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_QUERY_ERROR))
-        }
-        if (result.data == null) {
-            return emptyList()
-        }
-
-        return result.data!!.map {
-            it.project_id
-        }
+//        val url = "$authUrl?access_token=$accessToken"
+//        logger.info("Start to get auth projects - ($url)")
+//        val request = Request.Builder().url(url).get().build()
+//        val responseContent = request(request, MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_QUERY_ERROR))
+//        val result = objectMapper.readValue<Result<ArrayList<AuthProjectForList>>>(responseContent)
+//        if (result.isNotOk()) {
+//            logger.warn("Fail to get the project info with response $responseContent")
+//            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_QUERY_ERROR))
+//        }
+//        if (result.data == null) {
+//            return emptyList()
+//        }
+//
+//        return result.data!!.map {
+//            it.project_id
+//        }
+        return projectPermissionService.getUserProjects(userId!!)
     }
 
     override fun updateInfoReplace(projectUpdateInfo: ProjectUpdateInfo) {
@@ -243,6 +240,11 @@ class TxProjectServiceImpl @Autowired constructor(
 
     override fun modifyProjectAuthResource(projectCode: String, projectName: String) {
         return
+    }
+
+    override fun createProjectUser(projectId: String, createInfo: ProjectCreateUserInfo): Boolean {
+        // TODO: V0,V3有不同实现
+        return false
     }
 
     fun getInfoByEnglishName(englishName: String): ProjectVO? {
