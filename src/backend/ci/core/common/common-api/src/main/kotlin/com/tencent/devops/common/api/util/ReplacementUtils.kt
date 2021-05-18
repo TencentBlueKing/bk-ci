@@ -52,7 +52,7 @@ object ReplacementUtils {
                 // 先处理${} 单个花括号的情况
                 val lineTmp = parseTemplate(line, replacement)
                 // 再处理${{}} 双花括号的情况
-                parseWithDoubleCurlyBraces(lineTmp, replacement, contextMap)
+                parseWithDoubleCurlyBraces(lineTmp, contextMap)
             }
             sb.append(template)
             if (index != lines.size - 1) {
@@ -84,7 +84,6 @@ object ReplacementUtils {
 
     private fun parseWithDoubleCurlyBraces(
         command: String,
-        replacement: KeyReplacement,
         contextMap: Map<String, String>? = emptyMap()
     ): String {
         if (command.isBlank()) {
@@ -96,7 +95,7 @@ object ReplacementUtils {
             val c = command[index]
             if (checkPrefix(c, index, command)) {
                 val inside = StringBuilder()
-                index = parseVariableWithDoubleCurlyBraces(command, index + 3, inside, replacement, contextMap)
+                index = parseVariableWithDoubleCurlyBraces(command, index + 3, inside, contextMap)
                 newValue.append(inside)
             } else {
                 newValue.append(c)
@@ -132,11 +131,16 @@ object ReplacementUtils {
         command: String,
         start: Int,
         newValue: StringBuilder,
-        replacement: KeyReplacement,
         contextMap: Map<String, String>? = emptyMap()
     ): Int {
         val token = StringBuilder()
         var index = start
+        val replacement = object : KeyReplacement {
+            override fun getReplacement(key: String): String? {
+                return contextMap?.get(key) ?: "\${{$key}}"
+            }
+        }
+
         while (index < command.length) {
             val c = command[index]
             if (checkPrefix(c, index, command)) {
