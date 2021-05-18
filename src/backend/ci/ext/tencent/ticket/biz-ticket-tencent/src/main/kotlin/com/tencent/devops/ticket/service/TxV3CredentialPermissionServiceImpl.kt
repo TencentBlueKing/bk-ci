@@ -28,6 +28,7 @@
 package com.tencent.devops.ticket.service
 
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
+import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -42,7 +43,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class TxV3CredentialPermissionServiceImpl @Autowired constructor(
     val client: Client,
     val credentialDao: CredentialDao,
-    val dslContext: DSLContext
+    val dslContext: DSLContext,
+    val managerService: ManagerService
 ) : CredentialPermissionService {
 
     override fun validatePermission(
@@ -69,6 +71,9 @@ class TxV3CredentialPermissionServiceImpl @Autowired constructor(
     }
 
     override fun validatePermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
+        if (managerCheck(userId, projectId, authPermission)) {
+            return true
+        }
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             userId = userId,
             projectCode = projectId,
@@ -85,6 +90,9 @@ class TxV3CredentialPermissionServiceImpl @Autowired constructor(
         resourceCode: String,
         authPermission: AuthPermission
     ): Boolean {
+        if (managerCheck(userId, projectId, authPermission)) {
+            return true
+        }
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             userId = userId,
             projectCode = projectId,
@@ -145,6 +153,7 @@ class TxV3CredentialPermissionServiceImpl @Autowired constructor(
         authGroupList: List<BkAuthGroup>?
     ) {
         // TODO
+        return
     }
 
     override fun deleteResource(projectId: String, credentialId: String) {
@@ -161,6 +170,18 @@ class TxV3CredentialPermissionServiceImpl @Autowired constructor(
 
     private fun buildCredentialAction(permission: AuthPermission) : String {
         return TActionUtils.buildAction(permission, AuthResourceType.TICKET_CREDENTIAL)
+    }
+
+    private fun managerCheck(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
+        if (managerService.isManagerPermission(
+                userId = userId,
+                projectId = projectId,
+                authPermission = authPermission,
+                resourceType = AuthResourceType.TICKET_CREDENTIAL
+            )) {
+            return true
+        }
+        return false
     }
 
     companion object {

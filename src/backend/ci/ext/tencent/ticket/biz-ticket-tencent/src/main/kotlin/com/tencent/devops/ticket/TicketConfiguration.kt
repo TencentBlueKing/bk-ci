@@ -93,11 +93,13 @@ class TicketConfiguration {
     fun txV3CertPermissionServiceImpl(
         client: Client,
         certDao: CertDao,
-        dslContext: DSLContext
+        dslContext: DSLContext,
+        managerService: ManagerService
     ) = TxV3CertPermissionServiceImpl(
         client = client,
         certDao = certDao,
-        dslContext = dslContext
+        dslContext = dslContext,
+        managerService = managerService
     )
 
     @Bean
@@ -105,10 +107,12 @@ class TicketConfiguration {
     fun txV3CredentialPermissionServiceImpl(
         client: Client,
         credentialDao: CredentialDao,
-        dslContext: DSLContext
+        dslContext: DSLContext,
+        managerService: ManagerService
     ) = TxV3CredentialPermissionServiceImpl(
         client = client,
         credentialDao = credentialDao,
-        dslContext = dslContext
+        dslContext = dslContext,
+        managerService = managerService
     )
 }

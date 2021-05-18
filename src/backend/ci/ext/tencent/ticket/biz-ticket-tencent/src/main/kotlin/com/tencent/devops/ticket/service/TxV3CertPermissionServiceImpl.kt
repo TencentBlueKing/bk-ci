@@ -1,6 +1,7 @@
 package com.tencent.devops.ticket.service
 
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
+import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -14,7 +15,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class TxV3CertPermissionServiceImpl @Autowired constructor(
     val client: Client,
     val certDao: CertDao,
-    val dslContext: DSLContext
+    val dslContext: DSLContext,
+    val managerService: ManagerService
 ): CertPermissionService {
     override fun validatePermission(
         userId: String,
@@ -52,6 +54,9 @@ class TxV3CertPermissionServiceImpl @Autowired constructor(
         projectId: String,
         authPermission: AuthPermission
     ): Boolean {
+        if (managerCheck(userId, projectId, authPermission)) {
+            return true
+        }
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             userId = userId,
             projectCode = projectId,
@@ -68,6 +73,9 @@ class TxV3CertPermissionServiceImpl @Autowired constructor(
         resourceCode: String,
         authPermission: AuthPermission
     ): Boolean {
+        if (managerCheck(userId, projectId, authPermission)) {
+            return true
+        }
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             userId = userId,
             projectCode = projectId,
@@ -142,6 +150,18 @@ class TxV3CertPermissionServiceImpl @Autowired constructor(
             idList.add(it.certId)
         }
         return idList
+    }
+
+    private fun managerCheck(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
+        if (managerService.isManagerPermission(
+                userId = userId,
+                projectId = projectId,
+                authPermission = authPermission,
+                resourceType = AuthResourceType.TICKET_CERT
+            )) {
+            return true
+        }
+        return false
     }
 
     companion object {

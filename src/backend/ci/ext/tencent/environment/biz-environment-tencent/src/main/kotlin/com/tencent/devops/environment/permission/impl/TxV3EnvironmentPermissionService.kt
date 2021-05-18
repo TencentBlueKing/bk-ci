@@ -28,21 +28,15 @@
 package com.tencent.devops.environment.permission.impl
 
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
+import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.api.util.OwnerUtils
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthPermissionApi
-import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.code.EnvironmentAuthServiceCode
 import com.tencent.devops.common.auth.utils.TActionUtils
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.NodeDao
-import com.tencent.devops.environment.permission.AbstractEnvironmentPermissionService
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
-import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 
@@ -50,7 +44,8 @@ class TxV3EnvironmentPermissionService constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val envDao: EnvDao,
-    private val nodeDao: NodeDao
+    private val nodeDao: NodeDao,
+    private val managerService: ManagerService
 ) : EnvironmentPermissionService {
 
     override fun checkEnvPermission(
@@ -59,6 +54,15 @@ class TxV3EnvironmentPermissionService constructor(
         envId: Long,
         permission: AuthPermission
     ): Boolean {
+        if (managerService.isManagerPermission(
+                userId = userId,
+                projectId = projectId,
+                authPermission = permission,
+                resourceType = AuthResourceType.ENVIRONMENT_ENVIRONMENT
+        )) {
+            return true
+        }
+
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             userId = userId,
             projectCode = projectId,
@@ -70,6 +74,14 @@ class TxV3EnvironmentPermissionService constructor(
     }
 
     override fun checkEnvPermission(userId: String, projectId: String, permission: AuthPermission): Boolean {
+        if (managerService.isManagerPermission(
+                userId = userId,
+                projectId = projectId,
+                authPermission = permission,
+                resourceType = AuthResourceType.ENVIRONMENT_ENVIRONMENT
+            )) {
+            return true
+        }
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             userId = userId,
             projectCode = projectId,
@@ -86,6 +98,14 @@ class TxV3EnvironmentPermissionService constructor(
         nodeId: Long,
         permission: AuthPermission
     ): Boolean {
+        if (managerService.isManagerPermission(
+                userId = userId,
+                projectId = projectId,
+                authPermission = permission,
+                resourceType = AuthResourceType.ENVIRONMENT_ENV_NODE
+            )) {
+            return true
+        }
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             userId = userId,
             projectCode = projectId,
@@ -97,6 +117,14 @@ class TxV3EnvironmentPermissionService constructor(
     }
 
     override fun checkNodePermission(userId: String, projectId: String, permission: AuthPermission): Boolean {
+        if (managerService.isManagerPermission(
+                userId = userId,
+                projectId = projectId,
+                authPermission = permission,
+                resourceType = AuthResourceType.ENVIRONMENT_ENV_NODE
+            )) {
+            return true
+        }
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             userId = userId,
             projectCode = projectId,

@@ -28,6 +28,7 @@
 
 package com.tencent.devops.process.permission
 
+import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
@@ -45,7 +46,8 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
     val authProjectApi: AuthProjectApi,
     val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
     val dslContext: DSLContext,
-    val pipelineInfoDao: PipelineInfoDao
+    val pipelineInfoDao: PipelineInfoDao,
+    val managerService: ManagerService
 ) : PipelinePermissionService {
     // TODO: 为解决pipelineId较长的问题，此处校验时需将pipelineId转为Id, 获取实例时,需将ID转化为pipelineId
 

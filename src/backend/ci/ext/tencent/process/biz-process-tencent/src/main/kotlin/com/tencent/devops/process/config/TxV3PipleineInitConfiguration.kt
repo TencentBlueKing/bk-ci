@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.config
 
+import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.auth.api.v3.TxV3BSAuthProjectApi
 import com.tencent.devops.common.auth.api.v3.TxV3BsAuthPermissionApi
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
@@ -53,13 +54,15 @@ class TxV3PipleineInitConfiguration {
         txV3BSAuthProjectApi: TxV3BSAuthProjectApi,
         bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
         dslContext: DSLContext,
-        pipelineInfoDao: PipelineInfoDao
+        pipelineInfoDao: PipelineInfoDao,
+        managerService: ManagerService
     ): PipelinePermissionService =
         V3PipelinePermissionServiceImpl(
             authPermissionApi = txV3BsAuthPermission,
             authProjectApi = txV3BSAuthProjectApi,
             bsPipelineAuthServiceCode = bsPipelineAuthServiceCode,
             dslContext = dslContext,
-            pipelineInfoDao = pipelineInfoDao
+            pipelineInfoDao = pipelineInfoDao,
+            managerService = managerService
         )
 }

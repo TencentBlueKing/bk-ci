@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.common.auth.api.BkAuthProperties
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.impl.TxV3ProjectPermissionServiceImpl
@@ -51,10 +52,12 @@ class TxV3ProjectInitConfiguration {
     fun projectPermissionService(
         objectMapper: ObjectMapper,
         bkAuthProperties: BkAuthProperties,
-        projectDispatcher: ProjectDispatcher
+        projectDispatcher: ProjectDispatcher,
+        client: Client
     ): ProjectPermissionService = TxV3ProjectPermissionServiceImpl(
         objectMapper = objectMapper,
         authProperties = bkAuthProperties,
-        projectDispatcher = projectDispatcher
+        projectDispatcher = projectDispatcher,
+        client = client
     )
 }

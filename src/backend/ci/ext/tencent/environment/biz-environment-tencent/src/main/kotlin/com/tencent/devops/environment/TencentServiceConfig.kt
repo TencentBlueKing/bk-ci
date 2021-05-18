@@ -83,11 +83,13 @@ class TencentServiceConfig {
         client: Client,
         envDao: EnvDao,
         nodeDao: NodeDao,
-        dslContext: DSLContext
+        dslContext: DSLContext,
+        managerService: ManagerService
     ) = TxV3EnvironmentPermissionService(
         client = client,
         envDao = envDao,
         nodeDao = nodeDao,
-        dslContext = dslContext
+        dslContext = dslContext,
+        managerService = managerService
     )
 }
