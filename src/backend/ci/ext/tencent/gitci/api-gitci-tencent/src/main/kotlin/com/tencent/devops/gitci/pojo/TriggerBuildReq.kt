@@ -35,15 +35,15 @@ data class TriggerBuildReq(
     @ApiModelProperty("工蜂项目ID")
     override val gitProjectId: Long,
     @ApiModelProperty("工蜂项目名")
-    override val name: String,
+    override val name: String?,
     @ApiModelProperty("工蜂项目url")
-    override val url: String,
+    override val url: String?,
     @ApiModelProperty("homepage")
-    override val homepage: String,
+    override val homepage: String?,
     @ApiModelProperty("gitHttpUrl")
-    override val gitHttpUrl: String,
+    override val gitHttpUrl: String?,
     @ApiModelProperty("gitSshUrl")
-    override val gitSshUrl: String,
+    override val gitSshUrl: String?,
     @ApiModelProperty("分支")
     val branch: String,
     @ApiModelProperty("Custom commit message")
@@ -60,16 +60,6 @@ data class TriggerBuildReq(
 data class V2TriggerBuildReq(
     @ApiModelProperty("蓝盾项目ID")
     val projectId: String,
-    @ApiModelProperty("工蜂项目名")
-    val name: String,
-    @ApiModelProperty("工蜂项目url")
-    val url: String,
-    @ApiModelProperty("homepage")
-    val homepage: String,
-    @ApiModelProperty("gitHttpUrl")
-    val gitHttpUrl: String,
-    @ApiModelProperty("gitSshUrl")
-    val gitSshUrl: String,
     @ApiModelProperty("分支")
     val branch: String,
     @ApiModelProperty("Custom commit message")

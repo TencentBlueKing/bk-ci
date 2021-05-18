@@ -62,11 +62,11 @@ class UserGitCITriggerResourceImpl @Autowired constructor(
         val new = with(triggerBuildReq) {
             TriggerBuildReq(
                 gitProjectId = gitProjectId,
-                name = name,
-                url = url,
-                homepage = homepage,
-                gitHttpUrl = gitHttpUrl,
-                gitSshUrl = gitSshUrl,
+                name = null,
+                url = null,
+                homepage = null,
+                gitHttpUrl = null,
+                gitSshUrl = null,
                 branch = branch,
                 customCommitMsg = customCommitMsg,
                 yaml = yaml,
