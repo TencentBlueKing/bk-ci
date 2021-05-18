@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildHistoryWithVars
 import com.tencent.devops.process.pojo.BuildId
@@ -230,7 +231,9 @@ interface ApigwBuildResourceV3 {
         stageId: String,
         @ApiParam("取消执行", required = false)
         @QueryParam("cancel")
-        cancel: Boolean?
+        cancel: Boolean?,
+        @ApiParam("审核请求体", required = false)
+        reviewRequest: StageReviewRequest? = null
     ): Result<Boolean>
 
     @ApiOperation("获取构建中的变量值")
