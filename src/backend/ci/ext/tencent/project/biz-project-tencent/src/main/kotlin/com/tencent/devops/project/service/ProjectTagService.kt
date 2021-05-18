@@ -40,6 +40,7 @@ import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectTagDao
 import com.tencent.devops.project.pojo.ProjectExtSystemTagDTO
+import com.tencent.devops.project.pojo.enums.SystemEnums
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -188,9 +189,9 @@ class ProjectTagService @Autowired constructor(
                 projectCode = it.englishName,
                 routerTag = JsonUtil.toJson(newRouteMap)
             )
-            if (extSystemTag.system == "codecc") {
+            if (extSystemTag.system == SystemEnums.CODECC.name) {
                 redisOperation.hset(PROJECT_TAG_CODECC_REDIS_KEY, it.englishName, extSystemTag.routerTag)
-            } else if (extSystemTag.system == "repo") {
+            } else if (extSystemTag.system == SystemEnums.REPO.name) {
                 redisOperation.hset(PROJECT_TAG_REPO_REDIS_KEY, it.englishName, extSystemTag.routerTag)
             }
         }
