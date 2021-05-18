@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.worker.common.CI_TOKEN_CONTEXT
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.engine.EngineBuildSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
@@ -65,7 +66,7 @@ object EngineService {
                 vmName = ret.vmName,
                 projectId = ret.projectId,
                 pipelineId = ret.pipelineId,
-                variables = ret.variables.plus(mapOf("ci.token" to ciToken)),
+                variables = ret.variables.plus(mapOf(CI_TOKEN_CONTEXT to ciToken)),
                 buildEnvs = ret.buildEnvs,
                 containerId = ret.containerId,
                 containerHashId = ret.containerHashId,
