@@ -189,9 +189,13 @@ class ExperienceBaseService @Autowired constructor(
     fun isPublic(experienceId: Long) =
         experiencePublicDao.countByRecordId(dslContext, experienceId)?.value1() ?: 0 > 0
 
-    fun isPrivate(experienceId: Long): Boolean {
+    fun isPrivate(experienceId: Long, isOuter: Boolean = false): Boolean {
         return experienceGroupDao.listGroupIdsByRecordId(dslContext, experienceId)
-            .filterNot { it.value1() == ExperienceConstant.PUBLIC_GROUP }.count() > 0
+            .filterNot { it.value1() == ExperienceConstant.PUBLIC_GROUP }.count() > 0 ||
+                (if (isOuter) experienceOuterDao.countByRecordId(
+                    dslContext,
+                    experienceId
+                ) else experienceInnerDao.countByRecordId(dslContext, experienceId)) > 0
     }
 
     fun isInPrivate(experienceId: Long, userId: String, isOuter: Boolean = false): Boolean {
