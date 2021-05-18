@@ -59,7 +59,8 @@ class AppAppVersionResourceImpl @Autowired constructor(
                 "version" to (appVersion ?: "1.0.0"),
                 "userId" to userId,
                 "organization" to (organization ?: "inner"),
-                "timestamp" to System.currentTimeMillis()
+                "timestamp" to System.currentTimeMillis(),
+                "channelType" to channelType
             )
             kafkaClient.send(BK_CI_APP_LOGIN_TOPIC, JsonUtil.toJson(logData))
         } catch (e: Exception) {
