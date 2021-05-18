@@ -117,7 +117,11 @@ class UserGitCITriggerResourceImpl @Autowired constructor(
     ): Result<String?> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId, gitProjectId)
-        val ref = commitId ?: branchName
+        val ref = if (commitId.isNullOrBlank()) {
+            branchName
+        } else {
+            commitId
+        }
         return Result(gitCIV2PipelineService.getYamlByPipeline(gitProjectId, pipelineId, ref))
     }
 
