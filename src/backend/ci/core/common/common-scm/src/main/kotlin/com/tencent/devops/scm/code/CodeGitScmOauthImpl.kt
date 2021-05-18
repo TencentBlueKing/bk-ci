@@ -135,7 +135,7 @@ class CodeGitScmOauthImpl constructor(
 
         // Check if token legal
         try {
-            getBranches()
+            getBranches(full = false)
         } catch (ignored: Throwable) {
             logger.warn("Fail to list all branches", ignored)
             throw ScmException(
