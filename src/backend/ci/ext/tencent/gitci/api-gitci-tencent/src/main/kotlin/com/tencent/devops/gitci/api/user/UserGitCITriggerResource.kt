@@ -114,10 +114,10 @@ interface UserGitCITriggerResource {
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String,
-        @ApiParam("分支名称", required = true)
+        @ApiParam("分支名称", required = false)
         @QueryParam("branchName")
         branchName: String?,
-        @ApiParam("COMMIT_ID", required = true)
+        @ApiParam("COMMIT_ID", required = false)
         @QueryParam("commitId")
         commitId: String?
     ): Result<String?>
