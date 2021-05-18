@@ -112,15 +112,12 @@ class UserGitCITriggerResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        branchName: String?,
+        branchName: String,
         commitId: String?
     ): Result<String?> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId, gitProjectId)
-        if ((branchName == null && commitId == null) || (branchName != null && commitId != null)) {
-            throw InvalidParamException("branchName or commitId userId")
-        }
-        val ref = branchName ?: commitId!!
+        val ref = commitId ?: branchName
         return Result(gitCIV2PipelineService.getYamlByPipeline(gitProjectId, pipelineId, ref))
     }
 

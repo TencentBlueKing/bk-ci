@@ -116,7 +116,7 @@ interface UserGitCITriggerResource {
         pipelineId: String,
         @ApiParam("分支名称", required = false)
         @QueryParam("branchName")
-        branchName: String?,
+        branchName: String,
         @ApiParam("COMMIT_ID", required = false)
         @QueryParam("commitId")
         commitId: String?
