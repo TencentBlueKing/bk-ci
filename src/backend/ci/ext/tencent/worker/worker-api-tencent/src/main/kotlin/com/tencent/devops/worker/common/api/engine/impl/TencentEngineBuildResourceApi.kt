@@ -49,14 +49,18 @@ class TencentEngineBuildResourceApi : EngineBuildResourceApi(), EngineBuildSDKAp
     }
 
     override fun getCiToken(): String {
-        val projectId = AgentEnv.getProjectId()
-        if (projectId.startsWith("git_")) {
-            val gitProjectId = projectId.removePrefix("git_")
-            val url = "/ms/repository/api/build/gitci/getToken?gitProjectId=$gitProjectId"
-            val request = buildGet(url)
-            val responseContent = request(request, "获取工蜂CI项目Token失败！")
-            val gitToken = objectMapper.readValue<Result<GitToken>>(responseContent)
-            return gitToken.data?.accessToken ?: ""
+        try {
+            val projectId = AgentEnv.getProjectId()
+            if (projectId.startsWith("git_")) {
+                val gitProjectId = projectId.removePrefix("git_")
+                val url = "/ms/repository/api/build/gitci/getToken?gitProjectId=$gitProjectId"
+                val request = buildGet(url)
+                val responseContent = request(request, "获取工蜂CI项目Token失败！")
+                val gitToken = objectMapper.readValue<Result<GitToken>>(responseContent)
+                return gitToken.data?.accessToken ?: ""
+            }
+        } catch (e: Exception) {
+            logger.error("get ci token failed.", e)
         }
 
         return super.getCiToken()
