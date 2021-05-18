@@ -25,16 +25,30 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.setting
+package com.tencent.devops.process.engine.service.rule.processor
 
-import com.tencent.devops.common.pipeline.Model
-import io.swagger.annotations.ApiModelProperty
-import javax.validation.Valid
+import com.tencent.devops.process.engine.service.PipelineSettingService
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-data class PipelineModelAndSetting(
-    @ApiModelProperty("流水线模型", required = true)
-    val model: Model,
-    @ApiModelProperty("流水线设置", required = false)
-    @field:Valid
-    val setting: PipelineSetting
-)
+@Service("BuildNoOfDayProcessor")
+class BuildNoOfDayProcessorService : ProcessorService {
+
+    @Autowired
+    private lateinit var pipelineSettingService: PipelineSettingService
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(BuildNoOfDayProcessorService::class.java)
+    }
+
+    override fun getRuleValue(ruleName: String, pipelineId: String?, buildId: String?): String? {
+        val ruleValue = if (pipelineId != null) {
+            (pipelineSettingService.getCurrentDayBuildCount(pipelineId) + 1).toString()
+        } else {
+            null
+        }
+        logger.info("getRuleValue ruleName:$ruleName,pipelineId:$pipelineId,ruleValue:$ruleValue")
+        return ruleValue
+    }
+}

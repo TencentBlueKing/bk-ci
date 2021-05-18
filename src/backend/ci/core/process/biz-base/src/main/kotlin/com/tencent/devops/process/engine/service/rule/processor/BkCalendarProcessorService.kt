@@ -25,16 +25,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.setting
+package com.tencent.devops.process.engine.service.rule.processor
 
-import com.tencent.devops.common.pipeline.Model
-import io.swagger.annotations.ApiModelProperty
-import javax.validation.Valid
+import com.tencent.devops.common.api.util.DateTimeUtil
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.util.Calendar
 
-data class PipelineModelAndSetting(
-    @ApiModelProperty("流水线模型", required = true)
-    val model: Model,
-    @ApiModelProperty("流水线设置", required = false)
-    @field:Valid
-    val setting: PipelineSetting
-)
+@Service("BkCalendarProcessor")
+class BkCalendarProcessorService : ProcessorService {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(BkCalendarProcessorService::class.java)
+        private val calendar = Calendar.getInstance()
+        private const val FORMAT_DATE_NAME = "DATE:"
+    }
+
+    override fun getRuleValue(ruleName: String, pipelineId: String?, buildId: String?): String? {
+        return when {
+            ruleName == "MONTH_OF_YEAR" -> {
+                (calendar.get(Calendar.MONTH) + 1).toString()
+            }
+            ruleName.startsWith(FORMAT_DATE_NAME) -> {
+                val rule = ruleName.substring(FORMAT_DATE_NAME.length).removePrefix("\"").removeSuffix("\"")
+                try {
+                    DateTimeUtil.toDateTime(LocalDateTime.now(), rule)
+                } catch (ingored: Exception) {
+                    logger.warn("$rule toDateTime error:", ingored)
+                    null
+                }
+            }
+            else -> {
+                null
+            }
+        }
+    }
+}

@@ -25,16 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.setting
+package com.tencent.devops.process.pojo.pipeline
 
-import com.tencent.devops.common.pipeline.Model
+import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
-import javax.validation.Valid
 
-data class PipelineModelAndSetting(
-    @ApiModelProperty("流水线模型", required = true)
-    val model: Model,
-    @ApiModelProperty("流水线设置", required = false)
-    @field:Valid
-    val setting: PipelineSetting
+@ApiModel("流水线规则")
+data class PipelineRule(
+    @ApiModelProperty("规则名称", required = true)
+    val ruleName: String,
+    @ApiModelProperty("业务标识", required = true)
+    val busCode: String,
+    @ApiModelProperty("处理器", required = true)
+    val processor: String
 )
