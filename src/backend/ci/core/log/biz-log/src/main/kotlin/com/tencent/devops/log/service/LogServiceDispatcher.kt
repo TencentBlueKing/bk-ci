@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -27,55 +28,34 @@
 package com.tencent.devops.log.service
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.log.model.pojo.EndPageQueryLogs
-import com.tencent.devops.log.model.pojo.PageQueryLogs
-import com.tencent.devops.log.model.pojo.QueryLogs
-import com.tencent.devops.log.model.pojo.QueryLineNo
-import com.tencent.devops.log.service.v2.LogServiceV2
+import com.tencent.devops.common.log.pojo.EndPageQueryLogs
+import com.tencent.devops.common.log.pojo.PageQueryLogs
+import com.tencent.devops.common.log.pojo.QueryLogs
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
 
 @Service
+@Suppress("ALL")
 class LogServiceDispatcher @Autowired constructor(
-    private val logServiceV2: LogServiceV2
+    private val logService: LogService
 ) {
 
     fun getInitLogs(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        isAnalysis: Boolean?,
-        queryKeywords: String?,
+        debug: Boolean?,
         tag: String?,
         jobId: String?,
-        executeCount: Int?
+        executeCount: Int?,
+        subTag: String? = null
     ): Result<QueryLogs> {
         return Result(
-            logServiceV2.queryInitLogs(
+            logService.queryInitLogs(
                 buildId = buildId,
-                isAnalysis = isAnalysis ?: false,
-                keywordsStr = queryKeywords,
-                tag = tag,
-                jobId = jobId,
-                executeCount = executeCount
-            )
-        )
-    }
-
-    fun getLineNoByKeywords(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        queryKeywords: String,
-        tag: String?,
-        jobId: String?,
-        executeCount: Int?
-    ): Result<QueryLineNo> {
-        return Result(
-            logServiceV2.queryLineNoByKeywords(
-                buildId = buildId,
-                keywordsStr = queryKeywords,
+                debug = debug ?: false,
+                subTag = subTag,
                 tag = tag,
                 jobId = jobId,
                 executeCount = executeCount
@@ -88,52 +68,56 @@ class LogServiceDispatcher @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        isAnalysis: Boolean?,
-        queryKeywords: String?,
+        debug: Boolean?,
         tag: String?,
         jobId: String?,
         executeCount: Int?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        subTag: String? = null
     ): Result<PageQueryLogs> {
-            return Result(
-                logServiceV2.queryInitLogsPage(
-                    buildId = buildId,
-                    isAnalysis = isAnalysis ?: false,
-                    keywordsStr = queryKeywords,
-                    tag = tag,
-                    jobId = jobId,
-                    executeCount = executeCount,
-                    page = page ?: -1,
-                    pageSize = pageSize ?: -1
-                )
+        return Result(
+            logService.queryInitLogsPage(
+                buildId = buildId,
+                debug = debug ?: false,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount,
+                page = page ?: -1,
+                pageSize = pageSize ?: -1
             )
+        )
     }
 
     fun getMoreLogs(
         projectId: String,
         pipelineId: String,
         buildId: String,
+        debug: Boolean?,
         num: Int?,
         fromStart: Boolean?,
         start: Long,
         end: Long,
         tag: String?,
         jobId: String?,
-        executeCount: Int?
+        executeCount: Int?,
+        subTag: String? = null
     ): Result<QueryLogs> {
-            return Result(
-                logServiceV2.queryMoreLogsBetweenLines(
-                    buildId = buildId,
-                    num = num ?: 100,
-                    fromStart = fromStart ?: true,
-                    start = start,
-                    end = end,
-                    tag = tag,
-                    jobId = jobId,
-                    executeCount = executeCount
-                )
+        return Result(
+            logService.queryLogsBetweenLines(
+                buildId = buildId,
+                num = num ?: 100,
+                fromStart = fromStart ?: true,
+                start = start,
+                end = end,
+                debug = debug ?: false,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount
             )
+        )
     }
 
     fun getAfterLogs(
@@ -141,21 +125,49 @@ class LogServiceDispatcher @Autowired constructor(
         pipelineId: String,
         buildId: String,
         start: Long,
-        isAnalysis: Boolean?,
-        queryKeywords: String?,
+        debug: Boolean?,
         tag: String?,
         jobId: String?,
-        executeCount: Int?
+        executeCount: Int?,
+        subTag: String? = null
     ): Result<QueryLogs> {
-            return Result(
-                logServiceV2.queryMoreOriginLogsAfterLine(
-                    buildId = buildId,
-                    start = start,
-                    tag = tag,
-                    jobId = jobId,
-                    executeCount = executeCount
-                )
+        return Result(
+            logService.queryLogsAfterLine(
+                buildId = buildId,
+                start = start,
+                debug = debug ?: false,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount
             )
+        )
+    }
+
+    fun getBeforeLogs(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        end: Long,
+        debug: Boolean?,
+        size: Int?,
+        tag: String?,
+        jobId: String?,
+        executeCount: Int?,
+        subTag: String? = null
+    ): Result<QueryLogs> {
+        return Result(
+            logService.queryLogsBeforeLine(
+                buildId = buildId,
+                end = end,
+                size = size,
+                debug = debug ?: false,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                executeCount = executeCount
+            )
+        )
     }
 
     fun downloadLogs(
@@ -165,21 +177,65 @@ class LogServiceDispatcher @Autowired constructor(
         tag: String?,
         jobId: String?,
         executeCount: Int?,
-        fileName: String?
+        fileName: String?,
+        subTag: String? = null
     ): Response {
-        return logServiceV2.downloadLogs(pipelineId, buildId, tag, jobId, executeCount, fileName)
+        return logService.downloadLogs(
+            pipelineId = pipelineId,
+            buildId = buildId,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount,
+            fileName = fileName
+        )
     }
 
-    fun getEndLogs(
+    fun getEndLogsPage(
         userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,
         size: Int,
+        debug: Boolean?,
         tag: String?,
         jobId: String?,
-        executeCount: Int?
+        executeCount: Int?,
+        subTag: String? = null
     ): Result<EndPageQueryLogs> {
-        return Result(logServiceV2.getEndLogs(pipelineId, buildId, tag, jobId, executeCount, size))
+        return Result(logService.getEndLogsPage(
+            pipelineId = pipelineId,
+            buildId = buildId,
+            debug = debug ?: false,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount,
+            size = size
+        ))
+    }
+
+    fun getBottomLogs(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        debug: Boolean?,
+        size: Int?,
+        tag: String?,
+        jobId: String?,
+        executeCount: Int?,
+        subTag: String? = null
+    ): Result<QueryLogs> {
+        return Result(logService.getBottomLogs(
+            pipelineId = pipelineId,
+            buildId = buildId,
+            debug = debug ?: false,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            executeCount = executeCount,
+            size = size
+        ))
     }
 }

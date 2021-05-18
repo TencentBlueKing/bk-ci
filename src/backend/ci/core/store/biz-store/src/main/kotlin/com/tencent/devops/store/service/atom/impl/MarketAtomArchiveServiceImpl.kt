@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -33,6 +34,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomEnvInfoDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
@@ -51,11 +53,14 @@ import org.springframework.stereotype.Service
 import org.springframework.util.StringUtils
 import java.net.URLEncoder
 
+@Suppress("ALL")
 @Service
 class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
 
     @Autowired
     lateinit var dslContext: DSLContext
+    @Autowired
+    lateinit var atomDao: AtomDao
     @Autowired
     lateinit var marketAtomDao: MarketAtomDao
     @Autowired
@@ -92,19 +97,16 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         releaseType: ReleaseTypeEnum?,
         os: String?
     ): Result<Boolean> {
-        logger.info("verifyAtomPackageByUserId userId is :$userId,projectCode is :$projectCode,atomCode is :$atomCode,version is :$version,releaseType is :$releaseType,os is :$os")
         // 校验用户是否是该插件的开发成员
         val flag = storeMemberDao.isStoreMember(dslContext, userId, atomCode, StoreTypeEnum.ATOM.type.toByte())
         if (!flag) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
-        val atomRecords = marketAtomDao.getAtomsByAtomCode(dslContext, atomCode)
-        logger.info("the atomRecords is :$atomRecords")
-        if (null == atomRecords || atomRecords.isEmpty()) {
+        val atomCount = atomDao.countByCode(dslContext, atomCode)
+        if (atomCount < 0) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomCode))
         }
-        val atomRecord = atomRecords[0]
-        logger.info("the latest atomRecord is :$atomRecord")
+        val atomRecord = atomDao.getNewestAtomByCode(dslContext, atomCode)!!
         // 不是重新上传的包才需要校验版本号
         if (null != releaseType) {
             val osList = JsonUtil.getObjectMapper().readValue(os, ArrayList::class.java) as ArrayList<String>
@@ -126,8 +128,12 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         version: String
     ): Result<GetAtomConfigResult?> {
         val taskJsonStr = getFileStr(projectCode, atomCode, version, TASK_JSON_NAME)
-        val getAtomConfResult =
-            marketAtomCommonService.parseBaseTaskJson(taskJsonStr, atomCode, userId)
+        val getAtomConfResult = marketAtomCommonService.parseBaseTaskJson(
+            taskJsonStr = taskJsonStr,
+            atomCode = atomCode,
+            version = version,
+            userId = userId
+        )
         logger.info("parseTaskJson result is :$taskJsonStr")
         return if (getAtomConfResult.errorCode != "0") {
             MessageCodeUtil.generateResponseDataObject(getAtomConfResult.errorCode, getAtomConfResult.errorParams)
@@ -148,13 +154,17 @@ class MarketAtomArchiveServiceImpl : MarketAtomArchiveService {
         }
     }
 
-    override fun updateAtomPkgInfo(userId: String, atomId: String, atomPkgInfoUpdateRequest: AtomPkgInfoUpdateRequest): Result<Boolean> {
-        logger.info("updateAtomEnv userId is :$userId,atomId is :$atomId,atomPkgInfoUpdateRequest is :$atomPkgInfoUpdateRequest")
+    override fun updateAtomPkgInfo(
+        userId: String,
+        atomId: String,
+        atomPkgInfoUpdateRequest: AtomPkgInfoUpdateRequest
+    ): Result<Boolean> {
         val taskDataMap = atomPkgInfoUpdateRequest.taskDataMap
         val propsMap = mutableMapOf<String, Any?>()
         propsMap["inputGroups"] = taskDataMap["inputGroups"]
         propsMap["input"] = taskDataMap["input"]
         propsMap["output"] = taskDataMap["output"]
+        propsMap["config"] = taskDataMap["config"]
         dslContext.transaction { t ->
             val context = DSL.using(t)
             val props = JsonUtil.toJson(propsMap)

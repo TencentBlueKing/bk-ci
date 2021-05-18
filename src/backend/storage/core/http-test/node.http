@@ -1,0 +1,74 @@
+### 节点相关接口
+### 查询节点详情
+http://{{repositoryHost}}/api/node/{{project}}/{{repo}}/test.txt
+Authorization: Basic {{username}} {{password}}
+
+> {%
+    client.test('Request executed successfully', function() {
+        client.assert(response.status === 200, 'Response status is not 200');
+        client.assert(response.body.code === 0, 'Response data code is not 0');
+        client.assert(response.body.data.fullPath === "/test.txt" , 'Response data content invalid!');
+    });
+%}
+
+
+### 自定义查询
+POST http://{{repositoryHost}}/api/node/query
+Authorization: Basic {{username}} {{password}}
+Content-Type: application/json
+
+{
+  "select": ["fullPath", "metadata"],
+  "rule": {
+    "relation": "AND",
+    "rules": [
+      {
+        "field": "projectId",
+        "value": "{{project}}",
+        "operation": "EQ"
+      },
+      {
+        "field": "repoName",
+        "value": "{{repo}}",
+        "operation": "EQ"
+      },
+      {
+        "field": "fullPath",
+        "value": "regex-test.txt",
+        "operation": "MATCH"
+      }
+    ]
+  }
+}
+
+> {%
+    client.test('Request executed successfully', function() {
+        client.assert(response.status === 200, 'Response status is not 200');
+        client.assert(response.body.code === 0, 'Response data code is not 0');
+    });
+%}
+
+### 查询文件大小
+http://{{repositoryHost}}/api/node/size/{{project}}/{{repo}}/
+Authorization: Basic {{username}} {{password}}
+
+> {%
+    client.test('Request executed successfully', function() {
+        client.assert(response.status === 200, 'Response status is not 200');
+        client.assert(response.body.code === 0, 'Response data code is not 0');
+    });
+%}
+
+### 列表查询，深度查询
+http://{{repositoryHost}}/api/node/page/{{project}}/{{repo}}/?deep=true
+Authorization: Basic {{username}} {{password}}
+
+> {%
+    client.test('Request executed successfully', function() {
+        client.assert(response.status === 200, 'Response status is not 200');
+        client.assert(response.body.code === 0, 'Response data code is not 0');
+    });
+%}
+###
+
+

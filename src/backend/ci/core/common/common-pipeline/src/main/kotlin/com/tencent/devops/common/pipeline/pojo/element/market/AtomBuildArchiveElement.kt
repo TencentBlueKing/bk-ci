@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -40,8 +41,12 @@ data class AtomBuildArchiveElement(
     override var status: String? = null,
     @ApiModelProperty("插件发布包所在相对路径", required = true)
     val filePath: String = "\${filePath}",
-    @ApiModelProperty("目标", required = false)
-    val destPath: String = "\${atomCode}/\${version}/\${packageName}"
+    @ApiModelProperty("插件发布包上传至仓库的目标路径", required = true)
+    val destPath: String = "\${atomCode}/\${version}/\${packageName}",
+    @ApiModelProperty("插件自定义UI前端文件所在相对路径", required = false)
+    val frontendFilePath: String? = "\${BK_CI_CUSTOM_FRONTEND_DIST_PATH}",
+    @ApiModelProperty("插件自定义UI前端文件上传至仓库的目标路径", required = false)
+    val frontendDestPath: String? = "\${atomCode}/\${version}"
 ) : Element(name, id, status) {
 
     companion object {

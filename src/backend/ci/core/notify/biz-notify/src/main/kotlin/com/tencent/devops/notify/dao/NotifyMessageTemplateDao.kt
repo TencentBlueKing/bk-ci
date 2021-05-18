@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -47,6 +48,7 @@ import java.time.LocalDateTime
  * 消息通知数据库操作类
  */
 @Repository
+@Suppress("ALL")
 class NotifyMessageTemplateDao {
     /**
      * 根据模板代码和模板名称搜索公共消息模板
@@ -90,7 +92,7 @@ class NotifyMessageTemplateDao {
     /**
      * 获取微信消息模板
      * @param dslContext 数据库操作对象
-     * @param commonId
+     * @param commonTemplateId
      */
     fun getWechatNotifyMessageTemplate(
         dslContext: DSLContext,
@@ -108,7 +110,7 @@ class NotifyMessageTemplateDao {
     /**
      * 获取企业微信消息模板
      * @param dslContext 数据库操作对象
-     * @param commonId
+     * @param commonTemplateId
      */
     fun getRtxNotifyMessageTemplate(
         dslContext: DSLContext,

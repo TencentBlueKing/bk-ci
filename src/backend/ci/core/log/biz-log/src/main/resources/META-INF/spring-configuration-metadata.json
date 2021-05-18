@@ -2,26 +2,51 @@
   "hints": [],
   "groups": [
     {
-      "sourceType": "com.tencent.devops.common.es.ESProperties",
+      "sourceType": "com.tencent.devops.log.es.ESProperties",
       "name": "elasticsearch",
-      "type": "com.tencent.devops.common.es.ESProperties"
+      "type": "com.tencent.devops.log.es.ESProperties"
     }
   ],
   "properties": [
     {
-      "sourceType": "com.tencent.devops.common.es.ESProperties",
-      "name": "elasticsearch.ip",
+      "sourceType": "com.tencent.devops.log.configuration.StorageProperties",
+      "name": "log.storage.type",
       "type": "java.lang.String"
     },
     {
-      "sourceType": "com.tencent.devops.common.es.ESProperties",
-      "name": "elasticsearch.port",
+      "sourceType": "com.tencent.devops.log.configuration.StorageProperties",
+      "name": "log.storage.closeInDay",
+      "type": "java.lang.String"
+    },
+    {
+      "sourceType": "com.tencent.devops.log.configuration.StorageProperties",
+      "name": "log.storage.deleteInDay",
       "type": "java.lang.Integer"
     },
     {
-      "sourceType": "com.tencent.devops.common.es.ESProperties",
-      "name": "elasticsearch.cluster",
+      "sourceType": "com.tencent.devops.log.es.ESProperties",
+      "name": "log.elasticsearch.ip",
       "type": "java.lang.String"
+    },
+    {
+      "sourceType": "com.tencent.devops.log.es.ESProperties",
+      "name": "log.elasticsearch.port",
+      "type": "java.lang.Integer"
+    },
+    {
+      "sourceType": "com.tencent.devops.log.es.ESProperties",
+      "name": "log.elasticsearch.cluster",
+      "type": "java.lang.String"
+    },
+    {
+      "sourceType": "com.tencent.devops.log.lucene.LuceneProperties",
+      "name": "log.lucene.dataDirectory",
+      "type": "java.lang.String"
+    },
+    {
+      "sourceType": "com.tencent.devops.log.lucene.LuceneProperties",
+      "name": "log.lucene.indexMaxSize",
+      "type": "java.lang.Integer"
     }
   ]
 }

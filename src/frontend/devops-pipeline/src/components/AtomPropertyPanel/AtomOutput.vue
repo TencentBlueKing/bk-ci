@@ -18,6 +18,7 @@
                             {{ output.description }}
                         </div>
                     </bk-popover>
+                    <copy-icon :value="`\${${namespace ? `${namespace}_${key}` : key}}`"></copy-icon>
                 </p>
             </div>
         </div>
@@ -27,9 +28,13 @@
 <script>
     import atomMixin from './atomMixin'
     import validMixins from '../validMixins'
+    import copyIcon from '@/components/copyIcon'
 
     export default {
         name: 'atom-output',
+        components: {
+            copyIcon
+        },
         mixins: [atomMixin, validMixins],
         computed: {
             outputNamespaceDesc () {

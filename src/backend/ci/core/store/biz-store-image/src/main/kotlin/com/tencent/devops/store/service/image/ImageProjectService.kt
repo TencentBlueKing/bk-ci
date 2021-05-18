@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -31,10 +32,12 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.type.docker.ImageType
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.constant.StoreMessageCode
@@ -79,16 +82,17 @@ import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.util.MultiSourceDataPaginator
 import com.tencent.devops.store.util.PagableDataSource
+import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import org.springframework.util.StopWatch
 import java.time.LocalDateTime
 import kotlin.math.ceil
 
+@Suppress("ALL")
 @Service
 class ImageProjectService @Autowired constructor(
     private val dslContext: DSLContext,
@@ -139,8 +143,6 @@ class ImageProjectService @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Page<JobImageItem>? {
-        logger.info("getJobImages accessToken is :$accessToken,userId is :$userId,projectCode is :$projectCode,agentType is :$agentType")
-        logger.info("getJobImages recommendFlag is :$recommendFlag,classifyId is :$classifyId,page is :$page,pageSize is :$pageSize")
         // 校验用户是否有该项目的权限
         checkPermission(accessToken, userId, projectCode)
         val totalSize: Long
@@ -162,7 +164,6 @@ class ImageProjectService @Autowired constructor(
                 classifyId = classifyId,
                 recommendFlag = recommendFlag
             )
-            logger.info("getJobImages totalAvailableAgentJobImageSize is :$totalAvailableAgentJobImageSize,totalInvalidJobImageSize is :$totalInvalidJobImageSize")
             totalSize = totalAvailableAgentJobImageSize + totalInvalidJobImageSize
             if (page != null && pageSize != null) {
                 // 判断可用的镜像是否已到最后一页
@@ -209,7 +210,9 @@ class ImageProjectService @Autowired constructor(
                     }
                 } else {
                     // 当前页大于可用镜像最后一页，需要排除掉可用镜像最后一页不满页的数量用不可用的镜像填充的情况
-                    val lastPageRemainNum = if (totalAvailableAgentJobImageSize > 0) pageSize - totalAvailableAgentJobImageSize % pageSize else 0
+                    val lastPageRemainNum = if (totalAvailableAgentJobImageSize > 0) {
+                        pageSize - totalAvailableAgentJobImageSize % pageSize
+                    } else 0
                     logger.info("getJobImages lastPageRemainNum is :$lastPageRemainNum")
                     handleJobImageItemList(
                         projectCode = projectCode,
@@ -309,8 +312,7 @@ class ImageProjectService @Autowired constructor(
         val imageCode = it["imageCode"] as String
         val imageName = it["imageName"] as String
         val version = it["version"] as String
-        val versionPrefix = version.substring(0, version.indexOf(".") + 1)
-        val defaultVersion = "$versionPrefix*"
+        val defaultVersion = VersionUtils.convertLatestVersion(version)
         val imageStatus = it["imageStatus"] as Byte
         val dbClassifyId = it["classifyId"] as String
         val classifyCode = it["classifyCode"] as String
@@ -393,7 +395,6 @@ class ImageProjectService @Autowired constructor(
         pageSize: Int?,
         interfaceName: String? = "Anon interface"
     ): Page<ImageDetail?>? {
-        logger.info("$interfaceName:getMarketImagesByProjectCode:Input:($accessToken,$userId,$projectCode,$page,$pageSize)")
         return searchMarketImages(
             accessToken = accessToken,
             userId = userId,
@@ -420,7 +421,6 @@ class ImageProjectService @Autowired constructor(
         pageSize: Int?,
         interfaceName: String? = "Anon interface"
     ): Page<ImageDetail?>? {
-        logger.info("$interfaceName:searchMarketImages:Input:($accessToken,$userId,$projectCode,$imageNamePart,$page,$pageSize)")
         // 1.参数校验
         val validPage = PageUtil.getValidPage(page)
         // 默认拉取所有
@@ -468,15 +468,13 @@ class ImageProjectService @Autowired constructor(
             score = null,
             imageSourceType = null
         )
-        val pageObj = Page(
+        return Page(
             count = count.toLong(),
             page = validPage,
             pageSize = validPageSize,
             totalPages = if (validPageSize > 0) ceil(count * 1.0 / validPageSize).toInt() else 1,
             records = resultList
         )
-        logger.info("$interfaceName:searchMarketImages:Output:Page($validPage,$validPageSize,$count,resultList.size=${resultList.size})")
-        return pageObj
     }
 
     /**
@@ -492,7 +490,6 @@ class ImageProjectService @Autowired constructor(
         pageSize: Int?,
         interfaceName: String? = "Anon interface"
     ): Page<JobMarketImageItem?>? {
-        logger.info("$interfaceName:getMarketImagesByProjectCode:Input:($accessToken,$userId,$projectCode,$page,$pageSize)")
         return searchJobMarketImages(
             accessToken = accessToken,
             userId = userId,
@@ -523,8 +520,6 @@ class ImageProjectService @Autowired constructor(
         pageSize: Int?,
         interfaceName: String? = "Anon interface"
     ): Page<JobMarketImageItem?>? {
-        logger.info("$interfaceName:searchMarketImages:Input:($accessToken,$userId,$projectCode,$keyword,$page,$pageSize)")
-        val watch = StopWatch()
         // 1.参数校验
         val validPage = PageUtil.getValidPage(page)
         // 默认拉取所有
@@ -536,7 +531,11 @@ class ImageProjectService @Autowired constructor(
         val userDeptList = storeUserService.getUserDeptList(userId)
         logger.info("$interfaceName:searchMarketImages:Inner:userDeptList=$userDeptList")
         val installImageCodes = marketImageDao.getInstalledImageCodes(dslContext, projectCode)
-        var testImageCodes = storeProjectRelDao.getTestStoreCodes(dslContext, projectCode, StoreTypeEnum.IMAGE)?.map { it.value1() }
+        var testImageCodes = storeProjectRelDao.getTestStoreCodes(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            storeType = StoreTypeEnum.IMAGE
+        )?.map { it.value1() }
             ?: emptyList()
         testImageCodes = marketImageDao.getTestingImageCodes(dslContext, testImageCodes)?.map {
             it.value1()
@@ -547,7 +546,8 @@ class ImageProjectService @Autowired constructor(
         // （1）未安装、可安装、agentType符合的镜像
         val canInstallCurrentAgentDataSource = object : PagableDataSource<JobMarketImageItem> {
             override fun getData(offset: Int, limit: Int): List<JobMarketImageItem> {
-                watch.start("canInstallCurrentAgentJobMarketImages")
+                val watcher = Watcher(id = "JobMarketImageItem|$projectCode|$userId|$page|$pageSize")
+                watcher.start("canInstallCurrentAgentJobMarketImages")
                 val canInstallCurrentAgentJobMarketImages = marketImageDao.listCanInstallJobMarketImages(
                     dslContext = dslContext,
                     inImageCodes = agentTypeImageCodes,
@@ -569,13 +569,13 @@ class ImageProjectService @Autowired constructor(
                         availableFlag = true
                     )
                 } ?: emptyList()
-                watch.stop()
-                logger.info("canInstallCurrentAgentJobMarketImages:timecosuming:$watch")
+                LogUtils.printCostTimeWE(watcher = watcher)
                 return canInstallCurrentAgentJobMarketImages
             }
 
             override fun getDataSize(): Int {
-                watch.start("count canInstallCurrentAgentJobMarketImages")
+                val watcher = Watcher(id = "JobMarketImageItem|$projectCode|$userId|$page|$pageSize")
+                watcher.start("count canInstallCurrentAgentJobMarketImages")
                 val canInstallCurrentAgentJobMarketImagesCount = marketImageDao.countCanInstallJobMarketImages(
                     dslContext = dslContext,
                     inImageCodes = agentTypeImageCodes,
@@ -588,15 +588,15 @@ class ImageProjectService @Autowired constructor(
                     installedImageCodes = installImageCodes,
                     visibleImageCodes = visibleImageCodes
                 )
-                watch.stop()
-                logger.info("count canInstallCurrentAgentJobMarketImages:timecosuming:$watch")
+                LogUtils.printCostTimeWE(watcher = watcher)
                 return canInstallCurrentAgentJobMarketImagesCount
             }
         }
         // （2）未安装、可安装、agentType不符合的镜像
         val canInstallOtherAgentDataSource = object : PagableDataSource<JobMarketImageItem> {
             override fun getData(offset: Int, limit: Int): List<JobMarketImageItem> {
-                watch.start("canInstallOtherAgentJobMarketImages")
+                val watcher = Watcher(id = "JobMarketImageItem|$projectCode|$userId|$page|$pageSize")
+                watcher.start("canInstallOtherAgentJobMarketImages")
                 val canInstallOtherAgentJobMarketImages = marketImageDao.listCanInstallJobMarketImages(
                     dslContext = dslContext,
                     inImageCodes = null,
@@ -618,13 +618,13 @@ class ImageProjectService @Autowired constructor(
                         availableFlag = false
                     )
                 } ?: emptyList()
-                watch.stop()
-                logger.info("canInstallOtherAgentJobMarketImages:timecosuming:$watch")
+                LogUtils.printCostTimeWE(watcher = watcher)
                 return canInstallOtherAgentJobMarketImages
             }
 
             override fun getDataSize(): Int {
-                watch.start("count canInstallOtherAgentJobMarketImages")
+                val watcher = Watcher(id = "JobMarketImageItem|$projectCode|$userId|$page|$pageSize")
+                watcher.start("count canInstallOtherAgentJobMarketImages")
                 val canInstallOtherAgentJobMarketImagesCount = marketImageDao.countCanInstallJobMarketImages(
                     dslContext = dslContext,
                     inImageCodes = null,
@@ -637,8 +637,7 @@ class ImageProjectService @Autowired constructor(
                     installedImageCodes = installImageCodes,
                     visibleImageCodes = visibleImageCodes
                 )
-                watch.stop()
-                logger.info("count canInstallOtherAgentJobMarketImages:timecosuming:$watch")
+                LogUtils.printCostTimeWE(watcher = watcher)
                 return canInstallOtherAgentJobMarketImagesCount
             }
         }
@@ -646,7 +645,8 @@ class ImageProjectService @Autowired constructor(
         val agentTypeTestImageCodes = agentTypeImageCodes.intersect(testImageCodes)
         val testingCurrentAgentDataSource = object : PagableDataSource<JobMarketImageItem> {
             override fun getData(offset: Int, limit: Int): List<JobMarketImageItem> {
-                watch.start("testingCurrentAgentJobMarketImages")
+                val watcher = Watcher(id = "JobMarketImageItem|$projectCode|$userId|$page|$pageSize")
+                watcher.start("testingCurrentAgentJobMarketImages")
                 val testingCurrentAgentJobMarketImages = marketImageDao.listTestingJobMarketImages(
                     dslContext = dslContext,
                     // agentType符合与调试中镜像的交集
@@ -667,13 +667,13 @@ class ImageProjectService @Autowired constructor(
                         availableFlag = true
                     )
                 } ?: emptyList()
-                watch.stop()
-                logger.info("testingCurrentAgentJobMarketImages:timecosuming:$watch")
+                LogUtils.printCostTimeWE(watcher = watcher)
                 return testingCurrentAgentJobMarketImages
             }
 
             override fun getDataSize(): Int {
-                watch.start("count testingCurrentAgentJobMarketImages")
+                val watcher = Watcher(id = "JobMarketImageItem|$projectCode|$userId|$page|$pageSize")
+                watcher.start("count testingCurrentAgentJobMarketImages")
                 val testingCurrentAgentJobMarketImagesCount = marketImageDao.countTestingJobMarketImages(
                     dslContext = dslContext,
                     inImageCodes = agentTypeTestImageCodes,
@@ -684,15 +684,15 @@ class ImageProjectService @Autowired constructor(
                     categoryCode = categoryCode,
                     rdType = rdType
                 )
-                watch.stop()
-                logger.info("count testingCurrentAgentJobMarketImages:timecosuming:$watch")
+                LogUtils.printCostTimeWE(watcher = watcher)
                 return testingCurrentAgentJobMarketImagesCount
             }
         }
         // （3.2）agentType不符合的调试中镜像
         val testingOtherAgentDataSource = object : PagableDataSource<JobMarketImageItem> {
             override fun getData(offset: Int, limit: Int): List<JobMarketImageItem> {
-                watch.start("testingOtherAgentJobMarketImages")
+                val watcher = Watcher(id = "JobMarketImageItem|$projectCode|$userId|$page|$pageSize")
+                watcher.start("testingOtherAgentJobMarketImages")
                 val testingOtherAgentJobMarketImages = marketImageDao.listTestingJobMarketImages(
                     dslContext = dslContext,
                     // agentType符合与调试中镜像的交集
@@ -713,13 +713,13 @@ class ImageProjectService @Autowired constructor(
                         availableFlag = true
                     )
                 } ?: emptyList()
-                watch.stop()
-                logger.info("testingOtherAgentJobMarketImages:timecosuming:$watch")
+                LogUtils.printCostTimeWE(watcher = watcher)
                 return testingOtherAgentJobMarketImages
             }
 
             override fun getDataSize(): Int {
-                watch.start("count testingOtherAgentJobMarketImages")
+                val watcher = Watcher(id = "JobMarketImageItem|$projectCode|$userId|$page|$pageSize")
+                watcher.start("count testingOtherAgentJobMarketImages")
                 val testingOtherAgentJobMarketImagesCount = marketImageDao.countTestingJobMarketImages(
                     dslContext = dslContext,
                     inImageCodes = testImageCodes,
@@ -730,15 +730,15 @@ class ImageProjectService @Autowired constructor(
                     categoryCode = categoryCode,
                     rdType = rdType
                 )
-                watch.stop()
-                logger.info("count testingOtherAgentJobMarketImages:timecosuming:$watch")
+                LogUtils.printCostTimeWE(watcher = watcher)
                 return testingOtherAgentJobMarketImagesCount
             }
         }
         // （3.3）已安装、agentType符合的镜像（不含调试中镜像）
         val installedCurrentAgentDataSource = object : PagableDataSource<JobMarketImageItem> {
             override fun getData(offset: Int, limit: Int): List<JobMarketImageItem> {
-                watch.start("installedCurrentAgentJobMarketImages")
+                val watcher = Watcher(id = "JobMarketImageItem|$projectCode|$userId|$page|$pageSize")
+                watcher.start("installedCurrentAgentJobMarketImages")
                 val installedCurrentAgentJobMarketImages = marketImageDao.listInstalledJobMarketImages(
                     dslContext = dslContext,
                     inImageCodes = agentTypeImageCodes,
@@ -759,13 +759,13 @@ class ImageProjectService @Autowired constructor(
                         availableFlag = true
                     )
                 } ?: emptyList()
-                watch.stop()
-                logger.info("installedCurrentAgentJobMarketImages:timecosuming:$watch")
+                LogUtils.printCostTimeWE(watcher = watcher)
                 return installedCurrentAgentJobMarketImages
             }
 
             override fun getDataSize(): Int {
-                watch.start("count installedCurrentAgentJobMarketImages")
+                val watcher = Watcher(id = "JobMarketImageItem|$projectCode|$userId|$page|$pageSize")
+                watcher.start("count installedCurrentAgentJobMarketImages")
                 val installedCurrentAgentJobMarketImagesCount = marketImageDao.countInstalledJobMarketImages(
                     dslContext = dslContext,
                     inImageCodes = agentTypeImageCodes,
@@ -777,15 +777,15 @@ class ImageProjectService @Autowired constructor(
                     rdType = rdType,
                     installedImageCodes = installImageCodes
                 )
-                watch.stop()
-                logger.info("count installedCurrentAgentJobMarketImages:timecosuming:$watch")
+                LogUtils.printCostTimeWE(watcher = watcher)
                 return installedCurrentAgentJobMarketImagesCount
             }
         }
         // （4）已安装、agentType不符合的镜像
         val installedOtherAgentDataSource = object : PagableDataSource<JobMarketImageItem> {
             override fun getData(offset: Int, limit: Int): List<JobMarketImageItem> {
-                watch.start("installedOtherAgentJobMarketImages")
+                val watcher = Watcher(id = "JobMarketImageItem|$projectCode|$userId|$page|$pageSize")
+                watcher.start("installedOtherAgentJobMarketImages")
                 val installedOtherAgentJobMarketImages = marketImageDao.listInstalledJobMarketImages(
                     dslContext = dslContext,
                     inImageCodes = null,
@@ -806,13 +806,13 @@ class ImageProjectService @Autowired constructor(
                         availableFlag = false
                     )
                 } ?: emptyList()
-                watch.stop()
-                logger.info("installedOtherAgentJobMarketImages:timecosuming:$watch")
+                LogUtils.printCostTimeWE(watcher = watcher)
                 return installedOtherAgentJobMarketImages
             }
 
             override fun getDataSize(): Int {
-                watch.start("count installedOtherAgentJobMarketImages")
+                val watcher = Watcher(id = "JobMarketImageItem|$projectCode|$userId|$page|$pageSize")
+                watcher.start("count installedOtherAgentJobMarketImages")
                 val installedOtherAgentJobMarketImagesCount = marketImageDao.countInstalledJobMarketImages(
                     dslContext = dslContext,
                     inImageCodes = null,
@@ -824,15 +824,15 @@ class ImageProjectService @Autowired constructor(
                     rdType = rdType,
                     installedImageCodes = installImageCodes
                 )
-                watch.stop()
-                logger.info("count installedOtherAgentJobMarketImages:timecosuming:$watch")
+                LogUtils.printCostTimeWE(watcher = watcher)
                 return installedOtherAgentJobMarketImagesCount
             }
         }
         // （5）不可见、agentType符合的镜像
         val noVisibleCurrentAgentDataSource = object : PagableDataSource<JobMarketImageItem> {
             override fun getData(offset: Int, limit: Int): List<JobMarketImageItem> {
-                watch.start("noVisibleCurrentAgentJobMarketImages")
+                val watcher = Watcher(id = "JobMarketImageItem|$projectCode|$userId|$page|$pageSize")
+                watcher.start("noVisibleCurrentAgentJobMarketImages")
                 val noVisibleCurrentAgentJobMarketImages = marketImageDao.listNoVisibleJobMarketImages(
                     dslContext = dslContext,
                     inImageCodes = agentTypeImageCodes,
@@ -853,13 +853,13 @@ class ImageProjectService @Autowired constructor(
                         availableFlag = true
                     )
                 } ?: emptyList()
-                watch.stop()
-                logger.info("noVisibleCurrentAgentJobMarketImages:timecosuming:$watch")
+                LogUtils.printCostTimeWE(watcher = watcher)
                 return noVisibleCurrentAgentJobMarketImages
             }
 
             override fun getDataSize(): Int {
-                watch.start("count noVisibleCurrentAgentJobMarketImages")
+                val watcher = Watcher(id = "JobMarketImageItem|$projectCode|$userId|$page|$pageSize")
+                watcher.start("count noVisibleCurrentAgentJobMarketImages")
                 val noVisibleCurrentAgentJobMarketImagesCount = marketImageDao.countNoVisibleJobMarketImages(
                     dslContext = dslContext,
                     inImageCodes = agentTypeImageCodes,
@@ -871,15 +871,15 @@ class ImageProjectService @Autowired constructor(
                     rdType = rdType,
                     visibleImageCodes = visibleImageCodes
                 )
-                watch.stop()
-                logger.info("count noVisibleCurrentAgentJobMarketImages:timecosuming:$watch")
+                LogUtils.printCostTimeWE(watcher = watcher)
                 return noVisibleCurrentAgentJobMarketImagesCount
             }
         }
         // （6）不可见、agentType不符合的镜像
         val noVisibleOtherAgentDataSource = object : PagableDataSource<JobMarketImageItem> {
             override fun getData(offset: Int, limit: Int): List<JobMarketImageItem> {
-                watch.start("noVisibleOtherAgentJobMarketImages")
+                val watcher = Watcher(id = "JobMarketImageItem|$projectCode|$userId|$page|$pageSize")
+                watcher.start("noVisibleOtherAgentJobMarketImages")
                 val noVisibleOtherAgentJobMarketImages = marketImageDao.listNoVisibleJobMarketImages(
                     dslContext = dslContext,
                     inImageCodes = null,
@@ -900,13 +900,13 @@ class ImageProjectService @Autowired constructor(
                         availableFlag = false
                     )
                 } ?: emptyList()
-                watch.stop()
-                logger.info("noVisibleOtherAgentJobMarketImages:timecosuming:$watch")
+                LogUtils.printCostTimeWE(watcher = watcher)
                 return noVisibleOtherAgentJobMarketImages
             }
 
             override fun getDataSize(): Int {
-                watch.start("count noVisibleOtherAgentJobMarketImages")
+                val watcher = Watcher(id = "JobMarketImageItem|$projectCode|$userId|$page|$pageSize")
+                watcher.start("count noVisibleOtherAgentJobMarketImages")
                 val noVisibleOtherAgentJobMarketImagesCount = marketImageDao.countNoVisibleJobMarketImages(
                     dslContext = dslContext,
                     inImageCodes = null,
@@ -918,8 +918,7 @@ class ImageProjectService @Autowired constructor(
                     rdType = rdType,
                     visibleImageCodes = visibleImageCodes
                 )
-                watch.stop()
-                logger.info("count noVisibleOtherAgentJobMarketImages:timecosuming:$watch")
+                LogUtils.printCostTimeWE(watcher = watcher)
                 return noVisibleOtherAgentJobMarketImagesCount
             }
         }
@@ -944,14 +943,12 @@ class ImageProjectService @Autowired constructor(
 
         val resultList = paginator.getPagedData(validPage, validPageSize)
         val count = paginator.getTotalCount().toLong()
-        val pageObj = Page(
+        return Page(
             page = validPage,
             pageSize = validPageSize,
             count = count,
             records = resultList
         )
-        logger.info("$interfaceName:searchMarketImages:Output:Page($validPage,$validPageSize,resultList.size=${resultList.size})")
-        return pageObj
     }
 
     fun genJobMarketImageItem(
@@ -1056,7 +1053,6 @@ class ImageProjectService @Autowired constructor(
         if (validateInstallResult.isNotOk()) {
             return validateInstallResult
         }
-        logger.info("$interfaceName:installImage:Inner:image.id=${image.id},imageFeature.publicFlag=${imageFeature.publicFlag}")
         return storeProjectService.installStoreComponent(
             userId = userId,
             projectCodeList = projectCodeList,

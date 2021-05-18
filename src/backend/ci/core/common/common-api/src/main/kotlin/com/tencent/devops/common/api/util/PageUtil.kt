@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -34,14 +35,14 @@ import com.tencent.devops.common.api.pojo.Page
  */
 object PageUtil {
     fun convertPageSizeToSQLLimit(page: Int, pageSize: Int): SQLLimit {
-        val oneOffsetPage = if (page <= 0) 1 else page
-        val defaultPageSize = if (pageSize <= 0) 10 else pageSize
+        val oneOffsetPage = if (page <= 0) DEFAULT_PAGE else page
+        val defaultPageSize = if (pageSize <= 0) DEFAULT_PAGE_SIZE else pageSize
         return SQLLimit((oneOffsetPage - 1) * defaultPageSize, defaultPageSize)
     }
 
     // page & pageSize为空则不分页
     fun convertPageSizeToSQLLimit(page: Int?, pageSize: Int?): SQLLimit {
-        val oneOffsetPage = if (page == null || page <= 0) 1 else page
+        val oneOffsetPage = if (page == null || page <= 0) DEFAULT_PAGE else page
         val defaultPageSize = if (pageSize == null || pageSize <= 0) -1 else pageSize
         return SQLLimit((oneOffsetPage - 1) * defaultPageSize, defaultPageSize)
     }
@@ -86,7 +87,12 @@ object PageUtil {
     /**
      * 本地内存中分页，返回Page对象
      */
-    fun <T> pageList(list: List<T>, page: Int? = DEFAULT_PAGE, pageSize: Int? = DEFAULT_PAGE_SIZE, totalCount: Long?): Page<T> {
+    fun <T> pageList(
+        list: List<T>,
+        page: Int? = DEFAULT_PAGE,
+        pageSize: Int? = DEFAULT_PAGE_SIZE,
+        totalCount: Long?
+    ): Page<T> {
         // 参数校验
         val validPage = getValidPage(page)
         val validPageSize = getValidPageSize(pageSize)
@@ -95,18 +101,24 @@ object PageUtil {
             validTotalCount = list.size.toLong()
         }
         val offset = (validPage - 1) * validPageSize
-        val limit = validPageSize
         // 分页
         val pagedList = when {
             offset >= list.size -> emptyList()
             else -> {
-                val toIndex = if (list.size <= (offset + limit)) list.size else offset + limit
+                val toIndex = if (list.size <= (offset + validPageSize)) list.size else offset + validPageSize
                 list.subList(offset, toIndex)
             }
         }
         var totalPages = validTotalCount / validPageSize
-        if (totalPages * validPage<validTotalCount)
+        if (totalPages * validPage < validTotalCount) {
             totalPages++
-        return Page(validTotalCount, validPage, validPageSize, totalPages.toInt(), pagedList)
+        }
+        return Page(
+            count = validTotalCount,
+            page = validPage,
+            pageSize = validPageSize,
+            totalPages = totalPages.toInt(),
+            records = pagedList
+        )
     }
 }

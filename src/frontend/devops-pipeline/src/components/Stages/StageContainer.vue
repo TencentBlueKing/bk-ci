@@ -1,15 +1,19 @@
 <template>
     <div
         ref="stageContainer"
-        :class="{ 'devops-stage-container': true, 'first-container': stageIndex === 0, 'readonly': !editable || containerDisabled }"
+        :class="{ 'devops-stage-container': true, 'first-stage-container': stageIndex === 0, 'readonly': !editable || containerDisabled }"
     >
-        <template v-if="!isOnlyOneContainer && containerLength - 1 !== containerIndex">
-            <cruve-line :straight="true" :width="60" :height="cruveHeight" class="connect-line left" />
-            <cruve-line :straight="true" :width="60" :height="cruveHeight" :direction="false" class="connect-line right" />
+        <template v-if="containerIndex > 0">
+            <cruve-line :straight="true" :width="60" :style="`margin-top: -${cruveHeight}px`" :height="cruveHeight" class="connect-line left" />
+            <cruve-line :straight="true" :width="60" :style="`margin-top: -${cruveHeight}px`" :height="cruveHeight" :direction="false" class="connect-line right" />
+        </template>
+        <template v-else>
+            <cruveLine v-if="stageIndex !== 0" class="first-connect-line connect-line left" :width="60" :height="60"></cruveLine>
+            <cruve-line class="first-connect-line connect-line right" :width="60" :direction="false" :height="60"></cruve-line>
         </template>
 
         <h3 :class="{ 'container-title': true, 'first-ctitle': containerIndex === 0, [container.status]: container.status }" @click.stop="showContainerPanel">
-            <status-icon type="container" :editable="editable" :container-disabled="containerDisabled" :status="container.status">
+            <status-icon type="container" :editable="editable" :container-disabled="containerDisabled" :status="container.status" :depend-on-value="dependOnValue">
                 {{ containerSerialNum }}
             </status-icon>
             <p class="container-name">
@@ -40,7 +44,7 @@
 
 <script>
     import { mapActions, mapGetters, mapState } from 'vuex'
-    import { getOuterHeight, hashID } from '@/utils/util'
+    import { getOuterHeight, hashID, randomString } from '@/utils/util'
     import ContainerType from './ContainerType'
     import AtomList from './AtomList'
     import StatusIcon from './StatusIcon'
@@ -56,6 +60,7 @@
             CruveLine
         },
         props: {
+            preContainer: Object,
             container: Object,
             stageIndex: Number,
             containerIndex: Number,
@@ -111,10 +116,22 @@
             },
             containerDisabled () {
                 return !!(this.container.jobControlOption && this.container.jobControlOption.enable === false) || this.stageDisabled
+            },
+            dependOnValue () {
+                if (this.container.status !== 'DEPENDENT_WAITING') return ''
+                let val = ''
+                if (this.container.jobControlOption && this.container.jobControlOption.dependOnType) {
+                    if (this.container.jobControlOption.dependOnType === 'ID') {
+                        val = this.container.jobControlOption.dependOnId || []
+                    } else {
+                        val = this.container.jobControlOption.dependOnName || ''
+                    }
+                }
+                return `${this.$t('storeMap.dependOn')} 【${val}】`
             }
         },
         watch: {
-            'container.elements.length': function (newVal, oldVal) {
+            'preContainer.elements.length': function (newVal, oldVal) {
                 if (newVal !== oldVal) {
                     this.$forceUpdate()
                 }
@@ -170,10 +187,9 @@
                 }
             },
             updateCruveConnectHeight () {
-                if (!this.$refs.stageContainer) {
-                    return
+                if (this.$refs.stageContainer && this.$refs.stageContainer.previousSibling) {
+                    this.cruveHeight = getOuterHeight(this.$refs.stageContainer.previousSibling)
                 }
-                this.cruveHeight = getOuterHeight(this.$refs.stageContainer)
             },
             showContainerPanel () {
                 const { stageIndex, containerIndex } = this
@@ -191,10 +207,16 @@
                     const container = {
                         ...copyContainer,
                         containerId: `c-${hashID(32)}`,
+                        jobId: `job_${randomString(3)}`,
                         elements: copyContainer.elements.map(element => ({
                             ...element,
                             id: `e-${hashID(32)}`
-                        }))
+                        })),
+                        jobControlOption: copyContainer.jobControlOption ? {
+                            ...copyContainer.jobControlOption,
+                            dependOnType: 'ID',
+                            dependOnId: []
+                        } : undefined
                     }
                     this.pipeline.stages[this.stageIndex].containers.splice(this.containerIndex + 1, 0, JSON.parse(JSON.stringify(container)))
                     this.setPipelineEditing(true)
@@ -240,12 +262,11 @@
             z-index: 2;
         }
 
-        &.first-container {
+        &.first-stage-container {
             &:before {
                 display: none;
             }
         }
-
         .container-title {
             display: flex;
             height: $itemHeight;
@@ -322,12 +343,28 @@
             stroke: $primaryColor;
             stroke-width: 1;
             fill: none;
+            z-index: 0;
 
              &.left {
                 left: -$svgWidth + 4;
+
             }
             &.right {
-                right: -$addIconLeftMargin - $containerMargin;
+                right: -$StageMargin - $addIconLeft - $addBtnSize - 2;
+            }
+
+            &.first-connect-line {
+                height: 76px;
+                width: $svgWidth;
+                top: -$stageEntryHeight / 2 - 2 - 16px;
+                &.left {
+                    left: -$svgWidth - $addBtnSize / 2 + 4;
+                }
+                &.right {
+                    left: auto;
+                    right: -$addIconLeftMargin - $containerMargin - $addBtnSize / 2;
+
+                }
             }
         }
     }

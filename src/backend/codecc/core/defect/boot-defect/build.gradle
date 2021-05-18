@@ -1,0 +1,9 @@
+dependencies {
+    compile project(":core:defect:biz-defect-migration")
+    compile "org.springframework.boot:spring-boot-starter-test"
+    compile "org.springframework.kafka:spring-kafka:1.3.10.RELEASE"
+}
+
+version = null
+
+apply from: "$rootDir/task_spring_boot_package.gradle"

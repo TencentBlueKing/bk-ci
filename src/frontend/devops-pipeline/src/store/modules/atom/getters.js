@@ -40,9 +40,12 @@ export default {
     getAtomTree: (state, getters) => (os, category, searchKey) => {
         let atomCodeList = getters.getAtomCodeListByCategory(category)
         if (searchKey) {
+            const searchStr = searchKey.toLowerCase()
             atomCodeList = atomCodeList.filter(atomCode => {
-                const atom = state.atomMap[atomCode]
-                return atom.name.toLowerCase().indexOf(searchKey.toLowerCase()) > -1
+                const atom = state.atomMap[atomCode] || {}
+                const name = (atom.name || '').toLowerCase()
+                const summary = (atom.summary || '').toLowerCase()
+                return name.indexOf(searchStr) > -1 || summary.indexOf(searchStr) > -1
             })
         }
         const classifyCodeList = getters.classifyCodeListByCategory(category)
@@ -211,6 +214,7 @@ export default {
         }
     },
     hasBuildNo: state => stages => stages[0].containers[0].buildNo,
+    hasFinallyStage: state => state.pipeline.stages[state.pipeline.stages.length - 1].finally === true,
     userParams: state => {
         return state.pipeline ? state.pipeline.stages[0].containers[0].params : []
     },
@@ -300,5 +304,6 @@ export default {
     defaultBuildNo: state => defaultBuildNo,
     getPlatformList: state => platformList,
     getAtomModalKey: state => getAtomModalKey,
-    isNewAtomTemplate: state => isNewAtomTemplate
+    isNewAtomTemplate: state => isNewAtomTemplate,
+    atomVersionChangedKeys: state => state.atomVersionChangedKeys
 }

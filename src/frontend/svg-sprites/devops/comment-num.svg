@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="64px" height="64px" viewBox="0 0 64 64" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <title>评论数</title>
+    <g id="蓝盾服务扩展商店" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="蓝盾服务扩展商店设计稿-第四批界面" transform="translate(-410.000000, -2175.000000)">
+            <g id="编组" transform="translate(65.000000, 1942.000000)">
+                <g id="评论数" transform="translate(345.000000, 233.000000)">
+                    <g id="0228-gcloud-icon-05" transform="translate(14.000000, 18.000000)">
+                        <line x1="7.5" y1="9" x2="28.5" y2="9" id="路径" stroke="#383D49" stroke-width="2" stroke-linejoin="round"></line>
+                        <line x1="8" y1="16.5" x2="20" y2="16.5" id="路径" stroke="#3A84FF" stroke-width="2" stroke-linejoin="round"></line>
+                        <line x1="22" y1="16.5" x2="25" y2="16.5" id="路径-copy" stroke="#383D49" stroke-width="2" stroke-linejoin="round"></line>
+                        <path d="M34.0285714,-1.13686838e-13 C35.1085964,-1.13686838e-13 36,0.856395595 36,1.93327773 L36,23.3986655 C36,24.4755476 35.1085964,25.3319432 34.0285714,25.3319432 L15.9464575,25.3319423 L8,32.998 L8,30.22 L14.6529838,23.8023018 C15.0112,23.4987909 15.4678908,23.3325957 15.9405714,23.3319432 L34,23.3319432 L34,2 L2,2 L2,23.3319432 L8,23.3319432 L8,25.3319432 L1.97142857,25.3319432 C0.891403624,25.3319432 -1.42108547e-14,24.4755476 -1.42108547e-14,23.3986655 L-1.42108547e-14,1.93327773 C-1.42108547e-14,0.856395595 0.891403624,-1.13686838e-13 1.97142857,-1.13686838e-13 L34.0285714,-1.13686838e-13 Z" id="Combined-Shape" fill="#383D49" fill-rule="nonzero"></path>
+                    </g>
+                    <rect id="Rectangle-Copy-2" stroke="#EDEEF2" stroke-width="2" x="1" y="1" width="62" height="62" rx="31"></rect>
+                </g>
+            </g>
+        </g>
+    </g>
+</svg>

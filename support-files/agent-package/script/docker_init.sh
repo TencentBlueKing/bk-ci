@@ -2,7 +2,7 @@
 ## Download the docker.jar
 export LANG="zh_CN.UTF-8"
 
-URL=${devops_gateway}/ms/dispatch/api/build/dockers
+URL=${devops_gateway}/ms/dispatch-docker/api/build/dockers
 cd /data/devops
 echo "start to download the docker.jar..." > /data/devops/logs/docker.log
 
@@ -17,5 +17,5 @@ then
     cat docker.jar >> /data/devops/logs/docker.log
 fi
 
-/usr/local/jre/bin/java -Dfile.encoding=UTF-8 -DLC_CTYPE=UTF-8 -Dlandun.env=prod -Dbuild.type=DOCKER -Ddevops.gateway=${devops_gateway}  -jar docker.jar $@ >> /data/devops/logs/docker.log 2>&1
+/usr/local/jre/bin/java -Dfile.encoding=UTF-8 -DLC_CTYPE=UTF-8 -Dsun.jnu.encoding=UTF-8 -Dlandun.env=prod -Dbuild.type=DOCKER -Ddevops.gateway=${devops_gateway}  -jar docker.jar $@ >> /data/devops/logs/docker.log 2>&1
 #/usr/local/jre/bin/java -Dfile.encoding=UTF-8 -DLC_CTYPE=UTF-8 -Dlandun.env=dev -jar docker.jar $@ >> /data/devops/logs/docker.log

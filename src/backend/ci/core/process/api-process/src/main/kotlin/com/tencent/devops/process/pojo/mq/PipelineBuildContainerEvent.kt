@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -30,6 +31,7 @@ import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 
 /**
  * Container事件
@@ -46,7 +48,18 @@ data class PipelineBuildContainerEvent(
     val stageId: String,
     val containerId: String,
     val containerType: String,
+    val previousStageStatus: BuildStatus? = null, // 此仅在Stage下发处才会赋值，Job内/Task回调 等都会为null
     override var actionType: ActionType,
     override var delayMills: Int = 0,
-    val reason: String? = null
+    val reason: String? = null,
+    @Deprecated(message = "errorCode=com.tencent.devop.common.api.pojo.ErrorCode.USER_JOB_OUTTIME_LIMIT")
+    val timeout: Boolean? = false,
+    /**
+     * 0 表示 没有错误
+     */
+    var errorCode: Int = 0,
+    /**
+     * null 表示没有错误 see [com.tencent.devops.common.api.pojo.ErrorType.name]
+     */
+    var errorTypeName: String? = null
 ) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)

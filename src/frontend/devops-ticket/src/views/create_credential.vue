@@ -38,19 +38,18 @@
                             <bk-popover placement="right">
                                 <i class="devops-icon icon-info-circle"></i>
                                 <div slot="content" style="white-space: normal;">
-                                    <div> {{ getTypeDesc(localConfig.credentialType) }}<a style="color:#3c96ff" target="_blank" :href="`${DOCS_URL_PREFIX}/${$t('allService')}/${$t('ticket.credentialManage')}/summary.html`">{{ $t('ticket.learnMore') }}。</a> </div>
+                                    <div> {{ getTypeDesc(localConfig.credentialType) }}<a style="color:#3c96ff" target="_blank" :href="`${DOCS_URL_PREFIX}/document/6.0/129/7523`">{{ $t('ticket.learnMore') }}。</a> </div>
                                 </div>
                             </bk-popover>
-
                         </div>
                     </div>
                     <!-- 凭据类型 end -->
 
                     <!-- 凭据名称 start -->
                     <div class="bk-form-item is-required">
-                        <label class="bk-label">{{ $t('ticket.name') }}：</label>
+                        <label class="bk-label">{{ $t('ticket.id') }}：</label>
                         <div class="bk-form-content">
-                            <input type="text" name="credentialId" v-validate="{ required: true, regex: /^[a-zA-Z0-9\.\_]{1,30}$/ }" class="bk-form-input" :placeholder="$t('ticket.credential.validateName')"
+                            <input type="text" name="credentialId" v-validate="{ required: true, regex: /^[a-zA-Z0-9\_]{1,40}$/ }" class="bk-form-input" :placeholder="$t('ticket.credential.validateId')"
                                 v-model="localConfig.credentialId"
                                 :class="{
                                     'is-danger': errors.has('credentialId')
@@ -59,11 +58,30 @@
                             >
                             <p class="error-tips"
                                 v-show="errors.has('credentialId')">
-                                {{ `${$t('ticket.credential.validateName')}，${$t('ticket.credential.nameLenLimit')}` }}
+                                {{ `${$t('ticket.credential.validateId')}` }}
                             </p>
                         </div>
                     </div>
                     <!-- 凭据名称 end -->
+
+                    <!-- 凭据别名 start -->
+                    <div class="bk-form-item">
+                        <label class="bk-label">{{ $t('ticket.name') }}：</label>
+                        <div class="bk-form-content">
+                            <input type="text" name="credentialName" v-validate="{ regex: /^[\u4e00-\u9fa5a-zA-Z0-9\-\.\_]{0,30}$/ }" class="bk-form-input" :placeholder="$t('ticket.credential.validateName')"
+                                v-model="localConfig.credentialName"
+                                :class="{
+                                    'is-danger': errors.has('credentialName')
+                                }"
+                            >
+                            <i class="devops-icon icon-info-circle name-icon" v-bk-tooltips="{ content: $t('ticket.credential.nameTips') }"></i>
+                            <p class="error-tips"
+                                v-show="errors.has('credentialName')">
+                                {{ `${$t('ticket.credential.validateName')}` }}
+                            </p>
+                        </div>
+                    </div>
+                    <!-- 凭据别名 end -->
 
                     <!-- 凭据内容 start -->
                     <div v-for="(obj, key) in newModel" :key="key" :class="{ &quot;bk-form-item&quot;: true, &quot;is-required&quot;: obj.rules }">
@@ -228,8 +246,12 @@
                 this.iframeUtil.toggleProjectMenu(true)
             },
             goToApplyPerm () {
-                const url = `/backend/api/perm/apply/subsystem/?client_id=ticket&project_code=${this.projectId}&service_code=ticket&role_creator=credential`
-                window.open(url, '_blank')
+                // const url = `/backend/api/perm/apply/subsystem/?client_id=ticket&project_code=${this.projectId}&service_code=ticket&role_creator=credential`
+                // window.open(url, '_blank')
+                this.applyPermission(this.$permissionActionMap.create, this.$permissionResourceMap.credential, [{
+                    id: this.projectId,
+                    type: this.$permissionResourceTypeMap.PROJECT
+                }])
             },
             cancel () {
                 this.$router.push({
@@ -246,7 +268,8 @@
                         const credential = {
                             'credentialId': this.localConfig.credentialId,
                             'credentialRemark': this.localConfig.credentialRemark,
-                            'credentialType': this.localConfig.credentialType
+                            'credentialType': this.localConfig.credentialType,
+                            'credentialName': this.localConfig.credentialName
                         }
                         for (const key in this.newModel) {
                             Object.assign(credential, { [key]: this.localConfig.credential[key] })
@@ -292,6 +315,7 @@
                     }
                 })
                 this.newModel = this.getTicketByType(id)
+                this.localConfig.credentialType = id
                 this.localConfig.credential = {
                     v1: '',
                     v2: '',
@@ -310,6 +334,7 @@
                     credentialId: '',
                     credentialType: 'PASSWORD',
                     credentialRemark: '',
+                    credentialName: '',
                     credential: {
                         v1: '',
                         v2: '',
@@ -331,6 +356,7 @@
                             credentialId: data.credentialId,
                             credentialRemark: data.credentialRemark,
                             credentialType: data.credentialType,
+                            credentialName: data.credentialName,
                             credential: this.editInitCredential
                         })
                         this.newModel = this.getTicketByType(data.credentialType)
@@ -397,6 +423,10 @@
                 font-size: 12px;
                 padding-top: 6px;
             }
+        }
+        .devops-icon.name-icon {
+            padding-left: 0;
+            margin-left: 4px;
         }
         .bk-form-input, .bk-form-password, .bk-selector, .bk-form-textarea {
             width: 90%

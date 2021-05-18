@@ -1,48 +1,28 @@
 <template>
-    <div :class="['tool-card', { picked, disabled }]" :type="type" @click="handleClick">
+    <div :class="['tool-card', { picked, disabled }]" :source="source" :type="type" @click="handleClick">
         <div class="tool-logo">
-            <div class="tool-img"><img :src="toolData.logo" :alt="$t(`toolName.${toolData.displayName}`)"></div>
-            <div class="tool-name"><em>{{$t(`toolName.${toolData.displayName}`)}}</em></div>
+            <div class="tool-img"><img :src="toolData.logo"></div>
+            <div class="tool-name"><em :title="$t(`${toolData.displayName}`)">{{$t(`${toolData.displayName}`)}}</em></div>
         </div>
         <div class="tool-desc">
-            <div class="tool-summary" :title="toolData.description">{{toolDesc}}</div>
-            <div class="tool-lang" :title="supportLangs">{{$t('tools.支持')}}: {{supportLangs}}</div>
-            <div class="action-bar" v-if="type === 'manage'">
-                <a v-if="isAdded && hasRules" @click="toRules"><i class="bk-iconcool bk-icon-shezhi" :class="!statusEnabled ? 'disabled' : ''"></i></a>
-                <bk-switcher
-                    :key="+new Date()"
-                    v-if="isAdded"
-                    v-model="statusEnabled"
-                    size="small"
-                    class="bk-switcher-xsmall"
-                    :disabled="statusSwitcherDisabled"
-                    :title="statusSwitcherTitle"
-                    @click.native="handleStatusChange(statusEnabled)"
-                >
-                </bk-switcher>
-                <bk-button
-                    v-if="!isAdded"
-                    theme="primary"
-                    size="small"
-                    class="bk-button-xsmall"
-                    @click="handleAddButtonClick"
-                >
-                    {{$t('op.添加')}}
-                </bk-button>
+            <div class="desc">
+                <div class="tool-lang" :title="supportLangs">{{$t('支持语言')}} {{supportLangs}}</div>
+                <div class="tool-summary" :title="toolData.description">{{toolData.description}}</div>
+
             </div>
         </div>
-        <corner :text="$t('short.推荐')" theme="warning" v-if="toolData.recommend" />
+        <!-- <corner :text="$t('推荐')" theme="warning" v-if="toolData.recommend" /> -->
     </div>
 </template>
 
 <script>
     import { mapState } from 'vuex'
-    import Corner from '@/components/corner'
+    // import Corner from '@/components/corner'
 
     export default {
         name: 'tool-card',
         components: {
-            Corner
+            // Corner
         },
         props: {
             tool: {
@@ -65,6 +45,10 @@
                     }
                     return true
                 }
+            },
+            source: {
+                type: String,
+                default: 'new'
             }
         },
         data () {
@@ -96,14 +80,6 @@
                 }).filter(name => name)
                 return names.join('、')
             },
-            toolDesc () {
-                const description = this.toolData.description || ''
-                const cnCharLengthHalf = (description.match(/([\u4e00-\u9fa5]+)/g) || []).join('').length / 2
-                if (description.length + cnCharLengthHalf > 70) {
-                    return `${description.substr(0, 70 - cnCharLengthHalf)}....`
-                }
-                return description
-            },
             isAdded () {
                 return this.tool.taskId > 0
             },
@@ -121,21 +97,14 @@
                 return this.statusEnabled && this.taskDetail.enableToolList.length === 1
             },
             statusSwitcherTitle () {
-                let title = this.statusEnabled ? this.$t('suspend.停用') : this.$t('suspend.启用')
+                let title = this.statusEnabled ? this.$t('停用') : this.$t('启用')
                 if (this.statusSwitcherDisabled) {
-                    title = this.$t('suspend.不能停用所有工具')
+                    title = this.$t('不能停用所有工具')
                 }
                 return title
             }
         },
         methods: {
-            handleAddButtonClick () {
-                this.$emit('add-click', this.toolData.name)
-            },
-            handleStatusChange (statusEnabled) {
-                this.statusEnabled = !statusEnabled
-                this.$emit('status-change', statusEnabled, this.toolData.name)
-            },
             handleClick (e) {
                 if (this.type === 'pick') {
                     this.picked = !this.picked
@@ -143,7 +112,8 @@
                 this.$emit('click', e, {
                     name: this.toolData.name,
                     picked: this.picked,
-                    disabled: this.disabled
+                    disabled: this.disabled,
+                    source: this.source
                 })
             },
             toRules () {
@@ -151,7 +121,7 @@
                     const params = this.$route.params
                     params.toolId = this.toolData.name
                     this.$router.push({
-                        name: 'tool-rules',
+                        name: 'task-settings-checkerset',
                         params
                     })
                 }
@@ -162,16 +132,13 @@
 
 <style lang="postcss">
     @import '../../css/mixins.css';
-    @import '../../assets/bk_icon_font/style.css';
 
     .tool-card {
-        width: 320px;
-        min-height: 110px;
+        width: 485px;
+        height: 174px;
         border-radius: 2px;
-        box-shadow:0px 1px 3px 0px rgba(0, 0, 0, 0.08);
-        border:1px solid #cee0ff;
+        border:1px solid #d1e5f2;
         float: left;
-        padding: 8px;
         position: relative;
 
         &[type="pick"] {
@@ -180,12 +147,14 @@
 
         &.picked {
             border-color: #3a84ff;
-            @mixin triangle-check-bottom-right 44, 30, #3a84ff;
+            @mixin triangle-check-bottom-right 11, #3a84ff;
+            background: #fbfdff;
         }
 
         .tool-logo {
             float: left;
-            width: 95px;
+            width: 126px;
+            padding: 40px 5px;
             text-align: center;
 
             .tool-img {
@@ -197,35 +166,42 @@
             }
             .tool-name {
                 text-align: center;
-                color: #b2c2dc;
+                color: #46c2c7;
+                overflow: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
                 em {
                     font-style: normal;
-                    font-weight: 700;
-                    font-size: 12px;
+                    font-size: 18px;
                 }
             }
         }
         .tool-desc {
             overflow: hidden;
+            font-size: 14px;
+            padding: 20px 21px 20px 0;
 
+            .desc {
+                height: 115px;
+            }
             .tool-lang {
-                font-size: 12px;
-                color: #bac9de;
+                color: #63656e;
+                font-weight: 600;
                 margin-top: 4px;
-                @mixin ellipsis;
+                padding: 4px;
+                background: #e8f5fd;
+                @mixin text-ellipsis 2;
             }
             .tool-summary {
-                font-size: 12px;
-                color: #7b93b9;
-                height: 48px;
+                color: #63656e;
+                padding-top: 16px;
+                line-height: 26px;
+                @mixin text-ellipsis 3;
             }
             .action-bar {
                 text-align: right;
                 .is-checked {
                     background-color: #3a84ff;
-                }
-                .bk-icon-shezhi {
-                    cursor: pointer;
                 }
                 .disabled {
                     color: #b2c2dc;

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -33,6 +34,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwPipelineResourceV3
 import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineName
@@ -100,10 +102,27 @@ class ApigwPipelineResourceV3Impl @Autowired constructor(private val client: Cli
         pipelineId: String
     ): Result<Model> {
         logger.info("Get a pipeline at project:$projectId, pipelineId:$pipelineId")
-        return client.get(ServicePipelineResource::class).get(
+        return client.get(ServicePipelineResource::class).getWithPermission(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
+            channelCode = ChannelCode.BS,
+            checkPermission = true
+        )
+    }
+
+    override fun getBatch(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineIds: List<String>
+    ): Result<List<PipelineWithModel>> {
+        logger.info("Get batch pipelines at project:$projectId, pipelineIds:$pipelineIds")
+        return client.get(ServicePipelineResource::class).getBatch(
+            userId = userId,
+            projectId = projectId,
+            pipelineIds = pipelineIds,
             channelCode = ChannelCode.BS
         )
     }

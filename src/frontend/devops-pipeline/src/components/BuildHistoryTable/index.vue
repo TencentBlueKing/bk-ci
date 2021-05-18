@@ -24,7 +24,6 @@
                             }"
                         >
                         </i>
-
                     </span>
                 </template>
                 <template v-else-if="col.prop === 'stageStatus'" v-slot="props">
@@ -87,6 +86,21 @@
                             </div>
                         </bk-popover>
                     </div>
+                </template>
+                <template v-else-if="col.prop === 'pipelineVersion'" v-slot="props">
+                    <div>
+                        <span>{{ props.row[col.prop] }}</span>
+                        <logo v-if="isNotLatest(props)" v-bk-tooltips="$t('details.pipelineVersionDiffTips')" size="12" class="version-tips" name="warning-circle" />
+                    </div>
+                </template>
+                <template v-else-if="col.prop === 'errorCode'" v-slot="props">
+                    <template v-if="Array.isArray(props.row.errorInfoList) && props.row.errorInfoList.length > 0">
+                        <div @click.stop="" class="error-code-item" :style="`max-width: ${col.width - 30}px`" v-for="item in props.row.errorInfoList" :key="item.taskId">
+                            <logo class="svg-error-icon" v-if="errorTypeMap[item.errorType]" :title="$t(errorTypeMap[item.errorType].title)" :name="errorTypeMap[item.errorType].icon" size="12"></logo>
+                            <span :title="item.errorMsg" v-if="item.errorMsg">{{ item.errorMsg }} </span>
+                        </div>
+                    </template>
+                    <span v-else>--</span>
                 </template>
                 <template v-else v-slot="props">
                     {{ props.row[col.prop] }}
@@ -181,6 +195,26 @@
                     SKIP: 'redo-arrow'
                 }
             },
+            errorTypeMap () {
+                return [
+                    {
+                        title: 'systemError',
+                        icon: 'cog'
+                    },
+                    {
+                        title: 'userError',
+                        icon: 'user'
+                    },
+                    {
+                        title: 'thirdPartyError',
+                        icon: 'third-party'
+                    },
+                    {
+                        title: 'pluginError',
+                        icon: 'plugin'
+                    }
+                ]
+            },
             data () {
                 return this.buildList.map((item, index) => {
                     const active = index === this.activeIndex
@@ -225,7 +259,8 @@
                         sumSize: convertFileSize(sumSize, 'B'),
                         artifactories: needShowAll ? artifactories.slice(0, 11) : artifactories,
                         visible: this.visibleIndex === index,
-                        stageStatus
+                        stageStatus,
+                        errorInfoList: !active && Array.isArray(item.errorInfoList) && item.errorInfoList.length > 1 ? item.errorInfoList.slice(0, 1) : item.errorInfoList
                     }
                 })
             },
@@ -241,16 +276,12 @@
                 return this.data[this.visibleIndex].needShowAll
             },
             columnList () {
-                return this.columns.map(key => this.column[key])
+                return this.columns.map(key => this.column[key]).filter(m => !!m)
             },
             column () {
                 Object.keys(this.BUILD_HISTORY_TABLE_COLUMNS_MAP).map(item => {
-                    if (item === 'material') {
-                        const localStorageVal = localStorage.getItem('materialWidth')
-                        this.BUILD_HISTORY_TABLE_COLUMNS_MAP[item].width = localStorageVal || 500
-                    }
-                    if (item === 'stageStatus') {
-                        const localStorageVal = localStorage.getItem('stageStatusWidth')
+                    if (this.customColumn.includes(item)) {
+                        const localStorageVal = localStorage.getItem(`${item}Width`)
                         if (localStorageVal) {
                             this.BUILD_HISTORY_TABLE_COLUMNS_MAP[item].width = localStorageVal
                         }
@@ -265,6 +296,14 @@
             }
         },
         methods: {
+            isNotLatest ({ $index }) {
+                const length = this.data.length
+                // table最后一条记录必不变化
+                if ($index === length - 1) return false
+                const current = this.data[$index]
+                const before = this.data[$index + 1]
+                return current.pipelineVersion !== before.pipelineVersion
+            },
             getStageTooltip (stage) {
                 switch (true) {
                     case !!stage.elapsed:
@@ -344,8 +383,11 @@
                 }
             },
             handleDragend (newWidth, oldWidth, column) {
-                if (column.property === 'material') localStorage.setItem('materialWidth', newWidth)
-                if (column.property === 'stageStatus') localStorage.setItem('stageStatusWidth', newWidth)
+                if (this.customColumn.includes(column.property)) {
+                    localStorage.setItem(`${column.property}Width`, newWidth)
+                }
+
+                this.BUILD_HISTORY_TABLE_COLUMNS_MAP[column.property].width = newWidth
             },
             getArchiveUrl ({ id: buildNo }, type = '', codelib = '') {
                 const { projectId, pipelineId } = this.$route.params
@@ -471,13 +513,15 @@
                         theme = 'error'
                     }
                 } catch (err) {
-                    if (err.code === 403) { // 没有权限执行
-                        // this.setPermissionConfig(`流水线：${this.curPipeline.pipelineName}`, '执行')
-                        return
-                    } else {
-                        message = err.message || err
-                        theme = 'error'
-                    }
+                    this.handleError(err, [{
+                        actionId: this.$permissionActionMap.execute,
+                        resourceId: this.$permissionResourceMap.pipeline,
+                        instanceId: [{
+                            id: this.$route.params.pipelineId,
+                            name: this.$route.params.pipelineId
+                        }],
+                        projectId: this.$route.params.projectId
+                    }])
                 } finally {
                     delete this.retryingMap[buildId]
                     message && this.$showTips({
@@ -642,6 +686,26 @@
                     color: $primaryColor;
                 }
             }
+        }
+
+        .error-code-item {
+            display: flex;
+            width: 100%;
+            align-items: center;
+            > span {
+                margin-left: 4px;
+                @include ellipsis();
+            }
+            .svg-error-icon {
+                min-width: 12px;
+                min-height: 12px;
+            }
+        }
+        .version-tips {
+            display: inline-block;
+            vertical-align: -1px;
+            color: #F6B026;
+            font-size: 0;
         }
     }
     .artifact-list-popup {

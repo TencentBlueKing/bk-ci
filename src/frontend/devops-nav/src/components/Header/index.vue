@@ -12,17 +12,26 @@
                 />
             </router-link>
             <template v-if="showProjectList">
-                <devops-select
-                    ref="projectDropdown"
+                <bk-select ref="projectDropdown"
                     class="bkdevops-project-selector"
                     :placeholder="$t('selectProjectPlaceholder')"
                     :value="projectId"
                     :clearable="false"
-                    :options="selectProjectList"
                     :searchable="true"
                     @selected="handleProjectChange"
                     @toggle="handleDropdownVisible"
+                    :enable-virtual-scroll="selectProjectList && selectProjectList.length > 3000"
+                    :list="selectProjectList"
+                    id-key="projectCode"
+                    display-key="projectName"
                 >
+                    <bk-option
+                        v-for="item in selectProjectList"
+                        :key="item.projectCode"
+                        :id="item.projectCode"
+                        :name="item.projectName"
+                    >
+                    </bk-option>
                     <template slot="extension">
                         <div
                             class="bk-selector-create-item"
@@ -39,7 +48,7 @@
                             <span class="text">{{ $t('projectManage') }}</span>
                         </div>
                     </template>
-                </devops-select>
+                </bk-select>
             </template>
             <nav-menu v-if="showNav" />
             <h3

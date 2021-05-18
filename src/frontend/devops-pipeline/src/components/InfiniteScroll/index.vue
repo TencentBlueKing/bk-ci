@@ -1,5 +1,5 @@
 <template>
-    <div style="height: 100%;">
+    <div style="height: 100%;" v-bkloading="{ isLoading }">
         <slot v-bind="{ list, isLoading, isLoadingMore, queryList, setScrollTop, animateScroll, totals }"></slot>
         <div v-if="isLoadingMore" class="loading-more" slot="append"><i class="devops-icon icon-circle-2-1 spin-icon"></i><span>{{ $t('loadingTips') }}</span></div>
     </div>
@@ -69,7 +69,7 @@
             handleScroll (e) {
                 const { target } = e
                 const { hasNext, setScrollTop, scrollLoadMore, isLoadingMore } = this
-                
+
                 setScrollTop(e.target.scrollTop)
                 const offset = e.target.scrollHeight - (e.target.offsetHeight + e.target.scrollTop)
                 if (offset <= SCROLL_THRESHOLD && hasNext && !isLoadingMore) { // scroll to end
@@ -79,21 +79,23 @@
 
             async fetchData (page = 1, pageSize = this.pageSize) {
                 const res = await this.dataFetcher(page, pageSize)
-                this.list = page === 1 ? res.records : [
-                    ...this.list,
-                    ...res.records
-                ]
+                if (res) {
+                    this.list = page === 1 ? res.records : [
+                        ...this.list,
+                        ...res.records
+                    ]
 
-                this.currentPage = Math.ceil(this.list.length / pageSize)
-                
-                this.hasNext = this.currentPage < res.totalPages
-                this.totals = res.count
-                return res
+                    this.currentPage = Math.ceil(this.list.length / pageSize)
+
+                    this.hasNext = this.currentPage < res.totalPages
+                    this.totals = res.count
+                    return res
+                }
             },
 
-            async queryList (page = 1, pageSize) {
+            async queryList (page = 1, pageSize, isRefresh = false) {
                 try {
-                    this.isLoading = true
+                    this.isLoading = !isRefresh
                     const res = await this.fetchData(page, pageSize)
                     return res
                 } catch (e) {
@@ -118,10 +120,10 @@
                 }
             },
 
-            async updateList () {
+            async updateList (isRefresh = false) {
                 const { list, pageSize } = this
                 const len = list.length
-                const res = await this.queryList(1, len > pageSize ? len : pageSize)
+                const res = await this.queryList(1, len > pageSize ? len : pageSize, isRefresh)
 
                 this.list = res.records
 

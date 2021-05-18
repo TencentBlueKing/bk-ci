@@ -265,8 +265,12 @@
                 this.iframeUtil.toggleProjectMenu(true)
             },
             goToApplyPerm () {
-                const url = `/backend/api/perm/apply/subsystem/?client_id=environment&project_code=${this.projectId}&service_code=environment&role_creator=environment`
-                window.open(url, '_blank')
+                this.applyPermission(this.$permissionActionMap.create, this.$permissionResourceMap.environment, [{
+                    id: this.projectId,
+                    type: this.$permissionResourceTypeMap.PROJECT
+                }])
+                // const url = `/backend/api/perm/apply/subsystem/?client_id=environment&project_code=${this.projectId}&service_code=environment&role_creator=environment`
+                // window.open(url, '_blank')
             },
             /**
              * 弹窗全选联动
@@ -323,7 +327,7 @@
 
                         if (this.createEnvForm.envType === 'BUILD') {
                             for (let i = 0; i < target.length; i++) {
-                                if (target[i] && str.indexOf(target[i]) > -1 && item.nodeType === 'THIRDPARTY' && item.canUse) {
+                                if (target[i] && str === target[i] && item.nodeType === 'THIRDPARTY' && item.canUse) {
                                     item.isDisplay = true
                                     break
                                 } else {
@@ -332,7 +336,7 @@
                             }
                         } else {
                             for (let i = 0; i < target.length; i++) {
-                                if (target[i] && str.indexOf(target[i]) > -1 && item.nodeType !== 'THIRDPARTY' && item.canUse) {
+                                if (target[i] && str === target[i] && item.nodeType !== 'THIRDPARTY' && item.canUse) {
                                     item.isDisplay = true
                                     break
                                 } else {

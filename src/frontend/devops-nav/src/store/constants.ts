@@ -16,6 +16,7 @@ export const TOGGLE_MODULE_LOADING: string = 'TOGGLE_MODULE_LOADING'
 export const UPDATE_CURRENT_PAGE: string = 'UPDATE_CURRENT_PAGE'
 export const TOGGLE_PERMISSION_DIALOG: string = 'TOGGLE_PERMISSION_DIALOG'
 export const SET_CURRENT_NOTICE: string = 'SET_CURRENT_NOTICE'
+export const GET_PERM_REDIRECT_URL: string = 'GET_PERM_REDIRECT_URL'
 
 // 服务列表
 const serviceList = [
@@ -31,7 +32,8 @@ const serviceList = [
     'measure',
     'notify',
     'repository',
-    'ticket'
+    'ticket',
+    'auth'
 ]
 export const [
     PROJECT_API_URL_PREFIX,
@@ -46,7 +48,8 @@ export const [
     MEASURE_API_URL_PREFIX,
     NOTIFY_API_URL_PREFIX,
     REPOSITORY_API_URL_PREFIX,
-    TICKET_API_URL_PREFIX
+    TICKET_API_URL_PREFIX,
+    AUTH_API_URL_PREFIX
 ] = serviceList.map(s => `${s}/api`)
 
 export const EMPTY_PROJECT: Project = {

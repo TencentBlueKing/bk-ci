@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -67,7 +68,7 @@ class ApigwTemplateResourceV3Impl @Autowired constructor(private val client: Cli
         templateId: String,
         version: Long?
     ): Result<TemplateModelDetail> {
-        logger.info("get project's pipeline template, projectId($projectId) templateId($templateId) version($version) by $userId")
+        logger.info("get template, projectId($projectId) templateId($templateId) version($version) by $userId")
         return client.get(ServiceTemplateResource::class).getTemplate(
             userId = userId,
             projectId = projectId,
@@ -97,7 +98,7 @@ class ApigwTemplateResourceV3Impl @Autowired constructor(private val client: Cli
         projectId: String,
         template: Model
     ): Result<TemplateId> {
-        logger.info("create createTemplate :userId=$userId,projectId=$projectId,],template:$template")
+        logger.info("createTemplate|userId=$userId|projectId=$projectId")
         return client.get(UserPTemplateResource::class).createTemplate(
             userId = userId,
             projectId = projectId,
@@ -111,7 +112,7 @@ class ApigwTemplateResourceV3Impl @Autowired constructor(private val client: Cli
         projectId: String,
         templateId: String
     ): Result<Boolean> {
-        logger.info("create createTemplate :userId=$userId,projectId=$projectId,],templateId:$templateId")
+        logger.info("DeleteTemplate|userId=$userId|projectId=$projectId|templateId=$templateId")
         return client.get(UserPTemplateResource::class).deleteTemplate(
             userId = userId,
             projectId = projectId,
@@ -126,7 +127,7 @@ class ApigwTemplateResourceV3Impl @Autowired constructor(private val client: Cli
         templateId: String,
         version: Long
     ): Result<Boolean> {
-        logger.info("create createTemplate :userId=$userId,projectId=$projectId,],templateId:$templateId,version=$version")
+        logger.info("deleteTemplateVersion|userId=$userId|projectId=$projectId|templateId=$templateId|ver=$version")
         return client.get(UserPTemplateResource::class).deleteTemplate(
             userId = userId,
             projectId = projectId,
@@ -144,7 +145,7 @@ class ApigwTemplateResourceV3Impl @Autowired constructor(private val client: Cli
         versionName: String,
         template: Model
     ): Result<Boolean> {
-        logger.info("create createTemplate :userId=$userId,projectId=$projectId,],templateId:$templateId,versionName=$versionName,template=$template")
+        logger.info("updateTemplate|userId=$userId|projectId=$projectId|templateId=$templateId|verName=$versionName")
         return client.get(UserPTemplateResource::class).updateTemplate(
             userId = userId,
             projectId = projectId,

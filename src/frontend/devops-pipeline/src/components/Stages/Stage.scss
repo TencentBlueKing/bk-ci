@@ -257,6 +257,9 @@ span.skip-name {
         &.STAGE_SUCCESS {
             background-color: $successColor;
         }
+        &.PAUSE {
+            background-color: $pauseColor;
+        }
         &:before,
         &:after {
             border-top-color: $lineColor;

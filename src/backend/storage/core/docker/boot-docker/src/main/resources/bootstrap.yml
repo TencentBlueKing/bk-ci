@@ -1,0 +1,2 @@
+service.name: docker
+server.port: 25802

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -29,6 +30,7 @@ package com.tencent.devops.dockerhost.config
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
+@Suppress("ALL")
 @Component
 class DockerHostConfig {
 
@@ -89,6 +91,18 @@ class DockerHostConfig {
     @Value("\${dockerCli.volumeGradleCache:/root/.gradle/caches}")
     var volumeGradleCache: String? = null
 
+    @Value("\${dockerCli.volumeGolangCache:/root/go/pkg/mod}")
+    var volumeGolangCache: String? = null
+
+    @Value("\${dockerCli.volumeSbtCache:/root/.ivy2}")
+    var volumeSbtCache: String? = null
+
+    @Value("\${dockerCli.volumeSbt2Cache:/root/.cache}")
+    var volumeSbt2Cache: String? = null
+
+    @Value("\${dockerCli.volumeYarnCache:/usr/local/share/.cache/}")
+    var volumeYarnCache: String? = null
+
     @Value("\${dockerCli.hostPathWorkspace:#{null}}")
     var hostPathWorkspace: String? = null
 
@@ -128,6 +142,18 @@ class DockerHostConfig {
     @Value("\${dockerCli.hostPathGradleCache:#{null}}")
     var hostPathGradleCache: String? = null
 
+    @Value("\${dockerCli.hostPathGolangCache:#{null}}")
+    var hostPathGolangCache: String? = null
+
+    @Value("\${dockerCli.hostPathSbtCache:#{null}}")
+    var hostPathSbtCache: String? = null
+
+    @Value("\${dockerCli.hostPathSbt2Cache:#{null}}")
+    var hostPathSbt2Cache: String? = null
+
+    @Value("\${dockerCli.hostPathYarnCache:#{null}}")
+    var hostPathYarnCache: String? = null
+
     @Value("\${dockerCli.hostPathLinkDir}")
     var hostPathLinkDir: String = "/tmp/bkci"
 
@@ -161,6 +187,60 @@ class DockerHostConfig {
     @Value("\${dockerhost.mode:#{null}}")
     var dockerhostMode: String? = null
 
+    @Value("\${dockerhost.localIp:#{null}}")
+    var dockerhostLocalIp: String? = null
+
+    /**
+     * 运行dockerRun启动mysql,redis服务时的初始映射端口
+     */
+    @Value("\${dockerhost.dockerRun.startPort:20000}")
+    var dockerRunStartPort: Int? = 20000
+
+    /**
+     * DockerHost母机开启容器负载检测的CPU阈值
+     */
+    @Value("\${dockerhost.elasticity.systemCpuThreshold:80}")
+    var elasticitySystemCpuThreshold: Int? = 80
+
+    /**
+     * DockerHost母机开启容器负载检测的应用内存阈值
+     */
+    @Value("\${dockerhost.elasticity.systemMemThreshold:80}")
+    var elasticitySystemMemThreshold: Int? = 80
+
+    /**
+     * DockerHost容器负载弹性扩缩cpuPeriod配置--指定容器对CPU的使用要在多长时间内做一次重新分配
+     */
+    @Value("\${dockerhost.elasticity.cpuPeriod:10000}")
+    var elasticityCpuPeriod: Int? = 10000
+
+    /**
+     * DockerHost容器负载弹性扩缩cpuQuota配置--指定在这个周期内，最多可以有多少时间用来跑这个容器
+     */
+    @Value("\${dockerhost.elasticity.cpuQuota:80000}")
+    var elasticityCpuQuota: Int? = 80000
+
+    /**
+     * DockerHost容器负载弹性扩缩，容器CPU阈值
+     */
+    @Value("\${dockerhost.elasticity.cpuThreshold:80}")
+    var elasticityCpuThreshold: Int? = 80
+
+    /**
+     * DockerHost容器负载弹性扩缩，容器内存配置
+     */
+    @Value("\${dockerhost.elasticity.memReservation:34359738368}")
+    var elasticityMemReservation: Long? = 32 * 1024 * 1024 * 1024L
+
+    /**
+     * DockerHost容器负载弹性扩缩，容器内存阈值
+     */
+    @Value("\${dockerhost.elasticity.memThreshold:80}")
+    var elasticityMemThreshold: Int? = 80
+
+    /**
+     * Codecc集群下是否开启dockerRun日志上报
+     */
     @Value("\${codecc.dockerRun.log:false}")
     var dockerRunLog: Boolean? = false
 }

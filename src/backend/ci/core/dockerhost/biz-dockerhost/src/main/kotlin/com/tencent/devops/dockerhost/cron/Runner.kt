@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -29,10 +30,15 @@ package com.tencent.devops.dockerhost.cron
 import com.tencent.devops.dockerhost.services.DockerHostBuildService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.util.concurrent.TimeUnit
+import java.util.concurrent.locks.ReentrantLock
 
 // @Component
 class Runner @Autowired constructor(private val dockerHostBuildService: DockerHostBuildService) {
+
     private val logger = LoggerFactory.getLogger(Runner::class.java)
+
+    private val monitorLock = ReentrantLock()
 
     //    @Scheduled(initialDelay = 300 * 1000, fixedDelay = 3600 * 1000)
     fun clearExitedContainer() {
@@ -64,6 +70,18 @@ class Runner @Autowired constructor(private val dockerHostBuildService: DockerHo
             dockerHostBuildService.refreshDockerIpStatus()
         } catch (t: Throwable) {
             logger.error("refresh docker status error.", t)
+        }
+    }
+
+    fun monitorSystemLoad() {
+        try {
+            if (monitorLock.tryLock(1000, TimeUnit.MILLISECONDS)) {
+                dockerHostBuildService.monitorSystemLoad()
+            }
+        } catch (t: Throwable) {
+            logger.error("monitor systemLoad error.", t)
+        } finally {
+            monitorLock.unlock()
         }
     }
 }

@@ -18,7 +18,7 @@
                                 :to="addConsole(service.link_new)"
                             >
                                 <Logo
-                                    :name="service.key"
+                                    :name="service.logoUrl"
                                     size="16"
                                 />
                                 {{ serviceName(service.name) }}
@@ -118,11 +118,11 @@
                 <h2>{{ $t("bkdevopsTarget") }}</h2>
                 <p>
                     {{ $t("bkdevopsWay") }}
-                    <a
+                    <!-- <a
                         :href="DOCS_URL_PREFIX"
                         target="_blank"
                         class="more"
-                    >{{ $t("learnMore") }}</a>
+                    >{{ $t("learnMore") }}</a> -->
                 </p>
             </article>
             <article>

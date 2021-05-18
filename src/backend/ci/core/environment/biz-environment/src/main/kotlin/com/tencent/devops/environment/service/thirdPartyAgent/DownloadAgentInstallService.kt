@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -52,7 +53,7 @@ import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.core.StreamingOutput
 
-@Service
+@Service@Suppress("ALL")
 class DownloadAgentInstallService @Autowired constructor(
     private val dslContext: DSLContext,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
@@ -65,6 +66,9 @@ class DownloadAgentInstallService @Autowired constructor(
 
     @Value("\${environment.agentCollectorOn:false}")
     private val agentCollectorOn = ""
+
+    @Value("\${environment.certFilePath:#{null}}")
+    private val certFilePath: String? = null
 
     fun downloadInstallScript(agentId: String): Response {
         logger.info("Trying to download the agent($agentId) install script")
@@ -117,6 +121,15 @@ class DownloadAgentInstallService @Autowired constructor(
 
         return Response.ok(StreamingOutput { output ->
             val zipOut = ArchiveStreamFactory().createArchiveOutputStream(ArchiveStreamFactory.ZIP, output)
+
+            if (!certFilePath.isNullOrBlank()) {
+                val certFile = File(certFilePath)
+                if (certFile.exists() && certFile.isFile) {
+                    zipOut.putArchiveEntry(ZipArchiveEntry(certFile, CERT_FILE_NAME))
+                    IOUtils.copy(FileInputStream(certFile), zipOut)
+                    zipOut.closeArchiveEntry()
+                }
+            }
 
             jarFiles.plus(packageFiles).forEach {
                 zipOut.putArchiveEntry(ZipArchiveEntry(it, it.name))
@@ -264,13 +277,15 @@ class DownloadAgentInstallService @Autowired constructor(
     private fun getAgentReplaceProperties(agentRecord: TEnvironmentThirdpartyAgentRecord): Map<String, String> {
         val agentId = HashUtil.encodeLongId(agentRecord.id)
         val agentUrl = agentUrlService.genAgentUrl(agentRecord)
-        val gw = agentUrlService.genGateway(agentRecord)
+        val gateWay = agentUrlService.genGateway(agentRecord)
+        val fileGateway = agentUrlService.genFileGateway(agentRecord)
         return mapOf(
             "agent_url" to agentUrl,
             "projectId" to agentRecord.projectId,
             "agentId" to agentId,
             "agentSecretKey" to SecurityUtil.decrypt(agentRecord.secretKey),
-            "gateWay" to gw,
+            "gateWay" to gateWay,
+            "fileGateway" to fileGateway,
             "landun.env" to profile.getEnv().name,
             "agentCollectorOn" to agentCollectorOn
         )
@@ -306,5 +321,6 @@ class DownloadAgentInstallService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(DownloadAgentInstallService::class.java)
         private const val AGENT_FILE_MODE = 0b111101101
+        private const val CERT_FILE_NAME = ".cert"
     }
 }

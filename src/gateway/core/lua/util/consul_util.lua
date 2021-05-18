@@ -46,47 +46,73 @@ function _M:getAllWhitelistIp()
     else
       ns_config = config.ns_devnet_gray
     end
-  end 
-  --- 初始化HTTP连接
-  local httpc = http.new()
-  --- 开始连接
-  httpc:set_timeout(3000)
-  local consul_ip = ""
-  if type(ns_config.ip) == 'table' then
-    consul_ip = ns_config.ip[1]
-  else
-    consul_ip = ns_config.ip
   end
 
-  httpc:connect(consul_ip, ns_config.http_port)
+  local white_ip_hot_cache = ngx.shared.white_ip_hot_store
+  local white_ip_cold_cache = ngx.shared.white_ip_cold_store
+  local ip_cache_key = "X-DEVOPS-WHITE-IP"
+  local responseBody = white_ip_hot_cache:get(ip_cache_key)
 
-  --- 发送请求
-  -- local url = config.oauth.scheme .. config.oauth.ip  .. config.oauth.loginUrl .. bk_token
-  local url = ns_config.nodes_url
-  local res, err = httpc:request({
-      path = url,
-      method = "GET"
-  })
-  --- 判断是否出错了
-  if not res then
+  if responseBody == nil then
+    --- 初始化HTTP连接
+    local httpc = http.new()
+    --- 开始连接
+    httpc:set_timeout(3000)
+    local consul_ip = ""
+    if type(ns_config.ip) == 'table' then
+      consul_ip = ns_config.ip[1]
+    else
+      consul_ip = ns_config.ip
+    end
+
+    httpc:connect(consul_ip, ns_config.http_port)
+
+    --- 发送请求
+    -- local url = config.oauth.scheme .. config.oauth.ip  .. config.oauth.loginUrl .. bk_token
+    local url = ns_config.nodes_url
+    local res, err = httpc:request({
+        path = url,
+        method = "GET"
+    })
+
+    local useHttp = true
+    if not res then --- 判断是否出错了
       ngx.log(ngx.ERR, "failed to request get consul ip: ", err)
+      responseBody = white_ip_cold_cache:get(ip_cache_key)
+      useHttp = false
+    else
+      if res.status ~= 200 then --- 判断返回的状态码是否是200
+        ngx.log(ngx.ERR, "failed to request get consul ip, status: ", res.status)
+        responseBody = white_ip_cold_cache:get(ip_cache_key)
+        useHttp = false
+      else -- 正常
+        responseBody = res:read_body()
+        useHttp = true
+      end
+    end
+
+    if responseBody == nil then
+      ngx.log(ngx.ERR, "nil responseBody , please check all cache and http api")
       ngx.exit(500)
       return
+    else
+      if useHttp then
+        --- 热缓存5秒
+        white_ip_hot_cache:set(ip_cache_key, responseBody, 5)
+        -- 冷缓存1天
+        white_ip_cold_cache:set(ip_cache_key, responseBody, 86400)
+      end
+    end
+
+    --- 设置HTTP保持连接
+    httpc:set_keepalive(60000, 5)
   end
-  --- 判断返回的状态码是否是200
-  if res.status ~= 200 then
-      ngx.log(ngx.ERR, "failed to request get consul ip, status: ", res.status)
-      ngx.exit(500)
-      return
-  end
-  --- 获取所有回复
-  local responseBody = res:read_body()
-  --- 设置HTTP保持连接
-  httpc:set_keepalive(60000, 5)
+
+
   --- 转换JSON的返回数据为TABLE
   local result = json.decode(responseBody)
   --- 判断JSON转换是否成功
-  if result == nil then 
+  if result == nil then
       ngx.log(ngx.ERR, "failed to parse get consul ip response：", responseBody)
       ngx.exit(500)
       return

@@ -1,9 +1,10 @@
 spring:
+  main:
+    allow-bean-definition-overriding: true
   application:
     name: project${service-suffix}
     desc: DevOps Project Service
     version: 4.0.0
     packageName: com.tencent.devops.project
-
 server:
   port: 21912

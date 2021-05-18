@@ -55,8 +55,9 @@
                                         <bk-form-item label-width="auto" class="flex-col-span-1" :label="$t('name')" :is-error="errors.has(`param-${param.id}.id`)" :error-msg="errors.first(`param-${param.id}.id`)">
                                             <vuex-input :ref="`paramId${index}Input`" :data-vv-scope="`param-${param.id}`" :disabled="disabled" :handle-change="(name, value) => handleUpdateParamId(name, value, index)" v-validate.initial="`required|unique:${validateParams.map(p => p.id).join(',')}`" name="id" :placeholder="$t('nameInputTips')" :value="param.id" />
                                         </bk-form-item>
-                                        <bk-form-item label-width="auto" class="flex-col-span-1" :label="$t('editPage.defaultValue')" :required="isBooleanParam(param.type)" :is-error="errors.has(`param-${param.id}.defaultValue`)" :error-msg="errors.first(`param-${param.id}.defaultValue`)" :desc="showTips">
+                                        <bk-form-item label-width="auto" class="flex-col-span-1" :label="$t(`editPage.${getParamsDefaultValueLabel(param.type)}`)" :required="isBooleanParam(param.type)" :is-error="errors.has(`param-${param.id}.defaultValue`)" :error-msg="errors.first(`param-${param.id}.defaultValue`)" :desc="$t(`editPage.${getParamsDefaultValueLabelTips(param.type)}`)">
                                             <selector
+                                                style="max-width: 250px"
                                                 :popover-min-width="250"
                                                 v-if="isSelectorParam(param.type)"
                                                 :handle-change="(name, value) => handleUpdateParam(name, value, index)"
@@ -79,7 +80,8 @@
                                                 :handle-change="(name, value) => handleUpdateParam(name, value, index)"
                                                 :value="param.defaultValue">
                                             </enum-input>
-                                            <vuex-input v-if="isStringParam(param.type) || isSvnParam(param.type) || isGitParam(param.type) || isArtifactoryParam(param.type)" :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="defaultValue" :data-vv-scope="`param-${param.id}`" :placeholder="$t('editPage.defaultValueTips')" :value="param.defaultValue" />
+                                            <vuex-input v-if="isStringParam(param.type) || isSvnParam(param.type) || isGitParam(param.type) || isArtifactoryParam(param.type) || isFileParam(param.type)" :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="defaultValue" :click-unfold="true" :data-vv-scope="`param-${param.id}`" :placeholder="$t('editPage.defaultValueTips')" :value="param.defaultValue" />
+                                            <vuex-textarea v-if="isTextareaParam(param.type)" :click-unfold="true" :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="defaultValue" :data-vv-scope="`param-${param.id}`" :placeholder="$t('editPage.defaultValueTips')" :value="param.defaultValue" />
                                             <request-selector v-if="isCodelibParam(param.type)" :popover-min-width="250" :url="getCodeUrl(param.scmType)" v-bind="codelibOption" :disabled="disabled" name="defaultValue" :value="param.defaultValue" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`"></request-selector>
                                             <request-selector v-if="isBuildResourceParam(param.type)" :popover-min-width="250" :url="getBuildResourceUrl(param.containerType)" param-id="name" :disabled="disabled" name="defaultValue" :value="param.defaultValue" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`"></request-selector>
                                             <request-selector v-if="isSubPipelineParam(param.type)" :popover-min-width="250" v-bind="subPipelineOption" :disabled="disabled" name="defaultValue" :value="param.defaultValue" :handle-change="(name, value) => handleUpdateParam(name, value, index)" :data-vv-scope="`param-${param.id}`"></request-selector>
@@ -124,6 +126,12 @@
                                         <key-value-normal :disabled="disabled" name="properties" :data-vv-scope="`param-${param.id}`" :is-metadata-var="true" :add-btn-text="$t('editPage.addMetaData')" :value="getProperties(param)" :handle-change="(name, value) => handleProperties(name, value, index)"></key-value-normal>
                                     </bk-form-item>
 
+                                    <bk-form-item label-width="auto" v-if="isFileParam(param.type)">
+                                        <file-param-input
+                                            :file-path="param.defaultValue"
+                                        ></file-param-input>
+                                    </bk-form-item>
+
                                     <bk-form-item label-width="auto" :label="$t('desc')">
                                         <vuex-input :disabled="disabled" :handle-change="(name, value) => handleUpdateParam(name, value, index)" name="desc" :placeholder="$t('editPage.descTips')" :value="param.desc" />
                                     </bk-form-item>
@@ -152,11 +160,13 @@
     import Selector from '@/components/atomFormField/Selector'
     import AtomCheckbox from '@/components/atomFormField/AtomCheckbox'
     import KeyValueNormal from '@/components/atomFormField/KeyValueNormal'
+    import FileParamInput from '@/components/FileParamInput'
     import validMixins from '../validMixins'
     import draggable from 'vuedraggable'
     import { allVersionKeyList } from '@/utils/pipelineConst'
     import { STORE_API_URL_PREFIX, REPOSITORY_API_URL_PREFIX } from '@/store/constants'
     import {
+        isTextareaParam,
         isStringParam,
         isBooleanParam,
         isBuildResourceParam,
@@ -167,7 +177,10 @@
         isGitParam,
         isArtifactoryParam,
         isSubPipelineParam,
+        isFileParam,
         getRepoOption,
+        getParamsDefaultValueLabel,
+        getParamsDefaultValueLabelTips,
         DEFAULT_PARAM,
         PARAM_LIST,
         STRING,
@@ -198,7 +211,8 @@
             draggable,
             VuexTextarea,
             RequestSelector,
-            KeyValueNormal
+            KeyValueNormal,
+            FileParamInput
         },
         mixins: [validMixins],
         props: {
@@ -231,8 +245,7 @@
         data () {
             return {
                 paramIdCount: 0,
-                renderParams: [],
-                showTips: this.$t('editPage.defaultValueDesc')
+                renderParams: []
             }
         },
 
@@ -275,7 +288,7 @@
             },
             globalParams: {
                 get () {
-                    return this.renderParams.filter(p => !allVersionKeyList.includes(p.id))
+                    return this.renderParams.filter(p => !allVersionKeyList.includes(p.id) && p.id !== 'BK_CI_BUILD_MSG')
                 },
                 set (params) {
                     this.updateContainerParams(this.settingKey, [...params, ...this.versions])
@@ -317,6 +330,7 @@
         },
 
         methods: {
+            isTextareaParam,
             isStringParam,
             isBooleanParam,
             isMultipleParam,
@@ -326,6 +340,9 @@
             isArtifactoryParam,
             isBuildResourceParam,
             isSubPipelineParam,
+            isFileParam,
+            getParamsDefaultValueLabel,
+            getParamsDefaultValueLabelTips,
             isSelectorParam (type) {
                 return isMultipleParam(type) || isEnumParam(type)
             },
@@ -398,7 +415,6 @@
                             [key]: value
                         })
                     }
-
                     this.handleChange([
                         ...this.renderParams
                     ])
@@ -501,7 +517,7 @@
 
             getCodeUrl (type) {
                 type = type || 'CODE_GIT'
-                return `/${REPOSITORY_API_URL_PREFIX}/user/repositories/{projectId}/hasPermissionList?permission=USE&repositoryType=${type}&page=1&pageSize=100`
+                return `/${REPOSITORY_API_URL_PREFIX}/user/repositories/{projectId}/hasPermissionList?permission=USE&repositoryType=${type}&page=1&pageSize=1000`
             },
 
             handleChange (params) {
@@ -579,7 +595,6 @@
             }
             .flex-col-span-1 {
                 flex: 1;
-                overflow: hidden;
             }
         }
         .content .text-link {

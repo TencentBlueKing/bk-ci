@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -49,10 +50,11 @@ class NoticeDao {
                     .where(conditions)
                     .orderBy(ID.desc())
                     .fetch()
-            return if (notices.size > 0)
+            return if (notices.size > 0) {
                 notices[0]
-            else
+            } else {
                 null
+            }
         }
     }
 
@@ -93,6 +95,7 @@ class NoticeDao {
                         .set(UPDATE_DATE, Timestamp(currentTimestamp).toLocalDateTime())
                         .set(NOTICE_CONTENT, noticeRequest.noticeContent)
                         .set(REDIRECT_URL, noticeRequest.redirectUrl)
+                        .set(NOTICE_TYPE, noticeRequest.noticeType.toByte())
                         .where(ID.eq(id))
                         .execute()
             } else {
@@ -102,13 +105,15 @@ class NoticeDao {
                         EFFECT_DATE,
                         INVALID_DATE,
                         NOTICE_CONTENT,
-                        REDIRECT_URL
+                        REDIRECT_URL,
+                        NOTICE_TYPE
                 ).values(
                         noticeRequest.noticeTitle,
                         effectDate,
                         invalidDate,
                         noticeRequest.noticeContent,
-                        noticeRequest.redirectUrl
+                        noticeRequest.redirectUrl,
+                        noticeRequest.noticeType.toByte()
                 ).execute()
             }
         }

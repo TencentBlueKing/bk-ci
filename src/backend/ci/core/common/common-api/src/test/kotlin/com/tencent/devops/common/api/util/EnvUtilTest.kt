@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -38,5 +39,27 @@ class EnvUtilTest {
         println(command)
         val parseEnv = EnvUtils.parseEnv(command, map)
         println(parseEnv)
+
+        val command1 = "hello \${{variables.abc}} world"
+        val command2 = "\${{variables.abc}}world"
+        val command3 = "hello\${{variables.abc}}"
+        val command4 = "hello\${{variables.abc"
+        val command5 = "hello\${{variables.abc}"
+        val command6 = "hello\${variables.abc}}"
+        val command7 = "hello\$variables.abc}}"
+        val command8 = "echo \${{ variables.hello }}"
+        val data = mapOf(
+            "variables.abc" to "variables.value",
+            "variables.hello" to "hahahahaha"
+        )
+
+        println(EnvUtils.parseWithDoubleCurlyBraces(command1, data))
+        println(EnvUtils.parseWithDoubleCurlyBraces(command2, data))
+        println(EnvUtils.parseWithDoubleCurlyBraces(command3, data))
+        println(EnvUtils.parseWithDoubleCurlyBraces(command4, data))
+        println(EnvUtils.parseWithDoubleCurlyBraces(command5, data))
+        println(EnvUtils.parseWithDoubleCurlyBraces(command6, data))
+        println(EnvUtils.parseWithDoubleCurlyBraces(command7, data))
+        println(EnvUtils.parseWithDoubleCurlyBraces(command8, data))
     }
 }

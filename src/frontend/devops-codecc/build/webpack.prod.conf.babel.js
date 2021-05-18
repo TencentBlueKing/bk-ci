@@ -144,7 +144,7 @@ const prodConf = merge(baseConf, {
 
         new HtmlWebpackPlugin({
             filename: resolve(config.build.assetsRoot + sep + config.build.assetsSubDirectory, '..') + '/index.html',
-            template: 'index.html',
+            template: 'index-bundle.html',
             inject: true,
             minify: {
                 removeComments: true,

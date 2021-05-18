@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -43,6 +44,7 @@ import com.tencent.devops.common.auth.code.PROJECT_SCOPE_TYPE
 import org.json.JSONObject
 import org.slf4j.LoggerFactory
 
+@Suppress("ALL")
 class BkAuthResourceApi constructor(
     private val bkAuthProperties: BkAuthProperties,
     private val objectMapper: ObjectMapper,
@@ -151,12 +153,12 @@ class BkAuthResourceApi constructor(
             val responseBean = objectMapper.readValue<BkRegisterResourcesResponse>(responseBody.toString())
 
             if (!responseBean.result) {
-                logger.error("bkiam create resources failed, msg: ${responseBean.message}")
+                logger.warn("bkiam create resources failed, msg: ${responseBean.message}")
             }
 //            logger.info("结束调用权限中心批量注册资源，uri:$uri , systemId= ${systemId.id()}")
             return true
         } catch (ignored: Exception) {
-            logger.error("bkiam, create resources exception, msg: $ignored")
+            logger.warn("bkiam, create resources exception, msg: $ignored")
             throw RemoteServiceException(ignored.message!!)
         }
     }
@@ -233,11 +235,11 @@ class BkAuthResourceApi constructor(
             val responseBean = objectMapper.readValue<BkUpdateResourceResponse>(responseBody.toString())
 
             if (!responseBean.result) {
-                logger.error("bkiam update resources failed, msg: ${responseBean.message}")
+                logger.warn("bkiam update resources failed, msg: ${responseBean.message}")
             }
 //            logger.info("结束调用权限中心更新资源，uri:$uri , systemId= ${systemId.id()}")
         } catch (ignored: Exception) {
-            logger.error("bkiam, update resources exception, msg: $ignored")
+            logger.warn("bkiam, update resources exception, msg: $ignored")
             throw RemoteServiceException(ignored.message!!)
         }
     }
@@ -312,11 +314,11 @@ class BkAuthResourceApi constructor(
             val responseBean = objectMapper.readValue<BkDeleteResourceAuthResponse>(responseBody.toString())
 
             if (!responseBean.result) {
-                logger.error("bkiam delete resources failed, msg: ${responseBean.message}")
+                logger.warn("bkiam delete resources failed, msg: ${responseBean.message}")
             }
 //            logger.info("结束调用权限中心删除资源权限接口，uri:$uri , systemId= ${systemId.id()}")
         } catch (ignored: Exception) {
-            logger.error("bkiam, delete resources exception, msg: $ignored")
+            logger.warn("bkiam, delete resources exception, msg: $ignored")
             throw RemoteServiceException(ignored.message!!)
         }
     }

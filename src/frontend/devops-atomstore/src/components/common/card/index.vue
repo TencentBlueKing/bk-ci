@@ -4,7 +4,7 @@
         <p :class="[{ 'not-recommend': atom.recommendFlag === false }, 'card-name', 'text-overflow']">{{ atom.name }}</p>
         <h5 class="card-detail">
             <span class="text-overflow">{{ atom.publisher }}</span>
-            <span>{{ atom.downloads }} <i class="devops-icon icon-heat-2"></i></span>
+            <span>{{ displayNum }} <i class="devops-icon icon-heat-2"></i></span>
         </h5>
         <p v-if="hasSummary" class="card-summary">{{atom.summary || $t('store.暂无描述')}}</p>
         <section class="card-rate">
@@ -29,12 +29,27 @@
             atom: Object,
             hasSummary: Boolean
         },
+
         computed: {
             starWidth () {
                 const integer = Math.floor(this.atom.score)
                 const fixWidth = 18 * integer
                 const rateWidth = 15 * (this.atom.score - integer)
                 return `${fixWidth + rateWidth}px`
+            },
+
+            displayNum () {
+                const pipeType = this.$route.query.pipeType
+                let res
+                switch (pipeType) {
+                    case 'atom':
+                        res = this.atom.recentExecuteNum
+                        break
+                    default:
+                        res = this.atom.downloads
+                        break
+                }
+                return res
             }
         }
     }

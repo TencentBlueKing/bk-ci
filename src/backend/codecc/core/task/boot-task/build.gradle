@@ -1,0 +1,11 @@
+dependencies {
+    compile project(":ext:tencent:task:biz-task-cov")
+    compile project(":ext:tencent:task:biz-task-kw")
+    compile project(":ext:tencent:task:biz-task-pinpoint")
+    compile project(":ext:tencent:task:biz-task-opensource")
+    compile "org.springframework.kafka:spring-kafka:1.3.10.RELEASE"
+}
+
+version = null
+
+apply from: "$rootDir/task_spring_boot_package.gradle"

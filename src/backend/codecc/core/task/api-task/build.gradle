@@ -1,0 +1,6 @@
+dependencies {
+    compile project(":core:common:common-api")
+//    compile project(":task:model-task")
+    compile "org.glassfish.jersey.media:jersey-media-multipart"
+//    compile group: 'com.tencent.bk.devops', name: 'common-pipeline', version: '0.0.5', changing: true
+}

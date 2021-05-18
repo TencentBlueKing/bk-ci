@@ -5,16 +5,18 @@
 
 import Vue from 'vue'
 import Vuex from 'vuex'
-import jsonp from 'jsonp'
 
 import project from './modules/project'
 import task from './modules/task'
 import defect from './modules/defect'
 import tool from './modules/tool'
+import checker from './modules/checker'
+import checkerset from './modules/checkerset'
+import devops from './modules/devops'
 import http from '@/api'
 import { unifyObjectStyle } from '@/common/util'
 
-if (NODE_ENV === 'local') {
+if (NODE_ENV === 'development') {
     Vue.config.devtools = true
 }
 
@@ -35,12 +37,17 @@ const store = new Vuex.Store({
         project,
         defect,
         tool,
-        task
+        task,
+        checker,
+        checkerset,
+        devops
     },
     plugins: [loadedPlugin],
     // 公共 store
     state: {
         mainContentLoading: false,
+        isBannerClose: Boolean(window.localStorage.getItem('codecc-banner-271')),
+        // isBannerClose: true,
         // 系统当前登录用户
         user: {},
         toolMeta: {
@@ -55,7 +62,10 @@ const store = new Vuex.Store({
             TOOL_PATTERN: {
                 LINT: 'LINT',
                 CCN: 'CCN',
-                DUPC: 'DUPC'
+                DUPC: 'DUPC',
+                COVERITY: 'COVERITY',
+                KLOCWORK: 'KLOCWORK',
+                PINPOINT: 'PINPOINT'
             }
         },
         projectId: undefined
@@ -63,6 +73,7 @@ const store = new Vuex.Store({
     // 公共 getters
     getters: {
         mainContentLoading: state => state.mainContentLoading,
+        isBannerClose: state => state.isBannerClose,
         user: state => state.user
     },
     // 公共 mutations
@@ -84,6 +95,9 @@ const store = new Vuex.Store({
          */
         setMainContentLoading (state, loading) {
             state.mainContentLoading = loading
+        },
+        updateBannerStatus (state, status) {
+            state.isBannerClose = status
         },
 
         /**

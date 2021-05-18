@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -26,6 +27,8 @@
 
 package com.tencent.devops.repository.api.scm
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
+import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
@@ -39,6 +42,7 @@ import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitTag
+import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.Project
 import io.swagger.annotations.Api
@@ -48,6 +52,7 @@ import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
@@ -60,6 +65,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/git/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface ServiceGitResource {
 
     @ApiOperation("获取用户所有git项目")
@@ -276,7 +282,10 @@ interface ServiceGitResource {
         visibilityLevel: VisibilityLevelEnum?,
         @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
-        tokenType: TokenTypeEnum
+        tokenType: TokenTypeEnum,
+        @ApiParam(value = "前端UI渲染方式", required = false)
+        @QueryParam("frontendType")
+        frontendType: FrontendTypeEnum?
     ): Result<GitRepositoryResp?>
 
     @ApiOperation("为项目成员赋予代码库权限")
@@ -333,7 +342,10 @@ interface ServiceGitResource {
         tokenType: TokenTypeEnum,
         @ApiParam(value = "token", required = true)
         @QueryParam("token")
-        token: String
+        token: String,
+        @ApiParam(value = "仓库url", required = true)
+        @QueryParam("repoUrl")
+        repoUrl: String? = null
     ): Result<GitMrInfo>
 
     @ApiOperation("下载git仓库")
@@ -371,7 +383,10 @@ interface ServiceGitResource {
         tokenType: TokenTypeEnum,
         @ApiParam(value = "token", required = true)
         @QueryParam("token")
-        token: String
+        token: String,
+        @ApiParam(value = "仓库url", required = true)
+        @QueryParam("repoUrl")
+        repoUrl: String? = null
     ): Result<GitMrReviewInfo>
 
     @ApiOperation("获取mr信息")
@@ -389,6 +404,42 @@ interface ServiceGitResource {
         tokenType: TokenTypeEnum,
         @ApiParam(value = "token", required = true)
         @QueryParam("token")
-        token: String
+        token: String,
+        @ApiParam(value = "仓库url", required = true)
+        @QueryParam("repoUrl")
+        repoUrl: String? = null
     ): Result<GitMrChangeInfo>
+
+    @ApiOperation("获取仓库最近一次提交信息")
+    @GET
+    @Path("/getRepoRecentCommitInfo")
+    fun getRepoRecentCommitInfo(
+        @ApiParam(value = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
+        @QueryParam("repoName")
+        repoName: String,
+        @ApiParam(value = "hash值、分支名或tag", required = true)
+        @QueryParam("sha")
+        sha: String,
+        @ApiParam(value = "token", required = true)
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum
+    ): Result<GitCommit?>
+
+    @ApiOperation("解锁hook锁")
+    @POST
+    @Path("/unLockHookLock")
+    fun unLockHookLock(
+        @ApiParam("项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectId: String? = "",
+        @ApiParam(value = "项目唯一标识或NAMESPACE_PATH/PROJECT_PATH", required = true)
+        @QueryParam("repoName")
+        repoName: String,
+        @ApiParam(value = "合并请求的 id", required = true)
+        @QueryParam("mrId")
+        mrId: Long
+    ): Result<Boolean>
 }
