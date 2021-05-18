@@ -29,7 +29,7 @@ import nu.studer.gradle.jooq.JooqGenerate
 
 
 plugins {
-    id("nu.studer.jooq") version "5.2.1"
+    id("nu.studer.jooq")
     kotlin("jvm")
 }
 
