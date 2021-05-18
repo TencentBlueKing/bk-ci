@@ -76,12 +76,12 @@ interface UserGitCIGitCodeResource {
         @ApiParam(value = "蓝盾项目ID", required = true)
         @QueryParam("projectId")
         projectId: String,
-        @ApiParam(value = "page", required = true)
+        @ApiParam(value = "页码", defaultValue = "1")
         @QueryParam("page")
-        page: Int = 1,
-        @ApiParam(value = "pageSize", required = true)
-        @QueryParam("pageSize")
-        pageSize: Int = 20,
+        page: Int?,
+        @ApiParam(value = "每页数量,最大100", defaultValue = "20")
+        @QueryParam("perPage")
+        perPage: Int?,
         @ApiParam(value = "搜索用户关键字", required = true)
         @QueryParam("search")
         search: String?
@@ -111,10 +111,10 @@ interface UserGitCIGitCodeResource {
         until: String?,
         @ApiParam(value = "页码", defaultValue = "1")
         @QueryParam("page")
-        page: Int,
+        page: Int?,
         @ApiParam(value = "每页数量,最大100", defaultValue = "20")
         @QueryParam("perPage")
-        perPage: Int
+        perPage: Int?
     ): Result<List<Commit>?>
 
     @ApiOperation("向工蜂项目中创建新文件")
@@ -146,10 +146,10 @@ interface UserGitCIGitCodeResource {
         search: String?,
         @ApiParam(value = "页码", defaultValue = "1")
         @QueryParam("page")
-        page: Int,
+        page: Int?,
         @ApiParam(value = "每页数量,最大100", defaultValue = "20")
         @QueryParam("perPage")
-        perPage: Int,
+        perPage: Int?,
         @ApiParam(value = "返回列表的排序字段,可选可选字段:name、updated")
         @QueryParam("orderBy")
         orderBy: GitCodeBranchesOrder?,

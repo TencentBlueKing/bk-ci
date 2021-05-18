@@ -61,15 +61,18 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
     override fun getGitCodeProjectMembers(
         userId: String,
         projectId: String,
-        page: Int,
-        pageSize: Int,
+        page: Int?,
+        perPage: Int?,
         search: String?
     ): Result<List<GitMember>?> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId).toString()
         return Result(
             scmService.getProjectMembers(
                 token = getToken(userId),
-                gitProjectId = gitProjectId, page = page, pageSize = pageSize, search = search
+                gitProjectId = gitProjectId,
+                page = page,
+                pageSize = perPage,
+                search = search
             )
         )
     }
@@ -81,8 +84,8 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
         branch: String?,
         since: String?,
         until: String?,
-        page: Int,
-        perPage: Int
+        page: Int?,
+        perPage: Int?
     ): Result<List<Commit>?> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         return Result(
@@ -118,8 +121,8 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         search: String?,
-        page: Int,
-        perPage: Int,
+        page: Int?,
+        perPage: Int?,
         orderBy: GitCodeBranchesOrder?,
         sort: GitCodeBranchesSort?
     ): Result<List<String>?> {
