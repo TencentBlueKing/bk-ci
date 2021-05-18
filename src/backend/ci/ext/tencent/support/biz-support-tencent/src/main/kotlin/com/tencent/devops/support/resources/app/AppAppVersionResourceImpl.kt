@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.common.kafka.KafkaTopic.BK_CI_APP_LOGIN_TOPIC
+import com.tencent.devops.common.service.Profile
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.support.api.app.AppAppVersionResource
 import com.tencent.devops.support.model.app.pojo.AppVersion
@@ -41,7 +42,8 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class AppAppVersionResourceImpl @Autowired constructor(
     private val appVersionService: AppVersionService,
-    private val kafkaClient: KafkaClient
+    private val kafkaClient: KafkaClient,
+    private val profile: Profile
 ) :
     AppAppVersionResource {
     override fun getAllAppVersion(channelType: Byte): Result<List<AppVersion>> {
@@ -60,7 +62,8 @@ class AppAppVersionResourceImpl @Autowired constructor(
                 "userId" to userId,
                 "organization" to (organization ?: "inner"),
                 "timestamp" to System.currentTimeMillis(),
-                "channelType" to channelType
+                "channelType" to channelType,
+                "profile" to profile.getEnv().name
             )
             kafkaClient.send(BK_CI_APP_LOGIN_TOPIC, JsonUtil.toJson(logData))
         } catch (e: Exception) {
