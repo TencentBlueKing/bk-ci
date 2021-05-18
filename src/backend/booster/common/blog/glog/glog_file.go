@@ -99,7 +99,7 @@ func (lk *logKeeper) add(tag string, newBlock *fileBlock) (ok bool) {
 	for lk.total[tag] > MaxNum() {
 		lk.remove(tag)
 	}
-	return
+	return ok
 }
 
 func (lk *logKeeper) remove(tag string) (ok bool) {
@@ -111,7 +111,7 @@ func (lk *logKeeper) remove(tag string) (ok bool) {
 	lk.head[tag] = block.next
 	block = nil // for GC
 	lk.total[tag]--
-	return
+	return ok
 }
 
 func (lk *logKeeper) removeFile(name string) error {

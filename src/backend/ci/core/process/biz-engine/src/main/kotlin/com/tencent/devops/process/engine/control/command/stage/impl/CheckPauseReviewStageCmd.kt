@@ -56,7 +56,9 @@ class CheckPauseReviewStageCmd(
 ) : StageCmd {
 
     override fun canExecute(commandContext: StageContext): Boolean {
-        return commandContext.cmdFlowState == CmdFlowState.CONTINUE && !commandContext.buildStatus.isFinish()
+        return commandContext.stage.controlOption?.finally != true &&
+            commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
+            !commandContext.buildStatus.isFinish()
     }
 
     override fun execute(commandContext: StageContext) {

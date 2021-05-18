@@ -31,6 +31,9 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.enums.CodeSvnRegion
+import com.tencent.devops.scm.pojo.GitMrChangeInfo
+import com.tencent.devops.scm.pojo.GitMrInfo
+import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import io.swagger.annotations.Api
@@ -207,4 +210,67 @@ interface ServiceScmOauthResource {
     fun addCommitCheck(
         request: CommitCheckRequest
     ): Result<Boolean>
+
+    @ApiOperation("查询合并请求的代码变更")
+    @GET
+    @Path("getMergeRequestChangeInfo")
+    fun getMergeRequestChangeInfo(
+        @ApiParam("项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @ApiParam("仓库地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @ApiParam("仓库类型", required = true)
+        @QueryParam("type")
+        type: ScmType,
+        @ApiParam("token", required = true)
+        @QueryParam("token")
+        token: String?,
+        @ApiParam("mrId", required = true)
+        @QueryParam("mrId")
+        mrId: Long
+    ): Result<GitMrChangeInfo?>
+
+    @ApiOperation("查询合并请求的代码变更")
+    @GET
+    @Path("getMrInfo")
+    fun getMrInfo(
+        @ApiParam("项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @ApiParam("仓库地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @ApiParam("仓库类型", required = true)
+        @QueryParam("type")
+        type: ScmType,
+        @ApiParam("token", required = true)
+        @QueryParam("token")
+        token: String?,
+        @ApiParam("mrId", required = true)
+        @QueryParam("mrId")
+        mrId: Long
+    ): Result<GitMrInfo?>
+
+    @ApiOperation("查询合并请求的代码变更")
+    @GET
+    @Path("getMrReviewInfo")
+    fun getMrReviewInfo(
+        @ApiParam("项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @ApiParam("仓库地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @ApiParam("仓库类型", required = true)
+        @QueryParam("type")
+        type: ScmType,
+        @ApiParam("token", required = true)
+        @QueryParam("token")
+        token: String?,
+        @ApiParam("mrId", required = true)
+        @QueryParam("mrId")
+        mrId: Long
+    ): Result<GitMrReviewInfo?>
 }

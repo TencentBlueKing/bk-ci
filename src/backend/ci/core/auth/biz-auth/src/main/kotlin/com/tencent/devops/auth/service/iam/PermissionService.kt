@@ -30,9 +30,16 @@ package com.tencent.devops.auth.service.iam
 import com.tencent.devops.common.auth.api.AuthPermission
 
 interface PermissionService {
-    fun validateUserResourcePermission(
+    fun validateUserActionPermission(
         userId: String,
         action: String
+    ): Boolean
+
+    fun validateUserResourcePermission(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resourceType: String?
     ): Boolean
 
     fun validateUserResourcePermissionByRelation(
