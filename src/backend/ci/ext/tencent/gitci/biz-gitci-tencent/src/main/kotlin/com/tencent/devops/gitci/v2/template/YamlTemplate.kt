@@ -660,7 +660,11 @@ class YamlTemplate(
         return PreStage(
             name = stage["name"]?.toString(),
             id = stage["id"]?.toString(),
-            label = stage["label"]?.toString(),
+            label = if (stage["label"] == null) {
+                null
+            } else {
+                transValue<List<String>>(fromPath, "label", stage["label"])
+            },
             ifField = stage["if"]?.toString(),
             fastKill = YamlObjects.getNullValue("fast-kill", stage)?.toBoolean(),
             jobs = if (stage["jobs"] == null) {

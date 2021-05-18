@@ -395,7 +395,7 @@ class TriggerBuildService @Autowired constructor(
 
         return Stage(
             id = stage.id,
-            tag = listOf(stage.label),
+            tag = stage.label,
             fastKill = stage.fastKill,
             stageControlOption = stageControlOption,
             containers = containerList,

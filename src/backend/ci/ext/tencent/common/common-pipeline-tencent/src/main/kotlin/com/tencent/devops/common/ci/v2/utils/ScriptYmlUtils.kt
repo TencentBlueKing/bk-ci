@@ -57,6 +57,7 @@ import com.tencent.devops.common.ci.v2.PreStage
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
 import com.tencent.devops.common.ci.v2.RunsOn
 import com.tencent.devops.common.ci.v2.Service
+import com.tencent.devops.common.ci.v2.StageLabel
 import com.tencent.devops.common.ci.v2.Step
 import org.slf4j.LoggerFactory
 import org.yaml.snakeyaml.Yaml
@@ -360,7 +361,7 @@ object ScriptYmlUtils {
                 Stage(
                     id = it.id ?: randomString(stageNamespace),
                     name = it.name,
-                    label = it.label,
+                    label = formatStageLabel(it.label),
                     ifField = it.ifField,
                     fastKill = it.fastKill ?: false,
                     jobs = preJobs2Jobs(it.jobs as Map<String, PreJob>)
@@ -369,6 +370,34 @@ object ScriptYmlUtils {
         }
 
         return stageList
+    }
+
+    private fun formatStageLabel(labels: List<String>?): List<String> {
+        if (labels == null) {
+            return emptyList()
+        }
+
+        val newLabels = mutableListOf<String>()
+        labels.forEach {
+            val stageLabel = getStageLabel(it)
+            if (stageLabel != null) {
+                newLabels.add(stageLabel.id)
+            } else {
+                throw CustomException(Response.Status.BAD_REQUEST, "请核对Stage标签是否正确")
+            }
+        }
+
+        return newLabels
+    }
+
+    private fun getStageLabel(label: String): StageLabel? {
+        StageLabel.values().forEach {
+            if (it.value == label) {
+                return it
+            }
+        }
+
+        return null
     }
 
     /**
