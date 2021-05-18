@@ -138,6 +138,29 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         )
     }
 
+    override fun retry(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String?,
+        failedContainer: Boolean?,
+        channelCode: ChannelCode
+    ): Result<BuildId> {
+        logger.info("$pipelineId|retry|user($userId)")
+        return client.get(ServiceBuildResource::class).retry(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            taskId = taskId,
+            failedContainer = failedContainer,
+            channelCode = ChannelCode.BS
+        )
+    }
+
     override fun getStatus(
         appCode: String?,
         apigwType: String?,
