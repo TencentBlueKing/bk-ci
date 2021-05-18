@@ -96,11 +96,11 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
     @Autowired
     private lateinit var storeCommonService: StoreCommonService
 
-    @Value("\${pipeline.setting.common.stage.job.task.maxInputNum:50}")
-    private val maxInputNum: Int = 50
+    @Value("\${pipeline.setting.common.stage.job.task.maxInputNum:100}")
+    private val maxInputNum: Int = 100
 
-    @Value("\${pipeline.setting.common.stage.job.task.maxOutputNum:50}")
-    private val maxOutputNum: Int = 50
+    @Value("\${pipeline.setting.common.stage.job.task.maxOutputNum:100}")
+    private val maxOutputNum: Int = 100
 
     private val logger = LoggerFactory.getLogger(MarketAtomCommonServiceImpl::class.java)
 

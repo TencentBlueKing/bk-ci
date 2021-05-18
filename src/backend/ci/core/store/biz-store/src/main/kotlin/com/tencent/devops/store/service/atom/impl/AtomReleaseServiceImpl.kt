@@ -682,22 +682,15 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         userId: String
     ): GetAtomConfigResult {
         // 拉取task.json配置文件校验其合法性
+        val taskJsonStr: String?
         try {
-            val taskJsonStr = getFileStr(
+            taskJsonStr = getFileStr(
                 projectCode = projectCode,
                 atomCode = atomCode,
                 atomVersion = atomVersion,
                 repositoryHashId = repositoryHashId,
                 fileName = TASK_JSON_NAME
             )
-            logger.info("the taskJsonStr is :$taskJsonStr")
-            if (null == taskJsonStr) {
-                return GetAtomConfigResult(
-                    StoreMessageCode.USER_REPOSITORY_PULL_TASK_JSON_FILE_FAIL,
-                    arrayOf(TASK_JSON_NAME), null, null
-                )
-            }
-            return parseTaskJson(atomPackageSourceType, taskJsonStr, projectCode, atomCode, atomVersion, userId)
         } catch (e: Exception) {
             logger.error("getFileContent error is :$e", e)
             return GetAtomConfigResult(
@@ -705,6 +698,20 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 arrayOf(TASK_JSON_NAME), null, null
             )
         }
+        if (null == taskJsonStr) {
+            return GetAtomConfigResult(
+                StoreMessageCode.USER_REPOSITORY_PULL_TASK_JSON_FILE_FAIL,
+                arrayOf(TASK_JSON_NAME), null, null
+            )
+        }
+        return parseTaskJson(
+            atomPackageSourceType = atomPackageSourceType,
+            taskJsonStr = taskJsonStr,
+            projectCode = projectCode,
+            atomCode = atomCode,
+            version = atomVersion,
+            userId = userId
+        )
     }
 
     private fun validateAtomNameIsExist(
