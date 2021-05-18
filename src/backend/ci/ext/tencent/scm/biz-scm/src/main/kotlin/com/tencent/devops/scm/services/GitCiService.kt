@@ -103,7 +103,7 @@ class GitCiService {
         orderBy: GitCodeBranchesOrder?,
         sort: GitCodeBranchesSort?
     ): List<String> {
-        val url = "${gitCIUrl}/projects/${URLEncoder.encode(gitProjectId, "utf-8")}" +
+        val url = "${gitCIUrl}/api/v3/projects/${URLEncoder.encode(gitProjectId, "utf-8")}" +
                 "/repository/branches?access_token=$token&page=$page&per_page=$pageSize" +
                 if (search != null) {
                     "&search=$search"
