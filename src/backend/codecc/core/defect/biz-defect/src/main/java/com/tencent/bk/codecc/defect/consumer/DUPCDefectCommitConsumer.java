@@ -14,6 +14,8 @@ package com.tencent.bk.codecc.defect.consumer;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.tencent.bk.codecc.defect.component.RiskConfigCache;
 import com.tencent.bk.codecc.defect.dao.mongorepository.DUPCDefectRepository;
 import com.tencent.bk.codecc.defect.dao.mongorepository.DUPCStatisticRepository;
@@ -22,7 +24,7 @@ import com.tencent.bk.codecc.defect.dao.mongotemplate.DUPCDefectDao;
 import com.tencent.bk.codecc.defect.model.*;
 import com.tencent.bk.codecc.defect.model.incremental.ToolBuildInfoEntity;
 import com.tencent.bk.codecc.defect.service.IDataReportBizService;
-import com.tencent.bk.codecc.defect.utils.CommonKafkaClient;
+import com.tencent.bk.codecc.defect.service.newdefectjudge.NewDefectJudgeService;
 import com.tencent.bk.codecc.defect.vo.CommitDefectVO;
 import com.tencent.bk.codecc.defect.vo.DupcChartTrendVO;
 import com.tencent.bk.codecc.defect.vo.DupcDataReportRspVO;
@@ -32,6 +34,7 @@ import com.tencent.bk.codecc.defect.vo.customtool.ScmBlameVO;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.service.BizServiceFactory;
+import com.tencent.devops.common.service.utils.ToolParamUtils;
 import com.tencent.devops.common.util.JsonUtil;
 import com.tencent.devops.common.util.PathUtils;
 import lombok.extern.slf4j.Slf4j;
@@ -44,8 +47,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -73,7 +74,7 @@ public class DUPCDefectCommitConsumer extends AbstractDefectCommitConsumer
     @Autowired
     private ToolBuildInfoRepository toolBuildInfoRepository;
     @Autowired
-    private CommonKafkaClient commonKafkaClient;
+    private NewDefectJudgeService newDefectJudgeService;
 
     @Override
     protected void uploadDefects(CommitDefectVO commitDefectVO, Map<String, ScmBlameVO> fileChangeRecordsMap, Map<String, RepoSubModuleVO> codeRepoIdMap)
@@ -109,15 +110,19 @@ public class DUPCDefectCommitConsumer extends AbstractDefectCommitConsumer
         List<DUPCDefectEntity> defectList = defectJsonFileEntity.getDefects();
         if (CollectionUtils.isNotEmpty(defectList))
         {
-            Set<String> filterPaths = getFilterPaths(taskVO);
+            Set<String> filterPaths = filterPathService.getFilterPaths(taskVO, toolName);
 
             defectList.forEach(dupcDefectEntity ->
             {
                 // 填充告警信息
                 fillDefectInfo(dupcDefectEntity, commitDefectVO, curTime, fileChangeRecordsMap, codeRepoIdMap);
 
+                Set<String> pathSet = new HashSet<>();
+                if (CollectionUtils.isNotEmpty(taskVO.getWhitePaths())) {
+                    pathSet.addAll(taskVO.getWhitePaths());
+                }
                 // 更新告警状态
-                updateDefectStatus(dupcDefectEntity, oldDefectMap, filterPaths, curTime, m);
+                updateDefectStatus(dupcDefectEntity, oldDefectMap, filterPaths, pathSet, curTime, m);
             });
         }
         try{
@@ -146,7 +151,8 @@ public class DUPCDefectCommitConsumer extends AbstractDefectCommitConsumer
         ToolBuildInfoEntity toolBuildInfoEntity = toolBuildInfoRepository.findByTaskIdAndToolName(taskId, ComConstants.Tool.DUPC.name());
         String baseBuildId = toolBuildInfoEntity != null && StringUtils.isNotEmpty(toolBuildInfoEntity.getDefectBaseBuildId())
                 ? toolBuildInfoEntity.getDefectBaseBuildId() : "";
-        statistic(defectList, defectJsonFileEntity, taskId, buildId, baseBuildId, riskConfigMap);
+
+        statistic(defectList, defectJsonFileEntity, taskId, buildId, baseBuildId, riskConfigMap, taskVO, toolName);
 
         // 更新告警快照基准构建ID
         toolBuildInfoDao.updateDefectBaseBuildId(taskId, toolName, buildId);
@@ -163,7 +169,12 @@ public class DUPCDefectCommitConsumer extends AbstractDefectCommitConsumer
      * @param curTime
      * @param m
      */
-    private void updateDefectStatus(DUPCDefectEntity dupcDefectEntity, Map<String, DUPCDefectEntity> oldDefectMap, Set<String> filterPaths, long curTime, float m)
+    private void updateDefectStatus(DUPCDefectEntity dupcDefectEntity,
+                                    Map<String, DUPCDefectEntity> oldDefectMap,
+                                    Set<String> filterPaths,
+                                    Set<String> pathSet,
+                                    long curTime,
+                                    float m)
     {
         String path = StringUtils.isEmpty(dupcDefectEntity.getRelPath()) ? dupcDefectEntity.getFilePath() : dupcDefectEntity.getRelPath();
         DUPCDefectEntity oldDefect = oldDefectMap.get(path);
@@ -209,7 +220,7 @@ public class DUPCDefectCommitConsumer extends AbstractDefectCommitConsumer
         }
 
         // 检查是否被路径屏蔽
-        checkMaskByPath(dupcDefectEntity, filterPaths, curTime);
+        checkMaskByPath(dupcDefectEntity, filterPaths, pathSet, curTime);
     }
 
     /**
@@ -223,9 +234,9 @@ public class DUPCDefectCommitConsumer extends AbstractDefectCommitConsumer
      */
     private void statistic(List<DUPCDefectEntity> defectList,
                            DUPCDefectJsonFileEntity<DUPCDefectEntity> defectJsonFileEntity,
-                           long taskId, String buildId, String baseBuildId, Map<String, String> riskConfigMap)
+                           long taskId, String buildId, String baseBuildId, Map<String, String> riskConfigMap,
+                           TaskDetailVO taskVO, String toolName)
     {
-
         float sh = Float.valueOf(riskConfigMap.get(ComConstants.RiskFactor.SH.name()));
         float h = Float.valueOf(riskConfigMap.get(ComConstants.RiskFactor.H.name()));
         float m = Float.valueOf(riskConfigMap.get(ComConstants.RiskFactor.M.name()));
@@ -234,33 +245,95 @@ public class DUPCDefectCommitConsumer extends AbstractDefectCommitConsumer
         int superHighCount = 0;
         int highCount = 0;
         int mediumCount = 0;
+
+        // 新增统计项
+        int newSuperHighCount = 0;
+        int newHighCount = 0;
+        int newMediumCount = 0;
+        Map<String, DUPCNotRepairedAuthorEntity> newAuthorMap = Maps.newHashMap();
+        Map<String, DUPCNotRepairedAuthorEntity> existAuthorMap = Maps.newHashMap();
+
         log.info("dupc statistic build: {}", buildId);
         if (CollectionUtils.isNotEmpty(defectList))
         {
+            long newDefectJudgeTime = newDefectJudgeService.getNewDefectJudgeTime(taskId, toolName, taskVO);
             Iterator<DUPCDefectEntity> it = defectList.iterator();
+
             // 更新告警状态，并统计告警数量
             while (it.hasNext())
             {
                 DUPCDefectEntity defectEntity = it.next();
 
-                if (ComConstants.DefectStatus.NEW.value() == defectEntity.getStatus())
-                {
-                    existCount++;
-                    float dupcRate = defectEntity.getDupRateValue();
-                    if (MapUtils.isNotEmpty(riskConfigMap))
-                    {
-                        if (dupcRate >= m && dupcRate < h)
-                        {
-                            mediumCount++;
+                if (ComConstants.DefectStatus.NEW.value() != defectEntity.getStatus()) {
+                    continue;
+                }
+
+                existCount++;
+                float dupcRate = defectEntity.getDupRateValue();
+                int riskVal = getRiskFactorVal(dupcRate, sh, h, m);
+                // scm文件修改时间有可能为空，当null时则认为是新告警处理
+                boolean isNewDefectByJudgeTime = defectEntity.getFileChangeTime() == null
+                        || defectEntity.getFileChangeTime() >= newDefectJudgeTime;
+
+                // 逻辑区分新旧告警
+                if (isNewDefectByJudgeTime) {
+                    if (ComConstants.RiskFactor.SH.value() == riskVal) {
+                        newSuperHighCount++;
+                    } else if (ComConstants.RiskFactor.H.value() == riskVal) {
+                        newHighCount++;
+                    } else if (ComConstants.RiskFactor.M.value() == riskVal) {
+                        newMediumCount++;
+                    }
+                } else {
+                    if (dupcRate >= m && dupcRate < h) {
+                        mediumCount++;
+                    } else if (dupcRate >= h && dupcRate < sh) {
+                        highCount++;
+                    } else if (dupcRate >= sh) {
+                        superHighCount++;
+                    }
+                }
+
+                if (StringUtils.isEmpty(defectEntity.getAuthorList())) {
+                    continue;
+                }
+
+                Set<String> authorSet = null;
+                try {
+                    authorSet = Sets.newHashSet(StringUtils.split(defectEntity.getAuthorList(), ";"));
+                } catch (Exception e) {
+                    log.error("get dupc author list fail, source string: {}", defectEntity.getAuthorList(), e);
+                }
+
+                if (CollectionUtils.isEmpty(authorSet)) {
+                    continue;
+                }
+
+                for (String author : authorSet) {
+                    String name = author.trim();
+                    DUPCNotRepairedAuthorEntity authorEntity;
+                    if (isNewDefectByJudgeTime) {
+                        authorEntity = newAuthorMap.get(name);
+                        if (authorEntity == null) {
+                            authorEntity = new DUPCNotRepairedAuthorEntity();
+                            authorEntity.setName(name);
+                            newAuthorMap.put(name, authorEntity);
                         }
-                        else if (dupcRate >= h && dupcRate < sh)
-                        {
-                            highCount++;
+                    } else {
+                        authorEntity = existAuthorMap.get(name);
+                        if (authorEntity == null) {
+                            authorEntity = new DUPCNotRepairedAuthorEntity();
+                            authorEntity.setName(name);
+                            existAuthorMap.put(name, authorEntity);
                         }
-                        else if (dupcRate >= sh)
-                        {
-                            superHighCount++;
-                        }
+                    }
+
+                    if (ComConstants.RiskFactor.SH.value() == riskVal) {
+                        authorEntity.setSuperHighCount(authorEntity.getSuperHighCount() + 1);
+                    } else if (ComConstants.RiskFactor.H.value() == riskVal) {
+                        authorEntity.setHighCount(authorEntity.getHighCount() + 1);
+                    } else if (ComConstants.RiskFactor.M.value() == riskVal) {
+                        authorEntity.setMediumCount(authorEntity.getMediumCount() + 1);
                     }
                 }
             }
@@ -303,6 +376,11 @@ public class DUPCDefectCommitConsumer extends AbstractDefectCommitConsumer
         statisticEntity.setSuperHighCount(superHighCount);
         statisticEntity.setHighCount(highCount);
         statisticEntity.setMediumCount(mediumCount);
+        statisticEntity.setNewSuperHighCount(newSuperHighCount);
+        statisticEntity.setNewHighCount(newHighCount);
+        statisticEntity.setNewMediumCount(newMediumCount);
+        statisticEntity.setNewAuthorStatistic(Lists.newArrayList(newAuthorMap.values()));
+        statisticEntity.setExistAuthorStatistic(Lists.newArrayList(existAuthorMap.values()));
 
         DUPCScanSummaryEntity dupcScanSummary = new DUPCScanSummaryEntity();
         dupcScanSummary.setRawlineCount(rawlineCount);
@@ -338,9 +416,6 @@ public class DUPCDefectCommitConsumer extends AbstractDefectCommitConsumer
         }
         statisticEntity.setDupcChart(dupcChart);
         dupcStatisticRepository.save(statisticEntity);
-
-        //将数据加入数据平台
-        commonKafkaClient.pushDUPCStatisticToKafka(statisticEntity);
     }
 
     private void fillDefectInfo(DUPCDefectEntity dupcDefectEntity,
@@ -417,7 +492,7 @@ public class DUPCDefectCommitConsumer extends AbstractDefectCommitConsumer
                         if (recordVO != null && recordVO.getLineUpdateTime() > functionLastUpdateTime)
                         {
                             functionLastUpdateTime = recordVO.getLineUpdateTime();
-                            codeBlockEntity.setAuthor(recordVO.getAuthor());
+                            codeBlockEntity.setAuthor(ToolParamUtils.trimUserName(recordVO.getAuthor()));
                             codeBlockEntity.setLatestDatetime(recordVO.getLineUpdateTime());
                         }
                     }
@@ -436,20 +511,39 @@ public class DUPCDefectCommitConsumer extends AbstractDefectCommitConsumer
      * @param curTime
      * @return
      */
-    private boolean checkMaskByPath(DUPCDefectEntity dupcDefectEntity, Set<String> filterPaths, long curTime)
-    {
+    private boolean checkMaskByPath(DUPCDefectEntity dupcDefectEntity,
+                                    Set<String> filterPaths,
+                                    Set<String> pathSet,
+                                    long curTime) {
         String relPath = dupcDefectEntity.getRelPath();
         String filePath = dupcDefectEntity.getFilePath();
 
         // 如果告警不是已经屏蔽，则在入库前检测一遍屏蔽路径
         if ((dupcDefectEntity.getStatus() & ComConstants.TaskFileStatus.PATH_MASK.value()) == 0
                 && (dupcDefectEntity.getStatus() & ComConstants.DefectStatus.FIXED.value()) == 0
-                && PathUtils.checkIfMaskByPath(StringUtils.isNotEmpty(relPath) ? relPath : filePath, filterPaths))
+                && (PathUtils.checkIfMaskByPath(StringUtils.isNotEmpty(relPath) ? relPath : filePath, filterPaths)
+                || (CollectionUtils.isNotEmpty(pathSet)
+                && !PathUtils.checkIfMaskByPath(StringUtils.isNotEmpty(relPath) ? relPath : filePath, pathSet))))
         {
             dupcDefectEntity.setStatus(dupcDefectEntity.getStatus() | ComConstants.TaskFileStatus.PATH_MASK.value());
             dupcDefectEntity.setExcludeTime(curTime);
             return true;
         }
         return false;
+    }
+
+    /**
+     * 根据重复率获取风险等级枚举值
+     */
+    private int getRiskFactorVal(float dupcRate, float sh, float h, float m) {
+        if (dupcRate >= sh) {
+            return ComConstants.RiskFactor.SH.value();
+        } else if (dupcRate < sh && dupcRate >= h) {
+            return ComConstants.RiskFactor.H.value();
+        } else if (dupcRate < h && dupcRate >= m) {
+            return ComConstants.RiskFactor.M.value();
+        } else {
+            return ComConstants.RiskFactor.L.value();
+        }
     }
 }

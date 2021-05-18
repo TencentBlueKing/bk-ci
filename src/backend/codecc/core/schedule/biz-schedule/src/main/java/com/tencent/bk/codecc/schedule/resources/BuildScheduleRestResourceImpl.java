@@ -15,7 +15,7 @@ package com.tencent.bk.codecc.schedule.resources;
 import com.tencent.bk.codecc.schedule.api.BuildScheduleRestResource;
 import com.tencent.bk.codecc.schedule.service.ScheduleService;
 import com.tencent.bk.codecc.schedule.vo.TailLogRspVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.web.RestResource;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -32,14 +32,14 @@ public class BuildScheduleRestResourceImpl implements BuildScheduleRestResource
     private ScheduleService scheduleService;
 
     @Override
-    public CodeCCResult<Boolean> push(String streamName, String toolName, String buildId, String createFrom)
+    public Result<Boolean> push(String streamName, String toolName, String buildId, String createFrom, String projectId)
     {
-        return new CodeCCResult<>(scheduleService.push(streamName, toolName, buildId, createFrom));
+        return new Result<>(scheduleService.push(streamName, toolName, buildId, createFrom, projectId));
     }
 
     @Override
-    public CodeCCResult<TailLogRspVO> tailLog(String streamName, String toolName, String buildId, long beginLine)
+    public Result<TailLogRspVO> tailLog(String streamName, String toolName, String buildId, long beginLine)
     {
-        return new CodeCCResult<>(scheduleService.tailLog(streamName, toolName, buildId, beginLine));
+        return new Result<>(scheduleService.tailLog(streamName, toolName, buildId, beginLine));
     }
 }

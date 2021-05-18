@@ -3,6 +3,7 @@ package com.tencent.bk.codecc.apiquery.service.impl
 import com.tencent.bk.codecc.apiquery.service.ITaskService
 import com.tencent.bk.codecc.apiquery.task.TaskQueryReq
 import com.tencent.bk.codecc.apiquery.task.dao.TaskDao
+import com.tencent.bk.codecc.apiquery.task.dao.ToolConfigDao
 import com.tencent.bk.codecc.apiquery.task.model.BuildIdRelationshipModel
 import com.tencent.bk.codecc.apiquery.task.model.CustomProjModel
 import com.tencent.bk.codecc.apiquery.task.model.TaskFailRecordModel
@@ -21,7 +22,8 @@ import org.springframework.stereotype.Service
 
 @Service
 class TaskServiceImpl @Autowired constructor(
-    private val taskDao: TaskDao
+    private val taskDao: TaskDao,
+    private val toolConfigDao: ToolConfigDao
 ) : ITaskService {
 
     companion object {
@@ -45,21 +47,25 @@ class TaskServiceImpl @Autowired constructor(
         sortType: String?
     ): Page<TaskInfoModel> {
         val pageable = PageUtils.convertPageSizeToPageable(pageNum, pageSize, sortField, sortType)
-        val taskList = if (taskQueryReq.bgId != null) taskDao.findByBgId(
-            taskQueryReq.bgId!!, pageNum,
+        val taskList = if (taskQueryReq.bgId != null || taskQueryReq.deptId != null) taskDao.findByBgIdAndDeptId(
+            taskQueryReq.bgId, taskQueryReq.deptId, pageNum,
             pageSize,
             sortField,
             sortType
         ) else if (!taskQueryReq.taskIdList.isNullOrEmpty()) {
+            if (taskQueryReq.taskIdList!!.size > 5000) {
+                logger.info("task id list is too long!")
+                throw CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf("task id list"))
+            }
             taskDao.findTaskInfoModelListByTaskIds(taskQueryReq.taskIdList!!, pageNum, pageSize, sortField, sortType)
         } else {
             emptyList()
         }
-        return Page(pageable.pageNumber + 1, pageable.pageSize, 0L, taskList)
+        return Page(pageable.pageNumber + 1, pageable.pageSize, taskList.size.toLong(), taskList)
     }
 
     override fun getTaskDetailByProjectId(
-        projectId : String,
+        projectId: String,
         pageNum: Int?,
         pageSize: Int?,
         sortField: String?,
@@ -111,11 +117,11 @@ class TaskServiceImpl @Autowired constructor(
     }
 
     override fun getTaskInfoByPipelineIdList(
-            taskQueryReq: TaskQueryReq,
-            pageNum: Int?,
-            pageSize: Int?,
-            sortField: String?,
-            sortType: String?
+        taskQueryReq: TaskQueryReq,
+        pageNum: Int?,
+        pageSize: Int?,
+        sortField: String?,
+        sortType: String?
     ): Page<PipelineTaskVO> {
         val pipelineTaskVOList = mutableListOf<PipelineTaskVO>()
         // 排序分页
@@ -127,7 +133,7 @@ class TaskServiceImpl @Autowired constructor(
                 val pipelineTaskVO = PipelineTaskVO()
                 BeanUtils.copyProperties(it, pipelineTaskVO)
 
-                val toolNames= it.toolNames
+                val toolNames = it.toolNames
                 pipelineTaskVO.tools = if (toolNames.isNullOrBlank()) {
                     emptyList()
                 } else {
@@ -146,17 +152,16 @@ class TaskServiceImpl @Autowired constructor(
         return taskDao.findByCodeccBuildId(taskQueryReq.codeccbuildId!!)
     }
 
-
     override fun findTaskFailRecord(
         taskQueryReq: TaskQueryReq,
         pageNum: Int?,
         pageSize: Int?,
         sortField: String?,
         sortType: String?
-    ) : List<TaskFailRecordModel> {
-        //排序分页
+    ): List<TaskFailRecordModel> {
+        // 排序分页
         val pageable = PageUtils.convertPageSizeToPageable(pageNum, pageSize, sortField, sortType)
-        //获取失败任务列表
+        // 获取失败任务列表
         return taskDao.findTaskFailRecord(
             taskQueryReq.projectId,
             taskQueryReq.taskIdList,
@@ -166,5 +171,21 @@ class TaskServiceImpl @Autowired constructor(
         )
     }
 
-
+    override fun getTaskListByToolName(
+        toolName: String,
+        pageNum: Int?,
+        pageSize: Int?,
+        sortField: String?,
+        sortType: String?
+    ): Page<Long> {
+        // 排序分页
+        val pageable = PageUtils.convertPageSizeToPageable(pageNum, pageSize, sortField, sortType)
+        val toolConfigInfoModel = toolConfigDao.findByToolName(toolName, pageable)
+        val taskList = if (toolConfigInfoModel.isNullOrEmpty()) {
+            emptyList()
+        } else {
+            toolConfigInfoModel.map { it.taskId }
+        }
+        return Page(pageable.pageNumber + 1, pageable.pageSize, taskList.size.toLong(), taskList)
+    }
 }

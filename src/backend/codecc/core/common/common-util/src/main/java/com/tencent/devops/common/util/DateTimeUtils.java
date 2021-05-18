@@ -3,14 +3,23 @@ package com.tencent.devops.common.util;
 import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import org.apache.commons.lang.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
 import java.util.TimeZone;
 
 /**
@@ -35,6 +44,7 @@ public class DateTimeUtils
     public static final String yyyyMMddHHmmss = "yyyyMMddHHmmss";
     public static final String fullFormatWithT = "yyyy-MM-dd'T'HH:mm:ss";
     public static final int DAY_TIMESTAMP = 86400000;
+    public static final String UTC_FULL_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
 
     private static final int TIMESTAMP_SHIFT_SPACE_NUM = 12;
 
@@ -247,18 +257,16 @@ public class DateTimeUtils
      */
     public static long getTodayZeroMillis()
     {
-        String today = getDatebyDiff(0);
+        String today = getDateByDiff(0);
         String todayZero = today + " 00:00:00";
         long tina = getTimeStamp(todayZero);
         return tina;
     }
 
-    public static String getDatebyDiff(int diff)
-    {
-        long l = System.currentTimeMillis() / 1000 + (long) (diff * 24) * 3600;
-        Date date = new Date(l * 1000);
-        SimpleDateFormat ft =
-                new SimpleDateFormat("yyyy-MM-dd");
+    public static String getDateByDiff(int diff) {
+        long l = System.currentTimeMillis() + (long) diff * DAY_TIMESTAMP;
+        Date date = new Date(l);
+        SimpleDateFormat ft = new SimpleDateFormat(yyyyMMddFormat);
         ft.setTimeZone(TimeZone.getTimeZone("GMT+8"));
         return ft.format(date);
     }
@@ -475,24 +483,46 @@ public class DateTimeUtils
     }
 
     /**
+     * 将LocalDate转为时间戳
+     */
+    public static long localDateTransformTimestamp(LocalDate localDate) {
+        ZoneId zone = ZoneId.systemDefault();
+        Instant instant = localDate.atStartOfDay().atZone(zone).toInstant();
+        Date date = Date.from(instant);
+        String dateStr = convertDateToString(date, "yyyy/MM/dd :hh:mm:ss");
+        long timestamp = new Date(dateStr).getTime();
+        return timestamp;
+    }
+
+    /**
+     * 将时间戳转为LocalDate
+     * @return
+     */
+    public static LocalDate timestampTransformLocalDate(Long timestamp) {
+        Date date = new Date(timestamp);
+        Instant instant = date.toInstant();
+        ZoneId zone = ZoneId.systemDefault();
+        LocalDateTime localDateTime = LocalDateTime.ofInstant(instant, zone);
+        LocalDate localDate = localDateTime.toLocalDate();
+        return localDate;
+    }
+
+
+    /**
      * 时间戳转为13位
      *
      * @param time
      * @return
      */
-    public static long getThirteenTimestamp(Long time)
-    {
-        if (time == null)
-        {
+    public static long getThirteenTimestamp(Long time) {
+        if (time == null) {
             time = 0L;
         }
 
-        if (time >> TIMESTAMP_SHIFT_SPACE_NUM > 0)
-        {
+        String timeStr = String.valueOf(Math.abs(time));
+        if (timeStr.length() > 12) {
             return time;
-        }
-        else
-        {
+        } else {
             return time * 1000;
         }
     }
@@ -532,4 +562,187 @@ public class DateTimeUtils
             }
         }
     }
+
+    /**
+     * 获取当前日期前X天的日期
+     *
+     * @return
+     */
+    @NotNull
+    public static List<String> getBeforeDaily(Integer day) {
+        Calendar calendar = Calendar.getInstance();
+        //获得当前日期前 day 天的日期
+        calendar.add(Calendar.DATE, -day);
+        List<String> dates = new ArrayList<String>();
+        for (int i = 0; i < day; i++) {
+            calendar.add(Calendar.DATE, 1);
+            dates.add(new SimpleDateFormat(yyyyMMddFormat).format(calendar.getTime()));
+        }
+        return dates;
+    }
+
+    /**
+     * 获取开始日期和结束日期中间所有的时间集合
+     * @param startTime
+     * @param endTime
+     * @return
+     */
+    public static List<String> getStartTimeBetweenEndTime(String startTime, String endTime) {
+        try {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+            Calendar calendar = Calendar.getInstance();
+            calendar.setTime(sdf.parse(startTime));
+            List<String> date = new ArrayList();
+            for (long d = calendar.getTimeInMillis(); d <= sdf.parse(endTime).getTime();
+                 d = getPlusDayMillis(calendar)) {
+                date.add(sdf.format(d));
+            }
+            return date;
+        } catch (ParseException e) {
+            String errMsg = String.format("Time format error, startTime: %s, endTime: %s", startTime, endTime);
+            logger.error(errMsg);
+            throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID);
+        }
+    }
+
+    public static long getPlusDayMillis(Calendar c) {
+        c.set(Calendar.DAY_OF_MONTH, c.get(Calendar.DAY_OF_MONTH) + 1);
+        return c.getTimeInMillis();
+    }
+
+
+    /**
+     * 获取开始时间和结束时间
+     *
+     * @return
+     */
+    public static HashMap<String, String> getStartDateAndEndDate() {
+        HashMap<String, String> dateMap = new HashMap<>();
+
+        SimpleDateFormat sp = new SimpleDateFormat(yyyyMMddFormat);
+        //1.获取当前时间
+        Date time = new Date();
+        String endTime = sp.format(time);
+        endTime = endTime + " 23:59:59";
+        dateMap.put("endTime", endTime);
+
+        //2.获取昨天的时间为开始时间
+        Calendar cal = Calendar.getInstance();
+        cal.add(Calendar.DATE, -6);
+        Date yesterday = cal.getTime();
+        String startTime = sp.format(yesterday);
+        startTime = startTime + " 00:00:00";
+        //开始时间
+        dateMap.put("startTime", startTime);
+        return dateMap;
+    }
+
+
+    /**
+     * 字符串日期时间格式转LocalDate
+     *
+     * @param fullFormatStr str
+     * @return LocalDate
+     */
+    public static LocalDate convertString2LocalDate(String fullFormatStr) {
+        return LocalDate.parse(fullFormatStr, DateTimeFormatter.ofPattern(fullFormat));
+    }
+
+    /**
+     * 获取时间段每一天的时间
+     * @param startTime 开始时间
+     * @param endTime   结束时间
+     * @param day       指定获得多少天的日期
+     * @return
+     */
+    public static List<String> getDatesByStartTimeAndEndTime(String startTime, String endTime, int day) {
+        List<String> dates;
+        if (StringUtils.isEmpty(startTime) || StringUtils.isEmpty(endTime)) {
+            dates = DateTimeUtils.getBeforeDaily(day);
+        } else {
+            dates = DateTimeUtils.getStartTimeBetweenEndTime(startTime, endTime);
+        }
+        return dates;
+    }
+    /**
+     * 获取2020年开始每一周时间段
+     *
+     * @return list
+     */
+
+    public static List<String> getWeekTime() {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy/MM/dd");
+        Date startDate = null;
+        Date endDate = null;
+        try {
+            startDate = sdf.parse("2019/12/30");
+            endDate = sdf.parse(sdf.format(new Date()));
+        } catch (ParseException e) {
+            String errMsg = String.format("Time format error, startTime: %s, endTime: %s", startDate, endDate);
+            logger.error(errMsg);
+            throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID);
+        }
+        ArrayList<String> weekList = new ArrayList<>();
+        Calendar startCal = Calendar.getInstance();
+        Calendar endCal = Calendar.getInstance();
+        startCal.setTime(startDate);
+        endCal.setTime(endDate);
+
+        Calendar fistMonday = Calendar.getInstance();
+        // 设置该日期为开始日期的年份1月1号，方便计算开始日期是第几周(week of year)
+        fistMonday.set(startCal.get(Calendar.YEAR), Calendar.JANUARY, 1, 0, 0, 0);
+
+        // 如果开始日期不是周一,则向以前偏移到最近的周一日期
+        while (startCal.get(Calendar.DAY_OF_WEEK) != Calendar.MONDAY) {
+            startCal.add(Calendar.DAY_OF_YEAR, 1);
+        }
+        // 如果当前日期不是周日,则向以前偏移到上一个周日(tmp: 计算本周偏移量日期)
+        int tmp = 0;
+        while (endCal.get(Calendar.DAY_OF_WEEK) != Calendar.SUNDAY) {
+            tmp++;
+            endCal.add(Calendar.DAY_OF_YEAR, -1);
+        }
+        int startYear = startCal.get(Calendar.YEAR);
+        while (startCal.compareTo(endCal) < 0) {
+            int endYear = startCal.get(Calendar.YEAR);
+            // 跨年处理
+            if (startYear < endYear) {
+                // 设置日期回到跨年后的1月1号0点,重新偏移到第一个周一
+                fistMonday.set(endYear, Calendar.JANUARY, 1, 0, 0, 0);
+                while (fistMonday.get(Calendar.DAY_OF_WEEK) != Calendar.MONDAY) {
+                    fistMonday.add(Calendar.DAY_OF_YEAR, 1);
+                }
+                startYear = endYear;
+            }
+            int weekNum = startCal.get(Calendar.WEEK_OF_YEAR);
+            String weekNumStr = String.valueOf(weekNum);
+            if (weekNum < 10) {
+                weekNumStr = "0" + weekNum;
+            }
+
+            String monday = sdf.format(startCal.getTime());
+            startCal.add(Calendar.DATE, 6);
+            String sunday = sdf.format(startCal.getTime());
+            startCal.add(Calendar.DATE, 1);
+            String week = startCal.get(Calendar.YEAR) + "年第" + weekNumStr + "周" + monday
+                    + "-" + sunday;
+            weekList.add(week);
+        }
+        return weekList;
+    }
+
+    /**
+     * 从秒数获得一个具体时间，24小时制，比如2016-12-12 23:23:15
+     * 自动判断是否为13位的时间戳
+     *
+     * @param second
+     * @return
+     */
+    public static String timestamp2StringDate(long second) {
+        Date date = new Date(getThirteenTimestamp(second));
+        SimpleDateFormat ft = new SimpleDateFormat(fullFormat);
+        ft.setTimeZone(TimeZone.getTimeZone("GMT+8"));
+        return ft.format(date);
+    }
+
 }

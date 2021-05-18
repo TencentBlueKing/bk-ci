@@ -44,7 +44,7 @@ class TaskDBMongoConfig {
         val dbRefResolver = DefaultDbRefResolver(taskMongoDbFactory)
         return object : MappingMongoConverter(dbRefResolver, mongoMappingContext) {
             override fun <S> read(clazz: Class<S>, dbo: DBObject?): S? {
-                if(null == dbo){
+                if (null == dbo) {
                     return null
                 }
                 val string = JSON.serialize(dbo)

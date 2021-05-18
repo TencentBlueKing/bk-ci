@@ -17,6 +17,7 @@ import com.tencent.bk.codecc.defect.service.ICLOCQueryCodeLineService;
 import com.tencent.bk.codecc.defect.service.IQueryWarningBizService;
 import com.tencent.bk.codecc.defect.service.impl.LintQueryWarningBizServiceImpl;
 import com.tencent.bk.codecc.defect.service.openapi.ApiBizService;
+import com.tencent.bk.codecc.defect.vo.CLOCDefectQueryRspInfoVO;
 import com.tencent.bk.codecc.defect.vo.ToolClocRspVO;
 import com.tencent.bk.codecc.defect.vo.ToolDefectRspVO;
 import com.tencent.bk.codecc.defect.vo.admin.DeptTaskDefectExtReqVO;
@@ -26,7 +27,7 @@ import com.tencent.bk.codecc.defect.vo.openapi.CheckerPkgDefectRespVO;
 import com.tencent.bk.codecc.defect.vo.openapi.CheckerPkgDefectVO;
 import com.tencent.bk.codecc.defect.vo.openapi.TaskOverviewDetailRspVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.service.BizServiceFactory;
@@ -57,21 +58,29 @@ public class ServicePkgDefectRestResourceImpl implements ServicePkgDefectRestRes
     private ICLOCQueryCodeLineService iclocQueryCodeLineService;
 
     @Override
-    public CodeCCResult<ToolDefectRspVO> queryToolDefectList(Long taskId, DefectQueryReqVO defectQueryReqVO,
+    public Result<ToolDefectRspVO> queryToolDefectList(Long taskId, DefectQueryReqVO defectQueryReqVO,
                                                        Integer pageNum, Integer pageSize, String sortField, Sort.Direction sortType) {
         IQueryWarningBizService bizService = fileAndDefectQueryFactory
                 .createBizService(defectQueryReqVO.getToolName(), ComConstants.BusinessType.QUERY_WARNING.value(), IQueryWarningBizService.class);
-        return new CodeCCResult<>(bizService.processToolWarningRequest(taskId, defectQueryReqVO, pageNum, pageSize, sortField, sortType));
+        return new Result<>(bizService.processToolWarningRequest(taskId, defectQueryReqVO, pageNum, pageSize, sortField, sortType));
     }
 
     @Override
-    public CodeCCResult<ToolClocRspVO> queryCodeLine(Long taskId)
+    public Result<ToolClocRspVO> queryCodeLine(Long taskId, String toolName)
     {
-        return new CodeCCResult<>(iclocQueryCodeLineService.getCodeLineInfo(taskId));
+        return new Result<>(iclocQueryCodeLineService.getCodeLineInfo(taskId, toolName));
     }
 
     @Override
-    public CodeCCResult<TaskOverviewDetailRspVO> queryTaskOverview(DeptTaskDefectReqVO reqVO, Integer pageNum,
+    public Result<CLOCDefectQueryRspInfoVO> queryCodeLineByTaskIdAndLanguge(
+            Long taskId,
+            String toolName,
+            String language) {
+        return new Result<>(iclocQueryCodeLineService.generateSpecificLanguage(taskId, toolName, language));
+    }
+
+    @Override
+    public Result<TaskOverviewDetailRspVO> queryTaskOverview(DeptTaskDefectReqVO reqVO, Integer pageNum,
             Integer pageSize, Sort.Direction sortType)
     {
         // TODO 临时限定接口只允许查询pcg的任务
@@ -80,13 +89,13 @@ public class ServicePkgDefectRestResourceImpl implements ServicePkgDefectRestRes
             log.error("queryTaskOverview req can not query: {}", reqVO);
             throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, new String[]{"bgId"}, null);
         }
-        return new CodeCCResult<>(apiBizService.statisticsTaskOverview(reqVO, pageNum, pageSize, sortType));
+        return new Result<>(apiBizService.statisticsTaskOverview(reqVO, pageNum, pageSize, sortType));
     }
 
     @Override
-    public CodeCCResult<TaskOverviewDetailRspVO> queryCustomTaskOverview(String customProjSource, Integer pageNum,
-                                                                         Integer pageSize, Sort.Direction sortType)
+    public Result<TaskOverviewDetailRspVO> queryCustomTaskOverview(String customProjSource, Integer pageNum,
+            Integer pageSize, Sort.Direction sortType)
     {
-        return new CodeCCResult<>(apiBizService.statCustomTaskOverview(customProjSource, pageNum, pageSize, sortType));
+        return new Result<>(apiBizService.statCustomTaskOverview(customProjSource, pageNum, pageSize, sortType));
     }
 }

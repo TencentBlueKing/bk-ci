@@ -26,7 +26,6 @@
 
 package com.tencent.bk.codecc.defect.service;
 
-import com.google.common.collect.Lists;
 import com.tencent.bk.codecc.defect.vo.report.ChartAuthorBaseVO;
 import com.tencent.bk.codecc.defect.vo.report.CCNChartAuthorVO;
 import com.tencent.bk.codecc.defect.vo.report.ChartAuthorListVO;
@@ -35,7 +34,6 @@ import com.tencent.bk.codecc.defect.vo.common.CommonDataReportRspVO;
 import com.tencent.devops.common.api.pojo.GlobalMessage;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.service.utils.GlobalMessageUtil;
-import com.tencent.devops.common.util.DateTimeUtils;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;

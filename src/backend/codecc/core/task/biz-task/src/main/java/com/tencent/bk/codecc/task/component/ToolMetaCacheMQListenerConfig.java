@@ -1,27 +1,13 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CODECC 蓝鲸代码检查平台 available.
- *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
- *
- * BK-CODECC 蓝鲸代码检查平台 is licensed under the MIT license.
- *
- * A copy of the MIT License is included in this file.
- *
- *
- * Terms of the MIT License:
- * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
- * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
- * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * Tencent is pleased to support the open source community by making BlueKing available.
+ * Copyright (C) 2017-2018 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.tencent.bk.codecc.task.component;
@@ -51,37 +37,33 @@ import static com.tencent.devops.common.web.mq.ConstantsKt.QUEUE_REFRESH_TOOLMET
  * @version V1.0
  * @date 2019/5/27
  */
-@Configuration
+//@Configuration
 @Slf4j
-public class ToolMetaCacheMQListenerConfig
-{
+public class ToolMetaCacheMQListenerConfig {
     @Value("${server.port:#{null}}")
     private String localPort;
 
     @Bean
-    public RabbitAdmin toolMetaCacheRabbitAdmin(ConnectionFactory connectionFactory)
-    {
+    public RabbitAdmin toolMetaCacheRabbitAdmin(ConnectionFactory connectionFactory) {
         return new RabbitAdmin(connectionFactory);
     }
 
     @Bean
-    public Queue toolMetaCacheQueue()
-    {
-        String queueName = String.format("%s.%s.%s", QUEUE_REFRESH_TOOLMETA_CACHE, IPUtils.INSTANCE.getInnerIP(), localPort);
+    public Queue toolMetaCacheQueue() {
+        String queueName =
+                String.format("%s.%s.%s", QUEUE_REFRESH_TOOLMETA_CACHE, IPUtils.INSTANCE.getInnerIP(), localPort);
         return new Queue(queueName);
     }
 
     @Bean
-    public FanoutExchange toolMetaCacheFanoutExchange()
-    {
+    public FanoutExchange toolMetaCacheFanoutExchange() {
         FanoutExchange fanoutExchange = new FanoutExchange(EXCHANGE_REFRESH_TOOLMETA_CACHE, false, true);
         fanoutExchange.setDelayed(true);
         return fanoutExchange;
     }
 
     @Bean
-    public Binding toolMetaCacheQueueBind(Queue toolMetaCacheQueue, FanoutExchange toolMetaCacheFanoutExchange)
-    {
+    public Binding toolMetaCacheQueueBind(Queue toolMetaCacheQueue, FanoutExchange toolMetaCacheFanoutExchange) {
         return BindingBuilder.bind(toolMetaCacheQueue).to(toolMetaCacheFanoutExchange);
     }
 
@@ -96,8 +78,7 @@ public class ToolMetaCacheMQListenerConfig
             Queue toolMetaCacheQueue,
             RabbitAdmin toolMetaCacheRabbitAdmin,
             RefreshToolMetaCacheConsumer refreshToolMetaCacheConsumer,
-            Jackson2JsonMessageConverter jackson2JsonMessageConverter)
-    {
+            Jackson2JsonMessageConverter jackson2JsonMessageConverter) {
         SimpleMessageListenerContainer container = new SimpleMessageListenerContainer(connectionFactory);
         container.setConnectionFactory(connectionFactory);
         container.setQueueNames(toolMetaCacheQueue.getName());
@@ -106,7 +87,8 @@ public class ToolMetaCacheMQListenerConfig
         container.setRabbitAdmin(toolMetaCacheRabbitAdmin);
         container.setStartConsumerMinInterval(10000);
         container.setConsecutiveActiveTrigger(5);
-        MessageListenerAdapter adapter = new MessageListenerAdapter(refreshToolMetaCacheConsumer, "refreshToolMetaCache");
+        MessageListenerAdapter adapter =
+            new MessageListenerAdapter(refreshToolMetaCacheConsumer, "refreshToolMetaCache");
         adapter.setMessageConverter(jackson2JsonMessageConverter);
         container.setMessageListener(adapter);
         return container;
