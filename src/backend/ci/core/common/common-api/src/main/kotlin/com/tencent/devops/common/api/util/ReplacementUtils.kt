@@ -131,7 +131,7 @@ object ReplacementUtils {
                 index = parseVariable(command, index + 3, inside, replacement)
                 token.append(inside)
             } else if (c == '}' && index + 1 < command.length && command[index + 1] == '}') {
-                val tokenValue = getVariable(token.toString().trim(), replacement) ?: "\${$token}"
+                val tokenValue = getVariable(token.toString().trim(), replacement) ?: "\${{$token}}"
                 newValue.append(tokenValue)
                 return index + 2
             } else {

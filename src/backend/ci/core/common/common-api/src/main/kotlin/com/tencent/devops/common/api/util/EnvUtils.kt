@@ -175,7 +175,7 @@ object EnvUtils {
                 token.append(inside)
             } else if (c == '}' && index + 1 < command.length && command[index + 1] == '}') {
                 val tokenStr = token.toString().trim()
-                val value = data[tokenStr] ?: contextMap?.get(tokenStr) ?: "\${$token}"
+                val value = data[tokenStr] ?: contextMap?.get(tokenStr) ?: "\${{$token}}"
                 newValue.append(value)
                 return index + 2
             } else {
