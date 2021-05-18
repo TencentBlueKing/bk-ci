@@ -81,7 +81,7 @@ object WorkRunner {
                             override fun getReplacement(key: String): String? {
                                 return variables[key] ?: "\${$key}"
                             }
-                        })
+                        }, mapOf(WORKSPACE_CONTEXT to workspace))
                     } else {
                         workspace
                     }
