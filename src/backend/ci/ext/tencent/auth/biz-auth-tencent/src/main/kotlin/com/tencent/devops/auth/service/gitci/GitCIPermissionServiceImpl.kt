@@ -1,6 +1,6 @@
 package com.tencent.devops.auth.service.gitci
 
-import com.tencent.devops.auth.service.PermissionService
+import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.UnauthorizedException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.utils.GitCIUtils
