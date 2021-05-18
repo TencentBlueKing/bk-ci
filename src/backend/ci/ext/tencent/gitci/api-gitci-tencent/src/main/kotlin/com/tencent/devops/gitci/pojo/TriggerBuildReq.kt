@@ -55,3 +55,29 @@ data class TriggerBuildReq(
     @ApiModelProperty("用户选择的触发CommitId")
     val commitId: String? = null
 ) : Repository(gitProjectId, name, url, homepage, gitHttpUrl, gitSshUrl)
+
+@ApiModel("V2TriggerBuild请求")
+data class V2TriggerBuildReq(
+    @ApiModelProperty("蓝盾项目ID")
+    val projectId: String,
+    @ApiModelProperty("工蜂项目名")
+    val name: String,
+    @ApiModelProperty("工蜂项目url")
+    val url: String,
+    @ApiModelProperty("homepage")
+    val homepage: String,
+    @ApiModelProperty("gitHttpUrl")
+    val gitHttpUrl: String,
+    @ApiModelProperty("gitSshUrl")
+    val gitSshUrl: String,
+    @ApiModelProperty("分支")
+    val branch: String,
+    @ApiModelProperty("Custom commit message")
+    val customCommitMsg: String?,
+    @ApiModelProperty("yaml")
+    val yaml: String?,
+    @ApiModelProperty("描述")
+    val description: String?,
+    @ApiModelProperty("用户选择的触发CommitId")
+    val commitId: String? = null
+)
