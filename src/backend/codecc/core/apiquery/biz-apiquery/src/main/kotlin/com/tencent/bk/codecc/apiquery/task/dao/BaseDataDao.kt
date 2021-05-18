@@ -23,4 +23,13 @@ class BaseDataDao @Autowired constructor(
         )
         return taskMongoTemplate.find(query, BaseDataModel::class.java, "t_base_data")
     }
+
+    fun findAllByParamTypeAndParamCode(paramType: String, paramCode: String): List<BaseDataModel> {
+        val query = BasicQuery(BasicDBObject())
+        query.addCriteria(
+                Criteria.where("param_type").`is`(paramType).and("param_code").`is`(paramCode)
+        )
+        val baseDataList = taskMongoTemplate.find(query, BaseDataModel::class.java, "t_base_data")
+        return if (baseDataList.isEmpty()) mutableListOf<BaseDataModel>() else baseDataList
+    }
 }

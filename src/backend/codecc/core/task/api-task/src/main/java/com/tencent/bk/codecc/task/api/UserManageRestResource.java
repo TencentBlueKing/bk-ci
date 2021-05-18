@@ -28,7 +28,7 @@ package com.tencent.bk.codecc.task.api;
 
 import com.tencent.bk.codecc.task.vo.DevopsProjectVO;
 import com.tencent.devops.common.api.annotation.UserLogin;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -37,8 +37,8 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 
-import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEADER_DEVOPS_ACCESS_TOKEN;
-import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEADER_DEVOPS_USER_ID;
+import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_ACCESS_TOKEN;
+import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_USER_ID;
 
 /**
  * 登录的接口类
@@ -56,9 +56,9 @@ public interface UserManageRestResource
     @Path("/userInfo")
     @GET
     @UserLogin
-    CodeCCResult getInfo(
+    Result getInfo(
             @ApiParam(value = "用户id", required = true)
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
                     String userId
     );
 
@@ -66,11 +66,11 @@ public interface UserManageRestResource
     @ApiOperation("获取用户项目列表")
     @Path("/projects")
     @GET
-    CodeCCResult<List<DevopsProjectVO>> getProjectList(
+    Result<List<DevopsProjectVO>> getProjectList(
             @ApiParam(value = "用户id", required = true)
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
                     String userId,
             @ApiParam(value = "PAAS_CC token", required = true)
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+            @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
                     String accessToken);
 }

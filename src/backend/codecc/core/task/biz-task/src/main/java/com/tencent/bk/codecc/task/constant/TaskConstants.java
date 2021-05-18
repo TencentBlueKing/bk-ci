@@ -73,24 +73,15 @@ public interface TaskConstants
     }
 
     /**
-     * 工具集成进展状态：T-测试，P-发布
-     */
-    enum ToolIntegratedStatus
-    {
-        T,
-        P;
-    }
-
-    /**
      * 工具处理模式
      */
-    enum ToolPattern
-    {
+    enum ToolPattern {
         LINT,
         COVERITY,
         KLOCWORK,
         CCN,
         DUPC,
+        STAT,
         TSCLUA;
     }
 

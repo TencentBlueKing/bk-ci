@@ -44,7 +44,7 @@ public abstract class AbstractCCNBatchDefectProcessBizService extends AbstractBa
 
         IQueryWarningBizService queryWarningBizService = factory.createBizService(defectQueryReqVO.getToolName(),
                 ComConstants.BusinessType.QUERY_WARNING.value(), IQueryWarningBizService.class);
-        queryWarningBizService.filterDefectByCondition(taskId, defectList, defectQueryReqVO, defectQueryRspVO);
+        queryWarningBizService.filterDefectByCondition(taskId, defectList, null, defectQueryReqVO, defectQueryRspVO, null);
 
         return defectList;
     }

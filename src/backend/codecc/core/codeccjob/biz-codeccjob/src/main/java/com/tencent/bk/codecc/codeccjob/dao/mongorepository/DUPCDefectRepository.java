@@ -27,7 +27,9 @@
 package com.tencent.bk.codecc.codeccjob.dao.mongorepository;
 
 import com.tencent.bk.codecc.defect.model.DUPCDefectEntity;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -51,4 +53,11 @@ public interface DUPCDefectRepository extends MongoRepository<DUPCDefectEntity, 
     List<DUPCDefectEntity> findByTaskId(long taskId);
 
 
+    /**
+     * 根据任务id和工具状态分页查询告警
+     *
+     * @return
+     */
+    @Query(fields = "{'author_list':1}", value = "{'task_id': ?0, 'status': ?1}")
+    List<DUPCDefectEntity> findAuthorListByTaskIdAndAuthor(long taskId, int status, Pageable pageable);
 }

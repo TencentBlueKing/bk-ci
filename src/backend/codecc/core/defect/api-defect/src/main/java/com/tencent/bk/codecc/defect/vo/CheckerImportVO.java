@@ -12,6 +12,7 @@
  
 package com.tencent.bk.codecc.defect.vo;
 
+import com.tencent.devops.common.api.checkerset.CheckerSetVO;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -40,6 +41,6 @@ public class CheckerImportVO
     @NotEmpty(message = "规则列表不能为空")
     private List<CheckerDetailVO> checkerDetailVOList;
 
-//    @ApiModelProperty(value = "规则集ID", required = true)
-//    private String checkerSetId;
+    @ApiModelProperty(value = "腾讯规范规则集列表")
+    private List<CheckerSetVO> standardCheckerSetList;
 }

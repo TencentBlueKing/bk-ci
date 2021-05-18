@@ -13,16 +13,19 @@
 package com.tencent.bk.codecc.defect.service.statistic;
 
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import com.tencent.bk.codecc.defect.dao.mongorepository.CCNStatisticRepository;
 import com.tencent.bk.codecc.defect.dao.mongorepository.ToolBuildInfoRepository;
 import com.tencent.bk.codecc.defect.model.CCNDefectEntity;
+import com.tencent.bk.codecc.defect.model.CCNNotRepairedAuthorEntity;
 import com.tencent.bk.codecc.defect.model.CCNStatisticEntity;
 import com.tencent.bk.codecc.defect.model.ChartAverageEntity;
+import com.tencent.bk.codecc.defect.model.NotRepairedAuthorEntity;
 import com.tencent.bk.codecc.defect.model.incremental.ToolBuildInfoEntity;
 import com.tencent.bk.codecc.defect.model.incremental.ToolBuildStackEntity;
 import com.tencent.bk.codecc.defect.service.CheckerService;
 import com.tencent.bk.codecc.defect.service.IDataReportBizService;
-import com.tencent.bk.codecc.defect.utils.CommonKafkaClient;
+import com.tencent.bk.codecc.defect.service.newdefectjudge.NewDefectJudgeService;
 import com.tencent.bk.codecc.defect.utils.ThirdPartySystemCaller;
 import com.tencent.bk.codecc.defect.vo.CCNDataReportRspVO;
 import com.tencent.bk.codecc.defect.vo.ChartAverageVO;
@@ -32,9 +35,11 @@ import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.service.BizServiceFactory;
+import com.tencent.devops.common.util.DateTimeUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -45,6 +50,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static com.tencent.devops.common.web.mq.ConstantsKt.EXCHANGE_CLOSE_DEFECT_STATISTIC_CCN;
+import static com.tencent.devops.common.web.mq.ConstantsKt.EXCHANGE_CLOSE_DEFECT_STATISTIC_CCN_OPENSOURCE;
+import static com.tencent.devops.common.web.mq.ConstantsKt.ROUTE_CLOSE_DEFECT_STATISTIC_CCN;
+import static com.tencent.devops.common.web.mq.ConstantsKt.ROUTE_CLOSE_DEFECT_STATISTIC_CCN_OPENSOURCE;
 
 /**
  * Lint告警统计
@@ -67,7 +77,10 @@ public class CCNDefectStatisticService
     @Autowired
     private CheckerService checkerService;
     @Autowired
-    private CommonKafkaClient commonKafkaClient;
+    private RabbitTemplate rabbitTemplate;
+    @Autowired
+    private NewDefectJudgeService newDefectJudgeService;
+
     /**
      * 统计本次扫描的告警
      *
@@ -105,46 +118,97 @@ public class CCNDefectStatisticService
         int highCount = 0;
         int mediumCount = 0;
         int lowCount = 0;
-        if (CollectionUtils.isNotEmpty(allNewDefectList))
-        {
-            // 更新告警状态，并统计告警数量
-            Iterator<CCNDefectEntity> it = allNewDefectList.iterator();
-            while (it.hasNext())
-            {
-                CCNDefectEntity defectEntity = it.next();
 
+        // 新增统计项
+        int newSuperHighCount = 0;
+        int newHighCount = 0;
+        int newMediumCount = 0;
+        int newLowCount = 0;
+
+        Map<String, CCNNotRepairedAuthorEntity> newAuthorMap = Maps.newHashMap();
+        Map<String, CCNNotRepairedAuthorEntity> existAuthorMap = Maps.newHashMap();
+
+        if (CollectionUtils.isNotEmpty(allNewDefectList)) {
+            // 新老告警判定时间
+            long newDefectJudgeTime = newDefectJudgeService.getNewDefectJudgeTime(taskId, toolName, taskVO);
+
+            for (CCNDefectEntity defectEntity : allNewDefectList) {
                 // 统计遗留告警数
-                if (defectEntity.getStatus() == ComConstants.DefectStatus.NEW.value())
-                {
-                    existCount++;
+                if (defectEntity.getStatus() != ComConstants.DefectStatus.NEW.value()) {
+                    continue;
+                }
 
-                    int ccn = defectEntity.getCcn();
-                    if (ccn >= m && ccn < h)
-                    {
-                        mediumCount++;
-                    }
-                    else if (ccn >= h && ccn < sh)
-                    {
-                        highCount++;
-                    }
-                    else if (ccn >= sh)
-                    {
-                        superHighCount++;
-                    }
-                    else if (ccn < m)
-                    {
-                        lowCount++;
-                    }
+                existCount++;
 
-                    // 计算超标复杂度
-                    int diff = ccn - ccnThreshold;
-                    if (diff > 0)
-                    {
-                        ccnBeyondThresholdSum += diff;
+                int ccn = defectEntity.getCcn();
+                if (ccn >= m && ccn < h) {
+                    mediumCount++;
+                } else if (ccn >= h && ccn < sh) {
+                    highCount++;
+                } else if (ccn >= sh) {
+                    superHighCount++;
+                } else if (ccn < m) {
+                    lowCount++;
+                }
+
+                // 计算超标复杂度
+                int diff = ccn - ccnThreshold;
+                if (diff > 0) {
+                    ccnBeyondThresholdSum += diff;
+                }
+
+                int riskVal = getRiskFactorVal(ccn, sh, h, m);
+                long defectLastUpdateTime = DateTimeUtils.getThirteenTimestamp(
+                        defectEntity.getLatestDateTime() == null ? 0 : defectEntity.getLatestDateTime()
+                );
+                boolean isNewDefectByJudgeTime = defectLastUpdateTime >= newDefectJudgeTime;
+
+                if (isNewDefectByJudgeTime) {
+                    if (ComConstants.RiskFactor.SH.value() == riskVal) {
+                        newSuperHighCount++;
+                    } else if (ComConstants.RiskFactor.H.value() == riskVal) {
+                        newHighCount++;
+                    } else if (ComConstants.RiskFactor.M.value() == riskVal) {
+                        newMediumCount++;
+                    } else if (ComConstants.RiskFactor.L.value() == riskVal) {
+                        newLowCount++;
                     }
+                }
+
+                // 统计处理人信息
+                if (StringUtils.isEmpty(defectEntity.getAuthor())) {
+                    continue;
+                }
+
+                CCNNotRepairedAuthorEntity authorStatistic;
+                if (isNewDefectByJudgeTime) {
+                    authorStatistic = newAuthorMap.get(defectEntity.getAuthor());
+                    if (authorStatistic == null) {
+                        authorStatistic = new CCNNotRepairedAuthorEntity();
+                        authorStatistic.setName(defectEntity.getAuthor());
+                        newAuthorMap.put(defectEntity.getAuthor(), authorStatistic);
+                    }
+                } else {
+                    authorStatistic = existAuthorMap.get(defectEntity.getAuthor());
+                    if (authorStatistic == null) {
+                        authorStatistic = new CCNNotRepairedAuthorEntity();
+                        authorStatistic.setName(defectEntity.getAuthor());
+                        existAuthorMap.put(defectEntity.getAuthor(), authorStatistic);
+                    }
+                }
+
+                if (ComConstants.RiskFactor.SH.value() == riskVal) {
+                    authorStatistic.setSuperHighCount(authorStatistic.getSuperHighCount() + 1);
+                } else if (ComConstants.RiskFactor.H.value() == riskVal) {
+                    authorStatistic.setHighCount(authorStatistic.getHighCount() + 1);
+                } else if (ComConstants.RiskFactor.M.value() == riskVal) {
+                    authorStatistic.setMediumCount(authorStatistic.getMediumCount() + 1);
+                } else if (ComConstants.RiskFactor.L.value() == riskVal) {
+                    authorStatistic.setLowCount(authorStatistic.getLowCount() + 1);
                 }
             }
         }
+
         log.info("existCount-->{}", existCount);
 
         String baseBuildId;
@@ -186,6 +250,12 @@ public class CCNDefectStatisticService
         newCcnStatistic.setMediumCount(mediumCount);
         newCcnStatistic.setLowCount(lowCount);
         newCcnStatistic.setCcnBeyondThresholdSum(ccnBeyondThresholdSum);
+        newCcnStatistic.setNewAuthorStatistic(Lists.newArrayList(newAuthorMap.values()));
+        newCcnStatistic.setExistAuthorStatistic(Lists.newArrayList(existAuthorMap.values()));
+        newCcnStatistic.setNewSuperHighCount(newSuperHighCount);
+        newCcnStatistic.setNewHighCount(newHighCount);
+        newCcnStatistic.setNewMediumCount(newMediumCount);
+        newCcnStatistic.setNewlowCount(newLowCount);
         ccnStatisticRepository.save(newCcnStatistic);
 
         // 获取最近5日平均圈复杂度趋势数据，由于需要使用最新统计结果，所以先保存再获取趋势数据然后再次保存
@@ -214,10 +284,29 @@ public class CCNDefectStatisticService
             }).collect(Collectors.toList()));
         }
         newCcnStatistic.setAverageList(averageList);
-        ccnStatisticRepository.save(newCcnStatistic);
+        newCcnStatistic = ccnStatisticRepository.save(newCcnStatistic);
 
-        //将数据加入数据平台
-        commonKafkaClient.pushCCNStatisticToKafka(newCcnStatistic);
+        // 异步统计非new状态的告警数
+        if (ComConstants.BsTaskCreateFrom.GONGFENG_SCAN.value().equalsIgnoreCase(taskVO.getCreateFrom())) {
+            rabbitTemplate.convertAndSend(EXCHANGE_CLOSE_DEFECT_STATISTIC_CCN_OPENSOURCE,
+                    ROUTE_CLOSE_DEFECT_STATISTIC_CCN_OPENSOURCE, newCcnStatistic);
+        } else {
+            rabbitTemplate.convertAndSend(EXCHANGE_CLOSE_DEFECT_STATISTIC_CCN, ROUTE_CLOSE_DEFECT_STATISTIC_CCN, newCcnStatistic);
+        }
     }
 
+    /**
+     * 根据复杂度获取风险等级枚举值
+     */
+    private int getRiskFactorVal(int ccn, int sh, int h, int m) {
+        if (ccn >= sh) {
+            return ComConstants.RiskFactor.SH.value();
+        } else if (ccn < sh && ccn >= h) {
+            return ComConstants.RiskFactor.H.value();
+        } else if (ccn < h && ccn >= m) {
+            return ComConstants.RiskFactor.M.value();
+        } else {
+            return ComConstants.RiskFactor.L.value();
+        }
+    }
 }

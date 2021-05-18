@@ -38,8 +38,10 @@ class ApiAspect(
         val parameterNames = (jp.signature as MethodSignature).parameterNames
         var projectId: String? = null
         var appCode: String? = null
-        var apigwType: String? = null
+        val apigwType: String? = null
         var taskIds: List<Long>? = null
+        var toolName: String? = null
+        var taskQueryReq: TaskQueryReq? = null
         parameterNames.forEach {
             logger.info("参数名[$it]")
         }
@@ -50,8 +52,8 @@ class ApiAspect(
         for (index in parameterValue.indices) {
             when (parameterNames[index]) {
                 "taskQueryReq" -> {
-                    val taskQueryReq = try {
-                            parameterValue[index] as TaskQueryReq
+                    taskQueryReq = try {
+                        parameterValue[index] as TaskQueryReq
                     } catch (e: Exception) {
                         logger.info("cast to task query req fail! msg : ${e.message}")
                         null
@@ -60,8 +62,20 @@ class ApiAspect(
                         taskIds = taskQueryReq.taskIdList
                     }
                 }
+                "taskId" -> {
+                    val mutableList = mutableListOf<Long>(parameterValue[index].toString().toLong())
+                    taskIds = if (taskIds.isNullOrEmpty()) {
+                        mutableList
+                    } else {
+                        mutableList.addAll(taskIds)
+                        mutableList
+                    }
+                }
                 "projectId" -> {
                     projectId = parameterValue[index]?.toString()
+                }
+                "toolName" -> {
+                    toolName = parameterValue[index]?.toString()
                 }
                 "appCode" -> {
                     appCode = parameterValue[index]?.toString()
@@ -72,15 +86,18 @@ class ApiAspect(
                 else -> null
             }
         }
-        logger.info("appCode[$appCode],项目[$projectId],任务清单[$taskIds]")
-        if ((projectId != null || taskIds != null) && appCode != null) {
+        logger.info("appCode[$appCode],项目[$projectId],任务清单[$taskIds],工具[$toolName]")
+        if ((projectId != null || taskIds != null || !toolName.isNullOrBlank() || (null != taskQueryReq &&
+                (null != taskQueryReq.bgId || null != taskQueryReq.deptId))) && appCode != null
+        ) {
             logger.info("判断！！！！请求类型apigwType[$apigwType],appCode[$appCode],是否有项目[$projectId]的权限.")
-            if (appCodeService.validAppCode(appCode, projectId, taskIds)) {
+            if (appCodeService.validAppCode(appCode, projectId, taskIds, toolName, taskQueryReq)) {
                 logger.info("请求类型apigwType[$apigwType],appCode[$appCode],是否有项目[$projectId]的权限【验证通过】")
             } else {
                 val message = "请求类型apigwType[$apigwType],appCode[$appCode],是否有项目[$projectId]的权限【验证失败】"
                 throw PermissionForbiddenException(
-                    message = message
+                    message = message,
+                    params = arrayOf("user")
                 )
             }
         }

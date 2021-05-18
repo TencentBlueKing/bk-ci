@@ -29,7 +29,7 @@
 package com.tencent.devops.project.api.op
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.project.api.op.pojo.OpProjectTagUpdateDTO
+import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -50,7 +50,7 @@ interface OpProjectTagResource {
     @Path("/setTagByProject")
     fun setTagByProject(
         @ApiParam(value = "consulTag请求入参", required = true)
-        opProjectTagUpdateDTO: OpProjectTagUpdateDTO
+        opProjectTagUpdateDTO: ProjectTagUpdateDTO
     ): Result<Boolean>
 
     @ApiOperation("按组织设置consul Tag")
@@ -58,7 +58,7 @@ interface OpProjectTagResource {
     @Path("/setTagByOrg")
     fun setTagByOrg(
         @ApiParam(value = "consulTag请求入参", required = true)
-        opProjectTagUpdateDTO: OpProjectTagUpdateDTO
+        opProjectTagUpdateDTO: ProjectTagUpdateDTO
     ): Result<Boolean>
 
     @ApiOperation("按组织设置consul Tag")
@@ -66,6 +66,6 @@ interface OpProjectTagResource {
     @Path("/setTagByChannel")
     fun setTagByChannel(
         @ApiParam(value = "consulTag请求入参", required = true)
-        opProjectTagUpdateDTO: OpProjectTagUpdateDTO
+        opProjectTagUpdateDTO: ProjectTagUpdateDTO
     ): Result<Boolean>
 }

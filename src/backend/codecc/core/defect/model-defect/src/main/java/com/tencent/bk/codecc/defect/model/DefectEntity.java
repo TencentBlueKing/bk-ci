@@ -209,6 +209,15 @@ public class DefectEntity
     @Field("defect_instances")
     private List<DefectInstance> defectInstances;
 
+    @Field("rel_path")
+    private String relPath;
+
+    /**
+     * 版本号
+     */
+    @Field("revision")
+    private String revision;
+
     /**
      * 告警实例的数据
      */
