@@ -35,7 +35,6 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Service
 class TxPermissionServiceImpl @Autowired constructor(
     val authHelper: AuthHelper,
     val policyService: PolicyService,
@@ -45,15 +44,39 @@ class TxPermissionServiceImpl @Autowired constructor(
         return super.validateUserResourcePermission(userId, action)
     }
 
-    override fun validateUserResourcePermissionByRelation(userId: String, action: String, projectCode: String, resourceCode: String, resourceType: String, relationResourceType: String?): Boolean {
-        return super.validateUserResourcePermissionByRelation(userId, action, projectCode, resourceCode, resourceType, relationResourceType)
+    override fun validateUserResourcePermissionByRelation(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resourceCode: String,
+        resourceType: String,
+        relationResourceType: String?
+    ): Boolean {
+        return super.validateUserResourcePermissionByRelation(
+            userId = userId,
+            action = action,
+            projectCode = projectCode,
+            resourceCode = resourceCode,
+            resourceType = resourceType,
+            relationResourceType = relationResourceType
+        )
     }
 
-    override fun getUserResourceByAction(userId: String, action: String, projectCode: String, resourceType: String): List<String> {
+    override fun getUserResourceByAction(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resourceType: String
+    ): List<String> {
         return super.getUserResourceByAction(userId, action, projectCode, resourceType)
     }
 
-    override fun getUserResourcesByActions(userId: String, actions: List<String>, projectCode: String, resourceType: String): Map<AuthPermission, List<String>> {
+    override fun getUserResourcesByActions(
+        userId: String,
+        actions: List<String>,
+        projectCode: String,
+        resourceType: String
+    ): Map<AuthPermission, List<String>> {
         return super.getUserResourcesByActions(userId, actions, projectCode, resourceType)
     }
 }

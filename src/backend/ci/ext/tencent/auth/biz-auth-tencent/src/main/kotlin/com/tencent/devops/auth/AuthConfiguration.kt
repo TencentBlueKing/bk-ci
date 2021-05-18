@@ -90,11 +90,4 @@ class AuthConfiguration {
     @Bean
     @ConditionalOnMissingBean
     fun authHelper() = AuthHelper(tokenService(), policyService(), iamConfiguration())
-
-    @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
-    fun deptService(
-        redisOperation: RedisOperation,
-        objectMapper: ObjectMapper
-    ) = AuthDeptServiceImpl(redisOperation, objectMapper)
 }

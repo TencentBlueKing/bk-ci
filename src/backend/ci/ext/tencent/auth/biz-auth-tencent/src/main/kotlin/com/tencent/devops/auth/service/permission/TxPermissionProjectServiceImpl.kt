@@ -52,7 +52,6 @@ import org.springframework.stereotype.Service
 import java.lang.RuntimeException
 import java.util.concurrent.TimeUnit
 
-@Service
 class TxPermissionProjectServiceImpl @Autowired constructor(
     override val permissionRoleService: PermissionRoleService,
     override val permissionRoleMemberService: PermissionRoleMemberService,
@@ -88,7 +87,10 @@ class TxPermissionProjectServiceImpl @Autowired constructor(
         }
     }
 
-    override fun getProjectGroupAndUserList(serviceCode: String, projectCode: String): List<BkAuthGroupAndUserList> {
+    override fun getProjectGroupAndUserList(
+        serviceCode: String,
+        projectCode: String
+    ): List<BkAuthGroupAndUserList> {
         // 1. 转换projectCode为iam侧分级管理员Id
         val iamProjectId = getProjectId(projectCode)
         // 2. 获取项目下的所有用户组
@@ -97,7 +99,11 @@ class TxPermissionProjectServiceImpl @Autowired constructor(
         val result = mutableListOf<BkAuthGroupAndUserList>()
         // 3. 获取用户组下的所有用户
         roleInfos.forEach {
-            val groupMemberInfos = permissionRoleMemberService.getRoleMember(iamProjectId, it.id, 0, 1000).results
+            val groupMemberInfos = permissionRoleMemberService.getRoleMember(
+                projectId = iamProjectId,
+                roleId = it.id,
+                page = 0,
+                pageSize = 1000).results
             logger.info("[IAM] $projectCode $iamProjectId ,role ${it.id}| users $groupMemberInfos")
             val members = mutableListOf<String>()
             groupMemberInfos.forEach { memberInfo ->
@@ -135,7 +141,8 @@ class TxPermissionProjectServiceImpl @Autowired constructor(
         managerActionDto.id = managerAction
         actionDTOs.add(viewActionDto)
         actionDTOs.add(managerActionDto)
-        val actionPolicyDTOs = policyService.batchGetPolicyByActionList(userId, actionDTOs, null) ?: return emptyList()
+        val actionPolicyDTOs = policyService.batchGetPolicyByActionList(userId, actionDTOs, null)
+            ?: return emptyList()
         logger.info("[IAM] getUserProjects actionPolicyDTOs $actionPolicyDTOs")
         val actionPolicy = actionPolicyDTOs[0]
         return AuthUtils.getProjects(actionPolicy.condition)
