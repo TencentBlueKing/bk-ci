@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.engine.atom
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.KEY_CODE_EDITOR
 import com.tencent.devops.common.api.constant.KEY_DEFAULT
 import com.tencent.devops.common.api.constant.KEY_INPUT
@@ -52,7 +51,6 @@ import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.StoreParam
 import com.tencent.devops.store.pojo.common.StoreVersion
-import javax.ws.rs.core.Response
 
 object AtomUtils {
 
@@ -195,14 +193,10 @@ object AtomUtils {
             return true
         }
         // 批量获取插件运行时信息
-        val atomRunInfoResult = try {
-            client.get(ServiceMarketAtomEnvResource::class).batchGetAtomRunInfos(projectCode, atomVersions)
-        } catch (ignored: Exception) {
-            throw ErrorCodeException(
-                statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                errorCode = CommonMessageCode.SYSTEM_ERROR
-            )
-        }
+        val atomRunInfoResult = client.get(ServiceMarketAtomEnvResource::class).batchGetAtomRunInfos(
+            projectCode = projectCode,
+            atomVersions = atomVersions
+        )
         val atomRunInfoMap = atomRunInfoResult.data
         atomInputParamList.forEach { storeParam ->
             val atomCode = storeParam.storeCode
