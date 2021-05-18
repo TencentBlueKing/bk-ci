@@ -29,7 +29,7 @@ import nu.studer.gradle.jooq.JooqGenerate
 
 
 plugins {
-    id("nu.studer.jooq")
+    id("nu.studer.jooq") version "5.2.1"
     kotlin("jvm")
 }
 
@@ -37,7 +37,6 @@ val jooqGenerator by project.configurations
 val api by project.configurations
 
 dependencies {
-    api("org.jooq:jooq:3.14.9")
     jooqGenerator("mysql:mysql-connector-java:8.0.22")
 }
 
