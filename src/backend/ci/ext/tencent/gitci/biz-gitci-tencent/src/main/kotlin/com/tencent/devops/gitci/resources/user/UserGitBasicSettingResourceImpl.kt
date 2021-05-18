@@ -30,6 +30,7 @@ package com.tencent.devops.gitci.resources.user
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.user.UserGitBasicSettingResource
 import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.gitci.utils.GitCommonUtils
@@ -37,6 +38,7 @@ import com.tencent.devops.gitci.v2.service.GitCIBasicSettingService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
+@RestResource
 class UserGitBasicSettingResourceImpl @Autowired constructor(
     private val gitCIBasicSettingService: GitCIBasicSettingService
 ) : UserGitBasicSettingResource {
