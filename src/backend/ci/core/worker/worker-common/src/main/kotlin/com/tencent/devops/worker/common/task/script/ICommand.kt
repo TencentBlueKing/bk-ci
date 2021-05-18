@@ -29,6 +29,7 @@ package com.tencent.devops.worker.common.task.script
 
 import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.store.pojo.app.BuildEnv
+import com.tencent.devops.worker.common.WORKSPACE_CONTEXT
 import com.tencent.devops.worker.common.utils.CredentialUtils
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -48,7 +49,7 @@ interface ICommand {
         errorMessage: String? = null
     )
 
-    fun parseTemplate(buildId: String, command: String, data: Map<String, String>): String {
+    fun parseTemplate(buildId: String, command: String, data: Map<String, String>, dir: File): String {
         return ReplacementUtils.replace(command, object : ReplacementUtils.KeyReplacement {
             override fun getReplacement(key: String): String? = if (data[key] != null) {
                 data[key]!!
@@ -60,7 +61,7 @@ interface ICommand {
                     "\${$key}"
                 }
             }
-        })
+        }, mapOf(WORKSPACE_CONTEXT to dir.absolutePath))
     }
 
     companion object {

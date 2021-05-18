@@ -30,6 +30,14 @@ package com.tencent.devops.common.api.util
 object ReplacementUtils {
 
     fun replace(command: String, replacement: KeyReplacement): String {
+        return replace(command, replacement, emptyMap())
+    }
+
+    fun replace(
+        command: String,
+        replacement: KeyReplacement,
+        contextMap: Map<String, String>? = emptyMap()
+    ): String {
         if (command.isBlank()) {
             return command
         }
@@ -44,7 +52,7 @@ object ReplacementUtils {
                 // 先处理${} 单个花括号的情况
                 val lineTmp = parseTemplate(line, replacement)
                 // 再处理${{}} 双花括号的情况
-                parseWithDoubleCurlyBraces(lineTmp, replacement)
+                parseWithDoubleCurlyBraces(lineTmp, replacement, contextMap)
             }
             sb.append(template)
             if (index != lines.size - 1) {
@@ -74,7 +82,11 @@ object ReplacementUtils {
         return newValue.toString()
     }
 
-    private fun parseWithDoubleCurlyBraces(command: String, replacement: KeyReplacement): String {
+    private fun parseWithDoubleCurlyBraces(
+        command: String,
+        replacement: KeyReplacement,
+        contextMap: Map<String, String>? = emptyMap()
+    ): String {
         if (command.isBlank()) {
             return command
         }
@@ -84,7 +96,7 @@ object ReplacementUtils {
             val c = command[index]
             if (checkPrefix(c, index, command)) {
                 val inside = StringBuilder()
-                index = parseVariableWithDoubleCurlyBraces(command, index + 3, inside, replacement)
+                index = parseVariableWithDoubleCurlyBraces(command, index + 3, inside, replacement, contextMap)
                 newValue.append(inside)
             } else {
                 newValue.append(c)
@@ -120,7 +132,8 @@ object ReplacementUtils {
         command: String,
         start: Int,
         newValue: StringBuilder,
-        replacement: KeyReplacement
+        replacement: KeyReplacement,
+        contextMap: Map<String, String>? = emptyMap()
     ): Int {
         val token = StringBuilder()
         var index = start
@@ -131,7 +144,9 @@ object ReplacementUtils {
                 index = parseVariable(command, index + 3, inside, replacement)
                 token.append(inside)
             } else if (c == '}' && index + 1 < command.length && command[index + 1] == '}') {
-                val tokenValue = getVariable(token.toString().trim(), replacement) ?: "\${{$token}}"
+                val tokenStr = token.toString().trim()
+                val tokenValue =
+                    getVariable(token.toString().trim(), replacement) ?: contextMap?.get(tokenStr) ?: "\${{$token}}"
                 newValue.append(tokenValue)
                 return index + 2
             } else {
