@@ -332,7 +332,11 @@ class YamlTemplate(
                 }
             } else {
                 // 不是模板文件则直接实例化
-                variableMap[key] = YamlObjects.getVariable(transValue(fromPath, TemplateType.VARIABLE.text, value))
+                if (value is String) {
+                    variableMap[key] = Variable(value, false)
+                } else {
+                    variableMap[key] = YamlObjects.getVariable(transValue(fromPath, TemplateType.VARIABLE.text, value))
+                }
             }
         }
         return variableMap
