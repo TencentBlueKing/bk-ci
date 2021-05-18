@@ -34,6 +34,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.user.UserGitCITriggerResource
 import com.tencent.devops.gitci.pojo.GitYamlString
 import com.tencent.devops.gitci.pojo.TriggerBuildReq
+import com.tencent.devops.gitci.pojo.V2TriggerBuildReq
 import com.tencent.devops.gitci.pojo.v2.V2BuildYaml
 import com.tencent.devops.gitci.service.GitCITriggerService
 import com.tencent.devops.gitci.utils.GitCommonUtils
@@ -51,10 +52,26 @@ class UserGitCITriggerResourceImpl @Autowired constructor(
     override fun triggerStartup(
         userId: String,
         pipelineId: String,
-        triggerBuildReq: TriggerBuildReq
+        triggerBuildReq: V2TriggerBuildReq
     ): Result<Boolean> {
-        checkParam(userId, triggerBuildReq.gitProjectId)
-        return Result(gitCITriggerService.triggerBuild(userId, pipelineId, triggerBuildReq))
+        val gitProjectId = GitCommonUtils.getGitProjectId(triggerBuildReq.projectId)
+        checkParam(userId, gitProjectId)
+        val new = with(triggerBuildReq) {
+            TriggerBuildReq(
+                gitProjectId = gitProjectId,
+                name = name,
+                url = url,
+                homepage = homepage,
+                gitHttpUrl = gitHttpUrl,
+                gitSshUrl = gitSshUrl,
+                branch = branch,
+                customCommitMsg = customCommitMsg,
+                yaml = yaml,
+                description = description,
+                commitId = commitId
+            )
+        }
+        return Result(gitCITriggerService.triggerBuild(userId, pipelineId, new))
     }
 
     override fun checkYaml(userId: String, yaml: GitYamlString): Result<String> {

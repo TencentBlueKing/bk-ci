@@ -46,7 +46,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_GIT_CI_SETTING"], description = "user-setting页面")
-@Path("/user/setting")
+@Path("/user/basic/setting")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserGitBasicSettingResource {

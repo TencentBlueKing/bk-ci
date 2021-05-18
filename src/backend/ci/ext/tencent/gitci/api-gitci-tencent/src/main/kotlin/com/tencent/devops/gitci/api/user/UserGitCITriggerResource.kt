@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.gitci.pojo.GitYamlString
-import com.tencent.devops.gitci.pojo.TriggerBuildReq
+import com.tencent.devops.gitci.pojo.V2TriggerBuildReq
 import com.tencent.devops.gitci.pojo.v2.V2BuildYaml
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -62,7 +62,7 @@ interface UserGitCITriggerResource {
         @PathParam("pipelineId")
         pipelineId: String,
         @ApiParam("TriggerBuild请求", required = true)
-        triggerBuildReq: TriggerBuildReq
+        triggerBuildReq: V2TriggerBuildReq
     ): Result<Boolean>
 
     @ApiOperation("校验yaml格式")
