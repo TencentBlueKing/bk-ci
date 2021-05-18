@@ -43,7 +43,6 @@ import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 
@@ -60,8 +59,7 @@ class PipelineAtomRollBackCronService @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineAtomRollBackCronService::class.java)
-        @Value("\${redisLock.pipelineAtomRollBackLockName:pipelineAtomRollBackLock}")
-        protected lateinit var LOCK_KEY: String
+        private const val LOCK_KEY = "pipelineAtomRollBack"
         private const val ITEM_PAGE_SIZE = 10
         private const val HISTORY_PAGE_SIZE = 100
     }

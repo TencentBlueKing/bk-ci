@@ -66,8 +66,7 @@ class TemplateInstanceCronService @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(TemplateInstanceCronService::class.java)
-        @Value("\${redisLock.templateInstanceLockName:templateInstanceItemLock}")
-        protected lateinit var LOCK_KEY: String
+        private const val LOCK_KEY = "templateInstanceItemLock"
         private const val PAGE_SIZE = 100
     }
 
