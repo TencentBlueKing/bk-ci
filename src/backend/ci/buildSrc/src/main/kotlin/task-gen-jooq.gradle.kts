@@ -37,6 +37,7 @@ val jooqGenerator by project.configurations
 val api by project.configurations
 
 dependencies {
+    api("org.jooq:jooq")
     jooqGenerator("mysql:mysql-connector-java:8.0.22")
 }
 
