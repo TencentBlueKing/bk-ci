@@ -1110,6 +1110,7 @@ class PipelineRuntimeService @Autowired constructor(
                     variables = buildVariables
                 )
                 if (buildHistoryRecord != null) {
+                    buildHistoryRecord.endTime = null
                     buildHistoryRecord.status = startBuildStatus.ordinal
                     transactionContext.batchStore(buildHistoryRecord).execute()
                     // 重置状态和人
