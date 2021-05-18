@@ -43,6 +43,7 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.GET
 import javax.ws.rs.PathParam
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_GIT_CI_TRIGGER"], description = "user-TriggerBuild页面")
@@ -99,4 +100,25 @@ interface UserGitCITriggerResource {
         @PathParam("buildId")
         buildId: String
     ): Result<V2BuildYaml?>
+
+    @ApiOperation("根据PipelinId和分支查询Yaml内容")
+    @GET
+    @Path("/{projectId}/{pipelineId}/yaml")
+    fun getYamlByPipeline(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "蓝盾项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("分支名称", required = false)
+        @QueryParam("branchName")
+        branchName: String,
+        @ApiParam("COMMIT_ID", required = false)
+        @QueryParam("commitId")
+        commitId: String?
+    ): Result<String?>
 }
