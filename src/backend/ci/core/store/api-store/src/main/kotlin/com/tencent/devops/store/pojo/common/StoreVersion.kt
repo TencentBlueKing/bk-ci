@@ -25,51 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.atom
+package com.tencent.devops.store.pojo.common
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.model.store.tables.records.TAtomRecord
-import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
-import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
-import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-interface MarketAtomCommonService {
-
-    fun validateAtomVersion(
-        atomRecord: TAtomRecord,
-        releaseType: ReleaseTypeEnum,
-        osList: ArrayList<String>,
-        version: String
-    ): Result<Boolean>
-
-    fun parseBaseTaskJson(
-        taskJsonStr: String,
-        atomCode: String,
-        version: String,
-        userId: String
-    ): GetAtomConfigResult
-
-    fun checkEditCondition(
-        atomCode: String
-    ): Boolean
-
-    fun getNormalUpgradeFlag(atomCode: String, status: Int): Boolean
-
-    fun handleAtomCache(
-        atomId: String,
-        atomCode: String,
-        version: String,
-        releaseFlag: Boolean
-    )
-
-    fun updateAtomRunInfoCache(
-        atomId: String,
-        atomName: String? = null,
-        jobType: JobTypeEnum? = null,
-        buildLessRunFlag: Boolean? = null,
-        latestFlag: Boolean? = null,
-        props: String? = null
-    )
-
-    fun generateInputTypeInfos(props: String?): Map<String, String>?
-}
+@ApiModel("组件版本信息")
+data class StoreVersion(
+    @ApiModelProperty("组件代码", required = true)
+    var storeCode: String,
+    @ApiModelProperty("组件名称", required = true)
+    var storeName: String,
+    @ApiModelProperty("版本号", required = true)
+    var version: String,
+    @ApiModelProperty("是否是旧版本", required = true)
+    var historyFlag: Boolean
+)

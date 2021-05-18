@@ -40,6 +40,9 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -79,6 +82,7 @@ import com.tencent.devops.store.service.atom.AtomService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreProjectService
+import com.tencent.devops.store.utils.StoreUtils
 import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -127,6 +131,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     lateinit var marketAtomCommonService: MarketAtomCommonService
 
     @Autowired
+    lateinit var redisOperation: RedisOperation
+
+    @Autowired
     lateinit var client: Client
 
     private val logger = LoggerFactory.getLogger(javaClass)
@@ -135,7 +142,15 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         .expireAfterWrite(1, TimeUnit.MINUTES)
         .build(object : CacheLoader<String, Map<String, String>>() {
             override fun load(projectId: String): Map<String, String> {
-                val elementMapData = serviceGetPipelineAtoms(null, null, projectId, null, null, null, null).data
+                val elementMapData = serviceGetPipelineAtoms(
+                    serviceScope = null,
+                    os = null,
+                    projectCode = projectId,
+                    category = null,
+                    classifyId = null,
+                    page = null,
+                    pageSize = null
+                ).data
                 return elementMapData?.records?.map {
                     it.atomCode to it.name
                 }?.toMap() ?: mapOf()
@@ -394,7 +409,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     props = atomDao.convertString(pipelineAtomRecord.props),
                     data = atomDao.convertString(pipelineAtomRecord.data),
                     recommendFlag = atomFeature?.recommendFlag,
-                    frontendType = FrontendTypeEnum.getFrontendTypeObj(pipelineAtomRecord.htmlTemplateVersion)
+                    frontendType = FrontendTypeEnum.getFrontendTypeObj(pipelineAtomRecord.htmlTemplateVersion),
+                    createTime = pipelineAtomRecord.createTime.timestampmilli(),
+                    updateTime = pipelineAtomRecord.updateTime.timestampmilli()
                 )
             }
         )
@@ -560,24 +577,25 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             }
             val htmlTemplateVersion = atomRecord.htmlTemplateVersion
             var classType = atomRecord.classType
-            if ("1.0" != htmlTemplateVersion &&
-                (classType == "marketBuild" || classType == "marketBuildLess")
+            if (FrontendTypeEnum.HISTORY.typeVersion != htmlTemplateVersion &&
+                (classType == MarketBuildAtomElement.classType || classType == MarketBuildLessAtomElement.classType)
             ) {
                 // 更新插件市场的插件才需要根据操作系统来生成插件大类
                 classType = handleClassType(atomUpdateRequest.os)
             }
             atomUpdateRequest.os.sort() // 给操作系统排序
+            val atomCode = atomRecord.atomCode
             dslContext.transaction { t ->
                 val context = DSL.using(t)
                 atomDao.updateAtomFromOp(context, userId, id, classType, atomUpdateRequest)
                 val recommendFlag = atomUpdateRequest.recommendFlag
                 if (null != recommendFlag) {
                     // 为了兼容老插件特性表没有记录的情况，如果没有记录就新增
-                    val atomFeatureRecord = atomFeatureDao.getAtomFeature(context, atomRecord.atomCode)
+                    val atomFeatureRecord = atomFeatureDao.getAtomFeature(context, atomCode)
                     if (null != atomFeatureRecord) {
                         atomFeatureDao.updateAtomFeature(
                             context, userId, AtomFeatureRequest(
-                            atomCode = atomRecord.atomCode,
+                            atomCode = atomCode,
                             recommendFlag = recommendFlag,
                             yamlFlag = atomUpdateRequest.yamlFlag
                         )
@@ -585,13 +603,27 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                     } else {
                         atomFeatureDao.addAtomFeature(
                             context, userId, AtomFeatureRequest(
-                            atomCode = atomRecord.atomCode,
+                            atomCode = atomCode,
                             recommendFlag = recommendFlag,
                             yamlFlag = atomUpdateRequest.yamlFlag
                         )
                         )
                     }
                 }
+                // 更新默认插件缓存
+                if (atomUpdateRequest.defaultFlag) {
+                    redisOperation.addSetValue(StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name), atomCode)
+                } else {
+                    redisOperation.removeSetMember(StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name), atomCode)
+                }
+                // 更新插件运行时信息缓存
+                marketAtomCommonService.updateAtomRunInfoCache(
+                    atomId = id,
+                    atomName = atomUpdateRequest.name,
+                    jobType = atomUpdateRequest.jobType,
+                    buildLessRunFlag = atomUpdateRequest.buildLessRunFlag,
+                    props = atomUpdateRequest.props
+                )
             }
             Result(true)
         } else {
@@ -839,6 +871,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         atomCode: String,
         atomBaseInfoUpdateRequest: AtomBaseInfoUpdateRequest
     ): Result<Boolean> {
+        logger.info("updateAtomBaseInfo userId:$userId,atomCode:$atomCode,updateRequest:$atomBaseInfoUpdateRequest")
         // 判断当前用户是否是该插件的成员
         if (!storeMemberDao.isStoreMember(dslContext, userId, atomCode, StoreTypeEnum.ATOM.type.toByte())) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
@@ -875,13 +908,15 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             atomDao.updateAtomBaseInfo(context, userId, atomIdList, atomBaseInfoUpdateRequest)
             // 更新标签信息
             val labelIdList = atomBaseInfoUpdateRequest.labelIdList
-            if (null != labelIdList) {
-                atomIdList.forEach {
-                    atomLabelRelDao.deleteByAtomId(context, it)
-                    if (labelIdList.isNotEmpty()) {
-                        atomLabelRelDao.batchAdd(context, userId, it, labelIdList)
-                    }
+            atomIdList.forEach { atomId ->
+                if (labelIdList?.isNotEmpty() == true) {
+                    atomLabelRelDao.deleteByAtomId(context, atomId)
+                    atomLabelRelDao.batchAdd(context, userId, atomId, labelIdList)
                 }
+                marketAtomCommonService.updateAtomRunInfoCache(
+                    atomId = atomId,
+                    atomName = atomBaseInfoUpdateRequest.name
+                )
             }
         }
         return Result(true)
