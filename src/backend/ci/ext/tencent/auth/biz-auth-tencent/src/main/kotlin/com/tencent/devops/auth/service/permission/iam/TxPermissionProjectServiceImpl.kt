@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.service.permission
+package com.tencent.devops.auth.service.permission.iam
 
 import com.google.common.cache.CacheBuilder
 import com.tencent.bk.sdk.iam.config.IamConfiguration
@@ -48,7 +48,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import java.lang.RuntimeException
 import java.util.concurrent.TimeUnit
 

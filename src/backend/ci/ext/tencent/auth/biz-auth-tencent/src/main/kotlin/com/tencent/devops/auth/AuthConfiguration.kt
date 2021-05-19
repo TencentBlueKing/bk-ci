@@ -27,7 +27,6 @@
 
 package com.tencent.devops.auth
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.impl.ApigwHttpClientServiceImpl
@@ -35,14 +34,11 @@ import com.tencent.bk.sdk.iam.service.impl.DefaultHttpClientServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.ManagerServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.PolicyServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.TokenServiceImpl
-import com.tencent.devops.auth.service.AuthDeptServiceImpl
-import com.tencent.devops.common.auth.api.AuthTokenApi
-import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
-import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.auth.service.permission.empty.EmptyPermissionProjectServiceImpl
+import com.tencent.devops.auth.service.permission.empty.EmptyPermissionServiceImpl
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -90,4 +86,12 @@ class AuthConfiguration {
     @Bean
     @ConditionalOnMissingBean
     fun authHelper() = AuthHelper(tokenService(), policyService(), iamConfiguration())
+
+    @Bean
+    @ConditionalOnMissingBean
+    fun emptyPermissionService() = EmptyPermissionServiceImpl()
+
+    @Bean
+    @ConditionalOnMissingBean
+    fun emptyPermissionProjectServiceImpl() = EmptyPermissionProjectServiceImpl()
 }

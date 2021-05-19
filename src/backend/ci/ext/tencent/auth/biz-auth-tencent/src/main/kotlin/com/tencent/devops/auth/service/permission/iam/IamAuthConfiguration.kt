@@ -1,4 +1,4 @@
-package com.tencent.devops.auth.service.permission
+package com.tencent.devops.auth.service.permission.iam
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.config.IamConfiguration
