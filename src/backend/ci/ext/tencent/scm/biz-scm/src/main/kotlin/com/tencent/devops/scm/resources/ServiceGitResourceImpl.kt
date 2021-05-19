@@ -252,7 +252,11 @@ class ServiceGitResourceImpl @Autowired constructor(
         token: String,
         gitCICreateFile: GitCICreateFile
     ): Result<Boolean> {
-        return Result(gitService.gitCodeCreateFile(gitProjectId, token, gitCICreateFile))
+        return Result(gitService.gitCodeCreateFile(
+            gitProjectId = gitProjectId,
+            token = token,
+            gitCICreateFile = gitCICreateFile
+        ))
     }
 
     override fun getCommitRefs(

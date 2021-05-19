@@ -80,7 +80,11 @@ class ScmService @Autowired constructor(
         gitProjectId: String,
         useAccessToken: Boolean
     ): GitCIProjectInfo? {
-        return client.getScm(ServiceGitResource::class).getProjectInfo(token, gitProjectId, useAccessToken).data
+        return client.getScm(ServiceGitResource::class).getProjectInfo(
+            accessToken = token,
+            gitProjectId = gitProjectId,
+            useAccessToken = useAccessToken
+        ).data
     }
 
     fun getCommits(
@@ -110,7 +114,11 @@ class ScmService @Autowired constructor(
         gitProjectId: String,
         gitCICreateFile: GitCICreateFile
     ): Boolean {
-        return client.getScm(ServiceGitResource::class).gitCICreateFile(token, gitProjectId, gitCICreateFile).data!!
+        return client.getScm(ServiceGitResource::class).gitCICreateFile(
+            gitProjectId = gitProjectId,
+            token = token,
+            gitCICreateFile = gitCICreateFile
+        ).data!!
     }
 
     fun getProjectMembers(

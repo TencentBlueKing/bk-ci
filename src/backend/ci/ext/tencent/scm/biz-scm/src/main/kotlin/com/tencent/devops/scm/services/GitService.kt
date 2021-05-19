@@ -573,7 +573,7 @@ class GitService @Autowired constructor(
                 )
             )
             .build()
-        logger.info("url: $url request: $request Start to create file")
+        logger.info("request: $request Start to create file")
         OkhttpUtils.doHttp(request).use {
             val data = it.body()!!.string()
             if (!it.isSuccessful) throw RuntimeException("fail to create file: $data")
