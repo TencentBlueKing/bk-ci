@@ -67,10 +67,10 @@ interface UserGitCIUserMessageResource {
         haveRead: Boolean?,
         @ApiParam(value = "页码")
         @QueryParam("page")
-        page: Int,
+        page: Int?,
         @ApiParam(value = "每页数量")
         @QueryParam("pageSize")
-        pageSize: Int
+        pageSize: Int?
     ): Result<Page<Map<String, List<UserMessage>>>>
 
     @ApiOperation("获取用户未读消息数量")

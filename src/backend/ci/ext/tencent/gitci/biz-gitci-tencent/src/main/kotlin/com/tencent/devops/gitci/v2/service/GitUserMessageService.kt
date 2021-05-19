@@ -28,6 +28,7 @@
 package com.tencent.devops.gitci.v2.service
 
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.gitci.pojo.enums.TriggerReason
 import com.tencent.devops.gitci.pojo.v2.ContentAttr
@@ -66,13 +67,14 @@ class GitUserMessageService @Autowired constructor(
                 records = listOf()
             )
         }
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page = page, pageSize = pageSize)
         val messageRecords = gitUserMessageDao.getMessages(
             dslContext = dslContext,
             userId = userId,
             messageType = messageType,
             haveRead = haveRead,
-            limit = pageSize,
-            offset = page
+            limit = sqlLimit.limit,
+            offset = sqlLimit.offset
         )!!
         val requestIds = messageRecords.map { it.messageId.toInt() }.toSet()
         val requestMap = gitCIV2RequestService.getRequestMap(userId, requestIds)
