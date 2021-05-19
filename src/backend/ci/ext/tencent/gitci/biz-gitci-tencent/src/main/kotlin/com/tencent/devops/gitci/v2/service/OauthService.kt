@@ -27,13 +27,12 @@
 
 package com.tencent.devops.gitci.v2.service
 
-import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @Service
 class OauthService @Autowired constructor(
@@ -43,9 +42,8 @@ class OauthService @Autowired constructor(
     fun getAndCheckOauthToken(
         userId: String
     ): GitToken {
-        return client.get(ServiceOauthResource::class).gitGet(userId).data ?: throw CustomException(
-            Response.Status.FORBIDDEN,
-            "用户$userId 无OAuth权限"
+        return client.get(ServiceOauthResource::class).gitGet(userId).data ?: throw OauthForbiddenException(
+            message = "用户$userId 无OAuth权限"
         )
     }
 
