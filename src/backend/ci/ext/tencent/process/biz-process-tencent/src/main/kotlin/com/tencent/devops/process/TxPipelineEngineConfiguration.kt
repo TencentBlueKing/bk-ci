@@ -81,6 +81,8 @@ class TxPipelineEngineConfiguration {
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
     fun gitCIPipelinePermissionServiceImpl(
-        client: Client
-    ) = GitCiPipelinePermissionServiceImpl(client)
+        client: Client,
+        pipelineIndoDao: PipelineInfoDao,
+        dslContext: DSLContext
+    ) = GitCiPipelinePermissionServiceImpl(client, pipelineIndoDao, dslContext)
 }

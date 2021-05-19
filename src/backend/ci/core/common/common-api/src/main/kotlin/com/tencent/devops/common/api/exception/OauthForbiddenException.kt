@@ -25,23 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.service
+package com.tencent.devops.common.api.exception
 
-import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
-import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
+import com.tencent.devops.common.api.constant.CommonMessageCode.PERMISSION_DENIED
 
-interface PermissionProjectService {
-
-    fun getProjectUsers(serviceCode: String, projectCode: String, group: BkAuthGroup?): List<String>
-
-    fun getProjectGroupAndUserList(serviceCode: String, projectCode: String): List<BkAuthGroupAndUserList>
-
-    fun getUserProjects(userId: String): List<String>
-
-    fun isProjectUser(userId: String, projectCode: String, group: BkAuthGroup?): Boolean
-
-    fun createProjectUser(userId: String, projectCode: String, role: String): Boolean
-
-    fun getProjectRoles(projectCode: String, projectId: String): List<BKAuthProjectRolesResources>
-}
+class OauthForbiddenException(
+    message: String?,
+    errorCode: String = PERMISSION_DENIED,
+    params: Array<String>? = null
+) :
+    ErrorCodeException(errorCode = errorCode, defaultMessage = message, params = params)

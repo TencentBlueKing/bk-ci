@@ -77,4 +77,8 @@ class ServiceGitCiResourceImpl @Autowired constructor(
     ): Result<List<String>> {
         return Result(gitCiService.getBranch(token, gitProjectId, page, pageSize, search, orderBy, sort))
     }
+
+    override fun getGitUserId(rtxUserId: String, gitProjectId: String): Result<String?> {
+        return Result(gitService.getGitCIUserId(rtxUserId, gitProjectId))
+    }
 }

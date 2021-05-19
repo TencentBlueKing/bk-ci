@@ -126,4 +126,16 @@ interface ServiceGitCiResource {
         @QueryParam("sort")
         sort: GitCodeBranchesSort?
     ): Result<List<String>>
+
+    @ApiOperation("校验用户git项目权限")
+    @GET
+    @Path("/getUserId")
+    fun getGitUserId(
+        @ApiParam("userId", required = true)
+        @QueryParam("userId")
+        rtxUserId: String,
+        @ApiParam("gitProjectId", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: String
+    ): Result<String?>
 }

@@ -60,8 +60,11 @@ class TencentServiceConfig {
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
     fun gitCIEnvironmentPermissionServiceImpl(
-        client: Client
-    ) = GitCIEnvironmentPermissionServiceImpl(client)
+        client: Client,
+        dslContext: DSLContext,
+        nodeDao: NodeDao,
+        envDao: EnvDao
+    ) = GitCIEnvironmentPermissionServiceImpl(client, dslContext, nodeDao, envDao)
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
