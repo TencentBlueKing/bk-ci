@@ -75,13 +75,13 @@ class GitCiService {
         search: String?
     ): List<GitMember> {
         val url = "$gitCIUrl/api/v3/projects/${URLEncoder.encode(gitProjectId, "UTF8")}/members" +
+                "?access_token=$token" +
                 if (search != null) {
-                    "?query=$search"
+                    "&query=$search"
                 } else {
                     ""
                 } +
-                "&page=$page" + "&per_page=$pageSize" +
-                "&access_token=$token"
+                "&page=$page" + "&per_page=$pageSize"
         logger.info("request url: $url")
         val request = Request.Builder()
             .url(url)

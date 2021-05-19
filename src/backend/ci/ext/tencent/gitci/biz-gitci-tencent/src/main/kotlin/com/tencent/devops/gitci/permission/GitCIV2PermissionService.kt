@@ -25,33 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.v2.service
+package com.tencent.devops.gitci.permission
 
-import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.utils.GitCIUtils
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.repository.api.ServiceOauthResource
-import com.tencent.devops.repository.pojo.oauth.GitToken
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @Service
-class OauthService @Autowired constructor(
+class GitCIV2PermissionService @Autowired constructor(
     private val client: Client
 ) {
-
-    fun getAndCheckOauthToken(
-        userId: String
-    ): GitToken {
-        return client.get(ServiceOauthResource::class).gitGet(userId).data ?: throw CustomException(
-            Response.Status.FORBIDDEN,
-            "用户$userId 无OAuth权限"
-        )
+    fun checkGitCIPermission(
+        userId: String,
+        projectId: String,
+        permission: AuthPermission
+    ): Boolean {
+        return checkPermission(userId, projectId, permission)
     }
 
-    fun getOauthToken(
-        userId: String
-    ): GitToken? {
-        return client.get(ServiceOauthResource::class).gitGet(userId).data
+    private fun checkPermission(userId: String, projectId: String, permission: AuthPermission): Boolean {
+        val gitProjectId = GitCIUtils.getGitCiProjectId(projectId)
+        logger.info("GitCIEnvironmentPermission user:$userId projectId: $projectId gitProject: $gitProjectId")
+        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
+            userId, permission.value, gitProjectId, null
+        ).data ?: false
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(GitCIV2PermissionService::class.java)
     }
 }
