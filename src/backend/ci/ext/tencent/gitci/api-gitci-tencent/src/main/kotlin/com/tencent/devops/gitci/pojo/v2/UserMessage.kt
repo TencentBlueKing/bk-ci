@@ -37,6 +37,8 @@ data class UserMessage(
     val userId: String,
     @ApiModelProperty("消息类型")
     val messageType: UserMessageType,
+    @ApiModelProperty("消息标题")
+    val messageTitle: String,
     @ApiModelProperty("消息ID")
     val messageId: String,
     @ApiModelProperty("是否已读")
@@ -46,5 +48,14 @@ data class UserMessage(
     @ApiModelProperty("修改时间")
     val updateTime: Long?,
     @ApiModelProperty("消息内容")
-    val content: GitRequestHistory
+    val content: GitRequestHistory,
+    @ApiModelProperty("消息内容属性")
+    val contentAttr: ContentAttr?
+)
+
+data class ContentAttr(
+    @ApiModelProperty("内容总数")
+    val total: Int?,
+    @ApiModelProperty("request为触发构建总数")
+    val failedNum: Int?
 )

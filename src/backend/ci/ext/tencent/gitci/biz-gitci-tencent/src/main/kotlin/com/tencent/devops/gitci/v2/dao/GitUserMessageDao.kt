@@ -40,6 +40,7 @@ class GitUserMessageDao {
         dslContext: DSLContext,
         userId: String,
         messageType: UserMessageType,
+        messageTitle: String,
         messageId: String,
         haveRead: Boolean = false
     ) {
@@ -48,11 +49,13 @@ class GitUserMessageDao {
                 this,
                 USER_ID,
                 MESSAGE_TYPE,
+                MESSAGE_TITLE,
                 MESSAGE_ID,
                 HAVE_READ
             ).values(
                 userId,
                 messageType.name,
+                messageTitle,
                 messageId,
                 haveRead
             )

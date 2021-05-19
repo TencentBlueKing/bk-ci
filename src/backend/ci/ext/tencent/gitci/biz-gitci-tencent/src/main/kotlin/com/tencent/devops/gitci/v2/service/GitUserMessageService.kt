@@ -29,6 +29,8 @@ package com.tencent.devops.gitci.v2.service
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.gitci.pojo.enums.TriggerReason
+import com.tencent.devops.gitci.pojo.v2.ContentAttr
 import com.tencent.devops.gitci.pojo.v2.UserMessage
 import com.tencent.devops.gitci.pojo.v2.UserMessageType
 import com.tencent.devops.gitci.v2.dao.GitUserMessageDao
@@ -80,17 +82,24 @@ class GitUserMessageService @Autowired constructor(
                 return@forEach
             }
             val time = message.createTime.format(timeFormat)
+            val content = requestMap[message.messageId]!!
+            val failedNum = content.buildRecords.map { it.reason != TriggerReason.TRIGGER_SUCCESS.name }.size
             if (resultMap.containsKey(time)) {
                 resultMap[time]!!.add(
                     UserMessage(
                         id = message.id,
                         userId = message.userId,
                         messageType = UserMessageType.valueOf(message.messageType),
+                        messageTitle = message.messageTitle,
                         messageId = message.messageId,
                         haveRead = message.haveRead,
                         createTime = message.createTime.timestamp(),
                         updateTime = message.updateTime.timestamp(),
-                        content = requestMap[message.messageId]!!
+                        content = content,
+                        contentAttr = ContentAttr(
+                            total = content.buildRecords.size,
+                            failedNum = failedNum
+                        )
                     )
                 )
             }

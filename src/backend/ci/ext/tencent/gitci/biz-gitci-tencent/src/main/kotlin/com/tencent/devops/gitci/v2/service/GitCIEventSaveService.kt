@@ -27,11 +27,15 @@
 
 package com.tencent.devops.gitci.v2.service
 
+import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
+import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
+import com.tencent.devops.gitci.dao.GitRequestEventDao
 import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.gitci.pojo.v2.UserMessageType
 import com.tencent.devops.gitci.v2.dao.GitUserMessageDao
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -42,8 +46,14 @@ import org.springframework.stereotype.Service
 class GitCIEventSaveService @Autowired constructor(
     private val dslContext: DSLContext,
     private val userMessageDao: GitUserMessageDao,
-    private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao
+    private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
+    private val gitRequestEventDao: GitRequestEventDao
 ) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(GitCIEventSaveService::class.java)
+    }
+
     fun saveNotBuildEvent(
         userId: String,
         eventId: Long,
@@ -57,6 +67,18 @@ class GitCIEventSaveService @Autowired constructor(
         gitProjectId: Long
     ): Long {
         var messageId = -1L
+        val event = gitRequestEventDao.get(dslContext = dslContext, id = eventId)
+            ?: throw RuntimeException("can't find event $eventId")
+        val messageTitle = if (event.objectKind == OBJECT_KIND_MERGE_REQUEST) {
+            "Merge requests [!${event.mergeRequestId}] opened by ${event.userId}"
+        } else {
+            if (event.objectKind == OBJECT_KIND_MANUAL) {
+                "Manual Triggered by ${event.userId}"
+            } else {
+                "Commit [${event.commitId.subSequence(0, 7)}] pushed by ${event.userId}"
+            }
+        }
+
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             messageId = gitRequestEventNotBuildDao.save(
@@ -71,12 +93,15 @@ class GitCIEventSaveService @Autowired constructor(
                 filePath = filePath,
                 gitProjectId = gitProjectId
             )
+            logger.info("start save message $messageId")
             userMessageDao.save(
-                context,
-                userId,
-                UserMessageType.REQUEST,
-                messageId = messageId.toString()
+                dslContext = context,
+                userId = userId,
+                messageType = UserMessageType.REQUEST,
+                messageId = messageId.toString(),
+                messageTitle = messageTitle
             )
+            logger.info("finish save message $messageId")
         }
         return messageId
     }
