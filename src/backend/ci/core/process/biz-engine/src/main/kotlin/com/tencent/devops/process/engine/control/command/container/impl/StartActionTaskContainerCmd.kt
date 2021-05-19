@@ -200,10 +200,10 @@ class StartActionTaskContainerCmd(
                 )
                 LOG.info("ENGINE|$buildId|$source|CONTAINER_POST_TASK|$stageId|j($containerId)|${toDoTask?.taskId}")
             }
-            needTerminate -> { // 构建环境启动失败的，
+            needTerminate -> { // 构建环境启动失败或者是启动成功但后续Agent挂掉导致心跳超时
                 LOG.warn("ENGINE|$buildId|$source|CONTAINER_FAIL_VM|$stageId|j($containerId)|$taskId|$status")
-                val taskStatus = if (status == BuildStatus.QUEUE_CACHE) { // 领取过程中被中断标志为失败
-                    BuildStatus.FAILED
+                val taskStatus = if (status == BuildStatus.QUEUE_CACHE) { // 领取过程中被中断标志为取消
+                    BuildStatus.CANCELED
                 } else {
                     BuildStatus.UNEXEC
                 }
