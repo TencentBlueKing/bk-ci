@@ -416,6 +416,31 @@ class GitService @Autowired constructor(
         return false
     }
 
+    fun getGitCIUserId(rtxId: String, gitProjectId: String): String? {
+        try {
+            val token = getToken(gitProjectId)
+            val url = "$gitCIOauthUrl/api/v3/users/$rtxId?access_token=${token.accessToken}"
+
+            logger.info("[$rtxId]|[$gitProjectId]| Get gitUserId: $url")
+            val request = Request.Builder()
+                .url(url)
+                .get()
+                .build()
+            OkhttpUtils.doHttp(request).use { response ->
+                val body = response.body()!!.string()
+                logger.info("[$rtxId]|[$gitProjectId]| Get gitUserId response body: $body")
+                val userInfo = JsonUtil.to(body, Map::class.java)
+                val gitUserId = userInfo["id"].toString()
+                return gitUserId
+            }
+        } catch (e: Exception) {
+            logger.error("get git project member fail! gitProjectId: $gitProjectId", e)
+            return null
+        }
+
+        return null
+    }
+
     fun getGitCIFileContent(gitProjectId: Long, filePath: String, token: String, ref: String): String {
         logger.info("[$gitProjectId|$filePath|$ref] Start to get the git file content")
         val startEpoch = System.currentTimeMillis()

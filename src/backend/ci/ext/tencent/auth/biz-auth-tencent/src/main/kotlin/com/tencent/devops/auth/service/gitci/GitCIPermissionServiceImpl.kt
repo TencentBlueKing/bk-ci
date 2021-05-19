@@ -33,7 +33,14 @@ class GitCIPermissionServiceImpl @Autowired constructor(
             }
         }
         logger.info("GitCICertPermissionServiceImpl user:$userId projectId: $projectCode")
-        return client.getScm(ServiceGitCiResource::class).checkUserGitAuth(userId, projectCode).data ?: false
+
+        val gitUserId = client.getScm(ServiceGitCiResource::class).getGitUserId(userId, projectCode).data
+        if (gitUserId.isNullOrEmpty()) {
+            logger.warn("$userId is not gitCI user")
+            return false
+        }
+
+        return client.getScm(ServiceGitCiResource::class).checkUserGitAuth(gitUserId, projectCode).data ?: false
     }
 
     override fun validateUserResourcePermissionByRelation(

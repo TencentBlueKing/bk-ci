@@ -50,4 +50,8 @@ class ServiceGitCiResourceImpl @Autowired constructor(
     override fun clearToken(token: String): Result<Boolean> {
         return Result(gitService.clearToken(token))
     }
+
+    override fun getGitUserId(rtxUserId: String, gitProjectId: String): Result<String?> {
+        return Result(gitService.getGitCIUserId(rtxUserId, gitProjectId))
+    }
 }
