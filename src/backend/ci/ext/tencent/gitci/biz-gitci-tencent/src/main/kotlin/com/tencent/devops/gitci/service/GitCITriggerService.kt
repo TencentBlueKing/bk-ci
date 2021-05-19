@@ -43,6 +43,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
+import com.tencent.devops.common.ci.v2.utils.YamlCommonUtils
 import com.tencent.devops.gitci.dao.GitCIServicesConfDao
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
@@ -202,7 +203,7 @@ class GitCITriggerService @Autowired constructor(
                 dslContext = dslContext,
                 eventId = gitRequestEvent.id!!,
                 originYaml = originYaml!!,
-                parsedYaml = YamlUtil.toYaml(objects.preYaml),
+                parsedYaml = YamlCommonUtils.toYamlNotNull(objects.preYaml),
                 normalizedYaml = YamlUtil.toYaml(objects.normalYaml),
                 gitProjectId = gitRequestEvent.gitProjectId,
                 branch = gitRequestEvent.branch,

@@ -99,6 +99,9 @@ class GitCIBuildFinishListener @Autowired constructor(
     @Value("\${rtx.gitUrl:#{null}}")
     private val gitUrl: String? = null
 
+    @Value("\${rtx.v2GitUrl:#{null}}")
+    private val v2GitUrl: String? = null
+
     @RabbitListener(
         bindings = [(QueueBinding(
             value = Queue(value = MQ.QUEUE_PIPELINE_BUILD_FINISH_GITCI, durable = "true"),
@@ -664,13 +667,13 @@ class GitCIBuildFinishListener @Autowired constructor(
             GitCINotifyType.RTX_CUSTOM -> {
                 val accessToken =
                     RtxCustomApi.getAccessToken(urlPrefix = rtxUrl, corpSecret = corpSecret, corpId = corpId)
-                val newContent = (content ?: getRtxCustomContent(
+                val newContent = (content ?: getRtxCustomContentV2(
                     isSuccess = state == "success",
                     projectName = projectName,
                     branchName = branchName,
                     pipelineName = pipelineName,
                     pipelineId = pipeline.pipelineId,
-                    buildNum = buildNum,
+                    build = build,
                     isMr = isMr,
                     requestId = requestId,
                     buildTime = build.totalTime,
@@ -688,13 +691,13 @@ class GitCIBuildFinishListener @Autowired constructor(
                 val realGroups = replaceReceivers(chatIds, build.buildParameters)
                 val accessToken =
                     RtxCustomApi.getAccessToken(urlPrefix = rtxUrl, corpSecret = corpSecret, corpId = corpId)
-                val newContent = (content ?: getRtxCustomContent(
+                val newContent = (content ?: getRtxCustomContentV2(
                     isSuccess = state == "success",
                     projectName = projectName,
                     branchName = branchName,
                     pipelineName = pipelineName,
                     pipelineId = pipeline.pipelineId,
-                    buildNum = buildNum,
+                    build = build,
                     isMr = isMr,
                     requestId = requestId,
                     buildTime = build.totalTime,
@@ -749,8 +752,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                     totalTime = DateTimeUtil.formatMillSecond(build.totalTime ?: 0),
                     trigger = build.userId,
                     commitId = commitId,
-                    // todo: 页面webhook地址要改
-                    webUrl = "$gitUrl/$projectName/ci/pipelines#/detail/$pipelineId/?pipelineName=$pipelineName"
+                    webUrl = "$v2GitUrl/$projectName/pipelinesId/$pipelineId/detail/${build.id}"
                 ))
         )
         return SendNotifyMessageTemplateRequest(
@@ -761,6 +763,43 @@ class GitCIBuildFinishListener @Autowired constructor(
             bodyParams = bodyParams,
             notifyType = mutableSetOf(NotifyType.EMAIL.name)
         )
+    }
+
+    private fun getRtxCustomContentV2(
+        isSuccess: Boolean,
+        projectName: String,
+        branchName: String,
+        pipelineName: String,
+        pipelineId: String,
+        build: BuildHistory,
+        isMr: Boolean,
+        requestId: String,
+        openUser: String,
+        buildTime: Long?
+    ): String {
+        val state = if (isSuccess) {
+            Triple("✔", "info", "success")
+        } else {
+            Triple("❌", "warning", "failed")
+        }
+        val request = if (isMr) {
+            "Merge requests [[!$requestId]]($gitUrl/$projectName/merge_requests/$requestId)" +
+                    "opened by $openUser \n"
+        } else {
+            if (requestId.length >= 8) {
+                "Commit [[${requestId.subSequence(0, 7)}]]($gitUrl/$projectName/commit/$requestId)" +
+                        "pushed by $openUser \n"
+            } else {
+                "Manual Triggered by $openUser \n"
+            }
+        }
+        val costTime = "Time cost ${DateTimeUtil.formatMillSecond(buildTime ?: 0)}.  \n   "
+        return " <font color=\"${state.second}\"> ${state.first} </font> " +
+                "$projectName($branchName) - $pipelineName #${build.buildNum} run ${state.third} \n " +
+                request +
+                costTime +
+                "[View it on  工蜂内网版]" +
+                "($v2GitUrl/$projectName/pipelinesId/$pipelineId/detail/${build.id})"
     }
 
     // 使用启动参数替换接收人
