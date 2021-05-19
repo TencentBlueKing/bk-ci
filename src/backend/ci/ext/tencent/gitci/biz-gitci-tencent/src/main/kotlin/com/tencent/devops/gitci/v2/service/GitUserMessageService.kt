@@ -87,24 +87,25 @@ class GitUserMessageService @Autowired constructor(
             val time = message.createTime.format(timeFormat)
             val content = requestMap[message.messageId]!!
             val failedNum = content.buildRecords.map { it.reason != TriggerReason.TRIGGER_SUCCESS.name }.size
-            if (resultMap.containsKey(time)) {
-                resultMap[time]!!.add(
-                    UserMessage(
-                        id = message.id,
-                        userId = message.userId,
-                        messageType = UserMessageType.valueOf(message.messageType),
-                        messageTitle = message.messageTitle,
-                        messageId = message.messageId,
-                        haveRead = message.haveRead,
-                        createTime = message.createTime.timestamp(),
-                        updateTime = message.updateTime.timestamp(),
-                        content = content,
-                        contentAttr = ContentAttr(
-                            total = content.buildRecords.size,
-                            failedNum = failedNum
-                        )
-                    )
+            val userMassage = UserMessage(
+                id = message.id,
+                userId = message.userId,
+                messageType = UserMessageType.valueOf(message.messageType),
+                messageTitle = message.messageTitle,
+                messageId = message.messageId,
+                haveRead = message.haveRead,
+                createTime = message.createTime.timestamp(),
+                updateTime = message.updateTime.timestamp(),
+                content = content,
+                contentAttr = ContentAttr(
+                    total = content.buildRecords.size,
+                    failedNum = failedNum
                 )
+            )
+            if (resultMap.containsKey(time)) {
+                resultMap[time]!!.add(userMassage)
+            } else {
+                resultMap[time] = mutableListOf(userMassage)
             }
         }
         return Page(
