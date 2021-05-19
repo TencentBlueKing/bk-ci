@@ -48,6 +48,8 @@ class EnvUtilTest {
         val command6 = "hello\${variables.abc}}"
         val command7 = "hello\$variables.abc}}"
         val command8 = "echo \${{ variables.hello }}"
+
+        val command9 = "echo \${{ ci.workspace }}"
         val data = mapOf(
             "variables.abc" to "variables.value",
             "variables.hello" to "hahahahaha"
@@ -61,5 +63,12 @@ class EnvUtilTest {
         println(EnvUtils.parseWithDoubleCurlyBraces(command6, data))
         println(EnvUtils.parseWithDoubleCurlyBraces(command7, data))
         println(EnvUtils.parseWithDoubleCurlyBraces(command8, data))
+        println(EnvUtils.parseEnv(
+            command = command9,
+            data = map,
+            replaceWithEmpty = false,
+            isEscape = false,
+            contextMap = mapOf("ci.workspace" to "/data/landun/workspace")
+        ))
     }
 }

@@ -25,32 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.init
+package com.tencent.devops.scm.api
 
-import com.tencent.devops.process.engine.service.PipelineBuildExtService
-import com.tencent.devops.process.engine.service.PipelinePauseExtService
-import com.tencent.devops.process.service.PipelineBuildExtServiceImpl
-import com.tencent.devops.process.service.PipelineContextService
-import com.tencent.devops.process.service.PipelinePauseExtServiceImpl
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.pojo.oauth.GitToken
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-@Configuration
-@ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class PipelineServiceConfigure {
+@Api(tags = ["BUILD_SCM_GIT_CI"], description = "Build Code GIT CI resource")
+@Path("/build/gitci/")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface BuildGitCiResource {
 
-    @Bean
-    @ConditionalOnMissingBean(PipelineBuildExtService::class)
-    fun pipelineBuildExtService(@Autowired pipelineContextService: PipelineContextService) =
-        PipelineBuildExtServiceImpl(pipelineContextService)
+    @ApiOperation("获取项目的token")
+    @GET
+    @Path("/getToken")
+    fun getToken(
+        @ApiParam("gitProjectId", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: String
+    ): Result<GitToken>
 
-    @Bean
-    @ConditionalOnMissingBean(PipelinePauseExtService::class)
-    fun pipelinePauseExtService() = PipelinePauseExtServiceImpl()
+    @ApiOperation("获取项目的token")
+    @DELETE
+    @Path("/clearToken")
+    fun clearToken(
+        @ApiParam("token", required = true)
+        @QueryParam("token")
+        token: String
+    ): Result<Boolean>
 }

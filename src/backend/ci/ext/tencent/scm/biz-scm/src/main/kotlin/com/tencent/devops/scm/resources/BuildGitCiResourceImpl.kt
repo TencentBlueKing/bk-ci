@@ -25,32 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.init
+package com.tencent.devops.scm.resources
 
-import com.tencent.devops.process.engine.service.PipelineBuildExtService
-import com.tencent.devops.process.engine.service.PipelinePauseExtService
-import com.tencent.devops.process.service.PipelineBuildExtServiceImpl
-import com.tencent.devops.process.service.PipelineContextService
-import com.tencent.devops.process.service.PipelinePauseExtServiceImpl
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.scm.api.BuildGitCiResource
+import com.tencent.devops.scm.services.GitService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
 
-@Configuration
-@ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class PipelineServiceConfigure {
+@RestResource
+class BuildGitCiResourceImpl @Autowired constructor(
+    private val gitService: GitService
+) : BuildGitCiResource {
 
-    @Bean
-    @ConditionalOnMissingBean(PipelineBuildExtService::class)
-    fun pipelineBuildExtService(@Autowired pipelineContextService: PipelineContextService) =
-        PipelineBuildExtServiceImpl(pipelineContextService)
+    override fun getToken(gitProjectId: String): Result<GitToken> {
+        return Result(gitService.getToken(gitProjectId))
+    }
 
-    @Bean
-    @ConditionalOnMissingBean(PipelinePauseExtService::class)
-    fun pipelinePauseExtService() = PipelinePauseExtServiceImpl()
+    override fun clearToken(token: String): Result<Boolean> {
+        return Result(gitService.clearToken(token))
+    }
 }
