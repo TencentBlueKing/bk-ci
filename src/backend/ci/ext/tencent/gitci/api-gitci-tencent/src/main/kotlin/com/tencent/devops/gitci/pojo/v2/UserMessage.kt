@@ -59,3 +59,8 @@ data class ContentAttr(
     @ApiModelProperty("request为触发构建总数")
     val failedNum: Int?
 )
+
+data class UserMessageRecord(
+    val time: String,
+    val records: List<UserMessage>
+)

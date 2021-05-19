@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.gitci.pojo.enums.TriggerReason
 import com.tencent.devops.gitci.pojo.v2.ContentAttr
 import com.tencent.devops.gitci.pojo.v2.UserMessage
+import com.tencent.devops.gitci.pojo.v2.UserMessageRecord
 import com.tencent.devops.gitci.pojo.v2.UserMessageType
 import com.tencent.devops.gitci.v2.dao.GitUserMessageDao
 import org.jooq.DSLContext
@@ -56,7 +57,7 @@ class GitUserMessageService @Autowired constructor(
         haveRead: Boolean?,
         page: Int,
         pageSize: Int
-    ): Page<Map<String, List<UserMessage>>> {
+    ): Page<UserMessageRecord> {
         // 后续有不同类型再考虑分开逻辑，目前全部按照request处理
         val messageCount = gitUserMessageDao.getMessageCount(dslContext, userId, messageType, haveRead)
         if (messageCount == 0) {
@@ -110,7 +111,7 @@ class GitUserMessageService @Autowired constructor(
             page = page,
             pageSize = pageSize,
             count = messageCount.toLong(),
-            records = listOf()
+            records = resultMap.map { UserMessageRecord(time = it.key, records = it.value) }
         )
     }
 
