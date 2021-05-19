@@ -65,8 +65,9 @@ class TicketConfiguration {
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
     fun gitCICredentialPermissionServiceImpl(
         client: Client,
-        credentialDao: CredentialDao
-    ) = GitCICredentialPermissionServiceImpl(client, credentialDao)
+        credentialDao: CredentialDao,
+        dslContext: DSLContext
+    ) = GitCICredentialPermissionServiceImpl(client, credentialDao, dslContext)
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
