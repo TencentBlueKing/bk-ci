@@ -29,8 +29,10 @@ package com.tencent.devops.gitci.resources.user
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.user.UserGitCIBuildResource
+import com.tencent.devops.gitci.permission.GitCIV2PermissionService
 import com.tencent.devops.gitci.pojo.v2.GitCIV2Startup
 import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.v2.service.TriggerBuildService
@@ -39,7 +41,8 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserGitCIBuildResourceImpl @Autowired constructor(
-    private val triggerBuildService: TriggerBuildService
+    private val triggerBuildService: TriggerBuildService,
+    private val permissionService: GitCIV2PermissionService
 ) : UserGitCIBuildResource {
 
     override fun retry(
@@ -51,6 +54,7 @@ class UserGitCIBuildResourceImpl @Autowired constructor(
     ): Result<BuildId> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId, pipelineId, buildId, gitProjectId)
+        permissionService.checkGitCIPermission(userId, projectId, AuthPermission.EXECUTE)
         return Result(
             triggerBuildService.retry(
                 userId = userId,
@@ -70,6 +74,7 @@ class UserGitCIBuildResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId, pipelineId, buildId, gitProjectId)
+        permissionService.checkGitCIPermission(userId, projectId, AuthPermission.EXECUTE)
         return Result(
             triggerBuildService.manualShutdown(
                 userId = userId,
@@ -81,6 +86,11 @@ class UserGitCIBuildResourceImpl @Autowired constructor(
     }
 
     override fun gitCIStartupPipeline(userId: String, gitCIV2Startup: GitCIV2Startup): Result<BuildId?> {
+        permissionService.checkGitCIPermission(
+            userId,
+            "git_${gitCIV2Startup.gitCIBasicSetting.gitProjectId}",
+            AuthPermission.VIEW
+        )
         return Result(
             triggerBuildService.startBuild(
                 pipeline = gitCIV2Startup.pipeline,

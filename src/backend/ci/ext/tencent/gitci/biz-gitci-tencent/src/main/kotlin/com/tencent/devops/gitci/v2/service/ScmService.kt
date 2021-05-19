@@ -35,6 +35,8 @@ import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.GitCICreateFile
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
+import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -46,9 +48,6 @@ class ScmService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ScmService::class.java)
-        private const val ciFileName = ".ci.yml"
-        private const val templateDirectoryName = ".ci/templates"
-        private const val ciFileExtension = ".yml"
     }
 
     fun getYamlFromGit(
@@ -81,7 +80,11 @@ class ScmService @Autowired constructor(
         gitProjectId: String,
         useAccessToken: Boolean
     ): GitCIProjectInfo? {
-        return client.getScm(ServiceGitResource::class).getProjectInfo(token, gitProjectId, useAccessToken).data
+        return client.getScm(ServiceGitResource::class).getProjectInfo(
+            accessToken = token,
+            gitProjectId = gitProjectId,
+            useAccessToken = useAccessToken
+        ).data
     }
 
     fun getCommits(
@@ -91,8 +94,8 @@ class ScmService @Autowired constructor(
         branch: String?,
         since: String?,
         until: String?,
-        page: Int,
-        perPage: Int
+        page: Int?,
+        perPage: Int?
     ): List<Commit>? {
         return client.getScm(ServiceGitResource::class).getCommits(
             gitProjectId = gitProjectId,
@@ -101,8 +104,8 @@ class ScmService @Autowired constructor(
             token = token,
             since = since,
             until = until,
-            page = page,
-            perPage = perPage
+            page = page ?: 1,
+            perPage = perPage ?: 20
         ).data
     }
 
@@ -111,17 +114,48 @@ class ScmService @Autowired constructor(
         gitProjectId: String,
         gitCICreateFile: GitCICreateFile
     ): Boolean {
-        return client.getScm(ServiceGitResource::class).gitCICreateFile(token, gitProjectId, gitCICreateFile).data!!
+        return client.getScm(ServiceGitResource::class).gitCICreateFile(
+            gitProjectId = gitProjectId,
+            token = token,
+            gitCICreateFile = gitCICreateFile
+        ).data!!
     }
 
     fun getProjectMembers(
         token: String,
         gitProjectId: String,
-        page: Int,
-        pageSize: Int,
+        page: Int?,
+        pageSize: Int?,
         search: String?
     ): List<GitMember>? {
-        return client.getScm(ServiceGitCiResource::class).getMembers(token, gitProjectId, page, pageSize, search).data
+        return client.getScm(ServiceGitCiResource::class).getMembers(
+            token = token,
+            gitProjectId = gitProjectId,
+            page = page ?: 1,
+            pageSize = pageSize ?: 20,
+            search = search
+        ).data
+    }
+
+    fun getProjectBranches(
+        token: String,
+        gitProjectId: String,
+        page: Int?,
+        pageSize: Int?,
+        search: String?,
+        orderBy: GitCodeBranchesOrder?,
+        sort: GitCodeBranchesSort?
+    ): List<String>? {
+        return client.getScm(ServiceGitCiResource::class)
+            .getBranches(
+                token = token,
+                gitProjectId = gitProjectId,
+                page = page ?: 1,
+                pageSize = pageSize ?: 20,
+                search = search,
+                orderBy = orderBy,
+                sort = sort
+            ).data
     }
 
     // 获取项目ID，兼容没有source字段的旧数据，和fork库中源项目id不同的情况
@@ -140,14 +174,6 @@ class ScmService @Autowired constructor(
             branch.startsWith("refs/heads/") -> branch.removePrefix("refs/heads/")
             branch.startsWith("refs/tags/") -> branch.removePrefix("refs/tags/")
             else -> branch
-        }
-    }
-
-    private fun getTriggerBranch(gitRequestEvent: GitRequestEvent): String {
-        return when {
-            gitRequestEvent.branch.startsWith("refs/heads/") -> gitRequestEvent.branch.removePrefix("refs/heads/")
-            gitRequestEvent.branch.startsWith("refs/tags/") -> gitRequestEvent.branch.removePrefix("refs/tags/")
-            else -> gitRequestEvent.branch
         }
     }
 }

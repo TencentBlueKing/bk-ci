@@ -127,7 +127,6 @@ class YamlTemplate(
                 name = name,
                 label = label,
                 triggerOn = triggerOn,
-                onFail = onFail,
                 extends = extends,
                 resources = resources,
                 notices = notices,
@@ -192,7 +191,6 @@ class YamlTemplate(
         // 将不用替换的直接传入
         val newYaml = YamlObjects.getObjectFromYaml<NoReplaceTemplate>(toPath, YamlUtil.toYaml(templateObject))
         preYamlObject.label = newYaml.label
-        preYamlObject.onFail = newYaml.onFail
         if (newYaml.extends != null) {
             error(TEMPLATE_FORMAT_ERROR.format("extend "))
         }
@@ -334,7 +332,11 @@ class YamlTemplate(
                 }
             } else {
                 // 不是模板文件则直接实例化
-                variableMap[key] = YamlObjects.getVariable(transValue(fromPath, TemplateType.VARIABLE.text, value))
+                if (value is String) {
+                    variableMap[key] = Variable(value, false)
+                } else {
+                    variableMap[key] = YamlObjects.getVariable(transValue(fromPath, TemplateType.VARIABLE.text, value))
+                }
             }
         }
         return variableMap
@@ -662,7 +664,11 @@ class YamlTemplate(
         return PreStage(
             name = stage["name"]?.toString(),
             id = stage["id"]?.toString(),
-            label = stage["label"]?.toString(),
+            label = if (stage["label"] == null) {
+                null
+            } else {
+                transValue<List<String>>(fromPath, "label", stage["label"])
+            },
             ifField = stage["if"]?.toString(),
             fastKill = YamlObjects.getNullValue("fast-kill", stage)?.toBoolean(),
             jobs = if (stage["jobs"] == null) {

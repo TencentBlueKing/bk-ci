@@ -25,23 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.pojo
+package com.tencent.devops.gitci.v2.common
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-
-@ApiModel("工蜂项目基类")
-abstract class Repository(
-    @ApiModelProperty("工蜂项目ID")
-    open val gitProjectId: Long?,
-    @ApiModelProperty("工蜂项目名")
-    open val name: String?,
-    @ApiModelProperty("工蜂项目url")
-    open val url: String?,
-    @ApiModelProperty("homepage")
-    open val homepage: String?,
-    @ApiModelProperty("gitHttpUrl")
-    open val gitHttpUrl: String?,
-    @ApiModelProperty("gitSshUrl")
-    open val gitSshUrl: String?
-)
+object CommonVariables {
+    const val CI_PIPELINE_NAME = "ci.pipeline_name"
+    const val CI_BUILD_URL = "ci.build_url"
+    const val CI_ACTOR = "ci.actor"
+    const val CI_REPO = "ci.repo"
+    const val CI_REPO_NAME = "ci.repo_name"
+    const val CI_REPO_GROUP = "ci.repo_group"
+    const val CI_EVENT = "ci.event"
+    const val CI_EVENT_CONTENT = "ci.event_content"
+    const val CI_REF = "ci.ref"
+    const val CI_SHA = "ci.sha"
+    const val CI_SHA_SHORT = "ci.sha_short"
+    const val CI_COMMIT_MESSAGE = "ci.commit_message"
+    const val CI_HEAD_BRANCH = "ci.head_branch"
+    const val CI_BASE_BRANCH = "ci.base_branch"
+}

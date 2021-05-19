@@ -25,23 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.pojo
+package com.tencent.devops.scm.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.google.gson.annotations.SerializedName
 
-@ApiModel("工蜂项目基类")
-abstract class Repository(
-    @ApiModelProperty("工蜂项目ID")
-    open val gitProjectId: Long?,
-    @ApiModelProperty("工蜂项目名")
-    open val name: String?,
-    @ApiModelProperty("工蜂项目url")
-    open val url: String?,
-    @ApiModelProperty("homepage")
-    open val homepage: String?,
-    @ApiModelProperty("gitHttpUrl")
-    open val gitHttpUrl: String?,
-    @ApiModelProperty("gitSshUrl")
-    open val gitSshUrl: String?
-)
+enum class GitCodeFileEncoding {
+    @SerializedName("text")
+    TEXT,
+    @SerializedName("base64")
+    BASE64
+}
+
+enum class GitCodeBranchesOrder(val value: String) {
+    NAME("name"),
+    UPDATE("update")
+}
+
+enum class GitCodeBranchesSort(val value: String) {
+    ASC("asc"),
+    DESC("desc")
+}

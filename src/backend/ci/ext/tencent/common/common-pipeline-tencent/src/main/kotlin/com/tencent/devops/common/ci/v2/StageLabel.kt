@@ -25,23 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.pojo
+package com.tencent.devops.common.ci.v2
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-
-@ApiModel("工蜂项目基类")
-abstract class Repository(
-    @ApiModelProperty("工蜂项目ID")
-    open val gitProjectId: Long?,
-    @ApiModelProperty("工蜂项目名")
-    open val name: String?,
-    @ApiModelProperty("工蜂项目url")
-    open val url: String?,
-    @ApiModelProperty("homepage")
-    open val homepage: String?,
-    @ApiModelProperty("gitHttpUrl")
-    open val gitHttpUrl: String?,
-    @ApiModelProperty("gitSshUrl")
-    open val gitSshUrl: String?
-)
+enum class StageLabel(
+    val value: String,
+    val id: String
+) {
+    BUILD("Build", "28ee946a59f64949a74f3dee40a1bda4"),
+    APPROVE("Approve", "5168be68b9764edb91aa5b866e51a1a8"),
+    DEPLOY("Deploy", "53b4d3f38e3e425cb1aaa97aa1b37857"),
+    TEST("Test", "d0a06f6986fa4670af65ccad7bb49d3a");
+}

@@ -33,8 +33,10 @@ import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.user.UserGitCIDetailResource
+import com.tencent.devops.gitci.permission.GitCIV2PermissionService
 import com.tencent.devops.gitci.pojo.GitCIModelDetail
 import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.v2.service.GitCIV2DetailService
@@ -43,7 +45,8 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserGitCIDetailResourceImpl @Autowired constructor(
-    private val gitCIV2DetailService: GitCIV2DetailService
+    private val gitCIV2DetailService: GitCIV2DetailService,
+    private val permissionService: GitCIV2PermissionService
 ) : UserGitCIDetailResource {
 
     override fun getLatestBuildDetail(
@@ -71,6 +74,7 @@ class UserGitCIDetailResourceImpl @Autowired constructor(
     ): Result<FileInfoPage<FileInfo>> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId, gitProjectId)
+        permissionService.checkGitCIPermission(userId, projectId, AuthPermission.VIEW)
         return Result(gitCIV2DetailService.search(
             userId = userId,
             gitProjectId = gitProjectId,
@@ -90,6 +94,7 @@ class UserGitCIDetailResourceImpl @Autowired constructor(
     ): Result<Url> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId, gitProjectId)
+        permissionService.checkGitCIPermission(userId, projectId, AuthPermission.VIEW)
         return Result(gitCIV2DetailService.downloadUrl(
             userId = userId,
             gitUserId = gitUserId,
@@ -102,6 +107,7 @@ class UserGitCIDetailResourceImpl @Autowired constructor(
     override fun getReports(userId: String, projectId: String, pipelineId: String, buildId: String): Result<List<Report>> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId, gitProjectId)
+        permissionService.checkGitCIPermission(userId, projectId, AuthPermission.VIEW)
         return Result(gitCIV2DetailService.getReports(userId, gitProjectId, pipelineId, buildId))
     }
 

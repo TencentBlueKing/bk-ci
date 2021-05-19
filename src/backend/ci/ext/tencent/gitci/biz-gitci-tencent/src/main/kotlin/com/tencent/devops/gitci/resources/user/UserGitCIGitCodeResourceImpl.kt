@@ -27,10 +27,11 @@
 
 package com.tencent.devops.gitci.resources.user
 
-import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.user.UserGitCIGitCodeResource
+import com.tencent.devops.gitci.permission.GitCIV2PermissionService
 import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.v2.service.OauthService
 import com.tencent.devops.gitci.v2.service.ScmService
@@ -38,13 +39,15 @@ import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.GitCICreateFile
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
+import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
 
 @RestResource
 class UserGitCIGitCodeResourceImpl @Autowired constructor(
     private val scmService: ScmService,
-    private val oauthService: OauthService
+    private val oauthService: OauthService,
+    private val permissionService: GitCIV2PermissionService
 ) : UserGitCIGitCodeResource {
     override fun getGitCodeProjectInfo(userId: String, gitProjectId: String): Result<GitCIProjectInfo?> {
         return Result(
@@ -59,15 +62,18 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
     override fun getGitCodeProjectMembers(
         userId: String,
         projectId: String,
-        page: Int,
-        pageSize: Int,
+        page: Int?,
+        perPage: Int?,
         search: String?
     ): Result<List<GitMember>?> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId).toString()
         return Result(
             scmService.getProjectMembers(
                 token = getToken(userId),
-                gitProjectId = gitProjectId, page = page, pageSize = pageSize, search = search
+                gitProjectId = gitProjectId,
+                page = page,
+                pageSize = perPage,
+                search = search
             )
         )
     }
@@ -79,10 +85,11 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
         branch: String?,
         since: String?,
         until: String?,
-        page: Int,
-        perPage: Int
+        page: Int?,
+        perPage: Int?
     ): Result<List<Commit>?> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
+        permissionService.checkGitCIPermission(userId, projectId, AuthPermission.VIEW)
         return Result(
             scmService.getCommits(
                 token = getToken(userId = userId),
@@ -103,6 +110,7 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
         gitCICreateFile: GitCICreateFile
     ): Result<Boolean> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId).toString()
+        permissionService.checkGitCIPermission(userId, projectId, AuthPermission.CREATE)
         return Result(
             scmService.createNewFile(
                 token = getToken(userId = userId),
@@ -112,11 +120,31 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
         )
     }
 
-    private fun getToken(userId: String): String {
-        val token = oauthService.getOauthToken(userId) ?: throw CustomException(
-            Response.Status.UNAUTHORIZED,
-            "用户$userId 无OAuth权限"
+    override fun getGitCodeBranches(
+        userId: String,
+        projectId: String,
+        search: String?,
+        page: Int?,
+        perPage: Int?,
+        orderBy: GitCodeBranchesOrder?,
+        sort: GitCodeBranchesSort?
+    ): Result<List<String>?> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId).toString()
+        return Result(
+            scmService.getProjectBranches(
+                token = getToken(userId = userId),
+                gitProjectId = gitProjectId,
+                page = page,
+                pageSize = perPage,
+                orderBy = orderBy,
+                sort = sort,
+                search = search
+            )
         )
+    }
+
+    private fun getToken(userId: String): String {
+        val token = oauthService.getAndCheckOauthToken(userId)
         return token.accessToken
     }
 }

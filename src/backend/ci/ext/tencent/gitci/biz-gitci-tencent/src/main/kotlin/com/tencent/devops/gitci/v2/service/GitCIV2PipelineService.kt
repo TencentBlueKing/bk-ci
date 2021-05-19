@@ -27,27 +27,33 @@
 
 package com.tencent.devops.gitci.v2.service
 
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventDao
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
+import com.tencent.devops.scm.api.ServiceGitResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import javax.ws.rs.core.Response
 
 @Service
 class GitCIV2PipelineService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val client: Client,
     private val pipelineResourceDao: GitPipelineResourceDao,
     private val gitCIBasicSettingDao: GitCIBasicSettingDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventDao: GitRequestEventDao,
     private val gitCIBasicSettingService: GitCIBasicSettingService,
-    private val gitCIV2DetailService: GitCIV2DetailService
+    private val gitCIV2DetailService: GitCIV2DetailService,
+    private val scmService: ScmService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCIV2PipelineService::class.java)
@@ -185,7 +191,8 @@ class GitCIV2PipelineService @Autowired constructor(
             pipelineIds = pipelineIds
         )
         if (pipelines.isEmpty()) return emptyList()
-        val latestBuilds = gitCIV2DetailService.batchGetBuildDetail(userId, gitProjectId, pipelines.map { it.latestBuildId })
+        val latestBuilds =
+            gitCIV2DetailService.batchGetBuildDetail(userId, gitProjectId, pipelines.map { it.latestBuildId })
         return pipelines.map {
             GitProjectPipeline(
                 gitProjectId = gitProjectId,
@@ -211,5 +218,33 @@ class GitCIV2PipelineService @Autowired constructor(
             pipelineId = pipelineId,
             enabled = enabled
         ) == 1
+    }
+
+    fun getYamlByPipeline(
+        gitProjectId: Long,
+        pipelineId: String,
+        ref: String
+    ): String? {
+        logger.info("get yaml by pipelineId:($pipelineId), ref: $ref")
+        gitCIBasicSettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(
+            Response.Status.FORBIDDEN,
+            "项目未开启工蜂CI，无法查询"
+        )
+        val filePath =
+            pipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId)?.filePath ?: return null
+
+        val token = try {
+            client.getScm(ServiceGitResource::class).getToken(gitProjectId).data!!
+        } catch (e: Exception) {
+            logger.error("getYamlByPipeline $pipelineId $ref can't get token")
+            return null
+        }
+        return scmService.getYamlFromGit(
+            token = token.accessToken,
+            gitProjectId = gitProjectId,
+            fileName = filePath,
+            ref = ref,
+            useAccessToken = true
+        )
     }
 }

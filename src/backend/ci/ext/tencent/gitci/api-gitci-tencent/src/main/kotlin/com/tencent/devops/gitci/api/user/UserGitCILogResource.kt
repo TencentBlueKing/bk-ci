@@ -79,7 +79,7 @@ interface UserGitCILogResource {
     @Path("/{projectId}/{pipelineId}/{buildId}/after")
     fun getAfterLogs(
         @ApiParam("工蜂项目ID", required = true)
-        @PathParam("蓝盾项目ID")
+        @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "流水线ID", required = true)
         @PathParam("pipelineId")
@@ -110,7 +110,7 @@ interface UserGitCILogResource {
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun downloadLogs(
         @ApiParam("工蜂项目ID", required = true)
-        @PathParam("蓝盾项目ID")
+        @PathParam("projectId")
         projectId: String,
         @ApiParam(value = "流水线ID", required = true)
         @PathParam("pipelineId")

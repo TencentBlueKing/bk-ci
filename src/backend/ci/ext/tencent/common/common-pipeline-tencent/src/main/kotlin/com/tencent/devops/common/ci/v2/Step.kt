@@ -35,13 +35,13 @@ data class Step(
     @JsonProperty("if")
     val ifFiled: String?,
     val uses: String?,
-    val with: Map<String, Any>?,
+    val with: Map<String, Any?>?,
     @JsonProperty("timeout-minutes")
     val timeoutMinutes: Int?,
     @JsonProperty("continue-on-error")
     val continueOnError: Boolean?,
     @JsonProperty("retry-times")
-    val retryTimes: String?,
+    val retryTimes: Int?,
     val env: Any?,
     val run: String?,
     val checkout: String?

@@ -25,13 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.scm.pojo
+package com.tencent.devops.gitci.permission
 
-import com.google.gson.annotations.SerializedName
+import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.utils.GitCIUtils
+import com.tencent.devops.common.client.Client
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-enum class GitCodeFileEncoding {
-    @SerializedName("text")
-    TEXT,
-    @SerializedName("base64")
-    BASE64
+@Service
+class GitCIV2PermissionService @Autowired constructor(
+    private val client: Client
+) {
+    fun checkGitCIPermission(
+        userId: String,
+        projectId: String,
+        permission: AuthPermission
+    ): Boolean {
+        return checkPermission(userId, projectId, permission)
+    }
+
+    private fun checkPermission(userId: String, projectId: String, permission: AuthPermission): Boolean {
+        val gitProjectId = GitCIUtils.getGitCiProjectId(projectId)
+        logger.info("GitCIEnvironmentPermission user:$userId projectId: $projectId gitProject: $gitProjectId")
+        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
+            userId, permission.value, gitProjectId, null
+        ).data ?: false
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(GitCIV2PermissionService::class.java)
+    }
 }

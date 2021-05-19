@@ -29,20 +29,26 @@ package com.tencent.devops.gitci.resources.user
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.user.UserGitCITriggerResource
+import com.tencent.devops.gitci.permission.GitCIV2PermissionService
 import com.tencent.devops.gitci.pojo.GitYamlString
 import com.tencent.devops.gitci.pojo.TriggerBuildReq
+import com.tencent.devops.gitci.pojo.V2TriggerBuildReq
 import com.tencent.devops.gitci.pojo.v2.V2BuildYaml
 import com.tencent.devops.gitci.service.GitCITriggerService
 import com.tencent.devops.gitci.utils.GitCommonUtils
+import com.tencent.devops.gitci.v2.service.GitCIV2PipelineService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserGitCITriggerResourceImpl @Autowired constructor(
-    private val gitCITriggerService: GitCITriggerService
+    private val gitCITriggerService: GitCITriggerService,
+    private val gitCIV2PipelineService: GitCIV2PipelineService,
+    private val permissionService: GitCIV2PermissionService
 ) : UserGitCITriggerResource {
     companion object {
         private val logger = LoggerFactory.getLogger(UserGitCITriggerResourceImpl::class.java)
@@ -51,10 +57,27 @@ class UserGitCITriggerResourceImpl @Autowired constructor(
     override fun triggerStartup(
         userId: String,
         pipelineId: String,
-        triggerBuildReq: TriggerBuildReq
+        triggerBuildReq: V2TriggerBuildReq
     ): Result<Boolean> {
-        checkParam(userId, triggerBuildReq.gitProjectId)
-        return Result(gitCITriggerService.triggerBuild(userId, pipelineId, triggerBuildReq))
+        val gitProjectId = GitCommonUtils.getGitProjectId(triggerBuildReq.projectId)
+        checkParam(userId, gitProjectId)
+        permissionService.checkGitCIPermission(userId, triggerBuildReq.projectId, AuthPermission.EXECUTE)
+        val new = with(triggerBuildReq) {
+            TriggerBuildReq(
+                gitProjectId = gitProjectId,
+                name = null,
+                url = null,
+                homepage = null,
+                gitHttpUrl = null,
+                gitSshUrl = null,
+                branch = branch,
+                customCommitMsg = customCommitMsg,
+                yaml = yaml,
+                description = description,
+                commitId = commitId
+            )
+        }
+        return Result(gitCITriggerService.triggerBuild(userId, pipelineId, new))
     }
 
     override fun checkYaml(userId: String, yaml: GitYamlString): Result<String> {
@@ -86,6 +109,23 @@ class UserGitCITriggerResourceImpl @Autowired constructor(
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId, gitProjectId)
         return Result(gitCITriggerService.getYamlV2(gitProjectId, buildId))
+    }
+
+    override fun getYamlByPipeline(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        branchName: String,
+        commitId: String?
+    ): Result<String?> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
+        checkParam(userId, gitProjectId)
+        val ref = if (commitId.isNullOrBlank()) {
+            branchName
+        } else {
+            commitId
+        }
+        return Result(gitCIV2PipelineService.getYamlByPipeline(gitProjectId, pipelineId, ref))
     }
 
     private fun checkParam(userId: String, gitProjectId: Long) {
