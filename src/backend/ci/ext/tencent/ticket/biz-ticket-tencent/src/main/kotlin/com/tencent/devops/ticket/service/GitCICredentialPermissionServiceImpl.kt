@@ -33,11 +33,15 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.utils.GitCIUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.ticket.dao.CredentialDao
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 class GitCICredentialPermissionServiceImpl @Autowired constructor(
-    private val client: Client
+    private val client: Client,
+    private val credentialDao: CredentialDao,
+    private val dslContext: DSLContext
 ) : CredentialPermissionService {
 
     override fun validatePermission(
@@ -80,7 +84,11 @@ class GitCICredentialPermissionServiceImpl @Autowired constructor(
     }
 
     override fun filterCredential(userId: String, projectId: String, authPermission: AuthPermission): List<String> {
-        return emptyList()
+        val checkPermission = validatePermission(userId, projectId, authPermission)
+        if (!checkPermission) {
+            return emptyList()
+        }
+        return getAllCredentialsByProject(projectId)
     }
 
     override fun filterCredentials(
@@ -88,7 +96,16 @@ class GitCICredentialPermissionServiceImpl @Autowired constructor(
         projectId: String,
         authPermissions: Set<AuthPermission>
     ): Map<AuthPermission, List<String>> {
-        return emptyMap()
+        val checkPermission = validatePermission(userId, projectId, authPermissions.first())
+        if (!checkPermission) {
+            return emptyMap()
+        }
+        val projectAllInstances = getAllCredentialsByProject(projectId)
+        val resultMap = mutableMapOf<AuthPermission, List<String>>()
+        authPermissions.forEach {
+            resultMap[it] = projectAllInstances
+        }
+        return resultMap
     }
 
     override fun createResource(
@@ -98,6 +115,13 @@ class GitCICredentialPermissionServiceImpl @Autowired constructor(
         authGroupList: List<BkAuthGroup>?
     ) {
         return
+    }
+
+    private fun getAllCredentialsByProject(projectId: String): List<String> {
+        val idList = mutableListOf<String>()
+        val count = credentialDao.countByProject(dslContext, projectId)
+        credentialDao.listByProject(dslContext, projectId, 0, count.toInt()).filter { idList.add(it.credentialId) }
+        return idList
     }
 
     override fun deleteResource(projectId: String, credentialId: String) {
