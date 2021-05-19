@@ -25,12 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":core:log:biz-log")
-    compile project(":core:notify:api-notify")
-    compile project(":ext:tencent:common:common-auth:common-auth-tencent")
-    compile project(":ext:tencent:log:api-log-tencent")
-    compile project(":ext:tencent:auth:sdk-auth-tencent")
-    compile project(":core:auth:api-auth")
+package com.tencent.devops.common.web.handler
+
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.OauthForbiddenException
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.Profile
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.annotation.BkExceptionMapper
+import org.slf4j.LoggerFactory
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
+import javax.ws.rs.ext.ExceptionMapper
+
+@BkExceptionMapper
+class OauthForbiddenExceptionMapper : ExceptionMapper<OauthForbiddenException> {
+    companion object {
+        val logger = LoggerFactory.getLogger(OauthForbiddenExceptionMapper::class.java)!!
+    }
+
+    override fun toResponse(exception: OauthForbiddenException): Response {
+        logger.warn("Encounter permission exception(${exception.message})")
+        val status = CommonMessageCode.OAUTH_DENERD
+        val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
+            exception.defaultMessage
+        } else {
+            "你没有Oauth认证"
+        }
+        return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
+            .entity(Result(status = CommonMessageCode.OAUTH_DENERD, message = message, data = exception.message)).build()
+    }
+
 }

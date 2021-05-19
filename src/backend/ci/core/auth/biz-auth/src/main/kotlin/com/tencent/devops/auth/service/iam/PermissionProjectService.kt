@@ -25,12 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    compile project(":ext:tencent:common:common-digest-tencent")
-    compile project(":core:log:biz-log")
-    compile project(":core:notify:api-notify")
-    compile project(":ext:tencent:common:common-auth:common-auth-tencent")
-    compile project(":ext:tencent:log:api-log-tencent")
-    compile project(":ext:tencent:auth:sdk-auth-tencent")
-    compile project(":core:auth:api-auth")
+package com.tencent.devops.auth.service.iam
+
+import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
+
+interface PermissionProjectService {
+
+    fun getProjectUsers(serviceCode: String, projectCode: String, group: BkAuthGroup?): List<String>
+
+    fun getProjectGroupAndUserList(serviceCode: String, projectCode: String): List<BkAuthGroupAndUserList>
+
+    fun getUserProjects(userId: String): List<String>
+
+    fun isProjectUser(userId: String, projectCode: String, group: BkAuthGroup?): Boolean
+
+    fun createProjectUser(userId: String, projectCode: String, role: String): Boolean
+
+    fun getProjectRoles(projectCode: String, projectId: String): List<BKAuthProjectRolesResources>
 }

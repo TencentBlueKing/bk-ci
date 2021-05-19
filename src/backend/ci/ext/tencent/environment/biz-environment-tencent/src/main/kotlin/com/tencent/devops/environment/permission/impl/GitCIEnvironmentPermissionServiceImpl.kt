@@ -28,27 +28,48 @@
 package com.tencent.devops.environment.permission.impl
 
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.utils.GitCIUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.environment.dao.EnvDao
+import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
 
 /**
  * Pipeline专用权限校验接口
  */
 class GitCIEnvironmentPermissionServiceImpl @Autowired constructor(
-    val client: Client
+    val client: Client,
+    val dslContext: DSLContext,
+    val nodeDao: NodeDao,
+    val envDao: EnvDao
 ) : EnvironmentPermissionService {
 
     override fun listEnvByPermission(userId: String, projectId: String, permission: AuthPermission): Set<Long> {
-        return emptySet()
+        if (!checkPermission(userId, projectId)) {
+            return emptySet()
+        }
+        return getAllEnvInstance(projectId).map { HashUtil.decodeIdToLong(it) }.toSet()
     }
 
-    override fun listEnvByPermissions(userId: String, projectId: String, permissions: Set<AuthPermission>): Map<AuthPermission, List<String>> {
-        return emptyMap()
+    override fun listEnvByPermissions(
+        userId: String,
+        projectId: String,
+        permissions: Set<AuthPermission>
+    ): Map<AuthPermission, List<String>> {
+        if (!checkPermission(userId, projectId)) {
+            return emptyMap()
+        }
+        val resultMap = mutableMapOf<AuthPermission, List<String>>()
+        val instances = getAllEnvInstance(projectId)
+        permissions.forEach {
+            resultMap[it] = instances
+        }
+        return resultMap
     }
 
     override fun checkEnvPermission(userId: String, projectId: String, envId: Long, permission: AuthPermission): Boolean {
@@ -72,11 +93,22 @@ class GitCIEnvironmentPermissionServiceImpl @Autowired constructor(
     }
 
     override fun listNodeByPermission(userId: String, projectId: String, permission: AuthPermission): Set<Long> {
-        return emptySet()
+        if (!checkPermission(userId, projectId)) {
+            return emptySet()
+        }
+        return getAllNodeInstance(projectId).map { HashUtil.decodeIdToLong(it) }.toSet()
     }
 
     override fun listNodeByPermissions(userId: String, projectId: String, permissions: Set<AuthPermission>): Map<AuthPermission, List<String>> {
-        return emptyMap()
+        if (!checkPermission(userId, projectId)) {
+            return emptyMap()
+        }
+        val resultMap = mutableMapOf<AuthPermission, List<String>>()
+        val instances = getAllEnvInstance(projectId)
+        permissions.forEach {
+            resultMap[it] = instances
+        }
+        return resultMap
     }
 
     override fun checkNodePermission(userId: String, projectId: String, nodeId: Long, permission: AuthPermission): Boolean {
@@ -104,6 +136,27 @@ class GitCIEnvironmentPermissionServiceImpl @Autowired constructor(
         logger.info("GitCIEnvironmentPermission user:$userId projectId: $projectId gitProject: $gitProjectId")
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             userId, "", gitProjectId, null).data ?: false
+    }
+
+    // 拿到的数据统一为加密后的id
+    private fun getAllNodeInstance(projectId: String): List<String> {
+        val instanceIds = mutableListOf<String>()
+        val repositoryInfos = nodeDao.listNodes(dslContext, projectId)
+        repositoryInfos.map {
+            instanceIds.add(HashUtil.encodeLongId(it.nodeId))
+        }
+        return instanceIds
+    }
+
+    // 拿到的数据统一为加密后的id
+    private fun getAllEnvInstance(projectId: String): List<String> {
+        val instanceIds = mutableListOf<String>()
+
+        val repositoryInfos = envDao.list(dslContext, projectId)
+        repositoryInfos.map {
+            instanceIds.add(HashUtil.encodeLongId(it.envId))
+        }
+        return instanceIds
     }
 
     companion object {

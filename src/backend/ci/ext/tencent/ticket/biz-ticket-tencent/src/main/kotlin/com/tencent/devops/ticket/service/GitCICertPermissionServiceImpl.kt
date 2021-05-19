@@ -32,11 +32,15 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.utils.GitCIUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.ticket.dao.CertDao
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 class GitCICertPermissionServiceImpl @Autowired constructor(
-    val client: Client
+    val client: Client,
+    val certDao: CertDao,
+    val dslContext: DSLContext
 ) : CertPermissionService {
     override fun validatePermission(
         userId: String,
@@ -84,7 +88,11 @@ class GitCICertPermissionServiceImpl @Autowired constructor(
         projectId: String,
         authPermission: AuthPermission
     ): List<String> {
-        return emptyList()
+        val checkPermission = validatePermission(userId, projectId, authPermission)
+        if (!checkPermission) {
+            return emptyList()
+        }
+        return getAllCertByProject(projectId)
     }
 
     override fun filterCerts(
@@ -92,7 +100,16 @@ class GitCICertPermissionServiceImpl @Autowired constructor(
         projectId: String,
         authPermissions: Set<AuthPermission>
     ): Map<AuthPermission, List<String>> {
-        return emptyMap()
+        val checkPermission = validatePermission(userId, projectId, authPermissions.first())
+        if (!checkPermission) {
+            return emptyMap()
+        }
+        val projectAllInstances = getAllCertByProject(projectId)
+        val resultMap = mutableMapOf<AuthPermission, List<String>>()
+        authPermissions.forEach {
+            resultMap[it] = projectAllInstances
+        }
+        return resultMap
     }
 
     override fun createResource(userId: String, projectId: String, certId: String) {
@@ -101,6 +118,17 @@ class GitCICertPermissionServiceImpl @Autowired constructor(
 
     override fun deleteResource(projectId: String, certId: String) {
         return
+    }
+
+
+    private fun getAllCertByProject(projectId: String): List<String> {
+        val idList = mutableListOf<String>()
+        val count = certDao.countByProject(dslContext, projectId, null)
+        val records = certDao.listByProject(dslContext, projectId, 0, count.toInt())
+        records.map {
+            idList.add(it.certId)
+        }
+        return idList
     }
 
     companion object {
