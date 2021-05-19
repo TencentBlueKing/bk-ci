@@ -112,16 +112,17 @@ class ExperienceAppService(
         val isPublic = experienceBaseService.isPublic(experienceId)
         val isInPrivate = experienceBaseService.isInPrivate(experienceId, userId, isOuter)
 
+        val experience = experienceDao.get(dslContext, experienceId)
+
         // 新版本且没权限
         if (!isOldVersion && !isPublic && !isInPrivate) {
             throw ErrorCodeException(
                 statusCode = 403,
-                defaultMessage = "没有权限访问资源",
-                errorCode = ExperienceMessageCode.USER_NEED_EXP_X_PERMISSION
+                defaultMessage = "暂无体验权限。 请联系产品负责人 ${experience.creator} 授予体验权限。",
+                errorCode = ExperienceMessageCode.EXPERIENCE_NEED_PERMISSION
             )
         }
 
-        val experience = experienceDao.get(dslContext, experienceId)
         val projectId = experience.projectId
         val bundleIdentifier = experience.bundleIdentifier
         val isExpired = DateUtil.isExpired(experience.endDate)

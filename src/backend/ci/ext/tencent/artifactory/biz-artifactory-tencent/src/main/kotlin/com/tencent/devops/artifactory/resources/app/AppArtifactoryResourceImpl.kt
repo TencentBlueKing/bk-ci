@@ -165,20 +165,21 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         checkParameters(userId, projectId, path)
         val fileDetail = bkRepoService.show(userId, projectId, artifactoryType, path)
         val pipelineId = fileDetail.meta["pipelineId"] ?: StringUtils.EMPTY
-        if (!pipelineService.hasPermission(userId, projectId, pipelineId, AuthPermission.VIEW)) {
-            logger.error("no permission , user:$userId , project:$projectId , pipeline:$pipelineId")
-            throw ErrorCodeException(
-                statusCode = 403,
-                errorCode = CommonMessageCode.PERMISSION_DENIED,
-                defaultMessage = "用户没有权限访问流水线"
-            )
-        }
-
         val pipelineInfo = if (pipelineId != StringUtils.EMPTY) {
             client.get(ServicePipelineResource::class).getPipelineInfo(projectId, pipelineId, null).data
         } else {
             null
         }
+
+        if (!pipelineService.hasPermission(userId, projectId, pipelineId, AuthPermission.VIEW)) {
+            logger.error("no permission , user:$userId , project:$projectId , pipeline:$pipelineId")
+            throw ErrorCodeException(
+                statusCode = 403,
+                errorCode = CommonMessageCode.PERMISSION_DENIED_FOR_APP,
+                defaultMessage = "暂无流水线权限。访问构件请联系流水线负责人 ${pipelineInfo?.creator ?: ""} 授予流水线权限。"
+            )
+        }
+
         val backUpIcon = lazy { client.get(ServiceProjectResource::class).get(projectId).data!!.logoAddr!! }
 
         return Result(
@@ -244,8 +245,10 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         if (!path.endsWith(".ipa")) {
             throw BadRequestException("Path must end with ipa")
         }
-        return bkRepoAppService.getPlistFile(userId, projectId, artifactoryType, path, 24 * 3600, false,
-            experienceHashId)
+        return bkRepoAppService.getPlistFile(
+            userId, projectId, artifactoryType, path, 24 * 3600, false,
+            experienceHashId
+        )
     }
 
     override fun downloadUrl(
@@ -258,8 +261,12 @@ class AppArtifactoryResourceImpl @Autowired constructor(
         if (!path.endsWith(".ipa") && !path.endsWith(".apk")) {
             throw BadRequestException("Path must end with ipa or apk")
         }
-        return Result(bkRepoAppService.getExternalDownloadUrl(userId, projectId, artifactoryType, path, 24 * 3600,
-            true))
+        return Result(
+            bkRepoAppService.getExternalDownloadUrl(
+                userId, projectId, artifactoryType, path, 24 * 3600,
+                true
+            )
+        )
     }
 
     private fun checkParameters(userId: String, projectId: String) {
