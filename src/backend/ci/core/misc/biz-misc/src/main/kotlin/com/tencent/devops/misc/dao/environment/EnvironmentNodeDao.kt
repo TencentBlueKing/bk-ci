@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -38,9 +39,9 @@ class EnvironmentNodeDao {
     fun get(dslContext: DSLContext, projectId: String, nodeId: Long): TNodeRecord? {
         with(TNode.T_NODE) {
             return dslContext.selectFrom(this)
-                    .where(NODE_ID.eq(nodeId))
-                    .and(PROJECT_ID.eq(projectId))
-                    .fetchOne()
+                .where(NODE_ID.eq(nodeId))
+                .and(PROJECT_ID.eq(projectId))
+                .fetchOne()
         }
     }
 
@@ -51,9 +52,9 @@ class EnvironmentNodeDao {
     ) {
         with(TNode.T_NODE) {
             dslContext.update(this)
-                    .set(NODE_STATUS, status.name)
-                    .where(NODE_ID.eq(id))
-                    .execute()
+                .set(NODE_STATUS, status.name)
+                .where(NODE_ID.eq(id))
+                .execute()
         }
     }
 
@@ -64,26 +65,26 @@ class EnvironmentNodeDao {
 
         with(TNode.T_NODE) {
             dslContext.deleteFrom(this)
-                    .where(PROJECT_ID.eq(projectId))
-                    .and(NODE_ID.`in`(nodeIds))
-                    .execute()
+                .where(PROJECT_ID.eq(projectId))
+                .and(NODE_ID.`in`(nodeIds))
+                .execute()
         }
     }
 
     fun listDevCloudNodesByTaskId(dslContext: DSLContext, taskId: Long): List<TNodeRecord> {
         with(TNode.T_NODE) {
             return dslContext.selectFrom(this)
-                    .where(NODE_TYPE.eq(NodeType.DEVCLOUD.name)).and(TASK_ID.eq(taskId))
-                    .fetch()
+                .where(NODE_TYPE.eq(NodeType.DEVCLOUD.name)).and(TASK_ID.eq(taskId))
+                .fetch()
         }
     }
 
     fun deleteDevCloudNodesByTaskId(dslContext: DSLContext, taskId: Long) {
         with(TNode.T_NODE) {
             dslContext.deleteFrom(this)
-                    .where(NODE_TYPE.eq(NodeType.DEVCLOUD.name)).and(TASK_ID.eq(taskId))
-                    .and(NODE_STATUS.eq(NodeStatus.DELETED.name))
-                    .execute()
+                .where(NODE_TYPE.eq(NodeType.DEVCLOUD.name)).and(TASK_ID.eq(taskId))
+                .and(NODE_STATUS.eq(NodeStatus.DELETED.name))
+                .execute()
         }
     }
 
@@ -94,7 +95,11 @@ class EnvironmentNodeDao {
     fun listAllServerNodes(dslContext: DSLContext): List<TNodeRecord> {
         with(TNode.T_NODE) {
             return dslContext.selectFrom(this)
-                .where(NODE_TYPE.`in`(NodeType.CC.name, NodeType.CMDB.name, NodeType.BCSVM.name, NodeType.OTHER.name, NodeType.DEVCLOUD.name))
+                .where(NODE_TYPE.`in`(NodeType.CC.name,
+                    NodeType.CMDB.name,
+                    NodeType.BCSVM.name,
+                    NodeType.OTHER.name,
+                    NodeType.DEVCLOUD.name))
                 .fetch()
         }
     }
@@ -114,10 +119,3 @@ class EnvironmentNodeDao {
         dslContext.batchUpdate(allCmdbNodes).execute()
     }
 }
-
-/**
-
-ALTER TABLE T_NODE ADD COLUMN `IMAGE` varchar(512) NULL COMMENT '镜像';
-ALTER TABLE T_NODE ADD COLUMN `TASK_ID` bigint(20) NULL COMMENT '任务ID';
-
-**/

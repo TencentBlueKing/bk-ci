@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -41,6 +42,7 @@ import java.io.InputStream
 import java.io.OutputStream
 import javax.servlet.http.HttpServletResponse
 
+@Suppress("ALL")
 interface ArchiveFileService {
     /**
      * 获取报告根路径
@@ -108,7 +110,14 @@ interface ArchiveFileService {
     /**
      * 下载报告文件
      */
-    fun downloadReport(userId: String, projectId: String, pipelineId: String, buildId: String, elementId: String, path: String)
+    fun downloadReport(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        elementId: String,
+        path: String
+    )
 
     /**
      * 下载归档文件
@@ -139,7 +148,11 @@ interface ArchiveFileService {
     /**
      * 获取仓库指定路径下的文件下载路径列表
      */
-    fun getFileDownloadUrls(filePath: String, artifactoryType: ArtifactoryType, fileChannelType: FileChannelTypeEnum): GetFileDownloadUrlsResponse
+    fun getFileDownloadUrls(
+        filePath: String,
+        artifactoryType: ArtifactoryType,
+        fileChannelType: FileChannelTypeEnum
+    ): GetFileDownloadUrlsResponse
 
     /**
      * 根据文件元数据查找文件列表

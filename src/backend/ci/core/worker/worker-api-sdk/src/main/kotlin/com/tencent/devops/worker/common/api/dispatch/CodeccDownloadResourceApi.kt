@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -28,8 +29,8 @@ package com.tencent.devops.worker.common.api.dispatch
 
 import com.tencent.devops.common.api.enums.OSType
 import com.tencent.devops.common.api.exception.TaskExecuteException
-import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import okhttp3.Protocol
 import okhttp3.Response
@@ -49,7 +50,6 @@ class CodeccDownloadResourceApi : AbstractBuildResourceApi(), CodeccDownloadApi 
                 .code(HttpStatus.NOT_MODIFIED.value()).build()
         }
         if (!response.isSuccessful) {
-            logger.warn("Fail to request($request) with code ${response.code()} , message ${response.message()} and response (${response.body()?.string()})")
             throw TaskExecuteException(
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
@@ -70,7 +70,6 @@ class CodeccDownloadResourceApi : AbstractBuildResourceApi(), CodeccDownloadApi 
                 .code(HttpStatus.NOT_MODIFIED.value()).build()
         }
         if (!response.isSuccessful) {
-            logger.warn("Fail to request($request) with code ${response.code()} , message ${response.message()} and response (${response.body()?.string()})")
             throw TaskExecuteException(
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
@@ -92,7 +91,6 @@ class CodeccDownloadResourceApi : AbstractBuildResourceApi(), CodeccDownloadApi 
         }
 
         if (!response.isSuccessful) {
-            logger.warn("Fail to request($request) with code ${response.code()} , message ${response.message()} and response (${response.body()?.string()})")
             throw TaskExecuteException(
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,

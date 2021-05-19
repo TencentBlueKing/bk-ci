@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -26,19 +27,36 @@
 
 package com.tencent.devops.sign.service
 
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
+import com.tencent.devops.sign.jmx.SignBean
 import org.slf4j.LoggerFactory
-import org.springframework.scheduling.annotation.Async
-import org.springframework.stereotype.Component
+import org.springframework.beans.factory.DisposableBean
+import org.springframework.scheduling.annotation.Scheduled
+import org.springframework.stereotype.Service
 import java.io.File
+import java.time.LocalDateTime
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.RejectedExecutionException
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
-@Component
+@Service
 class AsyncSignService(
     private val signService: SignService,
-    private val signInfoService: SignInfoService
-) {
+    private val signInfoService: SignInfoService,
+    private val signBean: SignBean
+) : DisposableBean {
 
-    @Async
+    // 线程池队列和线程上限保持一致，并保持有一个活跃线程
+    private val signExecutorService = ThreadPoolExecutor(
+        10,
+        10,
+        0L,
+        TimeUnit.MILLISECONDS,
+        LinkedBlockingQueue(100)
+    )
+
     fun asyncSign(
         resignId: String,
         ipaSignInfo: IpaSignInfo,
@@ -46,9 +64,27 @@ class AsyncSignService(
         taskExecuteCount: Int
     ) {
         try {
-            logger.info("[$resignId] asyncSign|ipaSignInfo=$ipaSignInfo|taskExecuteCount=$taskExecuteCount")
-            signService.signIpaAndArchive(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
-        } catch (e: Exception) {
+            signExecutorService.execute {
+                val start = LocalDateTime.now()
+                logger.info("[$resignId] asyncSign start")
+                val success = signService.signIpaAndArchive(resignId, ipaSignInfo, ipaFile, taskExecuteCount)
+                logger.info("[$resignId] asyncSign finished with success:$success")
+                signBean.signTaskFinish(
+                    elapse = LocalDateTime.now().timestampmilli() - start.timestampmilli(),
+                    success = success
+                )
+            }
+        } catch (e: RejectedExecutionException) {
+            // 失败结束签名逻辑
+            signInfoService.failResign(
+                resignId = resignId,
+                info = ipaSignInfo,
+                executeCount = taskExecuteCount,
+                message = "Sign service queue tasks exceed the limit: ${e.message}"
+            )
+            // 异步处理，所以无需抛出异常
+            logger.error("[$resignId] asyncSign failed: $e")
+        } catch (e: Throwable) {
             // 失败结束签名逻辑
             signInfoService.failResign(
                 resignId = resignId,
@@ -59,6 +95,23 @@ class AsyncSignService(
             // 异步处理，所以无需抛出异常
             logger.error("[$resignId] asyncSign failed: $e")
         }
+    }
+
+    override fun destroy() {
+        // 当有签名任务执行时，阻塞服务的退出
+        signExecutorService.shutdown()
+        while (!signExecutorService.awaitTermination(5, TimeUnit.SECONDS)) {
+            logger.warn("SignTaskBean still has sign tasks.")
+        }
+    }
+
+    @Scheduled(cron = "0/10 * *  * * ? ")
+    fun flushTaskStatus() {
+        signBean.flushStatus(
+            activeCount = signExecutorService.activeCount,
+            taskCount = signExecutorService.taskCount,
+            queueSize = signExecutorService.queue.size
+        )
     }
 
     companion object {

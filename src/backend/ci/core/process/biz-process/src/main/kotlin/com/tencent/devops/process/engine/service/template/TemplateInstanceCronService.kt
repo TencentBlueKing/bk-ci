@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -39,7 +40,8 @@ import com.tencent.devops.process.engine.dao.template.TemplateInstanceBaseDao
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceItemDao
 import com.tencent.devops.process.pojo.template.TemplateInstanceBaseStatus
 import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
-import com.tencent.devops.process.util.NotifyTemplateUtils
+import com.tencent.devops.process.service.template.TemplateFacadeService
+import com.tencent.devops.process.util.TempNotifyTemplateUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -50,6 +52,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.text.MessageFormat
 
+@Suppress("ALL")
 @Service
 @RefreshScope
 class TemplateInstanceCronService @Autowired constructor(
@@ -57,7 +60,7 @@ class TemplateInstanceCronService @Autowired constructor(
     private val templateDao: TemplateDao,
     private val templateInstanceBaseDao: TemplateInstanceBaseDao,
     private val templateInstanceItemDao: TemplateInstanceItemDao,
-    private val templateService: TemplateService,
+    private val templateService: TemplateFacadeService,
     private val redisOperation: RedisOperation,
     private val client: Client
 ) {
@@ -98,7 +101,10 @@ class TemplateInstanceCronService @Autowired constructor(
                 val projectId = templateInstanceBase.projectId
                 val successPipelines = ArrayList<String>()
                 val failurePipelines = ArrayList<String>()
-                val templateInstanceItemCount = templateInstanceItemDao.getTemplateInstanceItemCountByBaseId(dslContext, baseId)
+                val templateInstanceItemCount = templateInstanceItemDao.getTemplateInstanceItemCountByBaseId(
+                    dslContext = dslContext,
+                    baseId = baseId
+                )
                 if (templateInstanceItemCount < 1) {
                     return@forEach
                 }
@@ -139,8 +145,8 @@ class TemplateInstanceCronService @Autowired constructor(
                                 )
                             )
                             successPipelines.add(pipelineName)
-                        } catch (t: Throwable) {
-                            logger.warn("Fail to update the pipeline $pipelineName of project $projectId by user $userId", t)
+                        } catch (ignored: Throwable) {
+                            logger.warn("Fail to update the pipeline|$pipelineName|$projectId|$userId|$ignored")
                             failurePipelines.add(pipelineName)
                         }
                     }
@@ -151,7 +157,7 @@ class TemplateInstanceCronService @Autowired constructor(
                     templateInstanceBaseDao.deleteByBaseId(context, baseId)
                 }
                 // 发送执行任务结果通知
-                NotifyTemplateUtils.sendUpdateTemplateInstanceNotify(
+                TempNotifyTemplateUtils.sendUpdateTemplateInstanceNotify(
                     client = client,
                     projectId = projectId,
                     receivers = mutableSetOf(templateInstanceBase.creator),

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -37,7 +38,7 @@ import com.tencent.devops.common.websocket.dispatch.message.SendMessage
 import com.tencent.devops.common.websocket.dispatch.push.WebsocketPush
 import com.tencent.devops.common.websocket.pojo.NotifyPost
 import com.tencent.devops.common.websocket.pojo.WebSocketType
-import com.tencent.devops.process.engine.service.PipelineBuildService
+import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import org.slf4j.LoggerFactory
 
 @Event(exchange = MQ.EXCHANGE_WEBSOCKET_TMP_FANOUT, routeKey = MQ.ROUTE_WEBSOCKET_TMP_EVENT)
@@ -55,7 +56,7 @@ data class DetailWebsocketPush(
 
     companion object {
         private val logger = LoggerFactory.getLogger(this::class.java)
-        private val pipelineBuildService = SpringContextUtil.getBean(PipelineBuildService::class.java)
+        private val pipelineBuildService = SpringContextUtil.getBean(PipelineBuildFacadeService::class.java)
     }
 
     override fun findSession(page: String): List<String>? {
@@ -79,13 +80,14 @@ data class DetailWebsocketPush(
     }
 
     override fun buildNotifyMessage(message: SendMessage) {
-        val notifyPost = message.notifyPost
         try {
-            val modelDetail = pipelineBuildService.getBuildDetail(projectId, pipelineId, buildId!!, ChannelCode.BS, ChannelCode.isNeedAuth(ChannelCode.BS))
-            if (notifyPost != null) {
-                notifyPost.message = objectMapper.writeValueAsString(modelDetail)
-//                logger.info("DetailWebsocketPush message: $notifyPost")
-            }
+            val modelDetail = pipelineBuildService.getBuildDetail(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId!!,
+                channelCode = ChannelCode.BS
+            )
+            message.notifyPost.message = objectMapper.writeValueAsString(modelDetail)
         } catch (e: Exception) {
             logger.error("DetailWebSocketMessage:getBuildDetail error. message:${e.message}")
         }

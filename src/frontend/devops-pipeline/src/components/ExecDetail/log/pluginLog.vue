@@ -1,6 +1,10 @@
 <template>
     <section class="plugin-log">
-        <bk-log-search :down-load-link="id === undefined ? downLoadAllLink : downLoadLink" :execute-count="executeCount" @change-execute="changeExecute" class="log-tools"></bk-log-search>
+        <bk-log-search :down-load-link="id === undefined ? downLoadAllLink : downLoadLink" :execute-count="executeCount" @change-execute="changeExecute" class="log-tools">
+            <template v-slot:tool>
+                <li class="more-button" @click="toggleShowDebugLog">{{ showDebug ? 'Hide Debug Log' : 'Show Debug Log' }}</li>
+            </template>
+        </bk-log-search>
         <bk-log class="bk-log" ref="scroll" @tag-change="tagChange"></bk-log>
     </section>
 </template>
@@ -32,10 +36,12 @@
                     tag: this.id,
                     subTag: '',
                     currentExe: this.executeCount,
-                    lineNo: 0
+                    lineNo: 0,
+                    debug: false
                 },
                 timeId: '',
-                clearIds: []
+                clearIds: [],
+                showDebug: false
             }
         },
 
@@ -49,12 +55,12 @@
                 const editingElementPos = this.editingElementPos
                 const fileName = encodeURI(encodeURI(`${editingElementPos.stageIndex + 1}-${editingElementPos.containerIndex + 1}-${editingElementPos.elementIndex + 1}-${this.currentElement.name}`))
                 const tag = this.currentElement.id
-                return `${AJAX_URL_PIRFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?tag=${tag}&executeCount=${this.postData.currentExe}&fileName=${fileName}`
+                return `${API_URL_PREFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?tag=${tag}&executeCount=${this.postData.currentExe}&fileName=${fileName}`
             },
 
             downLoadAllLink () {
                 const fileName = encodeURI(encodeURI(this.execDetail.pipelineName))
-                return `${AJAX_URL_PIRFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?executeCount=1&fileName=${fileName}`
+                return `${API_URL_PREFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?executeCount=1&fileName=${fileName}`
             },
 
             currentElement () {
@@ -162,6 +168,15 @@
             handleApiErr (err) {
                 const scroll = this.$refs.scroll
                 if (scroll) scroll.handleApiErr(err)
+            },
+
+            toggleShowDebugLog () {
+                this.showDebug = !this.showDebug
+                this.$refs.scroll.changeExecute()
+                this.postData.debug = this.showDebug
+                this.postData.lineNo = 0
+                this.closeLog()
+                this.getLog()
             }
         }
     }

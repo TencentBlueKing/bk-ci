@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -57,6 +58,7 @@ import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.LocalTime
 
+@Suppress("ALL")
 @Service
 class ProjectPipelineCallBackService @Autowired constructor(
     private val dslContext: DSLContext,
@@ -68,7 +70,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
 ) {
 
     companion object {
-        val logger = LoggerFactory.getLogger(this::class.java)
+        private val logger = LoggerFactory.getLogger(this::class.java)
         private val JSON = MediaType.parse("application/json;charset=utf-8")
     }
 
@@ -83,7 +85,10 @@ class ProjectPipelineCallBackService @Autowired constructor(
         // 验证用户是否为管理员
         validAuth(userId, projectId, BkAuthGroup.MANAGER)
         // 验证url的合法性
-        val regex = Regex("(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]", RegexOption.IGNORE_CASE)
+        val regex = Regex(
+            pattern = "(https?|ftp|file)://[-A-Za-z0-9+&@#/%?=~_|!:,.;]+[-A-Za-z0-9+&@#/%=~_|]",
+            option = RegexOption.IGNORE_CASE
+        )
         val regexResult = url.matches(regex)
         if (!regexResult) {
             throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_CALLBACK_URL_INVALID)
@@ -357,8 +362,10 @@ class ProjectPipelineCallBackService @Autowired constructor(
 
     private fun validAuth(userId: String, projectId: String, group: BkAuthGroup? = null) {
         if (!authProjectApi.isProjectUser(userId, pipelineAuthServiceCode, projectId, group)) {
-            logger.info("create Project callback createUser is not project manager,createUser[$userId] projectId[$projectId]")
-            throw ErrorCodeException(errorCode = ProcessMessageCode.USER_NEED_PROJECT_X_PERMISSION, params = arrayOf(userId, projectId))
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.USER_NEED_PROJECT_X_PERMISSION,
+                params = arrayOf(userId, projectId)
+            )
         }
     }
 }

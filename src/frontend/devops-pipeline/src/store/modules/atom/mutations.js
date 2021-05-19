@@ -40,6 +40,7 @@ import {
     ADD_STAGE,
     CONTAINER_TYPE_SELECTION_VISIBLE,
     SET_INSERT_STAGE_INDEX,
+    SET_INSERT_STAGE_ISFINALLY,
     UPDATE_ATOM,
     SET_PIPELINE_EDITING,
     SET_PIPELINE,
@@ -70,7 +71,7 @@ import {
     getAtomModalKey,
     getAtomDefaultValue,
     getAtomOutputObj,
-    getAtomPreviousVal,
+    diffAtomVersions,
     isNewAtomTemplate
 } from './atomUtil'
 import { hashID } from '@/utils/util'
@@ -188,7 +189,11 @@ export default {
         Object.assign(state, payload)
         return state
     },
-    [UPDATE_ATOM_TYPE]: (state, { container, atomCode, version, atomIndex }) => {
+    [SET_INSERT_STAGE_ISFINALLY]: (state, payload) => {
+        Object.assign(state, payload)
+        return state
+    },
+    [UPDATE_ATOM_TYPE] (state, { container, atomCode, version, atomIndex }) {
         const key = getAtomModalKey(atomCode, version)
         const atomModal = state.atomModalMap[key]
         const preVerEle = container.elements[atomIndex]
@@ -196,9 +201,12 @@ export default {
         const preVerAtomModal = state.atomModalMap[preVerkey] || { props: {} }
         const isChangeAtom = atomModal.atomCode !== preVerAtomModal.atomCode
         let atom = null
+        let atomVersionChangedKeys = []
         if (isNewAtomTemplate(atomModal.htmlTemplateVersion)) {
             const preVerData = preVerEle.data || {}
             const preVerModelProps = preVerAtomModal.props || {}
+            const diffRes = diffAtomVersions(preVerData.input, preVerModelProps.input, atomModal.props.input, isChangeAtom)
+            atomVersionChangedKeys = diffRes.atomVersionChangedKeys
             atom = {
                 id: `e-${hashID(32)}`,
                 '@type': atomModal.classType !== atomCode ? atomModal.classType : atomCode,
@@ -208,7 +216,7 @@ export default {
                 data: {
                     input: {
                         ...getAtomDefaultValue(atomModal.props.input),
-                        ...getAtomPreviousVal(preVerData.input, preVerModelProps.input, atomModal.props.input, isChangeAtom)
+                        ...diffRes.atomValue
                     },
                     output: {
                         ...getAtomOutputObj(atomModal.props.output)
@@ -218,6 +226,8 @@ export default {
                 }
             }
         } else {
+            const diffRes = diffAtomVersions(preVerEle, preVerAtomModal.props, atomModal.props, isChangeAtom)
+            atomVersionChangedKeys = diffRes.atomVersionChangedKeys
             atom = {
                 id: `e-${hashID(32)}`,
                 '@type': atomModal.classType !== atomCode ? atomModal.classType : atomCode,
@@ -225,9 +235,15 @@ export default {
                 version,
                 name: atomModal.name,
                 ...getAtomDefaultValue(atomModal.props),
-                ...getAtomPreviousVal(preVerEle, preVerAtomModal.props, atomModal.props, isChangeAtom)
+                ...diffRes.atomValue
             }
         }
+        // 对比出的差异key，会在5秒后清空
+        state.atomVersionChangedKeys = atomVersionChangedKeys
+        clearTimeout(this.atomVersionChangedCleanId)
+        this.atomVersionChangedCleanId = setTimeout(() => {
+            state.atomVersionChangedKeys = []
+        }, 5000)
         container.elements.splice(atomIndex, 1, atom)
     },
     [UPDATE_ATOM]: (state, { atom, newParam }) => {
@@ -283,12 +299,13 @@ export default {
     [UPDATE_STAGE]: (state, { stage, newParam }) => {
         Object.assign(stage, newParam)
     },
-    [ADD_STAGE]: (state, { stages, insertStageIndex }) => {
+    [ADD_STAGE]: (state, { stages, insertStageIndex, insertStageIsFinally = false }) => {
         stages.splice(insertStageIndex, 0, {
             id: `s-${hashID(32)}`,
-            name: `stage-${insertStageIndex + 1}`,
+            name: insertStageIsFinally === true ? 'Finally' : `stage-${insertStageIndex + 1}`,
             tag: [...state.defaultStageTags],
-            containers: []
+            containers: [],
+            finally: insertStageIsFinally === true || undefined
         })
         return state
     },

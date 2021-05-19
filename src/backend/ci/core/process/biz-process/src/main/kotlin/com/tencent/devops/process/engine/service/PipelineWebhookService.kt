@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -34,6 +35,8 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.TriggerContainer
@@ -49,7 +52,8 @@ import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.dao.PipelineWebhookDao
-import com.tencent.devops.process.engine.pojo.PipelineWebhook
+import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.webhook.PipelineWebhook
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.pojo.Repository
@@ -62,6 +66,7 @@ import org.springframework.stereotype.Service
  * 流水线webhook存储服务
  * @version 1.0
  */
+@Suppress("ALL")
 @Service
 class PipelineWebhookService @Autowired constructor(
     private val scmProxyService: ScmProxyService,
@@ -69,7 +74,8 @@ class PipelineWebhookService @Autowired constructor(
     private val pipelineWebhookDao: PipelineWebhookDao,
     private val pipelineResDao: PipelineResDao,
     private val objectMapper: ObjectMapper,
-    private val client: Client
+    private val client: Client,
+    private val pipelinePermissionService: PipelinePermissionService
 ) {
 
     private val logger = LoggerFactory.getLogger(javaClass)!!
@@ -101,7 +107,7 @@ class PipelineWebhookService @Autowired constructor(
                 ScmType.CODE_SVN ->
                     scmProxyService.addSvnWebhook(pipelineWebhook.projectId, repositoryConfig)
                 ScmType.CODE_GITLAB ->
-                    scmProxyService.addGitlabWebhook(pipelineWebhook.projectId, repositoryConfig)
+                    scmProxyService.addGitlabWebhook(pipelineWebhook.projectId, repositoryConfig, codeEventType)
                 ScmType.GITHUB -> {
                     val repo = client.get(ServiceRepositoryResource::class).get(
                         pipelineWebhook.projectId,
@@ -437,5 +443,94 @@ class PipelineWebhookService @Autowired constructor(
             },
             scmType
         )
+    }
+
+    fun listWebhook(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        page: Int?,
+        pageSize: Int?
+    ): List<PipelineWebhook> {
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: 20
+        val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        if (!pipelinePermissionService.checkPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.VIEW
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.USER_NEED_PROJECT_X_PERMISSION,
+                params = arrayOf(userId, projectId)
+            )
+        }
+        return pipelineWebhookDao.listWebhook(
+            dslContext = dslContext,
+            pipelineId = pipelineId,
+            offset = limit.offset,
+            limit = limit.limit
+        ) ?: emptyList()
+    }
+
+    fun updateWebhookSecret(type: ScmType) {
+        val pipelines = mutableMapOf<String/*pipelineId*/, List<Element>/*trigger element*/>()
+        val pipelineVariables = HashMap<String, Map<String, String>>()
+        var start = 0
+        loop@ while (true) {
+            logger.info("update webhook secret|start=$start")
+            val typeWebhooksResp = listRepositoryTypeWebhooks(type, start, 100)
+            if (typeWebhooksResp.isNotOk() || typeWebhooksResp.data == null || typeWebhooksResp.data!!.isEmpty()) {
+                break@loop
+            }
+            typeWebhooksResp.data!!.forEach webhook@{
+                it.doUpdateWebhookSecret(pipelines, pipelineVariables)
+            }
+            start += 100
+        }
+    }
+
+    private fun PipelineWebhook.doUpdateWebhookSecret(
+        pipelines: MutableMap<String, List<Element>>,
+        pipelineVariables: HashMap<String, Map<String, String>>
+    ) {
+        try {
+            val (elements, params) = getElementsAndParams(
+                pipelineId = pipelineId,
+                pipelines = pipelines,
+                pipelineVariables = pipelineVariables
+            )
+
+            val repositoryConfig = getRepositoryConfig(this, params)
+            for (element in elements) {
+                if (element.id == taskId) {
+                    when (element) {
+                        is CodeGitWebHookTriggerElement ->
+                            scmProxyService.addGitWebhook(
+                                projectId,
+                                repositoryConfig = repositoryConfig,
+                                codeEventType = element.eventType
+                            )
+                        is CodeTGitWebHookTriggerElement ->
+                            scmProxyService.addTGitWebhook(
+                                projectId,
+                                repositoryConfig = repositoryConfig,
+                                codeEventType = element.data.input.eventType
+                            )
+                        is CodeGitlabWebHookTriggerElement ->
+                            scmProxyService.addGitlabWebhook(
+                                projectId,
+                                repositoryConfig = repositoryConfig,
+                                codeEventType = element.eventType
+                            )
+                    }
+                    break
+                }
+            }
+        } catch (t: Throwable) {
+            logger.warn("$id|$pipelineId|update webhook secret exception ignore", t)
+        }
     }
 }

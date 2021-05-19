@@ -133,7 +133,19 @@
                         </div>
                         <div class="detail-form-item">
                             <div class="info-label"> {{ $t('store.发布描述：') }} </div>
-                            <div class="info-value">{{ versionDetail.versionContent }}</div>
+                            <div class="info-value">
+                                <mavon-editor
+                                    :editable="false"
+                                    default-open="preview"
+                                    :subfield="false"
+                                    :toolbars-flag="false"
+                                    :external-link="false"
+                                    :box-shadow="false"
+                                    preview-background="#fafbfd"
+                                    v-model="versionDetail.versionContent"
+                                >
+                                </mavon-editor>
+                            </div>
                         </div>
                     </div>
                     <div class="atom-logo-box">
@@ -173,7 +185,7 @@
                 currentBuildNo: '',
                 currentPipelineId: '',
                 timer: -1,
-                docsLink: 'http://tempdocklink/pages/viewpage.action?pageId=15008942',
+                docsLink: `${DOCS_URL_PREFIX}/document/6.0/129/7515`,
                 showContent: false,
                 isOverflow: false,
                 isDropdownShow: false,
@@ -226,13 +238,13 @@
                 return str
             },
             postUrl () {
-                return `${GW_URL_PREFIX}/artifactory/api/user/artifactories/projects/${this.versionDetail.projectCode}/ids/${this.versionDetail.atomId}/codes/${this.versionDetail.atomCode}/versions/${this.versionDetail.version}/re/archive`
+                return `${API_URL_PREFIX}/artifactory/api/user/artifactories/projects/${this.versionDetail.projectCode}/ids/${this.versionDetail.atomId}/codes/${this.versionDetail.atomCode}/versions/${this.versionDetail.version}/re/archive`
             },
             navList () {
                 return [
                     { name: this.$t('store.工作台') },
                     { name: this.$t('store.流水线插件'), to: { name: 'atomWork' } },
-                    { name: this.versionDetail.atomCode, to: { name: 'overView', params: { code: this.versionDetail.atomCode, type: 'atom' } } },
+                    { name: this.versionDetail.atomCode, to: { name: 'statisticData', params: { code: this.versionDetail.atomCode, type: 'atom' } } },
                     { name: this.curTitle }
                 ]
             }

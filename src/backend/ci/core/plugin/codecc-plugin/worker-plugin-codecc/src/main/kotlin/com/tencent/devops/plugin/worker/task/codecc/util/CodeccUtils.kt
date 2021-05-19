@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -58,6 +59,7 @@ import org.slf4j.LoggerFactory
 import java.io.File
 import kotlin.math.max
 
+@Suppress("ALL")
 open class CodeccUtils {
 
     private lateinit var coverityStartFile: String
@@ -90,7 +92,8 @@ open class CodeccUtils {
 
         // Copy the nfs coverity file to workspace
         LoggerService.addNormalLine("get the workspace: ${workspace.canonicalPath}")
-        LoggerService.addNormalLine("get the workspace parent: ${workspace.parentFile?.canonicalPath} | '${File.separatorChar}'")
+        LoggerService.addNormalLine(
+            "get the workspace parent: ${workspace.parentFile?.canonicalPath} | '${File.separatorChar}'")
         LoggerService.addNormalLine("get the workspace parent string: ${workspace.parent}")
 
         val tempDir = File(workspace, ".temp")
@@ -102,10 +105,7 @@ open class CodeccUtils {
         return codeccWorkspace
     }
 
-    private fun doRun(
-        codeccExecuteConfig: CodeccExecuteConfig,
-        codeccWorkspace: File
-    ): String {
+    private fun doRun(codeccExecuteConfig: CodeccExecuteConfig, codeccWorkspace: File): String {
         val scriptType = codeccExecuteConfig.scriptType
         return if (scriptType == BuildScriptType.BAT) {
             CodeccExecuteHelper.executeCodecc(
@@ -210,9 +210,7 @@ open class CodeccUtils {
         }
     }
 
-    private fun doCodeccToolCommand(
-        codeccExecuteConfig: CodeccExecuteConfig
-    ): String {
+    private fun doCodeccToolCommand(codeccExecuteConfig: CodeccExecuteConfig): String {
         val workspace = codeccExecuteConfig.workspace
         val scriptType = codeccExecuteConfig.scriptType
 
@@ -251,8 +249,11 @@ open class CodeccUtils {
             list.add("-DPY27_PYLINT_PATH=${workspace.canonicalPath}")
             list.add("-DPY35_PYLINT_PATH=${workspace.canonicalPath}")
         }
-        var subPath = if (BuildEnv.isThirdParty()) "" else
+        var subPath = if (BuildEnv.isThirdParty()) {
+            ""
+        } else {
             "/usr/local/svn/bin:/usr/local/bin:/data/bkdevops/apps/coverity:"
+        }
         subPath = "$subPath${getJdkPath(scriptType)}:${getNodePath(scriptType)}:" +
             "${getGoMetaLinterPath(scriptType)}:${getGoRootPath(scriptType)}:$STYLE_TOOL_PATH:$PHPCS_TOOL_PATH"
         list.add("-DSUB_PATH=$subPath")
@@ -267,7 +268,8 @@ open class CodeccUtils {
     open fun doPreCodeccSingleCommand(command: MutableList<String>) {
         command.add("export PATH=${getPython3Path(BuildScriptType.SHELL)}:\$PATH\n")
         command.add("export LANG=zh_CN.UTF-8\n")
-        command.add("export PATH=/data/bkdevops/apps/codecc/go/bin:/data/bkdevops/apps/codecc/gometalinter/bin:\$PATH\n")
+        command.add(
+            "export PATH=/data/bkdevops/apps/codecc/go/bin:/data/bkdevops/apps/codecc/gometalinter/bin:\$PATH\n")
 
         CommonEnv.getCommonEnv().forEach { (key, value) ->
             command.add("export $key=$value\n")
@@ -277,9 +279,7 @@ open class CodeccUtils {
         command.add("pwd\n")
     }
 
-    fun doCodeccSingleCommand(
-        codeccExecuteConfig: CodeccExecuteConfig
-    ): String {
+    fun doCodeccSingleCommand(codeccExecuteConfig: CodeccExecuteConfig): String {
         val command = mutableListOf<String>()
         doPreCodeccSingleCommand(command)
 
@@ -347,10 +347,14 @@ open class CodeccUtils {
             command.add("-DPY27_PYLINT_PATH=${workspace.canonicalPath}")
             command.add("-DPY35_PYLINT_PATH=${workspace.canonicalPath}")
         }
-        var subPath = if (BuildEnv.isThirdParty()) "" else
+        var subPath = if (BuildEnv.isThirdParty()) {
+            ""
+        } else {
             "/usr/local/svn/bin:/data/bkdevops/apps/coverity"
-        subPath = "$subPath:${getJdkPath(scriptType)}:${getNodePath(scriptType)}:" +
-            "${getGoMetaLinterPath(scriptType)}:${getGoRootPath(scriptType)}:$STYLE_TOOL_PATH:$PHPCS_TOOL_PATH:${getGoRootPath(scriptType)}:$GO_CI_LINT_PATH"
+        }
+        subPath = "$subPath:${getJdkPath(scriptType)}:" +
+            "${getNodePath(scriptType)}:${getGoMetaLinterPath(scriptType)}:${getGoRootPath(scriptType)}:" +
+            "$STYLE_TOOL_PATH:$PHPCS_TOOL_PATH:${getGoRootPath(scriptType)}:$GO_CI_LINT_PATH"
         command.add("-DSUB_PATH=$subPath")
         command.add("-DGOROOT=/data/bkdevops/apps/codecc/go")
 

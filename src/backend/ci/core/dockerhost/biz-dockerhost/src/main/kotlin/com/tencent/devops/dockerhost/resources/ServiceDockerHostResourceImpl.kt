@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -32,7 +33,6 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.api.ServiceDockerHostResource
 import com.tencent.devops.dockerhost.exception.ContainerException
-import com.tencent.devops.dockerhost.exception.NoSuchImageException
 import com.tencent.devops.dockerhost.pojo.CheckImageRequest
 import com.tencent.devops.dockerhost.pojo.CheckImageResponse
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
@@ -44,7 +44,6 @@ import com.tencent.devops.dockerhost.pojo.Status
 import com.tencent.devops.dockerhost.services.DockerHostBuildService
 import com.tencent.devops.dockerhost.services.DockerService
 import com.tencent.devops.dockerhost.utils.CommonUtils
-import com.tencent.devops.process.engine.common.VMUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import javax.servlet.http.HttpServletRequest
@@ -140,26 +139,9 @@ class ServiceDockerHostResourceImpl @Autowired constructor(
     override fun startBuild(dockerHostBuildInfo: DockerHostBuildInfo): Result<String> {
         return try {
             Result(dockerService.startBuild(dockerHostBuildInfo))
-        } catch (e: NoSuchImageException) {
-            logger.error("Create container container failed, no such image. pipelineId: ${dockerHostBuildInfo.pipelineId}, vmSeqId: ${dockerHostBuildInfo.vmSeqId}, err: ${e.message}")
-            dockerHostBuildService.log(
-                buildId = dockerHostBuildInfo.buildId,
-                red = true,
-                message = "构建环境启动失败，镜像不存在, 镜像:${dockerHostBuildInfo.imageName}",
-                tag = VMUtils.genStartVMTaskId(dockerHostBuildInfo.vmSeqId.toString()),
-                containerHashId = dockerHostBuildInfo.containerHashId
-            )
-            Result(1, "构建环境启动失败，镜像不存在, 镜像:${dockerHostBuildInfo.imageName}", "")
         } catch (e: ContainerException) {
-            logger.error("Create container failed, rollback build. buildId: ${dockerHostBuildInfo.buildId}, vmSeqId: ${dockerHostBuildInfo.vmSeqId}")
-            dockerHostBuildService.log(
-                buildId = dockerHostBuildInfo.buildId,
-                red = true,
-                message = "构建环境启动失败，错误信息:${e.message}",
-                tag = VMUtils.genStartVMTaskId(dockerHostBuildInfo.vmSeqId.toString()),
-                containerHashId = dockerHostBuildInfo.containerHashId
-            )
-            Result(2, "构建环境启动失败，错误信息:${e.message}", "")
+            logger.error("${dockerHostBuildInfo.buildId}|CreateContainerFailed|j(${dockerHostBuildInfo.vmSeqId})")
+            Result(e.errorCodeEnum.errorCode, "构建环境启动失败: ${e.message}", "")
         }
     }
 

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -27,6 +28,7 @@
 package com.tencent.devops.websocket.configuration
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.common.websocket.dispatch.TransferDispatch
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.websocket.listener.CacheSessionListener
@@ -48,6 +50,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.stereotype.Component
 
+@Suppress("ALL")
 @Component
 class WebsocketConfiguration {
 
@@ -64,7 +67,7 @@ class WebsocketConfiguration {
     private val devopsGateway: String? = null
 
     companion object {
-        private val logger = LoggerFactory.getLogger(javaClass)
+        private val logger = LoggerFactory.getLogger(WebsocketConfiguration::class.java)
     }
 
     @Bean
@@ -131,18 +134,18 @@ class WebsocketConfiguration {
         @Autowired pipelineWebSocketQueue: Queue,
         @Autowired buildListener: WebSocketListener
     ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(pipelineWebSocketQueue.name)
-        container.setConcurrentConsumers(webSocketQueueConcurrency!!)
-        container.setMaxConcurrentConsumers(websocketMaxConsumerCount!!)
-        container.setRabbitAdmin(rabbitAdmin)
-        container.setStartConsumerMinInterval(5000)
-        container.setConsecutiveActiveTrigger(webSocketActiveTrigger!!)
-        container.setMismatchedQueuesFatal(true)
         val adapter = MessageListenerAdapter(buildListener, buildListener::execute.name)
         adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
-        return container
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = pipelineWebSocketQueue,
+            rabbitAdmin = rabbitAdmin,
+            adapter = adapter,
+            startConsumerMinInterval = 5000,
+            consecutiveActiveTrigger = webSocketActiveTrigger!!,
+            concurrency = webSocketQueueConcurrency!!,
+            maxConcurrency = websocketMaxConsumerCount!!
+        )
     }
 
     @Bean
@@ -153,18 +156,18 @@ class WebsocketConfiguration {
         @Autowired cacheClearWebSocketQueue: Queue,
         @Autowired buildListener: CacheSessionListener
     ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(cacheClearWebSocketQueue.name)
-        container.setConcurrentConsumers(webSocketQueueConcurrency!!)
-        container.setMaxConcurrentConsumers(10)
-        container.setRabbitAdmin(rabbitAdmin)
-        container.setStartConsumerMinInterval(5000)
-        container.setConsecutiveActiveTrigger(webSocketActiveTrigger!!)
-        container.setMismatchedQueuesFatal(true)
         val adapter = MessageListenerAdapter(buildListener, buildListener::execute.name)
         adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
-        return container
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = cacheClearWebSocketQueue,
+            rabbitAdmin = rabbitAdmin,
+            adapter = adapter,
+            startConsumerMinInterval = 5000,
+            consecutiveActiveTrigger = webSocketActiveTrigger!!,
+            concurrency = webSocketQueueConcurrency!!,
+            maxConcurrency = 10
+        )
     }
 
     @Bean

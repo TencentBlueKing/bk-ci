@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -46,6 +47,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
 
 @RestResource
+@Suppress("ALL")
 class UserImageResourceImpl @Autowired constructor(
     private val importImageService: ImportImageService,
     private val artifactoryService: ImageArtifactoryService
@@ -54,7 +56,13 @@ class UserImageResourceImpl @Autowired constructor(
         private val logger = LoggerFactory.getLogger(UserImageResourceImpl::class.java)
     }
 
-    override fun upload(userId: String, projectId: String, isBuildImage: Boolean?, inputStream: InputStream, disposition: FormDataContentDisposition): Result<UploadImageTask> {
+    override fun upload(
+        userId: String,
+        projectId: String,
+        isBuildImage: Boolean?,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition
+    ): Result<UploadImageTask> {
         checkUserAndProject(userId, projectId)
         if (!importImageService.checkDeployPermission(projectId, userId)) {
             throw OperationException("用户($userId)没有上传镜像权限")
@@ -103,7 +111,13 @@ class UserImageResourceImpl @Autowired constructor(
         }
     }
 
-    override fun listProjectImages(userId: String, projectId: String, searchKey: String?, start: Int?, limit: Int?): Result<ImagePageData> {
+    override fun listProjectImages(
+        userId: String,
+        projectId: String,
+        searchKey: String?,
+        start: Int?,
+        limit: Int?
+    ): Result<ImagePageData> {
         checkUserAndProject(userId, projectId)
 
         val vSearchKey = searchKey ?: ""
@@ -123,7 +137,13 @@ class UserImageResourceImpl @Autowired constructor(
         return Result(artifactoryService.listAllProjectImages(projectId, searchKey))
     }
 
-    override fun listProjectBuildImages(userId: String, projectId: String, searchKey: String?, start: Int?, limit: Int?): Result<ImagePageData> {
+    override fun listProjectBuildImages(
+        userId: String,
+        projectId: String,
+        searchKey: String?,
+        start: Int?,
+        limit: Int?
+    ): Result<ImagePageData> {
         val vSearchKey = searchKey ?: ""
         val vStart = if (start == null || start == 0) 0 else start
         val vLimit = if (limit == null || limit == 0) 10000 else limit
@@ -190,7 +210,12 @@ class UserImageResourceImpl @Autowired constructor(
         }
     }
 
-    override fun setBuildImage(userId: String, projectId: String, imageRepo: String, imageTag: String): Result<Boolean> {
+    override fun setBuildImage(
+        userId: String,
+        projectId: String,
+        imageRepo: String,
+        imageTag: String
+    ): Result<Boolean> {
         if (imageRepo.isBlank()) {
             throw OperationException("imageRepo required")
         }

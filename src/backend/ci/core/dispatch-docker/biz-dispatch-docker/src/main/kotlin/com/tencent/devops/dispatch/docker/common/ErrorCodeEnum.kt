@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -28,6 +29,7 @@ package com.tencent.devops.dispatch.docker.common
 
 import com.tencent.devops.common.api.pojo.ErrorType
 
+@Suppress("ALL")
 enum class ErrorCodeEnum(
     val errorType: ErrorType,
     val errorCode: Int,
@@ -36,8 +38,13 @@ enum class ErrorCodeEnum(
     SYSTEM_ERROR(ErrorType.SYSTEM, 2127001, "Dispatcher-docker系统错误"),
     NO_IDLE_VM_ERROR(ErrorType.SYSTEM, 2127002, "构建机启动失败，没有空闲的构建机"),
     POOL_VM_ERROR(ErrorType.SYSTEM, 2127003, "容器并发池分配异常"),
-    NO_SPECIAL_VM_ERROR(ErrorType.SYSTEM, 2127004, "Start build Docker VM failed, no available Docker VM in specialIpList"),
-    NO_AVAILABLE_VM_ERROR(ErrorType.SYSTEM, 2127005, "Start build Docker VM failed, no available Docker VM. Please wait a moment and try again."),
+    NO_SPECIAL_VM_ERROR(errorType = ErrorType.SYSTEM,
+        errorCode = 2127004,
+        formatErrorMessage = "Start build Docker VM failed, no available Docker VM in specialIpList"),
+    NO_AVAILABLE_VM_ERROR(errorType = ErrorType.SYSTEM,
+        errorCode = 2127005,
+        formatErrorMessage =
+        "Start build Docker VM failed, no available Docker VM. Please wait a moment and try again."),
     DOCKER_IP_NOT_AVAILABLE(ErrorType.SYSTEM, 2127006, "Docker ip is not available."),
     END_VM_ERROR(ErrorType.SYSTEM, 2127007, "End build Docker VM failed"),
     START_VM_FAIL(ErrorType.SYSTEM, 2127008, "Start build Docker VM failed"),

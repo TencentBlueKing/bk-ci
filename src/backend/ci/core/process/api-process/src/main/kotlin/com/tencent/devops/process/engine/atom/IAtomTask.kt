@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -26,6 +27,8 @@
 
 package com.tencent.devops.process.engine.atom
 
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.container.NormalContainer
@@ -35,8 +38,6 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.common.api.pojo.ErrorCode
-import com.tencent.devops.common.api.pojo.ErrorType
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 
@@ -59,7 +60,7 @@ interface IAtomTask<T> {
      * 应用场景：
      * 1.同步原子，需要轮循等待接口返回数据以决定原子是否完成整个业务, eg: CodeCC/apk加固/子流水线调用
      *
-     * 例外： 当前原子执行失败则不会等待，直接标识为当前原子执行结束 BuildStatus.isFinish(status)
+     * 例外： 当前原子执行失败则不会等待，直接标识为当前原子执行结束 status.isFinish()
      *
      * @param task 执行任务
      * @param param 参数
@@ -86,17 +87,17 @@ interface IAtomTask<T> {
      * @param runVariables 运行时变量
      * @param force 是否强制终止
      * @return BuildStatus
-     *      返回标志位是否要等待其他任务结束才结束，如果返回 BuildStatus.isFinish(status)
+     *      返回标志位是否要等待其他任务结束才结束，如果返回 status.isFinish()
      *          true: 可以结束当前原子
      *          false: 需要等待其在他任务执行完。后续会不断的去调用该函数去查直到false，或者超时
      *          例外: 当前原子执行失败则不会等待，直接标识为当前原子执行结束
      */
+    @Suppress("ALL")
     fun tryFinish(task: PipelineBuildTask, runVariables: Map<String, String>, force: Boolean = false): AtomResponse {
-//        return tryFinish(task, getParamElement(task), runVariables, force)
         val param = getParamElement(task)
-        val atomResponse = tryFinish(task, param, runVariables, force)
+        var atomResponse = tryFinishImpl(task, param, runVariables, force)
         // 未结束？检查是否超时
-        if (!BuildStatus.isFinish(atomResponse.buildStatus)) {
+        if (!atomResponse.buildStatus.isFinish()) {
             val startTime = task.startTime?.timestampmilli() ?: 0L
             val timeoutMills: Long =
                 if (param is Element) {
@@ -128,15 +129,41 @@ interface IAtomTask<T> {
                     "[${task.buildId}]|TIME_OUT|" +
                         "startTime=$startTime|timeoutMills=$timeoutMills|current=${System.currentTimeMillis()}"
                 )
-                return AtomResponse(
+                atomResponse = AtomResponse(
                     buildStatus = BuildStatus.EXEC_TIMEOUT,
                     errorType = ErrorType.USER,
                     errorCode = ErrorCode.USER_TASK_OUTTIME_LIMIT,
-                    errorMsg = "Task execution timeout, the time limit is: ${TimeUnit.MILLISECONDS.toMinutes(timeoutMills)} minutes"
+                    errorMsg = "Task time out ${TimeUnit.MILLISECONDS.toMinutes(timeoutMills)} minutes"
                 )
+            } else if (force) { // 强制终止的设置为失败
+                logger.info("[${task.buildId}]|FORCE_TERMINATE|job=${task.containerId}|task=${task.taskId}")
+                atomResponse = defaultFailAtomResponse
             }
         }
         return atomResponse
+    }
+
+    private fun tryFinishImpl(
+        task: PipelineBuildTask,
+        param: T,
+        runVariables: Map<String, String>,
+        force: Boolean = false
+    ): AtomResponse {
+        val atomResponse = tryFinish(task, param, runVariables, force)
+        return if (!atomResponse.buildStatus.isFinish()) {
+            if (force) { // 未结束，强制情况下则设置为失敗，此为旧内置插件才会有的问题。
+                AtomResponse(
+                    buildStatus = BuildStatus.FAILED,
+                    errorType = ErrorType.PLUGIN,
+                    errorCode = ErrorCode.PLUGIN_DEFAULT_ERROR,
+                    errorMsg = "Force Terminate!"
+                )
+            } else {
+                atomResponse
+            }
+        } else {
+            atomResponse
+        }
     }
 
     fun tryFinish(
@@ -146,7 +173,7 @@ interface IAtomTask<T> {
         force: Boolean = false
     ): AtomResponse {
         return if (force) {
-            if (BuildStatus.isFinish(task.status)) {
+            if (task.status.isFinish()) {
                 AtomResponse(
                     buildStatus = task.status,
                     errorType = task.errorType,

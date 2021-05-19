@@ -119,7 +119,7 @@
                             :external-link="false"
                             :box-shadow="false"
                             preview-background="#fff"
-                            @imgAdd="addImage"
+                            @imgAdd="addImage('mdHook', ...arguments)"
                             @imgDel="delImage"
                             @change="changeData"
                         />
@@ -221,14 +221,19 @@
                 <div class="bk-form-item versionlog-form-item is-required">
                     <label class="bk-label"> {{ $t('store.版本日志') }} </label>
                     <div class="bk-form-content atom-item-content">
-                        <textarea type="text" class="bk-form-input atom-versionlog-input" placeholder=""
-                            name="versionContent"
-                            v-validate="{
-                                required: true
-                            }"
+                        <mavon-editor :class="{ 'is-danger': errors.has('versionContent'), 'atom-remark-input': true }"
+                            ref="versionMd"
                             v-model="atomForm.versionContent"
-                            :class="{ 'is-danger': errors.has('versionContent') }">
-                        </textarea>
+                            :toolbars="toolbarOptions"
+                            :external-link="false"
+                            :box-shadow="false"
+                            preview-background="#fff"
+                            name="versionContent"
+                            v-validate="{ required: true }"
+                            @imgAdd="addImage('versionMd', ...arguments)"
+                            @imgDel="delImage"
+                            @change="changeData"
+                        />
                         <p :class="errors.has('versionContent') ? 'error-tips' : 'normal-tips'">{{ errors.first("versionContent") }}</p>
                     </div>
                 </div>
@@ -261,7 +266,7 @@
                 initJobType: '',
                 initReleaseType: '',
                 descTemplate: '',
-                docsLink: 'http://tempdocklink/pages/viewpage.action?pageId=15008942',
+                docsLink: `${DOCS_URL_PREFIX}/document/6.0/129/7515`,
                 showContent: false,
                 isUploading: false,
                 initOs: [],
@@ -349,7 +354,7 @@
                 return toolbars
             },
             releasePackageUrl () {
-                return `${GW_URL_PREFIX}/artifactory/api/user/artifactories/projects/${this.atomForm.projectCode}/atoms/${this.atomForm.atomCode}/versions/${this.curVersion || '1.0.0'}/types/${this.atomForm.releaseType}/archive`
+                return `${API_URL_PREFIX}/artifactory/api/user/artifactories/projects/${this.atomForm.projectCode}/atoms/${this.atomForm.atomCode}/versions/${this.curVersion || '1.0.0'}/types/${this.atomForm.releaseType}/archive`
             },
             navList () {
                 const name = `${this.curTitle}（${this.atomForm.atomCode}）`
@@ -527,8 +532,8 @@
                 })
             },
 
-            addImage (pos, file) {
-                this.uploadimg(pos, file)
+            addImage (ref, pos, file) {
+                this.uploadimg(ref, pos, file)
             },
             delImage (pos) {
 
@@ -536,7 +541,7 @@
             changeData (value, render) {
                 // console.log(value, render)
             },
-            async uploadimg (pos, file) {
+            async uploadimg (ref, pos, file) {
                 const formData = new FormData()
                 const config = {
                     headers: {
@@ -552,7 +557,7 @@
                         config
                     })
 
-                    this.$refs.mdHook.$img2Url(pos, res)
+                    this.$refs[ref].$img2Url(pos, res)
                 } catch (err) {
                     message = err.message ? err.message : err
                     theme = 'error'
@@ -561,7 +566,7 @@
                         message,
                         theme
                     })
-                    this.$refs.mdHook.$refs.toolbar_left.$imgDel(pos)
+                    this.$refs[ref].$refs.toolbar_left.$imgDel(pos)
                 }
             },
 

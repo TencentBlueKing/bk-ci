@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -31,8 +32,11 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.BusTypeEnum
 import com.tencent.devops.common.api.enums.TaskStatusEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -41,6 +45,7 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomEle
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.process.tables.records.TPipelineAtomReplaceBaseRecord
 import com.tencent.devops.model.process.tables.records.TPipelineAtomReplaceItemRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
@@ -50,16 +55,19 @@ import com.tencent.devops.process.dao.PipelineAtomReplaceItemDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
-import com.tencent.devops.process.engine.service.template.TemplateService
 import com.tencent.devops.process.pojo.PipelineAtomReplaceHistory
 import com.tencent.devops.process.pojo.template.TemplateModel
 import com.tencent.devops.process.pojo.template.TemplateType
+import com.tencent.devops.process.service.template.TemplateFacadeService
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.api.service.ServiceUserResource
+import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.atom.AtomParamReplaceInfo
+import com.tencent.devops.store.pojo.atom.AtomReplaceParamConvertRequest
 import com.tencent.devops.store.pojo.atom.AtomVersionReplaceInfo
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
 import com.tencent.devops.store.pojo.atom.PipelineAtom
@@ -73,8 +81,10 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.Response
 
+@Suppress("ALL")
 @Service
 class PipelineAtomReplaceCronService @Autowired constructor(
     private val dslContext: DSLContext,
@@ -84,7 +94,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
     private val pipelineResDao: PipelineResDao,
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val templateService: TemplateService,
+    private val templateFacadeService: TemplateFacadeService,
     private val redisOperation: RedisOperation,
     private val client: Client
 ) {
@@ -94,6 +104,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         private const val ITEM_PAGE_SIZE = 10
         private const val DEFAULT_PAGE_SIZE = 100
         private const val PIPELINE_ATOM_REPLACE_PROJECT_ID_KEY = "pipeline:atom:replace:project:id"
+        private const val PIPELINE_ATOM_REPLACE_PROJECT_MANAGER_KEY = "pipeline:atom:replace:project:manager"
         private const val PIPELINE_ATOM_REPLACE_FAIL_FLAG_KEY = "pipeline:atom:replace:fail:flag"
     }
 
@@ -205,10 +216,14 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                 if (!projectId.isNullOrBlank()) {
                     // 如果没有指定要替换插件的具体流水线信息而指定了项目，则把该项目下所有流水线下相关的插件都替换
                     val projectInfoRecord = client.get(ServiceProjectResource::class).get(projectId).data
-                    ?: throw ErrorCodeException(
-                        errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                        params = arrayOf(projectId)
-                    )
+                        ?: throw ErrorCodeException(
+                            errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                            params = arrayOf(projectId),
+                            defaultMessage = MessageCodeUtil.getCodeMessage(
+                                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                                params = arrayOf(projectId)
+                            )
+                        )
                     handleProjectPipelineAtom(
                         project = ProjectBaseInfo(projectInfoRecord.id, projectInfoRecord.englishName),
                         projectCompleteFlag = true,
@@ -383,9 +398,9 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         baseId: String
     ) {
         if (projectId != null) {
-            val templatePage = 1
+            var templatePage = 1
             do {
-                val templateListModel = templateService.listTemplate(
+                val templateListModel = templateFacadeService.listTemplate(
                     projectId = projectId,
                     userId = userId,
                     templateType = TemplateType.CUSTOMIZE,
@@ -422,6 +437,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                         )
                     }
                 }
+                templatePage++
             } while (templateListModel.models.size == DEFAULT_PAGE_SIZE)
         }
     }
@@ -436,7 +452,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         baseId: String
     ) {
         val templateId = templateModel.templateId
-        val template = templateService.getTemplate(
+        val template = templateFacadeService.getTemplate(
             projectId = projectId,
             userId = userId,
             templateId = templateId,
@@ -445,7 +461,6 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         val model = template.template
         val replaceAtomFlag = generateReplacePipelineModel(
             pipelineModel = model,
-            userId = userId,
             projectId = projectId,
             busId = templateId,
             fromAtomCode = atomReplaceItem.fromAtomCode,
@@ -458,7 +473,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
             )
         )
         if (replaceAtomFlag) {
-            val targetVersion = templateService.updateTemplate(
+            val targetVersion = templateFacadeService.updateTemplate(
                 projectId = projectId,
                 userId = template.creator,
                 templateId = templateId,
@@ -477,7 +492,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                     status = TaskStatusEnum.SUCCESS.name,
                     baseId = baseId,
                     itemId = atomReplaceItem.id,
-                    userId = template.creator
+                    userId = userId
                 )
             )
         }
@@ -574,7 +589,6 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         val channelCode = pipelineInfoRecord.channel.let { ChannelCode.valueOf(it) }
         val replaceAtomFlag = generateReplacePipelineModel(
             pipelineModel = pipelineModel,
-            userId = userId,
             channelCode = channelCode,
             projectId = pipelineProjectId,
             busId = pipelineId,
@@ -615,7 +629,6 @@ class PipelineAtomReplaceCronService @Autowired constructor(
     @Suppress("UNCHECKED_CAST")
     private fun generateReplacePipelineModel(
         pipelineModel: Model,
-        userId: String,
         channelCode: ChannelCode = ChannelCode.BS,
         projectId: String,
         busId: String,
@@ -629,32 +642,41 @@ class PipelineAtomReplaceCronService @Autowired constructor(
             stage.containers.forEach { container ->
                 val finalElements = mutableListOf<Element>()
                 container.elements.forEach nextElement@{ element ->
-                    if (element.getAtomCode() == fromAtomCode) {
+                    val fromAtomVersion = atomVersionReplaceInfo.fromAtomVersion
+                    if (element.getAtomCode() == fromAtomCode && element.version == fromAtomVersion) {
                         replaceAtomFlag = true
-                        // 判断用户的项目是否安装了要替换的插件
-                        val installFlag = client.get(ServiceMarketAtomResource::class).installAtom(
-                            userId = userId,
-                            channelCode = channelCode,
-                            installAtomReq = InstallAtomReq(arrayListOf(projectId), toAtomCode)
-                        ).data
-                        if (installFlag != true) {
-                            throw ErrorCodeException(
-                                statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
-                                errorCode = StoreMessageCode.USER_INSTALL_ATOM_CODE_IS_INVALID
-                            )
+                        // 默认插件无需安装
+                        if (toAtomInfo.defaultFlag != true) {
+                            // 判断用户的项目是否安装了要替换的插件
+                            val projectManager = getProjectManager(projectId) // 获取项目管理员
+                            val installFlag = client.get(ServiceMarketAtomResource::class).installAtom(
+                                userId = projectManager,
+                                channelCode = channelCode,
+                                installAtomReq = InstallAtomReq(arrayListOf(projectId), toAtomCode)
+                            ).data
+                            if (installFlag != true) {
+                                throw ErrorCodeException(
+                                    statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                                    errorCode = StoreMessageCode.USER_INSTALL_ATOM_CODE_IS_INVALID,
+                                    defaultMessage = MessageCodeUtil
+                                        .getCodeLanMessage(StoreMessageCode.USER_INSTALL_ATOM_CODE_IS_INVALID)
+                                )
+                            }
                         }
                         val toAtomPropMap = toAtomInfo.props
                         val toAtomInputParamNameList =
                             (toAtomPropMap?.get(ATOM_INPUT) as? Map<String, Any>)?.map { it.key }
                         val fromAtomInputParamMap = generateFromAtomInputParamMap(element)
                         // 生成目标替换插件的输入参数
+                        val toAtomVersion = atomVersionReplaceInfo.toAtomVersion
                         val toAtomInputParamMap = generateToAtomInputParamMap(
+                            toAtomCode = toAtomCode,
+                            toAtomVersion = toAtomVersion,
                             toAtomInputParamNameList = toAtomInputParamNameList,
                             fromAtomInputParamMap = fromAtomInputParamMap,
                             paramReplaceInfoList = atomVersionReplaceInfo.paramReplaceInfoList
                         )
                         // 判断生成的目标插件参数集合是否符合要求
-                        val toAtomVersion = atomVersionReplaceInfo.toAtomVersion
                         if (toAtomInputParamNameList?.size != toAtomInputParamMap.size) {
                             val message =
                                 "bus[$busId] plugin: $fromAtomCode: ${atomVersionReplaceInfo.fromAtomVersion} " +
@@ -662,7 +684,8 @@ class PipelineAtomReplaceCronService @Autowired constructor(
                             logger.warn(message)
                             throw ErrorCodeException(
                                 errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
-                                params = arrayOf(message)
+                                params = arrayOf(message),
+                                defaultMessage = message
                             )
                         }
                         val toAtomJobType = toAtomInfo.jobType
@@ -696,6 +719,29 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         return replaceAtomFlag
     }
 
+    private fun getProjectManager(projectId: String): String {
+        // 首先从redis中获取项目的管理员，redis中获取不到再从权限中心查
+        var projectManager = redisOperation.get("$PIPELINE_ATOM_REPLACE_PROJECT_MANAGER_KEY:$projectId")
+        if (projectManager == null) {
+            val projectManagers =
+                client.get(ServiceUserResource::class).getProjectUserRoles(projectId, BkAuthGroup.MANAGER).data
+            if (projectManagers == null || projectManagers.isEmpty()) {
+                throw ErrorCodeException(
+                    statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                    errorCode = ProjectMessageCode.QUERY_USER_INFO_FAIL,
+                    defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.QUERY_USER_INFO_FAIL)
+                )
+            }
+            projectManager = projectManagers[0]
+            redisOperation.set(
+                key = "$PIPELINE_ATOM_REPLACE_PROJECT_MANAGER_KEY:$projectId",
+                value = projectManager,
+                expiredInSecond = TimeUnit.DAYS.toSeconds(3)
+            )
+        }
+        return projectManager
+    }
+
     private fun getErrorMessage(t: Throwable): String? {
         var message = t.message
         if (message != null && message.length > 128) {
@@ -705,7 +751,7 @@ class PipelineAtomReplaceCronService @Autowired constructor(
     }
 
     private fun generateAtomDataMap(
-        toAtomInputParamMap: MutableMap<String, Any>,
+        toAtomInputParamMap: MutableMap<String, Any?>,
         toAtomPropMap: Map<String, Any>,
         element: Element
     ): MutableMap<String, Any> {
@@ -755,38 +801,93 @@ class PipelineAtomReplaceCronService @Autowired constructor(
     }
 
     private fun generateToAtomInputParamMap(
+        toAtomCode: String,
+        toAtomVersion: String,
         toAtomInputParamNameList: List<String>?,
         fromAtomInputParamMap: Map<String, Any>?,
         paramReplaceInfoList: List<AtomParamReplaceInfo>?
-    ): MutableMap<String, Any> {
-        val toAtomInputParamMap = mutableMapOf<String, Any>()
-        toAtomInputParamNameList?.forEach { inputParamName ->
+    ): MutableMap<String, Any?> {
+        val toAtomInputParamMap = mutableMapOf<String, Any?>()
+        toAtomInputParamNameList?.forEach { toAtomInputParamName ->
             // 如果参数名一样则从被替换插件取值
             if (fromAtomInputParamMap != null) {
-                val fromAtomInputParamValue = fromAtomInputParamMap[inputParamName]
+                val fromAtomInputParamValue = fromAtomInputParamMap[toAtomInputParamName]
                 if (fromAtomInputParamValue != null) {
-                    toAtomInputParamMap[inputParamName] = fromAtomInputParamValue
+                    toAtomInputParamMap[toAtomInputParamName] = fromAtomInputParamValue
                 }
             }
             // 如果有插件参数替换映射信息则根据映射关系替换
             run handleParamReplace@{
                 paramReplaceInfoList?.forEach { paramReplaceInfo ->
-                    val toParamName = paramReplaceInfo.toParamName
-                    if (inputParamName == toParamName) {
-                        val inputParamValue = if (paramReplaceInfo.toParamValue != null) {
-                            paramReplaceInfo.toParamValue
-                        } else {
-                            fromAtomInputParamMap?.get(paramReplaceInfo.fromParamName)
-                        }
-                        if (inputParamValue != null) {
-                            toAtomInputParamMap[inputParamName] = inputParamValue
-                        }
-                        return@handleParamReplace
-                    }
+                    if (generateToAtomInputParam(
+                            paramReplaceInfo = paramReplaceInfo,
+                            toAtomInputParamName = toAtomInputParamName,
+                            toAtomCode = toAtomCode,
+                            toAtomVersion = toAtomVersion,
+                            fromAtomInputParamMap = fromAtomInputParamMap,
+                            toAtomInputParamMap = toAtomInputParamMap
+                        )
+                    ) return@handleParamReplace
                 }
             }
         }
         return toAtomInputParamMap
+    }
+
+    private fun generateToAtomInputParam(
+        paramReplaceInfo: AtomParamReplaceInfo,
+        toAtomInputParamName: String,
+        toAtomCode: String,
+        toAtomVersion: String,
+        fromAtomInputParamMap: Map<String, Any>?,
+        toAtomInputParamMap: MutableMap<String, Any?>
+    ): Boolean {
+        val fromParamName = paramReplaceInfo.fromParamName
+        val toParamName = paramReplaceInfo.toParamName
+        // 获取参数自定义转换接口路径
+        val paramConvertUrl = paramReplaceInfo.paramConvertUrl
+        if (!paramConvertUrl.isNullOrBlank() && toAtomInputParamName == toParamName) {
+            // 参数自定义转换
+            val atomReplaceParamConvertRequest = AtomReplaceParamConvertRequest(
+                toAtomCode = toAtomCode,
+                toAtomVersion = toAtomVersion,
+                fromField = fromParamName,
+                fromFieldValue = fromAtomInputParamMap?.get(fromParamName),
+                toField = toParamName,
+                toFieldDefaultValue = paramReplaceInfo.toParamValue
+            )
+            val response = OkhttpUtils.doPost(paramConvertUrl, JsonUtil.toJson(atomReplaceParamConvertRequest))
+            val responseContent = response.body()!!.string()
+            val errorMessage = "$fromParamName convert $toParamName fail"
+            if (!response.isSuccessful) {
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
+                    params = arrayOf(errorMessage),
+                    defaultMessage = errorMessage
+                )
+            }
+            val result = JsonUtil.to(responseContent, object : TypeReference<Result<Any?>>() {})
+            if (result.isNotOk()) {
+                throw ErrorCodeException(
+                    errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
+                    params = arrayOf(errorMessage),
+                    defaultMessage = errorMessage
+                )
+            }
+            toAtomInputParamMap[toAtomInputParamName] = result.data
+            return true
+        } else if (toAtomInputParamName == toParamName) {
+            val inputParamValue = if (paramReplaceInfo.toParamValue != null) {
+                paramReplaceInfo.toParamValue
+            } else {
+                fromAtomInputParamMap?.get(fromParamName)
+            }
+            if (inputParamValue != null) {
+                toAtomInputParamMap[toAtomInputParamName] = inputParamValue
+            }
+            return true
+        }
+        return false
     }
 
     private fun generateMarketBuildLessAtomElement(
@@ -796,23 +897,30 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         dataMap: MutableMap<String, Any>
     ): MarketBuildLessAtomElement {
         val marketBuildLessAtomElement = MarketBuildLessAtomElement(
-            name = toAtomInfo.name,
+            name = element.name,
             id = element.id,
             status = element.status,
             atomCode = toAtomInfo.atomCode,
             version = toAtomVersion,
             data = dataMap
         )
-        marketBuildLessAtomElement.executeCount = element.executeCount
-        marketBuildLessAtomElement.canRetry = element.canRetry
-        marketBuildLessAtomElement.elapsed = element.elapsed
-        marketBuildLessAtomElement.startEpoch = element.startEpoch
-        marketBuildLessAtomElement.templateModify = element.templateModify
-        marketBuildLessAtomElement.additionalOptions = element.additionalOptions
-        marketBuildLessAtomElement.errorType = element.errorType
-        marketBuildLessAtomElement.errorCode = element.errorCode
-        marketBuildLessAtomElement.errorMsg = element.errorMsg
+        setElementBaseInfo(marketBuildLessAtomElement, element)
         return marketBuildLessAtomElement
+    }
+
+    private fun setElementBaseInfo(
+        element: Element,
+        dataElement: Element
+    ) {
+        element.executeCount = dataElement.executeCount
+        element.canRetry = dataElement.canRetry
+        element.elapsed = dataElement.elapsed
+        element.startEpoch = dataElement.startEpoch
+        element.templateModify = dataElement.templateModify
+        element.additionalOptions = dataElement.additionalOptions
+        element.errorType = dataElement.errorType
+        element.errorCode = dataElement.errorCode
+        element.errorMsg = dataElement.errorMsg
     }
 
     private fun generateMarketBuildAtomElement(
@@ -822,22 +930,14 @@ class PipelineAtomReplaceCronService @Autowired constructor(
         dataMap: MutableMap<String, Any>
     ): MarketBuildAtomElement {
         val marketBuildAtomElement = MarketBuildAtomElement(
-            name = toAtomInfo.name,
+            name = element.name,
             id = element.id,
             status = element.status,
             atomCode = toAtomInfo.atomCode,
             version = toAtomVersion,
             data = dataMap
         )
-        marketBuildAtomElement.executeCount = element.executeCount
-        marketBuildAtomElement.canRetry = element.canRetry
-        marketBuildAtomElement.elapsed = element.elapsed
-        marketBuildAtomElement.startEpoch = element.startEpoch
-        marketBuildAtomElement.templateModify = element.templateModify
-        marketBuildAtomElement.additionalOptions = element.additionalOptions
-        marketBuildAtomElement.errorType = element.errorType
-        marketBuildAtomElement.errorCode = element.errorCode
-        marketBuildAtomElement.errorMsg = element.errorMsg
+        setElementBaseInfo(marketBuildAtomElement, element)
         return marketBuildAtomElement
     }
 }

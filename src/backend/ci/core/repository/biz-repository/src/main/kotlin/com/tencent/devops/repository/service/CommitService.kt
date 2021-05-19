@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -40,6 +41,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
+@Suppress("ALL")
 class CommitService @Autowired constructor(
     private val repositoryDao: RepositoryDao,
     private val commitDao: CommitDao,
@@ -56,8 +58,14 @@ class CommitService @Autowired constructor(
         val repoIds = commits.filter { it.repoName.isNullOrBlank() }.map { it.repoId }
         val repoNames = commits.filter { !it.repoName.isNullOrBlank() }.map { it.repoName }
 
-        val idRepos = repositoryDao.getRepoByIds(dslContext, repoIds)?.map { it.repositoryId.toString() to it }?.toMap() ?: mapOf()
-        val nameRepos = repositoryDao.getRepoByNames(dslContext, repoNames)?.map { it.aliasName.toString() to it }?.toMap() ?: mapOf()
+        val idRepos = repositoryDao.getRepoByIds(
+            dslContext = dslContext,
+            repositoryIds = repoIds
+        )?.map { it.repositoryId.toString() to it }?.toMap() ?: mapOf()
+        val nameRepos = repositoryDao.getRepoByNames(
+            dslContext = dslContext,
+            repositoryNames = repoNames
+        )?.map { it.aliasName.toString() to it }?.toMap() ?: mapOf()
 
         return commits.map {
             val repoUrl = idRepos[it.repoId.toString()]?.url ?: nameRepos[it.repoName]?.url
@@ -77,14 +85,14 @@ class CommitService @Autowired constructor(
                     "https://${urlAndRepo.first}/${urlAndRepo.second}/commit/${it.commit}"
                 } else null
             )
-        }?.groupBy { it.elementId }?.map {
-            val elementId = it.value[0].elementId
-            val repoId = it.value[0].repoId
-            val repoName = it.value[0].repoName
+        }?.groupBy { it.elementId }?.map { a ->
+            val elementId = a.value[0].elementId
+            val repoId = a.value[0].repoId
+            val repoName = a.value[0].repoName
             CommitResponse(
                 name = (idRepos[repoId]?.aliasName ?: nameRepos[repoName]?.aliasName ?: "unknown repo"),
                 elementId = elementId,
-                records = it.value.filter { it.commit.isNotBlank() })
+                records = a.value.filter { it.commit.isNotBlank() })
         } ?: listOf()
     }
 

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -26,7 +27,6 @@
 
 package com.tencent.devops.websocket.cron
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.websocket.dispatch.TransferDispatch
@@ -43,7 +43,6 @@ import org.springframework.stereotype.Component
 @Component
 class ClearTimeoutCron(
     private val redisOperation: RedisOperation,
-    private val objectMapper: ObjectMapper,
     private val websocketService: WebsocketService,
     private val transferDispatch: TransferDispatch
 ) {
@@ -80,6 +79,7 @@ class ClearTimeoutCron(
         websocketService.clearLongSessionPage()
     }
 
+    @Suppress("ALL")
     private fun clearTimeoutSession() {
         val nowTime = System.currentTimeMillis()
         logger.info("start clear Session by Timer")
@@ -105,7 +105,6 @@ class ClearTimeoutCron(
                             if (sessionPage != null) {
                                 RedisUtlis.cleanPageSessionBySessionId(redisOperation, sessionPage, sessionId)
                                 RedisUtlis.cleanUserSessionBySessionId(redisOperation, userId, sessionId)
-                                logger.info("[clearTimeOutSession] sessionId:$sessionId,loadPage:$sessionPage,userId:$userId")
                             }
                             // 如果不在本实例，下发到mq,供其他实例删除对应实例维持的session
                             if (websocketService.isCacheSession(sessionId)) {

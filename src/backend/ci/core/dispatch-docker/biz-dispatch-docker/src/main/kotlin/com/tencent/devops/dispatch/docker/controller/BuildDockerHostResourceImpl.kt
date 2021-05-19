@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -31,8 +32,6 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.common.web.mq.alert.AlertUtils
 import com.tencent.devops.dispatch.docker.api.builds.BuildDockerHostResource
-import com.tencent.devops.dispatch.pojo.ContainerInfo
-import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.docker.pojo.DockerHostInfo
 import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
 import com.tencent.devops.dispatch.docker.service.DispatchDockerService
@@ -41,7 +40,7 @@ import com.tencent.devops.dispatch.docker.service.DockerHostDebugService
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import org.springframework.beans.factory.annotation.Autowired
 
-@RestResource
+@RestResource@Suppress("ALL")
 class BuildDockerHostResourceImpl @Autowired constructor(
     private val dockerHostBuildService: DockerHostBuildService,
     private val dockerHostDebugService: DockerHostDebugService,
@@ -51,12 +50,17 @@ class BuildDockerHostResourceImpl @Autowired constructor(
     override fun getHost(hostTag: String): Result<DockerHostInfo>? {
         return dockerHostBuildService.getHost(hostTag)
     }
-
+/*
     override fun rollbackBuild(buildId: String, vmSeqId: Int, shutdown: Boolean?): Result<Boolean>? {
         return dockerHostBuildService.rollbackBuild(buildId, vmSeqId, shutdown)
     }
 
-    override fun reportContainerId(buildId: String, vmSeqId: Int, containerId: String, hostTag: String?): Result<Boolean>? {
+    override fun reportContainerId(
+        buildId: String,
+        vmSeqId: Int,
+        containerId: String,
+        hostTag: String?
+    ): Result<Boolean>? {
         return dockerHostBuildService.reportContainerId(buildId, vmSeqId, containerId, hostTag)
     }
 
@@ -80,9 +84,14 @@ class BuildDockerHostResourceImpl @Autowired constructor(
         return dockerHostDebugService.reportContainerId(pipelineId, vmSeqId, containerId)
     }
 
-    override fun rollbackDebug(pipelineId: String, vmSeqId: String, shutdown: Boolean?, message: String?): Result<Boolean>? {
+    override fun rollbackDebug(
+        pipelineId: String,
+        vmSeqId: String,
+        shutdown: Boolean?,
+        message: String?
+    ): Result<Boolean>? {
         return dockerHostDebugService.rollbackDebug(pipelineId, vmSeqId, shutdown, message)
-    }
+    }*/
 
     override fun alert(level: AlertLevel, title: String, message: String): Result<Boolean>? {
         AlertUtils.doAlert(level, title, message)
@@ -94,7 +103,13 @@ class BuildDockerHostResourceImpl @Autowired constructor(
         return Result(0, "success")
     }
 
-    override fun postLog(buildId: String, red: Boolean, message: String, tag: String?, jobId: String?): Result<Boolean>? {
+    override fun postLog(
+        buildId: String,
+        red: Boolean,
+        message: String,
+        tag: String?,
+        jobId: String?
+    ): Result<Boolean>? {
         dockerHostBuildService.log(buildId, red, message, tag, jobId)
         return Result(0, "success")
     }

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -45,52 +46,53 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTr
 
 object RepositoryConfigUtils {
 
+    @Suppress("ALL")
     fun buildConfig(element: Element): RepositoryConfig {
         return when (element) {
             is CodeGitElement -> RepositoryConfig(
-                element.repositoryHashId,
-                element.repositoryName,
-                element.repositoryType ?: RepositoryType.ID
+                repositoryHashId = element.repositoryHashId,
+                repositoryName = element.repositoryName,
+                repositoryType = element.repositoryType ?: RepositoryType.ID
             )
             is CodeGitWebHookTriggerElement -> RepositoryConfig(
-                element.repositoryHashId,
-                element.repositoryName,
-                element.repositoryType ?: RepositoryType.ID
+                repositoryHashId = element.repositoryHashId,
+                repositoryName = element.repositoryName,
+                repositoryType = element.repositoryType ?: RepositoryType.ID
             )
             is CodeSvnElement -> RepositoryConfig(
-                element.repositoryHashId,
-                element.repositoryName,
-                element.repositoryType ?: RepositoryType.ID
+                repositoryHashId = element.repositoryHashId,
+                repositoryName = element.repositoryName,
+                repositoryType = element.repositoryType ?: RepositoryType.ID
             )
             is CodeSVNWebHookTriggerElement -> RepositoryConfig(
-                element.repositoryHashId,
-                element.repositoryName,
-                element.repositoryType ?: RepositoryType.ID
+                repositoryHashId = element.repositoryHashId,
+                repositoryName = element.repositoryName,
+                repositoryType = element.repositoryType ?: RepositoryType.ID
             )
             is CodeGitlabElement -> RepositoryConfig(
-                element.repositoryHashId,
-                element.repositoryName,
-                element.repositoryType ?: RepositoryType.ID
+                repositoryHashId = element.repositoryHashId,
+                repositoryName = element.repositoryName,
+                repositoryType = element.repositoryType ?: RepositoryType.ID
             )
             is CodeGitlabWebHookTriggerElement -> RepositoryConfig(
-                element.repositoryHashId,
-                element.repositoryName,
-                element.repositoryType ?: RepositoryType.ID
+                repositoryHashId = element.repositoryHashId,
+                repositoryName = element.repositoryName,
+                repositoryType = element.repositoryType ?: RepositoryType.ID
             )
             is GithubElement -> RepositoryConfig(
-                element.repositoryHashId,
-                element.repositoryName,
-                element.repositoryType ?: RepositoryType.ID
+                repositoryHashId = element.repositoryHashId,
+                repositoryName = element.repositoryName,
+                repositoryType = element.repositoryType ?: RepositoryType.ID
             )
             is CodeGithubWebHookTriggerElement -> RepositoryConfig(
-                element.repositoryHashId,
-                element.repositoryName,
-                element.repositoryType ?: RepositoryType.ID
+                repositoryHashId = element.repositoryHashId,
+                repositoryName = element.repositoryName,
+                repositoryType = element.repositoryType ?: RepositoryType.ID
             )
             is CodeTGitWebHookTriggerElement -> RepositoryConfig(
-                element.data.input.repositoryHashId,
-                element.data.input.repositoryName,
-                element.data.input.repositoryType ?: RepositoryType.ID
+                repositoryHashId = element.data.input.repositoryHashId,
+                repositoryName = element.data.input.repositoryName,
+                repositoryType = element.data.input.repositoryType ?: RepositoryType.ID
             )
             is CodeGitGenericWebHookTriggerElement -> {
                 with(element.data.input) {

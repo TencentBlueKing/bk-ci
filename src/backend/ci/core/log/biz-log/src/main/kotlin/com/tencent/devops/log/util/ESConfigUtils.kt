@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -26,6 +27,7 @@
 
 package com.tencent.devops.log.util
 
+import com.tencent.devops.log.es.NormalX509ExtendedTrustManager
 import org.apache.http.HeaderElementIterator
 import org.apache.http.HttpHost
 import org.apache.http.HttpResponse
@@ -41,11 +43,14 @@ import java.io.File
 import java.io.FileInputStream
 import java.security.KeyStore
 import javax.net.ssl.SSLContext
+import java.security.SecureRandom
 
 object ESConfigUtils {
 
     fun getClientBuilder(
-        httpHost: HttpHost,
+        host: String,
+        port: Int,
+        https: Boolean,
         tcpKeepAliveSeconds: Long,
         connectTimeout: Int,
         socketTimeout: Int,
@@ -56,11 +61,22 @@ object ESConfigUtils {
         credentialsProvider: CredentialsProvider?
     ): RestClientBuilder {
         // 初始化 RestClient 配置
+        val httpHost = HttpHost(host, port, if (https) "https" else "http")
         val builder = RestClient.builder(httpHost)
 
         // HTTP连接设置
         return builder.setHttpClientConfigCallback { httpClientBuilder ->
-            if (sslContext != null) httpClientBuilder.setSSLContext(sslContext)
+            if (https) {
+                if (sslContext != null) {
+                    httpClientBuilder.setSSLContext(sslContext)
+                } else {
+                    val defaultContext = SSLContext.getInstance("SSL", "SunJSSE")
+                    defaultContext.init(null, arrayOf(NormalX509ExtendedTrustManager.INSTANCE), SecureRandom())
+                    httpClientBuilder.setSSLHostnameVerifier { _, _ -> true }
+                    httpClientBuilder.setSSLContext(defaultContext)
+                }
+            }
+
             if (credentialsProvider != null) httpClientBuilder.setDefaultCredentialsProvider(credentialsProvider)
             httpClientBuilder.setKeepAliveStrategy { response: HttpResponse, context: HttpContext? ->
                 try {

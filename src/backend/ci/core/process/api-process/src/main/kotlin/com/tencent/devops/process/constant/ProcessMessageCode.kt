@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -92,11 +93,22 @@ object ProcessMessageCode {
     const val ERROR_SOURCE_TEMPLATE_NOT_EXISTS = "2101035" // 源模板不存在
     const val FAIL_TO_LIST_TEMPLATE_PARAMS = "2101036" // 列举流水线模板参数失败
     const val ONLY_ONE_TRIGGER_JOB_IN_PIPELINE = "2101037" // 流水线只能有一个触发Stage
+    const val ERROR_PIPELINE_NOT_EXISTS = "2101038" // 流水线不存在
+    const val ERROR_PIPELINE_MODEL_NOT_EXISTS = "2101039" // 流水线的模型不存在
+    const val ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS = "2101040" // 流水线的模型中指定构建容器{0}不存在
+    const val ERROR_SAVE_PIPELINE_TIMER = "2101041" // 流水线的定时触发器保存失败
     const val ERROR_PIPELINE_JOB_NEED_TASK = "2101042" // Job需要至少有一个任务插件
+    const val ERROR_DEL_PIPELINE_TIMER = "2101043" // 流水线的定时触发器删除失败
     const val SVN_NOT_SUPPORT_TAG = "2101044" // SVN do not support tag
     const val ERROR_PIPELINE_REPO_ID_NULL = "2101045" // 仓库ID为空
     const val ERROR_PIPELINE_REPO_NAME_NULL = "2101046" // 仓库名为空
+    const val ERROR_PIPELINE_LOCK = "2101047" // 流水线锁定
     const val ILLEGAL_TIMER_CRONTAB = "2101048" // 定时触发器的定时参数不合法
+    const val ERROR_PIPELINE_QUEUE_FULL = "2101049" // 流水线队列满
+    const val ERROR_PIPELINE_AGENT_STATUS_EXCEPTION = "2101050" // 第三方构建机状态异常
+    const val ERROR_PIPELINE_DISPATCH_STORE_IMAGE_CODE_BLANK = "2101051" // 模型中使用了商店镜像，但code为空
+    const val ERROR_PIPELINE_DISPATCH_STORE_IMAGE_VERSION_BLANK = "2101052" // 模型中使用了商店镜像，但version为空
+    const val ERROR_PIPELINE_DISPATCH_VALUE_BLANK = "2101053" // 模型中非商店蓝盾源/第三方源的镜像value为空
     const val ERROR_PIPELINE_PARAMS_NAME_ERROR = "2101054" // 请使用英文命名流水线变量
     const val ERROR_PIPELINE_STAGE_NO_TRIGGER_USER = "2101055" // 手动触发的Stage没有未配置可执行人
     const val ERROR_PIPELINE_DESC_TOO_LONG = "2101056" // 流水线描述过长
@@ -107,19 +119,10 @@ object ProcessMessageCode {
     const val MODEL_DEFAULT_ATOMCODE_NOT_EXSIT = "2101061" // Model内包含不存在的内置插件
     const val ERROR_ATOM_RUN_BUILD_ENV_INVALID = "2101062" // 流水线: 插件[{0}]不能在该环境下运行
     const val ERROR_TEMPLATE_PIPELINE_IS_INSTANCING = "2101063" // 流水线: 模板下的流水线实例{0}正在更新中，请稍后再试
-
-    const val ERROR_PIPELINE_NOT_EXISTS = "2101038" // 流水线不存在
-    const val ERROR_PIPELINE_MODEL_NOT_EXISTS = "2101039" // 流水线的模型不存在
-    const val ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS = "2101040" // 流水线的模型中指定构建容器{0}不存在
-    const val ERROR_SAVE_PIPELINE_TIMER = "2101041" // 流水线的定时触发器保存失败
-    const val ERROR_DEL_PIPELINE_TIMER = "2101043" // 流水线的定时触发器删除失败
-    const val ERROR_PIPELINE_LOCK = "2101047" // 流水线锁定
-    const val ERROR_PIPELINE_QUEUE_FULL = "2101049" // 流水线队列满
-    const val ERROR_PIPELINE_AGENT_STATUS_EXCEPTION = "2101050" // 第三方构建机状态异常
-    const val ERROR_PIPELINE_DISPATCH_STORE_IMAGE_CODE_BLANK = "2101051" // 模型中使用了商店镜像，但code为空
-    const val ERROR_PIPELINE_DISPATCH_STORE_IMAGE_VERSION_BLANK = "2101052" // 模型中使用了商店镜像，但version为空
-    const val ERROR_PIPELINE_DISPATCH_VALUE_BLANK = "2101053" // 模型中非商店蓝盾源/第三方源的镜像value为空
-    const val ERROR_PIEPELINE_IS_CANCELED = "2101182" // 流水线: 流水线已经被取消构建
+    const val ERROR_FINALLY_STAGE = "2101064" // 流水线: 每个Model只能包含一个FinallyStage，并且处于最后位置
+    const val ERROR_FINALLY_STAGE_JOB_CONDITION = "2101065" // 流水线: finally stage下的[{0}]Job运行条件配置错误: {1}
+    const val ERROR_NORMAL_STAGE_JOB_CONDITION = "2101066" // 流水线: 普通stage下的[{0}]Job运行条件配置错误: {0}
+    const val ERROR_EMPTY_JOB = "2101067" // 流水线: Model信息不完整，Stage[{0}] Job[{1}]下没有插件
 
     // 通用参数错误
     const val ERROR_RETRY_3_FAILED = "2101989" // 重试3次失败
@@ -146,7 +149,7 @@ object ProcessMessageCode {
     const val ERROR_BUILD_TASK_BCS_OPERATE_FAIL = "2101115" // BCS operate failed
     const val ERROR_BUILD_TASK_BCS_PARAM_NAMESPACE_VAR = "2101116" // instVersionId is not init
     const val ERROR_BUILD_TASK_BCS_PARAM_VERSIONID = "2101117" // versionId is not init
-    const val ERROR_BUILD_TASK_BCS_PARAM_SHOW_VERSIONID = "2101118"  // showVersionId is not init
+    const val ERROR_BUILD_TASK_BCS_PARAM_SHOW_VERSIONID = "2101118" // showVersionId is not init
     const val ERROR_BUILD_TASK_BCS_PARAM_INSTANCE_ENTITY = "2101119" // instanceEntity is not init
     const val ERROR_BUILD_TASK_BCS_CREATE_INSTANCE_FAIL = "2101120" // create instance fail
     const val ERROR_BUILD_TASK_ENV_NAME_IS_NULL = "2101121" // EnvName is not init
@@ -166,15 +169,16 @@ object ProcessMessageCode {
     const val ERROR_BUILD_TASK_ACROSS_PROJECT_PARAM_TARGETPROJECTID = "2101123"
 
     const val ERROR_BUILD_TASK_QUALITY_IN = "2101137" // 质量红线(准入)检测失败
-    const val ERROR_BUILD_TASK_QUALITY_IN_INTERCEPT = "2101908" // 质量红线(准入)配置有误：Fail to find quality gate intercept element
+    // 质量红线(准入)配置有误：Fail to find quality gate intercept element
+    const val ERROR_BUILD_TASK_QUALITY_IN_INTERCEPT = "2101908"
     const val ERROR_BUILD_TASK_QUALITY_OUT = "2101909" // 质量红线(准出)检测失败
-    const val ERROR_BUILD_TASK_QUALITY_OUT_INTERCEPT = "2101910" // 质量红线(准出)配置有误：Fail to find quality gate intercept element
+    // 质量红线(准出)配置有误：Fail to find quality gate intercept element
+    const val ERROR_BUILD_TASK_QUALITY_OUT_INTERCEPT = "2101910"
 
     const val ERROR_PARAM_PROJEC_ID_NULL = "2101101" // 项目ID为空
     const val ERROR_PARAM_USER_ID_NULL = "2101102" // 用户ID为空
     const val ERROR_PARAM_PIPELINE_ID_NULL = "2101103" // 参数：流水线ID为空
     const val ERROR_PARAM_PIPELINE_NAME_TOO_LONG = "2101104" // 参数：流水线名称过长
-    const val ERROR_PARAM_PIPELINE_NAME_DUP = "2101105" // 参数：流水线名称重复
 
     // 权限错误 210198开头
     const val ERROR_PERMISSION_VIEW_NEED = "2101981" // 无查看权限
@@ -185,13 +189,13 @@ object ProcessMessageCode {
     const val ERROR_PERMISSION_NOT_IN_PROJECT = "2101990" // 非项目成员
 
     // 流水线模块业务错误21011
-    const val ERROR_ADD_PIPELINE_TIMER_QUARTZ = "2101105" // 流水线的定时Quartz任务保存失败
     const val ERROR_DEL_PIPELINE_TIMER_QUARTZ = "2101107" // 流水线的定时Quartz任务删除失败
 
     const val ERROR_PIPELINE_DENY_RUN = "2101197" // 流水线不能执行
     const val ERROR_PIPELINE_IS_RUNNING_LOCK = "2101198" // 流水线正在运行中，锁定
     const val ERROR_PIPELINE_TIMER_SCM_NO_CHANGE = "2101190" // 流水线定时触发时代码没有变更
     const val ERROR_PIPELINE_SUMMARY_NOT_FOUND = "2101191" // 异常：流水线的基础构建数据Summary不存在，请联系管理员
+    const val ERROR_PIPELINE_IS_NOT_THE_LATEST = "2101192" // 异常：保存已拒绝，因为保存流水线时已不是最新版本
 
     // callback error
     const val ERROR_CALLBACK_URL_INVALID = "2101180" // 回调的url非法
@@ -212,4 +216,12 @@ object ProcessMessageCode {
     const val BUILD_MSG_SERVICE = "2101315" // 服务触发
     const val BUILD_MSG_PIPELINE = "2101316" // 流水线触发
     const val BUILD_MSG_DESC = "2101317" // 构建信息描述
+
+    // 人工审核插件编辑时输入参数错误
+    const val ERROR_PARAM_MANUALREVIEW = "2101105"
+
+    // 标签与标签组错误21014开头
+    const val ERROR_GROUP_COUNT_EXCEEDS_LIMIT = "2101401" // 一个项目标签组不能超过10个
+    const val ERROR_LABEL_COUNT_EXCEEDS_LIMIT = "2101402" // 同一分组下最多可添加12个标签
+    const val ERROR_LABEL_NAME_TOO_LONG = "2101403" // 一个标签最多输入20个字符
 }

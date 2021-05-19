@@ -77,6 +77,7 @@ func agentHeartbeat() error {
 	}
 	if heartbeatResponse.Gateway != "" && heartbeatResponse.Gateway != config.GAgentConfig.Gateway {
 		config.GAgentConfig.Gateway = heartbeatResponse.Gateway
+		systemutil.DevopsGateway = heartbeatResponse.Gateway
 		configChanged = true
 	}
 	if heartbeatResponse.FileGateway != "" && heartbeatResponse.FileGateway != config.GAgentConfig.FileGateway {

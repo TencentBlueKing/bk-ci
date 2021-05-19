@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -56,7 +57,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.format.DateTimeFormatter
 
-@Service
+@Service@Suppress("ALL")
 class NodeService @Autowired constructor(
     private val dslContext: DSLContext,
     private val nodeDao: NodeDao,
@@ -146,7 +147,9 @@ class NodeService @Autowired constructor(
 
             // 如果是构建机类型，则取蓝盾Node状态，否则取gseAgent状态
             val nodeStatus =
-                if (it.nodeType == NodeType.THIRDPARTY.name || it.nodeType == NodeType.TSTACK.name || it.nodeType == NodeType.DEVCLOUD.name) {
+                if (it.nodeType == NodeType.THIRDPARTY.name ||
+                    it.nodeType == NodeType.TSTACK.name ||
+                    it.nodeType == NodeType.DEVCLOUD.name) {
                     it.nodeStatus
                 } else {
                     if (getAgentStatus(it)) {
@@ -174,10 +177,16 @@ class NodeService @Autowired constructor(
                 canDelete = canDeleteNodeIds.contains(it.nodeId),
                 gateway = gatewayShowName,
                 displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName),
-                createTime = if (null == it.createdTime) "" else
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.createdTime),
-                lastModifyTime = if (null == it.lastModifyTime) "" else
-                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastModifyTime),
+                createTime = if (null == it.createdTime) {
+                    ""
+                } else {
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.createdTime)
+                },
+                lastModifyTime = if (null == it.lastModifyTime) {
+                    ""
+                } else {
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastModifyTime)
+                },
                 lastModifyUser = it.lastModifyUser ?: ""
             )
         }
@@ -240,14 +249,16 @@ class NodeService @Autowired constructor(
                 canDelete = canDeleteNodeIds.contains(it.nodeId),
                 gateway = gatewayShowName,
                 displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName),
-                createTime = if (null == it.createdTime) "" else DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-                    .format(
-                        it.createdTime
-                    ),
-                lastModifyTime = if (null == it.lastModifyTime) "" else DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-                    .format(
-                        it.lastModifyTime
-                    ),
+                createTime = if (null == it.createdTime) {
+                    ""
+                } else {
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.createdTime)
+                },
+                lastModifyTime = if (null == it.lastModifyTime) {
+                    ""
+                } else {
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastModifyTime)
+                },
                 lastModifyUser = it.lastModifyUser ?: ""
             )
         }
@@ -281,14 +292,16 @@ class NodeService @Autowired constructor(
                 canDelete = null,
                 gateway = "",
                 displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName),
-                createTime = if (null == it.createdTime) "" else DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-                    .format(
-                        it.createdTime
-                    ),
-                lastModifyTime = if (null == it.lastModifyTime) "" else DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-                    .format(
-                        it.lastModifyTime
-                    ),
+                createTime = if (null == it.createdTime) {
+                    ""
+                } else {
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.createdTime)
+                },
+                lastModifyTime = if (null == it.lastModifyTime) {
+                    ""
+                } else {
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastModifyTime)
+                },
                 lastModifyUser = it.lastModifyUser ?: ""
             )
         }
@@ -418,5 +431,51 @@ class NodeService @Autowired constructor(
                 pageSize = limit!!,
                 records = nodeInfos.map { NodeStringIdUtils.getNodeBaseInfo(it) }
         )
+    }
+
+    fun extListNodes(userId: String, projectId: String): List<NodeWithPermission> {
+        val nodeRecordList = nodeDao.listThirdpartyNodes(dslContext, projectId)
+        if (nodeRecordList.isEmpty()) {
+            return emptyList()
+        }
+        return nodeRecordList.map {
+            val nodeStringId = NodeStringIdUtils.getNodeStringId(it)
+            NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName)
+            NodeWithPermission(
+                nodeHashId = HashUtil.encodeLongId(it.nodeId),
+                nodeId = nodeStringId,
+                name = it.nodeName,
+                ip = it.nodeIp,
+                nodeStatus = it.nodeStatus,
+                agentStatus = getAgentStatus(it),
+                nodeType = it.nodeType,
+                osName = it.osName,
+                createdUser = it.createdUser,
+                operator = it.operator,
+                bakOperator = it.bakOperator,
+                canUse = false,
+                canEdit = false,
+                canDelete = false,
+                gateway = "",
+                displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName),
+                createTime = if (null == it.createdTime) {
+                    ""
+                } else {
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.createdTime)
+                },
+                lastModifyTime = if (null == it.lastModifyTime) {
+                    ""
+                } else {
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastModifyTime)
+                },
+                lastModifyUser = it.lastModifyUser ?: "",
+                pipelineRefCount = it.pipelineRefCount ?: 0,
+                lastBuildTime = if (null == it.lastBuildTime) {
+                    ""
+                } else {
+                    DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastBuildTime)
+                }
+            )
+        }
     }
 }

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -26,13 +27,11 @@
 
 package com.tencent.devops.common.pipeline.enums
 
-import com.tencent.devops.common.api.pojo.IdValue
-
 /**
- * statusName: 状态中文名
- * visiable: 是否对用户可见
+ * [statusName] 状态中文名
+ * [visible] 是否对用户可见
  */
-enum class BuildStatus(val statusName: String, val visiable: Boolean) {
+enum class BuildStatus(val statusName: String, val visible: Boolean) {
     SUCCEED("成功", true), // 0 成功
     FAILED("失败", true), // 1 失败
     CANCELED("取消", true), // 2 取消
@@ -60,95 +59,52 @@ enum class BuildStatus(val statusName: String, val visiable: Boolean) {
     DEPENDENT_WAITING("依赖等待", true), // 24 依赖等待
     UNKNOWN("未知状态", false); // 99
 
-    fun isFinish(): Boolean = isFinish(this)
+    fun isFinish(): Boolean = isFailure() || isSuccess() || isCancel()
 
-    fun isFailure(): Boolean = isFailure(this)
+    fun isFailure(): Boolean = this == FAILED || isPassiveStop() || isTimeout() || this == QUOTA_FAILED
 
-    fun isSuccess(): Boolean = isSuccess(this)
+    fun isSuccess(): Boolean = this == SUCCEED || this == SKIP || this == REVIEW_PROCESSED
 
-    fun isRunning(): Boolean = isRunning(this)
+    fun isCancel(): Boolean = this == CANCELED
 
-    fun isCancel(): Boolean = isCancel(this)
+    fun isRunning(): Boolean =
+        this == RUNNING ||
+            this == LOOP_WAITING ||
+            this == REVIEWING ||
+            this == PREPARE_ENV ||
+            this == CALL_WAITING ||
+            this == PAUSE
 
-    fun isReview(): Boolean = isReview(this)
+    fun isReview(): Boolean = this == REVIEW_ABORT || this == REVIEW_PROCESSED
 
-    fun isReadyToRun(): Boolean = isReadyToRun(this)
+    fun isReadyToRun(): Boolean = this == QUEUE || this == QUEUE_CACHE || this == RETRY
 
-    fun isLoop(): Boolean = isLoop(this)
+    fun isPassiveStop(): Boolean = this == TERMINATE || this == REVIEW_ABORT || this == QUALITY_CHECK_FAIL
 
-    fun isRetry(): Boolean = isRetry(this)
+    fun isPause(): Boolean = this == PAUSE
 
-    fun isTimeout(): Boolean = isTimeout(this)
+    fun isTimeout(): Boolean = this == QUEUE_TIMEOUT || this == EXEC_TIMEOUT || this == HEARTBEAT_TIMEOUT
 
     companion object {
 
         fun parse(statusName: String?): BuildStatus {
             return try {
                 if (statusName == null) UNKNOWN else valueOf(statusName)
-            } catch (fail: Exception) {
+            } catch (ignored: Exception) {
                 UNKNOWN
             }
         }
-
-        fun isFailure(status: BuildStatus) = status == FAILED || isPassiveStop(status) || isTimeout(status) || status == QUOTA_FAILED
-
-        fun isFinish(status: BuildStatus) = isFailure(status) || isSuccess(status) || isCancel(status)
-
-        fun isSuccess(status: BuildStatus) =
-            status == SUCCEED || status == SKIP || status == REVIEW_PROCESSED
-
-        fun isRunning(status: BuildStatus) =
-            isLoop(status) || status == REVIEWING || status == PREPARE_ENV || status == CALL_WAITING || status == PAUSE
-
-        fun isPassiveStop(status: BuildStatus) =
-            status == TERMINATE || status == REVIEW_ABORT || status == QUALITY_CHECK_FAIL
-
-        fun isCancel(status: BuildStatus) = status == CANCELED
-
-        fun isReview(status: BuildStatus) = status == REVIEW_ABORT || status == REVIEW_PROCESSED
-
-        fun isReadyToRun(status: BuildStatus) = status == QUEUE || status == QUEUE_CACHE || isRetry(status)
-
-        /**
-         * 是否处于循环中： 正在运行中或循环等待都属于循环
-         */
-        fun isLoop(status: BuildStatus) = status == RUNNING || status == LOOP_WAITING
-
-        /**
-         * 是否处于重试中
-         */
-        fun isRetry(status: BuildStatus) = status == RETRY
-
-        /**
-         * 是否处于暂停中
-         */
-        fun isPause(status: BuildStatus) = status == PAUSE
-
-        /**
-         * 能否重试执行
-         */
-//        fun isCanRetry(status: BuildStatus) = !isCancel(status) && (isFailure(status) || isReadyToRun(status))
-
-        /**
-         * 是否是用于补偿失败任务的后置任务状态
-         */
-//        fun isTryFinally(status: BuildStatus) = status == TRY_FINALLY
-
-        /**
-         * 是否超时
-         */
-        fun isTimeout(status: BuildStatus) =
-            status == QUEUE_TIMEOUT || status == EXEC_TIMEOUT || status == HEARTBEAT_TIMEOUT
-
-        /**
-         * 获取Status列表
-         */
-        fun getStatusMap(): List<IdValue> {
-            val result = mutableListOf<IdValue>()
-            values().filter { it.visiable }.forEach {
-                result.add(IdValue(it.name, it.statusName))
-            }
-            return result
-        }
+        @Deprecated(replaceWith = ReplaceWith("isFailure"), message = "replace by isFailure")
+        fun isFailure(status: BuildStatus) = status.isFailure()
+        @Deprecated(replaceWith = ReplaceWith("isFinish"), message = "replace by isFinish")
+        fun isFinish(status: BuildStatus) = status.isFinish()
+        @Deprecated(replaceWith = ReplaceWith("isSuccess"), message = "replace by isSuccess")
+        fun isSuccess(status: BuildStatus) = status.isSuccess()
+        @Deprecated(replaceWith = ReplaceWith("isRunning"), message = "replace by isRunning")
+        fun isRunning(status: BuildStatus) = status.isRunning()
+        @Deprecated(replaceWith = ReplaceWith("isCancel"), message = "replace by isCancel")
+        fun isCancel(status: BuildStatus) = status.isCancel()
+        @Deprecated(replaceWith = ReplaceWith("isReadyToRun"), message = "replace by isReadyToRun")
+        fun isReadyToRun(status: BuildStatus) = status.isReadyToRun()
     }
 }

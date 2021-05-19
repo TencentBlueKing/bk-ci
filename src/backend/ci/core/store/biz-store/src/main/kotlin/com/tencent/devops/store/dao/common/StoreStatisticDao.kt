@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -32,49 +33,13 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record4
 import org.jooq.Result
-import org.slf4j.LoggerFactory
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
 
+@Suppress("ALL")
 @Repository
 class StoreStatisticDao {
-    private val logger = LoggerFactory.getLogger(StoreStatisticDao::class.java)
-    /**
-     * 根据storeId与storeType获取组件统计数据
-     */
-    fun getStatisticByStoreId(dslContext: DSLContext, storeId: String, storeType: Byte): Record4<BigDecimal, BigDecimal, BigDecimal, String>? {
-        with(TStoreStatistics.T_STORE_STATISTICS) {
-            return dslContext.select(
-                DOWNLOADS.sum(),
-                COMMITS.sum(),
-                SCORE.sum(),
-                STORE_CODE)
-                .from(this)
-                .where(STORE_ID.eq(storeId).and(STORE_TYPE.eq(storeType)))
-                .fetchOne()
-        }
-    }
-
-    /**
-     * 根据storeCode获取组件统计数据
-     */
-    fun getStatisticByStoreCode(
-        dslContext: DSLContext,
-        storeCode: String,
-        storeType: Byte
-    ): Record4<BigDecimal, BigDecimal, BigDecimal, String> {
-        with(TStoreStatistics.T_STORE_STATISTICS) {
-            return dslContext.select(
-                DOWNLOADS.sum(),
-                COMMITS.sum(),
-                SCORE.sum(),
-                STORE_CODE
-            )
-                .from(this)
-                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)))
-                .fetchOne()
-        }
-    }
 
     /**
      * 批量获取统计数据oo
@@ -82,13 +47,15 @@ class StoreStatisticDao {
     fun batchGetStatisticByStoreCode(
         dslContext: DSLContext,
         storeCodeList: List<String?>,
-        storeType: Byte
+        storeType: Byte,
+        limit: Int? = null,
+        offset: Int? = null
     ): Result<Record4<BigDecimal, BigDecimal, BigDecimal, String>> {
         with(TStoreStatistics.T_STORE_STATISTICS) {
             val baseStep = dslContext.select(
-                DOWNLOADS.sum(),
-                COMMITS.sum(),
-                SCORE.sum(),
+                DSL.sum(DOWNLOADS),
+                DSL.sum(COMMITS),
+                DSL.sum(SCORE),
                 STORE_CODE
             )
                 .from(this)
@@ -100,8 +67,11 @@ class StoreStatisticDao {
             }
             val finalStep = baseStep.where(conditions)
                 .groupBy(STORE_CODE)
-            logger.info(finalStep.getSQL(true))
-            return finalStep.fetch()
+            return if (null != offset && null != limit) {
+                finalStep.limit(limit).offset(offset).fetch()
+            } else {
+                finalStep.fetch()
+            }
         }
     }
 

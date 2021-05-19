@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -26,6 +27,7 @@
 
 package com.tencent.devops.dispatch.docker.dao
 
+import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import com.tencent.devops.model.dispatch.tables.TDispatchPipelineDockerIpInfo
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerIpInfoRecord
 import org.jooq.Condition
@@ -35,7 +37,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
-@Repository
+@Repository@Suppress("ALL")
 class PipelineDockerIPInfoDao {
 
     private val logger = LoggerFactory.getLogger(PipelineDockerIPInfoDao::class.java)
@@ -52,7 +54,8 @@ class PipelineDockerIPInfoDao {
         diskIOLoad: Int,
         enable: Boolean,
         grayEnv: Boolean,
-        specialOn: Boolean
+        specialOn: Boolean,
+        clusterName: String
     ) {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             val preRecord = dslContext.selectFrom(this)
@@ -69,6 +72,7 @@ class PipelineDockerIPInfoDao {
                     .set(ENABLE, enable)
                     .set(GRAY_ENV, grayEnv)
                     .set(SPECIAL_ON, specialOn)
+                    .set(CLUSTER_NAME, clusterName)
                     .set(GMT_MODIFIED, LocalDateTime.now())
                     .where(DOCKER_IP.eq(dockerIp))
                     .execute()
@@ -86,6 +90,7 @@ class PipelineDockerIPInfoDao {
                     ENABLE,
                     GRAY_ENV,
                     SPECIAL_ON,
+                    CLUSTER_NAME,
                     GMT_CREATE,
                     GMT_MODIFIED
                 ).values(
@@ -100,6 +105,7 @@ class PipelineDockerIPInfoDao {
                     enable,
                     grayEnv,
                     specialOn,
+                    clusterName,
                     LocalDateTime.now(),
                     LocalDateTime.now()
                 ).execute()
@@ -113,7 +119,8 @@ class PipelineDockerIPInfoDao {
         dockerHostPort: Int,
         enable: Boolean,
         grayEnv: Boolean,
-        specialOn: Boolean
+        specialOn: Boolean,
+        clusterName: String
     ) {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             dslContext.update(this)
@@ -121,6 +128,7 @@ class PipelineDockerIPInfoDao {
                 .set(ENABLE, enable)
                 .set(GRAY_ENV, grayEnv)
                 .set(SPECIAL_ON, specialOn)
+                .set(CLUSTER_NAME, clusterName)
                 .set(GMT_MODIFIED, LocalDateTime.now())
                 .where(DOCKER_IP.eq(dockerIp))
                 .execute()
@@ -203,21 +211,25 @@ class PipelineDockerIPInfoDao {
     fun getAvailableDockerIpList(
         dslContext: DSLContext,
         grayEnv: Boolean,
+        clusterName: DockerHostClusterType,
         cpuLoad: Int,
         memLoad: Int,
         diskLoad: Int,
         diskIOLoad: Int,
+        usedNum: Int,
         specialIpSet: Set<String> = setOf()
     ): Result<TDispatchPipelineDockerIpInfoRecord> {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             val conditions =
                 mutableListOf<Condition>(
                     ENABLE.eq(true),
-                    GRAY_ENV.eq(grayEnv)
+                    GRAY_ENV.eq(grayEnv),
+                    CLUSTER_NAME.eq(clusterName.name)
                 )
 
-            if (specialIpSet.isEmpty() || specialIpSet.toString() == "[]") {
-                // 没有配置专机，则过滤开启了专机独享的ip
+            if (clusterName == DockerHostClusterType.COMMON &&
+                (specialIpSet.isEmpty() || specialIpSet.toString() == "[]")) {
+                // 没有配置专机，则过滤开启了专机独享的ip，并且只有公共集群才考虑专机问题
                 conditions.add(SPECIAL_ON.eq(false))
             }
 
@@ -225,6 +237,7 @@ class PipelineDockerIPInfoDao {
             conditions.add(MEM_LOAD.lessOrEqual(memLoad))
             conditions.add(DISK_LOAD.lessOrEqual(diskLoad))
             conditions.add(DISK_IO_LOAD.lessOrEqual(diskIOLoad))
+            conditions.add(USED_NUM.lessOrEqual(usedNum))
 
             if (specialIpSet.isNotEmpty() && specialIpSet.toString() != "[]") {
                 conditions.add(DOCKER_IP.`in`(specialIpSet))

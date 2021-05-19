@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -38,7 +39,7 @@ import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
-@Repository
+@Repository@Suppress("ALL")
 class PipelineDockerTaskDao {
 
     fun insertTask(
@@ -63,7 +64,8 @@ class PipelineDockerTaskDao {
     ): Long {
         with(TDispatchPipelineDockerTask.T_DISPATCH_PIPELINE_DOCKER_TASK) {
             val now = LocalDateTime.now()
-            val preRecord = dslContext.selectFrom(this).where(BUILD_ID.eq(buildId)).and(VM_SEQ_ID.eq(vmSeqId)).fetchAny()
+            val preRecord = dslContext.selectFrom(this).where(BUILD_ID.eq(buildId))
+                .and(VM_SEQ_ID.eq(vmSeqId)).fetchAny()
             if (preRecord != null) { // 支持更新，让用户进行步骤重试时继续能使用
                 dslContext.update(this)
                     .set(AGENT_ID, agentId)
@@ -317,7 +319,6 @@ class PipelineDockerTaskDao {
     fun getTimeOutTask(dslContext: DSLContext): Result<TDispatchPipelineDockerTaskRecord> {
         with(TDispatchPipelineDockerTask.T_DISPATCH_PIPELINE_DOCKER_TASK) {
             return dslContext.selectFrom(this)
-//                    .where(timestampDiff(org.jooq.DatePart.DAY, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(2))
                 .where(UPDATED_TIME.lessOrEqual(timestampSubDay(2)))
                 .fetch()
         }
@@ -327,7 +328,6 @@ class PipelineDockerTaskDao {
         with(TDispatchPipelineDockerTask.T_DISPATCH_PIPELINE_DOCKER_TASK) {
             return dslContext.update(this)
                 .set(STATUS, com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus.FAILURE.status)
-//                    .where(timestampDiff(org.jooq.DatePart.DAY, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(2))
                 .where(UPDATED_TIME.lessOrEqual(timestampSubDay(2)))
                 .execute() == 1
         }
@@ -336,7 +336,6 @@ class PipelineDockerTaskDao {
     fun getUnclaimedHostTask(dslContext: DSLContext): Result<TDispatchPipelineDockerTaskRecord> {
         with(TDispatchPipelineDockerTask.T_DISPATCH_PIPELINE_DOCKER_TASK) {
             return dslContext.selectFrom(this)
-//                    .where(timestampDiff(org.jooq.DatePart.SECOND, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(20))
                 .where(UPDATED_TIME.lessOrEqual(timestampSubSecond(20)))
                 .and(STATUS.eq(PipelineTaskStatus.QUEUE.status))
                 .and(HOST_TAG.isNotNull).and(HOST_TAG.notEqual(""))
@@ -360,7 +359,6 @@ class PipelineDockerTaskDao {
         with(TDispatchPipelineDockerTask.T_DISPATCH_PIPELINE_DOCKER_TASK) {
             return dslContext.update(this)
                 .set(HOST_TAG, "")
-//                    .where(timestampDiff(org.jooq.DatePart.SECOND, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(20))
                 .where(UPDATED_TIME.lessOrEqual(timestampSubSecond(20)))
                 .and(STATUS.eq(PipelineTaskStatus.QUEUE.status))
                 .and(HOST_TAG.isNotNull).and(HOST_TAG.notEqual(""))
@@ -371,7 +369,6 @@ class PipelineDockerTaskDao {
     fun getUnclaimedZoneTask(dslContext: DSLContext): Result<TDispatchPipelineDockerTaskRecord> {
         with(TDispatchPipelineDockerTask.T_DISPATCH_PIPELINE_DOCKER_TASK) {
             return dslContext.selectFrom(this)
-//                    .where(timestampDiff(org.jooq.DatePart.SECOND, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(40))
                 .where(UPDATED_TIME.lessOrEqual(timestampSubSecond(40)))
                 .and(STATUS.eq(PipelineTaskStatus.QUEUE.status))
                 .and(ZONE.isNotNull).and(ZONE.notEqual(""))
@@ -383,18 +380,12 @@ class PipelineDockerTaskDao {
         with(TDispatchPipelineDockerTask.T_DISPATCH_PIPELINE_DOCKER_TASK) {
             return dslContext.update(this)
                 .set(ZONE, Zone.SHENZHEN.name)
-//                    .where(timestampDiff(org.jooq.DatePart.SECOND, UPDATED_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(40))
                 .where(UPDATED_TIME.lessOrEqual(timestampSubSecond(40)))
                 .and(STATUS.eq(PipelineTaskStatus.QUEUE.status))
                 .and(ZONE.isNotNull).and(ZONE.notEqual("")).and(ZONE.notEqual(Zone.SHENZHEN.name))
                 .execute() == 1
         }
     }
-
-//    fun timestampDiff(part: DatePart, t1: Field<Timestamp>): Field<Int> {
-//        return DSL.field("timestampdiff({0}, {1}, NOW())",
-//                Int::class.java, DSL.keyword(part.toSQL()), t1)
-//    }
 
     fun timestampSubDay(day: Long): Field<LocalDateTime> {
         return DSL.field("date_sub(NOW(), interval $day day)",
@@ -406,32 +397,3 @@ class PipelineDockerTaskDao {
             LocalDateTime::class.java)
     }
 }
-
-/**
-
-DROP TABLE IF EXISTS `T_DISPATCH_PIPELINE_DOCKER_TASK`;
-CREATE TABLE `T_DISPATCH_PIPELINE_DOCKER_TASK` (
-`ID` int(11) NOT NULL AUTO_INCREMENT,
-`PROJECT_ID` varchar(64) NOT NULL,
-`AGENT_ID` varchar(32) NOT NULL,
-`PIPELINE_ID` varchar(32) NOT NULL DEFAULT '',
-`BUILD_ID` varchar(32) NOT NULL,
-`VM_SEQ_ID` int(20) NOT NULL,
-`STATUS` int(11) NOT NULL,
-`SECRET_KEY` varchar(128) NOT NULL,
-`IMAGE_NAME` varchar(1024) NOT NULL,
-`CHANNEL_CODE` varchar(128) NULL
-`HOST_TAG` varchar(128) NULL,
-`CONTAINER_ID` varchar(128) NULL,
-`CREATED_TIME` datetime NOT NULL,
-`UPDATED_TIME` datetime NOT NULL,
-`CHANNEL_CODE` varchar(128) NULL,
-PRIMARY KEY (`ID`),
-UNIQUE KEY `BUILD_ID` (`BUILD_ID`,`VM_SEQ_ID`)
-) ENGINE=InnoDB AUTO_INCREMENT=93 DEFAULT CHARSET=utf8;
-
-ALTER TABLE T_DISPATCH_PIPELINE_DOCKER_TASK ADD COLUMN `ZONE` varchar(128) NULL;
-ALTER TABLE T_DISPATCH_PIPELINE_DOCKER_BUILD ADD COLUMN `ZONE` varchar(128) NULL;
-ALTER TABLE T_DISPATCH_PIPELINE_DOCKER_DEBUG ADD COLUMN `ZONE` varchar(128) NULL;
-
- * */

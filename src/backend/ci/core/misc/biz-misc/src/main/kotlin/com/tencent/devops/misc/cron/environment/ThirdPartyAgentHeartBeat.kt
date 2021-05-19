@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -28,7 +29,6 @@ package com.tencent.devops.misc.cron.environment
 
 import com.tencent.devops.common.api.enums.AgentAction
 import com.tencent.devops.common.api.enums.AgentStatus
-import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.environment.agent.ThirdPartyAgentHeartbeatUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
@@ -45,6 +45,7 @@ import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
 @Component
+@Suppress("ALL")
 class ThirdPartyAgentHeartBeat @Autowired constructor(
     private val dslContext: DSLContext,
     private val environmentThirdPartyAgentDao: EnvironmentThirdPartyAgentDao,
@@ -86,15 +87,26 @@ class ThirdPartyAgentHeartBeat @Autowired constructor(
             return
         }
         nodeRecords.forEach { record ->
-            val heartbeatTime = thirdPartyAgentHeartbeatUtils.getHeartbeatTime(record.id, record.projectId) ?: return@forEach
+            val heartbeatTime = thirdPartyAgentHeartbeatUtils.getHeartbeatTime(record.id, record.projectId)
+                ?: return@forEach
 
             val escape = System.currentTimeMillis() - heartbeatTime
             if (escape > 10 * THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL * 1000) {
-                logger.warn("The agent(${HashUtil.encodeLongId(record.id)}) has not receive the heart for $escape ms, mark it as exception")
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
-                    environmentThirdPartyAgentDao.updateStatus(context, record.id, null, record.projectId, AgentStatus.IMPORT_EXCEPTION)
-                    environmentThirdPartyAgentDao.addAgentAction(context, record.projectId, record.id, AgentAction.OFFLINE.name)
+                    environmentThirdPartyAgentDao.updateStatus(
+                        dslContext = context,
+                        id = record.id,
+                        nodeId = null,
+                        projectId = record.projectId,
+                        status = AgentStatus.IMPORT_EXCEPTION
+                    )
+                    environmentThirdPartyAgentDao.addAgentAction(
+                        dslContext = context,
+                        projectId = record.projectId,
+                        agentId = record.id,
+                        action = AgentAction.OFFLINE.name
+                    )
                     if (record.nodeId == null) {
                         logger.info("[${record.projectId}|${record.id}|${record.ip}] The node id is null")
                         return@transaction
@@ -119,13 +131,20 @@ class ThirdPartyAgentHeartBeat @Autowired constructor(
             return
         }
         nodeRecords.forEach { record ->
-            val heartbeatTime = thirdPartyAgentHeartbeatUtils.getHeartbeatTime(record.id, record.projectId) ?: return@forEach
+            val heartbeatTime = thirdPartyAgentHeartbeatUtils.getHeartbeatTime(record.id, record.projectId)
+                ?: return@forEach
             val escape = System.currentTimeMillis() - heartbeatTime
             if (escape > 2 * THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL * 1000) {
-                logger.warn("The un-import agent(${HashUtil.encodeLongId(record.id)}) has not receive the heart for $escape ms, mark it as exception")
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
-                    environmentThirdPartyAgentDao.updateStatus(context, record.id, null, record.projectId, AgentStatus.UN_IMPORT, AgentStatus.UN_IMPORT_OK)
+                    environmentThirdPartyAgentDao.updateStatus(
+                        dslContext = context,
+                        id = record.id,
+                        nodeId = null,
+                        projectId = record.projectId,
+                        status = AgentStatus.UN_IMPORT,
+                        expectStatus = AgentStatus.UN_IMPORT_OK
+                    )
                 }
             }
         }

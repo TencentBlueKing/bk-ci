@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -145,6 +146,7 @@ object CommonUtils {
         return Triple(url.trim(), name.trim(), tag.trim())
     }
 
+    @Suppress("ALL")
     private fun parseImageWithoutTrim(imageNameInput: String): Triple<String, String, String> {
         val imageNameStr = imageNameInput.removePrefix("http://").removePrefix("https://")
         val arry = imageNameStr.split(":")
@@ -164,7 +166,9 @@ object CommonUtils {
                 } else {
                     if (str.last().contains(":")) {
                         val nameTag = str.last().split(":")
-                        Triple(str[0], imageNameStr.substringAfter(str[0] + "/").substringBefore(":" + nameTag[1]), nameTag[1])
+                        Triple(str[0],
+                            imageNameStr.substringAfter(str[0] + "/").substringBefore(":" + nameTag[1]),
+                            nameTag[1])
                     } else {
                         Triple(str[0], str.last(), "latest")
                     }
@@ -194,7 +198,13 @@ object CommonUtils {
         }
     }
 
-    fun getAuthConfig(imageType: String?, dockerHostConfig: DockerHostConfig, imageName: String, registryUser: String?, registryPwd: String?): AuthConfig? {
+    fun getAuthConfig(
+        imageType: String?,
+        dockerHostConfig: DockerHostConfig,
+        imageName: String,
+        registryUser: String?,
+        registryPwd: String?
+    ): AuthConfig? {
         return if (imageType == ImageType.THIRD.type) {
             val (registryHost, _, _) = parseImage(imageName)
             logger.info("registry host: $registryHost")
