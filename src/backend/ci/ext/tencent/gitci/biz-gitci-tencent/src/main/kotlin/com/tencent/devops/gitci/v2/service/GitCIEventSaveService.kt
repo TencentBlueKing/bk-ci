@@ -97,7 +97,7 @@ class GitCIEventSaveService @Autowired constructor(
                 dslContext = context,
                 userId = userId,
                 messageType = UserMessageType.REQUEST,
-                messageId = messageId.toString(),
+                messageId = event.id.toString(),
                 messageTitle = messageTitle
             )
         }
