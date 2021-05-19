@@ -32,10 +32,8 @@ class GitCIPermissionServiceImpl @Autowired constructor(
                 throw UnauthorizedException("oauth is empty")
             }
         }
-
-        val gitProjectId = GitCIUtils.getGitCiProjectId(projectCode)
-        logger.info("GitCICertPermissionServiceImpl user:$userId projectId: $projectCode gitProject: $gitProjectId")
-        return client.get(ServiceGitCiResource::class).checkUserGitAuth(userId, gitProjectId).data ?: false
+        logger.info("GitCICertPermissionServiceImpl user:$userId projectId: $projectCode")
+        return client.get(ServiceGitCiResource::class).checkUserGitAuth(userId, projectCode).data ?: false
     }
 
     override fun validateUserResourcePermissionByRelation(
