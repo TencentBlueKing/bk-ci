@@ -93,7 +93,6 @@ class GitCIEventSaveService @Autowired constructor(
                 filePath = filePath,
                 gitProjectId = gitProjectId
             )
-            logger.info("start save message $messageId")
             userMessageDao.save(
                 dslContext = context,
                 userId = userId,
@@ -101,7 +100,6 @@ class GitCIEventSaveService @Autowired constructor(
                 messageId = messageId.toString(),
                 messageTitle = messageTitle
             )
-            logger.info("finish save message $messageId")
         }
         return messageId
     }

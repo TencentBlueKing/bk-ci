@@ -58,7 +58,7 @@ class GitUserMessageDao {
                 messageTitle,
                 messageId,
                 haveRead
-            )
+            ).execute()
         }
     }
 
