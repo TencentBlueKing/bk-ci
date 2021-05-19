@@ -2,6 +2,7 @@ package com.tencent.devops.auth.service.gitci
 
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.auth.service.iam.PermissionService
+import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.exception.UnauthorizedException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
@@ -36,7 +37,7 @@ class GitCIPermissionServiceImpl @Autowired constructor(
             val checkOauth = client.get(ServiceOauthResource::class).gitGet(userId).data
             if (checkOauth == null) {
                 logger.warn("GitCICertPermissionServiceImpl $userId oauth is empty")
-                throw UnauthorizedException("oauth is empty")
+                throw OauthForbiddenException("oauth is empty")
             }
         }
         logger.info("GitCICertPermissionServiceImpl user:$userId projectId: $projectCode")
