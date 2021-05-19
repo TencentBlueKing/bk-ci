@@ -82,7 +82,7 @@ interface UserGitCIGitCodeResource {
         @ApiParam(value = "每页数量,最大100", defaultValue = "20")
         @QueryParam("perPage")
         perPage: Int?,
-        @ApiParam(value = "搜索用户关键字", required = true)
+        @ApiParam(value = "搜索用户关键字", required = false)
         @QueryParam("search")
         search: String?
     ): Result<List<GitMember>?>

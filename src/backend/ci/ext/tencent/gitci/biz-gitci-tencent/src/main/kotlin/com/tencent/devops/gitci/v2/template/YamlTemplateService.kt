@@ -82,7 +82,7 @@ class YamlTemplateService @Autowired constructor(
                 val token = if (!(key == "" || key == personalAccessToken)) {
                     val ticket = ticketService.getCredential("git_$gitProjectId", credentialId = key)
                     if (ticket["type"] != CredentialType.ACCESSTOKEN.name) {
-                        throw RuntimeException("Not Support this credentialType: ${ticket["type"]}")
+                        throw RuntimeException("不支持凭证类型: ${ticket["type"]}")
                     }
                     ticket["v1"]!!
                 } else {
@@ -90,10 +90,10 @@ class YamlTemplateService @Autowired constructor(
                     if (key == "") {
                         val enableUserId =
                             gitCIBasicSettingService.getGitCIConf(gitProjectId)?.enableUserId ?: throw RuntimeException(
-                                "GitCi Project $gitProjectId not enable"
+                                "工蜂项目${gitProjectId}未开启工蜂CI"
                             )
                         oauthService.getOauthToken(enableUserId)?.accessToken
-                            ?: throw RuntimeException("$enableUserId hasn't oauth")
+                            ?: throw RuntimeException("用户${enableUserId}未进行OAuth授权")
                     } else {
                         key
                     }
@@ -102,7 +102,7 @@ class YamlTemplateService @Autowired constructor(
                     token = token,
                     gitProjectId = repo,
                     useAccessToken = false
-                )?.gitProjectId ?: throw RuntimeException("Cant find project $repo")
+                )?.gitProjectId ?: throw RuntimeException("未找到项目$repo")
                 return scmService.getYamlFromGit(
                     token = token,
                     gitProjectId = targetProjectId.toLong(),
@@ -113,12 +113,12 @@ class YamlTemplateService @Autowired constructor(
             }
             ResourceCredentialType.OAUTH -> {
                 val accessToken = oauthService.getOauthToken(userId)?.accessToken
-                    ?: throw RuntimeException("$userId hasn't oauth")
+                    ?: throw RuntimeException("用户${userId}未进行OAuth授权")
                 val targetProjectId = scmService.getProjectInfo(
                     token = accessToken,
                     gitProjectId = repo,
                     useAccessToken = true
-                )?.gitProjectId ?: throw RuntimeException("Cant find project $repo")
+                )?.gitProjectId ?: throw RuntimeException("未找到项目$repo")
                 return scmService.getYamlFromGit(
                     token = accessToken,
                     gitProjectId = targetProjectId.toLong(),
@@ -142,7 +142,7 @@ class YamlTemplateService @Autowired constructor(
             if (str.startsWith("settings.")) {
                 str.removePrefix("settings.")
             } else {
-                throw RuntimeException("\${{}} only support settings")
+                throw RuntimeException("\$凭证仅支持setting.引用")
             }
         } else {
             personalAccessToken

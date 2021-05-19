@@ -27,12 +27,13 @@
 
 package com.tencent.devops.gitci.resources.user
 
-import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.user.UserGitCITriggerResource
+import com.tencent.devops.gitci.permission.GitCIV2PermissionService
 import com.tencent.devops.gitci.pojo.GitYamlString
 import com.tencent.devops.gitci.pojo.TriggerBuildReq
 import com.tencent.devops.gitci.pojo.V2TriggerBuildReq
@@ -46,7 +47,8 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class UserGitCITriggerResourceImpl @Autowired constructor(
     private val gitCITriggerService: GitCITriggerService,
-    private val gitCIV2PipelineService: GitCIV2PipelineService
+    private val gitCIV2PipelineService: GitCIV2PipelineService,
+    private val permissionService: GitCIV2PermissionService
 ) : UserGitCITriggerResource {
     companion object {
         private val logger = LoggerFactory.getLogger(UserGitCITriggerResourceImpl::class.java)
@@ -59,6 +61,7 @@ class UserGitCITriggerResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         val gitProjectId = GitCommonUtils.getGitProjectId(triggerBuildReq.projectId)
         checkParam(userId, gitProjectId)
+        permissionService.checkGitCIPermission(userId, triggerBuildReq.projectId, AuthPermission.EXECUTE)
         val new = with(triggerBuildReq) {
             TriggerBuildReq(
                 gitProjectId = gitProjectId,

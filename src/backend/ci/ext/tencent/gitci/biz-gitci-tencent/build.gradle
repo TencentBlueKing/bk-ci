@@ -50,6 +50,10 @@ dependencies {
     compile project(":core:repository:api-repository")
 
     compile project(":ext:tencent:notify:api-notify-tencent")
+
+    compile project(":core:auth:api-auth")
+    compile project(":ext:tencent:common:common-auth:common-auth-tencent")
+
     compile "com.zaxxer:HikariCP"
     compile "mysql:mysql-connector-java"
     compile "org.apache.commons:commons-exec"

@@ -95,7 +95,7 @@ interface ServiceGitCiResource {
         @ApiParam(value = "pageSize", required = true)
         @QueryParam("pageSize")
         pageSize: Int = 20,
-        @ApiParam(value = "搜索用户关键字", required = true)
+        @ApiParam(value = "搜索用户关键字", required = false)
         @QueryParam("search")
         search: String?
     ): Result<List<GitMember>>
