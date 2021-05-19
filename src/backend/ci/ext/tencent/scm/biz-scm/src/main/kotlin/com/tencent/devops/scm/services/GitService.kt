@@ -563,26 +563,21 @@ class GitService @Autowired constructor(
     }
 
     fun gitCodeCreateFile(gitProjectId: String, token: String, gitCICreateFile: GitCICreateFile): Boolean {
-        logger.info("[$gitProjectId|$token] Start to create file")
-        val startEpoch = System.currentTimeMillis()
-        try {
-            val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/files?access_token=$token"
-            val request = Request.Builder()
-                .url(url)
-                .post(
-                    RequestBody.create(
-                        MediaType.parse("application/json;charset=utf-8"),
-                        JsonUtil.toJson(gitCICreateFile)
-                    )
+        val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/files?access_token=$token"
+        val request = Request.Builder()
+            .url(url)
+            .post(
+                RequestBody.create(
+                    MediaType.parse("application/json;charset=utf-8"),
+                    JsonUtil.toJson(gitCICreateFile)
                 )
-                .build()
-            OkhttpUtils.doHttp(request).use {
-                val data = it.body()!!.string()
-                if (!it.isSuccessful) throw RuntimeException("fail to create file: $data")
-                return true
-            }
-        } finally {
-            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to create file")
+            )
+            .build()
+        logger.info("url: $url request: $request Start to create file")
+        OkhttpUtils.doHttp(request).use {
+            val data = it.body()!!.string()
+            if (!it.isSuccessful) throw RuntimeException("fail to create file: $data")
+            return true
         }
     }
 
