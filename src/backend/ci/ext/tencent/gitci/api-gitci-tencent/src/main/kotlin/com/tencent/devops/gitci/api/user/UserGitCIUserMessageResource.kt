@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.gitci.pojo.v2.UserMessage
+import com.tencent.devops.gitci.pojo.v2.UserMessageRecord
 import com.tencent.devops.gitci.pojo.v2.UserMessageType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -71,7 +71,7 @@ interface UserGitCIUserMessageResource {
         @ApiParam(value = "每页数量")
         @QueryParam("pageSize")
         pageSize: Int?
-    ): Result<Page<Map<String, List<UserMessage>>>>
+    ): Result<Page<UserMessageRecord>>
 
     @ApiOperation("获取用户未读消息数量")
     @GET

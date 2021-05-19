@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.user.UserGitCIUserMessageResource
-import com.tencent.devops.gitci.pojo.v2.UserMessage
+import com.tencent.devops.gitci.pojo.v2.UserMessageRecord
 import com.tencent.devops.gitci.pojo.v2.UserMessageType
 import com.tencent.devops.gitci.v2.service.GitUserMessageService
 import org.springframework.beans.factory.annotation.Autowired
@@ -46,7 +46,7 @@ class UserGitCIUserMessageResourceImpl @Autowired constructor(
         haveRead: Boolean?,
         page: Int?,
         pageSize: Int?
-    ): Result<Page<Map<String, List<UserMessage>>>> {
+    ): Result<Page<UserMessageRecord>> {
         return Result(
             gitUserMessageService.getMessages(
                 userId = userId,
