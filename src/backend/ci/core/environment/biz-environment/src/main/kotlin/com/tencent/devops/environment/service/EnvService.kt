@@ -193,7 +193,7 @@ class EnvService @Autowired constructor(
                 desc = it.envDesc,
                 envType = if (it.envType == EnvType.TEST.name) EnvType.DEV.name else it.envType, // 兼容性代码
                 nodeCount = nodeCountMap[it.envId] ?: 0,
-                envVars = jacksonObjectMapper().readValue(it.envVars) ?: emptyList(),
+                envVars = jacksonObjectMapper().readValue(it.envVars),
                 createdUser = it.createdUser,
                 createdTime = it.createdTime.timestamp(),
                 updatedUser = it.updatedUser,
