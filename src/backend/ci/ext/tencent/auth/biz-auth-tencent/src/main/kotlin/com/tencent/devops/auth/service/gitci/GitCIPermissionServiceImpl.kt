@@ -33,7 +33,7 @@ class GitCIPermissionServiceImpl @Autowired constructor(
             }
         }
         logger.info("GitCICertPermissionServiceImpl user:$userId projectId: $projectCode")
-        return client.get(ServiceGitCiResource::class).checkUserGitAuth(userId, projectCode).data ?: false
+        return client.getScm(ServiceGitCiResource::class).checkUserGitAuth(userId, projectCode).data ?: false
     }
 
     override fun validateUserResourcePermissionByRelation(
