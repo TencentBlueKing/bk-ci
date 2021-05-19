@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.ci.CiBuildConfig
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
@@ -98,6 +99,20 @@ import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.gitci.utils.GitCIParameterUtils
 import com.tencent.devops.gitci.utils.GitCIPipelineUtils
 import com.tencent.devops.gitci.utils.GitCommonUtils
+import com.tencent.devops.gitci.v2.common.CommonVariables.CI_ACTOR
+import com.tencent.devops.gitci.v2.common.CommonVariables.CI_BASE_BRANCH
+import com.tencent.devops.gitci.v2.common.CommonVariables.CI_BUILD_URL
+import com.tencent.devops.gitci.v2.common.CommonVariables.CI_COMMIT_MESSAGE
+import com.tencent.devops.gitci.v2.common.CommonVariables.CI_EVENT
+import com.tencent.devops.gitci.v2.common.CommonVariables.CI_EVENT_CONTENT
+import com.tencent.devops.gitci.v2.common.CommonVariables.CI_HEAD_BRANCH
+import com.tencent.devops.gitci.v2.common.CommonVariables.CI_PIPELINE_NAME
+import com.tencent.devops.gitci.v2.common.CommonVariables.CI_REF
+import com.tencent.devops.gitci.v2.common.CommonVariables.CI_REPO
+import com.tencent.devops.gitci.v2.common.CommonVariables.CI_REPO_GROUP
+import com.tencent.devops.gitci.v2.common.CommonVariables.CI_REPO_NAME
+import com.tencent.devops.gitci.v2.common.CommonVariables.CI_SHA
+import com.tencent.devops.gitci.v2.common.CommonVariables.CI_SHA_SHORT
 import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.user.UserPipelineGroupResource
@@ -755,18 +770,20 @@ class TriggerBuildService @Autowired constructor(
         val startParams = mutableMapOf<String, String>()
 
         // 通用参数
+        startParams[CI_PIPELINE_NAME] = yaml.name ?: ""
+        startParams[CI_BUILD_URL] = "https://git-ci.woa.com/" // FIXME
         startParams[BK_CI_RUN] = "true"
-        startParams[BK_CI_REPO_OWNER] = GitCommonUtils.getRepoOwner(gitBasicSetting.gitHttpUrl)
-        startParams[BK_CI_REPOSITORY] =
-            GitCommonUtils.getRepoOwner(gitBasicSetting.gitHttpUrl) + "/" + gitBasicSetting.name
-        startParams[BK_REPO_GIT_WEBHOOK_EVENT_TYPE] = event.objectKind
-        startParams[BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_BRANCH] = event.branch
-        startParams[BK_REPO_GIT_WEBHOOK_COMMIT_ID] = event.commitId
-        startParams[BK_REPO_WEBHOOK_REPO_NAME] = gitBasicSetting.name
-        startParams[BK_REPO_WEBHOOK_REPO_URL] = gitBasicSetting.url
-        startParams[BK_REPO_GIT_WEBHOOK_COMMIT_MESSAGE] = event.commitMsg.toString()
-        if (!event.commitId.isBlank() && event.commitId.length >= 8)
-            startParams[BK_REPO_GIT_WEBHOOK_COMMIT_ID_SHORT] = event.commitId.substring(0, 8)
+        startParams[CI_ACTOR] = event.userId
+        startParams[CI_REPO] = GitCommonUtils.getRepoOwner(gitBasicSetting.gitHttpUrl) + "/" + gitBasicSetting.name
+        startParams[CI_REPO_NAME] = gitBasicSetting.name
+        startParams[CI_REPO_GROUP] = ""
+        startParams[CI_EVENT] = event.event
+        startParams[CI_EVENT_CONTENT] = JsonUtil.toJson(event)
+        startParams[CI_COMMIT_MESSAGE] = event.commitMsg ?: ""
+        startParams[CI_SHA] = event.commitId
+        if (!event.commitId.isBlank() && event.commitId.length >= 8) {
+            startParams[CI_SHA_SHORT] = event.commitId.substring(0, 8)
+        }
 
         // 写入WEBHOOK触发环境变量
         val originEvent = try {
@@ -776,50 +793,32 @@ class TriggerBuildService @Autowired constructor(
             logger.warn("Fail to parse the git web hook commit event, errMsg: ${e.message}")
         }
 
-        when (originEvent) {
+        val gitProjectName = when (originEvent) {
             is GitPushEvent -> {
-                startParams[BK_CI_REF] = originEvent.ref
-                addContext(yaml, originEvent, startParams, event)
-
-//                startParams[BK_REPO_GIT_WEBHOOK_PUSH_BEFORE_COMMIT] = originEvent.before
-//                startParams[BK_REPO_GIT_WEBHOOK_PUSH_AFTER_COMMIT] = originEvent.after
-//                startParams[BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT] = originEvent.total_commits_count.toString()
-//                startParams[BK_REPO_GIT_WEBHOOK_PUSH_OPERATION_KIND] = originEvent.operation_kind
+                startParams[CI_REF] = originEvent.ref
+                GitUtils.getProjectName(originEvent.repository.git_http_url)
             }
             is GitTagPushEvent -> {
-                startParams[BK_CI_REF] = originEvent.ref
-                addContext(yaml, originEvent, startParams, event)
-
-//                startParams[BK_REPO_GIT_WEBHOOK_TAG_NAME] = event.branch
-//                startParams[BK_REPO_GIT_WEBHOOK_TAG_OPERATION] = originEvent.operation_kind ?: ""
-//                startParams[BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT] = originEvent.total_commits_count.toString()
-//                startParams[BK_REPO_GIT_WEBHOOK_TAG_USERNAME] = event.userId
-//                startParams[BK_REPO_GIT_WEBHOOK_TAG_CREATE_FROM] = originEvent.create_from.toString()
+                startParams[CI_REF] = originEvent.ref
+                GitUtils.getProjectName(originEvent.repository.git_http_url)
             }
             is GitMergeRequestEvent -> {
-//                startParams[BK_REPO_GIT_WEBHOOK_MR_ACTION] = originEvent.object_attributes.action
-//                startParams[BK_REPO_GIT_WEBHOOK_MR_AUTHOR] = originEvent.user.username
-                startParams[BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH] = originEvent.object_attributes.target_branch
-                startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH] = originEvent.object_attributes.source_branch
-                startParams[BK_REPO_GIT_WEBHOOK_MR_TARGET_URL] = originEvent.object_attributes.target.http_url
-                startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_URL] = originEvent.object_attributes.source.http_url
-//                startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIME] = originEvent.object_attributes.created_at
-//                startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIMESTAMP] =
-//                    DateTimeUtil.zoneDateToTimestamp(originEvent.object_attributes.created_at).toString()
-//                startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME] = originEvent.object_attributes.updated_at
-//                startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP] =
-//                    DateTimeUtil.zoneDateToTimestamp(originEvent.object_attributes.updated_at).toString()
-                startParams[BK_REPO_GIT_WEBHOOK_MR_ID] = originEvent.object_attributes.id.toString()
-//                startParams[BK_REPO_GIT_WEBHOOK_MR_TITLE] = originEvent.object_attributes.title
-                startParams[BK_REPO_GIT_WEBHOOK_MR_URL] = originEvent.object_attributes.url
-//                startParams[BK_REPO_GIT_WEBHOOK_MR_NUMBER] = originEvent.object_attributes.id.toString()
-//                startParams[BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION] = originEvent.object_attributes.description
-//                startParams[BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE] = originEvent.object_attributes.assignee_id.toString()
-                startParams[BK_REPO_GIT_WEBHOOK_MR_IID] = originEvent.object_attributes.iid.toString()
-
-                addContext(yaml, originEvent, startParams, event)
+                startParams[CI_HEAD_BRANCH] = originEvent.object_attributes.target_branch
+                startParams[CI_BASE_BRANCH] = originEvent.object_attributes.source_branch
+                GitUtils.getProjectName(originEvent.object_attributes.source.http_url)
+            } else -> {
+                ""
             }
         }
+
+        startParams[CI_REPO] = gitProjectName
+        val repoName = gitProjectName.split("/")
+        startParams[CI_REPO_NAME] = if (repoName.size >= 2) {
+            gitProjectName.removePrefix(repoName[0] + "/")
+        } else {
+            gitProjectName
+        }
+        startParams[CI_REPO_GROUP] = repoName[0]
 
         // 用户自定义变量
         // startParams.putAll(yaml.variables ?: mapOf())
@@ -903,15 +902,20 @@ class TriggerBuildService @Autowired constructor(
         }
         yaml.variables!!.forEach { (key, variable) ->
             startParams[VARIABLE_PREFIX + key] =
-                variable.copy(value = formatVariablesValue(variable.value, gitBasicSetting)).toString()
+                variable.copy(value = formatVariablesValue(variable.value, gitBasicSetting, startParams)).toString()
         }
     }
 
-    private fun formatVariablesValue(value: String?, gitBasicSetting: GitCIBasicSetting): String? {
+    private fun formatVariablesValue(
+        value: String?,
+        gitBasicSetting: GitCIBasicSetting,
+        startParams: MutableMap<String, String>
+    ): String? {
         if (value == null || value.isEmpty()) {
             return ""
         }
         val settingMap = mutableMapOf<String, String>()
+        settingMap.putAll(startParams)
         return ScriptYmlUtils.parseVariableValue(value, settingMap)
     }
 
