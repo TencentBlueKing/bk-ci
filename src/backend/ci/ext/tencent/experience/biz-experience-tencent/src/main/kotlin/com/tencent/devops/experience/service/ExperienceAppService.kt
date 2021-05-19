@@ -118,7 +118,7 @@ class ExperienceAppService(
         if (!isOldVersion && !isPublic && !isInPrivate) {
             throw ErrorCodeException(
                 statusCode = 403,
-                defaultMessage = "暂无体验权限。 请联系产品负责人 ${experience.creator} 授予体验权限。",
+                defaultMessage = "请联系产品负责人 ${experience.creator} 授予体验权限。",
                 errorCode = ExperienceMessageCode.EXPERIENCE_NEED_PERMISSION
             )
         }
