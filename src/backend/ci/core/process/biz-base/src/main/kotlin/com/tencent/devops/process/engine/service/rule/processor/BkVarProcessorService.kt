@@ -25,16 +25,28 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.setting
+package com.tencent.devops.process.engine.service.rule.processor
 
-import com.tencent.devops.common.pipeline.Model
-import io.swagger.annotations.ApiModelProperty
-import javax.validation.Valid
+import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
+import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-data class PipelineModelAndSetting(
-    @ApiModelProperty("流水线模型", required = true)
-    val model: Model,
-    @ApiModelProperty("流水线设置", required = false)
-    @field:Valid
-    val setting: PipelineSetting
-)
+@Service("BkVarProcessor")
+class BkVarProcessorService : ProcessorService {
+
+    @Autowired
+    private lateinit var dslContext: DSLContext
+
+    @Autowired
+    private lateinit var pipelineBuildVarDao: PipelineBuildVarDao
+
+    override fun getRuleValue(ruleName: String, pipelineId: String?, buildId: String?): String? {
+        return if (buildId != null) {
+            val varMap = pipelineBuildVarDao.getVars(dslContext, buildId, ruleName)
+            varMap[ruleName]
+        } else {
+            null
+        }
+    }
+}

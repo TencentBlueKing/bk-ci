@@ -45,6 +45,7 @@ import com.tencent.devops.project.pojo.OpGrayProject
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.SystemEnums
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.service.OpProjectService
 import org.jooq.DSLContext
@@ -76,9 +77,11 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
         for (item in projectCodeList) {
             if (1 == operateFlag) {
                 gray.addGrayProject(item, redisOperation) // 添加项目为灰度项目
+                setGrayExt(projectCodeList, operateFlag, SystemEnums.CI)
 //                redisOperation.addSetValue(gray.getGrayRedisKey(), item) // 添加项目为灰度项目
             } else if (2 == operateFlag) {
                 gray.removeGrayProject(item, redisOperation) // 取消项目为灰度项目
+                setGrayExt(projectCodeList, operateFlag, SystemEnums.CI)
 //                redisOperation.removeSetMember(gray.getGrayRedisKey(), item) // 取消项目为灰度项目
             }
         }
@@ -93,8 +96,10 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
         for (item in projectCodeList) {
             if (1 == operateFlag) {
                 gray.addCodeCCGrayProject(item, redisOperation) // 添加项目为灰度项目
+                setGrayExt(projectCodeList, operateFlag, SystemEnums.CODECC)
             } else if (2 == operateFlag) {
                 gray.removeCodeCCGrayProject(item, redisOperation) // 取消项目为灰度项目
+                setGrayExt(projectCodeList, operateFlag, SystemEnums.CODECC)
             }
         }
         val projectCodeSet = grayProjectSet()
@@ -461,6 +466,8 @@ abstract class AbsOpProjectServiceImpl @Autowired constructor(
             pipelineLimit = projectData.pipelineLimit
         )
     }
+
+    abstract fun setGrayExt(projectCodeList: List<String>, operateFlag: Int, system: SystemEnums)
 
     companion object {
         val logger = LoggerFactory.getLogger(this::class.java)!!
