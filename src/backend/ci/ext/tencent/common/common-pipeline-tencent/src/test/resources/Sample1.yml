@@ -69,7 +69,8 @@ variables:
 stages:
   - name: "stage1"
     id: abc
-    label: ${{ varivable.approve }}
+    label:
+      - ${{ varivable.approve }}
     if: envs.BK_CI_EVENT == 'push' || varivable.approve
     jobs:
       job_id_1:
