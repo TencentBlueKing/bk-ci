@@ -133,4 +133,8 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
         )
         return objectMapper.readValue(responseContent)
     }
+
+    override fun getCiToken(): String {
+        return ""
+    }
 }

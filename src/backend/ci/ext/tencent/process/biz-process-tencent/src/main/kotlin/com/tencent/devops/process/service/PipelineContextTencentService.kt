@@ -27,19 +27,49 @@
 
 package com.tencent.devops.process.service
 
-import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.engine.service.PipelineBuildExtService
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.process.engine.service.PipelineBuildDetailService
+import com.tencent.devops.scm.api.ServiceGitCiResource
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
 @Suppress("ALL")
-class PipelineBuildExtServiceImpl@Autowired constructor(
-    private val pipelineContextService: PipelineContextService
-) : PipelineBuildExtService {
-    override fun buildExt(task: PipelineBuildTask, variable: Map<String, String>): Map<String, String> {
-        return pipelineContextService.buildContext(task.buildId, task.containerId, variable)
+@Service
+class PipelineContextTencentService@Autowired constructor(
+    pipelineBuildDetailService: PipelineBuildDetailService,
+    private val client: Client
+): PipelineContextService(pipelineBuildDetailService) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PipelineContextTencentService::class.java)
     }
 
-    override fun endBuild(task: PipelineBuildTask) {
-        return
+    fun getGitToken(
+        projectId: String,
+        buildId: String,
+        containerId: String
+    ): String {
+        return if (projectId.startsWith("git_")) {
+            val gitToken = try {
+                val gitProjectId = projectId.removePrefix("git_")
+                val accessToken = client.getScm(ServiceGitCiResource::class).getToken(gitProjectId).data!!.accessToken
+                logger.info("get token from scm success, token: $accessToken")
+                accessToken
+            } catch (e: Exception) {
+                logger.error("get token from scm exception:", e)
+                ""
+            }
+
+            gitToken
+        } else ""
+    }
+
+    fun deleteGitToken(token: String) {
+        try {
+            client.getScm(ServiceGitCiResource::class).clearToken(token)
+        } catch (e: Exception) {
+            logger.warn("Delete git token($token) failed, msg: ${e.message}")
+        }
     }
 }
