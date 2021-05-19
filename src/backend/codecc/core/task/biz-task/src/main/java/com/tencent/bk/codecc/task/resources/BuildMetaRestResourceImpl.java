@@ -28,9 +28,11 @@ package com.tencent.bk.codecc.task.resources;
 
 import com.tencent.bk.codecc.task.api.BuildMetaRestResource;
 import com.tencent.bk.codecc.task.service.MetaService;
+import com.tencent.bk.codecc.task.service.ToolMetaService;
 import com.tencent.bk.codecc.task.vo.MetadataVO;
 import com.tencent.devops.common.api.ToolMetaBaseVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.web.RestResource;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -49,15 +51,32 @@ public class BuildMetaRestResourceImpl implements BuildMetaRestResource
     @Autowired
     private MetaService metaService;
 
+    @Autowired
+    private ToolMetaService toolMetaService;
+
     @Override
-    public CodeCCResult<List<ToolMetaBaseVO>> toolList(Boolean isDetail)
+    public Result<List<ToolMetaBaseVO>> toolList(Boolean isDetail)
     {
-        return new CodeCCResult<>(metaService.toolList(isDetail));
+        return new Result<>(metaService.toolList(isDetail));
     }
 
     @Override
-    public CodeCCResult<Map<String, List<MetadataVO>>> metadatas(String metadataType)
+    public Result<Map<String, List<MetadataVO>>> metadatas(String metadataType)
     {
-        return new CodeCCResult<>(metaService.queryMetadatas(metadataType));
+        return new Result<>(metaService.queryMetadatas(metadataType));
+    }
+
+    @Override
+    public Result<String> updateToolIntegratedToStatus(String username,
+                                                       String toolName,
+                                                       ComConstants.ToolIntegratedStatus status) {
+        return new Result<>(toolMetaService.updateToolMetaToStatus(toolName, status, username));
+    }
+
+    @Override
+    public Result<String> revertToolIntegratedStatus(String username,
+                                                     String toolName,
+                                                     ComConstants.ToolIntegratedStatus status) {
+        return new Result<>(toolMetaService.revertToolMetaStatus(toolName, status, username));
     }
 }

@@ -30,7 +30,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.netflix.client.ClientException
 import com.tencent.devops.common.api.exception.CodeCCException
-import com.tencent.devops.common.api.pojo.CodeCCResult
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.constant.CommonMessageCode.SYSTEM_ERROR
 import feign.Response
 import feign.codec.ErrorDecoder
@@ -53,17 +53,17 @@ class ClientErrorDecoder @Autowired constructor(val objectMapper: ObjectMapper) 
     override fun decode(methodKey: String, response: Response): Exception {
         // 首先判断返回结果是否能被序列化
         val responseStream = response.body().asInputStream()
-        val codeCCResult: CodeCCResult<*>
+        val result: Result<*>
         try {
-            codeCCResult = objectMapper.readValue(responseStream)
+            result = objectMapper.readValue(responseStream)
         } catch (e: IOException) {
             return ClientException("内部服务返回结果无法解析")
         }
-        logger.info("interface client launch decoding fail! result: $codeCCResult, $methodKey")
+        logger.info("interface client launch decoding fail! result: $result, $methodKey")
         return CodeCCException(
                 errorCode = SYSTEM_ERROR,
                 params = emptyArray(),
-                defaultMessage = codeCCResult.message ?: "",
+                defaultMessage = result.message ?: "",
                 errorCause = null)
     }
 

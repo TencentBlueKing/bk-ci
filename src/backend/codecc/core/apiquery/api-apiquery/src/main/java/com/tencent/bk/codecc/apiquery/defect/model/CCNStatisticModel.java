@@ -27,10 +27,9 @@
 package com.tencent.bk.codecc.apiquery.defect.model;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.List;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
-
-import java.util.List;
 
 /**
  * 每次分析结束的统计数据
@@ -97,9 +96,46 @@ public class CCNStatisticModel extends StatisticModel
     @JsonProperty("ccn_beyond_threshold_sum")
     private Integer ccnBeyondThresholdSum;
 
+    @JsonProperty("high_fixed_count")
+    private long highFixedCount;
+
+    @JsonProperty("super_high_fixed_count")
+    private long superHighFixedCount;
+
+    @JsonProperty("middle_fixed_count")
+    private long middleFixedCount;
+
+    @JsonProperty("low_fixed_count")
+    private long lowFixedCount;
+
+    @JsonProperty("high_ignore_count")
+    private long highIgnoreCount;
+
+    @JsonProperty("super_high_ignore_count")
+    private long superHighIgnoreCount;
+
+    @JsonProperty("middle_ignore_count")
+    private long middleIgnoreCount;
+
+    @JsonProperty("low_ignore_count")
+    private long lowIgnoreCount;
+
+    @JsonProperty("high_mask_count")
+    private long highMaskCount;
+
+    @JsonProperty("super_high_mask_count")
+    private long superHighMaskCount;
+
+    @JsonProperty("middle_mask_count")
+    private long middleMaskCount;
+
+    @JsonProperty("low_mask_count")
+    private long lowMaskCount;
+
     /**
      * 5日圈复杂度趋势图
      */
     @JsonProperty("average_list")
     private List<ChartAverageModel> averageList;
+
 }

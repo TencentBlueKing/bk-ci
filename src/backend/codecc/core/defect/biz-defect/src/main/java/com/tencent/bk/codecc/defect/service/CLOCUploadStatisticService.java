@@ -14,7 +14,7 @@ package com.tencent.bk.codecc.defect.service;
 
 import com.tencent.bk.codecc.defect.model.CLOCDefectEntity;
 import com.tencent.bk.codecc.defect.vo.UploadCLOCStatisticVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.constant.CommonMessageCode;
 
 import java.util.List;
@@ -29,9 +29,9 @@ import java.util.Map;
 @Deprecated
 public interface CLOCUploadStatisticService
 {
-    CodeCCResult uploadStatistic(UploadCLOCStatisticVO uploadCLOCStatisticVO);
+    Result uploadStatistic(UploadCLOCStatisticVO uploadCLOCStatisticVO);
 
-    CodeCCResult<CommonMessageCode> uploadNewStatistic(UploadCLOCStatisticVO uploadCLOCStatisticVO,
+    Result<CommonMessageCode> uploadNewStatistic(UploadCLOCStatisticVO uploadCLOCStatisticVO,
             Map<String, List<CLOCDefectEntity>> clocLanguageMap,
             String buildId,
             String streamName);

@@ -34,7 +34,16 @@ public interface CLOCDefectRepository extends MongoRepository<CLOCDefectEntity, 
      * @param taskId
      * @return
      */
+    @Deprecated
     List<CLOCDefectEntity> findByTaskId(long taskId);
+
+    /**
+     * 查询该任务的CLOC信息
+     *
+     * @param taskId
+     * @return
+     */
+    List<CLOCDefectEntity> findByTaskIdAndToolNameIn(long taskId, List<String> toolName);
 
     /**
      * 批量查询任务的CLOC信息
@@ -42,6 +51,7 @@ public interface CLOCDefectRepository extends MongoRepository<CLOCDefectEntity, 
      * @param taskIdSet 任务ID集合
      * @return list
      */
+    @Deprecated
     List<CLOCDefectEntity> findByTaskIdIn(Collection<Long> taskIdSet);
 
     /**
@@ -49,6 +59,6 @@ public interface CLOCDefectRepository extends MongoRepository<CLOCDefectEntity, 
      *
      *
      */
-    List<CLOCDefectEntity> findByTaskIdAndStatusIsNot(Long taskId, String status);
+    List<CLOCDefectEntity> findByTaskIdAndToolNameInAndStatusIsNot(Long taskId, List<String> toolName, String status);
 
 }
