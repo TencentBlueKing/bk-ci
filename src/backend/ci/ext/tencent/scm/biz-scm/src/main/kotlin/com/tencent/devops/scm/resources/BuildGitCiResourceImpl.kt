@@ -25,33 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.scm.pojo
+package com.tencent.devops.scm.resources
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.scm.api.BuildGitCiResource
+import com.tencent.devops.scm.services.GitService
+import org.springframework.beans.factory.annotation.Autowired
 
-@ApiModel("工蜂CI查询代码库项目信息")
-data class GitCIProjectInfo(
-    @ApiModelProperty("项目ID")
-    @JsonProperty("id")
-    val gitProjectId: Int,
-    @ApiModelProperty("项目名称")
-    @JsonProperty("name")
-    val name: String,
-    @ApiModelProperty("页面地址")
-    @JsonProperty("web_url")
-    val homepage: String?,
-    @ApiModelProperty("HTTP链接", required = true)
-    @JsonProperty("http_url_to_repo")
-    val gitHttpUrl: String,
-    @ApiModelProperty("HTTPS链接")
-    @JsonProperty("https_url_to_repo")
-    val gitHttpsUrl: String?,
-    @ApiModelProperty("gitSshUrl")
-    @JsonProperty("ssh_url_to_repo")
-    val gitSshUrl: String?,
-    @ApiModelProperty("带有所有者的项目名称")
-    @JsonProperty("name_with_namespace")
-    val pathWithNamespace: String
-)
+@RestResource
+class BuildGitCiResourceImpl @Autowired constructor(
+    private val gitService: GitService
+) : BuildGitCiResource {
+
+    override fun getToken(gitProjectId: String): Result<GitToken> {
+        return Result(gitService.getToken(gitProjectId))
+    }
+
+    override fun clearToken(token: String): Result<Boolean> {
+        return Result(gitService.clearToken(token))
+    }
+}
