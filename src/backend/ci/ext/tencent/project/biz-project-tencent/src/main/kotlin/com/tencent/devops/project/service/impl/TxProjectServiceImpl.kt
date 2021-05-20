@@ -111,7 +111,7 @@ class TxProjectServiceImpl @Autowired constructor(
             return projectVO
         }
 
-        val projectAuthIds = getProjectFromAuth("", accessToken)
+        val projectAuthIds = getProjectFromAuth(userId, accessToken)
         if (projectAuthIds == null || projectAuthIds.isEmpty()) {
             return null
         }
