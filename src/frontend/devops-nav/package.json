@@ -73,7 +73,7 @@
     "@icon-cool/bk-icon-devops": "^0.1.13",
     "@types/js-cookie": "^2.1.0",
     "@types/webpack-env": "^1.15.2",
-    "axios": "^0.18.0",
+    "axios": "^0.21.1",
     "bk-magic-vue": "2.2.8",
     "bluebird": "^3.5.1",
     "js-cookie": "^2.2.0",
