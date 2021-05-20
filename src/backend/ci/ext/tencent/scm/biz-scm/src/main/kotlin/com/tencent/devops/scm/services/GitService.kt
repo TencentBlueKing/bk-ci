@@ -60,7 +60,6 @@ import com.tencent.devops.scm.code.git.CodeGitOauthCredentialSetter
 import com.tencent.devops.scm.code.git.CodeGitUsernameCredentialSetter
 import com.tencent.devops.scm.code.git.api.GitBranch
 import com.tencent.devops.scm.code.git.api.GitBranchCommit
-import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.code.git.api.GitOauthApi
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.code.git.api.GitTagCommit
@@ -74,6 +73,7 @@ import com.tencent.devops.scm.pojo.GitCIFileCommit
 import com.tencent.devops.scm.pojo.GitCIMrInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.OwnerInfo
@@ -94,7 +94,7 @@ import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.file.Files
 import java.time.LocalDateTime
-import java.util.Base64
+import java.util.*
 import java.util.concurrent.Executors
 import javax.servlet.http.HttpServletResponse
 
@@ -1115,7 +1115,11 @@ class GitService @Autowired constructor(
     ): Result<GitCIProjectInfo?> {
         logger.info("[gitProjectId=$gitProjectId]|getGitCIProjectInfo")
         val encodeId = URLEncoder.encode(gitProjectId, "utf-8") // 如果id为NAMESPACE_PATH则需要encode
-        val str = "$gitCIUrl/api/v3/projects/$encodeId?" + if (useAccessToken) { "access_token=$token" } else { "private_token=$token" }
+        val str = "$gitCIUrl/api/v3/projects/$encodeId?" + if (useAccessToken) {
+            "access_token=$token"
+        } else {
+            "private_token=$token"
+        }
         val url = StringBuilder(str)
         val request = Request.Builder()
             .url(url.toString())
