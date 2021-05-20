@@ -167,7 +167,7 @@ class ExperienceOuterService @Autowired constructor(
         val redisKey = "e:o:l:single:$username"
         val oldToken = redisOperation.getAndSet(redisKey, token, expireSecs + 300)
         if (null != oldToken) {
-            redisOperation.delete(tokenRedisKey(token))
+            redisOperation.delete(tokenRedisKey(oldToken))
         }
     }
 
