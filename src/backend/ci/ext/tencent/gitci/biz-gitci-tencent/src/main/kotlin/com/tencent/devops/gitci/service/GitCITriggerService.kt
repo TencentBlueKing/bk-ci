@@ -44,6 +44,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.ci.v2.utils.YamlCommonUtils
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.gitci.dao.GitCIServicesConfDao
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
@@ -172,7 +173,8 @@ class GitCITriggerService @Autowired constructor(
                 objectKind = gitRequestEvent.objectKind,
                 description = triggerBuildReq.customCommitMsg,
                 triggerUser = gitRequestEvent.userId,
-                sourceGitProjectId = gitRequestEvent.sourceGitProjectId
+                sourceGitProjectId = gitRequestEvent.sourceGitProjectId,
+                buildStatus = BuildStatus.RUNNING
             )
             dispatchEvent(
                 GitCIRequestTriggerEvent(
@@ -210,7 +212,8 @@ class GitCITriggerService @Autowired constructor(
                 objectKind = gitRequestEvent.objectKind,
                 description = triggerBuildReq.customCommitMsg,
                 triggerUser = gitRequestEvent.userId,
-                sourceGitProjectId = gitRequestEvent.sourceGitProjectId
+                sourceGitProjectId = gitRequestEvent.sourceGitProjectId,
+                buildStatus = BuildStatus.RUNNING
             )
             V2GitCIRequestDispatcher.dispatch(
                 rabbitTemplate,

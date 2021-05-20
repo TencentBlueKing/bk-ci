@@ -29,6 +29,7 @@ package com.tencent.devops.gitci.listener
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -93,7 +94,8 @@ class V2GitCIBuildQueueListener @Autowired constructor(
                 description = description,
                 sourceGitProjectId = sourceGitProjectId,
                 pipelineId = buildQueueEvent.pipelineId,
-                buildId = buildQueueEvent.buildId
+                buildId = buildQueueEvent.buildId,
+                buildStatus = BuildStatus.RUNNING
             )
         }
     }

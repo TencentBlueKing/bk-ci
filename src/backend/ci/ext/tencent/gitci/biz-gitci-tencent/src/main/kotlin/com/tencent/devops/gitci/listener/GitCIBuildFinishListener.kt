@@ -243,6 +243,12 @@ class GitCIBuildFinishListener @Autowired constructor(
                         build = buildInfo.first()
                     )
                 }
+                // 更新流水线执行状态
+                gitRequestEventBuildDao.updateBuildStatusById(
+                    dslContext = dslContext,
+                    id = record["ID"] as Long,
+                    buildStatus = buildStatus
+                )
             }
         } catch (e: Throwable) {
             logger.error("Fail to push commit check build(${buildFinishEvent.buildId})", e)

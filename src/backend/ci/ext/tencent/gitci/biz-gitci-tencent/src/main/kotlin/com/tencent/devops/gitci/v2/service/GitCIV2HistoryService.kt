@@ -29,6 +29,7 @@ package com.tencent.devops.gitci.v2.service
 
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -71,7 +72,7 @@ class GitCIV2HistoryService @Autowired constructor(
     ): Page<GitCIBuildHistory> {
         logger.info("get history build list, gitProjectId: $gitProjectId")
         val pageNotNull = search?.page ?: 1
-        val pageSizeNotNull = search?.pageSize ?: 20
+        val pageSizeNotNull = search?.pageSize ?: 10
         val conf = gitCIBasicSettingDao.getSetting(dslContext, gitProjectId)
         if (conf == null) {
             gitCIBasicSettingService.initGitCISetting(userId, gitProjectId)
@@ -82,6 +83,26 @@ class GitCIV2HistoryService @Autowired constructor(
                 records = emptyList()
             )
         }
+        val totalPage = gitRequestEventBuildDao.getRequestEventBuildListMultipleCount(
+            dslContext = dslContext,
+            gitProjectId = gitProjectId,
+            branchName = search?.branch,
+            sourceGitProjectId = search?.sourceGitProjectId,
+            triggerUser = search?.triggerUser,
+            pipelineId = search?.pipelineId,
+            event = search?.event?.map { it.value }?.toSet(),
+            commitMsg = search?.commitMsg,
+            buildStatus = search?.status?.map { it.name }?.toSet()
+        )
+        if (totalPage == 0){
+            return Page(
+                page = pageNotNull,
+                pageSize = pageSizeNotNull,
+                count = 0,
+                records = emptyList()
+            )
+        }
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page = pageNotNull, pageSize = pageSizeNotNull)
         val gitRequestBuildList = gitRequestEventBuildDao.getRequestEventBuildListMultiple(
             dslContext = dslContext,
             gitProjectId = gitProjectId,
@@ -89,7 +110,11 @@ class GitCIV2HistoryService @Autowired constructor(
             sourceGitProjectId = search?.sourceGitProjectId,
             triggerUser = search?.triggerUser,
             pipelineId = search?.pipelineId,
-            event = search?.event?.map { it.value }?.toSet()
+            event = search?.event?.map { it.value }?.toSet(),
+            commitMsg = search?.commitMsg,
+            buildStatus = search?.status?.map { it.name }?.toSet(),
+            limit = sqlLimit.limit,
+            offset = sqlLimit.offset
         )
         val builds = gitRequestBuildList.map { it.buildId }.toSet()
         logger.info("get history build list, build ids: $builds")
@@ -104,20 +129,13 @@ class GitCIV2HistoryService @Autowired constructor(
                 records = emptyList()
             )
         }
-        val firstIndex = (pageNotNull - 1) * pageSizeNotNull
-        val lastIndex = if (pageNotNull * pageSizeNotNull > gitRequestBuildList.size) {
-            gitRequestBuildList.size
-        } else {
-            pageNotNull * pageSizeNotNull
-        }
         val records = mutableListOf<GitCIBuildHistory>()
-        gitRequestBuildList.subList(firstIndex, lastIndex).forEach {
+        gitRequestBuildList.forEach {
             val buildHistory = getBuildHistory(
                 buildId = it.buildId,
-                buildHistoryList = buildHistoryList,
-                status = search?.status
+                buildHistoryList = buildHistoryList
             ) ?: return@forEach
-            val gitRequestEvent = gitRequestEventDao.get(dslContext, it.eventId, search?.commitMsg) ?: return@forEach
+            val gitRequestEvent = gitRequestEventDao.get(dslContext = dslContext, id = it.eventId) ?: return@forEach
             // 如果是来自fork库的分支，单独标识
             val realEvent = GitCommonUtils.checkAndGetForkBranch(gitRequestEvent, client)
             val pipeline =
@@ -134,7 +152,7 @@ class GitCIV2HistoryService @Autowired constructor(
         return Page(
             page = pageNotNull,
             pageSize = pageSizeNotNull,
-            count = records.size.toLong(),
+            count = totalPage.toLong(),
             records = records
         )
     }
@@ -199,18 +217,11 @@ class GitCIV2HistoryService @Autowired constructor(
 
     private fun getBuildHistory(
         buildId: String,
-        buildHistoryList: List<BuildHistory>,
-        status: Set<BuildStatus>?
+        buildHistoryList: List<BuildHistory>
     ): BuildHistory? {
-        val statusList = status?.map { it.name }?.toSet()
         buildHistoryList.forEach { build ->
             if (build.id != buildId) {
                 return@forEach
-            }
-            if (!status.isNullOrEmpty()) {
-                if (!statusList?.contains(build.status)!!) {
-                    return@forEach
-                }
             }
             return build
         }
