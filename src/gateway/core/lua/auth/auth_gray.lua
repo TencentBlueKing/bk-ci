@@ -29,7 +29,7 @@ if isGray or tag == "gray" then
     ngx.var.static_dir_codecc = config.static_dir_codecc_gray
     ngx.header["X-DEVOPS-GRAY"] = "true"
     ngx.header["X-DEVOPS-GRAY-DIR"] = "gray"
-elseif tag=='gitci' then
+elseif string.len(tag) >= 5 and string.sub(tag, -5) == 'gitci' then
     ngx.var.static_dir = config.static_dir
     ngx.var.static_dir_codecc = config.static_dir_codecc
     ngx.header["X-DEVOPS-GRAY"] = "false"
