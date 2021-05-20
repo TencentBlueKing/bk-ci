@@ -87,7 +87,8 @@ class ExperienceOuterService @Autowired constructor(
                 email = profile.email
             )
             val token = DigestUtils.md5Hex(profile.username + profile.id + UUIDUtil.generate())
-            redisOperation.set(redisKey(token), JsonUtil.toJson(outerProfileVO), expireSecs)
+            redisOperation.set(tokenRedisKey(token), JsonUtil.toJson(outerProfileVO), expireSecs) // 设置token
+            singleTokenLogin(profile.username, token)
             return token
         } catch (e: ApiException) {
             logger.warn("login error", e)
@@ -108,7 +109,7 @@ class ExperienceOuterService @Autowired constructor(
 
     fun outerAuth(token: String): OuterProfileVO {
         // token过期
-        val profileStr = redisOperation.get(redisKey(token))
+        val profileStr = redisOperation.get(tokenRedisKey(token))
         if (StringUtils.isBlank(profileStr)) {
             logger.warn("get profile by token failed , token:{}", token)
             throw ErrorCodeException(
@@ -137,7 +138,7 @@ class ExperienceOuterService @Autowired constructor(
     }
 
     fun renewToken(token: String) {
-        redisOperation.expire(redisKey(token), expireSecs)
+        redisOperation.expire(tokenRedisKey(token), expireSecs)
     }
 
     fun outerList(projectId: String): List<String> {
@@ -159,6 +160,15 @@ class ExperienceOuterService @Autowired constructor(
             )
         }
         return redisOperation.isMember("e:out:l:black:ip", realIp)
+    }
+
+    // 一个账户只能占用一个token
+    private fun singleTokenLogin(username: String, token: String) {
+        val redisKey = "e:o:l:single:$username"
+        val oldToken = redisOperation.getAndSet(redisKey, token, expireSecs + 300)
+        if (null != oldToken) {
+            redisOperation.delete(tokenRedisKey(token))
+        }
     }
 
     private fun checkNormal(token: String, profileVO: OuterProfileVO) {
@@ -215,7 +225,7 @@ class ExperienceOuterService @Autowired constructor(
         return limit ?: 0 > 5 // 60s内只能登录5次
     }
 
-    private fun redisKey(token: String) = "e:out:l:$token"
+    private fun tokenRedisKey(token: String) = "e:out:l:$token"
     private fun logo() = "${HomeHostUtil.outerServerHost()}/app/download/devops_app.png"
 
     companion object {
