@@ -25,20 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.pojo
+package com.tencent.devops.gitci.pojo.v2
 
-import com.tencent.devops.process.pojo.pipeline.ModelDetail
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.gitci.pojo.enums.GitEventEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.QueryParam
 
-@ApiModel("工蜂构建详情模型")
-data class GitCIModelDetail(
-    @ApiModelProperty("工蜂CI流水线信息", required = true)
-    val gitProjectPipeline: GitProjectPipeline?,
-    @ApiModelProperty("工蜂Event事件", required = true)
-    val gitRequestEvent: GitRequestEvent,
-    @ApiModelProperty("构建详情-构建信息", required = true)
-    val modelDetail: ModelDetail,
-    @ApiModelProperty("构建历史-备注信息")
-    val buildHistoryRemark: String? = null
+@ApiModel("V2版本多选搜索过滤历史参数")
+data class GitCIBuildHistorySearch(
+    @ApiModelProperty("第几页", required = false)
+    val page: Int?,
+    @ApiModelProperty("每页多少条", required = false)
+    val pageSize: Int?,
+    @ApiModelProperty("分支", required = false)
+    val branch: Set<String>?,
+    @ApiModelProperty("fork库分支", required = false)
+    val sourceGitProjectId: Set<String>?,
+    @ApiModelProperty("触发人", required = false)
+    val triggerUser: Set<String>?,
+    @ApiModelProperty("流水线ID", required = false)
+    val pipelineId: String?,
+    @ApiModelProperty("Commit Msg", required = false)
+    val commitMsg: String?,
+    @ApiModelProperty("Event", required = false)
+    val event: Set<GitEventEnum>?,
+    @ApiModelProperty("构建状态", required = false)
+    val status: Set<BuildStatus>?
 )

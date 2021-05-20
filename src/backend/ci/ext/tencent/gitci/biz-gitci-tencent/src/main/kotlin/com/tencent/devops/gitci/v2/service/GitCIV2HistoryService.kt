@@ -37,7 +37,7 @@ import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventDao
 import com.tencent.devops.gitci.pojo.GitCIBuildBranch
 import com.tencent.devops.gitci.pojo.GitCIBuildHistory
-import com.tencent.devops.gitci.pojo.enums.GitEventEnum
+import com.tencent.devops.gitci.pojo.v2.GitCIBuildHistorySearch
 import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
 import com.tencent.devops.process.api.service.ServiceBuildResource
@@ -67,19 +67,11 @@ class GitCIV2HistoryService @Autowired constructor(
     fun getHistoryBuildList(
         userId: String,
         gitProjectId: Long,
-        page: Int?,
-        pageSize: Int?,
-        branch: String?,
-        sourceGitProjectId: Long?,
-        triggerUser: String?,
-        pipelineId: String?,
-        commitMsg: String? = null,
-        event: GitEventEnum? = null,
-        status: BuildStatus? = null
+        search: GitCIBuildHistorySearch?
     ): Page<GitCIBuildHistory> {
         logger.info("get history build list, gitProjectId: $gitProjectId")
-        val pageNotNull = page ?: 1
-        val pageSizeNotNull = pageSize ?: 20
+        val pageNotNull = search?.page ?: 1
+        val pageSizeNotNull = search?.pageSize ?: 20
         val conf = gitCIBasicSettingDao.getSetting(dslContext, gitProjectId)
         if (conf == null) {
             gitCIBasicSettingService.initGitCISetting(userId, gitProjectId)
@@ -90,14 +82,14 @@ class GitCIV2HistoryService @Autowired constructor(
                 records = emptyList()
             )
         }
-        val gitRequestBuildList = gitRequestEventBuildDao.getRequestEventBuildList(
+        val gitRequestBuildList = gitRequestEventBuildDao.getRequestEventBuildListMultiple(
             dslContext = dslContext,
             gitProjectId = gitProjectId,
-            branchName = branch,
-            sourceGitProjectId = sourceGitProjectId,
-            triggerUser = triggerUser,
-            pipelineId = pipelineId,
-            event = event?.value
+            branchName = search?.branch,
+            sourceGitProjectId = search?.sourceGitProjectId,
+            triggerUser = search?.triggerUser,
+            pipelineId = search?.pipelineId,
+            event = search?.event?.map { it.value }?.toSet()
         )
         val builds = gitRequestBuildList.map { it.buildId }.toSet()
         logger.info("get history build list, build ids: $builds")
@@ -123,9 +115,9 @@ class GitCIV2HistoryService @Autowired constructor(
             val buildHistory = getBuildHistory(
                 buildId = it.buildId,
                 buildHistoryList = buildHistoryList,
-                status = status
+                status = search?.status
             ) ?: return@forEach
-            val gitRequestEvent = gitRequestEventDao.get(dslContext, it.eventId, commitMsg) ?: return@forEach
+            val gitRequestEvent = gitRequestEventDao.get(dslContext, it.eventId, search?.commitMsg) ?: return@forEach
             // 如果是来自fork库的分支，单独标识
             val realEvent = GitCommonUtils.checkAndGetForkBranch(gitRequestEvent, client)
             val pipeline =
@@ -208,14 +200,15 @@ class GitCIV2HistoryService @Autowired constructor(
     private fun getBuildHistory(
         buildId: String,
         buildHistoryList: List<BuildHistory>,
-        status: BuildStatus?
+        status: Set<BuildStatus>?
     ): BuildHistory? {
+        val statusList = status?.map { it.name }?.toSet()
         buildHistoryList.forEach { build ->
             if (build.id != buildId) {
                 return@forEach
             }
-            if (status != null) {
-                if (build.status != status.name) {
+            if (!status.isNullOrEmpty()) {
+                if (!statusList?.contains(build.status)!!) {
                     return@forEach
                 }
             }

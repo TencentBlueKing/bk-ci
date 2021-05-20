@@ -434,6 +434,49 @@ class GitRequestEventBuildDao {
         }
     }
 
+    fun getRequestEventBuildListMultiple(
+        dslContext: DSLContext,
+        gitProjectId: Long,
+        branchName: Set<String>?,
+        sourceGitProjectId: Set<String>?,
+        triggerUser: Set<String>?,
+        pipelineId: String?,
+        event: Set<String>?
+    ): List<TGitRequestEventBuildRecord> {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            val dsl = dslContext.selectFrom(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .and(BUILD_ID.isNotNull)
+            if (!branchName.isNullOrEmpty()) {
+                val branchList = branchName.map {
+                    // 针对fork库的特殊分支名 namespace:branchName 进行查询
+                    if (it.contains(":")) {
+                        it.split(":")[1]
+                    } else {
+                        it
+                    }
+                }.toSet()
+                if (!sourceGitProjectId.isNullOrEmpty()) {
+                    dsl.and(BRANCH.`in`(branchList))
+                        .and(SOURCE_GIT_PROJECT_ID.`in`(sourceGitProjectId).or(SOURCE_GIT_PROJECT_ID.isNull))
+                } else {
+                    dsl.and(BRANCH.`in`(branchList))
+                }
+            }
+            if (!triggerUser.isNullOrEmpty()) {
+                dsl.and(TRIGGER_USER.`in`(triggerUser))
+            }
+            if (!pipelineId.isNullOrBlank()) {
+                dsl.and(PIPELINE_ID.eq(pipelineId))
+            }
+            if (!event.isNullOrEmpty()) {
+                dsl.and(OBJECT_KIND.`in`(event))
+            }
+            return dsl.orderBy(EVENT_ID.desc())
+                .fetch()
+        }
+    }
+
     fun getEventsByPipelineId(
         dslContext: DSLContext,
         gitProjectId: Long,

@@ -80,7 +80,8 @@ class GitCIV2DetailService @Autowired constructor(
             Response.Status.FORBIDDEN,
             "项目未开启工蜂CI，无法查询"
         )
-        val eventBuildRecord = gitRequestEventBuildDao.getLatestBuild(dslContext, gitProjectId, pipelineId) ?: return null
+        val eventBuildRecord =
+            gitRequestEventBuildDao.getLatestBuild(dslContext, gitProjectId, pipelineId) ?: return null
         val eventRecord = gitRequestEventDao.get(dslContext, eventBuildRecord.eventId) ?: return null
         // 如果是来自fork库的分支，单独标识
         val realEvent = GitCommonUtils.checkAndGetForkBranch(eventRecord, client)
@@ -112,10 +113,22 @@ class GitCIV2DetailService @Autowired constructor(
             channelCode = channelCode
         ).data!!
         val pipeline = getPipelineWithId(userId, gitProjectId, eventBuildRecord.pipelineId)
-        return GitCIModelDetail(pipeline, realEvent, modelDetail)
+        // 获取备注信息
+        val remark = client.get(ServiceBuildResource::class)
+            .getBatchBuildStatus(conf.projectCode!!, setOf(buildId), channelCode).data?.first()?.remark
+        return GitCIModelDetail(
+            gitProjectPipeline = pipeline,
+            gitRequestEvent = realEvent,
+            modelDetail = modelDetail,
+            buildHistoryRemark = remark
+        )
     }
 
-    fun batchGetBuildDetail(userId: String, gitProjectId: Long, buildIds: List<String>): Map<String, GitCIBuildHistory> {
+    fun batchGetBuildDetail(
+        userId: String,
+        gitProjectId: Long,
+        buildIds: List<String>
+    ): Map<String, GitCIBuildHistory> {
         val conf = gitCIBasicSettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
             "项目未开启工蜂CI，无法查询"
@@ -131,7 +144,8 @@ class GitCIV2DetailService @Autowired constructor(
             val eventRecord = gitRequestEventDao.get(dslContext, buildRecord.eventId) ?: return@forEach
             // 如果是来自fork库的分支，单独标识
             val realEvent = GitCommonUtils.checkAndGetForkBranch(eventRecord, client)
-            val pipeline = pipelineResourceDao.getPipelineById(dslContext, gitProjectId, buildRecord.pipelineId) ?: return@forEach
+            val pipeline =
+                pipelineResourceDao.getPipelineById(dslContext, gitProjectId, buildRecord.pipelineId) ?: return@forEach
             infoMap[it.id] = GitCIBuildHistory(
                 displayName = pipeline.displayName,
                 pipelineId = pipeline.pipelineId,
