@@ -1198,7 +1198,7 @@ class PipelineRuntimeService @Autowired constructor(
                         )
                     }
                     // 设置流水线每日构建次数
-                    pipelineSettingService.setCurrentDayBuildCount(pipelineId)
+                    pipelineSettingService.setCurrentDayBuildCount(transactionContext, pipelineId)
                 }
 
                 // 保存链路信息
