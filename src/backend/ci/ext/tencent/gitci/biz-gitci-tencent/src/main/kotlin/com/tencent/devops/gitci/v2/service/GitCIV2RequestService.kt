@@ -274,7 +274,7 @@ class GitCIV2RequestService @Autowired constructor(
                 val pipeline = if (it.pipelineId.isNullOrBlank()) null else pipelineMap[it.pipelineId]
                 records.add(
                     GitCIBuildHistory(
-                        displayName = pipeline?.displayName,
+                        displayName = pipeline?.displayName ?: it.filePath,
                         pipelineId = pipeline?.pipelineId,
                         gitRequestEvent = event,
                         buildHistory = null,
