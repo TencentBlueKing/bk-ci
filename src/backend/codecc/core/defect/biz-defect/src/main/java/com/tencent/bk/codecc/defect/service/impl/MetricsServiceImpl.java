@@ -57,6 +57,9 @@ public class MetricsServiceImpl implements MetricsService {
     @Value("${bkci.public.url:#{null}}")
     private String codeccHost;
 
+    @Value("${git.host:}")
+    private String gitHost;
+
     @Override
     public MetricsVO getMetrics(String repoId, String buildId) {
         log.info("get metrics: repoId: {} | buildId: {}", repoId, buildId);
@@ -142,7 +145,8 @@ public class MetricsServiceImpl implements MetricsService {
                 codeccHost,
                 taskDetail.getProjectId(),
                 taskDetail.getTaskId()));
-        metricsVO.setRepoUrl(String.format("http://git.code.oa.com/%s/commit/%s",
+        metricsVO.setRepoUrl(String.format("%s/%s/commit/%s",
+                gitHost,
                 repoId,
                 metricsVO.getCommitId()));
         log.info("total cost {}", System.currentTimeMillis() - st);

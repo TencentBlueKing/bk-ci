@@ -75,12 +75,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.redis.core.RedisTemplate;
 
+import java.net.URI;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -123,6 +125,9 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
 
     @Autowired
     private LintStatisticRepository lintStatisticRepository;
+
+    @Value("${git.host:}")
+    private String gitHost;
 
     @Override
     public CommonDefectDetailQueryRspVO processGetFileContentSegmentRequest(long taskId, String userId, GetFileContentSegmentReqVO reqModel)
@@ -695,7 +700,7 @@ public abstract class AbstractQueryWarningBizService implements IQueryWarningBiz
         String createFrom = pair.getKey();
         String realProjectId = pair.getValue();
 
-        if (StringUtils.isNotBlank(url) && url.contains("git.code.oa.com") && !branch.equals("devops-virtual-branch")) {
+        if (StringUtils.isNotBlank(url) && !gitHost.isEmpty() && url.contains(URI.create(gitHost).getHost()) && !branch.equals("devops-virtual-branch")) {
             if (!ComConstants.BsTaskCreateFrom.GONGFENG_SCAN.value().equalsIgnoreCase(createFrom)
                 || realProjectId.startsWith("CUSTOMPROJ_"))
             {

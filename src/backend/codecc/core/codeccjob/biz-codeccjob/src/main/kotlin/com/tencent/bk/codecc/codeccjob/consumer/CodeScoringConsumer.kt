@@ -35,6 +35,7 @@ import org.springframework.amqp.rabbit.annotation.QueueBinding
 import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.util.CollectionUtils
 import java.math.BigDecimal
@@ -64,6 +65,9 @@ class CodeScoringConsumer @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(CodeScoringConsumer::class.java)
     }
+
+    @Value("\${codecc.public.url}")
+    private val codeccGateWay: String? = null
 
     /**
      * 对蓝盾插件代码打分
@@ -183,7 +187,7 @@ class CodeScoringConsumer @Autowired constructor(
                                     "codeSecurityScore" to "${BigDecimal(codeSecurityScore).setScale(2, BigDecimal.ROUND_HALF_UP).toDouble()}",
                                     "codeMeasureScore" to "${BigDecimal(codeMeasureScore).setScale(2, BigDecimal.ROUND_HALF_UP).toDouble()}",
                                     "rdIndicatorsScore" to "$rdIndicatorsScore",
-                                    "codeccDetailUrl" to "http://v2.codecc.oa.com/codecc/codecc/task/$taskId/detail",
+                                    "codeccDetailUrl" to "$codeccGateWay/codecc/codecc/task/$taskId/detail",
                                     "repoUrl" to "${repoInfo?.repoUrl} # ${repoInfo?.branch}"
                             )
 

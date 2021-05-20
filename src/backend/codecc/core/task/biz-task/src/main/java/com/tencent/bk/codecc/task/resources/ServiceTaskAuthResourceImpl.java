@@ -34,13 +34,16 @@ import com.tencent.bk.sdk.iam.constants.CallbackMethodEnum;
 import com.tencent.bk.sdk.iam.dto.PageInfoDTO;
 import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO;
 import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO;
+import com.tencent.devops.common.util.JsonUtil;
 import com.tencent.devops.common.web.RestResource;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @RestResource
+@Slf4j
 public class ServiceTaskAuthResourceImpl implements ServiceTaskAuthResource {
 
     @Autowired
@@ -48,6 +51,8 @@ public class ServiceTaskAuthResourceImpl implements ServiceTaskAuthResource {
 
     @Override
     public CallbackBaseResponseDTO taskInfo(CallbackRequestDTO callBackInfo) {
+        log.info("get call back request dto: {}", JsonUtil.INSTANCE.toJson(callBackInfo));
+
         CallbackMethodEnum method = callBackInfo.getMethod();
         PageInfoDTO page = callBackInfo.getPage();
         String projectId = callBackInfo.getFilter().getParent().getId();
