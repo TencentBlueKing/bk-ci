@@ -47,10 +47,7 @@ import com.tencent.devops.common.ci.v2.YmlVersion
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
-import com.tencent.devops.common.ci.v2.Container
-import com.tencent.devops.common.ci.v2.Credentials
 import com.tencent.devops.common.ci.v2.Job
-import com.tencent.devops.common.ci.v2.JobRunsOnType
 import com.tencent.devops.common.ci.v2.Notices
 import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreStage
@@ -126,6 +123,7 @@ object ScriptYmlUtils {
             val realValue = settingMap[matcher.group(1).trim()]
             newValue = newValue!!.replace(matcher.group(), realValue ?: "")
         }
+
         return newValue
     }
 
@@ -199,11 +197,25 @@ object ScriptYmlUtils {
     }
 
     fun checkYaml(preScriptBuildYaml: PreTemplateScriptBuildYaml) {
+        checkVariable(preScriptBuildYaml)
         checkStage(preScriptBuildYaml)
         checkNotice(preScriptBuildYaml.notices)
     }
 
-    fun checkStage(preScriptBuildYaml: PreTemplateScriptBuildYaml) {
+    private fun checkVariable(preScriptBuildYaml: PreTemplateScriptBuildYaml) {
+        if (preScriptBuildYaml.variables == null) {
+            return
+        }
+
+        preScriptBuildYaml.variables.forEach {
+            val keyRegex = Regex("^[0-9a-zA-Z_]+$")
+            if (!keyRegex.matches(it.key)) {
+                throw CustomException(Response.Status.BAD_REQUEST, "变量名称必须是英文字母、数字或下划线(_)")
+            }
+        }
+    }
+
+    private fun checkStage(preScriptBuildYaml: PreTemplateScriptBuildYaml) {
         if ((preScriptBuildYaml.stages != null && preScriptBuildYaml.jobs != null) ||
             (preScriptBuildYaml.stages != null && preScriptBuildYaml.steps != null) ||
             (preScriptBuildYaml.jobs != null && preScriptBuildYaml.steps != null) ||
@@ -215,7 +227,7 @@ object ScriptYmlUtils {
         }
     }
 
-    fun checkNotice(notices: List<Notices>?) {
+    private fun checkNotice(notices: List<Notices>?) {
         val types = setOf("email", "wework-message", "wework-chat")
         if (notices == null) {
             return
@@ -230,8 +242,7 @@ object ScriptYmlUtils {
     }
 
     private fun formatStage(preScriptBuildYaml: PreScriptBuildYaml): List<Stage> {
-
-        val stages = when {
+        return when {
             preScriptBuildYaml.steps != null -> {
                 listOf(
                     Stage(
@@ -261,8 +272,6 @@ object ScriptYmlUtils {
                 preStages2Stages(preScriptBuildYaml.stages as List<PreStage>)
             }
         }
-
-        return stages
     }
 
     private fun preJobs2Jobs(preJobs: Map<String, PreJob>?): List<Job> {
@@ -282,8 +291,6 @@ object ScriptYmlUtils {
                     )
                 )
             }
-
-
 
             jobs.add(
                 Job(
