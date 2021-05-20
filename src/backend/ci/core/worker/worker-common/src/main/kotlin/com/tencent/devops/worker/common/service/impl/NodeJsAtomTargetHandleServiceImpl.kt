@@ -29,6 +29,7 @@ package com.tencent.devops.worker.common.service.impl
 
 import com.tencent.devops.common.api.constant.NODEJS
 import com.tencent.devops.common.api.enums.OSType
+import com.tencent.devops.common.api.util.script.CommonScriptUtils
 import com.tencent.devops.store.pojo.app.BuildEnv
 import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
 import com.tencent.devops.worker.common.NODEJS_PATH_ENV
@@ -48,6 +49,17 @@ class NodeJsAtomTargetHandleServiceImpl : AtomTargetHandleService {
         postEntryParam: String?
     ): String {
         logger.info("handleAtomTarget target:$target,osType:$osType,buildHostType:$buildHostType")
+        var nodeEnvFlag = false
+        try {
+            CommonScriptUtils.execute("node -v")
+            nodeEnvFlag = true
+        } catch (ignored: Throwable) {
+            logger.warn("No node environment", ignored)
+        }
+        if (nodeEnvFlag) {
+            // 如果构建机上有安装node，则直接使用户配置的node插件启动命令
+            return target
+        }
         var convertTarget = target
         // 当构建机为公共构建机并且用户未为job执行环境选择nodejs依赖情况则用系统默认配置的nodejs环境执行
         if (buildHostType == BuildHostTypeEnum.PUBLIC) {
