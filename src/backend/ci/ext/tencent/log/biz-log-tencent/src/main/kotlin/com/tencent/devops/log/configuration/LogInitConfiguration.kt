@@ -74,7 +74,7 @@ class LogInitConfiguration {
     fun managerService(client: Client) = ManagerService(client)
 
     @Bean
-    @ConditionalOnProperty()
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
     fun logPermissionService(
         authPermissionApi: AuthPermissionApi,
         pipelineAuthServiceCode: PipelineAuthServiceCode,
@@ -84,7 +84,7 @@ class LogInitConfiguration {
     )
 
     @Bean
-    @ConditionalOnProperty()
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
     fun GitCILogPermissionService(
         client: Client
     ) = GitCILogPermissionServiceImpl(client)
