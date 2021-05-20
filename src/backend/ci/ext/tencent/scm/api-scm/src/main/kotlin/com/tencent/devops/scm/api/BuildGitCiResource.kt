@@ -25,33 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.scm.pojo
+package com.tencent.devops.scm.api
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.pojo.oauth.GitToken
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-@ApiModel("工蜂CI查询代码库项目信息")
-data class GitCIProjectInfo(
-    @ApiModelProperty("项目ID")
-    @JsonProperty("id")
-    val gitProjectId: Int,
-    @ApiModelProperty("项目名称")
-    @JsonProperty("name")
-    val name: String,
-    @ApiModelProperty("页面地址")
-    @JsonProperty("web_url")
-    val homepage: String?,
-    @ApiModelProperty("HTTP链接", required = true)
-    @JsonProperty("http_url_to_repo")
-    val gitHttpUrl: String,
-    @ApiModelProperty("HTTPS链接")
-    @JsonProperty("https_url_to_repo")
-    val gitHttpsUrl: String?,
-    @ApiModelProperty("gitSshUrl")
-    @JsonProperty("ssh_url_to_repo")
-    val gitSshUrl: String?,
-    @ApiModelProperty("带有所有者的项目名称")
-    @JsonProperty("name_with_namespace")
-    val pathWithNamespace: String
-)
+@Api(tags = ["BUILD_SCM_GIT_CI"], description = "Build Code GIT CI resource")
+@Path("/build/gitci/")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface BuildGitCiResource {
+
+    @ApiOperation("获取项目的token")
+    @GET
+    @Path("/getToken")
+    fun getToken(
+        @ApiParam("gitProjectId", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: String
+    ): Result<GitToken>
+
+    @ApiOperation("获取项目的token")
+    @DELETE
+    @Path("/clearToken")
+    fun clearToken(
+        @ApiParam("token", required = true)
+        @QueryParam("token")
+        token: String
+    ): Result<Boolean>
+}
