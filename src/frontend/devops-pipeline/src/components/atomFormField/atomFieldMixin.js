@@ -91,7 +91,35 @@ const atomFieldMixin = {
         }
     },
     methods: {
-        urlParse: pluginUrlParse
+        urlParse: pluginUrlParse,
+
+        getResponseData (response, dataPath = 'data.records', defaultVal = []) {
+            try {
+                switch (true) {
+                    case Array.isArray(response.data):
+                        return response.data
+                    case response.data && response.data.record && Array.isArray(response.data.record):
+                        return response.data.record
+                    default:
+                        const path = dataPath.split('.')
+                        let result = response
+                        let pos = 0
+                        while (path[pos] && result) {
+                            const key = path[pos]
+                            result = result[key]
+                            pos++
+                        }
+                        if (pos === path.length && Object.prototype.toString.call(result) === Object.prototype.toString.call(defaultVal)) {
+                            return result
+                        } else {
+                            throw Error(this.$t('editPage.failToGetData'))
+                        }
+                }
+            } catch (e) {
+                console.error(e)
+                return defaultVal
+            }
+        }
     }
 }
 
