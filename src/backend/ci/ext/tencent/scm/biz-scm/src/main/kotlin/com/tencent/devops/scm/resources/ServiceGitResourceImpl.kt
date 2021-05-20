@@ -156,10 +156,10 @@ class ServiceGitResourceImpl @Autowired constructor(
 
     override fun getProjectInfo(
         accessToken: String,
-        gitProjectId: String,
+        gitProjectId: Long,
         useAccessToken: Boolean
     ): Result<GitCIProjectInfo?> {
-        return gitService.getGitCIProjectInfo(gitProjectId, accessToken, useAccessToken)
+        return gitService.getGitCIProjectInfo(gitProjectId.toString(), accessToken, useAccessToken)
     }
 
     override fun getProjectList(
