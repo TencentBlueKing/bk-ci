@@ -1118,7 +1118,7 @@ class TXPipelineService @Autowired constructor(
                     name = it.name,
                     id = it.id,
                     // TODO: 根据ID从后台去拿名称再填进去
-                    label = it.tag.toString(),
+                    label = listOf(it.tag.toString()),
                     ifField = if (it.stageControlOption?.runCondition == StageRunCondition.CUSTOM_CONDITION_MATCH) {
                         it.stageControlOption?.customCondition
                     } else {
@@ -1150,7 +1150,7 @@ class TXPipelineService @Autowired constructor(
                     name = stage.name,
                     id = stage.id,
                     // TODO: 根据ID从后台去拿名称再填进去
-                    label = stage.tag.toString(),
+                    label = listOf(stage.tag.toString()),
                     ifField = if (stage.stageControlOption?.runCondition == StageRunCondition.CUSTOM_CONDITION_MATCH) {
                         stage.stageControlOption?.customCondition
                     } else {
