@@ -49,7 +49,7 @@ class TencentServiceConfig {
     fun archiveFileService() = JFrogArchiveFileServiceImpl()
 
     @Bean
-    @ConditionalOnMissingBean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
     fun defaultPipelineService(
         client: Client,
         pipelineAuthServiceCode: BSPipelineAuthServiceCode,
