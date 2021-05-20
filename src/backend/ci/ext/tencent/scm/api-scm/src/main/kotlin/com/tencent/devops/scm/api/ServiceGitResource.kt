@@ -98,7 +98,7 @@ interface ServiceGitResource {
         accessToken: String,
         @ApiParam("工蜂项目id", required = true)
         @QueryParam("gitProjectId")
-        gitProjectId: String,
+        gitProjectId: Long,
         @ApiParam("是否使用accesstoken否使用privatetoken", required = true)
         @QueryParam("useAccessToken")
         useAccessToken: Boolean = true

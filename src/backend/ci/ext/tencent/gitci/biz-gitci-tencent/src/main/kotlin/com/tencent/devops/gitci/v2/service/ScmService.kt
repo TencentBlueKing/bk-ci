@@ -82,7 +82,7 @@ class ScmService @Autowired constructor(
     ): GitCIProjectInfo? {
         return client.getScm(ServiceGitResource::class).getProjectInfo(
             accessToken = token,
-            gitProjectId = gitProjectId,
+            gitProjectId = gitProjectId.toLong(),
             useAccessToken = useAccessToken
         ).data
     }

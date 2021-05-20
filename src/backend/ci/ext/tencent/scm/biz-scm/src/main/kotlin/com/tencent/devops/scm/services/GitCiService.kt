@@ -28,19 +28,12 @@
 package com.tencent.devops.scm.services
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.repository.pojo.git.GitMember
-import com.tencent.devops.scm.code.git.api.GitBranch
-import com.tencent.devops.scm.code.git.api.GitBranchCommit
-import com.tencent.devops.scm.code.git.api.GitOauthApi
-import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
-import io.swagger.annotations.ApiParam
 import okhttp3.Request
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -103,7 +96,7 @@ class GitCiService {
         orderBy: GitCodeBranchesOrder?,
         sort: GitCodeBranchesSort?
     ): List<String> {
-        val url = "${gitCIUrl}/api/v3/projects/${URLEncoder.encode(gitProjectId, "utf-8")}" +
+        val url = "$gitCIUrl/api/v3/projects/${URLEncoder.encode(gitProjectId, "utf-8")}" +
                 "/repository/branches?access_token=$token&page=$page&per_page=$pageSize" +
                 if (search != null) {
                     "&search=$search"

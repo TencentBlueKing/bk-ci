@@ -61,7 +61,8 @@ class ServiceGitCiResourceImpl @Autowired constructor(
         gitProjectId: String,
         page: Int,
         pageSize:
-        Int, search: String?
+        Int,
+        search: String?
     ): Result<List<GitMember>> {
         return Result(gitCiService.getGitCIMembers(token, gitProjectId, page, pageSize, search))
     }
