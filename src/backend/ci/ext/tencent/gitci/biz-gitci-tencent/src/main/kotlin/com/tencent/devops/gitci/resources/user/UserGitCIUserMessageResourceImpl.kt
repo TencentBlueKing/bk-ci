@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.user.UserGitCIUserMessageResource
-import com.tencent.devops.gitci.pojo.v2.UserMessage
+import com.tencent.devops.gitci.pojo.v2.UserMessageRecord
 import com.tencent.devops.gitci.pojo.v2.UserMessageType
 import com.tencent.devops.gitci.v2.service.GitUserMessageService
 import org.springframework.beans.factory.annotation.Autowired
@@ -44,22 +44,22 @@ class UserGitCIUserMessageResourceImpl @Autowired constructor(
         userId: String,
         messageType: UserMessageType?,
         haveRead: Boolean?,
-        page: Int,
-        pageSize: Int
-    ): Result<Page<Map<String, List<UserMessage>>>> {
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<UserMessageRecord>> {
         return Result(
             gitUserMessageService.getMessages(
                 userId = userId,
                 messageType = messageType,
                 haveRead = haveRead,
-                page = page,
-                pageSize = pageSize
+                page = page ?: 1,
+                pageSize = pageSize ?: 10
             )
         )
     }
 
     override fun getUserMessagesNoreadCount(userId: String): Result<Int> {
-        return Result(gitUserMessageService.getNoReadMessageCount(userId))
+        return Result(data = gitUserMessageService.getNoReadMessageCount(userId))
     }
 
     override fun readMessage(userId: String, id: Int): Result<Boolean> {
