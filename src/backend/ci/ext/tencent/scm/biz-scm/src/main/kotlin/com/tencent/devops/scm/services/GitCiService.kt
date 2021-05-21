@@ -143,14 +143,18 @@ class GitCiService {
         filePath: String,
         token: String,
         ref: String,
-        isAccessToken: Boolean
+        useAccessToken: Boolean
     ): String {
         logger.info("[$gitProjectId|$filePath|$ref] Start to get the git file content")
         val startEpoch = System.currentTimeMillis()
         try {
             val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/blobs/" +
-                "${URLEncoder.encode(ref, "UTF-8")}?filepath=${URLEncoder.encode(filePath, "UTF-8")}" +
-                if (isAccessToken) { "&access_token=$token" } else { "&private_token=$token" }
+                    "${URLEncoder.encode(ref, "UTF-8")}?filepath=${URLEncoder.encode(filePath, "UTF-8")}" +
+                    if (useAccessToken) {
+                        "&access_token=$token"
+                    } else {
+                        "&private_token=$token"
+                    }
             logger.info("request url: $url")
             val request = Request.Builder()
                 .url(url)
