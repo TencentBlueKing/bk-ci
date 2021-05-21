@@ -32,6 +32,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitCiResource
+import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.services.GitCiService
@@ -81,5 +82,33 @@ class ServiceGitCiResourceImpl @Autowired constructor(
 
     override fun getGitUserId(rtxUserId: String, gitProjectId: String): Result<String?> {
         return Result(gitService.getGitCIUserId(rtxUserId, gitProjectId))
+    }
+
+    override fun getGitCIFileContent(
+        gitProjectId: Long,
+        filePath: String,
+        token: String,
+        ref: String,
+        useAccessToken: Boolean
+    ): Result<String> {
+        return Result(gitCiService.getGitCIFileContent(
+            gitProjectId = gitProjectId,
+            filePath = filePath,
+            token = token,
+            ref = ref,
+            useAccessToken = useAccessToken
+        ))
+    }
+
+    override fun getProjectInfo(
+        accessToken: String,
+        gitProjectId: String,
+        useAccessToken: Boolean
+    ): Result<GitCIProjectInfo?> {
+        return gitCiService.getGitCIProjectInfo(
+            gitProjectId = gitProjectId,
+            token = accessToken,
+            useAccessToken = useAccessToken
+        )
     }
 }
