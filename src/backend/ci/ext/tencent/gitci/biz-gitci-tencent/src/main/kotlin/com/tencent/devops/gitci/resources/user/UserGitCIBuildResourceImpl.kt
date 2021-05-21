@@ -29,9 +29,9 @@ package com.tencent.devops.gitci.resources.user
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.user.UserGitCIBuildResource
+import com.tencent.devops.gitci.constant.GitCIConstant.DEVOPS_PROJECT_PREFIX
 import com.tencent.devops.gitci.permission.GitCIV2PermissionService
 import com.tencent.devops.gitci.pojo.v2.GitCIV2Startup
 import com.tencent.devops.gitci.utils.GitCommonUtils
@@ -53,8 +53,8 @@ class UserGitCIBuildResourceImpl @Autowired constructor(
         taskId: String?
     ): Result<BuildId> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
-        checkParam(userId, pipelineId, buildId, gitProjectId)
-        permissionService.checkGitCIPermission(userId, projectId, AuthPermission.EXECUTE)
+        checkParam(userId, pipelineId, buildId)
+        permissionService.checkGitCIAndOAuthAndEnable(userId, projectId, gitProjectId)
         return Result(
             triggerBuildService.retry(
                 userId = userId,
@@ -73,8 +73,8 @@ class UserGitCIBuildResourceImpl @Autowired constructor(
         buildId: String
     ): Result<Boolean> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
-        checkParam(userId, pipelineId, buildId, gitProjectId)
-        permissionService.checkGitCIPermission(userId, projectId, AuthPermission.EXECUTE)
+        checkParam(userId, pipelineId, buildId)
+        permissionService.checkGitCIAndOAuthAndEnable(userId, projectId, gitProjectId)
         return Result(
             triggerBuildService.manualShutdown(
                 userId = userId,
@@ -86,10 +86,10 @@ class UserGitCIBuildResourceImpl @Autowired constructor(
     }
 
     override fun gitCIStartupPipeline(userId: String, gitCIV2Startup: GitCIV2Startup): Result<BuildId?> {
-        permissionService.checkGitCIPermission(
+        permissionService.checkGitCIAndOAuthAndEnable(
             userId,
-            "git_${gitCIV2Startup.gitCIBasicSetting.gitProjectId}",
-            AuthPermission.VIEW
+            "$DEVOPS_PROJECT_PREFIX${gitCIV2Startup.gitCIBasicSetting.gitProjectId}",
+            gitCIV2Startup.gitCIBasicSetting.gitProjectId
         )
         return Result(
             triggerBuildService.startBuild(
@@ -102,7 +102,7 @@ class UserGitCIBuildResourceImpl @Autowired constructor(
         )
     }
 
-    private fun checkParam(userId: String, pipelineId: String, buildId: String, gitProjectId: Long) {
+    private fun checkParam(userId: String, pipelineId: String, buildId: String) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
         }

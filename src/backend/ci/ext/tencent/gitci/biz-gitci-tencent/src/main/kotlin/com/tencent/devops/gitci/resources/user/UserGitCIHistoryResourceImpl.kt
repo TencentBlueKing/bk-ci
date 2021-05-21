@@ -27,7 +27,6 @@
 
 package com.tencent.devops.gitci.resources.user
 
-import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
@@ -37,15 +36,12 @@ import com.tencent.devops.gitci.pojo.GitCIBuildBranch
 import com.tencent.devops.gitci.pojo.GitCIBuildHistory
 import com.tencent.devops.gitci.pojo.v2.GitCIBuildHistorySearch
 import com.tencent.devops.gitci.utils.GitCommonUtils
-import com.tencent.devops.gitci.v2.service.GitCIBasicSettingService
 import com.tencent.devops.gitci.v2.service.GitCIV2HistoryService
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
 
 @RestResource
 class UserGitCIHistoryResourceImpl @Autowired constructor(
-    private val gitCIHistoryService: GitCIV2HistoryService,
-    private val gitCIBasicSettingService: GitCIBasicSettingService
+    private val gitCIHistoryService: GitCIV2HistoryService
 ) : UserGitCIHistoryResource {
     override fun getHistoryBuildList(
         userId: String,
@@ -54,9 +50,6 @@ class UserGitCIHistoryResourceImpl @Autowired constructor(
     ): Result<Page<GitCIBuildHistory>> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
-        if (!gitCIBasicSettingService.initGitCISetting(userId, gitProjectId)) {
-            throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")
-        }
         return Result(
             gitCIHistoryService.getHistoryBuildList(
                 userId = userId,
@@ -75,9 +68,6 @@ class UserGitCIHistoryResourceImpl @Autowired constructor(
     ): Result<Page<GitCIBuildBranch>> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
-        if (!gitCIBasicSettingService.initGitCISetting(userId, gitProjectId)) {
-            throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")
-        }
         return Result(
             gitCIHistoryService.getAllBuildBranchList(
                 userId = userId,

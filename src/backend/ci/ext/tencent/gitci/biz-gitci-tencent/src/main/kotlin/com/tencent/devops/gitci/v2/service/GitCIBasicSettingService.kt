@@ -30,9 +30,8 @@ package com.tencent.devops.gitci.v2.service
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
+import com.tencent.devops.gitci.v2.exception.GitCINoEnableException
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
-import com.tencent.devops.scm.api.ServiceGitResource
-import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -46,43 +45,6 @@ class GitCIBasicSettingService @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCIBasicSettingService::class.java)
-    }
-
-    fun initGitCISetting(userId: String, gitProjectId: Long): Boolean {
-        if (gitCIBasicSettingDao.getSetting(dslContext, gitProjectId) == null) {
-            val projectInfo = requestGitProjectInfo(gitProjectId) ?: return false
-            return saveGitCIConf(
-                userId = userId,
-                gitCIBasicSetting = GitCIBasicSetting(
-                    gitProjectId = gitProjectId,
-                    name = projectInfo.name,
-                    url = projectInfo.gitSshUrl ?: "",
-                    homepage = projectInfo.homepage ?: "",
-                    gitHttpUrl = projectInfo.gitHttpsUrl ?: "",
-                    gitSshUrl = projectInfo.gitSshUrl ?: "",
-                    enableCi = false,
-                    createTime = null,
-                    updateTime = null,
-                    projectCode = null,
-                    enableUserId = userId
-                )
-            )
-        } else {
-            return true
-        }
-    }
-
-    fun updateInfoSetting(gitProjectId: Long) {
-        val projectInfo = requestGitProjectInfo(gitProjectId)
-        if (projectInfo != null) gitCIBasicSettingDao.updateInfoSetting(
-            dslContext = dslContext,
-            gitProjectId = gitProjectId,
-            gitProjectName = projectInfo.name,
-            url = projectInfo.gitSshUrl ?: "",
-            homePage = projectInfo.homepage ?: "",
-            httpUrl = projectInfo.gitHttpsUrl ?: "",
-            sshUrl = projectInfo.gitSshUrl ?: ""
-        )
     }
 
     fun updateProjectSetting(
@@ -113,6 +75,10 @@ class GitCIBasicSettingService @Autowired constructor(
         return gitCIBasicSettingDao.getSetting(dslContext, gitProjectId)
     }
 
+    fun getGitCIBasicSettingAndCheck(gitProjectId: Long): GitCIBasicSetting {
+        return gitCIBasicSettingDao.getSetting(dslContext, gitProjectId) ?: throw GitCINoEnableException()
+    }
+
     fun saveGitCIConf(userId: String, gitCIBasicSetting: GitCIBasicSetting): Boolean {
         logger.info("save git ci conf, repositoryConf: $gitCIBasicSetting")
         val gitRepoConf = gitCIBasicSettingDao.getSetting(dslContext, gitCIBasicSetting.gitProjectId)
@@ -128,11 +94,5 @@ class GitCIBasicSettingService @Autowired constructor(
         }
         gitCIBasicSettingDao.saveSetting(dslContext, gitCIBasicSetting, projectCode!!)
         return true
-    }
-
-    private fun requestGitProjectInfo(gitProjectId: Long): GitCIProjectInfo? {
-        val serviceGitResource = client.getScm(ServiceGitResource::class)
-        val accessToken = serviceGitResource.getToken(gitProjectId).data?.accessToken ?: return null
-        return serviceGitResource.getProjectInfo(accessToken, gitProjectId).data
     }
 }

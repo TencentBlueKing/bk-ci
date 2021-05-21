@@ -27,7 +27,6 @@
 
 package com.tencent.devops.gitci.v2.service
 
-import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -39,24 +38,22 @@ import com.tencent.devops.gitci.pojo.GitCIBuildHistory
 import com.tencent.devops.gitci.pojo.GitRequestHistory
 import com.tencent.devops.gitci.pojo.enums.TriggerReason
 import com.tencent.devops.gitci.utils.GitCommonUtils
-import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @Service
 class GitCIV2RequestService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
-    private val gitCIBasicSettingDao: GitCIBasicSettingDao,
     private val gitRequestEventDao: GitRequestEventDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
-    private val pipelineResourceDao: GitPipelineResourceDao
+    private val pipelineResourceDao: GitPipelineResourceDao,
+    private val gitCIBasicSettingService: GitCIBasicSettingService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCIV2RequestService::class.java)
@@ -68,9 +65,7 @@ class GitCIV2RequestService @Autowired constructor(
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 10
         logger.info("get request list, gitProjectId: $gitProjectId")
-        val conf = gitCIBasicSettingDao.getSetting(dslContext, gitProjectId)
-            ?: throw CustomException(Response.Status.FORBIDDEN, "项目未开启工蜂CI，无法查询")
-
+        val conf = gitCIBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
         val count = gitRequestEventDao.getRequestCount(dslContext, gitProjectId)
         val requestList = gitRequestEventDao.getRequestList(
             dslContext = dslContext,

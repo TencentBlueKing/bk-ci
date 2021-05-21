@@ -27,31 +27,22 @@
 
 package com.tencent.devops.gitci.v2.service
 
-import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
-import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
-import com.tencent.devops.gitci.dao.GitRequestEventDao
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
-import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
 import com.tencent.devops.scm.api.ServiceGitResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @Service
 class GitCIV2PipelineService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
     private val pipelineResourceDao: GitPipelineResourceDao,
-    private val gitCIBasicSettingDao: GitCIBasicSettingDao,
-    private val gitRequestEventBuildDao: GitRequestEventBuildDao,
-    private val gitRequestEventDao: GitRequestEventDao,
-    private val gitCIBasicSettingService: GitCIBasicSettingService,
     private val gitCIV2DetailService: GitCIV2DetailService,
     private val scmService: ScmService
 ) {
@@ -69,17 +60,6 @@ class GitCIV2PipelineService @Autowired constructor(
         logger.info("get pipeline list, gitProjectId: $gitProjectId")
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 10
-        val conf = gitCIBasicSettingDao.getSetting(dslContext, gitProjectId)
-        if (conf == null) {
-            gitCIBasicSettingService.initGitCISetting(userId, gitProjectId)
-            return Page(
-                count = 0L,
-                page = pageNotNull,
-                pageSize = pageSizeNotNull,
-                totalPages = 0,
-                records = emptyList()
-            )
-        }
         val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         val pipelines = pipelineResourceDao.getPageByGitProjectId(
             dslContext = dslContext,
@@ -125,11 +105,6 @@ class GitCIV2PipelineService @Autowired constructor(
         gitProjectId: Long
     ): List<GitProjectPipeline> {
         logger.info("get pipeline info list, gitProjectId: $gitProjectId")
-        val conf = gitCIBasicSettingDao.getSetting(dslContext, gitProjectId)
-        if (conf == null) {
-            gitCIBasicSettingService.initGitCISetting(userId, gitProjectId)
-            return emptyList()
-        }
         val pipelines = pipelineResourceDao.getAllByGitProjectId(
             dslContext = dslContext,
             gitProjectId = gitProjectId
@@ -153,11 +128,6 @@ class GitCIV2PipelineService @Autowired constructor(
         pipelineId: String
     ): GitProjectPipeline? {
         logger.info("get pipeline: $pipelineId, gitProjectId: $gitProjectId")
-        val conf = gitCIBasicSettingDao.getSetting(dslContext, gitProjectId)
-        if (conf == null) {
-            gitCIBasicSettingService.initGitCISetting(userId, gitProjectId)
-            return null
-        }
         val pipeline = pipelineResourceDao.getPipelineById(
             dslContext = dslContext,
             gitProjectId = gitProjectId,
@@ -172,38 +142,6 @@ class GitCIV2PipelineService @Autowired constructor(
             creator = pipeline.creator,
             latestBuildInfo = null
         )
-    }
-
-    fun getPipelineListWithIds(
-        userId: String,
-        gitProjectId: Long,
-        pipelineIds: List<String>
-    ): List<GitProjectPipeline> {
-        logger.info("get pipeline list in $pipelineIds, gitProjectId: $gitProjectId")
-        val conf = gitCIBasicSettingDao.getSetting(dslContext, gitProjectId)
-        if (conf == null) {
-            gitCIBasicSettingService.initGitCISetting(userId, gitProjectId)
-            return emptyList()
-        }
-        val pipelines = pipelineResourceDao.getPipelinesInIds(
-            dslContext = dslContext,
-            gitProjectId = gitProjectId,
-            pipelineIds = pipelineIds
-        )
-        if (pipelines.isEmpty()) return emptyList()
-        val latestBuilds =
-            gitCIV2DetailService.batchGetBuildDetail(userId, gitProjectId, pipelines.map { it.latestBuildId })
-        return pipelines.map {
-            GitProjectPipeline(
-                gitProjectId = gitProjectId,
-                pipelineId = it.pipelineId,
-                filePath = it.filePath,
-                displayName = it.displayName,
-                enabled = it.enabled,
-                creator = it.creator,
-                latestBuildInfo = latestBuilds[it.latestBuildId]
-            )
-        }
     }
 
     fun enablePipeline(
@@ -226,13 +164,8 @@ class GitCIV2PipelineService @Autowired constructor(
         ref: String
     ): String? {
         logger.info("get yaml by pipelineId:($pipelineId), ref: $ref")
-        gitCIBasicSettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(
-            Response.Status.FORBIDDEN,
-            "项目未开启工蜂CI，无法查询"
-        )
         val filePath =
             pipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId)?.filePath ?: return null
-
         val token = try {
             client.getScm(ServiceGitResource::class).getToken(gitProjectId).data!!
         } catch (e: Exception) {

@@ -27,7 +27,6 @@
 
 package com.tencent.devops.gitci.v2.service
 
-import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
@@ -39,20 +38,17 @@ import com.tencent.devops.gitci.pojo.GitCIBuildBranch
 import com.tencent.devops.gitci.pojo.GitCIBuildHistory
 import com.tencent.devops.gitci.pojo.v2.GitCIBuildHistorySearch
 import com.tencent.devops.gitci.utils.GitCommonUtils
-import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @Service
 class GitCIV2HistoryService @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
-    private val gitCIBasicSettingDao: GitCIBasicSettingDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventDao: GitRequestEventDao,
     private val gitCIBasicSettingService: GitCIBasicSettingService,
@@ -72,16 +68,7 @@ class GitCIV2HistoryService @Autowired constructor(
         logger.info("get history build list, gitProjectId: $gitProjectId")
         val pageNotNull = search?.page ?: 1
         val pageSizeNotNull = search?.pageSize ?: 10
-        val conf = gitCIBasicSettingDao.getSetting(dslContext, gitProjectId)
-        if (conf == null) {
-            gitCIBasicSettingService.initGitCISetting(userId, gitProjectId)
-            return Page(
-                page = pageNotNull,
-                pageSize = pageSizeNotNull,
-                count = 0,
-                records = emptyList()
-            )
-        }
+        val conf = gitCIBasicSettingService.getGitCIBasicSettingAndCheck(gitProjectId)
         val totalPage = gitRequestEventBuildDao.getRequestEventBuildListMultipleCount(
             dslContext = dslContext,
             gitProjectId = gitProjectId,
@@ -166,10 +153,6 @@ class GitCIV2HistoryService @Autowired constructor(
         logger.info("get all branch build list, gitProjectId: $gitProjectId")
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
-        gitCIBasicSettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(
-            Response.Status.FORBIDDEN,
-            "项目未开启工蜂CI，无法查询"
-        )
         val buildBranchList = gitRequestEventBuildDao.getAllBuildBranchList(
             dslContext = dslContext,
             gitProjectId = gitProjectId,

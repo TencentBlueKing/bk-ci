@@ -27,25 +27,20 @@
 
 package com.tencent.devops.gitci.resources.user
 
-import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.user.UserGitCIPipelineResource
 import com.tencent.devops.gitci.permission.GitCIV2PermissionService
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.utils.GitCommonUtils
-import com.tencent.devops.gitci.v2.service.GitCIBasicSettingService
 import com.tencent.devops.gitci.v2.service.GitCIV2PipelineService
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
 
 @RestResource
 class UserGitCIPipelineResourceImpl @Autowired constructor(
     private val pipelineV2Service: GitCIV2PipelineService,
-    private val gitCIBasicSettingService: GitCIBasicSettingService,
     private val permissionService: GitCIV2PermissionService
 ) : UserGitCIPipelineResource {
 
@@ -58,9 +53,6 @@ class UserGitCIPipelineResourceImpl @Autowired constructor(
     ): Result<Page<GitProjectPipeline>> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
-        if (!gitCIBasicSettingService.initGitCISetting(userId, gitProjectId)) {
-            throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")
-        }
         return Result(
             pipelineV2Service.getPipelineList(
                 userId = userId,
@@ -79,9 +71,6 @@ class UserGitCIPipelineResourceImpl @Autowired constructor(
     ): Result<GitProjectPipeline?> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
-        if (!gitCIBasicSettingService.initGitCISetting(userId, gitProjectId)) {
-            throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")
-        }
         return Result(
             pipelineV2Service.getPipelineListById(
                 userId = userId,
@@ -99,10 +88,7 @@ class UserGitCIPipelineResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
-        permissionService.checkGitCIPermission(userId, projectId, AuthPermission.ENABLE)
-        if (!gitCIBasicSettingService.initGitCISetting(userId, gitProjectId)) {
-            throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")
-        }
+        permissionService.checkGitCIAndOAuthAndEnable(userId, projectId, gitProjectId)
         return Result(
             pipelineV2Service.enablePipeline(
                 userId = userId,
@@ -116,9 +102,6 @@ class UserGitCIPipelineResourceImpl @Autowired constructor(
     override fun listPipelineNames(userId: String, projectId: String): Result<List<GitProjectPipeline>> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
-        if (!gitCIBasicSettingService.initGitCISetting(userId, gitProjectId)) {
-            throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")
-        }
         return Result(
             pipelineV2Service.getPipelineListWithoutHistory(
                 userId = userId,

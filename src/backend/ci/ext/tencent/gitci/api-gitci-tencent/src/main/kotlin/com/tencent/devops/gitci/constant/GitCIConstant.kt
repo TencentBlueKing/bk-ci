@@ -25,36 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.resources.user
+package com.tencent.devops.gitci.constant
 
-import com.tencent.devops.common.api.exception.ParamBlankException
-import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.gitci.api.user.UserGitCIRequestResource
-import com.tencent.devops.gitci.pojo.GitRequestHistory
-import com.tencent.devops.gitci.utils.GitCommonUtils
-import com.tencent.devops.gitci.v2.service.GitCIV2RequestService
-import org.springframework.beans.factory.annotation.Autowired
-
-@RestResource
-class UserGitCIRequestResourceImpl @Autowired constructor(
-    private val gitCIV2RequestService: GitCIV2RequestService
-) : UserGitCIRequestResource {
-    override fun getMergeBuildList(
-        userId: String,
-        projectId: String,
-        page: Int?,
-        pageSize: Int?
-    ): Result<Page<GitRequestHistory>> {
-        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
-        checkParam(userId)
-        return Result(gitCIV2RequestService.getRequestList(userId, gitProjectId, page, pageSize))
-    }
-
-    private fun checkParam(userId: String) {
-        if (userId.isBlank()) {
-            throw ParamBlankException("Invalid userId")
-        }
-    }
+object GitCIConstant {
+    // 蓝盾的工蜂项目前缀
+    const val DEVOPS_PROJECT_PREFIX = "git_"
+    // 工蜂CI的文件目录
+    const val GIT_CI_FILE_DIR = ".ci"
+    // 工蜂CIYaml文件后缀
+    const val GIT_CI_FILE_SUFFIX = ".yml"
 }

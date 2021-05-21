@@ -29,7 +29,6 @@ package com.tencent.devops.gitci.resources.user
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.user.UserGitCITriggerResource
@@ -60,8 +59,8 @@ class UserGitCITriggerResourceImpl @Autowired constructor(
         triggerBuildReq: V2TriggerBuildReq
     ): Result<Boolean> {
         val gitProjectId = GitCommonUtils.getGitProjectId(triggerBuildReq.projectId)
-        checkParam(userId, gitProjectId)
-        permissionService.checkGitCIPermission(userId, triggerBuildReq.projectId, AuthPermission.EXECUTE)
+        checkParam(userId)
+        permissionService.checkGitCIAndOAuthAndEnable(userId, triggerBuildReq.projectId, gitProjectId)
         val new = with(triggerBuildReq) {
             TriggerBuildReq(
                 gitProjectId = gitProjectId,
@@ -107,7 +106,7 @@ class UserGitCITriggerResourceImpl @Autowired constructor(
 
     override fun getYamlByBuildId(userId: String, projectId: String, buildId: String): Result<V2BuildYaml?> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
-        checkParam(userId, gitProjectId)
+        checkParam(userId)
         return Result(gitCITriggerService.getYamlV2(gitProjectId, buildId))
     }
 
@@ -119,7 +118,7 @@ class UserGitCITriggerResourceImpl @Autowired constructor(
         commitId: String?
     ): Result<String?> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
-        checkParam(userId, gitProjectId)
+        checkParam(userId)
         val ref = if (commitId.isNullOrBlank()) {
             branchName
         } else {
@@ -128,7 +127,7 @@ class UserGitCITriggerResourceImpl @Autowired constructor(
         return Result(gitCIV2PipelineService.getYamlByPipeline(gitProjectId, pipelineId, ref))
     }
 
-    private fun checkParam(userId: String, gitProjectId: Long) {
+    private fun checkParam(userId: String) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
         }

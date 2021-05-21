@@ -30,6 +30,7 @@ package com.tencent.devops.gitci.v2.service
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.repository.pojo.git.GitMember
+import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitCiResource
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.Commit
@@ -50,6 +51,17 @@ class ScmService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(ScmService::class.java)
     }
 
+    // 获取工蜂超级token
+    fun getToken(
+        gitProjectId: String
+    ): GitToken {
+        try {
+            return client.getScm(ServiceGitCiResource::class).getToken(gitProjectId).data!!
+        } catch (e: Exception) {
+            throw RuntimeException("项目${gitProjectId}获取Token失败, ${e.message}")
+        }
+    }
+
     fun getYamlFromGit(
         token: String,
         gitProjectId: Long,
@@ -57,6 +69,7 @@ class ScmService @Autowired constructor(
         ref: String,
         useAccessToken: Boolean
     ): String {
+        logger.info("getYamlFromGit: [$gitProjectId|$fileName|$token|$ref|$useAccessToken]")
         return try {
             val result = client.getScm(ServiceGitCiResource::class).getGitCIFileContent(
                 gitProjectId = gitProjectId,
@@ -80,6 +93,7 @@ class ScmService @Autowired constructor(
         gitProjectId: String,
         useAccessToken: Boolean
     ): GitCIProjectInfo? {
+        logger.info("GitCIProjectInfo: [$gitProjectId|$token|$useAccessToken]")
         return client.getScm(ServiceGitCiResource::class).getProjectInfo(
             accessToken = token,
             gitProjectId = gitProjectId,
@@ -97,6 +111,7 @@ class ScmService @Autowired constructor(
         page: Int?,
         perPage: Int?
     ): List<Commit>? {
+        logger.info("getCommits: [$gitProjectId|$filePath|$branch|$token|$since|$until|$page|$perPage]")
         return client.getScm(ServiceGitResource::class).getCommits(
             gitProjectId = gitProjectId,
             filePath = filePath,
@@ -114,6 +129,7 @@ class ScmService @Autowired constructor(
         gitProjectId: String,
         gitCICreateFile: GitCICreateFile
     ): Boolean {
+        logger.info("createNewFile: [$gitProjectId|$token|$gitCICreateFile]")
         return client.getScm(ServiceGitResource::class).gitCICreateFile(
             gitProjectId = gitProjectId,
             token = token,
@@ -128,6 +144,7 @@ class ScmService @Autowired constructor(
         pageSize: Int?,
         search: String?
     ): List<GitMember>? {
+        logger.info("getProjectMembers: [$gitProjectId|$token|$page|$pageSize|$search]")
         return client.getScm(ServiceGitCiResource::class).getMembers(
             token = token,
             gitProjectId = gitProjectId,
@@ -146,6 +163,7 @@ class ScmService @Autowired constructor(
         orderBy: GitCodeBranchesOrder?,
         sort: GitCodeBranchesSort?
     ): List<String>? {
+        logger.info("getProjectBranches: [$gitProjectId|$token|$page|$pageSize|$search|$orderBy|$sort]")
         return client.getScm(ServiceGitCiResource::class)
             .getBranches(
                 token = token,

@@ -83,7 +83,7 @@ interface UserGitBasicSettingResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("工蜂项目配置", required = true)
-        repositoryConf: GitCIBasicSetting
+        gitCIBasicSetting: GitCIBasicSetting
     ): Result<Boolean>
 
     @ApiOperation("修改项目启动人")
