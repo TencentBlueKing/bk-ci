@@ -20,10 +20,11 @@ function _M:isSafe()
     local host = ngx.var.host
     local path = ngx.var.uri
     -- 外部链接安全检查
-    local external_host = "bkdevops.qq.com"
-    if string.find(host, external_host) ~= nil then
-        if string.find(path, "/api/app/") == nil and string.find(path, "/api/open/") == nil and
-            string.find(path, "/bkrepo/api/external/") == nil then
+    if string.find(host, "bkdevops.qq.com") ~= nil then -- bkdevops.qq.com 相关域名
+        if string.find(path, "/api/app/") == nil -- app 路径
+        and string.find(path, "/api/open/") == nil -- open路径
+        and string.find(path, "/bkrepo/api/external/generic") == nil -- 仓库的external/generic路径
+        and string.find(path, "/bkrepo/api/external/repository") == nil then -- 仓库的external/repository路径
             ngx.log(ngx.ERR, "it is unsafe , host : ", host, " , path : ", path)
             return false
         end
