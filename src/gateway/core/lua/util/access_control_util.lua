@@ -20,7 +20,7 @@ function _M:isAccess()
     -- report服务和bkrepo服务不做频率限制
     if ngx.var.service == 'report' or ngx.var.service == 'bkrepo' or ngx.var.service == 'schedule' or ngx.var.service ==
         'task' then
-        return
+        return true
     end
 
     local isAccess = true
