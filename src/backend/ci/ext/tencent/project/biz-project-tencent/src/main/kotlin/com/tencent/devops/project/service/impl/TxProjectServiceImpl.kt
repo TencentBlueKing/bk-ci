@@ -199,7 +199,9 @@ class TxProjectServiceImpl @Autowired constructor(
 //        return result.data!!.map {
 //            it.project_id
 //        }
-        return projectPermissionService.getUserProjects(userId!!)
+        val projectEnglishNames = projectPermissionService.getUserProjects(userId!!)
+        logger.info("$userId has permission project: $projectEnglishNames")
+        return projectEnglishNames
     }
 
     override fun updateInfoReplace(projectUpdateInfo: ProjectUpdateInfo) {
