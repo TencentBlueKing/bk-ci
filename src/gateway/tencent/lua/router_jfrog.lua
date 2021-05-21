@@ -15,34 +15,49 @@
 -- NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
 -- WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
 -- SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-string = require("string")
-math = require("math")
-json = require("cjson.safe")
-uuid = require("resty.jit-uuid")
-resolver = require("resty.dns.resolver")
-ck = require("resty.cookie")
-http = require("resty.http")
-jwt = require("resty.jwt")
-stringUtil = require("util.string_util")
-ipUtil = require("util.ip_util")
-consulUtil = require("util.consul_util")
-logUtil = require("util.log_util")
-redisUtil = require("util.redis_util")
-oauthUtil = require("util.oauth_util")
-md5 = require("resty.md5")
-arrayUtil = require("util.array_util")
-cookieUtil = require("util.cookie_util")
-grayUtil = require("util.gray_util")
-urlUtil = require("util.url_util")
-tagUtil = require("util.tag_util")
-loadBalanceUtil = require("util.loadbalance_util")
-accessControlUtil = require("util.access_control_util")
-securityUtil = require("util.security_util")
+--- 根据service_code和resource_type来确定存储路径
+if (ngx.var.service_code == nil or ngx.var.resource_type == nil) then
+    ngx.log(ngx.STDERR, "service_code or resource_type is nil")
+    ngx.exit(403)
+    return
+end
 
-math.randomseed(ngx.now() * 1000)
-uuid.seed()
+-- 访问限制的工具
+local access_util = nil
 
-local ok_table = {status = 0, data = true}
+-- 用户请求类型访问频率限制
+if ngx.var.access_type == 'user' then
+    access_util = require 'access_control_user'
+end
+-- ip地址请求类型访问频率限制
+if ngx.var.access_type == 'build' or ngx.var.access_type == 'external' then
+    access_util = require 'access_control_ip'
+end
 
-response_ok = json.encode(ok_table)
+-- 限制访问频率
+if access_util then
+    local access_result, err = access_util:isAccess()
+    if not access_result then
+        ngx.log(ngx.STDERR, "request excess!")
+        ngx.exit(503)
+        return
+    end
+end
 
+if ngx.var.service_code == "pipeline" then
+    ngx.var.storage_path = "generic-local/bk-archive/"
+end
+if ngx.var.service_code == "artifactory" then
+    ngx.var.storage_path = "generic-local/bk-custom/"
+end
+if ngx.var.service_code == "bcs" then
+    if ngx.var.resource_type == "dev_image" then
+        ngx.var.storage_path = "docker-local/paas/"
+    end
+    if ngx.var.resource_type == "prod_image" then
+        ngx.var.storage_path = "docker-prod/paas/"
+    end
+end
+if ngx.var.service_code == "report" then
+    ngx.var.storage_path = "generic-local/bk-report/"
+end
