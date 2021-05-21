@@ -563,7 +563,7 @@ class GitRequestEventBuildDao {
                 dsl.and(OBJECT_KIND.`in`(event))
             }
             if (!commitMsg.isNullOrBlank()) {
-                dsl.and(DESCRIPTION.like("%${commitMsg}%"))
+                dsl.and(DESCRIPTION.like("%$commitMsg%"))
             }
             if (!buildStatus.isNullOrEmpty()) {
                 dsl.and(BUILD_STATUS.`in`(buildStatus))

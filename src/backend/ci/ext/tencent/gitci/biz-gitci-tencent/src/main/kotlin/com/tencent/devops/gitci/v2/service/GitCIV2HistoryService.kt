@@ -31,7 +31,6 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
@@ -94,7 +93,7 @@ class GitCIV2HistoryService @Autowired constructor(
             commitMsg = search?.commitMsg,
             buildStatus = search?.status?.map { it.name }?.toSet()
         )
-        if (totalPage == 0){
+        if (totalPage == 0) {
             return Page(
                 page = pageNotNull,
                 pageSize = pageSizeNotNull,

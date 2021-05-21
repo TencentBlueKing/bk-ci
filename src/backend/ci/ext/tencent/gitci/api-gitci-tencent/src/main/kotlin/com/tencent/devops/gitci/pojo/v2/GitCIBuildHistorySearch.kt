@@ -31,8 +31,6 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.gitci.pojo.enums.GitEventEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.QueryParam
 
 @ApiModel("V2版本多选搜索过滤历史参数")
 data class GitCIBuildHistorySearch(
