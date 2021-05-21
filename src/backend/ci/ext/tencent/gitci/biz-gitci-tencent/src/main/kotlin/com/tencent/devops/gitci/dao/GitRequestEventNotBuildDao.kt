@@ -69,7 +69,7 @@ class GitRequestEventNotBuildDao {
                 gitProjectId,
                 LocalDateTime.now()
             ).returning(ID)
-                .fetchOne()
+                .fetchOne()!!
             return record.id
         }
     }

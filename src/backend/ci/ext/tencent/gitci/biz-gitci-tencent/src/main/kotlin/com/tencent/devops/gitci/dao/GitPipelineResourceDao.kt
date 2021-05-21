@@ -203,7 +203,7 @@ class GitPipelineResourceDao {
             return dslContext.selectCount()
                 .from(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 

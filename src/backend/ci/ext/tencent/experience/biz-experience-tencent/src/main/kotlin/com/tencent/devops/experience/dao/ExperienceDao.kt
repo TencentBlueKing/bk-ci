@@ -202,7 +202,7 @@ class ExperienceDao {
                 scheme
             )
                 .returning(ID)
-                .fetchOne()
+                .fetchOne()!!
             return record.id
         }
     }
@@ -300,7 +300,7 @@ class ExperienceDao {
                 .where(PROJECT_ID.eq(PROJECT_ID))
                 .and(BUNDLE_IDENTIFIER.eq(bundleIdentifier))
                 .and(PLATFORM.eq(platform))
-                .fetchOne().value1()
+                .fetchOne()!!.value1()
         }
     }
 
@@ -366,7 +366,7 @@ class ExperienceDao {
                 .let { if (null == platform) it else it.and(PLATFORM.eq(platform)) }
                 .and(END_DATE.gt(expireTime))
                 .and(ONLINE.eq(online))
-                .fetchOne().value1()
+                .fetchOne()!!.value1()
         }
     }
 

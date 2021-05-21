@@ -273,7 +273,7 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
         return dslContext.selectCount().from(t1).join(t2).on(t1.PIPELINE_ID.eq(t2.PIPELINE_ID))
             .where(t2.DELETE.eq(false))
             .and(t2.PROJECT_ID.`in`(projectIds))
-            .fetchOne()
+            .fetchOne()!!
     }
 
     fun countTemplateInstanced(
@@ -287,7 +287,7 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
             t1.TEMPLATE_ID.countDistinct()
         ).from(t1).join(t2).on(t1.PIPELINE_ID.eq(t2.PIPELINE_ID))
             .where(t2.PROJECT_ID.`in`(projectIds))
-            .fetchOne()
+            .fetchOne()!!
     }
 
     /**
@@ -299,7 +299,7 @@ class TemplatePipelineDao @Autowired constructor(private val objectMapper: Objec
     ): Record1<Int> {
         with(TTemplatePipeline.T_TEMPLATE_PIPELINE) {
             return dslContext.select(TEMPLATE_ID.countDistinct()).from(this)
-                .where(TEMPLATE_ID.`in`(srcTemplateIds)).fetchOne()
+                .where(TEMPLATE_ID.`in`(srcTemplateIds)).fetchOne()!!
         }
     }
 }

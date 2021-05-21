@@ -157,7 +157,7 @@ class WetestTaskInstDao {
             }
             return dslContext.selectCount().from(this)
                     .where(conditions)
-                    .fetchOne().value1()
+                    .fetchOne()!!.value1()
         }
     }
 
@@ -194,7 +194,7 @@ class WetestTaskInstDao {
             }
             return dslContext.selectCount().from(this)
                     .where(conditions)
-                    .fetchOne().value1()
+                    .fetchOne()!!.value1()
         }
     }
 }
