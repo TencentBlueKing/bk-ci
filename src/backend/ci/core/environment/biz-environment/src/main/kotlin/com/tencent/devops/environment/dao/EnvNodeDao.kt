@@ -52,7 +52,7 @@ class EnvNodeDao {
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(ENV_ID.eq(envId))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 

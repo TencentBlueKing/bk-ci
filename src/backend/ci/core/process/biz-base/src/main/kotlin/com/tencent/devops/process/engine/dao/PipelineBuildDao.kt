@@ -456,7 +456,7 @@ class PipelineBuildDao {
             dslContext.selectCount().from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -577,7 +577,7 @@ class PipelineBuildDao {
             if (buildMsg != null && buildMsg.isNotEmpty()) {
                 where.and(BUILD_MSG.like("%$buildMsg%"))
             }
-            where.fetchOne(0, Int::class.java)
+            where.fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -728,7 +728,7 @@ class PipelineBuildDao {
         return with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.selectCount().from(this)
                 .where(STATUS.eq(status.ordinal))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 

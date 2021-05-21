@@ -52,7 +52,7 @@ class FavoriteDao {
             return dslContext.selectCount().from(this)
                 .where(SERVICE_ID.eq(serviceId))
                 .and(USERNAME.eq(userId))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
