@@ -6,7 +6,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 object TActionUtils {
 
     fun buildAction(authPermission: AuthPermission, authResourceType: AuthResourceType): String {
-        return "${extResourceType(authResourceType)}_$authPermission"
+        return "${extResourceType(authResourceType)}_${authPermission.value}"
     }
 
     fun extResourceType(authResourceType: AuthResourceType): String {
