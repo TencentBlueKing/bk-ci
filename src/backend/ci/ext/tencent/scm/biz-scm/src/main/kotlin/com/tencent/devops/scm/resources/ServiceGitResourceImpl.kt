@@ -156,10 +156,9 @@ class ServiceGitResourceImpl @Autowired constructor(
 
     override fun getProjectInfo(
         accessToken: String,
-        gitProjectId: Long,
-        useAccessToken: Boolean
+        gitProjectId: Long
     ): Result<GitCIProjectInfo?> {
-        return gitService.getGitCIProjectInfo(gitProjectId.toString(), accessToken, useAccessToken)
+        return gitService.getGitCIProjectInfo(gitProjectId.toString(), accessToken)
     }
 
     override fun getProjectList(
@@ -211,10 +210,9 @@ class ServiceGitResourceImpl @Autowired constructor(
         gitProjectId: Long,
         filePath: String,
         token: String,
-        ref: String,
-        useAccessToken: Boolean
+        ref: String
     ): Result<String> {
-        return Result(gitService.getGitCIFileContent(gitProjectId, filePath, token, ref, useAccessToken))
+        return Result(gitService.getGitCIFileContent(gitProjectId, filePath, token, ref))
     }
 
     override fun getGitCIMrChanges(gitProjectId: Long, mergeRequestId: Long, token: String): Result<GitMrChangeInfo> {
@@ -272,10 +270,9 @@ class ServiceGitResourceImpl @Autowired constructor(
         gitProjectId: Long,
         path: String,
         token: String,
-        ref: String,
-        useAccessToken: Boolean
+        ref: String
     ): Result<List<GitFileInfo>> {
-        return Result(gitService.getGitCIFileTree(gitProjectId, path, token, ref, useAccessToken))
+        return Result(gitService.getGitCIFileTree(gitProjectId, path, token, ref))
     }
 
     override fun getRedirectUrl(authParamJsonStr: String): Result<String> {

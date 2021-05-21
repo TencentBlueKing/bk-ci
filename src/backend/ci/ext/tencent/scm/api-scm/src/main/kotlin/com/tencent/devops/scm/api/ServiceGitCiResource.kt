@@ -30,6 +30,7 @@ package com.tencent.devops.scm.api
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import io.swagger.annotations.Api
@@ -138,4 +139,40 @@ interface ServiceGitCiResource {
         @QueryParam("gitProjectId")
         gitProjectId: String
     ): Result<String?>
+
+    @ApiOperation("获取指定项目详细信息")
+    @GET
+    @Path("/getProjectInfo")
+    fun getProjectInfo(
+        @ApiParam("accessToken", required = true)
+        @QueryParam("accessToken")
+        accessToken: String,
+        @ApiParam("工蜂项目id", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @ApiParam("是否使用accessToken", required = true)
+        @QueryParam("gitProjectId")
+        useAccessToken: Boolean
+    ): Result<GitCIProjectInfo?>
+
+    @ApiOperation("获取git文件内容")
+    @GET
+    @Path("/gitci/getGitCIFileContent")
+    fun getGitCIFileContent(
+        @ApiParam(value = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: Long,
+        @ApiParam(value = "文件路径")
+        @QueryParam("filePath")
+        filePath: String,
+        @ApiParam(value = "token")
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "提交id 或者 分支")
+        @QueryParam("ref")
+        ref: String,
+        @ApiParam("是否使用accessToken", required = true)
+        @QueryParam("gitProjectId")
+        useAccessToken: Boolean
+    ): Result<String>
 }
