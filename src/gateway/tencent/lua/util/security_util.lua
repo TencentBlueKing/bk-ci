@@ -21,10 +21,9 @@ function _M:isSafe()
     local path = ngx.var.uri
     -- 外部链接安全检查
     local external_host = "bkdevops.qq.com"
-    local external_host_len = string.len(external_host)
-    if string.len(host) >= external_host_len and string.sub(host, -external_host_len) then
+    if string.find(host, external_host) ~= nil then
         if string.find(path, "/api/app/") == nil and string.find(path, "/api/open/") == nil and
-            string.find(path, "/bkrepo/api/external/repository/api/share") == nil then
+            string.find(path, "/bkrepo/api/external/") == nil then
             ngx.log(ngx.ERR, "it is unsafe , host : ", host, " , path : ", path)
             return false
         end
