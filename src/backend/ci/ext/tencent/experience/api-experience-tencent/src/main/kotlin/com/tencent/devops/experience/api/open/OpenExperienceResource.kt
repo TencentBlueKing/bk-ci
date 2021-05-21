@@ -1,6 +1,8 @@
 package com.tencent.devops.experience.api.open
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_APP_VERSION
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_REAL_IP
+import com.tencent.devops.common.api.auth.AUTH_HEADER_PLATFORM
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.experience.pojo.outer.OuterLoginParam
 import com.tencent.devops.experience.pojo.outer.OuterProfileVO
@@ -25,6 +27,12 @@ interface OpenExperienceResource {
     @Path("/outerLogin")
     @POST
     fun outerLogin(
+        @ApiParam("平台", required = true)
+        @HeaderParam(AUTH_HEADER_PLATFORM)
+        platform: Int,
+        @ApiParam("版本号", required = true)
+        @HeaderParam(AUTH_HEADER_APP_VERSION)
+        appVersion: String?,
         @HeaderParam(AUTH_HEADER_DEVOPS_REAL_IP)
         @ApiParam("用户IP", required = true)
         realIp: String,
