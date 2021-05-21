@@ -55,7 +55,7 @@ class SensitiveConfDao {
             conditions.add(STORE_TYPE.eq(storeType))
             if (fieldName != null) conditions.add(FIELD_NAME.eq(fieldName))
             if (id != null) conditions.add(ID.notEqual(id))
-            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java) > 0
+            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)!! > 0
         }
     }
 

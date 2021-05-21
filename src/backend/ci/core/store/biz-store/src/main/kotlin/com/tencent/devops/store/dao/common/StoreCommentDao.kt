@@ -74,7 +74,7 @@ class StoreCommentDao {
     ): Long {
         with(TStoreComment.T_STORE_COMMENT) {
             return dslContext.selectCount().from(this).where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)))
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Long::class.java)!!
         }
     }
 

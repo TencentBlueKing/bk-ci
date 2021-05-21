@@ -148,15 +148,15 @@ class MarketImageDao @Autowired constructor(
                 .asTable("t")
             baseStep.leftJoin(t).on(tImage.IMAGE_CODE.eq(t.field("STORE_CODE", String::class.java)))
                 .join(tImageFeature).on(tImage.IMAGE_CODE.eq(tImageFeature.IMAGE_CODE))
-            conditions.add(t.field("SCORE_AVERAGE", BigDecimal::class.java).ge(BigDecimal.valueOf(score.toLong())))
+            conditions.add(t.field("SCORE_AVERAGE", BigDecimal::class.java)!!.ge(BigDecimal.valueOf(score.toLong())))
         }
-        return baseStep.where(conditions).fetchOne(0, Int::class.java)
+        return baseStep.where(conditions).fetchOne(0, Int::class.java)!!
     }
 
     fun countByIdAndCode(dslContext: DSLContext, imageId: String, imageCode: String): Int {
         with(TImage.T_IMAGE) {
             return dslContext.selectCount().from(this).where(ID.eq(imageId).and(IMAGE_CODE.eq(imageCode)))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -287,7 +287,7 @@ class MarketImageDao @Autowired constructor(
                 tas.SCORE_AVERAGE
             ).from(tas).asTable("t")
             baseStep.leftJoin(t).on(tImage.IMAGE_CODE.eq(t.field("STORE_CODE", String::class.java)))
-            conditions.add(t.field("SCORE_AVERAGE", BigDecimal::class.java).ge(BigDecimal.valueOf(score.toLong())))
+            conditions.add(t.field("SCORE_AVERAGE", BigDecimal::class.java)!!.ge(BigDecimal.valueOf(score.toLong())))
         }
 
         if (null != sortType) {
@@ -318,9 +318,9 @@ class MarketImageDao @Autowired constructor(
 
             // 排序
             if (desc != null && desc) {
-                baseStep.where(conditions).orderBy(realSortType.desc())
+                baseStep.where(conditions).orderBy(realSortType!!.desc())
             } else {
-                baseStep.where(conditions).orderBy(realSortType.asc())
+                baseStep.where(conditions).orderBy(realSortType!!.asc())
             }
         } else {
             baseStep.where(conditions)
@@ -394,7 +394,7 @@ class MarketImageDao @Autowired constructor(
                 tas.SCORE_AVERAGE
             ).from(tas).asTable("t")
             baseStep.leftJoin(t).on(tImage.IMAGE_CODE.eq(t.field("STORE_CODE", String::class.java)))
-            conditions.add(t.field("SCORE_AVERAGE", BigDecimal::class.java).ge(BigDecimal.valueOf(score.toLong())))
+            conditions.add(t.field("SCORE_AVERAGE", BigDecimal::class.java)!!.ge(BigDecimal.valueOf(score.toLong())))
         }
         baseStep.where(conditions)
         logger.info(baseStep.getSQL(ParamType.INLINED))
@@ -597,7 +597,7 @@ class MarketImageDao @Autowired constructor(
         with(TImage.T_IMAGE) {
             return dslContext.selectCount().from(this)
                 .where(IMAGE_CODE.eq(imageCode).and(IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte())))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -1203,7 +1203,7 @@ class MarketImageDao @Autowired constructor(
             .leftJoin(tImageAgentType).on(tImage.IMAGE_CODE.eq(tImageAgentType.IMAGE_CODE))
             .where(conditions)
         logger.info(baseQuery.getSQL(ParamType.INLINED))
-        return baseQuery.fetchOne(0, Int::class.java)
+        return baseQuery.fetchOne(0, Int::class.java)!!
     }
 
     fun listJobMarketImagesWithExtraConditions(
@@ -1346,7 +1346,7 @@ class MarketImageDao @Autowired constructor(
             )
             .where(conditions)
         logger.info(baseQuery.getSQL(ParamType.INLINED))
-        return baseQuery.fetchOne(0, Int::class.java)
+        return baseQuery.fetchOne(0, Int::class.java)!!
     }
 
     /**

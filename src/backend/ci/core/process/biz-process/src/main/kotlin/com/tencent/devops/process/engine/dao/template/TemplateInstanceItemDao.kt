@@ -119,7 +119,7 @@ class TemplateInstanceItemDao {
         baseId: String
     ): Long {
         with(TTemplateInstanceItem.T_TEMPLATE_INSTANCE_ITEM) {
-            return dslContext.selectCount().from(this).where(BASE_ID.eq(baseId)).fetchOne(0, Long::class.java)
+            return dslContext.selectCount().from(this).where(BASE_ID.eq(baseId)).fetchOne(0, Long::class.java)!!
         }
     }
 

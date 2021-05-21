@@ -103,7 +103,7 @@ class AgentPipelineRefDao {
             return dslContext.selectCount()
                 .from(this)
                 .where(AGENT_ID.`in`(agentId))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 

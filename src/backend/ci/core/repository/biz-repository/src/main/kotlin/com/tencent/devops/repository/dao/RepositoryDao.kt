@@ -72,7 +72,7 @@ class RepositoryDao {
                 false
             )
                 .returning(REPOSITORY_ID)
-                .fetchOne()
+                .fetchOne()!!
             return record.repositoryId
         }
     }
@@ -109,11 +109,11 @@ class RepositoryDao {
             }
             return when (repositoryType) {
                 null -> {
-                    step.fetchOne(0, Long::class.java)
+                    step.fetchOne(0, Long::class.java)!!
                 }
                 else -> {
                     step.and(TYPE.eq(repositoryType.name))
-                    step.fetchOne(0, Long::class.java)
+                    step.fetchOne(0, Long::class.java)!!
                 }
             }
         }
@@ -132,7 +132,7 @@ class RepositoryDao {
                 .and(REPOSITORY_ID.notEqual(excludeRepositoryId))
                 .and(ALIAS_NAME.eq(aliasName))
                 .and(IS_DELETED.eq(false))
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -154,7 +154,7 @@ class RepositoryDao {
             return dslContext.selectCount()
                 .from(this)
                 .where(conditions)
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Long::class.java)!!
         }
     }
 
