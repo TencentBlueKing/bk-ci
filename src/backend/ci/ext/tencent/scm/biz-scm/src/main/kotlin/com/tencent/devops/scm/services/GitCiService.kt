@@ -29,9 +29,13 @@ package com.tencent.devops.scm.services
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.google.gson.JsonParser
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.repository.pojo.git.GitMember
+import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import okhttp3.Request
@@ -132,5 +136,62 @@ class GitCiService {
             }
         }
         return res
+    }
+
+    fun getGitCIFileContent(
+        gitProjectId: Long,
+        filePath: String,
+        token: String,
+        ref: String,
+        useAccessToken: Boolean
+    ): String {
+        logger.info("[$gitProjectId|$filePath|$ref] Start to get the git file content")
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val url = "$gitCIUrl/api/v3/projects/$gitProjectId/repository/blobs/" +
+                    "${URLEncoder.encode(ref, "UTF-8")}?filepath=${URLEncoder.encode(filePath, "UTF-8")}" +
+                    if (useAccessToken) {
+                        "&access_token=$token"
+                    } else {
+                        "&private_token=$token"
+                    }
+            logger.info("request url: $url")
+            val request = Request.Builder()
+                .url(url)
+                .get()
+                .build()
+            OkhttpUtils.doHttp(request).use {
+                val data = it.body()!!.string()
+                if (!it.isSuccessful) throw RuntimeException("fail to get git file content with: $url($data)")
+                return data
+            }
+        } finally {
+            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git file content")
+        }
+    }
+
+    fun getGitCIProjectInfo(
+        gitProjectId: String,
+        token: String,
+        useAccessToken: Boolean = true
+    ): Result<GitCIProjectInfo?> {
+        logger.info("[gitProjectId=$gitProjectId]|getGitCIProjectInfo")
+        val encodeId = URLEncoder.encode(gitProjectId, "utf-8") // 如果id为NAMESPACE_PATH则需要encode
+        val str = "$gitCIUrl/api/v3/projects/$encodeId?" + if (useAccessToken) {
+            "access_token=$token"
+        } else {
+            "private_token=$token"
+        }
+        val url = StringBuilder(str)
+        val request = Request.Builder()
+            .url(url.toString())
+            .get()
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            val response = it.body()!!.string()
+            logger.info("[url=$url]|getGitCIProjectInfo with response=$response")
+            if (!it.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            return Result(JsonUtil.to(response, GitCIProjectInfo::class.java))
+        }
     }
 }
