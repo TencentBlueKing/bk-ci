@@ -58,7 +58,7 @@ class ScmService @Autowired constructor(
         useAccessToken: Boolean
     ): String {
         return try {
-            val result = client.getScm(ServiceGitResource::class).getGitCIFileContent(
+            val result = client.getScm(ServiceGitCiResource::class).getGitCIFileContent(
                 gitProjectId = gitProjectId,
                 filePath = fileName,
                 token = token,
@@ -80,9 +80,9 @@ class ScmService @Autowired constructor(
         gitProjectId: String,
         useAccessToken: Boolean
     ): GitCIProjectInfo? {
-        return client.getScm(ServiceGitResource::class).getProjectInfo(
+        return client.getScm(ServiceGitCiResource::class).getProjectInfo(
             accessToken = token,
-            gitProjectId = gitProjectId.toLong(),
+            gitProjectId = gitProjectId,
             useAccessToken = useAccessToken
         ).data
     }
