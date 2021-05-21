@@ -1,32 +1,23 @@
 /*
- * Tencent is pleased to support the open source community by making BK-CODECC 蓝鲸代码检查平台 available.
- *
- * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
- *
- * BK-CODECC 蓝鲸代码检查平台 is licensed under the MIT license.
- *
- * A copy of the MIT License is included in this file.
- *
- *
- * Terms of the MIT License:
- * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
- *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
- *
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
- * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
- * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
- * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
- * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ * Tencent is pleased to support the open source community by making BlueKing available.
+ * Copyright (C) 2017-2018 THL A29 Limited, a Tencent company. All rights reserved.
+ * Licensed under the MIT License (the "License"); you may not use this file except
+ * in compliance with the License. You may obtain a copy of the License at
+ * http://opensource.org/licenses/MIT
+ * Unless required by applicable law or agreed to in writing, software distributed under
+ * the License is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND,
+ * either express or implied. See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.tencent.bk.codecc.apiquery.defect.dao.mongotemplate;
 
+import com.mongodb.BasicDBObject;
+import com.tencent.bk.codecc.apiquery.defect.model.DUPCDefectModel;
 import com.tencent.bk.codecc.apiquery.defect.model.DUPCStatisticModel;
+import com.tencent.devops.common.constant.ComConstants;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Sort;
@@ -36,11 +27,16 @@ import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.aggregation.GroupOperation;
 import org.springframework.data.mongodb.core.aggregation.MatchOperation;
 import org.springframework.data.mongodb.core.aggregation.SortOperation;
+import org.springframework.data.mongodb.core.query.BasicQuery;
 import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * DUPC类告警的查詢持久化
@@ -49,8 +45,7 @@ import java.util.List;
  * @date 2019/5/21
  */
 @Repository
-public class DUPCDefectDao
-{
+public class DUPCDefectDao {
     @Autowired
     @Qualifier("defectMongoTemplate")
     private MongoTemplate mongoTemplate;
@@ -63,8 +58,7 @@ public class DUPCDefectDao
      * @param toolName  工具名称
      * @return list
      */
-    public List<DUPCStatisticModel> batchFindByTaskIdInAndTool(Collection<Long> taskIdSet, String toolName)
-    {
+    public List<DUPCStatisticModel> batchFindByTaskIdInAndTool(Collection<Long> taskIdSet, String toolName) {
         MatchOperation match = Aggregation.match(Criteria.where("task_id").in(taskIdSet).and("tool_name").is(toolName));
         SortOperation sort = Aggregation.sort(Sort.Direction.DESC, "time");
         // 以taskId进行分组
@@ -86,4 +80,64 @@ public class DUPCDefectDao
                 mongoTemplate.aggregate(agg, "t_dupc_statistic", DUPCStatisticModel.class);
         return queryResult.getMappedResults();
     }
+
+    /**
+     * 根据任务ID，作者和路径列表查询
+     *
+     * @param taskId   任务ID
+     * @param author   作者筛选
+     * @param fileList 文件路径筛选
+     * @return list
+     */
+    public List<DUPCDefectModel> findByTaskIdAndAuthorAndRelPaths(long taskId, String author, Set<String> fileList) {
+        BasicDBObject fieldsObj = new BasicDBObject();
+        fieldsObj.put("block_list", false);
+        Query query = new BasicQuery(new BasicDBObject(), fieldsObj);
+        query.addCriteria(Criteria.where("task_id").is(taskId).and("status").is(ComConstants.DefectStatus.NEW.value()));
+
+        //作者过滤
+        if (StringUtils.isNotEmpty(author)) {
+            // 去掉人名的字符
+            String authorParam = author.trim();
+            if (author.contains("(") && author.endsWith(")")) {
+                authorParam = author.substring(0, author.indexOf("("));
+            }
+            Pattern pattern = Pattern.compile(String.format("^.*%s.*$", authorParam), Pattern.CASE_INSENSITIVE);
+            query.addCriteria(Criteria.where("author_list").regex(pattern));
+        }
+
+        //路径过滤
+        List<Criteria> criteriaList = new ArrayList<>();
+        List<Criteria> orCriteriaList = new ArrayList<>();
+        if (CollectionUtils.isNotEmpty(fileList)) {
+            fileList.forEach(file -> criteriaList.add(Criteria.where("rel_path").regex(file)));
+            orCriteriaList.add(new Criteria().orOperator(criteriaList.toArray(new Criteria[0])));
+            query.addCriteria(new Criteria().andOperator(orCriteriaList.toArray(new Criteria[0])));
+        }
+
+        //查询总的数量，并且过滤计数
+        return mongoTemplate.find(query, DUPCDefectModel.class, "t_dupc_defect");
+    }
+
+    /**
+     * 批量获取任务指定的重复率分析结果
+     *
+     * @param taskIdSet 任务id集合
+     * @param buildIds  构建id集合
+     * @return list
+     */
+    public List<DUPCStatisticModel> batchFindByTaskIdAndBuildId(Collection<Long> taskIdSet,
+            Collection<String> buildIds) {
+        BasicDBObject fieldsObj = new BasicDBObject();
+        fieldsObj.put("task_id", true);
+        fieldsObj.put("build_id", true);
+        fieldsObj.put("dup_rate", true);
+        fieldsObj.put("defect_count", true);
+        Query query = new BasicQuery(new BasicDBObject(), fieldsObj);
+
+        query.addCriteria(Criteria.where("task_id").in(taskIdSet).and("build_id").in(buildIds));
+
+        return mongoTemplate.find(query, DUPCStatisticModel.class, "t_dupc_statistic");
+    }
+
 }

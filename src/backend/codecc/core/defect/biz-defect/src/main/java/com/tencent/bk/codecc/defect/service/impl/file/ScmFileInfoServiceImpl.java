@@ -1,16 +1,26 @@
 package com.tencent.bk.codecc.defect.service.impl.file;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.tencent.bk.codecc.defect.component.ScmJsonComponent;
+import com.tencent.bk.codecc.defect.dao.mongorepository.CodeRepoInfoRepository;
+import com.tencent.bk.codecc.defect.dao.mongorepository.ToolBuildStackRepository;
 import com.tencent.bk.codecc.defect.dao.mongorepository.file.ScmFileInfoCacheRepository;
+import com.tencent.bk.codecc.defect.dao.mongotemplate.ToolBuildStackDao;
 import com.tencent.bk.codecc.defect.dao.mongotemplate.file.ScmFileInfoCacheDao;
 import com.tencent.bk.codecc.defect.model.file.ScmFileInfoCacheEntity;
+import com.tencent.bk.codecc.defect.model.incremental.CodeRepoEntity;
+import com.tencent.bk.codecc.defect.model.incremental.CodeRepoInfoEntity;
+import com.tencent.bk.codecc.defect.model.incremental.ToolBuildStackEntity;
 import com.tencent.bk.codecc.defect.pojo.FileMD5SingleModel;
 import com.tencent.bk.codecc.defect.pojo.FileMD5TotalModel;
 import com.tencent.bk.codecc.defect.service.file.ScmFileInfoService;
 import com.tencent.bk.codecc.defect.vo.customtool.ScmBlameChangeRecordVO;
 import com.tencent.bk.codecc.defect.vo.customtool.ScmBlameVO;
 import com.tencent.bk.codecc.defect.vo.file.ScmFileMd5Info;
+import com.tencent.devops.common.constant.ComConstants;
+import com.tencent.devops.common.util.PathUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang.StringUtils;
@@ -28,21 +38,57 @@ public class ScmFileInfoServiceImpl implements ScmFileInfoService {
 
     @Autowired
     private ScmFileInfoCacheDao scmFileInfoCacheDao;
-
     @Autowired
     private ScmJsonComponent scmJsonComponent;
-
     @Autowired
     private ScmFileInfoCacheRepository scmFileInfoCacheRepository;
+    @Autowired
+    private ToolBuildStackRepository toolBuildStackRepository;
+    @Autowired
+    private CodeRepoInfoRepository codeRepoInfoRepository;
 
     @Override
-    public List<ScmFileMd5Info> listMd5FileInfos(long taskId, String toolName)
+    public List<ScmFileMd5Info> listMd5FileInfos(long taskId, String toolName, String buildId)
     {
-        List<ScmFileInfoCacheEntity> result = scmFileInfoCacheRepository.findSimpleByTaskIdAndToolName(taskId, toolName);
-        if (result.isEmpty())
-        {
+        log.info("listMd5FileInfos, taskId: {} toolName: {}, buildId: {}", taskId, toolName, buildId);
+
+        // 如果前后两次分析的仓库地址或者分支发生了变化，则缓存失效
+        boolean isCodeRepoChange = false;
+        ToolBuildStackEntity toolBuildStack =
+                toolBuildStackRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
+        if (toolBuildStack != null) {
+            String lastBuildId = toolBuildStack.getBaseBuildId();
+            if (StringUtils.isNotEmpty(lastBuildId)) {
+                List<CodeRepoInfoEntity> codeRepoInfoList = codeRepoInfoRepository.findByTaskIdAndBuildIdIn(taskId,
+                        Sets.newHashSet(buildId, lastBuildId));
+                if (codeRepoInfoList.size() == 2) {
+                    List<CodeRepoEntity> codeRepoInfo1 = codeRepoInfoList.get(0).getRepoList();
+                    List<CodeRepoEntity> codeRepoInfo2 = codeRepoInfoList.get(1).getRepoList();
+                    Set<String> codeRepoInfoKeys1 = codeRepoInfo1.stream().map(it -> {
+                        if (StringUtils.isNotEmpty(it.getRepoId())) {
+                            return String.format("%s_%s", it.getRepoId(), it.getBranch());
+                        } else {
+                            return String.format("%s_%s", it.getUrl(), it.getBranch());
+                        }
+                    }).collect(Collectors.toSet());
+                    Set<String> codeRepoInfoKeys2 = codeRepoInfo2.stream().map(it -> {
+                        if (StringUtils.isNotEmpty(it.getRepoId())) {
+                            return String.format("%s_%s", it.getRepoId(), it.getBranch());
+                        } else {
+                            return String.format("%s_%s", it.getUrl(), it.getBranch());
+                        }
+                    }).collect(Collectors.toSet());
+
+                    isCodeRepoChange = !CollectionUtils.isEqualCollection(codeRepoInfoKeys1, codeRepoInfoKeys2);
+                }
+            }
+        }
+        if (isCodeRepoChange) {
             return Collections.emptyList();
         }
+
+        List<ScmFileInfoCacheEntity> result =
+                scmFileInfoCacheRepository.findSimpleByTaskIdAndToolName(taskId, toolName);
         return result.stream().map((entity) ->
         {
             ScmFileMd5Info fileMd5Info = new ScmFileMd5Info();

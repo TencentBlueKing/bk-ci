@@ -28,6 +28,7 @@ package com.tencent.bk.codecc.codeccjob.consumer;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
+import com.tencent.bk.codecc.codeccjob.service.TaskPersonalStatisticService;
 import com.tencent.bk.codecc.defect.vo.ConfigCheckersPkgReqVO;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.service.BizServiceFactory;
@@ -59,6 +60,9 @@ public class CheckerConfigConsumer
 {
     @Autowired
     private BizServiceFactory<IBizService> bizServiceFactory;
+
+    @Autowired
+    private TaskPersonalStatisticService taskPersonalStatisticService;
 
     /**
      * 添加屏蔽规则 [ 加入屏蔽规则列表t_ignore_checker之后, 调用Job模块操作]
@@ -99,6 +103,8 @@ public class CheckerConfigConsumer
 
             IBizService bizService = bizServiceFactory.createBizService(model.getToolName(), ComConstants.BusinessType.CONFIG_PKG.value(), IBizService.class);
             bizService.processBiz(model);
+
+            taskPersonalStatisticService.refresh(model.getTaskId(), "from v3 checker set of set relationships");
         }
         catch (Exception e)
         {

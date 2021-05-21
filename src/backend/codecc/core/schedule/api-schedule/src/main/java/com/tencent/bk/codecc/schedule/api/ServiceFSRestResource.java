@@ -27,7 +27,7 @@
 package com.tencent.bk.codecc.schedule.api;
 
 import com.tencent.bk.codecc.schedule.vo.*;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -54,7 +54,7 @@ public interface ServiceFSRestResource
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    CodeCCResult<FileIndexVO> index(
+    Result<FileIndexVO> index(
             @ApiParam(value = "文件名", required = true)
             @PathParam("fileName")
                     String fileName,
@@ -68,7 +68,7 @@ public interface ServiceFSRestResource
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    CodeCCResult<FileIndexVO> getFileIndex(
+    Result<FileIndexVO> getFileIndex(
             @ApiParam(value = "文件名", required = true)
             @PathParam("fileName")
                     String fileName,

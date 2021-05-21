@@ -27,8 +27,9 @@
 package com.tencent.devops.common.service.utils
 
 import com.tencent.devops.common.api.pojo.GlobalMessage
-import com.tencent.devops.common.api.pojo.CodeCCResult
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.util.JsonUtil
+import org.apache.commons.lang.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.i18n.LocaleContextHolder
@@ -46,13 +47,14 @@ import java.text.MessageFormat
 class MessageCodeUtil @Autowired constructor() {
     companion object {
         private val logger = LoggerFactory.getLogger(MessageCodeUtil::class.java)
+
         /**
          * 生成请求响应对象
          * @param messageCode 状态码
          */
         fun <T> generateResponseDataObject(
-                messageCode: String
-        ): CodeCCResult<T> {
+            messageCode: String
+        ): Result<T> {
             return generateResponseDataObject(messageCode, null, null)
         }
 
@@ -62,9 +64,9 @@ class MessageCodeUtil @Autowired constructor() {
          * @param data 数据对象
          */
         fun <T> generateResponseDataObject(
-                messageCode: String,
-                data: T?
-        ): CodeCCResult<T> {
+            messageCode: String,
+            data: T?
+        ): Result<T> {
             return generateResponseDataObject(messageCode, null, data)
         }
 
@@ -74,9 +76,9 @@ class MessageCodeUtil @Autowired constructor() {
          * @param params 替换状态码描述信息占位符的参数数组
          */
         fun <T> generateResponseDataObject(
-                messageCode: String,
-                params: Array<String>
-        ): CodeCCResult<T> {
+            messageCode: String,
+            params: Array<String>
+        ): Result<T> {
             return generateResponseDataObject(messageCode, params, null)
         }
 
@@ -88,26 +90,38 @@ class MessageCodeUtil @Autowired constructor() {
          */
         @Suppress("UNCHECKED_CAST")
         fun <T> generateResponseDataObject(
-                messageCode: String,
-                params: Array<String>?,
-                data: T?
-        ): CodeCCResult<T> {
-            var message = "System service busy, please try again later. {0}"
+            messageCode: String,
+            params: Array<String>?,
+            data: T?
+        ): Result<T> {
+            var message: String? = null
             try {
-                val redisTemplate: RedisTemplate<String, String> = SpringContextUtil.getBean(RedisTemplate::class.java, "redisTemplate") as RedisTemplate<String, String>
-                val messageCodeDetailStr = redisTemplate.opsForValue().get(messageCode) // 根据状态码从redis中获取该状态码对应的信息
-                val locale = LocaleContextHolder.getLocale().toString() // 获取字符集（与http请求头中的Accept-Language有关）
-                val messageCodeDetail = JsonUtil.getObjectMapper().readValue(messageCodeDetailStr, GlobalMessage::class.java)
-                message = getMessageByLocale(messageCodeDetail, locale) // 根据字符集取出对应的状态码描述信息
-                val arguments = params ?: arrayOf("")
-                message = MessageFormat.format(message, *arguments) // 根据参数动态替换状态码描述里的占位符
+                val redisTemplate: RedisTemplate<String, String> = SpringContextUtil.getBean(
+                    RedisTemplate::class.java,
+                    "redisTemplate"
+                ) as RedisTemplate<String, String>
+                // 根据状态码从redis中获取该状态码对应的信息
+                val messageCodeDetailStr = redisTemplate.opsForValue().get(messageCode)
+                if (StringUtils.isNotEmpty(messageCodeDetailStr)) {
+                    // 获取字符集（与http请求头中的Accept-Language有关）
+                    val locale = LocaleContextHolder.getLocale().toString()
+                    val messageCodeDetail =
+                        JsonUtil.getObjectMapper().readValue(messageCodeDetailStr, GlobalMessage::class.java)
+                    // 根据字符集取出对应的状态码描述信息
+                    message = getMessageByLocale(messageCodeDetail, locale)
+                    val arguments = params ?: arrayOf("")
+                    // 根据参数动态替换状态码描述里的占位符
+                    message = MessageFormat.format(message, *arguments)
+                }
             } catch (e: Exception) {
-                logger.info("get message error is :$e")
+                logger.error("get message error is :$e")
+                message = "System service busy, please try again later. {0}"
             }
-            return CodeCCResult(
-                    status = messageCode.toInt(),
-                    message = message,
-                    data = data) // 生成Result对象
+            return Result(
+                status = messageCode.toInt(),
+                message = message,
+                data = data
+            ) // 生成Result对象
         }
 
         private fun getMessageByLocale(globalMessage: GlobalMessage, locale: String): String {

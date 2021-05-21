@@ -38,6 +38,8 @@ import org.springframework.data.mongodb.core.mapping.DBRef;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
+import java.time.LocalDate;
+
 /**
  * lint类告警持久实体类
  *
@@ -145,6 +147,9 @@ public class LintDefectV2Entity extends CommonEntity
 
     @Field("pinpoint_hash")
     private String pinpointHash;
+
+    @Field("pinpoint_hash_group")
+    private String pinpointHashGroup;
 
     /**
      * 告警创建时间

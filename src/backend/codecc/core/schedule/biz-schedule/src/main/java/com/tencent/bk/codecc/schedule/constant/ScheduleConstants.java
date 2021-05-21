@@ -98,7 +98,12 @@ public interface ScheduleConstants
         /**
          * 聚类的临时文件
          */
-        GATHER;
+        GATHER,
+
+        /**
+         * OP运营数据生成的Excel文件 /data/bkee/codecc/nfs/download/op_excel
+         */
+        OP_EXCEL;
     }
 
     /**

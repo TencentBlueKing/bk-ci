@@ -29,7 +29,7 @@ package com.tencent.bk.codecc.defect.resources;
 import com.tencent.bk.codecc.defect.api.UserOperHisRestResource;
 import com.tencent.bk.codecc.defect.service.OperationHistoryService;
 import com.tencent.bk.codecc.defect.vo.OperationHistoryVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.web.RestResource;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -48,8 +48,8 @@ public class UserOperHisRestResourceImpl implements UserOperHisRestResource
     private OperationHistoryService operationHistoryService;
 
     @Override
-    public CodeCCResult<List<OperationHistoryVO>> getOperHisRecord(long taskId, String toolName, List<String> funcId)
+    public Result<List<OperationHistoryVO>> getOperHisRecord(long taskId, String toolName, List<String> funcId)
     {
-        return new CodeCCResult<>(operationHistoryService.getOperHisByTaskIdAndFuncId(taskId, toolName, funcId));
+        return new Result<>(operationHistoryService.getOperHisByTaskIdAndFuncId(taskId, toolName, funcId));
     }
 }

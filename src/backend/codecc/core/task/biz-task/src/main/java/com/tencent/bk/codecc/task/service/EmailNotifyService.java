@@ -16,7 +16,9 @@ import com.tencent.bk.codecc.quartz.pojo.OperationType;
 import com.tencent.bk.codecc.task.pojo.EmailMessageModel;
 import com.tencent.bk.codecc.task.pojo.EmailNotifyModel;
 import com.tencent.bk.codecc.task.pojo.RtxNotifyModel;
+import com.tencent.bk.codecc.task.pojo.WeChatMessageModel;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -55,4 +57,20 @@ public interface EmailNotifyService
      */
     void sendEmail(EmailMessageModel emailMessageModel);
 
+    /**
+     * 从指定微信模版发送微信
+     * @param weChatMessageModel 邮件参数
+     */
+    void sendWeChat(WeChatMessageModel weChatMessageModel);
+
+
+    /**
+     * 为开源扫描打开企业微信实时通知，接收人为"遗留问题处理人"
+     *
+     * @param bgId
+     * @param deptId
+     * @param centerId
+     * @return 更新命中的taskId
+     */
+    List<Long> turnOnWechatNotifyForGongFeng(Integer bgId, Integer deptId, Integer centerId);
 }

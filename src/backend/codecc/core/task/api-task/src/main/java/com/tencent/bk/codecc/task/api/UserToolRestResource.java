@@ -31,7 +31,7 @@ import com.tencent.bk.codecc.task.vo.ParamJsonAndCheckerSetsVO;
 import com.tencent.bk.codecc.task.vo.RepoInfoVO;
 import com.tencent.bk.codecc.task.vo.ToolConfigPlatformVO;
 import com.tencent.bk.codecc.task.vo.ToolStatusUpdateReqVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -42,7 +42,7 @@ import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import java.util.List;
 
-import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.*;
+import static com.tencent.devops.common.api.auth.HeaderKt.*;
 
 /**
  * 工具管理接口
@@ -60,12 +60,12 @@ public interface UserToolRestResource
     @ApiOperation("批量注册工具")
     @Path("/")
     @POST
-    CodeCCResult<Boolean> registerTools(
+    Result<Boolean> registerTools(
             @ApiParam(value = "工具注册信息", required = true)
             @Valid
                     BatchRegisterVO batchRegisterVO,
             @ApiParam(value = "当前用户", required = true)
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
             @NotNull(message = "用户信息不能为空")
                     String userName
     );
@@ -74,7 +74,7 @@ public interface UserToolRestResource
     @ApiOperation("获取代码库清单")
     @Path("/repos/projCode/{projCode}")
     @GET
-    CodeCCResult<List<RepoInfoVO>> getRepoList(
+    Result<List<RepoInfoVO>> getRepoList(
             @ApiParam(value = "项目code", required = true)
             @PathParam("projCode")
                     String projCode);
@@ -83,7 +83,7 @@ public interface UserToolRestResource
     @ApiOperation("获取代码库分支列表")
     @Path("/branches")
     @GET
-    CodeCCResult<List<String>> listBranches(
+    Result<List<String>> listBranches(
             @ApiParam(value = "项目code", required = true)
             @QueryParam("projCode")
                     String projCode,
@@ -99,41 +99,41 @@ public interface UserToolRestResource
     @ApiOperation("工具启用停用")
     @Path("/status")
     @PUT
-    CodeCCResult<Boolean> updateToolStatus(
+    Result<Boolean> updateToolStatus(
             @ApiParam(value = "工具名清单", required = true)
                     ToolStatusUpdateReqVO toolStatusUpdateReqVO,
             @ApiParam(value = "当前用户", required = true)
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
                     String userName,
             @ApiParam(value = "任务id", required = true)
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_TASK_ID)
+            @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
                     long taskId);
 
 
     @ApiOperation("停用流水线")
     @Path("/delete/pipeline")
     @DELETE
-    CodeCCResult<Boolean> deletePipeline(
+    Result<Boolean> deletePipeline(
             @ApiParam(value = "任务ID", required = true)
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_TASK_ID)
+            @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
                     Long taskId,
             @ApiParam(value = "项目ID", required = true)
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_PROJECT_ID)
+            @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
                     String projectId,
             @ApiParam(value = "当前用户", required = true)
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
                     String userName
     );
 
     @ApiOperation("修改工具特殊参数和规则集")
     @Path("/tasks/{taskId}/tools/paramJsonAndCheckerSets")
     @PUT
-    CodeCCResult<Boolean> updateParamJsonAndCheckerSets(
+    Result<Boolean> updateParamJsonAndCheckerSets(
             @ApiParam(value = "当前用户", required = true)
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
                     String user,
             @ApiParam(value = "任务ID", required = true)
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_TASK_ID)
+            @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
                     Long taskId,
             @ApiParam(value = "修改工具特殊参数和规则集请求体", required = true)
                     ParamJsonAndCheckerSetsVO paramJsonAndCheckerSetsVO
@@ -143,12 +143,12 @@ public interface UserToolRestResource
     @ApiOperation("修改工具特殊配置")
     @Path("/toolConfig/update")
     @PUT
-    CodeCCResult<Boolean> updateToolPlatformInfo(
+    Result<Boolean> updateToolPlatformInfo(
             @ApiParam(value = "任务ID", required = true)
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_TASK_ID)
+            @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
                     Long taskId,
             @ApiParam(value = "当前用户", required = true)
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
                     String userName,
             @ApiParam(value = "请求体", required = true)
                 ToolConfigPlatformVO toolConfigPlatformVO

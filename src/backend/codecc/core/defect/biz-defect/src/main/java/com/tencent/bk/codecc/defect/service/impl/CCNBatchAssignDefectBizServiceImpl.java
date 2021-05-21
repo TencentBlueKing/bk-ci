@@ -40,6 +40,8 @@ public class CCNBatchAssignDefectBizServiceImpl extends AbstractCCNBatchDefectPr
         String newAuthorStr = List2StrUtil.toString(newAuthor, ComConstants.SEMICOLON);
 
         defectDao.batchUpdateDefectAuthor(batchDefectProcessReqVO.getTaskId(), defectList, newAuthorStr);
+
+        refreshOverviewData(batchDefectProcessReqVO.getTaskId());
     }
 
 
