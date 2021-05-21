@@ -26,15 +26,20 @@
 
 package com.tencent.bk.codecc.defect.api;
 
+import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_TASK_ID;
+
 import com.tencent.bk.codecc.defect.vo.QueryTaskLogVO;
+import com.tencent.bk.codecc.defect.vo.TaskLogOverviewVO;
 import com.tencent.bk.codecc.task.vo.QueryLogRepVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 
+import java.util.List;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
+import org.springframework.data.domain.PageImpl;
 
 /**
  * task interface
@@ -52,7 +57,7 @@ public interface UserTaskLogRestResource
     @ApiOperation("获取分析记录")
     @Path("/")
     @GET
-    CodeCCResult<QueryTaskLogVO> getTaskLogs(
+    Result<QueryTaskLogVO> getTaskLogs(
             @ApiParam(value = "工具名称", required = true)
             @QueryParam("toolName")
                     String toolName,
@@ -64,11 +69,25 @@ public interface UserTaskLogRestResource
                     int pageSize
     );
 
+    @ApiOperation("获取分析记录 V2 接口")
+    @Path("/overview")
+    @GET
+    Result<PageImpl<TaskLogOverviewVO>> getTaskLogs(
+            @ApiParam(value = "任务ID")
+            @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
+                    Long taskId,
+            @ApiParam(value = "第几页")
+            @QueryParam("page")
+                    Integer page,
+            @ApiParam(value = "每页多少条")
+            @QueryParam("pageSize")
+                    Integer pageSize
+    );
 
     @ApiOperation("获取分析记录日志")
     @Path("/analysis/logs/{projectId}/{pipelineId}/{buildId}")
     @GET
-    CodeCCResult<QueryLogRepVO> getAnalysisLogs(
+    Result<QueryLogRepVO> getAnalysisLogs(
             @ApiParam(value = "项目ID", required = true)
             @PathParam("projectId")
                     String projectId,
@@ -86,11 +105,10 @@ public interface UserTaskLogRestResource
                     String tag
     );
 
-
     @ApiOperation("获取更多日志")
     @GET
     @Path("/analysis/logs/{projectId}/{pipelineId}/{buildId}/more")
-    CodeCCResult<QueryLogRepVO> getMoreLogs(
+    Result<QueryLogRepVO> getMoreLogs(
             @ApiParam(value = "项目ID", required = true)
             @PathParam("projectId")
                     String projectId,
@@ -147,7 +165,7 @@ public interface UserTaskLogRestResource
     @ApiOperation("获取某行后的日志")
     @GET
     @Path("/analysis/logs/{projectId}/{pipelineId}/{buildId}/after")
-    CodeCCResult<QueryLogRepVO> getAfterLogs(
+    Result<QueryLogRepVO> getAfterLogs(
             @ApiParam(value = "项目ID", required = true)
             @PathParam("projectId")
                     String projectId,

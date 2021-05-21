@@ -9,13 +9,18 @@
  * either express or implied. See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.tencent.bk.codecc.apiquery.service.impl;
 
+import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import com.tencent.bk.codecc.apiquery.defect.dao.mongotemplate.TaskLogDao;
 import com.tencent.bk.codecc.apiquery.defect.model.TaskLogModel;
 import com.tencent.bk.codecc.apiquery.service.TaskLogService;
 import org.apache.commons.collections.CollectionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -32,6 +37,8 @@ import java.util.stream.Collectors;
  */
 @Service
 public class TaskLogServiceImpl implements TaskLogService {
+
+    private static Logger logger = LoggerFactory.getLogger(TaskLogServiceImpl.class);
 
     @Autowired
     private TaskLogDao taskLogDao;
@@ -57,5 +64,59 @@ public class TaskLogServiceImpl implements TaskLogService {
         }
         List<TaskLogModel> taskLogModels = taskLogDao.findLastTaskLogByTime(taskIds, startTime, endTime);
         return taskLogModels.stream().collect(Collectors.groupingBy(TaskLogModel::getTaskId));
+    }
+
+
+    /**
+     * 批量获取任务的工具最新一条分析记录
+     *
+     * @param taskIds  任务ID集合
+     * @param toolName 工具名
+     * @return list
+     */
+    @Override
+    public Map<Long, TaskLogModel> batchFindLastTaskLogByTool(List<Long> taskIds, String toolName) {
+        if (CollectionUtils.isEmpty(taskIds)) {
+            return Maps.newHashMap();
+        }
+        List<TaskLogModel> taskLogModels = taskLogDao.batchFindLastTaskLogByTool(taskIds, toolName);
+        return taskLogModels.stream().collect(Collectors.groupingBy(TaskLogModel::getTaskId)).entrySet().stream()
+                        .collect(Collectors.toMap(Map.Entry::getKey, entry -> entry.getValue().iterator().next()));
+    }
+
+
+    /**
+     * 获取指定构建ID的分析记录
+     *
+     * @param taskId   任务ID
+     * @param toolName 工具名
+     * @param buildId  构建ID
+     * @return model
+     */
+    @Override
+    public TaskLogModel getBuildTaskLog(long taskId, String toolName, String buildId) {
+        logger.info("begin getBuildTaskLog: {}, {}, {}", taskId, toolName, buildId);
+
+        TaskLogModel taskLogModel;
+        List<TaskLogModel.TaskUnit> taskUnits = Lists.newArrayList();
+        taskLogModel = taskLogDao.findByBuildId(taskId, toolName, buildId);
+        if (taskLogModel != null) {
+            if (CollectionUtils.isNotEmpty(taskLogModel.getStepArray())) {
+                for (TaskLogModel.TaskUnit taskEntityUnit : taskLogModel.getStepArray()) {
+                    TaskLogModel.TaskUnit taskVOUnit = new TaskLogModel.TaskUnit();
+                    BeanUtils.copyProperties(taskEntityUnit, taskVOUnit);
+                    taskUnits.add(taskVOUnit);
+                }
+            }
+        } else {
+            taskLogModel = new TaskLogModel();
+            taskLogModel.setTaskId(taskId);
+            taskLogModel.setToolName(toolName);
+            taskLogModel.setBuildId(buildId);
+        }
+        taskLogModel.setStepArray(taskUnits);
+
+        logger.info("end getBuildTaskLog");
+        return taskLogModel;
     }
 }

@@ -82,9 +82,42 @@ public class LintStatisticEntity extends StatisticEntity
     @Field("total_defect_count")
     private Long totalDefectCount;
 
+    @Field("normal_fixed_count")
+    private long normalFixedCount;
+
+    @Field("prompt_fixed_count")
+    private long promptFixedCount;
+
+    @Field("serious_fixed_count")
+    private long seriousFixedCount;
+
+    @Field("normal_ignore_count")
+    private long normalIgnoreCount;
+
+    @Field("prompt_ignore_count")
+    private long promptIgnoreCount;
+
+    @Field("serious_ignore_count")
+    private long seriousIgnoreCount;
+
+    @Field("normal_mask_count")
+    private long normalMaskCount;
+
+    @Field("prompt_mask_count")
+    private long promptMaskCount;
+
+    @Field("serious_mask_count")
+    private long seriousMaskCount;
+
     @Field("author_statistic")
     private List<NotRepairedAuthorEntity> authorStatistic;
 
     @Field("checker_statistic")
     private List<CheckerStatisticEntity> checkerStatistic;
+
+    /**
+     * 存量告警处理人统计
+     */
+    @Field("exist_author_statistic")
+    private List<NotRepairedAuthorEntity> existAuthorStatistic;
 }

@@ -38,7 +38,7 @@ import com.tencent.devops.common.api.QueryTaskListReqVO;
 import com.tencent.devops.common.api.ToolMetaBaseVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.api.pojo.Page;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.ComConstants.Tool;
@@ -200,7 +200,7 @@ public class ApiBizServiceImpl implements ApiBizService {
      * @return list
      */
     private List<TaskDetailVO> batchGetTaskDetailVoList(QueryTaskListReqVO queryTaskListReqVO) {
-        CodeCCResult<List<TaskDetailVO>> batchGetTaskList =
+        Result<List<TaskDetailVO>> batchGetTaskList =
                 client.get(ServiceTaskRestResource.class).batchGetTaskList(queryTaskListReqVO);
         if (batchGetTaskList.isNotOk() || batchGetTaskList.getData() == null) {
             log.error("queryTaskListReqVO taskList isEmpty! req content: {}", queryTaskListReqVO);
@@ -225,7 +225,7 @@ public class ApiBizServiceImpl implements ApiBizService {
         reqVO.setPageSize(pageSize);
         reqVO.setSortField("task_id");
         reqVO.setSortType(sortType != null ? sortType.name() : Sort.Direction.ASC.name());
-        CodeCCResult<Page<CustomProjVO>> pageResult = client.get(ServiceTaskRestResource.class).batchGetCustomTaskList(reqVO);
+        Result<Page<CustomProjVO>> pageResult = client.get(ServiceTaskRestResource.class).batchGetCustomTaskList(reqVO);
         if (pageResult.isNotOk()) {
             log.error("batchGetCustomTaskList req is fail!");
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
@@ -339,7 +339,7 @@ public class ApiBizServiceImpl implements ApiBizService {
      * @return list
      */
     private List<ToolConfigInfoVO> batchGetToolConfigInfoVoList(QueryTaskListReqVO queryTaskListReqVO) {
-        CodeCCResult<List<ToolConfigInfoVO>> toolConfigListRes =
+        Result<List<ToolConfigInfoVO>> toolConfigListRes =
                 client.get(ServiceToolRestResource.class).batchGetToolConfigList(queryTaskListReqVO);
         if (toolConfigListRes.isNotOk() || CollectionUtils.isEmpty(toolConfigListRes.getData())) {
             log.error("toolConfigInfo result is empty! {}", queryTaskListReqVO);
@@ -355,7 +355,7 @@ public class ApiBizServiceImpl implements ApiBizService {
      * @return metaVO
      */
     private List<MetadataVO> getCodeLangMetadataVoList() {
-        CodeCCResult<Map<String, List<MetadataVO>>> metaDataResult =
+        Result<Map<String, List<MetadataVO>>> metaDataResult =
                 client.get(UserMetaRestResource.class).metadatas(ComConstants.KEY_CODE_LANG);
         if (metaDataResult.isNotOk() || metaDataResult.getData() == null) {
             log.error("meta data result is empty! meta data type {}", ComConstants.KEY_CODE_LANG);

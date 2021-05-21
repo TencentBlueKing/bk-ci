@@ -73,7 +73,8 @@ class PipelineBuildDao {
         parentTaskId: String?,
         webhookType: String?,
         webhookInfo: String?,
-        buildMsg: String?
+        buildMsg: String?,
+        buildNumAlias: String? = null
     ) {
 
         with(T_PIPELINE_BUILD_HISTORY) {
@@ -97,7 +98,8 @@ class PipelineBuildDao {
                 QUEUE_TIME,
                 WEBHOOK_TYPE,
                 WEBHOOK_INFO,
-                BUILD_MSG
+                BUILD_MSG,
+                BUILD_NUM_ALIAS
             ).values(
                 buildId,
                 buildNum,
@@ -117,7 +119,8 @@ class PipelineBuildDao {
                 LocalDateTime.now(),
                 webhookType,
                 webhookInfo,
-                buildMsg
+                buildMsg,
+                buildNumAlias
             ).execute()
         }
     }
@@ -811,6 +814,23 @@ class PipelineBuildDao {
                 .where(BUILD_ID.eq(buildId))
                 .fetchOne()
             return record?.buildParameters
+        }
+    }
+
+    fun countBuildNumByTime(
+        dslContext: DSLContext,
+        pipelineId: String,
+        startTime: LocalDateTime,
+        endTime: LocalDateTime
+    ): Int {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PIPELINE_ID.eq(pipelineId))
+            conditions.add(START_TIME.ge(startTime))
+            conditions.add(END_TIME.lt(endTime))
+            dslContext.selectCount().from(this)
+                .where(conditions)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 }

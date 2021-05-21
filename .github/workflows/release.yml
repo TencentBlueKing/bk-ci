@@ -78,9 +78,9 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
-      - name: Gradle Build
+      - name: Gradle Build Backend Service
         working-directory: src/backend/ci
-        run: ./gradlew clean test build -DmavenRepoUrl="http://maven.aliyun.com/nexus/content/groups/public/"
+        run: ./gradlew clean test build :core:worker:worker-agent:shadowJar -DmavenRepoUrl="https://maven.aliyun.com/nexus/content/groups/public/"
       - name: Create artifact - Step1:init
         run: |
           mkdir -p bkci/frontend
@@ -89,7 +89,7 @@ jobs:
           mkdir -p bkci/agent-package/script/linux
           mkdir -p bkci/agent-package/upgrade
           mkdir -p bkci/agent-package/jar
-      
+
       - name: Create artifact - Step2:Microservices
         run: |
           cp -rf support-files/agent-package/script/* bkci/agent-package/script/
@@ -114,16 +114,12 @@ jobs:
         with:
           name: agent
           path: bkci/agent-package/upgrade/
-      
+
       - name: Create artifact - Step4:Frontend
         uses: actions/download-artifact@v1
         with:
           name: frontend
           path: bkci/frontend/
-
-      - name: Create artifact - Step5:generate boot-microservice.sh
-        run: ./generate_boot.sh
-        working-directory: scripts/
 
       - name: Create artifact - Step6:support-files
         id: create-artifact
@@ -140,6 +136,26 @@ jobs:
           echo "::set-output name=version::$(basename $GITHUB_REF)"
           basename $GITHUB_REF > bkci/VERSION
 
+      - name: Create Slim Package dir
+        id: create-slim-dir
+        run: |
+          src_dir="bkci" slim_dir="ci"
+          mkdir -p "$slim_dir"
+          svcs=$(ls "$src_dir"/*/boot*.jar | sed -r 's/^.*boot-|.jar$//g'| grep -wv agentless)
+          #svcs="artifactory assembly auth dispatch dispatch dockerhost environment image log misc monitoring notify openapi plugin process project quality repository sign store ticket websocket"
+          for ms in $svcs; do
+            ./scripts/bk-ci-slim.sh "$ms" $src_dir/$ms/boot-$ms.jar "$slim_dir"
+          done
+
+          echo "sync files from $src_dir to $slim_dir. exclude agentless/ and boot-jars."
+          rsync -rav --exclude agentless/ --exclude "boot-*.jar" "$src_dir/" "$slim_dir"
+          echo "generate agentless/ dir."
+          mkdir -p "$slim_dir/agentless"
+          rsync -rav "$slim_dir/dockerhost/." "$slim_dir/agentless"
+          #ln -sfT dockerhost "$slim_dir"/agentless
+          echo "delete old boot-MS.sh"
+          rm -f "$slim_dir/support-files/templates/"*#boot-*.sh || true
+
       - name: Create Release
         id: create_release
         uses: actions/create-release@v1
@@ -150,14 +166,14 @@ jobs:
           release_name: bk-ci ${{ github.ref }}
           draft: true
           prerelease: true
-      
-      - run: tar czvf bkci.tar.gz  bkci
+
+      - run: tar czvf bkci-slim.tar.gz ci
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./bkci.tar.gz
-          asset_name: bkci.tar.gz
+          asset_path: ./bkci-slim.tar.gz
+          asset_name: bkci-slim.tar.gz
           asset_content_type: application/gzip

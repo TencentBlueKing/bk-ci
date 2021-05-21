@@ -55,7 +55,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
-@Suppress("ALL")
 @Service
 class BuildCancelControl @Autowired constructor(
     private val mutexControl: MutexControl,
@@ -95,7 +94,7 @@ class BuildCancelControl @Autowired constructor(
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId = event.buildId)
         // 已经结束的构建，不再受理，抛弃消息
         if (buildInfo == null || buildInfo.status.isFinish()) {
-            LOG.info("[$${event.buildId}|{${event.source}}|REPEAT_CANCEL_EVENT|${event.status}| abandon!")
+            LOG.info("[$${event.buildId}|${event.source}|REPEAT_CANCEL_EVENT|${event.status}| abandon!")
             return false
         }
 
@@ -154,6 +153,7 @@ class BuildCancelControl @Autowired constructor(
         )
     }
 
+    @Suppress("ALL")
     private fun cancelAllPendingTask(event: PipelineBuildCancelEvent, model: Model) {
 
         val variables: Map<String, String> by lazy { buildVariableService.getAllVariable(event.buildId) }

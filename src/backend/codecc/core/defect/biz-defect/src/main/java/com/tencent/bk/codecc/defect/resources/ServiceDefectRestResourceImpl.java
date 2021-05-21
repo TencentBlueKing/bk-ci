@@ -27,12 +27,18 @@
 package com.tencent.bk.codecc.defect.resources;
 
 import com.tencent.bk.codecc.defect.api.ServiceDefectRestResource;
+import com.tencent.bk.codecc.defect.service.MetricsService;
+import com.tencent.bk.codecc.defect.service.impl.StatQueryWarningServiceImpl;
 import com.tencent.bk.codecc.defect.vo.BatchDefectProcessReqVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.bk.codecc.defect.vo.MetricsVO;
+import com.tencent.devops.common.api.constant.CommonMessageCode;
+import com.tencent.devops.common.api.exception.CodeCCException;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.service.BizServiceFactory;
 import com.tencent.devops.common.service.IBizService;
 import com.tencent.devops.common.web.RestResource;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
@@ -43,20 +49,48 @@ import org.springframework.beans.factory.annotation.Autowired;
  */
 @RestResource
 public class ServiceDefectRestResourceImpl implements ServiceDefectRestResource {
+
     @Autowired
     private BizServiceFactory<IBizService> bizServiceFactory;
 
+    @Autowired
+    private MetricsService metricsService;
+
+    @Autowired
+    private StatQueryWarningServiceImpl statQueryWarningService;
+
     @Override
-    public CodeCCResult<Boolean> batchDefectProcess(long taskId,
-                                              String userName,
-                                              BatchDefectProcessReqVO batchDefectProcessReqVO)
-    {
+    public Result<Boolean> batchDefectProcess(long taskId,
+            String userName,
+            BatchDefectProcessReqVO batchDefectProcessReqVO) {
         batchDefectProcessReqVO.setTaskId(taskId);
         batchDefectProcessReqVO.setIgnoreAuthor(userName);
         IBizService<BatchDefectProcessReqVO> bizService =
-            bizServiceFactory.createBizService(batchDefectProcessReqVO.getToolName(),
-                ComConstants.BATCH_PROCESSOR_INFIX + batchDefectProcessReqVO.getBizType(),
-                IBizService.class);
+                bizServiceFactory.createBizService(batchDefectProcessReqVO.getToolName(),
+                        batchDefectProcessReqVO.getDimension(),
+                        ComConstants.BATCH_PROCESSOR_INFIX + batchDefectProcessReqVO.getBizType(),
+                        IBizService.class);
         return bizService.processBiz(batchDefectProcessReqVO);
     }
+
+    @Override
+    public Result<MetricsVO> getMetrics(String repoId, String buildId) {
+        if (StringUtils.isBlank(repoId)) {
+            throw new CodeCCException(CommonMessageCode.ERROR_INVALID_PARAM_);
+        }
+
+        try {
+            MetricsVO mericsInfo = metricsService.getMetrics(repoId, buildId);
+            return new Result<>(mericsInfo);
+        } catch (CodeCCException e) {
+            MetricsVO failData = new MetricsVO();
+            failData.setStatus(2);
+            return new Result<>(failData);
+        }
+    }
+
+    @Override public Result<Long> lastestStatDefect(long taskId, String toolName) {
+        return new Result<>(statQueryWarningService.getLastestMsgTime(taskId));
+    }
+
 }

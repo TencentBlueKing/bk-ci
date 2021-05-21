@@ -29,9 +29,13 @@ package com.tencent.bk.codecc.task.resources;
 import com.tencent.bk.codecc.task.api.ServiceBaseDataResource;
 import com.tencent.bk.codecc.task.service.BaseDataService;
 import com.tencent.bk.codecc.task.service.PipelineService;
-import com.tencent.bk.codecc.task.vo.BaseDataVO;
+import com.tencent.devops.common.api.BaseDataVO;
 import com.tencent.bk.codecc.task.vo.RepoInfoVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.exception.CodeCCException;
+import com.tencent.devops.common.api.pojo.Result;
+import com.tencent.devops.common.auth.api.external.AuthExPermissionApi;
+import com.tencent.devops.common.constant.ComConstants;
+import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.web.RestResource;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -55,22 +59,71 @@ public class ServiceBaseDataResourceImpl implements ServiceBaseDataResource
     @Autowired
     private PipelineService pipelineService;
 
+    @Autowired
+    private AuthExPermissionApi authExPermissionApi;
+
+
     @Override
-    public CodeCCResult<List<BaseDataVO>> getInfoByTypeAndCode(String paramType, String paramCode)
+    public Result<List<BaseDataVO>> getInfoByTypeAndCode(String paramType, String paramCode)
     {
-        return new CodeCCResult<>(baseDataService.findBaseDataInfoByTypeAndCode(paramType, paramCode));
+        return new Result<>(baseDataService.findBaseDataInfoByTypeAndCode(paramType, paramCode));
     }
 
     @Override
-    public CodeCCResult<Map<String, RepoInfoVO>> getRepoUrlByProjects(Set<String> bkProjectIds)
+    public Result<Map<String, RepoInfoVO>> getRepoUrlByProjects(Set<String> bkProjectIds)
     {
-        return new CodeCCResult<>(pipelineService.getRepoUrlByBkProjects(bkProjectIds));
+        return new Result<>(pipelineService.getRepoUrlByBkProjects(bkProjectIds));
     }
 
     @Override
-    public CodeCCResult<List<BaseDataVO>> getParamsByType(String paramType)
+    public Result<List<BaseDataVO>> getParamsByType(String paramType)
     {
-        return new CodeCCResult<>(baseDataService.findBaseDataInfoByType(paramType));
+        return new Result<>(baseDataService.findBaseDataInfoByType(paramType));
     }
 
+    @Override
+    public Result<Integer> batchSave(String uerId, List<BaseDataVO> baseDataVOList) {
+        return new Result<>(baseDataService.batchSave(uerId, baseDataVOList));
+    }
+
+    @Override
+    public Result<Integer> deleteById(String id) {
+        return new Result<>(baseDataService.deleteById(id));
+    }
+
+    @Override
+    public Result<Boolean> updateExcludeUserMember(String userName, BaseDataVO baseDataVO) {
+        // 判断是否为管理员
+        if (!authExPermissionApi.isAdminMember(userName)) {
+            throw new CodeCCException(CommonMessageCode.IS_NOT_ADMIN_MEMBER, new String[]{"admin member"});
+        }
+        return new Result<>(baseDataService.updateExcludeUserMember(baseDataVO, userName));
+    }
+
+
+    @Override
+    public Result<List<String>> queryExcludeUserMember() {
+        return new Result<>(baseDataService.queryMemberListByParamType(ComConstants.KEY_EXCLUDE_USER_LIST));
+    }
+
+
+    @Override
+    public Result<Boolean> updateAdminMember(String userName, BaseDataVO baseDataVO) {
+        // 判断是否为管理员
+        if (!authExPermissionApi.isAdminMember(userName)) {
+            throw new CodeCCException(CommonMessageCode.IS_NOT_ADMIN_MEMBER, new String[]{"admin member"});
+        }
+        return new Result<>(baseDataService.updateAdminMember(baseDataVO, userName));
+    }
+
+
+    @Override
+    public Result<List<String>> queryAdminMember() {
+        return new Result<>(baseDataService.queryMemberListByParamType(ComConstants.KEY_ADMIN_MEMBER));
+    }
+
+    @Override
+    public Result<List<BaseDataVO>> findBaseData() {
+        return new Result<>(baseDataService.findBaseData());
+    }
 }

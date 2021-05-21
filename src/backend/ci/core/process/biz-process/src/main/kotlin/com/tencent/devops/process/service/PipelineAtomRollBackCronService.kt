@@ -27,11 +27,14 @@
 
 package com.tencent.devops.process.service
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.BusTypeEnum
 import com.tencent.devops.common.api.enums.TaskStatusEnum
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.process.tables.records.TPipelineAtomReplaceHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineAtomReplaceItemRecord
 import com.tencent.devops.process.dao.PipelineAtomReplaceBaseDao
@@ -45,6 +48,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
+import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -211,11 +215,35 @@ class PipelineAtomRollBackCronService @Autowired constructor(
     private fun rollBackPipelineReplaceHistory(pipelineReplaceHistory: TPipelineAtomReplaceHistoryRecord) {
         val historyId = pipelineReplaceHistory.id
         val pipelineId = pipelineReplaceHistory.busId
-        val sourceModel =
-            pipelineRepositoryService.getModel(pipelineId = pipelineId, version = pipelineReplaceHistory.sourceVersion)
-                ?: return
-        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId = pipelineId) ?: return
         try {
+            val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId = pipelineId)
+            if (pipelineInfo == null) {
+                val params = arrayOf(pipelineId)
+                throw ErrorCodeException(
+                    statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                    errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                    params = params,
+                    defaultMessage = MessageCodeUtil.getCodeLanMessage(
+                        messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                        params = params
+                    )
+                )
+            }
+            val sourceVersion = pipelineReplaceHistory.sourceVersion
+            val sourceModel =
+                pipelineRepositoryService.getModel(pipelineId = pipelineId, version = sourceVersion)
+            if (sourceModel == null) {
+                val params = arrayOf("$pipelineId+$sourceVersion")
+                throw ErrorCodeException(
+                    statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                    errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                    params = params,
+                    defaultMessage = MessageCodeUtil.getCodeLanMessage(
+                        messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                        params = params
+                    )
+                )
+            }
             pipelineRepositoryService.deployPipeline(
                 model = sourceModel,
                 projectId = pipelineReplaceHistory.projectId,

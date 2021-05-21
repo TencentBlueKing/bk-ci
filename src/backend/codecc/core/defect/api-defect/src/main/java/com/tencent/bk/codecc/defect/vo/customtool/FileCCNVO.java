@@ -13,6 +13,12 @@ public class FileCCNVO
     private String filePath;
 
     /**
+     * 文件相对路径
+     */
+    @JsonProperty("file_rel_path")
+    private String fileRelPath;
+
+    /**
      * 文件所有函数圈复杂度之和
      */
     @JsonProperty("total_ccn_count")

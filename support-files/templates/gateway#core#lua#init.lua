@@ -19,6 +19,7 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
 
 config = {
   env = "__BK_CI_ENV__",
+  internal_file_dir = "__BK_CI_DATA_DIR__/gateway/files/",
   static_dir = "__BK_CI_HOME__/frontend",
   static_dir_gray = "__BK_CI_HOME__/frontend-gray",
   docs_dir = "__BK_CI_HOME__/docs",
