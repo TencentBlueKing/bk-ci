@@ -146,7 +146,7 @@ open class AbsPermissionService @Autowired constructor(
                 resourceType = resourceType
             )
             val authPermission = it.substringAfterLast("_")
-            result[AuthPermission.valueOf(authPermission)] = actionResourceList
+            result[AuthPermission.get(authPermission)] = actionResourceList
         }
         return result
     }
