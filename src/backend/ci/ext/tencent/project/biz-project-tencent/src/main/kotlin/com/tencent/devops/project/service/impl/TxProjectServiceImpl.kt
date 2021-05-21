@@ -27,8 +27,6 @@
 
 package com.tencent.devops.project.service.impl
 
-import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.bkrepo.common.api.util.JsonUtils.objectMapper
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -52,7 +50,6 @@ import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
-import com.tencent.devops.project.pojo.tof.Response
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectPaasCCService
 import com.tencent.devops.project.service.ProjectPermissionService
@@ -60,7 +57,6 @@ import com.tencent.devops.project.service.s3.S3Service
 import com.tencent.devops.project.service.tof.TOFService
 import com.tencent.devops.project.util.ImageUtil
 import com.tencent.devops.project.util.ProjectUtils
-import jdk.nashorn.internal.AssertsEnabled
 import okhttp3.Request
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -111,11 +107,11 @@ class TxProjectServiceImpl @Autowired constructor(
             return projectVO
         }
 
-        val projectAuthIds = getProjectFromAuth(userId, accessToken)
-        if (projectAuthIds == null || projectAuthIds.isEmpty()) {
+        val englishNames = getProjectFromAuth(userId, accessToken)
+        if (englishNames == null || englishNames.isEmpty()) {
             return null
         }
-        if (!projectAuthIds.contains(projectVO!!.projectId)) {
+        if (!englishNames.contains(projectVO!!.englishName)) {
             logger.warn("The user don't have the permission to get the project $englishName")
             return null
         }
@@ -126,14 +122,16 @@ class TxProjectServiceImpl @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         try {
 
-            val projects = getProjectFromAuth(userId, accessToken).toSet()
-            if (projects == null || projects.isEmpty()) {
+            val englishNames = getProjectFromAuth(userId, accessToken).toSet()
+            if (englishNames == null || englishNames.isEmpty()) {
                 return emptyList()
             }
-            logger.info("项目列表：$projects")
+            logger.info("项目列表：$englishNames")
             val list = ArrayList<ProjectVO>()
-            projectDao.list(dslContext, projects, enabled).map {
-                list.add(ProjectUtils.packagingBean(it, grayProjectSet()))
+            projectDao.listByCodes(dslContext, englishNames).map {
+                if (it.enabled == true) {
+                    list.add(ProjectUtils.packagingBean(it, grayProjectSet()))
+                }
             }
             return list
         } finally {
@@ -183,6 +181,7 @@ class TxProjectServiceImpl @Autowired constructor(
         projectPermissionService.deleteResource(projectId)
     }
 
+    // 此处分别对接V0,V3实现, V3,V0的projectId不通用,故此处调整返回为english_name
     override fun getProjectFromAuth(userId: String?, accessToken: String?): List<String> {
 //        val url = "$authUrl?access_token=$accessToken"
 //        logger.info("Start to get auth projects - ($url)")
