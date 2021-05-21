@@ -40,8 +40,13 @@ class TxPermissionServiceImpl @Autowired constructor(
     val policyService: PolicyService,
     val iamConfiguration: IamConfiguration
 ) : AbsPermissionService(authHelper, policyService, iamConfiguration) {
-    override fun validateUserResourcePermission(userId: String, action: String): Boolean {
-        return super.validateUserResourcePermission(userId, action)
+
+    override fun validateUserActionPermission(userId: String, action: String): Boolean {
+        return super.validateUserActionPermission(userId, action)
+    }
+
+    override fun validateUserResourcePermission(userId: String, action: String, projectCode: String, resourceType: String?): Boolean {
+        return super.validateUserResourcePermission(userId, action, projectCode, resourceType)
     }
 
     override fun validateUserResourcePermissionByRelation(

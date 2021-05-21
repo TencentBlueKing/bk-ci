@@ -11,10 +11,10 @@ object TActionUtils {
 
     fun extResourceType(authResourceType: AuthResourceType): String {
         val newResourceName = when(authResourceType) {
-            AuthResourceType.QUALITY_GROUP -> ""
-            AuthResourceType.QUALITY_RULE -> ""
-            AuthResourceType.EXPERIENCE_TASK -> ""
-            AuthResourceType.EXPERIENCE_GROUP -> ""
+            AuthResourceType.QUALITY_GROUP -> "quality_group"
+            AuthResourceType.QUALITY_RULE -> "rule"
+            AuthResourceType.EXPERIENCE_TASK -> "experience_task"
+            AuthResourceType.EXPERIENCE_GROUP -> "experience_group"
             else -> authResourceType.value
         }
         return newResourceName

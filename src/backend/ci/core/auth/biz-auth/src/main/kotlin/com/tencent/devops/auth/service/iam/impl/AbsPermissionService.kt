@@ -21,6 +21,7 @@ open class AbsPermissionService @Autowired constructor(
 ) : PermissionService {
 
     override fun validateUserActionPermission(userId: String, action: String): Boolean {
+        logger.info("[iam V3] validateUserActionPermission $userId $action")
         return authHelper.isAllowed(userId, action)
     }
 
@@ -48,6 +49,8 @@ open class AbsPermissionService @Autowired constructor(
         resourceType: String,
         relationResourceType: String?
     ): Boolean {
+        logger.info("[iam V3]validateUserResourcePermissionByRelation: $userId $action $projectCode " +
+            "$resourceCode $resourceType $relationResourceType")
         val instanceDTO = InstanceDTO()
         instanceDTO.system = iamConfiguration.systemId
         // 若不关注操作资源实例，则必须关注是否在项目下
@@ -79,30 +82,36 @@ open class AbsPermissionService @Autowired constructor(
         projectCode: String,
         resourceType: String
     ): List<String> {
-        val actionDto = ActionDTO()
-        actionDto.id = action
-        val expression = (policyService.getPolicyByAction(userId, actionDto, null) ?: return emptyList())
-        logger.info("[iam V3] getUserResourceByPermission expression:$expression")
+        try {
+            logger.info("[iam V3] getUserResourceByPermission $userId $action $projectCode $resourceType")
+            val actionDto = ActionDTO()
+            actionDto.id = action
+            val expression = (policyService.getPolicyByAction(userId, actionDto, null) ?: return emptyList())
+            logger.info("[iam V3] getUserResourceByPermission expression:$expression")
 
-        if (expression.operator == null && expression.content == null) {
-            return emptyList()
-        }
-
-        // 管理员权限
-        if (expression.operator == ExpressionOperationEnum.ANY) {
-            return listOf("*")
-        }
-
-        return if (resourceType == AuthResourceType.PROJECT.value) {
-            AuthUtils.getProjects(expression)
-        } else {
-            val instancesList = AuthUtils.getResourceInstance(expression, projectCode, resourceType)
-            if (!instancesList.contains("*")) {
-                instancesList.toList()
-            } else {
-                listOf("*")
+            if (expression.operator == null && expression.content == null) {
+                return emptyList()
             }
+
+            // 管理员权限
+            if (expression.operator == ExpressionOperationEnum.ANY) {
+                return listOf("*")
+            }
+
+            return if (resourceType == AuthResourceType.PROJECT.value) {
+                AuthUtils.getProjects(expression)
+            } else {
+                val instancesList = AuthUtils.getResourceInstance(expression, projectCode, resourceType)
+                if (!instancesList.contains("*")) {
+                    instancesList.toList()
+                } else {
+                    listOf("*")
+                }
+            }
+        } catch (e: Exception) {
+            logger.warn("getUserResourceByAction fail {}", e)
         }
+        return emptyList()
     }
 
     override fun getUserResourcesByActions(
@@ -111,6 +120,7 @@ open class AbsPermissionService @Autowired constructor(
         projectCode: String,
         resourceType: String
     ): Map<AuthPermission, List<String>> {
+        logger.info("[iam V3] getUserResourcesByActions $userId $actions $projectCode $resourceType")
         val result = mutableMapOf<AuthPermission, List<String>>()
         actions.forEach {
             val actionResourceList = getUserResourceByAction(
