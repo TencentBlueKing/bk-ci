@@ -39,6 +39,7 @@ import com.tencent.devops.auth.service.permission.empty.EmptyPermissionServiceIm
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -88,10 +89,10 @@ class AuthConfiguration {
     fun authHelper() = AuthHelper(tokenService(), policyService(), iamConfiguration())
 
     @Bean
-    @ConditionalOnMissingBean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
     fun emptyPermissionService() = EmptyPermissionServiceImpl()
 
     @Bean
-    @ConditionalOnMissingBean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
     fun emptyPermissionProjectServiceImpl() = EmptyPermissionProjectServiceImpl()
 }
