@@ -151,7 +151,7 @@ interface ServiceGitCiResource {
         @QueryParam("gitProjectId")
         gitProjectId: String,
         @ApiParam("是否使用accessToken", required = true)
-        @QueryParam("gitProjectId")
+        @QueryParam("useAccessToken")
         useAccessToken: Boolean
     ): Result<GitCIProjectInfo?>
 
@@ -172,7 +172,7 @@ interface ServiceGitCiResource {
         @QueryParam("ref")
         ref: String,
         @ApiParam("是否使用accessToken", required = true)
-        @QueryParam("gitProjectId")
+        @QueryParam("useAccessToken")
         useAccessToken: Boolean
     ): Result<String>
 }
