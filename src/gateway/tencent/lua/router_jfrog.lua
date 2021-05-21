@@ -22,26 +22,11 @@ if (ngx.var.service_code == nil or ngx.var.resource_type == nil) then
     return
 end
 
--- 访问限制的工具
-local access_util = nil
-
--- 用户请求类型访问频率限制
-if ngx.var.access_type == 'user' then
-    access_util = require 'access_control_user'
-end
--- ip地址请求类型访问频率限制
-if ngx.var.access_type == 'build' or ngx.var.access_type == 'external' then
-    access_util = require 'access_control_ip'
-end
-
--- 限制访问频率
-if access_util then
-    local access_result, err = access_util:isAccess()
-    if not access_result then
-        ngx.log(ngx.STDERR, "request excess!")
-        ngx.exit(503)
-        return
-    end
+-- 频率限制
+if not accessControlUtil:isAccess() then
+    ngx.log(ngx.ERR, "request excess!")
+    ngx.exit(429)
+    return
 end
 
 if ngx.var.service_code == "pipeline" then
