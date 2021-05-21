@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.pipeline.enums.DockerVersion
+import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.redis.RedisOperation
@@ -276,7 +277,8 @@ class DockerHostClient @Autowired constructor(
             } else {
                 ImageRDTypeEnum.getImageRDTypeByName(dispatchType.imageRDType!!).name
             },
-            containerHashId = event.containerHashId
+            containerHashId = event.containerHashId,
+            buildType = BuildType.AGENT_LESS
         )
 
         dockerBuildStart(agentLessDockerIp, agentLessDockerPort, requestBody, DispatchMessage(

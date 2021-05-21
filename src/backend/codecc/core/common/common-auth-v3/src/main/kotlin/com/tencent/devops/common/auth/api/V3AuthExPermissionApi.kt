@@ -98,17 +98,7 @@ class V3AuthExPermissionApi(client: Client,
         projectId: String,
         actions: Set<String>
     ): List<BkAuthExResourceActionModel> {
-        return actions.map { action ->
-            val result = codeccAuthPermissionApi.validateUserResourcePermission(
-                user = user,
-                serviceCode = CodeCCAuthServiceCode(),
-                resourceType = CODECC_RESOURCE_TYPE,
-                projectCode = projectId,
-                resourceCode = taskId,
-                permission = action,
-                relationResourceType = CODECC_RESOURCE_TYPE)
-            BkAuthExResourceActionModel(isPass = result)
-        }
+        return listOf(BkAuthExResourceActionModel(isPass = true))
     }
 
     /**

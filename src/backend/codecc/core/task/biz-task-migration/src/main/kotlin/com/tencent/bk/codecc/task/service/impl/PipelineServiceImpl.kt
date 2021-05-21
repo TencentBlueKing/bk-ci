@@ -96,6 +96,7 @@ import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import com.tencent.devops.store.pojo.atom.InstallAtomReq
+import lombok.extern.slf4j.Slf4j
 import net.sf.json.JSONArray
 import org.apache.commons.lang.StringUtils
 import org.slf4j.LoggerFactory
@@ -117,13 +118,15 @@ import kotlin.collections.set
  * @date 2019/5/5
  */
 @Service
+@Slf4j
 open class PipelineServiceImpl @Autowired constructor(
     private val client: Client,
     private val baseDataRepository: BaseDataRepository,
     private val toolMetaCacheService: ToolMetaCacheService,
     private val taskRepository: TaskRepository,
     private val objectMapper: ObjectMapper,
-    private val metaService: MetaService
+    private val metaService: MetaService,
+    private val pipelineUtils: PipelineUtils
 ) : PipelineService {
 
     @Value("\${devops.retry.attempt:#{null}}")
@@ -138,14 +141,8 @@ open class PipelineServiceImpl @Autowired constructor(
     @Value("\${devops.dispatch.buildType:DOCKER}")
     private val buildType: String = ""
 
-    @Value("\${devops.dispatch.imageCode:tlinux_ci}")
-    private val imageCode: String = ""
-
     @Value("\${devops.dispatch.imageVersion:3.*}")
     private val imageVersion: String = ""
-
-    @Value("\${codecc.dispatch.dockerBuildVersion:tlinux_ci}")
-    private val dockerBuildVersion: String = ""
 
     @Value("\${codecc.public.account:#{null}}")
     private val codeccPublicAccount: String? = null
@@ -155,7 +152,6 @@ open class PipelineServiceImpl @Autowired constructor(
 
     @Value("\${git.path:#{null}}")
     private val gitCodePath: String? = null
-
 
     private val pluginVersionCache = CacheBuilder.newBuilder()
         .maximumSize(10000)
@@ -181,12 +177,12 @@ open class PipelineServiceImpl @Autowired constructor(
         registerVO: BatchRegisterVO, taskInfoEntity: TaskInfoEntity,
         defaultExecuteTime: String, defaultExecuteDate: List<String>, userName: String, relPath: String
     ): String {
-        val modelParam = PipelineUtils.createPipeline(
+        val modelParam = pipelineUtils.createPipeline(
             registerVO = registerVO,
             taskInfoEntity = taskInfoEntity,
             relPath = relPath,
             imageName = imageName,
-            dispatchType = PipelineUtils.getDispatchType(buildType, imageName, imageVersion, imageCode, dockerBuildVersion)
+            dispatchType = pipelineUtils.getDispatchType(buildType, imageName, imageVersion)
         )
         val result = client.getDevopsService(ServicePipelineResource::class.java)
             .create(userName, taskInfoEntity.projectId, modelParam, ChannelCode.CODECC_EE)
@@ -216,9 +212,9 @@ open class PipelineServiceImpl @Autowired constructor(
                 container.elements.forEach { element ->
                     // 旧插件替换成新的
                     val newElement = when {
-                        PipelineUtils.isNewCodeElement(element) || PipelineUtils.isOldCodeElement(element) -> {
-                            PipelineUtils.getNewCodeElement(
-                                PipelineUtils.CodeElementData(
+                        pipelineUtils.isNewCodeElement(element) || pipelineUtils.isOldCodeElement(element) -> {
+                            pipelineUtils.getNewCodeElement(
+                                PipelineUtils.Companion.CodeElementData(
                                     scmType = registerVO.scmType,
                                     repoHashId = registerVO.repoHashId,
                                     branch= registerVO.branch,
@@ -226,8 +222,8 @@ open class PipelineServiceImpl @Autowired constructor(
                                 )
                             )
                         }
-                        PipelineUtils.isOldCodeCCElement(element) -> {
-                            PipelineUtils.transferOldCodeCCElementToNew()
+                        pipelineUtils.isOldCodeCCElement(element) -> {
+                            pipelineUtils.transferOldCodeCCElementToNew()
                         }
                         else -> {
                             element
@@ -285,7 +281,7 @@ open class PipelineServiceImpl @Autowired constructor(
 
         // 更新流水线model
         with(taskEntity) {
-            val channelCode = PipelineUtils.getDevopsChannelCode(createFrom, taskEntity.nameEn)
+            val channelCode = pipelineUtils.getDevopsChannelCode(createFrom, taskEntity.nameEn)
             val edit = client.getDevopsService(ServicePipelineResource::class.java).edit(userName, projectId, pipelineId, newModel, channelCode)
             if (Objects.nonNull(edit) && edit.data != true) {
                 throw CodeCCException(CommonMessageCode.BLUE_SHIELD_INTERNAL_ERROR)
@@ -511,7 +507,7 @@ open class PipelineServiceImpl @Autowired constructor(
         val codeccElement: Element =
             MarketBuildAtomElement(
                 name = "CodeCC代码检查(New)",
-                atomCode = "CodeccCheckAtomDebug",
+                atomCode = pipelineUtils.CODECC_ATOM_CODE,
                 version = (pluginVersionCache.get("CODECC") ?: "4.*"),
                 data = mapOf(
                     "input" to mapOf(
@@ -802,7 +798,7 @@ open class PipelineServiceImpl @Autowired constructor(
         val codeccElement: Element =
                 MarketBuildAtomElement(
                         name = "CodeCC代码检查(New)",
-                        atomCode = "CodeccCheckAtomDebug",
+                        atomCode = pipelineUtils.CODECC_ATOM_CODE,
                         version = (pluginVersionCache.get("CODECC") ?: "4.*"),
                         data = mapOf(
                                 "input" to mapOf(
@@ -992,7 +988,7 @@ open class PipelineServiceImpl @Autowired constructor(
         }
 
         // 获取CodeCC原子
-        val codeElement = PipelineUtils.getOldCodeElement(registerVO, relPath)
+        val codeElement = pipelineUtils.getOldCodeElement(registerVO, relPath)
 
         val scriptType =
             BuildScriptType.valueOf(if (registerVO?.projectBuildType.isNullOrBlank()) BuildScriptType.SHELL.name else registerVO!!.projectBuildType)
@@ -1338,7 +1334,7 @@ open class PipelineServiceImpl @Autowired constructor(
                                 }
                                 //定时时间或者日期为空则删除定时任务编排
                                 if (!executeTime.isBlank() && !executeDate.isNullOrEmpty()) {
-                                    val cronTabStr = PipelineUtils.getCrontabTimingStr(executeTime, executeDate)
+                                    val cronTabStr = pipelineUtils.getCrontabTimingStr(executeTime, executeDate)
                                     //无论原来是否有定时任务原子，都新建更新
                                     val timerTriggerElement =
                                         TimerTriggerElement("定时触发", null, null,
@@ -1676,7 +1672,7 @@ open class PipelineServiceImpl @Autowired constructor(
                                         }
                                         element
                                     } else if (null != codeElement && ComConstants.BsTaskCreateFrom.BS_PIPELINE.value() != createFrom
-                                        && (PipelineUtils.isOldCodeElement(element))
+                                        && (pipelineUtils.isOldCodeElement(element))
                                     ) {
                                         codeElement
                                     } else {
@@ -1751,7 +1747,7 @@ open class PipelineServiceImpl @Autowired constructor(
         createFrom: String,
         nameEn: String
     ): Model {
-        val channelCode = PipelineUtils.getDevopsChannelCode(createFrom, nameEn)
+        val channelCode = pipelineUtils.getDevopsChannelCode(createFrom, nameEn)
 
         val result = client.getDevopsService(ServicePipelineResource::class.java)
             .get(userName, projectId, pipelineId, channelCode)
@@ -1785,12 +1781,12 @@ open class PipelineServiceImpl @Autowired constructor(
                 container.elements.forEach { element ->
                     if(element is MarketBuildAtomElement){
                         //拉取代码原子更新版本
-                        if(element.getAtomCode() == "gitCodeRepoCommon"){
-                            element.version = (pluginVersionCache.get("GIT") ?: "2.*")
+                        if(element.getAtomCode() == pipelineUtils.GIT_COMMON_ATOM_CODE){
+                            element.version = (pluginVersionCache.get("GIT") ?: pipelineUtils.GIT_COMMON_ATOM_CODE_VERSION)
                         }
                         //代码扫描原子更新版本
-                        if(element.getAtomCode() == "CodeccCheckAtomDebug"){
-                            element.version = (pluginVersionCache.get("CODECC") ?: "4.*")
+                        if(element.getAtomCode() == pipelineUtils.CODECC_ATOM_CODE){
+                            element.version = (pluginVersionCache.get("CODECC") ?: pipelineUtils.CODECC_ATOM_VERSION)
                         }
                     }
                 }

@@ -1,14 +1,17 @@
 package com.tencent.devops.common.auth.api
 
 import com.tencent.devops.common.auth.api.external.AuthExRegisterApi
+import com.tencent.devops.common.auth.pojo.CodeCCAuthResourceType
 import com.tencent.devops.common.auth.pojo.CodeCCAuthServiceCode
+import com.tencent.devops.common.auth.utils.CodeCCAuthResourceApi
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 
 class V3AuthExRegisterApi @Autowired constructor(
-    private val authResourceApi: AuthResourceApi
+    private val authResourceApi: CodeCCAuthResourceApi
 ): AuthExRegisterApi {
     override fun registerCodeCCTask(user: String, taskId: String, taskName: String, projectId: String): Boolean {
-        authResourceApi.createResource(user, CodeCCAuthServiceCode(), AuthResourceType.CODECC_TASK, projectId, taskId, taskName)
+        authResourceApi.createResource(user, CodeCCAuthResourceType.CODECC_TASK, projectId, taskId, taskName)
         return true
     }
 

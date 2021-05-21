@@ -98,3 +98,11 @@ auth:
   appSecret: __BK_CODECC_APP_TOKEN__
   bkloginUrl: __BK_PAAS_PRIVATE_URL__/login/api/v2
   iamCallBackUser: __BK_CI_IAM_CALLBACK_USER__
+
+esb:
+  code: __BK_CODECC_APP_CODE__
+  secret: __BK_CODECC_APP_TOKEN__
+
+bk:
+  paas:
+    host: __BK_PAAS_PRIVATE_URL__
