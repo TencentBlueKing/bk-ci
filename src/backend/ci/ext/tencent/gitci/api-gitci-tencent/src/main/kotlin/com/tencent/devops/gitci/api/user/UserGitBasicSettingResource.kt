@@ -30,7 +30,9 @@ package com.tencent.devops.gitci.api.user
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.gitci.pojo.GitRepository
 import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
+import com.tencent.devops.gitci.pojo.v2.GitCIUpdateSetting
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -40,7 +42,6 @@ import javax.ws.rs.Consumes
 import javax.ws.rs.POST
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.GET
-import javax.ws.rs.DELETE
 import javax.ws.rs.PathParam
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
@@ -51,16 +52,21 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserGitBasicSettingResource {
 
-    @ApiOperation("关闭工蜂CI功能")
-    @DELETE
-    @Path("/{projectId}/disable")
-    fun disableGitCI(
+    @ApiOperation("开启，关闭，初始化呢工蜂CI")
+    @POST
+    @Path("/{projectId}/enable")
+    fun enableGitCI(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam("蓝盾项目ID", required = true)
         @PathParam("projectId")
-        projectId: String
+        projectId: String,
+        @ApiParam("开启或关闭", required = true)
+        @QueryParam("enabled")
+        enabled: Boolean,
+        @ApiParam("工蜂项目信息(初始化时用)", required = false)
+        repository: GitRepository?
     ): Result<Boolean>
 
     @ApiOperation("查询工蜂CI项目配置")
@@ -77,13 +83,16 @@ interface UserGitBasicSettingResource {
 
     @ApiOperation("保存工蜂CI配置")
     @POST
-    @Path("/save")
+    @Path("/{projectId}/save")
     fun saveGitCIConf(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam(value = "蓝盾项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
         @ApiParam("工蜂项目配置", required = true)
-        gitCIBasicSetting: GitCIBasicSetting
+        gitCIUpdateSetting: GitCIUpdateSetting
     ): Result<Boolean>
 
     @ApiOperation("修改项目启动人")
@@ -95,8 +104,6 @@ interface UserGitBasicSettingResource {
         userId: String,
         @ApiParam(value = "蓝盾项目ID", required = true)
         @PathParam("projectId")
-        projectId: String,
-        @QueryParam("enableUserId")
-        enableUserId: String
+        projectId: String
     ): Result<Boolean>
 }

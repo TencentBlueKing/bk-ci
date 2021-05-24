@@ -94,11 +94,16 @@ class ScmService @Autowired constructor(
         useAccessToken: Boolean
     ): GitCIProjectInfo? {
         logger.info("GitCIProjectInfo: [$gitProjectId|$token|$useAccessToken]")
-        return client.getScm(ServiceGitCiResource::class).getProjectInfo(
-            accessToken = token,
-            gitProjectId = gitProjectId,
-            useAccessToken = useAccessToken
-        ).data
+        return try {
+            client.getScm(ServiceGitCiResource::class).getProjectInfo(
+                accessToken = token,
+                gitProjectId = gitProjectId,
+                useAccessToken = useAccessToken
+            ).data
+        } catch (e: Exception) {
+            logger.error("getProjectInfo error", e)
+            null
+        }
     }
 
     fun getCommits(

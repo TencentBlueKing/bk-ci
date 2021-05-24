@@ -28,6 +28,7 @@
 package com.tencent.devops.gitci.v2.service
 
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.gitci.pojo.GitRepository
 import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
 import com.tencent.devops.gitci.v2.exception.GitCINoEnableException
@@ -77,6 +78,34 @@ class GitCIBasicSettingService @Autowired constructor(
 
     fun getGitCIBasicSettingAndCheck(gitProjectId: Long): GitCIBasicSetting {
         return gitCIBasicSettingDao.getSetting(dslContext, gitProjectId) ?: throw GitCINoEnableException()
+    }
+
+    fun initGitCIConf(
+        userId: String,
+        projectId: String,
+        gitProjectId: Long,
+        enabled: Boolean,
+        repository: GitRepository
+    ): Boolean {
+        return saveGitCIConf(
+            userId,
+            GitCIBasicSetting(
+                gitProjectId = gitProjectId,
+                name = repository.name,
+                url = repository.url,
+                homepage = repository.homepage,
+                gitHttpUrl = repository.gitHttpUrl,
+                gitSshUrl = repository.gitSshUrl,
+                enableCi = enabled,
+                enableUserId = userId,
+                buildPushedBranches = true,
+                buildPushedPullRequest = true,
+                enableMrBlock = true,
+                projectCode = projectId,
+                createTime = null,
+                updateTime = null
+            )
+        )
     }
 
     fun saveGitCIConf(userId: String, gitCIBasicSetting: GitCIBasicSetting): Boolean {
