@@ -62,3 +62,13 @@ data class GitCIBasicSetting(
     @ApiModelProperty("工蜂CI开启人")
     val enableUserId: String
 ) : Repository(gitProjectId, name, url, homepage, gitHttpUrl, gitSshUrl)
+
+@ApiModel("蓝盾工蜂页面修改配置")
+data class GitCIUpdateSetting(
+    @ApiModelProperty("Build pushed branches")
+    val buildPushedBranches: Boolean,
+    @ApiModelProperty("Build pushed pull request")
+    val buildPushedPullRequest: Boolean,
+    @ApiModelProperty("是否开启Mr锁定")
+    val enableMrBlock: Boolean
+)
