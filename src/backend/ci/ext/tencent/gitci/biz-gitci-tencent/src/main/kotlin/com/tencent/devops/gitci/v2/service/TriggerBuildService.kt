@@ -902,7 +902,7 @@ class TriggerBuildService @Autowired constructor(
         }
         yaml.variables!!.forEach { (key, variable) ->
             startParams[VARIABLE_PREFIX + key] =
-                variable.copy(value = formatVariablesValue(variable.value, gitBasicSetting, startParams)).toString()
+                variable.copy(value = formatVariablesValue(variable.value, gitBasicSetting, startParams)).value ?: ""
         }
     }
 
