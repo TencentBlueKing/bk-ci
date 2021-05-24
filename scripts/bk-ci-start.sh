@@ -54,7 +54,7 @@ tip_dir_exist (){
 
 # 启动网关.
 start_ci__openresty (){
-  $OPENRESTY_CMD -p "$PWD"
+  $OPENRESTY_CMD -p "$PWD" -g "user $MS_USER;"
 }
 
 check_port_listen (){
