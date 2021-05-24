@@ -58,21 +58,21 @@ data class AtomEnv(
     @ApiModelProperty("插件最后修改时间", required = true)
     val updateTime: Long,
     @ApiModelProperty("插件初始化项目代码", required = false)
-    val projectCode: String?,
-    @ApiModelProperty("安装包路径", required = true)
-    val pkgPath: String,
+    val projectCode: String? = null,
+    @ApiModelProperty("安装包路径", required = false)
+    val pkgPath: String? = null,
     @ApiModelProperty("插件开发语言", required = false)
-    val language: String?,
+    val language: String? = null,
     @ApiModelProperty("支持插件开发语言的最低版本", required = false)
-    val minVersion: String?,
-    @ApiModelProperty("插件执行入口", required = true)
-    val target: String,
+    val minVersion: String? = null,
+    @ApiModelProperty("插件执行入口", required = false)
+    val target: String? = null,
     @ApiModelProperty("插件SHA签名串", required = false)
-    val shaContent: String?,
+    val shaContent: String? = null,
     @ApiModelProperty("插件执行前置命令", required = false)
-    val preCmd: String?,
+    val preCmd: String? = null,
     @ApiModelProperty("Job类型", required = false)
-    val jobType: JobTypeEnum?,
+    val jobType: JobTypeEnum? = null,
     @ApiModelProperty("插件post信息", required = false)
-    val atomPostInfo: AtomPostInfo?
+    val atomPostInfo: AtomPostInfo? = null
 )

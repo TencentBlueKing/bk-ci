@@ -213,7 +213,7 @@ class StoreTemplateDao {
             conditions.add(ttlr.LABEL_ID.`in`(labelIdList))
         }
 
-        return baseStep.where(conditions).fetchOne(0, Int::class.java)
+        return baseStep.where(conditions).fetchOne(0, Int::class.java)!!
     }
 
     /**
@@ -224,7 +224,7 @@ class StoreTemplateDao {
             return dslContext.selectCount().from(this)
                 .where(TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte())
                     .and(CLASSIFY_ID.eq(classifyId)))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -238,6 +238,6 @@ class StoreTemplateDao {
         return dslContext.selectCount().from(a).join(b).on(a.TEMPLATE_CODE.eq(b.STORE_CODE))
             .where(a.TEMPLATE_STATUS.`in`(templateStatusList)
                 .and(a.CLASSIFY_ID.eq(classifyId)))
-            .fetchOne(0, Int::class.java)
+            .fetchOne(0, Int::class.java)!!
     }
 }

@@ -41,6 +41,12 @@ const val JAVA_PATH_ENV = "bk_java_path"
 
 const val NODEJS_PATH_ENV = "bk_nodejs_path"
 
+const val LOG_DEBUG_FLAG = "##[debug]"
+
+const val LOG_ERROR_FLAG = "##[error]"
+
+const val LOG_WARN_FLAG = "##[warning]"
+
 const val LOG_SUBTAG_FLAG = "##subTag##"
 
 const val LOG_SUBTAG_FINISH_FLAG = "##subTagFinish##"

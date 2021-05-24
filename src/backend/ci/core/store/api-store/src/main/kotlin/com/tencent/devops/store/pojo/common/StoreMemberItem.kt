@@ -38,6 +38,8 @@ data class StoreMemberItem(
     val userName: String,
     @ApiModelProperty("成员类型")
     val type: String,
+    @ApiModelProperty("所属调试项目标识")
+    val projectCode: String,
     @ApiModelProperty("所属调试项目名称")
     val projectName: String,
     @ApiModelProperty("创建人")

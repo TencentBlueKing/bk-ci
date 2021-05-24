@@ -390,7 +390,7 @@ class CustomSchedulerManager @Autowired constructor(
                     scheduler.scheduleJob(jobDetail, trigger)
                 } catch (e1: ObjectAlreadyExistsException) {
                     trigger = trigger.triggerBuilder.withIdentity(triggerKey).withSchedule(
-                        CronScheduleBuilder.cronSchedule(cronExpression)
+                        CronScheduleBuilder.cronSchedule(cronExpression).withMisfireHandlingInstructionDoNothing()
                     ).build()
                     scheduler.rescheduleJob(triggerKey, trigger)
                 } catch (e2: Exception) {
@@ -415,10 +415,18 @@ class CustomSchedulerManager @Autowired constructor(
             val triggerKey = TriggerKey.triggerKey(triggerName, triggerGroup)
             try {
                 var trigger = scheduler.getTrigger(triggerKey) as CronTrigger
-                trigger = trigger.triggerBuilder.withIdentity(triggerKey)
-                    .withSchedule(CronScheduleBuilder.cronSchedule(cronExpression))
+                if (trigger.cronExpression.equals(cronExpression)) {
+                    return
+                }
+
+                var triggerNew = TriggerBuilder.newTrigger()
+                    .withIdentity(triggerKey)
+                    .withSchedule(
+                        CronScheduleBuilder.cronSchedule(cronExpression).withMisfireHandlingInstructionDoNothing()
+                    )
                     .build()
-                scheduler.rescheduleJob(triggerKey, trigger)
+
+                scheduler.rescheduleJob(triggerKey, triggerNew)
             } catch (e: Exception) {
                 logger.info("reschedule job fail! job name: ${jobInstanceEntity.jobName}")
             }

@@ -47,7 +47,6 @@ import org.springframework.stereotype.Service
 import org.tmatesoft.svn.core.wc.SVNRevision
 import java.util.Base64
 import javax.ws.rs.NotFoundException
-import kotlin.math.min
 
 @Suppress("ALL")
 @Service
@@ -103,11 +102,11 @@ class CodeService @Autowired constructor(
     fun getGitRefs(projectId: String, repoHashId: String?): List<String> {
         val repositoryConfig = getRepositoryConfig(repoHashId, null)
         val result = mutableListOf<String>()
-        val branches = scmProxyService.listBranches(projectId, repositoryConfig).data ?: listOf()
-        val tags = scmProxyService.listTags(projectId, repositoryConfig).data ?: listOf()
+        val branches = scmProxyService.listBranches(projectId, repositoryConfig, full = false).data ?: listOf()
+        val tags = scmProxyService.listTags(projectId, repositoryConfig, full = false).data ?: listOf()
         // 取前100
-        result.addAll(branches.subList(0, min(branches.size, 100)))
-        result.addAll(tags.subList(0, min(tags.size, 100)))
+        result.addAll(branches)
+        result.addAll(tags)
         return result
     }
 

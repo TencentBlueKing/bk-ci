@@ -88,7 +88,7 @@ class QualityControlPointDao {
         with(TQualityControlPoint.T_QUALITY_CONTROL_POINT) {
             return dslContext.selectCount().from(this)
                 .where(TAG.ne("IN_READY_TEST"))
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Long::class.java)!!
         }
     }
 

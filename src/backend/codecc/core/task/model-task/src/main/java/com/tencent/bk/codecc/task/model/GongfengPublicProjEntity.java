@@ -167,4 +167,16 @@ public class GongfengPublicProjEntity extends CommonEntity
     @Field("synchronize_time")
     private Long synchronizeTime;
 
+    /**
+     * 流水线id
+     */
+    @Field("pipeline_id")
+    @Indexed(background = true)
+    private String pipelineId;
+
+    /**
+     * 项目id
+     */
+    @Field("project_id")
+    private String projectId;
 }

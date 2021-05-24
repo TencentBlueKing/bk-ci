@@ -40,6 +40,7 @@ import com.tencent.devops.process.api.user.UserPipelineResource
 import com.tencent.devops.process.audit.service.AuditService
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineVersionFacadeService
+import com.tencent.devops.process.engine.service.rule.PipelineRuleService
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.Permission
@@ -55,6 +56,7 @@ import com.tencent.devops.process.pojo.app.PipelinePage
 import com.tencent.devops.process.pojo.audit.Audit
 import com.tencent.devops.process.pojo.classify.PipelineViewAndPipelines
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineRuleBusCodeEnum
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
@@ -81,7 +83,8 @@ class UserPipelineResourceImpl @Autowired constructor(
     private val stageTagService: StageTagService,
     private val pipelineInfoFacadeService: PipelineInfoFacadeService,
     private val auditService: AuditService,
-    private val pipelineVersionFacadeService: PipelineVersionFacadeService
+    private val pipelineVersionFacadeService: PipelineVersionFacadeService,
+    private val pipelineRuleService: PipelineRuleService
 ) : UserPipelineResource {
 
     override fun hasCreatePermission(userId: String, projectId: String): Result<Boolean> {
@@ -263,6 +266,10 @@ class UserPipelineResourceImpl @Autowired constructor(
         checkPipelineId(pipelineId)
         checkName(modelAndSetting.model.name)
         PipelineUtils.checkPipelineDescLength(modelAndSetting.model.desc)
+        val buildNumRule = modelAndSetting.setting.buildNumRule
+        if (!buildNumRule.isNullOrBlank()) {
+            pipelineRuleService.validateRuleStr(buildNumRule, PipelineRuleBusCodeEnum.BUILD_NUM.name)
+        }
         val pipelineResult = pipelineInfoFacadeService.saveAll(
             userId = userId,
             projectId = projectId,

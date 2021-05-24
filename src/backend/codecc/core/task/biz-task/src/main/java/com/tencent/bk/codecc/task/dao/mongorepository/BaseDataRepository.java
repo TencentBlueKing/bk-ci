@@ -59,6 +59,14 @@ public interface BaseDataRepository extends MongoRepository<BaseDataEntity, Obje
     List<BaseDataEntity> findAllByParamType(String paramType);
 
     /**
+     * 根据基础数据类型查询全量基础数据信息
+     *
+     * @param paramCode
+     * @return
+     */
+    BaseDataEntity findByParamCode(String paramCode);
+
+    /**
      * 根据参数类型查询信息
      *
      * @param paramTypes
@@ -91,4 +99,22 @@ public interface BaseDataRepository extends MongoRepository<BaseDataEntity, Obje
      * @return
      */
     List<BaseDataEntity> findAllByParamTypeAndParamCodeAndParamValue(String paramType, String paramCode, String paramValue);
+
+    /**
+     * 根据参数类型和参数代码查询信息
+     *
+     * @param paramType
+     * @param paramCode
+     * @return
+     */
+    BaseDataEntity findByParamTypeAndParamCode(String paramType, String paramCode);
+
+    /**
+     * 根据参数类型，参数代码和参数名称查询信息
+     * @param paramType
+     * @param paramCode
+     * @param paramName
+     * @return
+     */
+    BaseDataEntity findByParamTypeAndParamCodeAndParamName(String paramType, String paramCode, String paramName);
 }

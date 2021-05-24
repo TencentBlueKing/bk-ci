@@ -1,10 +1,10 @@
 package com.tencent.bk.codecc.task.utils
 
-
 import com.tencent.bk.codecc.task.model.TaskInfoEntity
 import com.tencent.bk.codecc.task.vo.BatchRegisterVO
-import com.tencent.bk.codecc.task.vo.MetadataVO
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.CodeCCException
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.constant.ComConstants
 import com.tencent.devops.common.constant.CommonMessageCode
 import com.tencent.devops.common.pipeline.Model
@@ -13,216 +13,322 @@ import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.CodePullStrategy
+import com.tencent.devops.common.pipeline.enums.GitPullModeType
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
+import com.tencent.devops.common.pipeline.enums.SvnDepth
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.pipeline.pojo.element.agent.*
+import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitElement
+import com.tencent.devops.common.pipeline.pojo.element.agent.CodeGitlabElement
+import com.tencent.devops.common.pipeline.pojo.element.agent.CodeSvnElement
+import com.tencent.devops.common.pipeline.pojo.element.agent.GithubElement
+import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxCodeCCScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
+import com.tencent.devops.common.pipeline.pojo.git.GitPullMode
 import com.tencent.devops.common.pipeline.type.DispatchType
-import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
-import com.tencent.devops.plugin.codecc.pojo.coverity.ProjectLanguage
 import net.sf.json.JSONArray
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 
-object PipelineUtils {
+@Component
+class PipelineUtils {
 
     private val logger = LoggerFactory.getLogger(PipelineUtils::class.java)
 
-    const val CODECC_ATOM_CODE = "CodeccCheckAtomDebug"
-    const val GIT_ATOM_CODE = "gitCodeRepo"
-    const val GITLAB_ATOM_CODE = "GitLab"
-    const val GITHUB_ATOM_CODE = "PullFromGithub"
-    const val SVN_ATOM_CODE = "svnCodeRepo"
-    const val GIT_SCM_TYPE = "CODE_GIT"
-    const val GITLAB_SCM_TYPE = "CODE_GITLAB"
-    const val GITHUB_SCM_TYPE = "GITHUB"
-    const val SVN_SCM_TYPE = "CODE_SVN"
+    @Value("\${pipeline.atomCode.codecc:CodeccCheckAtomDebug}")
+    public lateinit var CODECC_ATOM_CODE: String
+    @Value("\${pipeline.atomCode.codeccVersion:4.*}")
+    public lateinit var CODECC_ATOM_VERSION: String
+
+    @Value("\${pipeline.atomCode.git:gitCodeRepo}")
+    public lateinit var GIT_ATOM_CODE: String
+    @Value("\${pipeline.atomCode.gitVersion:4.*}")
+    public lateinit var GIT_ATOM_CODE_VERSION: String
+    @Value("\${pipeline.atomCode.gitlab:GitLab}")
+    public lateinit var GITLAB_ATOM_CODE: String
+    @Value("\${pipeline.atomCode.github:PullFromGithub}")
+    public lateinit var GITHUB_ATOM_CODE: String
+    @Value("\${pipeline.atomCode.githubVersion:4.*}")
+    public lateinit var GITHUB_ATOM_CODE_VERSION: String
+    @Value("\${pipeline.atomCode.svn:svnCodeRepo}")
+    public lateinit var SVN_ATOM_CODE: String
+    @Value("\${pipeline.atomCode.svnVersion:4.*}")
+    public lateinit var SVN_ATOM_CODE_VERSION: String
+    @Value("\${pipeline.scmType.git:CODE_GIT}")
+    public lateinit var GIT_SCM_TYPE: String
+    @Value("\${pipeline.scmType.gitlab:CODE_GITLAB}")
+    public lateinit var GITLAB_SCM_TYPE: String
+    @Value("\${pipeline.scmType.github:GITHUB}")
+    public lateinit var GITHUB_SCM_TYPE: String
+    @Value("\${pipeline.scmType.svn:CODE_SVN}")
+    public lateinit var SVN_SCM_TYPE: String
+    @Value("\${pipeline.scmType.gitUrl:GIT_URL_TYPE}")
+    public lateinit var GIT_URL_TYPE: String
+
+    @Value("\${pipeline.atomCode.gitCommon:gitCodeRepoCommon}")
+    public lateinit var GIT_COMMON_ATOM_CODE: String
+    @Value("\${pipeline.atomCode.gitCommonVersion:2 .*}")
+    public lateinit var GIT_COMMON_ATOM_CODE_VERSION: String
+
+    @Value("\${pipeline.scmType.github.old:false}")
+    public var GITHUB_SCM_TYPE_OLD: Boolean = false
+
+    @Value("\${pipeline.scmType.svn.old:false}")
+    public var SVN_SCM_TYPE_OLD: Boolean = false
+
+    @Value("\${pipeline.imageType:BKSTORE}")
+    public var PIPELINE_IMAGE_TYPE: ImageType = ImageType.BKSTORE
 
     /**
      * 创建流水线
      */
     fun createPipeline(
-            registerVO: BatchRegisterVO,
-            taskInfoEntity: TaskInfoEntity,
-            relPath: String?,
-            imageName: String,
-            dispatchType: DispatchType
+        registerVO: BatchRegisterVO,
+        taskInfoEntity: TaskInfoEntity,
+        relPath: String?,
+        imageName: String,
+        dispatchType: DispatchType
     ): Model {
         /**
          * 第一个stage的内容
          */
         val elementFirst = ManualTriggerElement(
-                name = "手动触发",
-                id = null,
-                status = null,
-                canElementSkip = false,
-                useLatestParameters = false
+            name = "手动触发",
+            id = null,
+            status = null,
+            canElementSkip = false,
+            useLatestParameters = false
         )
 
         val containerFirst = TriggerContainer(
-                id = null,
-                name = "demo",
-                elements = arrayListOf(elementFirst),
-                status = null,
-                startEpoch = null,
-                systemElapsed = null,
-                elementElapsed = null,
-                params = emptyList(),
-                templateParams = null,
-                buildNo = null,
-                canRetry = null,
-                containerId = null
+            id = null,
+            name = "demo",
+            elements = arrayListOf(elementFirst),
+            status = null,
+            startEpoch = null,
+            systemElapsed = null,
+            elementElapsed = null,
+            params = emptyList(),
+            templateParams = null,
+            buildNo = null,
+            canRetry = null,
+            containerId = null
         )
 
         val stageFirst = Stage(
-                containers = arrayListOf(containerFirst),
-                id = null
+            containers = arrayListOf(containerFirst),
+            id = null
         )
 
         /**
          * 第二个stage
          */
         val elementThird = getNewCodeElement(CodeElementData(
-                scmType = registerVO.scmType,
-                branch = registerVO.branch,
-                repoHashId = registerVO.repoHashId,
-                relPath = relPath))
+            url = registerVO.repositoryUrl,
+            userName = registerVO.userName,
+            passWord = registerVO.passWord,
+            scmType = registerVO.scmType,
+            branch = registerVO.branch,
+            repoHashId = registerVO.repoHashId ?: "",
+            relPath = relPath))
 
         val elementFourth: Element = MarketBuildAtomElement(
-                name = "执行扫描脚本",
-                id = null,
-                status = null,
-                atomCode = CODECC_ATOM_CODE,
-                version = "4.*",
-                data = mapOf("input" to mapOf<String, String>())
+            name = "执行扫描脚本",
+            id = null,
+            status = null,
+            atomCode = CODECC_ATOM_CODE,
+            version = CODECC_ATOM_VERSION,
+            data = mapOf("input" to mapOf<String, String>())
         )
 
         val containerSecond = VMBuildContainer(
-                id = null,
-                name = "demo",
-                elements = listOf(elementThird, elementFourth),
-                status = null,
-                startEpoch = null,
-                systemElapsed = null,
-                elementElapsed = null,
-                baseOS = if (!registerVO.osType.isNullOrBlank()) VMBaseOS.valueOf(registerVO.osType) else VMBaseOS.valueOf("LINUX"),
-                vmNames = emptySet(),
-                maxQueueMinutes = null,
-                maxRunningMinutes = 480,
-                buildEnv = registerVO.buildEnv,
-                customBuildEnv = null,
-                thirdPartyAgentId = null,
-                thirdPartyAgentEnvId = null,
-                thirdPartyWorkspace = null,
-                dockerBuildVersion = imageName,
-                tstackAgentId = null,
-                dispatchType = dispatchType,
-                canRetry = null,
-                enableExternal = null,
-                containerId = null,
-                jobControlOption = JobControlOption(
-                        enable = true,
-                        timeout = 900,
-                        runCondition = JobRunCondition.STAGE_RUNNING,
-                        customVariables = null,
-                        customCondition = null
-                ),
-                mutexGroup = null
+            id = null,
+            name = "demo",
+            elements = listOf(elementThird, elementFourth),
+            status = null,
+            startEpoch = null,
+            systemElapsed = null,
+            elementElapsed = null,
+            baseOS = if (!registerVO.osType.isNullOrBlank()) VMBaseOS.valueOf(registerVO.osType) else VMBaseOS.valueOf("LINUX"),
+            vmNames = emptySet(),
+            maxQueueMinutes = null,
+            maxRunningMinutes = 480,
+            buildEnv = registerVO.buildEnv,
+            customBuildEnv = null,
+            thirdPartyAgentId = null,
+            thirdPartyAgentEnvId = null,
+            thirdPartyWorkspace = null,
+            dockerBuildVersion = imageName,
+            tstackAgentId = null,
+            dispatchType = dispatchType,
+            canRetry = null,
+            enableExternal = null,
+            containerId = null,
+            jobControlOption = JobControlOption(
+                enable = true,
+                timeout = 900,
+                runCondition = JobRunCondition.STAGE_RUNNING,
+                customVariables = null,
+                customCondition = null
+            ),
+            mutexGroup = null
         )
         val stageSecond = Stage(
-                containers = arrayListOf(containerSecond),
-                id = null
+            containers = arrayListOf(containerSecond),
+            id = null
         )
 
-        logger.info("assemble pipeline parameter successfully! task id: ${taskInfoEntity.taskId}")
+        logger.info("assemble pipeline parameter successfully! task id: ${taskInfoEntity?.taskId}")
         /**
          * 总流水线拼装
          */
         return Model(
-                name = taskInfoEntity.taskId.toString(),
-                desc = taskInfoEntity.projectName,
-                stages = arrayListOf(stageFirst, stageSecond),
-                labels = emptyList(),
-                instanceFromTemplate = null,
-                pipelineCreator = null,
-                srcTemplateId = null
+            name = if (0L != taskInfoEntity.taskId)taskInfoEntity.taskId.toString() else UUIDUtil.generate(),
+            desc = taskInfoEntity.projectName ?: "",
+            stages = arrayListOf(stageFirst, stageSecond),
+            labels = emptyList(),
+            instanceFromTemplate = null,
+            pipelineCreator = null,
+            srcTemplateId = null
         )
     }
 
     fun getNewCodeElement(codeElementData: CodeElementData): Element {
         return when (codeElementData.scmType) {
             GIT_SCM_TYPE -> MarketBuildAtomElement(
+                name = "下载代码",
+                id = null,
+                status = null,
+                atomCode = GIT_ATOM_CODE,
+                version = GIT_ATOM_CODE_VERSION,
+                data = mapOf("input" to mapOf(
+                    "repositoryType" to "ID",
+                    "repositoryHashId" to codeElementData.repoHashId,
+                    "repositoryName" to "",
+                    "pullType" to "BRANCH",
+                    "branchName" to (codeElementData.branch),
+                    "tagName" to "",
+                    "commitId" to "",
+                    "localPath" to (codeElementData.relPath ?: ""),
+                    "includePath" to "",
+                    "excludePath" to "",
+                    "fetchDepth" to "",
+                    "strategy" to CodePullStrategy.FRESH_CHECKOUT,
+                    "enableSubmodule" to true,
+                    "enableSubmoduleRemote" to false,
+                    "enableSubmoduleRecursive" to true,
+                    "enableVirtualMergeBranch" to false,
+                    "enableAutoCrlf" to false,
+                    "enableGitLfs" to false,
+                    "enableGitClean" to true,
+                    "rebuildToNew" to "false",
+                    "autoCrlf" to "false",
+                    "scmType" to GIT_SCM_TYPE
+                )))
+            SVN_SCM_TYPE -> if (SVN_SCM_TYPE_OLD) {
+                CodeSvnElement(
                     name = "下载代码",
                     id = null,
                     status = null,
-                    atomCode = GIT_ATOM_CODE,
-                    version = "4.*",
-                    data = mapOf("input" to mapOf(
-                            "repositoryType" to "ID",
-                            "repositoryHashId" to codeElementData.repoHashId,
-                            "repositoryName" to "",
-                            "pullType" to "BRANCH",
-                            "branchName" to (codeElementData.branch),
-                            "tagName" to "",
-                            "commitId" to "",
-                            "localPath" to (codeElementData.relPath ?: ""),
-                            "includePath" to "",
-                            "excludePath" to "",
-                            "fetchDepth" to "",
-                            "strategy" to CodePullStrategy.FRESH_CHECKOUT,
-                            "enableSubmodule" to true,
-                            "enableSubmoduleRemote" to false,
-                            "enableSubmoduleRecursive" to true,
-                            "enableVirtualMergeBranch" to false,
-                            "enableAutoCrlf" to false,
-                            "enableGitLfs" to false,
-                            "enableGitClean" to true,
-                            "rebuildToNew" to "false",
-                            "autoCrlf" to "false",
-                            "scmType" to GIT_SCM_TYPE
-                    )))
-            SVN_SCM_TYPE -> MarketBuildAtomElement(
+                    repositoryHashId = codeElementData.repoHashId,
+                    svnPath = "",
+                    path = codeElementData.relPath ?: "",
+                    strategy = CodePullStrategy.FRESH_CHECKOUT,
+                    svnDepth = SvnDepth.infinity,
+                    enableSubmodule = false,
+                    specifyRevision = false,
+                    revision = ""
+                )
+            } else {
+                MarketBuildAtomElement(
                     name = "下载代码",
                     id = null,
                     status = null,
                     atomCode = SVN_ATOM_CODE,
-                    version = "4.*",
+                    version = SVN_ATOM_CODE_VERSION,
                     data = mapOf("input" to mapOf(
-                            "repositoryType" to "ID",
-                            "repositoryHashId" to codeElementData.repoHashId,
-                            "repositoryName" to "",
-                            "svnPath" to "",
-                            "codePath" to (codeElementData.relPath ?: ""),
-                            "strategy" to CodePullStrategy.FRESH_CHECKOUT,
-                            "svnDepth" to "infinity",
-                            "enableSubmodule" to true,
-                            "specifyRevision" to false,
-                            "reversion" to ""
+                        "repositoryType" to "ID",
+                        "repositoryHashId" to codeElementData.repoHashId,
+                        "repositoryName" to "",
+                        "svnPath" to "",
+                        "codePath" to (codeElementData.relPath ?: ""),
+                        "strategy" to CodePullStrategy.FRESH_CHECKOUT,
+                        "svnDepth" to "infinity",
+                        "enableSubmodule" to true,
+                        "specifyRevision" to false,
+                        "reversion" to ""
                     )))
-            GITHUB_SCM_TYPE -> MarketBuildAtomElement(
+            }
+            GITHUB_SCM_TYPE -> if (GITHUB_SCM_TYPE_OLD) {
+                GithubElement(
+                    name = "下载代码",
+                    id = null,
+                    status = null,
+                    repositoryType = RepositoryType.ID,
+                    repositoryHashId = codeElementData.repoHashId,
+                    gitPullMode = GitPullMode(GitPullModeType.BRANCH, codeElementData.branch),
+                    path = codeElementData.relPath ?: ",",
+                    enableSubmodule = true,
+                    enableVirtualMergeBranch = false
+                )
+            } else {
+                MarketBuildAtomElement(
                     name = "下载代码",
                     id = null,
                     status = null,
                     atomCode = GITHUB_ATOM_CODE,
-                    version = "4.*",
+                    version = GITHUB_ATOM_CODE_VERSION,
                     data = mapOf("input" to mapOf(
-                            "repositoryType" to "ID",
-                            "repositoryHashId" to codeElementData.repoHashId,
-                            "aliasName" to "",
-                            "pullType" to "BRANCH",
-                            "branchName" to codeElementData.branch,
-                            "tagName" to "",
-                            "commitId" to "",
-                            "localPath" to (codeElementData.relPath ?: ""),
-                            "strategy" to CodePullStrategy.FRESH_CHECKOUT,
-                            "enableSubmodule" to true,
-                            "enableVirtualMergeBranch" to false
+                        "repositoryType" to "ID",
+                        "repositoryHashId" to codeElementData.repoHashId,
+                        "aliasName" to "",
+                        "pullType" to "BRANCH",
+                        "branchName" to codeElementData.branch,
+                        "tagName" to "",
+                        "commitId" to "",
+                        "localPath" to (codeElementData.relPath ?: ""),
+                        "strategy" to CodePullStrategy.FRESH_CHECKOUT,
+                        "enableSubmodule" to true,
+                        "enableVirtualMergeBranch" to false
                     )))
-            else -> CodeGitlabElement(
+            }
+            GIT_URL_TYPE -> MarketBuildAtomElement(
+                name = "拉取代码",
+                atomCode = GIT_COMMON_ATOM_CODE,
+                version = GIT_COMMON_ATOM_CODE_VERSION,
+                data = mapOf(
+                    "input" to
+                            mapOf(
+                                "username" to codeElementData.userName,
+                                "password" to codeElementData.passWord,
+                                "refName" to codeElementData.branch,
+                                "commitId" to "",
+                                "enableAutoCrlf" to false,
+                                "enableGitClean" to true,
+                                "enableSubmodule" to false,
+                                "enableSubmoduleRemote" to false,
+                                "enableVirtualMergeBranch" to false,
+                                "excludePath" to "",
+                                "fetchDepth" to "",
+                                "includePath" to "",
+                                "localPath" to "",
+                                "paramMode" to "SIMPLE",
+                                "pullType" to "BRANCH",
+                                "repositoryUrl" to codeElementData.url,
+                                "strategy" to "FRESH_CHECKOUT",
+                                "tagName" to ""
+                            ),
+                    "output" to mapOf()
+                )
+
+            )
+            else -> {
+                CodeGitlabElement(
                     name = "下载代码",
                     id = null,
                     status = null,
@@ -235,7 +341,8 @@ object PipelineUtils {
                     gitPullMode = null,
                     repositoryType = null,
                     repositoryName = null
-            )
+                )
+            }
         }
     }
 
@@ -244,89 +351,88 @@ object PipelineUtils {
 
         return when (registerVO!!.scmType) {
             "CODE_GIT" -> CodeGitElement(
-                    name = "下载代码",
-                    id = null,
-                    status = null,
-                    repositoryHashId = registerVO.repoHashId,
-                    branchName = if (registerVO.branch.isNullOrBlank()) "" else registerVO.branch,
-                    revision = null,
-                    strategy = CodePullStrategy.FRESH_CHECKOUT,
-                    path = relPath,
-                    enableSubmodule = null,
-                    gitPullMode = null,
-                    repositoryType = null,
-                    repositoryName = null
+                name = "下载代码",
+                id = null,
+                status = null,
+                repositoryHashId = registerVO.repoHashId,
+                branchName = if (registerVO.branch.isNullOrBlank()) "" else registerVO.branch,
+                revision = null,
+                strategy = CodePullStrategy.FRESH_CHECKOUT,
+                path = relPath,
+                enableSubmodule = null,
+                gitPullMode = null,
+                repositoryType = null,
+                repositoryName = null
             )
             "CODE_GITLAB" -> CodeGitlabElement(
-                    name = "下载代码",
-                    id = null,
-                    status = null,
-                    repositoryHashId = registerVO.repoHashId,
-                    branchName = if (registerVO.branch.isNullOrBlank()) "" else registerVO.branch,
-                    revision = null,
-                    strategy = CodePullStrategy.FRESH_CHECKOUT,
-                    path = relPath,
-                    enableSubmodule = null,
-                    gitPullMode = null,
-                    repositoryType = null,
-                    repositoryName = null
+                name = "下载代码",
+                id = null,
+                status = null,
+                repositoryHashId = registerVO.repoHashId,
+                branchName = if (registerVO.branch.isNullOrBlank()) "" else registerVO.branch,
+                revision = null,
+                strategy = CodePullStrategy.FRESH_CHECKOUT,
+                path = relPath,
+                enableSubmodule = null,
+                gitPullMode = null,
+                repositoryType = null,
+                repositoryName = null
             )
             "GITHUB" -> GithubElement(
-                    name = "下载代码",
-                    id = null,
-                    status = null,
-                    repositoryHashId = registerVO.repoHashId,
-                    strategy = CodePullStrategy.FRESH_CHECKOUT,
-                    path = relPath,
-                    enableSubmodule = null,
-                    revision = null,
-                    gitPullMode = null,
-                    enableVirtualMergeBranch = null,
-                    repositoryType = null,
-                    repositoryName = null
+                name = "下载代码",
+                id = null,
+                status = null,
+                repositoryHashId = registerVO.repoHashId,
+                strategy = CodePullStrategy.FRESH_CHECKOUT,
+                path = relPath,
+                enableSubmodule = null,
+                revision = null,
+                gitPullMode = null,
+                enableVirtualMergeBranch = null,
+                repositoryType = null,
+                repositoryName = null
             )
             else -> CodeSvnElement(
-                    name = "下载代码",
-                    id = null,
-                    status = null,
-                    repositoryHashId = registerVO.repoHashId,
-                    revision = null,
-                    strategy = CodePullStrategy.FRESH_CHECKOUT,
-                    path = relPath,
-                    enableSubmodule = null,
-                    specifyRevision = null,
-                    svnDepth = null,
-                    svnPath = null,
-                    svnVersion = null,
-                    repositoryType = null,
-                    repositoryName = null
+                name = "下载代码",
+                id = null,
+                status = null,
+                repositoryHashId = registerVO.repoHashId,
+                revision = null,
+                strategy = CodePullStrategy.FRESH_CHECKOUT,
+                path = relPath,
+                enableSubmodule = null,
+                specifyRevision = null,
+                svnDepth = null,
+                svnPath = null,
+                svnVersion = null,
+                repositoryType = null,
+                repositoryName = null
             )
         }
     }
 
-    fun getDispatchType(buildType: String, imageName: String, imageVersion: String, imageCode: String, dockerBuildVersion: String): DispatchType {
+    fun getDispatchType(buildType: String, imageName: String, imageVersion: String): DispatchType {
         return when (buildType) {
-            "DEVCLOUD" -> {
-                PublicDevCloudDispathcType(
-                        imageType = ImageType.BKSTORE,
-                        image = imageName,
-                        imageCode = imageCode,
-                        imageVersion = imageVersion,
-                        imageName = imageName,
-                        performanceConfigId = "",
-                        credentialId = ""
-                )
+            "DEVCLOUD" ->
+            {
+                getDevCloudDispatchType(imageName, imageName, imageVersion)!!
             }
-            else -> {
+            else ->
+            {
                 DockerDispatchType(
-                        imageType = ImageType.BKSTORE,
-                        dockerBuildVersion = dockerBuildVersion,
-                        imageCode = imageCode,
-                        imageVersion = imageVersion,
-                        imageName = imageName
+                    imageType = PIPELINE_IMAGE_TYPE,
+                    dockerBuildVersion = imageName,
+                    imageCode = imageName,
+                    imageVersion = imageVersion,
+                    imageName = imageName
                 )
             }
         }
+    }
+
+    private fun getDevCloudDispatchType(imageName: String, imageCode: String, imageVersion: String): DispatchType? {
+        // TODO("Not yet implemented")
+        return null
     }
 
     /**
@@ -340,9 +446,9 @@ object PipelineUtils {
         if (executeTime.isBlank() || executeDateList.isNullOrEmpty()) {
             logger.error("execute date and time is empty!")
             throw CodeCCException(
-                    errCode = CommonMessageCode.PARAMETER_IS_NULL,
-                    msgParam = arrayOf("定时执行时间"),
-                    errorCause = null
+                errCode = CommonMessageCode.PARAMETER_IS_NULL,
+                msgParam = arrayOf("定时执行时间"),
+                errorCause = null
             )
         }
         val hour = executeTime.substring(0, executeTime.indexOf(":"))
@@ -352,29 +458,13 @@ object PipelineUtils {
         return String.format("0 %s %s ? * %s", min, hour, weekDayListStr)
     }
 
-    /**
-     * 将codecc平台的项目语言转换为蓝盾平台的codecc原子语言
-     */
-    @Suppress("CAST_NEVER_SUCCEEDS")
-    fun convertCodeLangToBs(metadataList: List<MetadataVO>?, langCode: Long): List<ProjectLanguage> {
-        val languageList = metadataList?.filter { metadataVO ->
-            (metadataVO.key.toLong() and langCode) != 0L
-        }
-                ?.map { metadataVO ->
-                    ProjectLanguage.valueOf(JSONArray.fromObject(metadataVO.aliasNames)[0].toString())
-                }
-        return if (languageList.isNullOrEmpty()) listOf(ProjectLanguage.OTHERS) else languageList
-    }
-
-    fun isCodeElement(element: Element) = isOldCodeElement(element) || isNewCodeElement(element)
-
     fun isOldCodeElement(element: Element) = element is CodeGitElement ||
-            element is CodeGitlabElement ||
-            element is GithubElement ||
-            element is CodeSvnElement
+        element is CodeGitlabElement ||
+        element is GithubElement ||
+        element is CodeSvnElement
 
     fun isNewCodeElement(element: Element) = element is MarketBuildAtomElement &&
-            (element.getAtomCode() in listOf(GIT_ATOM_CODE, GITHUB_ATOM_CODE, GITLAB_ATOM_CODE, SVN_ATOM_CODE))
+        (element.getAtomCode() in listOf(GIT_ATOM_CODE, GITHUB_ATOM_CODE, GITLAB_ATOM_CODE, SVN_ATOM_CODE))
 
     fun isOldCodeCCElement(element: Element) = element is LinuxCodeCCScriptElement
 
@@ -392,19 +482,24 @@ object PipelineUtils {
 
     fun transferOldCodeCCElementToNew(): Element {
         return MarketBuildAtomElement(
-                name = "执行扫描脚本",
-                id = null,
-                status = null,
-                atomCode = CODECC_ATOM_CODE,
-                version = "4.*",
-                data = mapOf("input" to mapOf<String, String>())
+            name = "执行扫描脚本",
+            id = null,
+            status = null,
+            atomCode = CODECC_ATOM_CODE,
+            version = CODECC_ATOM_VERSION,
+            data = mapOf("input" to mapOf<String, String>())
         )
     }
 
-    data class CodeElementData(
+    companion object {
+        data class CodeElementData(
             val scmType: String?,
+            val url: String? = null,
             val branch: String,
             val repoHashId: String,
-            val relPath: String?
-    )
+            val relPath: String?,
+            val userName: String? = null,
+            val passWord: String? = null
+        )
+    }
 }

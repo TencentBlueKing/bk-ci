@@ -40,6 +40,9 @@ import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.exception.GitApiException
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitDiff
+import com.tencent.devops.scm.pojo.GitMrChangeInfo
+import com.tencent.devops.scm.pojo.GitMrInfo
+import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -66,19 +69,35 @@ open class GitApi {
         private const val OPERATION_COMMIT = "拉提交记录"
         private const val OPERATION_COMMIT_DIFF = "查询commit变化"
         private const val OPERATION_UNLOCK_HOOK_LOCK = "解锁hook锁"
+        private const val OPERATION_MR_CHANGE = "查询合并请求的代码变更"
+        private const val OPERATION_MR_INFO = "查询项目合并请求"
+        private const val OPERATION_MR_REVIEW = "查询项目合并请求"
     }
 
-    fun listBranches(host: String, token: String, projectName: String): List<String> {
+    /**
+     * @param full 是否全部获取分支,默认全量拉
+     */
+    fun listBranches(
+        host: String,
+        token: String,
+        projectName: String,
+        search: String? = null,
+        full: Boolean = true
+    ): List<String> {
         logger.info("Start to list branches of host $host by project $projectName")
         var page = 1
         val result = mutableListOf<GitBranch>()
         while (true) {
+            var searchReq = "page=$page&per_page=100&order_by=updated&sort=desc"
+            if (!search.isNullOrBlank()) {
+                searchReq = "$searchReq&search=$search"
+            }
             val request =
-                get(host, token, "projects/${urlEncode(projectName)}/repository/branches", "page=$page&per_page=100")
+                get(host, token, "projects/${urlEncode(projectName)}/repository/branches", searchReq)
             page++
             val pageResult = JsonUtil.getObjectMapper().readValue<List<GitBranch>>(getBody(OPERATION_BRANCH, request))
             result.addAll(pageResult)
-            if (pageResult.size < 100) {
+            if (pageResult.size < 100 || !full) {
                 if (result.size >= BRANCH_LIMIT) {
                     logger.error("there are ${result.size} branches in project $projectName")
                 }
@@ -87,16 +106,26 @@ open class GitApi {
         }
     }
 
-    fun listTags(host: String, token: String, projectName: String): List<String> {
+    fun listTags(
+        host: String,
+        token: String,
+        projectName: String,
+        search: String? = null,
+        full: Boolean = true
+    ): List<String> {
         var page = 1
         val result = mutableListOf<GitTag>()
         while (true) {
+            var searchReq = "page=$page&per_page=100&order_by=updated&sort=desc"
+            if (!search.isNullOrBlank()) {
+                searchReq = "$searchReq&search=$search"
+            }
             val request =
-                get(host, token, "projects/${urlEncode(projectName)}/repository/tags", "page=$page&per_page=100")
+                get(host, token, "projects/${urlEncode(projectName)}/repository/tags", searchReq)
             page++
             val pageResult: List<GitTag> = JsonUtil.getObjectMapper().readValue(getBody(OPERATION_TAG, request))
             result.addAll(pageResult)
-            if (pageResult.size < 100) {
+            if (pageResult.size < 100 || !full) {
                 if (result.size >= TAG_LIMIT) logger.error("there are ${result.size} tags in project $projectName")
                 return result.sortedByDescending { it.commit.authoredDate }.map { it.name }
             }
@@ -332,7 +361,7 @@ open class GitApi {
 
     private val mediaType = MediaType.parse("application/json; charset=utf-8")
 
-    private fun post(host: String, token: String, url: String, body: String) =
+    fun post(host: String, token: String, url: String, body: String) =
         request(host, token, url, "").post(RequestBody.create(mediaType, body)).build()
 
     private fun delete(host: String, token: String, url: String, body: String) =
@@ -427,6 +456,24 @@ open class GitApi {
             }
             throw t
         }
+    }
+
+    fun getMergeRequestChangeInfo(host: String, token: String, url: String): GitMrChangeInfo {
+        logger.info("get mr changes info url: $url")
+        val request = get(host, token, url, "")
+        return callMethod(OPERATION_MR_CHANGE, request, GitMrChangeInfo::class.java)
+    }
+
+    fun getMrInfo(host: String, token: String, url: String): GitMrInfo {
+        logger.info("get mr info url: $url")
+        val request = get(host, token, url, "")
+        return callMethod(OPERATION_MR_INFO, request, GitMrInfo::class.java)
+    }
+
+    fun getMrReviewInfo(host: String, token: String, url: String): GitMrReviewInfo {
+        logger.info("get mr review url: $url")
+        val request = get(host, token, url, "")
+        return callMethod(OPERATION_MR_INFO, request, GitMrReviewInfo::class.java)
     }
 
 //    private val OPERATION_BRANCH = "拉分支"

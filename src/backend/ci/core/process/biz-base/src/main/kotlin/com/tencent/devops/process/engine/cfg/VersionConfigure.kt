@@ -39,4 +39,16 @@ class VersionConfigure {
      */
     @Value("\${pipeline.version.max_keep_num:50}")
     val maxKeepNum: Int = PIPELINE_RES_NUM_MIN
+
+    /**
+     * 特定渠道的流水线版本保存的最大记录数
+     */
+    @Value("\${pipeline.version.spec_channels:AM,CODECC,GCLOUD,GIT,GONGFENGSCAN,CODECC_EE}")
+    val specChannels: String = "AM,CODECC,GCLOUD,GIT,GONGFENGSCAN,CODECC_EE"
+
+    /**
+     * 特定渠道的流水线版本保存的最大记录数
+     */
+    @Value("\${pipeline.version.spec_channel_max_keep_num:2}")
+    val specChannelMaxKeepNum: Int = 2
 }

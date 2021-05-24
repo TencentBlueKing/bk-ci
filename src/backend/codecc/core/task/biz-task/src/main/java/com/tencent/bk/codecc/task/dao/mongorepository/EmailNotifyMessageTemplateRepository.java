@@ -5,12 +5,12 @@ import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface EmailNotifyMessageTemplateRepository extends
-        MongoRepository<EmailNotifyMessageTemplateEntity, String> {
-    /**
-     * 根据ID获取邮件模版
-     *
-     * @param templateId
-     */
-    EmailNotifyMessageTemplateEntity findByTemplateId(String templateId);
+public interface EmailNotifyMessageTemplateRepository  extends
+      MongoRepository<EmailNotifyMessageTemplateEntity, String> {
+   /**
+    * 根据ID获取邮件模版
+    *
+    * @param templateId
+    */
+   EmailNotifyMessageTemplateEntity findByTemplateId(String templateId);
 }
