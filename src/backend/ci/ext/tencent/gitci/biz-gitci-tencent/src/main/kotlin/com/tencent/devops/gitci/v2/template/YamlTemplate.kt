@@ -42,12 +42,13 @@ import com.tencent.devops.gitci.v2.template.pojo.enums.TemplateType
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.gitci.v2.template.pojo.NoReplaceTemplate
-import com.tencent.devops.gitci.v2.template.pojo.enums.ResourceCredentialType
 import org.slf4j.LoggerFactory
 
 class YamlTemplate(
     // 发起者的库ID,用户名,分支
     val triggerProjectId: Long,
+    // sourceProjectId，在fork时是源库的ID
+    val sourceProjectId: Long,
     val triggerUserId: String,
     val triggerRef: String,
     val triggerToken: String,
@@ -538,6 +539,7 @@ class YamlTemplate(
         val resYamlObject = YamlTemplate(
             yamlObject = null,
             filePath = toPath.split(FILE_REPO_SPLIT)[0],
+            sourceProjectId = sourceProjectId,
             triggerProjectId = triggerProjectId,
             triggerUserId = triggerUserId,
             triggerRef = triggerRef,
@@ -713,15 +715,10 @@ class YamlTemplate(
                 )
             } else {
                 SpringContextUtil.getBean(YamlTemplateService::class.java).getResTemplate(
-                    gitProjectId = triggerProjectId,
+                    gitProjectId = sourceProjectId,
                     userId = triggerUserId,
                     repo = repo.repository,
                     ref = repo.ref ?: triggerRef,
-                    credentialType = if (repo.credentials?.useActorOauth == true) {
-                        ResourceCredentialType.OAUTH
-                    } else {
-                        ResourceCredentialType.PRIVATE_KEY
-                    },
                     personalAccessToken = repo.credentials?.personalAccessToken,
                     fileName = path
                 )

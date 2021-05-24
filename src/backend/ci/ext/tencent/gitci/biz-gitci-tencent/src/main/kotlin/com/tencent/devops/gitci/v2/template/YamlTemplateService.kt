@@ -31,7 +31,6 @@ import com.tencent.devops.gitci.v2.service.GitCIBasicSettingService
 import com.tencent.devops.gitci.v2.service.OauthService
 import com.tencent.devops.gitci.v2.service.ScmService
 import com.tencent.devops.gitci.v2.service.TicketService
-import com.tencent.devops.gitci.v2.template.pojo.enums.ResourceCredentialType
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -51,6 +50,7 @@ class YamlTemplateService @Autowired constructor(
         private const val templateDirectory = ".ci/templates/"
     }
 
+    // 获取当前库文件，使用超级token直接拉取，token区分fork和非fork
     fun getTemplate(
         token: String,
         fileName: String,
@@ -67,85 +67,78 @@ class YamlTemplateService @Autowired constructor(
         )
     }
 
+    /**
+     * 获取远程库文件，没有凭证使用项目开启人，有凭证，使用用户写的
+     * 如果是fork库，凭证使用目标库的凭证
+     * gitProjectId: fork库为主库ID
+     */
     fun getResTemplate(
         gitProjectId: Long,
         repo: String,
         ref: String? = "master",
-        credentialType: ResourceCredentialType,
         personalAccessToken: String?,
         userId: String,
         fileName: String
     ): String {
-        when (credentialType) {
-            ResourceCredentialType.PRIVATE_KEY -> {
-                val key = getKey(personalAccessToken)
-                val token = if (!(key == "" || key == personalAccessToken)) {
-                    val ticket = ticketService.getCredential("git_$gitProjectId", credentialId = key)
-                    if (ticket["type"] != CredentialType.ACCESSTOKEN.name) {
-                        throw RuntimeException("不支持凭证类型: ${ticket["type"]}")
-                    }
-                    ticket["v1"]!!
-                } else {
-                    // 空值的key使用开启人的Oauth
-                    if (key == "") {
-                        val enableUserId =
-                            gitCIBasicSettingService.getGitCIConf(gitProjectId)?.enableUserId ?: throw RuntimeException(
-                                "工蜂项目${gitProjectId}未开启工蜂CI"
-                            )
-                        oauthService.getOauthToken(enableUserId)?.accessToken
-                            ?: throw RuntimeException("用户${enableUserId}未进行OAuth授权")
-                    } else {
-                        key
-                    }
+        if (personalAccessToken.isNullOrBlank()) {
+            val enableUserId =
+                gitCIBasicSettingService.getGitCIConf(gitProjectId)?.enableUserId
+                    ?: throw RuntimeException(
+                        "工蜂项目${gitProjectId}未开启工蜂CI"
+                    )
+            val token = oauthService.getOauthToken(enableUserId)?.accessToken
+                ?: throw RuntimeException("用户${enableUserId}未进行OAuth授权")
+            val targetProjectId = scmService.getProjectInfo(
+                token = token,
+                gitProjectId = repo,
+                useAccessToken = true
+            )?.gitProjectId ?: throw RuntimeException("未找到项目$repo")
+            return scmService.getYamlFromGit(
+                token = token,
+                gitProjectId = targetProjectId.toLong(),
+                ref = ref!!,
+                fileName = templateDirectory + fileName,
+                useAccessToken = false
+            )
+        } else {
+            val (isTicket, key) = getKey(personalAccessToken)
+            val token = if (isTicket) {
+                val ticket = ticketService.getCredential(
+                    projectId = "git_$gitProjectId",
+                    credentialId = key
+                )
+                if (ticket["type"] != CredentialType.ACCESSTOKEN.name) {
+                    throw RuntimeException("不支持凭证类型: ${ticket["type"]}")
                 }
-                val targetProjectId = scmService.getProjectInfo(
-                    token = token,
-                    gitProjectId = repo,
-                    useAccessToken = false
-                )?.gitProjectId ?: throw RuntimeException("未找到项目$repo")
-                return scmService.getYamlFromGit(
-                    token = token,
-                    gitProjectId = targetProjectId.toLong(),
-                    ref = ref!!,
-                    fileName = templateDirectory + fileName,
-                    useAccessToken = false
-                )
+                ticket["v1"]!!
+            } else {
+                key
             }
-            ResourceCredentialType.OAUTH -> {
-                val accessToken = oauthService.getOauthToken(userId)?.accessToken
-                    ?: throw RuntimeException("用户${userId}未进行OAuth授权")
-                val targetProjectId = scmService.getProjectInfo(
-                    token = accessToken,
-                    gitProjectId = repo,
-                    useAccessToken = true
-                )?.gitProjectId ?: throw RuntimeException("未找到项目$repo")
-                return scmService.getYamlFromGit(
-                    token = accessToken,
-                    gitProjectId = targetProjectId.toLong(),
-                    ref = ref!!,
-                    fileName = templateDirectory + fileName,
-                    useAccessToken = false
-                )
-            }
-            else -> {
-                throw RuntimeException("Not Support this credentialType")
-            }
+            val targetProjectId = scmService.getProjectInfo(
+                token = token,
+                gitProjectId = repo,
+                useAccessToken = false
+            )?.gitProjectId ?: throw RuntimeException("未找到项目$repo")
+            return scmService.getYamlFromGit(
+                token = token,
+                gitProjectId = targetProjectId.toLong(),
+                ref = ref!!,
+                fileName = templateDirectory + fileName,
+                useAccessToken = false
+            )
         }
     }
 
-    private fun getKey(personalAccessToken: String?): String {
-        if (personalAccessToken == null) {
-            return ""
-        }
+    private fun getKey(personalAccessToken: String): Pair<Boolean, String> {
         return if (personalAccessToken.contains("\${{") && personalAccessToken.contains("}}")) {
             val str = personalAccessToken.split("\${{")[1].split("}}")[0]
             if (str.startsWith("settings.")) {
-                str.removePrefix("settings.")
+                Pair(true, str.removePrefix("settings."))
             } else {
                 throw RuntimeException("\$凭证仅支持setting.引用")
             }
         } else {
-            personalAccessToken
+            Pair(false, personalAccessToken)
         }
     }
 }

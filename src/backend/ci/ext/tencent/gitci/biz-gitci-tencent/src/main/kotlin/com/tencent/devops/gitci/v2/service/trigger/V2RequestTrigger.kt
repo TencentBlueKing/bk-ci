@@ -227,8 +227,13 @@ class V2RequestTrigger @Autowired constructor(
                 filePath = filePath,
                 triggerProjectId = scmService.getProjectId(isFork, gitRequestEvent),
                 triggerUserId = gitRequestEvent.userId,
+                sourceProjectId = gitRequestEvent.gitProjectId,
                 triggerRef = gitRequestEvent.branch,
-                triggerToken = gitToken.accessToken,
+                triggerToken = if (isFork) {
+                    forkGitToken!!.accessToken
+                } else {
+                    gitToken.accessToken
+                },
                 repo = null,
                 repoTemplateGraph = TemplateGraph()
             ).replace()
