@@ -596,6 +596,7 @@ class TriggerBuildService @Autowired constructor(
                     if (step.checkout == "self") {
                         inputMap["accessToken"] = scmClient.getAccessToken(gitBasicSetting.gitProjectId).first
                         inputMap["repositoryUrl"] = gitBasicSetting.gitHttpUrl
+                        inputMap["authType"] = "ACCESS_TOKEN"
                     } else {
                         inputMap["repositoryUrl"] = step.checkout!!
                     }
