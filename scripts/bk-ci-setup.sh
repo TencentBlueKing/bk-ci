@@ -261,7 +261,7 @@ setup_ci_gateway (){
   # 在数据目录创建运行时的存储目录, 并更新链接.
   local gateway_data_dir="$BK_CI_DATA_DIR/gateway" temp_dir=
   mkdir -p "$gateway_data_dir" || return 1
-  for temp_dir in client_body_temp fastcgi_temp proxy_temp scgi_temp uwsgi_temp; do
+  for temp_dir in client_body_temp fastcgi_temp proxy_temp scgi_temp uwsgi_temp files; do
     mkdir -p "$gateway_data_dir/$temp_dir" || return 2
     chown "$MS_USER:$MS_USER" "$gateway_data_dir/$temp_dir" || return 5
     update_link_to_target "$gateway_dir/$temp_dir" "$gateway_data_dir/$temp_dir" || return 3
@@ -274,6 +274,9 @@ setup_ci_gateway (){
       return 6
     fi
   fi
+  # prod目录指向agent-package.
+  # 预期200: curl -I bk-ci.service.consul/static/files/jar/worker-agent.jar
+  update_link_to_target "$gateway_data_dir/files/prod" "$BK_CI_HOME/agent-package"
   # 在全部 ci-gateway 节点上注册主入口域名: bk-ci.service.consul, 用于在集群内提供web服务.
   if [ -x $CTRL_DIR/bin/reg_consul_svc ]; then
     check_empty_var LAN_IP || return 15
