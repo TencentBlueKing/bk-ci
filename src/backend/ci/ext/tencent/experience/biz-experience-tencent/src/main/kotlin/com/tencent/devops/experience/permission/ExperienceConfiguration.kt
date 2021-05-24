@@ -25,16 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.quality
+package com.tencent.devops.experience.permission
 
-import com.tencent.devops.auth.service.ManagerService
-import com.tencent.devops.common.auth.api.AuthPermissionApi
-import com.tencent.devops.common.auth.api.AuthResourceApi
-import com.tencent.devops.common.auth.code.QualityAuthServiceCode
+import com.tencent.devops.common.auth.api.BSAuthPermissionApi
+import com.tencent.devops.common.auth.api.BSAuthResourceApi
+import com.tencent.devops.common.auth.code.BSExperienceAuthServiceCode
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.quality.dao.v2.QualityRuleDao
-import com.tencent.devops.quality.service.TxQualityPermissionService
-import com.tencent.devops.quality.service.TxV3QualityPermissionService
+import com.tencent.devops.experience.dao.ExperienceDao
+import com.tencent.devops.experience.dao.GroupDao
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -46,32 +44,25 @@ import org.springframework.core.Ordered
 @Configuration
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class QualityConfiguration {
-    @Bean
-    fun managerService(client: Client) = ManagerService(client)
-
+class ExperienceConfiguration {
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
-    fun txQualityPermissionService(
-        bkAuthPermissionApi: AuthPermissionApi,
-        bkAuthResourceApi: AuthResourceApi,
-        serviceCode: QualityAuthServiceCode,
-        managerService: ManagerService,
-        qualityRuleDao: QualityRuleDao,
-        qualityGroupDao: QualityRuleDao,
-        dslContext: DSLContext
-    ) = TxQualityPermissionService(
-        bkAuthPermissionApi, bkAuthResourceApi, serviceCode, managerService, qualityRuleDao, qualityGroupDao, dslContext
+    fun txExperiencePermissionServiceImpl(
+        bsAuthPermissionApi: BSAuthPermissionApi,
+        bsAuthResourceApi: BSAuthResourceApi,
+        experienceServiceCode: BSExperienceAuthServiceCode
+    ) = TxExperiencePermissionServiceImpl(
+        bsAuthPermissionApi, bsAuthResourceApi, experienceServiceCode
     )
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
-    fun txV3QualityPermissionService(
+    fun txV3ExperiencePermissionServiceImpl(
         client: Client,
         dslContext: DSLContext,
-        ruleDao: QualityRuleDao,
-        groupDao: QualityRuleDao
-    ) = TxV3QualityPermissionService(
-        client, dslContext, ruleDao, groupDao
+        experienceDao: ExperienceDao,
+        groupDao: GroupDao
+    ) = TxV3ExperiencePermissionServiceImpl(
+        client, dslContext, experienceDao, groupDao
     )
 }

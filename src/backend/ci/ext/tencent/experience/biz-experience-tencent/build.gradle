@@ -45,4 +45,5 @@ dependencies {
     compile project(":core:notify:api-notify")
     compile project(":ext:tencent:project:api-project-tencent")
     compile project(":ext:tencent:experience:model-experience-tencent")
+    compile project(":core:auth:auth-api")
 }

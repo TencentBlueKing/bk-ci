@@ -73,6 +73,13 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
         pipelineId: String,
         permission: AuthPermission
     ): Boolean {
+        if (pipelineId == "*") {
+            return checkPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                permission = permission
+            )
+        }
         val iamId = findInstanceId(pipelineId)
 
         return authPermissionApi.validateUserResourcePermission(
@@ -86,6 +93,16 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
     }
 
     override fun validPipelinePermission(userId: String, projectId: String, pipelineId: String, permission: AuthPermission, message: String?) {
+        if (pipelineId == "*") {
+            if (!checkPipelinePermission(
+                    userId = userId,
+                    projectId = projectId,
+                    permission = permission
+                )) {
+                throw PermissionForbiddenException(message)
+            }
+        }
+
         val iamId = findInstanceId(pipelineId)
         if (iamId.isNullOrEmpty()) {
             throw PermissionForbiddenException("流水线不存在")
@@ -117,6 +134,7 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
             pipelineInfoDao.searchByPipelineName(dslContext, projectId)?.map { pipelineIds.add(it.pipelineId) }
         } else {
             // TODO: 根据ID 列表查pipeline信息
+            pipelineIds.addAll(iamInstanceList)
 
         }
         return pipelineIds
