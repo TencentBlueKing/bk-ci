@@ -333,8 +333,8 @@ object ScriptYmlUtils {
 
         val stepList = mutableListOf<Step>()
         oldSteps.forEach {
-            if (it.uses == null && it.run == null) {
-                throw CustomException(Response.Status.BAD_REQUEST, "step必须包含uses或run!")
+            if (it.uses == null && it.run == null && it.checkout == null) {
+                throw CustomException(Response.Status.BAD_REQUEST, "step必须包含uses或run或checkout!")
             }
 
             stepList.add(
