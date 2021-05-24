@@ -610,7 +610,7 @@ class TriggerBuildService @Autowired constructor(
                         name = step.name ?: "拉代码插件",
                         id = step.id,
                         atomCode = "checkout",
-                        version = "1.latest",
+                        version = "1.*",
                         data = data,
                         additionalOptions = additionalOptions
                     )
