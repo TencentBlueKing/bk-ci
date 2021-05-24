@@ -255,7 +255,7 @@ setup_ci_gateway (){
   update_link_to_target "$gateway_dir/conf" "$nginx_conf_dir" || return 3
   # 创建并更新logs目录.
   mkdir -p "$BK_CI_LOGS_DIR/nginx" || return 2
-  chown "$MS_USER:$MS_USER" "$BK_CI_LOGS_DIR/nginx" || return 5
+  chown -R "$MS_USER:$MS_USER" "$BK_CI_LOGS_DIR/nginx" || return 5
   update_link_to_target "$gateway_dir/logs" "$BK_CI_LOGS_DIR/nginx" || return 3
   update_link_to_target "$gateway_dir/run" "$BK_CI_LOGS_DIR/nginx" || return 3
   # 在数据目录创建运行时的存储目录, 并更新链接.
