@@ -54,6 +54,9 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
     private val gitCIBasicSettingService: GitCIBasicSettingService
 ) : UserGitCIGitCodeResource {
     override fun getGitCodeProjectInfo(userId: String, gitProjectId: String): Result<GitCIProjectInfo?> {
+        if (gitProjectId.isBlank()) {
+            return Result(data = null)
+        }
         return Result(
             scmService.getProjectInfo(
                 token = getToken(gitProjectId),

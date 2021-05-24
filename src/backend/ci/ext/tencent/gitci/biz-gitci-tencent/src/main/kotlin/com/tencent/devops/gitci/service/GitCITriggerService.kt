@@ -1227,6 +1227,8 @@ class GitCITriggerService @Autowired constructor(
             "项目未开启工蜂CI，无法查询"
         )
         val eventBuild = gitRequestEventBuildDao.getByBuildId(dslContext, buildId) ?: return null
-        return V2BuildYaml(parsedYaml = eventBuild.parsedYaml, originYaml = eventBuild.originYaml)
+        // 针对V2版本做替换
+        val parsed = eventBuild.parsedYaml.replaceFirst("triggerOn:", "on:")
+        return V2BuildYaml(parsedYaml = parsed, originYaml = eventBuild.originYaml)
     }
 }

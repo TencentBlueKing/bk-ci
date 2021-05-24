@@ -27,12 +27,11 @@
 
 package com.tencent.devops.gitci.v2.exception
 
-import com.tencent.devops.common.api.constant.CommonMessageCode.PERMISSION_DENIED
 import com.tencent.devops.common.api.exception.ErrorCodeException
 
 class GitCINoEnableException() : ErrorCodeException(
     statusCode = ErrorCodeEnum.GITCI_NOT_ENABLE_ERROR.errorCode,
-    errorCode = PERMISSION_DENIED,
+    errorCode = ErrorCodeEnum.GITCI_NOT_ENABLE_ERROR.errorCode.toString(),
     defaultMessage = ErrorCodeEnum.GITCI_NOT_ENABLE_ERROR.formatErrorMessage,
     params = null
 )

@@ -137,4 +137,18 @@ class GitUserMessageDao {
                 .count()
         }
     }
+
+    fun getMessageExist(
+        dslContext: DSLContext,
+        userId: String,
+        messageId: String
+    ): Boolean {
+        with(TGitUserMessage.T_GIT_USER_MESSAGE) {
+            return dslContext.selectFrom(this)
+                .where(USER_ID.eq(userId))
+                .and(MESSAGE_ID.eq(messageId))
+                .limit(1)
+                .count() > 0
+        }
+    }
 }

@@ -558,7 +558,7 @@ class TriggerBuildService @Autowired constructor(
                 continueWhenFailed = step.continueOnError ?: false,
                 timeout = step.timeoutMinutes?.toLong(),
                 retryWhenFailed = step.retryTimes != null,
-                retryCount = step.retryTimes?.toInt() ?: 0,
+                retryCount = step.retryTimes ?: 0,
                 enableCustomEnv = step.env != null,
                 customEnv = emptyList(),
                 runCondition = RunCondition.CUSTOM_CONDITION_MATCH,

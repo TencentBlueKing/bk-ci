@@ -53,14 +53,14 @@ object YamlObjects {
             ifFiled = step["if"]?.toString(),
             uses = step["uses"]?.toString(),
             with = if (step["with"] == null) {
-                mapOf()
+                null
             } else {
                 transValue<Map<String, Any>>(fromPath, "with", step["with"])
             },
             timeoutMinutes = getNullValue("timeout-minutes", step)?.toInt(),
             continueOnError = getNullValue("continue-on-error", step)?.toBoolean(),
             retryTimes = getNullValue("retry-times", step)?.toInt(),
-            env = step["env"]?.toString(),
+            env = step["env"],
             run = step["run"]?.toString(),
             checkout = step["checkout"]?.toString()
         )

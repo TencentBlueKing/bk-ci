@@ -93,13 +93,16 @@ class GitCIEventSaveService @Autowired constructor(
                 filePath = filePath,
                 gitProjectId = gitProjectId
             )
-            userMessageDao.save(
-                dslContext = context,
-                userId = userId,
-                messageType = UserMessageType.REQUEST,
-                messageId = event.id.toString(),
-                messageTitle = messageTitle
-            )
+            // eventId只用保存一次
+            if (!userMessageDao.getMessageExist(context, userId, event.id.toString())) {
+                userMessageDao.save(
+                    dslContext = context,
+                    userId = userId,
+                    messageType = UserMessageType.REQUEST,
+                    messageId = event.id.toString(),
+                    messageTitle = messageTitle
+                )
+            }
         }
         return messageId
     }
