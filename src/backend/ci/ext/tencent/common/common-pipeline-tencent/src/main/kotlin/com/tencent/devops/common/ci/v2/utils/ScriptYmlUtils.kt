@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.ci.v2.utils
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
@@ -101,13 +102,13 @@ object ScriptYmlUtils {
         return YamlUtil.getObjectMapper().readValue(obj, YmlVersion::class.java)
     }
 
-    fun isV2Version(yamlStr: String?):Boolean{
+    fun isV2Version(yamlStr: String?): Boolean {
         if (yamlStr == null) {
             return false
         }
         val yaml = Yaml()
         val obj = YamlUtil.toYaml(yaml.load(yamlStr) as Any)
-        val version =  YamlUtil.getObjectMapper().readValue(obj, YmlVersion::class.java)
+        val version = YamlUtil.getObjectMapper().readValue(obj, YmlVersion::class.java)
         return version == null || version.version == "v2.0"
     }
 
@@ -196,9 +197,10 @@ object ScriptYmlUtils {
         return sb.toString()
     }
 
-    fun checkYaml(preScriptBuildYaml: PreTemplateScriptBuildYaml) {
+    fun checkYaml(preScriptBuildYaml: PreTemplateScriptBuildYaml, yaml: String) {
         checkVariable(preScriptBuildYaml)
         checkStage(preScriptBuildYaml)
+        checkExtend(yaml)
         checkNotice(preScriptBuildYaml.notices)
     }
 
@@ -218,12 +220,21 @@ object ScriptYmlUtils {
     private fun checkStage(preScriptBuildYaml: PreTemplateScriptBuildYaml) {
         if ((preScriptBuildYaml.stages != null && preScriptBuildYaml.jobs != null) ||
             (preScriptBuildYaml.stages != null && preScriptBuildYaml.steps != null) ||
-            (preScriptBuildYaml.jobs != null && preScriptBuildYaml.steps != null) ||
-            (preScriptBuildYaml.extends != null && preScriptBuildYaml.stages != null) ||
-            (preScriptBuildYaml.extends != null && preScriptBuildYaml.jobs != null) ||
-            (preScriptBuildYaml.extends != null && preScriptBuildYaml.steps != null)
+            (preScriptBuildYaml.jobs != null && preScriptBuildYaml.steps != null)
         ) {
-            throw CustomException(Response.Status.BAD_REQUEST, "extend, stages, jobs, steps不能并列存在，只能存在其一!")
+            throw CustomException(Response.Status.BAD_REQUEST, "stages, jobs, steps不能并列存在，只能存在其一")
+        }
+    }
+
+    private fun checkExtend(yaml: String) {
+        val yamlMap = YamlUtil.getObjectMapper().readValue(yaml, object : TypeReference<Map<String, Any?>>() {})
+        if (yamlMap["extends"] == null) {
+            return
+        }
+        yamlMap.forEach { (t, _) ->
+            if (t != "on" && t != "extends" && t != "version") {
+                throw CustomException(Response.Status.BAD_REQUEST, "使用 extends 时顶级关键字只能有触发器 on")
+            }
         }
     }
 
@@ -437,7 +448,9 @@ object ScriptYmlUtils {
         return ScriptBuildYaml(
             name = if (!preScriptBuildYaml.name.isNullOrBlank()) {
                 preScriptBuildYaml.name!!
-            } else { filePath.removeSuffix(".yml") },
+            } else {
+                filePath.removeSuffix(".yml")
+            },
             version = preScriptBuildYaml.version,
             triggerOn = thisTriggerOn,
             variables = preScriptBuildYaml.variables,

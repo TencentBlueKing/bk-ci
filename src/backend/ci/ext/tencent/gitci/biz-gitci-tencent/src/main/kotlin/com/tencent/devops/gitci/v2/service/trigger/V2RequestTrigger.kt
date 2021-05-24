@@ -219,7 +219,7 @@ class V2RequestTrigger @Autowired constructor(
 
         val preTemplateYamlObject = YamlUtil.getObjectMapper().readValue(yaml, PreTemplateScriptBuildYaml::class.java)
         // 检查Yaml语法的格式问题
-        ScriptYmlUtils.checkYaml(preTemplateYamlObject)
+        ScriptYmlUtils.checkYaml(preTemplateYamlObject, yaml)
         // 替换yaml文件中的模板引用
         val preYamlObject = try {
             YamlTemplate(
