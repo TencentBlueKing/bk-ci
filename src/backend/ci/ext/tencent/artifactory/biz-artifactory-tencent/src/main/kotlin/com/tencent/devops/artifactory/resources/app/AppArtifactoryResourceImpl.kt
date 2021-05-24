@@ -176,7 +176,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
             throw ErrorCodeException(
                 statusCode = 403,
                 errorCode = CommonMessageCode.PERMISSION_DENIED_FOR_APP,
-                defaultMessage = "访问构件请联系流水线负责人 ${pipelineInfo?.creator ?: ""} 授予流水线权限。"
+                defaultMessage = "访问构件请联系流水线负责人：\n${pipelineInfo?.creator ?: ""} 授予流水线权限。"
             )
         }
 
