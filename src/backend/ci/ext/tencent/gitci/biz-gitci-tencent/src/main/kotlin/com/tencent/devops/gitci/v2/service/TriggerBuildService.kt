@@ -594,7 +594,7 @@ class TriggerBuildService @Autowired constructor(
                     inputMap.putAll(step.with!!)
                     // 拉取本地工程代码
                     if (step.checkout == "self") {
-                        inputMap["accessToken"] = scmClient.getAccessToken(gitBasicSetting.gitProjectId)
+                        inputMap["accessToken"] = scmClient.getAccessToken(gitBasicSetting.gitProjectId).first
                         inputMap["repositoryUrl"] = gitBasicSetting.gitHttpUrl
                     } else {
                         inputMap["repositoryUrl"] = step.checkout!!
