@@ -151,8 +151,8 @@ emulate_systemd_prerequisites (){
   cd "$BK_CI_HOME/$MS_NAME" || return 16
   load_systemd_env || return $?
   check_empty_var MS_USER || return 15  # env文件里必须定义MS_USER
-  # 校验启动用户.
-  if [ "$USER" != "${MS_USER:-no-user}" ]; then
+  # gateway使用root启动nginx, 其worker为普通用户.
+  if [ "$USER" != "${MS_USER:-no-user}" ] && [ "$MS_NAME" != "gateway" ]; then
     echo "please run this script using user: ${MS_USER:-}. example command:"
     echo "sudo -u $MS_USER $0 $MS_NAME ..."
     return 5
