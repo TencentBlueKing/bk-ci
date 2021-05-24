@@ -26,7 +26,9 @@
  */
 
 dependencies {
-    api(project(":core:log:api-log"))
+    api(project(":core:common:common-api"))
+    api(project(":core:common:common-web"))
+    api(project(":core:common:common-event"))
 }
 
 plugins {

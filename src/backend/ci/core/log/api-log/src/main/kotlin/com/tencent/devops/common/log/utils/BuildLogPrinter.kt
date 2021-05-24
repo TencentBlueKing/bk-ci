@@ -97,17 +97,14 @@ class BuildLogPrinter(
         subTag: String? = null,
         jobId: String? = null,
         executeCount: Int
-    ) {
-        logMQEventDispatcher.dispatch(genLogEvent(
-            buildId = buildId,
-            message = "##[endgroup]$groupName",
-            tag = tag,
-            subTag = subTag,
-            jobId = jobId,
-            logType = LogType.LOG,
-            executeCount = executeCount
-        ))
-    }
+    ) = addLine(
+        buildId = buildId,
+        message = "##[endgroup]$groupName",
+        tag = tag,
+        subTag = subTag,
+        jobId = jobId,
+        executeCount = executeCount
+    )
 
     fun addErrorLine(
         buildId: String,
@@ -117,15 +114,17 @@ class BuildLogPrinter(
         executeCount: Int,
         subTag: String? = null
     ) {
-        logMQEventDispatcher.dispatch(genLogEvent(
+        genLogPrintPrintResource().addLogLine(
             buildId = buildId,
-            message = message,
-            tag = tag,
-            subTag = subTag,
-            jobId = jobId,
-            logType = LogType.ERROR,
-            executeCount = executeCount
-        ))
+            logMessage = genLogMessage(
+                message = message,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                logType = LogType.ERROR,
+                executeCount = executeCount
+            )
+        )
     }
 
     fun addDebugLine(
@@ -136,15 +135,17 @@ class BuildLogPrinter(
         executeCount: Int,
         subTag: String? = null
     ) {
-        logMQEventDispatcher.dispatch(genLogEvent(
+        genLogPrintPrintResource().addLogLine(
             buildId = buildId,
-            message = message,
-            tag = tag,
-            subTag = subTag,
-            jobId = jobId,
-            logType = LogType.DEBUG,
-            executeCount = executeCount
-        ))
+            logMessage = genLogMessage(
+                message = message,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                logType = LogType.DEBUG,
+                executeCount = executeCount
+            )
+        )
     }
 
     fun addYellowLine(
