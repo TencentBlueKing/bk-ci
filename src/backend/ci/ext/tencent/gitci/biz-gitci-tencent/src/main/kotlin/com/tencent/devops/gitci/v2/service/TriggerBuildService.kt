@@ -586,6 +586,7 @@ class TriggerBuildService @Autowired constructor(
                         inputMap["accessToken"] =
                             oauthService.getOauthTokenNotNull(gitBasicSetting.enableUserId).accessToken
                         inputMap["repositoryUrl"] = gitBasicSetting.gitHttpUrl
+                        inputMap["authType"] = "ACCESS_TOKEN"
                     } else {
                         inputMap["repositoryUrl"] = step.checkout!!
                     }
@@ -893,7 +894,7 @@ class TriggerBuildService @Autowired constructor(
         }
         yaml.variables!!.forEach { (key, variable) ->
             startParams[VARIABLE_PREFIX + key] =
-                variable.copy(value = formatVariablesValue(variable.value, gitBasicSetting, startParams)).toString()
+                variable.copy(value = formatVariablesValue(variable.value, gitBasicSetting, startParams)).value ?: ""
         }
     }
 
