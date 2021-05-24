@@ -153,10 +153,7 @@ class TxV3EnvironmentPermissionService constructor(
         projectId: String,
         permissions: Set<AuthPermission>
     ): Map<AuthPermission, List<String>> {
-        val actions = mutableListOf<String>()
-        permissions.forEach {
-            actions.add(buildEnvAction(it))
-        }
+        val actions = TActionUtils.buildActionList(permissions, AuthResourceType.ENVIRONMENT_ENVIRONMENT)
         val instanceResourcesMap = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
             userId = userId,
             projectCode = projectId,
@@ -191,10 +188,8 @@ class TxV3EnvironmentPermissionService constructor(
         projectId: String,
         permissions: Set<AuthPermission>
     ): Map<AuthPermission, List<String>> {
-        val actions = mutableListOf<String>()
-        permissions.forEach {
-            actions.add(buildEnvAction(it))
-        }
+        val actions = TActionUtils.buildActionList(permissions, AuthResourceType.ENVIRONMENT_ENV_NODE)
+
         val instanceResourcesMap = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
             userId = userId,
             projectCode = projectId,

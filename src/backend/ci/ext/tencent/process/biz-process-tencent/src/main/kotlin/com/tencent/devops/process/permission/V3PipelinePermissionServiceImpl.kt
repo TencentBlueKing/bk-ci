@@ -101,6 +101,7 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
                 )) {
                 throw PermissionForbiddenException(message)
             }
+            return
         }
 
         val iamId = findInstanceId(pipelineId)

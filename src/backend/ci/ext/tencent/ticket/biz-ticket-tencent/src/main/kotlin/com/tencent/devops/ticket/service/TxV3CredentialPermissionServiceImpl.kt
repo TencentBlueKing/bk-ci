@@ -123,11 +123,8 @@ class TxV3CredentialPermissionServiceImpl @Autowired constructor(
         projectId: String,
         authPermissions: Set<AuthPermission>
     ): Map<AuthPermission, List<String>> {
+        val actions = TActionUtils.buildActionList(authPermissions, AuthResourceType.TICKET_CREDENTIAL)
 
-        val actions = mutableListOf<String>()
-        authPermissions.forEach {
-            actions.add(buildCredentialAction(it))
-        }
         val credentialAuthResult = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
             userId = userId,
             projectCode = projectId,

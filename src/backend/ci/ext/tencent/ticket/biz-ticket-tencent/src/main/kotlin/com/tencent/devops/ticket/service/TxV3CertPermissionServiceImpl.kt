@@ -109,10 +109,7 @@ class TxV3CertPermissionServiceImpl @Autowired constructor(
         projectId: String,
         authPermissions: Set<AuthPermission>
     ): Map<AuthPermission, List<String>> {
-        val actions = mutableListOf<String>()
-        authPermissions.forEach {
-            actions.add(buildCertAction(it))
-        }
+        val actions = TActionUtils.buildActionList(authPermissions, AuthResourceType.TICKET_CERT)
         val certResultMap = mutableMapOf<AuthPermission, List<String>>()
         val certIamInfo = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
             userId = userId,
