@@ -64,27 +64,33 @@ class DependOnControl @Autowired constructor(
         logBuilder: StringBuilder
     ): BuildStatus {
         var foundFailure = false
+        var foundSkip = false
         var successCnt = 0
         val jobStatusMap = pipelineRuntimeService.listContainers(container.buildId, container.stageId)
             .associate { it.containerId to it.status }
 
-        run tBreak@{
-            dependRel.forEach {
-                val dependOnJobStatus = jobStatusMap[it.key]
-                logBuilder.append("${it.value} ${dependOnJobStatus ?: BuildStatus.SKIP}\n")
-                // 无状态（兼容），成功状态，计数+1
-                if (dependOnJobStatus == null || dependOnJobStatus.isSuccess()) {
-                    successCnt++
-                }
-                // 发现非正常构建结束的，立即终止循环
-                else if (dependOnJobStatus == BuildStatus.SKIP || dependOnJobStatus.isFailure()) {
-                    foundFailure = true
-                    return@tBreak
-                }
+        for (it in dependRel.entries) {
+            val dependOnJobStatus = jobStatusMap[it.key]
+            logBuilder.append("${it.value} $dependOnJobStatus \n")
+            // 无状态（兼容），成功状态，计数+1
+            if (dependOnJobStatus == BuildStatus.SKIP) { // 如果发现依赖的Job被跳过
+                foundSkip = true
+            } else if (dependOnJobStatus == null || dependOnJobStatus.isSuccess()) {
+                successCnt++
+            } else if (dependOnJobStatus.isFailure()) { // 发现非正常构建结束，则表示失败
+                foundFailure = true
+            }
+
+            if (foundSkip || foundFailure) {
+                break
             }
         }
 
         return when {
+            foundSkip -> {
+                logBuilder.append("Skip\n")
+                BuildStatus.SKIP
+            }
             foundFailure -> {
                 logBuilder.append("Terminated\n")
                 BuildStatus.FAILED

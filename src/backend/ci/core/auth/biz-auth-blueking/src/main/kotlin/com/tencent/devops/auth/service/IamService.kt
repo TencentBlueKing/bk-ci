@@ -36,7 +36,7 @@ import com.tencent.devops.common.auth.pojo.Action
 import com.tencent.devops.common.auth.pojo.IamPermissionUrlReq
 import com.tencent.devops.common.auth.pojo.RelatedResourceTypes
 import com.tencent.devops.common.auth.service.IamEsbService
-import com.tencent.devops.common.auth.utlis.ActionUtils
+import com.tencent.devops.common.auth.utils.ActionUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service

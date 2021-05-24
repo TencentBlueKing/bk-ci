@@ -32,6 +32,8 @@ import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+import java.util.Set;
+
 /**
  * 告警可跟踪的工具最近一次分析结果
  *
@@ -57,4 +59,55 @@ public class CommonLastAnalysisResultVO extends BaseLastAnalysisResultVO
 
     @ApiModelProperty("屏蔽数")
     private Integer excludeCount;
+
+    @ApiModelProperty("遗留提示告警总数")
+    private Integer existPromptCount;
+
+    @ApiModelProperty("遗留一般告警总数")
+    private Integer existNormalCount;
+
+    @ApiModelProperty("遗留严重告警总数")
+    private Integer existSeriousCount;
+
+    @ApiModelProperty("新增提示告警总数")
+    private Integer newPromptCount;
+
+    @ApiModelProperty("新增一般告警总数")
+    private Integer newNormalCount;
+
+    @ApiModelProperty("新增严重告警总数")
+    private Integer newSeriousCount;
+
+    @ApiModelProperty("新增告警处理人")
+    private Set<String> newAuthors;
+
+    @ApiModelProperty("遗留告警处理人")
+    private Set<String> existAuthors;
+
+    @ApiModelProperty("提示告警处理人")
+    private Set<String> promptAuthors;
+
+    @ApiModelProperty("一般告警处理人")
+    private Set<String> normalAuthors;
+
+    @ApiModelProperty("严重告警处理人")
+    private Set<String> seriousAuthors;
+
+    /**
+     * 存量提示级别处理人
+     */
+    @ApiModelProperty("存量提示级别处理人")
+    private Set<String> existPromptAuthors;
+
+    /**
+     * 存量一般级别处理人
+     */
+    @ApiModelProperty("存量一般级别处理人")
+    private Set<String> existNormalAuthors;
+
+    /**
+     * 存量严重级别处理人
+     */
+    @ApiModelProperty("存量严重级别处理人")
+    private Set<String> existSeriousAuthors;
 }

@@ -27,15 +27,23 @@
 package com.tencent.bk.codecc.defect.service.impl;
 
 import com.tencent.bk.codecc.defect.dao.mongorepository.CCNStatisticRepository;
+import com.tencent.bk.codecc.defect.dao.mongorepository.ToolBuildStackRepository;
 import com.tencent.bk.codecc.defect.model.CCNStatisticEntity;
+import com.tencent.bk.codecc.defect.service.ClusterDefectService;
 import com.tencent.bk.codecc.defect.service.IQueryStatisticBizService;
 import com.tencent.devops.common.api.analysisresult.BaseLastAnalysisResultVO;
 import com.tencent.devops.common.api.analysisresult.CCNLastAnalysisResultVO;
+import com.tencent.devops.common.api.analysisresult.CCNNotRepairedAuthorVO;
 import com.tencent.devops.common.api.analysisresult.ToolLastAnalysisResultVO;
+import com.tencent.devops.common.api.clusterresult.CcnClusterResultVO;
 import com.tencent.devops.common.constant.ComConstants;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+
+import java.util.stream.Collectors;
 
 /**
  * CCN类查询分析统计结果的业务逻辑类
@@ -49,18 +57,75 @@ public class CCNQueryStatisticBizServiceImpl implements IQueryStatisticBizServic
     @Autowired
     private CCNStatisticRepository ccnStatisticRepository;
 
+    @Autowired
+    @Qualifier("CCN")
+    private AbstractClusterDefectService ccnClusterDefectService;
+
+    @Autowired
+    private ToolBuildStackRepository toolBuildStackRepository;
+
     @Override
-    public BaseLastAnalysisResultVO processBiz(ToolLastAnalysisResultVO arg)
-    {
+    public BaseLastAnalysisResultVO processBiz(ToolLastAnalysisResultVO arg, boolean isLast) {
         long taskId = arg.getTaskId();
         String toolName = arg.getToolName();
-        CCNStatisticEntity statisticEntity = ccnStatisticRepository.findFirstByTaskIdAndToolNameOrderByTimeDesc(taskId, toolName);
+        String buildId = arg.getBuildId();
+
+        CCNStatisticEntity statisticEntity = isLast
+                ? ccnStatisticRepository.findFirstByTaskIdAndToolNameOrderByTimeDesc(taskId, toolName)
+                : ccnStatisticRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
+
         CCNLastAnalysisResultVO lastAnalysisResultVO = new CCNLastAnalysisResultVO();
-        if (statisticEntity != null)
-        {
+        if (statisticEntity != null) {
             BeanUtils.copyProperties(statisticEntity, lastAnalysisResultVO);
+
+            if (!CollectionUtils.isEmpty(statisticEntity.getNewAuthorStatistic())) {
+                lastAnalysisResultVO.setNewAuthorStatistic(
+                        statisticEntity.getNewAuthorStatistic().stream().map(source -> {
+                            CCNNotRepairedAuthorVO newAuthorVO = new CCNNotRepairedAuthorVO();
+                            BeanUtils.copyProperties(source, newAuthorVO);
+                            return newAuthorVO;
+                        }).collect(Collectors.toList())
+                );
+            }
+
+            if (!CollectionUtils.isEmpty(statisticEntity.getExistAuthorStatistic())) {
+                lastAnalysisResultVO.setExistAuthorStatistic(
+                        statisticEntity.getExistAuthorStatistic().stream().map(source -> {
+                            CCNNotRepairedAuthorVO existAuthorVO = new CCNNotRepairedAuthorVO();
+                            BeanUtils.copyProperties(source, existAuthorVO);
+                            return existAuthorVO;
+                        }).collect(Collectors.toList())
+                );
+            }
+
+            if (isLast) {
+                setAverageThousandDefect(lastAnalysisResultVO, taskId, buildId);
+            }
         }
+
         lastAnalysisResultVO.setPattern(ComConstants.ToolPattern.CCN.name());
+
         return lastAnalysisResultVO;
+    }
+
+    /**
+     * 设置千行超标复杂度相关数据
+     *
+     * @param lastAnalysisResultVO
+     * @param taskId
+     * @param buildId
+     */
+    private void setAverageThousandDefect(CCNLastAnalysisResultVO lastAnalysisResultVO, long taskId, String buildId) {
+        CcnClusterResultVO clusterStatistic =
+                (CcnClusterResultVO) ccnClusterDefectService.getClusterStatistic(taskId, buildId);
+
+        if (clusterStatistic == null) {
+            lastAnalysisResultVO.setAverageThousandDefect(Double.valueOf(0));
+            lastAnalysisResultVO.setAverageThousandDefectChange(Double.valueOf(0));
+            return;
+        }
+
+        lastAnalysisResultVO.setAverageThousandDefect(clusterStatistic.getAverageThousandDefect());
+        lastAnalysisResultVO.setAverageThousandDefectChange(clusterStatistic.getAverageThousandDefectChange());
     }
 }

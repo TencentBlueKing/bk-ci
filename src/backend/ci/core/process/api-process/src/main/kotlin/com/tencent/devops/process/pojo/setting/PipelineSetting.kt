@@ -28,6 +28,8 @@
 package com.tencent.devops.process.pojo.setting
 
 import com.tencent.devops.common.api.exception.InvalidParamException
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.process.utils.PIPELINE_RES_NUM_MIN
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_MAX
@@ -40,18 +42,21 @@ import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_
 
 data class PipelineSetting(
     val projectId: String = "",
-    val pipelineId: String = "",
-    val pipelineName: String = "",
+    var pipelineId: String = "",
+    var pipelineName: String = "",
     val desc: String = "",
     val runLockType: PipelineRunLockType = PipelineRunLockType.SINGLE_LOCK,
-    val successSubscription: Subscription = Subscription(),
-    val failSubscription: Subscription = Subscription(),
+    var successSubscription: Subscription = Subscription(),
+    var failSubscription: Subscription = Subscription(),
     var labels: List<String> = emptyList(),
     val waitQueueTimeMinute: Int = PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_DEFAULT,
     val maxQueueSize: Int = PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT,
     var hasPermission: Boolean? = null,
     val maxPipelineResNum: Int = PIPELINE_RES_NUM_MIN, // 保存流水线编排的最大个数
-    val maxConRunningQueueSize: Int = PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT // MULTIPLE类型时，并发构建数量限制
+    val maxConRunningQueueSize: Int = PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT, // MULTIPLE类型时，并发构建数量限制
+    var version: Int = 0,
+    @field:BkField(patternStyle = BkStyleEnum.BUILD_NUM_RULE_STYLE, required = false)
+    val buildNumRule: String? = null // 构建号生成规则
 ) {
 
     @Suppress("ALL")

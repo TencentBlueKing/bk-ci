@@ -182,7 +182,7 @@ interface OpThirdPartyAgentResource {
     @Path("/agents/cleanAllLockUpgradeAgents")
     fun cleanAllLockUpgradeAgents(): Result<Boolean>
 
-    @ApiOperation("")
+    @ApiOperation("设置Agent网关")
     @POST
     @Path("/agents/updateAgentGateway")
     fun updateAgentGateway(

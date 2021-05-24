@@ -32,19 +32,27 @@ import com.google.common.collect.Maps;
 import com.tencent.bk.codecc.task.constant.TaskConstants;
 import com.tencent.bk.codecc.task.dao.mongorepository.ToolMetaRepository;
 import com.tencent.bk.codecc.task.model.ToolMetaEntity;
+import com.tencent.bk.codecc.task.model.ToolVersionEntity;
 import com.tencent.devops.common.api.ToolMetaBaseVO;
 import com.tencent.devops.common.api.ToolMetaDetailVO;
+import com.tencent.devops.common.api.ToolVersionVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
 import com.tencent.devops.common.api.pojo.GlobalMessage;
+import com.tencent.devops.common.constant.ComConstants;
+import com.tencent.devops.common.constant.ComConstants.ToolIntegratedStatus;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.service.ToolMetaCacheService;
 import com.tencent.devops.common.service.utils.GlobalMessageUtil;
 import com.tencent.devops.common.util.CompressionUtils;
 import com.tencent.devops.common.util.JsonUtil;
+
+import java.util.ArrayList;
+
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -54,6 +62,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
 import static com.tencent.devops.common.constant.RedisKeyConstants.GLOBAL_TOOL_DESCRIPTION;
 
@@ -65,8 +74,7 @@ import static com.tencent.devops.common.constant.RedisKeyConstants.GLOBAL_TOOL_D
  */
 @Slf4j
 @Component
-public class ToolMetaCacheServiceImpl implements ToolMetaCacheService
-{
+public class ToolMetaCacheServiceImpl implements ToolMetaCacheService {
     private static final String TOOL_CACHE_KEY = "TOOL_METADATA";
 
     @Autowired
@@ -85,41 +93,35 @@ public class ToolMetaCacheServiceImpl implements ToolMetaCacheService
      * 加载工具缓存
      */
     @Override
-    public List<ToolMetaDetailVO> loadToolDetailCache()
-    {
+    public List<ToolMetaDetailVO> loadToolDetailCache() {
         List<ToolMetaDetailVO> toolMetaDetailVOS = Lists.newArrayList();
         List<ToolMetaEntity> toolMetaList = toolMetaRepository.findAll();
         Map<String, GlobalMessage> globalMessageMap = globalMessageUtil.getGlobalMessageMap(GLOBAL_TOOL_DESCRIPTION);
 
         toolMetaBasicMap.clear();
-        for (ToolMetaEntity tool : toolMetaList)
-        {
+        for (ToolMetaEntity tool : toolMetaList) {
             // 缓存基础信息
             cacheToolBaseMeta(tool);
 
             // 解压图标和图文详情
             String logo = tool.getLogo();
-            if (StringUtils.isNotEmpty(logo))
-            {
+            if (StringUtils.isNotEmpty(logo)) {
                 byte[] compressLogoBytes = logo.getBytes(StandardCharsets.ISO_8859_1);
                 byte[] afterDecompress = CompressionUtils.decompress(compressLogoBytes);
                 tool.setLogo(new String(afterDecompress, StandardCharsets.UTF_8));
             }
 
             String graphicDetails = tool.getGraphicDetails();
-            if (StringUtils.isNotBlank(graphicDetails))
-            {
+            if (StringUtils.isNotBlank(graphicDetails)) {
                 byte[] compressGraphicDetailsBytes = graphicDetails.getBytes(StandardCharsets.ISO_8859_1);
                 byte[] afterDecompress = CompressionUtils.decompress(compressGraphicDetailsBytes);
                 tool.setGraphicDetails(new String(afterDecompress, StandardCharsets.UTF_8));
             }
 
             // 工具描述国际化
-            if (MapUtils.isNotEmpty(globalMessageMap))
-            {
+            if (MapUtils.isNotEmpty(globalMessageMap)) {
                 GlobalMessage globalMessage = globalMessageMap.get(tool.getName());
-                if (null != globalMessage)
-                {
+                if (null != globalMessage) {
                     String description = globalMessageUtil.getMessageByLocale(globalMessage);
                     tool.setDescription(description);
                     tool.setBriefIntroduction(description);
@@ -128,6 +130,10 @@ public class ToolMetaCacheServiceImpl implements ToolMetaCacheService
 
             ToolMetaDetailVO toolMetaDetailVO = new ToolMetaDetailVO();
             BeanUtils.copyProperties(tool, toolMetaDetailVO);
+
+            List<ToolVersionVO> versionVOList = getToolVersionVOs(tool);
+
+            toolMetaDetailVO.setToolVersions(versionVOList);
             toolMetaDetailVOS.add(toolMetaDetailVO);
         }
 
@@ -137,6 +143,24 @@ public class ToolMetaCacheServiceImpl implements ToolMetaCacheService
         return toolMetaDetailVOS;
     }
 
+    @NotNull
+    private List<ToolVersionVO> getToolVersionVOs(ToolMetaEntity tool) {
+        List<ToolVersionEntity> versionList = tool.getToolVersions();
+        List<ToolVersionVO> versionVOList = new ArrayList<>();
+        if (CollectionUtils.isEmpty(versionList)) {
+            ToolVersionVO toolVersionVO = new ToolVersionVO();
+            toolVersionVO.setVersionType(ToolIntegratedStatus.P.name());
+            versionVOList.add(toolVersionVO);
+        } else {
+            versionList.forEach(toolVersionEntity -> {
+                ToolVersionVO toolVersionVO = new ToolVersionVO();
+                BeanUtils.copyProperties(toolVersionEntity, toolVersionVO);
+                versionVOList.add(toolVersionVO);
+            });
+        }
+        return versionVOList;
+    }
+
     /**
      * 根据工具名获取工具模型
      *
@@ -144,15 +168,12 @@ public class ToolMetaCacheServiceImpl implements ToolMetaCacheService
      * @return
      */
     @Override
-    public String getToolPattern(String toolName)
-    {
+    public String getToolPattern(String toolName) {
         String pattern;
-        if (toolMetaBasicMap.get(toolName) != null && StringUtils.isNotEmpty(toolMetaBasicMap.get(toolName).getPattern()))
-        {
+        if (toolMetaBasicMap.get(toolName) != null
+                && StringUtils.isNotEmpty(toolMetaBasicMap.get(toolName).getPattern())) {
             pattern = toolMetaBasicMap.get(toolName).getPattern();
-        }
-        else
-        {
+        } else {
             ToolMetaBaseVO toolMetaDetailVO = getToolBaseMetaCache(toolName);
             pattern = toolMetaDetailVO.getPattern();
         }
@@ -163,12 +184,10 @@ public class ToolMetaCacheServiceImpl implements ToolMetaCacheService
      * 加载工具缓存
      */
     @Override
-    public List<ToolMetaBaseVO> loadToolBaseCache()
-    {
+    public List<ToolMetaBaseVO> loadToolBaseCache() {
         List<ToolMetaBaseVO> toolMetaBaseVOS = Lists.newArrayList();
         List<ToolMetaEntity> toolMetaList = toolMetaRepository.findAll();
-        for (ToolMetaEntity tool : toolMetaList)
-        {
+        for (ToolMetaEntity tool : toolMetaList) {
             // 缓存基础信息
             cacheToolBaseMeta(tool);
         }
@@ -181,15 +200,12 @@ public class ToolMetaCacheServiceImpl implements ToolMetaCacheService
      * @param toolName
      * @return
      */
-    public String getToolParams(String toolName)
-    {
+    public String getToolParams(String toolName) {
         String params;
-        if (toolMetaBasicMap.get(toolName) != null && StringUtils.isNotEmpty(toolMetaBasicMap.get(toolName).getParams()))
-        {
+        if (toolMetaBasicMap.get(toolName) != null
+                && StringUtils.isNotEmpty(toolMetaBasicMap.get(toolName).getParams())) {
             params = toolMetaBasicMap.get(toolName).getParams();
-        }
-        else
-        {
+        } else {
             ToolMetaBaseVO toolMetaBaseVO = getToolBaseMetaCache(toolName);
             params = toolMetaBaseVO.getParams();
         }
@@ -203,14 +219,10 @@ public class ToolMetaCacheServiceImpl implements ToolMetaCacheService
      * @return
      */
     @Override
-    public ToolMetaBaseVO getToolBaseMetaCache(String toolName)
-    {
-        if (toolMetaBasicMap.get(toolName) != null)
-        {
+    public ToolMetaBaseVO getToolBaseMetaCache(String toolName) {
+        if (toolMetaBasicMap.get(toolName) != null) {
             return toolMetaBasicMap.get(toolName);
-        }
-        else
-        {
+        } else {
             ToolMetaDetailVO toolMetaDetailVO = getToolDetailFromCache(toolName);
             ToolMetaBaseVO toolMetaBaseVO = new ToolMetaBaseVO();
             BeanUtils.copyProperties(toolMetaDetailVO, toolMetaBaseVO);
@@ -227,41 +239,37 @@ public class ToolMetaCacheServiceImpl implements ToolMetaCacheService
      * @return
      */
     @Override
-    public ToolMetaDetailVO getToolDetailFromCache(String toolName)
-    {
+    public ToolMetaDetailVO getToolDetailFromCache(String toolName) {
         List<ToolMetaDetailVO> toolMetaDetails;
         Object toolMetadataObj = redisTemplate.opsForValue().get(TOOL_CACHE_KEY);
-        if (toolMetadataObj == null)
-        {
+        if (toolMetadataObj == null) {
             toolMetaDetails = loadToolDetailCache();
-        }
-        else
-        {
-            toolMetaDetails = JsonUtil.INSTANCE.to((String)toolMetadataObj, new TypeReference<List<ToolMetaDetailVO>>()
-            {
+        } else {
+            toolMetaDetails = JsonUtil.INSTANCE.to((String) toolMetadataObj, new TypeReference<List<ToolMetaDetailVO>>() {
             });
         }
 
         ToolMetaDetailVO toolMetaDetailVOResult = null;
-        if (CollectionUtils.isNotEmpty(toolMetaDetails))
-        {
-            for (ToolMetaDetailVO toolMetaDetail : toolMetaDetails)
-            {
-                if (toolName.equals(toolMetaDetail.getName()))
-                {
+        if (CollectionUtils.isNotEmpty(toolMetaDetails)) {
+            for (ToolMetaDetailVO toolMetaDetail : toolMetaDetails) {
+                if (toolName.equals(toolMetaDetail.getName())) {
                     toolMetaDetailVOResult = toolMetaDetail;
                     break;
                 }
             }
         }
 
-        if (Objects.isNull(toolMetaDetailVOResult))
-        {
+        if (Objects.isNull(toolMetaDetailVOResult)) {
             log.error("tool[{}] is invalid.", toolName);
             throw new CodeCCException(CommonMessageCode.INVALID_TOOL_NAME, new String[]{toolName}, null);
         }
 
         return toolMetaDetailVOResult;
+    }
+
+    @Override
+    public List<String> getToolDetailByDimension(String dimension) {
+        return null;
     }
 
     /**
@@ -271,53 +279,41 @@ public class ToolMetaCacheServiceImpl implements ToolMetaCacheService
      * @return
      */
     @Override
-    public Map<String, ToolMetaBaseVO> getToolMetaListFromCache(boolean isDetail, boolean isAdmin)
-    {
+    public Map<String, ToolMetaBaseVO> getToolMetaListFromCache(boolean isDetail, boolean isAdmin) {
         List<ToolMetaDetailVO> toolMetaDetails;
 
         // 如果不需要详情，并且基础信息缓存不为空，就直接使用基础信息缓存，否则就查询Redis缓存中的工具信息
-        if (Boolean.FALSE.equals(isDetail) && MapUtils.isNotEmpty(toolMetaBasicMap))
-        {
+        if (Boolean.FALSE.equals(isDetail) && MapUtils.isNotEmpty(toolMetaBasicMap)) {
             toolMetaDetails = Lists.newArrayList();
-            for (Map.Entry<String, ToolMetaBaseVO> entry : toolMetaBasicMap.entrySet())
-            {
+            for (Map.Entry<String, ToolMetaBaseVO> entry : toolMetaBasicMap.entrySet()) {
                 ToolMetaDetailVO toolMetaDetailVO = new ToolMetaDetailVO();
                 BeanUtils.copyProperties(entry.getValue(), toolMetaDetailVO);
                 toolMetaDetails.add(toolMetaDetailVO);
             }
-        }
-        else
-        {
+        } else {
             Object toolMetadataObj = redisTemplate.opsForValue().get(TOOL_CACHE_KEY);
-            if (toolMetadataObj == null)
-            {
+            if (toolMetadataObj == null) {
                 toolMetaDetails = loadToolDetailCache();
-            }
-            else
-            {
-                toolMetaDetails = JsonUtil.INSTANCE.to((String)toolMetadataObj, new TypeReference<List<ToolMetaDetailVO>>()
-                {
-                });
+            } else {
+                toolMetaDetails = JsonUtil.INSTANCE.to((String) toolMetadataObj,
+                        new TypeReference<List<ToolMetaDetailVO>>() {
+                        });
             }
         }
 
         Map<String, ToolMetaBaseVO> toolCacheCopy = Maps.newHashMap();
-        if (CollectionUtils.isNotEmpty(toolMetaDetails))
-        {
-            for (ToolMetaDetailVO toolMetaDetailVO : toolMetaDetails)
-            {
-                if (Boolean.FALSE.equals(isAdmin) && !TaskConstants.ToolIntegratedStatus.P.name().equals(toolMetaDetailVO.getStatus()))
-                {
-                    continue;
-                }
+        if (CollectionUtils.isNotEmpty(toolMetaDetails)) {
+            for (ToolMetaDetailVO toolMetaDetailVO : toolMetaDetails) {
+//                if (Boolean.FALSE.equals(isAdmin)
+//                && !ComConstants.ToolIntegratedStatus.P.name().equals(toolMetaDetailVO.getStatus()))
+//                {
+//                    continue;
+//                }
 
                 ToolMetaBaseVO toolMetaVO;
-                if (Boolean.TRUE.equals(isDetail))
-                {
+                if (Boolean.TRUE.equals(isDetail)) {
                     toolMetaVO = toolMetaDetailVO;
-                }
-                else
-                {
+                } else {
                     toolMetaVO = new ToolMetaBaseVO();
                     BeanUtils.copyProperties(toolMetaDetailVO, toolMetaVO);
                 }
@@ -335,15 +331,12 @@ public class ToolMetaCacheServiceImpl implements ToolMetaCacheService
      * @return
      */
     @Override
-    public String getToolDisplayName(String toolName)
-    {
+    public String getToolDisplayName(String toolName) {
         String displayName;
-        if (toolMetaBasicMap.get(toolName) != null && StringUtils.isNotEmpty(toolMetaBasicMap.get(toolName).getDisplayName()))
-        {
+        if (toolMetaBasicMap.get(toolName) != null
+                && StringUtils.isNotEmpty(toolMetaBasicMap.get(toolName).getDisplayName())) {
             displayName = toolMetaBasicMap.get(toolName).getDisplayName();
-        }
-        else
-        {
+        } else {
             ToolMetaBaseVO toolMetaBaseVO = getToolBaseMetaCache(toolName);
             displayName = toolMetaBaseVO.getDisplayName();
         }
@@ -355,10 +348,11 @@ public class ToolMetaCacheServiceImpl implements ToolMetaCacheService
      *
      * @param toolMetaEntity
      */
-    private ToolMetaBaseVO cacheToolBaseMeta(ToolMetaEntity toolMetaEntity)
-    {
+    private ToolMetaBaseVO cacheToolBaseMeta(ToolMetaEntity toolMetaEntity) {
         ToolMetaBaseVO newToolMetaBaseVO = new ToolMetaBaseVO();
         BeanUtils.copyProperties(toolMetaEntity, newToolMetaBaseVO);
+        List<ToolVersionVO> versionVOList = getToolVersionVOs(toolMetaEntity);
+        newToolMetaBaseVO.setToolVersions(versionVOList);
         toolMetaBasicMap.put(newToolMetaBaseVO.getName(), newToolMetaBaseVO);
         return newToolMetaBaseVO;
     }
@@ -368,13 +362,13 @@ public class ToolMetaCacheServiceImpl implements ToolMetaCacheService
      *
      * @param toolName
      */
-    public void cacheToolBaseMeta(String toolName)
-    {
+    public void cacheToolBaseMeta(String toolName) {
         ToolMetaEntity toolMetaEntity = toolMetaRepository.findByName(toolName);
-        if (toolMetaEntity != null)
-        {
+        if (toolMetaEntity != null) {
             ToolMetaBaseVO newToolMetaBaseVO = new ToolMetaBaseVO();
             BeanUtils.copyProperties(toolMetaEntity, newToolMetaBaseVO);
+            List<ToolVersionVO> versionVOList = getToolVersionVOs(toolMetaEntity);
+            newToolMetaBaseVO.setToolVersions(versionVOList);
             toolMetaBasicMap.put(newToolMetaBaseVO.getName(), newToolMetaBaseVO);
             log.info("cache tool success. {}", toolName);
         }

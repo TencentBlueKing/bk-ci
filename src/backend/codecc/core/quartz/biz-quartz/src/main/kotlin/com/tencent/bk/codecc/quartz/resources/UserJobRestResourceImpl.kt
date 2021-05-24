@@ -7,7 +7,7 @@ import com.tencent.bk.codecc.quartz.pojo.NodeInfoVO
 import com.tencent.bk.codecc.quartz.pojo.ShardInfoVO
 import com.tencent.bk.codecc.quartz.pojo.ShardingResultVO
 import com.tencent.bk.codecc.quartz.service.JobManageService
-import com.tencent.devops.common.api.pojo.CodeCCResult
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -17,32 +17,32 @@ class UserJobRestResourceImpl @Autowired constructor(
     private val jobManageService: JobManageService
 ) : UserJobRestResource {
 
-    override fun getExistingJob(): CodeCCResult<List<JobInfoVO>> {
-        return CodeCCResult(customSchedulerManager.getExistingJob())
+    override fun getExistingJob(): Result<List<JobInfoVO>> {
+        return Result(customSchedulerManager.getExistingJob())
     }
 
 
-    override fun deleteAllJobs(dataDelete : Int) : CodeCCResult<Boolean> {
+    override fun deleteAllJobs(dataDelete : Int) : Result<Boolean> {
         customSchedulerManager.deleteAllJobs(dataDelete)
-        return CodeCCResult(true)
+        return Result(true)
     }
 
 
-    override fun initAllJobs() : CodeCCResult<Boolean> {
+    override fun initAllJobs() : Result<Boolean> {
         customSchedulerManager.initAllJobs()
-        return CodeCCResult(true)
+        return Result(true)
     }
 
 
-    override fun refreshOpenSourceCronExpression(period : Int, startTime : Int) : CodeCCResult<Boolean> {
+    override fun refreshOpenSourceCronExpression(period : Int, startTime : Int) : Result<Boolean> {
         jobManageService.refreshOpensourceCronExpression(period, startTime)
-        return CodeCCResult(true)
+        return Result(true)
     }
 
 
-    override fun getShardingResult(): CodeCCResult<ShardingResultVO?> {
+    override fun getShardingResult(): Result<ShardingResultVO?> {
         val shardingResult =
-            CustomSchedulerManager.shardingStrategy.getShardingStrategy().getShardingResult() ?: return CodeCCResult(null)
+            CustomSchedulerManager.shardingStrategy.getShardingStrategy().getShardingResult() ?: return Result(null)
         return with(shardingResult) {
             val shardingResultVO = ShardingResultVO(
                 currentShard = ShardInfoVO(
@@ -80,7 +80,7 @@ class UserJobRestResourceImpl @Autowired constructor(
                     )
                 }
             )
-            CodeCCResult(shardingResultVO)
+            Result(shardingResultVO)
         }
     }
 }

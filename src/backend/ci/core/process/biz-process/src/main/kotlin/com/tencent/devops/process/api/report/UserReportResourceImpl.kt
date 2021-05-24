@@ -40,7 +40,13 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserReportResourceImpl @Autowired constructor(
     private val reportService: ReportService
 ) : UserReportResource {
-    override fun get(userId: String, projectId: String, pipelineId: String, buildId: String): Result<List<Report>> {
+    override fun get(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String?
+    ): Result<List<Report>> {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
         }
@@ -53,7 +59,7 @@ class UserReportResourceImpl @Autowired constructor(
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }
-        val result = reportService.list(userId, projectId, pipelineId, buildId)
+        val result = reportService.list(userId, projectId, pipelineId, buildId, taskId)
         return Result(result)
     }
 }

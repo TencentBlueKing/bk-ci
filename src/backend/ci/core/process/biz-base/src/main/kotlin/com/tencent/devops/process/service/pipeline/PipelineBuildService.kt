@@ -187,10 +187,12 @@ class PipelineBuildService(
         val pipelineId = readyToBuildPipelineInfo.pipelineId
         var acquire = false
         val projectId = readyToBuildPipelineInfo.projectId
-        val bucketSize = pipelineRepositoryService.getSetting(pipelineId)!!.maxConRunningQueueSize
+        val pipelineSetting = pipelineRepositoryService.getSetting(pipelineId)
+        val bucketSize = pipelineSetting!!.maxConRunningQueueSize
+        val lockKey = "PipelineRateLimit:$pipelineId"
         try {
             if (frequencyLimit && channelCode !in NO_LIMIT_CHANNEL) {
-                acquire = simpleRateLimiter.acquire(bucketSize, lock = pipelineId)
+                acquire = simpleRateLimiter.acquire(bucketSize, lockKey = lockKey)
                 if (!acquire) {
                     throw ErrorCodeException(
                         errorCode = ProcessMessageCode.ERROR_START_BUILD_FREQUENT_LIMIT,
@@ -226,7 +228,7 @@ class PipelineBuildService(
                 throw ErrorCodeException(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
                     errorCode = interceptResult.status.toString(),
-                    defaultMessage = "流水线启动失败![${interceptResult.message}]"
+                    defaultMessage = "Pipeline start failed: [${interceptResult.message}]"
                 )
             }
 
@@ -265,7 +267,8 @@ class PipelineBuildService(
                 pipelineInfo = readyToBuildPipelineInfo,
                 fullModel = model,
                 startParamsWithType = paramsWithType,
-                buildNo = buildNo
+                buildNo = buildNo,
+                buildNumRule = pipelineSetting.buildNumRule
             )
 
             // 重写启动参数，若为插件重试此处将写入启动参数的最新数值
@@ -285,7 +288,7 @@ class PipelineBuildService(
             return buildId
         } finally {
             if (acquire) {
-                simpleRateLimiter.release(lock = pipelineId)
+                simpleRateLimiter.release(lockKey = lockKey)
             }
         }
     }
@@ -386,7 +389,8 @@ class PipelineBuildService(
                         elementItemList = elementItemList,
                         originalElementList = originalElementList,
                         finalElementList = finalElementList,
-                        startValues = startValues
+                        startValues = startValues,
+                        finallyStage = stage.finally
                     )
                 }
                 container.elements = finalElementList

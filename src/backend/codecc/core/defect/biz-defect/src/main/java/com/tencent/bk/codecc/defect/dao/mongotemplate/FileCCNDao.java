@@ -42,11 +42,12 @@ public class FileCCNDao
             for (FileCCNEntity fileCCN : fileCCNList)
             {
                 Query query = new Query();
-                query.addCriteria(Criteria.where("file_path").is(fileCCN.getFilePath()).
-                        and("task_id").is(fileCCN.getTaskId()));
+                query.addCriteria(Criteria.where("file_rel_path").is(fileCCN.getFileRelPath())
+                        .and("task_id").is(fileCCN.getTaskId()));
                 Update update = new Update();
                 update.set("total_ccn_count", fileCCN.getTotalCCNCount())
                         .set("file_path", fileCCN.getFilePath())
+                        .set("file_rel_path", fileCCN.getFileRelPath())
                         .set("task_id", fileCCN.getTaskId());
                 ops.upsert(query, update);
             }

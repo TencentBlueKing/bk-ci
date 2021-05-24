@@ -47,6 +47,7 @@ export default {
         isStagePopupShow: false,
         isAddParallelContainer: false,
         insertStageIndex: null,
+        insertStageIsFinally: false,
         buildParamsMap: {},
         execDetail: null,
         globalEnvs: null,
@@ -58,7 +59,8 @@ export default {
         showReviewDialog: false,
         reviewInfo: null,
         showStageReviewPanel: false,
-        importedPipelineJson: null
+        importedPipelineJson: null,
+        atomVersionChangedKeys: []
     },
     mutations,
     actions,

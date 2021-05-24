@@ -26,6 +26,7 @@
 
 package com.tencent.bk.codecc.defect.service;
 
+import com.tencent.bk.codecc.defect.vo.CLOCDefectQueryRspInfoVO;
 import com.tencent.devops.common.api.analysisresult.BaseLastAnalysisResultVO;
 import com.tencent.devops.common.api.analysisresult.ToolLastAnalysisResultVO;
 
@@ -43,5 +44,6 @@ public interface IQueryStatisticBizService
      * @param arg
      * @return
      */
-    BaseLastAnalysisResultVO processBiz(ToolLastAnalysisResultVO arg);
+    BaseLastAnalysisResultVO processBiz(ToolLastAnalysisResultVO arg, boolean isLast);
+
 }

@@ -61,4 +61,8 @@ class ServicePipelineTaskResourceImpl @Autowired constructor(
             pageSize = pageSize
         ))
     }
+
+    override fun listPipelineNumByAtomCodes(projectId: String?, atomCodes: List<String>): Result<Map<String, Int>> {
+        return Result(pipelineTaskService.listPipelineNumByAtomCodes(projectId, atomCodes))
+    }
 }

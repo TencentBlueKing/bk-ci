@@ -107,7 +107,7 @@ class PipelineWebhookService @Autowired constructor(
                 ScmType.CODE_SVN ->
                     scmProxyService.addSvnWebhook(pipelineWebhook.projectId, repositoryConfig)
                 ScmType.CODE_GITLAB ->
-                    scmProxyService.addGitlabWebhook(pipelineWebhook.projectId, repositoryConfig)
+                    scmProxyService.addGitlabWebhook(pipelineWebhook.projectId, repositoryConfig, codeEventType)
                 ScmType.GITHUB -> {
                     val repo = client.get(ServiceRepositoryResource::class).get(
                         pipelineWebhook.projectId,
@@ -473,5 +473,64 @@ class PipelineWebhookService @Autowired constructor(
             offset = limit.offset,
             limit = limit.limit
         ) ?: emptyList()
+    }
+
+    fun updateWebhookSecret(type: ScmType) {
+        val pipelines = mutableMapOf<String/*pipelineId*/, List<Element>/*trigger element*/>()
+        val pipelineVariables = HashMap<String, Map<String, String>>()
+        var start = 0
+        loop@ while (true) {
+            logger.info("update webhook secret|start=$start")
+            val typeWebhooksResp = listRepositoryTypeWebhooks(type, start, 100)
+            if (typeWebhooksResp.isNotOk() || typeWebhooksResp.data == null || typeWebhooksResp.data!!.isEmpty()) {
+                break@loop
+            }
+            typeWebhooksResp.data!!.forEach webhook@{
+                it.doUpdateWebhookSecret(pipelines, pipelineVariables)
+            }
+            start += 100
+        }
+    }
+
+    private fun PipelineWebhook.doUpdateWebhookSecret(
+        pipelines: MutableMap<String, List<Element>>,
+        pipelineVariables: HashMap<String, Map<String, String>>
+    ) {
+        try {
+            val (elements, params) = getElementsAndParams(
+                pipelineId = pipelineId,
+                pipelines = pipelines,
+                pipelineVariables = pipelineVariables
+            )
+
+            val repositoryConfig = getRepositoryConfig(this, params)
+            for (element in elements) {
+                if (element.id == taskId) {
+                    when (element) {
+                        is CodeGitWebHookTriggerElement ->
+                            scmProxyService.addGitWebhook(
+                                projectId,
+                                repositoryConfig = repositoryConfig,
+                                codeEventType = element.eventType
+                            )
+                        is CodeTGitWebHookTriggerElement ->
+                            scmProxyService.addTGitWebhook(
+                                projectId,
+                                repositoryConfig = repositoryConfig,
+                                codeEventType = element.data.input.eventType
+                            )
+                        is CodeGitlabWebHookTriggerElement ->
+                            scmProxyService.addGitlabWebhook(
+                                projectId,
+                                repositoryConfig = repositoryConfig,
+                                codeEventType = element.eventType
+                            )
+                    }
+                    break
+                }
+            }
+        } catch (t: Throwable) {
+            logger.warn("$id|$pipelineId|update webhook secret exception ignore", t)
+        }
     }
 }

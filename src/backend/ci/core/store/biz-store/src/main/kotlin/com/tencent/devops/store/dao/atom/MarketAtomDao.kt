@@ -93,7 +93,7 @@ class MarketAtomDao : AtomBaseDao() {
             yamlFlag = yamlFlag,
             recommendFlag = recommendFlag
         )
-        return baseStep.where(conditions).fetchOne(0, Int::class.java)
+        return baseStep.where(conditions).fetchOne(0, Int::class.java)!!
     }
 
     private fun formatConditions(
@@ -157,6 +157,8 @@ class MarketAtomDao : AtomBaseDao() {
             ta.OS,
             ta.BUILD_LESS_RUN_FLAG,
             ta.DOCS_LINK,
+            ta.MODIFIER,
+            ta.UPDATE_TIME,
             taf.RECOMMEND_FLAG,
             taf.YAML_FLAG
         ).from(ta)
@@ -178,24 +180,31 @@ class MarketAtomDao : AtomBaseDao() {
         )
 
         if (null != sortType) {
-            if (sortType == MarketAtomSortTypeEnum.DOWNLOAD_COUNT && score == null) {
+            val flag =
+                sortType == MarketAtomSortTypeEnum.DOWNLOAD_COUNT || sortType == MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM
+            if (flag && score == null) {
                 val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL.`as`("tas")
                 val t =
-                    dslContext.select(tas.STORE_CODE, tas.DOWNLOADS.`as`(MarketAtomSortTypeEnum.DOWNLOAD_COUNT.name))
+                    dslContext.select(
+                        tas.STORE_CODE,
+                        tas.DOWNLOADS.`as`(MarketAtomSortTypeEnum.DOWNLOAD_COUNT.name),
+                        tas.RECENT_EXECUTE_NUM.`as`(MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM.name)
+                    )
                         .from(tas).where(tas.STORE_TYPE.eq(storeType)).asTable("t")
                 baseStep.leftJoin(t).on(ta.ATOM_CODE.eq(t.field("STORE_CODE", String::class.java)))
             }
 
-            val realSortType = if (sortType == MarketAtomSortTypeEnum.DOWNLOAD_COUNT) {
-                DSL.field(sortType.name)
-            } else {
-                ta.field(sortType.name)
-            }
+            val realSortType =
+                if (flag) {
+                    DSL.field(sortType.name)
+                } else {
+                    ta.field(sortType.name)
+                }
 
             if (desc != null && desc) {
-                baseStep.where(conditions).orderBy(realSortType.desc())
+                baseStep.where(conditions).orderBy(realSortType!!.desc())
             } else {
-                baseStep.where(conditions).orderBy(realSortType.asc())
+                baseStep.where(conditions).orderBy(realSortType!!.asc())
             }
         } else {
             baseStep.where(conditions)
@@ -238,8 +247,8 @@ class MarketAtomDao : AtomBaseDao() {
                 tas.SCORE_AVERAGE
             ).from(tas).asTable("t")
             baseStep.leftJoin(t).on(ta.ATOM_CODE.eq(t.field("STORE_CODE", String::class.java)))
-            conditions.add(t.field("SCORE_AVERAGE", BigDecimal::class.java).ge(BigDecimal.valueOf(score.toLong())))
-            conditions.add(t.field("STORE_TYPE", Byte::class.java).eq(storeType))
+            conditions.add(t.field("SCORE_AVERAGE", BigDecimal::class.java)!!.ge(BigDecimal.valueOf(score.toLong())))
+            conditions.add(t.field("STORE_TYPE", Byte::class.java)!!.eq(storeType))
         }
         if (null != yamlFlag) {
             conditions.add(taf.YAML_FLAG.eq(yamlFlag))
@@ -259,7 +268,7 @@ class MarketAtomDao : AtomBaseDao() {
             }
             return dslContext.selectCount().from(this)
                 .where(conditions)
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -292,7 +301,7 @@ class MarketAtomDao : AtomBaseDao() {
             .leftJoin(b)
             .on(a.ATOM_CODE.eq(b.STORE_CODE))
             .where(conditions)
-            .fetchOne(0, Int::class.java)
+            .fetchOne(0, Int::class.java)!!
     }
 
     fun getMyAtoms(
@@ -551,12 +560,21 @@ class MarketAtomDao : AtomBaseDao() {
         }
     }
 
-    fun getAtomsByAtomCode(dslContext: DSLContext, atomCode: String): Result<TAtomRecord>? {
+    fun getAtomsByAtomCode(
+        dslContext: DSLContext,
+        atomCode: String,
+        page: Int? = null,
+        pageSize: Int? = null
+    ): Result<TAtomRecord>? {
         return with(TAtom.T_ATOM) {
-            dslContext.selectFrom(this)
+            val baseStep = dslContext.selectFrom(this)
                 .where(ATOM_CODE.eq(atomCode))
                 .orderBy(CREATE_TIME.desc())
-                .fetch()
+            if (null != page && null != pageSize) {
+                baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+            } else {
+                baseStep.fetch()
+            }
         }
     }
 

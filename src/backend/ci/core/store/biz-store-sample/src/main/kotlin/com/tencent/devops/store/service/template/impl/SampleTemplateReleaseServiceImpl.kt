@@ -64,6 +64,10 @@ class SampleTemplateReleaseServiceImpl : SampleTemplateReleaseService, TemplateR
         return processInfo
     }
 
+    override fun validateTemplateVisibleDept(templateCode: String) {
+        // 开源版没有权限概念，无需校验
+    }
+
     /**
      * 初始化进度
      */

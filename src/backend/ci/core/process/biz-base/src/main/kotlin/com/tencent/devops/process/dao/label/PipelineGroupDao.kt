@@ -68,7 +68,7 @@ class PipelineGroupDao {
                     userId
                 )
                 .returning(ID)
-                .fetchOne().id
+                .fetchOne()!!.id
         }
     }
 
@@ -110,6 +110,17 @@ class PipelineGroupDao {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .fetch()
+        }
+    }
+
+    fun count(
+        dslContext: DSLContext,
+        projectId: String
+    ): Long {
+        with(TPipelineGroup.T_PIPELINE_GROUP) {
+            return dslContext.selectCount().from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .fetchOne(0, Long::class.java)!!
         }
     }
 

@@ -45,11 +45,13 @@ import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Field
 import org.jooq.Record
 import org.jooq.Result
 import org.jooq.SelectOnConditionStep
 import org.jooq.TableField
 import org.jooq.impl.DSL
+import org.jooq.impl.SQLDataType
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -91,7 +93,7 @@ class PipelineBuildSummaryDao {
     fun getBuildNo(dslContext: DSLContext, pipelineId: String): Int {
         return with(T_PIPELINE_BUILD_SUMMARY) {
             dslContext.select(BUILD_NO).from(this)
-                .where(PIPELINE_ID.eq(pipelineId)).fetchOne(BUILD_NO, Int::class.java)
+                .where(PIPELINE_ID.eq(pipelineId)).fetchOne(BUILD_NO, Int::class.java)!!
         }
     }
 
@@ -112,7 +114,11 @@ class PipelineBuildSummaryDao {
         }
     }
 
-    fun updateBuildNum(dslContext: DSLContext, pipelineId: String, buildNum: Int = 0): Int {
+    fun updateBuildNum(
+        dslContext: DSLContext,
+        pipelineId: String,
+        buildNum: Int = 0
+    ): Int {
 
         with(T_PIPELINE_BUILD_SUMMARY) {
             if (buildNum == 0) {
@@ -129,7 +135,19 @@ class PipelineBuildSummaryDao {
             dslContext.select(BUILD_NUM)
                 .from(this)
                 .where(PIPELINE_ID.eq(pipelineId))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    fun updateBuildNumAlias(
+        dslContext: DSLContext,
+        pipelineId: String,
+        buildNumAlias: String
+    ) {
+        with(T_PIPELINE_BUILD_SUMMARY) {
+            dslContext.update(this)
+                .set(BUILD_NUM_ALIAS, buildNumAlias)
+                .where(PIPELINE_ID.eq(pipelineId)).execute()
         }
     }
 
@@ -156,7 +174,7 @@ class PipelineBuildSummaryDao {
         )
         val t = getPipelineInfoBuildSummaryBaseQuery(dslContext, favorPipelines, authPipelines)
             .where(conditions).asTable("t")
-        return dslContext.selectCount().from(t).fetchOne(0, Long::class.java)
+        return dslContext.selectCount().from(t).fetchOne(0, Long::class.java)!!
     }
 
     fun listPipelineInfoBuildSummary(
@@ -414,13 +432,13 @@ class PipelineBuildSummaryDao {
         if (sortType != null) {
             val sortTypeField = when (sortType) {
                 PipelineSortType.NAME -> {
-                    t.field("PIPELINE_NAME").asc()
+                    t.field("PIPELINE_NAME")!!.asc()
                 }
                 PipelineSortType.CREATE_TIME -> {
-                    t.field("CREATE_TIME").desc()
+                    t.field("CREATE_TIME")!!.desc()
                 }
                 PipelineSortType.UPDATE_TIME -> {
-                    t.field("UPDATE_TIME").desc()
+                    t.field("UPDATE_TIME")!!.desc()
                 }
             }
             baseStep.orderBy(sortTypeField)
@@ -455,6 +473,7 @@ class PipelineBuildSummaryDao {
             T_PIPELINE_SETTING.DESC,
             T_PIPELINE_SETTING.RUN_LOCK_TYPE,
             T_PIPELINE_BUILD_SUMMARY.BUILD_NUM,
+            T_PIPELINE_BUILD_SUMMARY.BUILD_NUM_ALIAS,
             T_PIPELINE_BUILD_SUMMARY.BUILD_NO,
             T_PIPELINE_BUILD_SUMMARY.FINISH_COUNT,
             T_PIPELINE_BUILD_SUMMARY.RUNNING_COUNT,
@@ -587,7 +606,7 @@ class PipelineBuildSummaryDao {
             val count = dslContext.selectCount().from(this)
                 .where(PIPELINE_ID.eq(pipelineId))
                 .and(LATEST_BUILD_ID.eq(buildId))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
 
             val update =
                 dslContext.update(this).set(RUNNING_COUNT, RUNNING_COUNT + runningIncrement)
@@ -604,6 +623,24 @@ class PipelineBuildSummaryDao {
             }
             update.where(PIPELINE_ID.eq(pipelineId))
                 .execute()
+        }
+    }
+
+    fun listOrderSummaryByPipelineIds(
+        dslContext: DSLContext,
+        pipelineIds: List<String>
+    ): Result<TPipelineBuildSummaryRecord> {
+        return with(T_PIPELINE_BUILD_SUMMARY) {
+            val query = dslContext.selectFrom(this).where(PIPELINE_ID.`in`(pipelineIds))
+            val size = pipelineIds.size + 1
+            val args = arrayOfNulls<Field<out Any>?>(size)
+            args[0] = DSL.field("PIPELINE_ID")
+            var index = 1
+            pipelineIds.forEach { pipelineId ->
+                args[index++] = DSL.`val`(pipelineId)
+            }
+            query.orderBy(DSL.function("field", SQLDataType.VARCHAR, *args))
+            query.fetch()
         }
     }
 }

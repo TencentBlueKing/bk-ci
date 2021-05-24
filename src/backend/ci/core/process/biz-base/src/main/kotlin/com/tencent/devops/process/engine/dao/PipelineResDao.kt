@@ -114,20 +114,6 @@ class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapp
             .fetch()
     }
 
-    fun getAllVersionModel(
-        dslContext: DSLContext,
-        pipelineId: String
-    ): List<String> {
-
-        return with(T_PIPELINE_RESOURCE) {
-            dslContext.select(MODEL)
-                .from(this)
-                .where(PIPELINE_ID.eq(pipelineId))
-                .orderBy(VERSION.desc())
-                .fetch(0, String::class.java)
-        }
-    }
-
     fun deleteAllVersion(dslContext: DSLContext, pipelineId: String): Int {
         return with(T_PIPELINE_RESOURCE) {
             dslContext.deleteFrom(this)
@@ -136,12 +122,11 @@ class PipelineResDao @Autowired constructor(private val objectMapper: ObjectMapp
         }
     }
 
-    fun deleteEarlyVersion(dslContext: DSLContext, pipelineId: String, maxPipelineResNum: Int): Int {
+    fun deleteEarlyVersion(dslContext: DSLContext, pipelineId: String, beforeVersion: Int): Int {
         return with(T_PIPELINE_RESOURCE) {
-            val pipelineMaxVersion = dslContext.select(VERSION.max()).from(this).where(PIPELINE_ID.eq(pipelineId)).fetchOne(0, Int::class.java)
             dslContext.deleteFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
-                .and(VERSION.le(pipelineMaxVersion - maxPipelineResNum))
+                .and(VERSION.lt(beforeVersion))
                 .execute()
         }
     }

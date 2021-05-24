@@ -55,6 +55,7 @@ class ReportArchiveTask : ITask() {
 
     private val logger = LoggerFactory.getLogger(ReportArchiveTask::class.java)
 
+    @Suppress("ALL")
     override fun execute(buildTask: BuildTask, buildVariables: BuildVariables, workspace: File) {
         val taskParams = buildTask.params ?: mapOf()
         val elementId = taskParams["id"] ?: taskParams["elementId"]

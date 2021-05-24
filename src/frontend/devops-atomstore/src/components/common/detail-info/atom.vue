@@ -4,6 +4,10 @@
         <hgroup class="detail-info-group">
             <h3 class="title-with-img">
                 <span :class="{ 'not-recommend': detail.recommendFlag === false }" :title="detail.recommendFlag === false ? $t('store.该插件不推荐使用') : ''">{{detail.name}}</span>
+                <div class="canvas-contain">
+                    <canvas class="atom-chart" v-if="detail.dailyStatisticList && detail.dailyStatisticList.length" width="64" height="18"></canvas>
+                    <icon v-else class="chart-empty" name="empty" size="16" v-bk-tooltips="{ content: $t('store.最近七天暂无执行') }" />
+                </div>
                 <template v-if="userInfo.type !== 'ADMIN' && detail.htmlTemplateVersion !== '1.0'">
                     <h5 :title="approveTip" :class="[{ 'not-public': approveMsg !== $t('store.协作') }]" @click="cooperation">
                         <icon class="detail-img" name="cooperation" size="16" />
@@ -42,7 +46,7 @@
                 <span> {{ $t('store.分类：') }} </span><span>{{detail.classifyName || '-'}}</span>
             </h5>
             <h5 class="detail-info">
-                <span> {{ $t('store.热度：') }} </span><span>{{detail.downloads || 0}}</span>
+                <span> {{ $t('store.热度：') }} </span><span>{{detail.recentExecuteNum || 0}}</span>
             </h5>
             <h5 class="detail-info detail-label">
                 <span> {{ $t('store.功能标签：') }} </span>
@@ -96,6 +100,7 @@
 </template>
 
 <script>
+    import BKChart from '@blueking/bkcharts'
     import commentRate from '../comment-rate'
     import formTips from '@/components/common/formTips/index'
     import api from '@/api'
@@ -182,8 +187,12 @@
             }
         },
 
-        created () {
+        mounted () {
             this.initData()
+            const chartData = this.drawTrend()
+            this.$once('hook:beforeDestroy', () => {
+                if (chartData && chartData.destroy) chartData.destroy()
+            })
         },
 
         methods: {
@@ -201,6 +210,75 @@
 
             closeDialog () {
                 this.clearFormData()
+            },
+
+            drawTrend () {
+                const dailyStatisticList = this.detail.dailyStatisticList
+                if (!dailyStatisticList || dailyStatisticList.length <= 0) return
+                const context = document.querySelector('.atom-chart')
+                const chartDatas = []
+                const chartLabels = []
+                const backgroundColors = []
+                dailyStatisticList.map((statis) => {
+                    const val = statis.dailySuccessRate
+                    const isEmpty = [0, undefined, null].includes(val)
+                    const isUndefinedOrNull = [undefined, null].includes(val)
+                    const data = isEmpty ? 2 : val
+                    const lableVal = isUndefinedOrNull ? '--' : val
+                    const color = isEmpty ? '#b4b4b4' : 'rgba(90, 159, 247, 1)'
+                    chartDatas.push(data)
+                    chartLabels.push(`${this.$t('store.执行成功率')}：${lableVal}%`)
+                    backgroundColors.push(color)
+                })
+                return new BKChart(context, {
+                    type: 'bar',
+                    data: {
+                        labels: dailyStatisticList.map(x => x.statisticsTime),
+                        datasets: [
+                            {
+                                barThickness: 6,
+                                label: this.$t('store.执行成功率'),
+                                backgroundColor: backgroundColors,
+                                lineTension: 0,
+                                borderWidth: 0,
+                                pointRadius: 0,
+                                pointHitRadius: 3,
+                                pointHoverRadius: 3,
+                                data: chartDatas
+                            }
+                        ]
+                    },
+                    options: {
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                display: false
+                            },
+                            y: {
+                                display: false,
+                                min: 0,
+                                max: 100
+                            }
+                        },
+                        plugins: {
+                            tooltip: {
+                                mode: 'x',
+                                intersect: false,
+                                singleInRange: true,
+                                callbacks: {
+                                    label (context) {
+                                        const index = context.dataIndex
+                                        const label = chartLabels[index]
+                                        return label
+                                    }
+                                }
+                            },
+                            legend: {
+                                display: false
+                            }
+                        }
+                    }
+                })
             },
 
             confirmDialog () {
@@ -314,6 +392,35 @@
         flex: 1;
         margin: 0 32px;
         max-width: calc(100% - 314px);
+        .canvas-contain {
+            height: 20px;
+            width: 64px;
+            margin: 0 12px;
+            padding: 2px 2px 0;
+            background: #F9F9F9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            &:after {
+                content: '';
+                position: absolute;
+                right: -12px;
+                top: 0;
+                width: 1px;
+                height: 100%;
+                background: #eff1f5;
+            }
+            .chart-empty {
+                color: #e2e2e2;
+            }
+            /deep/ div[data-bkcharts-tooltips] {
+                min-width: 140px;
+            }
+            &:last-child:after {
+                display: none;
+            }
+        }
         h3 {
             font-size: 22px;
             line-height: 29px;

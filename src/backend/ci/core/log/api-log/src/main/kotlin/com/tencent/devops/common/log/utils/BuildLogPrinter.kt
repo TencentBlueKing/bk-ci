@@ -97,14 +97,55 @@ class BuildLogPrinter(
         subTag: String? = null,
         jobId: String? = null,
         executeCount: Int
-    ) = addLine(
-        buildId = buildId,
-        message = "##[endgroup]$groupName",
-        tag = tag,
-        subTag = subTag,
-        jobId = jobId,
-        executeCount = executeCount
-    )
+    ) {
+        logMQEventDispatcher.dispatch(genLogEvent(
+            buildId = buildId,
+            message = "##[endgroup]$groupName",
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            logType = LogType.LOG,
+            executeCount = executeCount
+        ))
+    }
+
+    fun addErrorLine(
+        buildId: String,
+        message: String,
+        tag: String,
+        jobId: String? = null,
+        executeCount: Int,
+        subTag: String? = null
+    ) {
+        logMQEventDispatcher.dispatch(genLogEvent(
+            buildId = buildId,
+            message = message,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            logType = LogType.ERROR,
+            executeCount = executeCount
+        ))
+    }
+
+    fun addDebugLine(
+        buildId: String,
+        message: String,
+        tag: String,
+        jobId: String? = null,
+        executeCount: Int,
+        subTag: String? = null
+    ) {
+        logMQEventDispatcher.dispatch(genLogEvent(
+            buildId = buildId,
+            message = message,
+            tag = tag,
+            subTag = subTag,
+            jobId = jobId,
+            logType = LogType.DEBUG,
+            executeCount = executeCount
+        ))
+    }
 
     fun addYellowLine(
         buildId: String,

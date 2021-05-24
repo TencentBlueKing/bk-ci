@@ -1,4 +1,6 @@
 spring:
+  main:
+    allow-bean-definition-overriding: true
   application:
     name: artifactory${service-suffix}
     desc: DevOps Artifactory Service

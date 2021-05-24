@@ -34,7 +34,7 @@ import org.springframework.data.redis.core.ScanOptions
 import java.util.Date
 import java.util.concurrent.TimeUnit
 
-class RedisOperation(private val redisTemplate: RedisTemplate<String, String>) {
+class RedisOperation(private val redisTemplate: RedisTemplate<String, String>, private val redisName: String? = null) {
 
     // max expire time is 30 days
     private val maxExpireTime = TimeUnit.DAYS.toSeconds(30)
@@ -132,8 +132,8 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>) {
         return redisTemplate.opsForHash<String, String>().entries(key)
     }
 
-    fun sadd(key: String, values: String): Long? {
-        return redisTemplate.opsForSet().add(key, values)
+    fun sadd(key: String, vararg values: String): Long? {
+        return redisTemplate.opsForSet().add(key, *values)
     }
 
     fun sremove(key: String, values: String): Long? {
@@ -171,5 +171,9 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>) {
 
     fun <T> execute(action: RedisCallback<T>): T {
         return redisTemplate.execute(action)
+    }
+
+    fun getRedisName(): String? {
+        return redisName
     }
 }

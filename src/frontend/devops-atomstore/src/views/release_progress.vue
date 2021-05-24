@@ -133,7 +133,19 @@
                         </div>
                         <div class="detail-form-item">
                             <div class="info-label"> {{ $t('store.发布描述：') }} </div>
-                            <div class="info-value">{{ versionDetail.versionContent }}</div>
+                            <div class="info-value">
+                                <mavon-editor
+                                    :editable="false"
+                                    default-open="preview"
+                                    :subfield="false"
+                                    :toolbars-flag="false"
+                                    :external-link="false"
+                                    :box-shadow="false"
+                                    preview-background="#fafbfd"
+                                    v-model="versionDetail.versionContent"
+                                >
+                                </mavon-editor>
+                            </div>
                         </div>
                     </div>
                     <div class="atom-logo-box">
@@ -232,7 +244,7 @@
                 return [
                     { name: this.$t('store.工作台') },
                     { name: this.$t('store.流水线插件'), to: { name: 'atomWork' } },
-                    { name: this.versionDetail.atomCode, to: { name: 'overView', params: { code: this.versionDetail.atomCode, type: 'atom' } } },
+                    { name: this.versionDetail.atomCode, to: { name: 'statisticData', params: { code: this.versionDetail.atomCode, type: 'atom' } } },
                     { name: this.curTitle }
                 ]
             }

@@ -149,7 +149,7 @@ class ProjectPipelineCallbackHistoryDao {
             if (endTime != null) {
                 where.and(CREATED_TIME.le(Timestamp(endTime).toLocalDateTime()))
             }
-            return where.fetchOne(0, Long::class.java)
+            return where.fetchOne(0, Long::class.java)!!
         }
     }
 

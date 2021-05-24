@@ -32,6 +32,9 @@ import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.process.pojo.BuildTask
 
 object TaskUtil {
+
+    private val taskThreadLocal = ThreadLocal<String>()
+
     fun isContinueWhenFailed(buildTask: BuildTask): Boolean {
         val params = buildTask.params
         if (params != null && null != params["additionalOptions"]) {
@@ -51,5 +54,17 @@ object TaskUtil {
             return additionalOptions?.timeout
         }
         return 0
+    }
+
+    fun setTaskId(taskId: String) {
+        taskThreadLocal.set(taskId)
+    }
+
+    fun getTaskId(): String {
+        return taskThreadLocal.get() ?: ""
+    }
+
+    fun removeTaskId() {
+        taskThreadLocal.remove()
     }
 }

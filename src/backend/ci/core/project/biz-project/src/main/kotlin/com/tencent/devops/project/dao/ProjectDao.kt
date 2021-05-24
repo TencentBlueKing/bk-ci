@@ -39,6 +39,7 @@ import com.tencent.devops.project.pojo.user.UserDeptDetail
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
+import org.jooq.Record1
 import org.jooq.Result
 import org.jooq.UpdateConditionStep
 import org.jooq.impl.DSL
@@ -103,9 +104,14 @@ class ProjectDao {
         }
     }
 
-    fun list(dslContext: DSLContext, projectIdList: Set<String>): Result<TProjectRecord> {
+    fun list(dslContext: DSLContext, projectIdList: Set<String>, enabled: Boolean? = null): Result<TProjectRecord> {
         return with(TProject.T_PROJECT) {
-            dslContext.selectFrom(this).where(PROJECT_ID.`in`(projectIdList)).fetch()
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.`in`(projectIdList))
+            if (enabled != null) {
+                conditions.add(ENABLED.eq(enabled))
+            }
+            dslContext.selectFrom(this).where(conditions).fetch()
         }
     }
 
@@ -123,7 +129,7 @@ class ProjectDao {
 
     fun getCount(dslContext: DSLContext): Long {
         return with(TProject.T_PROJECT) {
-            dslContext.selectCount().from(this).where(ENABLED.eq(true)).fetchOne(0, Long::class.java)
+            dslContext.selectCount().from(this).where(ENABLED.eq(true)).fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -588,7 +594,8 @@ class ProjectDao {
         englishNameList: List<String>,
         offset: Int? = null,
         limit: Int? = null,
-        searchName: String? = null
+        searchName: String? = null,
+        enabled: Boolean? = null
     ): Result<TProjectRecord> {
         with(TProject.T_PROJECT) {
             return dslContext.selectFrom(this)
@@ -596,6 +603,7 @@ class ProjectDao {
                 .and(ENGLISH_NAME.`in`(englishNameList))
                 .and(IS_OFFLINED.eq(false))
                 .let { if (null == searchName) it else it.and(PROJECT_NAME.like("%$searchName%")) }
+                .let { if (null == enabled) it else it.and(ENABLED.eq(enabled)) }
                 .let { if (null == offset || null == limit) it else it.limit(offset, limit) }
                 .fetch()
         }
@@ -676,7 +684,7 @@ class ProjectDao {
                 macosGrayNames = repoGrayNames,
                 codeCCGrayNames = codeCCGrayNames
             )
-            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)
+            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -691,19 +699,19 @@ class ProjectDao {
                 .and(ENGLISH_NAME.`in`(englishNameList))
                 .and(IS_OFFLINED.eq(false))
                 .let { if (null == searchName) it else it.and(PROJECT_NAME.like("%$searchName%")) }
-                .fetchOne().value1()
+                .fetchOne()!!.value1()
         }
     }
 
     fun getMinId(dslContext: DSLContext): Long {
         with(TProject.T_PROJECT) {
-            return dslContext.select(DSL.min(ID)).from(this).fetchOne(0, Long::class.java)
+            return dslContext.select(DSL.min(ID)).from(this).fetchOne(0, Long::class.java)!!
         }
     }
 
     fun getMaxId(dslContext: DSLContext): Long {
         with(TProject.T_PROJECT) {
-            return dslContext.select(DSL.max(ID)).from(this).fetchOne(0, Long::class.java)
+            return dslContext.select(DSL.max(ID)).from(this).fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -737,7 +745,16 @@ class ProjectDao {
         with(TProject.T_PROJECT) {
             return dslContext.selectCount().from(this)
                 .where(PROJECT_NAME.like("%$projectName%"))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    fun listSecrecyProject(dslContext: DSLContext): Result<Record1<String>>? {
+        with(TProject.T_PROJECT) {
+            return dslContext.select(ENGLISH_NAME)
+                .from(this)
+                .where(IS_SECRECY.eq(true))
+                .fetch()
         }
     }
 }

@@ -78,4 +78,15 @@ interface ServicePipelineTaskResource {
         @QueryParam("pageSize")
         pageSize: Int?
     ): Result<Page<PipelineProjectRel>>
+
+    @ApiOperation("获取使用插件的流水线数量")
+    @POST
+    @Path("/listPipelineNumByAtomCodes")
+    fun listPipelineNumByAtomCodes(
+        @ApiParam("项目ID", required = false)
+        @QueryParam("projectId")
+        projectId: String? = null,
+        @ApiParam("插件标识集合", required = true)
+        atomCodes: List<String>
+    ): Result<Map<String, Int>>
 }

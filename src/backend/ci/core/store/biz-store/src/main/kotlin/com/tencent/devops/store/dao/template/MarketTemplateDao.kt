@@ -108,11 +108,11 @@ class MarketTemplateDao {
                 tas.SCORE_AVERAGE
             ).from(tas).asTable("t")
             baseStep.leftJoin(t).on(tt.TEMPLATE_CODE.eq(t.field("STORE_CODE", String::class.java)))
-            conditions.add(t.field("SCORE_AVERAGE", BigDecimal::class.java).ge(BigDecimal.valueOf(score.toLong())))
-            conditions.add(t.field("STORE_TYPE", Byte::class.java).eq(storeType))
+            conditions.add(t.field("SCORE_AVERAGE", BigDecimal::class.java)!!.ge(BigDecimal.valueOf(score.toLong())))
+            conditions.add(t.field("STORE_TYPE", Byte::class.java)!!.eq(storeType))
         }
 
-        return baseStep.where(conditions).fetchOne(0, Int::class.java)
+        return baseStep.where(conditions).fetchOne(0, Int::class.java)!!
     }
 
     private fun formatConditions(
@@ -175,7 +175,9 @@ class MarketTemplateDao {
             tt.LOGO_URL,
             tt.PUBLISHER,
             tt.SUMMARY,
-            tt.PUBLIC_FLAG
+            tt.PUBLIC_FLAG,
+            tt.MODIFIER,
+            tt.UPDATE_TIME
         ).from(tt)
         val storeType = StoreTypeEnum.TEMPLATE.type.toByte()
 
@@ -209,16 +211,17 @@ class MarketTemplateDao {
                 tas.SCORE_AVERAGE
             ).from(tas).asTable("t")
             baseStep.leftJoin(t).on(tt.TEMPLATE_CODE.eq(t.field("STORE_CODE", String::class.java)))
-            conditions.add(t.field("SCORE_AVERAGE", BigDecimal::class.java).ge(BigDecimal.valueOf(score.toLong())))
-            conditions.add(t.field("STORE_TYPE", Byte::class.java).eq(storeType))
+            conditions.add(t.field("SCORE_AVERAGE", BigDecimal::class.java)!!.ge(BigDecimal.valueOf(score.toLong())))
+            conditions.add(t.field("STORE_TYPE", Byte::class.java)!!.eq(storeType))
         }
 
         if (null != sortType) {
             if (sortType == MarketTemplateSortTypeEnum.DOWNLOAD_COUNT && score == null) {
                 val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL.`as`("tas")
-                val t = dslContext
-                    .select(tas.STORE_CODE, tas.DOWNLOADS.`as`(MarketTemplateSortTypeEnum.DOWNLOAD_COUNT.name))
-                    .from(tas).asTable("t")
+                val t = dslContext.select(
+                    tas.STORE_CODE,
+                    tas.DOWNLOADS.`as`(MarketTemplateSortTypeEnum.DOWNLOAD_COUNT.name)
+                ).from(tas).asTable("t")
                 baseStep.leftJoin(t).on(tt.TEMPLATE_CODE.eq(t.field("STORE_CODE", String::class.java)))
             }
 
@@ -229,9 +232,9 @@ class MarketTemplateDao {
             }
 
             if (desc != null && desc) {
-                baseStep.where(conditions).orderBy(realSortType.desc())
+                baseStep.where(conditions).orderBy(realSortType!!.desc())
             } else {
-                baseStep.where(conditions).orderBy(realSortType.asc())
+                baseStep.where(conditions).orderBy(realSortType!!.asc())
             }
         } else {
             baseStep.where(conditions)
@@ -372,12 +375,17 @@ class MarketTemplateDao {
         }
     }
 
-    fun countByName(dslContext: DSLContext, templateName: String): Int {
+    fun countByName(dslContext: DSLContext, templateName: String, templateCode: String? = null): Int {
         with(TTemplate.T_TEMPLATE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(TEMPLATE_NAME.eq(templateName))
+            if (templateCode != null) {
+                conditions.add(TEMPLATE_CODE.eq(templateCode))
+            }
             return dslContext.selectCount()
                 .from(this)
-                .where(TEMPLATE_NAME.eq(templateName))
-                .fetchOne(0, Int::class.java)
+                .where(conditions)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -385,7 +393,7 @@ class MarketTemplateDao {
         with(TTemplate.T_TEMPLATE) {
             return dslContext.selectCount().from(this)
                 .where(TEMPLATE_CODE.eq(templateCode))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -394,7 +402,7 @@ class MarketTemplateDao {
             return dslContext.selectCount().from(this)
                 .where(ID.eq(templateId)
                     .and(TEMPLATE_CODE.eq(templateCode)))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -403,7 +411,7 @@ class MarketTemplateDao {
             return dslContext.selectCount().from(this)
                 .where(TEMPLATE_CODE.eq(templateCode)
                     .and(TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte())))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -519,8 +527,12 @@ class MarketTemplateDao {
         val a = TTemplate.T_TEMPLATE.`as`("a")
         val b = TStoreMember.T_STORE_MEMBER.`as`("b")
         val c = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("c")
-        val t = dslContext.select(a.TEMPLATE_CODE.`as`("templateCode"), DSL.max(a.CREATE_TIME).`as`("createTime"))
-            .from(a).groupBy(a.TEMPLATE_CODE) // 查找每组templateCode最新的记录
+        val t = dslContext.select(
+            a.TEMPLATE_CODE.`as`("templateCode"),
+            DSL.max(a.CREATE_TIME).`as`("createTime")
+        )
+            .from(a)
+            .groupBy(a.TEMPLATE_CODE) // 查找每组templateCode最新的记录
         val conditions = generateGetMyTemplatesConditions(a, userId, b, c, templateName)
         return dslContext.select(
             a.ID.`as`("templateId"),
@@ -568,7 +580,7 @@ class MarketTemplateDao {
             .join(c)
             .on(a.TEMPLATE_CODE.eq(c.STORE_CODE))
             .where(conditions)
-            .fetchOne(0, Long::class.java)
+            .fetchOne(0, Long::class.java)!!
     }
 
     private fun generateGetMyTemplatesConditions(

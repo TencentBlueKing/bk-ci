@@ -77,7 +77,7 @@ class CodeGitCredentialSetter constructor(
                         return false
                     }
 
-                    override fun showMessage(message: String) {}
+                    override fun showMessage(message: String) = Unit
                 }
             }
 

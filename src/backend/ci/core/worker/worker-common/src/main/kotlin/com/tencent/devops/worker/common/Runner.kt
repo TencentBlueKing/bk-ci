@@ -27,6 +27,7 @@
 
 package com.tencent.devops.worker.common
 
+import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
@@ -38,13 +39,15 @@ import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.utils.ParameterUtils
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.pojo.BuildTask
+import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
 import com.tencent.devops.worker.common.heartbeat.Heartbeat
 import com.tencent.devops.worker.common.logger.LoggerService
-import com.tencent.devops.worker.common.service.ProcessService
+import com.tencent.devops.worker.common.service.EngineService
 import com.tencent.devops.worker.common.task.TaskDaemon
 import com.tencent.devops.worker.common.task.TaskFactory
 import com.tencent.devops.worker.common.utils.KillBuildProcessTree
@@ -54,186 +57,193 @@ import java.io.File
 import kotlin.system.exitProcess
 
 object Runner {
+
     private val logger = LoggerFactory.getLogger(Runner::class.java)
 
-    @Suppress("ALL")
     fun run(workspaceInterface: WorkspaceInterface, systemExit: Boolean = true) {
         var workspacePathFile: File? = null
         var failed = false
         try {
             logger.info("Start the worker ...")
             // 启动成功了，报告process我已经启动了
-            val buildVariables = ProcessService.setStarted()
-            // 为进程加上ShutdownHook事件
-            KillBuildProcessTree.addKillProcessTreeHook(
-                projectId = buildVariables.projectId,
-                buildId = buildVariables.buildId,
-                vmSeqId = buildVariables.vmSeqId
-            )
-            // 启动日志服务
-            LoggerService.start()
-            val variables = buildVariables.variablesWithType
-            val retryCount = ParameterUtils.getListValueByKey(variables, PIPELINE_RETRY_COUNT) ?: "0"
-            LoggerService.executeCount = retryCount.toInt() + 1
-            LoggerService.jobId = buildVariables.containerHashId
+            val buildVariables = EngineService.setStarted()
 
-            Heartbeat.start(buildVariables.timeoutMills) // #2043 添加Job超时监控
-            // 开始轮询
+            BuildEnv.setBuildId(buildVariables.buildId)
+
+            workspacePathFile = prepareWorkspace(buildVariables, workspaceInterface)
+
             try {
-                LoggerService.elementId = VMUtils.genStartVMTaskId(buildVariables.containerId)
-
-                showBuildStartupLog(buildVariables.buildId, buildVariables.vmSeqId)
-                showMachineLog(buildVariables.vmName)
-                showSystemLog()
-                showRuntimeEnvs(buildVariables.variablesWithType)
-
-                val variablesMap = buildVariables.variablesWithType.map { it.key to it.value.toString() }.toMap()
-                workspacePathFile = workspaceInterface.getWorkspace(variablesMap, buildVariables.pipelineId)
-
-                LoggerService.addNormalLine("Start the runner at workspace(${workspacePathFile.absolutePath})")
-                logger.info("Start the runner at workspace(${workspacePathFile.absolutePath})")
-
-                loop@ while (true) {
-                    logger.info("Start to claim the task")
-                    val buildTask = ProcessService.claimTask()
-                    logger.info("Start to execute the task($buildTask)")
-                    when (buildTask.status) {
-                        BuildTaskStatus.DO -> {
-                            val taskType = buildTask.type ?: "empty"
-                            val taskId = buildTask.taskId ?: throw RemoteServiceException("Not valid build taskId")
-                            if (buildTask.elementId == null) {
-                                throw RemoteServiceException("Not valid build elementId")
-                            }
-                            val task = TaskFactory.create(taskType)
-                            val taskDaemon = TaskDaemon(task, buildTask, buildVariables, workspacePathFile)
-                            try {
-                                LoggerService.elementId = buildTask.elementId!!
-
-                                // 开始Task执行
-                                taskDaemon.run()
-
-                                // 获取执行结果
-                                val env = taskDaemon.getAllEnv()
-
-                                // 上报Task执行结果
-                                logger.info("Complete the task ($buildTask)")
-                                ProcessService.completeTask(
-                                    taskId = taskId,
-                                    elementId = buildTask.elementId!!,
-                                    elementName = buildTask.elementName ?: "",
-                                    containerId = buildVariables.containerHashId,
-                                    isSuccess = true,
-                                    buildResult = env,
-                                    type = buildTask.type,
-                                    errorCode = 0,
-                                    monitorData = taskDaemon.getMonitorData()
-                                )
-                                logger.info("Finish completing the task ($buildTask)")
-                            } catch (e: Throwable) {
-                                failed = true
-
-                                var message: String
-                                var errorType: String
-                                var errorCode: Int
-
-                                val trueException = when {
-                                    e is TaskExecuteException -> e
-                                    e.cause is TaskExecuteException -> e.cause as TaskExecuteException
-                                    else -> null
-                                }
-                                if (trueException != null) {
-                                    // Worker内插件执行出错处理
-                                    logger.warn("[Task Error] Fail to execute the task($buildTask) with task error", e)
-                                    message = trueException.errorMsg
-                                    errorType = trueException.errorType.name
-                                    errorCode = trueException.errorCode
-                                } else {
-                                    // Worker执行的错误处理
-                                    logger.warn("[Worker Error] Fail to execute the task($buildTask)", e)
-                                    val defaultMessage =
-                                        StringBuilder("Unknown system error has occurred with StackTrace:\n")
-                                    defaultMessage.append(e.toString())
-                                    e.stackTrace.forEach {
-                                        with(it) {
-                                            defaultMessage.append(
-                                                "\n    at $className.$methodName($fileName:$lineNumber)")
-                                        }
-                                    }
-                                    message = e.message ?: defaultMessage.toString()
-                                    errorType = ErrorType.SYSTEM.name
-                                    errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
-                                }
-
-                                val env = taskDaemon.getAllEnv()
-                                LoggerService.addRedLine(message)
-
-                                ProcessService.completeTask(
-                                    taskId = taskId,
-                                    elementId = buildTask.elementId!!,
-                                    elementName = buildTask.elementName ?: "",
-                                    containerId = buildVariables.containerHashId,
-                                    isSuccess = false,
-                                    buildResult = env,
-                                    type = buildTask.type,
-                                    message = CommonUtils.interceptStringInLength(
-                                        string = message,
-                                        length = PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
-                                    ),
-                                    errorType = errorType,
-                                    errorCode = errorCode,
-                                    monitorData = taskDaemon.getMonitorData()
-                                )
-                            } finally {
-                                LoggerService.finishTask()
-                                LoggerService.elementId = ""
-                            }
-                        }
-                        BuildTaskStatus.WAIT -> {
-                            Thread.sleep(5000)
-                        }
-                        BuildTaskStatus.END -> {
-                            break@loop
-                        }
-                    }
-                }
-            } catch (e: Exception) {
+                // 开始轮询
+                failed = loopPickup(workspacePathFile, buildVariables)
+            } catch (ignore: Exception) {
                 failed = true
-                logger.error("Other unknown error has occurred:", e)
-                LoggerService.addRedLine("Other unknown error has occurred: " + e.message)
+                logger.error("Other unknown error has occurred:", ignore)
+                LoggerService.addRedLine("Other unknown error has occurred: " + ignore.message)
             } finally {
                 LoggerService.stop()
                 Heartbeat.stop()
-                ProcessService.endBuild()
+                EngineService.endBuild()
             }
-        } catch (e: Exception) {
+        } catch (ignore: Exception) {
             failed = true
-            logger.warn("Catch unknown exceptions", e)
-            throw e
+            logger.warn("Catch unknown exceptions", ignore)
+            throw ignore
         } finally {
-            if (workspacePathFile != null && checkIfNeed2CleanWorkspace(failed)) {
-                val file = workspacePathFile.absoluteFile.normalize()
-                logger.warn("Need to clean up the workspace(${file.absolutePath})")
-                // 去除workspace目录下的软连接，再清空workspace
-                try {
-                    ShellUtil.execute(
-                        buildId = "",
-                        script = "find ${file.absolutePath} -type l | xargs rm -rf;",
-                        dir = file,
-                        buildEnvs = emptyList(),
-                        runtimeVariables = emptyMap()
-                    )
-                    if (!file.deleteRecursively()) {
-                        logger.warn("Fail to clean up the workspace")
-                    }
-                } catch (e: Exception) {
-                    logger.error("Fail to clean up the workspace.", e)
-                }
-            }
+            finally(workspacePathFile, failed)
 
             if (systemExit) {
                 exitProcess(0)
             }
         }
+    }
+
+    private fun prepareWorkspace(buildVariables: BuildVariables, workspaceInterface: WorkspaceInterface): File {
+        // 为进程加上ShutdownHook事件
+        KillBuildProcessTree.addKillProcessTreeHook(
+            projectId = buildVariables.projectId,
+            buildId = buildVariables.buildId,
+            vmSeqId = buildVariables.vmSeqId
+        )
+
+        // 启动日志服务
+        LoggerService.start()
+        val variables = buildVariables.variablesWithType
+        val retryCount = ParameterUtils.getListValueByKey(variables, PIPELINE_RETRY_COUNT) ?: "0"
+        LoggerService.executeCount = retryCount.toInt() + 1
+        LoggerService.jobId = buildVariables.containerHashId
+        LoggerService.elementId = VMUtils.genStartVMTaskId(buildVariables.containerId)
+
+        showBuildStartupLog(buildVariables.buildId, buildVariables.vmSeqId)
+        showMachineLog(buildVariables.vmName)
+        showSystemLog()
+        showRuntimeEnvs(buildVariables.variablesWithType)
+
+        Heartbeat.start(buildVariables.timeoutMills) // #2043 添加Job超时监控
+
+        return workspaceInterface.getWorkspace(
+            variables = buildVariables.variablesWithType.associate { it.key to it.value.toString() },
+            pipelineId = buildVariables.pipelineId
+        )
+    }
+
+    private fun loopPickup(workspacePathFile: File, buildVariables: BuildVariables): Boolean {
+        var failed = false
+        LoggerService.addNormalLine("Start the runner at workspace(${workspacePathFile.absolutePath})")
+        logger.info("Start the runner at workspace(${workspacePathFile.absolutePath})")
+
+        loop@ while (true) {
+            logger.info("Start to claim the task")
+            val buildTask = EngineService.claimTask()
+            logger.info("Start to execute the task($buildTask)")
+            when (buildTask.status) {
+                BuildTaskStatus.DO -> {
+                    Preconditions.checkNotNull(
+                        obj = buildTask.elementId,
+                        exception = RemoteServiceException("Not valid build elementId")
+                    )
+
+                    val task = TaskFactory.create(buildTask.type ?: "empty")
+                    val taskDaemon = TaskDaemon(task, buildTask, buildVariables, workspacePathFile)
+                    try {
+                        LoggerService.elementId = buildTask.elementId!!
+
+                        // 开始Task执行
+                        taskDaemon.run()
+
+                        // 上报Task执行结果
+                        logger.info("Complete the task (${buildTask.elementName})")
+                        // 获取执行结果
+                        val buildTaskRst = taskDaemon.getBuildResult()
+                        EngineService.completeTask(buildTaskRst)
+                        logger.info("Finish completing the task ($buildTask)")
+                    } catch (exception: Throwable) {
+                        failed = true
+                        dealException(exception, buildTask, taskDaemon)
+                    } finally {
+                        LoggerService.finishTask()
+                        LoggerService.elementId = ""
+                    }
+                }
+                BuildTaskStatus.WAIT -> Thread.sleep(5000)
+                BuildTaskStatus.END -> break@loop
+            }
+        }
+
+        return failed
+    }
+
+    private fun finally(workspacePathFile: File?, failed: Boolean) {
+
+        if (workspacePathFile != null && checkIfNeed2CleanWorkspace(failed)) {
+
+            val file = workspacePathFile.absoluteFile.normalize()
+            logger.warn("Need to clean up the workspace(${file.absolutePath})")
+
+            // 去除workspace目录下的软连接，再清空workspace
+            try {
+                ShellUtil.execute(
+                    buildId = "",
+                    script = "find ${file.absolutePath} -type l | xargs rm -rf;",
+                    dir = file,
+                    buildEnvs = emptyList(),
+                    runtimeVariables = emptyMap()
+                )
+                if (!file.deleteRecursively()) {
+                    logger.warn("Fail to clean up the workspace")
+                }
+            } catch (e: Exception) {
+                logger.error("Fail to clean up the workspace.", e)
+            }
+        }
+    }
+
+    private fun dealException(exception: Throwable, buildTask: BuildTask, taskDaemon: TaskDaemon) {
+
+        val message: String
+        val errorType: String
+        val errorCode: Int
+
+        val trueException = when {
+            exception is TaskExecuteException -> exception
+            exception.cause is TaskExecuteException -> exception.cause as TaskExecuteException
+            else -> null
+        }
+        if (trueException != null) {
+            // Worker内插件执行出错处理
+            logger.warn("[Task Error] Fail to execute the task($buildTask) with task error", exception)
+            message = trueException.errorMsg
+            errorType = trueException.errorType.name
+            errorCode = trueException.errorCode
+        } else {
+            // Worker执行的错误处理
+            logger.warn("[Worker Error] Fail to execute the task($buildTask)", exception)
+            val defaultMessage =
+                StringBuilder("Unknown system error has occurred with StackTrace:\n")
+            defaultMessage.append(exception.toString())
+            exception.stackTrace.forEach {
+                with(it) {
+                    defaultMessage.append(
+                        "\n    at $className.$methodName($fileName:$lineNumber)")
+                }
+            }
+            message = exception.message ?: defaultMessage.toString()
+            errorType = ErrorType.SYSTEM.name
+            errorCode = ErrorCode.SYSTEM_WORKER_LOADING_ERROR
+        }
+
+        LoggerService.addRedLine(message)
+
+        val buildResult = taskDaemon.getBuildResult(
+            isSuccess = false,
+            errorMessage = CommonUtils.interceptStringInLength(
+                string = message,
+                length = PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
+            ),
+            errorType = errorType,
+            errorCode = errorCode
+        )
+
+        EngineService.completeTask(buildResult)
     }
 
     private fun checkIfNeed2CleanWorkspace(failed: Boolean): Boolean {
@@ -242,10 +252,7 @@ object Runner {
             return false
         }
 
-        if (System.getProperty(CLEAN_WORKSPACE)?.trim() == true.toString()) {
-            return true
-        }
-        return false
+        return System.getProperty(CLEAN_WORKSPACE)?.trim()?.toBoolean() ?: false
     }
 
     /**
@@ -262,6 +269,8 @@ object Runner {
     private fun showMachineLog(vmName: String) {
         LoggerService.addNormalLine("")
         LoggerService.addFoldStartLine("[Machine Environment Properties]")
+        LoggerService.addNormalLine("vmName: $vmName")
+        logger.info("vmName: $vmName")
         System.getProperties().toMap().forEach { (k, v) ->
             LoggerService.addNormalLine("$k: $v")
             logger.info("$k: $v")
