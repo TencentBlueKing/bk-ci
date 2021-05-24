@@ -565,5 +565,6 @@
     "日": "day",
     "适用机器类型：": "Machine",
     "editLogo": "Edit",
-    "请确认": "Please Confirm"
+    "请确认": "Please Confirm",
+    "已确认兼容新增参数，继续": "Confirmed compatibility with newly added parameters, continue"
 }
