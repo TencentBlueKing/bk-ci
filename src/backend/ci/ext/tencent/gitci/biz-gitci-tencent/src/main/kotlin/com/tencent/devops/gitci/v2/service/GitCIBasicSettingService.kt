@@ -28,11 +28,11 @@
 package com.tencent.devops.gitci.v2.service
 
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.gitci.pojo.GitRepository
 import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
 import com.tencent.devops.gitci.v2.exception.GitCINoEnableException
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
+import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -85,17 +85,17 @@ class GitCIBasicSettingService @Autowired constructor(
         projectId: String,
         gitProjectId: Long,
         enabled: Boolean,
-        repository: GitRepository
+        projectInfo: GitCIProjectInfo
     ): Boolean {
         return saveGitCIConf(
             userId,
             GitCIBasicSetting(
                 gitProjectId = gitProjectId,
-                name = repository.name,
-                url = repository.url,
-                homepage = repository.homepage,
-                gitHttpUrl = repository.gitHttpUrl,
-                gitSshUrl = repository.gitSshUrl,
+                name = projectInfo.name,
+                url = projectInfo.gitSshUrl ?: "",
+                homepage = projectInfo.homepage ?: "",
+                gitHttpUrl = projectInfo.gitHttpsUrl ?: "",
+                gitSshUrl = projectInfo.gitSshUrl ?: "",
                 enableCi = enabled,
                 enableUserId = userId,
                 buildPushedBranches = true,

@@ -176,9 +176,17 @@ class GitCIV2HistoryService @Autowired constructor(
         } else {
             pageNotNull * pageSizeNotNull
         }
+        // 过滤掉重复的分支(mr和push会重复)
+        val recordsMap = mutableMapOf<String, GitCIBuildBranch>()
         // 如果是来自fork库的分支，单独标识
-        val records = buildBranchList.subList(firstIndex, lastIndex).map {
-            GitCIBuildBranch(
+        buildBranchList.subList(firstIndex, lastIndex).forEach {
+            val branchName = GitCommonUtils.checkAndGetForkBranchName(
+                gitProjectId = it.gitProjectId,
+                sourceGitProjectId = it.sourceGitProjectId,
+                branch = it.branch,
+                client = client
+            )
+            recordsMap[branchName] = GitCIBuildBranch(
                 branchName = GitCommonUtils.checkAndGetForkBranchName(
                     gitProjectId = it.gitProjectId,
                     sourceGitProjectId = it.sourceGitProjectId,
@@ -193,7 +201,7 @@ class GitCIV2HistoryService @Autowired constructor(
             page = pageNotNull,
             pageSize = pageSizeNotNull,
             count = buildBranchList.size.toLong(),
-            records = records
+            records = recordsMap.values.toList()
         )
     }
 

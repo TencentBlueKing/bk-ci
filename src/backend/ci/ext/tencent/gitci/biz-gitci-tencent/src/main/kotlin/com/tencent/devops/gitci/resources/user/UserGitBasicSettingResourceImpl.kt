@@ -31,12 +31,13 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.user.UserGitBasicSettingResource
+import com.tencent.devops.gitci.constant.GitCIConstant.DEVOPS_PROJECT_PREFIX
 import com.tencent.devops.gitci.permission.GitCIV2PermissionService
-import com.tencent.devops.gitci.pojo.GitRepository
 import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.gitci.pojo.v2.GitCIUpdateSetting
 import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.v2.service.GitCIBasicSettingService
+import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -47,11 +48,11 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
 
     override fun enableGitCI(
         userId: String,
-        projectId: String,
         enabled: Boolean,
-        repository: GitRepository?
+        projectInfo: GitCIProjectInfo
     ): Result<Boolean> {
-        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
+        val projectId = "$DEVOPS_PROJECT_PREFIX${projectInfo.gitProjectId}"
+        val gitProjectId = projectInfo.gitProjectId.toLong()
         checkParam(userId)
         permissionService.checkGitCIAndOAuth(
             userId = userId,
@@ -59,10 +60,7 @@ class UserGitBasicSettingResourceImpl @Autowired constructor(
         )
         val setting = gitCIBasicSettingService.getGitCIConf(gitProjectId)
         val result = if (setting == null) {
-            if (repository == null) {
-                throw ParamBlankException("Invalid repository")
-            }
-            gitCIBasicSettingService.initGitCIConf(userId, projectId, gitProjectId, enabled, repository)
+            gitCIBasicSettingService.initGitCIConf(userId, projectId, gitProjectId, enabled, projectInfo)
         } else {
             gitCIBasicSettingService.updateProjectSetting(
                 gitProjectId = gitProjectId,

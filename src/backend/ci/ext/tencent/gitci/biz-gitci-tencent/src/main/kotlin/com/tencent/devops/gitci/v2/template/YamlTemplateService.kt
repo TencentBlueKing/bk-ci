@@ -27,7 +27,6 @@
 
 package com.tencent.devops.gitci.v2.template
 
-import com.tencent.devops.gitci.v2.service.GitCIBasicSettingService
 import com.tencent.devops.gitci.v2.service.OauthService
 import com.tencent.devops.gitci.v2.service.ScmService
 import com.tencent.devops.gitci.v2.service.TicketService
@@ -41,7 +40,6 @@ import java.lang.RuntimeException
 class YamlTemplateService @Autowired constructor(
     private val oauthService: OauthService,
     private val scmService: ScmService,
-    private val gitCIBasicSettingService: GitCIBasicSettingService,
     private val ticketService: TicketService
 ) {
 
@@ -81,13 +79,7 @@ class YamlTemplateService @Autowired constructor(
         fileName: String
     ): String {
         if (personalAccessToken.isNullOrBlank()) {
-            val enableUserId =
-                gitCIBasicSettingService.getGitCIConf(gitProjectId)?.enableUserId
-                    ?: throw RuntimeException(
-                        "工蜂项目${gitProjectId}未开启工蜂CI"
-                    )
-            val token = oauthService.getOauthToken(enableUserId)?.accessToken
-                ?: throw RuntimeException("用户${enableUserId}未进行OAuth授权")
+            val token = oauthService.getGitCIEnableToken(gitProjectId).accessToken
             val targetProjectId = scmService.getProjectInfo(
                 token = token,
                 gitProjectId = repo,

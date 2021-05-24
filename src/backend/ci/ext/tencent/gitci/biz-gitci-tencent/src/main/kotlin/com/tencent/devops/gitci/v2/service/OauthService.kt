@@ -33,10 +33,12 @@ import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.lang.RuntimeException
 
 @Service
 class OauthService @Autowired constructor(
-    private val client: Client
+    private val client: Client,
+    private val gitCIBasicSettingService: GitCIBasicSettingService
 ) {
 
     fun getAndCheckOauthToken(
@@ -51,5 +53,24 @@ class OauthService @Autowired constructor(
         userId: String
     ): GitToken? {
         return client.get(ServiceOauthResource::class).gitGet(userId).data
+    }
+
+    fun getOauthTokenNotNull(
+        userId: String
+    ): GitToken {
+        return client.get(ServiceOauthResource::class).gitGet(userId).data
+            ?: throw RuntimeException("用户${userId}未进行OAuth授权")
+    }
+
+    fun getGitCIEnableToken(
+        gitProjectId: Long
+    ): GitToken {
+        val userId = gitCIBasicSettingService.getGitCIConf(gitProjectId)?.enableUserId
+            ?: throw RuntimeException("工蜂项目${gitProjectId}未开启工蜂CI")
+        return try {
+            client.get(ServiceOauthResource::class).gitGet(userId).data!!
+        } catch (e: Exception) {
+            throw RuntimeException("用户${userId}未进行OAuth授权")
+        }
     }
 }

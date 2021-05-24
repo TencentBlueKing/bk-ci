@@ -30,9 +30,9 @@ package com.tencent.devops.gitci.api.user
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.gitci.pojo.GitRepository
 import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.gitci.pojo.v2.GitCIUpdateSetting
+import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -54,19 +54,16 @@ interface UserGitBasicSettingResource {
 
     @ApiOperation("开启，关闭，初始化呢工蜂CI")
     @POST
-    @Path("/{projectId}/enable")
+    @Path("/enable")
     fun enableGitCI(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("蓝盾项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
         @ApiParam("开启或关闭", required = true)
         @QueryParam("enabled")
         enabled: Boolean,
         @ApiParam("工蜂项目信息(初始化时用)", required = false)
-        repository: GitRepository?
+        projectInfo: GitCIProjectInfo
     ): Result<Boolean>
 
     @ApiOperation("查询工蜂CI项目配置")

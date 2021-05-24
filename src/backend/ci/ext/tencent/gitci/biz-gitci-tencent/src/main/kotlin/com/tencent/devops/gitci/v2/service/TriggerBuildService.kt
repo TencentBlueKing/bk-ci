@@ -123,23 +123,7 @@ import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.Subscription
 import com.tencent.devops.scm.api.ServiceGitResource
-import com.tencent.devops.scm.pojo.BK_CI_REF
-import com.tencent.devops.scm.pojo.BK_CI_REPOSITORY
-import com.tencent.devops.scm.pojo.BK_CI_REPO_OWNER
 import com.tencent.devops.scm.pojo.BK_CI_RUN
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_COMMIT_ID
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_COMMIT_ID_SHORT
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_COMMIT_MESSAGE
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_BRANCH
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_ID
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_SOURCE_URL
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_TARGET_URL
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_URL
-import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_NAME
-import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_URL
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -158,10 +142,11 @@ class TriggerBuildService @Autowired constructor(
     private val gitCIParameterUtils: GitCIParameterUtils,
     private val gitServicesConfDao: GitCIServicesConfDao,
     private val scmClient: ScmClient,
-    redisOperation: RedisOperation,
+    private val redisOperation: RedisOperation,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
-    gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
-    gitCIEventSaveService: GitCIEventSaveService
+    private val oauthService: OauthService,
+    private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
+    private val gitCIEventSaveService: GitCIEventSaveService
 ) : V2BaseBuildService<ScriptBuildYaml>(
     client, scmClient, dslContext, redisOperation, gitPipelineResourceDao,
     gitRequestEventBuildDao, gitRequestEventNotBuildDao, gitCIEventSaveService
@@ -333,17 +318,21 @@ class TriggerBuildService @Autowired constructor(
             yaml.label.forEach {
                 // 要设置的标签组不存在，新建标签组和标签（同名）
                 if (!checkPipelineLabel(it, pipelineGroups)) {
-                    client.get(UserPipelineGroupResource::class).addGroup(event.userId, PipelineGroupCreate(
-                        projectId = gitBasicSetting.projectCode!!,
-                        name = it
-                    ))
+                    client.get(UserPipelineGroupResource::class).addGroup(
+                        event.userId, PipelineGroupCreate(
+                            projectId = gitBasicSetting.projectCode!!,
+                            name = it
+                        )
+                    )
 
                     val pipelineGroup = getPipelineGroup(it, event.userId, gitBasicSetting.projectCode!!)
                     if (pipelineGroup != null) {
-                        client.get(UserPipelineGroupResource::class).addLabel(event.userId, PipelineLabelCreate(
-                            groupId = pipelineGroup.id,
-                            name = it
-                        ))
+                        client.get(UserPipelineGroupResource::class).addLabel(
+                            event.userId, PipelineLabelCreate(
+                                groupId = pipelineGroup.id,
+                                name = it
+                            )
+                        )
                     }
                 }
 
@@ -594,7 +583,8 @@ class TriggerBuildService @Autowired constructor(
                     inputMap.putAll(step.with!!)
                     // 拉取本地工程代码
                     if (step.checkout == "self") {
-                        inputMap["accessToken"] = scmClient.getAccessToken(gitBasicSetting.gitProjectId).first
+                        inputMap["accessToken"] =
+                            oauthService.getOauthTokenNotNull(gitBasicSetting.enableUserId).accessToken
                         inputMap["repositoryUrl"] = gitBasicSetting.gitHttpUrl
                     } else {
                         inputMap["repositoryUrl"] = step.checkout!!
@@ -806,7 +796,8 @@ class TriggerBuildService @Autowired constructor(
                 startParams[CI_HEAD_BRANCH] = originEvent.object_attributes.target_branch
                 startParams[CI_BASE_BRANCH] = originEvent.object_attributes.source_branch
                 GitUtils.getProjectName(originEvent.object_attributes.source.http_url)
-            } else -> {
+            }
+            else -> {
                 ""
             }
         }
