@@ -86,17 +86,23 @@ class ReplacementUtilsTest {
             "context.hello" to "context.value"
         )
 
-        Assert.assertEquals("hello variables.value world", ReplacementUtils.replace(command1, Replacement(emptyMap()), contextData))
-        Assert.assertEquals("variables.valueworld", ReplacementUtils.replace(command2, Replacement(emptyMap()), contextData))
-        Assert.assertEquals("hellovariables.value", ReplacementUtils.replace(command3, Replacement(emptyMap()), contextData))
-        Assert.assertEquals("hello\${{variables.abc", ReplacementUtils.replace(command4, Replacement(emptyMap()), contextData))
-        Assert.assertEquals("hello\${{variables.abc}", ReplacementUtils.replace(command5, Replacement(emptyMap()), contextData))
-        Assert.assertEquals("hello\${variables.abc}}", ReplacementUtils.replace(command6,
-            Replacement(emptyMap()), contextData))
-        Assert.assertEquals("hello\$variables.abc}}", ReplacementUtils.replace(command7, Replacement(emptyMap()), contextData))
-        Assert.assertEquals("echo context.value", ReplacementUtils.replace(command8,
-            Replacement(emptyMap()), contextData))
-        Assert.assertEquals("echo \${variables.abc}", ReplacementUtils.replace(command9,
-            Replacement(emptyMap()), contextData))
+        Assert.assertEquals("hello variables.value world",
+            ReplacementUtils.replace(command1, Replacement(emptyMap()), contextData))
+        Assert.assertEquals("variables.valueworld",
+            ReplacementUtils.replace(command2, Replacement(emptyMap()), contextData))
+        Assert.assertEquals("hellovariables.value",
+            ReplacementUtils.replace(command3, Replacement(emptyMap()), contextData))
+        Assert.assertEquals("hello\${{variables.abc",
+            ReplacementUtils.replace(command4, Replacement(emptyMap()), contextData))
+        Assert.assertEquals("hello\${{variables.abc}",
+            ReplacementUtils.replace(command5, Replacement(emptyMap()), contextData))
+        Assert.assertEquals("hello\${variables.abc}}",
+            ReplacementUtils.replace(command6, Replacement(emptyMap()), contextData))
+        Assert.assertEquals("hello\$variables.abc}}",
+            ReplacementUtils.replace(command7, Replacement(emptyMap()), contextData))
+        Assert.assertEquals("echo context.value",
+            ReplacementUtils.replace(command8, Replacement(emptyMap()), contextData))
+        Assert.assertEquals("echo \${variables.abc}",
+            ReplacementUtils.replace(command9, Replacement(emptyMap()), contextData))
     }
 }
