@@ -53,7 +53,6 @@ class YamlTemplateService @Autowired constructor(
         token: String,
         fileName: String,
         gitProjectId: Long,
-        userId: String,
         ref: String
     ): String {
         return scmService.getYamlFromGit(
@@ -75,12 +74,11 @@ class YamlTemplateService @Autowired constructor(
         repo: String,
         ref: String? = "master",
         personalAccessToken: String?,
-        userId: String,
         fileName: String
     ): String {
         if (personalAccessToken.isNullOrBlank()) {
             val token = oauthService.getGitCIEnableToken(gitProjectId).accessToken
-            val targetProjectId = scmService.getProjectInfo(
+            val targetProjectId = scmService.getProjectInfoThrow(
                 token = token,
                 gitProjectId = repo,
                 useAccessToken = true
@@ -106,7 +104,7 @@ class YamlTemplateService @Autowired constructor(
             } else {
                 key
             }
-            val targetProjectId = scmService.getProjectInfo(
+            val targetProjectId = scmService.getProjectInfoThrow(
                 token = token,
                 gitProjectId = repo,
                 useAccessToken = false
@@ -127,7 +125,7 @@ class YamlTemplateService @Autowired constructor(
             if (str.startsWith("settings.")) {
                 Pair(true, str.removePrefix("settings."))
             } else {
-                throw RuntimeException("\$凭证仅支持setting.引用")
+                throw RuntimeException("凭证仅支持setting.引用")
             }
         } else {
             Pair(false, personalAccessToken)

@@ -714,7 +714,6 @@ class YamlTemplate(
             val template = if (repo == null) {
                 SpringContextUtil.getBean(YamlTemplateService::class.java).getTemplate(
                     gitProjectId = triggerProjectId,
-                    userId = triggerUserId,
                     token = triggerToken,
                     ref = triggerRef,
                     fileName = path
@@ -722,7 +721,6 @@ class YamlTemplate(
             } else {
                 SpringContextUtil.getBean(YamlTemplateService::class.java).getResTemplate(
                     gitProjectId = sourceProjectId,
-                    userId = triggerUserId,
                     repo = repo.repository,
                     ref = repo.ref ?: triggerRef,
                     personalAccessToken = repo.credentials?.personalAccessToken,

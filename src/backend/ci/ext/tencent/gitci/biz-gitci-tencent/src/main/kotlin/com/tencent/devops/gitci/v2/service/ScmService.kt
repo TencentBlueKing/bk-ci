@@ -27,6 +27,7 @@
 
 package com.tencent.devops.gitci.v2.service
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.repository.pojo.git.GitMember
@@ -104,6 +105,25 @@ class ScmService @Autowired constructor(
             logger.error("getProjectInfo error", e)
             null
         }
+    }
+
+    // 针对需要抛出异常做处理的场景
+    fun getProjectInfoThrow(
+        token: String,
+        gitProjectId: String,
+        useAccessToken: Boolean
+    ): GitCIProjectInfo? {
+        logger.info("getProjectInfoThrow: [$gitProjectId|$token|$useAccessToken]")
+        val result = client.getScm(ServiceGitCiResource::class).getProjectInfo(
+            accessToken = token,
+            gitProjectId = gitProjectId,
+            useAccessToken = useAccessToken
+        )
+        // 针对模板请求失败只有可能是无权限和系统问题，系统问题不考虑一律按无权限
+        if (result.status.toString() == CommonMessageCode.SYSTEM_ERROR){
+            throw RuntimeException("$gitProjectId 项目下无权限")
+        }
+        return result.data
     }
 
     fun getCommits(
