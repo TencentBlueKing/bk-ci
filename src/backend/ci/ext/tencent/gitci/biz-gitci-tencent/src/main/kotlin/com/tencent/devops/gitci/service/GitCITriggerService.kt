@@ -200,12 +200,12 @@ class GitCITriggerService @Autowired constructor(
                 filePath = existsPipeline.filePath,
                 pipelineId = existsPipeline.pipelineId
             ) ?: return false
-
+            val parsedYaml = YamlCommonUtils.toYamlNotNull(objects.preYaml)
             val gitBuildId = gitRequestEventBuildDao.save(
                 dslContext = dslContext,
                 eventId = gitRequestEvent.id!!,
                 originYaml = originYaml!!,
-                parsedYaml = YamlCommonUtils.toYamlNotNull(objects.preYaml),
+                parsedYaml = parsedYaml,
                 normalizedYaml = YamlUtil.toYaml(objects.normalYaml),
                 gitProjectId = gitRequestEvent.gitProjectId,
                 branch = gitRequestEvent.branch,
@@ -221,6 +221,7 @@ class GitCITriggerService @Autowired constructor(
                     pipeline = buildPipeline,
                     event = gitRequestEvent,
                     yaml = objects.normalYaml,
+                    parsedYaml = parsedYaml,
                     originYaml = originYaml,
                     normalizedYaml = YamlUtil.toYaml(objects.normalYaml),
                     gitBuildId = gitBuildId

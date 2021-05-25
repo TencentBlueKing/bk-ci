@@ -108,11 +108,12 @@ class V2RequestTrigger @Autowired constructor(
                 "Matcher is true, display the event, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
                         "eventId: ${gitRequestEvent.id}, dispatched pipeline: $gitProjectPipeline"
             )
+            val parsedYaml = YamlCommonUtils.toYamlNotNull(yamlObjects.preYaml)
             val gitBuildId = gitRequestEventBuildDao.save(
                 dslContext = dslContext,
                 eventId = gitRequestEvent.id!!,
                 originYaml = originYaml!!,
-                parsedYaml = YamlCommonUtils.toYamlNotNull(yamlObjects.preYaml),
+                parsedYaml = parsedYaml,
                 normalizedYaml = normalizedYaml,
                 gitProjectId = gitRequestEvent.gitProjectId,
                 branch = gitRequestEvent.branch,
@@ -128,6 +129,7 @@ class V2RequestTrigger @Autowired constructor(
                     pipeline = gitProjectPipeline,
                     event = gitRequestEvent,
                     yaml = yamlObject,
+                    parsedYaml = parsedYaml,
                     originYaml = originYaml,
                     normalizedYaml = normalizedYaml,
                     gitBuildId = gitBuildId
