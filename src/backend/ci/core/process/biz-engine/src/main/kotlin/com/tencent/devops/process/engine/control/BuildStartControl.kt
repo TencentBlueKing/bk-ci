@@ -212,26 +212,7 @@ class BuildStartControl @Autowired constructor(
                 message = "Build #${buildInfo.buildNum} preparing",
                 buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
             )
-            if (buildNoType == BuildNoType.SUCCESS_BUILD_INCREMENT) {
-                // 防止"每次构建成功+1"读取到相同buildNo的情况正式启动前为var表设置最新的buildNo
-                val buildNoLock = PipelineBuildNoLock(redisOperation = redisOperation, pipelineId = pipelineId)
-                try {
-                    buildNoLock.lock()
-                    val buildSummary = pipelineRuntimeService.getBuildSummaryRecord(pipelineId = pipelineId)
-                    val buildNo = buildSummary?.buildNo
-                    if (buildNo != null) {
-                        buildVariableService.setVariable(
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            buildId = buildId,
-                            varName = BUILD_NO,
-                            varValue = buildNo
-                        )
-                    }
-                } finally {
-                    buildNoLock.unlock()
-                }
-            }
+            handleBuildNo()
             pipelineRuntimeService.startLatestRunningBuild(
                 latestRunningBuild = LatestRunningBuild(
                     projectId = projectId,
@@ -248,6 +229,29 @@ class BuildStartControl @Autowired constructor(
         }
 
         return canStart
+    }
+
+    private fun PipelineBuildStartEvent.handleBuildNo() {
+        if (buildNoType == BuildNoType.SUCCESS_BUILD_INCREMENT) {
+            // 防止"每次构建成功+1"读取到相同buildNo的情况正式启动前为var表设置最新的buildNo
+            val buildNoLock = PipelineBuildNoLock(redisOperation = redisOperation, pipelineId = pipelineId)
+            try {
+                buildNoLock.lock()
+                val buildSummary = pipelineRuntimeService.getBuildSummaryRecord(pipelineId = pipelineId)
+                val buildNo = buildSummary?.buildNo
+                if (buildNo != null) {
+                    buildVariableService.setVariable(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        buildId = buildId,
+                        varName = BUILD_NO,
+                        varValue = buildNo
+                    )
+                }
+            } finally {
+                buildNoLock.unlock()
+            }
+        }
     }
 
     private fun PipelineBuildStartEvent.broadcastStartEvent(buildInfo: BuildInfo) {
