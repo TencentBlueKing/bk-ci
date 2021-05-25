@@ -27,11 +27,15 @@
 
 package com.tencent.devops.gitci.v2.service
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
+import com.tencent.devops.common.ci.OBJECT_KIND_TAG_PUSH
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.gitci.dao.GitRequestEventDao
 import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.gitci.pojo.v2.UserMessageType
+import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.v2.dao.GitUserMessageDao
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -45,6 +49,7 @@ import org.springframework.stereotype.Service
 @Service
 class GitCIEventSaveService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val client: Client,
     private val userMessageDao: GitUserMessageDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val gitRequestEventDao: GitRequestEventDao
@@ -69,13 +74,25 @@ class GitCIEventSaveService @Autowired constructor(
         var messageId = -1L
         val event = gitRequestEventDao.get(dslContext = dslContext, id = eventId)
             ?: throw RuntimeException("can't find event $eventId")
-        val messageTitle = if (event.objectKind == OBJECT_KIND_MERGE_REQUEST) {
-            "Merge requests [!${event.mergeRequestId}] opened by ${event.userId}"
-        } else {
-            if (event.objectKind == OBJECT_KIND_MANUAL) {
-                "Manual Triggered by ${event.userId}"
-            } else {
-                "Commit [${event.commitId.subSequence(0, 7)}] pushed by ${event.userId}"
+        val eventMap = JsonUtil.toMap(event.event)
+        val messageTitle = when (event.objectKind) {
+            OBJECT_KIND_MERGE_REQUEST -> {
+                val branch = GitCommonUtils.checkAndGetForkBranchName(
+                    gitProjectId = gitProjectId,
+                    sourceGitProjectId = event.sourceGitProjectId,
+                    branch = event.branch,
+                    client = client
+                )
+                "[$branch] Merge requests [!${event.mergeRequestId}] ${event.extensionAction} by ${event.userId}"
+            }
+            OBJECT_KIND_MANUAL -> {
+                "[${event.branch}] Manual Triggered by ${event.userId}"
+            }
+            OBJECT_KIND_TAG_PUSH -> {
+                "[${eventMap["create_from"]}] Tag [${event.branch}] pushed by ${event.userId}"
+            }
+            else -> {
+                "[${event.branch}] Commit [${event.commitId.subSequence(0, 7)}] pushed by ${event.userId}"
             }
         }
 

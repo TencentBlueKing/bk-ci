@@ -88,7 +88,7 @@ class YamlTemplateService @Autowired constructor(
                 gitProjectId = targetProjectId.toLong(),
                 ref = ref!!,
                 fileName = templateDirectory + fileName,
-                useAccessToken = false
+                useAccessToken = true
             )
         } else {
             val (isTicket, key) = getKey(personalAccessToken)
