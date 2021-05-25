@@ -13,7 +13,6 @@ BK_PKG_SRC_PATH=${BK_PKG_SRC_PATH:-/data/src}
 BK_CI_SRC_DIR=${BK_CI_SRC_DIR:-$BK_PKG_SRC_PATH/ci}
 cd "$CTRL_DIR"
 
-set -vx
 echo "注册 蓝鲸 ESB"
 ./bin/add_or_update_appcode.sh "$BK_CI_APP_CODE" "$BK_CI_APP_TOKEN" "蓝盾" "mysql-paas"  # 注册app。第4个参数即是login-path。
 
