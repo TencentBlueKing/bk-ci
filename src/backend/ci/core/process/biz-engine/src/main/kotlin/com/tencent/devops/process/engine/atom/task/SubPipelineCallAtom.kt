@@ -42,6 +42,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_S
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_SUBPIPELINEID_NULL
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
+import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
@@ -168,7 +169,8 @@ class SubPipelineCallAtom constructor(
         param.parameters?.forEach {
             startParams[it.key] = parseVariable(it.value, runVariables)
         }
-        val subBuildId = client.get(BuildSubPipelineResource::class).callPipelineStartup(
+
+        val result = client.get(BuildSubPipelineResource::class).callPipelineStartup(
             projectId = task.projectId,
             parentPipelineId = task.pipelineId,
             callPipelineId = subPipelineId,
@@ -183,6 +185,17 @@ class SubPipelineCallAtom constructor(
             },
             values = startParams
         )
+
+        if (result.isNotOk()) {
+            buildLogPrinter.addErrorLine(
+                buildId = task.buildId,
+                message = result.message ?: result.status.toString(),
+                tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+            )
+            return defaultFailAtomResponse
+        }
+
+        val subBuildId = result.data?.id
 
         buildLogPrinter.addLine(
             buildId = task.buildId,
