@@ -49,16 +49,20 @@ class NodeJsAtomTargetHandleServiceImpl : AtomTargetHandleService {
         postEntryParam: String?
     ): String {
         logger.info("handleAtomTarget target:$target,osType:$osType,buildHostType:$buildHostType")
-        var nodeEnvFlag = false
-        try {
-            CommonScriptUtils.execute("node -v")
-            nodeEnvFlag = true
-        } catch (ignored: Throwable) {
-            logger.warn("No node environment", ignored)
-        }
-        if (nodeEnvFlag) {
-            // 如果构建机上有安装node，则直接使用户配置的node插件启动命令
-            return target
+        val machineNodeSwitch = systemEnvVariables["machineNodeSwitch"]
+        if (machineNodeSwitch != null && machineNodeSwitch.toBoolean()) {
+            var nodeEnvFlag = false
+            try {
+                // 探测构建机上是否有node环境
+                CommonScriptUtils.execute("node -v")
+                nodeEnvFlag = true
+            } catch (ignored: Throwable) {
+                logger.warn("No node environment", ignored)
+            }
+            if (nodeEnvFlag) {
+                // 如果构建机上有安装node，则直接使用户配置的node插件启动命令
+                return target
+            }
         }
         var convertTarget = target
         // 当构建机为公共构建机并且用户未为job执行环境选择nodejs依赖情况则用系统默认配置的nodejs环境执行

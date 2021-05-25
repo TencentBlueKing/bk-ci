@@ -210,7 +210,7 @@ class StoreMemberDao {
                 .where(STORE_CODE.eq(storeCode))
                 .and(STORE_TYPE.eq(storeType))
                 .and(TYPE.eq(0))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 }

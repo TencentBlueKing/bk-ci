@@ -123,7 +123,7 @@ class AtomDao : AtomBaseDao() {
                 .from(this)
                 .where(ID.eq(atomId))
                 .and(ATOM_CODE.eq(atomCode))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -134,20 +134,20 @@ class AtomDao : AtomBaseDao() {
             if (atomCode != null) {
                 conditions.add(ATOM_CODE.eq(atomCode))
             }
-            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)
+            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)!!
         }
     }
 
     fun countByCode(dslContext: DSLContext, atomCode: String): Int {
         with(TAtom.T_ATOM) {
-            return dslContext.selectCount().from(this).where(ATOM_CODE.eq(atomCode)).fetchOne(0, Int::class.java)
+            return dslContext.selectCount().from(this).where(ATOM_CODE.eq(atomCode)).fetchOne(0, Int::class.java)!!
         }
     }
 
     fun countByUserIdAndCode(dslContext: DSLContext, userId: String, atomCode: String): Int {
         with(TAtom.T_ATOM) {
             return dslContext.selectCount().from(this).where(ATOM_CODE.eq(atomCode).and(CREATOR.eq(userId)))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -157,7 +157,7 @@ class AtomDao : AtomBaseDao() {
     fun countReleaseAtomNumByClassifyId(dslContext: DSLContext, classifyId: String): Int {
         with(TAtom.T_ATOM) {
             return dslContext.selectCount().from(this).where(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte())
-                .and(CLASSIFY_ID.eq(classifyId))).fetchOne(0, Int::class.java)
+                .and(CLASSIFY_ID.eq(classifyId))).fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -174,7 +174,7 @@ class AtomDao : AtomBaseDao() {
         return dslContext.selectCount().from(a).join(b).on(a.ATOM_CODE.eq(b.STORE_CODE))
             .where(a.ATOM_STATUS.`in`(atomStatusList)
                 .and(a.CLASSIFY_ID.eq(classifyId)))
-            .fetchOne(0, Int::class.java)
+            .fetchOne(0, Int::class.java)!!
     }
 
     fun delete(dslContext: DSLContext, id: String) {
@@ -272,7 +272,7 @@ class AtomDao : AtomBaseDao() {
                     )
             )
             .asTable("t")
-        return dslContext.selectFrom(t).orderBy(t.field("CREATE_TIME").desc()).limit(1).fetchOne()
+        return dslContext.selectFrom(t).orderBy(t.field("CREATE_TIME")!!.desc()).limit(1).fetchOne()
     }
 
     private fun generateGetPipelineAtomCondition(
@@ -352,7 +352,7 @@ class AtomDao : AtomBaseDao() {
                 classifyId = classifyId,
                 atomStatus = atomStatus
             )
-            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Long::class.java)
+            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -445,7 +445,7 @@ class AtomDao : AtomBaseDao() {
                     )
             )
             .asTable("t")
-        return dslContext.select().from(t).orderBy(t.field("createTime").desc()).fetch()
+        return dslContext.select().from(t).orderBy(t.field("createTime")!!.desc()).fetch()
     }
 
     fun getPipelineAtoms(
@@ -516,7 +516,7 @@ class AtomDao : AtomBaseDao() {
                     .where(initTestAtomCondition)
             )
             .asTable("t")
-        val baseStep = dslContext.select().from(t).orderBy(t.field("weight").desc(), t.field("name").asc())
+        val baseStep = dslContext.select().from(t).orderBy(t.field("weight")!!.desc(), t.field("name")!!.asc())
         return if (null != page && null != pageSize) {
             baseStep.limit((page - 1) * pageSize, pageSize).fetch()
         } else {
@@ -606,13 +606,13 @@ class AtomDao : AtomBaseDao() {
         normalAtomConditions.add(a.ATOM_CODE.notIn(dslContext.select(a.ATOM_CODE)
             .from(a).join(c).on(a.ATOM_CODE.eq(c.STORE_CODE)).where(initTestAtomCondition)))
         val defaultAtomCount = dslContext.selectCount().from(a)
-            .where(defaultAtomCondition).fetchOne(0, Long::class.java)
+            .where(defaultAtomCondition).fetchOne(0, Long::class.java)!!
         val normalAtomCount =
             dslContext.selectCount().from(a).join(c).on(a.ATOM_CODE.eq(c.STORE_CODE)).where(normalAtomConditions)
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Long::class.java)!!
         val initTestAtomCount =
             dslContext.selectCount().from(a).join(c).on(a.ATOM_CODE.eq(c.STORE_CODE)).where(initTestAtomCondition)
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Long::class.java)!!
         return defaultAtomCount + normalAtomCount + initTestAtomCount
     }
 
@@ -812,7 +812,7 @@ class AtomDao : AtomBaseDao() {
             .join(tspr)
             .on(ta.ATOM_CODE.eq(tspr.STORE_CODE))
             .where(conditions)
-            .fetchOne(0, Int::class.java)
+            .fetchOne(0, Int::class.java)!!
     }
 
     /**
