@@ -214,7 +214,7 @@ class BuildEndControl @Autowired constructor(
 
     private fun updateBuildNoInfo(pipelineId: String, buildId: String) {
         val buildSummary = pipelineRuntimeService.getBuildSummaryRecord(pipelineId = pipelineId)
-        if (buildSummary?.buildNo != null) {
+        if (buildSummary?.buildNo != null && buildSummary.latestBuildId != buildId) {
             val buildNo = buildSummary.buildNo
             pipelineRuntimeService.updateBuildNo(pipelineId = pipelineId, buildNo = buildNo + 1)
             // 更新历史表的推荐版本号
@@ -333,9 +333,9 @@ class BuildEndControl @Autowired constructor(
         }
 
         LOG.info("ENGINE|$buildId|$source|FETCH_QUEUE|next build: ${nextBuild.buildId} ${nextBuild.status}")
-        val model = pipelineBuildDetailService.getBuildModel(buildId) ?: throw ErrorCodeException(
+        val model = pipelineBuildDetailService.getBuildModel(nextBuild.buildId) ?: throw ErrorCodeException(
             errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-            params = arrayOf(buildId)
+            params = arrayOf(nextBuild.buildId)
         )
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
         pipelineEventDispatcher.dispatch(

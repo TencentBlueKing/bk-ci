@@ -278,9 +278,9 @@ class BuildMonitorControl @Autowired constructor(
             if (canStart) {
                 val buildId = event.buildId
                 LOG.info("ENGINE|$buildId|${event.source}|BUILD_QUEUE_TRY_START")
-                val model = pipelineBuildDetailService.getBuildModel(buildId) ?: throw ErrorCodeException(
+                val model = pipelineBuildDetailService.getBuildModel(buildInfo.buildId) ?: throw ErrorCodeException(
                     errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                    params = arrayOf(buildId)
+                    params = arrayOf(buildInfo.buildId)
                 )
                 val triggerContainer = model.stages[0].containers[0] as TriggerContainer
                 pipelineEventDispatcher.dispatch(
