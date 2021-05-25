@@ -162,7 +162,7 @@ class PipelineContextService@Autowired constructor(
             } else {
                 BuildStatus.FAILED.name
             }
-        }else {
+        } else {
             e.status ?: ""
         }
     }
