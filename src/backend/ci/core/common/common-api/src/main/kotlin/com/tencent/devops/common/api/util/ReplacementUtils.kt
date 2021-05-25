@@ -50,7 +50,7 @@ object ReplacementUtils {
                 line
             } else {
                 // 先处理${} 单个花括号的情况
-                val lineTmp = parseTemplate(line, replacement)
+                val lineTmp = parseTemplate(line, replacement, contextMap)
                 // 再处理${{}} 双花括号的情况
                 parseWithDoubleCurlyBraces(lineTmp, contextMap)
             }
@@ -62,7 +62,11 @@ object ReplacementUtils {
         return sb.toString()
     }
 
-    private fun parseTemplate(command: String, replacement: KeyReplacement): String {
+    private fun parseTemplate(
+        command: String,
+        replacement: KeyReplacement,
+        contextMap: Map<String, String>? = emptyMap()
+    ): String {
         if (command.isBlank()) {
             return command
         }
@@ -72,7 +76,7 @@ object ReplacementUtils {
             val c = command[index]
             if (c == '$' && (index + 1) < command.length && command[index + 1] == '{') {
                 val inside = StringBuilder()
-                index = parseVariable(command, index + 2, inside, replacement)
+                index = parseVariable(command, index + 2, inside, replacement, contextMap)
                 newValue.append(inside)
             } else {
                 newValue.append(c)
@@ -105,7 +109,13 @@ object ReplacementUtils {
         return newValue.toString()
     }
 
-    private fun parseVariable(command: String, start: Int, newValue: StringBuilder, replacement: KeyReplacement): Int {
+    private fun parseVariable(
+        command: String,
+        start: Int,
+        newValue: StringBuilder,
+        replacement: KeyReplacement,
+        contextMap: Map<String, String>? = emptyMap()
+    ): Int {
         val token = StringBuilder()
         var index = start
         while (index < command.length) {
@@ -115,7 +125,8 @@ object ReplacementUtils {
                 index = parseVariable(command, index + 2, inside, replacement)
                 token.append(inside)
             } else if (c == '}') {
-                val tokenValue = getVariable(token.toString(), replacement) ?: "\${$token}"
+                val tokenValue =
+                    getVariable(token.toString(), replacement) ?: contextMap?.get(token.toString()) ?: "\${$token}"
                 newValue.append(tokenValue)
                 return index + 1
             } else {
