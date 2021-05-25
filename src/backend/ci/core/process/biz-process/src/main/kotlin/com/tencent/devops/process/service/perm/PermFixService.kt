@@ -62,7 +62,7 @@ class PermFixService @Autowired constructor(
 
             val admin = authProjectApi.getProjectUsers(serviceCode, projectId, BkAuthGroup.MANAGER).firstOrNull()
             if (!admin.isNullOrBlank()) { // 遇到已经丢失权限的更新最后修改人为管理员
-                pipelineInfoDao.update(dslContext = dslContext, pipelineId = pipelineId, userId = admin)
+                pipelineInfoDao.update(dslContext, pipelineId = pipelineId, userId = admin, updateVersion = false)
                 LOG.warn("BKSystemErrorMonitor|BAD_USER|$userId|$projectId|$pipelineId|$admin")
             } else {
                 LOG.error("BKSystemErrorMonitor|EMPTY_ADMIN|$projectId|$pipelineId")
