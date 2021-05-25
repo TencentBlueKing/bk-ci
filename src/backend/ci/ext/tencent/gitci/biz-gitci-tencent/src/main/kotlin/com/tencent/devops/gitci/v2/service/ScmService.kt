@@ -59,7 +59,7 @@ class ScmService @Autowired constructor(
         try {
             return client.getScm(ServiceGitCiResource::class).getToken(gitProjectId).data!!
         } catch (e: Exception) {
-            throw RuntimeException("项目${gitProjectId}获取Token失败, ${e.message}")
+            throw RuntimeException("项目${gitProjectId}获取Token失败")
         }
     }
 
@@ -85,7 +85,7 @@ class ScmService @Autowired constructor(
             result.data!!
         } catch (e: Throwable) {
             logger.error("Get yaml from git failed", e)
-            throw RuntimeException("Get yaml $fileName from git failed ${e.message}")
+            throw RuntimeException("Get yaml $fileName from git failed")
         }
     }
 
@@ -120,7 +120,7 @@ class ScmService @Autowired constructor(
             useAccessToken = useAccessToken
         )
         // 针对模板请求失败只有可能是无权限和系统问题，系统问题不考虑一律按无权限
-        if (result.status.toString() == CommonMessageCode.SYSTEM_ERROR){
+        if (result.status.toString() == CommonMessageCode.SYSTEM_ERROR) {
             throw RuntimeException("$gitProjectId 项目下无权限")
         }
         return result.data
