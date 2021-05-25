@@ -11,10 +11,12 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.experience.constant.ExperienceMessageCode
+import com.tencent.devops.experience.dao.ExperienceOuterLoginRecordDao
 import com.tencent.devops.experience.pojo.outer.OuterLoginParam
 import com.tencent.devops.experience.pojo.outer.OuterProfileVO
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang3.StringUtils
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.data.redis.connection.RedisStringCommands
@@ -29,9 +31,16 @@ import javax.ws.rs.core.Response
 class ExperienceOuterService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val loginApi: V1Api,
-    private val profileApi: ProfilesApi
+    private val profileApi: ProfilesApi,
+    private val experienceOuterLoginRecordDao: ExperienceOuterLoginRecordDao,
+    private val dslContext: DSLContext
 ) {
-    fun outerLogin(realIp: String, params: OuterLoginParam): String {
+    fun outerLogin(
+        platform: Int,
+        appVersion: String?,
+        realIp: String,
+        params: OuterLoginParam
+    ): String {
         // IP黑名单
         if (isBlackIp(realIp)) {
             logger.warn("it is black ip : {}", realIp)
@@ -86,8 +95,23 @@ class ExperienceOuterService @Autowired constructor(
                 logo = logo(),
                 email = profile.email
             )
+
+            // 设置token
             val token = DigestUtils.md5Hex(profile.username + profile.id + UUIDUtil.generate())
-            redisOperation.set(redisKey(token), JsonUtil.toJson(outerProfileVO), expireSecs)
+            redisOperation.set(tokenRedisKey(token), JsonUtil.toJson(outerProfileVO), expireSecs)
+
+            // 单token有效
+            singleTokenLogin(profile.username, token)
+
+            // 记录登录历史
+            experienceOuterLoginRecordDao.add(
+                dslContext = dslContext,
+                username = profile.username,
+                realIp = realIp,
+                loginTime = LocalDateTime.now(),
+                appVersion = appVersion ?: "",
+                platform = platform
+            )
             return token
         } catch (e: ApiException) {
             logger.warn("login error", e)
@@ -108,7 +132,7 @@ class ExperienceOuterService @Autowired constructor(
 
     fun outerAuth(token: String): OuterProfileVO {
         // token过期
-        val profileStr = redisOperation.get(redisKey(token))
+        val profileStr = redisOperation.get(tokenRedisKey(token))
         if (StringUtils.isBlank(profileStr)) {
             logger.warn("get profile by token failed , token:{}", token)
             throw ErrorCodeException(
@@ -137,7 +161,7 @@ class ExperienceOuterService @Autowired constructor(
     }
 
     fun renewToken(token: String) {
-        redisOperation.expire(redisKey(token), expireSecs)
+        redisOperation.expire(tokenRedisKey(token), expireSecs)
     }
 
     fun outerList(projectId: String): List<String> {
@@ -159,6 +183,15 @@ class ExperienceOuterService @Autowired constructor(
             )
         }
         return redisOperation.isMember("e:out:l:black:ip", realIp)
+    }
+
+    // 一个账户只能占用一个token
+    private fun singleTokenLogin(username: String, token: String) {
+        val redisKey = "e:o:l:single:$username"
+        val oldToken = redisOperation.getAndSet(redisKey, token, expireSecs + 300)
+        if (null != oldToken) {
+            redisOperation.delete(tokenRedisKey(oldToken))
+        }
     }
 
     private fun checkNormal(token: String, profileVO: OuterProfileVO) {
@@ -215,7 +248,7 @@ class ExperienceOuterService @Autowired constructor(
         return limit ?: 0 > 5 // 60s内只能登录5次
     }
 
-    private fun redisKey(token: String) = "e:out:l:$token"
+    private fun tokenRedisKey(token: String) = "e:out:l:$token"
     private fun logo() = "${HomeHostUtil.outerServerHost()}/app/download/devops_app.png"
 
     companion object {
