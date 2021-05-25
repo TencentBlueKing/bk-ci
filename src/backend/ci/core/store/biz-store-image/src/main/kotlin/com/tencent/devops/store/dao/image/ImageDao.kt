@@ -115,7 +115,7 @@ class ImageDao {
             if (imageCode != null) {
                 conditions.add(IMAGE_CODE.eq(imageCode))
             }
-            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)
+            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -134,7 +134,7 @@ class ImageDao {
                 conditions.add(CLASSIFY_ID.eq(classifyId))
             }
             baseStep.where(conditions)
-            return baseStep.fetchOne(0, Int::class.java)
+            return baseStep.fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -162,13 +162,13 @@ class ImageDao {
 
     fun countByNameLike(dslContext: DSLContext, imageName: String): Int {
         with(TImage.T_IMAGE) {
-            return dslContext.selectCount().from(this).where(IMAGE_NAME.like(imageName)).fetchOne(0, Int::class.java)
+            return dslContext.selectCount().from(this).where(IMAGE_NAME.like(imageName)).fetchOne(0, Int::class.java)!!
         }
     }
 
     fun countByCode(dslContext: DSLContext, imageCode: String): Int {
         with(TImage.T_IMAGE) {
-            return dslContext.selectCount().from(this).where(IMAGE_CODE.eq(imageCode)).fetchOne(0, Int::class.java)
+            return dslContext.selectCount().from(this).where(IMAGE_CODE.eq(imageCode)).fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -189,7 +189,7 @@ class ImageDao {
             conditions.add(IMAGE_REPO_NAME.eq(imageRepoName))
             conditions.add(IMAGE_TAG.eq(imageTag))
             conditions.add(IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte()))
-            return baseStep.where(conditions).fetchOne(0, Int::class.java)
+            return baseStep.where(conditions).fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -324,17 +324,17 @@ class ImageDao {
         val publicImageCount =
             dslContext.select(DSL.countDistinct(a.IMAGE_CODE)).from(a)
                 .join(d).on(a.IMAGE_CODE.eq(d.IMAGE_CODE)).where(publicImageCondition)
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Long::class.java)!!
         val normalImageCount =
             dslContext.select(DSL.countDistinct(a.IMAGE_CODE)).from(a)
                 .join(c).on(a.IMAGE_CODE.eq(c.STORE_CODE)).join(d)
                 .on(a.IMAGE_CODE.eq(d.IMAGE_CODE)).where(normalImageConditions)
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Long::class.java)!!
         val initTestImageCount =
             dslContext.select(DSL.countDistinct(a.IMAGE_CODE)).from(a)
                 .join(c).on(a.IMAGE_CODE.eq(c.STORE_CODE)).join(d)
                 .on(a.IMAGE_CODE.eq(d.IMAGE_CODE)).where(initTestImageCondition)
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Long::class.java)!!
         return publicImageCount + normalImageCount + initTestImageCount
     }
 
@@ -398,7 +398,7 @@ class ImageDao {
                     .where(initTestImageCondition)
             )
             .asTable("t")
-        val baseStep = dslContext.select().from(t).orderBy(t.field("weight").desc(), t.field("imageName").asc())
+        val baseStep = dslContext.select().from(t).orderBy(t.field("weight")!!.desc(), t.field("imageName")!!.asc())
         return if (null != page && null != pageSize) {
             baseStep.limit((page - 1) * pageSize + (offsetNum ?: 0), pageSize).fetch()
         } else {
@@ -789,7 +789,7 @@ class ImageDao {
                     )
             )
             .asTable("t")
-        return dslContext.select().from(t).orderBy(t.field("createTime").desc()).fetch()
+        return dslContext.select().from(t).orderBy(t.field("createTime")!!.desc()).fetch()
     }
 
     /**
@@ -799,7 +799,7 @@ class ImageDao {
         with(TImage.T_IMAGE) {
             return dslContext.selectCount().from(this)
                 .where(IMAGE_STATUS.eq(ImageStatusEnum.RELEASED.status.toByte()).and(CLASSIFY_ID.eq(classifyId)))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -813,7 +813,7 @@ class ImageDao {
             listOf(ImageStatusEnum.UNDERCARRIAGING.status.toByte(), ImageStatusEnum.UNDERCARRIAGED.status.toByte())
         return dslContext.selectCount().from(a).join(b).on(a.IMAGE_CODE.eq(b.STORE_CODE))
             .where(a.IMAGE_STATUS.`in`(templateStatusList).and(a.CLASSIFY_ID.eq(classifyId)))
-            .fetchOne(0, Int::class.java)
+            .fetchOne(0, Int::class.java)!!
     }
 
     fun listByRepoNameAndTag(

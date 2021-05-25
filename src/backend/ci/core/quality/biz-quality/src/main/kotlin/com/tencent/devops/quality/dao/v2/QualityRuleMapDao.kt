@@ -39,7 +39,7 @@ class QualityRuleMapDao {
         return with(TQualityRuleMap.T_QUALITY_RULE_MAP) {
             dslContext.selectFrom(this)
                 .where(RULE_ID.eq(ruleId))
-                .fetchOne()
+                .fetchOne()!!
         }
     }
 

@@ -81,13 +81,14 @@ class ContainerAppsDao {
             )
                 .values(name, os, binPath)
                 .returning(ID)
-                .fetchOne().id
+                .fetchOne()!!.id
         }
     }
 
     fun countByNameAndOs(dslContext: DSLContext, name: String, os: String): Int {
         with(TApps.T_APPS) {
-            return dslContext.selectCount().from(this).where(NAME.eq(name).and(OS.eq(os))).fetchOne(0, Int::class.java)
+            return dslContext.selectCount().from(this).where(NAME.eq(name).and(OS.eq(os)))
+                .fetchOne(0, Int::class.java)!!
         }
     }
 

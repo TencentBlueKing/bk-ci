@@ -209,7 +209,7 @@ class StoreDeptRelDao {
                         STATUS.`in`(DeptStatusEnum.APPROVING.status.toByte(), DeptStatusEnum.APPROVED.status.toByte())
                     )
                 )
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 }
