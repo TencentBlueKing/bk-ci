@@ -37,6 +37,7 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineId
+import com.tencent.devops.process.pojo.PipelineIdInfo
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import io.swagger.annotations.Api
@@ -358,4 +359,13 @@ interface ServicePipelineResource {
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<Boolean>
+
+    @ApiOperation("获取项目下流水线Id列表")
+    @PUT
+    @Path("/projects/{projectCode}/idList")
+    fun getProjectPipelineIds(
+        @ApiParam("项目Id", required = true)
+        @PathParam("projectCode")
+        projectCode: String
+    ): Result<List<PipelineIdInfo>>
 }

@@ -28,6 +28,7 @@
 package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Page
@@ -628,6 +629,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             }
         }
         return projectIds
+    }
+
+    override fun relationIamProject(projectCode: String, relationId: String): Boolean {
+        val projectInfo = projectDao.get(dslContext, projectCode) ?: throw InvalidParamException("项目不存在")
+        val relationId = projectInfo.relationId
+        if (!relationId.isNullOrEmpty()) {
+            throw InvalidParamException("$projectCode 已绑定IAM分级管理员")
+        }
+        val updateCount = projectDao.updateRelationByCode(dslContext, projectCode, relationId)
+        return updateCount > 0
     }
 
     abstract fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean
