@@ -66,7 +66,7 @@ function _M:getProfile(otoken)
         end
 
         --- 设置3分钟缓存
-        outerlogin_cache:set(otoken, responseBody, 180)
+        outerlogin_cache:set(otoken, responseBody, 30)
 
         return result
     else
