@@ -128,19 +128,6 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
         storeType: Byte,
         storeCode: String
     ): StoreStatistic {
-        // 判断当前用户是否是该组件的成员
-        if (!storeMemberDao.isStoreMember(
-                dslContext = dslContext,
-                userId = userId,
-                storeCode = storeCode,
-                storeType = storeType
-            )
-        ) {
-            throw ErrorCodeException(
-                errorCode = CommonMessageCode.PERMISSION_DENIED,
-                params = arrayOf(storeCode)
-            )
-        }
         val record =
             storeStatisticTotalDao.getStatisticByStoreCode(dslContext, storeCode, storeType)
         // 统计基于昨天为截止日期的最近三个月的数据的组件执行成功率
