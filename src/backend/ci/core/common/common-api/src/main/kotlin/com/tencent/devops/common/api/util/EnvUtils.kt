@@ -173,7 +173,7 @@ object EnvUtils {
             val c = command[index]
             if (checkPrefix(c, index, command)) {
                 val inside = StringBuilder()
-                index = parseVariable(command, index + 3, inside, data)
+                index = parseVariableWithDoubleCurlyBraces(command, index + 3, inside, data)
                 token.append(inside)
             } else if (c == '}' && index + 1 < command.length && command[index + 1] == '}') {
                 val tokenStr = token.toString().trim()
