@@ -214,8 +214,8 @@ class BuildEndControl @Autowired constructor(
 
     private fun updateBuildNoInfo(pipelineId: String, buildId: String) {
         val buildSummary = pipelineRuntimeService.getBuildSummaryRecord(pipelineId = pipelineId)
-        if (buildSummary?.buildNo != null && buildSummary.latestBuildId != buildId) {
-            val buildNo = buildSummary.buildNo
+        val buildNo = buildSummary?.buildNo
+        if (buildNo != null && pipelineRuntimeService.getBuildInfo(buildId)?.retryFlag != true) {
             pipelineRuntimeService.updateBuildNo(pipelineId = pipelineId, buildNo = buildNo + 1)
             // 更新历史表的推荐版本号
             val buildParameters = pipelineRuntimeService.getBuildParametersFromStartup(buildId)
