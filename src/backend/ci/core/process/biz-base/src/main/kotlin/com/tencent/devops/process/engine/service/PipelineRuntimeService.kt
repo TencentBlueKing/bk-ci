@@ -1200,8 +1200,8 @@ class PipelineRuntimeService @Autowired constructor(
                         buildStatus = BuildStatus.QUEUE
                     )
                     // 写入BuildNo
-                    if (buildNoType != BuildNoType.SUCCESS_BUILD_INCREMENT && currentBuildNo != null
-                        && context.actionType == ActionType.START
+                    if (buildNoType != BuildNoType.SUCCESS_BUILD_INCREMENT && currentBuildNo != null &&
+                        context.actionType == ActionType.START
                     ) {
                         buildVariableService.setVariable(
                             projectId = pipelineInfo.projectId,
