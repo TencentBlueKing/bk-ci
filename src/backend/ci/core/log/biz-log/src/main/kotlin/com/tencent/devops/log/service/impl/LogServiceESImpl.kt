@@ -146,6 +146,11 @@ class LogServiceESImpl constructor(
         } finally {
             val elapse = System.currentTimeMillis() - currentEpoch
             logBeanV2.batchWrite(elapse, success)
+
+            // #4265 当日志消息处理时间过长时打印消息内容
+            if (elapse >= 1000 && event.logs.isNotEmpty()) logger.warn(
+                "[${event.buildId}] addBatchLogEvent spent too much time with tag=${event.logs.first().tag}"
+            )
         }
     }
 
@@ -1176,7 +1181,13 @@ class LogServiceESImpl constructor(
             if (bulkLines != lines) {
                 logger.warn("[$buildId] Part of bulk lines failed, lines:$lines, bulkLines:$bulkLines")
             }
-            logBeanV2.bulkRequest(System.currentTimeMillis() - currentEpoch, bulkLines > 0)
+            val elapse = System.currentTimeMillis() - currentEpoch
+            logBeanV2.bulkRequest(elapse, bulkLines > 0)
+
+            // #4265 当日志消息处理时间过长时打印消息内容
+            if (elapse >= 500 && logMessages.isNotEmpty()) logger.warn(
+                "[$buildId] doAddMultiLines spent too much time with tag=${logMessages.first().tag}"
+            )
         }
     }
 
