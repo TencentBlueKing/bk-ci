@@ -167,7 +167,6 @@ class DevCloudClient {
                 formatErrorMessage = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.formatErrorMessage,
                 errorMessage = "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 操作容器接口超时, url: $url")
         }
-
     }
 
     fun getContainers(staffName: String, keyword: String?, page: Int, size: Int): JSONObject {
@@ -305,7 +304,7 @@ class DevCloudClient {
         }
     }
 
-    fun getTasks(staffName: String, taskId: String, retryFlag : Int = 3): JSONObject {
+    fun getTasks(staffName: String, taskId: String, retryFlag: Int = 3): JSONObject {
         val url = devCloudUrl + "/api/v2.1/tasks/" + taskId
         val request = Request.Builder()
             .url(url)
@@ -690,4 +689,3 @@ class DevCloudClient {
 }
 
 data class TaskResult(val isFinish: Boolean, val success: Boolean, val msg: String, val errorCodeEnum: ErrorCodeEnum = ErrorCodeEnum.CREATE_VM_ERROR)
-

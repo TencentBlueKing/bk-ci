@@ -105,4 +105,3 @@ enum class TaskAction {
     DELETE,
     BUILD_IMAGE
 }
-

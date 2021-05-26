@@ -6,9 +6,9 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import org.springframework.beans.factory.annotation.Autowired
 
-class BkAuthPermissionProjectService @Autowired constructor(
+class BkAuthPermissionProjectService @Autowired constructor (
 
-): PermissionProjectService {
+) : PermissionProjectService {
     override fun getProjectUsers(serviceCode: String, projectCode: String, group: BkAuthGroup?): List<String> {
         return emptyList()
     }

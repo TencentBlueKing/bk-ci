@@ -4,9 +4,9 @@ import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
 import org.springframework.beans.factory.annotation.Autowired
 
-class BkAuthPermissionService @Autowired constructor(
+class BkAuthPermissionService @Autowired constructor (
 
-): PermissionService {
+) : PermissionService {
     override fun validateUserActionPermission(userId: String, action: String): Boolean {
         return true
     }
