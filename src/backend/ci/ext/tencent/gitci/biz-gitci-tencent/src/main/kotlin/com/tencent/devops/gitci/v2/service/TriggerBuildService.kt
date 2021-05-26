@@ -718,7 +718,8 @@ class TriggerBuildService @Autowired constructor(
                     hookEventType = CodeEventType.MERGE_REQUEST.name,
                     hookSourceBranch = event.branch,
                     hookTargetBranch = event.targetBranch,
-                    hookSourceUrl = if (event.sourceGitProjectId != null && event.sourceGitProjectId != event.gitProjectId) {
+                    hookSourceUrl = if (event.sourceGitProjectId != null &&
+                        event.sourceGitProjectId != event.gitProjectId) {
                         gitEvent.object_attributes.source.http_url
                     } else {
                         gitBasicSetting.gitHttpUrl
