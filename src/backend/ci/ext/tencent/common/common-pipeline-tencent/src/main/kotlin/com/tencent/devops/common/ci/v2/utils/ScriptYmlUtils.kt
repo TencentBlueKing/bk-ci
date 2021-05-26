@@ -77,6 +77,10 @@ object ScriptYmlUtils {
     private const val stageNamespace = "stage-"
     private const val jobNamespace = "job-"
     private const val stepNamespace = "step-"
+    // 用户编写的触发器语法和实际对象不一致
+    private const val userTrigger  ="on"
+    private const val formatTrigger = "triggerOn"
+
 
     /**
      * 1、解决锚点
@@ -186,8 +190,8 @@ object ScriptYmlUtils {
         val br = BufferedReader(StringReader(yamlStr))
         var line: String? = br.readLine()
         while (line != null) {
-            if (line == "on:") {
-                sb.append("triggerOn:").append("\n")
+            if (line == "$userTrigger:") {
+                sb.append("$formatTrigger:").append("\n")
             } else {
                 sb.append(line).append("\n")
             }
@@ -232,7 +236,7 @@ object ScriptYmlUtils {
             return
         }
         yamlMap.forEach { (t, _) ->
-            if (t != "on" && t != "extends" && t != "version") {
+            if (t != formatTrigger && t != "extends" && t != "version") {
                 throw CustomException(Response.Status.BAD_REQUEST, "使用 extends 时顶级关键字只能有触发器 on")
             }
         }
