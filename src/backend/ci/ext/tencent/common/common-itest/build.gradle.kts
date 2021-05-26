@@ -39,4 +39,4 @@ dependencies {
     api(group= "cglib", name = "cglib", version= "2.2.2")
 }
 
-apply from: "$rootDir/task_deploy_to_maven.gradle"
+apply(plugin = "task-deploy-to-maven")
