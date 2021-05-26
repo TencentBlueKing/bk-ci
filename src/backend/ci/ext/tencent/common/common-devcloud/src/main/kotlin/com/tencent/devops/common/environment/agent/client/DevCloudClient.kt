@@ -59,6 +59,7 @@ import org.springframework.stereotype.Component
 import java.net.SocketTimeoutException
 import java.net.URLEncoder
 
+@Suppress("ALL")
 @Component
 class DevCloudClient {
 
@@ -91,16 +92,22 @@ class DevCloudClient {
         logger.info("[${dispatchMessage.buildId}]|[${dispatchMessage.vmSeqId}] request body: $body")
         val request = Request.Builder()
             .url(url)
-            .headers(Headers.of(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, dispatchMessage.userId, smartProxyToken)))
+            .headers(Headers.of(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, dispatchMessage.userId,
+                smartProxyToken)))
             .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body.toString()))
             .build()
 
         try {
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body()!!.string()
-                logger.info("[${dispatchMessage.buildId}]|[${dispatchMessage.vmSeqId}] http code is ${response.code()}, $responseContent")
+                logger.info("[${dispatchMessage.buildId}]|[${dispatchMessage.vmSeqId}] http code is " +
+                    "${response.code()}, $responseContent")
                 if (!response.isSuccessful) {
-                    throw BuildFailureException(ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorType, ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorCode, ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.formatErrorMessage, "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 创建容器接口异常: Fail to createContainer, http response code: ${response.code()}")
+                    throw BuildFailureException(ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorType,
+                        ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorCode,
+                        ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.formatErrorMessage,
+                        "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 创建容器接口异常: " +
+                            "Fail to createContainer, http response code: ${response.code()}")
                 }
 
                 val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseContent)
@@ -110,11 +117,15 @@ class DevCloudClient {
                     return Pair((dataMap["taskId"] as Int).toString(), dataMap["name"] as String)
                 } else {
                     val msg = responseData["actionMessage"] as String
-                    throw BuildFailureException(ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType, ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode, ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage, "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 创建容器接口返回失败: $msg")
+                    throw BuildFailureException(ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
+                        ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
+                        ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.formatErrorMessage,
+                        "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 创建容器接口返回失败: $msg")
                 }
             }
         } catch (e: SocketTimeoutException) {
-            logger.error("[${dispatchMessage.buildId}]|[${dispatchMessage.vmSeqId}] create container get SocketTimeoutException", e)
+            logger.error("[${dispatchMessage.buildId}]|[${dispatchMessage.vmSeqId}] " +
+                "create container get SocketTimeoutException", e)
             throw BuildFailureException(
                 errorType = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorType,
                 errorCode = ErrorCodeEnum.CREATE_VM_INTERFACE_FAIL.errorCode,
@@ -123,7 +134,14 @@ class DevCloudClient {
         }
     }
 
-    fun operateContainer(buildId: String, vmSeqId: String, userId: String, name: String, action: Action, param: Params? = null): String {
+    fun operateContainer(
+        buildId: String,
+        vmSeqId: String,
+        userId: String,
+        name: String,
+        action: Action,
+        param: Params? = null
+    ): String {
         val url = devCloudUrl + "/api/v2.1/containers/" + name
         val body = when (action) {
             Action.DELETE -> "{\"action\":\"delete\",\"params\":{}}"
@@ -146,7 +164,11 @@ class DevCloudClient {
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body()!!.string()
                 if (!response.isSuccessful) {
-                    throw BuildFailureException(ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorType, ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorCode, ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.formatErrorMessage, "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 操作容器接口异常（Fail to $action docker, http response code: ${response.code()}")
+                    throw BuildFailureException(ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorType,
+                        ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorCode,
+                        ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.formatErrorMessage,
+                        "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 操作容器接口异常" +
+                            "（Fail to $action docker, http response code: ${response.code()}")
                 }
                 logger.info("[$buildId]|[$vmSeqId] response: $responseContent")
                 val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseContent)
@@ -156,7 +178,10 @@ class DevCloudClient {
                     return (dataMap["taskId"] as Int).toString()
                 } else {
                     val msg = responseData["actionMessage"] as String
-                    throw BuildFailureException(ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorType, ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorCode, ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.formatErrorMessage, "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 操作容器接口返回失败：$msg")
+                    throw BuildFailureException(ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorType,
+                        ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.errorCode,
+                        ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.formatErrorMessage,
+                        "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 操作容器接口返回失败：$msg")
                 }
             }
         } catch (e: SocketTimeoutException) {
@@ -167,11 +192,11 @@ class DevCloudClient {
                 formatErrorMessage = ErrorCodeEnum.OPERATE_VM_INTERFACE_FAIL.formatErrorMessage,
                 errorMessage = "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 操作容器接口超时, url: $url")
         }
-
     }
 
     fun getContainers(staffName: String, keyword: String?, page: Int, size: Int): JSONObject {
-        val url = devCloudUrl + "/api/v2.1/containers?page=$page&size=$size" + if (null != keyword && keyword.isNotBlank()) "&keyword=" + URLEncoder.encode(keyword, "UTF-8") else ""
+        val url = devCloudUrl + "/api/v2.1/containers?page=$page&size=$size" +
+            if (null != keyword && keyword.isNotBlank()) "&keyword=" + URLEncoder.encode(keyword, "UTF-8") else ""
         logger.info("request url: $url")
         val request = Request.Builder()
             .url(url)
@@ -188,7 +213,13 @@ class DevCloudClient {
         }
     }
 
-    fun getContainerStatus(buildId: String, vmSeqId: String, userId: String, name: String, retryTime: Int = 3): JSONObject {
+    fun getContainerStatus(
+        buildId: String,
+        vmSeqId: String,
+        userId: String,
+        name: String,
+        retryTime: Int = 3
+    ): JSONObject {
         val url = devCloudUrl + "/api/v2.1/containers/" + name + "/status"
         logger.info("[$buildId]|[$vmSeqId] request url: $url")
         val request = Request.Builder()
@@ -206,15 +237,19 @@ class DevCloudClient {
                         return getContainerStatus(buildId, vmSeqId, userId, name, retryTimeLocal)
                     }
                     // throw RuntimeException("Fail to get container status")
-                    throw BuildFailureException(ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType, ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
-                        ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage, "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 获取容器状态接口异常（Fail to get container status, http response code: ${response.code()}")
+                    throw BuildFailureException(ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
+                        ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
+                        ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
+                        "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 获取容器状态接口异常" +
+                            "（Fail to get container status, http response code: ${response.code()}")
                 }
                 return JSONObject(responseContent)
             }
         } catch (e: SocketTimeoutException) {
             // 接口超时失败，重试三次
             if (retryTime > 0) {
-                logger.info("[$buildId]|[$vmSeqId] containerName: $name getContainerStatus SocketTimeoutException. retry: $retryTime")
+                logger.info("[$buildId]|[$vmSeqId] containerName: $name getContainerStatus SocketTimeoutException. " +
+                    "retry: $retryTime")
                 return getContainerStatus(buildId, vmSeqId, userId, name, retryTime - 1)
             } else {
                 logger.error("[$buildId]|[$vmSeqId] containerName: $name getContainerStatus failed.", e)
@@ -259,7 +294,11 @@ class DevCloudClient {
             val responseContent = response.body()!!.string()
             if (!response.isSuccessful) {
                 // throw RuntimeException("Fail to createImage")
-                throw BuildFailureException(ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorType, ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorCode, ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.formatErrorMessage, "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 创建镜像接口异常（Fail to createImage, http response code: ${response.code()}")
+                throw BuildFailureException(ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorType,
+                    ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorCode,
+                    ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.formatErrorMessage,
+                    "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 创建镜像接口异常" +
+                        "（Fail to createImage, http response code: ${response.code()}")
             }
             logger.info("response: $responseContent")
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseContent)
@@ -270,7 +309,10 @@ class DevCloudClient {
             } else {
                 val msg = responseData["actionMessage"] as String
                 // throw OperationException(msg)
-                throw BuildFailureException(ErrorCodeEnum.CREATE_IMAGE_INTERFACE_FAIL.errorType, ErrorCodeEnum.CREATE_IMAGE_INTERFACE_FAIL.errorCode, ErrorCodeEnum.CREATE_IMAGE_INTERFACE_FAIL.formatErrorMessage, "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 创建镜像接口返回失败：$msg")
+                throw BuildFailureException(ErrorCodeEnum.CREATE_IMAGE_INTERFACE_FAIL.errorType,
+                    ErrorCodeEnum.CREATE_IMAGE_INTERFACE_FAIL.errorCode,
+                    ErrorCodeEnum.CREATE_IMAGE_INTERFACE_FAIL.formatErrorMessage,
+                    "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 创建镜像接口返回失败：$msg")
             }
         }
     }
@@ -290,7 +332,11 @@ class DevCloudClient {
             logger.info("response: $responseContent")
             if (!response.isSuccessful) {
                 // throw RuntimeException("Fail to createImageVersions")
-                throw BuildFailureException(ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_ERROR.errorType, ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_ERROR.errorCode, ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_ERROR.formatErrorMessage, "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 创建镜像新版本接口异常（Fail to createImageVersions, http response code: ${response.code()}")
+                throw BuildFailureException(ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_ERROR.errorType,
+                    ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_ERROR.errorCode,
+                    ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_ERROR.formatErrorMessage,
+                    "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 创建镜像新版本接口异常" +
+                        "（Fail to createImageVersions, http response code: ${response.code()}")
             }
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseContent)
             val code = responseData["actionCode"] as Int
@@ -300,12 +346,15 @@ class DevCloudClient {
             } else {
                 val msg = responseData["actionMessage"] as String
                 // throw OperationException(msg)
-                throw BuildFailureException(ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_FAIL.errorType, ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_FAIL.errorCode, ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_FAIL.formatErrorMessage, "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 创建镜像新版本接口返回失败：$msg")
+                throw BuildFailureException(ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_FAIL.errorType,
+                    ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_FAIL.errorCode,
+                    ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_FAIL.formatErrorMessage,
+                    "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 创建镜像新版本接口返回失败：$msg")
             }
         }
     }
 
-    fun getTasks(staffName: String, taskId: String, retryFlag : Int = 3): JSONObject {
+    fun getTasks(staffName: String, taskId: String, retryFlag: Int = 3): JSONObject {
         val url = devCloudUrl + "/api/v2.1/tasks/" + taskId
         val request = Request.Builder()
             .url(url)
@@ -326,7 +375,10 @@ class DevCloudClient {
                         if (!it.isSuccessful) {
                             // 没机会了，只能失败
                             logger.error("$taskId retry get task status failed, retry responseCode: ${it.code()}")
-                            throw BuildFailureException(ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType, ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode, ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.formatErrorMessage, "获取TASK状态接口异常：http response code: ${response.code()}")
+                            throw BuildFailureException(ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
+                                ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
+                                ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.formatErrorMessage,
+                                "获取TASK状态接口异常：http response code: ${response.code()}")
                         }
 
                         logger.info("retry response: $retryResponseContent")
@@ -365,7 +417,11 @@ class DevCloudClient {
             logger.info("response: $responseContent")
             if (!response.isSuccessful) {
                 // throw OperationException("Fail to get container websocket")
-                throw BuildFailureException(ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorType, ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode, ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.formatErrorMessage, "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 获取websocket接口异常（Fail to getWebsocket, http response code: ${response.code()}")
+                throw BuildFailureException(ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorType,
+                    ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
+                    ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.formatErrorMessage,
+                    "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 获取websocket接口异常" +
+                        "（Fail to getWebsocket, http response code: ${response.code()}")
             }
             return JSONObject(responseContent)
         }
@@ -410,7 +466,11 @@ class DevCloudClient {
             logger.info("response: $responseContent")
             if (!response.isSuccessful) {
                 // throw OperationException("Fail to get container websocket")
-                throw BuildFailureException(ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorType, ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode, ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.formatErrorMessage, "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 获取websocket接口异常（Fail to getWebsocket, http response code: ${response.code()}")
+                throw BuildFailureException(ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorType,
+                    ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
+                    ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.formatErrorMessage,
+                    "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 获取websocket接口异常" +
+                        "（Fail to getWebsocket, http response code: ${response.code()}")
             }
             return responseContent
         }
@@ -429,7 +489,11 @@ class DevCloudClient {
             logger.info("response: $responseContent")
             if (!response.isSuccessful) {
                 // throw OperationException("Fail to get container websocket")
-                throw BuildFailureException(ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorType, ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode, ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.formatErrorMessage, "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 获取websocket接口异常（Fail to getWebsocket, http response code: ${response.code()}")
+                throw BuildFailureException(ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorType,
+                    ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
+                    ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.formatErrorMessage,
+                    "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 获取websocket接口异常" +
+                        "（Fail to getWebsocket, http response code: ${response.code()}")
             }
             return responseContent
         }
@@ -443,7 +507,8 @@ class DevCloudClient {
         val request = Request.Builder()
             .url(url)
             .headers(Headers.of(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, staffName, smartProxyToken)))
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), ObjectMapper().writeValueAsString(body)))
+            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"),
+                ObjectMapper().writeValueAsString(body)))
             .build()
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
@@ -511,7 +576,8 @@ class DevCloudClient {
                         TaskResult(isFinish = true, success = true, msg = msg)
                     }
                     errorInfo.optInt("type") == 0 -> {
-                        TaskResult(isFinish = true, success = false, msg = msg, errorCodeEnum = ErrorCodeEnum.CREATE_VM_USER_ERROR)
+                        TaskResult(isFinish = true, success = false, msg = msg,
+                            errorCodeEnum = ErrorCodeEnum.CREATE_VM_USER_ERROR)
                     }
                     else -> {
                         TaskResult(isFinish = true, success = false, msg = msg)
@@ -558,7 +624,12 @@ class DevCloudClient {
     /**
      * first： 成功or失败
      */
-    fun waitContainerRunning(buildId: String, vmSeqId: String, userId: String, containerName: String): DevCloudContainerStatus {
+    fun waitContainerRunning(
+        buildId: String,
+        vmSeqId: String,
+        userId: String,
+        containerName: String
+    ): DevCloudContainerStatus {
         val startTime = System.currentTimeMillis()
         loop@ while (true) {
             if (System.currentTimeMillis() - startTime > 10 * 60 * 1000) {
@@ -644,7 +715,8 @@ class DevCloudClient {
             }
             logger.info("response: $responseContent")
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseContent)
-            // val volumeDetail: VolumeDetail = ObjectMapper.readValue(ObjectMapper.writeValueAsString(responseData["data"]))
+            // val volumeDetail: VolumeDetail =
+            //    ObjectMapper.readValue(ObjectMapper.writeValueAsString(responseData["data"]))
             val volumeDetail: VolumeDetail = JsonUtil.to(responseData["data"].toString(), VolumeDetail::class.java)
             return if (volumeDetail.defaultMountIp.isNullOrBlank()) {
                 VolumeDetail(
@@ -689,5 +761,9 @@ class DevCloudClient {
     }
 }
 
-data class TaskResult(val isFinish: Boolean, val success: Boolean, val msg: String, val errorCodeEnum: ErrorCodeEnum = ErrorCodeEnum.CREATE_VM_ERROR)
-
+data class TaskResult(
+    val isFinish: Boolean,
+    val success: Boolean,
+    val msg: String,
+    val errorCodeEnum: ErrorCodeEnum = ErrorCodeEnum.CREATE_VM_ERROR
+)

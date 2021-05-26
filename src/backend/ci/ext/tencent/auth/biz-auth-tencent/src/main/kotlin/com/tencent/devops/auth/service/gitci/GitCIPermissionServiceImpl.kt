@@ -3,7 +3,6 @@ package com.tencent.devops.auth.service.gitci
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.OauthForbiddenException
-import com.tencent.devops.common.api.exception.UnauthorizedException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.api.ServiceOauthResource
@@ -14,7 +13,7 @@ import java.util.concurrent.TimeUnit
 
 class GitCIPermissionServiceImpl @Autowired constructor(
     val client: Client
-): PermissionService {
+) : PermissionService {
 
     private val gitCIUserCache = CacheBuilder.newBuilder()
         .maximumSize(2000)
@@ -82,7 +81,7 @@ class GitCIPermissionServiceImpl @Autowired constructor(
         return emptyMap()
     }
 
-    private fun getGitUserByRtx(rtxUserId: String, projectCode: String) : String? {
+    private fun getGitUserByRtx(rtxUserId: String, projectCode: String): String? {
         return if (!gitCIUserCache.getIfPresent(rtxUserId).isNullOrEmpty()) {
             gitCIUserCache.getIfPresent(rtxUserId)!!
         } else {
@@ -92,7 +91,7 @@ class GitCIPermissionServiceImpl @Autowired constructor(
         }
     }
 
-    private fun checkListOrViewAction(action: String) : Boolean {
+    private fun checkListOrViewAction(action: String): Boolean {
         if (action.contains(AuthPermission.LIST.value) || action.contains(AuthPermission.VIEW.value)) {
             return true
         }

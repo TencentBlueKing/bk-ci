@@ -65,6 +65,7 @@ import java.util.Random
 import java.util.regex.Pattern
 import javax.ws.rs.core.Response
 
+@Suppress("ALL")
 object ScriptYmlUtils {
 
     private val logger = LoggerFactory.getLogger(ScriptYmlUtils::class.java)

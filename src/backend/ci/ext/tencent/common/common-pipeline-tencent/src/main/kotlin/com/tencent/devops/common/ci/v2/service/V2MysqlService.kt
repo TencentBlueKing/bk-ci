@@ -40,7 +40,12 @@ data class V2MysqlService(
         return type
     }
 
-    override fun getServiceInput(repoUrl: String, repoUsername: String, repoPwd: String, env: String): ServiceJobDevCloudInput {
+    override fun getServiceInput(
+        repoUrl: String,
+        repoUsername: String,
+        repoPwd: String,
+        env: String
+    ): ServiceJobDevCloudInput {
         val params = if (with.password.isNullOrBlank()) {
             "{\"env\":{\"MYSQL_ALLOW_EMPTY_PASSWORD\":\"yes\"}}"
         } else {

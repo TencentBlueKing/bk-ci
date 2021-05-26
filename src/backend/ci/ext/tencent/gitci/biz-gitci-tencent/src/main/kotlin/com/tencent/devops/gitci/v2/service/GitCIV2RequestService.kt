@@ -45,6 +45,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
+@Suppress("ALL")
 @Service
 class GitCIV2RequestService @Autowired constructor(
     private val client: Client,
@@ -131,7 +132,8 @@ class GitCIV2RequestService @Autowired constructor(
                         )
                     } catch (e: Exception) {
                         logger.error(
-                            "Load gitProjectId: ${it.gitProjectId}, eventId: ${it.eventId}, pipelineId: ${it.pipelineId} failed with error: ",
+                            "Load gitProjectId: ${it.gitProjectId}, eventId: ${it.eventId}, pipelineId:" +
+                                " ${it.pipelineId} failed with error: ",
                             e
                         )
                         return@nextBuild
@@ -240,7 +242,8 @@ class GitCIV2RequestService @Autowired constructor(
                         )
                     } catch (e: Exception) {
                         logger.error(
-                            "Load gitProjectId: ${it.gitProjectId}, eventId: ${it.eventId}, pipelineId: ${it.pipelineId} failed with error: ",
+                            "Load gitProjectId: ${it.gitProjectId}, eventId: ${it.eventId}, pipelineId: " +
+                                "${it.pipelineId} failed with error: ",
                             e
                         )
                         return@nextBuild
