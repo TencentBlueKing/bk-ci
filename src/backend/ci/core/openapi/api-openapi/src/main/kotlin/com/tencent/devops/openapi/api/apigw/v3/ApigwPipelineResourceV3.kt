@@ -259,7 +259,7 @@ interface ApigwPipelineResourceV3 {
 
     @ApiOperation("获取项目下pipelineId+自增id")
     @GET
-    @Path("/{projectCode}/pipelineIds/list")
+    @Path("/pipelineIds/list")
     fun getProjectPipelineIds(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -268,7 +268,7 @@ interface ApigwPipelineResourceV3 {
         @PathParam("apigwType")
         apigwType: String?,
         @ApiParam("项目Code", required = true)
-        @PathParam("projectCode")
-        projectCode: String
+        @PathParam("projectId")
+        projectId: String
     ): Result<List<PipelineIdInfo>>
 }

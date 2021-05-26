@@ -183,7 +183,7 @@ interface ApigwProjectResourceV3 {
     ): Result<Boolean?>
 
     @ApiOperation("关联iam项目")
-    @GET
+    @PUT
     @Path("/{projectCode}/relationProject")
     fun relationProject(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
