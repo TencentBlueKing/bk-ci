@@ -27,9 +27,6 @@
 
 package com.tencent.devops.common.job.api.pojo
 
-import org.springframework.stereotype.Component
-
-@Component
 data class EnvSet(
     val envHashIds: List<String>,
     val nodeHashIds: List<String>,

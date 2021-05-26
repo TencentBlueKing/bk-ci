@@ -32,9 +32,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.scm.ServiceScmResource
-import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.scm.enums.CodeSvnRegion
+import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
@@ -84,19 +84,25 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: IScm
         passPhrase: String?,
         token: String?,
         region: CodeSvnRegion?,
-        userName: String?
+        userName: String?,
+        search: String?,
+        full: Boolean?
     ): Result<List<String>> {
         logger.info("listBranches|(projectName=$projectName, url=$url, type=$type, region=$region, username=$userName)")
-        return Result(scmService.listBranches(
-            projectName = projectName,
-            url = url,
-            type = type,
-            privateKey = privateKey,
-            passPhrase = passPhrase,
-            token = token,
-            region = region,
-            userName = userName
-        ))
+        return Result(
+            scmService.listBranches(
+                projectName = projectName,
+                url = url,
+                type = type,
+                privateKey = privateKey,
+                passPhrase = passPhrase,
+                token = token,
+                region = region,
+                userName = userName,
+                search = search,
+                full = full ?: true
+            )
+        )
     }
 
     override fun listTags(
@@ -104,16 +110,22 @@ class ServiceScmResourceImpl @Autowired constructor(private val scmService: IScm
         url: String,
         type: ScmType,
         token: String,
-        userName: String
+        userName: String,
+        search: String?,
+        full: Boolean?
     ): Result<List<String>> {
         logger.info("listTags|projectName=$projectName, url=$url, type=$type, username=$userName")
-        return Result(scmService.listTags(
-            projectName = projectName,
-            url = url,
-            type = type,
-            token = token,
-            userName = userName
-        ))
+        return Result(
+            scmService.listTags(
+                projectName = projectName,
+                url = url,
+                type = type,
+                token = token,
+                userName = userName,
+                search = search,
+                full = full ?: true
+            )
+        )
     }
 
     override fun checkPrivateKeyAndToken(

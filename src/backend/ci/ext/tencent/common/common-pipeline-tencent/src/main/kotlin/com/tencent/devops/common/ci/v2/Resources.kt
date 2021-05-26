@@ -49,7 +49,5 @@ data class Repositories(
 
 data class ResCredentials(
     @JsonProperty("personal-access-token")
-    val personalAccessToken: String?,
-    @JsonProperty("use-actor-oauth")
-    val useActorOauth: Boolean?
+    val personalAccessToken: String?
 )

@@ -27,70 +27,47 @@
 
 package com.tencent.devops.gitci.resources.user
 
-import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.user.UserGitCIHistoryResource
 import com.tencent.devops.gitci.pojo.GitCIBuildBranch
 import com.tencent.devops.gitci.pojo.GitCIBuildHistory
-import com.tencent.devops.gitci.pojo.enums.GitEventEnum
-import com.tencent.devops.gitci.service.GitRepositoryConfService
-import com.tencent.devops.gitci.service.GitCIHistoryService
+import com.tencent.devops.gitci.pojo.v2.GitCIBuildHistorySearch
+import com.tencent.devops.gitci.utils.GitCommonUtils
+import com.tencent.devops.gitci.v2.service.GitCIV2HistoryService
 import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
 
 @RestResource
 class UserGitCIHistoryResourceImpl @Autowired constructor(
-    private val gitCIHistoryService: GitCIHistoryService,
-    private val repositoryConfService: GitRepositoryConfService
+    private val gitCIHistoryService: GitCIV2HistoryService
 ) : UserGitCIHistoryResource {
     override fun getHistoryBuildList(
         userId: String,
-        gitProjectId: Long,
-        page: Int?,
-        pageSize: Int?,
-        branch: String?,
-        sourceGitProjectId: Long?,
-        triggerUser: String?,
-        pipelineId: String?,
-        commitMsg: String?,
-        event: GitEventEnum?,
-        status: BuildStatus?
+        projectId: String,
+        search: GitCIBuildHistorySearch?
     ): Result<Page<GitCIBuildHistory>> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
-        if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
-            throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")
-        }
         return Result(
             gitCIHistoryService.getHistoryBuildList(
                 userId = userId,
                 gitProjectId = gitProjectId,
-                page = page, pageSize = pageSize,
-                branch = branch,
-                sourceGitProjectId = sourceGitProjectId,
-                triggerUser = triggerUser,
-                pipelineId = pipelineId,
-                commitMsg = commitMsg,
-                event = event,
-                status = status
+                search = search
             )
         )
     }
 
     override fun getAllBuildBranchList(
         userId: String,
-        gitProjectId: Long,
+        projectId: String,
         page: Int?,
         pageSize: Int?,
         keyword: String?
     ): Result<Page<GitCIBuildBranch>> {
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
-        if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
-            throw CustomException(Response.Status.FORBIDDEN, "项目无法开启工蜂CI，请联系蓝盾助手")
-        }
         return Result(
             gitCIHistoryService.getAllBuildBranchList(
                 userId = userId,

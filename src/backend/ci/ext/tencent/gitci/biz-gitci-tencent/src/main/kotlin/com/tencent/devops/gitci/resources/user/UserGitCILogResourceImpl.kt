@@ -33,15 +33,18 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.service.GitCILogService
 import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.gitci.api.user.UserGitCILogResource
+import com.tencent.devops.gitci.permission.GitCIV2PermissionService
+import com.tencent.devops.gitci.utils.GitCommonUtils
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
 @RestResource
 class UserGitCILogResourceImpl @Autowired constructor(
-    private val gitCILogService: GitCILogService
+    private val gitCILogService: GitCILogService,
+    private val permissionService: GitCIV2PermissionService
 ) : UserGitCILogResource {
     override fun getInitLogs(
-        gitProjectId: Long,
+        projectId: String,
         pipelineId: String,
         buildId: String,
         debug: Boolean?,
@@ -49,20 +52,23 @@ class UserGitCILogResourceImpl @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
-        checkParam(buildId, gitProjectId)
-        return Result(gitCILogService.getInitLogs(
-            gitProjectId = gitProjectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            debug = debug,
-            tag = tag,
-            jobId = jobId,
-            executeCount = executeCount
-        ))
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
+        checkParam(buildId)
+        return Result(
+            gitCILogService.getInitLogs(
+                gitProjectId = gitProjectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                debug = debug,
+                tag = tag,
+                jobId = jobId,
+                executeCount = executeCount
+            )
+        )
     }
 
     override fun getAfterLogs(
-        gitProjectId: Long,
+        projectId: String,
         pipelineId: String,
         buildId: String,
         start: Long,
@@ -71,28 +77,34 @@ class UserGitCILogResourceImpl @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
-        checkParam(buildId, gitProjectId)
-        return Result(gitCILogService.getAfterLogs(
-            gitProjectId = gitProjectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            start = start,
-            debug = debug,
-            tag = tag,
-            jobId = jobId,
-            executeCount = executeCount
-        ))
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
+        checkParam(buildId)
+        return Result(
+            gitCILogService.getAfterLogs(
+                gitProjectId = gitProjectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                start = start,
+                debug = debug,
+                tag = tag,
+                jobId = jobId,
+                executeCount = executeCount
+            )
+        )
     }
 
     override fun downloadLogs(
-        gitProjectId: Long,
+        userId: String,
+        projectId: String,
         pipelineId: String,
         buildId: String,
         tag: String?,
         jobId: String?,
         executeCount: Int?
     ): Response {
-        checkParam(buildId, gitProjectId)
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
+        checkParam(buildId)
+        permissionService.checkGitCIPermission(userId, projectId)
         return gitCILogService.downloadLogs(
             gitProjectId = gitProjectId,
             pipelineId = pipelineId,
@@ -103,7 +115,7 @@ class UserGitCILogResourceImpl @Autowired constructor(
         )
     }
 
-    private fun checkParam(buildId: String, gitProjectId: Long) {
+    private fun checkParam(buildId: String) {
         if (buildId.isBlank()) {
             throw ParamBlankException("Invalid buildId")
         }

@@ -1,7 +1,7 @@
 package com.tencent.bk.codecc.apiquery.enums
 
 enum class TaskQuerySource(
-    val beanNamePrefix : String
+    val beanNamePrefix: String
 ) {
 
     /**
@@ -28,5 +28,4 @@ enum class TaskQuerySource(
      * teg开源协同
      */
     TEG_CODE_STYLE("TEGCodeStyle")
-
 }

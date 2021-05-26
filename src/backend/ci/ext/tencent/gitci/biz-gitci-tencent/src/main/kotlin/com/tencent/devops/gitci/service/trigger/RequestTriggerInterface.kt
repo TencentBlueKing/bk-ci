@@ -50,7 +50,7 @@ interface RequestTriggerInterface<T> {
         gitToken: GitToken,
         forkGitToken: GitToken?,
         gitRequestEvent: GitRequestEvent,
-        event: GitEvent,
+        isMr: Boolean,
         originYaml: String?,
         filePath: String?,
         pipelineId: String?

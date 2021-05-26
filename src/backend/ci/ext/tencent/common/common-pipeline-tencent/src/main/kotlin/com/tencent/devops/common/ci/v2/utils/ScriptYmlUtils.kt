@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.ci.v2.utils
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.JsonNode
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.databind.exc.MismatchedInputException
@@ -47,16 +48,14 @@ import com.tencent.devops.common.ci.v2.YmlVersion
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
-import com.tencent.devops.common.ci.v2.Container
-import com.tencent.devops.common.ci.v2.Credentials
 import com.tencent.devops.common.ci.v2.Job
-import com.tencent.devops.common.ci.v2.JobRunsOnType
 import com.tencent.devops.common.ci.v2.Notices
 import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreStage
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
 import com.tencent.devops.common.ci.v2.RunsOn
 import com.tencent.devops.common.ci.v2.Service
+import com.tencent.devops.common.ci.v2.StageLabel
 import com.tencent.devops.common.ci.v2.Step
 import org.slf4j.LoggerFactory
 import org.yaml.snakeyaml.Yaml
@@ -103,6 +102,16 @@ object ScriptYmlUtils {
         return YamlUtil.getObjectMapper().readValue(obj, YmlVersion::class.java)
     }
 
+    fun isV2Version(yamlStr: String?): Boolean {
+        if (yamlStr == null) {
+            return false
+        }
+        val yaml = Yaml()
+        val obj = YamlUtil.toYaml(yaml.load(yamlStr) as Any)
+        val version = YamlUtil.getObjectMapper().readValue(obj, YmlVersion::class.java)
+        return version == null || version.version == "v2.0"
+    }
+
     fun parseVariableValue(value: String?, settingMap: Map<String, String?>): String? {
         if (value == null || value.isEmpty()) {
             return ""
@@ -115,6 +124,7 @@ object ScriptYmlUtils {
             val realValue = settingMap[matcher.group(1).trim()]
             newValue = newValue!!.replace(matcher.group(), realValue ?: "")
         }
+
         return newValue
     }
 
@@ -187,24 +197,48 @@ object ScriptYmlUtils {
         return sb.toString()
     }
 
-    fun checkYaml(preScriptBuildYaml: PreTemplateScriptBuildYaml) {
+    fun checkYaml(preScriptBuildYaml: PreTemplateScriptBuildYaml, yaml: String) {
+        checkVariable(preScriptBuildYaml)
         checkStage(preScriptBuildYaml)
+        checkExtend(yaml)
         checkNotice(preScriptBuildYaml.notices)
     }
 
-    fun checkStage(preScriptBuildYaml: PreTemplateScriptBuildYaml) {
-        if ((preScriptBuildYaml.stages != null && preScriptBuildYaml.jobs != null) ||
-            (preScriptBuildYaml.stages != null && preScriptBuildYaml.steps != null) ||
-            (preScriptBuildYaml.jobs != null && preScriptBuildYaml.steps != null) ||
-            (preScriptBuildYaml.extends != null && preScriptBuildYaml.stages != null) ||
-            (preScriptBuildYaml.extends != null && preScriptBuildYaml.jobs != null) ||
-            (preScriptBuildYaml.extends != null && preScriptBuildYaml.steps != null)
-        ) {
-            throw CustomException(Response.Status.BAD_REQUEST, "extend, stages, jobs, steps不能并列存在，只能存在其一!")
+    private fun checkVariable(preScriptBuildYaml: PreTemplateScriptBuildYaml) {
+        if (preScriptBuildYaml.variables == null) {
+            return
+        }
+
+        preScriptBuildYaml.variables.forEach {
+            val keyRegex = Regex("^[0-9a-zA-Z_]+$")
+            if (!keyRegex.matches(it.key)) {
+                throw CustomException(Response.Status.BAD_REQUEST, "变量名称必须是英文字母、数字或下划线(_)")
+            }
         }
     }
 
-    fun checkNotice(notices: List<Notices>?) {
+    private fun checkStage(preScriptBuildYaml: PreTemplateScriptBuildYaml) {
+        if ((preScriptBuildYaml.stages != null && preScriptBuildYaml.jobs != null) ||
+            (preScriptBuildYaml.stages != null && preScriptBuildYaml.steps != null) ||
+            (preScriptBuildYaml.jobs != null && preScriptBuildYaml.steps != null)
+        ) {
+            throw CustomException(Response.Status.BAD_REQUEST, "stages, jobs, steps不能并列存在，只能存在其一")
+        }
+    }
+
+    private fun checkExtend(yaml: String) {
+        val yamlMap = YamlUtil.getObjectMapper().readValue(yaml, object : TypeReference<Map<String, Any?>>() {})
+        if (yamlMap["extends"] == null) {
+            return
+        }
+        yamlMap.forEach { (t, _) ->
+            if (t != "on" && t != "extends" && t != "version") {
+                throw CustomException(Response.Status.BAD_REQUEST, "使用 extends 时顶级关键字只能有触发器 on")
+            }
+        }
+    }
+
+    private fun checkNotice(notices: List<Notices>?) {
         val types = setOf("email", "wework-message", "wework-chat")
         if (notices == null) {
             return
@@ -219,8 +253,7 @@ object ScriptYmlUtils {
     }
 
     private fun formatStage(preScriptBuildYaml: PreScriptBuildYaml): List<Stage> {
-
-        val stages = when {
+        return when {
             preScriptBuildYaml.steps != null -> {
                 listOf(
                     Stage(
@@ -250,8 +283,6 @@ object ScriptYmlUtils {
                 preStages2Stages(preScriptBuildYaml.stages as List<PreStage>)
             }
         }
-
-        return stages
     }
 
     private fun preJobs2Jobs(preJobs: Map<String, PreJob>?): List<Job> {
@@ -271,8 +302,6 @@ object ScriptYmlUtils {
                     )
                 )
             }
-
-
 
             jobs.add(
                 Job(
@@ -315,8 +344,8 @@ object ScriptYmlUtils {
 
         val stepList = mutableListOf<Step>()
         oldSteps.forEach {
-            if (it.uses == null && it.run == null) {
-                throw CustomException(Response.Status.BAD_REQUEST, "step必须包含use或run!")
+            if (it.uses == null && it.run == null && it.checkout == null) {
+                throw CustomException(Response.Status.BAD_REQUEST, "step必须包含uses或run或checkout!")
             }
 
             stepList.add(
@@ -350,7 +379,7 @@ object ScriptYmlUtils {
                 Stage(
                     id = it.id ?: randomString(stageNamespace),
                     name = it.name,
-                    label = it.label,
+                    label = formatStageLabel(it.label),
                     ifField = it.ifField,
                     fastKill = it.fastKill ?: false,
                     jobs = preJobs2Jobs(it.jobs as Map<String, PreJob>)
@@ -359,6 +388,34 @@ object ScriptYmlUtils {
         }
 
         return stageList
+    }
+
+    private fun formatStageLabel(labels: List<String>?): List<String> {
+        if (labels == null) {
+            return emptyList()
+        }
+
+        val newLabels = mutableListOf<String>()
+        labels.forEach {
+            val stageLabel = getStageLabel(it)
+            if (stageLabel != null) {
+                newLabels.add(stageLabel.id)
+            } else {
+                throw CustomException(Response.Status.BAD_REQUEST, "请核对Stage标签是否正确")
+            }
+        }
+
+        return newLabels
+    }
+
+    private fun getStageLabel(label: String): StageLabel? {
+        StageLabel.values().forEach {
+            if (it.value == label) {
+                return it
+            }
+        }
+
+        return null
     }
 
     /**
@@ -391,16 +448,18 @@ object ScriptYmlUtils {
         return ScriptBuildYaml(
             name = if (!preScriptBuildYaml.name.isNullOrBlank()) {
                 preScriptBuildYaml.name!!
-            } else { filePath.removeSuffix(".yml") },
+            } else {
+                filePath.removeSuffix(".yml")
+            },
             version = preScriptBuildYaml.version,
             triggerOn = thisTriggerOn,
             variables = preScriptBuildYaml.variables,
-            onFail = preScriptBuildYaml.onFail,
             extends = preScriptBuildYaml.extends,
             resource = preScriptBuildYaml.resources,
             notices = preScriptBuildYaml.notices,
             stages = stages,
-            finally = preStages2Stages(preScriptBuildYaml.finally)
+            finally = preStages2Stages(preScriptBuildYaml.finally),
+            label = preScriptBuildYaml.label ?: emptyList()
         )
     }
 

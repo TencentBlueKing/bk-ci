@@ -23,6 +23,14 @@ public interface NewDefectJudgeService
      */
     long getNewDefectJudgeTime(long taskId, String toolName, TaskDetailVO taskDetailVO);
 
+    /**
+     * 获取新告警判定时间
+     *
+     * @param taskId
+     * @return
+     */
+    long getNewDefectJudgeTime(long taskId, TaskDetailVO taskDetailVO);
+
 
     /**
      * 批量获取任务新告警判定时间

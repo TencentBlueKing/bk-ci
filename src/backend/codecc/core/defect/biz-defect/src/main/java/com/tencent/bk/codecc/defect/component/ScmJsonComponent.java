@@ -7,7 +7,7 @@ import com.tencent.bk.codecc.defect.vo.customtool.ScmBlameVO;
 import com.tencent.bk.codecc.schedule.api.ServiceFSRestResource;
 import com.tencent.bk.codecc.schedule.vo.FileIndexVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.util.JsonUtil;
@@ -17,7 +17,11 @@ import org.json.JSONArray;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -69,14 +73,14 @@ public class ScmJsonComponent
     public String index(String fileName, String type)
     {
         //获取风险系数值
-        CodeCCResult<FileIndexVO> codeCCResult = client.get(ServiceFSRestResource.class).index(fileName, type);
+        Result<FileIndexVO> result = client.get(ServiceFSRestResource.class).index(fileName, type);
 
-        if (codeCCResult.isNotOk() || null == codeCCResult.getData())
+        if (result.isNotOk() || null == result.getData())
         {
-            log.error("get file {} index fail: {}", fileName, codeCCResult);
+            log.error("get file {} index fail: {}", fileName, result);
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL, new String[]{fileName}, null);
         }
-        FileIndexVO fileIndex = codeCCResult.getData();
+        FileIndexVO fileIndex = result.getData();
         return String.format("%s/%s", fileIndex.getFileFolder(), fileIndex.getFileName());
     }
 
@@ -90,17 +94,17 @@ public class ScmJsonComponent
     public String getFileIndex(String fileName, String type)
     {
         //获取风险系数值
-        CodeCCResult<FileIndexVO> codeCCResult = client.get(ServiceFSRestResource.class).getFileIndex(fileName, type);
+        Result<FileIndexVO> result = client.get(ServiceFSRestResource.class).getFileIndex(fileName, type);
 
-        if (codeCCResult.isNotOk() || null == codeCCResult.getData())
+        if (result.isNotOk() || null == result.getData())
         {
-            log.error("get file {} index fail: {}", fileName, codeCCResult);
+            log.error("get file {} index fail: {}", fileName, result);
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL, new String[]{fileName}, null);
         }
-        FileIndexVO fileIndex = codeCCResult.getData();
+        FileIndexVO fileIndex = result.getData();
         if (StringUtils.isEmpty(fileIndex.getFileName()))
         {
-            log.error("file not found: {}, {}", fileName, codeCCResult);
+            log.error("file not found: {}, {}", fileName, result);
             return "";
         }
         return String.format("%s/%s", fileIndex.getFileFolder(), fileIndex.getFileName());
@@ -156,11 +160,11 @@ public class ScmJsonComponent
      */
     public JSONArray loadRepoInfo(String streamName, String toolName, String buildId)
     {
-        String scmJsonFileName = String.format("%s_%s_%s%s", streamName, toolName, buildId, REPO_INFO_FILE_POSTFIX);
+        String scmJsonFileName = String.format("%s_%s%s", streamName, buildId, REPO_INFO_FILE_POSTFIX);
         String fileIndex = getFileIndex(scmJsonFileName, SCM_JSON);
         if (StringUtils.isEmpty(fileIndex))
         {
-            scmJsonFileName = String.format("%s_%s%s", streamName, toolName, REPO_INFO_FILE_POSTFIX);
+            scmJsonFileName = String.format("%s_%s_%s%s", streamName, toolName, buildId, REPO_INFO_FILE_POSTFIX);
             fileIndex = getFileIndex(scmJsonFileName, SCM_JSON);
         }
         log.info(fileIndex);
@@ -340,8 +344,7 @@ public class ScmJsonComponent
             return "";
         }
         File file = new File(filePath);
-        if (!file.exists())
-        {
+        if (!file.exists()) {
             log.warn("文件[{}]不存在", filePath);
             return "";
         }
@@ -349,17 +352,15 @@ public class ScmJsonComponent
         //start read scm json
         String fileData = null;
         StringBuffer fileBuffer = new StringBuffer();
-        try(BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(file), Charsets.UTF_8)))
-        {
+        try (FileInputStream fileInputStream = new FileInputStream(file);
+             InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream, Charsets.UTF_8);
+             BufferedReader reader = new BufferedReader(inputStreamReader)) {
             String tempString;
-            while ((tempString = reader.readLine()) != null)
-            {
+            while ((tempString = reader.readLine()) != null) {
                 fileBuffer.append(tempString);
             }
             fileData = fileBuffer.toString();
-        }
-        catch (IOException e)
-        {
+        } catch (IOException e) {
             log.error("ERROR!!!", e);
         }
 

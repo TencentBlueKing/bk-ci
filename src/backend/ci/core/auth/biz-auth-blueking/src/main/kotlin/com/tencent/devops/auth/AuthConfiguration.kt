@@ -27,8 +27,11 @@
 
 package com.tencent.devops.auth
 
+import com.tencent.devops.auth.service.BkAuthPermissionProjectService
+import com.tencent.devops.auth.service.BkAuthPermissionService
 import com.tencent.devops.common.auth.service.IamEsbService
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
@@ -42,4 +45,12 @@ class AuthConfiguration {
 
     @Bean
     fun iamEsbService() = IamEsbService()
+
+    @Bean
+    @ConditionalOnMissingBean
+    fun permissionService() = BkAuthPermissionService()
+
+    @Bean
+    @ConditionalOnMissingBean
+    fun permissionProjectService() = BkAuthPermissionProjectService()
 }

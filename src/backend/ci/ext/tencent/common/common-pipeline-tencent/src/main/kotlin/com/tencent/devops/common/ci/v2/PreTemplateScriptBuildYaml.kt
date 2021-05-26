@@ -41,14 +41,12 @@ import com.fasterxml.jackson.annotation.JsonProperty
 data class PreTemplateScriptBuildYaml(
     val version: String?,
     val name: String?,
-    val label: String? = null,
+    val label: List<String>? = null,
     val triggerOn: PreTriggerOn?,
     val variables: Map<String, Any>?,
     val stages: List<Map<String, Any>>?,
     val jobs: Map<String, Any>? = null,
     val steps: List<Map<String, Any>>? = null,
-    @JsonProperty("on-fail")
-    val onFail: OnFail?,
     val extends: Extends?,
     val resources: Resources?,
     val notices: List<Notices>?,

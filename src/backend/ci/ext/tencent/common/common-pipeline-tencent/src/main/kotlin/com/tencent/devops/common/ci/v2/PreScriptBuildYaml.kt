@@ -41,14 +41,12 @@ import com.fasterxml.jackson.annotation.JsonProperty
 data class PreScriptBuildYaml(
     var version: String?,
     var name: String?,
-    var label: String? = null,
+    var label: List<String>? = null,
     var triggerOn: PreTriggerOn?,
     var variables: Map<String, Variable>? = null,
     var stages: List<PreStage>? = null,
     var jobs: Map<String, PreJob>? = null,
     var steps: List<Step>? = null,
-    @JsonProperty("on-fail")
-    var onFail: OnFail?,
     var extends: Extends?,
     var resources: Resources?,
     var notices: List<Notices>?,

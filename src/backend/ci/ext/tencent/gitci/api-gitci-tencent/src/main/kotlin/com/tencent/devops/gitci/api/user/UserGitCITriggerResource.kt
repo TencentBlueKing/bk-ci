@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.gitci.pojo.GitYamlString
-import com.tencent.devops.gitci.pojo.TriggerBuildReq
+import com.tencent.devops.gitci.pojo.V2TriggerBuildReq
 import com.tencent.devops.gitci.pojo.v2.V2BuildYaml
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -43,6 +43,7 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.GET
 import javax.ws.rs.PathParam
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_GIT_CI_TRIGGER"], description = "user-TriggerBuild页面")
@@ -62,7 +63,7 @@ interface UserGitCITriggerResource {
         @PathParam("pipelineId")
         pipelineId: String,
         @ApiParam("TriggerBuild请求", required = true)
-        triggerBuildReq: TriggerBuildReq
+        triggerBuildReq: V2TriggerBuildReq
     ): Result<Boolean>
 
     @ApiOperation("校验yaml格式")
@@ -87,16 +88,37 @@ interface UserGitCITriggerResource {
 
     @ApiOperation("根据BuildId查询yaml内容")
     @GET
-    @Path("/getYaml/{gitProjectId}/{buildId}")
+    @Path("/getYaml/{projectId}/{buildId}")
     fun getYamlByBuildId(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "工蜂项目ID", required = true)
-        @PathParam("gitProjectId")
-        gitProjectId: Long,
+        @ApiParam(value = "蓝盾项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
         @ApiParam(value = "构建ID", required = true)
         @PathParam("buildId")
         buildId: String
     ): Result<V2BuildYaml?>
+
+    @ApiOperation("根据PipelinId和分支查询Yaml内容")
+    @GET
+    @Path("/{projectId}/{pipelineId}/yaml")
+    fun getYamlByPipeline(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "蓝盾项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("分支名称", required = false)
+        @QueryParam("branchName")
+        branchName: String,
+        @ApiParam("COMMIT_ID", required = false)
+        @QueryParam("commitId")
+        commitId: String?
+    ): Result<String?>
 }

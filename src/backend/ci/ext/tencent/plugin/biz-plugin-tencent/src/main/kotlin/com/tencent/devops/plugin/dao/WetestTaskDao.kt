@@ -69,7 +69,7 @@ class WetestTaskDao {
                             LocalDateTime.now(),
                             LocalDateTime.now())
                     .returning(ID)
-                    .fetchOne()
+                    .fetchOne()!!
             return data.id
         }
     }
@@ -116,7 +116,7 @@ class WetestTaskDao {
     fun getCount(dslContext: DSLContext, projectId: String): Int {
         with(TPluginWetestTask.T_PLUGIN_WETEST_TASK) {
             return dslContext.selectCount().from(this).where(PROJECT_ID.eq(projectId))
-                    .fetchOne().get(0) as Int
+                    .fetchOne()!!.get(0) as Int
         }
     }
 

@@ -31,9 +31,7 @@ import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.ci.v2.utils.YamlCommonUtils
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.gitci.dao.GitCIServicesConfDao
-import com.tencent.devops.gitci.dao.GitCISettingDao
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
@@ -46,6 +44,7 @@ import com.tencent.devops.gitci.service.GitRepositoryConfService
 import com.tencent.devops.gitci.service.trigger.RequestTriggerInterface
 import com.tencent.devops.gitci.v2.listener.V2GitCIRequestDispatcher
 import com.tencent.devops.gitci.v2.listener.V2GitCIRequestTriggerEvent
+import com.tencent.devops.gitci.v2.service.GitCIEventSaveService
 import com.tencent.devops.gitci.v2.service.ScmService
 import com.tencent.devops.gitci.v2.template.YamlTemplate
 import com.tencent.devops.gitci.v2.template.pojo.TemplateGraph
@@ -59,15 +58,13 @@ import org.springframework.stereotype.Component
 
 @Component
 class V2RequestTrigger @Autowired constructor(
-    private val client: Client,
     private val dslContext: DSLContext,
     private val scmService: ScmService,
-    private val gitCISettingDao: GitCISettingDao,
-    private val gitServicesConfDao: GitCIServicesConfDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
-    private val repositoryConfService: GitRepositoryConfService,
-    private val rabbitTemplate: RabbitTemplate
+    private val gitBasicSettingService: GitRepositoryConfService,
+    private val rabbitTemplate: RabbitTemplate,
+    private val gitCIEventSaveService: GitCIEventSaveService
 ) : RequestTriggerInterface<YamlObjects> {
 
     companion object {
@@ -93,7 +90,7 @@ class V2RequestTrigger @Autowired constructor(
             gitToken = gitToken,
             forkGitToken = forkGitToken,
             gitRequestEvent = gitRequestEvent,
-            event = event,
+            isMr = (event is GitMergeRequestEvent),
             originYaml = originYaml,
             filePath = filePath,
             pipelineId = gitProjectPipeline.pipelineId
@@ -107,20 +104,24 @@ class V2RequestTrigger @Autowired constructor(
             if (!yamlObject.name.isNullOrBlank()) yamlObject.name!! else filePath.removeSuffix(".yml")
 
         if (isMatch(event, yamlObjects)) {
-            logger.info("Matcher is true, display the event, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
-                "eventId: ${gitRequestEvent.id}, dispatched pipeline: $gitProjectPipeline")
+            logger.info(
+                "Matcher is true, display the event, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
+                        "eventId: ${gitRequestEvent.id}, dispatched pipeline: $gitProjectPipeline"
+            )
+            val parsedYaml = YamlCommonUtils.toYamlNotNull(yamlObjects.preYaml)
             val gitBuildId = gitRequestEventBuildDao.save(
                 dslContext = dslContext,
                 eventId = gitRequestEvent.id!!,
                 originYaml = originYaml!!,
-                parsedYaml = YamlCommonUtils.toYamlNotNull(yamlObjects.preYaml),
+                parsedYaml = parsedYaml,
                 normalizedYaml = normalizedYaml,
                 gitProjectId = gitRequestEvent.gitProjectId,
                 branch = gitRequestEvent.branch,
                 objectKind = gitRequestEvent.objectKind,
                 description = gitRequestEvent.commitMsg,
                 triggerUser = gitRequestEvent.userId,
-                sourceGitProjectId = gitRequestEvent.sourceGitProjectId
+                sourceGitProjectId = gitRequestEvent.sourceGitProjectId,
+                buildStatus = BuildStatus.RUNNING
             )
             V2GitCIRequestDispatcher.dispatch(
                 rabbitTemplate,
@@ -128,16 +129,17 @@ class V2RequestTrigger @Autowired constructor(
                     pipeline = gitProjectPipeline,
                     event = gitRequestEvent,
                     yaml = yamlObject,
+                    parsedYaml = parsedYaml,
                     originYaml = originYaml,
                     normalizedYaml = normalizedYaml,
                     gitBuildId = gitBuildId
                 )
             )
-            repositoryConfService.updateGitCISetting(gitRequestEvent.gitProjectId)
+            gitBasicSettingService.updateGitCISetting(gitRequestEvent.gitProjectId)
         } else {
             logger.warn("Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}")
-            gitRequestEventNotBuildDao.save(
-                dslContext = dslContext,
+            gitCIEventSaveService.saveNotBuildEvent(
+                userId = gitRequestEvent.userId,
                 eventId = gitRequestEvent.id!!,
                 pipelineId = if (gitProjectPipeline.pipelineId.isBlank()) null else gitProjectPipeline.pipelineId,
                 filePath = gitProjectPipeline.filePath,
@@ -161,7 +163,7 @@ class V2RequestTrigger @Autowired constructor(
         gitToken: GitToken,
         forkGitToken: GitToken?,
         gitRequestEvent: GitRequestEvent,
-        event: GitEvent,
+        isMr: Boolean,
         originYaml: String?,
         filePath: String?,
         pipelineId: String?
@@ -169,7 +171,7 @@ class V2RequestTrigger @Autowired constructor(
         if (originYaml.isNullOrBlank()) {
             return null
         }
-        val isFork = (event is GitMergeRequestEvent) && gitRequestEvent.sourceGitProjectId != null &&
+        val isFork = (isMr) && gitRequestEvent.sourceGitProjectId != null &&
                 gitRequestEvent.sourceGitProjectId != gitRequestEvent.gitProjectId
         val yamlObjects = try {
             createCIBuildYaml(
@@ -185,8 +187,8 @@ class V2RequestTrigger @Autowired constructor(
             )
         } catch (e: Throwable) {
             logger.error("git ci yaml is invalid", e)
-            gitRequestEventNotBuildDao.save(
-                dslContext = dslContext,
+            gitCIEventSaveService.saveNotBuildEvent(
+                userId = gitRequestEvent.userId,
                 eventId = gitRequestEvent.id!!,
                 pipelineId = pipelineId,
                 filePath = filePath,
@@ -219,7 +221,7 @@ class V2RequestTrigger @Autowired constructor(
 
         val preTemplateYamlObject = YamlUtil.getObjectMapper().readValue(yaml, PreTemplateScriptBuildYaml::class.java)
         // 检查Yaml语法的格式问题
-        ScriptYmlUtils.checkYaml(preTemplateYamlObject)
+        ScriptYmlUtils.checkYaml(preTemplateYamlObject, yaml)
         // 替换yaml文件中的模板引用
         val preYamlObject = try {
             YamlTemplate(
@@ -227,8 +229,13 @@ class V2RequestTrigger @Autowired constructor(
                 filePath = filePath,
                 triggerProjectId = scmService.getProjectId(isFork, gitRequestEvent),
                 triggerUserId = gitRequestEvent.userId,
+                sourceProjectId = gitRequestEvent.gitProjectId,
                 triggerRef = gitRequestEvent.branch,
-                triggerToken = gitToken.accessToken,
+                triggerToken = if (isFork) {
+                    forkGitToken!!.accessToken
+                } else {
+                    gitToken.accessToken
+                },
                 repo = null,
                 repoTemplateGraph = TemplateGraph()
             ).replace()
@@ -239,8 +246,8 @@ class V2RequestTrigger @Autowired constructor(
             } else {
                 e.message.toString()
             }
-            gitRequestEventNotBuildDao.save(
-                dslContext = dslContext,
+            gitCIEventSaveService.saveNotBuildEvent(
+                userId = gitRequestEvent.userId,
                 eventId = gitRequestEvent.id!!,
                 pipelineId = pipelineId,
                 filePath = filePath,

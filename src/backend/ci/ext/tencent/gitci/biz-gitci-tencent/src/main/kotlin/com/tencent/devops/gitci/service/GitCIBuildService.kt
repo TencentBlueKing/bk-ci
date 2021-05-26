@@ -72,11 +72,11 @@ import com.tencent.devops.common.ci.yaml.Job
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.enums.CodePullStrategy
 import com.tencent.devops.common.pipeline.enums.GitPullModeType
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
-import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.gitci.pojo.BuildConfig
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.pojo.enums.GitCICommitCheckState
@@ -87,6 +87,7 @@ import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
 import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.utils.GitCIParameterUtils
 import com.tencent.devops.gitci.utils.GitCIPipelineUtils
+import com.tencent.devops.gitci.v2.service.GitCIEventSaveService
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildId
@@ -123,12 +124,20 @@ class GitCIBuildService @Autowired constructor(
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitCISettingDao: GitCISettingDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
-    private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val gitServicesConfDao: GitCIServicesConfDao,
     private val buildConfig: BuildConfig,
     private val objectMapper: ObjectMapper,
-    private val gitCIParameterUtils: GitCIParameterUtils
-) : BaseBuildService<CIBuildYaml>(client, scmClient, dslContext, redisOperation, gitPipelineResourceDao, gitRequestEventBuildDao, gitRequestEventNotBuildDao) {
+    private val gitCIParameterUtils: GitCIParameterUtils,
+    gitCIEventSaveService: GitCIEventSaveService
+) : BaseBuildService<CIBuildYaml>(
+    client,
+    scmClient,
+    dslContext,
+    redisOperation,
+    gitPipelineResourceDao,
+    gitRequestEventBuildDao,
+    gitCIEventSaveService
+) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCIBuildService::class.java)
         const val BK_REPO_GIT_WEBHOOK_MR_IID = "BK_CI_REPO_GIT_WEBHOOK_MR_IID"
@@ -136,11 +145,17 @@ class GitCIBuildService @Autowired constructor(
 
     private val channelCode = ChannelCode.GIT
 
-    override fun gitStartBuild(pipeline: GitProjectPipeline, event: GitRequestEvent, yaml: CIBuildYaml, gitBuildId: Long): BuildId? {
+    override fun gitStartBuild(
+        pipeline: GitProjectPipeline,
+        event: GitRequestEvent,
+        yaml: CIBuildYaml,
+        gitBuildId: Long
+    ): BuildId? {
         logger.info("Git request gitBuildId:$gitBuildId, pipeline:$pipeline, event: $event, yaml: $yaml")
 
         // create or refresh pipeline
-        val gitProjectConf = gitCISettingDao.getSetting(dslContext, event.gitProjectId) ?: throw OperationException("git ci projectCode not exist")
+        val gitProjectConf = gitCISettingDao.getSetting(dslContext, event.gitProjectId)
+            ?: throw OperationException("git ci projectCode not exist")
 
         val model = createPipelineModel(event, gitProjectConf, yaml)
 
@@ -259,7 +274,11 @@ class GitCIBuildService @Autowired constructor(
         ).data!!
     }
 
-    private fun createPipelineModel(event: GitRequestEvent, gitProjectConf: GitRepositoryConf, yaml: CIBuildYaml): Model {
+    private fun createPipelineModel(
+        event: GitRequestEvent,
+        gitProjectConf: GitRepositoryConf,
+        yaml: CIBuildYaml
+    ): Model {
         // 先安装插件市场的插件
         installMarketAtom(gitProjectConf, event.userId, GitCiCodeRepoTask.atomCode)
         installMarketAtom(gitProjectConf, event.userId, DockerRunDevCloudTask.atomCode)
@@ -430,7 +449,7 @@ class GitCIBuildService @Autowired constructor(
         job.job.steps.forEach {
             val element = it.covertToElement(getCiBuildConf(buildConfig))
             elementList.add(element)
-            if (element is MarketBuildAtomElement) {
+            if (element is MarketBuildAtomElement || element is MarketBuildLessAtomElement) {
                 logger.info("install market atom: ${element.getAtomCode()}")
                 installMarketAtom(gitProjectConf, userId, element.getAtomCode())
             }

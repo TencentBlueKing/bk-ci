@@ -74,17 +74,30 @@ open class GitApi {
         private const val OPERATION_MR_REVIEW = "查询项目合并请求"
     }
 
-    fun listBranches(host: String, token: String, projectName: String): List<String> {
+    /**
+     * @param full 是否全部获取分支,默认全量拉
+     */
+    fun listBranches(
+        host: String,
+        token: String,
+        projectName: String,
+        search: String? = null,
+        full: Boolean = true
+    ): List<String> {
         logger.info("Start to list branches of host $host by project $projectName")
         var page = 1
         val result = mutableListOf<GitBranch>()
         while (true) {
+            var searchReq = "page=$page&per_page=100&order_by=updated&sort=desc"
+            if (!search.isNullOrBlank()) {
+                searchReq = "$searchReq&search=$search"
+            }
             val request =
-                get(host, token, "projects/${urlEncode(projectName)}/repository/branches", "page=$page&per_page=100")
+                get(host, token, "projects/${urlEncode(projectName)}/repository/branches", searchReq)
             page++
             val pageResult = JsonUtil.getObjectMapper().readValue<List<GitBranch>>(getBody(OPERATION_BRANCH, request))
             result.addAll(pageResult)
-            if (pageResult.size < 100) {
+            if (pageResult.size < 100 || !full) {
                 if (result.size >= BRANCH_LIMIT) {
                     logger.error("there are ${result.size} branches in project $projectName")
                 }
@@ -93,16 +106,26 @@ open class GitApi {
         }
     }
 
-    fun listTags(host: String, token: String, projectName: String): List<String> {
+    fun listTags(
+        host: String,
+        token: String,
+        projectName: String,
+        search: String? = null,
+        full: Boolean = true
+    ): List<String> {
         var page = 1
         val result = mutableListOf<GitTag>()
         while (true) {
+            var searchReq = "page=$page&per_page=100&order_by=updated&sort=desc"
+            if (!search.isNullOrBlank()) {
+                searchReq = "$searchReq&search=$search"
+            }
             val request =
-                get(host, token, "projects/${urlEncode(projectName)}/repository/tags", "page=$page&per_page=100")
+                get(host, token, "projects/${urlEncode(projectName)}/repository/tags", searchReq)
             page++
             val pageResult: List<GitTag> = JsonUtil.getObjectMapper().readValue(getBody(OPERATION_TAG, request))
             result.addAll(pageResult)
-            if (pageResult.size < 100) {
+            if (pageResult.size < 100 || !full) {
                 if (result.size >= TAG_LIMIT) logger.error("there are ${result.size} tags in project $projectName")
                 return result.sortedByDescending { it.commit.authoredDate }.map { it.name }
             }

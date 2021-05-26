@@ -36,6 +36,7 @@ import com.tencent.devops.common.ci.v2.ServiceWith
 import com.tencent.devops.common.ci.v2.Step
 import com.tencent.devops.common.ci.v2.Strategy
 import com.tencent.devops.common.ci.v2.Variable
+import com.tencent.devops.gitci.v2.template.pojo.enums.TemplateType
 
 object YamlObjects {
 
@@ -53,14 +54,14 @@ object YamlObjects {
             ifFiled = step["if"]?.toString(),
             uses = step["uses"]?.toString(),
             with = if (step["with"] == null) {
-                mapOf()
+                null
             } else {
                 transValue<Map<String, Any>>(fromPath, "with", step["with"])
             },
             timeoutMinutes = getNullValue("timeout-minutes", step)?.toInt(),
             continueOnError = getNullValue("continue-on-error", step)?.toBoolean(),
-            retryTimes = step["retry-times"]?.toString(),
-            env = step["env"]?.toString(),
+            retryTimes = getNullValue("retry-times", step)?.toInt(),
+            env = step["env"],
             run = step["run"]?.toString(),
             checkout = step["checkout"]?.toString()
         )
@@ -116,18 +117,42 @@ object YamlObjects {
         return try {
             YamlUtil.getObjectMapper().readValue(template, object : TypeReference<T>() {})
         } catch (e: Exception) {
-            throw RuntimeException("File： $path format error！ ${e.message}")
+            throw RuntimeException("文件：$path 格式错误 ${e.message}")
+        }
+    }
+
+    fun checkTemplate(path: String, yaml: String, type: TemplateType) {
+        val yamlMap = getObjectFromYaml<Map<String, Any?>>(path, yaml)
+        if (type == TemplateType.EXTEND) {
+            // extend后不能包含on
+            if (yamlMap.contains("on")) {
+                error(YamlTemplate.TEMPLATE_FORMAT_ERROR.format("文件 $path 错误, extends模板中不支持定义触发器"))
+            }
+            // extend后不能接extend模板
+            if (yamlMap.contains("extends")) {
+                error(YamlTemplate.TEMPLATE_FORMAT_ERROR.format("文件 $path 错误, extends模板中不能嵌套extend关键字使用"))
+            }
+        } else {
+            yamlMap.forEach { (key, _) ->
+                if (key != "parameters" && key != "resources" && key != type.content) {
+                    error(
+                        YamlTemplate.TEMPLATE_FORMAT_ERROR.format(
+                            "文件: $path 中含有 $key 错误，${type.text} 模板中只能包含 parameters, resources 与 ${type.content} 关键字"
+                        )
+                    )
+                }
+            }
         }
     }
 
     private fun <T> transValue(file: String, type: String, value: Any?): T {
         if (value == null) {
-            throw RuntimeException("%s template format error in file: %s".format(type, file))
+            throw RuntimeException(YamlTemplate.TRANS_AS_ERROR.format(file, type))
         }
         return try {
             value as T
         } catch (e: Exception) {
-            throw RuntimeException("%s template format error in file: %s".format(type, file))
+            throw RuntimeException(YamlTemplate.TRANS_AS_ERROR.format(file, type))
         }
     }
 
@@ -138,7 +163,7 @@ object YamlObjects {
             return try {
                 map[key] as T
             } catch (e: Exception) {
-                throw RuntimeException("%s template format error in file: %s".format(type, file))
+                throw RuntimeException(YamlTemplate.TRANS_AS_ERROR.format(file, type))
             }
         }
     }
@@ -153,9 +178,13 @@ object YamlObjects {
 
     fun getNotNullValue(key: String, mapName: String, map: Map<String, Any?>): String {
         return if (map[key] == null) {
-            throw RuntimeException("$mapName need $key")
+            throw RuntimeException("$mapName 需要定义 $key")
         } else {
             map[key].toString()
         }
+    }
+
+    private fun error(content: String) {
+        throw RuntimeException(content)
     }
 }

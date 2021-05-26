@@ -13,12 +13,15 @@
 package com.tencent.bk.codecc.task.model;
 
 import com.tencent.codecc.common.db.CommonEntity;
+import com.tencent.devops.common.constant.ComConstants;
 import lombok.Data;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
+import org.springframework.data.mongodb.core.index.Indexed;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -53,6 +56,7 @@ public class CustomProjEntity extends CommonEntity
      * 流水线id
      */
     @Field("pipeline_id")
+    @Indexed(background = true)
     private String pipelineId;
 
     /**
@@ -78,6 +82,7 @@ public class CustomProjEntity extends CommonEntity
      * 个性化项目来源
      */
     @Field("custom_proj_source")
+    @Indexed(background = true)
     private String customProjSource;
 
     /**
@@ -96,6 +101,7 @@ public class CustomProjEntity extends CommonEntity
      * 工蜂项目id
      */
     @Field("gongfeng_project_id")
+    @Indexed(background = true)
     private Integer gongfengProjectId;
 
     /**
@@ -103,5 +109,35 @@ public class CustomProjEntity extends CommonEntity
      */
     @Field("logic_repo")
     private String logicRepo;
+
+    /**
+     * 是否是oteam项目,并且配置了ci.yml
+     */
+    @Field("oteam_ci_proj")
+    private Boolean oTeamCiProj;
+
+    /**
+     * 规则集范围
+     */
+    @Field("checker_set_range")
+    private List<OpenSourceCheckerSet> checkerSetRange;
+
+    /**
+     * 流水线运行时参数
+     */
+    @Field("runtime_param")
+    private Map<String, String> runtimeParam;
+
+    /**
+     * codecc路由信息
+     */
+    @Field("dispatch_route")
+    private ComConstants.CodeCCDispatchRoute dispatchRoute;
+
+    /**
+     * 流水线编排相关信息
+     */
+    @Field("pipeline_model_info")
+    private CustomProjVersionEntity pipelineModelInfo;
 
 }

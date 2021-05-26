@@ -41,12 +41,10 @@ import com.fasterxml.jackson.annotation.JsonProperty
 data class ScriptBuildYaml(
     val version: String?,
     val name: String?,
-    val label: String? = null,
+    val label: List<String> = emptyList(),
     val triggerOn: TriggerOn?,
     val variables: Map<String, Variable>?,
     val stages: List<Stage>,
-    @JsonProperty("on-fail")
-    val onFail: OnFail?,
     val extends: Extends?,
     val resource: Resources?,
     val notices: List<Notices>?,

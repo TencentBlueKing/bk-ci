@@ -34,5 +34,6 @@ enum class EnvEnum(
     TEST_ENV("test"),
     GRAY_ENV("gray"),
     PROD_ENV("prod"),
-    AUTO_ENV("auto")
+    AUTO_ENV("auto"),
+    GITCI_PROD_ENV("gitci-prod")
 }

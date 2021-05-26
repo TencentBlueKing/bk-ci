@@ -27,6 +27,8 @@
 
 package com.tencent.devops.gitci.v2.listener
 
+import com.tencent.devops.gitci.pojo.enums.TriggerReason
+import com.tencent.devops.gitci.v2.service.GitCIEventSaveService
 import com.tencent.devops.gitci.v2.service.TriggerBuildService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -34,7 +36,8 @@ import org.springframework.stereotype.Service
 
 @Service
 class V2GitCIRequestTriggerListener @Autowired constructor(
-    private val triggerBuildService: TriggerBuildService
+    private val triggerBuildService: TriggerBuildService,
+    private val gitCIEventSaveService: GitCIEventSaveService
 ) {
 
     fun listenGitCIRequestTriggerEvent(v2GitCIRequestTriggerEvent: V2GitCIRequestTriggerEvent) {
@@ -47,6 +50,20 @@ class V2GitCIRequestTriggerListener @Autowired constructor(
             )
         } catch (e: Throwable) {
             logger.error("Fail to start the git ci build(${v2GitCIRequestTriggerEvent.event})", e)
+            with(v2GitCIRequestTriggerEvent) {
+                gitCIEventSaveService.saveNotBuildEvent(
+                    userId = event.userId,
+                    eventId = event.id!!,
+                    originYaml = originYaml,
+                    parsedYaml = parsedYaml,
+                    normalizedYaml = normalizedYaml,
+                    reason = TriggerReason.GIT_CI_START_BUILD_FAILED.name,
+                    reasonDetail = TriggerReason.GIT_CI_START_BUILD_FAILED.detail.format(e.message),
+                    pipelineId = pipeline.pipelineId,
+                    filePath = pipeline.filePath,
+                    gitProjectId = event.gitProjectId
+                )
+            }
         }
     }
 

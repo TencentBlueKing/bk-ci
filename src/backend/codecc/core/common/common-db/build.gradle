@@ -1,5 +1,3 @@
-apply plugin: "maven"
-
 dependencies {
     compile("org.springframework.boot:spring-boot-starter-data-mongodb")
     compile "org.projectlombok:lombok"

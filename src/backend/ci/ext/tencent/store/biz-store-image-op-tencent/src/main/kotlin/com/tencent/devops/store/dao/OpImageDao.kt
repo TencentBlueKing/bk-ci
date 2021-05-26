@@ -145,7 +145,7 @@ class OpImageDao @Autowired constructor() {
             baseStep = baseStep.join(tImageLabelRel).on(tImage.ID.eq(tImageLabelRel.IMAGE_ID))
             conditions.add(tImageLabelRel.LABEL_ID.`in`(labelIdList))
         }
-        return baseStep.where(conditions).fetchOne(0, Int::class.java)
+        return baseStep.where(conditions).fetchOne(0, Int::class.java)!!
     }
 
     fun listOpImages(
@@ -296,7 +296,7 @@ class OpImageDao @Autowired constructor() {
                     ImageStatusEnum.TESTING.status.toByte(),
                     ImageStatusEnum.AUDITING.status.toByte()
                 )
-                conditions.add(t.field(Constants.KEY_IMAGE_STATUS).`in`(imageStatusList))
+                conditions.add(t.field(Constants.KEY_IMAGE_STATUS)!!.`in`(imageStatusList))
             } else {
                 val imageStatusList = listOf(
                     ImageStatusEnum.AUDIT_REJECT.status.toByte(),
@@ -305,7 +305,7 @@ class OpImageDao @Autowired constructor() {
                     ImageStatusEnum.UNDERCARRIAGING.status.toByte(),
                     ImageStatusEnum.UNDERCARRIAGED.status.toByte()
                 )
-                conditions.add(t.field(KEY_IMAGE_STATUS).`in`(imageStatusList))
+                conditions.add(t.field(KEY_IMAGE_STATUS)!!.`in`(imageStatusList))
             }
         }
         return conditions
@@ -353,7 +353,7 @@ class OpImageDao @Autowired constructor() {
         }
         return dslContext.selectCount().from(tImage)
             .where(conditions)
-            .fetchOne(0, Int::class.java)
+            .fetchOne(0, Int::class.java)!!
     }
 
     fun getImagesByRepoInfo(dslContext: DSLContext, repoUrl: String?, repoName: String?, tag: String?): Result<TImageRecord>? {

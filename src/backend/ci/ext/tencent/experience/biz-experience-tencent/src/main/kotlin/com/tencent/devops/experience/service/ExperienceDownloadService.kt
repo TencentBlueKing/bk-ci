@@ -137,8 +137,8 @@ class ExperienceDownloadService @Autowired constructor(
         return getExternalDownloadUrl(userId, experienceId)
     }
 
-    fun getExternalDownloadUrl(userId: String, experienceId: Long): DownloadUrl {
-        val canExperience = experienceBaseService.userCanExperience(userId, experienceId)
+    fun getExternalDownloadUrl(userId: String, experienceId: Long, isOuter: Boolean = false): DownloadUrl {
+        val canExperience = experienceBaseService.userCanExperience(userId, experienceId, isOuter)
         if (!canExperience) {
             throw ErrorCodeException(
                 statusCode = 403,
@@ -328,7 +328,8 @@ class ExperienceDownloadService @Autowired constructor(
                     expireTime = LocalDateTime.now(),
                     online = true,
                     offset = 0,
-                    limit = experienceIdsByBundleId.size
+                    limit = experienceIdsByBundleId.size,
+                    experienceName = null
                 ).asSequence().map {
                     DownloadRecordVO(
                         experienceHashId = HashUtil.encodeLongId(it.id),

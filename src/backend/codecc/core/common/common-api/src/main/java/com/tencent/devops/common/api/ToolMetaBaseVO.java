@@ -32,6 +32,7 @@ import lombok.Data;
 import org.jboss.logging.Field;
 
 import javax.validation.constraints.Pattern;
+import java.util.List;
 
 /**
  * 工具完整信息对象
@@ -105,4 +106,10 @@ public class ToolMetaBaseVO extends CommonVO
      */
     @ApiModelProperty("工具镜像版本")
     private String toolImageRevision;
+
+    /**
+     * 工具版本列表，T-测试版本，G-灰度版本，P-正式发布版本
+     */
+    @ApiModelProperty("工具镜像版本")
+    private List<ToolVersionVO> toolVersions;
 }

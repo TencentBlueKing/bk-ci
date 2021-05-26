@@ -35,7 +35,6 @@ import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.ApiPriority
 import com.tencent.devops.worker.common.api.engine.EngineBuildSDKApi
-import com.tencent.devops.worker.common.env.BuildEnv
 import okhttp3.MediaType
 import okhttp3.RequestBody
 
@@ -43,7 +42,7 @@ import okhttp3.RequestBody
 open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKApi {
 
     override fun getRequestUrl(path: String, retryCount: Int): String {
-        return "/ms/process/$path?retryCount=$retryCount?buildId=${BuildEnv.getBuildId()}"
+        return "/ms/process/$path?retryCount=$retryCount"
     }
 
     override fun setStarted(retryCount: Int): Result<BuildVariables> {

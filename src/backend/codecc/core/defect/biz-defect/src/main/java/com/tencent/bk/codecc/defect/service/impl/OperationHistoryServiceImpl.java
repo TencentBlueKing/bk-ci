@@ -87,8 +87,7 @@ public class OperationHistoryServiceImpl implements OperationHistoryService
         List<OperationHistoryEntity> operationHistoryEntityList =
                 operationHistoryRepository.findByTaskIdAndFuncIdInOrderByTimeDesc(taskId, funcId);
         //根据工具过滤
-        if (StringUtils.isNotBlank(toolName))
-        {
+        if (StringUtils.isNotBlank(toolName)) {
             operationHistoryEntityList = operationHistoryEntityList.stream()
                     .filter(operationHistoryEntity ->
                             toolName.equalsIgnoreCase(operationHistoryEntity.getToolName())
@@ -96,31 +95,28 @@ public class OperationHistoryServiceImpl implements OperationHistoryService
                     .collect(Collectors.toList());
         }
 
-        if (CollectionUtils.isEmpty(operationHistoryEntityList))
-        {
+        if (CollectionUtils.isEmpty(operationHistoryEntityList)) {
             return new ArrayList<>();
         }
         return operationHistoryEntityList.stream()
-                .map(operationHistoryEntity ->
-                {
-                    OperationHistoryVO operationHistoryVO = new OperationHistoryVO();
-                    operationHistoryVO.setTaskId(operationHistoryEntity.getTaskId());
-                    operationHistoryVO.setFuncId(operationHistoryEntity.getFuncId());
-                    operationHistoryVO.setOperType(operationHistoryEntity.getOperType());
-                    operationHistoryVO.setToolName(operationHistoryEntity.getToolName());
-                    operationHistoryVO.setOperator(operationHistoryEntity.getOperator());
-                    operationHistoryVO.setOperTypeName(globalMessageUtil.getMessageByLocale(
-                            operTypeDetailMap.get(operationHistoryEntity.getOperType()),
-                            locale
-                    ));
-                    operationHistoryVO.setOperMsg(
-                            MessageFormat.format(globalMessageUtil.getMessageByLocale(
-                                    operMsgDetail.get(String.format("%s%s", PREFIX_OPERATION_HISTORY_MSG, operationHistoryEntity.getFuncId())),
-                                    locale), (Object[]) operationHistoryEntity.getParamArray()));
-                    operationHistoryVO.setTime(operationHistoryEntity.getTime());
-                    return operationHistoryVO;
-                }).
-                        collect(Collectors.toList());
+            .map(operationHistoryEntity -> {
+                OperationHistoryVO operationHistoryVO = new OperationHistoryVO();
+                operationHistoryVO.setTaskId(operationHistoryEntity.getTaskId());
+                operationHistoryVO.setFuncId(operationHistoryEntity.getFuncId());
+                operationHistoryVO.setOperType(operationHistoryEntity.getOperType());
+                operationHistoryVO.setToolName(operationHistoryEntity.getToolName());
+                operationHistoryVO.setOperator(operationHistoryEntity.getOperator());
+                operationHistoryVO.setOperTypeName(globalMessageUtil.getMessageByLocale(
+                    operTypeDetailMap.get(operationHistoryEntity.getOperType()),
+                    locale
+                ));
+                String str = String.format("%s%s", PREFIX_OPERATION_HISTORY_MSG, operationHistoryEntity.getFuncId());
+                operationHistoryVO.setOperMsg(
+                    MessageFormat.format(globalMessageUtil.getMessageByLocale(operMsgDetail.get(str), locale),
+                        (Object[]) operationHistoryEntity.getParamArray()));
+                operationHistoryVO.setTime(operationHistoryEntity.getTime());
+                return operationHistoryVO;
+            }).collect(Collectors.toList());
     }
 
 

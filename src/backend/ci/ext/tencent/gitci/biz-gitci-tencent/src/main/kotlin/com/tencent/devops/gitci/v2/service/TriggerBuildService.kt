@@ -29,7 +29,9 @@ package com.tencent.devops.gitci.v2.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.ci.CiBuildConfig
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
@@ -73,6 +75,7 @@ import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
+import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.agent.AgentType
@@ -82,48 +85,51 @@ import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.gitci.dao.GitCIServicesConfDao
-import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.gitci.pojo.BuildConfig
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
-import com.tencent.devops.gitci.pojo.GitRepositoryConf
 import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitPushEvent
 import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
-import com.tencent.devops.gitci.service.BaseBuildService
+import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.gitci.utils.GitCIParameterUtils
 import com.tencent.devops.gitci.utils.GitCIPipelineUtils
 import com.tencent.devops.gitci.utils.GitCommonUtils
+import com.tencent.devops.gitci.v2.common.CommonVariables.CI_ACTOR
+import com.tencent.devops.gitci.v2.common.CommonVariables.CI_BASE_BRANCH
+import com.tencent.devops.gitci.v2.common.CommonVariables.CI_BUILD_URL
+import com.tencent.devops.gitci.v2.common.CommonVariables.CI_COMMIT_MESSAGE
+import com.tencent.devops.gitci.v2.common.CommonVariables.CI_EVENT
+import com.tencent.devops.gitci.v2.common.CommonVariables.CI_EVENT_CONTENT
+import com.tencent.devops.gitci.v2.common.CommonVariables.CI_HEAD_BRANCH
+import com.tencent.devops.gitci.v2.common.CommonVariables.CI_PIPELINE_NAME
+import com.tencent.devops.gitci.v2.common.CommonVariables.CI_REF
+import com.tencent.devops.gitci.v2.common.CommonVariables.CI_REPO
+import com.tencent.devops.gitci.v2.common.CommonVariables.CI_REPO_GROUP
+import com.tencent.devops.gitci.v2.common.CommonVariables.CI_REPO_NAME
+import com.tencent.devops.gitci.v2.common.CommonVariables.CI_SHA
+import com.tencent.devops.gitci.v2.common.CommonVariables.CI_SHA_SHORT
+import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
+import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.api.user.UserPipelineGroupResource
 import com.tencent.devops.process.pojo.BuildId
+import com.tencent.devops.process.pojo.classify.PipelineGroup
+import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
+import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.Subscription
 import com.tencent.devops.scm.api.ServiceGitResource
-import com.tencent.devops.scm.pojo.BK_CI_REF
-import com.tencent.devops.scm.pojo.BK_CI_REPOSITORY
-import com.tencent.devops.scm.pojo.BK_CI_REPO_OWNER
 import com.tencent.devops.scm.pojo.BK_CI_RUN
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_COMMIT_ID
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_COMMIT_ID_SHORT
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_COMMIT_MESSAGE
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_BRANCH
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_ID
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_SOURCE_URL
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_TARGET_URL
-import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_URL
-import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_NAME
-import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_URL
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import javax.ws.rs.core.Response
 
 @Service
 class TriggerBuildService @Autowired constructor(
@@ -131,15 +137,20 @@ class TriggerBuildService @Autowired constructor(
     private val dslContext: DSLContext,
     private val buildConfig: BuildConfig,
     private val objectMapper: ObjectMapper,
-    private val gitCISettingDao: GitCISettingDao,
+    private val gitCIBasicSettingDao: GitCIBasicSettingDao,
+    private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitCIParameterUtils: GitCIParameterUtils,
     private val gitServicesConfDao: GitCIServicesConfDao,
     private val scmClient: ScmClient,
-    redisOperation: RedisOperation,
-    gitPipelineResourceDao: GitPipelineResourceDao,
-    gitRequestEventBuildDao: GitRequestEventBuildDao,
-    gitRequestEventNotBuildDao: GitRequestEventNotBuildDao
-) : BaseBuildService<ScriptBuildYaml>(client, scmClient, dslContext, redisOperation, gitPipelineResourceDao, gitRequestEventBuildDao, gitRequestEventNotBuildDao) {
+    private val redisOperation: RedisOperation,
+    private val gitRequestEventBuildDao: GitRequestEventBuildDao,
+    private val oauthService: OauthService,
+    private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
+    private val gitCIEventSaveService: GitCIEventSaveService
+) : V2BaseBuildService<ScriptBuildYaml>(
+    client, scmClient, dslContext, redisOperation, gitPipelineResourceDao,
+    gitRequestEventBuildDao, gitRequestEventNotBuildDao, gitCIEventSaveService
+) {
     private val channelCode = ChannelCode.GIT
 
     companion object {
@@ -147,6 +158,48 @@ class TriggerBuildService @Autowired constructor(
 
         const val BK_REPO_GIT_WEBHOOK_MR_IID = "BK_CI_REPO_GIT_WEBHOOK_MR_IID"
         const val VARIABLE_PREFIX = "variables."
+    }
+
+    fun retry(userId: String, gitProjectId: Long, pipelineId: String, buildId: String, taskId: String?): BuildId {
+        logger.info("retry pipeline, gitProjectId: $gitProjectId, pipelineId: $pipelineId, buildId: $buildId")
+        val pipeline =
+            gitPipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId) ?: throw CustomException(
+                Response.Status.FORBIDDEN,
+                "流水线不存在或已删除，如有疑问请联系蓝盾助手"
+            )
+        val gitEventBuild = gitRequestEventBuildDao.getByBuildId(dslContext, buildId)
+            ?: throw CustomException(Response.Status.NOT_FOUND, "构建任务不存在，无法重试")
+        val newBuildId = client.get(ServiceBuildResource::class).retry(
+            userId = userId,
+            projectId = GitCIPipelineUtils.genGitProjectCode(pipeline.gitProjectId),
+            pipelineId = pipeline.pipelineId,
+            buildId = buildId,
+            taskId = taskId,
+            channelCode = channelCode
+        ).data!!
+
+        gitRequestEventBuildDao.retryUpdate(
+            dslContext = dslContext,
+            gitBuildId = gitEventBuild.id
+        )
+        return newBuildId
+    }
+
+    fun manualShutdown(userId: String, gitProjectId: Long, pipelineId: String, buildId: String): Boolean {
+        logger.info("manualShutdown, gitProjectId: $gitProjectId, pipelineId: $pipelineId, buildId: $buildId")
+        val pipeline =
+            gitPipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId) ?: throw CustomException(
+                Response.Status.FORBIDDEN,
+                "流水线不存在或已删除，如有疑问请联系蓝盾助手"
+            )
+
+        return client.get(ServiceBuildResource::class).manualShutdown(
+            userId = userId,
+            projectId = GitCIPipelineUtils.genGitProjectCode(pipeline.gitProjectId),
+            pipelineId = pipeline.pipelineId,
+            buildId = buildId,
+            channelCode = channelCode
+        ).data!!
     }
 
     override fun gitStartBuild(
@@ -158,12 +211,13 @@ class TriggerBuildService @Autowired constructor(
         logger.info("Git request gitBuildId:$gitBuildId, pipeline:$pipeline, event: $event, yaml: $yaml")
 
         // create or refresh pipeline
-        val gitProjectConf = gitCISettingDao.getSetting(dslContext, event.gitProjectId) ?: throw OperationException("git ci projectCode not exist")
+        val gitBasicSetting = gitCIBasicSettingDao.getSetting(dslContext, event.gitProjectId)
+            ?: throw OperationException("git ci projectCode not exist")
 
-        val model = createPipelineModel(event, gitProjectConf, yaml)
+        val model = createPipelineModel(event, gitBasicSetting, yaml)
         logger.info("Git request gitBuildId:$gitBuildId, pipeline:$pipeline, model: $model")
 
-        return startBuild(pipeline, event, gitProjectConf, model, gitBuildId)
+        return startBuild(pipeline, event, gitBasicSetting, model, gitBuildId)
     }
 
     private fun createPipelineSetting(
@@ -182,52 +236,151 @@ class TriggerBuildService @Autowired constructor(
 
     private fun createPipelineModel(
         event: GitRequestEvent,
-        gitProjectConf: GitRepositoryConf,
+        gitBasicSetting: GitCIBasicSetting,
         yaml: ScriptBuildYaml
     ): Model {
+        // 流水线插件标签设置
+        val labelList = preparePipelineLabels(event, gitBasicSetting, yaml)
+
         // 预安装插件市场的插件
-        installMarketAtom(gitProjectConf, event.userId, GitCiCodeRepoTask.atomCode)
-        installMarketAtom(gitProjectConf, event.userId, DockerRunDevCloudTask.atomCode)
-        installMarketAtom(gitProjectConf, event.userId, ServiceJobDevCloudTask.atomCode)
+        installMarketAtom(gitBasicSetting, event.userId, GitCiCodeRepoTask.atomCode)
+        installMarketAtom(gitBasicSetting, event.userId, DockerRunDevCloudTask.atomCode)
+        installMarketAtom(gitBasicSetting, event.userId, ServiceJobDevCloudTask.atomCode)
 
         val stageList = mutableListOf<Stage>()
 
-        // 第一个stage，触发类
+        // 第一个stage，触发类，可能会包含定时触发
+        val triggerElementList = mutableListOf<Element>()
         val manualTriggerElement = ManualTriggerElement("手动触发", "T-1-1-1")
-        val params = createPipelineParams(yaml, gitProjectConf, event)
-        val triggerContainer =
-            TriggerContainer("0", "构建触发", listOf(manualTriggerElement), null, null, null, null, params)
+        triggerElementList.add(manualTriggerElement)
+
+        if (yaml.triggerOn?.schedules != null &&
+            yaml.triggerOn?.schedules!!.cron != null
+        ) {
+            triggerElementList.add(
+                TimerTriggerElement(
+                    id = "T-1-1-2",
+                    name = "定时触发",
+                    advanceExpression = listOf(
+                        yaml.triggerOn!!.schedules!!.cron!!
+                    )
+                )
+            )
+        }
+
+        val params = createPipelineParams(yaml, gitBasicSetting, event)
+        val triggerContainer = TriggerContainer(
+            id = "0",
+            name = "构建触发",
+            elements = triggerElementList,
+            status = null,
+            startEpoch = null,
+            systemElapsed = null,
+            elementElapsed = null,
+            params = params
+        )
+
         val stage1 = Stage(listOf(triggerContainer), "stage-1")
         stageList.add(stage1)
 
         // 其他的stage
         yaml.stages.forEachIndexed { stageIndex, stage ->
-            stageList.add(createStage(stage, event, gitProjectConf))
+            stageList.add(createStage(stage, event, gitBasicSetting))
         }
 
         yaml.finally?.forEach {
-            stageList.add(createStage(it, event, gitProjectConf, true))
+            stageList.add(createStage(it, event, gitBasicSetting, true))
         }
 
         return Model(
-            name = GitCIPipelineUtils.genBKPipelineName(gitProjectConf.gitProjectId),
+            name = GitCIPipelineUtils.genBKPipelineName(gitBasicSetting.gitProjectId),
             desc = "",
             stages = stageList,
-            labels = emptyList(),
+            labels = labelList,
             instanceFromTemplate = false,
             pipelineCreator = event.userId
         )
     }
 
+    private fun preparePipelineLabels(
+        event: GitRequestEvent,
+        gitBasicSetting: GitCIBasicSetting,
+        yaml: ScriptBuildYaml
+    ): List<String> {
+        val gitCIPipelineLabels = mutableListOf<String>()
+
+        try {
+            // 获取当前项目下存在的标签组
+            val pipelineGroups = client.get(UserPipelineGroupResource::class)
+                .getGroups(event.userId, gitBasicSetting.projectCode!!)
+                .data
+
+            yaml.label.forEach {
+                // 要设置的标签组不存在，新建标签组和标签（同名）
+                if (!checkPipelineLabel(it, pipelineGroups)) {
+                    client.get(UserPipelineGroupResource::class).addGroup(
+                        event.userId, PipelineGroupCreate(
+                            projectId = gitBasicSetting.projectCode!!,
+                            name = it
+                        )
+                    )
+
+                    val pipelineGroup = getPipelineGroup(it, event.userId, gitBasicSetting.projectCode!!)
+                    if (pipelineGroup != null) {
+                        client.get(UserPipelineGroupResource::class).addLabel(
+                            event.userId, PipelineLabelCreate(
+                                groupId = pipelineGroup.id,
+                                name = it
+                            )
+                        )
+                    }
+                }
+
+                // 保证标签已创建成功后，取label加密ID
+                val pipelineGroup = getPipelineGroup(it, event.userId, gitBasicSetting.projectCode!!)
+                gitCIPipelineLabels.add(pipelineGroup!!.labels[0].id)
+            }
+        } catch (e: Exception) {
+            logger.error("${event.userId}|${gitBasicSetting.projectCode!!} preparePipelineLabels error.", e)
+        }
+
+        return gitCIPipelineLabels
+    }
+
+    private fun checkPipelineLabel(gitciPipelineLabel: String, pipelineGroups: List<PipelineGroup>?): Boolean {
+        pipelineGroups?.forEach { pipelineGroup ->
+            pipelineGroup.labels.forEach {
+                if (it.name == gitciPipelineLabel) {
+                    return true
+                }
+            }
+        }
+
+        return false
+    }
+
+    private fun getPipelineGroup(labelGroupName: String, userId: String, projectId: String): PipelineGroup? {
+        val pipelineGroups = client.get(UserPipelineGroupResource::class)
+            .getGroups(userId, projectId)
+            .data
+        pipelineGroups?.forEach {
+            if (it.name == labelGroupName) {
+                return it
+            }
+        }
+
+        return null
+    }
+
     private fun createStage(
         stage: com.tencent.devops.common.ci.v2.Stage,
         event: GitRequestEvent,
-        gitProjectConf: GitRepositoryConf,
+        gitBasicSetting: GitCIBasicSetting,
         finalStage: Boolean = false
     ): Stage {
         val containerList = mutableListOf<Container>()
         stage.jobs.forEachIndexed { jobIndex, job ->
-            val elementList = makeElementList(job, gitProjectConf, event.userId)
+            val elementList = makeElementList(job, gitBasicSetting, event.userId)
             if (job.runsOn.poolName == JobRunsOnType.AGENT_LESS.type) {
                 addNormalContainer(job, elementList, containerList, jobIndex)
             } else {
@@ -246,7 +399,7 @@ class TriggerBuildService @Autowired constructor(
 
         return Stage(
             id = stage.id,
-            tag = listOf(stage.label),
+            tag = stage.label,
             fastKill = stage.fastKill,
             stageControlOption = stageControlOption,
             containers = containerList,
@@ -285,7 +438,7 @@ class TriggerBuildService @Autowired constructor(
         } else VMBaseOS.valueOf(agentInfo.os)*/
 
         val vmContainer = VMBuildContainer(
-            id = job.id,
+            jobId = job.id,
             name = "Job_${jobIndex + 1} ${job.name ?: ""}",
             elements = elementList,
             status = null,
@@ -314,8 +467,8 @@ class TriggerBuildService @Autowired constructor(
         if (job.runsOn.poolName.startsWith("macos")) {
             return MacOSDispatchType(
                 macOSEvn = "",
-                systemVersion = "",
-                xcodeVersion = ""
+                systemVersion = "10.15",
+                xcodeVersion = "12.4"
             )
         }
 
@@ -392,7 +545,7 @@ class TriggerBuildService @Autowired constructor(
 
     private fun makeElementList(
         job: Job,
-        gitProjectConf: GitRepositoryConf,
+        gitBasicSetting: GitCIBasicSetting,
         userId: String
     ): MutableList<Element> {
         // 解析service
@@ -405,7 +558,7 @@ class TriggerBuildService @Autowired constructor(
                 continueWhenFailed = step.continueOnError ?: false,
                 timeout = step.timeoutMinutes?.toLong(),
                 retryWhenFailed = step.retryTimes != null,
-                retryCount = step.retryTimes?.toInt() ?: 0,
+                retryCount = step.retryTimes ?: 0,
                 enableCustomEnv = step.env != null,
                 customEnv = emptyList(),
                 runCondition = RunCondition.CUSTOM_CONDITION_MATCH,
@@ -426,15 +579,22 @@ class TriggerBuildService @Autowired constructor(
                 }
                 step.checkout != null -> {
                     // checkout插件装配
-                    val inputMap = mutableMapOf<String, Any>()
-                    inputMap.putAll(step.with!!)
+                    val inputMap = mutableMapOf<String, Any?>()
+                    if (!step.with.isNullOrEmpty()) {
+                        inputMap.putAll(step.with!!)
+                    }
                     // 拉取本地工程代码
                     if (step.checkout == "self") {
-                        inputMap["accessToken"] = scmClient.getAccessToken(gitProjectConf.gitProjectId)
-                        inputMap["repositoryUrl"] = gitProjectConf.gitHttpUrl
+                        inputMap["accessToken"] =
+                            oauthService.getOauthTokenNotNull(gitBasicSetting.enableUserId).accessToken
+                        inputMap["repositoryUrl"] = gitBasicSetting.gitHttpUrl
+                        inputMap["authType"] = "ACCESS_TOKEN"
                     } else {
                         inputMap["repositoryUrl"] = step.checkout!!
                     }
+
+                    // 拼装插件固定参数
+                    inputMap["repositoryType"] = "URL"
 
                     val data = mutableMapOf<String, Any>()
                     data["input"] = inputMap
@@ -443,14 +603,14 @@ class TriggerBuildService @Autowired constructor(
                         name = step.name ?: "拉代码插件",
                         id = step.id,
                         atomCode = "checkout",
-                        version = "1.latest",
+                        version = "1.*",
                         data = data,
                         additionalOptions = additionalOptions
                     )
                 }
                 else -> {
                     val data = mutableMapOf<String, Any>()
-                    data["input"] = step.with!!
+                    data["input"] = step.with ?: Any()
                     MarketBuildAtomElement(
                         name = step.name ?: "插件市场第三方构建环境类插件",
                         id = step.id,
@@ -466,7 +626,7 @@ class TriggerBuildService @Autowired constructor(
 
             if (element is MarketBuildAtomElement) {
                 logger.info("install market atom: ${element.getAtomCode()}")
-                installMarketAtom(gitProjectConf, userId, element.getAtomCode())
+                installMarketAtom(gitBasicSetting, userId, element.getAtomCode())
             }
         }
 
@@ -481,7 +641,8 @@ class TriggerBuildService @Autowired constructor(
             job.services!!.forEach {
                 val (imageName, imageTag) = ScriptYmlUtils.parseServiceImage(it.image)
 
-                val record = gitServicesConfDao.get(dslContext, imageName, imageTag) ?: throw RuntimeException("Git CI没有此镜像版本记录. ${it.image}")
+                val record = gitServicesConfDao.get(dslContext, imageName, imageTag)
+                    ?: throw RuntimeException("Git CI没有此镜像版本记录. ${it.image}")
                 if (!record.enable) {
                     throw RuntimeException("镜像版本不可用")
                 }
@@ -516,14 +677,14 @@ class TriggerBuildService @Autowired constructor(
         return elementList
     }
 
-    private fun createGitCodeElement(event: GitRequestEvent, gitProjectConf: GitRepositoryConf): Element {
-        val gitToken = client.getScm(ServiceGitResource::class).getToken(gitProjectConf.gitProjectId).data!!
+    private fun createGitCodeElement(event: GitRequestEvent, gitBasicSetting: GitCIBasicSetting): Element {
+        val gitToken = client.getScm(ServiceGitResource::class).getToken(gitBasicSetting.gitProjectId).data!!
         logger.info("get token from scm success, gitToken: $gitToken")
         val gitCiCodeRepoInput = when (event.objectKind) {
             OBJECT_KIND_PUSH -> {
                 GitCiCodeRepoInput(
-                    repositoryName = gitProjectConf.name,
-                    repositoryUrl = gitProjectConf.gitHttpUrl,
+                    repositoryName = gitBasicSetting.name,
+                    repositoryUrl = gitBasicSetting.gitHttpUrl,
                     oauthToken = gitToken.accessToken,
                     localPath = null,
                     strategy = CodePullStrategy.REVERT_UPDATE,
@@ -533,8 +694,8 @@ class TriggerBuildService @Autowired constructor(
             }
             OBJECT_KIND_TAG_PUSH -> {
                 GitCiCodeRepoInput(
-                    repositoryName = gitProjectConf.name,
-                    repositoryUrl = gitProjectConf.gitHttpUrl,
+                    repositoryName = gitBasicSetting.name,
+                    repositoryUrl = gitBasicSetting.gitHttpUrl,
                     oauthToken = gitToken.accessToken,
                     localPath = null,
                     strategy = CodePullStrategy.REVERT_UPDATE,
@@ -546,8 +707,8 @@ class TriggerBuildService @Autowired constructor(
                 // MR时fork库的源仓库URL会不同，需要单独拿出来处理
                 val gitEvent = objectMapper.readValue<GitEvent>(event.event) as GitMergeRequestEvent
                 GitCiCodeRepoInput(
-                    repositoryName = gitProjectConf.name,
-                    repositoryUrl = gitProjectConf.gitHttpUrl,
+                    repositoryName = gitBasicSetting.name,
+                    repositoryUrl = gitBasicSetting.gitHttpUrl,
                     oauthToken = gitToken.accessToken,
                     localPath = null,
                     strategy = CodePullStrategy.REVERT_UPDATE,
@@ -560,15 +721,15 @@ class TriggerBuildService @Autowired constructor(
                     hookSourceUrl = if (event.sourceGitProjectId != null && event.sourceGitProjectId != event.gitProjectId) {
                         gitEvent.object_attributes.source.http_url
                     } else {
-                        gitProjectConf.gitHttpUrl
+                        gitBasicSetting.gitHttpUrl
                     },
-                    hookTargetUrl = gitProjectConf.gitHttpUrl
+                    hookTargetUrl = gitBasicSetting.gitHttpUrl
                 )
             }
             OBJECT_KIND_MANUAL -> {
                 GitCiCodeRepoInput(
-                    repositoryName = gitProjectConf.name,
-                    repositoryUrl = gitProjectConf.gitHttpUrl,
+                    repositoryName = gitBasicSetting.name,
+                    repositoryUrl = gitBasicSetting.gitHttpUrl,
                     oauthToken = gitToken.accessToken,
                     localPath = null,
                     strategy = CodePullStrategy.REVERT_UPDATE,
@@ -594,45 +755,28 @@ class TriggerBuildService @Autowired constructor(
 
     private fun createPipelineParams(
         yaml: ScriptBuildYaml,
-        gitProjectConf: GitRepositoryConf,
+        gitBasicSetting: GitCIBasicSetting,
         event: GitRequestEvent
     ): MutableList<BuildFormProperty> {
         val result = mutableListOf<BuildFormProperty>()
-        gitProjectConf.env?.forEach {
-            val value = gitCIParameterUtils.encrypt(it.value)
-            result.add(
-                BuildFormProperty(
-                    id = it.name,
-                    required = false,
-                    type = BuildFormPropertyType.PASSWORD,
-                    defaultValue = value,
-                    options = null,
-                    desc = null,
-                    repoHashId = null,
-                    relativePath = null,
-                    scmType = null,
-                    containerType = null,
-                    glob = null,
-                    properties = null
-                )
-            )
-        }
 
         val startParams = mutableMapOf<String, String>()
 
         // 通用参数
+        startParams[CI_PIPELINE_NAME] = yaml.name ?: ""
+        startParams[CI_BUILD_URL] = "https://git-ci.woa.com/" // FIXME
         startParams[BK_CI_RUN] = "true"
-        startParams[BK_CI_REPO_OWNER] = GitCommonUtils.getRepoOwner(gitProjectConf.gitHttpUrl)
-        startParams[BK_CI_REPOSITORY] =
-            GitCommonUtils.getRepoOwner(gitProjectConf.gitHttpUrl) + "/" + gitProjectConf.name
-        startParams[BK_REPO_GIT_WEBHOOK_EVENT_TYPE] = event.objectKind
-        startParams[BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_BRANCH] = event.branch
-        startParams[BK_REPO_GIT_WEBHOOK_COMMIT_ID] = event.commitId
-        startParams[BK_REPO_WEBHOOK_REPO_NAME] = gitProjectConf.name
-        startParams[BK_REPO_WEBHOOK_REPO_URL] = gitProjectConf.url
-        startParams[BK_REPO_GIT_WEBHOOK_COMMIT_MESSAGE] = event.commitMsg.toString()
-        if (!event.commitId.isBlank() && event.commitId.length >= 8)
-            startParams[BK_REPO_GIT_WEBHOOK_COMMIT_ID_SHORT] = event.commitId.substring(0, 8)
+        startParams[CI_ACTOR] = event.userId
+        startParams[CI_REPO] = GitCommonUtils.getRepoOwner(gitBasicSetting.gitHttpUrl) + "/" + gitBasicSetting.name
+        startParams[CI_REPO_NAME] = gitBasicSetting.name
+        startParams[CI_REPO_GROUP] = ""
+        startParams[CI_EVENT] = event.event
+        startParams[CI_EVENT_CONTENT] = JsonUtil.toJson(event)
+        startParams[CI_COMMIT_MESSAGE] = event.commitMsg ?: ""
+        startParams[CI_SHA] = event.commitId
+        if (!event.commitId.isBlank() && event.commitId.length >= 8) {
+            startParams[CI_SHA_SHORT] = event.commitId.substring(0, 8)
+        }
 
         // 写入WEBHOOK触发环境变量
         val originEvent = try {
@@ -642,54 +786,37 @@ class TriggerBuildService @Autowired constructor(
             logger.warn("Fail to parse the git web hook commit event, errMsg: ${e.message}")
         }
 
-        when (originEvent) {
+        val gitProjectName = when (originEvent) {
             is GitPushEvent -> {
-                startParams[BK_CI_REF] = originEvent.ref
-                addContext(yaml, originEvent, startParams, event)
-
-//                startParams[BK_REPO_GIT_WEBHOOK_PUSH_BEFORE_COMMIT] = originEvent.before
-//                startParams[BK_REPO_GIT_WEBHOOK_PUSH_AFTER_COMMIT] = originEvent.after
-//                startParams[BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT] = originEvent.total_commits_count.toString()
-//                startParams[BK_REPO_GIT_WEBHOOK_PUSH_OPERATION_KIND] = originEvent.operation_kind
+                startParams[CI_REF] = originEvent.ref
+                GitUtils.getProjectName(originEvent.repository.git_http_url)
             }
             is GitTagPushEvent -> {
-                startParams[BK_CI_REF] = originEvent.ref
-                addContext(yaml, originEvent, startParams, event)
-
-//                startParams[BK_REPO_GIT_WEBHOOK_TAG_NAME] = event.branch
-//                startParams[BK_REPO_GIT_WEBHOOK_TAG_OPERATION] = originEvent.operation_kind ?: ""
-//                startParams[BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT] = originEvent.total_commits_count.toString()
-//                startParams[BK_REPO_GIT_WEBHOOK_TAG_USERNAME] = event.userId
-//                startParams[BK_REPO_GIT_WEBHOOK_TAG_CREATE_FROM] = originEvent.create_from.toString()
+                startParams[CI_REF] = originEvent.ref
+                GitUtils.getProjectName(originEvent.repository.git_http_url)
             }
             is GitMergeRequestEvent -> {
-//                startParams[BK_REPO_GIT_WEBHOOK_MR_ACTION] = originEvent.object_attributes.action
-//                startParams[BK_REPO_GIT_WEBHOOK_MR_AUTHOR] = originEvent.user.username
-                startParams[BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH] = originEvent.object_attributes.target_branch
-                startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH] = originEvent.object_attributes.source_branch
-                startParams[BK_REPO_GIT_WEBHOOK_MR_TARGET_URL] = originEvent.object_attributes.target.http_url
-                startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_URL] = originEvent.object_attributes.source.http_url
-//                startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIME] = originEvent.object_attributes.created_at
-//                startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIMESTAMP] =
-//                    DateTimeUtil.zoneDateToTimestamp(originEvent.object_attributes.created_at).toString()
-//                startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME] = originEvent.object_attributes.updated_at
-//                startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP] =
-//                    DateTimeUtil.zoneDateToTimestamp(originEvent.object_attributes.updated_at).toString()
-                startParams[BK_REPO_GIT_WEBHOOK_MR_ID] = originEvent.object_attributes.id.toString()
-//                startParams[BK_REPO_GIT_WEBHOOK_MR_TITLE] = originEvent.object_attributes.title
-                startParams[BK_REPO_GIT_WEBHOOK_MR_URL] = originEvent.object_attributes.url
-//                startParams[BK_REPO_GIT_WEBHOOK_MR_NUMBER] = originEvent.object_attributes.id.toString()
-//                startParams[BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION] = originEvent.object_attributes.description
-//                startParams[BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE] = originEvent.object_attributes.assignee_id.toString()
-                startParams[BK_REPO_GIT_WEBHOOK_MR_IID] = originEvent.object_attributes.iid.toString()
-
-                addContext(yaml, originEvent, startParams, event)
+                startParams[CI_HEAD_BRANCH] = originEvent.object_attributes.target_branch
+                startParams[CI_BASE_BRANCH] = originEvent.object_attributes.source_branch
+                GitUtils.getProjectName(originEvent.object_attributes.source.http_url)
+            }
+            else -> {
+                ""
             }
         }
 
+        startParams[CI_REPO] = gitProjectName
+        val repoName = gitProjectName.split("/")
+        startParams[CI_REPO_NAME] = if (repoName.size >= 2) {
+            gitProjectName.removePrefix(repoName[0] + "/")
+        } else {
+            gitProjectName
+        }
+        startParams[CI_REPO_GROUP] = repoName[0]
+
         // 用户自定义变量
         // startParams.putAll(yaml.variables ?: mapOf())
-        putVariables2StartParams(yaml, gitProjectConf, startParams)
+        putVariables2StartParams(yaml, gitBasicSetting, startParams)
 
         startParams.forEach {
             result.add(
@@ -724,7 +851,7 @@ class TriggerBuildService @Autowired constructor(
         startParams["ci.actor"] = event.userId
         startParams["ci.build_url"] = "https://git-ci.woa.com/" // FIXME
 
-        val gitProjectName = when (originEvent){
+        val gitProjectName = when (originEvent) {
             is GitPushEvent -> {
                 startParams["ci.ref"] = originEvent.ref
                 GitUtils.getProjectName(originEvent.repository.git_http_url)
@@ -757,34 +884,32 @@ class TriggerBuildService @Autowired constructor(
         startParams["ci.sha"] = event.commitId
         startParams["ci.sha_short"] = event.commitId.substring(0, 8)
         startParams["ci.commit_message"] = event.commitMsg.toString()
-
     }
 
     private fun putVariables2StartParams(
         yaml: ScriptBuildYaml,
-        gitProjectConf: GitRepositoryConf,
+        gitBasicSetting: GitCIBasicSetting,
         startParams: MutableMap<String, String>
     ) {
         if (yaml.variables == null) {
             return
         }
-
         yaml.variables!!.forEach { (key, variable) ->
             startParams[VARIABLE_PREFIX + key] =
-                variable.copy(value = formatVariablesValue(variable.value, gitProjectConf)).toString()
+                variable.copy(value = formatVariablesValue(variable.value, gitBasicSetting, startParams)).value ?: ""
         }
     }
 
-    private fun formatVariablesValue(value: String?, gitProjectConf: GitRepositoryConf): String? {
+    private fun formatVariablesValue(
+        value: String?,
+        gitBasicSetting: GitCIBasicSetting,
+        startParams: MutableMap<String, String>
+    ): String? {
         if (value == null || value.isEmpty()) {
             return ""
         }
-
         val settingMap = mutableMapOf<String, String>()
-        gitProjectConf.env?.forEach {
-            settingMap[it.name] = it.value
-        }
-
+        settingMap.putAll(startParams)
         return ScriptYmlUtils.parseVariableValue(value, settingMap)
     }
 

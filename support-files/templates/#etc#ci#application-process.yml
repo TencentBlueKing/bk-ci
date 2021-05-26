@@ -43,3 +43,8 @@ pipeline:
     max_keep_num: 50
     spec_channels: "AM,CODECC,GCLOUD,GIT,GONGFENGSCAN,CODECC_EE"
     spec_channel_max_keep_num: 2    
+scm:
+  external:
+    tGit:
+      hookSecret: 
+      enableHookSecret: false

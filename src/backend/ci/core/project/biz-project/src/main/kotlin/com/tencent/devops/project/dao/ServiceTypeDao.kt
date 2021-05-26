@@ -70,7 +70,7 @@ class ServiceTypeDao {
             ).values(title, weight, userId, now, userId, now, false).returning()
                 .fetchOne().let {
                     ServiceType(
-                        it.id, it.title, weight, it.createdUser,
+                        it!!.id, it.title, weight, it.createdUser,
                         DateTimeUtil.toDateTime(it.createdTime), it.updatedUser, DateTimeUtil.toDateTime(it.updatedTime)
                     )
                 }
@@ -107,10 +107,10 @@ class ServiceTypeDao {
                 .and(DELETED.eq(false))
                 .fetchOne {
                     ServiceType(
-                        it.id, it.title, it.weight ?: 0, it.createdUser,
+                        it!!.id, it.title, it.weight ?: 0, it.createdUser,
                         DateTimeUtil.toDateTime(it.createdTime), it.updatedUser, DateTimeUtil.toDateTime(it.updatedTime)
                     )
-                }
+                }!!
         }
     }
 }

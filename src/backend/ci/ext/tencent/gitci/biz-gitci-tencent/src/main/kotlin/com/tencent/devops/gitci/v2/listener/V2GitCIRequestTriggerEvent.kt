@@ -39,6 +39,7 @@ data class V2GitCIRequestTriggerEvent(
     val event: GitRequestEvent,
     val yaml: ScriptBuildYaml,
     val originYaml: String,
+    val parsedYaml: String?,
     val normalizedYaml: String,
     val gitBuildId: Long
 )

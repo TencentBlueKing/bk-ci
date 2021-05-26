@@ -93,7 +93,7 @@ on:
 #        steps:
 #          - run: |
 #              echo "root_stage_id_1, root_job_id_2"
-#          - template: step1.yml@repoA
+#          - template: step8.yml@repoA
 #            parameters:
 #              username: RES_STEP
 #        depend-on:
@@ -121,12 +121,14 @@ on:
 #    - run: |
 #        echo "do something when the upstream fails"
 
-
-
-extends:
-  template: pipeline.yml@repoC
-  parameters:
-    repo: "hello/my-first-repo"
+steps:
+  - template: cyclic/step/templates/step8.yml
+    parameters:
+      username: RES_STEP
+#extends:
+#  template: pipeline.yml@repoC
+#  parameters:
+#    repo: "hello/my-first-repo"
 
 resources:
   repositories:

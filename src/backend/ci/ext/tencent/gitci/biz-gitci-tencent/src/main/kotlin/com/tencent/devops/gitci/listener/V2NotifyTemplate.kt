@@ -43,7 +43,7 @@ object V2NotifyTemplate {
             "run failed"
         }
         return """
-            [${projectName}][${branchName}] $pipelineName #${buildNum} $state
+            [$projectName][$branchName] $pipelineName #$buildNum $state
         """
     }
 
@@ -76,21 +76,21 @@ object V2NotifyTemplate {
 </head>
 
 <body style="color: #666;padding: 20px;">
-    <h3 style="font-weight: normal;margin: 0;padding: 0;line-height: 40px;">[${projectName}][${branchName}]
-        $pipelineName #${buildNum} $state </h3>
+    <h3 style="font-weight: normal;margin: 0;padding: 0;line-height: 40px;">[$projectName][$branchName]
+        $pipelineName #$buildNum $state </h3>
     <ul style="margin: 7px 0;padding: 0;">
         <li style="list-style: none;display: block;line-height: 30px;"> <span
                 style="width: 130px;display: inline-block;text-align: right;">Build num：
-            </span><span>#${buildNum}</span> </li>
+            </span><span>#$buildNum</span> </li>
         <li style="list-style: none;display: block;line-height: 30px;"> <span
                 style="width: 130px;display: inline-block;text-align: right;">Start Time：
-            </span><span>${startTime}</span> </li>
+            </span><span>$startTime</span> </li>
         <li style="list-style: none;display: block;line-height: 30px;"> <span
                 style="width: 130px;display: inline-block;text-align: right;">Total duration：
-            </span><span>${totalTime}</span> </li>
+            </span><span>$totalTime</span> </li>
         <li style="list-style: none;display: block;line-height: 30px;"> <span
                 style="width: 130px;display: inline-block;text-align: right;">Commit： </span><a href="$webUrl"
-                style="color: #3a84ff;">${commitId}</a> </li>
+                style="color: #3a84ff;">$commitId</a> </li>
     </ul> <a href="$webUrl" style="color: #3a84ff;line-height: 30px;">View it on 工蜂内网版</a>
 </body>
 

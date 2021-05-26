@@ -35,7 +35,7 @@ import com.fasterxml.jackson.annotation.JsonProperty
 data class Stage(
     val name: String?,
     val id: String?,
-    val label: String? = null,
+    val label: List<String> = emptyList(),
     @JsonProperty("if")
     val ifField: String? = null,
     @JsonProperty("fast-kill")

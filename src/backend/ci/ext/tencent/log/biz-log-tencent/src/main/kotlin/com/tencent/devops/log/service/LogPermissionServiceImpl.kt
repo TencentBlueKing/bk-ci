@@ -62,7 +62,6 @@ import org.springframework.stereotype.Service
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-@Service
 class LogPermissionServiceImpl @Autowired constructor(
     private val authPermissionApi: AuthPermissionApi,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,

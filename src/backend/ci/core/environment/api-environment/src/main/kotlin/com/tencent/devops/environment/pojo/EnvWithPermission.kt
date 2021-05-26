@@ -43,7 +43,7 @@ data class EnvWithPermission(
     @ApiModelProperty("节点数量", required = false)
     val nodeCount: Int?,
     @ApiModelProperty("环境变量", required = true)
-    val envVars: List<EnvVar>,
+    val envVars: List<EnvVar>?,
     @ApiModelProperty("创建人", required = true)
     val createdUser: String,
     @ApiModelProperty("创建时间", required = true)

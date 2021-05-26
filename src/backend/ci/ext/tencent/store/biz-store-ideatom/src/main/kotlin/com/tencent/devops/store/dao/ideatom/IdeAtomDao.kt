@@ -61,7 +61,7 @@ class IdeAtomDao {
             if (atomCode != null) {
                 conditions.add(ATOM_CODE.eq(atomCode))
             }
-            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Long::class.java)
+            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -69,7 +69,7 @@ class IdeAtomDao {
         with(TIdeAtom.T_IDE_ATOM) {
             return dslContext.selectCount().from(this)
                 .where(ATOM_CODE.eq(atomCode))
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -79,7 +79,7 @@ class IdeAtomDao {
                 .from(this)
                 .where(ID.eq(atomId))
                 .and(ATOM_CODE.eq(atomCode))
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -172,7 +172,7 @@ class IdeAtomDao {
         with(TIdeAtom.T_IDE_ATOM) {
             return dslContext.selectCount().from(this)
                 .where(ID.eq(atomId).and(ATOM_STATUS.eq(IdeAtomStatusEnum.RELEASED.status.toByte())))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -366,7 +366,7 @@ class IdeAtomDao {
             baseStep.join(d).on(a.ID.eq(d.ATOM_ID))
             conditions.add(d.LABEL_ID.`in`(labelIdList))
         }
-        return baseStep.where(conditions).fetchOne(0, Long::class.java)
+        return baseStep.where(conditions).fetchOne(0, Long::class.java)!!
     }
 
     fun listOpIdeAtoms(
@@ -467,7 +467,7 @@ class IdeAtomDao {
                     IdeAtomStatusEnum.INIT.status.toByte(),
                     IdeAtomStatusEnum.AUDITING.status.toByte()
                 )
-                conditions.add(t.field("atomStatus").`in`(atomStatusList))
+                conditions.add(t.field("atomStatus")!!.`in`(atomStatusList))
             } else {
                 val atomStatusList = listOf(
                     IdeAtomStatusEnum.AUDIT_REJECT.status.toByte(),
@@ -475,7 +475,7 @@ class IdeAtomDao {
                     IdeAtomStatusEnum.GROUNDING_SUSPENSION.status.toByte(),
                     IdeAtomStatusEnum.UNDERCARRIAGED.status.toByte()
                 )
-                conditions.add(t.field("atomStatus").`in`(atomStatusList))
+                conditions.add(t.field("atomStatus")!!.`in`(atomStatusList))
             }
         }
         return conditions
@@ -516,7 +516,7 @@ class IdeAtomDao {
         with(TIdeAtom.T_IDE_ATOM) {
             return dslContext.selectCount().from(this)
                 .where(ATOM_STATUS.eq(IdeAtomStatusEnum.RELEASED.status.toByte()).and(CLASSIFY_ID.eq(classifyId)))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 }

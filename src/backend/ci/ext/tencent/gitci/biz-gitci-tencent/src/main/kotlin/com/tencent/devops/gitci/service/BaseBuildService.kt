@@ -35,13 +35,13 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
-import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.gitci.pojo.GitCITriggerLock
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.pojo.GitRepositoryConf
 import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.gitci.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.gitci.pojo.enums.TriggerReason
+import com.tencent.devops.gitci.v2.service.GitCIEventSaveService
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildId
@@ -60,7 +60,7 @@ abstract class BaseBuildService<T> @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val gitPipelineResourceDao: GitPipelineResourceDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
-    private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao
+    private val gitCIEventSaveService: GitCIEventSaveService
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(BaseBuildService::class.java)
@@ -139,8 +139,8 @@ abstract class BaseBuildService<T> @Autowired constructor(
         } catch (e: Exception) {
             logger.error("GitCI Build failed, gitProjectId[${gitProjectConf.gitProjectId}], pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]", e)
             val build = gitRequestEventBuildDao.getByGitBuildId(dslContext, gitBuildId)
-            gitRequestEventNotBuildDao.save(
-                dslContext = dslContext,
+            gitCIEventSaveService.saveNotBuildEvent(
+                userId = event.userId,
                 eventId = event.id!!,
                 pipelineId = pipeline.pipelineId,
                 filePath = pipeline.filePath,

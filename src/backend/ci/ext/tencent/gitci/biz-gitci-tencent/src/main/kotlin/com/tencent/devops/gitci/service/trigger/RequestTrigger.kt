@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.gitci.dao.GitCIServicesConfDao
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
@@ -42,8 +43,10 @@ import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.gitci.pojo.enums.TriggerReason
 import com.tencent.devops.gitci.pojo.git.GitEvent
+import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.service.GitRepositoryConfService
 import com.tencent.devops.gitci.utils.GitCIWebHookMatcher
+import com.tencent.devops.gitci.v2.service.GitCIEventSaveService
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -62,7 +65,8 @@ class RequestTrigger @Autowired constructor(
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val repositoryConfService: GitRepositoryConfService,
-    private val rabbitTemplate: RabbitTemplate
+    private val rabbitTemplate: RabbitTemplate,
+    private val gitCIEventSaveService: GitCIEventSaveService
 ) : RequestTriggerInterface<CIBuildYaml> {
 
     override fun triggerBuild(
@@ -78,7 +82,7 @@ class RequestTrigger @Autowired constructor(
             gitToken = gitToken,
             forkGitToken = forkGitToken,
             gitRequestEvent = gitRequestEvent,
-            event = event,
+            isMr = (event is GitMergeRequestEvent),
             originYaml = originYaml,
             filePath = filePath,
             pipelineId = gitProjectPipeline.pipelineId
@@ -104,7 +108,8 @@ class RequestTrigger @Autowired constructor(
                 objectKind = gitRequestEvent.objectKind,
                 description = gitRequestEvent.commitMsg,
                 triggerUser = gitRequestEvent.userId,
-                sourceGitProjectId = gitRequestEvent.sourceGitProjectId
+                sourceGitProjectId = gitRequestEvent.sourceGitProjectId,
+                buildStatus = BuildStatus.RUNNING
             )
             dispatchEvent(
                 GitCIRequestTriggerEvent(
@@ -119,8 +124,8 @@ class RequestTrigger @Autowired constructor(
             repositoryConfService.updateGitCISetting(gitRequestEvent.gitProjectId)
         } else {
             logger.warn("Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}")
-            gitRequestEventNotBuildDao.save(
-                dslContext = dslContext,
+            gitCIEventSaveService.saveNotBuildEvent(
+                userId = gitRequestEvent.userId,
                 eventId = gitRequestEvent.id!!,
                 pipelineId = if (gitProjectPipeline.pipelineId.isBlank()) null else gitProjectPipeline.pipelineId,
                 filePath = gitProjectPipeline.filePath,
@@ -144,7 +149,7 @@ class RequestTrigger @Autowired constructor(
         gitToken: GitToken,
         forkGitToken: GitToken?,
         gitRequestEvent: GitRequestEvent,
-        event: GitEvent,
+        isMr: Boolean,
         originYaml: String?,
         filePath: String?,
         pipelineId: String?
@@ -155,11 +160,11 @@ class RequestTrigger @Autowired constructor(
         }
 
         val yamlObject = try {
-            createCIBuildYaml(originYaml!!, gitRequestEvent.gitProjectId)
+            createCIBuildYaml(originYaml, gitRequestEvent.gitProjectId)
         } catch (e: Throwable) {
             logger.error("git ci yaml is invalid", e)
-            gitRequestEventNotBuildDao.save(
-                dslContext = dslContext,
+            gitCIEventSaveService.saveNotBuildEvent(
+                userId = gitRequestEvent.userId,
                 eventId = gitRequestEvent.id!!,
                 pipelineId = pipelineId,
                 filePath = filePath,

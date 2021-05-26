@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.pojo.BuildHistoryPage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwBuildResourceV3
 import com.tencent.devops.process.api.service.ServiceBuildResource
@@ -137,6 +138,28 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         )
     }
 
+    override fun retry(
+        appCode: String?,
+        apigwType: String?,
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String?,
+        failedContainer: Boolean?
+    ): Result<BuildId> {
+        logger.info("$pipelineId|retry|user($userId)")
+        return client.get(ServiceBuildResource::class).retry(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            taskId = taskId,
+            failedContainer = failedContainer,
+            channelCode = ChannelCode.BS
+        )
+    }
+
     override fun getStatus(
         appCode: String?,
         apigwType: String?,
@@ -163,7 +186,8 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         pipelineId: String,
         buildId: String,
         stageId: String,
-        cancel: Boolean?
+        cancel: Boolean?,
+        reviewRequest: StageReviewRequest?
     ): Result<Boolean> {
         logger.info("$pipelineId|manualStartStage|user($userId)|build($buildId)")
         return client.get(ServiceBuildResource::class).manualStartStage(
@@ -172,7 +196,8 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             stageId = stageId,
-            cancel = cancel ?: false
+            cancel = cancel ?: false,
+            reviewRequest = reviewRequest
         )
     }
 

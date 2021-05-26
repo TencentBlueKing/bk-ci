@@ -53,6 +53,7 @@ import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCICommitRef
+import com.tencent.devops.scm.pojo.GitCICreateFile
 import com.tencent.devops.scm.pojo.GitCIFileCommit
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -97,10 +98,7 @@ interface ServiceGitResource {
         accessToken: String,
         @ApiParam("工蜂项目id", required = true)
         @QueryParam("gitProjectId")
-        gitProjectId: String,
-        @ApiParam("是否使用accesstoken否使用privatetoken",required = true)
-        @QueryParam("useAccessToken")
-        useAccessToken:Boolean = true
+        gitProjectId: Long
     ): Result<GitCIProjectInfo?>
 
     @ApiOperation("获取用户所有git项目，分页方式获取")
@@ -219,10 +217,7 @@ interface ServiceGitResource {
         token: String,
         @ApiParam(value = "提交id 或者 分支")
         @QueryParam("ref")
-        ref: String,
-        @ApiParam(value = "是否为accessToken不是则为privateToken")
-        @QueryParam("useAccessToken")
-        useAccessToken: Boolean = true
+        ref: String
     ): Result<String>
 
     @ApiOperation("获取git文件目录列表")
@@ -240,10 +235,7 @@ interface ServiceGitResource {
         token: String,
         @ApiParam(value = "提交id 或者 分支")
         @QueryParam("ref")
-        ref: String,
-        @ApiParam(value = "是否为accessToken不是则为privateToken")
-        @QueryParam("useAccessToken")
-        useAccessToken: Boolean = true
+        ref: String
     ): Result<List<GitFileInfo>>
 
     @ApiOperation("获取mr请求的代码变更")
@@ -303,10 +295,10 @@ interface ServiceGitResource {
         gitProjectId: Long,
         @ApiParam(value = "filePath")
         @QueryParam("filePath")
-        filePath: String,
+        filePath: String?,
         @ApiParam(value = "branch")
         @QueryParam("branch")
-        branch: String,
+        branch: String?,
         @ApiParam(value = "token")
         @QueryParam("token")
         token: String,
@@ -323,6 +315,20 @@ interface ServiceGitResource {
         @QueryParam("perPage")
         perPage: Int
     ): Result<List<Commit>>
+
+    @ApiOperation("工蜂创建文件")
+    @POST
+    @Path("/gitci/create/file")
+    fun gitCICreateFile(
+        @ApiParam(value = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @ApiParam(value = "token")
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "创建文件内容")
+        gitCICreateFile: GitCICreateFile
+    ): Result<Boolean>
 
     @ApiOperation("获取当前commit记录所属")
     @GET

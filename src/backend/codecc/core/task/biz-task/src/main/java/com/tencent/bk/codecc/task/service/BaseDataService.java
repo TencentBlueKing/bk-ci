@@ -26,7 +26,7 @@
 
 package com.tencent.bk.codecc.task.service;
 
-import com.tencent.bk.codecc.task.vo.BaseDataVO;
+import com.tencent.devops.common.api.BaseDataVO;
 
 import java.util.List;
 
@@ -63,4 +63,44 @@ public interface BaseDataService
      * @return
      */
     List<BaseDataVO> findBaseDataInfoByTypeAndCodeAndValue(String paramType, String paramCode, String paramValue);
+
+    /**
+     * 保存元数据
+     */
+    int batchSave(String userId, List<BaseDataVO> baseDataVOList);
+
+    /**
+     * 删除元数据
+     */
+    int deleteById(String id);
+
+
+    /**
+     * 更新屏蔽用户名单
+     *
+     * @param baseDataVO vo
+     * @return boolean
+     */
+    Boolean updateExcludeUserMember(BaseDataVO baseDataVO, String userName);
+
+
+    /**
+     * 获取用户名单
+     * @return list
+     */
+    List<String> queryMemberListByParamType(String paramType);
+
+
+    /**
+     * 更新管理员名单
+     *
+     * @param baseDataVO vo
+     * @return boolean
+     */
+    Boolean updateAdminMember(BaseDataVO baseDataVO, String userName);
+
+    /**
+     *  获取基础元数据
+     */
+    List<BaseDataVO> findBaseData();
 }

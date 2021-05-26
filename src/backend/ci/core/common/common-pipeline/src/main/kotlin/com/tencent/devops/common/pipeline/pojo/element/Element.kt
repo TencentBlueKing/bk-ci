@@ -124,15 +124,15 @@ abstract class Element(
     open fun findFirstTaskIdByStartType(startType: StartType): String = ""
 
     /**
-     * 根据参数变量[params]以及是否在[finallyStage]，来初始化出插件是否跳过
-     * 当插件处于finally Stage下时插件，除非是显式的通过[params]指明要跳过或者本身的[isElementEnable]设置为未启用插件会返回SKIP
+     * 除非是显式的通过[params]指明要跳过或者本身的[isElementEnable]设置为未启用插件会返回SKIP，
+     * [rerun]允许对状态进行重置为QUEUE
      */
-    fun initStatus(params: Map<String, Any>, finallyStage: Boolean): BuildStatus {
+    fun initStatus(params: Map<String, Any>, rerun: Boolean = false): BuildStatus {
         return if (params[SkipElementUtils.getSkipElementVariableName(id!!)] == "true") { // 参数中指明要求跳过
             BuildStatus.SKIP // 跳过
         } else if (!isElementEnable()) { // 插件未启用
             BuildStatus.SKIP // 跳过
-        } else if (finallyStage) { // 除以上指定跳过或不启用的以外，在final Stage 下的插件都需要重置状态
+        } else if (rerun) { // 除以上指定跳过或不启用的以外，在final Stage 下的插件都需要重置状态
             BuildStatus.QUEUE
         } else if (status == BuildStatus.SKIP.name) { // 原本状态为SKIP，一般为 Rebuild/Fail Retry 的上一次执行标志下来
             BuildStatus.SKIP // 跳过

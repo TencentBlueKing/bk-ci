@@ -32,7 +32,6 @@ import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.ZoneOffset
-import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Date
 
@@ -209,7 +208,8 @@ object DateTimeUtil {
      * 将格式化的日期时间字符串转换为LocalDateTime对象
      */
     fun stringToLocalDateTime(dateTimeStr: String, formatStr: String = "yyyy-MM-dd HH:mm:ss"): LocalDateTime {
-        val formatter = DateTimeFormatter.ofPattern(formatStr)
-        return LocalDateTime.parse(dateTimeStr, formatter)
+        val format = SimpleDateFormat(formatStr)
+        val date = format.parse(dateTimeStr)
+        return convertDateToLocalDateTime(date)
     }
 }

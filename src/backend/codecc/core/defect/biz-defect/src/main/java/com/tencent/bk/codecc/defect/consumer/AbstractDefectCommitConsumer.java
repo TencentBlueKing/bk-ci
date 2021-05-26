@@ -13,13 +13,17 @@
 package com.tencent.bk.codecc.defect.consumer;
 
 import com.google.common.collect.Maps;
-import com.tencent.bk.codecc.defect.api.ServiceReportTaskLogRestResource;
 import com.tencent.bk.codecc.defect.component.ScmJsonComponent;
+import com.tencent.bk.codecc.defect.dao.mongorepository.CodeRepoInfoRepository;
 import com.tencent.bk.codecc.defect.dao.mongorepository.ToolBuildInfoRepository;
 import com.tencent.bk.codecc.defect.dao.mongorepository.ToolBuildStackRepository;
 import com.tencent.bk.codecc.defect.dao.mongorepository.TransferAuthorRepository;
 import com.tencent.bk.codecc.defect.dao.mongotemplate.BuildDao;
 import com.tencent.bk.codecc.defect.dao.mongotemplate.ToolBuildInfoDao;
+import com.tencent.bk.codecc.defect.model.BuildEntity;
+import com.tencent.bk.codecc.defect.model.incremental.CodeRepoEntity;
+import com.tencent.bk.codecc.defect.model.incremental.CodeRepoInfoEntity;
+import com.tencent.bk.codecc.defect.service.FilterPathService;
 import com.tencent.bk.codecc.defect.service.RedLineReportService;
 import com.tencent.bk.codecc.defect.service.file.ScmFileInfoService;
 import com.tencent.bk.codecc.defect.utils.ThirdPartySystemCaller;
@@ -29,10 +33,10 @@ import com.tencent.bk.codecc.defect.vo.customtool.RepoSubModuleVO;
 import com.tencent.bk.codecc.defect.vo.customtool.ScmBlameChangeRecordVO;
 import com.tencent.bk.codecc.defect.vo.customtool.ScmBlameVO;
 import com.tencent.bk.codecc.defect.vo.customtool.ScmInfoVO;
-import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.devops.common.auth.api.external.AuthTaskService;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.util.JsonUtil;
+import com.tencent.devops.common.web.aop.annotation.EndReport;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.jetbrains.annotations.NotNull;
@@ -41,7 +45,11 @@ import org.json.JSONObject;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * 告警提交消息队列的消费者抽象类
@@ -50,12 +58,11 @@ import java.util.*;
  * @date 2020/3/12
  */
 @Slf4j
-public abstract class AbstractDefectCommitConsumer
-{
+public abstract class AbstractDefectCommitConsumer {
     /**
      * 流式分批告警处理每批最大处理数
      */
-    protected static final int MAX_PER_BATCH = 30000;
+    protected static final int MAX_PER_BATCH = 15000;
 
     @Autowired
     public ToolBuildInfoDao toolBuildInfoDao;
@@ -79,24 +86,27 @@ public abstract class AbstractDefectCommitConsumer
     public TransferAuthorRepository transferAuthorRepository;
     @Autowired
     protected ScmFileInfoService scmFileInfoService;
+    @Autowired
+    public FilterPathService filterPathService;
+    @Autowired
+    private CodeRepoInfoRepository codeRepoRepository;
 
     /**
      * 告警提交
      *
      * @param commitDefectVO
      */
-    public void commitDefect(CommitDefectVO commitDefectVO)
-    {
+    @EndReport(isOpenSource = false)
+    public void commitDefect(CommitDefectVO commitDefectVO) {
         long beginTime = System.currentTimeMillis();
-        try
-        {
+        try {
             log.info("commit defect! {}", commitDefectVO);
 
             // 发送开始提单的分析记录
-            uploadTaskLog(commitDefectVO, ComConstants.StepFlag.PROCESSING.value(), System.currentTimeMillis(), 0, null);
+            uploadTaskLog(commitDefectVO, ComConstants.StepFlag.PROCESSING.value(), System.currentTimeMillis(), 0,
+                    null);
 
-            try
-            {
+            try {
                 // 获取文件作者信息
                 Map<String, ScmBlameVO> fileChangeRecordsMap = getAuthorInfo(commitDefectVO);
 
@@ -105,21 +115,19 @@ public abstract class AbstractDefectCommitConsumer
 
                 // 解析工具上报的告警文件并入库
                 uploadDefects(commitDefectVO, fileChangeRecordsMap, codeRepoIdMap);
-            }
-            catch (Throwable e)
-            {
+            } catch (Throwable e) {
                 e.printStackTrace();
                 log.error("commit defect fail!", e);
                 // 发送提单失败的分析记录
-                uploadTaskLog(commitDefectVO, ComConstants.StepFlag.FAIL.value(), 0, System.currentTimeMillis(), e.getLocalizedMessage());
+                uploadTaskLog(commitDefectVO, ComConstants.StepFlag.FAIL.value(), 0, System.currentTimeMillis(),
+                        e.getLocalizedMessage());
                 return;
             }
 
             // 发送提单成功的分析记录
-            uploadTaskLog(commitDefectVO, ComConstants.StepFlag.SUCC.value(), 0, System.currentTimeMillis(), commitDefectVO.getMessage());
-        }
-        catch (Throwable e)
-        {
+            uploadTaskLog(commitDefectVO, ComConstants.StepFlag.SUCC.value(), 0, System.currentTimeMillis(),
+                    commitDefectVO.getMessage());
+        } catch (Throwable e) {
             log.error("commit defect fail!", e);
         }
         log.info("end commitDefect cost: {}", System.currentTimeMillis() - beginTime);
@@ -127,46 +135,40 @@ public abstract class AbstractDefectCommitConsumer
 
     /**
      * 解析工具上报的告警文件并入库
+     *
      * @param commitDefectVO
      * @param fileChangeRecordsMap
      * @param codeRepoIdMap
      */
+    protected abstract void uploadDefects(CommitDefectVO commitDefectVO,
+                                          Map<String, ScmBlameVO> fileChangeRecordsMap,
+                                          Map<String, RepoSubModuleVO> codeRepoIdMap);
 
-    protected abstract void uploadDefects(CommitDefectVO commitDefectVO, Map<String, ScmBlameVO> fileChangeRecordsMap, Map<String, RepoSubModuleVO> codeRepoIdMap);
-
-    protected Map<String, ScmBlameVO> getAuthorInfo(CommitDefectVO commitDefectVO)
-    {
+    protected Map<String, ScmBlameVO> getAuthorInfo(CommitDefectVO commitDefectVO) {
         return scmFileInfoService.loadAuthorInfoMap(
-            commitDefectVO.getTaskId(),
-            commitDefectVO.getStreamName(),
-            commitDefectVO.getToolName(),
-            commitDefectVO.getBuildId());
+                commitDefectVO.getTaskId(),
+                commitDefectVO.getStreamName(),
+                commitDefectVO.getToolName(),
+                commitDefectVO.getBuildId());
     }
 
-    protected Map<String, RepoSubModuleVO> getRepoInfo(CommitDefectVO commitDefectVO)
-    {
-        JSONArray repoInfoJsonArr = scmJsonComponent.loadRepoInfo(commitDefectVO.getStreamName(), commitDefectVO.getToolName(), commitDefectVO.getBuildId());
+    protected Map<String, RepoSubModuleVO> getRepoInfo(CommitDefectVO commitDefectVO) {
+        JSONArray repoInfoJsonArr = scmJsonComponent.loadRepoInfo(commitDefectVO.getStreamName(),
+                commitDefectVO.getToolName(), commitDefectVO.getBuildId());
         Map<String, RepoSubModuleVO> codeRepoIdMap = Maps.newHashMap();
-        if (repoInfoJsonArr != null && repoInfoJsonArr.length() > 0)
-        {
-            for (int i = 0; i < repoInfoJsonArr.length(); i++)
-            {
+        if (repoInfoJsonArr != null && repoInfoJsonArr.length() > 0) {
+            for (int i = 0; i < repoInfoJsonArr.length(); i++) {
                 JSONObject codeRepoJson = repoInfoJsonArr.getJSONObject(i);
                 ScmInfoVO codeRepoInfo = JsonUtil.INSTANCE.to(codeRepoJson.toString(), ScmInfoVO.class);
                 //需要判断是svn还是git，svn采用rootUrl做key，git采用url做key
                 RepoSubModuleVO repoSubModuleVO = new RepoSubModuleVO();
                 repoSubModuleVO.setRepoId(codeRepoInfo.getRepoId());
-                if(ComConstants.CodeHostingType.SVN.name().equalsIgnoreCase(codeRepoInfo.getScmType()))
-                {
+                if (ComConstants.CodeHostingType.SVN.name().equalsIgnoreCase(codeRepoInfo.getScmType())) {
                     codeRepoIdMap.put(codeRepoInfo.getRootUrl(), repoSubModuleVO);
-                }
-                else
-                {
+                } else {
                     codeRepoIdMap.put(codeRepoInfo.getUrl(), repoSubModuleVO);
-                    if (CollectionUtils.isNotEmpty(codeRepoInfo.getSubModules()))
-                    {
-                        for (RepoSubModuleVO subModuleVO : codeRepoInfo.getSubModules())
-                        {
+                    if (CollectionUtils.isNotEmpty(codeRepoInfo.getSubModules())) {
+                        for (RepoSubModuleVO subModuleVO : codeRepoInfo.getSubModules()) {
                             RepoSubModuleVO subRepoSubModuleVO = new RepoSubModuleVO();
                             subRepoSubModuleVO.setRepoId(codeRepoInfo.getRepoId());
                             subRepoSubModuleVO.setSubModule(subModuleVO.getSubModule());
@@ -180,38 +182,26 @@ public abstract class AbstractDefectCommitConsumer
     }
 
     @NotNull
-    public Map<Integer, ScmBlameChangeRecordVO> getLineAuthorMap(List<ScmBlameChangeRecordVO> changeRecords)
-    {
+    public Map<Integer, ScmBlameChangeRecordVO> getLineAuthorMap(List<ScmBlameChangeRecordVO> changeRecords) {
         Map<Integer, ScmBlameChangeRecordVO> lineAuthorMap = new HashMap<>();
-        for (ScmBlameChangeRecordVO changeRecord : changeRecords)
-        {
+        for (ScmBlameChangeRecordVO changeRecord : changeRecords) {
             List<Object> lines = changeRecord.getLines();
-            if (CollectionUtils.isNotEmpty(lines))
-            {
-                for (Object line : lines)
-                {
-                    if (line instanceof Integer)
-                    {
+            if (CollectionUtils.isNotEmpty(lines)) {
+                for (Object line : lines) {
+                    if (line instanceof Integer) {
                         lineAuthorMap.put((int) line, changeRecord);
-                    }
-                    else if (line instanceof List)
-                    {
-                        List<Integer> lineScope = (List<Integer>) line;
-                        for (int i = lineScope.get(0); i <= lineScope.get(1); i++)
-                        {
-                            lineAuthorMap.put(i, changeRecord);
+                    } else {
+                        if (line instanceof List) {
+                            List<Integer> lineScope = (List<Integer>) line;
+                            for (int i = lineScope.get(0); i <= lineScope.get(1); i++) {
+                                lineAuthorMap.put(i, changeRecord);
+                            }
                         }
                     }
                 }
             }
         }
         return lineAuthorMap;
-    }
-
-    @NotNull
-    protected Set<String> getFilterPaths(TaskDetailVO taskVO)
-    {
-        return new HashSet<>(taskVO.getAllFilterPaths());
     }
 
     /**
@@ -221,8 +211,8 @@ public abstract class AbstractDefectCommitConsumer
      * @param stepFlag
      * @param msg
      */
-    protected void uploadTaskLog(CommitDefectVO commitDefectVO, int stepFlag, long startTime, long endTime, String msg)
-    {
+    protected void uploadTaskLog(CommitDefectVO commitDefectVO, int stepFlag, long startTime, long endTime,
+                                 String msg) {
         UploadTaskLogStepVO uploadTaskLogStepVO = new UploadTaskLogStepVO();
         uploadTaskLogStepVO.setTaskId(commitDefectVO.getTaskId());
         uploadTaskLogStepVO.setStreamName(commitDefectVO.getStreamName());
@@ -237,4 +227,18 @@ public abstract class AbstractDefectCommitConsumer
         thirdPartySystemCaller.uploadTaskLog(uploadTaskLogStepVO);
     }
 
+    protected void getCodeRepoMap(long taskId, boolean isFullScan, BuildEntity buildEntity,
+                                  Map<String, CodeRepoEntity> repoIdMap, Map<String, CodeRepoEntity> urlMap) {
+        if (!isFullScan) {
+            // 校验构建号对应的仓库信息是否已存在
+            CodeRepoInfoEntity codeRepoInfo = codeRepoRepository.findByTaskIdAndBuildId(taskId,
+                    buildEntity.getBuildId());
+            if (codeRepoInfo != null && CollectionUtils.isNotEmpty(codeRepoInfo.getRepoList())) {
+                repoIdMap.putAll(codeRepoInfo.getRepoList().stream().collect(Collectors.toMap(CodeRepoEntity::getRepoId,
+                        Function.identity(), (k, v) -> v)));
+                urlMap.putAll(codeRepoInfo.getRepoList().stream().collect(Collectors.toMap(CodeRepoEntity::getUrl,
+                        Function.identity(), (k, v) -> v)));
+            }
+        }
+    }
 }
