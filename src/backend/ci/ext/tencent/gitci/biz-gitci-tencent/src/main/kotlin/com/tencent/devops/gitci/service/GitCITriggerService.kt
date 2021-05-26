@@ -115,9 +115,9 @@ class GitCITriggerService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(GitCITriggerService::class.java)
         private val channelCode = ChannelCode.GIT
+        private val ciFileExtensions = listOf(".yml", ".yaml")
         private const val ciFileName = ".ci.yml"
         private const val ciFileDirectoryName = ".ci"
-        private const val ciFileExtension = ".yml"
         private const val noPipelineBuildEvent = "validatePipeline"
     }
 
@@ -400,7 +400,10 @@ class GitCITriggerService @Autowired constructor(
 
         yamlPathList.forEach { filePath ->
             // 因为要为 GIT_CI_YAML_INVALID 这个异常添加文件信息，所以先创建流水线，后面再根据Yaml修改流水线名称即可
-            var displayName = filePath.removeSuffix(ciFileExtension)
+            var displayName = filePath
+            ciFileExtensions.forEach {
+                displayName = filePath.removeSuffix(it)
+            }
             val existsPipeline = path2PipelineExists[filePath]
             // 如果该流水线已保存过，则继续使用
             val buildPipeline = existsPipeline
@@ -1032,7 +1035,7 @@ class GitCITriggerService @Autowired constructor(
         isMrEvent: Boolean = false
     ): MutableList<String> {
         val ciFileList = getFileTreeFromGit(gitToken, gitRequestEvent, ciFileDirectoryName, isMrEvent)
-            .filter { it.name.endsWith(ciFileExtension) }
+            .filter { ciFileExtensions.contains(File(it.name).nameWithoutExtension) }
         return ciFileList.map { ciFileDirectoryName + File.separator + it.name }.toMutableList()
     }
 
