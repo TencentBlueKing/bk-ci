@@ -31,7 +31,6 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineBuildExtService
@@ -47,8 +46,7 @@ import java.util.Random
 @Service
 class PipelineBuildExtTencentService @Autowired constructor(
     private val consulClient: ConsulDiscoveryClient?,
-    private val pipelineContextTencentService: PipelineContextTencentService,
-    private val redisOperation: RedisOperation
+    private val pipelineContextService: PipelineContextService
 ) : PipelineBuildExtService {
 
     override fun buildExt(task: PipelineBuildTask, variable: Map<String, String>): Map<String, String> {
@@ -60,33 +58,13 @@ class PipelineBuildExtTencentService @Autowired constructor(
             extMap[PIPELINE_TURBO_TASK_ID] = turboTaskId
         }
 
-        extMap.putAll(pipelineContextTencentService.buildContext(task.buildId, task.containerId, variable))
-        val gitToken = pipelineContextTencentService.getGitToken(
-            task.projectId,
-            task.buildId,
-            task.containerId
-        )
-        if (gitToken.isNotBlank()) {
-            extMap["ci.token"] = gitToken
-            redisOperation.set(
-                containerGitCITokenKey(task.buildId, task.containerId),
-                gitToken,
-                28800L
-            )
-        }
+        extMap.putAll(pipelineContextService.buildContext(task.buildId, task.containerId, variable))
         return extMap
     }
 
     override fun endBuild(task: PipelineBuildTask) {
-        val token = redisOperation.get(containerGitCITokenKey(task.buildId, task.containerId))
-        if (!token.isNullOrBlank()) {
-            pipelineContextTencentService.deleteGitToken(token)
-            redisOperation.delete(containerGitCITokenKey(task.buildId, task.containerId))
-        }
+        return
     }
-
-    private fun containerGitCITokenKey(buildId: String, containerId: String) =
-        "container_git_ci_token_${buildId}_$containerId"
 
     fun getTurboTask(pipelineId: String, elementId: String): String {
         try {
