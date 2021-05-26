@@ -1186,7 +1186,7 @@ class LogServiceESImpl constructor(
 
             // #4265 当日志消息处理时间过长时打印消息内容
             if (elapse >= 500) logger.warn(
-                "[${buildId}] doAddMultiLines spent too much time, logMessages is $logMessages"
+                "[$buildId] doAddMultiLines spent too much time, logMessages is $logMessages"
             )
         }
     }
