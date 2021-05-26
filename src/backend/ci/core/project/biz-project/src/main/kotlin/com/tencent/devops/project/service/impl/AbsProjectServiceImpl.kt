@@ -633,8 +633,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     override fun relationIamProject(projectCode: String, relationId: String): Boolean {
         val projectInfo = projectDao.getByEnglishName(dslContext, projectCode) ?: throw InvalidParamException("项目不存在")
-        val relationId = projectInfo.relationId
-        if (!relationId.isNullOrEmpty()) {
+        val currentRelationId = projectInfo.relationId
+        if (!currentRelationId.isNullOrEmpty()) {
             throw InvalidParamException("$projectCode 已绑定IAM分级管理员")
         }
         val updateCount = projectDao.updateRelationByCode(dslContext, projectCode, relationId)
