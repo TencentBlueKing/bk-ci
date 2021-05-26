@@ -35,8 +35,8 @@ import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
-import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
+import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -78,6 +78,10 @@ class PipelineContextService@Autowired constructor(
                     varMap["jobs.${c.jobId ?: ""}.steps.${e.id}.id"] = e.id ?: ""
                     varMap["jobs.${c.jobId ?: ""}.steps.${e.id}.status"] = getStepStatus(e)
                     varMap["jobs.${c.jobId ?: ""}.steps.${e.id}.outcome"] = e.status ?: ""
+                    varMap["steps.${e.id}.name"] = e.name
+                    varMap["steps.${e.id}.id"] = e.id ?: ""
+                    varMap["steps.${e.id}.status"] = getStepStatus(e)
+                    varMap["steps.${e.id}.outcome"] = e.status ?: ""
                     varMap.putAll(getStepOutput(c, e, buildVar))
                 }
             }
@@ -85,7 +89,7 @@ class PipelineContextService@Autowired constructor(
 
         varMap["ci.pipeline_name"] = modelDetail.pipelineName
         varMap["ci.build_id"] = buildVar[PIPELINE_BUILD_ID] ?: ""
-        varMap["ci.build_num"] = buildVar[BUILD_NO] ?: ""
+        varMap["ci.build_num"] = buildVar[PIPELINE_BUILD_NUM] ?: ""
         varMap["ci.pipeline_name"] = modelDetail.pipelineName
         varMap["ci.actor"] = modelDetail.userId
         varMap["ci.build_url"] = "https://git-ci.woa.com/" // FIXME
