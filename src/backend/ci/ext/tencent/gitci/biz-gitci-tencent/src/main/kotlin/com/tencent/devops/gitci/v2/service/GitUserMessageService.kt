@@ -37,6 +37,7 @@ import com.tencent.devops.gitci.pojo.v2.UserMessageRecord
 import com.tencent.devops.gitci.pojo.v2.UserMessageType
 import com.tencent.devops.gitci.v2.dao.GitUserMessageDao
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.format.DateTimeFormatter
@@ -49,6 +50,7 @@ class GitUserMessageService @Autowired constructor(
 ) {
     companion object {
         private val timeFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        private val logger = LoggerFactory.getLogger(GitUserMessageService::class.java)
     }
 
     fun getMessages(
@@ -58,6 +60,7 @@ class GitUserMessageService @Autowired constructor(
         page: Int,
         pageSize: Int
     ): Page<UserMessageRecord> {
+        val startEpoch = System.currentTimeMillis()
         // 后续有不同类型再考虑分开逻辑，目前全部按照request处理
         val messageCount = gitUserMessageDao.getMessageCount(dslContext, userId, messageType, haveRead)
         if (messageCount == 0) {
@@ -68,6 +71,9 @@ class GitUserMessageService @Autowired constructor(
                 records = listOf()
             )
         }
+
+        logger.info("getMessageTest took ${System.currentTimeMillis() - startEpoch}ms to get messageCount")
+
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page = page, pageSize = pageSize)
         val messageRecords = gitUserMessageDao.getMessages(
             dslContext = dslContext,
@@ -77,8 +83,14 @@ class GitUserMessageService @Autowired constructor(
             limit = sqlLimit.limit,
             offset = sqlLimit.offset
         )!!
+
+        logger.info("getMessageTest took ${System.currentTimeMillis() - startEpoch}ms to get messageRecords")
+
         val requestIds = messageRecords.map { it.messageId.toInt() }.toSet()
         val requestMap = gitCIV2RequestService.getRequestMap(userId, requestIds)
+
+        logger.info("getMessageTest took ${System.currentTimeMillis() - startEpoch}ms to get requestMap")
+
         val resultMap = mutableMapOf<String, MutableList<UserMessage>>()
         messageRecords.forEach { message ->
             if (requestMap[message.messageId] == null) {
@@ -108,6 +120,9 @@ class GitUserMessageService @Autowired constructor(
                 resultMap[time] = mutableListOf(userMassage)
             }
         }
+
+        logger.info("getMessageTest took ${System.currentTimeMillis() - startEpoch}ms to get result")
+
         return Page(
             page = page,
             pageSize = pageSize,

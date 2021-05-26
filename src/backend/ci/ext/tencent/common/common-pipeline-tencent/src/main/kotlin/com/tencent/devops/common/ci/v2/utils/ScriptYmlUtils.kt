@@ -77,8 +77,9 @@ object ScriptYmlUtils {
     private const val stageNamespace = "stage-"
     private const val jobNamespace = "job-"
     private const val stepNamespace = "step-"
+
     // 用户编写的触发器语法和实际对象不一致
-    private const val userTrigger  ="on"
+    private const val userTrigger = "on"
     private const val formatTrigger = "triggerOn"
 
 
@@ -394,13 +395,25 @@ object ScriptYmlUtils {
         return stageList
     }
 
-    private fun formatStageLabel(labels: List<String>?): List<String> {
+    private fun formatStageLabel(labels: Any?): List<String> {
         if (labels == null) {
             return emptyList()
         }
 
+        val transLabels = try {
+            YamlUtil.getObjectMapper().readValue(
+                JsonUtil.toJson(labels),
+                List::class.java
+            ) as ArrayList<String>
+        } catch (e: MismatchedInputException) {
+            listOf(labels.toString())
+        } catch (e: Exception) {
+            logger.error("Format label  failed.", e)
+            listOf<String>()
+        }
+
         val newLabels = mutableListOf<String>()
-        labels.forEach {
+        transLabels.forEach {
             val stageLabel = getStageLabel(it)
             if (stageLabel != null) {
                 newLabels.add(stageLabel.id)

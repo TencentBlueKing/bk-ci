@@ -1,9 +1,28 @@
 version: v2.0
 
-parameters:
-  - name: username
-    type: string
-    default: world
+on:
+  push:
+    branches:
+      - master
+      - release/*
+    path:
+      - src/*
+  tag:
+    tags:
+      - release_*
+    from-branches:
+      - master
+  mr:
+    target-branches:
+      - master
+    path:
+      - src/*/*
+  schedules:
+    cron: 0 0/5 0 0 0
+    branches:
+      - master
+      - develop
+    always: false
 
 variables:
   DEPLOY_TYPE:
@@ -24,7 +43,7 @@ variables:
 stages:
   - name: "root_stage_id_1"
     id: root_stage_id_1
-    label: ${{ varivable.approve }}
+    label: "${{ varivable.approve }}"
     if: [ envs.BK_CI_EVENT == 'push' || varivable.approve ]
     jobs:
       root_job_id_1:
@@ -74,9 +93,6 @@ stages:
         steps:
           - run: |
               echo "root_stage_id_1, root_job_id_2"
-          - template: step1.yml@repoA
-            parameters:
-              username: RES_STEP
         depend-on:
           - job_id_1
       template:
@@ -100,34 +116,44 @@ on-fail:
     name: test2
   steps:
     - run: |
-        echo "do something when the upstream fails {{parameters.username}}"
+        echo "do something when the upstream fails"
+
+steps:
+  - template: cyclic/step/templates/step8.yml
+    parameters:
+      username: RES_STEP
 
 resources:
   repositories:
+    - repository: ruotiantang/gitci2-template-1
+      name: repoC
+      ref: master  # 可选
+      credentials:
+        personal-access-token: xxx
     - repository: ruotiantang/gitci2-template-1
       name: repoA
       ref: master  # 可选
       credentials:
         personal-access-token: xxx
 
-#notices:
-#  - type: email
-#    title: this is a email notice
-#    content: this is a email notice,content is hello.
-#    receivers:
-#      - user1
-#      - user2
-#    ccs:
-#      - user3
-#    if: SUCCESS
-#  - type: wework-message
-#    title: this is a wework-message notice
-#    content: this is a wework-message notice,content is hello.
-#    receivers:
-#      - user1
-#      - user2
-#  - type: wework-chat
-#    chat-id:
-#      - xxxxxxxx
-#    content: this is a wework-chat notice,content is hello.
+notices:
+  - type: email
+    title: this is a email notice
+    content: this is a email notice,content is hello.
+    receivers:
+      - user1
+      - user2
+    ccs:
+      - user3
+    if: SUCCESS
+  - type: wework-message
+    title: this is a wework-message notice
+    content: this is a wework-message notice,content is hello.
+    receivers:
+      - user1
+      - user2
+  - type: wework-chat
+    chat-id:
+      - xxxxxxxx
+    content: this is a wework-chat notice,content is hello.
 
