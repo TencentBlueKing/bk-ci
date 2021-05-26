@@ -87,6 +87,7 @@ import org.springframework.stereotype.Service
 import java.io.BufferedReader
 import java.io.File
 import java.io.StringReader
+import java.lang.RuntimeException
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.util.Date
@@ -139,6 +140,15 @@ class GitCITriggerService @Autowired constructor(
             creator = existsPipeline.creator,
             latestBuildInfo = null
         )
+
+        // 流水线未启用在手动触发处直接报错
+        if (!buildPipeline.enabled) {
+            logger.error(
+                "Pipeline is not enabled, return, " +
+                        "gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}"
+            )
+            throw RuntimeException("${TriggerReason.PIPELINE_DISABLE.name}(${TriggerReason.PIPELINE_DISABLE.detail})")
+        }
 
         val originYaml = triggerBuildReq.yaml
         // 如果当前文件没有内容直接不触发
