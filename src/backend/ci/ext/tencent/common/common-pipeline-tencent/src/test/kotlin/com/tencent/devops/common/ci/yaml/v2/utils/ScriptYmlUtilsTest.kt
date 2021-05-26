@@ -41,13 +41,13 @@ import java.util.regex.Pattern
 
 class ScriptYmlUtilsTest {
 
-    @Before
-    fun setUp() {
-    }
-
-    @After
-    fun tearDown() {
-    }
+//    @Before
+//    fun setUp() {
+//    }
+//
+//    @After
+//    fun tearDown() {
+//    }
 
     @Test
     fun formatYaml() {

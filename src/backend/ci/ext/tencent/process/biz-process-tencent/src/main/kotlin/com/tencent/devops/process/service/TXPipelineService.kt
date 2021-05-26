@@ -126,6 +126,7 @@ import javax.ws.rs.core.StreamingOutput
  * @author irwinsun
  * @version 1.0
  */
+@Suppress("ALL")
 @Service("newPipelineService")
 class TXPipelineService @Autowired constructor(
     private val bkAuthPermissionApi: AuthPermissionApi,

@@ -59,6 +59,7 @@ import org.springframework.stereotype.Component
 import java.net.SocketTimeoutException
 import java.net.URLEncoder
 
+@Suppress("ALL")
 @Component
 class DevCloudClient {
 

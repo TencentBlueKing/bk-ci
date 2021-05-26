@@ -38,6 +38,7 @@ import com.tencent.devops.process.utils.GIT_MR_NUMBER
 import org.slf4j.LoggerFactory
 import org.springframework.util.AntPathMatcher
 
+@Suppress("ALL")
 class V2WebHookMatcher(private val event: GitEvent) {
 
     companion object {

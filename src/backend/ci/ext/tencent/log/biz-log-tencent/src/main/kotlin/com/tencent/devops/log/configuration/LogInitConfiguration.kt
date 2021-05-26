@@ -59,7 +59,7 @@ class LogInitConfiguration {
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
-    fun GitCILogPermissionService(
+    fun gitCILogPermissionService(
         client: Client
     ) = GitCILogPermissionServiceImpl(client)
 }
