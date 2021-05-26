@@ -27,9 +27,6 @@
 
 package com.tencent.devops.common.gcloud.api.pojo
 
-import org.springframework.stereotype.Component
-
-@Component
 class GcloudException : Exception {
     constructor(message: String) : super(message)
 

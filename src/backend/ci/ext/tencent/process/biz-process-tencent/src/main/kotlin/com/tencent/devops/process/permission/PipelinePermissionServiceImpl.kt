@@ -49,7 +49,6 @@ import javax.ws.rs.core.Response
 /**
  * Pipeline专用权限校验接口
  */
-@Service
 class PipelinePermissionServiceImpl @Autowired constructor(
     private val authProjectApi: AuthProjectApi,
     private val authResourceApi: AuthResourceApi,

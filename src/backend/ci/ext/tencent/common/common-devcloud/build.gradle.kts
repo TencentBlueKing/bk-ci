@@ -29,4 +29,5 @@ dependencies {
     api(project(":core:common:common-service"))
     api("org.json:json")
     api("org.apache.commons:commons-lang3")
+    api("org.apache.commons:commons-lang3:$commonLang3Version")
 }

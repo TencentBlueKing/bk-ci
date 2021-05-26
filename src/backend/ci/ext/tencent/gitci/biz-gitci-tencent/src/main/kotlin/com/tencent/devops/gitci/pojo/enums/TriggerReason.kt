@@ -40,7 +40,9 @@ enum class TriggerReason(val detail: String) {
     GIT_CI_MERGE_HAS_CONFLICT("git ci merge request has conflict"),
     TRIGGER_NOT_MATCH("yaml trigger is not match"),
     PIPELINE_RUN_ERROR("pipeline run with error"),
-    PIPELINE_DISABLE("pipeline is not enabled");
+    PIPELINE_DISABLE("pipeline is not enabled"),
+    GIT_CI_YAML_TEMPLATE_ERROR("git ci yaml template replace error"),
+    GIT_CI_START_BUILD_FAILED("工蜂CI启动构建失败: %s");
 
     companion object {
 

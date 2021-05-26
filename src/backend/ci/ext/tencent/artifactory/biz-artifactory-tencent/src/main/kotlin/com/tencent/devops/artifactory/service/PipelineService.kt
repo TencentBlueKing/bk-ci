@@ -47,13 +47,8 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
-@Service
-class PipelineService @Autowired constructor(
-    private val client: Client,
-    private val pipelineAuthServiceCode: BSPipelineAuthServiceCode,
-    private val bkAuthPermissionApi: BSAuthPermissionApi,
-    private val authProjectApi: BSAuthProjectApi,
-    private val artifactoryAuthServiceCode: BSRepoAuthServiceCode
+abstract class PipelineService @Autowired constructor(
+    private val client: Client
 ) {
     private val resourceType = AuthResourceType.PIPELINE_DEFAULT
     fun getRootPathFileList(userId: String, projectId: String, path: String, jFrogFileInfoList: List<JFrogFileInfo>): List<FileInfo> {
@@ -280,42 +275,22 @@ class PipelineService @Autowired constructor(
         }
     }
 
-    fun validatePermission(userId: String, projectId: String, pipelineId: String? = null, permission: AuthPermission? = null, message: String? = null) {
-        if (!hasPermission(userId, projectId, pipelineId, permission)) {
-            throw PermissionForbiddenException(message ?: "permission denied")
-        }
-    }
+    abstract fun validatePermission(
+        userId: String,
+        projectId: String,
+        pipelineId: String? = null,
+        permission: AuthPermission? = null,
+        message: String? = null
+    )
 
-    fun hasPermission(userId: String, projectId: String, pipelineId: String? = null, permission: AuthPermission? = null): Boolean {
-        return if (pipelineId == null) {
-            authProjectApi.isProjectUser(userId, artifactoryAuthServiceCode, projectId, null)
-        } else {
-            bkAuthPermissionApi.validateUserResourcePermission(
-                userId,
-                pipelineAuthServiceCode,
-                AuthResourceType.PIPELINE_DEFAULT,
-                projectId,
-                pipelineId,
-                permission ?: AuthPermission.DOWNLOAD
-            )
-        }
-    }
+    abstract fun hasPermission(
+        userId: String,
+        projectId: String,
+        pipelineId: String? = null,
+        permission: AuthPermission? = null
+    ): Boolean
 
-    fun filterPipeline(user: String, projectId: String): List<String> {
-        val startTimestamp = System.currentTimeMillis()
-        try {
-            return bkAuthPermissionApi.getUserResourceByPermission(
-                user,
-                pipelineAuthServiceCode,
-                resourceType,
-                projectId,
-                AuthPermission.LIST,
-                null
-            )
-        } finally {
-            logger.info("filterPipeline cost ${System.currentTimeMillis() - startTimestamp}ms")
-        }
-    }
+    abstract fun filterPipeline(user: String, projectId: String): List<String>
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineService::class.java)

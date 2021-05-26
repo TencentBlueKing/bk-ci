@@ -88,12 +88,16 @@ class GitRequestEventDao {
 
     fun get(
         dslContext: DSLContext,
-        id: Long
+        id: Long,
+        commitMsg: String? = null
     ): GitRequestEvent? {
         with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
-            val record = dslContext.selectFrom(this)
+            val dsl = dslContext.selectFrom(this)
                 .where(ID.eq(id))
-                .fetchOne()
+            if (commitMsg != null) {
+                dsl.and(COMMIT_MSG.like("%$commitMsg%"))
+            }
+            val record = dsl.fetchOne()
             return if (record == null) {
                 null
             } else {
@@ -254,6 +258,46 @@ class GitRequestEventDao {
         with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
             return dslContext.delete(this)
                 .where(ID.`in`(ids)).execute()
+        }
+    }
+
+    /**
+     * 根据ID批量查询
+     */
+    fun getRequestsById(
+        dslContext: DSLContext,
+        requestIds: Set<Int>
+    ): List<GitRequestEvent> {
+        with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
+            val records = dslContext.selectFrom(this)
+                .where(ID.`in`(requestIds))
+                .orderBy(ID.desc())
+                .fetch()
+            val result = mutableListOf<GitRequestEvent>()
+            records.forEach {
+                result.add(
+                    GitRequestEvent(
+                        id = it.id,
+                        objectKind = it.objectKind,
+                        operationKind = it.operationKind,
+                        extensionAction = it.extensionAction,
+                        gitProjectId = it.gitProjectId,
+                        sourceGitProjectId = it.sourceGitProjectId,
+                        branch = it.branch,
+                        targetBranch = it.targetBranch,
+                        commitId = it.commitId,
+                        commitMsg = it.commitMsg,
+                        commitTimeStamp = it.commitTimestamp,
+                        userId = it.userName,
+                        totalCommitCount = it.totalCommitCount,
+                        mergeRequestId = it.mergeRequestId,
+                        event = "", // record.event,
+                        description = it.description,
+                        mrTitle = it.mrTitle
+                    )
+                )
+            }
+            return result
         }
     }
 }

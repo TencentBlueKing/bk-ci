@@ -30,6 +30,7 @@ package com.tencent.devops.common.environment.agent.pojo.devcloud
 import com.fasterxml.jackson.annotation.JsonValue
 
 data class DevCloudContainer(
+    val life: String,           // 容器生命，默认forever。forever:永久，brief：短暂
     val name: String,           // 容器名称
     val type: String,           // 容器类型, dev,stateless,stateful三个之一
     val image: String,          // 镜像（镜像名:版本)
@@ -40,13 +41,26 @@ data class DevCloudContainer(
     val replica: Int,           // 容器副本数，最小1，最大10
     val ports: List<Ports>?,    // 服务协议端口
     val password: String,       // 密码,需8到16位,至少包括两项[a-z,A-Z],[0-9]和[()`~!@#$%^&*-+=_
-    val params: Params?
+    val params: Params?,
+    val regionId: String? = "ap-guangzhou",       // 区域Id，默认值ap-guangzhou（广州）
+    val clusterType: String? = "normal"    // 集群类型，默认值normal。normal：一般类型，gitCI：工蜂CI
 )
 
 data class Params(
     val env: Map<String, String>?,
-    val command: List<String>?
+    val command: List<String>?,
+    val nfsVolume: NfsVolume? = null,
+    val labels: Map<String, String>? = emptyMap(),
+    val ipEnabled: Boolean = true
 )
+
+data class NfsVolume(
+    val server: String,
+    val path: String,
+    val mountPath: String
+) {
+    constructor() : this("", "", "")
+}
 
 enum class ContainerType(private val type: String) {
     DEV("dev"),
@@ -58,12 +72,6 @@ enum class ContainerType(private val type: String) {
         return type
     }
 }
-
-data class Registry(
-    val host: String,
-    val username: String,
-    val password: String
-)
 
 data class Ports(
     val protocol: String?,
@@ -79,6 +87,15 @@ enum class TaskStatus {
     SUCCEEDED
 }
 
+enum class DevCloudContainerStatus {
+    CREATING,
+    STARTING,
+    RUNNING,
+    STOPPED,
+    SCALING,
+    EXCEPTION
+}
+
 enum class TaskAction {
     CREATE,
     START,
@@ -88,3 +105,4 @@ enum class TaskAction {
     DELETE,
     BUILD_IMAGE
 }
+

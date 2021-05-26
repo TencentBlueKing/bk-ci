@@ -38,3 +38,5 @@ dependencies {
     api("net.sf.json-lib:json-lib")
     api(group= "cglib", name = "cglib", version= "2.2.2")
 }
+
+apply from: "$rootDir/task_deploy_to_maven.gradle"

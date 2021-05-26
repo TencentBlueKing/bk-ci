@@ -51,6 +51,8 @@ import com.tencent.devops.common.ci.task.MarketBuildLessTask
 import com.tencent.devops.common.ci.task.MarketBuildTask
 import com.tencent.devops.common.ci.task.WindowsScriptInput
 import com.tencent.devops.common.ci.task.WindowsScriptTask
+import com.tencent.devops.common.ci.v2.RunsOn
+import com.tencent.devops.common.ci.v2.ScriptBuildYaml
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.ci.yaml.Job
 import com.tencent.devops.common.ci.yaml.JobDetail
@@ -63,7 +65,10 @@ import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.JobRunCondition
+import com.tencent.devops.common.pipeline.enums.StageRunCondition
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
+import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
@@ -101,6 +106,9 @@ import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
 import com.tencent.devops.store.api.image.service.ServiceStoreImageResource
+import com.tencent.devops.common.ci.v2.Stage as V2Stage
+import com.tencent.devops.common.ci.v2.Job as V2Job
+import com.tencent.devops.common.ci.v2.Step as V2Step
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -269,31 +277,7 @@ class TXPipelineService @Autowired constructor(
     }
 
     fun exportYaml(userId: String, projectId: String, pipelineId: String, isGitCI: Boolean = false): Response {
-        pipelinePermissionService.validPipelinePermission(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            permission = AuthPermission.EDIT,
-            message = "用户($userId)无权限在工程($projectId)下导出流水线"
-        )
-        val model = pipelineRepositoryService.getModel(pipelineId) ?: throw CustomException(
-            Response.Status.BAD_REQUEST,
-            "流水线已不存在！"
-        )
-        val yamlSb = StringBuilder()
-        yamlSb.append("#####################################################################################################################\n")
-        yamlSb.append("# 项目ID: $projectId \n")
-        yamlSb.append("# 流水线ID: $pipelineId \n")
-        yamlSb.append("# 流水线名称: ${model.name} \n")
-        yamlSb.append("# 导出时间: ${DateTimeUtil.toDateTime(LocalDateTime.now())} \n")
-        yamlSb.append("# \n")
-        yamlSb.append("# 注意：不支持系统凭证(用户名、密码)的导出，请检查系统凭证的完整性！ \n")
-        yamlSb.append("# 注意：[插件]内参数可能存在敏感信息，请仔细检查，谨慎分享！！！ \n")
-        if (isGitCI) {
-            yamlSb.append("# 注意：[插件]工蜂CI不支持依赖蓝盾项目的服务（如凭证、节点等），请联系插件开发者改造插件，改造指引：https://iwiki.woa.com/x/CqARHg \n")
-            yamlSb.append("# 注意：[插件]工蜂CI不支持蓝盾老版本的插件，请在研发商店搜索新插件替换 \n")
-            yamlSb.append("# 注意：[构建环境]工蜂CI不支持第三方构建机，支持的构建环境参考：https://iwiki.woa.com/x/FQuWDQ \n")
-        }
+        val (model, yamlSb) = checkPermissionAndGetHead(userId, projectId, pipelineId, isGitCI)
         // 在stages对象的生成中会添加顶部注释，所以放在分隔注释上面
         val stages = getStageFromModel(userId, projectId, pipelineId, model, yamlSb, isGitCI)
         yamlSb.append("#####################################################################################################################\n\n")
@@ -594,7 +578,7 @@ class TXPipelineService @Autowired constructor(
                     logger.info("Not support plugin:${it.getClassType()}, skip...")
                     comment.append(
                         "# 注意：不再支持插件【${it.name}(${it.getClassType()})】的导出！" +
-                            "请检查YAML的完整性，或切换为研发商店推荐的插件后再导出。\n"
+                                "请检查YAML的完整性，或切换为研发商店推荐的插件后再导出。\n"
                     )
                     if (isGitCI) {
                         val task = OldVersionTask(
@@ -606,7 +590,7 @@ class TXPipelineService @Autowired constructor(
                             TaskData(
                                 task,
                                 "# ======== 工蜂CI不支持蓝盾老版本插件 ${it.name} ，" +
-                                    "请在研发商店搜索新插件替换 ======== \n ${it.getClassType()}@latest",
+                                        "请在研发商店搜索新插件替换 ======== \n ${it.getClassType()}@latest",
                                 toYamlStr(task)
                             )
                         )
@@ -631,8 +615,8 @@ class TXPipelineService @Autowired constructor(
                 // 工蜂CI仅支持docker，devCloud，macos
                 val tip =
                     "# 注意：工蜂CI暂不支持当前类型的构建机" +
-                        "【${dispatchType.buildType().value}(${dispatchType.buildType().name})】的导出, " +
-                        "需检查JOB(${modelContainer.name})的Pool字段 "
+                            "【${dispatchType.buildType().value}(${dispatchType.buildType().name})】的导出, " +
+                            "需检查JOB(${modelContainer.name})的Pool字段 "
                 when (dispatchType.buildType()) {
                     BuildType.DOCKER, BuildType.PUBLIC_DEVCLOUD -> {
                         return PoolData(
@@ -688,8 +672,8 @@ class TXPipelineService @Autowired constructor(
                     else -> {
                         comment.append(
                             "# 注意：暂不支持当前类型的构建机" +
-                                "【${dispatchType.buildType().value}(${dispatchType.buildType().name})】的导出, " +
-                                "需检查JOB(${modelContainer.name})的Pool字段 \n"
+                                    "【${dispatchType.buildType().value}(${dispatchType.buildType().name})】的导出, " +
+                                    "需检查JOB(${modelContainer.name})的Pool字段 \n"
                         )
                         return PoolData(null, null, null)
                     }
@@ -704,7 +688,7 @@ class TXPipelineService @Autowired constructor(
     private fun getThirdPartyEnvPool(dispatchType: DispatchType, projectId: String, comment: StringBuilder): Pool? {
         comment.append(
             "# 注意：【${BuildType.THIRD_PARTY_AGENT_ENV.value}】的环境【${dispatchType.value}】在新业务下可能不存在，" +
-                "请手动修改成存在的环境，并检查操作系统是否正确！ \n"
+                    "请手动修改成存在的环境，并检查操作系统是否正确！ \n"
         )
         return if (dispatchType is ThirdPartyAgentEnvDispatchType) {
             val agentsResult = if (dispatchType.agentType == AgentType.ID) {
@@ -717,7 +701,7 @@ class TXPipelineService @Autowired constructor(
             val os = if (agentsResult.isNotOk() || null == agentsResult.data || agentsResult.data!!.isEmpty()) {
                 logger.error(
                     "getPoolFromModelContainer , ThirdPartyAgentIDDispatchType , " +
-                        "not found agent:${dispatchType.envName}"
+                            "not found agent:${dispatchType.envName}"
                 )
                 VMBaseOS.LINUX
             } else {
@@ -760,7 +744,7 @@ class TXPipelineService @Autowired constructor(
     private fun getThirdPartyAgentPool(dispatchType: DispatchType, projectId: String, comment: StringBuilder): Pool? {
         comment.append(
             "# 注意：【${BuildType.THIRD_PARTY_AGENT_ID.value}】的节点【${dispatchType.value}】在新业务下可能不存在，" +
-                "请手动修改成存在的节点！ \n"
+                    "请手动修改成存在的节点！ \n"
         )
         return if (dispatchType is ThirdPartyAgentIDDispatchType) {
             val agentResult = if (dispatchType.agentType == AgentType.ID) {
@@ -773,7 +757,7 @@ class TXPipelineService @Autowired constructor(
             val os = if (agentResult.isNotOk() || null == agentResult.data) {
                 logger.error(
                     "getPoolFromModelContainer , ThirdPartyAgentIDDispatchType , " +
-                        "not found agent:${dispatchType.displayName}"
+                            "not found agent:${dispatchType.displayName}"
                 )
                 VMBaseOS.LINUX
             } else {
@@ -1092,6 +1076,355 @@ class TXPipelineService @Autowired constructor(
             }
         }
         return sb.toString()
+    }
+
+    // 导出工蜂CI-2.0的yml
+    fun exportV2Yaml(userId: String, projectId: String, pipelineId: String, isGitCI: Boolean = false): Response {
+        val (model, yamlSb) = checkPermissionAndGetHead(userId, projectId, pipelineId, isGitCI)
+        yamlSb.append("#####################################################################################################################\n\n")
+        val yamlObj = ScriptBuildYaml(
+            version = "v2.0",
+            name = model.name,
+            label = model.labels,
+            triggerOn = null,
+            // TODO: variables从Var表中拿
+            variables = null,
+            stages = getV2StageFromModel(userId, projectId, pipelineId, model, yamlSb),
+            extends = null,
+            resource = null,
+            notices = null,
+            finally = getV2FinalFromStage(userId, projectId, pipelineId, model.stages.filter { it.finally }, yamlSb)
+        )
+        var yamlStr = YamlUtil.toYaml(yamlObj)
+        yamlSb.append(replaceTaskType(yamlStr))
+        return exportToFile(yamlSb.toString(), model.name)
+    }
+
+    private fun getV2FinalFromStage(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        stage: List<com.tencent.devops.common.pipeline.container.Stage>,
+        comment: StringBuilder
+    ): List<V2Stage> {
+        if (stage.isEmpty()) {
+            return emptyList()
+        }
+        val stages = mutableListOf<V2Stage>()
+        stage.forEach {
+            val jobs = getV2JobFromStage(userId, projectId, pipelineId, it, comment)
+            stages.add(
+                V2Stage(
+                    name = it.name,
+                    id = it.id,
+                    // TODO: 根据ID从后台去拿名称再填进去
+                    label = listOf(it.tag.toString()),
+                    ifField = if (it.stageControlOption?.runCondition == StageRunCondition.CUSTOM_CONDITION_MATCH) {
+                        it.stageControlOption?.customCondition
+                    } else {
+                        null
+                    },
+                    fastKill = it.fastKill,
+                    jobs = jobs
+                )
+            )
+        }
+        return stages
+    }
+
+    private fun getV2StageFromModel(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        model: Model,
+        comment: StringBuilder
+    ): List<V2Stage> {
+        val stages = mutableListOf<V2Stage>()
+        model.stages.drop(1).forEach { stage ->
+            if (stage.finally) {
+                return@forEach
+            }
+            val jobs = getV2JobFromStage(userId, projectId, pipelineId, stage, comment)
+            stages.add(
+                V2Stage(
+                    name = stage.name,
+                    id = stage.id,
+                    // TODO: 根据ID从后台去拿名称再填进去
+                    label = listOf(stage.tag.toString()),
+                    ifField = if (stage.stageControlOption?.runCondition == StageRunCondition.CUSTOM_CONDITION_MATCH) {
+                        stage.stageControlOption?.customCondition
+                    } else {
+                        null
+                    },
+                    fastKill = stage.fastKill,
+                    jobs = jobs
+                )
+            )
+        }
+        return stages
+    }
+
+    private fun getV2JobFromStage(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        stage: com.tencent.devops.common.pipeline.container.Stage,
+        comment: StringBuilder
+    ): List<V2Job> {
+        val jobs = mutableListOf<V2Job>()
+        stage.containers.forEach {
+            when (it.getClassType()) {
+                NormalContainer.classType -> {
+                    val job = it as NormalContainer
+                    jobs.add(
+                        V2Job(
+                            id = job.id,
+                            name = job.name,
+                            // TODO: 问下对应关系
+                            runsOn = RunsOn(),
+                            // TODO: 问下对应关系
+                            services = null,
+                            ifField = if (job.jobControlOption?.runCondition == JobRunCondition.CUSTOM_CONDITION_MATCH) {
+                                job.jobControlOption?.customCondition
+                            } else {
+                                null
+                            },
+                            steps = getV2StepFromJob(userId, projectId, pipelineId, job, comment),
+                            timeoutMinutes = job.jobControlOption?.timeout,
+                            // TODO: 问下对应关系
+                            env = null,
+                            continueOnError = job.jobControlOption?.continueWhenFailed,
+                            // TODO: 问下对应关系
+                            strategy = null,
+                            dependOn = job.jobControlOption?.dependOnId
+                        )
+                    )
+                }
+                else -> {
+                    if (it.getClassType() != VMBuildContainer.classType) {
+                        logger.error("get jobs from stage failed, unknown classType:(${it.getClassType()})")
+                        // TODO: 看看是否抛异常
+                    }
+                    val job = it as VMBuildContainer
+                    jobs.add(
+                        V2Job(
+                            id = job.id,
+                            name = job.name,
+                            // TODO: 问下对应关系
+                            runsOn = RunsOn(),
+                            // TODO: 问下对应关系
+                            services = null,
+                            ifField = if (job.jobControlOption?.runCondition == JobRunCondition.CUSTOM_CONDITION_MATCH) {
+                                job.jobControlOption?.customCondition
+                            } else {
+                                null
+                            },
+                            steps = getV2StepFromJob(userId, projectId, pipelineId, job, comment),
+                            timeoutMinutes = job.jobControlOption?.timeout,
+                            // TODO: 问下对应关系
+                            env = job.buildEnv,
+                            continueOnError = job.jobControlOption?.continueWhenFailed,
+                            // TODO: 问下对应关系
+                            strategy = null,
+                            dependOn = job.jobControlOption?.dependOnId
+                        )
+                    )
+                }
+            }
+        }
+        return jobs
+    }
+
+    private fun getV2StepFromJob(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        job: Container,
+        comment: StringBuilder
+    ): List<V2Step> {
+        val stepList = mutableListOf<V2Step>()
+        job.elements.forEach { element ->
+            when (element.getClassType()) {
+                LinuxScriptElement.classType -> {
+                    val step = element as LinuxScriptElement
+                    stepList.add(
+                        V2Step(
+                            name = step.name,
+                            id = step.id,
+                            ifFiled = if (step.additionalOptions?.runCondition == RunCondition.CUSTOM_CONDITION_MATCH) {
+                                step.additionalOptions?.customCondition
+                            } else {
+                                null
+                            },
+                            uses = "${step.getAtomCode()}@${step.version}",
+                            // TODO: 问下对应关系
+                            with = mapOf(
+                                "scriptType" to element.scriptType,
+                                "content" to element.script,
+                                "continueOnError" to element.continueNoneZero
+                            ),
+                            timeoutMinutes = step.additionalOptions?.timeout?.toInt(),
+                            continueOnError = step.additionalOptions?.continueWhenFailed,
+                            retryTimes = step.additionalOptions?.retryCount,
+                            // TODO: 问下对应关系
+                            env = step.additionalOptions?.customEnv,
+                            // TODO: 问下对应关系
+                            run = null,
+                            // TODO: 问下对应关系
+                            checkout = null
+                        )
+                    )
+                }
+                WindowsScriptElement.classType -> {
+                    val step = element as WindowsScriptElement
+                    stepList.add(
+                        V2Step(
+                            name = step.name,
+                            id = step.id,
+                            ifFiled = if (step.additionalOptions?.runCondition == RunCondition.CUSTOM_CONDITION_MATCH) {
+                                step.additionalOptions?.customCondition
+                            } else {
+                                null
+                            },
+                            uses = "${step.getAtomCode()}@${step.version}",
+                            // TODO: 问下对应关系
+                            with = mapOf(
+                                "content" to element.script,
+                                "scriptType" to element.scriptType
+                            ),
+                            timeoutMinutes = step.additionalOptions?.timeout?.toInt(),
+                            continueOnError = step.additionalOptions?.continueWhenFailed,
+                            retryTimes = step.additionalOptions?.retryCount,
+                            // TODO: 问下对应关系
+                            env = step.additionalOptions?.customEnv,
+                            // TODO: 问下对应关系
+                            run = null,
+                            // TODO: 问下对应关系
+                            checkout = null
+                        )
+                    )
+                }
+                MarketBuildAtomElement.classType -> {
+                    val step = element as MarketBuildAtomElement
+                    var elementData = mutableMapOf<String, Any>()
+                    // 针对CodeCC的插件导出参数做处理
+                    if (element.getAtomCode() == "CodeccCheckAtomDebug") {
+                        element.data.forEach dataLoop@{ (key, value) ->
+                            if (key == "input") {
+                                elementData[key] = objectMapper.convertValue<CodeCCExportYamlData>(
+                                    value,
+                                    object : TypeReference<CodeCCExportYamlData>() {}
+                                )
+                            } else if (key == "output" || key == "namespace") {
+                                return@dataLoop
+                            } else {
+                                elementData[key] = value
+                            }
+                        }
+                    } else {
+                        elementData = element.data.toMutableMap()
+                    }
+                    stepList.add(
+                        V2Step(
+                            name = step.name,
+                            id = step.id,
+                            ifFiled = if (step.additionalOptions?.runCondition == RunCondition.CUSTOM_CONDITION_MATCH) {
+                                step.additionalOptions?.customCondition
+                            } else {
+                                null
+                            },
+                            uses = "${step.getAtomCode()}@${step.version}",
+                            with = mapOf(
+                                "atomCode" to element.getAtomCode(),
+                                "name" to element.name,
+                                "version" to element.version,
+                                "data" to elementData
+                            ),
+                            timeoutMinutes = step.additionalOptions?.timeout?.toInt(),
+                            continueOnError = step.additionalOptions?.continueWhenFailed,
+                            retryTimes = step.additionalOptions?.retryCount,
+                            // TODO: 问下对应关系
+                            env = step.additionalOptions?.customEnv,
+                            // TODO: 问下对应关系
+                            run = null,
+                            // TODO: 问下对应关系
+                            checkout = null
+                        )
+                    )
+                }
+                MarketBuildLessAtomElement.classType -> {
+                    val step = element as MarketBuildLessAtomElement
+                    stepList.add(
+                        V2Step(
+                            name = step.name,
+                            id = step.id,
+                            ifFiled = if (step.additionalOptions?.runCondition == RunCondition.CUSTOM_CONDITION_MATCH) {
+                                step.additionalOptions?.customCondition
+                            } else {
+                                null
+                            },
+                            uses = "${step.getAtomCode()}@${step.version}",
+                            with = mapOf(
+                                "atomCode" to element.getAtomCode(),
+                                "name" to element.name,
+                                "version" to element.version,
+                                "data" to element.data
+                            ),
+                            timeoutMinutes = step.additionalOptions?.timeout?.toInt(),
+                            continueOnError = step.additionalOptions?.continueWhenFailed,
+                            retryTimes = step.additionalOptions?.retryCount,
+                            // TODO: 问下对应关系
+                            env = step.additionalOptions?.customEnv,
+                            // TODO: 问下对应关系
+                            run = null,
+                            // TODO: 问下对应关系
+                            checkout = null
+                        )
+                    )
+                }
+                else -> {
+                    logger.info("Not support plugin:${element.getClassType()}, skip...")
+                    comment.append(
+                        "# 注意：不再支持插件【${element.name}(${element.getClassType()})】的导出！" +
+                                "请检查YAML的完整性，或切换为研发商店推荐的插件后再导出。\n"
+                    )
+                }
+            }
+        }
+        return stepList
+    }
+
+    private fun checkPermissionAndGetHead(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        isGitCI: Boolean
+    ): Pair<Model, StringBuilder> {
+        pipelinePermissionService.validPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.EDIT,
+            message = "用户($userId)无权限在工程($projectId)下导出流水线"
+        )
+        val model = pipelineRepositoryService.getModel(pipelineId) ?: throw CustomException(
+            Response.Status.BAD_REQUEST,
+            "流水线已不存在！"
+        )
+        val yamlSb = StringBuilder()
+        yamlSb.append("#####################################################################################################################\n")
+        yamlSb.append("# 项目ID: $projectId \n")
+        yamlSb.append("# 流水线ID: $pipelineId \n")
+        yamlSb.append("# 流水线名称: ${model.name} \n")
+        yamlSb.append("# 导出时间: ${DateTimeUtil.toDateTime(LocalDateTime.now())} \n")
+        yamlSb.append("# \n")
+        yamlSb.append("# 注意：不支持系统凭证(用户名、密码)的导出，请检查系统凭证的完整性！ \n")
+        yamlSb.append("# 注意：[插件]内参数可能存在敏感信息，请仔细检查，谨慎分享！！！ \n")
+        if (isGitCI) {
+            yamlSb.append("# 注意：[插件]工蜂CI不支持依赖蓝盾项目的服务（如凭证、节点等），请联系插件开发者改造插件，改造指引：https://iwiki.woa.com/x/CqARHg \n")
+            yamlSb.append("# 注意：[插件]工蜂CI不支持蓝盾老版本的插件，请在研发商店搜索新插件替换 \n")
+        }
+        return Pair(model, yamlSb)
     }
 
     private fun exportToFile(yaml: String, pipelineName: String): Response {

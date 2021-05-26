@@ -42,10 +42,18 @@ dependencies {
     api(project(":ext:tencent:gitci:api-gitci-tencent"))
     api(project(":ext:tencent:project:api-project-tencent"))
     api(project(":ext:tencent:project:api-project-op"))
+    api(project(":ext:tencent:environment:api-environment-tencent"))
     api(project(":core:store:api-store"))
     api(project(":core:project:api-project"))
     api(project(":ext:tencent:gitci:model-gitci-tencent"))
     api(project(":ext:tencent:scm:api-scm"))
+    api(project(":core:repository:api-repository"))
+
+    api(project(":ext:tencent:notify:api-notify-tencent"))
+
+    api(project(":core:auth:api-auth"))
+    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
+
     api("com.zaxxer:HikariCP")
     api("mysql:mysql-connector-java")
     api("org.apache.commons:commons-exec")

@@ -28,16 +28,14 @@
 package com.tencent.devops.dockerhost.dispatch
 
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 @Service
 class AlertApi constructor(
-    dockerHostConfig: DockerHostConfig,
-    gray: Gray
-) : AbstractBuildResourceApi(dockerHostConfig, gray) {
+    dockerHostConfig: DockerHostConfig
+) : AbstractBuildResourceApi(dockerHostConfig) {
     private val logger = LoggerFactory.getLogger(AlertApi::class.java)
 
     fun alert(level: String, title: String, message: String) {
