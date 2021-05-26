@@ -27,7 +27,6 @@
 
 package com.tencent.devops.common.ci
 
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 internal class CiYamlUtilsTest {
