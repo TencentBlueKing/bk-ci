@@ -72,7 +72,12 @@ class GitCIEnvironmentPermissionServiceImpl @Autowired constructor(
         return resultMap
     }
 
-    override fun checkEnvPermission(userId: String, projectId: String, envId: Long, permission: AuthPermission): Boolean {
+    override fun checkEnvPermission(
+        userId: String,
+        projectId: String,
+        envId: Long,
+        permission: AuthPermission
+    ): Boolean {
         return checkPermission(userId, projectId)
     }
 
@@ -99,7 +104,11 @@ class GitCIEnvironmentPermissionServiceImpl @Autowired constructor(
         return getAllNodeInstance(projectId).map { HashUtil.decodeIdToLong(it) }.toSet()
     }
 
-    override fun listNodeByPermissions(userId: String, projectId: String, permissions: Set<AuthPermission>): Map<AuthPermission, List<String>> {
+    override fun listNodeByPermissions(
+        userId: String,
+        projectId: String,
+        permissions: Set<AuthPermission>
+    ): Map<AuthPermission, List<String>> {
         if (!checkPermission(userId, projectId)) {
             return emptyMap()
         }
@@ -111,7 +120,12 @@ class GitCIEnvironmentPermissionServiceImpl @Autowired constructor(
         return resultMap
     }
 
-    override fun checkNodePermission(userId: String, projectId: String, nodeId: Long, permission: AuthPermission): Boolean {
+    override fun checkNodePermission(
+        userId: String,
+        projectId: String,
+        nodeId: Long,
+        permission: AuthPermission
+    ): Boolean {
         return checkPermission(userId, projectId)
     }
 

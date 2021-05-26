@@ -45,7 +45,12 @@ abstract class PipelineService @Autowired constructor(
     private val client: Client
 ) {
     private val resourceType = AuthResourceType.PIPELINE_DEFAULT
-    fun getRootPathFileList(userId: String, projectId: String, path: String, jFrogFileInfoList: List<JFrogFileInfo>): List<FileInfo> {
+    fun getRootPathFileList(
+        userId: String,
+        projectId: String,
+        path: String,
+        jFrogFileInfoList: List<JFrogFileInfo>
+    ): List<FileInfo> {
         val hasPermissionList = filterPipeline(userId, projectId)
         val pipelineIdToNameMap = getPipelineNames(projectId, hasPermissionList.toSet())
 
@@ -64,7 +69,8 @@ abstract class PipelineService @Autowired constructor(
                         fullPath = fullPath,
                         size = it.size,
                         folder = it.folder,
-                        modifiedTime = LocalDateTime.parse(it.lastModified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+                        modifiedTime =
+                            LocalDateTime.parse(it.lastModified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
                         artifactoryType = ArtifactoryType.PIPELINE
                     )
                 )
@@ -94,7 +100,8 @@ abstract class PipelineService @Autowired constructor(
                         fullPath = fullPath,
                         size = it.size,
                         folder = it.folder,
-                        modifiedTime = LocalDateTime.parse(it.lastModified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+                        modifiedTime =
+                            LocalDateTime.parse(it.lastModified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
                         artifactoryType = ArtifactoryType.PIPELINE
                     )
                 )
@@ -198,7 +205,13 @@ abstract class PipelineService @Autowired constructor(
         return path.replaceFirst("/$pipelineId", "/$pipelineName")
     }
 
-    fun getFullName(path: String, pipelineId: String, pipelineName: String, buildId: String, buildName: String): String {
+    fun getFullName(
+        path: String,
+        pipelineId: String,
+        pipelineName: String,
+        buildId: String,
+        buildName: String
+    ): String {
         return path.replaceFirst("/$pipelineId/$buildId", "/$pipelineName/$buildName")
     }
 
