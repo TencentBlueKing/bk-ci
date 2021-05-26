@@ -125,10 +125,12 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
 
         // 修改流水线并启动构建，需要加锁保证事务性
         try {
-            logger.info("GitCI Build start, gitProjectId[${gitCIBasicSetting.gitProjectId}], pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]")
+            logger.info("GitCI Build start, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
+                "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]")
             val buildId =
                 startupPipelineBuild(processClient, gitBuildId, model, event, gitCIBasicSetting, pipeline.pipelineId)
-            logger.info("GitCI Build success, gitProjectId[${gitCIBasicSetting.gitProjectId}], pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId], buildId[$buildId]")
+            logger.info("GitCI Build success, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
+                "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId], buildId[$buildId]")
             gitPipelineResourceDao.updatePipelineBuildInfo(dslContext, pipeline, buildId)
             gitRequestEventBuildDao.update(dslContext, gitBuildId, pipeline.pipelineId, buildId)
             // 推送启动构建消息,当人工触发时不推送构建消息
@@ -147,7 +149,8 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
             return BuildId(buildId)
         } catch (e: Exception) {
             logger.error(
-                "GitCI Build failed, gitProjectId[${gitCIBasicSetting.gitProjectId}], pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]",
+                "GitCI Build failed, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
+                    "pipelineId[${pipeline.pipelineId}], gitBuildId[$gitBuildId]",
                 e
             )
             val build = gitRequestEventBuildDao.getByGitBuildId(dslContext, gitBuildId)
@@ -206,7 +209,8 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
                 return true
             }
         } catch (e: Exception) {
-            logger.error("get pipeline failed, pipelineId: ${pipeline.pipelineId}, projectCode: ${gitCIBasicSetting.projectCode}, error msg: ${e.message}")
+            logger.error("get pipeline failed, pipelineId: ${pipeline.pipelineId}, " +
+                "projectCode: ${gitCIBasicSetting.projectCode}, error msg: ${e.message}")
             return true
         }
         return false

@@ -4,11 +4,8 @@ import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
-import org.springframework.beans.factory.annotation.Autowired
 
-class GitCIPermissionProjectServiceImpl @Autowired constructor(
-
-): PermissionProjectService {
+class GitCIPermissionProjectServiceImpl : PermissionProjectService {
 
     // GitCI权限场景不会出现次调用, 故做默认实现
     override fun getProjectUsers(serviceCode: String, projectCode: String, group: BkAuthGroup?): List<String> {

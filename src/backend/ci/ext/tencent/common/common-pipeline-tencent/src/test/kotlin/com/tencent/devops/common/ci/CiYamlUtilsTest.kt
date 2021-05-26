@@ -36,62 +36,6 @@ import java.io.InputStreamReader
 internal class CiYamlUtilsTest {
 
     @Test
-    fun parseImage() {
-    }
-
-    @Test
-    fun formatYaml() {
-    }
-
-    @Test
-    fun checkYaml() {
-    }
-
-    @Test
-    fun normalizeGitCiYaml() {
-    }
-
-    @Test
-    fun normalizePrebuildYaml() {
-    }
-
-    @Test
-    fun validateYaml() {
-    }
-
-    @Test
-    fun validate() {
-    }
-
-    @Test
-    fun jsonNodeFromString() {
-    }
-
-    @Test
-    fun validateSchema() {
-    }
-
-    @Test
-    fun validateJson() {
-    }
-
-    @Test
-    fun convertYamlToJson() {
-    }
-
-    @Test
-    fun getCIBuildYamlSchema() {
-    }
-
-    @Test
-    fun getAbstractTaskSchema() {
-    }
-
-    @Test
-    fun getAbstractServiceSchema() {
-    }
-
-    @Test
     fun versionExist() {
         val classPathResource = ClassPathResource("test.yml")
         val inputStream: InputStream = classPathResource.inputStream

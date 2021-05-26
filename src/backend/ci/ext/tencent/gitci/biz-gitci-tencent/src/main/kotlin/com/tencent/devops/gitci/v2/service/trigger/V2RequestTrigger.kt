@@ -132,7 +132,8 @@ class V2RequestTrigger @Autowired constructor(
             )
             gitBasicSettingService.updateGitCISetting(gitRequestEvent.gitProjectId)
         } else {
-            logger.warn("Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}")
+            logger.warn("Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
+                "eventId: ${gitRequestEvent.id}")
             gitCIEventSaveService.saveNotBuildEvent(
                 userId = gitRequestEvent.userId,
                 eventId = gitRequestEvent.id!!,

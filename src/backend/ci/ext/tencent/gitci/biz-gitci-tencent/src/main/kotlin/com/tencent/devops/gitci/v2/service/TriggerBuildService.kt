@@ -131,6 +131,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
 
+@Suppress("ALL")
 @Service
 class TriggerBuildService @Autowired constructor(
     private val client: Client,
@@ -718,7 +719,8 @@ class TriggerBuildService @Autowired constructor(
                     hookEventType = CodeEventType.MERGE_REQUEST.name,
                     hookSourceBranch = event.branch,
                     hookTargetBranch = event.targetBranch,
-                    hookSourceUrl = if (event.sourceGitProjectId != null && event.sourceGitProjectId != event.gitProjectId) {
+                    hookSourceUrl = if (event.sourceGitProjectId != null &&
+                        event.sourceGitProjectId != event.gitProjectId) {
                         gitEvent.object_attributes.source.http_url
                     } else {
                         gitBasicSetting.gitHttpUrl

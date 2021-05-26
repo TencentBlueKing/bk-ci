@@ -120,7 +120,6 @@ class GitCICertPermissionServiceImpl @Autowired constructor(
         return
     }
 
-
     private fun getAllCertByProject(projectId: String): List<String> {
         val idList = mutableListOf<String>()
         val count = certDao.countByProject(dslContext, projectId, null)

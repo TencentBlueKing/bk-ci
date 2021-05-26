@@ -54,7 +54,7 @@ object EnvUtils {
             return command ?: ""
         }
         // 先处理${} 单个花括号的情况
-        val value = parseWithSingleCurlyBraces(command, data, replaceWithEmpty, isEscape)
+        val value = parseWithSingleCurlyBraces(command, data, replaceWithEmpty, isEscape, contextMap)
         // 再处理${{}} 双花括号的情况
         return parseWithDoubleCurlyBraces(value, data, isEscape, contextMap)
     }
@@ -89,7 +89,8 @@ object EnvUtils {
         command: String,
         data: Map<String, String>,
         replaceWithEmpty: Boolean,
-        isEscape: Boolean
+        isEscape: Boolean,
+        contextMap: Map<String, String>? = emptyMap()
     ): String {
         val newValue = StringBuilder()
         var index = 0
@@ -97,7 +98,7 @@ object EnvUtils {
             val c = command[index]
             if (c == '$' && (index + 1) < command.length && command[index + 1] == '{') {
                 val inside = StringBuilder()
-                index = parseVariable(command, index + 2, inside, data, replaceWithEmpty)
+                index = parseVariable(command, index + 2, inside, data, replaceWithEmpty, contextMap)
                 if (isEscape) {
                     // 将动态参数值里面的特殊字符转义
                     newValue.append(escapeSpecialWord(inside.toString()))
@@ -130,7 +131,8 @@ object EnvUtils {
         start: Int,
         newValue: StringBuilder,
         data: Map<String, String>,
-        replaceWithEmpty: Boolean = false
+        replaceWithEmpty: Boolean = false,
+        contextMap: Map<String, String>? = emptyMap()
     ): Int {
         val token = StringBuilder()
         var index = start
@@ -138,10 +140,10 @@ object EnvUtils {
             val c = command[index]
             if (c == '$' && (index + 1) < command.length && command[index + 1] == '{') {
                 val inside = StringBuilder()
-                index = parseVariable(command, index + 2, inside, data, replaceWithEmpty)
+                index = parseVariable(command, index + 2, inside, data, replaceWithEmpty, contextMap)
                 token.append(inside)
             } else if (c == '}') {
-                val value = data[token.toString()] ?: if (replaceWithEmpty) {
+                val value = data[token.toString()] ?: contextMap?.get(token.toString()) ?: if (replaceWithEmpty) {
                     ""
                 } else {
                     "\${$token}"
@@ -171,7 +173,7 @@ object EnvUtils {
             val c = command[index]
             if (checkPrefix(c, index, command)) {
                 val inside = StringBuilder()
-                index = parseVariable(command, index + 3, inside, data)
+                index = parseVariableWithDoubleCurlyBraces(command, index + 3, inside, data)
                 token.append(inside)
             } else if (c == '}' && index + 1 < command.length && command[index + 1] == '}') {
                 val tokenStr = token.toString().trim()

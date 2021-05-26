@@ -90,7 +90,8 @@ class V2MQConfiguration {
         container.setAmqpAdmin(rabbitAdmin)
         container.setPrefetchCount(1)
 
-        val adapter = MessageListenerAdapter(v2GitCIRequestTriggerListener, v2GitCIRequestTriggerListener::listenGitCIRequestTriggerEvent.name)
+        val adapter = MessageListenerAdapter(v2GitCIRequestTriggerListener,
+            v2GitCIRequestTriggerListener::listenGitCIRequestTriggerEvent.name)
         adapter.setMessageConverter(messageConverter)
         container.setMessageListener(adapter)
         return container

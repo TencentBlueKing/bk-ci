@@ -29,7 +29,7 @@ package com.tencent.devops.gitci.v2.exception
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 
-class GitCINoEnableException() : ErrorCodeException(
+class GitCINoEnableException : ErrorCodeException(
     statusCode = ErrorCodeEnum.GITCI_NOT_ENABLE_ERROR.errorCode,
     errorCode = ErrorCodeEnum.GITCI_NOT_ENABLE_ERROR.errorCode.toString(),
     defaultMessage = ErrorCodeEnum.GITCI_NOT_ENABLE_ERROR.formatErrorMessage,

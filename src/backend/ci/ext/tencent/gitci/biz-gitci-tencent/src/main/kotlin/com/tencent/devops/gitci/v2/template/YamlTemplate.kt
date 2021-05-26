@@ -44,6 +44,7 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.gitci.v2.template.pojo.NoReplaceTemplate
 import org.slf4j.LoggerFactory
 
+@Suppress("ALL")
 class YamlTemplate(
     // 发起者的库ID,用户名,分支
     val triggerProjectId: Long,
