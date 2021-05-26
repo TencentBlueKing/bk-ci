@@ -35,6 +35,8 @@ import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
+import com.tencent.devops.process.utils.BUILD_NO
+import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -81,6 +83,9 @@ class PipelineContextService@Autowired constructor(
             }
         }
 
+        varMap["ci.pipeline_name"] = modelDetail.pipelineName
+        varMap["ci.build_id"] = buildVar[PIPELINE_BUILD_ID] ?: ""
+        varMap["ci.build_num"] = buildVar[BUILD_NO] ?: ""
         varMap["ci.pipeline_name"] = modelDetail.pipelineName
         varMap["ci.actor"] = modelDetail.userId
         varMap["ci.build_url"] = "https://git-ci.woa.com/" // FIXME
