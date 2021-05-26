@@ -80,5 +80,4 @@ class GitCiPipelinePermissionServiceImpl @Autowired constructor(
     private fun getProjectAllInstance(projectId: String): List<String> {
         return pipelineInfoDao.searchByPipelineName(dslContext, projectId)?.map { it.pipelineId } ?: emptyList()
     }
-
 }

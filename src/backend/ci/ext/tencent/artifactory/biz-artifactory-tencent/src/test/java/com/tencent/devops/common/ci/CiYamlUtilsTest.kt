@@ -27,64 +27,49 @@
 
 package com.tencent.devops.common.ci
 
-import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.Test
 
 internal class CiYamlUtilsTest {
 
     @Test
-    fun parseImage() {
-    }
+    fun parseImage() = Unit
 
     @Test
-    fun formatYaml() {
-    }
+    fun formatYaml() = Unit
 
     @Test
-    fun checkYaml() {
-    }
+    fun checkYaml() = Unit
 
     @Test
-    fun normalizeGitCiYaml() {
-    }
+    fun normalizeGitCiYaml() = Unit
 
     @Test
-    fun normalizePrebuildYaml() {
-    }
+    fun normalizePrebuildYaml() = Unit
 
     @Test
-    fun validateYaml() {
-    }
+    fun validateYaml() = Unit
 
     @Test
-    fun validate() {
-    }
+    fun validate() = Unit
 
     @Test
-    fun jsonNodeFromString() {
-    }
+    fun jsonNodeFromString() = Unit
 
     @Test
-    fun validateSchema() {
-    }
+    fun validateSchema() = Unit
 
     @Test
-    fun validateJson() {
-    }
+    fun validateJson() = Unit
 
     @Test
-    fun convertYamlToJson() {
-    }
+    fun convertYamlToJson() = Unit
 
     @Test
-    fun getCIBuildYamlSchema() {
-    }
+    fun getCIBuildYamlSchema() = Unit
 
     @Test
-    fun getAbstractTaskSchema() {
-    }
+    fun getAbstractTaskSchema() = Unit
 
     @Test
-    fun getAbstractServiceSchema() {
-    }
+    fun getAbstractServiceSchema() = Unit
 }

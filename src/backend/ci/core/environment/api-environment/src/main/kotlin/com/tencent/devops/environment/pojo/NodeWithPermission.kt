@@ -78,4 +78,4 @@ data class NodeWithPermission(
     val lastBuildTime: String? = "",
     @ApiModelProperty("agent hash id")
     val agentHashId: String? = ""
-    )
+)

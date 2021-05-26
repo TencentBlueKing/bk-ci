@@ -40,7 +40,7 @@ import org.springframework.stereotype.Service
 
 @Suppress("ALL")
 @Service
-class PipelineContextService@Autowired constructor(
+class PipelineContextService @Autowired constructor(
     private val pipelineBuildDetailService: PipelineBuildDetailService
 ) {
     fun buildContext(buildId: String, containerId: String?, buildVar: Map<String, String>): Map<String, String> {
@@ -162,7 +162,7 @@ class PipelineContextService@Autowired constructor(
             } else {
                 BuildStatus.FAILED.name
             }
-        }else {
+        } else {
             e.status ?: ""
         }
     }

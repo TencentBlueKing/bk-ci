@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 class GitCILogPermissionServiceImpl @Autowired constructor(
     val client: Client
-): LogPermissionService {
+) : LogPermissionService {
     override fun verifyUserLogPermission(projectCode: String, pipelineId: String, userId: String): Boolean {
         val gitProjectId = GitCIUtils.getGitCiProjectId(projectCode)
         logger.info("GitCILogPermissionServiceImpl user:$userId projectId: $projectCode gitProject: $gitProjectId")
@@ -16,7 +16,7 @@ class GitCILogPermissionServiceImpl @Autowired constructor(
             userId, "", gitProjectId, null).data ?: false
     }
 
-    companion object{
-        val logger = LoggerFactory.getLogger(GitCILogPermissionServiceImpl::class.java)
+    companion object {
+        private val logger = LoggerFactory.getLogger(GitCILogPermissionServiceImpl::class.java)
     }
 }

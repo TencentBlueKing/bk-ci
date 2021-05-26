@@ -29,9 +29,9 @@ package com.tencent.devops.environment.permission.impl
 
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
-import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.EnvironmentAuthServiceCode
 import com.tencent.devops.environment.dao.EnvDao
@@ -40,7 +40,6 @@ import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
 
 /**
  * Pipeline专用权限校验接口
@@ -84,7 +83,11 @@ class EnvironmentPermissionServiceImpl @Autowired constructor(
         return envHashIdSet
     }
 
-    override fun listEnvByPermissions(userId: String, projectId: String, permissions: Set<AuthPermission>): Map<AuthPermission, List<String>> {
+    override fun listEnvByPermissions(
+        userId: String,
+        projectId: String,
+        permissions: Set<AuthPermission>
+    ): Map<AuthPermission, List<String>> {
 
         val iamInstancesMap = authPermissionApi.getUserResourcesByPermissions(
             user = userId,
@@ -126,7 +129,12 @@ class EnvironmentPermissionServiceImpl @Autowired constructor(
         return iamInstancesMap
     }
 
-    override fun checkEnvPermission(userId: String, projectId: String, envId: Long, permission: AuthPermission): Boolean {
+    override fun checkEnvPermission(
+        userId: String,
+        projectId: String,
+        envId: Long,
+        permission: AuthPermission
+    ): Boolean {
         val iamPermission = authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = environmentAuthServiceCode,
@@ -218,7 +226,11 @@ class EnvironmentPermissionServiceImpl @Autowired constructor(
         ).map { HashUtil.decodeIdToLong(it) }.toSet()
     }
 
-    override fun listNodeByPermissions(userId: String, projectId: String, permissions: Set<AuthPermission>): Map<AuthPermission, List<String>> {
+    override fun listNodeByPermissions(
+        userId: String,
+        projectId: String,
+        permissions: Set<AuthPermission>
+    ): Map<AuthPermission, List<String>> {
         val iamPermissionMap = authPermissionApi.getUserResourcesByPermissions(
             user = userId,
             serviceCode = environmentAuthServiceCode,
@@ -261,7 +273,12 @@ class EnvironmentPermissionServiceImpl @Autowired constructor(
         return iamPermissionMap
     }
 
-    override fun checkNodePermission(userId: String, projectId: String, nodeId: Long, permission: AuthPermission): Boolean {
+    override fun checkNodePermission(
+        userId: String,
+        projectId: String,
+        nodeId: Long,
+        permission: AuthPermission
+    ): Boolean {
         val iamPermission = authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = environmentAuthServiceCode,
@@ -332,6 +349,6 @@ class EnvironmentPermissionServiceImpl @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(EnvironmentPermissionServiceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(EnvironmentPermissionServiceImpl::class.java)
     }
 }
