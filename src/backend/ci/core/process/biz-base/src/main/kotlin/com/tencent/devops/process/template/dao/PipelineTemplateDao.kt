@@ -155,7 +155,7 @@ class PipelineTemplateDao {
             return dslContext.selectCount()
                 .from(this)
                 .where(SRC_TEMPLATE_ID.eq(templateId))
-                .fetchOne(0, Long::class.java) > 0
+                .fetchOne(0, Long::class.java)!! > 0
         }
     }
 }

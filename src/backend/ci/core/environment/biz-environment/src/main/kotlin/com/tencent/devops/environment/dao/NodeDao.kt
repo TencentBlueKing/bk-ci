@@ -113,7 +113,7 @@ class NodeDao {
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(NODE_TYPE.eq(NodeType.BCSVM.name))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -123,7 +123,7 @@ class NodeDao {
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(NODE_TYPE.eq(NodeType.DEVCLOUD.name))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -133,7 +133,7 @@ class NodeDao {
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(NODE_TYPE.`in`(NodeType.CC.name, NodeType.CMDB.name, NodeType.OTHER.name))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -144,7 +144,7 @@ class NodeDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(NODE_ID.`in`(nodeIds))
                 .and(NODE_STATUS.eq(status.name))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -254,7 +254,7 @@ class NodeDao {
                     LocalDateTime.now()
                 )
                 .returning(NODE_ID)
-                .fetchOne().nodeId
+                .fetchOne()!!.nodeId
         }
     }
 
@@ -510,13 +510,13 @@ class NodeDao {
                     .where(PROJECT_ID.eq(projectId))
                     .and(NODE_ID.ne(nodeId))
                     .and(DISPLAY_NAME.eq(displayName))
-                    .fetchOne(0, Long::class.java) > 0
+                    .fetchOne(0, Long::class.java)!! > 0
             } else {
                 dslContext.selectCount()
                     .from(this)
                     .where(PROJECT_ID.eq(projectId))
                     .and(DISPLAY_NAME.eq(displayName))
-                    .fetchOne(0, Long::class.java) > 0
+                    .fetchOne(0, Long::class.java)!! > 0
             }
         }
     }
@@ -541,12 +541,12 @@ class NodeDao {
             return if (name.isNullOrBlank()) {
                 dslContext.selectCount()
                     .from(TNode.T_NODE)
-                    .fetchOne(0, Int::class.java)
+                    .fetchOne(0, Int::class.java)!!
             } else {
                 dslContext.selectCount()
                     .from(TNode.T_NODE)
                     .where(NODE_NAME.like("%$name%"))
-                    .fetchOne(0, Int::class.java)
+                    .fetchOne(0, Int::class.java)!!
             }
         }
     }
@@ -571,12 +571,12 @@ class NodeDao {
             return if (project.isNullOrBlank()) {
                 dslContext.selectCount()
                     .from(TNode.T_NODE)
-                    .fetchOne(0, Int::class.java)
+                    .fetchOne(0, Int::class.java)!!
             } else {
                 dslContext.selectCount()
                     .from(TNode.T_NODE)
                     .where(PROJECT_ID.eq(project))
-                    .fetchOne(0, Int::class.java)
+                    .fetchOne(0, Int::class.java)!!
             }
         }
     }
@@ -602,7 +602,7 @@ class NodeDao {
             return dslContext.selectCount()
                 .from(TNode.T_NODE)
                 .where(PROJECT_ID.eq(project).and(DISPLAY_NAME.like("%$displayName%")))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 

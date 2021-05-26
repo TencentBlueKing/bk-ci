@@ -156,7 +156,7 @@ class GitProjectConfDao {
             return dslContext.selectCount()
                     .from(this)
                     .where(conditions)
-                    .fetchOne(0, Int::class.java)
+                    .fetchOne(0, Int::class.java)!!
         }
     }
 

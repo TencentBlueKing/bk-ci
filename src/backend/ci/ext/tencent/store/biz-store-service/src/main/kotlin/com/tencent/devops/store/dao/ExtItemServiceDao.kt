@@ -108,7 +108,7 @@ class ExtItemServiceDao {
             conditions.add(tes.SERVICE_STATUS.eq(ExtServiceStatusEnum.RELEASED.status.toByte()))
             baseStep.where(conditions).asTable("t")
         }
-        val sql = dslContext.select().from(t).orderBy(t.field("weight").desc(), t.field("serviceName").asc())
+        val sql = dslContext.select().from(t).orderBy(t.field("weight")!!.desc(), t.field("serviceName")!!.asc())
         return if (null != page && null != pageSize) {
             sql.limit((page - 1) * pageSize, pageSize).fetch()
         } else {

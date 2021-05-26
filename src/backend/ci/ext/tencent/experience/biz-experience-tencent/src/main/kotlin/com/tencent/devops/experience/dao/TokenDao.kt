@@ -53,7 +53,7 @@ class TokenDao {
                     now,
                     now)
                     .returning(ID)
-                    .fetchOne()
+                    .fetchOne()!!
             return record.id
         }
     }

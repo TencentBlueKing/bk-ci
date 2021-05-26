@@ -89,7 +89,7 @@ class JinGangAppDao {
                             version,
                             type)
                     .returning(ID)
-                    .fetchOne()
+                    .fetchOne()!!
             return data.id
         }
     }
@@ -180,7 +180,7 @@ class JinGangAppDao {
         with(TPluginJingang.T_PLUGIN_JINGANG) {
             return dslContext.selectCount().from(this)
                     .where(PROJECT_ID.eq(projectId))
-                    .fetchOne().get(0) as Int
+                    .fetchOne()!!.get(0) as Int
         }
     }
 

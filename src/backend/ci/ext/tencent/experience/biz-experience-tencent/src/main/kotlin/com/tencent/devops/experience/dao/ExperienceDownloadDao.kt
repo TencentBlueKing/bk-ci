@@ -56,7 +56,7 @@ class ExperienceDownloadDao {
                 now
             )
                 .returning(ID)
-                .fetchOne()
+                .fetchOne()!!
             return record.id
         }
     }
@@ -102,7 +102,7 @@ class ExperienceDownloadDao {
             return dslContext.selectCount()
                 .from(this)
                 .where(EXPERIENCE_ID.eq(experienceId))
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -111,7 +111,7 @@ class ExperienceDownloadDao {
             return dslContext.select(DSL.sum(TIMES))
                 .from(this)
                 .where(EXPERIENCE_ID.eq(experienceId))
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Long::class.java)!!
         }
     }
 
