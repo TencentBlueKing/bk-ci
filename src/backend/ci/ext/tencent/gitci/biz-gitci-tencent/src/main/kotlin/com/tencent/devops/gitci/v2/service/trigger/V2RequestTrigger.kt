@@ -172,8 +172,8 @@ class V2RequestTrigger @Autowired constructor(
             return null
         }
         val isFork = (isMr) && gitRequestEvent.sourceGitProjectId != null &&
-                gitRequestEvent.sourceGitProjectId != gitRequestEvent.gitProjectId
-        val yamlObjects = try {
+            gitRequestEvent.sourceGitProjectId != gitRequestEvent.gitProjectId
+        return try {
             createCIBuildYaml(
                 isFork = isFork,
                 gitToken = gitToken,
@@ -199,9 +199,8 @@ class V2RequestTrigger @Autowired constructor(
                 reasonDetail = e.message.toString(),
                 gitProjectId = gitRequestEvent.gitProjectId
             )
-            return null
+            null
         }
-        return yamlObjects
     }
 
     fun createCIBuildYaml(
