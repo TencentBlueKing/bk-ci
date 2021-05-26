@@ -75,6 +75,7 @@ import com.tencent.devops.gitci.v2.listener.V2GitCIRequestDispatcher
 import com.tencent.devops.gitci.v2.listener.V2GitCIRequestTriggerEvent
 import com.tencent.devops.gitci.v2.service.GitCIEventSaveService
 import com.tencent.devops.gitci.v2.service.OauthService
+import com.tencent.devops.gitci.v2.service.trigger.V2RequestTrigger
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.GitFileInfo
@@ -396,26 +397,28 @@ class GitCITriggerService @Autowired constructor(
         }
 
         yamlPathList.forEach { filePath ->
+            // 因为要为 GIT_CI_YAML_INVALID 这个异常添加文件信息，所以先创建流水线，后面再根据Yaml修改流水线名称即可
+            var displayName = filePath.removeSuffix(ciFileExtension)
+            val existsPipeline = path2PipelineExists[filePath]
+            // 如果该流水线已保存过，则继续使用
+            val buildPipeline = existsPipeline
+                ?: GitProjectPipeline(
+                    gitProjectId = gitProjectConf.gitProjectId,
+                    displayName = displayName,
+                    pipelineId = "", // 留空用于是否创建判断
+                    filePath = filePath,
+                    enabled = true,
+                    creator = gitRequestEvent.userId,
+                    latestBuildInfo = null
+                )
+            var originYaml: String? = null
             try {
-                // 因为要为 GIT_CI_YAML_INVALID 这个异常添加文件信息，所以先创建流水线，后面再根据Yaml修改流水线名称即可
-                var displayName = filePath.removeSuffix(ciFileExtension)
-                val existsPipeline = path2PipelineExists[filePath]
-
-                // 如果该流水线已保存过，则继续使用
-                val buildPipeline = existsPipeline
-                    ?: GitProjectPipeline(
-                        gitProjectId = gitProjectConf.gitProjectId,
-                        displayName = displayName,
-                        pipelineId = "", // 留空用于是否创建判断
-                        filePath = filePath,
-                        enabled = true,
-                        creator = gitRequestEvent.userId,
-                        latestBuildInfo = null
-                    )
                 // 为已存在的流水线设置名称
                 buildPipeline.displayName = displayName
-                val originYaml = if (isFork) getYamlFromGit(forkGitToken!!, gitRequestEvent, filePath, isMrEvent)
+                originYaml = if (isFork) getYamlFromGit(forkGitToken!!, gitRequestEvent, filePath, isMrEvent)
                 else getYamlFromGit(gitToken, gitRequestEvent, filePath, isMrEvent)
+                logger.info("origin yamlStr: $originYaml")
+
                 // 如果当前文件没有内容直接不触发
                 if (originYaml.isNullOrBlank()) {
                     logger.warn(
@@ -530,6 +533,17 @@ class GitCITriggerService @Autowired constructor(
                 logger.error(
                     "yamlPathList in gitProjectId:${gitProjectConf.gitProjectId} has invalid yaml file[$filePath]: ",
                     e
+                )
+                gitCIEventSaveService.saveNotBuildEvent(
+                    userId = gitRequestEvent.userId,
+                    eventId = gitRequestEvent.id!!,
+                    pipelineId = buildPipeline.pipelineId,
+                    filePath = buildPipeline.filePath,
+                    originYaml = originYaml,
+                    normalizedYaml = null,
+                    reason = TriggerReason.GIT_CI_YAML_INVALID.name,
+                    reasonDetail = e.message,
+                    gitProjectId = gitRequestEvent.gitProjectId
                 )
                 return@forEach
             }
