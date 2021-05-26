@@ -79,8 +79,12 @@ object WorkRunner {
                 override fun getWorkspace(variables: Map<String, String>, pipelineId: String): File {
                     val replaceWorkspace = if (workspace.isNotBlank()) {
                         ReplacementUtils.replace(workspace, object : ReplacementUtils.KeyReplacement {
-                            override fun getReplacement(key: String): String? {
-                                return variables[key] ?: "\${$key}"
+                            override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? {
+                                return if (doubleCurlyBraces) {
+                                    variables[key] ?: "\${{$key}}"
+                                } else {
+                                    variables[key] ?: "\${$key}"
+                                }
                             }
                         }, mapOf(WORKSPACE_CONTEXT to workspace))
                     } else {
