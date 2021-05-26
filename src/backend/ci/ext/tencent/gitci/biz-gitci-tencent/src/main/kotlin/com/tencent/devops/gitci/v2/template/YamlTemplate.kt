@@ -58,7 +58,7 @@ class YamlTemplate(
     val repoTemplateGraph: TemplateGraph<String>,
 
     // 当前文件
-    val filePath: String,
+    var filePath: String,
     // 文件对象
     var yamlObject: PreTemplateScriptBuildYaml?,
     // 当前库信息(发起库没有库信息)
@@ -172,6 +172,8 @@ class YamlTemplate(
         val parameters = extend.parameters
         // 根据远程模板获取
         val templateObject = replaceResAndParam(TemplateType.EXTEND, toPath, parameters, filePath)
+        // 获取extends模板后filePath就为被替换的文件了
+        this.filePath = toPath
         // 需要替换模板的的递归替换
         if (templateObject[TemplateType.VARIABLE.content] != null) {
             replaceVariables(
@@ -673,11 +675,7 @@ class YamlTemplate(
         return PreStage(
             name = stage["name"]?.toString(),
             id = stage["id"]?.toString(),
-            label = if (stage["label"] == null) {
-                null
-            } else {
-                transValue<List<String>>(fromPath, "label", stage["label"])
-            },
+            label = stage["label"],
             ifField = stage["if"]?.toString(),
             fastKill = YamlObjects.getNullValue("fast-kill", stage)?.toBoolean(),
             jobs = if (stage["jobs"] == null) {
