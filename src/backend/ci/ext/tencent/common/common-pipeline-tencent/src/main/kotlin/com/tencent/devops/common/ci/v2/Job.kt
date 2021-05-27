@@ -82,10 +82,10 @@ data class Strategy(
 
 data class RunsOn(
     @JsonProperty("self-hosted")
-    val selfHosted: Boolean? = false,
+    val selfHosted: Boolean = false,
     @JsonProperty("pool-name")
-    val poolName: String? = JobRunsOnType.DOCKER.type,
-    val container: Container? = Container(
+    val poolName: String = JobRunsOnType.DOCKER.type,
+    val container: Container = Container(
         image = "http://mirrors.tencent.com/ci/tlinux3_ci:0.1.1.0",
         credentials = null
     )
