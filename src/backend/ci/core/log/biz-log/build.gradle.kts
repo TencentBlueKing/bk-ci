@@ -40,4 +40,5 @@ dependencies {
     api("org.elasticsearch.client:elasticsearch-rest-high-level-client")
     api("org.apache.logging.log4j:log4j-core")
     api("org.apache.logging.log4j:log4j-api")
+    api("com.github.ben-manes.caffeine:caffeine")
 }
