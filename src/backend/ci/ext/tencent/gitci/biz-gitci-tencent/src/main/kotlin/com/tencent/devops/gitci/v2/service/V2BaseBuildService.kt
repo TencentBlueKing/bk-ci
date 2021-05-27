@@ -143,7 +143,8 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
                     userId = event.userId,
                     status = GitCICommitCheckState.PENDING,
                     context = "${pipeline.displayName}(${pipeline.filePath})",
-                    gitCIBasicSetting = gitCIBasicSetting
+                    gitCIBasicSetting = gitCIBasicSetting,
+                    pipelineId = pipeline.pipelineId
                 )
             }
             return BuildId(buildId)
