@@ -80,8 +80,8 @@ interface UserGitCIGitCodeResource {
         @QueryParam("page")
         page: Int?,
         @ApiParam(value = "每页数量,最大100", defaultValue = "20")
-        @QueryParam("perPage")
-        perPage: Int?,
+        @QueryParam("pageSize")
+        pageSize: Int?,
         @ApiParam(value = "搜索用户关键字", required = false)
         @QueryParam("search")
         search: String?
@@ -113,8 +113,8 @@ interface UserGitCIGitCodeResource {
         @QueryParam("page")
         page: Int?,
         @ApiParam(value = "每页数量,最大100", defaultValue = "20")
-        @QueryParam("perPage")
-        perPage: Int?
+        @QueryParam("pageSize")
+        pageSize: Int?
     ): Result<List<Commit>?>
 
     @ApiOperation("向工蜂项目中创建新文件")
@@ -148,8 +148,8 @@ interface UserGitCIGitCodeResource {
         @QueryParam("page")
         page: Int?,
         @ApiParam(value = "每页数量,最大100", defaultValue = "20")
-        @QueryParam("perPage")
-        perPage: Int?,
+        @QueryParam("pageSize")
+        pageSize: Int?,
         @ApiParam(value = "返回列表的排序字段,可选可选字段:name、updated")
         @QueryParam("orderBy")
         orderBy: GitCodeBranchesOrder?,

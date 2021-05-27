@@ -77,7 +77,7 @@ class V2WebHookMatcher(private val event: GitEvent) {
     private fun isPushMatch(triggerOn: TriggerOn, eventBranch: String): Boolean {
         // 如果没有配置push，默认匹配
         if (triggerOn.push == null) {
-            return true
+            return false
         }
 
         val pushRule = triggerOn.push!!
@@ -100,7 +100,7 @@ class V2WebHookMatcher(private val event: GitEvent) {
 
     private fun isTagPushMatch(triggerOn: TriggerOn, eventTag: String): Boolean {
         if (triggerOn.tag == null) {
-            return true
+            return false
         }
 
         val tagRule = triggerOn.tag!!
@@ -140,7 +140,7 @@ class V2WebHookMatcher(private val event: GitEvent) {
 
     private fun isMrMatch(triggerOn: TriggerOn, eventBranch: String): Boolean {
         if (triggerOn.mr == null) {
-            return true
+            return false
         }
 
         // exclude branch of mr

@@ -70,7 +70,7 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         page: Int?,
-        perPage: Int?,
+        pageSize: Int?,
         search: String?
     ): Result<List<GitMember>?> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId).toString()
@@ -79,7 +79,7 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
                 token = getToken(userId, isEnableUser = true, gitProjectId = gitProjectId.toLong()),
                 gitProjectId = gitProjectId,
                 page = page,
-                pageSize = perPage,
+                pageSize = pageSize,
                 search = search
             )
         )
@@ -93,7 +93,7 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
         since: String?,
         until: String?,
         page: Int?,
-        perPage: Int?
+        pageSize: Int?
     ): Result<List<Commit>?> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         permissionService.checkGitCIPermission(userId, projectId)
@@ -106,7 +106,7 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
                 since = since,
                 until = until,
                 page = page,
-                perPage = perPage
+                perPage = pageSize
             )
         )
     }
@@ -148,7 +148,7 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
         projectId: String,
         search: String?,
         page: Int?,
-        perPage: Int?,
+        pageSize: Int?,
         orderBy: GitCodeBranchesOrder?,
         sort: GitCodeBranchesSort?
     ): Result<List<String>?> {
@@ -158,7 +158,7 @@ class UserGitCIGitCodeResourceImpl @Autowired constructor(
                 token = getToken(userId = userId, isEnableUser = true, gitProjectId = gitProjectId.toLong()),
                 gitProjectId = gitProjectId,
                 page = page,
-                pageSize = perPage,
+                pageSize = pageSize,
                 orderBy = orderBy,
                 sort = sort,
                 search = search

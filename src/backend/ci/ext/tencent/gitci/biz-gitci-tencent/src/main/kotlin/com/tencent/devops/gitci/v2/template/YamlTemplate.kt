@@ -136,7 +136,6 @@ class YamlTemplate(
                 name = name,
                 label = label,
                 triggerOn = triggerOn,
-                extends = extends,
                 resources = resources,
                 notices = notices,
                 finally = finally

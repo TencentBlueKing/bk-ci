@@ -54,6 +54,7 @@ import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreStage
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
 import com.tencent.devops.common.ci.v2.RunsOn
+import com.tencent.devops.common.ci.v2.SchedulesRule
 import com.tencent.devops.common.ci.v2.Service
 import com.tencent.devops.common.ci.v2.StageLabel
 import com.tencent.devops.common.ci.v2.Step
@@ -238,8 +239,8 @@ object ScriptYmlUtils {
             return
         }
         yamlMap.forEach { (t, _) ->
-            if (t != formatTrigger && t != "extends" && t != "version") {
-                throw CustomException(Response.Status.BAD_REQUEST, "使用 extends 时顶级关键字只能有触发器 on")
+            if (t != formatTrigger && t != "extends" && t != "version" && t!="resources") {
+                throw CustomException(Response.Status.BAD_REQUEST, "使用 extends 时顶级关键字只能有触发器 on 与 resources")
             }
         }
     }
@@ -485,6 +486,7 @@ object ScriptYmlUtils {
         var pushRule = PushRule()
         var tagRule = TagRule()
         var mrRule = MrRule()
+        var schedulesRule = SchedulesRule()
 
         if (preTriggerOn.push != null) {
             val push = preTriggerOn.push
@@ -569,10 +571,23 @@ object ScriptYmlUtils {
             }
         }
 
+        if (preTriggerOn.schedules != null) {
+            val schedules = preTriggerOn.schedules
+            try {
+                schedulesRule = YamlUtil.getObjectMapper().readValue(
+                    JsonUtil.toJson(schedules),
+                    SchedulesRule::class.java
+                )
+            } catch (e: MismatchedInputException) {
+                logger.error("Format triggerOn schedulesRule failed.", e)
+            }
+        }
+
         return TriggerOn(
             push = pushRule,
             tag = tagRule,
-            mr = mrRule
+            mr = mrRule,
+            schedules = schedulesRule
         )
     }
 
