@@ -284,7 +284,8 @@ class GitCIBuildFinishListener @Autowired constructor(
                 userId = buildFinishEvent.userId,
                 status = state,
                 context = "${pipeline.displayName}(${pipeline.filePath})",
-                gitCIBasicSetting = gitCIBasicSetting
+                gitCIBasicSetting = gitCIBasicSetting,
+                pipelineId = buildFinishEvent.pipelineId
             )
         }
     }
@@ -758,7 +759,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                     totalTime = DateTimeUtil.formatMillSecond(build.totalTime ?: 0),
                     trigger = build.userId,
                     commitId = commitId,
-                    webUrl = "$v2GitUrl/$projectName/pipelinesId/$pipelineId/detail/${build.id}"
+                    webUrl = "$v2GitUrl/pipeline/$pipelineId/detail/${build.id}/${build.buildNum}/#$projectName"
                 ))
         )
         return SendNotifyMessageTemplateRequest(
@@ -805,7 +806,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                 request +
                 costTime +
                 "[View it on  工蜂内网版]" +
-                "($v2GitUrl/$projectName/pipelinesId/$pipelineId/detail/${build.id})"
+                "($v2GitUrl/pipeline/$pipelineId/detail/${build.id}/${build.buildNum}/#$projectName)"
     }
 
     // 使用启动参数替换接收人

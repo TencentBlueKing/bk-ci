@@ -46,7 +46,7 @@ data class PreScriptBuildYaml(
     var stages: List<PreStage>? = null,
     var jobs: Map<String, PreJob>? = null,
     var steps: List<Step>? = null,
-    var extends: Extends?,
+    var extends: Extends? = null,
     var resources: Resources?,
     var notices: List<Notices>?,
     var finally: List<PreStage>?
