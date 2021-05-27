@@ -27,6 +27,7 @@
 
 dependencies {
     api(project(":core:common:common-service"))
+    api(project(":ext:tencent:common:common-pipeline-tencent"))
     api("org.json:json")
     api("org.apache.commons:commons-lang3:${Versions.CommonLang3}")
 }
