@@ -13,6 +13,7 @@ if [ "${BASH_VERSINFO[0]:-0}" -lt 4 ]; then
   exit 1
 fi
 
+BK_CI_SRC_DIR="${BK_CI_SRC_DIR:-$BK_PKG_SRC_PATH/ci}"
 sd_ci_target="bk-ci.target"
 # 剥离dns重定向能力为独立服务, 默认启用.
 sd_dns_redirect="bk-ci-docker-dns-redirect.service"
@@ -215,6 +216,18 @@ fi
 if [ -z "${BK_CI_HOME:-}" ]; then
   echo >&2 "ERROR: env BK_CI_HOME is not set or empty. please set it first."
   exit 2
+fi
+
+invalid_proj=""
+for MS_NAME in "$@"; do
+  [ -d "$BK_CI_SRC_DIR/$MS_NAME" ] || {
+    echo "dir $BK_CI_SRC_DIR/$MS_NAME not eixst."
+    invalid_proj="$invalid_proj,$MS_NAME"
+  }
+done
+if [ "${#invalid_proj}" -gt 1 ]; then
+  echo "ERROR: invalid proj: $invalid_proj."
+  exit 15
 fi
 
 gen_systemd_ci__target

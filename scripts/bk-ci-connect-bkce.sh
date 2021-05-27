@@ -33,7 +33,7 @@ echo "导入 SQL 文件"
 
 echo "RabbitMQ"
 echo " 创建vhost及账户."
-./pcmd.sh -H "$BK_RABBITMQ_IP" "$CTRL_DIR/bin/add_rabbitmq_user.sh -u \"$BK_CI_RABBITMQ_USER\" -p \"$BK_CI_RABBITMQ_PASSWORD\" -h \"$BK_CI_RABBITMQ_VHOST\" && rabbitmqctl change_password \"$BK_CI_RABBITMQ_USER\" \"$BK_CI_RABBITMQ_PASSWORD\""
+./pcmd.sh -H "$BK_RABBITMQ_IP" "$CTRL_DIR/bin/add_rabbitmq_user.sh -u \"$BK_CI_RABBITMQ_USER\" -p \"$BK_CI_RABBITMQ_PASSWORD\" -h \"$BK_CI_RABBITMQ_VHOST\"; rabbitmqctl change_password \"$BK_CI_RABBITMQ_USER\" \"$BK_CI_RABBITMQ_PASSWORD\""
 
 
 echo "导入 IAM 权限模板"
