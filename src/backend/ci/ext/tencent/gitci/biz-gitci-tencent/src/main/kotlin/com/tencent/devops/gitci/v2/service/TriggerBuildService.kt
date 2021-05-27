@@ -618,7 +618,7 @@ class TriggerBuildService @Autowired constructor(
                     val data = mutableMapOf<String, Any>()
                     data["input"] = step.with ?: Any()
                     MarketBuildAtomElement(
-                        name = step.name ?: "插件市场第三方构建环境类插件",
+                        name = step.name ?: step.uses!!.split('@')[0],
                         id = step.id,
                         atomCode = step.uses!!.split('@')[0],
                         version = step.uses!!.split('@')[1],
