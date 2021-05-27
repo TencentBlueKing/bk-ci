@@ -85,7 +85,7 @@ class GitCIV2PipelineService @Autowired constructor(
             count = count.toLong(),
             page = pageNotNull,
             pageSize = pageSizeNotNull,
-            totalPages = PageUtil.calTotalPage(pageSize, count.toLong()),
+            totalPages = PageUtil.calTotalPage(pageSizeNotNull, count.toLong()),
             records = pipelines.map {
                 GitProjectPipeline(
                     gitProjectId = gitProjectId,
