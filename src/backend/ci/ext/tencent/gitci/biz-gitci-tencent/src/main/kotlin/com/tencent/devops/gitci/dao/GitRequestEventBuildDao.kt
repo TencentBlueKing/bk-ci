@@ -217,7 +217,6 @@ class GitRequestEventBuildDao {
             return dslContext.selectFrom(this)
                 .where(EVENT_ID.`in`(eventIds))
                 .and(BUILD_ID.isNotNull)
-                .orderBy(EVENT_ID.desc())
                 .fetch()
         }
     }

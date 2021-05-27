@@ -25,42 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.gitci.pojo.v2
+package com.tencent.devops.gitci.pojo.v2.message
 
-import com.tencent.devops.gitci.pojo.GitRequestHistory
-import io.swagger.annotations.ApiModelProperty
-
-data class UserMessage(
-    @ApiModelProperty("ID")
-    val id: Int,
-    @ApiModelProperty("用户ID")
-    val userId: String,
-    @ApiModelProperty("消息类型")
-    val messageType: UserMessageType,
-    @ApiModelProperty("消息标题")
-    val messageTitle: String,
-    @ApiModelProperty("消息ID")
-    val messageId: String,
-    @ApiModelProperty("是否已读")
-    val haveRead: Boolean,
-    @ApiModelProperty("创建时间")
-    val createTime: Long?,
-    @ApiModelProperty("修改时间")
-    val updateTime: Long?,
-    @ApiModelProperty("消息内容")
-    val content: GitRequestHistory,
-    @ApiModelProperty("消息内容属性")
-    val contentAttr: ContentAttr?
-)
-
-data class ContentAttr(
-    @ApiModelProperty("内容总数")
-    val total: Int?,
-    @ApiModelProperty("request为触发构建总数")
-    val failedNum: Int?
-)
-
-data class UserMessageRecord(
-    val time: String,
-    val records: List<UserMessage>
-)
+/**
+ * 用户消息通知的类型
+ */
+enum class UserMessageType {
+    REQUEST
+}

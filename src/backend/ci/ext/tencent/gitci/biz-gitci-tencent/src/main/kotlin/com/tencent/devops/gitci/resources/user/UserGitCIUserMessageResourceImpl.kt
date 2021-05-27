@@ -31,8 +31,8 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.user.UserGitCIUserMessageResource
-import com.tencent.devops.gitci.pojo.v2.UserMessageRecord
-import com.tencent.devops.gitci.pojo.v2.UserMessageType
+import com.tencent.devops.gitci.pojo.v2.message.UserMessageRecord
+import com.tencent.devops.gitci.pojo.v2.message.UserMessageType
 import com.tencent.devops.gitci.v2.service.GitUserMessageService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -42,6 +42,7 @@ class UserGitCIUserMessageResourceImpl @Autowired constructor(
 ) : UserGitCIUserMessageResource {
     override fun getUserMessages(
         userId: String,
+        projectId: String,
         messageType: UserMessageType?,
         haveRead: Boolean?,
         page: Int?,
@@ -49,6 +50,7 @@ class UserGitCIUserMessageResourceImpl @Autowired constructor(
     ): Result<Page<UserMessageRecord>> {
         return Result(
             gitUserMessageService.getMessages(
+                projectId = projectId,
                 userId = userId,
                 messageType = messageType,
                 haveRead = haveRead,
@@ -58,15 +60,15 @@ class UserGitCIUserMessageResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getUserMessagesNoreadCount(userId: String): Result<Int> {
-        return Result(data = gitUserMessageService.getNoReadMessageCount(userId))
+    override fun getUserMessagesNoreadCount(userId: String, projectId: String): Result<Int> {
+        return Result(data = gitUserMessageService.getNoReadMessageCount(projectId, userId))
     }
 
     override fun readMessage(userId: String, id: Int): Result<Boolean> {
-        return Result(gitUserMessageService.readMessage(userId = userId, messageId = id))
+        return Result(gitUserMessageService.readMessage(userId = userId, id = id))
     }
 
-    override fun readAllMessages(userId: String): Result<Boolean> {
-        return Result(gitUserMessageService.readMessage(userId = userId, messageId = null, isAll = true))
+    override fun readAllMessages(userId: String, projectId: String): Result<Boolean> {
+        return Result(gitUserMessageService.readAllMessage(projectId, userId = userId))
     }
 }

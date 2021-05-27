@@ -31,8 +31,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.gitci.pojo.v2.UserMessageRecord
-import com.tencent.devops.gitci.pojo.v2.UserMessageType
+import com.tencent.devops.gitci.pojo.v2.message.UserMessageRecord
+import com.tencent.devops.gitci.pojo.v2.message.UserMessageType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -59,6 +59,9 @@ interface UserGitCIUserMessageResource {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam(value = "蓝盾项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
         @ApiParam(value = "消息类型")
         @QueryParam("messageType")
         messageType: UserMessageType?,
@@ -79,7 +82,10 @@ interface UserGitCIUserMessageResource {
     fun getUserMessagesNoreadCount(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
+        userId: String,
+        @ApiParam(value = "蓝盾项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String
     ): Result<Int>
 
     @ApiOperation("读取消息")
@@ -100,6 +106,9 @@ interface UserGitCIUserMessageResource {
     fun readAllMessages(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
+        userId: String,
+        @ApiParam(value = "蓝盾项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String
     ): Result<Boolean>
 }
