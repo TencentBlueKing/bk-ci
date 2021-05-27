@@ -478,7 +478,7 @@ class TriggerBuildService @Autowired constructor(
             return ThirdPartyAgentEnvDispatchType(
                 envName = job.runsOn.poolName,
                 workspace = "",
-                agentType = AgentType.ID
+                agentType = AgentType.NAME
             )
         }
 
