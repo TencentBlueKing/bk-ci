@@ -25,34 +25,34 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.api.service
+package com.tencent.devops.project.resources
 
+import com.tencent.bk.sdk.iam.constants.CallbackMethodEnum
 import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
-import com.tencent.devops.common.api.auth.AUTH_HEADER_IAM_TOKEN
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.api.service.ServiceProjectAuthCallBackResource
+import org.springframework.beans.factory.annotation.Autowired
 
-@Api(tags = ["AUTH_CALLBACK_PROJECT"], description = "iam回调project接口")
-@Path("/open/project/callback")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ServiceProjectAuthResource {
-    @POST
-    @Path("/")
-    @ApiOperation("iam项目回调接口")
-    fun projectInfo(
-        @HeaderParam(AUTH_HEADER_IAM_TOKEN)
-        @ApiParam("token")
-        token: String,
-        @ApiParam(value = "回调信息")
-        callBackInfo: CallbackRequestDTO
-    ): CallbackBaseResponseDTO?
+@RestResource
+class ServiceProjectAuthCallBackResourceImpl @Autowired constructor(
+    val authProjectService: AuthProjectService
+) : ServiceProjectAuthCallBackResource {
+    override fun projectInfo(token: String, callBackInfo: CallbackRequestDTO): CallbackBaseResponseDTO? {
+        val method = callBackInfo.method
+        val page = callBackInfo.page
+        when (method) {
+            CallbackMethodEnum.LIST_INSTANCE -> {
+                return authProjectService.getProjectList(page, token)
+            }
+            CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
+                val ids = callBackInfo.filter.idList.map { it.toString() }
+                return authProjectService.getProjectInfo(ids, token)
+            }
+            CallbackMethodEnum.SEARCH_INSTANCE -> {
+                return authProjectService.searchProjectInstances(callBackInfo.filter.keyword, page, token)
+            }
+        }
+        return null
+    }
 }
