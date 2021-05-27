@@ -37,7 +37,7 @@ import com.tencent.devops.gitci.dao.GitRequestEventDao
 import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
-import com.tencent.devops.gitci.pojo.v2.UserMessageType
+import com.tencent.devops.gitci.pojo.v2.message.UserMessageType
 import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.v2.dao.GitUserMessageDao
 import org.jooq.DSLContext
@@ -104,7 +104,6 @@ class GitCIEventSaveService @Autowired constructor(
                 "[${event.branch}] Commit [${event.commitId.subSequence(0, 7)}] pushed by ${event.userId}"
             }
         }
-        logger.info("save not build event: $eventId")
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             messageId = gitRequestEventNotBuildDao.save(
@@ -120,9 +119,10 @@ class GitCIEventSaveService @Autowired constructor(
                 gitProjectId = gitProjectId
             )
             // eventId只用保存一次
-            if (!userMessageDao.getMessageExist(context, userId, event.id.toString())) {
+            if (!userMessageDao.getMessageExist(context, "git_$gitProjectId", userId, event.id.toString())) {
                 userMessageDao.save(
                     dslContext = context,
+                    projectId = "git_$gitProjectId",
                     userId = userId,
                     messageType = UserMessageType.REQUEST,
                     messageId = event.id.toString(),
