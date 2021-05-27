@@ -109,7 +109,7 @@ class LogServiceLuceneImpl constructor(
 
             // #4265 当日志消息处理时间过长时打印消息内容
             if (elapse >= 1000 && event.logs.isNotEmpty()) logger.warn(
-                "[${event.buildId}] addBatchLogEvent spent too much time with tag=${event.logs.first().tag}"
+                "[${event.buildId}] addBatchLogEvent spent too much time($elapse) with tag=${event.logs.first().tag}"
             )
         }
     }
