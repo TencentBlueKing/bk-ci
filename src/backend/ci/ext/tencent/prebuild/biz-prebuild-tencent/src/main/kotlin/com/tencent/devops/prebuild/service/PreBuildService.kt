@@ -62,6 +62,7 @@ import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.agent.AgentType
@@ -253,7 +254,7 @@ class PreBuildService @Autowired constructor(
         job.job.steps.forEach {
             val element = it.covertToElement(getCiBuildConf(preBuildConfig))
             elementList.add(element)
-            if (element is MarketBuildAtomElement) {
+            if (element is MarketBuildAtomElement || element is MarketBuildLessAtomElement) {
                 logger.info("install market atom: ${element.getAtomCode()}")
                 installMarketAtom(userId, element.getAtomCode())
             }
@@ -322,7 +323,7 @@ class PreBuildService @Autowired constructor(
 
             val element = step.covertToElement(getCiBuildConf(preBuildConfig))
             elementList.add(element)
-            if (element is MarketBuildAtomElement) {
+            if (element is MarketBuildAtomElement || element is MarketBuildLessAtomElement) {
                 logger.info("install market atom: ${element.getAtomCode()}")
                 installMarketAtom(userId, element.getAtomCode())
             }

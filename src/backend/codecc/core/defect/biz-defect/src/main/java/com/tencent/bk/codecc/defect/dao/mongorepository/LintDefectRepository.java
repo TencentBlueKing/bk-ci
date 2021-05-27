@@ -160,4 +160,14 @@ public interface LintDefectRepository extends MongoRepository<LintFileEntity, St
      * @return
      */
     List<LintFileEntity> findByTaskIdAndToolNameAndRelPathIn(long taskId, String toolName, Set<String> relPathSet);
+
+    /**
+     * 通过任务Id、工具名称、状态查询告警
+     *
+     * @param taskId
+     * @param toolNameList
+     * @param status
+     * @return
+     */
+    List<LintFileEntity> findByTaskIdAndToolNameInAndStatus(long taskId, List<String> toolNameList, int status);
 }

@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: bkci-codecc-gateway
+  name: bkci-codecc-gateway
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: bkci-codecc-gateway
+  template:
+    metadata:
+      labels:
+        app: bkci-codecc-gateway
+    spec:
+      containers:
+        - image: {{ .Values.image.hub }}/bkci-codecc-gateway:{{ .Values.image.tag }}
+          name: bkci-codecc-gateway
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          workingDir: /usr/local/openresty/nginx/
+          command: ['/bin/sh','-c','/data/docker/bkci/codecc/gateway/gateway_run_codecc.sh']
+          env:
+            - name: INSTALL_PATH
+              value: /data/docker/bkci
+            - name: MODULE
+              value: ci
+            - name: AUTH_PROVIDER
+              value: sample
+            - name: CONSUL_SERVER
+              value: {{ .Values.consul.server }}
+            - name: CONSUL_DATACENTER
+              value: {{ .Values.consul.datacenter }}
+            {{- range $key, $value := .Values.env }}
+            - name : {{ $key }}
+              value : "{{ $value }}"
+            {{- end}}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: bkci-codecc-gateway
+spec:
+  selector:
+    app: bkci-codecc-gateway
+  ports:
+    - protocol: TCP
+      port: 80

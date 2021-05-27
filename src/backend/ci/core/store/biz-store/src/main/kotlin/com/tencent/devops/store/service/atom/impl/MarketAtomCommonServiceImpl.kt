@@ -27,8 +27,10 @@
 
 package com.tencent.devops.store.service.atom.impl
 
+import com.tencent.devops.common.api.constant.COMPONENT
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.INIT_VERSION
+import com.tencent.devops.common.api.constant.TYPE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
@@ -39,10 +41,14 @@ import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomEnvInfoDao
+import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.AtomPostInfo
+import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.GetAtomConfigResult
 import com.tencent.devops.store.pojo.atom.enums.AtomStatusEnum
+import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
+import com.tencent.devops.store.pojo.common.ATOM_INPUT
 import com.tencent.devops.store.pojo.common.ATOM_POST
 import com.tencent.devops.store.pojo.common.ATOM_POST_CONDITION
 import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
@@ -51,8 +57,10 @@ import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PR
 import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.common.StoreCommonService
+import com.tencent.devops.store.utils.StoreUtils
 import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -78,6 +86,9 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
 
     @Autowired
     private lateinit var marketAtomEnvInfoDao: MarketAtomEnvInfoDao
+
+    @Autowired
+    private lateinit var storeProjectRelDao: StoreProjectRelDao
 
     @Autowired
     private lateinit var storeCommonService: StoreCommonService
@@ -240,32 +251,63 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         return releaseTotalNum > currentNum
     }
 
-    override fun handleAtomPostCache(atomId: String, atomCode: String, version: String, atomStatus: Byte) {
-        if (atomStatus == AtomStatusEnum.RELEASED.status.toByte()) {
-            val atomEnv = marketAtomEnvInfoDao.getMarketAtomEnvInfoByAtomId(dslContext, atomId)
-                ?: throw ErrorCodeException(
-                    errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
-                    params = arrayOf(atomId)
-                )
-            val postEntryParam = atomEnv.postEntryParam
-            val postCondition = atomEnv.postCondition
-            val postFlag = !StringUtils.isEmpty(postEntryParam) && !StringUtils.isEmpty(postEntryParam)
-            val atomPostMap = mapOf(
-                ATOM_POST_FLAG to postFlag,
-                ATOM_POST_ENTRY_PARAM to postEntryParam,
-                ATOM_POST_CONDITION to postCondition
+    override fun handleAtomCache(atomId: String, atomCode: String, version: String, releaseFlag: Boolean) {
+        val atomEnv = marketAtomEnvInfoDao.getMarketAtomEnvInfoByAtomId(dslContext, atomId)
+            ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(atomId)
             )
-            redisOperation.hset(
-                key = "$ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX:$atomCode",
-                hashKey = version,
-                values = JsonUtil.toJson(atomPostMap)
-            )
-            // 更新xxx.latest这种版本号的post缓存信息
-            redisOperation.hset(
-                key = "$ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX:$atomCode",
-                hashKey = VersionUtils.convertLatestVersion(version),
-                values = JsonUtil.toJson(atomPostMap)
-            )
+        val atom = atomDao.getPipelineAtom(dslContext, atomId) ?: throw ErrorCodeException(
+            errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+            params = arrayOf(atomId)
+        )
+        val postEntryParam = atomEnv.postEntryParam
+        val postCondition = atomEnv.postCondition
+        val postFlag = !StringUtils.isEmpty(postEntryParam) && !StringUtils.isEmpty(postEntryParam)
+        val atomPostMap = mapOf(
+            ATOM_POST_FLAG to postFlag,
+            ATOM_POST_ENTRY_PARAM to postEntryParam,
+            ATOM_POST_CONDITION to postCondition
+        )
+        val atomRunInfoKey = StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, atomCode)
+        val jobType = atom.jobType
+        val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
+            dslContext = dslContext,
+            storeCode = atomCode,
+            storeType = StoreTypeEnum.ATOM.type.toByte()
+        )
+        val atomRunInfo = AtomRunInfo(
+            atomCode = atomCode,
+            atomName = atom.name,
+            version = atom.version,
+            initProjectCode = initProjectCode!!,
+            jobType = if (jobType == null) null else JobTypeEnum.valueOf(jobType),
+            buildLessRunFlag = atom.buildLessRunFlag,
+            inputTypeInfos = generateInputTypeInfos(atom.props)
+        )
+        // 更新插件当前版本号的缓存信息
+        redisOperation.hset(
+            key = "$ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX:$atomCode",
+            hashKey = version,
+            values = JsonUtil.toJson(atomPostMap)
+        )
+        redisOperation.hset(
+            key = atomRunInfoKey,
+            hashKey = version,
+            values = JsonUtil.toJson(atomRunInfo)
+        )
+        // 更新插件xxx.latest这种版本号的缓存信息
+        redisOperation.hset(
+            key = "$ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX:$atomCode",
+            hashKey = VersionUtils.convertLatestVersion(version),
+            values = JsonUtil.toJson(atomPostMap)
+        )
+        redisOperation.hset(
+            key = atomRunInfoKey,
+            hashKey = VersionUtils.convertLatestVersion(version),
+            values = JsonUtil.toJson(atomRunInfo)
+        )
+        if (releaseFlag) {
             // 更新插件当前大版本内是否有测试版本标识
             redisOperation.hset(
                 key = "$ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX:$atomCode",
@@ -273,5 +315,71 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
                 values = "false"
             )
         }
+    }
+
+    override fun updateAtomRunInfoCache(
+        atomId: String,
+        atomName: String?,
+        jobType: JobTypeEnum?,
+        buildLessRunFlag: Boolean?,
+        latestFlag: Boolean?,
+        props: String?
+    ) {
+        val atomRecord = atomDao.getPipelineAtom(dslContext, atomId) ?: return
+        val atomCode = atomRecord.atomCode
+        val version = atomRecord.version
+        val atomRunInfoKey = StoreUtils.getStoreRunInfoKey(StoreTypeEnum.ATOM.name, atomCode)
+        val atomRunInfoJson = redisOperation.hget(atomRunInfoKey, version)
+        if (!atomRunInfoJson.isNullOrEmpty()) {
+            val atomRunInfo = JsonUtil.to(atomRunInfoJson, AtomRunInfo::class.java)
+            if (atomName != null) atomRunInfo.atomName = atomName
+            if (jobType != null) atomRunInfo.jobType = jobType
+            if (buildLessRunFlag != null) atomRunInfo.buildLessRunFlag = buildLessRunFlag
+            if (props != null) atomRunInfo.inputTypeInfos = generateInputTypeInfos(props)
+            // 更新插件当前版本号的缓存信息
+            redisOperation.hset(
+                key = atomRunInfoKey,
+                hashKey = version,
+                values = JsonUtil.toJson(atomRunInfo)
+            )
+            val updateLatestAtomCacheFlag = if (latestFlag == true) {
+                true
+            } else {
+                val latestAtomRecord = marketAtomDao.getLatestAtomByCode(dslContext, atomCode)
+                atomId == latestAtomRecord?.id
+            }
+            if (updateLatestAtomCacheFlag) {
+                // 更新插件xxx.latest这种版本号的缓存信息
+                redisOperation.hset(
+                    key = atomRunInfoKey,
+                    hashKey = VersionUtils.convertLatestVersion(version),
+                    values = JsonUtil.toJson(atomRunInfo)
+                )
+            }
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    override fun generateInputTypeInfos(props: String?): Map<String, String>? {
+        var inputTypeInfos: Map<String, String>? = null
+        if (!props.isNullOrEmpty()) {
+            val propMap = JsonUtil.toMap(props)
+            inputTypeInfos = mutableMapOf()
+            val inputDataMap = propMap[ATOM_INPUT] as? Map<String, Any>
+            if (inputDataMap != null) {
+                // 生成新插件输入参数对应的类型数据
+                inputDataMap.keys.forEach { inputKey ->
+                    val inputDataObj = inputDataMap[inputKey] as Map<String, Any>
+                    inputTypeInfos[inputKey] = inputDataObj[TYPE].toString()
+                }
+            } else {
+                // 生成老插件输入参数对应的类型数据
+                propMap.keys.forEach { inputKey ->
+                    val inputDataObj = propMap[inputKey] as Map<String, Any>
+                    inputTypeInfos[inputKey] = inputDataObj[COMPONENT].toString()
+                }
+            }
+        }
+        return inputTypeInfos
     }
 }

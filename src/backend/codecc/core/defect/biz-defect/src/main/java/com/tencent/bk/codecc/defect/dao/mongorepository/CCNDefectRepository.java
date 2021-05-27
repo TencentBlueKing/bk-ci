@@ -29,6 +29,7 @@ package com.tencent.bk.codecc.defect.dao.mongorepository;
 import com.tencent.bk.codecc.defect.model.CCNDefectEntity;
 import com.tencent.bk.codecc.defect.model.LintFileEntity;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -112,4 +113,7 @@ public interface CCNDefectRepository extends MongoRepository<CCNDefectEntity, St
      * @return
      */
     List<CCNDefectEntity> findByTaskIdAndRelPathIn(long taskId, Set<String> relPathSet);
+
+    @Query(fields = "{'ccn':1, 'status':1}", value = "{'task_id': ?0, 'status': {'$gt':1}}")
+    List<CCNDefectEntity> findCloseDefectByTaskId(Long taskId);
 }

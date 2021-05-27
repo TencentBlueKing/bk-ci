@@ -13,7 +13,7 @@
 package com.tencent.bk.codecc.task.component;
 
 import com.tencent.bk.codecc.task.service.BaseDataService;
-import com.tencent.bk.codecc.task.vo.BaseDataVO;
+import com.tencent.devops.common.api.BaseDataVO;
 import com.tencent.devops.common.service.utils.SpringContextUtil;
 import com.tencent.devops.common.util.DynamicEnumUtils;
 import lombok.extern.slf4j.Slf4j;

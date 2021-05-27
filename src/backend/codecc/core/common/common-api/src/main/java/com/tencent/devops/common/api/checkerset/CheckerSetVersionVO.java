@@ -1,6 +1,8 @@
 package com.tencent.devops.common.api.checkerset;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 描述
@@ -9,6 +11,8 @@ import lombok.Data;
  * @date 2020/1/8
  */
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class CheckerSetVersionVO
 {
     /**

@@ -1,7 +1,7 @@
 package com.tencent.bk.codecc.defect.api;
 
-import com.tencent.devops.common.api.pojo.CodeCCResult;
 import com.tencent.bk.codecc.defect.vo.SetForceFullScanReqVO;
+import com.tencent.devops.common.api.pojo.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -25,7 +25,7 @@ public interface ServiceToolBuildInfoResource
     @ApiOperation("设置强制全量扫描标志位")
     @Path("/task/{taskId}/forceFullScanSymbol")
     @POST
-    CodeCCResult<Boolean> setForceFullScan(
+    Result<Boolean> setForceFullScan(
             @ApiParam(value = "任务ID", required = true)
             @PathParam("taskId")
                     Long taskId,
@@ -35,7 +35,7 @@ public interface ServiceToolBuildInfoResource
     @ApiOperation("设置运行时栈强制全量扫描标志位")
     @Path("/stack/task/{taskId}/forceFullScan")
     @POST
-    CodeCCResult<Boolean> setToolBuildStackFullScan(
+    Result<Boolean> setToolBuildStackFullScan(
             @ApiParam(value = "任务ID", required = true)
             @PathParam("taskId")
                     Long taskId,

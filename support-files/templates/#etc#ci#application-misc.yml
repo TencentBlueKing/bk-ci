@@ -1,9 +1,44 @@
 # Misc Service Template 服务配置文件模板
 spring:
   datasource:
-    url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_environment?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
-    username: __BK_CI_MYSQL_USER__
-    password: __BK_CI_MYSQL_PASSWORD__
+      process:
+         url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_process?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+         username: __BK_CI_MYSQL_USER__
+         password: __BK_CI_MYSQL_PASSWORD__
+      project:
+         url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_project?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+         username: __BK_CI_MYSQL_USER__
+         password: __BK_CI_MYSQL_PASSWORD__
+      repository:
+         url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_repository?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+         username: __BK_CI_MYSQL_USER__
+         password: __BK_CI_MYSQL_PASSWORD__
+      dispatch:
+         url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_dispatch?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+         username: __BK_CI_MYSQL_USER__
+         password: __BK_CI_MYSQL_PASSWORD__
+      plugin:
+         url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_plugin?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+         username: __BK_CI_MYSQL_USER__
+         password: __BK_CI_MYSQL_PASSWORD__
+      quality:
+         url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_quality?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+         username: __BK_CI_MYSQL_USER__
+         password: __BK_CI_MYSQL_PASSWORD__
+      artifactory:
+         url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_artifactory?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+         username: __BK_CI_MYSQL_USER__
+         password: __BK_CI_MYSQL_PASSWORD__
+      environment:
+         url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_environment?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+         username: __BK_CI_MYSQL_USER__
+         password: __BK_CI_MYSQL_PASSWORD__       
+
+influxdb:
+  server: __BK_CI_INFLUXDB_ADDR__
+  userName: __BK_CI_INFLUXDB_USER__
+  password: __BK_CI_INFLUXDB_PASSWORD__
+         
 # 服务器端口配置，在同一台机器上部署多个微服务，端口号要不同 21927
 server:
   port: __BK_CI_MISC_API_PORT__

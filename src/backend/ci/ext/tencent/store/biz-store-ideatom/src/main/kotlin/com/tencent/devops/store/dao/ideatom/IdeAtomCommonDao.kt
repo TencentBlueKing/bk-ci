@@ -104,7 +104,7 @@ class IdeAtomCommonDao : AbstractStoreCommonDao() {
         return if (atomRecord != null) {
             val publicFlag = dslContext.select(tiaf.PUBLIC_FLAG).from(tiaf)
                 .where(tiaf.ATOM_CODE.eq(storeCode))
-                .fetchOne(0, Boolean::class.java)
+                .fetchOne(0, Boolean::class.java)!!
             StoreBaseInfo(
                 storeId = atomRecord.id,
                 storeCode = atomRecord.atomCode,

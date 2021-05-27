@@ -34,8 +34,14 @@ import com.tencent.devops.artifactory.service.PipelineService
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.artifactory.util.StringUtil
+import com.tencent.devops.artifactory.util.UrlUtil
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.archive.client.BkRepoClient
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_APP_TITLE
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_ICON
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_NAME
+import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
@@ -187,50 +193,55 @@ class BkRepoAppService @Autowired constructor(
             RepoUtils.getRepoByType(artifactoryType),
             argPath
         )
-        var bundleIdentifier = ""
-        var appTitle = ""
-        var appVersion = ""
-        fileProperties.forEach {
-            when (it.key) {
-                "bundleIdentifier" -> bundleIdentifier = it.value
-                "appTitle" -> appTitle = it.value
-                "appVersion" -> appVersion = it.value
-                else -> null
-            }
-        }
-        return "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" +
-            "<!DOCTYPE plist PUBLIC \"-//Apple//DTD PLIST 1.0//EN\" " +
-            "\"http://www.apple.com/DTDs/PropertyList-1.0.dtd\">\n" +
-            "<plist version=\"1.0\">\n" +
-            "<dict>\n" +
-            "    <key>items</key>\n" +
-            "    <array>\n" +
-            "        <dict>\n" +
-            "            <key>assets</key>\n" +
-            "            <array>\n" +
-            "                <dict>\n" +
-            "                    <key>kind</key>\n" +
-            "                    <string>software-package</string>\n" +
-            "                    <key>url</key>\n" +
-            "                    <string>${ipaExternalDownloadUrlEncode.replace("&download=true", "")}</string>\n" +
-            "                </dict>\n" +
-            "            </array>\n" +
-            "            <key>metadata</key>\n" +
-            "            <dict>\n" +
-            "                <key>bundle-identifier</key>\n" +
-            "                <string>$bundleIdentifier</string>\n" +
-            "                <key>bundle-version</key>\n" +
-            "                <string>$appVersion</string>\n" +
-            "                <key>title</key>\n" +
-            "                <string>$appTitle</string>\n" +
-            "                <key>kind</key>\n" +
-            "                <string>software</string>\n" +
-            "            </dict>\n" +
-            "        </dict>\n" +
-            "    </array>\n" +
-            "</dict>\n" +
-            "</plist>"
+        val bundleIdentifier = fileProperties[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER] ?: ""
+        val appTitle = fileProperties[ARCHIVE_PROPS_APP_NAME] ?: fileProperties[ARCHIVE_PROPS_APP_APP_TITLE] ?: ""
+        val appVersion = fileProperties[ARCHIVE_PROPS_APP_VERSION] ?: ""
+        val appIcon = fileProperties[ARCHIVE_PROPS_APP_ICON]?.let { UrlUtil.toOuterPhotoAddr(it) } ?: ""
+
+        return """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+            <plist version="1.0">
+            <dict>
+                <key>items</key>
+                <array>
+                    <dict>
+                        <key>assets</key>
+                        <array>
+                            <dict>
+                                <key>kind</key>
+                                <string>software-package</string>
+                                <key>url</key>
+                                <string>${getCdataStr(ipaExternalDownloadUrlEncode)}</string>
+                            </dict>
+                            <dict>
+                                <key>kind</key>
+                                <string>display-image</string>
+                                <key>needs-shine</key>
+                                <false/>
+                                <key>url</key>
+                                <string>${getCdataStr(appIcon)}</string>
+                            </dict>
+                        </array>
+                        <key>metadata</key>
+                        <dict>
+                            <key>bundle-identifier</key>
+                            <string>${getCdataStr(bundleIdentifier)}</string>
+                            <key>bundle-version</key>
+                            <string>${getCdataStr(appVersion)}</string>
+                            <key>title</key>
+                            <string>${getCdataStr(appTitle)}</string>
+                            <key>kind</key>
+                            <string>software</string>
+                        </dict>
+                    </dict>
+                </array>
+            </dict>
+            </plist>
+        """.trimIndent()
     }
+
+    private fun getCdataStr(str: String): String = "<![CDATA[$str]]>"
 
     companion object {
         private val logger = LoggerFactory.getLogger(BkRepoAppService::class.java)

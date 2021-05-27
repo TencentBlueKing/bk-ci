@@ -546,7 +546,12 @@ class BkRepoClient constructor(
 
     fun getFileDetail(userId: String, projectId: String, repoName: String, path: String): NodeDetail? {
         logger.info("getFileInfo, projectId:$projectId, repoName: $repoName, path: $path")
-        val url = "${getGatewaytUrl()}/bkrepo/api/service/repository/api/node/$projectId/$repoName/$path"
+        val url = "${getGatewaytUrl()}/bkrepo/api/service/repository/api/node/$projectId/$repoName/${
+            path.replace(
+                "#",
+                "%23"
+            )
+        }"
         val request = Request.Builder()
             .url(url)
             // .header("Authorization", makeCredential())

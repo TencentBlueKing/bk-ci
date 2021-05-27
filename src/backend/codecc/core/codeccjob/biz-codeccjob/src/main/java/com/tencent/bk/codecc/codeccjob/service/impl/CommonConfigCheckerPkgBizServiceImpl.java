@@ -15,7 +15,7 @@ package com.tencent.bk.codecc.codeccjob.service.impl;
 import com.tencent.bk.codecc.defect.model.DefectEntity;
 import com.tencent.bk.codecc.defect.vo.ConfigCheckersPkgReqVO;
 import com.tencent.bk.codecc.codeccjob.dao.mongorepository.DefectRepository;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.service.IBizService;
@@ -40,7 +40,7 @@ public class CommonConfigCheckerPkgBizServiceImpl implements IBizService<ConfigC
     private DefectRepository defectRepository;
 
     @Override
-    public CodeCCResult processBiz(ConfigCheckersPkgReqVO configCheckersPkgReqVO)
+    public Result processBiz(ConfigCheckersPkgReqVO configCheckersPkgReqVO)
     {
         List<DefectEntity> defectList = defectRepository.findByTaskIdAndToolName(configCheckersPkgReqVO.getTaskId(), configCheckersPkgReqVO.getToolName());
         if (CollectionUtils.isNotEmpty(defectList))
@@ -90,6 +90,6 @@ public class CommonConfigCheckerPkgBizServiceImpl implements IBizService<ConfigC
 
             defectRepository.save(needUpdateDefectList);
         }
-        return new CodeCCResult(CommonMessageCode.SUCCESS);
+        return new Result(CommonMessageCode.SUCCESS);
     }
 }

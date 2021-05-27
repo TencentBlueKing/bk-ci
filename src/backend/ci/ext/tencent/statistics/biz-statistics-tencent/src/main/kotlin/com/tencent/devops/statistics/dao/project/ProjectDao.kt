@@ -120,7 +120,7 @@ class ProjectDao {
 
     fun getCount(dslContext: DSLContext): Long {
         return with(TProject.T_PROJECT) {
-            dslContext.selectCount().from(this).where(ENABLED.eq(true)).fetchOne(0, Long::class.java)
+            dslContext.selectCount().from(this).where(ENABLED.eq(true)).fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -727,7 +727,7 @@ class ProjectDao {
                 approvalStatus = approvalStatus,
                 grayFlag = grayFlag, englishNames = englishNames
             )
-            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, kotlin.Int::class.java)
+            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, kotlin.Int::class.java)!!
         }
     }
 
@@ -759,7 +759,7 @@ class ProjectDao {
                 grayNames = grayNames,
                 repoGrayNames = repoGrayNames
             )
-            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, kotlin.Int::class.java)
+            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, kotlin.Int::class.java)!!
         }
     }
 
@@ -795,7 +795,7 @@ class ProjectDao {
                 repoGrayNames = repoGrayNames,
                 macosGrayNames = repoGrayNames
             )
-            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, kotlin.Int::class.java)
+            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, kotlin.Int::class.java)!!
         }
     }
 }

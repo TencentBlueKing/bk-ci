@@ -1,4 +1,6 @@
 spring:
+  main:
+    allow-bean-definition-overriding: true
   application:
     name: dispatch${service-suffix}
     desc: DevOps Dispatch Service

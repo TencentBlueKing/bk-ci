@@ -19,6 +19,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import static com.tencent.devops.common.web.mq.ConstantsKt.*;
+
 /**
  * 开源扫描重试定时任务
  * 

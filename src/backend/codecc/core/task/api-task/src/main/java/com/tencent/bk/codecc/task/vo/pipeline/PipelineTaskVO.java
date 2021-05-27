@@ -1,6 +1,5 @@
 package com.tencent.bk.codecc.task.vo.pipeline;
 
-import com.tencent.bk.codecc.task.enums.ProjectLanguage;
 import com.tencent.devops.common.api.CommonVO;
 import io.swagger.annotations.ApiModel;
 import lombok.Data;
@@ -27,7 +26,7 @@ public class PipelineTaskVO extends CommonVO
 
     private String cnName;
 
-    private List<ProjectLanguage> codeLanguages;
+    private List<String> codeLanguages;
 
     private List<PipelineToolVO> tools;
 }

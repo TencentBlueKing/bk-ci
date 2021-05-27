@@ -948,12 +948,12 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                         pubTime = pubTime
                     )
                 )
-                // 处理post操作缓存
-                marketAtomCommonService.handleAtomPostCache(
+                // 处理插件缓存
+                marketAtomCommonService.handleAtomCache(
                     atomId = atomId,
                     atomCode = atomCode,
                     version = version,
-                    atomStatus = atomStatus
+                    releaseFlag = true
                 )
                 // 通过websocket推送状态变更消息
                 storeWebsocketService.sendWebsocketMessage(userId, atomId)
@@ -1001,61 +1001,12 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 storeType = StoreTypeEnum.ATOM.type.toByte()
             )
         ) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
+            throw ErrorCodeException(errorCode = CommonMessageCode.PERMISSION_DENIED)
         }
         val version = atomOfflineReq.version
         val reason = atomOfflineReq.reason
         if (!version.isNullOrEmpty()) {
-            val atomRecord = atomDao.getPipelineAtom(dslContext, atomCode, version!!.trim())
-                ?: return MessageCodeUtil.generateResponseDataObject(
-                    CommonMessageCode.PARAMETER_IS_INVALID,
-                    arrayOf("$atomCode:$version"),
-                    false
-                )
-            if (AtomStatusEnum.RELEASED.status.toByte() != atomRecord.atomStatus) {
-                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
-            }
-            dslContext.transaction { t ->
-                val context = DSL.using(t)
-                val releaseAtomRecords = marketAtomDao.getReleaseAtomsByCode(context, atomCode, 2)
-                if (null != releaseAtomRecords && releaseAtomRecords.size > 0) {
-                    marketAtomDao.updateAtomInfoById(
-                        dslContext = context,
-                        atomId = atomRecord.id,
-                        userId = userId,
-                        updateAtomInfo = UpdateAtomInfo(
-                            atomStatus = AtomStatusEnum.UNDERCARRIAGED.status.toByte(),
-                            atomStatusMsg = reason,
-                            latestFlag = false
-                        )
-                    )
-                    val newestReleaseAtomRecord = releaseAtomRecords[0]
-                    if (newestReleaseAtomRecord.id == atomRecord.id) {
-                        var atomId: String? = null
-                        if (releaseAtomRecords.size == 1) {
-                            val newestUndercarriagedAtom =
-                                marketAtomDao.getNewestUndercarriagedAtomsByCode(context, atomCode)
-                            if (null != newestUndercarriagedAtom) {
-                                atomId = newestUndercarriagedAtom.id
-                            }
-                        } else {
-                            // 把前一个发布的版本的latestFlag置为true
-                            val tmpAtomRecord = releaseAtomRecords[1]
-                            atomId = tmpAtomRecord.id
-                        }
-                        if (null != atomId) {
-                            marketAtomDao.updateAtomInfoById(
-                                dslContext = context,
-                                atomId = atomId,
-                                userId = userId,
-                                updateAtomInfo = UpdateAtomInfo(
-                                    latestFlag = true
-                                )
-                            )
-                        }
-                    }
-                }
-            }
+            offlineAtomByVersion(atomCode = atomCode, version = version, userId = userId, reason = reason)
         } else {
             // 设置插件状态为下架
             dslContext.transaction { t ->
@@ -1088,5 +1039,88 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         // 通知使用方插件即将下架 -- todo
 
         return Result(true)
+    }
+
+    private fun offlineAtomByVersion(
+        atomCode: String,
+        version: String,
+        userId: String,
+        reason: String?
+    ) {
+        val atomRecord = atomDao.getPipelineAtom(dslContext, atomCode, version.trim())
+            ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf("$atomCode:$version")
+            )
+        if (AtomStatusEnum.RELEASED.status.toByte() != atomRecord.atomStatus) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.PERMISSION_DENIED)
+        }
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            handleOfflineAtomByVersion(
+                context = context,
+                atomCode = atomCode,
+                atomRecord = atomRecord,
+                userId = userId,
+                reason = reason,
+                version = version
+            )
+        }
+    }
+
+    private fun handleOfflineAtomByVersion(
+        context: DSLContext,
+        atomCode: String,
+        atomRecord: TAtomRecord,
+        userId: String,
+        reason: String?,
+        version: String
+    ) {
+        // 查找插件最近二个已经发布的版本
+        val releaseAtomRecords = marketAtomDao.getReleaseAtomsByCode(context, atomCode, 2)
+        if (null != releaseAtomRecords && releaseAtomRecords.size > 0) {
+            marketAtomDao.updateAtomInfoById(
+                dslContext = context,
+                atomId = atomRecord.id,
+                userId = userId,
+                updateAtomInfo = UpdateAtomInfo(
+                    atomStatus = AtomStatusEnum.UNDERCARRIAGED.status.toByte(),
+                    atomStatusMsg = reason,
+                    latestFlag = false
+                )
+            )
+            val newestReleaseAtomRecord = releaseAtomRecords[0]
+            if (newestReleaseAtomRecord.id == atomRecord.id) {
+                var atomId: String? = null
+                if (releaseAtomRecords.size == 1) {
+                    val newestUndercarriagedAtom =
+                        marketAtomDao.getNewestUndercarriagedAtomsByCode(context, atomCode)
+                    if (null != newestUndercarriagedAtom) {
+                        atomId = newestUndercarriagedAtom.id
+                    }
+                } else {
+                    // 把前一个发布的版本的latestFlag置为true
+                    val tmpAtomRecord = releaseAtomRecords[1]
+                    atomId = tmpAtomRecord.id
+                    // 处理插件缓存(保证用户用到当前大版本中已发布的版本)
+                    marketAtomCommonService.handleAtomCache(
+                        atomId = atomId,
+                        atomCode = atomCode,
+                        version = tmpAtomRecord.version,
+                        releaseFlag = false
+                    )
+                }
+                if (null != atomId) {
+                    marketAtomDao.updateAtomInfoById(
+                        dslContext = context,
+                        atomId = atomId,
+                        userId = userId,
+                        updateAtomInfo = UpdateAtomInfo(
+                            latestFlag = true
+                        )
+                    )
+                }
+            }
+        }
     }
 }

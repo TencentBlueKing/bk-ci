@@ -108,11 +108,11 @@ class MarketTemplateDao {
                 tas.SCORE_AVERAGE
             ).from(tas).asTable("t")
             baseStep.leftJoin(t).on(tt.TEMPLATE_CODE.eq(t.field("STORE_CODE", String::class.java)))
-            conditions.add(t.field("SCORE_AVERAGE", BigDecimal::class.java).ge(BigDecimal.valueOf(score.toLong())))
-            conditions.add(t.field("STORE_TYPE", Byte::class.java).eq(storeType))
+            conditions.add(t.field("SCORE_AVERAGE", BigDecimal::class.java)!!.ge(BigDecimal.valueOf(score.toLong())))
+            conditions.add(t.field("STORE_TYPE", Byte::class.java)!!.eq(storeType))
         }
 
-        return baseStep.where(conditions).fetchOne(0, Int::class.java)
+        return baseStep.where(conditions).fetchOne(0, Int::class.java)!!
     }
 
     private fun formatConditions(
@@ -211,8 +211,8 @@ class MarketTemplateDao {
                 tas.SCORE_AVERAGE
             ).from(tas).asTable("t")
             baseStep.leftJoin(t).on(tt.TEMPLATE_CODE.eq(t.field("STORE_CODE", String::class.java)))
-            conditions.add(t.field("SCORE_AVERAGE", BigDecimal::class.java).ge(BigDecimal.valueOf(score.toLong())))
-            conditions.add(t.field("STORE_TYPE", Byte::class.java).eq(storeType))
+            conditions.add(t.field("SCORE_AVERAGE", BigDecimal::class.java)!!.ge(BigDecimal.valueOf(score.toLong())))
+            conditions.add(t.field("STORE_TYPE", Byte::class.java)!!.eq(storeType))
         }
 
         if (null != sortType) {
@@ -232,9 +232,9 @@ class MarketTemplateDao {
             }
 
             if (desc != null && desc) {
-                baseStep.where(conditions).orderBy(realSortType.desc())
+                baseStep.where(conditions).orderBy(realSortType!!.desc())
             } else {
-                baseStep.where(conditions).orderBy(realSortType.asc())
+                baseStep.where(conditions).orderBy(realSortType!!.asc())
             }
         } else {
             baseStep.where(conditions)
@@ -385,7 +385,7 @@ class MarketTemplateDao {
             return dslContext.selectCount()
                 .from(this)
                 .where(conditions)
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -393,7 +393,7 @@ class MarketTemplateDao {
         with(TTemplate.T_TEMPLATE) {
             return dslContext.selectCount().from(this)
                 .where(TEMPLATE_CODE.eq(templateCode))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -402,7 +402,7 @@ class MarketTemplateDao {
             return dslContext.selectCount().from(this)
                 .where(ID.eq(templateId)
                     .and(TEMPLATE_CODE.eq(templateCode)))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -411,7 +411,7 @@ class MarketTemplateDao {
             return dslContext.selectCount().from(this)
                 .where(TEMPLATE_CODE.eq(templateCode)
                     .and(TEMPLATE_STATUS.eq(TemplateStatusEnum.RELEASED.status.toByte())))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -580,7 +580,7 @@ class MarketTemplateDao {
             .join(c)
             .on(a.TEMPLATE_CODE.eq(c.STORE_CODE))
             .where(conditions)
-            .fetchOne(0, Long::class.java)
+            .fetchOne(0, Long::class.java)!!
     }
 
     private fun generateGetMyTemplatesConditions(

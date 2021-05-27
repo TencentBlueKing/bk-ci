@@ -204,7 +204,7 @@ class PipelineDockerIPInfoDao {
         with(TDispatchPipelineDockerIpInfo.T_DISPATCH_PIPELINE_DOCKER_IP_INFO) {
             return dslContext.selectCount()
                 .from(this)
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -273,7 +273,7 @@ class PipelineDockerIPInfoDao {
                 .from(this)
                 .where(ENABLE.eq(true))
                 .and(GRAY_ENV.eq(grayEnv))
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Long::class.java)!!
         }
     }
 
