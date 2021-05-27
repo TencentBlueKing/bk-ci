@@ -124,6 +124,44 @@ class GitRequestEventDao {
         }
     }
 
+    fun getWithEvent(
+        dslContext: DSLContext,
+        id: Long,
+        commitMsg: String? = null
+    ): GitRequestEvent? {
+        with(TGitRequestEvent.T_GIT_REQUEST_EVENT) {
+            val dsl = dslContext.selectFrom(this)
+                .where(ID.eq(id))
+            if (commitMsg != null) {
+                dsl.and(COMMIT_MSG.like("%$commitMsg%"))
+            }
+            val record = dsl.fetchOne()
+            return if (record == null) {
+                null
+            } else {
+                GitRequestEvent(
+                    id = record.id,
+                    objectKind = record.objectKind,
+                    operationKind = record.operationKind,
+                    extensionAction = record.extensionAction,
+                    gitProjectId = record.gitProjectId,
+                    sourceGitProjectId = record.sourceGitProjectId,
+                    branch = record.branch,
+                    targetBranch = record.targetBranch,
+                    commitId = record.commitId,
+                    commitMsg = record.commitMsg,
+                    commitTimeStamp = record.commitTimestamp,
+                    userId = record.userName,
+                    totalCommitCount = record.totalCommitCount,
+                    mergeRequestId = record.mergeRequestId,
+                    event = record.event,
+                    description = record.description,
+                    mrTitle = record.mrTitle
+                )
+            }
+        }
+    }
+
     fun getRequestList(
         dslContext: DSLContext,
         gitProjectId: Long,

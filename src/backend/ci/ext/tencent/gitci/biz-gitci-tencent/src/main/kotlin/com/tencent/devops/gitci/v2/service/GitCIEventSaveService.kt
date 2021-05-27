@@ -76,7 +76,7 @@ class GitCIEventSaveService @Autowired constructor(
         gitProjectId: Long
     ): Long {
         var messageId = -1L
-        val event = gitRequestEventDao.get(dslContext = dslContext, id = eventId)
+        val event = gitRequestEventDao.getWithEvent(dslContext = dslContext, id = eventId)
             ?: throw RuntimeException("can't find event $eventId")
         val messageTitle = when (event.objectKind) {
             OBJECT_KIND_MERGE_REQUEST -> {
