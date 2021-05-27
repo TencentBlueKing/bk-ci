@@ -32,17 +32,24 @@ echo "导入 SQL 文件"
 ./bin/sql_migrate.sh -n mysql-ci $BK_PKG_SRC_PATH/ci/support-files/sql/*.sql
 
 echo "RabbitMQ"
-echo " 服务端启用rabbitmq_delayed_message_exchange插件."
-./pcmd.sh -m rabbitmq 'rabbitmq-plugins enable rabbitmq_delayed_message_exchange'
-
-echo " 检查所有服务端的 rabbitmq_delayed_message_exchange 插件是否启用"
-./pcmd.sh -m rabbitmq 'rabbitmq-plugins list | grep rabbitmq_delayed_message_exchange | grep -F "E*"'
 echo " 创建vhost及账户."
 ./pcmd.sh -H "$BK_RABBITMQ_IP" "$CTRL_DIR/bin/add_rabbitmq_user.sh -u \"$BK_CI_RABBITMQ_USER\" -p \"$BK_CI_RABBITMQ_PASSWORD\" -h \"$BK_CI_RABBITMQ_VHOST\" && rabbitmqctl change_password \"$BK_CI_RABBITMQ_USER\" \"$BK_CI_RABBITMQ_PASSWORD\""
 
 
 echo "导入 IAM 权限模板"
 ./bin/bkiam_migrate.sh -t "$BK_IAM_PRIVATE_URL" -a "$BK_CI_APP_CODE" -s "$BK_CI_APP_TOKEN" $BK_PKG_SRC_PATH/ci/support-files/bkiam/*.json
+
+# 处理rabbitmq插件.
+rabbitmq_plugin_url="https://github.com/rabbitmq/rabbitmq-delayed-message-exchange/releases/download/v3.8.0/rabbitmq_delayed_message_exchange-3.8.0.ez"
+echo " 检查所有服务端的 rabbitmq_delayed_message_exchange 插件是否启用"
+if ./pcmd.sh -m rabbitmq 'rabbitmq-plugins list | grep rabbitmq_delayed_message_exchange | grep -F "E*"'; then
+  echo "RabbitMQ插件rabbitmq_delayed_message_exchange已经启用."
+else
+  echo "RabbitMQ插件rabbitmq_delayed_message_exchange未启用."
+  echo "参考下载地址: $rabbitmq_plugin_url"
+  #echo " 服务端启用rabbitmq_delayed_message_exchange插件."
+  #./pcmd.sh -m rabbitmq 'rabbitmq-plugins enable rabbitmq_delayed_message_exchange'
+fi
 
 # 不影响部署结果, 如果报错可以忽略:
 echo "注册 PaaS 桌面图标"
