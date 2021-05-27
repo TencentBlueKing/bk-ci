@@ -216,10 +216,6 @@ if [ -z "${BK_CI_HOME:-}" ]; then
   echo >&2 "ERROR: env BK_CI_HOME is not set or empty. please set it first."
   exit 2
 fi
-if ! [ -d "$BK_CI_HOME" ]; then
-  echo >&2 "ERROR: dir BK_CI_HOME does not exsit: $BK_CI_HOME, you should install bk-ci first."
-  exit 4
-fi
 
 gen_systemd_ci__target
 for MS_NAME in "$@"; do
