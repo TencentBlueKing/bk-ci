@@ -281,7 +281,7 @@ class TriggerBuildService @Autowired constructor(
             params = params
         )
 
-        val stage1 = Stage(listOf(triggerContainer), "stage-1")
+        val stage1 = Stage(listOf(triggerContainer), id = "stage-0", name = "stage_0")
         stageList.add(stage1)
 
         // 其他的stage
@@ -400,6 +400,7 @@ class TriggerBuildService @Autowired constructor(
 
         return Stage(
             id = stage.id,
+            name = stage.name ?: "",
             tag = stage.label,
             fastKill = stage.fastKill,
             stageControlOption = stageControlOption,
@@ -813,12 +814,19 @@ class TriggerBuildService @Autowired constructor(
 
         startParams[CI_REPO] = gitProjectName
         val repoName = gitProjectName.split("/")
-        startParams[CI_REPO_NAME] = if (repoName.size >= 2) {
-            gitProjectName.removePrefix(repoName[0] + "/")
+        val repoProjectName = if (repoName.size >= 2) {
+            val index = repoName.lastIndexOf("/")
+            gitProjectName.substring(index + 1)
         } else {
             gitProjectName
         }
-        startParams[CI_REPO_GROUP] = repoName[0]
+        val repoGroupName = if (repoName.size >= 2) {
+            gitProjectName.removeSuffix("/$repoProjectName")
+        } else {
+            gitProjectName
+        }
+        startParams[CI_REPO_NAME] = repoProjectName
+        startParams[CI_REPO_GROUP] = repoGroupName
 
         // 用户自定义变量
         // startParams.putAll(yaml.variables ?: mapOf())
