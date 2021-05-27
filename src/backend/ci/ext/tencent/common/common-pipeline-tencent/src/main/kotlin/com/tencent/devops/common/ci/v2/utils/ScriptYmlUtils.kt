@@ -335,7 +335,7 @@ object ScriptYmlUtils {
         }
 
         return try {
-            YamlUtil.getObjectMapper().readValue(preRunsOn.toString(), RunsOn::class.java)
+            YamlUtil.getObjectMapper().readValue(JsonUtil.toJson(preRunsOn), RunsOn::class.java)
         } catch (e: Exception) {
             RunsOn(
                 poolName = preRunsOn.toString()
