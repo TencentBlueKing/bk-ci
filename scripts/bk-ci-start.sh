@@ -116,6 +116,7 @@ start_ci__springboot (){
   done
   java_argv+=(
     "-Ddevops_gateway=$DEVOPS_GATEWAY"
+    "-Dserver.port=$API_PORT"  # 强制覆盖配置文件里的端口.
     "-Dbksvc=bk-ci-$MS_NAME"
   )
   # 指定环境变量及参数, 启动PATH里的java.
