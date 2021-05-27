@@ -483,19 +483,23 @@ class TriggerBuildService @Autowired constructor(
         }
 
         // 公共docker构建机
-        val containerPool = Pool(
-            container = job.runsOn.container.image,
-            credential = Credential(
-                user = job.runsOn.container.credentials?.username ?: "",
-                password = job.runsOn.container.credentials?.password ?: ""
-            ),
-            macOS = null,
-            third = null,
-            env = job.env,
-            buildType = BuildType.DOCKER_VM
-        )
+        if (job.runsOn.poolName == "docker") {
+            val containerPool = Pool(
+                container = job.runsOn.container.image,
+                credential = Credential(
+                    user = job.runsOn.container.credentials?.username ?: "",
+                    password = job.runsOn.container.credentials?.password ?: ""
+                ),
+                macOS = null,
+                third = null,
+                env = job.env,
+                buildType = BuildType.DOCKER_VM
+            )
 
-        return GitCIDispatchType(objectMapper.writeValueAsString(containerPool))
+            return GitCIDispatchType(objectMapper.writeValueAsString(containerPool))
+        }
+
+        throw CustomException(Response.Status.NOT_FOUND, "公共构建资源池不存在，请检查yml配置.")
     }
 
     private fun addNormalContainer(
