@@ -16,6 +16,7 @@ import com.tencent.devops.common.api.analysisresult.BaseLastAnalysisResultVO;
 import com.tencent.devops.common.api.analysisresult.CommonLastAnalysisResultVO;
 import com.tencent.devops.common.api.analysisresult.ToolLastAnalysisResultVO;
 import com.tencent.devops.common.constant.ComConstants;
+import com.tencent.devops.common.constant.ComConstants.Tool;
 import com.tencent.devops.common.service.ToolMetaCacheService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -37,7 +38,7 @@ import java.util.*;
 @Service("CommonCheckerReportBizService")
 public class CommonCheckReportBizServiceImpl implements ICheckReportBizService
 {
-    @Value("${devopsGateway.idchost:#{null}}")
+    @Value("${bkci.public.url:#{null}}")
     private String DEVOPS_HOST;
 
     @Autowired
@@ -86,9 +87,9 @@ public class CommonCheckReportBizServiceImpl implements ICheckReportBizService
         covReport.setLatestExistCount(null == newestCovData.getExistCount() ? 0 : newestCovData.getExistCount());
 
         // cloc加上总行数
-        if (toolName.equalsIgnoreCase(String.valueOf(ComConstants.Tool.CLOC))) {
+        if (Tool.CLOC.name().equals(toolName)) {
             // 获取总行数
-            List<CLOCStatisticEntity> clocStatisticEntityList = clocStatisticRepository.findByTaskId(taskId);
+            List<CLOCStatisticEntity> clocStatisticEntityList = clocStatisticRepository.findByTaskIdAndToolName(taskId, toolName);
             log.info("get cloc entity list for task: {}, {}", taskId, buildId);
             long totalLines = 0;
             long totalBlankLines = 0;

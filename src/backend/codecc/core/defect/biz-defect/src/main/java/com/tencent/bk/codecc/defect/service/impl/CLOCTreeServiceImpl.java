@@ -9,9 +9,11 @@ import com.tencent.bk.codecc.defect.vo.TreeNodeVO;
 import com.tencent.bk.codecc.task.api.ServiceTaskRestResource;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.client.Client;
+import com.tencent.devops.common.constant.ComConstants.Tool;
 import com.tencent.devops.common.constant.CommonMessageCode;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -48,17 +50,16 @@ public class CLOCTreeServiceImpl implements TreeService {
         if (taskId == null) {
             return new CLOCTreeNodeVO();
         }
-        List<CLOCDefectEntity> defectEntityList = clocDefectRepository.findByTaskIdAndStatusIsNot(taskId, "DISABLED");
+        List<CLOCDefectEntity> defectEntityList = clocDefectRepository.findByTaskIdAndToolNameInAndStatusIsNot(taskId, toolNames, "DISABLED");
 
         if (CollectionUtils.isEmpty(defectEntityList)) {
             return new CLOCTreeNodeVO();
         }
 
-        CodeCCResult<TaskDetailVO> taskBaseResult;
+        Result<TaskDetailVO> taskBaseResult;
         try {
             taskBaseResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
-        }
-        catch (Exception e) {
+        } catch (Exception e) {
             log.error("get task info fail!, task id: {}", taskId);
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
         }
@@ -102,8 +103,14 @@ public class CLOCTreeServiceImpl implements TreeService {
     @Override
     public Set<String> getDefectPaths(Long taskId, String toolName) {
         Set<String> defectPaths = new TreeSet<>();
+        List<String> toolList;
+        if (Tool.SCC.name().equals(toolName)) {
+            toolList = Collections.singletonList(toolName);
+        } else {
+            toolList = Arrays.asList(toolName, null);
+        }
         List<CLOCDefectEntity> clocDefectEntityList =
-                clocDefectRepository.findByTaskIdAndStatusIsNot(taskId, "DISABLED");
+                clocDefectRepository.findByTaskIdAndToolNameInAndStatusIsNot(taskId, toolList, "DISABLED");
         if (CollectionUtils.isEmpty(clocDefectEntityList)) {
             return defectPaths;
         }

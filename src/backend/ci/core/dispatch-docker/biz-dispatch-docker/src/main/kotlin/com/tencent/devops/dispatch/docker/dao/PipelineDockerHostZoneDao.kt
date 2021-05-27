@@ -86,7 +86,7 @@ class PipelineDockerHostZoneDao {
 
     fun count(dslContext: DSLContext) = dslContext.selectCount()
             .from(TDispatchPipelineDockerHostZone.T_DISPATCH_PIPELINE_DOCKER_HOST_ZONE)
-            .fetchOne(0, Int::class.java)
+            .fetchOne(0, Int::class.java)!!
 
     fun getList(
         dslContext: DSLContext,
@@ -126,7 +126,7 @@ class PipelineDockerHostZoneDao {
         with(TDispatchPipelineDockerHostZone.T_DISPATCH_PIPELINE_DOCKER_HOST_ZONE) {
             return dslContext.selectFrom(this)
                     .orderBy(DSL.rand())
-                    .fetchAny()
+                    .fetchAny()!!
         }
     }
 

@@ -2,7 +2,7 @@ package com.tencent.bk.codecc.defect.resources;
 
 import com.tencent.bk.codecc.defect.api.UserBackendParamsResource;
 import com.tencent.bk.codecc.defect.vo.common.BackendParamsVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.util.List2StrUtil;
 import com.tencent.devops.common.web.RestResource;
@@ -32,11 +32,11 @@ public class UserBackendParamsResourceImpl implements UserBackendParamsResource
     private String codeLangRelateCheckerSetTools;
 
     @Override
-    public CodeCCResult<BackendParamsVO> getParams()
+    public Result<BackendParamsVO> getParams()
     {
         BackendParamsVO backendParamsVO = new BackendParamsVO();
         backendParamsVO.setCodeLangRelateCheckerSetTools(List2StrUtil.fromString(codeLangRelateCheckerSetTools, ComConstants.SEMICOLON));
         backendParamsVO.setParamJsonRelateCheckerSetTools(List2StrUtil.fromString(paramJsonRelateCheckerSetTools, ComConstants.SEMICOLON));
-        return new CodeCCResult<>(backendParamsVO);
+        return new Result<>(backendParamsVO);
     }
 }

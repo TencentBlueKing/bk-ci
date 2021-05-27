@@ -150,12 +150,12 @@ class ProjectConfigDao {
             return if (projectId.isNullOrBlank()) {
                 dslContext.selectCount()
                         .from(TProjectConfig.T_PROJECT_CONFIG)
-                        .fetchOne(0, Int::class.java)
+                        .fetchOne(0, Int::class.java)!!
             } else {
                 dslContext.selectCount()
                         .from(TProjectConfig.T_PROJECT_CONFIG)
                         .where(PROJECT_ID.like("%$projectId%"))
-                        .fetchOne(0, Int::class.java)
+                        .fetchOne(0, Int::class.java)!!
             }
         }
     }

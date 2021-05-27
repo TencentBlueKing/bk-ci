@@ -467,7 +467,7 @@ class NotifyMessageTemplateDao {
             return dslContext.selectCount()
                 .from(this)
                 .where(COMMON_TEMPLATE_ID.eq(templateId))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -479,7 +479,7 @@ class NotifyMessageTemplateDao {
             return dslContext.selectCount()
                 .from(this)
                 .where(COMMON_TEMPLATE_ID.eq(templateId))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -491,7 +491,7 @@ class NotifyMessageTemplateDao {
             return dslContext.selectCount()
                 .from(this)
                 .where(COMMON_TEMPLATE_ID.eq(templateId))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 }

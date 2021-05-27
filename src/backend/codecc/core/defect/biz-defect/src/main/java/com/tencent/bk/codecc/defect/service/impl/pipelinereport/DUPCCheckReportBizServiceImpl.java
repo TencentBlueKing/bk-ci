@@ -75,7 +75,7 @@ public class DUPCCheckReportBizServiceImpl implements ICheckReportBizService
     @Autowired
     private ToolMetaCacheService toolMetaCacheService;
 
-    @Value("${devopsGateway.idchost:#{null}}")
+    @Value("${bkci.public.url:#{null}}")
     private String devopsHost;
 
     @Override

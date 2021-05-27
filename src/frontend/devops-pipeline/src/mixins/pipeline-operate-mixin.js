@@ -472,7 +472,8 @@ export default {
         },
         async savePipelineAndSetting () {
             const { pipelineSetting, checkPipelineInvalid, pipeline } = this
-            const { inValid, message } = checkPipelineInvalid(pipeline.stages)
+            console.log(this, '111')
+            const { inValid, message } = checkPipelineInvalid(pipeline.stages, pipelineSetting)
             const { projectId, pipelineId } = this.$route.params
             if (inValid) {
                 throw new Error(message)
@@ -519,12 +520,17 @@ export default {
                     message: this.$t('saveSuc'),
                     theme: 'success'
                 })
+                const { pipeline } = this
+                if (!this.isTemplatePipeline && pipeline.latestVersion && !isNaN(pipeline.latestVersion)) {
+                    ++pipeline.latestVersion
+                }
                 this.fetchPipelineList()
                 return {
                     code: 0,
                     data: responses
                 }
             } catch (e) {
+
                 this.handleError(e, [{
                     actionId: this.$permissionActionMap.edit,
                     resourceId: this.$permissionResourceMap.pipeline,

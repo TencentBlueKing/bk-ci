@@ -256,6 +256,9 @@
             this.fetchPipelineList()
             this.$store.dispatch('requestProjectDetail', { projectId: this.projectId })
         },
+        beforeDestroy () {
+            this.$store.commit('pipelines/updateCurPipeline', {})
+        },
         methods: {
             ...mapActions('pipelines', [
                 'requestPipelinesList',

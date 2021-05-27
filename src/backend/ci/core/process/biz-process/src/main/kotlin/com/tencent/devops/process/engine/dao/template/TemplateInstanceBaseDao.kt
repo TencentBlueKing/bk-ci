@@ -41,6 +41,7 @@ class TemplateInstanceBaseDao {
     fun createTemplateInstanceBase(
         dslContext: DSLContext,
         baseId: String,
+        templateId: String,
         templateVersion: String,
         useTemplateSettingsFlag: Boolean,
         projectId: String,
@@ -52,6 +53,7 @@ class TemplateInstanceBaseDao {
             dslContext.insertInto(
                 this,
                 ID,
+                TEMPLATE_ID,
                 TEMPLATE_VERSION,
                 USE_TEMPLATE_SETTINGS_FLAG,
                 PROJECT_ID,
@@ -62,6 +64,7 @@ class TemplateInstanceBaseDao {
             )
                 .values(
                     baseId,
+                    templateId,
                     templateVersion,
                     useTemplateSettingsFlag,
                     projectId,

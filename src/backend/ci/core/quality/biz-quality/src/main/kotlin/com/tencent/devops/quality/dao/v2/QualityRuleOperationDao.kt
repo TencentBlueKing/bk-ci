@@ -125,7 +125,7 @@ class QualityRuleOperationDao {
         return with(TQualityRuleOperation.T_QUALITY_RULE_OPERATION) {
             dslContext.selectFrom(this)
                 .where(RULE_ID.eq(ruleId))
-                .fetchOne()
+                .fetchOne()!!
         }
     }
 }

@@ -57,7 +57,7 @@ class VMTypeDao {
 
     fun countByName(dslContext: DSLContext, typeName: String): Int {
         with(TDispatchVmType.T_DISPATCH_VM_TYPE) {
-            return dslContext.selectCount().from(this).where(TYPE_NAME.eq(typeName)).fetchOne(0, Int::class.java)
+            return dslContext.selectCount().from(this).where(TYPE_NAME.eq(typeName)).fetchOne(0, Int::class.java)!!
         }
     }
 

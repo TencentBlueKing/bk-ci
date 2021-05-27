@@ -47,6 +47,6 @@ class ExtServiceBuildInfoDao {
             .join(b)
             .on(a.LANGUAGE.eq(b.LANGUAGE))
             .where(a.SERVICE_ID.eq(serviceId)).and(b.STORE_TYPE.eq(StoreTypeEnum.SERVICE.type.toByte()))
-            .fetchOne()
+            .fetchOne()!!
     }
 }

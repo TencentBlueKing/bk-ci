@@ -119,7 +119,7 @@ class TencentReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
     }
 
     override fun uploadReport(file: File, taskId: String, relativePath: String, buildVariables: BuildVariables) {
-        if (bkrepoResourceApi.useBkRepo()) {
+        if (bkrepoResourceApi.tokenAccess()) {
             val token = bkrepoResourceApi.createBkRepoTemporaryToken(
                 projectId = buildVariables.projectId,
                 repoName = "report",

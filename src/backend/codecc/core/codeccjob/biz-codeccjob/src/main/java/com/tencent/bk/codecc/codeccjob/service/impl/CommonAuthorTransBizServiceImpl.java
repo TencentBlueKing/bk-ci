@@ -15,7 +15,7 @@ package com.tencent.bk.codecc.codeccjob.service.impl;
 import com.tencent.bk.codecc.defect.model.DefectEntity;
 import com.tencent.bk.codecc.defect.vo.common.AuthorTransferVO;
 import com.tencent.bk.codecc.codeccjob.dao.mongorepository.DefectRepository;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.service.IBizService;
@@ -40,7 +40,7 @@ public class CommonAuthorTransBizServiceImpl implements IBizService<AuthorTransf
     @Autowired
     private DefectRepository defectRepository;
     @Override
-    public CodeCCResult processBiz(AuthorTransferVO authorTransferVO)
+    public Result processBiz(AuthorTransferVO authorTransferVO)
     {
         long taskId = authorTransferVO.getTaskId();
         String toolName = authorTransferVO.getToolName();
@@ -89,6 +89,6 @@ public class CommonAuthorTransBizServiceImpl implements IBizService<AuthorTransf
             }
         }
 
-        return new CodeCCResult(CommonMessageCode.SUCCESS);
+        return new Result(CommonMessageCode.SUCCESS);
     }
 }

@@ -139,4 +139,26 @@ class DateTimeUtilTest {
         val maxInt = Int.MAX_VALUE
         Assert.assertTrue(lastTime - maxInt > 0)
     }
+
+    @Test
+    fun stringToLocalDateTime() {
+        var dateStr = "2021"
+        var convertDate = DateTimeUtil.stringToLocalDateTime(dateStr, "yyyy")
+        Assert.assertEquals(convertDate.toString(), "2021-01-01T00:00")
+        dateStr = "2021-04"
+        convertDate = DateTimeUtil.stringToLocalDateTime(dateStr, "yyyy-MM")
+        Assert.assertEquals(convertDate.toString(), "2021-04-01T00:00")
+        dateStr = "2021-04-29"
+        convertDate = DateTimeUtil.stringToLocalDateTime(dateStr, DateTimeUtil.YYYY_MM_DD)
+        Assert.assertEquals(convertDate.toString(), "2021-04-29T00:00")
+        dateStr = "2021-04-29 15"
+        convertDate = DateTimeUtil.stringToLocalDateTime(dateStr, "yyyy-MM-dd HH")
+        Assert.assertEquals(convertDate.toString(), "2021-04-29T15:00")
+        dateStr = "2021-04-29 15:02"
+        convertDate = DateTimeUtil.stringToLocalDateTime(dateStr, "yyyy-MM-dd HH:mm")
+        Assert.assertEquals(convertDate.toString(), "2021-04-29T15:02")
+        dateStr = "2021-04-29 15:02:01"
+        convertDate = DateTimeUtil.stringToLocalDateTime(dateStr, "yyyy-MM-dd HH:mm:ss")
+        Assert.assertEquals(convertDate.toString(), "2021-04-29T15:02:01")
+    }
 }

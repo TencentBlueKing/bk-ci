@@ -51,19 +51,19 @@ class BuildBuildResourceImpl @Autowired constructor(
     private val subPipelineStartUpService: SubPipelineStartUpService
 ) : BuildBuildResource {
 
-    @Deprecated("replace by EngineBuildResourceImpl")
+    @Deprecated("replace by BuildJobResourceImpl")
     override fun setStarted(buildId: String, vmSeqId: String, vmName: String): Result<BuildVariables> {
         checkParam(buildId, vmSeqId, vmName)
         return Result(vmBuildService.buildVMStarted(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
     }
 
-    @Deprecated("replace by EngineBuildResourceImpl")
+    @Deprecated("replace by BuildJobResourceImpl")
     override fun claimTask(buildId: String, vmSeqId: String, vmName: String): Result<BuildTask> {
         checkParam(buildId, vmSeqId, vmName)
         return Result(vmBuildService.buildClaimTask(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
     }
 
-    @Deprecated("replace by EngineBuildResourceImpl")
+    @Deprecated("replace by BuildJobResourceImpl")
     override fun completeTask(
         buildId: String,
         vmSeqId: String,
@@ -75,13 +75,13 @@ class BuildBuildResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    @Deprecated("replace by EngineBuildResourceImpl")
+    @Deprecated("replace by BuildJobResourceImpl")
     override fun endTask(buildId: String, vmSeqId: String, vmName: String): Result<Boolean> {
         checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
         return Result(vmBuildService.buildEndTask(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))
     }
 
-    @Deprecated("replace by EngineBuildResourceImpl")
+    @Deprecated("replace by BuildJobResourceImpl")
     override fun timeoutTheBuild(
         projectId: String,
         pipelineId: String,
@@ -99,7 +99,7 @@ class BuildBuildResourceImpl @Autowired constructor(
         )
     }
 
-    @Deprecated("replace by EngineBuildResourceImpl")
+    @Deprecated("replace by BuildJobResourceImpl")
     override fun heartbeat(buildId: String, vmSeqId: String, vmName: String): Result<Boolean> {
         checkParam(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName)
         return Result(data = vmBuildService.heartbeat(buildId = buildId, vmSeqId = vmSeqId, vmName = vmName))

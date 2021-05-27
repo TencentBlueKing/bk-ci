@@ -82,7 +82,7 @@ class WebIDEStatusDao {
             return dslContext.selectFrom(this)
                     .where(OWNER.eq(owner))
                     .and(IP.eq(ip))
-                    .fetchOne()
+                    .fetchOne()!!
         }
     }
 

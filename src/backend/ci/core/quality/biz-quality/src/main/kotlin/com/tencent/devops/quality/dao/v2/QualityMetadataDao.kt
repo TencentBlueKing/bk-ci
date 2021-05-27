@@ -116,7 +116,7 @@ class QualityMetadataDao {
                     .or(EXTRA.like("%$searchString%"))
             }
 
-            select.fetchOne(0, Long::class.java)
+            select.fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -180,7 +180,7 @@ class QualityMetadataDao {
                     LocalDateTime.now()
                 )
                 .returning(ID)
-                .fetchOne().id
+                .fetchOne()!!.id
         }
     }
 

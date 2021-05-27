@@ -6,6 +6,8 @@ import org.apache.commons.lang.StringUtils;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -93,5 +95,25 @@ public class List2StrUtil
             }
         }
         return source;
+    }
+
+
+    /**
+     * 优化removAll方法
+     *
+     * @param source      原始list集合
+     * @param destination 需筛除掉的list集合
+     * @param <T>
+     * @return list
+     */
+    public static <T> List<T> listRemoveAllAscension(List<T> source, List<T> destination) {
+        List<T> result = new LinkedList<T>();
+        Set<T> destinationSet = new HashSet<T>(destination);
+        for (T t : source) {
+            if (!destinationSet.contains(t)) {
+                result.add(t);
+            }
+        }
+        return result;
     }
 }

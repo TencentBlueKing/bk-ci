@@ -26,11 +26,12 @@
 
 package com.tencent.bk.codecc.task.api;
 
-import com.tencent.devops.common.api.RefreshToolImageRevisionReqVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.RefreshDockerImageHashReqVO;
+import com.tencent.devops.common.api.ToolMetaDetailVO;
+import com.tencent.devops.common.api.pojo.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
-
+import java.util.List;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -38,7 +39,6 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
-import java.util.List;
 
 /**
  * 工具元数据注册接口
@@ -50,24 +50,31 @@ import java.util.List;
 @Path("/service/toolmeta")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-public interface ServiceToolMetaRestResource
-{
+public interface ServiceToolMetaRestResource {
 
-    @ApiOperation("工具元数据查询")
+    @ApiOperation("工具类型验证")
     @Path("/tool/{toolType}/validate")
     @GET
-    CodeCCResult<Boolean> validateToolType(
-        @PathParam("toolType")
-            String toolType
+    Result<Boolean> validateToolType(
+            @PathParam("toolType")
+                    String toolType
     );
 
-    @ApiOperation("工具元数据查询")
+    @ApiOperation("工具支持语言验证")
     @Path("/language/validate")
     @POST
-    CodeCCResult<Boolean> validateLanguage(List<String> languages);
+    Result<Boolean> validateLanguage(List<String> languages);
 
-    @ApiOperation("刷新工具镜像版本")
-    @Path("/toolImageRevision")
+    @ApiOperation("获取工具元数据")
+    @Path("/tool/toolName/{toolName}")
+    @GET
+    Result<ToolMetaDetailVO> obtainToolDetail(
+            @PathParam("toolName")
+                    String toolName
+    );
+
+    @ApiOperation("刷新工具docker镜像的hash值")
+    @Path("/dockerImageHash")
     @POST
-    CodeCCResult<Boolean> refreshToolImageRevision(RefreshToolImageRevisionReqVO refreshToolImageRevisionReqVO);
+    Result<Boolean> refreshDockerImageHash(RefreshDockerImageHashReqVO refreshDockerImageHashReqVO);
 }

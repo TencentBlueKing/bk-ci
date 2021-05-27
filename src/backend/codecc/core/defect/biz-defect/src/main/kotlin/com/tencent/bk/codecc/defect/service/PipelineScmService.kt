@@ -37,7 +37,7 @@ interface PipelineScmService {
      * @version V4.0
      */
     fun getFileContent(taskId: Long, repoId: String?, filePath: String,
-        reversion: String?, branch: String?, subModule: String?): String?
+        reversion: String?, branch: String?, subModule: String?, createFrom: String): String?
 
     /**
      * 通过OAUTH方式获取文件详情

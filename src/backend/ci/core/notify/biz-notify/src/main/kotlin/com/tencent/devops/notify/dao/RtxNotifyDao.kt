@@ -123,7 +123,7 @@ class RtxNotifyDao @Autowired constructor(
         return dslContext.selectCount()
             .from(TNotifyRtx.T_NOTIFY_RTX)
             .where(getListConditions(success, fromSysId))
-            .fetchOne()
+            .fetchOne()!!
             .value1()
     }
 

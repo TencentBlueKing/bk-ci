@@ -111,7 +111,7 @@ class AtomCommonDao : AbstractStoreCommonDao() {
             taei.LANGUAGE.`as`("language")
         ).from(ta).join(taei).on(ta.ID.eq(taei.ATOM_ID))
             .where(ta.ATOM_CODE.eq(storeCode).and(ta.LATEST_FLAG.eq(true)))
-            .fetchOne()
+            .fetchOne()!!
         val htmlTemplateVersion = record[0] as String
         val language = record[1] as String
         return if (htmlTemplateVersion == FrontendTypeEnum.SPECIAL.typeVersion) {

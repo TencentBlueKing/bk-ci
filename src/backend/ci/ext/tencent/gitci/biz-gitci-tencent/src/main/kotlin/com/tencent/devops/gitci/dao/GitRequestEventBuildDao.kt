@@ -75,7 +75,7 @@ class GitRequestEventBuildDao {
                 LocalDateTime.now(),
                 sourceGitProjectId
             ).returning(ID)
-                .fetchOne()
+                .fetchOne()!!
             return record.id
         }
     }
@@ -307,7 +307,7 @@ class GitRequestEventBuildDao {
                 .and(OBJECT_KIND.eq("merge_request"))
                 .and(BUILD_ID.isNotNull)
                 .orderBy(EVENT_ID.desc())
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -333,7 +333,7 @@ class GitRequestEventBuildDao {
                 dsl.and(PIPELINE_ID.eq(pipelineId))
             }
             return dsl.orderBy(EVENT_ID.desc())
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Long::class.java)!!
         }
     }
 

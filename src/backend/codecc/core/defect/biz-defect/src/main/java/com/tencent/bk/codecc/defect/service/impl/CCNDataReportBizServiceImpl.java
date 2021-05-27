@@ -215,7 +215,7 @@ public class CCNDataReportBizServiceImpl extends AbstractDataReportBizService
 
         // 如果是选择了日期则不需要展示国际化描述
         boolean dateRangeFlag = true;
-        if (org.apache.commons.lang.StringUtils.isEmpty(startTime) && org.apache.commons.lang.StringUtils.isEmpty(endTime))
+        if (StringUtils.isEmpty(startTime) && StringUtils.isEmpty(endTime))
         {
             dateRangeFlag = false;
         }

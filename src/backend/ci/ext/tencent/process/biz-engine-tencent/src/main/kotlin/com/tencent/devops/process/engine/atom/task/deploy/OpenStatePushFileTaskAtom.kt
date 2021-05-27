@@ -32,20 +32,16 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.archive.client.BkRepoClient
-import com.tencent.devops.common.archive.client.JfrogService
-import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.job.JobClient
 import com.tencent.devops.common.job.api.pojo.EnvSet
 import com.tencent.devops.common.job.api.pojo.OpenStateFastPushFileRequest
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.element.OpenStatePushFileElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.ServiceNodeResource
-import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.process.bkjob.ClearJobTempFileEvent
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS
 import com.tencent.devops.process.engine.atom.AtomResponse
@@ -72,10 +68,7 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
     private val client: Client,
     private val jobClient: JobClient,
     private val pipelineRepositoryService: PipelineRepositoryService,
-    private val jfrogService: JfrogService,
     private val buildLogPrinter: BuildLogPrinter,
-    private val repoGray: RepoGray,
-    private val redisOperation: RedisOperation,
     private val bkRepoClient: BkRepoClient
 ) : IAtomTask<OpenStatePushFileElement> {
     override fun tryFinish(
@@ -179,8 +172,6 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
         val executeCount = task.executeCount ?: 1
 
         val srcPath = parseVariable(param.srcPath, runVariables)
-        val isRepoGray = repoGray.isGray(projectId, redisOperation)
-        buildLogPrinter.addLine(buildId, "use bkrepo: $isRepoGray", taskId, containerId, executeCount)
 
         // 下载所有文件
         var count = 0
@@ -190,42 +181,28 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
         srcPath.split(",").map {
             it.trim().removePrefix("/").removePrefix("./")
         }.forEach { path ->
-            val files = if (isRepoGray) {
-                bkRepoClient.downloadFileByPattern(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    repoName = if (isCustom) "custom" else "pipeline",
-                    pathPattern = path,
-                    destPath = destPath.canonicalPath
-                )
-            } else {
-                jfrogService.downloadFile(
-                    ArtifactorySearchParam(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        buildId = buildId,
-                        regexPath = path,
-                        custom = isCustom,
-                        executeCount = executeCount,
-                        elementId = taskId
-                    ),
-                    destPath.canonicalPath
-                )
-            }
+            val files = bkRepoClient.downloadFileByPattern(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                repoName = if (isCustom) "custom" else "pipeline",
+                pathPattern = path,
+                destPath = destPath.canonicalPath
+            )
 
             files.forEach { file ->
                 localFileList.add(file.absolutePath)
             }
             count += files.size
         }
-        if (count == 0) throw throw TaskExecuteException(
+        if (count == 0) throw TaskExecuteException(
             errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
             errorType = ErrorType.USER,
             errorMsg = "没有匹配到需要分发的文件/File not found"
         )
-        buildLogPrinter.addLine(buildId, "$count 个文件将被分发/$count files will be distribute", taskId, task.containerHashId, executeCount)
+        buildLogPrinter.addLine(buildId, "$count 个文件将被分发/$count files will be distribute", taskId,
+            task.containerHashId, executeCount)
 
         val localIp = CommonUtils.getInnerIP()
         task.taskParams[BS_TASK_HOST] = localIp
@@ -298,7 +275,8 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
         val envSet = EnvSet(listOf(), listOf(), listOf())
         checkEnvNodeExists(buildId, taskId, task.containerHashId, executeCount, operator, projectId, envSet, client)
 
-        // val fileSource = "{\"files\":[\"$srcPath\"],\"envSet\":{\"nodeHashIds\":[\"$srcNodeId\"]},\"account\":\"$srcAccount\"}"
+        /* val fileSource = "{\"files\":[\"$srcPath\"],\"envSet\":{\"nodeHashIds\":[\"$srcNodeId\"]}," +
+            "\"account\":\"$srcAccount\"}" */
         val appId = client.get(ServiceProjectResource::class).get(task.projectId).data?.ccAppId?.toInt()
             ?: run {
                 buildLogPrinter.addLine(task.buildId, "找不到绑定配置平台的业务ID/can not found CC Business ID", task.taskId,
@@ -311,7 +289,8 @@ class OpenStatePushFileTaskAtom @Autowired constructor(
             targetAccount, timeout * 1L, appId, param.openState
         )
         val taskInstanceId = jobClient.openStateFastPushFileDevops(fastPushFileReq, projectId)
-        buildLogPrinter.addLine(buildId, "查看结果: ${jobClient.getDetailUrl(projectId, taskInstanceId)}", taskId, task.containerId, executeCount)
+        buildLogPrinter.addLine(buildId, "查看结果: ${jobClient.getDetailUrl(projectId, taskInstanceId)}", taskId,
+            task.containerId, executeCount)
 
         val startTime = System.currentTimeMillis()
 

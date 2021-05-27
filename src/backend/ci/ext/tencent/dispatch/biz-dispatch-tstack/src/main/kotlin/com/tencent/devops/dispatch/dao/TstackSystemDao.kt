@@ -41,7 +41,7 @@ class TstackSystemDao {
         with(TDispatchTstackSystem.T_DISPATCH_TSTACK_SYSTEM) {
             return dslContext.selectFrom(this)
                     // .where(ID.eq(1L))
-                    .fetchOne()
+                    .fetchOne()!!
         }
     }
 

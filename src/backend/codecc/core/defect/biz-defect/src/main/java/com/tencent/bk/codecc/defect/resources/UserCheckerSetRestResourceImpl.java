@@ -11,7 +11,7 @@ import com.tencent.bk.codecc.defect.vo.UpdateAllCheckerReq;
 import com.tencent.bk.codecc.defect.vo.enums.CheckerSetPermissionType;
 import com.tencent.devops.common.api.checkerset.*;
 import com.tencent.devops.common.api.exception.CodeCCException;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.auth.api.external.AuthExPermissionApi;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.web.RestResource;
@@ -44,20 +44,20 @@ public class UserCheckerSetRestResourceImpl implements UserCheckerSetRestResourc
     private CheckerSetRepository checkerSetRepository;
 
     @Override
-    public CodeCCResult<CheckerSetParamsVO> getParams(String projectId)
+    public Result<CheckerSetParamsVO> getParams(String projectId)
     {
-        return new CodeCCResult<>(checkerSetBizService.getParams(projectId));
+        return new Result<>(checkerSetBizService.getParams(projectId));
     }
 
     @Override
-    public CodeCCResult<Boolean> createCheckerSet(String user, String projectId, CreateCheckerSetReqVO createCheckerSetReqVO)
+    public Result<Boolean> createCheckerSet(String user, String projectId, CreateCheckerSetReqVO createCheckerSetReqVO)
     {
         checkerSetBizService.createCheckerSet(user, projectId, createCheckerSetReqVO);
-        return new CodeCCResult<>(true);
+        return new Result<>(true);
     }
 
     @Override
-    public CodeCCResult<Boolean> updateCheckersOfSet(String checkerSetId, String projectId, String user, UpdateCheckersOfSetReqVO updateCheckersOfSetReq)
+    public Result<Boolean> updateCheckersOfSet(String checkerSetId, String projectId, String user, UpdateCheckersOfSetReqVO updateCheckersOfSetReq)
     {
         List<CheckerSetEntity> checkerSetEntities = checkerSetRepository.findByCheckerSetId(checkerSetId);
         if (CollectionUtils.isNotEmpty(checkerSetEntities))
@@ -69,88 +69,98 @@ public class UserCheckerSetRestResourceImpl implements UserCheckerSetRestResourc
                 throw new CodeCCException(CommonMessageCode.PARAMETER_IS_INVALID, new String[]{errMsg}, null);
             }
         }
-        checkerSetBizService.updateCheckersOfSet(checkerSetId, user, updateCheckersOfSetReq.getCheckerProps());
-        return new CodeCCResult<>(true);
+        checkerSetBizService.updateCheckersOfSet(checkerSetId, user, updateCheckersOfSetReq.getCheckerProps(), null);
+        return new Result<>(true);
     }
 
     @Override
-    public CodeCCResult<Boolean> updateCheckersOfSetForAll(String user, UpdateAllCheckerReq updateAllCheckerReq){
-        return new CodeCCResult<>(checkerSetBizService.updateCheckersOfSetForAll(user, updateAllCheckerReq));
+    public Result<Boolean> updateCheckersOfSetForAll(String user, UpdateAllCheckerReq updateAllCheckerReq){
+        return new Result<>(checkerSetBizService.updateCheckersOfSetForAll(user, updateAllCheckerReq));
     }
 
     @Override
-    public CodeCCResult<List<CheckerSetVO>> getCheckerSets(CheckerSetListQueryReq queryCheckerSetReq)
+    public Result<List<CheckerSetVO>> getCheckerSets(CheckerSetListQueryReq queryCheckerSetReq)
     {
         if (queryCheckerSetReq.getTaskId() != null)
         {
-            return new CodeCCResult<>(checkerSetBizService.getCheckerSetsOfTask(queryCheckerSetReq));
+            return new Result<>(checkerSetBizService.getCheckerSetsOfTask(queryCheckerSetReq));
         }
         else
         {
-            return new CodeCCResult<>(checkerSetBizService.getCheckerSetsOfProject(queryCheckerSetReq));
+            return new Result<>(checkerSetBizService.getCheckerSetsOfProject(queryCheckerSetReq));
         }
     }
 
     @Override
-    public CodeCCResult<Page<CheckerSetVO>> getCheckerSetsPageable(CheckerSetListQueryReq queryCheckerSetReq)
-    {
-        if (queryCheckerSetReq.getTaskId() != null)
-        {
-            return new CodeCCResult<>(checkerSetBizService.getCheckerSetsOfTaskPage(queryCheckerSetReq));
+    public Result<List<CheckerSetVO>> getTaskCheckerSets(String projectId, long taskId, String toolName, String dimension) {
+        return new Result<>(checkerSetBizService.getTaskCheckerSets(projectId,
+                taskId,
+                toolName,
+                dimension,
+                false));
+    }
+
+    @Override
+    public Result<Page<CheckerSetVO>> getCheckerSetsPageable(CheckerSetListQueryReq queryCheckerSetReq) {
+        if (queryCheckerSetReq.getTaskId() != null) {
+            return new Result<>(checkerSetBizService.getCheckerSetsOfTaskPage(queryCheckerSetReq));
+        } else {
+            return new Result<>(checkerSetBizService.getCheckerSetsOfProjectPage(queryCheckerSetReq));
         }
-        else
-        {
-            return new CodeCCResult<>(checkerSetBizService.getCheckerSetsOfProjectPage(queryCheckerSetReq));
-        }
     }
 
     @Override
-    public CodeCCResult<Page<CheckerSetVO>> getOtherCheckerSets(String projectId, OtherCheckerSetListQueryReq queryCheckerSetReq)
+    public Result<Page<CheckerSetVO>> getOtherCheckerSets(String projectId, OtherCheckerSetListQueryReq queryCheckerSetReq)
     {
-        return new CodeCCResult<>(checkerSetBizService.getOtherCheckerSets(projectId, queryCheckerSetReq));
+        return new Result<>(checkerSetBizService.getOtherCheckerSets(projectId, queryCheckerSetReq));
     }
 
     @Override
-    public CodeCCResult<List<CheckerCommonCountVO>> queryCheckerSetCountList(CheckerSetListQueryReq checkerSetListQueryReq)
+    public Result<List<CheckerCommonCountVO>> queryCheckerSetCountList(CheckerSetListQueryReq checkerSetListQueryReq)
     {
-        return new CodeCCResult<>(checkerSetBizService.queryCheckerSetCountList(checkerSetListQueryReq));
+        return new Result<>(checkerSetBizService.queryCheckerSetCountList(checkerSetListQueryReq));
     }
 
     @Override
-    public CodeCCResult<CheckerSetVO> getCheckerSetDetail(String checkerSetId, Integer version)
+    public Result<CheckerSetVO> getCheckerSetDetail(String checkerSetId, Integer version)
     {
-        return new CodeCCResult<>(checkerSetBizService.getCheckerSetDetail(checkerSetId, version));
+        return new Result<>(checkerSetBizService.getCheckerSetDetail(checkerSetId, version));
     }
 
     @Override
-    public CodeCCResult<Boolean> updateCheckerSetBaseInfo(String checkerSetId, String projectId, V3UpdateCheckerSetReqVO updateCheckerSetReq)
+    public Result<Boolean> updateCheckerSetBaseInfo(String checkerSetId, String projectId, V3UpdateCheckerSetReqVO updateCheckerSetReq)
     {
         checkerSetBizService.updateCheckerSetBaseInfo(checkerSetId, projectId, updateCheckerSetReq);
-        return new CodeCCResult<>(true);
+        return new Result<>(true);
     }
 
     @Override
-    public CodeCCResult<Boolean> setRelationships(String checkerSetId, String user, CheckerSetRelationshipVO checkerSetRelationshipVO)
+    public Result<Boolean> setRelationships(String checkerSetId, String user, CheckerSetRelationshipVO checkerSetRelationshipVO)
     {
         checkerSetBizService.setRelationships(checkerSetId, user, checkerSetRelationshipVO);
-        return new CodeCCResult<>(true);
+        return new Result<>(true);
     }
 
     @Override
-    public CodeCCResult<Boolean> management(String user, String checkerSetId, CheckerSetManagementReqVO checkerSetManagementReqVO)
+    public Result<Boolean> setRelationshipsOnce(String user, String projectId, long taskId, String toolName) {
+        return new Result<>(checkerSetBizService.setRelationshipsOnce(user, projectId, taskId, toolName));
+    }
+
+    @Override
+    public Result<Boolean> management(String user, String checkerSetId, CheckerSetManagementReqVO checkerSetManagementReqVO)
     {
         checkerSetBizService.management(user, checkerSetId, checkerSetManagementReqVO);
-        return new CodeCCResult<>(true);
+        return new Result<>(true);
     }
 
     @Override
-    public CodeCCResult<Map<String, List<CheckerSetVO>>> getCheckerSetListByCategory(String projectId)
+    public Result<Map<String, List<CheckerSetVO>>> getCheckerSetListByCategory(String projectId)
     {
-        return new CodeCCResult<>(checkerSetBizService.getAvailableCheckerSetsOfProject(projectId));
+        return new Result<>(checkerSetBizService.getAvailableCheckerSetsOfProject(projectId));
     }
 
     @Override
-    public CodeCCResult<List<CheckerSetPermissionType>> getUserManagementPermission(AuthManagementPermissionReqVO authManagementPermissionReqVO) {
+    public Result<List<CheckerSetPermissionType>> getUserManagementPermission(AuthManagementPermissionReqVO authManagementPermissionReqVO) {
         try {
             List<CheckerSetPermissionType> checkerSetPermissionTypes = new ArrayList<>();
             if (authManagementPermissionReqVO.getCheckerSetId() != null) {
@@ -164,10 +174,10 @@ public class UserCheckerSetRestResourceImpl implements UserCheckerSetRestResourc
             if (authExPermissionApi.authProjectManager(authManagementPermissionReqVO.getProjectId(), authManagementPermissionReqVO.getUser())) {
                 checkerSetPermissionTypes.add(CheckerSetPermissionType.MANAGER);
             }
-            return new CodeCCResult<>(checkerSetPermissionTypes);
+            return new Result<>(checkerSetPermissionTypes);
         } catch (Exception e) {
             log.info("get checker set auth fail! ");
-            return new CodeCCResult<>(new ArrayList<>());
+            return new Result<>(new ArrayList<>());
         }
     }
 }

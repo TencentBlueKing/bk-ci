@@ -1,4 +1,6 @@
 spring:
+  main:
+    allow-bean-definition-overriding: true
   application:
     name: websocket${service-suffix}
     desc: DevOps Websocket Service

@@ -140,6 +140,7 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT` (
   `enabled` bit(1) DEFAULT NULL,
   `CHANNEL` varchar(32) NOT NULL DEFAULT 'BS',
   `pipeline_limit` int(10) DEFAULT 500 COMMENT '流水线数量上限',
+  `other_router_tags` varchar(128) DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE KEY `project_name` (`project_name`) USING BTREE,
   UNIQUE KEY `project_id` (`project_id`) USING BTREE,
