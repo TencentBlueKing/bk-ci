@@ -27,7 +27,7 @@
 
 package com.tencent.devops.log.service.impl
 
-import com.google.common.cache.CacheBuilder
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.log.pojo.EndPageQueryLogs
@@ -97,7 +97,7 @@ class LogServiceESImpl constructor(
         private val logger = LoggerFactory.getLogger(LogServiceESImpl::class.java)
     }
 
-    private val indexCache = CacheBuilder.newBuilder()
+    private val indexCache = Caffeine.newBuilder()
         .maximumSize(100000)
         .expireAfterAccess(30, TimeUnit.MINUTES)
         .build<String/*BuildId*/, Boolean/*Has create the index*/>()
