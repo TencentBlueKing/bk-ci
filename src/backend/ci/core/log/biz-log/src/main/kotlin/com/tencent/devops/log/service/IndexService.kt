@@ -68,8 +68,8 @@ class IndexService @Autowired constructor(
                         val context = DSL.using(configuration)
                         var indexName = indexDao.getIndexName(context, buildId)
                         if (indexName.isNullOrBlank()) {
-                            val redisLock = RedisLock(redisOperation, LOG_INDEX_LOCK, 10)
-                            redisLock.lock()
+//                            val redisLock = RedisLock(redisOperation, LOG_INDEX_LOCK, 10)
+//                            redisLock.lock()
                             try {
                                 indexName = indexDao.getIndexName(context, buildId)
                                 if (indexName.isNullOrBlank()) {
@@ -77,7 +77,7 @@ class IndexService @Autowired constructor(
                                     indexName = saveIndex(buildId)
                                 }
                             } finally {
-                                redisLock.unlock()
+//                                redisLock.unlock()
                             }
                         }
                         indexName!!
