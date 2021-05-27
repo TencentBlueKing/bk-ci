@@ -27,6 +27,7 @@
 package com.tencent.bk.codecc.task.service;
 
 import com.tencent.bk.codecc.task.vo.MetadataVO;
+import com.tencent.bk.codecc.task.vo.OpenScanAndEpcToolNameMapVO;
 import com.tencent.devops.common.api.ToolMetaBaseVO;
 import com.tencent.devops.common.api.ToolMetaDetailVO;
 
@@ -76,4 +77,9 @@ public interface MetaService
      * 将codecc平台的项目语言转换为蓝盾平台的codecc原子语言
      */
     List<String> convertCodeLangToBsString(Long langCode);
+
+    /**
+     * 获取开源治理/EPC对应工具列表映射
+     */
+    OpenScanAndEpcToolNameMapVO getOpenScanAndEpcToolNameMap();
 }

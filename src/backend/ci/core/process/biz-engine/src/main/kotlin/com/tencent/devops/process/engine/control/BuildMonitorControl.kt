@@ -78,7 +78,7 @@ class BuildMonitorControl @Autowired constructor(
 
         val buildId = event.buildId
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
-        if (buildInfo == null || buildInfo.status.isFinish()) {
+        if (buildInfo == null || buildInfo.isFinish()) {
             LOG.info("ENGINE|$buildId|${event.source}|BUILD_MONITOR|status=${buildInfo?.status}")
             return true
         }
@@ -132,7 +132,7 @@ class BuildMonitorControl @Autowired constructor(
     private fun monitorStage(event: PipelineBuildMonitorEvent): Long {
 
         val stages = pipelineStageService.listStages(event.buildId)
-            .filter { !it.status.isFinish() }
+            .filter { !it.status.isFinish() && it.status != BuildStatus.STAGE_SUCCESS }
 
         var minInterval = Timeout.STAGE_MAX_MILLS
 
@@ -142,12 +142,10 @@ class BuildMonitorControl @Autowired constructor(
         }
 
         stages.forEach Next@{ stage ->
-            if (!stage.status.isFinish()) {
-                val interval = stage.checkNextStageMonitorIntervals(event.userId)
-                // 根据最小的超时时间来决定下一次监控执行的时间
-                if (interval in 1 until minInterval) {
-                    minInterval = interval
-                }
+            val interval = stage.checkNextStageMonitorIntervals(event.userId)
+            // 根据最小的超时时间来决定下一次监控执行的时间
+            if (interval in 1 until minInterval) {
+                minInterval = interval
             }
         }
 
@@ -208,7 +206,7 @@ class BuildMonitorControl @Autowired constructor(
     private fun PipelineBuildStage.checkNextStageMonitorIntervals(userId: String): Long {
         var interval: Long = 0
 
-        if (status.isFinish() || controlOption?.stageControlOption?.manualTrigger != true) {
+        if (controlOption?.stageControlOption?.manualTrigger != true) {
             return interval
         }
 

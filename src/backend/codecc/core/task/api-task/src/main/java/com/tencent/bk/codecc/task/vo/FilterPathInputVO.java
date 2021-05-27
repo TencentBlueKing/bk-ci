@@ -30,6 +30,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
+import org.jboss.logging.Field;
 
 import javax.validation.constraints.NotNull;
 import java.util.List;
@@ -66,10 +67,6 @@ public class FilterPathInputVO
     @ApiModelProperty(value = "过滤路径类型")
     private String pathType;
 
-    @ApiModelProperty(value = "SVN版本")
-    @JsonIgnore
-    private String svnRevision;
-
     @ApiModelProperty(value = "是否为添加屏蔽路径")
     @JsonIgnore
     private Boolean addFile;
@@ -92,4 +89,14 @@ public class FilterPathInputVO
     private List<String> autoGenFilterPath;
 
     private List<String> thirdPartyFilterPath;
+
+    /*
+     * 是否扫描测试代码，true-扫描，false-不扫描，默认不扫描
+     */
+    private Boolean scanTestSource;
+
+    /**
+     * 代码规范工具
+     */
+    private Set<String> standardToolSet;
 }

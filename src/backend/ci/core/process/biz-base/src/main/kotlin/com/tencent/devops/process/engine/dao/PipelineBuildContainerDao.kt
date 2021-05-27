@@ -222,7 +222,7 @@ class PipelineBuildContainerDao {
 
     fun countByStatus(dslContext: DSLContext, status: Int): Int {
         return with(T_PIPELINE_BUILD_CONTAINER) {
-            dslContext.selectCount().from(this).where(STATUS.eq(status)).fetchOne(0, Int::class.java)
+            dslContext.selectCount().from(this).where(STATUS.eq(status)).fetchOne(0, Int::class.java)!!
         }
     }
 

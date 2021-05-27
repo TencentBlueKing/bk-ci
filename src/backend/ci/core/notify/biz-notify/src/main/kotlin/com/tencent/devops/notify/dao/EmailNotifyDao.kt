@@ -128,7 +128,7 @@ class EmailNotifyDao @Autowired constructor(private val dslContext: DSLContext) 
         return dslContext.selectCount()
             .from(TNotifyEmail.T_NOTIFY_EMAIL)
             .where(getListConditions(success, fromSysId))
-            .fetchOne()
+            .fetchOne()!!
             .value1()
     }
 

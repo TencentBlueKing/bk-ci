@@ -54,7 +54,7 @@ class GrayTestDao {
             ).values(serviceId, userId, status).returning()
                 .fetchOne().let {
                     GrayTestInfo(
-                        it.id, it.serviceId, it.username, it.status
+                        it!!.id, it.serviceId, it.username, it.status
                     )
                 }
         }
@@ -86,7 +86,7 @@ class GrayTestDao {
                 .where(ID.eq(id))
                 .fetchOne {
                     GrayTestInfo(it.id, it.serviceId, it.username, it.status)
-                }
+                }!!
         }
     }
 
@@ -118,7 +118,7 @@ class GrayTestDao {
 
     fun getSum(dslContext: DSLContext): Long {
         with(TGrayTest.T_GRAY_TEST) {
-            return dslContext.selectCount().from(this).fetchOne(0, Long::class.java)
+            return dslContext.selectCount().from(this).fetchOne(0, Long::class.java)!!
         }
     }
 

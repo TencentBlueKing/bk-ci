@@ -125,7 +125,8 @@ class ControlUtilsTest : TestBase() {
                 conditions = conditions,
                 variables = variables,
                 buildId = buildId,
-                runCondition = JobRunCondition.CUSTOM_CONDITION_MATCH
+                runCondition = JobRunCondition.CUSTOM_CONDITION_MATCH,
+                customCondition = "a==a"
             )
         )
     }
@@ -344,7 +345,8 @@ class ControlUtilsTest : TestBase() {
             Assert.assertFalse(
                 ControlUtils.checkStageSkipCondition(
                     conditions = conditions, variables = variables, buildId = buildId,
-                    runCondition = StageRunCondition.CUSTOM_CONDITION_MATCH
+                    runCondition = StageRunCondition.CUSTOM_CONDITION_MATCH,
+                    customCondition = "a==a"
                 )
             )
             Assert.assertFalse(

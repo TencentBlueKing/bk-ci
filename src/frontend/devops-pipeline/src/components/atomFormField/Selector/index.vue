@@ -1,23 +1,7 @@
 <template>
-    <bk-select
-        :value="value"
-        :loading="isLoading"
-        :disabled="disabled"
-        :searchable="searchable"
-        :multiple="multiSelect"
-        :clearable="clearable"
-        @toggle="toggleVisible"
-        :placeholder="placeholder"
-        :search-key="displayKey"
-        @change="onChange"
-        :popover-options="popoverOptions"
-        :enable-virtual-scroll="list.length > 3000"
-        :list="list"
-        :id-key="settingKey"
-        :display-key="displayKey"
-    >
+    <bk-select @toggle="toggleVisible" @change="onChange" v-bind="selectProps">
         <bk-option
-            v-for="item in list"
+            v-for="item in listData"
             :key="item[settingKey]"
             :id="item[settingKey]"
             :name="item[displayKey]"
@@ -73,6 +57,14 @@
             settingKey: {
                 type: String,
                 default: 'id'
+            },
+            searchUrl: String,
+            replaceKey: String,
+            dataPath: String
+        },
+        data () {
+            return {
+                listData: []
             }
         },
         computed: {
@@ -86,6 +78,34 @@
                         }
                     }
                 }
+            },
+
+            selectProps () {
+                const props = {
+                    value: this.value,
+                    loading: this.isLoading,
+                    disabled: this.disabled,
+                    searchable: this.searchable,
+                    multiple: this.multiSelect,
+                    clearable: this.clearable,
+                    placeholder: this.placeholder,
+                    'search-key': this.displayKey,
+                    'popover-options': this.popoverOptions,
+                    'enable-virtual-scroll': this.list.length > 3000,
+                    list: this.listData,
+                    'id-key': this.settingKey,
+                    'display-key': this.displayKey
+                }
+                if (this.searchUrl) props['remote-method'] = this.remoteMethod
+                return props
+            }
+        },
+        watch: {
+            list: {
+                handler (list) {
+                    this.listData = list
+                },
+                immediate: true
             }
         },
         methods: {
@@ -96,6 +116,23 @@
             },
             editItem (index) {
                 this.edit(index)
+            },
+            remoteMethod (name) {
+                return new Promise((resolve, reject) => {
+                    clearTimeout(this.remoteMethod.timeId)
+                    this.remoteMethod.timeId = setTimeout(async () => {
+                        try {
+                            const regExp = new RegExp(this.replaceKey, 'g')
+                            const url = this.searchUrl.replace(regExp, name)
+                            const data = await this.$ajax.get(url)
+                            this.listData = this.getResponseData(data)
+                            resolve()
+                        } catch (error) {
+                            console.error(error)
+                            reject(error)
+                        }
+                    }, 500)
+                })
             }
         }
     }

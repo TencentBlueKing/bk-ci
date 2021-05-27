@@ -42,7 +42,7 @@ class StoreCommentPraiseDao {
     fun countByIds(dslContext: DSLContext, userId: String, commentId: String): Int {
         with(TStoreCommentPraise.T_STORE_COMMENT_PRAISE) {
             return dslContext.selectCount().from(this).where(COMMENT_ID.eq(commentId).and(CREATOR.eq(userId)))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 

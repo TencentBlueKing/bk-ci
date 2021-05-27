@@ -79,7 +79,7 @@ class RunningJobsDao {
             return dslContext.selectCount().from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(VM_TYPE.eq(jobQuotaVmType.name))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -99,7 +99,7 @@ class RunningJobsDao {
             return dslContext.selectCount().from(this)
                 .where(VM_TYPE.eq(jobQuotaVmType.name))
                 .and(PROJECT_ID.notLike("git_%"))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -108,7 +108,7 @@ class RunningJobsDao {
             return dslContext.selectCount().from(this)
                 .where(VM_TYPE.eq(jobQuotaVmType.name))
                 .and(PROJECT_ID.like("git_%"))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 

@@ -103,7 +103,7 @@ class ImageCommonDao : AbstractStoreCommonDao() {
         return if (imageRecord != null) {
             val publicFlag = dslContext.select(tif.PUBLIC_FLAG).from(tif)
                 .where(tif.IMAGE_CODE.eq(storeCode))
-                .fetchOne(0, Boolean::class.java)
+                .fetchOne(0, Boolean::class.java)!!
             StoreBaseInfo(
                 storeId = imageRecord.id,
                 storeCode = imageRecord.imageCode,

@@ -12,6 +12,8 @@
 
 package com.tencent.bk.codecc.task.service.impl;
 
+import static com.tencent.devops.common.web.mq.ConstantsKt.EXCHANGE_EXTERNAL_JOB;
+
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.collect.Lists;
@@ -24,16 +26,29 @@ import com.tencent.bk.codecc.task.dao.mongorepository.GongfengPublicProjReposito
 import com.tencent.bk.codecc.task.dao.mongorepository.GongfengStatProjRepository;
 import com.tencent.bk.codecc.task.dao.mongorepository.TaskRepository;
 import com.tencent.bk.codecc.task.dao.mongotemplate.GongfengStatProjDao;
-import com.tencent.bk.codecc.task.model.*;
+import com.tencent.bk.codecc.task.dao.mongotemplate.TaskDao;
+import com.tencent.bk.codecc.task.model.CustomProjEntity;
+import com.tencent.bk.codecc.task.model.ForkProjEntity;
+import com.tencent.bk.codecc.task.model.GongfengActiveProjEntity;
+import com.tencent.bk.codecc.task.model.GongfengPublicProjEntity;
+import com.tencent.bk.codecc.task.model.GongfengStatProjEntity;
+import com.tencent.bk.codecc.task.model.TaskInfoEntity;
 import com.tencent.bk.codecc.task.service.GongfengPublicProjService;
-import com.tencent.devops.common.service.utils.PageableUtils;
 import com.tencent.bk.codecc.task.vo.CustomProjVO;
 import com.tencent.bk.codecc.task.vo.GongfengPublicProjVO;
 import com.tencent.bk.codecc.task.vo.gongfeng.ForkProjVO;
 import com.tencent.bk.codecc.task.vo.gongfeng.ProjectStatVO;
 import com.tencent.devops.common.api.QueryTaskListReqVO;
 import com.tencent.devops.common.api.pojo.Page;
+import com.tencent.devops.common.service.utils.PageableUtils;
 import com.tencent.devops.common.util.OkhttpUtils;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import kotlin.TuplesKt;
 import kotlin.collections.MapsKt;
 import org.apache.commons.collections.CollectionUtils;
@@ -47,15 +62,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-import static com.tencent.devops.common.web.mq.ConstantsKt.EXCHANGE_EXTERNAL_JOB;
 
 /**
  * 工蜂公共项目服务层代码
@@ -85,6 +91,9 @@ public class GongfengPublicProjServiceImpl implements GongfengPublicProjService 
 
     @Autowired
     private TaskRepository taskRepository;
+
+    @Autowired
+    private TaskDao taskDao;
 
     @Autowired
     private RabbitTemplate rabbitTemplate;
@@ -205,6 +214,7 @@ public class GongfengPublicProjServiceImpl implements GongfengPublicProjService 
                 }
                 forkProjVO.setId(gongfengId);
                 gongfengPublicProjVO.setForkedFromProject(forkProjVO);
+                gongfengPublicProjVO.setHttpUrlToRepo(entity.getHttpUrlToRepo());
                 return gongfengPublicProjVO;
             }).collect(Collectors.toMap(GongfengPublicProjVO::getId, Function.identity(), (k, v) -> v));
         }
@@ -342,5 +352,28 @@ public class GongfengPublicProjServiceImpl implements GongfengPublicProjService 
         return true;
     }
 
+    @Override
+    public Map<Long, GongfengPublicProjVO> queryGongfengProjectMapByTaskId(List<Long> taskId) {
+        List<TaskInfoEntity> taskEntityList = taskRepository.findByTaskIdIn(taskId);
+        if (CollectionUtils.isEmpty(taskEntityList)) {
+            logger.info("get gongfeng projrct by taskId fail");
+            return Maps.newHashMap();
+        }
 
+        Set<Integer> gongfengId = taskEntityList.stream()
+                .map(TaskInfoEntity::getGongfengProjectId)
+                .collect(Collectors.toSet());
+
+        Map<Integer, GongfengPublicProjVO> gongfengPublicProjVOMap = queryGongfengProjectMapById(gongfengId);
+        logger.info("get gongfeng proj by taskId, task size: {} | proj size: {}", taskId.size(), gongfengId.size());
+        Map<Long, GongfengPublicProjVO> gongfengMap = new HashMap<>();
+        for (TaskInfoEntity taskInfoEntity : taskEntityList) {
+            GongfengPublicProjVO proj = gongfengPublicProjVOMap.get(taskInfoEntity.getGongfengProjectId());
+            if (proj != null) {
+                gongfengMap.put(taskInfoEntity.getTaskId(), proj);
+            }
+        }
+
+        return gongfengMap;
+    }
 }

@@ -24,8 +24,7 @@ import java.util.Set;
  * @version V1.0
  */
 @Data
-public class OpenSourceCheckerSet 
-{
+public class OpenSourceCheckerSet {
     @Field("checker_set_id")
     private String checkerSetId;
 

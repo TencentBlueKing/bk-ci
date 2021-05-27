@@ -28,17 +28,21 @@ package com.tencent.bk.codecc.defect.resources;
 
 import com.tencent.bk.codecc.defect.api.UserTaskLogRestResource;
 import com.tencent.bk.codecc.defect.service.GetTaskLogService;
+import com.tencent.bk.codecc.defect.service.TaskLogOverviewService;
 import com.tencent.bk.codecc.defect.vo.QueryTaskLogVO;
+import com.tencent.bk.codecc.defect.vo.TaskLogOverviewVO;
 import com.tencent.bk.codecc.task.vo.QueryLogRepVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.web.RestResource;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.servlet.http.HttpServletRequest;
 
-import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEADER_DEVOPS_TASK_ID;
+import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_TASK_ID;
 
 /**
  * 工具侧上报任务分析记录接口实现
@@ -52,31 +56,38 @@ public class UserTaskLogRestResourceImpl implements UserTaskLogRestResource
     @Autowired
     private GetTaskLogService getTaskLogService;
 
+    @Autowired
+    private TaskLogOverviewService taskLogOverviewService;
+
     @Override
-    public CodeCCResult<QueryTaskLogVO> getTaskLogs(String toolName, int page, int pageSize)
+    public Result<QueryTaskLogVO> getTaskLogs(String toolName, int page, int pageSize)
     {
         HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes()).getRequest();
-        String taskId = request.getHeader(CODECC_AUTH_HEADER_DEVOPS_TASK_ID);
+        String taskId = request.getHeader(AUTH_HEADER_DEVOPS_TASK_ID);
         QueryTaskLogVO queryTaskLogVO = new QueryTaskLogVO();
-        queryTaskLogVO.setTaskId(Long.valueOf(taskId));
+        queryTaskLogVO.setTaskId(Long.parseLong(taskId));
         queryTaskLogVO.setToolName(toolName);
         queryTaskLogVO.setPage(page);
         queryTaskLogVO.setPageSize(pageSize);
-        CodeCCResult codeCCResult = getTaskLogService.queryTaskLog(queryTaskLogVO);
-        return codeCCResult;
+        return getTaskLogService.queryTaskLog(queryTaskLogVO);
+    }
+
+    @Override
+    public Result<PageImpl<TaskLogOverviewVO>> getTaskLogs(Long taskId, Integer page, Integer pageSize) {
+        return new Result<>(taskLogOverviewService.getTaskLogOverviewList(taskId, page, pageSize));
     }
 
 
     @Override
-    public CodeCCResult<QueryLogRepVO> getAnalysisLogs(String projectId, String pipelineId, String buildId, String queryKeywords, String tag)
+    public Result<QueryLogRepVO> getAnalysisLogs(String projectId, String pipelineId, String buildId, String queryKeywords, String tag)
     {
-        return new CodeCCResult<>(getTaskLogService.queryAnalysisLog(projectId, pipelineId, buildId, queryKeywords, tag));
+        return new Result<>(getTaskLogService.queryAnalysisLog(projectId, pipelineId, buildId, queryKeywords, tag));
     }
 
     @Override
-    public CodeCCResult<QueryLogRepVO> getMoreLogs(String projectId, String pipelineId, String buildId, Integer num, Boolean fromStart, Long start, Long end, String tag, Integer executeCount)
+    public Result<QueryLogRepVO> getMoreLogs(String projectId, String pipelineId, String buildId, Integer num, Boolean fromStart, Long start, Long end, String tag, Integer executeCount)
     {
-        return new CodeCCResult<>(getTaskLogService.getMoreLogs(projectId, pipelineId, buildId, num, fromStart, start, end, tag, executeCount));
+        return new Result<>(getTaskLogService.getMoreLogs(projectId, pipelineId, buildId, num, fromStart, start, end, tag, executeCount));
     }
 
     @Override
@@ -86,9 +97,9 @@ public class UserTaskLogRestResourceImpl implements UserTaskLogRestResource
     }
 
     @Override
-    public CodeCCResult<QueryLogRepVO> getAfterLogs(String projectId, String pipelineId, String buildId, Long start, String queryKeywords, String tag, Integer executeCount)
+    public Result<QueryLogRepVO> getAfterLogs(String projectId, String pipelineId, String buildId, Long start, String queryKeywords, String tag, Integer executeCount)
     {
-        return new CodeCCResult<>(getTaskLogService.getAfterLogs(projectId, pipelineId, buildId, start, queryKeywords, tag, executeCount));
+        return new Result<>(getTaskLogService.getAfterLogs(projectId, pipelineId, buildId, start, queryKeywords, tag, executeCount));
     }
 
 

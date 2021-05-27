@@ -51,7 +51,7 @@ import static com.tencent.devops.common.web.mq.ConstantsKt.QUEUE_REFRESH_TOOLMET
  * @version V1.0
  * @date 2019/5/27
  */
-@Configuration
+//@Configuration
 @Slf4j
 public class ToolMetaCacheMQListenerConfig
 {

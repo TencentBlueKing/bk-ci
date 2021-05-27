@@ -34,6 +34,41 @@ import org.junit.Test
 class BuildStatusSwitcherTest {
 
     @Test
+    fun fixPipelineFinish() {
+        BuildStatus.values().forEach { status ->
+            when {
+                status == BuildStatus.UNKNOWN -> {
+                    Assert.assertEquals(BuildStatus.SUCCEED, BuildStatusSwitcher.fixPipelineFinish(status))
+                }
+                status.isReadyToRun() -> {
+                    Assert.assertEquals(BuildStatus.SUCCEED, BuildStatusSwitcher.fixPipelineFinish(status))
+                }
+                status.isRunning() -> {
+                    Assert.assertEquals(BuildStatus.SUCCEED, BuildStatusSwitcher.fixPipelineFinish(status))
+                }
+                status == BuildStatus.SKIP -> {
+                    Assert.assertEquals(BuildStatus.SUCCEED, BuildStatusSwitcher.fixPipelineFinish(status))
+                }
+                status.isSuccess() -> {
+                    Assert.assertEquals(BuildStatus.SUCCEED, BuildStatusSwitcher.fixPipelineFinish(status))
+                }
+                status.isCancel() -> {
+                    Assert.assertEquals(status, BuildStatusSwitcher.fixPipelineFinish(status))
+                }
+                status.isFailure() -> {
+                    Assert.assertEquals(BuildStatus.FAILED, BuildStatusSwitcher.fixPipelineFinish(status))
+                }
+                status == BuildStatus.STAGE_SUCCESS -> {
+                    Assert.assertEquals(BuildStatus.STAGE_SUCCESS, BuildStatusSwitcher.fixPipelineFinish(status))
+                }
+                else -> {
+                    Assert.assertEquals(BuildStatus.SUCCEED, BuildStatusSwitcher.fixPipelineFinish(status))
+                }
+            }
+        }
+    }
+
+    @Test
     fun cancel() {
         BuildStatus.values().forEach { currentBuildStatus ->
             when {
