@@ -247,7 +247,6 @@ class PipelineContextService@Autowired constructor(
         varMap["ci.build_num"] = buildVar[PIPELINE_BUILD_NUM] ?: ""
         varMap["ci.pipeline_name"] = modelDetail.pipelineName
         varMap["ci.actor"] = modelDetail.userId
-        varMap["ci.build_url"] = "https://git-ci.woa.com/" // FIXME
         varMap["ci.ref"] = buildVar["ci.ref"] ?: ""
         varMap["ci.head_ref"] = buildVar["ci.head_ref"] ?: ""
         varMap["ci.base_ref"] = buildVar["ci.base_ref"] ?: ""
