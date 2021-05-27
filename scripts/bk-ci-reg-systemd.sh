@@ -96,6 +96,7 @@ Environment=DNS_CACHE_SERVER=127.0.0.1:53
 Environment=IPTABLES_RULE_MARKER=bk-ci-docker-dns-hijack
 EnvironmentFile=-$sysconfig_dir/${sd_dns_redirect%.service}
 ExecStartPre=/bin/bash -c 'command -v iptables'
+ExecStart=/usr/bin/env sysctl -w net.ipv4.ip_forward=1
 ExecStart=/usr/bin/env sysctl -w net.ipv4.conf.\${NIC_DEVICE}.route_localnet=1
 ExecStart=/bin/bash -c 'if iptables -t nat -S PREROUTING | grep -- "\${IPTABLES_RULE_MARKER}"; then echo "iptables rule exist yet, do nothing."; else iptables -t nat -I PREROUTING 1 -i "\${NIC_DEVICE}" -p udp --dport "\${CONTAINER_DNS_DPORT}" -j DNAT --to-destination "\${DNS_CACHE_SERVER}" -m comment --comment "\${IPTABLES_RULE_MARKER}"; fi'
 ExecStop=/bin/bash -c 'if iptables -t nat -S PREROUTING | grep -- "\${IPTABLES_RULE_MARKER}"; then echo "iptables rule exist, cleanup it."; iptables -t nat -D PREROUTING -i "\${NIC_DEVICE}" -p udp --dport "\${CONTAINER_DNS_DPORT}" -j DNAT --to-destination "\${DNS_CACHE_SERVER}" -m comment --comment "\${IPTABLES_RULE_MARKER}"; else echo "iptables rule was cleaned already, do nothing."; fi'
