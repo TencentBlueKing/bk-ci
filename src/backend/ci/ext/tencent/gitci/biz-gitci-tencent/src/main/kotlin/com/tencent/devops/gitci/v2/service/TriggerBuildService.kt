@@ -440,7 +440,7 @@ class TriggerBuildService @Autowired constructor(
 
         val vmContainer = VMBuildContainer(
             jobId = job.id,
-            name = "Job_${jobIndex + 1} ${job.name ?: ""}",
+            name = job.name ?: "",
             elements = elementList,
             status = null,
             startEpoch = null,
@@ -509,7 +509,7 @@ class TriggerBuildService @Autowired constructor(
             NormalContainer(
                 containerId = null,
                 id = job.id,
-                name = "Job_${jobIndex + 1} ${job.name ?: ""}",
+                name = job.name ?: "",
                 elements = elementList,
                 status = null,
                 startEpoch = null,
