@@ -29,7 +29,7 @@ package com.tencent.devops.gitci.v2.service
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
-import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.gitci.pojo.enums.TriggerReason
 import com.tencent.devops.gitci.pojo.v2.message.ContentAttr
 import com.tencent.devops.gitci.pojo.v2.message.UserMessage
@@ -117,8 +117,8 @@ class GitUserMessageService @Autowired constructor(
                 messageTitle = message.messageTitle,
                 messageId = message.messageId,
                 haveRead = message.haveRead,
-                createTime = message.createTime.timestamp(),
-                updateTime = message.updateTime.timestamp(),
+                createTime = message.createTime.timestampmilli(),
+                updateTime = message.updateTime.timestampmilli(),
                 content = content,
                 contentAttr = ContentAttr(
                     total = content.size,
