@@ -775,8 +775,6 @@ class TriggerBuildService @Autowired constructor(
         startParams[BK_CI_RUN] = "true"
         startParams[CI_ACTOR] = event.userId
         startParams[CI_REPO] = GitCommonUtils.getRepoOwner(gitBasicSetting.gitHttpUrl) + "/" + gitBasicSetting.name
-        startParams[CI_REPO_NAME] = gitBasicSetting.name
-        startParams[CI_REPO_GROUP] = ""
         startParams[CI_EVENT] = event.event
         startParams[CI_EVENT_CONTENT] = JsonUtil.toJson(event)
         startParams[CI_COMMIT_MESSAGE] = event.commitMsg ?: ""
@@ -815,7 +813,7 @@ class TriggerBuildService @Autowired constructor(
         startParams[CI_REPO] = gitProjectName
         val repoName = gitProjectName.split("/")
         val repoProjectName = if (repoName.size >= 2) {
-            val index = repoName.lastIndexOf("/")
+            val index = gitProjectName.lastIndexOf("/")
             gitProjectName.substring(index + 1)
         } else {
             gitProjectName
