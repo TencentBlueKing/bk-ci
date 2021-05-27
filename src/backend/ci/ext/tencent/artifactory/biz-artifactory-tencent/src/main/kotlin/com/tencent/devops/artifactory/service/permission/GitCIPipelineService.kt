@@ -45,7 +45,8 @@ class GitCIPipelineService @Autowired constructor(
             userId = user,
             projectId = projectId,
             page = 0,
-            pageSize = 1000
+            pageSize = 1000,
+            checkPermission = false
         ).data?.records
 
         return if (!pipelineInfos.isNullOrEmpty()) {
