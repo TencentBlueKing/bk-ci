@@ -116,6 +116,8 @@ class GitCITriggerService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(GitCITriggerService::class.java)
         private val channelCode = ChannelCode.GIT
         private val ciFileExtensions = listOf(".yml", ".yaml")
+        private val ciFileExtensionYml = ".yml"
+        private val ciFileExtensionYaml = ".yaml"
         private const val ciFileName = ".ci.yml"
         private const val ciFileDirectoryName = ".ci"
         private const val noPipelineBuildEvent = "validatePipeline"
@@ -1035,7 +1037,7 @@ class GitCITriggerService @Autowired constructor(
         isMrEvent: Boolean = false
     ): MutableList<String> {
         val ciFileList = getFileTreeFromGit(gitToken, gitRequestEvent, ciFileDirectoryName, isMrEvent)
-            .filter { ciFileExtensions.contains(File(it.name).nameWithoutExtension) }
+            .filter { it.name.endsWith(ciFileExtensionYml) || it.name.endsWith(ciFileExtensionYaml) }
         return ciFileList.map { ciFileDirectoryName + File.separator + it.name }.toMutableList()
     }
 
