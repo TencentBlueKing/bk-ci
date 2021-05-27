@@ -93,9 +93,9 @@ class GitCIEventSaveService @Autowired constructor(
             }
             OBJECT_KIND_TAG_PUSH -> {
                 val eventMap = try {
-                    objectMapper.readValue<GitEvent>(event.event) as GitTagPushEvent
+                    objectMapper.readValue<GitTagPushEvent>(event.event)
                 } catch (e: Exception) {
-                    logger.error("event as GitTagPushEvent error")
+                    logger.error("event as GitTagPushEvent error ${e.message}")
                     null
                 }
                 "[${eventMap?.create_from}] Tag [${event.branch}] pushed by ${event.userId}"
