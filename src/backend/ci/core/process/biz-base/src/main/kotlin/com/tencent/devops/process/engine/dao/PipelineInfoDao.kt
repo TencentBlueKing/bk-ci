@@ -36,7 +36,9 @@ import com.tencent.devops.process.engine.pojo.PipelineInfo
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Field
+import org.jooq.Record
 import org.jooq.Record1
+import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.jooq.impl.SQLDataType
@@ -515,6 +517,13 @@ class PipelineInfoDao {
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(CHANNEL.eq(channelCode.name))
                 .execute()
+        }
+    }
+
+    fun listByProject(dslContext: DSLContext, projectCode: String): Result<Record2<String, Long>> {
+        return with(T_PIPELINE_INFO) {
+            dslContext.select(PIPELINE_ID.`as`("pipelineId"), ID.`as`("id")).from(this)
+                .where(PROJECT_ID.eq(projectCode)).fetch()
         }
     }
 
