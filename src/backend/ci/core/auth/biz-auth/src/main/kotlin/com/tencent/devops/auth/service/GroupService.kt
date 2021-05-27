@@ -86,7 +86,7 @@ class GroupService @Autowired constructor(
             projectCode = projectCode,
             groupCodes = groupCodes
         )
-        if (groupRecord != null) {
+        if (groupRecord.isNotEmpty) {
             // 项目下分组已存在,不能重复创建
             logger.warn("createGroup |$userId| $projectCode| $groupCodes is exsit")
             throw OperationException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.GROUP_EXIST))
