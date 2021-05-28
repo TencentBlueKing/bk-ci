@@ -492,7 +492,8 @@ class PipelineInfoDao {
                     channelCode = ChannelCode.valueOf(channel),
                     canManualStartup = manualStartup == 1,
                     canElementSkip = elementSkip == 1,
-                    taskCount = taskCount
+                    taskCount = taskCount,
+                    id = id
                 )
             }
         } else {
