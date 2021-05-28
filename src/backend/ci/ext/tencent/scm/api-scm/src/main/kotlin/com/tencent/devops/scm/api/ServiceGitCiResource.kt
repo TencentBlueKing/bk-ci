@@ -33,6 +33,7 @@ import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
+import com.tencent.devops.scm.pojo.GitCodeProjectInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -175,4 +176,13 @@ interface ServiceGitCiResource {
         @QueryParam("useAccessToken")
         useAccessToken: Boolean
     ): Result<String>
+
+    @ApiOperation("获取工蜂项目详细信息(使用超级token)")
+    @GET
+    @Path("/getGitCodeProjectInfo")
+    fun getGitCodeProjectInfo(
+        @ApiParam("工蜂项目id", required = true)
+        @QueryParam("gitProjectId")
+        gitProjectId: String
+    ): Result<GitCodeProjectInfo?>
 }
