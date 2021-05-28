@@ -53,7 +53,7 @@ class IndexService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(IndexService::class.java)
         private const val LOG_INDEX_LOCK = "log:build:enable:lock:key"
         private const val LOG_LINE_NUM = "log:build:line:num:"
-        private const val LOG_LINE_NUM_LOCK = "log:build:line:num:distribute:lock:"
+        private const val LOG_LINE_NUM_LOCK = "log:build:line:num:distribute:lock"
         fun getLineNumRedisKey(buildId: String) = LOG_LINE_NUM + buildId
     }
 
@@ -65,7 +65,7 @@ class IndexService @Autowired constructor(
                 val context = DSL.using(configuration)
                 var indexName = indexDao.getIndexName(context, buildId)
                 if (indexName.isNullOrBlank()) {
-                    val redisLock = RedisLock(redisOperation, LOG_INDEX_LOCK, 10)
+                    val redisLock = RedisLock(redisOperation, "$LOG_INDEX_LOCK:$buildId", 10)
                     redisLock.lock()
                     try {
                         indexName = indexDao.getIndexName(context, buildId)
@@ -88,7 +88,7 @@ class IndexService @Autowired constructor(
             indexDao.create(context, buildId, indexName, true)
             redisOperation.set(getLineNumRedisKey(buildId), 1.toString(), TimeUnit.DAYS.toSeconds(2))
         }
-        logger.info("[$buildId|$indexName] Create new index/type in db and cache")
+        logger.info("[$buildId|$indexName] Create new index in db and cache")
         return indexName
     }
 
@@ -104,7 +104,7 @@ class IndexService @Autowired constructor(
         var lineNum = redisOperation.increment(getLineNumRedisKey(buildId), size.toLong())
         // val startLineNum = indexDaoV2.updateLastLineNum(dslContext, buildId, size)
         if (lineNum == null) {
-            val redisLock = RedisLock(redisOperation, LOG_LINE_NUM_LOCK + buildId, 10)
+            val redisLock = RedisLock(redisOperation, "$LOG_LINE_NUM_LOCK:$buildId", 10)
             try {
                 redisLock.lock()
                 lineNum = redisOperation.increment(getLineNumRedisKey(buildId), size.toLong())
