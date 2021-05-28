@@ -172,8 +172,8 @@ class RequestTrigger @Autowired constructor(
                 filePath = filePath,
                 originYaml = originYaml,
                 normalizedYaml = null,
-                reason = TriggerReason.GIT_CI_YAML_INVALID.name,
-                reasonDetail = e.message.toString(),
+                reason = TriggerReason.CI_YAML_INVALID.name,
+                reasonDetail = TriggerReason.CI_YAML_INVALID.detail.format(e.message.toString()),
                 gitProjectId = gitRequestEvent.gitProjectId
             )
             return null

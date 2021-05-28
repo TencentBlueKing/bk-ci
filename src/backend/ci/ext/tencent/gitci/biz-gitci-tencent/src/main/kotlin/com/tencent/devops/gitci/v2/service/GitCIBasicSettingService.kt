@@ -77,7 +77,8 @@ class GitCIBasicSettingService @Autowired constructor(
     }
 
     fun getGitCIBasicSettingAndCheck(gitProjectId: Long): GitCIBasicSetting {
-        return gitCIBasicSettingDao.getSetting(dslContext, gitProjectId) ?: throw GitCINoEnableException()
+        return gitCIBasicSettingDao.getSetting(dslContext, gitProjectId)
+            ?: throw GitCINoEnableException(gitProjectId.toString())
     }
 
     fun initGitCIConf(
