@@ -36,6 +36,9 @@ import com.tencent.devops.common.ci.v2.ServiceWith
 import com.tencent.devops.common.ci.v2.Step
 import com.tencent.devops.common.ci.v2.Strategy
 import com.tencent.devops.common.ci.v2.Variable
+import com.tencent.devops.gitci.v2.template.YamlTemplate.Companion.ATTR_MISSING_ERROR
+import com.tencent.devops.gitci.v2.template.YamlTemplate.Companion.TEMPLATE_KEYWORDS_ERROR
+import com.tencent.devops.gitci.v2.template.YamlTemplate.Companion.YAML_FORMAT_ERROR
 import com.tencent.devops.gitci.v2.template.pojo.enums.TemplateType
 
 object YamlObjects {
@@ -117,7 +120,7 @@ object YamlObjects {
         return try {
             YamlUtil.getObjectMapper().readValue(template, object : TypeReference<T>() {})
         } catch (e: Exception) {
-            throw RuntimeException("文件：$path 格式错误 ${e.message}")
+            throw RuntimeException(YamlTemplate.YAML_FORMAT_ERROR.format(path, e.message))
         }
     }
 
@@ -126,20 +129,16 @@ object YamlObjects {
         if (type == TemplateType.EXTEND) {
             // extend后不能包含on
             if (yamlMap.contains("on")) {
-                error(YamlTemplate.TEMPLATE_FORMAT_ERROR.format("文件 $path 错误, extends模板中不支持定义触发器"))
+                error(YamlTemplate.EXTENDS_TEMPLATE_ON_ERROR.format(path))
             }
             // extend后不能接extend模板
             if (yamlMap.contains("extends")) {
-                error(YamlTemplate.TEMPLATE_FORMAT_ERROR.format("文件 $path 错误, extends模板中不能嵌套extend关键字使用"))
+                error(YamlTemplate.EXTENDS_TEMPLATE_EXTENDS_ERROR.format(path))
             }
         } else {
             yamlMap.forEach { (key, _) ->
                 if (key != "parameters" && key != "resources" && key != type.content) {
-                    error(
-                        YamlTemplate.TEMPLATE_FORMAT_ERROR.format(
-                            "文件: $path 中含有 $key 错误，${type.text} 模板中只能包含 parameters, resources 与 ${type.content} 关键字"
-                        )
-                    )
+                    error(YamlTemplate.TEMPLATE_KEYWORDS_ERROR.format(path, type.text, type.content))
                 }
             }
         }
@@ -178,7 +177,7 @@ object YamlObjects {
 
     fun getNotNullValue(key: String, mapName: String, map: Map<String, Any?>): String {
         return if (map[key] == null) {
-            throw RuntimeException("$mapName 需要定义 $key")
+            throw RuntimeException(YamlTemplate.ATTR_MISSING_ERROR)
         } else {
             map[key].toString()
         }

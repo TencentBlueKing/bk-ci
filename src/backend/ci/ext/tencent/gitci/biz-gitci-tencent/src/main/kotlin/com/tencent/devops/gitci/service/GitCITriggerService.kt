@@ -361,8 +361,8 @@ class GitCITriggerService @Autowired constructor(
                 filePath = null,
                 originYaml = null,
                 normalizedYaml = null,
-                reason = TriggerReason.GIT_CI_YAML_NOT_FOUND.name,
-                reasonDetail = TriggerReason.GIT_CI_YAML_NOT_FOUND.detail,
+                reason = TriggerReason.CI_YAML_NOT_FOUND.name,
+                reasonDetail = TriggerReason.CI_YAML_NOT_FOUND.detail,
                 gitProjectId = gitRequestEvent.gitProjectId
             )
             blockCommitCheck(
@@ -389,8 +389,8 @@ class GitCITriggerService @Autowired constructor(
                         filePath = filePath,
                         originYaml = null,
                         normalizedYaml = null,
-                        reason = TriggerReason.GIT_CI_YAML_VERSION_BEHIND.name,
-                        reasonDetail = TriggerReason.GIT_CI_YAML_VERSION_BEHIND.detail,
+                        reason = TriggerReason.CI_YAML_VERSION_BEHIND.name,
+                        reasonDetail = TriggerReason.CI_YAML_VERSION_BEHIND.detail,
                         gitProjectId = gitRequestEvent.gitProjectId
                     )
                     // 落后版本的文件不触发
@@ -553,8 +553,8 @@ class GitCITriggerService @Autowired constructor(
                     filePath = buildPipeline.filePath,
                     originYaml = originYaml,
                     normalizedYaml = null,
-                    reason = TriggerReason.GIT_CI_YAML_INVALID.name,
-                    reasonDetail = e.message,
+                    reason = TriggerReason.CI_YAML_INVALID.name,
+                    reasonDetail = TriggerReason.CI_YAML_INVALID.detail.format(e.message),
                     gitProjectId = gitRequestEvent.gitProjectId
                 )
                 return@forEach
@@ -622,8 +622,8 @@ class GitCITriggerService @Autowired constructor(
                 filePath = filePath,
                 originYaml = originYaml,
                 normalizedYaml = null,
-                reason = TriggerReason.GIT_CI_YAML_INVALID.name,
-                reasonDetail = e.message.toString(),
+                reason = TriggerReason.CI_YAML_INVALID.name,
+                reasonDetail = TriggerReason.CI_YAML_INVALID.detail.format(e.message),
                 gitProjectId = gitRequestEvent.gitProjectId
             )
             return null
@@ -645,8 +645,8 @@ class GitCITriggerService @Autowired constructor(
                 filePath = null,
                 originYaml = null,
                 normalizedYaml = null,
-                reason = TriggerReason.GIT_CI_DISABLE.name,
-                reasonDetail = TriggerReason.GIT_CI_DISABLE.detail,
+                reason = TriggerReason.CI_DISABLED.name,
+                reasonDetail = TriggerReason.CI_DISABLED.detail,
                 gitProjectId = gitRequestEvent.gitProjectId
             )
             return false
@@ -661,8 +661,8 @@ class GitCITriggerService @Autowired constructor(
                 filePath = null,
                 originYaml = null,
                 normalizedYaml = null,
-                reason = TriggerReason.GIT_CI_DISABLE.name,
-                reasonDetail = TriggerReason.GIT_CI_DISABLE.detail,
+                reason = TriggerReason.CI_DISABLED.name,
+                reasonDetail = TriggerReason.CI_DISABLED.detail,
                 gitProjectId = gitRequestEvent.gitProjectId
             )
             return false
@@ -679,8 +679,8 @@ class GitCITriggerService @Autowired constructor(
                         filePath = null,
                         originYaml = null,
                         normalizedYaml = null,
-                        reason = TriggerReason.BUILD_PUSHED_BRANCHES_DISABLE.name,
-                        reasonDetail = TriggerReason.BUILD_PUSHED_BRANCHES_DISABLE.detail,
+                        reason = TriggerReason.BUILD_PUSHED_BRANCHES_DISABLED.name,
+                        reasonDetail = TriggerReason.BUILD_PUSHED_BRANCHES_DISABLED.detail,
                         gitProjectId = gitRequestEvent.gitProjectId
                     )
                     return false
@@ -697,8 +697,8 @@ class GitCITriggerService @Autowired constructor(
                         filePath = null,
                         originYaml = null,
                         normalizedYaml = null,
-                        reason = TriggerReason.BUILD_PUSHED_BRANCHES_DISABLE.name,
-                        reasonDetail = TriggerReason.BUILD_PUSHED_BRANCHES_DISABLE.detail,
+                        reason = TriggerReason.BUILD_PUSHED_BRANCHES_DISABLED.name,
+                        reasonDetail = TriggerReason.BUILD_PUSHED_BRANCHES_DISABLED.detail,
                         gitProjectId = gitRequestEvent.gitProjectId
                     )
                     return false
@@ -715,8 +715,8 @@ class GitCITriggerService @Autowired constructor(
                         filePath = null,
                         originYaml = null,
                         normalizedYaml = null,
-                        reason = TriggerReason.BUILD_PUSHED_PULL_REQUEST_DISABLE.name,
-                        reasonDetail = TriggerReason.BUILD_PUSHED_PULL_REQUEST_DISABLE.detail,
+                        reason = TriggerReason.BUILD_MERGE_REQUEST_DISABLED.name,
+                        reasonDetail = TriggerReason.BUILD_MERGE_REQUEST_DISABLED.detail,
                         gitProjectId = gitRequestEvent.gitProjectId
                     )
                     return false
@@ -760,8 +760,8 @@ class GitCITriggerService @Autowired constructor(
                     filePath = null,
                     originYaml = null,
                     normalizedYaml = null,
-                    reason = TriggerReason.GIT_CI_MERGE_CHECK_CONFLICT.name,
-                    reasonDetail = TriggerReason.GIT_CI_MERGE_CHECK_CONFLICT.detail,
+                    reason = TriggerReason.CI_MERGE_CHECKING.name,
+                    reasonDetail = TriggerReason.CI_MERGE_CHECKING.detail,
                     gitProjectId = gitRequestEvent.gitProjectId
                 )
 
@@ -786,8 +786,8 @@ class GitCITriggerService @Autowired constructor(
                     filePath = null,
                     originYaml = null,
                     normalizedYaml = null,
-                    reason = TriggerReason.GIT_CI_MERGE_HAS_CONFLICT.name,
-                    reasonDetail = TriggerReason.GIT_CI_MERGE_HAS_CONFLICT.detail,
+                    reason = TriggerReason.CI_MERGE_CONFLICT.name,
+                    reasonDetail = TriggerReason.CI_MERGE_CONFLICT.detail,
                     gitProjectId = gitRequestEvent.gitProjectId
                 )
                 return false
@@ -829,8 +829,8 @@ class GitCITriggerService @Autowired constructor(
                     gitRequestEventNotBuildDao.updateNoBuildReasonByRecordId(
                         dslContext = dslContext,
                         recordId = notBuildRecordId,
-                        reason = TriggerReason.GIT_CI_MERGE_CHECK_CONFLICT_TIMEOUT.name,
-                        reasonDetail = TriggerReason.GIT_CI_MERGE_CHECK_CONFLICT_TIMEOUT.detail
+                        reason = TriggerReason.CI_MERGE_CHECK_TIMEOUT.name,
+                        reasonDetail = TriggerReason.CI_MERGE_CHECK_TIMEOUT.detail
                     )
                 }
                 return false
@@ -840,8 +840,8 @@ class GitCITriggerService @Autowired constructor(
                 gitRequestEventNotBuildDao.updateNoBuildReasonByRecordId(
                     dslContext = dslContext,
                     recordId = notBuildRecordId,
-                    reason = TriggerReason.GIT_CI_MERGE_HAS_CONFLICT.name,
-                    reasonDetail = TriggerReason.GIT_CI_MERGE_HAS_CONFLICT.detail
+                    reason = TriggerReason.CI_MERGE_CONFLICT.name,
+                    reasonDetail = TriggerReason.CI_MERGE_CONFLICT.detail
                 )
                 return true
             }
