@@ -584,7 +584,7 @@ class TriggerBuildService @Autowired constructor(
             val element: Element = when {
                 step.run != null -> {
                     LinuxScriptElement(
-                        name = step.name ?: "执行Linux脚本",
+                        name = step.name ?: "run",
                         id = step.id,
                         // todo: 如何判断类型
                         scriptType = BuildScriptType.SHELL,
@@ -616,7 +616,7 @@ class TriggerBuildService @Autowired constructor(
                     data["input"] = inputMap
 
                     MarketBuildAtomElement(
-                        name = step.name ?: "拉代码插件",
+                        name = step.name ?: "checkout",
                         id = step.id,
                         atomCode = "checkout",
                         version = "1.*",

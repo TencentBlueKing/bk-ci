@@ -125,10 +125,10 @@ class GitCIBuildFinishListener @Autowired constructor(
                 val objectKind = record["OBJECT_KIND"] as String
                 val buildStatus = BuildStatus.valueOf(buildFinishEvent.status)
                 // 检测状态
-                val state = if (buildStatus.isFailure()) {
-                    GitCICommitCheckState.FAILURE
-                } else {
+                val state = if (buildStatus.isSuccess()) {
                     GitCICommitCheckState.SUCCESS
+                } else {
+                    GitCICommitCheckState.FAILURE
                 }
 
                 val commitId = record["COMMIT_ID"] as String
