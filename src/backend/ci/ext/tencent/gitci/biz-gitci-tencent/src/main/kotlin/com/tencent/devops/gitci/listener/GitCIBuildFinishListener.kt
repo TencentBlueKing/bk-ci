@@ -28,6 +28,7 @@
 package com.tencent.devops.gitci.listener
 
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.YamlUtil
@@ -55,6 +56,7 @@ import com.tencent.devops.gitci.pojo.enums.GitCINotifyType
 import com.tencent.devops.gitci.pojo.rtxCustom.MessageType
 import com.tencent.devops.gitci.pojo.rtxCustom.ReceiverType
 import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
+import com.tencent.devops.gitci.utils.GitCIPipelineUtils
 import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
 import com.tencent.devops.model.gitci.tables.records.TGitPipelineResourceRecord
@@ -759,7 +761,12 @@ class GitCIBuildFinishListener @Autowired constructor(
                     totalTime = DateTimeUtil.formatMillSecond(build.totalTime ?: 0),
                     trigger = build.userId,
                     commitId = commitId,
-                    webUrl = "$v2GitUrl/pipeline/$pipelineId/detail/${build.id}/${build.buildNum}/#$projectName"
+                    webUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(
+                        homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
+                        projectName = projectName,
+                        pipelineId = pipelineId,
+                        buildId = build.id
+                    )
                 ))
         )
         return SendNotifyMessageTemplateRequest(
@@ -806,7 +813,12 @@ class GitCIBuildFinishListener @Autowired constructor(
                 request +
                 costTime +
                 "[View it on  工蜂内网版]" +
-                "($v2GitUrl/pipeline/$pipelineId/detail/${build.id}/${build.buildNum}/#$projectName)"
+                "(${GitCIPipelineUtils.genGitCIV2BuildUrl(
+                    homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
+                    projectName = projectName,
+                    pipelineId = pipelineId,
+                    buildId = build.id
+                )})"
     }
 
     // 使用启动参数替换接收人

@@ -28,13 +28,11 @@
 package com.tencent.devops.gitci.v2.utils
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.ci.v2.TriggerOn
 import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitPushEvent
 import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
-import com.tencent.devops.process.utils.GIT_MR_NUMBER
 import org.slf4j.LoggerFactory
 import org.springframework.util.AntPathMatcher
 

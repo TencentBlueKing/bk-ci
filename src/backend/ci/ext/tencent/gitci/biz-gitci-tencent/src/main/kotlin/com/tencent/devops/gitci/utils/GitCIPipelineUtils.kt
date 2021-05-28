@@ -32,4 +32,7 @@ object GitCIPipelineUtils {
     fun genGitProjectCode(gitProjectId: Long) = "git_$gitProjectId"
 
     fun genBKPipelineName(gitProjectId: Long) = "git_" + gitProjectId + "_" + System.currentTimeMillis()
+
+    fun genGitCIV2BuildUrl(homePage: String, projectName: String, pipelineId: String, buildId: String)
+        = "$homePage/pipeline/$pipelineId/detail/$buildId/#$projectName"
 }

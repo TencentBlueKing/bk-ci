@@ -207,8 +207,8 @@ class V2RequestTrigger @Autowired constructor(
                 originYaml = originYaml,
                 parsedYaml = null,
                 normalizedYaml = null,
-                reason = TriggerReason.GIT_CI_YAML_INVALID.name,
-                reasonDetail = e.message.toString(),
+                reason = TriggerReason.CI_YAML_INVALID.name,
+                reasonDetail = TriggerReason.CI_YAML_INVALID.detail.format(e.message),
                 gitProjectId = gitRequestEvent.gitProjectId
             )
             null
@@ -257,8 +257,8 @@ class V2RequestTrigger @Autowired constructor(
                 originYaml = originYaml,
                 parsedYaml = null,
                 normalizedYaml = null,
-                reason = TriggerReason.GIT_CI_YAML_TEMPLATE_ERROR.name,
-                reasonDetail = message,
+                reason = TriggerReason.CI_YAML_TEMPLATE_ERROR.name,
+                reasonDetail = TriggerReason.CI_YAML_TEMPLATE_ERROR.detail.format(message),
                 gitProjectId = gitRequestEvent.gitProjectId
             )
             return null

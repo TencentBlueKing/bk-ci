@@ -50,6 +50,7 @@ class ScmService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ScmService::class.java)
+        const val PROJECT_PERMISSION_ERROR = "[%s] No permissions"
     }
 
     // 获取工蜂超级token
@@ -121,7 +122,7 @@ class ScmService @Autowired constructor(
         )
         // 针对模板请求失败只有可能是无权限和系统问题，系统问题不考虑一律按无权限
         if (result.status.toString() == CommonMessageCode.SYSTEM_ERROR) {
-            throw RuntimeException("$gitProjectId 项目下无权限")
+            throw RuntimeException(PROJECT_PERMISSION_ERROR.format(gitProjectId))
         }
         return result.data
     }
