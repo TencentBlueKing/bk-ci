@@ -6,7 +6,6 @@ import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.api.ServiceOauthResource
-import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.scm.api.ServiceGitCiResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -20,7 +19,7 @@ class GitCIPermissionServiceImpl @Autowired constructor(
         .maximumSize(2000)
         .expireAfterWrite(24, TimeUnit.HOURS)
         .build<String/*userId*/, String>()
-    
+
     private val projectPublicCache = CacheBuilder.newBuilder()
         .maximumSize(2000)
         .expireAfterWrite(1, TimeUnit.HOURS)
@@ -46,7 +45,7 @@ class GitCIPermissionServiceImpl @Autowired constructor(
             }
         }
         logger.info("GitCICertPermissionServiceImpl user:$userId projectId: $projectCode")
-        
+
         // 若为开源项目,则鉴权全部放行
         if (checkProjectPublic(projectCode)) {
             return true
@@ -103,7 +102,7 @@ class GitCIPermissionServiceImpl @Autowired constructor(
             gitUserId
         }
     }
-    
+
     private fun checkProjectPublic(projectCode: String): Boolean {
         if (!projectPublicCache.getIfPresent(projectCode).isNullOrEmpty()) {
             return true

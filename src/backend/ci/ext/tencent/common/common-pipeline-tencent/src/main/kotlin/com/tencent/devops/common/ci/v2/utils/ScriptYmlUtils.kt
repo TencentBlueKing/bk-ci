@@ -84,7 +84,6 @@ object ScriptYmlUtils {
     private const val userTrigger = "on"
     private const val formatTrigger = "triggerOn"
 
-
     /**
      * 1、解决锚点
      * 2、yml string层面的格式化填充
@@ -240,7 +239,7 @@ object ScriptYmlUtils {
             return
         }
         yamlMap.forEach { (t, _) ->
-            if (t != formatTrigger && t != "extends" && t != "version" && t!="resources") {
+            if (t != formatTrigger && t != "extends" && t != "version" && t!= "resources") {
                 throw CustomException(Response.Status.BAD_REQUEST, "使用 extends 时顶级关键字只能有触发器 on 与 resources")
             }
         }

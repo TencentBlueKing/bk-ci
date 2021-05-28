@@ -48,10 +48,10 @@ class MeasurePipelineBuildFinishListener @Autowired constructor(
     private val pipelineSubscriptionService: PipelineSubscriptionService,
     pipelineEventDispatcher: PipelineEventDispatcher
 ) : BaseListener<PipelineBuildFinishBroadCastEvent>(pipelineEventDispatcher) {
-    
+
     @Value("\${measure.execute:#{null}}")
     private val measureExecute: String? = null
-    
+
     override fun run(event: PipelineBuildFinishBroadCastEvent) {
         // 是否触发开关, gitci,auto集群无需次listener
         if (!measureExecute.isNullOrEmpty() && measureExecute == "false") {
@@ -65,7 +65,7 @@ class MeasurePipelineBuildFinishListener @Autowired constructor(
             return
         }
         logger.info("[$buildId]|[${event.source}]|status=(${event.status}|errorInfoList=${event.errorInfoList}")
-        
+
         pipelineSubscriptionService.onPipelineShutdown(
             pipelineId = pipelineId,
             buildId = buildId,
