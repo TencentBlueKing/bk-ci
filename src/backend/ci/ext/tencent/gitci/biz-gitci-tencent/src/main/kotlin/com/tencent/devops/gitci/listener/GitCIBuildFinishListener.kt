@@ -28,6 +28,7 @@
 package com.tencent.devops.gitci.listener
 
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.YamlUtil
@@ -44,6 +45,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.web.handler.ParamBlankExceptionMapper
 import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
@@ -55,6 +57,7 @@ import com.tencent.devops.gitci.pojo.enums.GitCINotifyType
 import com.tencent.devops.gitci.pojo.rtxCustom.MessageType
 import com.tencent.devops.gitci.pojo.rtxCustom.ReceiverType
 import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
+import com.tencent.devops.gitci.utils.GitCIPipelineUtils
 import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
 import com.tencent.devops.model.gitci.tables.records.TGitPipelineResourceRecord
@@ -759,7 +762,12 @@ class GitCIBuildFinishListener @Autowired constructor(
                     totalTime = DateTimeUtil.formatMillSecond(build.totalTime ?: 0),
                     trigger = build.userId,
                     commitId = commitId,
-                    webUrl = "$v2GitUrl/pipeline/$pipelineId/detail/${build.id}/${build.buildNum}/#$projectName"
+                    webUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(
+                        homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
+                        projectName = projectName,
+                        pipelineId = pipelineId,
+                        buildId = build.id
+                    )
                 ))
         )
         return SendNotifyMessageTemplateRequest(
