@@ -45,7 +45,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
-import com.tencent.devops.common.web.handler.ParamBlankExceptionMapper
 import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.gitci.dao.GitCISettingDao
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
