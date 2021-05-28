@@ -149,7 +149,7 @@ class GitCIEnvironmentPermissionServiceImpl @Autowired constructor(
         val gitProjectId = GitCIUtils.getGitCiProjectId(projectId)
         logger.info("GitCIEnvironmentPermission user:$userId projectId: $projectId gitProject: $gitProjectId")
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
-            userId, "", gitProjectId, null).data ?: false
+            userId, "", gitProjectId, "").data ?: false
     }
 
     // 拿到的数据统一为加密后的id
