@@ -41,6 +41,7 @@ import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
+@Suppress("ALL")
 @Repository
 class GitCISettingDao {
 

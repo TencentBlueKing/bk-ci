@@ -75,6 +75,7 @@ import java.util.regex.Pattern
 import javax.ws.rs.BadRequestException
 import javax.ws.rs.NotFoundException
 
+@Suppress("ALL")
 @Service
 class BkRepoService @Autowired constructor(
     val pipelineService: PipelineService,
