@@ -50,9 +50,9 @@ object ReplacementUtils {
                 line
             } else {
                 // 先处理${} 单个花括号的情况
-                val lineTmp = parseTemplate(line, replacement)
+                val lineTmp = parseTemplate(line, replacement, contextMap)
                 // 再处理${{}} 双花括号的情况
-                parseWithDoubleCurlyBraces(lineTmp, contextMap)
+                parseWithDoubleCurlyBraces(lineTmp, replacement, contextMap)
             }
             sb.append(template)
             if (index != lines.size - 1) {
@@ -62,7 +62,11 @@ object ReplacementUtils {
         return sb.toString()
     }
 
-    private fun parseTemplate(command: String, replacement: KeyReplacement): String {
+    private fun parseTemplate(
+        command: String,
+        replacement: KeyReplacement,
+        contextMap: Map<String, String>? = emptyMap()
+    ): String {
         if (command.isBlank()) {
             return command
         }
@@ -72,7 +76,7 @@ object ReplacementUtils {
             val c = command[index]
             if (c == '$' && (index + 1) < command.length && command[index + 1] == '{') {
                 val inside = StringBuilder()
-                index = parseVariable(command, index + 2, inside, replacement)
+                index = parseVariable(command, index + 2, inside, replacement, contextMap)
                 newValue.append(inside)
             } else {
                 newValue.append(c)
@@ -84,6 +88,7 @@ object ReplacementUtils {
 
     private fun parseWithDoubleCurlyBraces(
         command: String,
+        replacement: KeyReplacement,
         contextMap: Map<String, String>? = emptyMap()
     ): String {
         if (command.isBlank()) {
@@ -95,7 +100,7 @@ object ReplacementUtils {
             val c = command[index]
             if (checkPrefix(c, index, command)) {
                 val inside = StringBuilder()
-                index = parseVariableWithDoubleCurlyBraces(command, index + 3, inside, contextMap)
+                index = parseVariableWithDoubleCurlyBraces(command, index + 3, inside, replacement, contextMap)
                 newValue.append(inside)
             } else {
                 newValue.append(c)
@@ -105,7 +110,13 @@ object ReplacementUtils {
         return newValue.toString()
     }
 
-    private fun parseVariable(command: String, start: Int, newValue: StringBuilder, replacement: KeyReplacement): Int {
+    private fun parseVariable(
+        command: String,
+        start: Int,
+        newValue: StringBuilder,
+        replacement: KeyReplacement,
+        contextMap: Map<String, String>? = emptyMap()
+    ): Int {
         val token = StringBuilder()
         var index = start
         while (index < command.length) {
@@ -115,7 +126,10 @@ object ReplacementUtils {
                 index = parseVariable(command, index + 2, inside, replacement)
                 token.append(inside)
             } else if (c == '}') {
-                val tokenValue = getVariable(token.toString(), replacement) ?: "\${$token}"
+                var tokenValue = getVariable(token.toString(), replacement, false)
+                if (tokenValue == "\${$token}") {
+                    tokenValue = contextMap?.get(token.toString()) ?: "\${$token}"
+                }
                 newValue.append(tokenValue)
                 return index + 1
             } else {
@@ -131,26 +145,24 @@ object ReplacementUtils {
         command: String,
         start: Int,
         newValue: StringBuilder,
+        replacement: KeyReplacement,
         contextMap: Map<String, String>? = emptyMap()
     ): Int {
         val token = StringBuilder()
         var index = start
-        val replacement = object : KeyReplacement {
-            override fun getReplacement(key: String): String? {
-                return contextMap?.get(key) ?: "\${{$key}}"
-            }
-        }
 
         while (index < command.length) {
             val c = command[index]
             if (checkPrefix(c, index, command)) {
                 val inside = StringBuilder()
-                index = parseVariable(command, index + 3, inside, replacement)
+                index = parseVariableWithDoubleCurlyBraces(command, index + 3, inside, replacement, contextMap)
                 token.append(inside)
             } else if (c == '}' && index + 1 < command.length && command[index + 1] == '}') {
                 val tokenStr = token.toString().trim()
-                val tokenValue =
-                    getVariable(token.toString().trim(), replacement) ?: contextMap?.get(tokenStr) ?: "\${{$token}}"
+                var tokenValue = getVariable(token.toString().trim(), replacement, true)
+                if (tokenValue == "\${{$tokenStr}}") {
+                    tokenValue = contextMap?.get(tokenStr) ?: "\${{$token}}"
+                }
                 newValue.append(tokenValue)
                 return index + 2
             } else {
@@ -165,9 +177,10 @@ object ReplacementUtils {
     private fun checkPrefix(c: Char, index: Int, command: String) =
         c == '$' && (index + 2) < command.length && command[index + 1] == '{' && command[index + 2] == '{'
 
-    private fun getVariable(key: String, replacement: KeyReplacement) = replacement.getReplacement(key)
+    private fun getVariable(key: String, replacement: KeyReplacement, doubleCurlyBraces: Boolean) =
+        replacement.getReplacement(key, doubleCurlyBraces)
 
     interface KeyReplacement {
-        fun getReplacement(key: String): String?
+        fun getReplacement(key: String, doubleCurlyBraces: Boolean): String?
     }
 }

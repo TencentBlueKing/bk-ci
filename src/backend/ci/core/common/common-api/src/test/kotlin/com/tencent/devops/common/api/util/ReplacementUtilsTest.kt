@@ -34,10 +34,14 @@ class ReplacementUtilsTest {
     class Replacement(
         private val data: Map<String, String>
     ) : ReplacementUtils.KeyReplacement {
-        override fun getReplacement(key: String): String? = if (data[key] != null) {
+        override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? = if (data[key] != null) {
             data[key]!!
         } else {
-            "\${$key}"
+            if (doubleCurlyBraces) {
+                "\${{$key}}"
+            } else {
+                "\${$key}"
+            }
         }
     }
 
@@ -57,9 +61,9 @@ class ReplacementUtilsTest {
             "variables.hello" to "hahahahaha"
         )
 
-        Assert.assertEquals(command1, ReplacementUtils.replace(command1, Replacement(varData)))
-        Assert.assertEquals(command2, ReplacementUtils.replace(command2, Replacement(varData)))
-        Assert.assertEquals(command3, ReplacementUtils.replace(command3, Replacement(varData)))
+        Assert.assertEquals("hello variables.value world", ReplacementUtils.replace(command1, Replacement(varData)))
+        Assert.assertEquals("variables.valueworld", ReplacementUtils.replace(command2, Replacement(varData)))
+        Assert.assertEquals("hellovariables.value", ReplacementUtils.replace(command3, Replacement(varData)))
         Assert.assertEquals(command4, ReplacementUtils.replace(command4, Replacement(varData)))
         Assert.assertEquals(command5, ReplacementUtils.replace(command5, Replacement(varData)))
         Assert.assertEquals("hellovariables.value}", ReplacementUtils.replace(command6, Replacement(varData)))
@@ -96,13 +100,13 @@ class ReplacementUtilsTest {
             ReplacementUtils.replace(command4, Replacement(emptyMap()), contextData))
         Assert.assertEquals("hello\${{variables.abc}",
             ReplacementUtils.replace(command5, Replacement(emptyMap()), contextData))
-        Assert.assertEquals("hello\${variables.abc}}", ReplacementUtils.replace(command6,
-            Replacement(emptyMap()), contextData))
+        Assert.assertEquals("hellovariables.value}",
+            ReplacementUtils.replace(command6, Replacement(emptyMap()), contextData))
         Assert.assertEquals("hello\$variables.abc}}",
             ReplacementUtils.replace(command7, Replacement(emptyMap()), contextData))
-        Assert.assertEquals("echo context.value", ReplacementUtils.replace(command8,
-            Replacement(emptyMap()), contextData))
-        Assert.assertEquals("echo \${variables.abc}", ReplacementUtils.replace(command9,
-            Replacement(emptyMap()), contextData))
+        Assert.assertEquals("echo context.value",
+            ReplacementUtils.replace(command8, Replacement(emptyMap()), contextData))
+        Assert.assertEquals("echo variables.value",
+            ReplacementUtils.replace(command9, Replacement(emptyMap()), contextData))
     }
 }
