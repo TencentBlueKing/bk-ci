@@ -15,7 +15,6 @@ import java.util.concurrent.TimeUnit
 class GitCIPermissionServiceImpl @Autowired constructor(
     val client: Client
 ) : PermissionService {
-    
     private val gitCIUserCache = CacheBuilder.newBuilder()
         .maximumSize(2000)
         .expireAfterWrite(24, TimeUnit.HOURS)

@@ -30,8 +30,6 @@ package com.tencent.devops.environment.permission.impl
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.code.AuthServiceCode
-import com.tencent.devops.common.auth.code.EnvironmentAuthServiceCode
 import com.tencent.devops.common.auth.utils.GitCIUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.environment.dao.EnvDao
