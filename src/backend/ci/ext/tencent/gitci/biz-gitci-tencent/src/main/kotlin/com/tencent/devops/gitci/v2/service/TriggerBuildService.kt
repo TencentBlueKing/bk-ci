@@ -281,7 +281,7 @@ class TriggerBuildService @Autowired constructor(
             params = params
         )
 
-        val stage1 = Stage(listOf(triggerContainer), "stage-1")
+        val stage1 = Stage(listOf(triggerContainer), id = "stage-0", name = "stage_0")
         stageList.add(stage1)
 
         // 其他的stage
@@ -400,6 +400,7 @@ class TriggerBuildService @Autowired constructor(
 
         return Stage(
             id = stage.id,
+            name = stage.name ?: "",
             tag = stage.label,
             fastKill = stage.fastKill,
             stageControlOption = stageControlOption,
@@ -617,7 +618,7 @@ class TriggerBuildService @Autowired constructor(
                     val data = mutableMapOf<String, Any>()
                     data["input"] = step.with ?: Any()
                     MarketBuildAtomElement(
-                        name = step.name ?: "插件市场第三方构建环境类插件",
+                        name = step.name ?: step.uses!!.split('@')[0],
                         id = step.id,
                         atomCode = step.uses!!.split('@')[0],
                         version = step.uses!!.split('@')[1],
@@ -774,8 +775,6 @@ class TriggerBuildService @Autowired constructor(
         startParams[BK_CI_RUN] = "true"
         startParams[CI_ACTOR] = event.userId
         startParams[CI_REPO] = GitCommonUtils.getRepoOwner(gitBasicSetting.gitHttpUrl) + "/" + gitBasicSetting.name
-        startParams[CI_REPO_NAME] = gitBasicSetting.name
-        startParams[CI_REPO_GROUP] = ""
         startParams[CI_EVENT] = event.event
         startParams[CI_EVENT_CONTENT] = JsonUtil.toJson(event)
         startParams[CI_COMMIT_MESSAGE] = event.commitMsg ?: ""
@@ -813,12 +812,19 @@ class TriggerBuildService @Autowired constructor(
 
         startParams[CI_REPO] = gitProjectName
         val repoName = gitProjectName.split("/")
-        startParams[CI_REPO_NAME] = if (repoName.size >= 2) {
-            gitProjectName.removePrefix(repoName[0] + "/")
+        val repoProjectName = if (repoName.size >= 2) {
+            val index = gitProjectName.lastIndexOf("/")
+            gitProjectName.substring(index + 1)
         } else {
             gitProjectName
         }
-        startParams[CI_REPO_GROUP] = repoName[0]
+        val repoGroupName = if (repoName.size >= 2) {
+            gitProjectName.removeSuffix("/$repoProjectName")
+        } else {
+            gitProjectName
+        }
+        startParams[CI_REPO_NAME] = repoProjectName
+        startParams[CI_REPO_GROUP] = repoGroupName
 
         // 用户自定义变量
         // startParams.putAll(yaml.variables ?: mapOf())

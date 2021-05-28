@@ -35,7 +35,6 @@ import com.tencent.devops.common.ci.OBJECT_KIND_TAG_PUSH
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.gitci.dao.GitRequestEventDao
 import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
-import com.tencent.devops.gitci.pojo.git.GitEvent
 import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
 import com.tencent.devops.gitci.pojo.v2.message.UserMessageType
 import com.tencent.devops.gitci.utils.GitCommonUtils
@@ -76,7 +75,7 @@ class GitCIEventSaveService @Autowired constructor(
         gitProjectId: Long
     ): Long {
         var messageId = -1L
-        val event = gitRequestEventDao.get(dslContext = dslContext, id = eventId)
+        val event = gitRequestEventDao.getWithEvent(dslContext = dslContext, id = eventId)
             ?: throw RuntimeException("can't find event $eventId")
         val messageTitle = when (event.objectKind) {
             OBJECT_KIND_MERGE_REQUEST -> {

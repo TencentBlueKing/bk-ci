@@ -77,7 +77,7 @@ class V2WebHookMatcher(private val event: GitEvent) {
     private fun isPushMatch(triggerOn: TriggerOn, eventBranch: String): Boolean {
         // 如果没有配置push，默认匹配
         if (triggerOn.push == null) {
-            return true
+            return false
         }
 
         val pushRule = triggerOn.push!!
@@ -100,7 +100,7 @@ class V2WebHookMatcher(private val event: GitEvent) {
 
     private fun isTagPushMatch(triggerOn: TriggerOn, eventTag: String): Boolean {
         if (triggerOn.tag == null) {
-            return true
+            return false
         }
 
         val tagRule = triggerOn.tag!!
@@ -140,7 +140,7 @@ class V2WebHookMatcher(private val event: GitEvent) {
 
     private fun isMrMatch(triggerOn: TriggerOn, eventBranch: String): Boolean {
         if (triggerOn.mr == null) {
-            return true
+            return false
         }
 
         // exclude branch of mr
@@ -370,81 +370,12 @@ class V2WebHookMatcher(private val event: GitEvent) {
         }
     }
 
-    fun getUsername(): String {
-        return when (event) {
-            is GitPushEvent -> event.user_name
-            is GitTagPushEvent -> event.user_name
-            is GitMergeRequestEvent -> event.user.username
-            else -> ""
-        }
-    }
-
-    fun getRevision(): String {
-        return when (event) {
-            is GitPushEvent -> event.checkout_sha ?: ""
-            is GitTagPushEvent -> event.checkout_sha ?: ""
-            is GitMergeRequestEvent -> event.object_attributes.last_commit.id
-            else -> ""
-        }
-    }
-
     private fun getEventType(): CodeEventType {
         return when (event) {
             is GitPushEvent -> CodeEventType.PUSH
             is GitTagPushEvent -> CodeEventType.TAG_PUSH
             is GitMergeRequestEvent -> CodeEventType.MERGE_REQUEST
             else -> CodeEventType.PUSH
-        }
-    }
-
-    fun getHookSourceBranch(): String? {
-        return if (event is GitMergeRequestEvent) event.object_attributes.source_branch else null
-    }
-
-    fun getHookTargetBranch(): String? {
-        return if (event is GitMergeRequestEvent) event.object_attributes.target_branch else null
-    }
-
-    fun getHookSourceUrl(): String? {
-        return if (event is GitMergeRequestEvent) event.object_attributes.source.http_url else null
-    }
-
-    fun getHookTargetUrl(): String? {
-        return if (event is GitMergeRequestEvent) event.object_attributes.target.http_url else null
-    }
-
-    fun getCodeType() = CodeType.GIT
-
-    fun getEnv(): Map<String, Any> {
-        if (event is GitMergeRequestEvent) {
-            return mapOf(GIT_MR_NUMBER to event.object_attributes.iid)
-        }
-        return emptyMap<String, Any>()
-    }
-
-    fun getRepoName(): String {
-        val sshUrl = when (event) {
-            is GitPushEvent -> event.repository.git_ssh_url
-            is GitTagPushEvent -> event.repository.git_ssh_url
-            is GitMergeRequestEvent -> event.object_attributes.target.ssh_url
-            else -> ""
-        }
-        return sshUrl.removePrefix("git@git.code.oa.com:").removeSuffix(".git")
-    }
-
-    fun getBranchName(): String {
-        return when (event) {
-            is GitPushEvent -> org.eclipse.jgit.lib.Repository.shortenRefName(event.ref)
-            is GitTagPushEvent -> org.eclipse.jgit.lib.Repository.shortenRefName(event.ref)
-            is GitMergeRequestEvent -> event.object_attributes.target_branch
-            else -> ""
-        }
-    }
-
-    fun getMergeRequestId(): Long? {
-        return when (event) {
-            is GitMergeRequestEvent -> event.object_attributes.id
-            else -> null
         }
     }
 

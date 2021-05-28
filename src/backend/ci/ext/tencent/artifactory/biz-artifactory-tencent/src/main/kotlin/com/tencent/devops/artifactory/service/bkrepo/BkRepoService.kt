@@ -450,6 +450,8 @@ class BkRepoService @Autowired constructor(
                         ""
                     }
 
+                    logger.info("pipelineHasPermissionList.contains(pipelineId):" +
+                        " ${(!checkPermission || pipelineHasPermissionList.contains(pipelineId))}")
                     if ((!checkPermission || pipelineHasPermissionList.contains(pipelineId)) &&
                         pipelineIdToNameMap.containsKey(pipelineId) && buildIdToNameMap.containsKey(buildId)
                     ) {
