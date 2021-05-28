@@ -122,6 +122,11 @@ import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
 import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.Subscription
+import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_EVENT_TYPE
+import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_SOURCE_BRANCH
+import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_SOURCE_URL
+import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_BRANCH
+import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.BK_CI_RUN
 import com.tencent.devops.scm.utils.code.git.GitUtils
@@ -808,6 +813,11 @@ class TriggerBuildService @Autowired constructor(
             is GitMergeRequestEvent -> {
                 startParams[CI_HEAD_BRANCH] = originEvent.object_attributes.target_branch
                 startParams[CI_BASE_BRANCH] = originEvent.object_attributes.source_branch
+                startParams[PIPELINE_WEBHOOK_EVENT_TYPE] = CodeEventType.MERGE_REQUEST.name
+                startParams[PIPELINE_WEBHOOK_SOURCE_BRANCH] = originEvent.object_attributes.source_branch
+                startParams[PIPELINE_WEBHOOK_TARGET_BRANCH] = originEvent.object_attributes.target_branch
+                startParams[PIPELINE_WEBHOOK_SOURCE_URL] = originEvent.object_attributes.source.http_url
+                startParams[PIPELINE_WEBHOOK_TARGET_URL] = originEvent.object_attributes.target.http_url
                 GitUtils.getProjectName(originEvent.object_attributes.source.http_url)
             }
             else -> {
