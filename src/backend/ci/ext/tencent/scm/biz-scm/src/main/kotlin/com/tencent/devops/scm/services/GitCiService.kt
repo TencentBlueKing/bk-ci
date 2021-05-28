@@ -38,6 +38,7 @@ import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
+import com.tencent.devops.scm.pojo.GitCodeProjectInfo
 import okhttp3.Request
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -192,6 +193,31 @@ class GitCiService {
             logger.info("[url=$url]|getGitCIProjectInfo with response=$response")
             if (!it.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
             return Result(JsonUtil.to(response, GitCIProjectInfo::class.java))
+        }
+    }
+
+    fun getGitCodeProjectInfo(
+        gitProjectId: String,
+        token: String,
+        useAccessToken: Boolean = true
+    ): Result<GitCodeProjectInfo?> {
+        logger.info("[gitProjectId=$gitProjectId]|getGitCodeProjectInfo")
+        val encodeId = URLEncoder.encode(gitProjectId, "utf-8") // 如果id为NAMESPACE_PATH则需要encode
+        val str = "$gitCIUrl/api/v3/projects/$encodeId?" + if (useAccessToken) {
+            "access_token=$token"
+        } else {
+            "private_token=$token"
+        }
+        val url = StringBuilder(str)
+        val request = Request.Builder()
+            .url(url.toString())
+            .get()
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            val response = it.body()!!.string()
+            logger.info("[url=$url]|getGitCIProjectInfo with response=$response")
+            if (!it.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            return Result(JsonUtil.to(response, GitCodeProjectInfo::class.java))
         }
     }
 }
