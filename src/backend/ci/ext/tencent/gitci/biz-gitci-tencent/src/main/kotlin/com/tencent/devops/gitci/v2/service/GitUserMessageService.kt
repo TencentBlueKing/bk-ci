@@ -109,7 +109,7 @@ class GitUserMessageService @Autowired constructor(
             }
             val time = message.createTime.format(timeFormat)
             val content = eventMap[eventId]!!
-            val failedNum = content.map { it.triggerReasonName != TriggerReason.TRIGGER_SUCCESS.name }.size
+            val failedNum = content.filter { it.triggerReasonName != TriggerReason.TRIGGER_SUCCESS.name }.size
             val userMassage = UserMessage(
                 id = message.id,
                 userId = message.userId,

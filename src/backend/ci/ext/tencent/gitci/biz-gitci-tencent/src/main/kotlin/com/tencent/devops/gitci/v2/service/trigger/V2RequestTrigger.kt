@@ -92,6 +92,8 @@ class V2RequestTrigger @Autowired constructor(
         ) ?: return false
         val yamlObject = yamlObjects.normalYaml
         val normalizedYaml = YamlUtil.toYaml(yamlObject)
+        val parsedYaml = YamlCommonUtils.toYamlNotNull(yamlObjects.preYaml)
+        logger.info("${gitProjectPipeline.pipelineId} parsedYaml: $parsedYaml")
         logger.info("normalize yaml: $normalizedYaml")
 
         // 若是Yaml格式没问题，则取Yaml中的流水线名称，并修改当前流水线名称
@@ -103,7 +105,6 @@ class V2RequestTrigger @Autowired constructor(
                 "Matcher is true, display the event, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
                         "eventId: ${gitRequestEvent.id}, dispatched pipeline: $gitProjectPipeline"
             )
-            val parsedYaml = YamlCommonUtils.toYamlNotNull(yamlObjects.preYaml)
             val gitBuildId = gitRequestEventBuildDao.save(
                 dslContext = dslContext,
                 eventId = gitRequestEvent.id!!,
@@ -140,7 +141,7 @@ class V2RequestTrigger @Autowired constructor(
                 pipelineId = if (gitProjectPipeline.pipelineId.isBlank()) null else gitProjectPipeline.pipelineId,
                 filePath = gitProjectPipeline.filePath,
                 originYaml = originYaml,
-                parsedYaml = YamlCommonUtils.toYamlNotNull(yamlObjects.preYaml),
+                parsedYaml = parsedYaml,
                 normalizedYaml = normalizedYaml,
                 reason = TriggerReason.TRIGGER_NOT_MATCH.name,
                 reasonDetail = TriggerReason.TRIGGER_NOT_MATCH.detail,

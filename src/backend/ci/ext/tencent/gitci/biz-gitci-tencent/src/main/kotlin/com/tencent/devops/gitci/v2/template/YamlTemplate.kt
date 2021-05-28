@@ -671,7 +671,7 @@ class YamlTemplate(
             },
             timeoutMinutes = YamlObjects.getNullValue("timeout-minutes", job)?.toInt(),
             env = if (job["env"] == null) {
-                emptyMap()
+                null
             } else {
                 transValue<Map<String, String>>(fromPath, "env", job["env"])
             },
