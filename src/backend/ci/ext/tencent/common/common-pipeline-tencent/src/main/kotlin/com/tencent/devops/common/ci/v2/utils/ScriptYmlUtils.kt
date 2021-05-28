@@ -193,6 +193,7 @@ object ScriptYmlUtils {
         val br = BufferedReader(StringReader(yamlStr))
         var line: String? = br.readLine()
         while (line != null) {
+            line = line.trimEnd()
             if (line == "$userTrigger:") {
                 sb.append("$formatTrigger:").append("\n")
             } else {
