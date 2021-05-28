@@ -6,6 +6,7 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.utils.GitCIUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -46,6 +47,7 @@ class GitCIPipelineService @Autowired constructor(
             projectId = projectId,
             page = 0,
             pageSize = 1000,
+            channelCode = ChannelCode.GIT,
             checkPermission = false
         ).data?.records
 

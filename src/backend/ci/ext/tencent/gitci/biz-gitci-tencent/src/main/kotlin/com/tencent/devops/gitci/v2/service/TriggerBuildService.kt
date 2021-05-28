@@ -128,6 +128,7 @@ import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
 
@@ -152,6 +153,10 @@ class TriggerBuildService @Autowired constructor(
     client, scmClient, dslContext, redisOperation, gitPipelineResourceDao,
     gitRequestEventBuildDao, gitRequestEventNotBuildDao, gitCIEventSaveService
 ) {
+
+    @Value("\${rtx.v2GitUrl:#{null}}")
+    private val v2GitUrl: String? = null
+
     private val channelCode = ChannelCode.GIT
 
     companion object {
@@ -771,7 +776,7 @@ class TriggerBuildService @Autowired constructor(
 
         // 通用参数
         startParams[CI_PIPELINE_NAME] = yaml.name ?: ""
-        startParams[CI_BUILD_URL] = "https://git-ci.woa.com/" // FIXME
+        startParams[CI_BUILD_URL] = v2GitUrl ?: ""
         startParams[BK_CI_RUN] = "true"
         startParams[CI_ACTOR] = event.userId
         startParams[CI_REPO] = GitCommonUtils.getRepoOwner(gitBasicSetting.gitHttpUrl) + "/" + gitBasicSetting.name

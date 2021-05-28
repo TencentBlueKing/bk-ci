@@ -367,16 +367,6 @@ class GitCIWebHookMatcher(private val event: GitEvent) {
         return emptyMap<String, Any>()
     }
 
-    fun getRepoName(): String {
-        val sshUrl = when (event) {
-            is GitPushEvent -> event.repository.git_ssh_url
-            is GitTagPushEvent -> event.repository.git_ssh_url
-            is GitMergeRequestEvent -> event.object_attributes.target.ssh_url
-            else -> ""
-        }
-        return sshUrl.removePrefix("git@git.code.oa.com:").removeSuffix(".git")
-    }
-
     fun getBranchName(): String {
         return when (event) {
             is GitPushEvent -> org.eclipse.jgit.lib.Repository.shortenRefName(event.ref)

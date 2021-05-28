@@ -483,10 +483,10 @@ object ScriptYmlUtils {
     }
 
     private fun formatTriggerOn(preTriggerOn: PreTriggerOn): TriggerOn {
-        var pushRule = PushRule()
-        var tagRule = TagRule()
-        var mrRule = MrRule()
-        var schedulesRule = SchedulesRule()
+        var pushRule: PushRule? = null
+        var tagRule: TagRule? = null
+        var mrRule: MrRule? = null
+        var schedulesRule: SchedulesRule? = null
 
         if (preTriggerOn.push != null) {
             val push = preTriggerOn.push
