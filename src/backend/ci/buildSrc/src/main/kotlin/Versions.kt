@@ -42,4 +42,5 @@ object Versions {
     const val Poi = "3.17"
     const val Jolokia = "1.6.0"
     const val InfluxDB = "2.10"
+    const val Caffeine = "2.8.8"
 }

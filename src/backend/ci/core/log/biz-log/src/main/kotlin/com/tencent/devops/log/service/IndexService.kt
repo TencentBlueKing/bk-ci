@@ -27,8 +27,7 @@
 
 package com.tencent.devops.log.service
 
-import com.google.common.cache.CacheBuilder
-import com.google.common.cache.CacheLoader
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
@@ -54,37 +53,33 @@ class IndexService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(IndexService::class.java)
         private const val LOG_INDEX_LOCK = "log:build:enable:lock:key"
         private const val LOG_LINE_NUM = "log:build:line:num:"
-        private const val LOG_LINE_NUM_LOCK = "log:build:line:num:distribute:lock:"
+        private const val LOG_LINE_NUM_LOCK = "log:build:line:num:distribute:lock"
         fun getLineNumRedisKey(buildId: String) = LOG_LINE_NUM + buildId
     }
 
-    private val indexCache = CacheBuilder.newBuilder()
+    private val indexCache = Caffeine.newBuilder()
         .maximumSize(100000)
         .expireAfterAccess(30, TimeUnit.MINUTES)
-        .build<String/*BuildId*/, String/*IndexName*/>(
-            object : CacheLoader<String, String>() {
-                override fun load(buildId: String): String {
-                    return dslContext.transactionResult { configuration ->
-                        val context = DSL.using(configuration)
-                        var indexName = indexDao.getIndexName(context, buildId)
+        .build<String/*BuildId*/, String/*IndexName*/> { buildId ->
+            dslContext.transactionResult { configuration ->
+                val context = DSL.using(configuration)
+                var indexName = indexDao.getIndexName(context, buildId)
+                if (indexName.isNullOrBlank()) {
+                    val redisLock = RedisLock(redisOperation, "$LOG_INDEX_LOCK:$buildId", 10)
+                    redisLock.lock()
+                    try {
+                        indexName = indexDao.getIndexName(context, buildId)
                         if (indexName.isNullOrBlank()) {
-                            val redisLock = RedisLock(redisOperation, LOG_INDEX_LOCK, 10)
-                            redisLock.lock()
-                            try {
-                                indexName = indexDao.getIndexName(context, buildId)
-                                if (indexName.isNullOrBlank()) {
-                                    logger.info("[$buildId] Add the build record")
-                                    indexName = saveIndex(buildId)
-                                }
-                            } finally {
-                                redisLock.unlock()
-                            }
+                            logger.info("[$buildId] Add the build record")
+                            indexName = saveIndex(buildId)
                         }
-                        indexName!!
+                    } finally {
+                        redisLock.unlock()
                     }
                 }
+                indexName!!
             }
-        )
+        }
 
     private fun saveIndex(buildId: String): String {
         val indexName = IndexNameUtils.getIndexName()
@@ -93,7 +88,7 @@ class IndexService @Autowired constructor(
             indexDao.create(context, buildId, indexName, true)
             redisOperation.set(getLineNumRedisKey(buildId), 1.toString(), TimeUnit.DAYS.toSeconds(2))
         }
-        logger.info("[$buildId|$indexName] Create new index/type in db and cache")
+        logger.info("[$buildId|$indexName] Create new index in db and cache")
         return indexName
     }
 
@@ -109,7 +104,7 @@ class IndexService @Autowired constructor(
         var lineNum = redisOperation.increment(getLineNumRedisKey(buildId), size.toLong())
         // val startLineNum = indexDaoV2.updateLastLineNum(dslContext, buildId, size)
         if (lineNum == null) {
-            val redisLock = RedisLock(redisOperation, LOG_LINE_NUM_LOCK + buildId, 10)
+            val redisLock = RedisLock(redisOperation, "$LOG_LINE_NUM_LOCK:$buildId", 10)
             try {
                 redisLock.lock()
                 lineNum = redisOperation.increment(getLineNumRedisKey(buildId), size.toLong())
