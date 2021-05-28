@@ -115,8 +115,8 @@ class GitCITriggerService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(GitCITriggerService::class.java)
         private val channelCode = ChannelCode.GIT
         private val ciFileExtensions = listOf(".yml", ".yaml")
-        private val ciFileExtensionYml = ".yml"
-        private val ciFileExtensionYaml = ".yaml"
+        private const val ciFileExtensionYml = ".yml"
+        private const val ciFileExtensionYaml = ".yaml"
         private const val ciFileName = ".ci.yml"
         private const val ciFileDirectoryName = ".ci"
         private const val noPipelineBuildEvent = "validatePipeline"
