@@ -131,6 +131,6 @@ class GitCICertPermissionServiceImpl @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(GitCICredentialPermissionServiceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(GitCICredentialPermissionServiceImpl::class.java)
     }
 }

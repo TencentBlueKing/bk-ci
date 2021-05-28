@@ -17,6 +17,6 @@ class GitCILogPermissionServiceImpl @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(GitCILogPermissionServiceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(GitCILogPermissionServiceImpl::class.java)
     }
 }

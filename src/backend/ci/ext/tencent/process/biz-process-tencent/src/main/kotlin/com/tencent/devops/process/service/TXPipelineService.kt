@@ -281,8 +281,8 @@ class TXPipelineService @Autowired constructor(
         val (model, yamlSb) = checkPermissionAndGetHead(userId, projectId, pipelineId, isGitCI)
         // 在stages对象的生成中会添加顶部注释，所以放在分隔注释上面
         val stages = getStageFromModel(userId, projectId, pipelineId, model, yamlSb, isGitCI)
-        yamlSb.append("#########################################################################" +
-            "############################################\n\n")
+        yamlSb.append("################################################################" +
+            "#####################################################\n\n")
         val yamlObj = CIBuildYaml(
             name = null,
             trigger = null,
@@ -448,8 +448,8 @@ class TXPipelineService @Autowired constructor(
         val taskList = mutableListOf<TaskData>()
         modelContainer.elements.forEach {
             val gitCINotSupportTip =
-                "# ======== 插件 ${it.name} 尚未确认是否可以在工蜂CI执行，" +
-                    "请联系插件开发者（https://iwiki.woa.com/x/CqARHg） ======== "
+                "# ======== 插件 ${it.name} 尚未确认是否可以在工蜂CI执行" +
+                    "，请联系插件开发者（https://iwiki.woa.com/x/CqARHg） ======== "
             when (it.getClassType()) {
                 LinuxScriptElement.classType -> {
                     val element = it as LinuxScriptElement
@@ -1084,8 +1084,8 @@ class TXPipelineService @Autowired constructor(
     // 导出工蜂CI-2.0的yml
     fun exportV2Yaml(userId: String, projectId: String, pipelineId: String, isGitCI: Boolean = false): Response {
         val (model, yamlSb) = checkPermissionAndGetHead(userId, projectId, pipelineId, isGitCI)
-        yamlSb.append("#############################################################################" +
-            "########################################\n\n")
+        yamlSb.append("########################################################" +
+            "#############################################################\n\n")
         val yamlObj = ScriptBuildYaml(
             version = "v2.0",
             name = model.name,

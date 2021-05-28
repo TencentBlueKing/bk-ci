@@ -69,8 +69,8 @@ abstract class PipelineService @Autowired constructor(
                         fullPath = fullPath,
                         size = it.size,
                         folder = it.folder,
-                        modifiedTime =
-                            LocalDateTime.parse(it.lastModified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+                        modifiedTime = LocalDateTime.parse(it.lastModified, DateTimeFormatter.ISO_DATE_TIME)
+                            .timestamp(),
                         artifactoryType = ArtifactoryType.PIPELINE
                     )
                 )
@@ -100,8 +100,8 @@ abstract class PipelineService @Autowired constructor(
                         fullPath = fullPath,
                         size = it.size,
                         folder = it.folder,
-                        modifiedTime =
-                            LocalDateTime.parse(it.lastModified, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+                        modifiedTime = LocalDateTime.parse(it.lastModified, DateTimeFormatter.ISO_DATE_TIME)
+                            .timestamp(),
                         artifactoryType = ArtifactoryType.PIPELINE
                     )
                 )
@@ -249,7 +249,7 @@ abstract class PipelineService @Autowired constructor(
                 setOf(pipelineId)
             ).data!![pipelineId]!!
         } finally {
-            logger.info("getPipelineName [$projectId, $pipelineId] cost ${System.currentTimeMillis() - startTimestamp}ms")
+            logger.info("getPipelineName[$projectId,$pipelineId] cost${System.currentTimeMillis() - startTimestamp}ms")
         }
     }
 
@@ -259,7 +259,9 @@ abstract class PipelineService @Autowired constructor(
             if (pipelineIds.isEmpty()) return emptyMap()
             return client.get(ServiceJfrogResource::class).getPipelineNameByIds(projectId, pipelineIds).data!!
         } finally {
-            logger.info("getPipelineNames [$projectId, $pipelineIds] cost ${System.currentTimeMillis() - startTimestamp}ms")
+            logger.info(
+                "getPipelineNames[$projectId, $pipelineIds] cost${System.currentTimeMillis() - startTimestamp}ms"
+            )
         }
     }
 
