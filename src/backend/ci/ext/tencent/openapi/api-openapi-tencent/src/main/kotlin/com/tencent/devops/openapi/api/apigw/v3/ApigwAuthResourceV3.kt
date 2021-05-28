@@ -18,7 +18,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OPEN_API_BUILD"], description = "OPEN-API-构建资源")
-@Path("/{apigwType:apigw-user|apigw-app|apigw}/auth/")
+@Path("/{apigwType:apigw-user|apigw-app|apigw}/v3/auth/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ApigwAuthResourceV3 {
