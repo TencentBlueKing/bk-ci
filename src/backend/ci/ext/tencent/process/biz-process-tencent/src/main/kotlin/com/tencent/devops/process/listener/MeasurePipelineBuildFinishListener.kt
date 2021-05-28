@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.service.PipelineSubscriptionService
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 /**
@@ -47,8 +48,15 @@ class MeasurePipelineBuildFinishListener @Autowired constructor(
     private val pipelineSubscriptionService: PipelineSubscriptionService,
     pipelineEventDispatcher: PipelineEventDispatcher
 ) : BaseListener<PipelineBuildFinishBroadCastEvent>(pipelineEventDispatcher) {
-
+    
+    @Value("\${measure.execute:#{null}}")
+    private val measureExecute: String? = null
+    
     override fun run(event: PipelineBuildFinishBroadCastEvent) {
+        // 是否触发开关, gitci,auto集群无需次listener
+        if (!measureExecute.isNullOrEmpty() && measureExecute == "false") {
+            return
+        }
         val pipelineId = event.pipelineId
         val buildId = event.buildId
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
@@ -57,7 +65,7 @@ class MeasurePipelineBuildFinishListener @Autowired constructor(
             return
         }
         logger.info("[$buildId]|[${event.source}]|status=(${event.status}|errorInfoList=${event.errorInfoList}")
-
+        
         pipelineSubscriptionService.onPipelineShutdown(
             pipelineId = pipelineId,
             buildId = buildId,
