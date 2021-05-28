@@ -30,8 +30,6 @@ package com.tencent.devops.common.ci.yaml.v2.utils
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.v2.PreScriptBuildYaml
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
-import org.junit.After
-import org.junit.Before
 import org.junit.Test
 import org.springframework.core.io.ClassPathResource
 import java.io.BufferedReader
@@ -40,14 +38,6 @@ import java.io.InputStreamReader
 import java.util.regex.Pattern
 
 class ScriptYmlUtilsTest {
-
-    @Before
-    fun setUp() {
-    }
-
-    @After
-    fun tearDown() {
-    }
 
     @Test
     fun formatYaml() {

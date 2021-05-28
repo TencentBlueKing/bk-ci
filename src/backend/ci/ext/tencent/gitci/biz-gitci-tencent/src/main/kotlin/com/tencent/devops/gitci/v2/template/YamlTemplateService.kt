@@ -46,6 +46,9 @@ class YamlTemplateService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(YamlTemplateService::class.java)
         private const val templateDirectory = ".ci/templates/"
+        const val NOT_FIND_REPO = "[%s] Repository does not exist"
+        const val UN_SUPPORT_TICKET_ERROR = "Unsupported ticket type: [%s]"
+        const val ONLY_SUPPORT_ERROR = "Only supports using the settings context to access credentials"
     }
 
     // 获取当前库文件，使用超级token直接拉取，token区分fork和非fork
@@ -82,7 +85,7 @@ class YamlTemplateService @Autowired constructor(
                 token = token,
                 gitProjectId = repo,
                 useAccessToken = true
-            )?.gitProjectId ?: throw RuntimeException("未找到项目$repo")
+            )?.gitProjectId ?: throw RuntimeException(NOT_FIND_REPO.format(repo))
             return scmService.getYamlFromGit(
                 token = token,
                 gitProjectId = targetProjectId.toLong(),
@@ -98,7 +101,7 @@ class YamlTemplateService @Autowired constructor(
                     credentialId = key
                 )
                 if (ticket["type"] != CredentialType.ACCESSTOKEN.name) {
-                    throw RuntimeException("不支持凭证类型: ${ticket["type"]}")
+                    throw RuntimeException(UN_SUPPORT_TICKET_ERROR.format(ticket["type"]))
                 }
                 ticket["v1"]!!
             } else {
@@ -108,7 +111,7 @@ class YamlTemplateService @Autowired constructor(
                 token = token,
                 gitProjectId = repo,
                 useAccessToken = false
-            )?.gitProjectId ?: throw RuntimeException("未找到项目$repo")
+            )?.gitProjectId ?: throw RuntimeException(NOT_FIND_REPO.format(repo))
             return scmService.getYamlFromGit(
                 token = token,
                 gitProjectId = targetProjectId.toLong(),
@@ -125,7 +128,7 @@ class YamlTemplateService @Autowired constructor(
             if (str.startsWith("settings.")) {
                 Pair(true, str.removePrefix("settings."))
             } else {
-                throw RuntimeException("凭证仅支持setting.引用")
+                throw RuntimeException(ONLY_SUPPORT_ERROR)
             }
         } else {
             Pair(false, personalAccessToken)

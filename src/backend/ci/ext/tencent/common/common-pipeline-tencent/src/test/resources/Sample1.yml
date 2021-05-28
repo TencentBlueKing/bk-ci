@@ -50,12 +50,12 @@ on:
 #      - zhangsan
 #    users-ignore:
 #      - lisi
-#  schedules:
-#    cron: 0 0/5 0 0 0
-#    branches:
-#      - master
-#      - develop
-#    always: false
+  schedules:
+    cron: 0 0/5 0 0 0
+    branches:
+      - master
+      - develop
+    always: false
 
 variables:
   DEPLOY_TYPE:
@@ -70,7 +70,7 @@ stages:
   - name: "stage1"
     id: abc
     label:
-      - ${{ varivable.approve }}
+      - Build
     if: envs.BK_CI_EVENT == 'push' || varivable.approve
     jobs:
       job_id_1:
@@ -116,6 +116,24 @@ stages:
         steps:
           - run: |
               echo "stage1, job_id_2"
+
+      build_docker:
+        name: build and push docker
+        runs-on:
+          self-hosted: true
+          pool-name: sawyer-test
+        steps:
+          - checkout: self
+          - uses: DockerBuildAndPushImage@3.*
+            with:
+              targetImage: ${{ variables.IMAGE_NAME }}
+              targetImageTag: ${{ variables.IMAGE_TAG }}
+              dockerBuildDir: .
+              dockerFilePath: ./Dockerfile
+              targetRepoItem:
+                url: ${{ variables.IMAGE_HOST }}
+                username: ${{ settings.CSIGHUB_USER }}
+                password: ${{ settings.CSIGHUB_PWD }}
 
 on-fail:
 #  job1:

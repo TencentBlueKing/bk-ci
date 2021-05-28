@@ -29,14 +29,16 @@ package com.tencent.devops.gitci.v2.service
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
-import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.gitci.pojo.enums.TriggerReason
-import com.tencent.devops.gitci.pojo.v2.ContentAttr
-import com.tencent.devops.gitci.pojo.v2.UserMessage
-import com.tencent.devops.gitci.pojo.v2.UserMessageRecord
-import com.tencent.devops.gitci.pojo.v2.UserMessageType
+import com.tencent.devops.gitci.pojo.v2.message.ContentAttr
+import com.tencent.devops.gitci.pojo.v2.message.UserMessage
+import com.tencent.devops.gitci.pojo.v2.message.UserMessageRecord
+import com.tencent.devops.gitci.pojo.v2.message.UserMessageType
+import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.v2.dao.GitUserMessageDao
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.format.DateTimeFormatter
@@ -49,17 +51,27 @@ class GitUserMessageService @Autowired constructor(
 ) {
     companion object {
         private val timeFormat = DateTimeFormatter.ofPattern("yyyy-MM-dd")
+        private val logger = LoggerFactory.getLogger(GitUserMessageService::class.java)
     }
 
     fun getMessages(
+        projectId: String,
         userId: String,
         messageType: UserMessageType?,
         haveRead: Boolean?,
         page: Int,
         pageSize: Int
     ): Page<UserMessageRecord> {
+        val startEpoch = System.currentTimeMillis()
+        val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         // 后续有不同类型再考虑分开逻辑，目前全部按照request处理
-        val messageCount = gitUserMessageDao.getMessageCount(dslContext, userId, messageType, haveRead)
+        val messageCount = gitUserMessageDao.getMessageCount(
+            dslContext = dslContext,
+            projectId = projectId,
+            userId = userId,
+            messageType = messageType,
+            haveRead = haveRead
+        )
         if (messageCount == 0) {
             return Page(
                 page = page,
@@ -68,25 +80,36 @@ class GitUserMessageService @Autowired constructor(
                 records = listOf()
             )
         }
+
+        logger.info("getMessageTest took ${System.currentTimeMillis() - startEpoch}ms to get messageCount")
+
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page = page, pageSize = pageSize)
         val messageRecords = gitUserMessageDao.getMessages(
             dslContext = dslContext,
+            projectId = projectId,
             userId = userId,
             messageType = messageType,
             haveRead = haveRead,
             limit = sqlLimit.limit,
             offset = sqlLimit.offset
         )!!
+
+        logger.info("getMessageTest took ${System.currentTimeMillis() - startEpoch}ms to get messageRecords")
+
         val requestIds = messageRecords.map { it.messageId.toInt() }.toSet()
-        val requestMap = gitCIV2RequestService.getRequestMap(userId, requestIds)
+        val eventMap = gitCIV2RequestService.getRequestMap(gitProjectId, userId, requestIds)
+
+        logger.info("getMessageTest took ${System.currentTimeMillis() - startEpoch}ms to get eventMap")
+
         val resultMap = mutableMapOf<String, MutableList<UserMessage>>()
         messageRecords.forEach { message ->
-            if (requestMap[message.messageId] == null) {
+            val eventId = message.messageId.toLong()
+            if (eventMap[eventId] == null) {
                 return@forEach
             }
             val time = message.createTime.format(timeFormat)
-            val content = requestMap[message.messageId]!!
-            val failedNum = content.buildRecords.map { it.reason != TriggerReason.TRIGGER_SUCCESS.name }.size
+            val content = eventMap[eventId]!!
+            val failedNum = content.filter { it.triggerReasonName != TriggerReason.TRIGGER_SUCCESS.name }.size
             val userMassage = UserMessage(
                 id = message.id,
                 userId = message.userId,
@@ -94,20 +117,23 @@ class GitUserMessageService @Autowired constructor(
                 messageTitle = message.messageTitle,
                 messageId = message.messageId,
                 haveRead = message.haveRead,
-                createTime = message.createTime.timestamp(),
-                updateTime = message.updateTime.timestamp(),
+                createTime = message.createTime.timestampmilli(),
+                updateTime = message.updateTime.timestampmilli(),
                 content = content,
                 contentAttr = ContentAttr(
-                    total = content.buildRecords.size,
+                    total = content.size,
                     failedNum = failedNum
                 )
             )
-            if (resultMap.containsKey(time)) {
-                resultMap[time]!!.add(userMassage)
-            } else {
+            if (resultMap[time].isNullOrEmpty()) {
                 resultMap[time] = mutableListOf(userMassage)
+            } else {
+                resultMap[time]!!.add(userMassage)
             }
         }
+
+        logger.info("getMessageTest took ${System.currentTimeMillis() - startEpoch}ms to get result")
+
         return Page(
             page = page,
             pageSize = pageSize,
@@ -118,19 +144,22 @@ class GitUserMessageService @Autowired constructor(
 
     fun readMessage(
         userId: String,
-        messageId: Int?,
-        isAll: Boolean = false
+        id: Int
     ): Boolean {
-        return if (isAll) {
-            gitUserMessageDao.readAllMessage(dslContext, userId) >= 0
-        } else {
-            gitUserMessageDao.readMessage(dslContext, messageId!!) >= 0
-        }
+        return gitUserMessageDao.readMessage(dslContext, id) >= 0
+    }
+
+    fun readAllMessage(
+        projectId: String,
+        userId: String
+    ): Boolean {
+        return gitUserMessageDao.readAllMessage(dslContext = dslContext, projectId = projectId, userId = userId) >= 0
     }
 
     fun getNoReadMessageCount(
+        projectId: String,
         userId: String
     ): Int {
-        return gitUserMessageDao.getNoReadCount(dslContext, userId)
+        return gitUserMessageDao.getNoReadCount(dslContext = dslContext, projectId = projectId, userId = userId)
     }
 }

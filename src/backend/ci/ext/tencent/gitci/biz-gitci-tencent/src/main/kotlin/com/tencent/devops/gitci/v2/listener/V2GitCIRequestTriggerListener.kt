@@ -57,8 +57,8 @@ class V2GitCIRequestTriggerListener @Autowired constructor(
                     originYaml = originYaml,
                     parsedYaml = parsedYaml,
                     normalizedYaml = normalizedYaml,
-                    reason = TriggerReason.GIT_CI_START_BUILD_FAILED.name,
-                    reasonDetail = TriggerReason.GIT_CI_START_BUILD_FAILED.detail.format(e.message),
+                    reason = TriggerReason.CI_RUN_FAILED.name,
+                    reasonDetail = TriggerReason.CI_RUN_FAILED.detail.format(e.message),
                     pipelineId = pipeline.pipelineId,
                     filePath = pipeline.filePath,
                     gitProjectId = event.gitProjectId

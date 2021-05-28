@@ -25,51 +25,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.ci
+package com.tencent.devops.gitci.pojo.rtxCustom
 
-import org.junit.jupiter.api.Test
-
-internal class CiYamlUtilsTest {
-
-    @Test
-    fun parseImage() = Unit
-
-    @Test
-    fun formatYaml() = Unit
-
-    @Test
-    fun checkYaml() = Unit
-
-    @Test
-    fun normalizeGitCiYaml() = Unit
-
-    @Test
-    fun normalizePrebuildYaml() = Unit
-
-    @Test
-    fun validateYaml() = Unit
-
-    @Test
-    fun validate() = Unit
-
-    @Test
-    fun jsonNodeFromString() = Unit
-
-    @Test
-    fun validateSchema() = Unit
-
-    @Test
-    fun validateJson() = Unit
-
-    @Test
-    fun convertYamlToJson() = Unit
-
-    @Test
-    fun getCIBuildYamlSchema() = Unit
-
-    @Test
-    fun getAbstractTaskSchema() = Unit
-
-    @Test
-    fun getAbstractServiceSchema() = Unit
+enum class MessageType(val value: String) {
+    MARKDOWN("markdown")
 }

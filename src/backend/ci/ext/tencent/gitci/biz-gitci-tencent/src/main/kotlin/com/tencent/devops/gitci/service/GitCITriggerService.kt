@@ -87,6 +87,7 @@ import org.springframework.stereotype.Service
 import java.io.BufferedReader
 import java.io.File
 import java.io.StringReader
+import java.lang.RuntimeException
 import java.text.SimpleDateFormat
 import java.time.LocalDateTime
 import java.util.Date
@@ -113,9 +114,11 @@ class GitCITriggerService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(GitCITriggerService::class.java)
         private val channelCode = ChannelCode.GIT
+        private val ciFileExtensions = listOf(".yml", ".yaml")
+        private const val ciFileExtensionYml = ".yml"
+        private const val ciFileExtensionYaml = ".yaml"
         private const val ciFileName = ".ci.yml"
         private const val ciFileDirectoryName = ".ci"
-        private const val ciFileExtension = ".yml"
         private const val noPipelineBuildEvent = "validatePipeline"
     }
 
@@ -140,10 +143,20 @@ class GitCITriggerService @Autowired constructor(
             latestBuildInfo = null
         )
 
+        // 流水线未启用在手动触发处直接报错
+        if (!buildPipeline.enabled) {
+            logger.error(
+                "Pipeline is not enabled, return, " +
+                        "gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}"
+            )
+            throw RuntimeException("${TriggerReason.PIPELINE_DISABLE.name}(${TriggerReason.PIPELINE_DISABLE.detail})")
+        }
+
         val originYaml = triggerBuildReq.yaml
         // 如果当前文件没有内容直接不触发
         if (originYaml.isNullOrBlank()) {
-            logger.warn("Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}")
+            logger.warn("Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
+                "eventId: ${gitRequestEvent.id}")
             gitCIEventSaveService.saveNotBuildEvent(
                 userId = gitRequestEvent.userId,
                 eventId = gitRequestEvent.id!!,
@@ -336,7 +349,8 @@ class GitCITriggerService @Autowired constructor(
         if (isCIYamlExist) {
             yamlPathList.add(ciFileName)
         }
-        logger.info("matchAndTriggerPipeline in gitProjectId:${gitProjectConf.gitProjectId}, yamlPathList: $yamlPathList, path2PipelineExists: $path2PipelineExists")
+        logger.info("matchAndTriggerPipeline in gitProjectId:${gitProjectConf.gitProjectId}, yamlPathList: " +
+            "$yamlPathList, path2PipelineExists: $path2PipelineExists")
         // 如果没有Yaml文件则直接不触发
         if (yamlPathList.isEmpty()) {
             logger.error("gitProjectId: ${gitRequestEvent.gitProjectId} cannot found ci yaml from git")
@@ -347,8 +361,8 @@ class GitCITriggerService @Autowired constructor(
                 filePath = null,
                 originYaml = null,
                 normalizedYaml = null,
-                reason = TriggerReason.GIT_CI_YAML_NOT_FOUND.name,
-                reasonDetail = TriggerReason.GIT_CI_YAML_NOT_FOUND.detail,
+                reason = TriggerReason.CI_YAML_NOT_FOUND.name,
+                reasonDetail = TriggerReason.CI_YAML_NOT_FOUND.detail,
                 gitProjectId = gitRequestEvent.gitProjectId
             )
             blockCommitCheck(
@@ -375,8 +389,8 @@ class GitCITriggerService @Autowired constructor(
                         filePath = filePath,
                         originYaml = null,
                         normalizedYaml = null,
-                        reason = TriggerReason.GIT_CI_YAML_VERSION_BEHIND.name,
-                        reasonDetail = TriggerReason.GIT_CI_YAML_VERSION_BEHIND.detail,
+                        reason = TriggerReason.CI_YAML_VERSION_BEHIND.name,
+                        reasonDetail = TriggerReason.CI_YAML_VERSION_BEHIND.detail,
                         gitProjectId = gitRequestEvent.gitProjectId
                     )
                     // 落后版本的文件不触发
@@ -386,26 +400,31 @@ class GitCITriggerService @Autowired constructor(
         }
 
         yamlPathList.forEach { filePath ->
+            // 因为要为 GIT_CI_YAML_INVALID 这个异常添加文件信息，所以先创建流水线，后面再根据Yaml修改流水线名称即可
+            var displayName = filePath
+            ciFileExtensions.forEach {
+                displayName = filePath.removeSuffix(it)
+            }
+            val existsPipeline = path2PipelineExists[filePath]
+            // 如果该流水线已保存过，则继续使用
+            val buildPipeline = existsPipeline
+                ?: GitProjectPipeline(
+                    gitProjectId = gitProjectConf.gitProjectId,
+                    displayName = displayName,
+                    pipelineId = "", // 留空用于是否创建判断
+                    filePath = filePath,
+                    enabled = true,
+                    creator = gitRequestEvent.userId,
+                    latestBuildInfo = null
+                )
+            var originYaml: String? = null
             try {
-                // 因为要为 GIT_CI_YAML_INVALID 这个异常添加文件信息，所以先创建流水线，后面再根据Yaml修改流水线名称即可
-                var displayName = filePath.removeSuffix(ciFileExtension)
-                val existsPipeline = path2PipelineExists[filePath]
-
-                // 如果该流水线已保存过，则继续使用
-                val buildPipeline = existsPipeline
-                    ?: GitProjectPipeline(
-                        gitProjectId = gitProjectConf.gitProjectId,
-                        displayName = displayName,
-                        pipelineId = "", // 留空用于是否创建判断
-                        filePath = filePath,
-                        enabled = true,
-                        creator = gitRequestEvent.userId,
-                        latestBuildInfo = null
-                    )
                 // 为已存在的流水线设置名称
                 buildPipeline.displayName = displayName
-                val originYaml = if (isFork) getYamlFromGit(forkGitToken!!, gitRequestEvent, filePath, isMrEvent)
+                originYaml = if (isFork) getYamlFromGit(forkGitToken!!, gitRequestEvent, filePath, isMrEvent)
                 else getYamlFromGit(gitToken, gitRequestEvent, filePath, isMrEvent)
+                logger.info("origin yamlStr: $originYaml")
+
                 // 如果当前文件没有内容直接不触发
                 if (originYaml.isNullOrBlank()) {
                     logger.warn(
@@ -462,9 +481,15 @@ class GitCITriggerService @Autowired constructor(
                 }
 
                 /*val (yamlObject, normalizedYaml) =
-                    prepareCIBuildYaml(gitRequestEvent, originYaml, filePath, buildPipeline.pipelineId) ?: return@forEach
+                    prepareCIBuildYaml(
+                        gitRequestEvent,
+                        originYaml,
+                        filePath,
+                        buildPipeline.pipelineId
+                    ) ?: return@forEach
                 // 若是Yaml格式没问题，则取Yaml中的流水线名称，并修改当前流水线名称
-                displayName = if (!yamlObject.name.isNullOrBlank()) yamlObject.name!! else filePath.removeSuffix(ciFileExtension)
+                displayName =
+                    if (!yamlObject.name.isNullOrBlank()) yamlObject.name!! else filePath.removeSuffix(ciFileExtension)
                 buildPipeline.displayName = displayName
 
                 val matcher = GitCIWebHookMatcher(event)
@@ -521,6 +546,17 @@ class GitCITriggerService @Autowired constructor(
                     "yamlPathList in gitProjectId:${gitProjectConf.gitProjectId} has invalid yaml file[$filePath]: ",
                     e
                 )
+                gitCIEventSaveService.saveNotBuildEvent(
+                    userId = gitRequestEvent.userId,
+                    eventId = gitRequestEvent.id!!,
+                    pipelineId = buildPipeline.pipelineId,
+                    filePath = buildPipeline.filePath,
+                    originYaml = originYaml,
+                    normalizedYaml = null,
+                    reason = TriggerReason.CI_YAML_INVALID.name,
+                    reasonDetail = TriggerReason.CI_YAML_INVALID.detail.format(e.message),
+                    gitProjectId = gitRequestEvent.gitProjectId
+                )
                 return@forEach
             }
         }
@@ -553,7 +589,8 @@ class GitCITriggerService @Autowired constructor(
                 // 判断镜像格式是否合法
                 val (imageName, imageTag) = it.parseImage()
                 val record = gitServicesConfDao.get(dslContext, imageName, imageTag)
-                    ?: throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "Git CI没有此镜像版本记录. ${it.image}")
+                    ?: throw CustomException(Response.Status.INTERNAL_SERVER_ERROR,
+                        "Git CI没有此镜像版本记录. ${it.image}")
                 if (!record.enable) {
                     throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "镜像版本不可用. ${it.image}")
                 }
@@ -585,8 +622,8 @@ class GitCITriggerService @Autowired constructor(
                 filePath = filePath,
                 originYaml = originYaml,
                 normalizedYaml = null,
-                reason = TriggerReason.GIT_CI_YAML_INVALID.name,
-                reasonDetail = e.message.toString(),
+                reason = TriggerReason.CI_YAML_INVALID.name,
+                reasonDetail = TriggerReason.CI_YAML_INVALID.detail.format(e.message),
                 gitProjectId = gitRequestEvent.gitProjectId
             )
             return null
@@ -608,14 +645,15 @@ class GitCITriggerService @Autowired constructor(
                 filePath = null,
                 originYaml = null,
                 normalizedYaml = null,
-                reason = TriggerReason.GIT_CI_DISABLE.name,
-                reasonDetail = TriggerReason.GIT_CI_DISABLE.detail,
+                reason = TriggerReason.CI_DISABLED.name,
+                reasonDetail = TriggerReason.CI_DISABLED.detail,
                 gitProjectId = gitRequestEvent.gitProjectId
             )
             return false
         }
         if (!gitProjectSetting.enableCi) {
-            logger.warn("git ci is disabled, git project id: ${gitRequestEvent.gitProjectId}, name: ${gitProjectSetting.name}")
+            logger.warn("git ci is disabled, git project id: ${gitRequestEvent.gitProjectId}, " +
+                "name: ${gitProjectSetting.name}")
             gitCIEventSaveService.saveNotBuildEvent(
                 userId = gitRequestEvent.userId,
                 eventId = gitRequestEvent.id!!,
@@ -623,8 +661,8 @@ class GitCITriggerService @Autowired constructor(
                 filePath = null,
                 originYaml = null,
                 normalizedYaml = null,
-                reason = TriggerReason.GIT_CI_DISABLE.name,
-                reasonDetail = TriggerReason.GIT_CI_DISABLE.detail,
+                reason = TriggerReason.CI_DISABLED.name,
+                reasonDetail = TriggerReason.CI_DISABLED.detail,
                 gitProjectId = gitRequestEvent.gitProjectId
             )
             return false
@@ -632,7 +670,8 @@ class GitCITriggerService @Autowired constructor(
         when (event) {
             is GitPushEvent -> {
                 if (!gitProjectSetting.buildPushedBranches) {
-                    logger.warn("git ci conf buildPushedBranches is false, git project id: ${gitRequestEvent.gitProjectId}, name: ${gitProjectSetting.name}")
+                    logger.warn("git ci conf buildPushedBranches is false, git project id: " +
+                        "${gitRequestEvent.gitProjectId}, name: ${gitProjectSetting.name}")
                     gitCIEventSaveService.saveNotBuildEvent(
                         userId = gitRequestEvent.userId,
                         eventId = gitRequestEvent.id!!,
@@ -640,8 +679,8 @@ class GitCITriggerService @Autowired constructor(
                         filePath = null,
                         originYaml = null,
                         normalizedYaml = null,
-                        reason = TriggerReason.BUILD_PUSHED_BRANCHES_DISABLE.name,
-                        reasonDetail = TriggerReason.BUILD_PUSHED_BRANCHES_DISABLE.detail,
+                        reason = TriggerReason.BUILD_PUSHED_BRANCHES_DISABLED.name,
+                        reasonDetail = TriggerReason.BUILD_PUSHED_BRANCHES_DISABLED.detail,
                         gitProjectId = gitRequestEvent.gitProjectId
                     )
                     return false
@@ -649,7 +688,8 @@ class GitCITriggerService @Autowired constructor(
             }
             is GitTagPushEvent -> {
                 if (!gitProjectSetting.buildPushedBranches) {
-                    logger.warn("git ci conf buildPushedBranches is false, git project id: ${gitRequestEvent.gitProjectId}, name: ${gitProjectSetting.name}")
+                    logger.warn("git ci conf buildPushedBranches is false, git project id: " +
+                        "${gitRequestEvent.gitProjectId}, name: ${gitProjectSetting.name}")
                     gitCIEventSaveService.saveNotBuildEvent(
                         userId = gitRequestEvent.userId,
                         eventId = gitRequestEvent.id!!,
@@ -657,8 +697,8 @@ class GitCITriggerService @Autowired constructor(
                         filePath = null,
                         originYaml = null,
                         normalizedYaml = null,
-                        reason = TriggerReason.BUILD_PUSHED_BRANCHES_DISABLE.name,
-                        reasonDetail = TriggerReason.BUILD_PUSHED_BRANCHES_DISABLE.detail,
+                        reason = TriggerReason.BUILD_PUSHED_BRANCHES_DISABLED.name,
+                        reasonDetail = TriggerReason.BUILD_PUSHED_BRANCHES_DISABLED.detail,
                         gitProjectId = gitRequestEvent.gitProjectId
                     )
                     return false
@@ -666,7 +706,8 @@ class GitCITriggerService @Autowired constructor(
             }
             is GitMergeRequestEvent -> {
                 if (!gitProjectSetting.buildPushedPullRequest) {
-                    logger.warn("git ci conf buildPushedPullRequest is false, git project id: ${gitRequestEvent.gitProjectId}, name: ${gitProjectSetting.name}")
+                    logger.warn("git ci conf buildPushedPullRequest is false, git project id: " +
+                        "${gitRequestEvent.gitProjectId}, name: ${gitProjectSetting.name}")
                     gitCIEventSaveService.saveNotBuildEvent(
                         userId = gitRequestEvent.userId,
                         eventId = gitRequestEvent.id!!,
@@ -674,8 +715,8 @@ class GitCITriggerService @Autowired constructor(
                         filePath = null,
                         originYaml = null,
                         normalizedYaml = null,
-                        reason = TriggerReason.BUILD_PUSHED_PULL_REQUEST_DISABLE.name,
-                        reasonDetail = TriggerReason.BUILD_PUSHED_PULL_REQUEST_DISABLE.detail,
+                        reason = TriggerReason.BUILD_MERGE_REQUEST_DISABLED.name,
+                        reasonDetail = TriggerReason.BUILD_MERGE_REQUEST_DISABLED.detail,
                         gitProjectId = gitRequestEvent.gitProjectId
                     )
                     return false
@@ -719,8 +760,8 @@ class GitCITriggerService @Autowired constructor(
                     filePath = null,
                     originYaml = null,
                     normalizedYaml = null,
-                    reason = TriggerReason.GIT_CI_MERGE_CHECK_CONFLICT.name,
-                    reasonDetail = TriggerReason.GIT_CI_MERGE_CHECK_CONFLICT.detail,
+                    reason = TriggerReason.CI_MERGE_CHECKING.name,
+                    reasonDetail = TriggerReason.CI_MERGE_CHECKING.detail,
                     gitProjectId = gitRequestEvent.gitProjectId
                 )
 
@@ -745,8 +786,8 @@ class GitCITriggerService @Autowired constructor(
                     filePath = null,
                     originYaml = null,
                     normalizedYaml = null,
-                    reason = TriggerReason.GIT_CI_MERGE_HAS_CONFLICT.name,
-                    reasonDetail = TriggerReason.GIT_CI_MERGE_HAS_CONFLICT.detail,
+                    reason = TriggerReason.CI_MERGE_CONFLICT.name,
+                    reasonDetail = TriggerReason.CI_MERGE_CONFLICT.detail,
                     gitProjectId = gitRequestEvent.gitProjectId
                 )
                 return false
@@ -788,8 +829,8 @@ class GitCITriggerService @Autowired constructor(
                     gitRequestEventNotBuildDao.updateNoBuildReasonByRecordId(
                         dslContext = dslContext,
                         recordId = notBuildRecordId,
-                        reason = TriggerReason.GIT_CI_MERGE_CHECK_CONFLICT_TIMEOUT.name,
-                        reasonDetail = TriggerReason.GIT_CI_MERGE_CHECK_CONFLICT_TIMEOUT.detail
+                        reason = TriggerReason.CI_MERGE_CHECK_TIMEOUT.name,
+                        reasonDetail = TriggerReason.CI_MERGE_CHECK_TIMEOUT.detail
                     )
                 }
                 return false
@@ -799,8 +840,8 @@ class GitCITriggerService @Autowired constructor(
                 gitRequestEventNotBuildDao.updateNoBuildReasonByRecordId(
                     dslContext = dslContext,
                     recordId = notBuildRecordId,
-                    reason = TriggerReason.GIT_CI_MERGE_HAS_CONFLICT.name,
-                    reasonDetail = TriggerReason.GIT_CI_MERGE_HAS_CONFLICT.detail
+                    reason = TriggerReason.CI_MERGE_CONFLICT.name,
+                    reasonDetail = TriggerReason.CI_MERGE_CONFLICT.detail
                 )
                 return true
             }
@@ -995,7 +1036,7 @@ class GitCITriggerService @Autowired constructor(
         isMrEvent: Boolean = false
     ): MutableList<String> {
         val ciFileList = getFileTreeFromGit(gitToken, gitRequestEvent, ciFileDirectoryName, isMrEvent)
-            .filter { it.name.endsWith(ciFileExtension) }
+            .filter { it.name.endsWith(ciFileExtensionYml) || it.name.endsWith(ciFileExtensionYaml) }
         return ciFileList.map { ciFileDirectoryName + File.separator + it.name }.toMutableList()
     }
 
@@ -1064,7 +1105,8 @@ class GitCITriggerService @Autowired constructor(
             }
             is GitMergeRequestEvent -> {
                 if (event.object_attributes.action == "close" || event.object_attributes.action == "merge" ||
-                    (event.object_attributes.action == "update" && event.object_attributes.extension_action != "push-update")
+                    (event.object_attributes.action == "update" &&
+                        event.object_attributes.extension_action != "push-update")
                 ) {
                     logger.info("Git web hook is ${event.object_attributes.action} merge request")
                     return null
@@ -1192,20 +1234,26 @@ class GitCITriggerService @Autowired constructor(
 
     private fun getTriggerBranch(gitRequestEvent: GitRequestEvent): String {
         return when {
-            gitRequestEvent.branch.startsWith("refs/heads/") -> gitRequestEvent.branch.removePrefix("refs/heads/")
-            gitRequestEvent.branch.startsWith("refs/tags/") -> gitRequestEvent.branch.removePrefix("refs/tags/")
+            gitRequestEvent.branch.startsWith("refs/heads/") ->
+                gitRequestEvent.branch.removePrefix("refs/heads/")
+            gitRequestEvent.branch.startsWith("refs/tags/") ->
+                gitRequestEvent.branch.removePrefix("refs/tags/")
             else -> gitRequestEvent.branch
         }
 //        return if (gitRequestEvent.objectKind == OBJECT_KIND_MERGE_REQUEST) {
 //            when {
-//                gitRequestEvent.targetBranch!!.startsWith("refs/heads/") -> gitRequestEvent.targetBranch!!.removePrefix("refs/heads/")
-//                gitRequestEvent.targetBranch!!.startsWith("refs/tags/") -> gitRequestEvent.targetBranch!!.removePrefix("refs/tags/")
+//                gitRequestEvent.targetBranch!!.startsWith("refs/heads/")
+    //                -> gitRequestEvent.targetBranch!!.removePrefix("refs/heads/")
+//                gitRequestEvent.targetBranch!!.startsWith("refs/tags/")
+    //                -> gitRequestEvent.targetBranch!!.removePrefix("refs/tags/")
 //                else -> gitRequestEvent.targetBranch!!
 //            }
 //        } else {
 //            when {
-//                gitRequestEvent.branch.startsWith("refs/heads/") -> gitRequestEvent.branch.removePrefix("refs/heads/")
-//                gitRequestEvent.branch.startsWith("refs/tags/") -> gitRequestEvent.branch.removePrefix("refs/tags/")
+//                gitRequestEvent.branch.startsWith("refs/heads/") ->
+    //                gitRequestEvent.branch.removePrefix("refs/heads/")
+//                gitRequestEvent.branch.startsWith("refs/tags/") ->
+    //                gitRequestEvent.branch.removePrefix("refs/tags/")
 //                else -> gitRequestEvent.branch
 //            }
 //        }

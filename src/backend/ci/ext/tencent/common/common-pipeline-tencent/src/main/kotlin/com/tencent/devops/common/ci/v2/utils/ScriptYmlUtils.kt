@@ -54,6 +54,7 @@ import com.tencent.devops.common.ci.v2.PreJob
 import com.tencent.devops.common.ci.v2.PreStage
 import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
 import com.tencent.devops.common.ci.v2.RunsOn
+import com.tencent.devops.common.ci.v2.SchedulesRule
 import com.tencent.devops.common.ci.v2.Service
 import com.tencent.devops.common.ci.v2.StageLabel
 import com.tencent.devops.common.ci.v2.Step
@@ -65,6 +66,7 @@ import java.util.Random
 import java.util.regex.Pattern
 import javax.ws.rs.core.Response
 
+@Suppress("ALL")
 object ScriptYmlUtils {
 
     private val logger = LoggerFactory.getLogger(ScriptYmlUtils::class.java)
@@ -77,6 +79,10 @@ object ScriptYmlUtils {
     private const val stageNamespace = "stage-"
     private const val jobNamespace = "job-"
     private const val stepNamespace = "step-"
+
+    // 用户编写的触发器语法和实际对象不一致
+    private const val userTrigger = "on"
+    private const val formatTrigger = "triggerOn"
 
     /**
      * 1、解决锚点
@@ -186,8 +192,9 @@ object ScriptYmlUtils {
         val br = BufferedReader(StringReader(yamlStr))
         var line: String? = br.readLine()
         while (line != null) {
-            if (line == "on:") {
-                sb.append("triggerOn:").append("\n")
+            line = line.trimEnd()
+            if (line == "$userTrigger:") {
+                sb.append("$formatTrigger:").append("\n")
             } else {
                 sb.append(line).append("\n")
             }
@@ -232,8 +239,8 @@ object ScriptYmlUtils {
             return
         }
         yamlMap.forEach { (t, _) ->
-            if (t != "on" && t != "extends" && t != "version") {
-                throw CustomException(Response.Status.BAD_REQUEST, "使用 extends 时顶级关键字只能有触发器 on")
+            if (t != formatTrigger && t != "extends" && t != "version" && t != "resources") {
+                throw CustomException(Response.Status.BAD_REQUEST, "使用 extends 时顶级关键字只能有触发器 on 与 resources")
             }
         }
     }
@@ -329,7 +336,7 @@ object ScriptYmlUtils {
         }
 
         return try {
-            YamlUtil.getObjectMapper().readValue(preRunsOn.toString(), RunsOn::class.java)
+            YamlUtil.getObjectMapper().readValue(JsonUtil.toJson(preRunsOn), RunsOn::class.java)
         } catch (e: Exception) {
             RunsOn(
                 poolName = preRunsOn.toString()
@@ -390,13 +397,25 @@ object ScriptYmlUtils {
         return stageList
     }
 
-    private fun formatStageLabel(labels: List<String>?): List<String> {
+    private fun formatStageLabel(labels: Any?): List<String> {
         if (labels == null) {
             return emptyList()
         }
 
+        val transLabels = try {
+            YamlUtil.getObjectMapper().readValue(
+                JsonUtil.toJson(labels),
+                List::class.java
+            ) as ArrayList<String>
+        } catch (e: MismatchedInputException) {
+            listOf(labels.toString())
+        } catch (e: Exception) {
+            logger.error("Format label  failed.", e)
+            listOf<String>()
+        }
+
         val newLabels = mutableListOf<String>()
-        labels.forEach {
+        transLabels.forEach {
             val stageLabel = getStageLabel(it)
             if (stageLabel != null) {
                 newLabels.add(stageLabel.id)
@@ -464,9 +483,10 @@ object ScriptYmlUtils {
     }
 
     private fun formatTriggerOn(preTriggerOn: PreTriggerOn): TriggerOn {
-        var pushRule = PushRule()
-        var tagRule = TagRule()
-        var mrRule = MrRule()
+        var pushRule: PushRule? = null
+        var tagRule: TagRule? = null
+        var mrRule: MrRule? = null
+        var schedulesRule: SchedulesRule? = null
 
         if (preTriggerOn.push != null) {
             val push = preTriggerOn.push
@@ -551,10 +571,23 @@ object ScriptYmlUtils {
             }
         }
 
+        if (preTriggerOn.schedules != null) {
+            val schedules = preTriggerOn.schedules
+            try {
+                schedulesRule = YamlUtil.getObjectMapper().readValue(
+                    JsonUtil.toJson(schedules),
+                    SchedulesRule::class.java
+                )
+            } catch (e: MismatchedInputException) {
+                logger.error("Format triggerOn schedulesRule failed.", e)
+            }
+        }
+
         return TriggerOn(
             push = pushRule,
             tag = tagRule,
-            mr = mrRule
+            mr = mrRule,
+            schedules = schedulesRule
         )
     }
 

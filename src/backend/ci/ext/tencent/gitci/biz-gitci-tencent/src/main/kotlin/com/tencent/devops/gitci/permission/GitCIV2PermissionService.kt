@@ -85,7 +85,7 @@ class GitCIV2PermissionService @Autowired constructor(
     ) {
         val result = gitCIBasicSettingDao.getSetting(dslContext, gitProjectId)?.enableCi ?: false
         if (!result) {
-            throw GitCINoEnableException()
+            throw GitCINoEnableException(gitProjectId.toString())
         }
     }
 

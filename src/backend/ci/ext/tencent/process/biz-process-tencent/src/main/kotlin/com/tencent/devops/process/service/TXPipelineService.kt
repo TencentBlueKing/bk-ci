@@ -126,6 +126,7 @@ import javax.ws.rs.core.StreamingOutput
  * @author irwinsun
  * @version 1.0
  */
+@Suppress("ALL")
 @Service("newPipelineService")
 class TXPipelineService @Autowired constructor(
     private val bkAuthPermissionApi: AuthPermissionApi,
@@ -1187,7 +1188,8 @@ class TXPipelineService @Autowired constructor(
                             runsOn = RunsOn(),
                             // TODO: 问下对应关系
                             services = null,
-                            ifField = if (job.jobControlOption?.runCondition == JobRunCondition.CUSTOM_CONDITION_MATCH) {
+                            ifField = if (job.jobControlOption?.runCondition ==
+                                JobRunCondition.CUSTOM_CONDITION_MATCH) {
                                 job.jobControlOption?.customCondition
                             } else {
                                 null
@@ -1217,7 +1219,8 @@ class TXPipelineService @Autowired constructor(
                             runsOn = RunsOn(),
                             // TODO: 问下对应关系
                             services = null,
-                            ifField = if (job.jobControlOption?.runCondition == JobRunCondition.CUSTOM_CONDITION_MATCH) {
+                            ifField = if (job.jobControlOption?.runCondition ==
+                                JobRunCondition.CUSTOM_CONDITION_MATCH) {
                                 job.jobControlOption?.customCondition
                             } else {
                                 null
@@ -1254,7 +1257,8 @@ class TXPipelineService @Autowired constructor(
                         V2Step(
                             name = step.name,
                             id = step.id,
-                            ifFiled = if (step.additionalOptions?.runCondition == RunCondition.CUSTOM_CONDITION_MATCH) {
+                            ifFiled = if (step.additionalOptions?.runCondition ==
+                                RunCondition.CUSTOM_CONDITION_MATCH) {
                                 step.additionalOptions?.customCondition
                             } else {
                                 null
@@ -1284,7 +1288,8 @@ class TXPipelineService @Autowired constructor(
                         V2Step(
                             name = step.name,
                             id = step.id,
-                            ifFiled = if (step.additionalOptions?.runCondition == RunCondition.CUSTOM_CONDITION_MATCH) {
+                            ifFiled = if (step.additionalOptions?.runCondition ==
+                                RunCondition.CUSTOM_CONDITION_MATCH) {
                                 step.additionalOptions?.customCondition
                             } else {
                                 null
@@ -1331,7 +1336,8 @@ class TXPipelineService @Autowired constructor(
                         V2Step(
                             name = step.name,
                             id = step.id,
-                            ifFiled = if (step.additionalOptions?.runCondition == RunCondition.CUSTOM_CONDITION_MATCH) {
+                            ifFiled = if (step.additionalOptions?.runCondition ==
+                                RunCondition.CUSTOM_CONDITION_MATCH) {
                                 step.additionalOptions?.customCondition
                             } else {
                                 null
@@ -1361,7 +1367,8 @@ class TXPipelineService @Autowired constructor(
                         V2Step(
                             name = step.name,
                             id = step.id,
-                            ifFiled = if (step.additionalOptions?.runCondition == RunCondition.CUSTOM_CONDITION_MATCH) {
+                            ifFiled = if (step.additionalOptions?.runCondition ==
+                                RunCondition.CUSTOM_CONDITION_MATCH) {
                                 step.additionalOptions?.customCondition
                             } else {
                                 null
@@ -1415,7 +1422,8 @@ class TXPipelineService @Autowired constructor(
             "流水线已不存在！"
         )
         val yamlSb = StringBuilder()
-        yamlSb.append("#####################################################################################################################\n")
+        yamlSb.append("############################################################################" +
+            "#########################################\n")
         yamlSb.append("# 项目ID: $projectId \n")
         yamlSb.append("# 流水线ID: $pipelineId \n")
         yamlSb.append("# 流水线名称: ${model.name} \n")
@@ -1424,7 +1432,8 @@ class TXPipelineService @Autowired constructor(
         yamlSb.append("# 注意：不支持系统凭证(用户名、密码)的导出，请检查系统凭证的完整性！ \n")
         yamlSb.append("# 注意：[插件]内参数可能存在敏感信息，请仔细检查，谨慎分享！！！ \n")
         if (isGitCI) {
-            yamlSb.append("# 注意：[插件]工蜂CI不支持依赖蓝盾项目的服务（如凭证、节点等），请联系插件开发者改造插件，改造指引：https://iwiki.woa.com/x/CqARHg \n")
+            yamlSb.append("# 注意：[插件]工蜂CI不支持依赖蓝盾项目的服务（如凭证、节点等），" +
+                "请联系插件开发者改造插件，改造指引：https://iwiki.woa.com/x/CqARHg \n")
             yamlSb.append("# 注意：[插件]工蜂CI不支持蓝盾老版本的插件，请在研发商店搜索新插件替换 \n")
         }
         return Pair(model, yamlSb)

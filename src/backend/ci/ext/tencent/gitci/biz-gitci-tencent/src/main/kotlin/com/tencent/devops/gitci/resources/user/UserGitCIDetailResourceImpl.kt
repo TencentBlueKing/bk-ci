@@ -104,7 +104,12 @@ class UserGitCIDetailResourceImpl @Autowired constructor(
         ))
     }
 
-    override fun getReports(userId: String, projectId: String, pipelineId: String, buildId: String): Result<List<Report>> {
+    override fun getReports(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): Result<List<Report>> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
         permissionService.checkGitCIPermission(userId, projectId)

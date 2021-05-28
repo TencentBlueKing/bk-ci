@@ -33,7 +33,6 @@ import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.ci.v2.utils.YamlCommonUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
-import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.gitci.pojo.GitRequestEvent
 import com.tencent.devops.gitci.pojo.enums.TriggerReason
@@ -61,7 +60,6 @@ class V2RequestTrigger @Autowired constructor(
     private val dslContext: DSLContext,
     private val scmService: ScmService,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
-    private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val gitBasicSettingService: GitRepositoryConfService,
     private val rabbitTemplate: RabbitTemplate,
     private val gitCIEventSaveService: GitCIEventSaveService
@@ -69,9 +67,6 @@ class V2RequestTrigger @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(V2RequestTrigger::class.java)
-        private const val ciFileName = ".ci.yml"
-        private const val templateDirectoryName = ".ci/templates"
-        private const val ciFileExtension = ".yml"
 
         // 针对filePath可能为空的情况下创建一个模板替换的根目录名称
         private const val GIT_CI_TEMPLATE_ROOT_FILE = "GIT_CI_TEMPLATE_ROOT_FILE"
@@ -97,6 +92,8 @@ class V2RequestTrigger @Autowired constructor(
         ) ?: return false
         val yamlObject = yamlObjects.normalYaml
         val normalizedYaml = YamlUtil.toYaml(yamlObject)
+        val parsedYaml = YamlCommonUtils.toYamlNotNull(yamlObjects.preYaml)
+        logger.info("${gitProjectPipeline.pipelineId} parsedYaml: $parsedYaml")
         logger.info("normalize yaml: $normalizedYaml")
 
         // 若是Yaml格式没问题，则取Yaml中的流水线名称，并修改当前流水线名称
@@ -108,7 +105,6 @@ class V2RequestTrigger @Autowired constructor(
                 "Matcher is true, display the event, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
                         "eventId: ${gitRequestEvent.id}, dispatched pipeline: $gitProjectPipeline"
             )
-            val parsedYaml = YamlCommonUtils.toYamlNotNull(yamlObjects.preYaml)
             val gitBuildId = gitRequestEventBuildDao.save(
                 dslContext = dslContext,
                 eventId = gitRequestEvent.id!!,
@@ -137,14 +133,15 @@ class V2RequestTrigger @Autowired constructor(
             )
             gitBasicSettingService.updateGitCISetting(gitRequestEvent.gitProjectId)
         } else {
-            logger.warn("Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}")
+            logger.warn("Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
+                "eventId: ${gitRequestEvent.id}")
             gitCIEventSaveService.saveNotBuildEvent(
                 userId = gitRequestEvent.userId,
                 eventId = gitRequestEvent.id!!,
                 pipelineId = if (gitProjectPipeline.pipelineId.isBlank()) null else gitProjectPipeline.pipelineId,
                 filePath = gitProjectPipeline.filePath,
                 originYaml = originYaml,
-                parsedYaml = YamlCommonUtils.toYamlNotNull(yamlObjects.preYaml),
+                parsedYaml = parsedYaml,
                 normalizedYaml = normalizedYaml,
                 reason = TriggerReason.TRIGGER_NOT_MATCH.name,
                 reasonDetail = TriggerReason.TRIGGER_NOT_MATCH.detail,
@@ -171,21 +168,37 @@ class V2RequestTrigger @Autowired constructor(
         if (originYaml.isNullOrBlank()) {
             return null
         }
+        logger.info("input yamlStr: $originYaml")
         val isFork = (isMr) && gitRequestEvent.sourceGitProjectId != null &&
                 gitRequestEvent.sourceGitProjectId != gitRequestEvent.gitProjectId
-        val yamlObjects = try {
-            createCIBuildYaml(
-                isFork = isFork,
-                gitToken = gitToken,
-                forkGitToken = forkGitToken,
-                yamlStr = originYaml,
-                filePath = filePath ?: GIT_CI_TEMPLATE_ROOT_FILE,
-                gitRequestEvent = gitRequestEvent,
-                gitProjectId = gitRequestEvent.gitProjectId,
-                pipelineId = pipelineId,
-                originYaml = originYaml
-            )
-        } catch (e: Throwable) {
+        val preTemplateYamlObject = formatAndCheckYaml(originYaml, gitRequestEvent, pipelineId, filePath) ?: return null
+        return replaceYamlTemplate(
+            isFork = isFork,
+            gitToken = gitToken,
+            forkGitToken = forkGitToken,
+            preTemplateYamlObject = preTemplateYamlObject,
+            filePath = filePath ?: GIT_CI_TEMPLATE_ROOT_FILE,
+            gitRequestEvent = gitRequestEvent,
+            pipelineId = pipelineId,
+            originYaml = originYaml
+        )
+    }
+
+    private fun formatAndCheckYaml(
+        originYaml: String,
+        gitRequestEvent: GitRequestEvent,
+        pipelineId: String?,
+        filePath: String?
+    ): PreTemplateScriptBuildYaml? {
+        return try {
+            // 格式化yaml，替换部分内容
+            val yaml = ScriptYmlUtils.formatYaml(originYaml)
+            val preTemplateYamlObject =
+                YamlUtil.getObjectMapper().readValue(yaml, PreTemplateScriptBuildYaml::class.java)
+            // 检查Yaml语法的格式问题
+            ScriptYmlUtils.checkYaml(preTemplateYamlObject, yaml)
+            preTemplateYamlObject
+        } catch (e: Exception) {
             logger.error("git ci yaml is invalid", e)
             gitCIEventSaveService.saveNotBuildEvent(
                 userId = gitRequestEvent.userId,
@@ -195,33 +208,24 @@ class V2RequestTrigger @Autowired constructor(
                 originYaml = originYaml,
                 parsedYaml = null,
                 normalizedYaml = null,
-                reason = TriggerReason.GIT_CI_YAML_INVALID.name,
-                reasonDetail = e.message.toString(),
+                reason = TriggerReason.CI_YAML_INVALID.name,
+                reasonDetail = TriggerReason.CI_YAML_INVALID.detail.format(e.message),
                 gitProjectId = gitRequestEvent.gitProjectId
             )
-            return null
+            null
         }
-        return yamlObjects
     }
 
-    fun createCIBuildYaml(
+    private fun replaceYamlTemplate(
         isFork: Boolean,
         gitToken: GitToken,
         forkGitToken: GitToken?,
-        yamlStr: String,
+        preTemplateYamlObject: PreTemplateScriptBuildYaml,
         filePath: String,
         gitRequestEvent: GitRequestEvent,
-        gitProjectId: Long? = null,
         originYaml: String?,
         pipelineId: String?
     ): YamlObjects? {
-        logger.info("input yamlStr: $yamlStr")
-
-        val yaml = ScriptYmlUtils.formatYaml(yamlStr)
-
-        val preTemplateYamlObject = YamlUtil.getObjectMapper().readValue(yaml, PreTemplateScriptBuildYaml::class.java)
-        // 检查Yaml语法的格式问题
-        ScriptYmlUtils.checkYaml(preTemplateYamlObject, yaml)
         // 替换yaml文件中的模板引用
         val preYamlObject = try {
             YamlTemplate(
@@ -254,8 +258,8 @@ class V2RequestTrigger @Autowired constructor(
                 originYaml = originYaml,
                 parsedYaml = null,
                 normalizedYaml = null,
-                reason = TriggerReason.GIT_CI_YAML_TEMPLATE_ERROR.name,
-                reasonDetail = message,
+                reason = TriggerReason.CI_YAML_TEMPLATE_ERROR.name,
+                reasonDetail = TriggerReason.CI_YAML_TEMPLATE_ERROR.detail.format(message),
                 gitProjectId = gitRequestEvent.gitProjectId
             )
             return null

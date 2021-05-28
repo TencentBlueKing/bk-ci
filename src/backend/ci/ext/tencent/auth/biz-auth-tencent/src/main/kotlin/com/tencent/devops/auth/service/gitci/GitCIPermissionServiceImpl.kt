@@ -20,6 +20,11 @@ class GitCIPermissionServiceImpl @Autowired constructor(
         .expireAfterWrite(24, TimeUnit.HOURS)
         .build<String/*userId*/, String>()
 
+    private val projectPublicCache = CacheBuilder.newBuilder()
+        .maximumSize(2000)
+        .expireAfterWrite(1, TimeUnit.HOURS)
+        .build<String/*project*/, String?>()
+
     // GitCI权限场景不会出现次调用, 故做默认实现
     override fun validateUserActionPermission(userId: String, action: String): Boolean {
         return true
@@ -40,6 +45,11 @@ class GitCIPermissionServiceImpl @Autowired constructor(
             }
         }
         logger.info("GitCICertPermissionServiceImpl user:$userId projectId: $projectCode")
+
+        // 若为开源项目,则鉴权全部放行
+        if (checkProjectPublic(projectCode)) {
+            return true
+        }
 
         val gitUserId = getGitUserByRtx(userId, projectCode)
         if (gitUserId.isNullOrEmpty()) {
@@ -86,9 +96,29 @@ class GitCIPermissionServiceImpl @Autowired constructor(
             gitCIUserCache.getIfPresent(rtxUserId)!!
         } else {
             val gitUserId = client.getScm(ServiceGitCiResource::class).getGitUserId(rtxUserId, projectCode).data
-            gitCIUserCache.put(rtxUserId, gitUserId)
+            if (gitUserId != null) {
+                gitCIUserCache.put(rtxUserId, gitUserId)
+            }
             gitUserId
         }
+    }
+
+    private fun checkProjectPublic(projectCode: String): Boolean {
+        if (!projectPublicCache.getIfPresent(projectCode).isNullOrEmpty()) {
+            return true
+        } else {
+            val gitProjectInfo = client.getScm(ServiceGitCiResource::class).getGitCodeProjectInfo(projectCode).data
+            if (gitProjectInfo != null) {
+                logger.info("project $projectCode visibilityLevel: ${gitProjectInfo?.visibilityLevel}")
+                if (gitProjectInfo.visibilityLevel != null && gitProjectInfo.visibilityLevel!! > 0) {
+                    projectPublicCache.put(projectCode, gitProjectInfo.visibilityLevel.toString())
+                    return true
+                }
+            } else {
+                logger.warn("project $projectCode get projectInfo is empty")
+            }
+        }
+        return false
     }
 
     private fun checkListOrViewAction(action: String): Boolean {

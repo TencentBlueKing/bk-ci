@@ -27,10 +27,8 @@
 
 package com.tencent.devops.gitci.v2.template
 
-import com.tencent.devops.common.api.util.YamlUtil
-import com.tencent.devops.common.ci.v2.PreTemplateScriptBuildYaml
-import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import org.junit.Test
+
 import org.springframework.core.io.ClassPathResource
 import java.io.BufferedReader
 import java.io.InputStream
@@ -38,11 +36,17 @@ import java.io.InputStreamReader
 
 class YamlTemplateTest {
 
-    // 综合测试
-    val testYaml = "pipelineWithTemplate.yml"
+    @Test
+    fun testAllTemplate() {
+        replace("all.yml")
+    }
 
     @Test
-    fun test() {
+    fun testExtendsTemplate() {
+        replace("extends.yml")
+    }
+
+    private fun replace(testYaml: String) {
         val classPathResource = ClassPathResource(testYaml)
         val inputStream: InputStream = classPathResource.inputStream
         val isReader = InputStreamReader(inputStream)
@@ -54,8 +58,8 @@ class YamlTemplateTest {
             sb.append(str).append("\n")
         }
 
-        val yaml = ScriptYmlUtils.formatYaml(sb.toString())
-        val preTemplateYamlObject = YamlUtil.getObjectMapper().readValue(yaml, PreTemplateScriptBuildYaml::class.java)
+//        val yaml = ScriptYmlUtils.formatYaml(sb.toString())
+//        val preTemplateYamlObject = YamlUtil.getObjectMapper().readValue(yaml, PreTemplateScriptBuildYaml::class.java)
 
 //        println(
 //            YamlCommonUtils.toYamlNotNull(
@@ -67,7 +71,8 @@ class YamlTemplateTest {
 //                    triggerToken = "",
 //                    triggerRef = "master",
 //                    repo = null,
-//                    repoTemplateGraph = TemplateGraph()
+//                    repoTemplateGraph = TemplateGraph(),
+//                    sourceProjectId = 580280
 //                ).replace()
 //            )
 //        )

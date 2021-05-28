@@ -58,5 +58,5 @@ enum class ErrorCodeEnum(
         2129012,
         "User Image illegal, not found or credential error"
     ),
-    GITCI_NOT_ENABLE_ERROR(ErrorType.USER, 419, "当前项目未开启工蜂CI")
+    GITCI_NOT_ENABLE_ERROR(ErrorType.USER, 419, "[%s]CI is not enabled")
 }

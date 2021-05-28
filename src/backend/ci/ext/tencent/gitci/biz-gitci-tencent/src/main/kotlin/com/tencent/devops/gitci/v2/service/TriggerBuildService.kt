@@ -122,15 +122,22 @@ import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
 import com.tencent.devops.process.pojo.classify.PipelineLabelCreate
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.setting.Subscription
+import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_EVENT_TYPE
+import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_SOURCE_BRANCH
+import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_SOURCE_URL
+import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_BRANCH
+import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.BK_CI_RUN
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
 
+@Suppress("ALL")
 @Service
 class TriggerBuildService @Autowired constructor(
     private val client: Client,
@@ -151,6 +158,10 @@ class TriggerBuildService @Autowired constructor(
     client, scmClient, dslContext, redisOperation, gitPipelineResourceDao,
     gitRequestEventBuildDao, gitRequestEventNotBuildDao, gitCIEventSaveService
 ) {
+
+    @Value("\${rtx.v2GitUrl:#{null}}")
+    private val v2GitUrl: String? = null
+
     private val channelCode = ChannelCode.GIT
 
     companion object {
@@ -280,7 +291,7 @@ class TriggerBuildService @Autowired constructor(
             params = params
         )
 
-        val stage1 = Stage(listOf(triggerContainer), "stage-1")
+        val stage1 = Stage(listOf(triggerContainer), id = "stage-0", name = "stage_0")
         stageList.add(stage1)
 
         // 其他的stage
@@ -399,6 +410,7 @@ class TriggerBuildService @Autowired constructor(
 
         return Stage(
             id = stage.id,
+            name = stage.name ?: "",
             tag = stage.label,
             fastKill = stage.fastKill,
             stageControlOption = stageControlOption,
@@ -439,7 +451,7 @@ class TriggerBuildService @Autowired constructor(
 
         val vmContainer = VMBuildContainer(
             jobId = job.id,
-            name = "Job_${jobIndex + 1} ${job.name ?: ""}",
+            name = job.name ?: "",
             elements = elementList,
             status = null,
             startEpoch = null,
@@ -477,24 +489,28 @@ class TriggerBuildService @Autowired constructor(
             return ThirdPartyAgentEnvDispatchType(
                 envName = job.runsOn.poolName,
                 workspace = "",
-                agentType = AgentType.ID
+                agentType = AgentType.NAME
             )
         }
 
         // 公共docker构建机
-        val containerPool = Pool(
-            container = job.runsOn.container.image,
-            credential = Credential(
-                user = job.runsOn.container.credentials?.username ?: "",
-                password = job.runsOn.container.credentials?.password ?: ""
-            ),
-            macOS = null,
-            third = null,
-            env = job.env,
-            buildType = BuildType.DOCKER_VM
-        )
+        if (job.runsOn.poolName == "docker") {
+            val containerPool = Pool(
+                container = job.runsOn.container.image,
+                credential = Credential(
+                    user = job.runsOn.container.credentials?.username ?: "",
+                    password = job.runsOn.container.credentials?.password ?: ""
+                ),
+                macOS = null,
+                third = null,
+                env = job.env,
+                buildType = BuildType.DOCKER_VM
+            )
 
-        return GitCIDispatchType(objectMapper.writeValueAsString(containerPool))
+            return GitCIDispatchType(objectMapper.writeValueAsString(containerPool))
+        }
+
+        throw CustomException(Response.Status.NOT_FOUND, "公共构建资源池不存在，请检查yml配置.")
     }
 
     private fun addNormalContainer(
@@ -508,7 +524,7 @@ class TriggerBuildService @Autowired constructor(
             NormalContainer(
                 containerId = null,
                 id = job.id,
-                name = "Job_${jobIndex + 1} ${job.name ?: ""}",
+                name = job.name ?: "",
                 elements = elementList,
                 status = null,
                 startEpoch = null,
@@ -612,7 +628,7 @@ class TriggerBuildService @Autowired constructor(
                     val data = mutableMapOf<String, Any>()
                     data["input"] = step.with ?: Any()
                     MarketBuildAtomElement(
-                        name = step.name ?: "插件市场第三方构建环境类插件",
+                        name = step.name ?: step.uses!!.split('@')[0],
                         id = step.id,
                         atomCode = step.uses!!.split('@')[0],
                         version = step.uses!!.split('@')[1],
@@ -718,7 +734,8 @@ class TriggerBuildService @Autowired constructor(
                     hookEventType = CodeEventType.MERGE_REQUEST.name,
                     hookSourceBranch = event.branch,
                     hookTargetBranch = event.targetBranch,
-                    hookSourceUrl = if (event.sourceGitProjectId != null && event.sourceGitProjectId != event.gitProjectId) {
+                    hookSourceUrl = if (event.sourceGitProjectId != null &&
+                        event.sourceGitProjectId != event.gitProjectId) {
                         gitEvent.object_attributes.source.http_url
                     } else {
                         gitBasicSetting.gitHttpUrl
@@ -764,12 +781,10 @@ class TriggerBuildService @Autowired constructor(
 
         // 通用参数
         startParams[CI_PIPELINE_NAME] = yaml.name ?: ""
-        startParams[CI_BUILD_URL] = "https://git-ci.woa.com/" // FIXME
+        startParams[CI_BUILD_URL] = v2GitUrl ?: ""
         startParams[BK_CI_RUN] = "true"
         startParams[CI_ACTOR] = event.userId
         startParams[CI_REPO] = GitCommonUtils.getRepoOwner(gitBasicSetting.gitHttpUrl) + "/" + gitBasicSetting.name
-        startParams[CI_REPO_NAME] = gitBasicSetting.name
-        startParams[CI_REPO_GROUP] = ""
         startParams[CI_EVENT] = event.event
         startParams[CI_EVENT_CONTENT] = JsonUtil.toJson(event)
         startParams[CI_COMMIT_MESSAGE] = event.commitMsg ?: ""
@@ -798,6 +813,11 @@ class TriggerBuildService @Autowired constructor(
             is GitMergeRequestEvent -> {
                 startParams[CI_HEAD_BRANCH] = originEvent.object_attributes.target_branch
                 startParams[CI_BASE_BRANCH] = originEvent.object_attributes.source_branch
+                startParams[PIPELINE_WEBHOOK_EVENT_TYPE] = CodeEventType.MERGE_REQUEST.name
+                startParams[PIPELINE_WEBHOOK_SOURCE_BRANCH] = originEvent.object_attributes.source_branch
+                startParams[PIPELINE_WEBHOOK_TARGET_BRANCH] = originEvent.object_attributes.target_branch
+                startParams[PIPELINE_WEBHOOK_SOURCE_URL] = originEvent.object_attributes.source.http_url
+                startParams[PIPELINE_WEBHOOK_TARGET_URL] = originEvent.object_attributes.target.http_url
                 GitUtils.getProjectName(originEvent.object_attributes.source.http_url)
             }
             else -> {
@@ -807,12 +827,19 @@ class TriggerBuildService @Autowired constructor(
 
         startParams[CI_REPO] = gitProjectName
         val repoName = gitProjectName.split("/")
-        startParams[CI_REPO_NAME] = if (repoName.size >= 2) {
-            gitProjectName.removePrefix(repoName[0] + "/")
+        val repoProjectName = if (repoName.size >= 2) {
+            val index = gitProjectName.lastIndexOf("/")
+            gitProjectName.substring(index + 1)
         } else {
             gitProjectName
         }
-        startParams[CI_REPO_GROUP] = repoName[0]
+        val repoGroupName = if (repoName.size >= 2) {
+            gitProjectName.removeSuffix("/$repoProjectName")
+        } else {
+            gitProjectName
+        }
+        startParams[CI_REPO_NAME] = repoProjectName
+        startParams[CI_REPO_GROUP] = repoGroupName
 
         // 用户自定义变量
         // startParams.putAll(yaml.variables ?: mapOf())

@@ -28,16 +28,19 @@
 package com.tencent.devops.gitci.client
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.gitci.pojo.GitRepositoryConf
 import com.tencent.devops.gitci.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
+import com.tencent.devops.gitci.utils.GitCIPipelineUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.CommitCheckRequest
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.Collections
 
@@ -45,6 +48,10 @@ import java.util.Collections
 class ScmClient @Autowired constructor(
     private val client: Client
 ) {
+
+    @Value("\${rtx.v2GitUrl:#{null}}")
+    private val v2GitUrl: String? = null
+
     // 用来进行展示状态的CommitCheck
     fun pushCommitCheck(
         commitId: String,
@@ -134,7 +141,8 @@ class ScmClient @Autowired constructor(
         userId: String,
         status: GitCICommitCheckState,
         context: String,
-        gitCIBasicSetting: GitCIBasicSetting
+        gitCIBasicSetting: GitCIBasicSetting,
+        pipelineId: String
     ) = try {
         val titleData = mutableListOf<String>()
         val resultMap = mutableMapOf<String, MutableList<List<String>>>()
@@ -151,7 +159,12 @@ class ScmClient @Autowired constructor(
             region = null,
             commitId = commitId,
             state = status.value,
-            targetUrl = gitCIBasicSetting.homepage + "/ci/pipelines#/build/" + buildId + "?buildNum=" + buildNum,
+            targetUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(
+                homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
+                projectName = getProjectName(gitCIBasicSetting),
+                pipelineId = pipelineId,
+                buildId = buildId
+            ),
             context = context,
             description = description,
             block = false,
@@ -217,6 +230,17 @@ class ScmClient @Autowired constructor(
             ""
         } else {
             buildHistoryList[0].buildNum.toString()
+        }
+    }
+
+    private fun getProjectName(conf: GitCIBasicSetting): String {
+        return try {
+            val names = conf.homepage.split("/")
+            val userName = names[names.lastIndex - 1]
+            val projectName = names.last()
+            "$userName/$projectName"
+        } catch (e: java.lang.Exception) {
+            conf.name
         }
     }
 

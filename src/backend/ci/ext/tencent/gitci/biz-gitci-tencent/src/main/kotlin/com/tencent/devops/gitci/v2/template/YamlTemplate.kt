@@ -44,6 +44,7 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.gitci.v2.template.pojo.NoReplaceTemplate
 import org.slf4j.LoggerFactory
 
+@Suppress("ALL")
 class YamlTemplate(
     // 发起者的库ID,用户名,分支
     val triggerProjectId: Long,
@@ -57,7 +58,7 @@ class YamlTemplate(
     val repoTemplateGraph: TemplateGraph<String>,
 
     // 当前文件
-    val filePath: String,
+    var filePath: String,
     // 文件对象
     var yamlObject: PreTemplateScriptBuildYaml?,
     // 当前库信息(发起库没有库信息)
@@ -91,14 +92,23 @@ class YamlTemplate(
         private const val MAX_TEMPLATE_DEEP = 5
 
         // 异常模板
-        const val TEMPLATE_ID_DUPLICATE = "%s 类型的模板存在ID %s 与被替换文件重复"
-        const val TRANS_AS_ERROR = "文件： %s 中关键字： %s 格式错误"
-        const val REPO_NOT_FOUND_ERROR = "文件： %s 中引用的远程仓库：%s 没有在Resource关键字中定义"
-        const val REPO_CYCLE_ERROR = "远程仓库： %s 和 %s 存在远程仓库的循环依赖"
-        const val TEMPLATE_CYCLE_ERROR = "模板文件： %s 在文件 %s 存在 %s 类型的循环依赖"
-        const val TEMPLATE_NUMB_BEYOND = "文件：%s 引用的模板总数超过每个文件最大引用限制： $MAX_TEMPLATE_NUMB"
-        const val TEMPLATE_DEEP_BEYOND = "文件：%s 引用的模板嵌套深度超过了最大嵌套限制： $MAX_TEMPLATE_DEEP"
-        const val TEMPLATE_FORMAT_ERROR = "模板文件格式错误： %s"
+        const val TEMPLATE_ID_DUPLICATE = "Format error: ID [%s] in template [%s] and template [%s] are duplicated"
+        const val TEMPLATE_ROOT_ID_DUPLICATE = "[%s] Format error: IDs [%s] are duplicated"
+        const val TRANS_AS_ERROR = "[%s]Keyword [%s] format error"
+        const val REPO_NOT_FOUND_ERROR =
+            "[%s]The referenced repository [%s] should first be declared by the resources keyword"
+        const val REPO_CYCLE_ERROR = "Repository: Cyclic dependency"
+        const val TEMPLATE_CYCLE_ERROR = "There is a [%s] circular dependency in template [%s] and template [%s]"
+        const val TEMPLATE_NUMB_BEYOND =
+            "[%s]The number of referenced template files exceeds the threshold [$MAX_TEMPLATE_NUMB] "
+        const val TEMPLATE_DEEP_BEYOND = "[%s]The template nesting depth exceeds the threshold [$MAX_TEMPLATE_DEEP]"
+        const val TEMPLATE_FORMAT_ERROR = "[%s]Template YAML does not meet the specification"
+        const val YAML_FORMAT_ERROR = "[%s] Format error: %s"
+        const val ATTR_MISSING_ERROR = "[%s]Required attributes [%s] are missing"
+        const val TEMPLATE_KEYWORDS_ERROR = "[%s]Template YAML does not meet the specification. " +
+            "The %s template can only contain parameters, resources and %s keywords"
+        const val EXTENDS_TEMPLATE_EXTENDS_ERROR = "[%s]The extends keyword cannot be nested"
+        const val EXTENDS_TEMPLATE_ON_ERROR = "[%s]Triggers are not supported in the template"
     }
 
     // 存储当前库的模板信息，减少重复获取 key: templatePath value： template
@@ -135,7 +145,6 @@ class YamlTemplate(
                 name = name,
                 label = label,
                 triggerOn = triggerOn,
-                extends = extends,
                 resources = resources,
                 notices = notices,
                 finally = finally
@@ -171,6 +180,8 @@ class YamlTemplate(
         val parameters = extend.parameters
         // 根据远程模板获取
         val templateObject = replaceResAndParam(TemplateType.EXTEND, toPath, parameters, filePath)
+        // 获取extends模板后filePath就为被替换的文件了
+        this.filePath = toPath
         // 需要替换模板的的递归替换
         if (templateObject[TemplateType.VARIABLE.content] != null) {
             replaceVariables(
@@ -218,9 +229,10 @@ class YamlTemplate(
                     variableMap.putAll(newVariable)
                 } else {
                     error(
-                        TEMPLATE_ID_DUPLICATE.format(
-                            TemplateType.VARIABLE.text,
-                            interSet.filter { it != TEMPLATE_KEY })
+                        TEMPLATE_ROOT_ID_DUPLICATE.format(
+                            filePath,
+                            interSet.filter { it != TEMPLATE_KEY }
+                        )
                     )
                 }
             } else {
@@ -258,7 +270,12 @@ class YamlTemplate(
                 if (interSet.isNullOrEmpty() || (interSet.size == 1 && interSet.last() == TEMPLATE_KEY)) {
                     jobMap.putAll(newJob)
                 } else {
-                    error(TEMPLATE_ID_DUPLICATE.format(TemplateType.JOB.text, interSet.filter { it != TEMPLATE_KEY }))
+                    error(
+                        TEMPLATE_ROOT_ID_DUPLICATE.format(
+                            filePath,
+                            interSet.filter { it != TEMPLATE_KEY }
+                        )
+                    )
                 }
             } else {
                 jobMap.putAll(newJob)
@@ -326,8 +343,10 @@ class YamlTemplate(
                     } else {
                         error(
                             TEMPLATE_ID_DUPLICATE.format(
-                                TemplateType.VARIABLE.text,
-                                interSet.filter { it != TEMPLATE_KEY })
+                                interSet.filter { it != TEMPLATE_KEY },
+                                filePath,
+                                toPath
+                            )
                         )
                     }
                 }
@@ -427,8 +446,10 @@ class YamlTemplate(
                     } else {
                         error(
                             TEMPLATE_ID_DUPLICATE.format(
-                                TemplateType.JOB.text,
-                                interSet.filter { it != TEMPLATE_KEY })
+                                interSet.filter { it != TEMPLATE_KEY },
+                                filePath,
+                                toPath
+                            )
                         )
                     }
                 }
@@ -538,7 +559,7 @@ class YamlTemplate(
         // 判断是否有库之间的循环依赖
         repoTemplateGraph.addEdge(repo?.name ?: filePath, toRepo.name)
         if (repoTemplateGraph.hasCyclic()) {
-            error(REPO_CYCLE_ERROR.format(toRepo, (repo?.name ?: filePath)))
+            error(REPO_CYCLE_ERROR)
         }
 
         val resYamlObject = YamlTemplate(
@@ -650,7 +671,7 @@ class YamlTemplate(
             },
             timeoutMinutes = YamlObjects.getNullValue("timeout-minutes", job)?.toInt(),
             env = if (job["env"] == null) {
-                emptyMap()
+                null
             } else {
                 transValue<Map<String, String>>(fromPath, "env", job["env"])
             },
@@ -672,11 +693,7 @@ class YamlTemplate(
         return PreStage(
             name = stage["name"]?.toString(),
             id = stage["id"]?.toString(),
-            label = if (stage["label"] == null) {
-                null
-            } else {
-                transValue<List<String>>(fromPath, "label", stage["label"])
-            },
+            label = stage["label"],
             ifField = stage["if"]?.toString(),
             fastKill = YamlObjects.getNullValue("fast-kill", stage)?.toBoolean(),
             jobs = if (stage["jobs"] == null) {
@@ -687,15 +704,16 @@ class YamlTemplate(
                 jobs.forEach { (key, value) ->
                     // 检查根文件处jobId重复
                     val newJob = replaceJobTemplate(mapOf(key to value), filePath)
-                    if (key == "template") {
+                    if (key == TEMPLATE_KEY) {
                         val interSet = newJob.keys intersect jobs.keys
-                        if (interSet.isNullOrEmpty() || (interSet.size == 1 && interSet.last() == "template")) {
+                        if (interSet.isNullOrEmpty() || (interSet.size == 1 && interSet.last() == TEMPLATE_KEY)) {
                             map.putAll(newJob)
                         } else {
                             error(
-                                TEMPLATE_ID_DUPLICATE.format(
-                                    TemplateType.JOB.text,
-                                    interSet.filter { it != TEMPLATE_KEY })
+                                TEMPLATE_ROOT_ID_DUPLICATE.format(
+                                    filePath,
+                                    interSet.filter { it != TEMPLATE_KEY }
+                                )
                             )
                         }
                     } else {

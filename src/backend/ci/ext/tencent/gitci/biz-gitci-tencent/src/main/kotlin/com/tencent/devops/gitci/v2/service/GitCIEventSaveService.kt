@@ -27,14 +27,16 @@
 
 package com.tencent.devops.gitci.v2.service
 
-import com.tencent.devops.common.api.util.JsonUtil
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.common.ci.OBJECT_KIND_TAG_PUSH
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.gitci.dao.GitRequestEventDao
 import com.tencent.devops.gitci.dao.GitRequestEventNotBuildDao
-import com.tencent.devops.gitci.pojo.v2.UserMessageType
+import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
+import com.tencent.devops.gitci.pojo.v2.message.UserMessageType
 import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.v2.dao.GitUserMessageDao
 import org.jooq.DSLContext
@@ -50,6 +52,7 @@ import org.springframework.stereotype.Service
 class GitCIEventSaveService @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
+    private val objectMapper: ObjectMapper,
     private val userMessageDao: GitUserMessageDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
     private val gitRequestEventDao: GitRequestEventDao
@@ -72,9 +75,8 @@ class GitCIEventSaveService @Autowired constructor(
         gitProjectId: Long
     ): Long {
         var messageId = -1L
-        val event = gitRequestEventDao.get(dslContext = dslContext, id = eventId)
+        val event = gitRequestEventDao.getWithEvent(dslContext = dslContext, id = eventId)
             ?: throw RuntimeException("can't find event $eventId")
-        val eventMap = JsonUtil.toMap(event.event)
         val messageTitle = when (event.objectKind) {
             OBJECT_KIND_MERGE_REQUEST -> {
                 val branch = GitCommonUtils.checkAndGetForkBranchName(
@@ -89,13 +91,18 @@ class GitCIEventSaveService @Autowired constructor(
                 "[${event.branch}] Manual Triggered by ${event.userId}"
             }
             OBJECT_KIND_TAG_PUSH -> {
-                "[${eventMap["create_from"]}] Tag [${event.branch}] pushed by ${event.userId}"
+                val eventMap = try {
+                    objectMapper.readValue<GitTagPushEvent>(event.event)
+                } catch (e: Exception) {
+                    logger.error("event as GitTagPushEvent error ${e.message}")
+                    null
+                }
+                "[${eventMap?.create_from}] Tag [${event.branch}] pushed by ${event.userId}"
             }
             else -> {
                 "[${event.branch}] Commit [${event.commitId.subSequence(0, 7)}] pushed by ${event.userId}"
             }
         }
-
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             messageId = gitRequestEventNotBuildDao.save(
@@ -111,9 +118,10 @@ class GitCIEventSaveService @Autowired constructor(
                 gitProjectId = gitProjectId
             )
             // eventId只用保存一次
-            if (!userMessageDao.getMessageExist(context, userId, event.id.toString())) {
+            if (!userMessageDao.getMessageExist(context, "git_$gitProjectId", userId, event.id.toString())) {
                 userMessageDao.save(
                     dslContext = context,
+                    projectId = "git_$gitProjectId",
                     userId = userId,
                     messageType = UserMessageType.REQUEST,
                     messageId = event.id.toString(),

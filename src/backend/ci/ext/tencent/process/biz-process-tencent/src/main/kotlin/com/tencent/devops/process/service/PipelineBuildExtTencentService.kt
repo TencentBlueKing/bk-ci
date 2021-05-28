@@ -34,7 +34,10 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineBuildExtService
+import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
+import com.tencent.devops.process.utils.PIPELINE_ID
 import com.tencent.devops.process.utils.PIPELINE_TURBO_TASK_ID
+import com.tencent.devops.process.utils.PROJECT_NAME
 import okhttp3.Request
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -59,10 +62,20 @@ class PipelineBuildExtTencentService @Autowired constructor(
         }
 
         extMap.putAll(pipelineContextService.buildContext(task.buildId, task.containerId, variable))
+        extMap["ci.build_url"] = getGitCiUrl(variable)
         return extMap
     }
 
     override fun endBuild(task: PipelineBuildTask) = Unit
+
+    fun getGitCiUrl(variable: Map<String, String>): String {
+        return if (variable["ci.build_url"] != null) {
+            "${variable["ci.build_url"]}/pipeline/${variable[PIPELINE_ID]}/detail/${variable[PIPELINE_BUILD_ID]}" +
+                "/#${variable[PROJECT_NAME]}"
+        } else {
+            ""
+        }
+    }
 
     fun getTurboTask(pipelineId: String, elementId: String): String {
         try {
