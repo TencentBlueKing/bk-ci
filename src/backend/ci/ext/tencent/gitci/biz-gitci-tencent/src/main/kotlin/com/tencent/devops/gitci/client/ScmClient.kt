@@ -28,11 +28,13 @@
 package com.tencent.devops.gitci.client
 
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.gitci.pojo.GitRepositoryConf
 import com.tencent.devops.gitci.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
+import com.tencent.devops.gitci.utils.GitCIPipelineUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.CommitCheckRequest
@@ -157,8 +159,12 @@ class ScmClient @Autowired constructor(
             region = null,
             commitId = commitId,
             state = status.value,
-            targetUrl =
-            "$v2GitUrl/pipeline/$pipelineId/detail/$buildId/$buildNum/#${getProjectName(gitCIBasicSetting)}",
+            targetUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(
+                homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
+                projectName = getProjectName(gitCIBasicSetting),
+                pipelineId = pipelineId,
+                buildId = buildId
+            ),
             context = context,
             description = description,
             block = false,

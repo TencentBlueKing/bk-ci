@@ -813,7 +813,12 @@ class GitCIBuildFinishListener @Autowired constructor(
                 request +
                 costTime +
                 "[View it on  工蜂内网版]" +
-                "($v2GitUrl/pipeline/$pipelineId/detail/${build.id}/${build.buildNum}/#$projectName)"
+                "(${GitCIPipelineUtils.genGitCIV2BuildUrl(
+                    homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
+                    projectName = projectName,
+                    pipelineId = pipelineId,
+                    buildId = build.id
+                )})"
     }
 
     // 使用启动参数替换接收人
