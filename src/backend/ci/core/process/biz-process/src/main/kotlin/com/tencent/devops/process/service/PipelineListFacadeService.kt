@@ -1033,7 +1033,8 @@ class PipelineListFacadeService @Autowired constructor(
                     pipelineDesc = it.pipelineDesc,
                     taskCount = it.taskCount,
                     isDelete = it.delete,
-                    instanceFromTemplate = templatePipelineIds.contains(it.pipelineId)
+                    instanceFromTemplate = templatePipelineIds.contains(it.pipelineId),
+                    id = it.id
                 )
             }
         } finally {

@@ -45,5 +45,7 @@ data class SimplePipeline(
     @ApiModelProperty("是否被删除了", required = false)
     val isDelete: Boolean,
     @ApiModelProperty("是否模板实例化的流水线", required = true)
-    val instanceFromTemplate: Boolean
+    val instanceFromTemplate: Boolean,
+    @ApiModelProperty("自增id", required = true)
+    val id: Long?
 )
