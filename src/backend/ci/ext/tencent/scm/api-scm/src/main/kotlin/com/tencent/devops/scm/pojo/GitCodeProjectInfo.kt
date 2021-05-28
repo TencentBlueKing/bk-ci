@@ -115,166 +115,62 @@ import io.swagger.annotations.ApiModel
 @ApiModel("工蜂项目详细信息")
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GitCodeProjectInfo(
-    @JsonProperty("approver_rule")
-    val approverRule: Int?,
+    @JsonProperty("id")
+    val id: Long?,
+    @JsonProperty("public")
+    val public: Boolean?,
     @JsonProperty("archived")
     val archived: Boolean?,
-    @JsonProperty("auto_create_review_after_push")
-    val autoCreateReviewAfterPush: Boolean?,
-    @JsonProperty("avatar_url")
-    val avatarUrl: String?,
-    @JsonProperty("can_approve_by_creator")
-    val canApproveByCreator: Boolean?,
-    @JsonProperty("config_storage")
-    val configStorage: ConfigStorage?,
-    @JsonProperty("created_at")
-    val createdAt: String?,
-    @JsonProperty("creator_id")
-    val creatorId: Int?,
-    @JsonProperty("default_branch")
-    val defaultBranch: String?,
-    @JsonProperty("description")
-    val description: Any?,
-    @JsonProperty("file_owner_path_rules")
-    val fileOwnerPathRules: String?,
-    @JsonProperty("fork_enabled")
-    val forkEnabled: Boolean?,
-    @JsonProperty("forked_from_project")
-    val forkedFromProject: String?,
-    @JsonProperty("forks_count")
-    val forksCount: Int?,
-    @JsonProperty("http_url_to_repo")
-    val httpUrlToRepo: String?,
-    @JsonProperty("https_url_to_repo")
-    val httpsUrlToRepo: String?,
-    @JsonProperty("id")
-    val id: Int?,
-    @JsonProperty("issues_enabled")
-    val issuesEnabled: Boolean?,
-    @JsonProperty("last_activity_at")
-    val lastActivityAt: String?,
-    @JsonProperty("merge_request_template")
-    val mergeRequestTemplate: Any?,
-    @JsonProperty("merge_requests_enabled")
-    val mergeRequestsEnabled: Boolean?,
+    @JsonProperty("visibility_level")
+    val visibilityLevel: Long?,
+    @JsonProperty("public_visibility")
+    val publicVisibility: Long?,
     @JsonProperty("name")
     val name: String?,
     @JsonProperty("name_with_namespace")
     val nameWithNamespace: String?,
-    @JsonProperty("namespace")
-    val namespace: Namespace?,
-    @JsonProperty("necessary_approver_rule")
-    val necessaryApproverRule: Int?,
-    @JsonProperty("necessary_reviewers")
-    val necessaryReviewers: List<Any>?,
-    @JsonProperty("owner")
-    val owner: Owner?,
     @JsonProperty("path")
     val path: String?,
-    @JsonProperty("path_reviewer_rules")
-    val pathReviewerRules: String?,
     @JsonProperty("path_with_namespace")
     val pathWithNamespace: String?,
-    @JsonProperty("public")
-    val public: Boolean?,
-    @JsonProperty("public_visibility")
-    val publicVisibility: Int?,
-    @JsonProperty("push_reset_enabled")
-    val pushResetEnabled: Boolean?,
-    @JsonProperty("review_enabled")
-    val reviewEnabled: Boolean?,
-    @JsonProperty("snippets_enabled")
-    val snippetsEnabled: Boolean?,
+    @JsonProperty("default_branch")
+    val defaultBranch: String?,
     @JsonProperty("ssh_url_to_repo")
     val sshUrlToRepo: String?,
-    @JsonProperty("stars_count")
-    val starsCount: Int?,
-    @JsonProperty("statistics")
-    val statistics: Statistics?,
-    @JsonProperty("suggestion_reviewers")
-    val suggestionReviewers: List<SuggestionReviewers?>?,
-    @JsonProperty("tag_create_push_level")
-    val tagCreatePushLevel: Int?,
-    @JsonProperty("tag_list")
-    val tagList: List<Any>?,
-    @JsonProperty("tag_name_regex")
-    val tagNameRegex: Any?,
-    @JsonProperty("visibility_level")
-    val visibilityLevel: Int?,
-    @JsonProperty("watchs_count")
-    val watchsCount: Int?,
+    @JsonProperty("http_url_to_repo")
+    val httpUrlToRepo: String?,
+    @JsonProperty("https_url_to_repo")
+    val httpsUrlToRepo: String?,
     @JsonProperty("web_url")
     val webUrl: String?,
+    @JsonProperty("issues_enabled")
+    val issuesEnabled: Boolean?,
+    @JsonProperty("merge_requests_enabled")
+    val mergeRequestsEnabled: Boolean?,
     @JsonProperty("wiki_enabled")
-    val wikiEnabled: Boolean?
-)
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class SuggestionReviewers(
-    @JsonProperty("avatar_url")
-    val avatarUrl: String?,
-    @JsonProperty("id")
-    val id: Int?,
-    @JsonProperty("name")
-    val name: String?,
-    @JsonProperty("state")
-    val state: String?,
-    @JsonProperty("username")
-    val username: String?,
-    @JsonProperty("web_url")
-    val webUrl: String?
-)
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class Statistics(
-    @JsonProperty("commit_count")
-    val commitCount: Int?,
-    @JsonProperty("repository_size")
-    val repositorySize: Int?
-)
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class Owner(
-    @JsonProperty("avatar_url")
-    val avatarUrl: String?,
-    @JsonProperty("id")
-    val id: Int?,
-    @JsonProperty("name")
-    val name: String?,
-    @JsonProperty("state")
-    val state: String?,
-    @JsonProperty("username")
-    val username: String?,
-    @JsonProperty("web_url")
-    val webUrl: String?
-)
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class Namespace(
+    val wikiEnabled: Boolean?,
+    @JsonProperty("snippets_enabled")
+    val snippetsEnabled: Boolean?,
+    @JsonProperty("review_enabled")
+    val reviewEnabled: Boolean?,
+    @JsonProperty("fork_enabled")
+    val forkEnabled: Boolean?,
+    @JsonProperty("tag_create_push_level")
+    val tagCreatePushLevel: Long?,
     @JsonProperty("created_at")
     val createdAt: String?,
-    @JsonProperty("description")
-    val description: String?,
-    @JsonProperty("id")
-    val id: Int?,
-    @JsonProperty("name")
-    val name: String?,
-    @JsonProperty("owner_id")
-    val ownerId: Int?,
-    @JsonProperty("path")
-    val path: String?,
-    @JsonProperty("updated_at")
-    val updatedAt: String?
-)
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class ConfigStorage(
-    @JsonProperty("limit_file_size")
-    val limitFileSize: Int?,
-    @JsonProperty("limit_lfs_file_size")
-    val limitLfsFileSize: Int?,
-    @JsonProperty("limit_lfs_size")
-    val limitLfsSize: Int?,
-    @JsonProperty("limit_size")
-    val limitSize: Int?
+    @JsonProperty("last_activity_at")
+    val lastActivityAt: String?,
+    @JsonProperty("creator_id")
+    val creatorId: Long?,
+    @JsonProperty("avatar_url")
+    val avatarUrl: String?,
+    @JsonProperty("watchs_count")
+    val watchsCount: Long?,
+    @JsonProperty("stars_count")
+    val starsCount: Long?,
+    @JsonProperty("forks_count")
+    val forksCount: Long?,
+    @JsonProperty("push_reset_enabled")
+    val pushResetEnabled: Boolean?
 )
