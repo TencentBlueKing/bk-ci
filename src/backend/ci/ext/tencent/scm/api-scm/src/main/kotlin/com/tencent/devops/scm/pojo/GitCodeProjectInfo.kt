@@ -192,7 +192,7 @@ data class GitCodeProjectInfo(
     @JsonProperty("statistics")
     val statistics: Statistics?,
     @JsonProperty("suggestion_reviewers")
-    val suggestionReviewers: SuggestionReviewers?,
+    val suggestionReviewers: List<SuggestionReviewers?>?,
     @JsonProperty("tag_create_push_level")
     val tagCreatePushLevel: Int?,
     @JsonProperty("tag_list")
