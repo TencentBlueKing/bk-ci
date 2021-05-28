@@ -30,6 +30,8 @@ package com.tencent.devops.environment.permission.impl
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.code.AuthServiceCode
+import com.tencent.devops.common.auth.code.EnvironmentAuthServiceCode
 import com.tencent.devops.common.auth.utils.GitCIUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.environment.dao.EnvDao
@@ -149,7 +151,7 @@ class GitCIEnvironmentPermissionServiceImpl @Autowired constructor(
         val gitProjectId = GitCIUtils.getGitCiProjectId(projectId)
         logger.info("GitCIEnvironmentPermission user:$userId projectId: $projectId gitProject: $gitProjectId")
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
-            userId, "", gitProjectId, null).data ?: false
+            userId, "", gitProjectId, "").data ?: false
     }
 
     // 拿到的数据统一为加密后的id

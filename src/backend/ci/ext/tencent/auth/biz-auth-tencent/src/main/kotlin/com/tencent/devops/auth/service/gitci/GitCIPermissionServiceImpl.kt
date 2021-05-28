@@ -4,6 +4,7 @@ import com.google.common.cache.CacheBuilder
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.scm.api.ServiceGitCiResource
@@ -14,22 +15,22 @@ import java.util.concurrent.TimeUnit
 class GitCIPermissionServiceImpl @Autowired constructor(
     val client: Client
 ) : PermissionService {
-
+    
     private val gitCIUserCache = CacheBuilder.newBuilder()
         .maximumSize(2000)
         .expireAfterWrite(24, TimeUnit.HOURS)
         .build<String/*userId*/, String>()
-
+    
     private val projectPublicCache = CacheBuilder.newBuilder()
         .maximumSize(2000)
         .expireAfterWrite(1, TimeUnit.HOURS)
         .build<String/*project*/, String?>()
-
+    
     // GitCI权限场景不会出现次调用, 故做默认实现
     override fun validateUserActionPermission(userId: String, action: String): Boolean {
         return true
     }
-
+    
     override fun validateUserResourcePermission(
         userId: String,
         action: String,
@@ -45,21 +46,24 @@ class GitCIPermissionServiceImpl @Autowired constructor(
             }
         }
         logger.info("GitCICertPermissionServiceImpl user:$userId projectId: $projectCode")
-
-        // 若为开源项目,则鉴权全部放行
+        
+        // 判断是否为开源项目
         if (checkProjectPublic(projectCode)) {
-            return true
+            // 若为pipeline 且action为list 校验成功
+            if (checkExtAction(action, resourceType)) {
+                return true
+            }
         }
-
+        
         val gitUserId = getGitUserByRtx(userId, projectCode)
         if (gitUserId.isNullOrEmpty()) {
             logger.warn("$userId is not gitCI user")
             return false
         }
-
+        
         return client.getScm(ServiceGitCiResource::class).checkUserGitAuth(gitUserId, projectCode).data ?: false
     }
-
+    
     override fun validateUserResourcePermissionByRelation(
         userId: String,
         action: String,
@@ -70,7 +74,7 @@ class GitCIPermissionServiceImpl @Autowired constructor(
     ): Boolean {
         return validateUserResourcePermission(userId, action, projectCode, resourceCode)
     }
-
+    
     // GitCI权限场景不会出现次调用, 故做默认实现
     override fun getUserResourceByAction(
         userId: String,
@@ -80,7 +84,7 @@ class GitCIPermissionServiceImpl @Autowired constructor(
     ): List<String> {
         return emptyList()
     }
-
+    
     // GitCI权限场景不会出现次调用, 故做默认实现
     override fun getUserResourcesByActions(
         userId: String,
@@ -90,7 +94,7 @@ class GitCIPermissionServiceImpl @Autowired constructor(
     ): Map<AuthPermission, List<String>> {
         return emptyMap()
     }
-
+    
     private fun getGitUserByRtx(rtxUserId: String, projectCode: String): String? {
         return if (!gitCIUserCache.getIfPresent(rtxUserId).isNullOrEmpty()) {
             gitCIUserCache.getIfPresent(rtxUserId)!!
@@ -102,7 +106,7 @@ class GitCIPermissionServiceImpl @Autowired constructor(
             gitUserId
         }
     }
-
+    
     private fun checkProjectPublic(projectCode: String): Boolean {
         if (!projectPublicCache.getIfPresent(projectCode).isNullOrEmpty()) {
             return true
@@ -120,14 +124,25 @@ class GitCIPermissionServiceImpl @Autowired constructor(
         }
         return false
     }
-
+    
     private fun checkListOrViewAction(action: String): Boolean {
         if (action.contains(AuthPermission.LIST.value) || action.contains(AuthPermission.VIEW.value)) {
             return true
         }
         return false
     }
-
+    
+    private fun checkExtAction(action: String?, resourceCode: String?): Boolean {
+        if (action.isNullOrEmpty() || resourceCode.isNullOrEmpty()) {
+            return false
+        }
+        if ((action == AuthPermission.VIEW.value || action == AuthPermission.LIST.value) &&
+            resourceCode == AuthResourceType.PIPELINE_DEFAULT.value) {
+            return true
+        }
+        return false
+    }
+    
     companion object {
         val logger = LoggerFactory.getLogger(GitCIPermissionServiceImpl::class.java)
     }
