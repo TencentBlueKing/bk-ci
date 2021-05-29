@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.archive.element.ReportArchiveElement
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
@@ -46,6 +47,7 @@ import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
 import com.tencent.devops.store.pojo.common.enums.BuildHostTypeEnum
 import com.tencent.devops.worker.common.JAVA_PATH_ENV
 import com.tencent.devops.worker.common.PIPELINE_SCRIPT_ATOM_CODE
+import com.tencent.devops.worker.common.WORKSPACE_CONTEXT
 import com.tencent.devops.worker.common.WORKSPACE_ENV
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
@@ -148,7 +150,12 @@ open class MarketAtomTask : ITask() {
             inputMap?.forEach { (name, value) ->
                 // 只有构建环境下运行的插件才有workspace变量
                 if (buildTask.containerType == VMBuildContainer.classType) {
-                    atomParams[name] = EnvUtils.parseEnv(JsonUtil.toJson(value), systemVariables)
+                    atomParams[name] = EnvUtils.parseEnv(
+                        command = JsonUtil.toJson(value),
+                        data = systemVariables,
+                        contextMap = contextMap(buildTask).plus(
+                            mapOf(WORKSPACE_CONTEXT to workspace.absolutePath))
+                    )
                 } else {
                     atomParams[name] = JsonUtil.toJson(value)
                 }
@@ -508,6 +515,9 @@ open class MarketAtomTask : ITask() {
                     "report" -> env[key] = archiveReport(buildTask, output, buildVariables, bkWorkspace)
                     "artifact" -> env[key] = archiveArtifact(output, bkWorkspace, buildVariables)
                 }
+
+                env["steps.${buildTask.elementId ?: ""}.outputs.$key"] = env[key] ?: ""
+
                 TaskUtil.removeTaskId()
                 if (outputTemplate.containsKey(varKey)) {
                     val outPutDefine = outputTemplate[varKey]
@@ -698,6 +708,14 @@ open class MarketAtomTask : ITask() {
     }
 
     private fun getJavaFile() = File(System.getProperty("java.home"), "/bin/java")
+
+    private fun contextMap(buildTask: BuildTask): Map<String, String> {
+        return mapOf(
+            "steps.${buildTask.elementId}.name" to (buildTask.elementName ?: ""),
+            "steps.${buildTask.elementId}.id" to (buildTask.elementId ?: ""),
+            "steps.${buildTask.elementId}.status" to BuildStatus.RUNNING.name
+        )
+    }
 
     companion object {
         private const val DIR_ENV = "bk_data_dir"
