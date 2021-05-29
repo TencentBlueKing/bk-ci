@@ -187,7 +187,8 @@ class PipelineBuildService(
         val pipelineId = readyToBuildPipelineInfo.pipelineId
         var acquire = false
         val projectId = readyToBuildPipelineInfo.projectId
-        val bucketSize = pipelineRepositoryService.getSetting(pipelineId)!!.maxConRunningQueueSize
+        val pipelineSetting = pipelineRepositoryService.getSetting(pipelineId)
+        val bucketSize = pipelineSetting!!.maxConRunningQueueSize
         val lockKey = "PipelineRateLimit:$pipelineId"
         try {
             if (frequencyLimit && channelCode !in NO_LIMIT_CHANNEL) {
@@ -266,7 +267,8 @@ class PipelineBuildService(
                 pipelineInfo = readyToBuildPipelineInfo,
                 fullModel = model,
                 startParamsWithType = paramsWithType,
-                buildNo = buildNo
+                buildNo = buildNo,
+                buildNumRule = pipelineSetting.buildNumRule
             )
 
             // 重写启动参数，若为插件重试此处将写入启动参数的最新数值

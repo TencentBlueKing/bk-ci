@@ -17,7 +17,6 @@ public class CodeFileUrlVO
     @ApiModelProperty(value = "流名称", required = true)
     private String streamName;
 
-    @NotEmpty(message = "工具名称不能为空")
     @ApiModelProperty(value = "工具名称", required = true)
     private String toolName;
 

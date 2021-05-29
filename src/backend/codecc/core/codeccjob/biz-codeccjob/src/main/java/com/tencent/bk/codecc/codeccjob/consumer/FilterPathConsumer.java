@@ -26,12 +26,14 @@
 
 package com.tencent.bk.codecc.codeccjob.consumer;
 
+import com.tencent.bk.codecc.codeccjob.service.TaskPersonalStatisticService;
 import com.tencent.bk.codecc.task.vo.FilterPathInputVO;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.service.BizServiceFactory;
 import com.tencent.devops.common.service.IBizService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
@@ -39,9 +41,16 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
-import static com.tencent.devops.common.web.mq.ConstantsKt.*;
+import static com.tencent.devops.common.web.mq.ConstantsKt.EXCHANGE_TASK_FILTER_PATH;
+import static com.tencent.devops.common.web.mq.ConstantsKt.QUEUE_ADD_TASK_FILTER_PATH;
+import static com.tencent.devops.common.web.mq.ConstantsKt.QUEUE_DEL_TASK_FILTER_PATH;
+import static com.tencent.devops.common.web.mq.ConstantsKt.ROUTE_ADD_TASK_FILTER_PATH;
+import static com.tencent.devops.common.web.mq.ConstantsKt.ROUTE_DEL_TASK_FILTER_PATH;
 
 /**
  * 路径屏蔽消费者
@@ -51,10 +60,12 @@ import static com.tencent.devops.common.web.mq.ConstantsKt.*;
  */
 @Component
 @Slf4j
-public class FilterPathConsumer
-{
+public class FilterPathConsumer {
     @Autowired
     private BizServiceFactory<IBizService> bizServiceFactory;
+
+    @Autowired
+    private TaskPersonalStatisticService taskPersonalStatisticService;
 
     /**
      * 刪除屏蔽路徑
@@ -64,17 +75,13 @@ public class FilterPathConsumer
     @RabbitListener(bindings = @QueueBinding(key = ROUTE_DEL_TASK_FILTER_PATH,
             value = @Queue(value = QUEUE_DEL_TASK_FILTER_PATH, durable = "true"),
             exchange = @Exchange(value = EXCHANGE_TASK_FILTER_PATH, durable = "true", delayed = "true", type = "topic")))
-    public void delFilterPathMessage(FilterPathInputVO filterPathInput)
-    {
+    public void delFilterPathMessage(FilterPathInputVO filterPathInput) {
         log.info("delete path ignore: {}", filterPathInput);
         // status設置成NEW
         filterPathInput.setAddFile(Boolean.FALSE);
-        try
-        {
+        try {
             doFilterPathMessage(filterPathInput);
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             log.error("delFilterPath exception. \n{}", filterPathInput, e);
         }
     }
@@ -87,94 +94,76 @@ public class FilterPathConsumer
     @RabbitListener(bindings = @QueueBinding(key = ROUTE_ADD_TASK_FILTER_PATH,
             value = @Queue(value = QUEUE_ADD_TASK_FILTER_PATH, durable = "true"),
             exchange = @Exchange(value = EXCHANGE_TASK_FILTER_PATH, durable = "true", delayed = "true", type = "topic")))
-    public void addFilterPathMessage(FilterPathInputVO filterPathInput)
-    {
+    public void addFilterPathMessage(FilterPathInputVO filterPathInput) {
         log.info("add path ignore: {}", filterPathInput);
         // status設置成EXCLUDED
         filterPathInput.setAddFile(Boolean.TRUE);
-        try
-        {
+        try {
             doFilterPathMessage(filterPathInput);
-        }
-        catch (Exception e)
-        {
+        } catch (Exception e) {
             log.error("addFilterPath exception. \n{}", filterPathInput, e);
         }
     }
 
+    private void doFilterPathMessage(FilterPathInputVO filterPathInputVO) {
+        if (Objects.nonNull(filterPathInputVO) && Objects.nonNull(filterPathInputVO.getAddFile())) {
+            List<String> tools = filterPathInputVO.getEffectiveTools();
 
-    private void doFilterPathMessage(FilterPathInputVO filterPathInputVO)
-    {
-        if (Objects.nonNull(filterPathInputVO) && Objects.nonNull(filterPathInputVO.getAddFile()))
-        {
-            Set<String> ignoredPaths = new HashSet<>();
-            // 屏蔽默认路径
-            if (ComConstants.PATH_TYPE_DEFAULT.equalsIgnoreCase(filterPathInputVO.getPathType()))
-            {
-                ignoredPaths.addAll(filterPathInputVO.getDefaultFilterPath());
-            }
-            else
-            {
-                List<String> fileDir = filterPathInputVO.getFilterDir();
-                List<String> filterFile = filterPathInputVO.getFilterFile();
-                List<String> customPath = filterPathInputVO.getCustomPath();
-
-                // 手工输入路径
-                if (!CollectionUtils.isEmpty(customPath))
-                {
-                    ignoredPaths.addAll(customPath);
-                }
-                // 选择屏蔽文件
-                if (!CollectionUtils.isEmpty(filterFile))
-                {
-                    ignoredPaths.addAll(filterFile);
-                }
-                // 选择屏蔽文件夹
-                if (!CollectionUtils.isEmpty(fileDir))
-                {
-                    ignoredPaths.addAll(fileDir);
-                }
-                // code.yml屏蔽路径
-                if (!CollectionUtils.isEmpty(filterPathInputVO.getTestSourceFilterPath()))
-                {
-                    ignoredPaths.addAll(filterPathInputVO.getTestSourceFilterPath());
-                }
-                if (!CollectionUtils.isEmpty(filterPathInputVO.getAutoGenFilterPath()))
-                {
-                    ignoredPaths.addAll(filterPathInputVO.getAutoGenFilterPath());
-                }
-                if (!CollectionUtils.isEmpty(filterPathInputVO.getThirdPartyFilterPath()))
-                {
-                    ignoredPaths.addAll(filterPathInputVO.getThirdPartyFilterPath());
-                }
-            }
-
-            if (CollectionUtils.isEmpty(ignoredPaths))
-            {
+            Set<String> ignoredPaths = getFilterPaths(filterPathInputVO);
+            if (CollectionUtils.isEmpty(ignoredPaths)) {
                 log.debug("IgnoredPaths list is empty!");
                 return;
             }
 
             filterPathInputVO.setFilterPaths(ignoredPaths);
 
-            List<String> tools = filterPathInputVO.getEffectiveTools();
             // 工具维度的所有类型告警数据都需要更新
-            tools.forEach(toolName ->
-                    {
-                        log.info("begin filter path for: {}", toolName);
-                        filterPathInputVO.setToolName(toolName);
-                        IBizService bizService = bizServiceFactory
-                                .createBizService(toolName, ComConstants.BusinessType.FILTER_PATH.value(), IBizService.class);
-                        bizService.processBiz(filterPathInputVO);
-                        log.info("end filter path for: {}", toolName);
-                    }
-            );
+            tools.forEach(toolName -> {
+                log.info("begin filter path for: {}", toolName);
+                filterPathInputVO.setToolName(toolName);
+                IBizService bizService = bizServiceFactory
+                        .createBizService(toolName, ComConstants.BusinessType.FILTER_PATH.value(), IBizService.class);
+                bizService.processBiz(filterPathInputVO);
+                log.info("end filter path for: {}", toolName);
+            });
+
+            // update overview data
+            taskPersonalStatisticService.refresh(filterPathInputVO.getTaskId(), "from FilterPathConsumer doFilterPathMessage");
         }
     }
 
-    private void doDefectPath(FilterPathInputVO filterPathInput, Set<String> ignoredPaths)
-    {
+    @NotNull
+    private Set<String> getFilterPaths(FilterPathInputVO filterPathInputVO) {
+        Set<String> ignoredPaths = new HashSet<>();
+        // 屏蔽默认路径
+        if (ComConstants.PATH_TYPE_DEFAULT.equalsIgnoreCase(filterPathInputVO.getPathType())) {
+            ignoredPaths.addAll(filterPathInputVO.getDefaultFilterPath());
+        } else if (ComConstants.PATH_TYPE_CODE_YML.equalsIgnoreCase(filterPathInputVO.getPathType())) {
+            // code.yml屏蔽路径
+            if (CollectionUtils.isNotEmpty(filterPathInputVO.getAutoGenFilterPath())) {
+                ignoredPaths.addAll(filterPathInputVO.getAutoGenFilterPath());
+            }
+            if (CollectionUtils.isNotEmpty(filterPathInputVO.getThirdPartyFilterPath())) {
+                ignoredPaths.addAll(filterPathInputVO.getThirdPartyFilterPath());
+            }
+            if (CollectionUtils.isNotEmpty(filterPathInputVO.getTestSourceFilterPath())) {
+                ignoredPaths.addAll(filterPathInputVO.getTestSourceFilterPath());
+            }
+        } else {
+            // 手工输入路径
+            if (CollectionUtils.isNotEmpty(filterPathInputVO.getCustomPath())) {
+                ignoredPaths.addAll(filterPathInputVO.getCustomPath());
+            }
+            // 选择屏蔽文件
+            if (CollectionUtils.isNotEmpty(filterPathInputVO.getFilterFile())) {
+                ignoredPaths.addAll(filterPathInputVO.getFilterFile());
+            }
+            // 选择屏蔽文件夹
+            if (CollectionUtils.isNotEmpty(filterPathInputVO.getFilterDir())) {
+                ignoredPaths.addAll(filterPathInputVO.getFilterDir());
+            }
+        }
 
+        return ignoredPaths;
     }
-
 }

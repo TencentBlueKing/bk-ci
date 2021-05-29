@@ -65,7 +65,7 @@ class MetadataDao {
             )
                 .returning(ID)
                 .fetchOne()
-            return record.id
+            return record!!.id
         }
     }
 

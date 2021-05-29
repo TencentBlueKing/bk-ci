@@ -29,6 +29,11 @@ import java.util.List;
 @Component
 public interface GongfengPublicProjRepository extends MongoRepository<GongfengPublicProjEntity, String>
 {
+    /**
+     * 通过id查询工蜂开源项目信息
+     * @param id
+     * @return
+     */
     GongfengPublicProjEntity findById(Integer id);
 
 
@@ -45,4 +50,9 @@ public interface GongfengPublicProjRepository extends MongoRepository<GongfengPu
      * @param id
      */
     void deleteByIdIs(Integer id);
+
+    /**
+     * 判断指定工蜂ID的记录是否存在
+     */
+    Boolean existsById(Integer id);
 }

@@ -747,7 +747,9 @@ class PipelineRepositoryService constructor(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                channelCode = channelCode),
+                channelCode = channelCode,
+                delete = delete
+            ),
             templateId = templateId
         )
     }
@@ -1010,7 +1012,8 @@ class PipelineRepositoryService constructor(
                 waitQueueTimeMinute = DateTimeUtil.secondToMinute(t.waitQueueTimeSecond ?: 600000),
                 maxQueueSize = t.maxQueueSize,
                 maxPipelineResNum = t.maxPipelineResNum,
-                maxConRunningQueueSize = t.maxConRunningQueueSize
+                maxConRunningQueueSize = t.maxConRunningQueueSize,
+                buildNumRule = t.buildNumRule
             )
         } else null
     }

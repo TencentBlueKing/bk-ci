@@ -27,7 +27,7 @@
 package com.tencent.bk.codecc.defect.api;
 
 import com.tencent.bk.codecc.defect.vo.common.CommonDataReportRspVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -35,7 +35,7 @@ import io.swagger.annotations.ApiParam;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 
-import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.CODECC_AUTH_HEADER_DEVOPS_TASK_ID;
+import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_TASK_ID;
 
 /**
  * 数据报表服务
@@ -53,9 +53,9 @@ public interface UserReportRestResource
     @ApiOperation("数据报表")
     @Path("/toolName/{toolName}")
     @GET
-    CodeCCResult<CommonDataReportRspVO> dataReport(
+    Result<CommonDataReportRspVO> dataReport(
             @ApiParam("任务Id")
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_TASK_ID)
+            @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
                     Long taskId,
             @ApiParam("工具名称")
             @PathParam("toolName")

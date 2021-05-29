@@ -67,5 +67,16 @@ data class BuildFormProperty(
     var placeholder: String? = null,
     // 区分构建信息、构建版本和流水线参数
     @ApiModelProperty("元素模块", required = false)
-    var propertyType: String? = null
+    var propertyType: String? = null,
+
+    @ApiModelProperty("搜索url, 当是下拉框选项时，列表值从url获取不再从option获取", required = false)
+    var searchUrl: String? = null,
+    /**
+     * 替换搜索url中的搜素关键字
+     *
+     * 如searchUrl是aaa/bbb?search={key}, replaceKey的值是{key},则前端在搜索的时候会把{key}替换成用户输入的值.
+     * 假设用户输入aaa，那么前端请求就是aaa/bbb?search=aaa
+     */
+    @ApiModelProperty("替换搜索url中的搜素关键字", required = false)
+    var replaceKey: String? = null
 )

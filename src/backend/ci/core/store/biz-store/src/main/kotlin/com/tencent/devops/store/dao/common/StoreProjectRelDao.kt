@@ -36,6 +36,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1
+import org.jooq.Record2
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -109,7 +110,7 @@ class StoreProjectRelDao {
                     .and(STORE_CODE.eq(storeCode))
                     .and(STORE_TYPE.eq(storeType))
                 )
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -120,7 +121,7 @@ class StoreProjectRelDao {
                     .and(STORE_TYPE.eq(storeType))
                     .and(TYPE.eq(1))
                 )
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -158,7 +159,7 @@ class StoreProjectRelDao {
                     grayFlag = grayFlag,
                     grayProjectCodeList = grayProjectCodeList
                 )
-            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Long::class.java)
+            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -419,15 +420,19 @@ class StoreProjectRelDao {
     fun getTestStoreCodes(
         dslContext: DSLContext,
         projectCode: String,
-        storeType: StoreTypeEnum
+        storeType: StoreTypeEnum,
+        storeCodeList: List<String>? = null
     ): Result<Record1<String>>? {
-        val tStoreProjectRel = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("tStoreProjectRel")
-        return dslContext.select(tStoreProjectRel.STORE_CODE)
-            .from(tStoreProjectRel)
-            .where(tStoreProjectRel.PROJECT_CODE.eq(projectCode))
-            .and(tStoreProjectRel.STORE_TYPE.eq(storeType.type.toByte()))
-            .and(tStoreProjectRel.TYPE.eq(StoreProjectTypeEnum.TEST.type.toByte()))
-            .fetch()
+        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_CODE.eq(projectCode))
+            conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
+            conditions.add(TYPE.eq(StoreProjectTypeEnum.TEST.type.toByte()))
+            if (storeCodeList != null) {
+                conditions.add(STORE_CODE.`in`(storeCodeList))
+            }
+            return dslContext.select(STORE_CODE).from(this).where(conditions).fetch()
+        }
     }
 
     fun countInstallNumByCode(
@@ -449,7 +454,7 @@ class StoreProjectRelDao {
                 conditions.add(CREATE_TIME.lt(endTime))
             }
             return dslContext.selectCount().from(this).where(conditions)
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -469,6 +474,20 @@ class StoreProjectRelDao {
                 .and(STORE_TYPE.eq(storeType.type.toByte()))
                 .groupBy(STORE_CODE)
                 .fetch()
+        }
+    }
+
+    fun getInitProjectCodes(
+        dslContext: DSLContext,
+        storeType: StoreTypeEnum,
+        storeCodeList: List<String>
+    ): Result<Record2<String, String>> {
+        with(TStoreProjectRel.T_STORE_PROJECT_REL) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
+            conditions.add(TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
+            conditions.add(STORE_CODE.`in`(storeCodeList))
+            return dslContext.select(STORE_CODE, PROJECT_CODE).from(this).where(conditions).fetch()
         }
     }
 }

@@ -33,9 +33,11 @@ public class BatchDefectProcessReqVO
     @ApiModelProperty("任务ID")
     private long taskId;
 
-    @NotEmpty(message = "工具名称不能为空")
     @ApiModelProperty("工具名称")
     private String toolName;
+
+    @ApiModelProperty("工具名称")
+    private String dimension;
 
     @ApiModelProperty("业务类型：忽略IgnoreDefect、分配AssignDefect、标志修改MarkDefect")
     private String bizType;

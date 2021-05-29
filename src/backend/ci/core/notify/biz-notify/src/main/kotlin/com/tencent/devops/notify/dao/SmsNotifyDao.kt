@@ -116,7 +116,7 @@ class SmsNotifyDao @Autowired constructor(private val dslContext: DSLContext) {
         return dslContext.selectCount()
             .from(TNotifySms.T_NOTIFY_SMS)
             .where(getListConditions(success, fromSysId))
-            .fetchOne()
+            .fetchOne()!!
             .value1()
     }
 

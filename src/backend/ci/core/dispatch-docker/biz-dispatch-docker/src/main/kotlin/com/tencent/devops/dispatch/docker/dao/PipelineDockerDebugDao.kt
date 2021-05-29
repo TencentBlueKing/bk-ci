@@ -103,7 +103,7 @@ class PipelineDockerDebugDao {
                     imageRDType?.type?.toByte()
                 )
                 .returning(ID)
-                .fetchOne().id
+                .fetchOne()!!.id
         }
     }
 

@@ -26,8 +26,8 @@
 
 package com.tencent.devops.common.web
 
-import com.tencent.devops.common.api.auth.CODECC_AUTH_HEADER_DEVOPS_BK_TICKET
-import com.tencent.devops.common.api.auth.CODECC_AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TICKET
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.util.JsonUtil
 import feign.RequestInterceptor
 import org.springframework.beans.factory.annotation.Autowired
@@ -104,13 +104,13 @@ class WebAutoConfiguration @Autowired constructor(private val profile: com.tence
             val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
                     ?: return@RequestInterceptor
             val request = attributes.request
-            val bkTicket = request.getHeader(CODECC_AUTH_HEADER_DEVOPS_BK_TICKET)
-            val userName = request.getHeader(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
+            val bkTicket = request.getHeader(AUTH_HEADER_DEVOPS_BK_TICKET)
+            val userName = request.getHeader(AUTH_HEADER_DEVOPS_USER_ID)
             if(!bkTicket.isNullOrBlank()){
-                requestTemplate.header(CODECC_AUTH_HEADER_DEVOPS_BK_TICKET, bkTicket)
+                requestTemplate.header(AUTH_HEADER_DEVOPS_BK_TICKET, bkTicket)
             }
             if(!userName.isNullOrBlank()){
-                requestTemplate.header(CODECC_AUTH_HEADER_DEVOPS_USER_ID, userName)
+                requestTemplate.header(AUTH_HEADER_DEVOPS_USER_ID, userName)
             }
 
         }
