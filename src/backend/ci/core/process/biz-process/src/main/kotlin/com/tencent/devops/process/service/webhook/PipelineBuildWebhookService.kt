@@ -32,12 +32,11 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.RepositoryTypeNew
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.Watcher
-import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -47,10 +46,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
-import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
-import com.tencent.devops.plugin.api.pojo.GithubPrEvent
+import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineWebHookQueueService
@@ -65,23 +61,21 @@ import com.tencent.devops.process.pojo.code.WebhookCommit
 import com.tencent.devops.process.pojo.code.git.GitEvent
 import com.tencent.devops.process.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.process.pojo.code.git.GitPushEvent
+import com.tencent.devops.process.pojo.code.github.GithubCheckRunEvent
 import com.tencent.devops.process.pojo.code.github.GithubCreateEvent
 import com.tencent.devops.process.pojo.code.github.GithubEvent
 import com.tencent.devops.process.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.process.pojo.code.github.GithubPushEvent
 import com.tencent.devops.process.pojo.code.svn.SvnCommitEvent
-import com.tencent.devops.process.pojo.scm.code.GitlabCommitEvent
+import com.tencent.devops.process.service.perm.PermFixService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.repository.api.ServiceRepositoryResource
-import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_STATUS_IN_PROGRESS
-import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_PENDING
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Service
@@ -91,7 +85,7 @@ class PipelineBuildWebhookService @Autowired constructor(
     private val pipelineWebhookService: PipelineWebhookService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineBuildService: PipelineBuildService,
-    private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val permFixService: PermFixService,
     private val scmWebhookMatcherBuilder: ScmWebhookMatcherBuilder,
     private val gitWebhookUnlockDispatcher: GitWebhookUnlockDispatcher,
     private val pipelineWebHookQueueService: PipelineWebHookQueueService,
@@ -156,7 +150,7 @@ class PipelineBuildWebhookService @Autowired constructor(
         logger.info("Trigger gitlab build($e)")
 
         val event = try {
-            objectMapper.readValue(e, GitlabCommitEvent::class.java)
+            objectMapper.readValue(e, GitEvent::class.java)
         } catch (e: Exception) {
             logger.warn("Fail to parse the gitlab web hook commit event", e)
             return false
@@ -174,6 +168,7 @@ class PipelineBuildWebhookService @Autowired constructor(
             GithubPushEvent.classType -> objectMapper.readValue<GithubPushEvent>(body)
             GithubCreateEvent.classType -> objectMapper.readValue<GithubCreateEvent>(body)
             GithubPullRequestEvent.classType -> objectMapper.readValue<GithubPullRequestEvent>(body)
+            GithubCheckRunEvent.classType -> objectMapper.readValue<GithubCheckRunEvent>(body)
             else -> {
                 logger.info("Github event($eventType) is ignored")
                 return true
@@ -192,6 +187,29 @@ class PipelineBuildWebhookService @Autowired constructor(
                     logger.info("Github pull request no open or update")
                     return true
                 }
+            }
+            is GithubCheckRunEvent -> {
+                if (event.action != "rerequested") {
+                    logger.info("Unsupported check run action:${event.action}")
+                    return true
+                }
+                if (event.checkRun.externalId == null) {
+                    logger.info("github check run externalId is empty")
+                    return true
+                }
+                val buildInfo = event.checkRun.externalId!!.split("_")
+                if (buildInfo.size < 4) {
+                    logger.info("the buildInfo of github check run is error")
+                    return true
+                }
+                client.get(ServiceBuildResource::class).retry(
+                    userId = buildInfo[0],
+                    projectId = buildInfo[1],
+                    pipelineId = buildInfo[2],
+                    buildId = buildInfo[3],
+                    channelCode = ChannelCode.BS
+                )
+                return true
             }
         }
 
@@ -420,13 +438,8 @@ class PipelineBuildWebhookService @Autowired constructor(
                 }
                 return false
             } else {
-                PipelineWebhookBuildLogContext.addLogBuildInfo(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    taskId = element.id!!,
-                    taskName = element.name,
-                    success = false,
-                    triggerResult = matchResult.failedReason
+                logger.info(
+                    "$pipelineId|webhook trigger match unsuccess|(${element.name}|repo(${matcher.getRepoName()})"
                 )
             }
         }
@@ -449,6 +462,8 @@ class PipelineBuildWebhookService @Autowired constructor(
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId)
             ?: throw RuntimeException("Pipeline($pipelineId) not found")
+
+        permFixService.checkPermission(pipelineInfo.lastModifyUser, projectId, pipelineId = pipelineId)
 
         val model = pipelineRepositoryService.getModel(pipelineId)
         if (model == null) {
@@ -484,7 +499,6 @@ class PipelineBuildWebhookService @Autowired constructor(
                 signPipelineVersion = pipelineInfo.version,
                 frequencyLimit = false
             )
-            dispatchCommitCheck(projectId = projectId, webhookCommit = webhookCommit, buildId = buildId)
             pipelineWebHookQueueService.onWebHookTrigger(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -505,53 +519,6 @@ class PipelineBuildWebhookService @Autowired constructor(
             return ""
         } finally {
             logger.info("$pipelineId|WEBHOOK_TRIGGER|repo=$repoName|time=${System.currentTimeMillis() - startEpoch}")
-        }
-    }
-
-    private fun dispatchCommitCheck(
-        projectId: String,
-        webhookCommit: WebhookCommit,
-        buildId: String
-    ) {
-        with(webhookCommit) {
-            when {
-                webhookCommit.eventType == CodeEventType.MERGE_REQUEST &&
-                    (webhookCommit.codeType == CodeType.GIT || webhookCommit.codeType == CodeType.TGIT) -> {
-                    logger.info("$buildId|WebHook_ADD_GIT_COMMIT_CHECK|$pipelineId|$repositoryConfig|$commitId]")
-                    pipelineEventDispatcher.dispatch(
-                        GitCommitCheckEvent(
-                            source = "codeWebhook_pipeline_build_trigger",
-                            userId = userId,
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            buildId = buildId,
-                            repositoryConfig = repositoryConfig,
-                            commitId = commitId,
-                            state = GIT_COMMIT_CHECK_STATE_PENDING,
-                            block = block
-                        )
-                    )
-                }
-                webhookCommit.eventType == CodeEventType.PULL_REQUEST && webhookCommit.codeType == CodeType.GITHUB -> {
-                    logger.info("$buildId|WebHook_ADD_GITHUB_COMMIT_CHECK|$pipelineId|$repositoryConfig|$commitId]")
-                    pipelineEventDispatcher.dispatch(
-                        GithubPrEvent(
-                            source = "codeWebhook_pipeline_build_trigger",
-                            userId = userId,
-                            projectId = projectId,
-                            pipelineId = pipelineId,
-                            buildId = buildId,
-                            repositoryConfig = repositoryConfig,
-                            commitId = commitId,
-                            status = GITHUB_CHECK_RUNS_STATUS_IN_PROGRESS,
-                            startedAt = LocalDateTime.now().timestamp(),
-                            conclusion = null,
-                            completedAt = null
-                        )
-                    )
-                }
-                else -> Unit
-            }
         }
     }
 }

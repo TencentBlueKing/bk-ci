@@ -38,6 +38,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.QUEUE_LOG_STATU
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.ROUTE_LOG_BATCH_BUILD_EVENT
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.ROUTE_LOG_BUILD_EVENT
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.ROUTE_LOG_STATUS_BUILD_EVENT
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.common.web.mq.EXTEND_CONNECTION_FACTORY_NAME
 import com.tencent.devops.common.web.mq.EXTEND_RABBIT_ADMIN_NAME
 import com.tencent.devops.common.web.mq.EXTEND_RABBIT_TEMPLATE_NAME
@@ -59,6 +60,7 @@ import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Qualifier
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
@@ -69,6 +71,18 @@ import org.springframework.core.Ordered
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class LogMQConfiguration @Autowired constructor() {
+
+    @Value("\${log.rabbitmq.preprocess.concurrency:#{null}}")
+    private val preprocessConcurrency: Int? = null
+
+    @Value("\${log.rabbitmq.preprocess.maxConcurrency:#{null}}")
+    private val preprocessMaxConcurrency: Int? = null
+
+    @Value("\${log.rabbitmq.storage.concurrency:#{null}}")
+    private val storageConcurrency: Int? = null
+
+    @Value("\${log.rabbitmq.storage.maxConcurrency:#{null}}")
+    private val storageMaxConcurrency: Int? = null
 
     @Bean
     fun rabbitAdmin(
@@ -159,17 +173,18 @@ class LogMQConfiguration @Autowired constructor() {
         @Autowired logListener: LogListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(logEventQueue.name)
-        container.setConcurrentConsumers(1)
-        container.setMaxConcurrentConsumers(1)
-        container.setRabbitAdmin(rabbitAdmin)
-        container.setMismatchedQueuesFatal(true)
         val messageListenerAdapter = MessageListenerAdapter(logListener, logListener::logEvent.name)
         messageListenerAdapter.setMessageConverter(messageConverter)
-        container.messageListener = messageListenerAdapter
-        logger.info("Start log event listener")
-        return container
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = logEventQueue,
+            rabbitAdmin = rabbitAdmin,
+            adapter = messageListenerAdapter,
+            startConsumerMinInterval = 5000,
+            consecutiveActiveTrigger = 5,
+            concurrency = preprocessConcurrency ?: 1,
+            maxConcurrency = preprocessMaxConcurrency ?: 1
+        )
     }
 
     @Bean
@@ -182,17 +197,18 @@ class LogMQConfiguration @Autowired constructor() {
         @Autowired logListener: LogListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(logBatchEventQueue.name)
-        container.setConcurrentConsumers(10)
-        container.setMaxConcurrentConsumers(100)
-        container.setRabbitAdmin(rabbitAdmin)
-        container.setMismatchedQueuesFatal(true)
         val messageListenerAdapter = MessageListenerAdapter(logListener, logListener::logBatchEvent.name)
         messageListenerAdapter.setMessageConverter(messageConverter)
-        container.messageListener = messageListenerAdapter
-        logger.info("Start log batch event listener")
-        return container
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = logBatchEventQueue,
+            rabbitAdmin = rabbitAdmin,
+            adapter = messageListenerAdapter,
+            startConsumerMinInterval = 5000,
+            consecutiveActiveTrigger = 5,
+            concurrency = storageConcurrency ?: 10,
+            maxConcurrency = storageMaxConcurrency ?: 100
+        )
     }
 
     @Bean
@@ -205,17 +221,18 @@ class LogMQConfiguration @Autowired constructor() {
         @Autowired logListener: LogListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(logStatusEventQueue.name)
-        container.setConcurrentConsumers(20)
-        container.setMaxConcurrentConsumers(20)
-        container.setRabbitAdmin(rabbitAdmin)
-        container.setMismatchedQueuesFatal(true)
         val messageListenerAdapter = MessageListenerAdapter(logListener, logListener::logStatusEvent.name)
         messageListenerAdapter.setMessageConverter(messageConverter)
-        container.messageListener = messageListenerAdapter
-        logger.info("Start log status event listener")
-        return container
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = logStatusEventQueue,
+            rabbitAdmin = rabbitAdmin,
+            adapter = messageListenerAdapter,
+            startConsumerMinInterval = 5000,
+            consecutiveActiveTrigger = 5,
+            concurrency = 20,
+            maxConcurrency = 20
+        )
     }
 
     /**
@@ -247,16 +264,18 @@ class LogMQConfiguration @Autowired constructor() {
         @Autowired logService: LogService,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(pipelineBuildFinishQueue.name)
-        container.setConcurrentConsumers(1)
-        container.setMaxConcurrentConsumers(1)
-        container.setRabbitAdmin(rabbitAdmin)
-
         val adapter = MessageListenerAdapter(logService, logService::pipelineFinish.name)
         adapter.setMessageConverter(messageConverter)
-        container.messageListener = adapter
-        return container
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = pipelineBuildFinishQueue,
+            rabbitAdmin = rabbitAdmin,
+            adapter = adapter,
+            startConsumerMinInterval = 5000,
+            consecutiveActiveTrigger = 5,
+            concurrency = 1,
+            maxConcurrency = 1
+        )
     }
 
     companion object {

@@ -28,11 +28,13 @@
 package com.tencent.devops.common.web
 
 import org.springframework.boot.context.properties.ConfigurationProperties
+import org.springframework.boot.context.properties.ConstructorBinding
 
 /**
  *
  * Powered By Tencent
  */
+@ConstructorBinding
 @ConfigurationProperties(prefix = "spring.application")
 data class SwaggerProperties(
     val packageName: String? = null,

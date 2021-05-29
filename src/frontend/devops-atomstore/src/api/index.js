@@ -1,6 +1,7 @@
 const Vue = window.Vue
 const vue = new Vue()
 const prefix = 'store/api'
+const processPerfix = 'process/api'
 
 export default {
     getMemberView (params) {
@@ -21,5 +22,27 @@ export default {
 
     requestChangeProject (params) {
         return vue.$ajax.put(`${prefix}/user/market/desk/store/member/test/project/change?projectCode=${params.projectCode}&storeCode=${params.storeCode}&storeType=${params.storeType}&storeMember=${params.storeMember}`)
+    },
+
+    requestStaticChartData (storeType, storeCode, params) {
+        return vue.$ajax.get(`${prefix}/user/store/statistic/types/${storeType}/codes/${storeCode}/trend/data`, { params })
+    },
+
+    requestStatisticPipeline (code, params) {
+        return vue.$ajax.get(`${processPerfix}/user/pipeline/atoms/${code}/rel/list`, { params })
+    },
+
+    requestSavePipelinesAsCsv (code, params) {
+        const query = []
+        for (const key in params) {
+            const val = params[key]
+            if (val) query.push(`${key}=${val}`)
+        }
+        return fetch(`${processPerfix}/user/pipeline/atoms/${code}/rel/csv/export?${query.join('&')}`, {
+            method: 'POST',
+            headers: {
+                'content-type': 'application/json'
+            }
+        })
     }
 }

@@ -136,6 +136,10 @@ class BkAuthTokenApi constructor(
         return accessToken
     }
 
+    override fun checkToken(token: String): Boolean {
+        return true
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(BkAuthTokenApi::class.java)
         private const val SleepMills = 100L

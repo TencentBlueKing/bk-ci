@@ -5,7 +5,7 @@
                 <vuex-input :placeholder="$t('pipelineNameInputTips')" name="pipelineName" :value="pipelineSetting.pipelineName" v-validate.initial="&quot;required|max:40&quot;" max-length="40" :handle-change="handleBaseInfoChange" />
             </bk-form-item>
 
-            <bk-form-item :required="false" :label="$t('settings.group')" v-if="tagGroupList.length">
+            <bk-form-item :required="false" :label="$t('settings.label')" v-if="tagGroupList.length">
                 <div class="tag-group-row">
                     <div class="group-col" v-for="(filter, index) in tagGroupList" :key="index">
                         <label class="group-title">{{filter.name}}</label>
@@ -23,6 +23,14 @@
             <bk-form-item :label="$t('desc')" :is-error="errors.has(&quot;desc&quot;)" :error-msg="errors.first(&quot;desc&quot;)">
                 <vuex-textarea name="desc" :value="pipelineSetting.desc" :placeholder="$t('pipelineDescInputTips')" v-validate.initial="&quot;max:100&quot;" :handle-change="handleBaseInfoChange" />
             </bk-form-item>
+            <bk-form-item :label="$t('settings.buildNumberFormat')" :is-error="errors.has(&quot;buildNumRule&quot;)" :error-msg="errors.first(&quot;buildNumRule&quot;)">
+                <vuex-input style="max-width: 350px;" name="buildNumRule" :value="pipelineSetting.buildNumRule" :placeholder="$t('buildDescInputTips')" v-validate.initial="{ buildNumRule: true }" max-length="256" :handle-change="handleBaseInfoChange" />
+                <logo size="16" class="build-num-rule-warn" name="feedback" v-bk-tooltips="$t('buildNumRuleWarn')" />
+                <p class="error-tips"
+                    v-show="errors.has('buildNumRule')">
+                    {{ $t('settings.validatebuildNum') }}
+                </p>
+            </bk-form-item>
             <bk-form-item class="item-badge" :label="$t('settings.badge')" v-if="routeName !== 'templateSetting'">
                 <img class="image-url" :src="badgeImageUrl">
                 <div v-for="copyUrl in urlList" :key="copyUrl.url">
@@ -38,6 +46,7 @@
 </template>
 
 <script>
+    import Logo from '@/components/Logo'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea/index.vue'
     import VuexInput from '@/components/atomFormField/VuexInput/index.vue'
     import { mapGetters } from 'vuex'
@@ -46,6 +55,7 @@
     export default {
         name: 'bkdevops-base-info-setting-tab',
         components: {
+            Logo,
             VuexTextarea,
             VuexInput
         },
@@ -67,7 +77,7 @@
                 return `${BADGE_URL_PREFIX}/process/api/external/pipelines/projects/${this.projectId}/${this.pipelineId}/badge?X-DEVOPS-PROJECT-ID=${this.projectId}`
             },
             badgeMarkdownLink () {
-                return `[![BK Pipelines Status](${BADGE_URL_PREFIX}/process/api/external/pipelines/projects/${this.projectId}/${this.pipelineId}/badge?X-DEVOPS-PROJECT-ID=${this.projectId})](${API_URL_PREFIX}/process/api-html/user/builds/projects/${this.projectId}/pipelines/${this.pipelineId}/latestFinished?X-DEVOPS-PROJECT-ID=${this.projectId})`
+                return `[![BK Pipelines Status](${BADGE_URL_PREFIX}/process/api/external/pipelines/projects/${this.projectId}/${this.pipelineId}/badge?X-DEVOPS-PROJECT-ID=${this.projectId})](${location.origin}/process/api-html/user/builds/projects/${this.projectId}/pipelines/${this.pipelineId}/latestFinished?X-DEVOPS-PROJECT-ID=${this.projectId})`
             },
             urlList () {
                 return [{
@@ -182,6 +192,11 @@
                     margin-left: 10px;
                 }
             }
+        }
+        .build-num-rule-warn {
+            position: relative;
+            top: 5px;
+            left: 5px;
         }
     }
 </style>

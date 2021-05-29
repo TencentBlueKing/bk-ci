@@ -27,18 +27,21 @@
 
 package com.tencent.devops.process.service.scm
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.api.ServiceOauthResource
-import com.tencent.devops.repository.api.scm.ServiceGitResource
+import com.tencent.devops.repository.api.scm.ServiceScmOauthResource
+import com.tencent.devops.repository.api.scm.ServiceScmResource
 import com.tencent.devops.repository.pojo.CodeGitRepository
+import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
-import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
-import com.tencent.devops.repository.pojo.git.GitMrInfo
-import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.GitMrChangeInfo
+import com.tencent.devops.scm.pojo.GitMrInfo
+import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -60,31 +63,34 @@ class GitScmService @Autowired constructor(
         mrId: Long?,
         repo: Repository
     ): GitMrReviewInfo? {
-        if (mrId == null) return null
-        val authType = when (repo) {
-            is CodeGitRepository ->
-                repo.authType
-            is CodeTGitRepository ->
-                repo.authType
-            else ->
-                return null
-        }
+        val type = getType(repo)
+        if (mrId == null || type == null) return null
 
         return try {
-            val tokenType = if (authType == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
+            val tokenType = if (type.first == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
             val token = getToken(
                 projectId = projectId,
                 credentialId = repo.credentialId,
                 userName = repo.userName,
                 authType = tokenType
             )
-            client.get(ServiceGitResource::class).getMergeRequestReviewersInfo(
-                repoName = repo.projectName,
-                mrId = mrId,
-                tokenType = tokenType,
-                token = token,
-                repoUrl = repo.url
-            ).data!!
+            if (type.first == RepoAuthType.OAUTH) {
+                client.get(ServiceScmOauthResource::class).getMrReviewInfo(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    type = type.second,
+                    token = token,
+                    mrId = mrId
+                ).data
+            } else {
+                client.get(ServiceScmResource::class).getMrReviewInfo(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    type = type.second,
+                    token = token,
+                    mrId = mrId
+                ).data
+            }
         } catch (e: Exception) {
             logger.error("fail to get mr reviews info", e)
             null
@@ -96,31 +102,34 @@ class GitScmService @Autowired constructor(
         mrId: Long?,
         repo: Repository
     ): GitMrInfo? {
-        if (mrId == null) return null
-        val authType = when (repo) {
-            is CodeGitRepository ->
-                repo.authType
-            is CodeTGitRepository ->
-                repo.authType
-            else ->
-                return null
-        }
+        val type = getType(repo)
+        if (mrId == null || type == null) return null
 
         return try {
-            val tokenType = if (authType == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
+            val tokenType = if (type.first == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
             val token = getToken(
                 projectId = projectId,
                 credentialId = repo.credentialId,
                 userName = repo.userName,
                 authType = tokenType
             )
-            return client.get(ServiceGitResource::class).getMergeRequestInfo(
-                repoName = repo.projectName,
-                mrId = mrId,
-                tokenType = tokenType,
-                token = token,
-                repoUrl = repo.url
-            ).data!!
+            if (type.first == RepoAuthType.OAUTH) {
+                client.get(ServiceScmOauthResource::class).getMrInfo(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    type = type.second,
+                    token = token,
+                    mrId = mrId
+                ).data
+            } else {
+                client.get(ServiceScmResource::class).getMrInfo(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    type = type.second,
+                    token = token,
+                    mrId = mrId
+                ).data
+            }
         } catch (e: Exception) {
             logger.error("fail to get mr info", e)
             null
@@ -132,31 +141,34 @@ class GitScmService @Autowired constructor(
         mrId: Long?,
         repo: Repository
     ): GitMrChangeInfo? {
-        if (mrId == null) return null
-        val authType = when (repo) {
-            is CodeGitRepository ->
-                repo.authType
-            is CodeTGitRepository ->
-                repo.authType
-            else ->
-                return null
-        }
+        val type = getType(repo)
+        if (mrId == null || type == null) return null
 
         return try {
-            val tokenType = if (authType == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
+            val tokenType = if (type.first == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
             val token = getToken(
                 projectId = projectId,
                 credentialId = repo.credentialId,
                 userName = repo.userName,
                 authType = tokenType
             )
-            return client.get(ServiceGitResource::class).getMergeRequestChangeInfo(
-                repoName = repo.projectName,
-                mrId = mrId,
-                tokenType = tokenType,
-                token = token,
-                repoUrl = repo.url
-            ).data!!
+            if (type.first == RepoAuthType.OAUTH) {
+                client.get(ServiceScmOauthResource::class).getMergeRequestChangeInfo(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    type = type.second,
+                    token = token,
+                    mrId = mrId
+                ).data
+            } else {
+                client.get(ServiceScmResource::class).getMergeRequestChangeInfo(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    type = type.second,
+                    token = token,
+                    mrId = mrId
+                ).data
+            }
         } catch (e: Exception) {
             logger.error("fail to get mr info", e)
             null
@@ -185,6 +197,19 @@ class GitScmService @Autowired constructor(
                 partBPublicKey = decoder.decode(credential.publicKey),
                 partAPrivateKey = pair.privateKey
             ))
+        }
+    }
+
+    private fun getType(repo: Repository): Pair<RepoAuthType?, ScmType>? {
+        return when (repo) {
+            is CodeGitRepository ->
+                Pair(repo.authType, ScmType.CODE_GIT)
+            is CodeTGitRepository ->
+                Pair(repo.authType, ScmType.CODE_TGIT)
+            is CodeGitlabRepository ->
+                Pair(RepoAuthType.HTTP, ScmType.CODE_GITLAB)
+            else ->
+                return null
         }
     }
 }

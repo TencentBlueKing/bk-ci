@@ -60,6 +60,7 @@ import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.BatScriptUtil
 import com.tencent.devops.worker.common.utils.FileUtils
 import com.tencent.devops.worker.common.utils.ShellUtil
+import com.tencent.devops.worker.common.utils.TaskUtil
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.nio.file.Files
@@ -191,7 +192,7 @@ open class MarketAtomTask : ITask() {
 
         printInput(atomData, atomParams, inputTemplate)
 
-        if (atomData.target.isBlank()) {
+        if (atomData.target?.isBlank() == true) {
             throw TaskExecuteException(
                 errorMsg = "can not found any plugin cmd",
                 errorType = ErrorType.SYSTEM,
@@ -226,7 +227,7 @@ open class MarketAtomTask : ITask() {
         var error: Throwable? = null
         try {
             // 下载atom执行文件
-            atomExecuteFile = downloadAtomExecuteFile(atomData.pkgPath, atomTmpSpace)
+            atomExecuteFile = downloadAtomExecuteFile(atomData.pkgPath!!, atomTmpSpace)
 
             checkSha1(atomExecuteFile, atomData.shaContent!!)
             val buildHostType = if (BuildEnv.isThirdParty()) BuildHostTypeEnum.THIRD else BuildHostTypeEnum.PUBLIC
@@ -262,7 +263,7 @@ open class MarketAtomTask : ITask() {
                 postEntryParam = elementPostInfoMap?.get(ATOM_POST_ENTRY_PARAM)?.toString()
             }
             val atomTarget = atomTargetHandleService.handleAtomTarget(
-                target = atomData.target,
+                target = atomData.target!!,
                 osType = AgentEnv.getOS(),
                 buildHostType = buildHostType,
                 systemEnvVariables = systemEnvVariables,
@@ -383,8 +384,7 @@ open class MarketAtomTask : ITask() {
                     secretKey = AgentEnv.getAgentSecretKey(),
                     buildId = buildTask.buildId,
                     vmSeqId = buildTask.vmSeqId,
-                    gateway = AgentEnv.getGateway(),
-                    fileGateway = AgentEnv.getFileGateway()
+                    gateway = AgentEnv.getGateway()
                 )
             }
             BuildType.WORKER -> {
@@ -395,8 +395,7 @@ open class MarketAtomTask : ITask() {
                     secretKey = "",
                     buildId = buildTask.buildId,
                     vmSeqId = buildTask.vmSeqId,
-                    gateway = AgentEnv.getGateway(),
-                    fileGateway = AgentEnv.getFileGateway()
+                    gateway = AgentEnv.getGateway()
                 )
             }
         }
@@ -435,7 +434,6 @@ open class MarketAtomTask : ITask() {
         val agentId: String,
         val secretKey: String,
         val gateway: String,
-        val fileGateway: String,
         val buildId: String,
         val vmSeqId: String
     )
@@ -504,11 +502,13 @@ open class MarketAtomTask : ITask() {
                     }
                 }
                  */
+                TaskUtil.setTaskId(buildTask.taskId ?: "")
                 when (type) {
                     "string" -> env[key] = output["value"] as String
                     "report" -> env[key] = archiveReport(buildTask, output, buildVariables, bkWorkspace)
                     "artifact" -> env[key] = archiveArtifact(output, bkWorkspace, buildVariables)
                 }
+                TaskUtil.removeTaskId()
                 if (outputTemplate.containsKey(varKey)) {
                     val outPutDefine = outputTemplate[varKey]
                     val sensitiveFlag = outPutDefine!!["isSensitive"] as Boolean? ?: false
@@ -551,7 +551,7 @@ open class MarketAtomTask : ITask() {
             if (!success) {
                 throw TaskExecuteException(
                     errorMsg = "[Finish task] status: ${atomResult.status}, errorType: ${atomResult.errorType}, " +
-                        "errorCode: ${atomResult.message}, message: ${atomResult.message}",
+                        "errorCode: ${atomResult.errorCode}, message: ${atomResult.message}",
                     errorType = when (atomResult.errorType) {
                         // 插件上报的错误类型，若非用户业务错误或插件内的第三方服务调用错误，统一设为插件逻辑错误
                         1 -> ErrorType.USER

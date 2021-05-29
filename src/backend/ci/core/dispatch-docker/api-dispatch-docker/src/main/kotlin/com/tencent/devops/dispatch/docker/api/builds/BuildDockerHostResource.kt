@@ -29,8 +29,6 @@ package com.tencent.devops.dispatch.docker.api.builds
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.mq.alert.AlertLevel
-import com.tencent.devops.dispatch.pojo.ContainerInfo
-import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dispatch.docker.pojo.DockerHostInfo
 import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
@@ -52,7 +50,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)@Suppress("ALL")
 interface BuildDockerHostResource {
 
-    @ApiOperation("轮询开始任务")
+/*    @ApiOperation("轮询开始任务")
     @POST
     @Path("/startBuild")
     fun startBuild(
@@ -151,7 +149,7 @@ interface BuildDockerHostResource {
         shutdown: Boolean? = false,
         @ApiParam("message", required = true)
         message: String?
-    ): Result<Boolean>?
+    ): Result<Boolean>?*/
 
     @ApiOperation("系统监控告警")
     @POST

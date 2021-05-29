@@ -103,7 +103,7 @@ class DevCloudTaskDao {
                             now
                     )
                     .returning(TASK_ID)
-                    .fetchOne().taskId.toLong()
+                    .fetchOne()!!.taskId.toLong()
         }
     }
 

@@ -48,6 +48,6 @@ class MarketAtomBuildInfoDao {
             .join(b)
             .on(a.LANGUAGE.eq(b.LANGUAGE))
             .where(a.ATOM_ID.eq(atomId)).and(b.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
-            .fetchOne()
+            .fetchOne()!!
     }
 }

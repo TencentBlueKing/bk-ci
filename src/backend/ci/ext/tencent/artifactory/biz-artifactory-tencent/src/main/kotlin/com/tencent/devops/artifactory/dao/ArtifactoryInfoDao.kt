@@ -102,7 +102,7 @@ class ArtifactoryInfoDao {
                 appVersion,
                 dataFrom.toByte()
             ).returning(ID)
-                .fetchOne()
+                .fetchOne()!!
             return record.id
         }
     }

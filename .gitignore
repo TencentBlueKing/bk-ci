@@ -30,6 +30,5 @@ out
 /src/backend/ci/.settings/
 .prebuild.yml
 .temp
-
-.vscode
-scripts/ci_env.properties
+.history
+/src/backend/ci/core/sign/biz-sign/test.ipa

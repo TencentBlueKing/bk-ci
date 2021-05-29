@@ -66,7 +66,6 @@ import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.service.BuildVariableService
-import com.tencent.devops.process.service.PipelineBackupService
 import com.tencent.devops.process.service.PipelineTaskPauseService
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
@@ -90,8 +89,7 @@ class PipelineBuildDetailService @Autowired constructor(
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val client: Client,
     private val pipelineBuildDao: PipelineBuildDao,
-    private val pipelinePauseValueDao: PipelinePauseValueDao,
-    private val pipelineBackupService: PipelineBackupService
+    private val pipelinePauseValueDao: PipelinePauseValueDao
 ) {
 
     companion object {
@@ -116,13 +114,10 @@ class PipelineBuildDetailService @Autowired constructor(
 
         val model = JsonUtil.to(record.model, Model::class.java)
 
-        // 构建机环境的会因为构建号不一样工作空间可能被覆盖的问题, 所以构建号不同不允许重试
-        val canRetry =
-            buildSummaryRecord?.buildNum == buildInfo.buildNum && buildInfo.status.isFailure() // 并且是失败后
-
         // 判断需要刷新状态，目前只会改变canRetry状态
         if (refreshStatus) {
-            ModelUtils.refreshCanRetry(model, canRetry, buildInfo.status)
+            val canRetry = buildInfo.status.isFailure() || buildInfo.status.isCancel() // 已经失败或者取消
+            ModelUtils.refreshCanRetry(model, canRetry)
         }
 
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
@@ -139,7 +134,7 @@ class PipelineBuildDetailService @Autowired constructor(
             if (!newVarName.isNullOrBlank()) {
                 newParams.add(
                     BuildFormProperty(
-                        id = newVarName!!,
+                        id = newVarName,
                         required = it.required,
                         type = it.type,
                         defaultValue = it.defaultValue,
@@ -197,15 +192,8 @@ class PipelineBuildDetailService @Autowired constructor(
     }
 
     fun updateModel(buildId: String, model: Model) {
-        val now = System.currentTimeMillis()
-//        logger.info("update the build model for the build $buildId and now $now")
-//        buildDetailDao.update(
-//            dslContext = dslContext,
-//            buildId = buildId,
-//            model = JsonUtil.getObjectMapper().writeValueAsString(model),
-//            buildStatus = BuildStatus.RUNNING
-//        )
-        updateDouble(
+        buildDetailDao.update(
+            dslContext = dslContext,
             buildId = buildId,
             model = JsonUtil.getObjectMapper().writeValueAsString(model),
             buildStatus = BuildStatus.RUNNING
@@ -376,7 +364,8 @@ class PipelineBuildDetailService @Autowired constructor(
             }
 
             override fun onFindContainer(id: Int, container: Container, stage: Stage): Traverse {
-                if (container.status == BuildStatus.PREPARE_ENV.name) {
+                val status = BuildStatus.parse(container.status)
+                if (status == BuildStatus.PREPARE_ENV) {
                     if (container.startEpoch == null) {
                         container.systemElapsed = 0
                     } else {
@@ -396,6 +385,10 @@ class PipelineBuildDetailService @Autowired constructor(
                     stage.elapsed = containerElapsed
 
                     update = true
+                }
+                // #3138 状态实时刷新
+                if (status.isRunning()) {
+                    container.status = buildStatus.name
                 }
                 return Traverse.CONTINUE
             }
@@ -873,9 +866,7 @@ class PipelineBuildDetailService @Autowired constructor(
 
         // 若插件暫停继续有修改插件变量，重试需环境为原始变量
         if (needUpdate) {
-//            buildDetailDao.updateModel(dslContext, buildId, objectMapper.writeValueAsString(model))
-            updateModelDouble(buildId, model)
-            logger.info("[$buildId| updateElementWhenPauseRetry success")
+            buildDetailDao.updateModel(dslContext, buildId, objectMapper.writeValueAsString(model))
         }
     }
 
@@ -980,50 +971,6 @@ class PipelineBuildDetailService @Autowired constructor(
                 .getAtomEnv(projectCode, atomCode, atomVersion).data?.version ?: atomVersion
         } else {
             atomVersion
-        }
-    }
-
-    private fun updateModelDouble(buildId: String, model: Model) {
-        try {
-            buildDetailDao.updateModel(dslContext, buildId, objectMapper.writeValueAsString(model))
-        } catch (e: Exception) {
-            logger.warn("updateModel fail: ", e)
-        } finally {
-            if (pipelineBackupService.isBackUp(pipelineBackupService.detailLabel)) {
-                try {
-                    buildDetailDao.updateModelBak(dslContext, buildId, objectMapper.writeValueAsString(model))
-                } catch (e: Exception) {
-                    logger.warn("updateModel fail: ", e)
-                }
-            }
-        }
-    }
-
-    private fun updateDouble(buildId: String, model: String?, buildStatus: BuildStatus, cancelUser: String? = null) {
-        try {
-            buildDetailDao.update(
-                dslContext = dslContext,
-                buildId = buildId,
-                model = model,
-                buildStatus = buildStatus,
-                cancelUser = cancelUser
-            )
-        } catch (e: Exception) {
-            logger.warn("updateModel fail: ", e)
-        } finally {
-            if (pipelineBackupService.isBackUp(pipelineBackupService.detailLabel)) {
-                try {
-                    buildDetailDao.updateBak(
-                        dslContext = dslContext,
-                        buildId = buildId,
-                        model = objectMapper.writeValueAsString(model),
-                        buildStatus = buildStatus,
-                        cancelUser = cancelUser
-                    )
-                } catch (e: Exception) {
-                    logger.warn("updateModel fail: ", e)
-                }
-            }
         }
     }
 

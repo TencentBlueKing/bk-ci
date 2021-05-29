@@ -27,8 +27,7 @@
 
 package com.tencent.devops.log.client.impl
 
-import com.google.common.cache.CacheBuilder
-import com.google.common.cache.CacheLoader
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.redis.RedisLock
@@ -66,22 +65,18 @@ class MultiESLogClient constructor(
         }
     }
 
-    private val cache = CacheBuilder.newBuilder()
+    private val cache = Caffeine.newBuilder()
         .maximumSize(300000)
         .expireAfterWrite(2, TimeUnit.DAYS)
         .build<String/*buildId*/, String/*ES NAME*/>()
 
     // The cache store the bad ES
-    private val inactiveESCache = CacheBuilder.newBuilder()
-            .maximumSize(10)
-            .expireAfterWrite(1, TimeUnit.MINUTES)
-            .build<String/*ES Name*/, Boolean>(
-                object : CacheLoader<String, Boolean>() {
-                    override fun load(esName: String): Boolean {
-                        return getInactiveESFromRedis().contains(esName)
-                    }
-                }
-            )
+    private val inactiveESCache = Caffeine.newBuilder()
+        .maximumSize(10)
+        .expireAfterWrite(1, TimeUnit.MINUTES)
+        .build<String/*ES Name*/, Boolean> { esName ->
+            getInactiveESFromRedis().contains(esName)
+        }
 
     private val notifyExecutor = Executors.newSingleThreadExecutor()
 
@@ -124,11 +119,11 @@ class MultiESLogClient constructor(
     }
 
     fun getInactiveClients(): List<ESClient> {
-        return clients.filter { inactiveESCache.get(it.clusterName) }
+        return clients.filter { inactiveESCache.get(it.clusterName) ?: false }
     }
 
     override fun getActiveClients(): List<ESClient> {
-        return clients.filter { !inactiveESCache.get(it.clusterName) }
+        return clients.filter { inactiveESCache.get(it.clusterName) != true }
     }
 
     /**

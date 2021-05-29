@@ -43,7 +43,6 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
-import com.tencent.devops.dispatch.api.ServiceJobQuotaBusinessResource
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.BuildingHeartBeatUtils
@@ -72,6 +71,7 @@ import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
 import kotlin.math.min
 
+@Deprecated("replace by EngineVMBuildService")
 @Suppress("ALL")
 @Service
 class PipelineVMBuildService @Autowired(required = false) constructor(
@@ -167,13 +167,6 @@ class PipelineVMBuildService @Autowired(required = false) constructor(
                         vmSeqId = vmSeqId,
                         buildStatus = BuildStatus.SUCCEED
                     )
-                    // 告诉dispatch agent启动了，为JOB计时服务
-                    try {
-                        client.get(ServiceJobQuotaBusinessResource::class)
-                            .addRunningAgent(projectId = buildInfo.projectId, buildId = buildId, vmSeqId = vmSeqId)
-                    } catch (ignored: Throwable) {
-                        LOG.error("ENGINE|$buildId|Agent|FAIL_Job|j($vmSeqId)|Add job quota failed.", ignored)
-                    }
 
                     return BuildVariables(
                         buildId = buildId,

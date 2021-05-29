@@ -15,10 +15,12 @@
                                     <i class="devops-icon icon-txt" :title="$t('history.completedLog')" @click="showLog"></i>
                                 </template>
                             </div>
+                            <version-sideslider v-else-if="$route.name === 'pipelinesEdit' && index === breadCrumbs.length - 1"></version-sideslider>
                         </bread-crumb-item>
                     </template>
                     <i v-else class="devops-icon icon-circle-2-1 spin-icon" />
                 </bread-crumb>
+
             </div>
             <template v-if="$route.name === 'pipelinesPreview'" slot="right">
                 <router-link :to="{ name: 'pipelinesEdit' }"><bk-button>{{ $t('edit') }}</bk-button></router-link>
@@ -96,6 +98,7 @@
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
     import showTooltip from '@/components/common/showTooltip'
     import exportDialog from '@/components/ExportDialog'
+    import versionSideslider from '@/components/VersionSideslider'
     export default {
         components: {
             innerHeader,
@@ -104,7 +107,8 @@
             showTooltip,
             BreadCrumbItem,
             ReviewDialog,
-            exportDialog
+            exportDialog,
+            versionSideslider
         },
         mixins: [pipelineOperateMixin],
         data () {
@@ -241,7 +245,7 @@
                     selectedValue: this.$route.params.type && this.tabMap[this.$route.params.type] ? this.tabMap[this.$route.params.type] : this.$t(this.$route.name)
                 }]
             }
-            
+
         },
         watch: {
             pipelineId (newVal) {
@@ -251,6 +255,9 @@
         created () {
             this.fetchPipelineList()
             this.$store.dispatch('requestProjectDetail', { projectId: this.projectId })
+        },
+        beforeDestroy () {
+            this.$store.commit('pipelines/updateCurPipeline', {})
         },
         methods: {
             ...mapActions('pipelines', [

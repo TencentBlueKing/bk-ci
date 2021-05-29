@@ -40,6 +40,9 @@ import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.exception.GitApiException
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitDiff
+import com.tencent.devops.scm.pojo.GitMrChangeInfo
+import com.tencent.devops.scm.pojo.GitMrInfo
+import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -57,6 +60,7 @@ open class GitApi {
         private const val OPERATION_BRANCH = "拉分支"
         private const val OPERATION_TAG = "拉标签"
         private const val OPERATION_ADD_WEBHOOK = "添加WEBHOOK"
+        private const val OPERATION_UPDATE_WEBHOOK = "修改WEBHOOK"
         private const val OPERATION_LIST_WEBHOOK = "查询WEBHOOK"
         private const val OPERATION_ADD_COMMIT_CHECK = "添加COMMIT CHECK"
         private const val OPERATION_ADD_MR_COMMENT = "添加MR COMMENT"
@@ -65,19 +69,35 @@ open class GitApi {
         private const val OPERATION_COMMIT = "拉提交记录"
         private const val OPERATION_COMMIT_DIFF = "查询commit变化"
         private const val OPERATION_UNLOCK_HOOK_LOCK = "解锁hook锁"
+        private const val OPERATION_MR_CHANGE = "查询合并请求的代码变更"
+        private const val OPERATION_MR_INFO = "查询项目合并请求"
+        private const val OPERATION_MR_REVIEW = "查询项目合并请求"
     }
 
-    fun listBranches(host: String, token: String, projectName: String): List<String> {
+    /**
+     * @param full 是否全部获取分支,默认全量拉
+     */
+    fun listBranches(
+        host: String,
+        token: String,
+        projectName: String,
+        search: String? = null,
+        full: Boolean = true
+    ): List<String> {
         logger.info("Start to list branches of host $host by project $projectName")
         var page = 1
         val result = mutableListOf<GitBranch>()
         while (true) {
+            var searchReq = "page=$page&per_page=100"
+            if (!search.isNullOrBlank()) {
+                searchReq = "$searchReq&search=$search"
+            }
             val request =
-                get(host, token, "projects/${urlEncode(projectName)}/repository/branches", "page=$page&per_page=100")
+                get(host, token, "projects/${urlEncode(projectName)}/repository/branches", searchReq)
             page++
             val pageResult = JsonUtil.getObjectMapper().readValue<List<GitBranch>>(getBody(OPERATION_BRANCH, request))
             result.addAll(pageResult)
-            if (pageResult.size < 100) {
+            if (pageResult.size < 100 || !full) {
                 if (result.size >= BRANCH_LIMIT) {
                     logger.error("there are ${result.size} branches in project $projectName")
                 }
@@ -86,16 +106,26 @@ open class GitApi {
         }
     }
 
-    fun listTags(host: String, token: String, projectName: String): List<String> {
+    fun listTags(
+        host: String,
+        token: String,
+        projectName: String,
+        search: String? = null,
+        full: Boolean = true
+    ): List<String> {
         var page = 1
         val result = mutableListOf<GitTag>()
         while (true) {
+            var searchReq = "page=$page&per_page=100&order_by=updated&sort=desc"
+            if (!search.isNullOrBlank()) {
+                searchReq = "$searchReq&search=$search"
+            }
             val request =
-                get(host, token, "projects/${urlEncode(projectName)}/repository/tags", "page=$page&per_page=100")
+                get(host, token, "projects/${urlEncode(projectName)}/repository/tags", searchReq)
             page++
             val pageResult: List<GitTag> = JsonUtil.getObjectMapper().readValue(getBody(OPERATION_TAG, request))
             result.addAll(pageResult)
-            if (pageResult.size < 100) {
+            if (pageResult.size < 100 || !full) {
                 if (result.size >= TAG_LIMIT) logger.error("there are ${result.size} tags in project $projectName")
                 return result.sortedByDescending { it.commit.authoredDate }.map { it.name }
             }
@@ -112,7 +142,14 @@ open class GitApi {
         return callMethod(OPERATION_BRANCH, request, GitBranch::class.java)
     }
 
-    fun addWebhook(host: String, token: String, projectName: String, hookUrl: String, event: String?) {
+    fun addWebhook(
+        host: String,
+        token: String,
+        projectName: String,
+        hookUrl: String,
+        event: String?,
+        secret: String? = null
+    ) {
         logger.info("[$host|$projectName|$hookUrl|$event] Start add the web hook")
         val existHooks = getHooks(host, token, projectName)
         if (existHooks.isNotEmpty()) {
@@ -145,6 +182,17 @@ open class GitApi {
 
                     if (exist) {
                         logger.info("The web hook url($hookUrl) and event($event) is already exist($it)")
+                        if (!secret.isNullOrBlank()) {
+                            updateHook(
+                                host = host,
+                                hookId = it.id,
+                                token = token,
+                                projectName = projectName,
+                                hookUrl = hookUrl,
+                                event = event,
+                                secret = secret
+                            )
+                        }
                         return
                     }
                 }
@@ -152,7 +200,7 @@ open class GitApi {
         }
 
         // Add the wed hook
-        addHook(host, token, projectName, hookUrl, event)
+        addHook(host, token, projectName, hookUrl, event, secret)
     }
 
     fun addCommitCheck(
@@ -229,8 +277,22 @@ open class GitApi {
         token: String,
         projectName: String,
         hookUrl: String,
-        event: String? = null
+        event: String? = null,
+        secret: String? = null
     ): GitHook {
+        val body = webhookBody(hookUrl, event, secret)
+        val request = post(host, token, "projects/${urlEncode(projectName)}/hooks", body)
+        try {
+            return callMethod(OPERATION_ADD_WEBHOOK, request, GitHook::class.java)
+        } catch (t: GitApiException) {
+            if (t.code == HTTP_403) {
+                throw GitApiException(t.code, "Webhook添加失败，请确保该代码库的凭据关联的用户对代码库有Developer权限")
+            }
+            throw t
+        }
+    }
+
+    private fun webhookBody(hookUrl: String, event: String?, secret: String?): String {
         val params = mutableMapOf<String, String>()
 
         params["url"] = hookUrl
@@ -243,14 +305,30 @@ open class GitApi {
                 params[CodeGitWebhookEvent.PUSH_EVENTS.value] = false.toString()
             }
         }
+        if (!secret.isNullOrBlank()) {
+            params["token"] = secret!!
+        }
         params[CodeGitWebhookEvent.ENABLE_SSL_VERIFICATION.value] = false.toString()
-        val body = JsonUtil.getObjectMapper().writeValueAsString(params)
-        val request = post(host, token, "projects/${urlEncode(projectName)}/hooks", body)
+        return JsonUtil.getObjectMapper().writeValueAsString(params)
+    }
+
+    private fun updateHook(
+        host: String,
+        hookId: Long,
+        token: String,
+        projectName: String,
+        hookUrl: String,
+        event: String? = null,
+        secret: String? = null
+    ): GitHook {
+        logger.info("Start to update webhook of host $host by project $projectName")
+        val body = webhookBody(hookUrl, event, secret)
+        val request = put(host, token, "projects/${urlEncode(projectName)}/hooks/$hookId", body)
         try {
-            return callMethod(OPERATION_ADD_WEBHOOK, request, GitHook::class.java)
+            return callMethod(OPERATION_UPDATE_WEBHOOK, request, GitHook::class.java)
         } catch (t: GitApiException) {
             if (t.code == HTTP_403) {
-                throw GitApiException(t.code, "Webhook添加失败，请确保该代码库的凭据关联的用户对代码库有Developer权限")
+                throw GitApiException(t.code, "Webhook更新失败，请确保该代码库的凭据关联的用户对代码库有Developer权限")
             }
             throw t
         }
@@ -283,7 +361,7 @@ open class GitApi {
 
     private val mediaType = MediaType.parse("application/json; charset=utf-8")
 
-    private fun post(host: String, token: String, url: String, body: String) =
+    fun post(host: String, token: String, url: String, body: String) =
         request(host, token, url, "").post(RequestBody.create(mediaType, body)).build()
 
     private fun delete(host: String, token: String, url: String, body: String) =
@@ -378,6 +456,24 @@ open class GitApi {
             }
             throw t
         }
+    }
+
+    fun getMergeRequestChangeInfo(host: String, token: String, url: String): GitMrChangeInfo {
+        logger.info("get mr changes info url: $url")
+        val request = get(host, token, url, "")
+        return callMethod(OPERATION_MR_CHANGE, request, GitMrChangeInfo::class.java)
+    }
+
+    fun getMrInfo(host: String, token: String, url: String): GitMrInfo {
+        logger.info("get mr info url: $url")
+        val request = get(host, token, url, "")
+        return callMethod(OPERATION_MR_INFO, request, GitMrInfo::class.java)
+    }
+
+    fun getMrReviewInfo(host: String, token: String, url: String): GitMrReviewInfo {
+        logger.info("get mr review url: $url")
+        val request = get(host, token, url, "")
+        return callMethod(OPERATION_MR_INFO, request, GitMrReviewInfo::class.java)
     }
 
 //    private val OPERATION_BRANCH = "拉分支"

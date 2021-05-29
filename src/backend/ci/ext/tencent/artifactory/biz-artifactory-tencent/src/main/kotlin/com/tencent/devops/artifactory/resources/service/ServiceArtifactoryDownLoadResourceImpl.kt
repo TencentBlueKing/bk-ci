@@ -30,24 +30,17 @@ package com.tencent.devops.artifactory.resources.service
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryDownLoadResource
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
-import com.tencent.devops.artifactory.service.artifactory.ArtifactoryDownloadService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoDownloadService
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.common.service.gray.RepoGray
-import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
     private val bkRepoDownloadService: BkRepoDownloadService,
-    private val artifactoryDownloadService: ArtifactoryDownloadService,
-    private val redisOperation: RedisOperation,
-    private val commonConfig: CommonConfig,
-    private val repoGray: RepoGray
+    private val commonConfig: CommonConfig
 ) : ServiceArtifactoryDownLoadResource {
 
     override fun getThirdPartyDownloadUrl(
@@ -64,39 +57,21 @@ class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
         region: String?
     ): Result<List<String>> {
         checkParam(projectId, path)
-        return if (repoGray.isGray(projectId, redisOperation)) {
-            Result(
-                bkRepoDownloadService.getThirdPartyDownloadUrl(
-                    projectId,
-                    pipelineId,
-                    buildId,
-                    artifactoryType,
-                    path,
-                    ttl,
-                    crossProjectId,
-                    crossPipineId,
-                    crossBuildNo,
-                    region,
-                    userId
-                )
+        return Result(
+            bkRepoDownloadService.getThirdPartyDownloadUrl(
+                projectId,
+                pipelineId,
+                buildId,
+                artifactoryType,
+                path,
+                ttl,
+                crossProjectId,
+                crossPipineId,
+                crossBuildNo,
+                region,
+                userId
             )
-        } else {
-            Result(
-                artifactoryDownloadService.getThirdPartyDownloadUrl(
-                    projectId,
-                    pipelineId,
-                    buildId,
-                    artifactoryType,
-                    path,
-                    ttl,
-                    crossProjectId,
-                    crossPipineId,
-                    crossBuildNo,
-                    region,
-                    userId
-                )
-            )
-        }
+        )
     }
 
     override fun downloadUrl(
@@ -109,11 +84,8 @@ class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
     ): Result<Url> {
         checkParam(projectId, path)
         val isDirected = directed ?: false
-        return if (repoGray.isGray(projectId, redisOperation)) {
-            Result(bkRepoDownloadService.serviceGetInnerDownloadUrl(userId, projectId, artifactoryType, path, ttl, isDirected))
-        } else {
-            Result(artifactoryDownloadService.serviceGetInnerDownloadUrl(userId, projectId, artifactoryType, path, ttl, isDirected))
-        }
+        return Result(bkRepoDownloadService.serviceGetInnerDownloadUrl(userId, projectId, artifactoryType, path, ttl,
+            isDirected))
     }
 
     override fun downloadIndexUrl(
@@ -125,32 +97,15 @@ class ServiceArtifactoryDownLoadResourceImpl @Autowired constructor(
         directed: Boolean?
     ): Result<Url> {
         checkParam(projectId, path)
-        val isDirected = directed ?: false
-        return if (repoGray.isGray(projectId, redisOperation)) {
-            // 返回临时分享链接，仅支持额外分享一次
-            val url = bkRepoDownloadService.serviceGetInternalTemporaryAccessDownloadUrls(
-                userId = userId,
-                projectId = projectId,
-                artifactoryType = artifactoryType,
-                argPathSet = setOf(path),
-                ttl = ttl,
-                permits = 1
-            ).first()
-            Result(Url(url.url, url.url2))
-        } else {
-            val url = artifactoryDownloadService.serviceGetInnerDownloadUrl(userId, projectId, artifactoryType, path, ttl, isDirected)
-            Result(Url(getIndexUrl(url.url)!!, getIndexUrl(url.url2)))
-        }
-    }
-
-    private fun getIndexUrl(url: String?): String? {
-        if (url == null) {
-            return null
-        }
-        if (url.startsWith(HomeHostUtil.getHost(commonConfig.devopsHostGateway!!))) {
-            return url.removePrefix(HomeHostUtil.getHost(commonConfig.devopsHostGateway!!))
-        }
-        return url
+        val url = bkRepoDownloadService.serviceGetInternalTemporaryAccessDownloadUrls(
+            userId = userId,
+            projectId = projectId,
+            artifactoryType = artifactoryType,
+            argPathSet = setOf(path),
+            ttl = ttl,
+            permits = 1
+        ).first()
+        return Result(Url(url.url, url.url2))
     }
 
     private fun checkParam(projectId: String, path: String) {

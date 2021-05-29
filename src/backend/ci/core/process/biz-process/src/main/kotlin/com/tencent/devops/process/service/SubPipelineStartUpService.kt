@@ -46,6 +46,7 @@ import com.tencent.devops.process.pojo.pipeline.StartUpInfo
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStatus
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
+import com.tencent.devops.process.service.perm.PermFixService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
@@ -65,6 +66,7 @@ class SubPipelineStartUpService(
     private val pipelineBuildService: PipelineBuildService,
     private val pipelineBuildTaskDao: PipelineBuildTaskDao,
     private val dslContext: DSLContext,
+    private val permFixService: PermFixService,
     private val subPipelineStatusService: SubPipelineStatusService
 ) {
     companion object {
@@ -192,6 +194,8 @@ class SubPipelineStartUpService(
         val pipeline = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId) ?: return
         val existModel = pipelineRepositoryService.getModel(pipelineId, pipeline.version) ?: return
 
+        permFixService.checkPermission(pipeline.lastModifyUser, projectId, pipelineId = pipelineId)
+
         val currentExistPipelines = HashSet(existPipelines)
         existModel.stages.forEachIndexed stage@{ index, stage ->
             if (index == 0) {
@@ -219,7 +223,7 @@ class SubPipelineStartUpService(
                     if (element is MarketBuildLessAtomElement) {
                         val map = element.data
                         val msg = map["input"] as? Map<*, *> ?: return@element
-                        val subPip = msg["subPip"]
+                        val subPip = msg["subPip"] ?: return@element
                         logger.info("callPipelineStartup: ${msg["projectId"]} $projectId")
                         val subPro =
                             if (msg["projectId"] == null || msg["projectId"].toString()

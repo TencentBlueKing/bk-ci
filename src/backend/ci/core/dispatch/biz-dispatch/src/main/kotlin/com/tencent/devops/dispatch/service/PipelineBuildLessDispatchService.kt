@@ -33,7 +33,6 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.dispatch.service.dispatcher.BuildLessDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
@@ -107,16 +106,16 @@ class PipelineBuildLessDispatchService @Autowired constructor(
 
         getDispatchers().forEach {
             if (it.canDispatch(pipelineBuildLessAgentStartupEvent)) {
-                if (!jobQuotaBusinessService.checkJobQuota(pipelineBuildLessAgentStartupEvent, buildLogPrinter)) {
-                    logger.error("[$buildId]|BUILD_LESS| AgentLess Job quota exceed quota.")
-                    return
-                }
+//                if (!jobQuotaBusinessService.checkJobQuota(pipelineBuildLessAgentStartupEvent, buildLogPrinter)) {
+//                    logger.error("[$buildId]|BUILD_LESS| AgentLess Job quota exceed quota.")
+//                    return
+//                }
                 it.startUp(pipelineBuildLessAgentStartupEvent)
-                // 到这里说明JOB已经启动成功，开始累加使用额度
-                jobQuotaBusinessService.insertRunningJob(projectId = pipelineBuildLessAgentStartupEvent.projectId,
-                    vmType = JobQuotaVmType.AGENTLESS,
-                    buildId = pipelineBuildLessAgentStartupEvent.buildId,
-                    vmSeqId = pipelineBuildLessAgentStartupEvent.vmSeqId)
+//                // 到这里说明JOB已经启动成功，开始累加使用额度
+//                jobQuotaBusinessService.insertRunningJob(projectId = pipelineBuildLessAgentStartupEvent.projectId,
+//                    vmType = JobQuotaVmType.AGENTLESS,
+//                    buildId = pipelineBuildLessAgentStartupEvent.buildId,
+//                    vmSeqId = pipelineBuildLessAgentStartupEvent.vmSeqId)
                 return
             }
         }
@@ -124,15 +123,15 @@ class PipelineBuildLessDispatchService @Autowired constructor(
     }
 
     fun shutdown(event: PipelineBuildLessShutdownDispatchEvent) {
-        try {
+//        try {
             logger.info("[${event.buildId}]| Start to finish the pipeline build($event)")
             getDispatchers().forEach {
                 it.shutdown(event)
             }
-        } finally {
+//        } finally {
             // 不管shutdown成功失败，都要回收配额；这里回收job，将自动累加agent执行时间
-            jobQuotaBusinessService.deleteRunningJob(event.projectId, event.buildId, event.vmSeqId)
-        }
+//            jobQuotaBusinessService.deleteRunningJob(event.projectId, event.buildId, event.vmSeqId)
+//        }
     }
 
     companion object {

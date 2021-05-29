@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
 import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.common.ci.OBJECT_KIND_PUSH
@@ -71,6 +72,7 @@ import com.tencent.devops.common.ci.yaml.Job
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.enums.CodePullStrategy
 import com.tencent.devops.common.pipeline.enums.GitPullModeType
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.gitci.client.ScmClient
@@ -439,7 +441,7 @@ class GitCIBuildService @Autowired constructor(
         job.job.steps.forEach {
             val element = it.covertToElement(getCiBuildConf(buildConfig))
             elementList.add(element)
-            if (element is MarketBuildAtomElement) {
+            if (element is MarketBuildAtomElement || element is MarketBuildLessAtomElement) {
                 logger.info("install market atom: ${element.getAtomCode()}")
                 installMarketAtom(gitProjectConf, userId, element.getAtomCode())
             }
@@ -663,8 +665,12 @@ class GitCIBuildService @Autowired constructor(
             }
         }
 
+        val vars = yaml.variables?.map { (key, value) ->
+            key to EnvUtils.parseEnv(value, startParams)
+        }?.toMap()
+
         // 用户自定义变量
-        startParams.putAll(yaml.variables ?: mapOf())
+        startParams.putAll(vars ?: mapOf())
 
         startParams.forEach {
             result.add(BuildFormProperty(

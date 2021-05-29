@@ -28,12 +28,14 @@ package com.tencent.bk.codecc.codeccjob.dao;
 
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import com.google.common.collect.Sets;
 import com.tencent.bk.codecc.task.api.ServiceTaskRestResource;
 import com.tencent.devops.common.api.ToolMetaBaseVO;
 import com.tencent.devops.common.api.ToolMetaDetailVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.client.Client;
+import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.service.ToolMetaCacheService;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +48,8 @@ import org.springframework.stereotype.Component;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * 工具缓存
@@ -66,20 +70,26 @@ public class ToolMetaCacheServiceImpl implements ToolMetaCacheService
     private Map<String, ToolMetaBaseVO> toolMetaBasicMap = Maps.newConcurrentMap();
 
     /**
+     * 工具维度基础信息缓存
+     */
+    private Map<String, Set<ToolMetaBaseVO>> toolMetaBasicDimensionMap = Maps.newConcurrentMap();
+
+    /**
      * 加载工具缓存
      */
     @Override
     public List<ToolMetaBaseVO> loadToolBaseCache()
     {
-        CodeCCResult<Map<String, ToolMetaBaseVO>> taskCodeCCResult = client.get(ServiceTaskRestResource.class).getToolMetaListFromCache();
-        if (taskCodeCCResult.isNotOk() || null == taskCodeCCResult.getData() || MapUtils.isEmpty(taskCodeCCResult.getData()))
+        Result<Map<String, ToolMetaBaseVO>> taskResult = client.get(ServiceTaskRestResource.class).getToolMetaListFromCache();
+        if (taskResult.isNotOk() || null == taskResult.getData() || MapUtils.isEmpty(taskResult.getData()))
         {
             log.error("all tool metadata is empty!");
             throw new CodeCCException(CommonMessageCode.INTERNAL_SYSTEM_FAIL);
         }
-        Map<String, ToolMetaBaseVO> toolMetaBaseVOMap = taskCodeCCResult.getData();
+        Map<String, ToolMetaBaseVO> toolMetaBaseVOMap = taskResult.getData();
 
         toolMetaBasicMap.clear();
+        toolMetaBasicDimensionMap.clear();
         List<ToolMetaBaseVO> toolMetaBaseVOS = Lists.newArrayList();
         for (Map.Entry<String, ToolMetaBaseVO> entry : toolMetaBaseVOMap.entrySet())
         {
@@ -87,9 +97,25 @@ public class ToolMetaCacheServiceImpl implements ToolMetaCacheService
             ToolMetaBaseVO tool = entry.getValue();
             toolMetaBasicMap.put(tool.getName(), tool);
             toolMetaBaseVOS.add(tool);
+
+            // 缓存维度基础信息
+            // DEFECT类型的工具特殊处理下
+            String dimensionMapKey = tool.getType();
+            if (dimensionMapKey.equals(ComConstants.ToolType.DEFECT.name()) && tool.getPattern().equals(ComConstants.ToolPattern.LINT.name())) {
+                dimensionMapKey = ComConstants.ToolPattern.LINT.name();
+            }
+            Set<ToolMetaBaseVO> toolDimensionSet = toolMetaBasicDimensionMap.get(dimensionMapKey);
+            if (toolDimensionSet == null) {
+                toolDimensionSet = Sets.newHashSet();
+            }
+            toolDimensionSet.add(tool);
+            toolMetaBasicDimensionMap.put(dimensionMapKey, toolDimensionSet);
         }
 
-        log.info("load tool cache success");
+        log.info("load tool dimension cache success: {}", toolMetaBasicDimensionMap);
+
+        log.info("load tool cache success: {}", toolMetaBasicMap);
+
         return toolMetaBaseVOS;
     }
 
@@ -211,6 +237,17 @@ public class ToolMetaCacheServiceImpl implements ToolMetaCacheService
     public ToolMetaDetailVO getToolDetailFromCache(String toolName)
     {
         return null;
+    }
+
+    @Override
+    public List<String> getToolDetailByDimension(String dimension) {
+        if (StringUtils.isBlank(dimension)) {
+            return null;
+        }
+        if (toolMetaBasicDimensionMap.get(dimension) == null || CollectionUtils.isEmpty(toolMetaBasicDimensionMap.get(dimension))) {
+            loadToolBaseCache();
+        }
+        return toolMetaBasicDimensionMap.get(dimension).stream().map(ToolMetaBaseVO::getName).collect(Collectors.toList());
     }
 
     /**

@@ -49,8 +49,12 @@ import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.service.ProjectLocalService
 import com.tencent.devops.project.service.ProjectMemberService
 import com.tencent.devops.project.service.ProjectService
+import com.tencent.devops.project.service.ProjectTagService
 import com.tencent.devops.project.service.TxProjectPermissionService
+import com.tencent.devops.project.service.iam.ProjectIamV0Service
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 
 @RestResource
 class ServiceTxProjectResourceImpl @Autowired constructor(
@@ -58,8 +62,14 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
     private val projectPermissionService: TxProjectPermissionService,
     private val projectLocalService: ProjectLocalService,
     private val projectService: ProjectService,
-    private val projectMemberService: ProjectMemberService
+    private val projectMemberService: ProjectMemberService,
+    private val projectIamV0Service: ProjectIamV0Service,
+    private val projectTagService: ProjectTagService
 ) : ServiceTxProjectResource {
+
+    @Value("\${auto.tag:#{null}}")
+    val autoTag: String? = null
+
     override fun addManagerForProject(userId: String, addManagerRequest: AddManagerRequest): Result<Boolean> {
         return Result(bsAuthPermissionApi.addResourcePermissionForUsers(
             userId = userId,
@@ -185,19 +195,44 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         return Result(projectLocalService.getOrCreatePreProject(userId, accessToken))
     }
 
-    // TODO
-    override fun create(userId: String, accessToken: String, projectCreateInfo: ProjectCreateInfo): Result<String> {
-        val createExtInfo = ProjectCreateExtInfo(
-            needAuth = true,
-            needValidate = true
-        )
-        return Result(projectService.create(
+    override fun create(
+        userId: String,
+        accessToken: String,
+        projectCreateInfo: ProjectCreateInfo,
+        routerTag: String?
+    ): Result<String> {
+        var channelCode = ProjectChannelCode.BS
+        val createExtInfo = if (
+            !routerTag.isNullOrEmpty() &&
+            !autoTag.isNullOrEmpty() &&
+            routerTag == autoTag
+        ) {
+            channelCode = ProjectChannelCode.AUTO
+            logger.info("create $userId ${projectCreateInfo.englishName} $routerTag")
+            ProjectCreateExtInfo(
+                needAuth = false,
+                needValidate = true
+            )
+        } else {
+            ProjectCreateExtInfo(
+                needAuth = true,
+                needValidate = true
+            )
+        }
+        val createResult = projectService.create(
             userId = userId,
             accessToken = accessToken,
             projectCreateInfo = projectCreateInfo,
             createExt = createExtInfo,
-            channel = ProjectChannelCode.BS
-        ))
+            channel = channelCode
+        )
+        if (channelCode == ProjectChannelCode.AUTO) {
+            projectTagService.updateTagByProject(
+                projectCreateInfo.englishName,
+                autoTag
+            )
+        }
+        return Result(createResult)
     }
 
     override fun getProjectManagers(
@@ -246,7 +281,7 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         createUser: String,
         createInfo: ProjectCreateUserDTO
     ): Result<Boolean> {
-        return Result(projectLocalService.createUser2Project(
+        return Result(projectIamV0Service.createUser2Project(
             createUser = createUser,
             userIds = createInfo.userIds!!,
             projectCode = createInfo.projectId,
@@ -275,7 +310,7 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
         createUser: String,
         createInfo: PipelinePermissionInfo
     ): Result<Boolean> {
-        return Result(projectLocalService.createPipelinePermission(
+        return Result(projectIamV0Service.createPipelinePermission(
             createUser = createUser,
             projectId = createInfo.projectId,
             userId = createInfo.userId,
@@ -308,5 +343,9 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
             organizationId = organizationId,
             projectId = projectCode
         ))
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(ServiceTxProjectResourceImpl::class.java)
     }
 }

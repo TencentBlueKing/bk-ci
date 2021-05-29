@@ -35,8 +35,11 @@ import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Field
 import org.jooq.Record1
 import org.jooq.Result
+import org.jooq.impl.DSL
+import org.jooq.impl.SQLDataType
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -102,7 +105,8 @@ class PipelineInfoDao {
         manualStartup: Boolean? = null,
         canElementSkip: Boolean? = null,
         buildNo: BuildNo? = null,
-        taskCount: Int = 0
+        taskCount: Int = 0,
+        latestVersion: Int = 0
     ): Int {
         val count = with(T_PIPELINE_INFO) {
 
@@ -127,20 +131,31 @@ class PipelineInfoDao {
             if (taskCount > 0) {
                 update.set(TASK_COUNT, taskCount)
             }
-
+            val conditions = ArrayList<Condition>(2)
+            conditions.add(PIPELINE_ID.eq(pipelineId))
+            if (latestVersion > 0) {
+                conditions.add(VERSION.eq(latestVersion))
+            }
             update.set(UPDATE_TIME, LocalDateTime.now())
                 .set(LAST_MODIFY_USER, userId)
-                .where(PIPELINE_ID.eq(pipelineId))
+                .where(conditions)
                 .execute()
         }
-
+        if (count < 1) {
+            logger.warn("Update the pipeline $pipelineId with the latest version($latestVersion) failed")
+            // 版本号为0则为更新失败, 异常在业务层抛出, 只有pipelineId和version不符合的情况会走这里, 统一成一个异常应该問題ありません
+            return 0
+        }
         val version = with(T_PIPELINE_INFO) {
             dslContext.select(VERSION)
                 .from(this)
                 .where(PIPELINE_ID.eq(pipelineId))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
-        logger.info("Update the pipeline $pipelineId add new version($version) and result=${count == 1}")
+        logger.info(
+            "Update the pipeline $pipelineId add new version($version) old version($latestVersion) " +
+                "and result=${count == 1}"
+        )
         return version
     }
 
@@ -156,7 +171,7 @@ class PipelineInfoDao {
                 .and(PIPELINE_ID.`in`(pipelineIds))
                 .and(CHANNEL.eq(channelCode.name))
                 .and(DELETE.eq(false))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -172,7 +187,7 @@ class PipelineInfoDao {
             if (channelCode != null)
                 query.and(CHANNEL.eq(channelCode.name))
 
-            query.and(DELETE.eq(false)).fetchOne(0, Int::class.java)
+            query.and(DELETE.eq(false)).fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -191,12 +206,27 @@ class PipelineInfoDao {
         }
     }
 
-    fun listPipelineInfoByProject(dslContext: DSLContext, projectId: String, limit: Int, offset: Int): Result<TPipelineInfoRecord>? {
+    fun listPipelineInfoByProject(
+        dslContext: DSLContext,
+        projectId: String? = null,
+        limit: Int,
+        offset: Int,
+        deleteFlag: Boolean = false,
+        timeDescFlag: Boolean = true
+    ): Result<TPipelineInfoRecord>? {
         return with(T_PIPELINE_INFO) {
-            dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(DELETE.eq(false)).limit(limit).offset(offset)
-                .fetch()
+            val conditions = mutableListOf<Condition>()
+            if (projectId != null) {
+                conditions.add(PROJECT_ID.eq(projectId))
+            }
+            conditions.add(DELETE.eq(deleteFlag))
+            val baseQuery = dslContext.selectFrom(this).where(conditions)
+            if (timeDescFlag) {
+                baseQuery.orderBy(CREATE_TIME.desc(), PIPELINE_ID)
+            } else {
+                baseQuery.orderBy(CREATE_TIME.asc(), PIPELINE_ID)
+            }
+            baseQuery.limit(limit).offset(offset).fetch()
         }
     }
 
@@ -217,7 +247,7 @@ class PipelineInfoDao {
                     .where(PROJECT_ID.eq(projectId))
                     .and(PIPELINE_NAME.like("%$pipelineName%"))
                     .and(DELETE.eq(false))
-                    .fetchOne(0, Int::class.java)
+                    .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -379,6 +409,23 @@ class PipelineInfoDao {
                     dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId)).and(PIPELINE_ID.`in`(pipelineIds))
                 }
             if (filterDelete) query.and(DELETE.eq(false))
+            query.fetch()
+        }
+    }
+
+    fun listOrderInfoByPipelineIds(
+        dslContext: DSLContext,
+        pipelineIds: List<String>
+    ): Result<TPipelineInfoRecord> {
+        return with(T_PIPELINE_INFO) {
+            val query = dslContext.selectFrom(this).where(PIPELINE_ID.`in`(pipelineIds))
+            val args = arrayOfNulls<Field<out Any>?>(pipelineIds.size + 1)
+            args[0] = DSL.field("PIPELINE_ID")
+            var index = 1
+            pipelineIds.forEach { pipelineId ->
+                args[index++] = DSL.`val`(pipelineId)
+            }
+            query.orderBy(DSL.function("field", SQLDataType.VARCHAR, *args))
             query.fetch()
         }
     }

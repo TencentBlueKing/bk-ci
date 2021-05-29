@@ -38,7 +38,7 @@ import com.tencent.bk.codecc.defect.vo.UploadDefectVO;
 import com.tencent.bk.codecc.task.vo.AnalyzeConfigInfoVO;
 import com.tencent.bk.codecc.task.vo.OpenCheckerVO;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.util.JsonUtil;
 import lombok.extern.slf4j.Slf4j;
@@ -64,18 +64,17 @@ public abstract class AbstractPlatformUploadDefectBizService extends AbstractUpl
 {
     @Autowired
     private TaskLogRepository taskLogRepository;
-
     @Autowired
     private TransferAuthorRepository transferAuthorRepository;
-
     @Autowired
     protected CheckerService checkerService;
-
     @Autowired
     private ThirdPartySystemCaller thirdPartySystemCaller;
+    @Autowired
+    private FilterPathService filterPathService;
 
     @Override
-    public CodeCCResult processBiz(UploadDefectVO uploadDefectVO)
+    public Result processBiz(UploadDefectVO uploadDefectVO)
     {
         String defectListJson = decompressDefects(uploadDefectVO.getDefectsCompress());
         List<DefectEntity> defectList = JsonUtil.INSTANCE.to(defectListJson, new TypeReference<List<DefectEntity>>()
@@ -85,7 +84,7 @@ public abstract class AbstractPlatformUploadDefectBizService extends AbstractUpl
         if (CollectionUtils.isEmpty(defectList))
         {
             log.error("defect list is empty.");
-            return new CodeCCResult(CommonMessageCode.SUCCESS, "defect list is empty.");
+            return new Result(CommonMessageCode.SUCCESS, "defect list is empty.");
         }
 
         long taskId = uploadDefectVO.getTaskId();
@@ -96,17 +95,29 @@ public abstract class AbstractPlatformUploadDefectBizService extends AbstractUpl
         String buildNum = taskLogEntity.getBuildNum();
 
         TaskDetailVO taskDetailVO = thirdPartySystemCaller.getTaskInfoWithoutToolsByTaskId(taskId);
-        Set<String> filterPathSet = getFilterPaths(taskDetailVO);
+        Set<String> filterPathSet = filterPathService.getFilterPaths(taskDetailVO, toolName);
         TransferAuthorEntity transferAuthorEntity = transferAuthorRepository.findByTaskId(taskId);
         List<TransferAuthorEntity.TransferAuthorPair> transferAuthorList = null;
         if (transferAuthorEntity != null)
         {
             transferAuthorList = transferAuthorEntity.getTransferAuthorList();
         }
-        log.info("begin to save defect");
-        saveAndStatisticDefect(uploadDefectVO, defectList, taskDetailVO, filterPathSet, transferAuthorList, buildNum);
 
-        return new CodeCCResult(CommonMessageCode.SUCCESS, "upload defect ok");
+        Set<String> pathSet = new HashSet<>();
+        if (CollectionUtils.isNotEmpty(taskDetailVO.getWhitePaths())) {
+            pathSet.addAll(taskDetailVO.getWhitePaths());
+        }
+
+        log.info("begin to save defect");
+        saveAndStatisticDefect(uploadDefectVO,
+                defectList,
+                taskDetailVO,
+                filterPathSet,
+                pathSet,
+                transferAuthorList,
+                buildNum);
+
+        return new Result(CommonMessageCode.SUCCESS, "upload defect ok");
     }
 
     /**
@@ -116,6 +127,7 @@ public abstract class AbstractPlatformUploadDefectBizService extends AbstractUpl
      * @param defectList
      * @param taskDetailVO
      * @param filterPathSet
+     * @param pathSet
      * @param transferAuthorList
      * @param buildNum
      */
@@ -124,15 +136,9 @@ public abstract class AbstractPlatformUploadDefectBizService extends AbstractUpl
             List<DefectEntity> defectList,
             TaskDetailVO taskDetailVO,
             Set<String> filterPathSet,
+            Set<String> pathSet,
             List<TransferAuthorEntity.TransferAuthorPair> transferAuthorList,
             String buildNum);
-
-
-    private Set<String> getFilterPaths(TaskDetailVO taskDetailVO)
-    {
-        return new HashSet<>(taskDetailVO.getAllFilterPaths());
-    }
-
 
     /**
      * 获取打开规则映射

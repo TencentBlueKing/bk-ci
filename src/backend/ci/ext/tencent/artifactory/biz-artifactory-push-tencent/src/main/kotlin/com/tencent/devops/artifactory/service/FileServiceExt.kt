@@ -32,8 +32,6 @@ import com.tencent.devops.artifactory.constant.PushMessageCode
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.client.BkRepoClient
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import okhttp3.Request
 import org.slf4j.LoggerFactory
@@ -46,8 +44,6 @@ import java.nio.file.Paths
 
 @Service
 class FileServiceExt @Autowired constructor(
-    private val repoGray: RepoGray,
-    private val redisOperation: RedisOperation,
     private val bkRepoClient: BkRepoClient
 ) : FileService {
     @Value("\${gateway.url:#{null}}")
@@ -62,37 +58,22 @@ class FileServiceExt @Autowired constructor(
     ): List<File> {
         val downloadFiles = mutableListOf<File>()
         val destPath = buildTmpFile(projectId, buildId, pipelineId)
-        val isRepoGray = repoGray.isGray(projectId, redisOperation)
 
         var count = 0
         fileName.split(",").map {
             it.trim().removePrefix("/").removePrefix("./")
         }.forEach { path ->
-            if (isRepoGray) {
-                val fileList = bkRepoClient.matchBkRepoFile("", path, projectId, pipelineId, buildId, isCustom)
-                val repoName = if (isCustom) "custom" else "pipeline"
-                fileList.forEach { bkrepoFile ->
-                    logger.info("BKRepoFile匹配到文件：(${bkrepoFile.displayPath})")
-                    count++
-                    val url =
-                        "http://$gatewayUrl/bkrepo/api/service/generic/$projectId/$repoName/${bkrepoFile.fullPath}"
-                    val destFile = File(destPath, File(bkrepoFile.displayPath).name)
-                    OkhttpUtils.downloadFile(url, destFile, mapOf("X-BKREPO-UID" to "admin")) // todo user
-                    downloadFiles.add(destFile)
-                    logger.info("save file : ${destFile.canonicalPath} (${destFile.length()})")
-                }
-            } else {
-                val fileList = matchFile(path, projectId, pipelineId, buildId, isCustom)
-                fileList.forEach { jfrogFile ->
-                    logger.info("Jfrog匹配到文件：(${jfrogFile.uri})")
-                    count++
-                    val url = if (isCustom) "http://$gatewayUrl/jfrog/storage/service/custom/$projectId${jfrogFile.uri}"
-                    else "http://$gatewayUrl/jfrog/storage/service/archive/$projectId/$pipelineId/$buildId${jfrogFile.uri}"
-                    val destFile = File(destPath, File(jfrogFile.uri).name)
-                    OkhttpUtils.downloadFile(url, destFile)
-                    downloadFiles.add(destFile)
-                    logger.info("save file : ${destFile.canonicalPath} (${destFile.length()})")
-                }
+            val fileList = bkRepoClient.matchBkRepoFile("", path, projectId, pipelineId, buildId, isCustom)
+            val repoName = if (isCustom) "custom" else "pipeline"
+            fileList.forEach { bkrepoFile ->
+                logger.info("BKRepoFile匹配到文件：(${bkrepoFile.displayPath})")
+                count++
+                val url =
+                    "http://$gatewayUrl/bkrepo/api/service/generic/$projectId/$repoName/${bkrepoFile.fullPath}"
+                val destFile = File(destPath, File(bkrepoFile.displayPath).name)
+                OkhttpUtils.downloadFile(url, destFile, mapOf("X-BKREPO-UID" to "admin")) // todo user
+                downloadFiles.add(destFile)
+                logger.info("save file : ${destFile.canonicalPath} (${destFile.length()})")
             }
         }
         if (count == 0) {
@@ -127,7 +108,12 @@ class FileServiceExt @Autowired constructor(
     }
 
     // 获取所有的文件和文件夹
-    private fun getAllFiles(projectId: String, pipelineId: String, buildId: String, isCustom: Boolean): JfrogFilesData {
+    private fun getAllFiles(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        isCustom: Boolean
+    ): JfrogFilesData {
 
         val cusListFilesUrl = "http://$gatewayUrl/jfrog/api/service/custom/$projectId?list&deep=1&listFolders=1"
         val listFilesUrl = "http://$gatewayUrl/jfrog/api/service/archive"
@@ -135,10 +121,7 @@ class FileServiceExt @Autowired constructor(
         val url = if (!isCustom) "$listFilesUrl/$projectId/$pipelineId/$buildId?list&deep=1&listFolders=1"
         else cusListFilesUrl
 
-        val request = Request.Builder()
-            .url(url)
-            .get()
-            .build()
+        val request = Request.Builder().url(url).get().build()
 
         // 获取所有的文件和文件夹
         OkhttpUtils.doHttp(request).use { response ->

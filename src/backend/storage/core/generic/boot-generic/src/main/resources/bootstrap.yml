@@ -1,15 +1,5 @@
-spring:
-  application:
-    name: generic
-  cloud:
-    consul:
-      discovery:
-        heartbeat:
-          enabled: true
-        query-passing: true
-        prefer-ip-address: true
-      config:
-        prefix: bkrepo-config
-        format: YAML
-        data-key: data
-        profileSeparator: '::'
+service.name: generic
+server.port: 25801
+
+generic:
+  host: localhost

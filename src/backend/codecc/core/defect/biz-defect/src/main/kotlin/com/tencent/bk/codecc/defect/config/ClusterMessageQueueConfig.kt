@@ -67,7 +67,7 @@ class ClusterMessageQueueConfig {
         container.setConsecutiveActiveTrigger(5)
         container.setRabbitAdmin(rabbitAdmin)
         //确保只有一个消费者消费，保证负载不超时
-        val adapter = MessageListenerAdapter(defectClusterComponent, defectClusterComponent::executeCluster.name)
+        val adapter = MessageListenerAdapter(defectClusterComponent, defectClusterComponent::executeClusterNew.name)
         adapter.setMessageConverter(messageConverter)
         container.messageListener = adapter
         return container

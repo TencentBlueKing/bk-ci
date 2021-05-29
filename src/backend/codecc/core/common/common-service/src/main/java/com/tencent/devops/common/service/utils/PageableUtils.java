@@ -53,4 +53,17 @@ public class PageableUtils
                 pageSize == null || pageSize <= 0 ? 10 : pageSize, pageSort);
     }
 
+    /**
+     * 生成分页请求对象
+     *
+     * @param pageNum          页码
+     * @param pageSize         每页数量
+     * @return PR
+     */
+    public static Pageable getPageable(Integer pageNum, Integer pageSize)
+    {
+
+        return new PageRequest(pageNum == null || pageNum - 1 < 0 ? 0 : pageNum - 1,
+            pageSize == null || pageSize <= 0 ? 10 : pageSize);
+    }
 }

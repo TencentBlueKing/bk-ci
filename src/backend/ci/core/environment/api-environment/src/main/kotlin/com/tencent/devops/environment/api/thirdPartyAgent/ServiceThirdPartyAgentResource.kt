@@ -32,6 +32,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
+import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentPipelineRef
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineCreate
@@ -189,4 +191,60 @@ interface ServiceThirdPartyAgentResource {
         @PathParam("os")
         os: OS
     ): Result<List<ThirdPartyAgentInfo>>
+
+    @ApiOperation("构建任务已认领")
+    @POST
+    @Path("/projects/{projectId}/agents/{agentId}/taskStarted")
+    fun agentTaskStarted(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("pipeline ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("build ID", required = true)
+        @QueryParam("buildId")
+        buildId: String,
+        @ApiParam("VM SEQ ID", required = true)
+        @QueryParam("vmSeqId")
+        vmSeqId: String,
+        @ApiParam("agent Hash ID", required = true)
+        @PathParam("agentId")
+        agentId: String
+    ): Result<Boolean>
+
+    @ApiOperation("获取构建机流水线引用信息")
+    @GET
+    @Path("/projects/{projectId}/agents/{nodeHashId}/listPipelineRef")
+    fun listPipelineRef(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("Node Hash ID", required = true)
+        @PathParam("nodeHashId")
+        nodeHashId: String,
+        @ApiParam("排序字段, pipelineName|lastBuildTime", required = true)
+        @QueryParam("sortBy")
+        sortBy: String? = null,
+        @ApiParam("排序方向, ASC|DESC", required = true)
+        @QueryParam("sortDirection")
+        sortDirection: String? = null
+    ): Result<List<AgentPipelineRef>>
+
+    @ApiOperation("更新构建机流水线引用信息")
+    @POST
+    @Path("/projects/{projectId}/updatePipelineRef")
+    fun updatePipelineRef(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线引用信息", required = true)
+        request: AgentPipelineRefRequest
+    ): Result<Boolean>
 }

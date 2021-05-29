@@ -14,7 +14,9 @@ package com.tencent.bk.codecc.apiquery.vo.openapi;
 
 import io.swagger.annotations.ApiModel;
 import io.swagger.annotations.ApiModelProperty;
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * 规则告警统计
@@ -24,6 +26,8 @@ import lombok.Data;
  */
 @Data
 @ApiModel("规则告警统计")
+@AllArgsConstructor
+@NoArgsConstructor
 public class CheckerDefectStatVO {
     @ApiModelProperty("任务ID")
     private Long taskId;

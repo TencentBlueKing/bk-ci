@@ -46,5 +46,7 @@ public class LintBatchRevertIgnoreBizServiceImpl extends AbstractLintBatchDefect
                 }).collect(Collectors.toList());
 
         defectDao.batchUpdateDefectStatusIgnoreBit(batchDefectProcessReqVO.getTaskId(), defects, 0, null, null);
+
+        refreshOverviewData(batchDefectProcessReqVO.getTaskId());
     }
 }

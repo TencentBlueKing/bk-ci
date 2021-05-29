@@ -132,7 +132,8 @@ class BkRepoDownloadService @Autowired constructor(
         pipelineService.validatePermission(userId, projectId)
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         val repo = RepoUtils.getRepoByType(artifactoryType)
-        val url = "${HomeHostUtil.getHost(commonConfig.devopsIdcGateway!!)}/bkrepo/api/user/generic/$projectId/$repo$normalizedPath"
+        val url = "${HomeHostUtil.getHost(commonConfig.devopsIdcGateway!!)}" +
+            "/bkrepo/api/user/generic/$projectId/$repo$normalizedPath?download=true"
         return Url(url, url)
     }
 
@@ -301,7 +302,7 @@ class BkRepoDownloadService @Autowired constructor(
                 downloadIps = listOf(),
                 timeoutInSeconds = (ttl ?: 24 * 3600).toLong()
             )
-            resultList.add("${RegionUtil.getRegionUrl(region)}/bkrepo/api/external/repository$shareUri")
+            resultList.add("${RegionUtil.getRegionUrl(region)}/bkrepo/api/external/repository$shareUri&download=true")
         }
         return resultList
     }

@@ -34,6 +34,7 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.util.UrlUtil
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
@@ -43,6 +44,7 @@ import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceDownloadDao
+import com.tencent.devops.experience.dao.ExperienceLastDownloadDao
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.dao.TokenDao
 import com.tencent.devops.experience.pojo.DownloadUrl
@@ -50,10 +52,12 @@ import com.tencent.devops.experience.pojo.ExperienceCount
 import com.tencent.devops.experience.pojo.ExperienceUserCount
 import com.tencent.devops.experience.pojo.download.CheckVersionParam
 import com.tencent.devops.experience.pojo.download.CheckVersionVO
+import com.tencent.devops.experience.pojo.download.DownloadRecordVO
 import com.tencent.devops.experience.util.DateUtil
 import com.tencent.devops.experience.util.StringUtil
 import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -64,16 +68,18 @@ class ExperienceDownloadService @Autowired constructor(
     private val tokenDao: TokenDao,
     private val experienceDao: ExperienceDao,
     private val experienceDownloadDao: ExperienceDownloadDao,
+    private val experienceLastDownloadDao: ExperienceLastDownloadDao,
     private val experiencePublicDao: ExperiencePublicDao,
     private val experienceBaseService: ExperienceBaseService,
     private val client: Client
 ) {
     fun checkVersion(userId: String, platform: Int, params: List<CheckVersionParam>): List<CheckVersionVO> {
-        if (params.isEmpty()) {
-            return emptyList()
-        }
-
-        val experienceRecordIds = experienceBaseService.getRecordIdsByUserId(userId, GroupIdTypeEnum.ALL)
+        val experienceRecordIds = if (params.isEmpty()) {
+            mutableSetOf()
+        } else experienceBaseService.getRecordIdsByUserId(
+            userId,
+            GroupIdTypeEnum.ALL
+        )
         if (experienceRecordIds.isEmpty()) {
             return emptyList()
         }
@@ -131,7 +137,16 @@ class ExperienceDownloadService @Autowired constructor(
         return getExternalDownloadUrl(userId, experienceId)
     }
 
-    fun getExternalDownloadUrl(userId: String, experienceId: Long): DownloadUrl {
+    fun getExternalDownloadUrl(userId: String, experienceId: Long, isOuter: Boolean = false): DownloadUrl {
+        val canExperience = experienceBaseService.userCanExperience(userId, experienceId, isOuter)
+        if (!canExperience) {
+            throw ErrorCodeException(
+                statusCode = 403,
+                defaultMessage = "没有权限下载资源",
+                errorCode = ExperienceMessageCode.USER_NEED_EXP_X_PERMISSION
+            )
+        }
+
         val experienceRecord = experienceDao.get(dslContext, experienceId)
         checkIfExpired(experienceRecord)
 
@@ -151,18 +166,28 @@ class ExperienceDownloadService @Autowired constructor(
         val path = experienceRecord.artifactoryPath
         val platform = PlatformEnum.valueOf(experienceRecord.platform)
         val url = if (path.endsWith(".ipa", true)) {
-            "${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories/$projectId/$artifactoryType/filePlist?experienceHashId=$experienceHashId&path=$path"
+            "${HomeHostUtil.outerApiServerHost()}/artifactory/api/app/artifactories" +
+                    "/$projectId/$artifactoryType/filePlist?experienceHashId=$experienceHashId&path=$path"
         } else {
             client.get(ServiceArtifactoryResource::class)
                 .externalUrl(projectId, artifactoryType, userId, path, 24 * 3600, false).data!!.url
         }
         val fileDetail = client.get(ServiceArtifactoryResource::class).show(projectId, artifactoryType, path).data!!
 
-        addDownloadRecord(experienceId, userId)
+        addDownloadRecord(experienceRecord, userId)
         return DownloadUrl(StringUtil.chineseUrlEncode(url), platform, fileDetail.size)
     }
 
     fun getInnerDownloadUrl(userId: String, experienceId: Long): String {
+        val canExperience = experienceBaseService.userCanExperience(userId, experienceId)
+        if (!canExperience) {
+            throw ErrorCodeException(
+                statusCode = 403,
+                defaultMessage = "没有权限下载资源",
+                errorCode = ExperienceMessageCode.USER_NEED_EXP_X_PERMISSION
+            )
+        }
+
         val experienceRecord = experienceDao.get(dslContext, experienceId)
         val projectId = experienceRecord.projectId
         val path = experienceRecord.artifactoryPath
@@ -178,14 +203,15 @@ class ExperienceDownloadService @Autowired constructor(
             )
         }
 
-        addDownloadRecord(experienceId, userId)
+        addDownloadRecord(experienceRecord, userId)
         return client.get(ServiceArtifactoryResource::class)
             .downloadUrl(projectId, artifactoryType, userId, path, 24 * 3600, false).data!!.url
     }
 
     fun getQrCodeUrl(experienceHashId: String): String {
         val url =
-            "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
+            "${HomeHostUtil.outerServerHost()}/app/download/devops_app_forward.html" +
+                    "?flag=experienceDetail&experienceId=$experienceHashId"
         return client.get(ServiceShortUrlResource::class)
             .createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 3)).data!!
     }
@@ -206,15 +232,25 @@ class ExperienceDownloadService @Autowired constructor(
         }
     }
 
-    fun addDownloadRecord(experienceId: Long, userId: String) {
-        val experienceDownloadRecord = experienceDownloadDao.getOrNull(dslContext, experienceId, userId)
+    fun addDownloadRecord(experienceRecord: TExperienceRecord, userId: String) {
+        // 新增下载次数
+        val experienceDownloadRecord = experienceDownloadDao.getOrNull(dslContext, experienceRecord.id, userId)
         if (experienceDownloadRecord == null) {
-            experienceDownloadDao.create(dslContext, experienceId, userId)
+            experienceDownloadDao.create(dslContext, experienceRecord.id, userId)
         } else {
             experienceDownloadDao.plusTimes(dslContext, experienceDownloadRecord.id)
         }
+        experiencePublicDao.addDownloadTimeByRecordId(dslContext, experienceRecord.id)
 
-        experiencePublicDao.addDownloadTimeByRecordId(dslContext, experienceId)
+        // 更新最近下载记录
+        experienceLastDownloadDao.upset(
+            dslContext = dslContext,
+            userId = userId,
+            bundleId = experienceRecord.bundleIdentifier,
+            projectId = experienceRecord.projectId,
+            platform = experienceRecord.platform,
+            recordId = experienceRecord.id
+        )
     }
 
     fun downloadCount(userId: String, projectId: String, experienceHashId: String): ExperienceCount {
@@ -239,7 +275,12 @@ class ExperienceDownloadService @Autowired constructor(
         val count = experienceDownloadDao.count(dslContext, experienceId)
         val finalOffset = if (limit == -1) 0 else offset
         val finalLimit = if (limit == -1) count.toInt() else limit
-        val downloadRecordList = experienceDownloadDao.list(dslContext, experienceId, finalOffset, finalLimit)
+        val downloadRecordList = experienceDownloadDao.listByExperienceId(
+            dslContext,
+            experienceId,
+            finalOffset,
+            finalLimit
+        )
 
         val list = downloadRecordList.map {
             ExperienceUserCount(
@@ -249,5 +290,78 @@ class ExperienceDownloadService @Autowired constructor(
             )
         }
         return Pair(count, list)
+    }
+
+    fun records(userId: String, platform: Int, page: Int, pageSize: Int): Pagination<DownloadRecordVO> {
+        val isParamLegal = userId.isEmpty() || PlatformEnum.of(platform) == null || page < 1 || pageSize < 0
+        if (isParamLegal) {
+            logger.info("params is illegal , userId:$userId , platform:$platform , page:$page , pageSize:$pageSize")
+            return Pagination(false, emptyList())
+        }
+
+        val experienceIdDownloadTimeMap =
+            experienceDownloadDao.distinctExperienceIdByUserId(
+                dslContext = dslContext,
+                userId = userId,
+                limit = 10000
+            )?.map { it.value1() to it.value2() }?.toMap()
+        return if (null == experienceIdDownloadTimeMap || experienceIdDownloadTimeMap.isEmpty()) {
+            Pagination(false, emptyList())
+        } else {
+            val experienceIdsByBundleId = experienceDao.listIdsGroupByBundleId(
+                dslContext = dslContext,
+                ids = experienceIdDownloadTimeMap.keys,
+                expireTime = LocalDateTime.now(),
+                online = true
+            ).map { it.value1() }.toSet()
+
+            val lastDownloadMap = experienceBaseService.getLastDownloadMap(userId)
+
+            val offset = (page - 1) * pageSize
+            if (offset >= experienceIdsByBundleId.size) {
+                Pagination(false, emptyList())
+            } else {
+                var experiences = experienceDao.listByIds(
+                    dslContext = dslContext,
+                    ids = experienceIdsByBundleId,
+                    platform = PlatformEnum.of(platform)?.name,
+                    expireTime = LocalDateTime.now(),
+                    online = true,
+                    offset = 0,
+                    limit = experienceIdsByBundleId.size,
+                    experienceName = null
+                ).asSequence().map {
+                    DownloadRecordVO(
+                        experienceHashId = HashUtil.encodeLongId(it.id),
+                        size = it.size,
+                        logoUrl = UrlUtil.toOuterPhotoAddr(it.logoUrl),
+                        experienceName = it.experienceName,
+                        versionTitle = it.versionTitle,
+                        createTime = it.createTime.timestampmilli(),
+                        downloadTime = experienceIdDownloadTimeMap[it.id]?.timestampmilli() ?: 0,
+                        bundleIdentifier = it.bundleIdentifier,
+                        appScheme = it.scheme,
+                        expired = false,
+                        lastDownloadHashId = lastDownloadMap[it.projectId + it.bundleIdentifier + it.platform]
+                            ?.let { l -> HashUtil.encodeLongId(l) } ?: ""
+                    )
+                }.sortedByDescending { it.downloadTime }.toList()
+
+                experiences = experiences.subList(offset, (offset + pageSize).coerceAtMost(experiences.size))
+
+                val hasNext = page * pageSize < experienceDao.countByIds(
+                    dslContext = dslContext,
+                    ids = experienceIdsByBundleId,
+                    platform = PlatformEnum.of(platform)?.name,
+                    expireTime = LocalDateTime.now(),
+                    online = true
+                )
+                Pagination(hasNext, experiences)
+            }
+        }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ExperienceDownloadService::class.java)
     }
 }

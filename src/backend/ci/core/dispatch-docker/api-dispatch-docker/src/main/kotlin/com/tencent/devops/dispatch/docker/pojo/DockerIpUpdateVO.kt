@@ -27,6 +27,7 @@
 
 package com.tencent.devops.dispatch.docker.pojo
 
+import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -43,5 +44,7 @@ data class DockerIpUpdateVO(
     @ApiModelProperty("是否为灰度节点")
     val grayEnv: Boolean,
     @ApiModelProperty("是否为专用机独占")
-    val specialOn: Boolean
+    val specialOn: Boolean,
+    @ApiModelProperty("构建集群", required = false)
+    val clusterType: DockerHostClusterType = DockerHostClusterType.COMMON
 )

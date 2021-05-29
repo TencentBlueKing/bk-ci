@@ -31,12 +31,21 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
 import com.tencent.devops.store.pojo.atom.AtomEnv
+import com.tencent.devops.store.pojo.atom.AtomRunInfo
+import com.tencent.devops.store.pojo.common.StoreVersion
 import com.tencent.devops.store.service.atom.MarketAtomEnvService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceMarketAtomEnvResourceImpl @Autowired constructor(private val marketAtomEnvService: MarketAtomEnvService) :
     ServiceMarketAtomEnvResource {
+
+    override fun batchGetAtomRunInfos(
+        projectCode: String,
+        atomVersions: Set<StoreVersion>
+    ): Result<Map<String, AtomRunInfo>?> {
+        return marketAtomEnvService.batchGetAtomRunInfos(projectCode, atomVersions)
+    }
 
     override fun getAtomEnv(projectCode: String, atomCode: String, version: String): Result<AtomEnv?> {
         return marketAtomEnvService.getMarketAtomEnvInfo(projectCode, atomCode, version)

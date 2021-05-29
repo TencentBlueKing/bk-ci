@@ -32,8 +32,7 @@ import com.tencent.devops.worker.common.task.script.ICommand
 import com.tencent.devops.worker.common.utils.BatScriptUtil
 import java.io.File
 
-class CommandBatImpl() :
-    ICommand {
+class CommandBatImpl : ICommand {
 
     override fun execute(
         buildId: String,

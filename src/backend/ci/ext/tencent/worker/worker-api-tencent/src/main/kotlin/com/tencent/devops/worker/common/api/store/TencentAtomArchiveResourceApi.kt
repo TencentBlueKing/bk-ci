@@ -63,10 +63,17 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
     /**
      * 获取原子信息
      */
-    override fun getAtomEnv(projectCode: String, atomCode: String, atomVersion: String): Result<AtomEnv> {
-        val path = "/store/api/build/market/atom/env/$projectCode/$atomCode/$atomVersion"
+    override fun getAtomEnv(
+        projectCode: String,
+        atomCode: String,
+        atomVersion: String,
+        atomStatus: Byte?
+    ): Result<AtomEnv> {
+        var path = "/store/api/build/market/atom/env/$projectCode/$atomCode/$atomVersion"
+        if (atomStatus != null) {
+            path = "$path?atomStatus=$atomStatus"
+        }
         val request = buildGet(path)
-
         val responseContent = request(request, "获取插件执行环境信息失败")
         return objectMapper.readValue(responseContent)
     }

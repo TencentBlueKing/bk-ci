@@ -1,5 +1,16 @@
 {
     "store": "Store",
+    "最近七天暂无执行": "No execution in the last seven days",
+    "周": "week",
+    "执行成功数": "Number of successful executions",
+    "执行失败数": "Number of execution failures",
+    "最近三个月内的执行成功率": "Execution success rate in the last three months",
+    "执行趋势": "Execution trend",
+    "错误分析": "Error analysis",
+    "执行成功率": "Execution success rate",
+    "执行失败率": "Execution failure rate",
+    "成功率": "Success rate",
+    "查看详情": "Show details",
     "插件开发公约": "Plugin Development Convention",
     "1、插件能获取到的所有内容（包括但不限于：代码、节点、凭证、项目信息）均属于项目资产，仅用于实现流水线编排设定好的功能。": "1. All the information (including but not limited to: code, ip, certificate, project) that can be obtained by the plug-in belongs to the project, and is only used to realize the functions defined by the pipeline.",
     "2、未经授权私自使用插件获取到的内容（包括但不限于：拉取或转移代码、泄露或滥用凭证等）属于违规行为。": "2、 Unauthorized use of the information obtained by the plug-in (including but not limited to: pulling or transferring code, divulge or abuse credentials, etc). ",
@@ -553,5 +564,14 @@
     "月": "month",
     "日": "day",
     "适用机器类型：": "Machine",
-    "editLogo": "Edit"
+    "editLogo": "Edit",
+    "请选择起止时间": "Please select the start and end time",
+    "请输入版本": "Please enter the version",
+    "导出": "Export",
+    "流水线链接": "Pipeline link",
+    "最近修改人": "Recently edited by",
+    "最近修改时间": "Last modified time",
+    "最近执行人": "Recent executor",
+    "最近执行时间": "Last execution time",
+    "搜索": "Search"
 }

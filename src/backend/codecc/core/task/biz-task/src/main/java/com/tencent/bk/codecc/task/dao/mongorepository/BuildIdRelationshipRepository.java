@@ -38,6 +38,24 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public interface BuildIdRelationshipRepository extends MongoRepository<BuildIdRelationshipEntity, ObjectId> {
+    /**
+     * 通过构建id查询
+     * @param commitId
+     * @return
+     */
+    BuildIdRelationshipEntity findByBuildId(String commitId);
 
+    /**
+     * 通过构建id查找
+     * @param buildId
+     * @return
+     */
+    BuildIdRelationshipEntity findFirstByBuildId(String buildId);
 
+    /**
+     * 通过codecc构建id查询
+     * @param codeccBuildId
+     * @return
+     */
+    BuildIdRelationshipEntity findFirstByCodeccBuildId(String codeccBuildId);
 }

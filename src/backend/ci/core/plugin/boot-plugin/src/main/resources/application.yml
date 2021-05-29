@@ -1,4 +1,6 @@
 spring:
+  main:
+    allow-bean-definition-overriding: true
   application:
     name: plugin${service-suffix}
     desc: DevOps Plugin Service

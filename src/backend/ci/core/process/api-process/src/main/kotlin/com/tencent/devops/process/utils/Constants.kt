@@ -40,6 +40,7 @@ const val PIPELINE_START_CHANNEL = "BK_CI_START_CHANNEL" // "pipeline.start.chan
 const val PIPELINE_BUILD_NUM = "BK_CI_BUILD_NUM" // "pipeline.build.num"
 const val PIPELINE_BUILD_LAST_UPDATE = "BK_CI_BUILD_LAST_UPDATE" // "pipeline.build.last.update"
 const val PIPELINE_BUILD_SVN_REVISION = "BK_CI_BUILD_SVN_REVISION" // "pipeline.build.svn.revision"
+const val PIPELINE_BUILD_NUM_ALIAS = "BK_CI_BUILD_NUM_ALIAS"
 
 const val PIPELINE_WEBHOOK_REVISION = "BK_CI_HOOK_REVISION" // hookRevision
 const val PIPELINE_WEBHOOK_BRANCH = "BK_CI_HOOK_BRANCH" // hookBranch
@@ -85,6 +86,7 @@ const val PIPELINE_START_TASK_ID = "BK_CI_START_TASK_ID" // "pipeline.start.task
 const val PIPELINE_RETRY_COUNT = "BK_CI_RETRY_COUNT" // "pipeline.retry.count"
 const val PIPELINE_RETRY_BUILD_ID = "BK_CI_RETRY_BUILD_ID" // "pipeline.retry.build.id"
 const val PIPELINE_RETRY_START_TASK_ID = "BK_CI_RETRY_TASK_ID" // "pipeline.retry.start.task.id"
+const val PIPELINE_RETRY_ALL_FAILED_CONTAINER = "BK_CI_RETRY_ALL_FAILED_CONTAINER"
 
 const val BK_CI_BUILD_FAIL_TASKS = "BK_CI_BUILD_FAIL_TASKS"
 const val BK_CI_BUILD_FAIL_TASKNAMES = "BK_CI_BUILD_FAIL_TASKNAMES"
@@ -180,3 +182,7 @@ const val PIPELINE_BUILD_MSG = "BK_CI_BUILD_MSG"
  * 保存流水线编排的最大个数
  */
 const val PIPELINE_RES_NUM_MIN = 50
+
+const val KEY_PIPELINE_ID = "pipelineId"
+
+const val KEY_PROJECT_ID = "projectId"

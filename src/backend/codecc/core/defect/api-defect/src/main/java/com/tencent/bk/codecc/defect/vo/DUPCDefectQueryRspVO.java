@@ -72,4 +72,21 @@ public class DUPCDefectQueryRspVO extends CommonDefectQueryRspVO
      */
     private Page<DUPCDefectVO> defectList;
 
+    /**
+     * 新老告警判定时间
+     */
+    @ApiModelProperty("新老告警判定时间")
+    private long newDefectJudgeTime;
+
+    /**
+     * 新增告警的个数
+     */
+    @ApiModelProperty("新增告警的个数")
+    private int newCount;
+
+    /**
+     * 历史告警的个数
+     */
+    @ApiModelProperty("历史告警的个数")
+    private int historyCount;
 }

@@ -679,7 +679,7 @@
                             content: [
                                 {
                                     key: this.$t('lastBuildNum'),
-                                    value: item.latestBuildNum ? `#${item.latestBuildNum}` : '--'
+                                    value: item.latestBuildNumAlias ? item.latestBuildNumAlias : (item.latestBuildNum ? `#${item.latestBuildNum}` : '--')
                                 },
                                 {
                                     key: this.$t('lastExecTime'),
@@ -1151,7 +1151,6 @@
             cursor: pointer;
         }
         .table-list-name {
-            max-width: 300px;
             padding-left: 30px;
         }
         .table-list-progress {

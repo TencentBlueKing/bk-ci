@@ -70,13 +70,13 @@ class HistoryDao {
                 updateTime
             )
                 .returning(ID)
-                .fetchOne()
+                .fetchOne()!!
 
             // 更新projectNum
             val projectNum = dslContext.selectCount()
                 .from(this)
                 .where(PROJECT_ID.eq(projectId).and(ID.lt(record.id)))
-                .fetchOne(0, Long::class.java) + 1
+                .fetchOne(0, Long::class.java)!! + 1
             dslContext.update(this)
                 .set(PROJECT_NUM, projectNum)
                 .where(ID.eq(record.id))
@@ -187,7 +187,7 @@ class HistoryDao {
             return dslContext.selectCount()
                 .from(this)
                 .where(RULE_ID.eq(ruleId))
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -207,7 +207,7 @@ class HistoryDao {
             val step4 = if (result == null) step3 else step3.and(RESULT.eq(result))
             val step5 = if (startTime == null) step4 else step4.and(CREATE_TIME.gt(startTime))
             val step6 = if (endTime == null) step5 else step5.and(CREATE_TIME.lt(endTime))
-            return step6.fetchOne(0, Long::class.java)
+            return step6.fetchOne(0, Long::class.java)!!
         }
     }
 

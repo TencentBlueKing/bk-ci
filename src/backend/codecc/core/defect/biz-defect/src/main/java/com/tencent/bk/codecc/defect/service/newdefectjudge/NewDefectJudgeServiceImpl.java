@@ -7,7 +7,7 @@ import com.tencent.bk.codecc.task.api.ServiceTaskRestResource;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.bk.codecc.task.vo.scanconfiguration.NewDefectJudgeVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.client.Client;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.util.DateTimeUtils;
@@ -53,7 +53,7 @@ public class NewDefectJudgeServiceImpl implements NewDefectJudgeService
         if(null == taskDetailVO)
         {
             // 获取告警转为历史的时间
-            CodeCCResult<TaskDetailVO> taskInfoResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
+            Result<TaskDetailVO> taskInfoResult = client.get(ServiceTaskRestResource.class).getTaskInfoById(taskId);
             if (taskInfoResult.isNotOk() || null == taskInfoResult.getData())
             {
                 log.error("get task info fail! task id is: {}, msg: {}", taskId, taskInfoResult.getMessage());
@@ -85,6 +85,31 @@ public class NewDefectJudgeServiceImpl implements NewDefectJudgeService
             {
                 result = firstSuccessTimeEntity.getFirstAnalysisSuccessTime();
             }
+        }
+        return result;
+    }
+
+    @Override
+    public long getNewDefectJudgeTime(long taskId, TaskDetailVO taskDetailVO) {
+        long result = 0;
+        NewDefectJudgeVO newDefectJudge = taskDetailVO.getNewDefectJudge();
+
+        if (newDefectJudge != null)
+        {
+            if (newDefectJudge.getFromDateTime() != null && newDefectJudge.getFromDateTime() != 0)
+            {
+                result = newDefectJudge.getFromDateTime();
+            }
+            else if (StringUtils.isNotEmpty(newDefectJudge.getFromDate()))
+            {
+                result = DateTimeUtils.convertStringDateToLongTime(newDefectJudge.getFromDate(), DateTimeUtils.yyyyMMddFormat);
+            }
+        }
+
+        // 获取首次成功分析时间
+        if (result == 0)
+        {
+            result = taskDetailVO.getCreatedDate();
         }
         return result;
     }

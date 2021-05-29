@@ -29,6 +29,7 @@ package com.tencent.devops.process.api.user
 
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.scm.pojo.RevisionInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -100,4 +101,22 @@ interface UserScmResource {
         @QueryParam("repositoryType")
         repositoryType: RepositoryType?
     ): Result<List<String>>
+
+    @ApiOperation("列出仓库分支和tag集合")
+    @GET
+    @Path("/{projectId}/{repositoryId}/refs")
+    fun listRefs(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("repo hash id", required = true)
+        @PathParam("repositoryId")
+        repositoryId: String,
+        @ApiParam("代码库请求类型", required = false)
+        @QueryParam("repositoryType")
+        repositoryType: RepositoryType?,
+        @ApiParam("搜索条件", required = false)
+        @QueryParam("search")
+        search: String?
+    ): Result<List<BuildFormValue>>
 }

@@ -30,6 +30,7 @@ package com.tencent.devops.dispatch.docker
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerIPInfoDao
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
+import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import com.tencent.devops.dispatch.docker.service.DockerHostProxyService
 import okhttp3.Request
 import org.jooq.DSLContext
@@ -57,7 +58,8 @@ class TXDockerHostProxyServiceImpl @Autowired constructor(
     override fun getDockerHostProxyRequest(
         dockerHostUri: String,
         dockerHostIp: String,
-        dockerHostPort: Int
+        dockerHostPort: Int,
+        clusterType: DockerHostClusterType
     ): Request.Builder {
         val url = if (dockerHostPort == 0) {
             val dockerIpInfo = pipelineDockerIPInfoDao.getDockerIpInfo(dslContext, dockerHostIp) ?: throw DockerServiceException(
@@ -67,14 +69,20 @@ class TXDockerHostProxyServiceImpl @Autowired constructor(
             "http://$dockerHostIp:$dockerHostPort$dockerHostUri"
         }
 
-        val proxyUrl = smartProxyUrl + "/proxy-devnet?url=" + urlEncode(url)
-        val timestamp = (System.currentTimeMillis() / 1000).toString()
-        val signature = sha256("$timestamp$smartProxyToken$timestamp")
-        return Request.Builder().url(proxyUrl)
-            .addHeader("Accept", "application/json; charset=utf-8")
-            .addHeader("Content-Type", "application/json; charset=utf-8")
-            .addHeader("TIMESTAMP", timestamp)
-            .addHeader("SIGNATURE", signature)
+        return if (clusterType == DockerHostClusterType.AGENT_LESS) {
+            Request.Builder().url(url)
+                .addHeader("Accept", "application/json; charset=utf-8")
+                .addHeader("Content-Type", "application/json; charset=utf-8")
+        } else {
+            val proxyUrl = smartProxyUrl + "/proxy-devnet?url=" + urlEncode(url)
+            val timestamp = (System.currentTimeMillis() / 1000).toString()
+            val signature = sha256("$timestamp$smartProxyToken$timestamp")
+            Request.Builder().url(proxyUrl)
+                .addHeader("Accept", "application/json; charset=utf-8")
+                .addHeader("Content-Type", "application/json; charset=utf-8")
+                .addHeader("TIMESTAMP", timestamp)
+                .addHeader("SIGNATURE", signature)
+        }
     }
 
     private fun sha256(str: String): String {

@@ -38,6 +38,7 @@ import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
 import com.tencent.devops.worker.common.utils.ArchiveUtils.archiveCustomFiles
 import com.tencent.devops.worker.common.utils.ArchiveUtils.archivePipelineFiles
+import com.tencent.devops.worker.common.utils.TaskUtil
 import java.io.File
 
 @TaskClassType(classTypes = [SingleArchiveElement.classType])
@@ -48,18 +49,24 @@ class SingleFileArchiveTask : ITask() {
         val filePath = taskParams["filePath"] ?: throw ParamBlankException("param [filePath] is empty")
         val isCustomize = taskParams["customize"] ?: throw ParamBlankException("param [isCustomize] is empty")
 
-        val count = if (isCustomize.toBoolean()) {
-            val destPath = taskParams["destPath"] ?: throw ParamBlankException("param [destPath] is empty")
-            archiveCustomFiles(filePath, destPath, workspace, buildVariables)
-        } else {
-            archivePipelineFiles(filePath, workspace, buildVariables)
-        }
-        if (count == 0) {
-            throw TaskExecuteException(
-                errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
-                errorType = ErrorType.USER,
-                errorMsg = "没有匹配到任何待归档文件，请检查工作空间下面的文件"
-            )
+        TaskUtil.setTaskId(buildTask.taskId ?: "")
+
+        try {
+            val count = if (isCustomize.toBoolean()) {
+                val destPath = taskParams["destPath"] ?: throw ParamBlankException("param [destPath] is empty")
+                archiveCustomFiles(filePath, destPath, workspace, buildVariables)
+            } else {
+                archivePipelineFiles(filePath, workspace, buildVariables)
+            }
+            if (count == 0) {
+                throw TaskExecuteException(
+                    errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
+                    errorType = ErrorType.USER,
+                    errorMsg = "没有匹配到任何待归档文件，请检查工作空间下面的文件"
+                )
+            }
+        } finally {
+            TaskUtil.removeTaskId()
         }
     }
 }

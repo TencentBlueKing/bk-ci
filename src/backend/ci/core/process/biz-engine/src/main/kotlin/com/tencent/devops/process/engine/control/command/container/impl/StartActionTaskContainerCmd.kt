@@ -82,7 +82,7 @@ class StartActionTaskContainerCmd(
                     if (!fastKill && actionType.isTerminate() && !commandContext.buildStatus.isFailure()) {
                         commandContext.buildStatus = BuildStatus.FAILED
                     }
-                    commandContext.latestSummary = "status=${commandContext.buildStatus}"
+                    commandContext.latestSummary += "| status=${commandContext.buildStatus}"
                 } else {
                     sendTask(event = commandContext.event, task = waitToDoTask)
                 }
@@ -164,7 +164,7 @@ class StartActionTaskContainerCmd(
 
     private fun isTerminate(containerContext: ContainerContext): Boolean {
         return containerContext.event.actionType.isTerminate() ||
-            FastKillUtils.isFastKillCode(containerContext.event.errorCode)
+            FastKillUtils.isTerminateCode(containerContext.event.errorCode)
     }
 
     private fun findRunningTask(
@@ -203,10 +203,14 @@ class StartActionTaskContainerCmd(
                 )
                 LOG.info("ENGINE|$buildId|$source|CONTAINER_POST_TASK|$stageId|j($containerId)|${toDoTask?.taskId}")
             }
-            needTerminate -> { // 构建环境启动失败的，
+            needTerminate -> { // 构建环境启动失败或者是启动成功但后续Agent挂掉导致心跳超时
                 LOG.warn("ENGINE|$buildId|$source|CONTAINER_FAIL_VM|$stageId|j($containerId)|$taskId|$status")
-                // 更新任务状态为跳过
-                pipelineRuntimeService.updateTaskStatus(task = this, userId = starter, buildStatus = BuildStatus.UNEXEC)
+                val taskStatus = if (status == BuildStatus.QUEUE_CACHE) { // 领取过程中被中断标志为取消
+                    BuildStatus.CANCELED
+                } else {
+                    BuildStatus.UNEXEC
+                }
+                pipelineRuntimeService.updateTaskStatus(task = this, userId = starter, buildStatus = taskStatus)
                 // 打印构建日志
                 buildLogPrinter.addYellowLine(executeCount = containerContext.executeCount, tag = taskId,
                     buildId = buildId, message = "Terminate Plugin [$taskName]: ${containerContext.latestSummary}!",
@@ -218,7 +222,8 @@ class StartActionTaskContainerCmd(
                 additionalOptions = additionalOptions,
                 containerFinalStatus = containerContext.buildStatus,
                 variables = containerContext.variables,
-                hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer
+                hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer,
+                buildLogPrinter = buildLogPrinter
             ) -> { // 检查条件跳过
                 val taskStatus = BuildStatusSwitcher.readyToSkipWhen(containerContext.buildStatus.isFailure())
                 LOG.warn("ENGINE|$buildId|$source|CONTAINER_SKIP_TASK|$stageId|j($containerId)|$taskId|$taskStatus")
@@ -240,6 +245,8 @@ class StartActionTaskContainerCmd(
         }
 
         if (toDoTask != null) {
+            // 进入预队列
+            pipelineRuntimeService.updateTaskStatus(toDoTask, userId = starter, buildStatus = BuildStatus.QUEUE_CACHE)
             containerContext.buildStatus = BuildStatus.RUNNING
             containerContext.event.actionType = ActionType.START // 未开始的需要开始
         }
