@@ -140,7 +140,8 @@ class BuildLogPrintResourceImpl @Autowired constructor(
 
     override fun updateLogStorageMode(
         buildId: String,
-        executeCount: Int?,
+        jobId: String,
+        executeCount: Int,
         propertyList: List<TaskBuildLogProperty>
     ): Result<Boolean> {
         if (buildId.isBlank()) {
@@ -149,7 +150,8 @@ class BuildLogPrintResourceImpl @Autowired constructor(
         }
         logStatusService.updateStorageMode(
             buildId = buildId,
-            executeCount = executeCount ?: 1,
+            jobId = jobId,
+            executeCount = executeCount,
             propertyList = propertyList
         )
         return Result(true)

@@ -60,8 +60,8 @@ class LogStatusDao {
                 MODE
             ).values(
                 buildId,
-                tag ?: "",
-                subTags ?: "",
+                tag,
+                subTags,
                 jobId,
                 executeCount ?: 1,
                 finish,
@@ -76,6 +76,7 @@ class LogStatusDao {
     fun updateStorageMode(
         dslContext: DSLContext,
         buildId: String,
+        jobId: String,
         executeCount: Int,
         modeList: Map<String, LogStorageMode>
     ) {
@@ -88,11 +89,13 @@ class LogStatusDao {
                         this,
                         BUILD_ID,
                         TAG,
+                        JOB_ID,
                         EXECUTE_COUNT,
                         MODE
                     ).values(
                         buildId,
                         tag,
+                        jobId,
                         executeCount,
                         mode.name
                     ).onDuplicateKeyUpdate()

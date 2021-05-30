@@ -156,9 +156,12 @@ interface BuildLogPrintResource {
         @ApiParam("构建ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
         buildId: String,
+        @ApiParam("job id或者container的34位id", required = false)
+        @QueryParam("jobId")
+        jobId: String,
         @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
-        executeCount: Int?,
+        executeCount: Int,
         @ApiParam("所有插件的日志存储结果", required = true)
         propertyList: List<TaskBuildLogProperty>
     ): Result<Boolean>
