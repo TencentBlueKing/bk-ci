@@ -27,13 +27,12 @@
 
 package com.tencent.devops.log.dao
 
-import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.model.log.tables.TLogStatus
 import com.tencent.devops.model.log.tables.records.TLogStatusRecord
 import org.jooq.DSLContext
+import org.jooq.InsertOnDuplicateSetMoreStep
 import org.jooq.Result
-import org.jooq.UpdateConditionStep
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -82,14 +81,22 @@ class LogStatusDao {
     ) {
         with(TLogStatus.T_LOG_STATUS) {
             val records =
-                mutableListOf<UpdateConditionStep<TLogStatusRecord>>()
+                mutableListOf<InsertOnDuplicateSetMoreStep<TLogStatusRecord>>()
             modeList.forEach { (tag, mode) ->
                 records.add(
-                    dslContext.update(this)
+                    dslContext.insertInto(
+                        this,
+                        BUILD_ID,
+                        TAG,
+                        EXECUTE_COUNT,
+                        MODE
+                    ).values(
+                        buildId,
+                        tag,
+                        executeCount,
+                        mode.name
+                    ).onDuplicateKeyUpdate()
                         .set(MODE, mode.name)
-                        .where(BUILD_ID.eq(buildId))
-                        .and(TAG.eq(tag))
-                        .and(EXECUTE_COUNT.eq(executeCount))
                 )
             }
             dslContext.batch(records).execute()
