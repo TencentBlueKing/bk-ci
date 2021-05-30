@@ -33,6 +33,7 @@ import com.tencent.devops.model.log.tables.records.TLogStatusRecord
 import org.jooq.DSLContext
 import org.jooq.InsertOnDuplicateSetMoreStep
 import org.jooq.Result
+import org.jooq.UpdateConditionStep
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -82,24 +83,16 @@ class LogStatusDao {
     ) {
         with(TLogStatus.T_LOG_STATUS) {
             val records =
-                mutableListOf<InsertOnDuplicateSetMoreStep<TLogStatusRecord>>()
+                mutableListOf<UpdateConditionStep<TLogStatusRecord>>()
             modeList.forEach { (tag, mode) ->
                 records.add(
-                    dslContext.insertInto(
-                        this,
-                        BUILD_ID,
-                        TAG,
-                        JOB_ID,
-                        EXECUTE_COUNT,
-                        MODE
-                    ).values(
-                        buildId,
-                        tag,
-                        jobId,
-                        executeCount,
-                        mode.name
-                    ).onDuplicateKeyUpdate()
+                    dslContext.update(this)
                         .set(MODE, mode.name)
+                        .where(BUILD_ID.eq(buildId))
+                        .and(TAG.eq(tag))
+                        .and(JOB_ID.eq(jobId))
+                        .and(SUB_TAG.isNull)
+                        .and(EXECUTE_COUNT.eq(executeCount))
                 )
             }
             dslContext.batch(records).execute()
@@ -146,6 +139,7 @@ class LogStatusDao {
             return dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
                 .and(TAG.eq(tag))
+                .and(SUB_TAG.isNull)
                 .and(EXECUTE_COUNT.eq(executeCount ?: 1))
                 .fetchAny()
         }

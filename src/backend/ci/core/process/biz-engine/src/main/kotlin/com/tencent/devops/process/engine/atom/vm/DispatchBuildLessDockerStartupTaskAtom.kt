@@ -118,6 +118,12 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
                 errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
                 errorMsg = ignored.message
             )
+            buildLogPrinter.stopLog(
+                buildId = task.buildId,
+                tag = task.taskId,
+                jobId = task.containerHashId,
+                executeCount = task.executeCount ?: 1
+            )
         }
         return atomResponse
     }
