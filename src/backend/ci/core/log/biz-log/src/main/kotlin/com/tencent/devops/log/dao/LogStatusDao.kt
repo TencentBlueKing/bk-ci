@@ -61,8 +61,8 @@ class LogStatusDao {
                 MODE
             ).values(
                 buildId,
-                tag,
-                subTags,
+                tag ?: "",
+                subTags ?: "",
                 jobId,
                 executeCount ?: 1,
                 finish,
@@ -91,7 +91,6 @@ class LogStatusDao {
                         .where(BUILD_ID.eq(buildId))
                         .and(TAG.eq(tag))
                         .and(JOB_ID.eq(jobId))
-                        .and(SUB_TAG.isNull)
                         .and(EXECUTE_COUNT.eq(executeCount))
                 )
             }
