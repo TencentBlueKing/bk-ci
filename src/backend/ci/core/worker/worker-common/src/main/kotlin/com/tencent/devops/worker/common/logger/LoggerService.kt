@@ -291,6 +291,12 @@ object LoggerService {
                     return@forEach
                 }
 
+                if (!property.logFile.exists()) {
+                    logger.warn("Cancel archiving task[$elementId] build log " +
+                        "file(${property.logFile.absolutePath}) which not exists")
+                    return@forEach
+                }
+
                 // 开始归档符合归档条件的日志文件
                 logger.info("Archive task[$elementId] build log file(${property.logFile.absolutePath})")
                 ArchiveUtils.archiveLogFile(property.logFile, property.childPath, buildVariables!!)
