@@ -77,7 +77,7 @@ class LogResourceApi : AbstractBuildResourceApi(), LogSDKApi {
 
     override fun updateStorageMode(propertyList: List<TaskBuildLogProperty>, executeCount: Int?): Result<Boolean> {
         val path = StringBuilder("/log/api/build/logs/mode")
-        if (executeCount != null) path.append("&executeCount=$executeCount")
+        if (executeCount != null) path.append("?executeCount=$executeCount")
         val requestBody = RequestBody.create(
             MediaType.parse("application/json; charset=utf-8"),
             objectMapper.writeValueAsString(propertyList)
@@ -85,7 +85,7 @@ class LogResourceApi : AbstractBuildResourceApi(), LogSDKApi {
         val request = buildPost(path.toString(), requestBody)
         val responseContent = request(
             request = request,
-            errorMessage = "上报日志失败",
+            errorMessage = "上报日志存储状态失败",
             connectTimeoutInSec = 5L,
             readTimeoutInSec = 10L,
             writeTimeoutInSec = 10L

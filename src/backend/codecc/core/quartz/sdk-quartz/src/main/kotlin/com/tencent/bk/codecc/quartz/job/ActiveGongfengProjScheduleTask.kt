@@ -37,7 +37,7 @@ class ActiveGongfengProjScheduleTask @Autowired constructor(
         val gitPrivateToken = jobCustomParam["gitPrivateToken"] as String
 
         val url = "$gitCodePath/api/v3/projects/$gitProjectId/repository/tree?ref=master"
-        //从工蜂拉取项目文件列表
+        // 从工蜂拉取项目文件列表
         val result = OkhttpUtils.doGet(url, mapOf("PRIVATE-TOKEN" to gitPrivateToken))
         if (result.isBlank()) {
             logger.info("null returned from api")
@@ -47,7 +47,7 @@ class ActiveGongfengProjScheduleTask @Autowired constructor(
             object : TypeReference<List<ActiveProjModel>>() {})
         logger.info("file list size is : ${projectFileList.size}")
 
-        //对文件进行正则匹配,取日期最近的一个时间
+        // 对文件进行正则匹配,取日期最近的一个时间
         val personalRegex = Regex("""personal_projects_([0-9]+).json""")
         val personalDate = projectFileList.filter { personalRegex.matches(it.name) }
             .map { personalRegex.find(it.name)!!.groupValues[1] }

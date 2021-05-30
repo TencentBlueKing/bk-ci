@@ -120,7 +120,7 @@ class PipelineAtomReplaceItemDao {
     ): Long {
         with(TPipelineAtomReplaceItem.T_PIPELINE_ATOM_REPLACE_ITEM) {
             val conditions = getAtomReplaceItemListCondition(baseId, statusList)
-            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Long::class.java)
+            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Long::class.java)!!
         }
     }
 

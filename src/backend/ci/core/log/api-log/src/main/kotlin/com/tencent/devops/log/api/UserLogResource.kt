@@ -204,7 +204,7 @@ interface UserLogResource {
         fileName: String?
     ): Response
 
-    @ApiOperation("获取某行后的日志")
+    @ApiOperation("获取插件的的日志状态")
     @GET
     @Path("/{projectId}/{pipelineId}/{buildId}/mode")
     fun getLogMode(

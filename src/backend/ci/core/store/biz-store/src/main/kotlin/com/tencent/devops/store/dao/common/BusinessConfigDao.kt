@@ -150,7 +150,7 @@ class BusinessConfigDao {
                 .where(BUSINESS.eq(business.name))
                 .and(FEATURE.eq(feature))
                 .and(BUSINESS_VALUE.eq(businessValue))
-                .fetchOne(0, Int::class.java) > 0
+                .fetchOne(0, Int::class.java)!! > 0
         }
     }
 

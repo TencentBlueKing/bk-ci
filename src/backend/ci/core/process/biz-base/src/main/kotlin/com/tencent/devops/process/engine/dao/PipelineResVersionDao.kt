@@ -162,7 +162,7 @@ class PipelineResVersionDao @Autowired constructor(private val objectMapper: Obj
             return dslContext.select(DSL.count(PIPELINE_ID))
                 .from(this)
                 .where(PIPELINE_ID.eq(pipelineId))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 

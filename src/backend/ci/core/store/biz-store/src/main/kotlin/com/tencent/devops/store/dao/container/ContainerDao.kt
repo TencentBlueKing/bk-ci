@@ -42,7 +42,7 @@ class ContainerDao {
 
     fun countByName(dslContext: DSLContext, name: String): Int {
         with(TContainer.T_CONTAINER) {
-            return dslContext.selectCount().from(this).where(NAME.eq(name)).fetchOne(0, Int::class.java)
+            return dslContext.selectCount().from(this).where(NAME.eq(name)).fetchOne(0, Int::class.java)!!
         }
     }
 

@@ -39,6 +39,7 @@ import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.enums.SystemEnums
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -153,5 +154,9 @@ class DefaultOpProjectServiceImpl @Autowired constructor(
     override fun synProjectInit(isRefresh: Boolean?): Result<List<String>> {
         logger.info("[synProjectInit]| isRefresh=$isRefresh| do nothing")
         return Result(emptyList())
+    }
+
+    override fun setGrayExt(projectCodeList: List<String>, operateFlag: Int, system: SystemEnums) {
+        return
     }
 }

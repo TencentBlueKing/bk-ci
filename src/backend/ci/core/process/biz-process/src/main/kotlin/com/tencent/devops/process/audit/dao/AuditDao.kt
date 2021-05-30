@@ -72,7 +72,7 @@ class AuditDao {
                 projectId
             )
                 .returning(ID)
-                .fetchOne()
+                .fetchOne()!!
             return record.id
         }
     }
@@ -142,7 +142,7 @@ class AuditDao {
                 val endTimeDateTime = LocalDateTime.parse(endTime, df)
                 query.and(CREATED_TIME.between(startTimeDateTime, endTimeDateTime))
             }
-            query.fetchOne(0, Long::class.java)
+            query.fetchOne(0, Long::class.java)!!
         }
     }
 }

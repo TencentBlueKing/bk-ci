@@ -15,6 +15,7 @@ package com.tencent.bk.codecc.codeccjob.consumer;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tencent.bk.codecc.defect.dto.WebsocketDTO;
+import com.tencent.bk.codecc.defect.vo.TaskLogOverviewVO;
 import com.tencent.bk.codecc.defect.vo.TaskLogVO;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.bk.codecc.task.vo.TaskOverviewVO;
@@ -54,6 +55,7 @@ public class WebsocketConsumer {
         TaskLogVO taskLogVO = websocketDTO.getTaskLogVO();
         TaskOverviewVO.LastAnalysis lastAnalysis = websocketDTO.getLastAnalysisResultList();
         TaskDetailVO taskDetailVO = websocketDTO.getTaskDetailVO();
+        TaskLogOverviewVO taskLogOverviewVO = websocketDTO.getTaskLogOverviewVO();
         //1.推送消息到详情界面
         try
         {
@@ -83,6 +85,17 @@ public class WebsocketConsumer {
         {
             logger.error("execute last analysis detail failed! task id: {}, tool name: {}", taskLogVO.getTaskId(),
                     taskLogVO.getToolName(), e2);
+        }
+
+        try {
+            simpMessagingTemplate.convertAndSend(String.format("/topic/analysisDetail/taskId/%d",
+                    taskLogOverviewVO.getTaskId()),
+                    objectMapper.writeValueAsString(taskLogOverviewVO));
+        } catch (JsonProcessingException e1) {
+            logger.error("serialize last analysis detail failed! task id: {}", taskLogOverviewVO.getTaskId());
+        } catch (Exception e2)
+        {
+            logger.error("execute last analysis detail failed! task id: {}", taskLogVO.getTaskId(), e2);
         }
 
         //3.推送工具进度条至消息详情界面

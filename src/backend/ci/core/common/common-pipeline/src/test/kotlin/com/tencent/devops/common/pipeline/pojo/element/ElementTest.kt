@@ -50,37 +50,37 @@ class ElementTest {
         val element = ManualTriggerElement(id = "1")
         element.status = BuildStatus.QUEUE.name
         val skipElementVariableName = SkipElementUtils.getSkipElementVariableName(element.id!!)
-        var finallyStage = true
-        var takeStatus = element.initStatus(mapOf(skipElementVariableName to "true"), finallyStage = finallyStage)
+        var rerun = true
+        var takeStatus = element.initStatus(mapOf(skipElementVariableName to "true"), rerun = rerun)
         assertEquals(BuildStatus.SKIP.name, takeStatus.name)
 
         element.status = BuildStatus.SUCCEED.name
-        finallyStage = true
-        takeStatus = element.initStatus(params = mapOf(skipElementVariableName to "false"), finallyStage = finallyStage)
+        rerun = true
+        takeStatus = element.initStatus(params = mapOf(skipElementVariableName to "false"), rerun = rerun)
         assertEquals(BuildStatus.QUEUE.name, takeStatus.name)
 
         element.status = BuildStatus.FAILED.name
-        finallyStage = false
-        takeStatus = element.initStatus(params = mapOf(skipElementVariableName to "false"), finallyStage = finallyStage)
+        rerun = false
+        takeStatus = element.initStatus(params = mapOf(skipElementVariableName to "false"), rerun = rerun)
         assertEquals(BuildStatus.QUEUE.name, takeStatus.name)
 
         element.status = BuildStatus.QUEUE.name
-        finallyStage = false
-        takeStatus = element.initStatus(params = mapOf(skipElementVariableName to "false"), finallyStage = finallyStage)
+        rerun = false
+        takeStatus = element.initStatus(params = mapOf(skipElementVariableName to "false"), rerun = rerun)
         assertEquals(BuildStatus.QUEUE.name, takeStatus.name)
 
         element.status = BuildStatus.SKIP.name
-        finallyStage = false
-        takeStatus = element.initStatus(params = mapOf(skipElementVariableName to "false"), finallyStage = finallyStage)
+        rerun = false
+        takeStatus = element.initStatus(params = mapOf(skipElementVariableName to "false"), rerun = rerun)
         assertEquals(BuildStatus.SKIP.name, takeStatus.name)
 
         element.status = BuildStatus.SKIP.name
-        finallyStage = true
-        takeStatus = element.initStatus(params = mapOf(skipElementVariableName to "false"), finallyStage = finallyStage)
+        rerun = true
+        takeStatus = element.initStatus(params = mapOf(skipElementVariableName to "false"), rerun = rerun)
         assertEquals(BuildStatus.QUEUE.name, takeStatus.name)
 
         element.additionalOptions = elementAdditionalOptions(enable = false)
-        takeStatus = element.initStatus(params = mapOf(skipElementVariableName to "false"), finallyStage = finallyStage)
+        takeStatus = element.initStatus(params = mapOf(skipElementVariableName to "false"), rerun = rerun)
         assertEquals(BuildStatus.SKIP.name, takeStatus.name)
     }
 

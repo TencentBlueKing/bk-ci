@@ -27,7 +27,6 @@
 
 package com.tencent.devops.log.resources
 
-import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.print.ServiceLogPrintResource
@@ -36,12 +35,9 @@ import com.tencent.devops.common.log.pojo.LogStatusEvent
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.log.service.BuildLogPrintService
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
-/**
- *
- * Powered By Tencent
- */
 @RestResource
 class ServiceLogPrintResourceImpl @Autowired constructor(
     private val buildLogPrintService: BuildLogPrintService
@@ -49,14 +45,16 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
 
     override fun addLogLine(buildId: String, logMessage: LogMessage): Result<Boolean> {
         if (buildId.isBlank()) {
-            throw ParamBlankException("无效的构建ID")
+            logger.error("Invalid build ID[$buildId]")
+            return Result(false)
         }
         return buildLogPrintService.asyncDispatchEvent(LogEvent(buildId, listOf(logMessage)))
     }
 
     override fun addLogMultiLine(buildId: String, logMessages: List<LogMessage>): Result<Boolean> {
         if (buildId.isBlank()) {
-            throw ParamBlankException("无效的构建ID")
+            logger.error("Invalid build ID[$buildId]")
+            return Result(false)
         }
         buildLogPrintService.asyncDispatchEvent(LogEvent(buildId, logMessages))
         return Result(true)
@@ -70,9 +68,10 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
         executeCount: Int?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
-            throw ParamBlankException("无效的构建ID")
+            logger.error("Invalid build ID[$buildId]")
+            return Result(false)
         }
-        return buildLogPrintService.asyncDispatchEvent(
+        buildLogPrintService.dispatchEvent(
             LogStatusEvent(
                 buildId = buildId,
                 finished = false,
@@ -82,6 +81,7 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
                 executeCount = executeCount
             )
         )
+        return Result(true)
     }
 
     override fun updateLogStatus(
@@ -94,9 +94,10 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
         logStorageMode: LogStorageMode?
     ): Result<Boolean> {
         if (buildId.isBlank()) {
-            throw ParamBlankException("无效的构建ID")
+            logger.error("Invalid build ID[$buildId]")
+            return Result(false)
         }
-        return buildLogPrintService.asyncDispatchEvent(LogStatusEvent(
+        buildLogPrintService.dispatchEvent(LogStatusEvent(
             buildId = buildId,
             finished = finished,
             tag = tag ?: "",
@@ -105,5 +106,10 @@ class ServiceLogPrintResourceImpl @Autowired constructor(
             executeCount = executeCount,
             logStorageMode = logStorageMode
         ))
+        return Result(true)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ServiceLogPrintResourceImpl::class.java)
     }
 }

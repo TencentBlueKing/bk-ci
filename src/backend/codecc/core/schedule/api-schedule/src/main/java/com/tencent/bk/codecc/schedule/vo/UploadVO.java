@@ -57,4 +57,8 @@ public class UploadVO
     @NotNull(message = "上传类型不能为空")
     @ApiModelProperty(value = "上传类型", required = true)
     private String uploadType;
+
+    @NotNull(message = "构建ID不能为空")
+    @ApiModelProperty(value = "构建ID")
+    private String buildId;
 }

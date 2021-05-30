@@ -15,6 +15,7 @@ package com.tencent.bk.codecc.defect.service.impl;
 import com.tencent.bk.codecc.defect.dao.mongorepository.FileDefectGatherRepository;
 import com.tencent.bk.codecc.defect.model.FileDefectGatherEntity;
 import com.tencent.bk.codecc.defect.service.FileDefectGatherService;
+import com.tencent.bk.codecc.defect.utils.ParamUtils;
 import com.tencent.bk.codecc.defect.vo.FileDefectGatherVO;
 import com.tencent.devops.common.constant.ComConstants;
 import lombok.extern.slf4j.Slf4j;
@@ -40,9 +41,15 @@ public class FileDefectGatherServiceImpl implements FileDefectGatherService
     private FileDefectGatherRepository fileDefectGatherRepository;
 
     @Override
-    public FileDefectGatherVO getFileDefectGather(long taskId, String toolName)
+    public FileDefectGatherVO getFileDefectGather(long taskId, String toolName, String dimension)
     {
-        List<FileDefectGatherEntity> gatherFileList = fileDefectGatherRepository.findByTaskIdAndToolNameAndStatus(taskId, toolName, ComConstants.DefectStatus.NEW.value());
+        List<String> toolNameSet = ParamUtils.getToolsByDimension(toolName, dimension, taskId);
+
+        if (CollectionUtils.isEmpty(toolNameSet)) {
+            return null;
+        }
+
+        List<FileDefectGatherEntity> gatherFileList = fileDefectGatherRepository.findByTaskIdAndToolNameInAndStatus(taskId, toolNameSet, ComConstants.DefectStatus.NEW.value());
 
         if (CollectionUtils.isNotEmpty(gatherFileList))
         {

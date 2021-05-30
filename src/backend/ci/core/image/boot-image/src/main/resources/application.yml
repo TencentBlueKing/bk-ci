@@ -1,4 +1,6 @@
 spring:
+  main:
+    allow-bean-definition-overriding: true
   application:
     name: image${service-suffix}
     desc: DevOps Image Service

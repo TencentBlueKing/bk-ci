@@ -34,6 +34,7 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -44,6 +45,7 @@ import com.tencent.devops.store.api.atom.ServiceAtomResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
+import com.tencent.devops.store.pojo.common.StoreVersion
 import java.util.concurrent.TimeUnit
 
 object AtomUtils {
@@ -66,20 +68,42 @@ object AtomUtils {
     ): MutableMap<String, String> {
         val atoms = mutableMapOf<String, String>()
         val serviceMarketAtomEnvResource = client.get(ServiceMarketAtomEnvResource::class)
+        val atomVersions = getAtomVersions(container)
+        if (atomVersions.isNullOrEmpty()) {
+            // 如果job容器内没有新插件，则直接返回
+            return atoms
+        }
+        // 批量获取插件运行时信息
+        var flag = true
+        val atomRunInfoResult = try {
+            serviceMarketAtomEnvResource.batchGetAtomRunInfos(task.projectId, atomVersions)
+        } catch (ignored: Exception) {
+            flag = false
+            null
+        }
+        if (!flag || atomRunInfoResult?.isNotOk() == true) {
+            throw BuildTaskException(
+                errorType = ErrorType.USER,
+                errorCode = ProcessMessageCode.ERROR_ATOM_NOT_FOUND.toInt(),
+                errorMsg = atomRunInfoResult?.message ?: "query tasks error",
+                pipelineId = task.pipelineId,
+                buildId = task.buildId,
+                taskId = task.taskId
+            )
+        }
+        val atomRunInfoMap = atomRunInfoResult?.data
         container.elements.forEach nextOne@{ element ->
-            if (element !is MarketBuildAtomElement && element !is MarketBuildLessAtomElement) {
+            if (isHisAtomElement(element)) {
                 return@nextOne
             }
-
             var version = element.version
             if (version.isBlank()) {
                 version = "1.*"
             }
             val atomCode = element.getAtomCode()
-            val atomEnvResult = serviceMarketAtomEnvResource.getAtomEnv(task.projectId, atomCode, version)
-            val atomEnv = atomEnvResult.data
-            if (atomEnvResult.isNotOk() || atomEnv == null) {
-                val message = "Can't found task($atomCode):${element.name}| ${atomEnvResult.message}."
+            val atomRunInfo = atomRunInfoMap?.get("$atomCode:$version")
+            if (atomRunInfo == null) {
+                val message = "Can't found task($atomCode:$version):${element.name}."
                 throw BuildTaskException(
                     errorType = ErrorType.USER,
                     errorCode = ProcessMessageCode.ERROR_ATOM_NOT_FOUND.toInt(),
@@ -90,9 +114,9 @@ object AtomUtils {
                 )
             }
             // 判断插件是否有权限在该job环境下运行(需判断无编译环境插件是否可以在有编译环境下运行)
-            val jobRunFlag = when (atomEnv.jobType) {
+            val jobRunFlag = when (atomRunInfo.jobType) {
                 // 无编译环境插件： 本身就在无编译环境下运行，或者允许无编译插件在编译环境下运行
-                JobTypeEnum.AGENT_LESS -> (container is NormalContainer || atomEnv.buildLessRunFlag == true)
+                JobTypeEnum.AGENT_LESS -> (container is NormalContainer || atomRunInfo.buildLessRunFlag == true)
                 // 编译环境插件：需要在编译环境下运行
                 JobTypeEnum.AGENT -> container is VMBuildContainer
                 else -> false
@@ -113,15 +137,39 @@ object AtomUtils {
 
             buildLogPrinter.addLine(
                 buildId = task.buildId,
-                message = "Prepare ${element.name}(${atomEnv.atomName})",
+                message = "Prepare ${element.name}(${atomRunInfo.atomName})",
                 tag = task.taskId,
                 jobId = task.containerHashId,
                 executeCount = task.executeCount ?: 1
             )
-            atoms[atomCode] = atomEnv.projectCode!!
+            atoms[atomCode] = atomRunInfo.initProjectCode
         }
         return atoms
     }
+
+    private fun getAtomVersions(container: Container): MutableSet<StoreVersion> {
+        val atomVersions = mutableSetOf<StoreVersion>()
+        container.elements.forEach nextOne@{ element ->
+            if (isHisAtomElement(element)) {
+                return@nextOne
+            }
+            var version = element.version
+            if (version.isBlank()) {
+                version = "1.*"
+            }
+            val atomCode = element.getAtomCode()
+            atomVersions.add(StoreVersion(
+                storeCode = atomCode,
+                storeName = element.name,
+                version = version,
+                historyFlag = false
+            ))
+        }
+        return atomVersions
+    }
+
+    private fun isHisAtomElement(element: Element) =
+        element !is MarketBuildAtomElement && element !is MarketBuildLessAtomElement
 
     fun isAtomExist(atomCode: String, client: Client): Boolean {
         return if (atomCache.getIfPresent(atomCode) != null) {

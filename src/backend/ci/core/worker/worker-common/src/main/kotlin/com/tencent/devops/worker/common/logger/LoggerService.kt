@@ -42,6 +42,10 @@ import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.log.LogSDKApi
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.common.log.pojo.enums.LogStorageMode
+import com.tencent.devops.common.service.utils.CommonUtils
+import com.tencent.devops.worker.common.LOG_FILE_LENGTH_LIMIT
+import com.tencent.devops.worker.common.LOG_MESSAGE_LENGTH_LIMIT
+import com.tencent.devops.worker.common.LOG_UPLOAD_BUFFER_SIZE
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import org.slf4j.LoggerFactory
@@ -56,7 +60,6 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 
-@Suppress("ALL")
 object LoggerService {
 
     private val logResourceApi = ApiFactory.create(LogSDKApi::class)
@@ -122,7 +125,7 @@ object LoggerService {
                 val size = logMessages.size
                 val now = System.currentTimeMillis()
                 // 缓冲大于200条或上次保存时间超过3秒
-                if (size >= 200 || (size > 0 && (now - lastSaveTime > 3 * 1000))) {
+                if (size >= LOG_UPLOAD_BUFFER_SIZE || (size > 0 && (now - lastSaveTime > 3 * 1000))) {
                     flush()
                     lastSaveTime = now
                     currentTaskLineNo += size
@@ -226,10 +229,15 @@ object LoggerService {
 
         try {
             if (currentTaskLineNo <= LOG_TASK_LINE_LIMIT) {
+                // 上报前做长度等内容限制
+                fixUploadMessage(logMessage)
                 this.uploadQueue.put(logMessage)
             } else {
                 logger.warn("The number of Task[$elementId] log lines exceeds the limit, " +
                     "the log file will be archived.")
+                this.uploadQueue.put(logMessage.copy(
+                    message = "The number of log lines printed by the task exceeds the limit"
+                ))
                 elementId2LogProperty[elementId]?.logStorageMode = LogStorageMode.LOCAL
             }
         } catch (e: InterruptedException) {
@@ -268,22 +276,34 @@ object LoggerService {
     }
 
     fun archiveLogFiles() {
-        logger.info("Start to archive log files because of LogMode[${AgentEnv.getLogMode()}]")
+        logger.info("Start to archive log files with LogMode[${AgentEnv.getLogMode()}]")
         try {
+            var archivedCount = 0
             // 将所有日志存储状态为LOCAL的插件进行文件归档
             elementId2LogProperty.forEach { (elementId, property) ->
+                // 如果不是LOCAL状态直接跳过
                 if (property.logStorageMode != LogStorageMode.LOCAL) return@forEach
+
+                // 如果日志文件过大，则取消归档
+                if (property.logFile.length() > LOG_FILE_LENGTH_LIMIT) {
+                    logger.warn("Cancel archiving task[$elementId] build log " +
+                        "file(${property.logFile.absolutePath}), length(${property.logFile.length()})")
+                    return@forEach
+                }
+
+                // 开始归档符合归档条件的日志文件
                 logger.info("Archive task[$elementId] build log file(${property.logFile.absolutePath})")
                 ArchiveUtils.archiveLogFile(property.logFile, property.childPath, buildVariables!!)
                 property.logStorageMode = LogStorageMode.ARCHIVED
+                archivedCount++
             }
-            logger.info("Finished archiving log ${elementId2LogProperty.size} files")
+            logger.info("Finished archiving log $archivedCount files")
 
             // 同步所有存储状态到
             logResourceApi.updateStorageMode(elementId2LogProperty.values.toList(), executeCount)
             logger.info("Finished update mode to log service.")
-        } catch (e: Exception) {
-            logger.warn("Fail to finish the logs", e)
+        } catch (t: Throwable) {
+            logger.warn("Fail to archive log files", t)
         }
     }
 
@@ -331,10 +351,8 @@ object LoggerService {
                 logger.info("Create new build log file(${logProperty.logFile.absolutePath})")
                 elementId2LogProperty[elementId] = logProperty
             }
-            logProperty.logFile.printWriter().use { out ->
-                val dateTime = sdf.format(Date(logMessage.timestamp))
-                out.println("$dateTime : ${logMessage.message}")
-            }
+            val dateTime = sdf.format(Date(logMessage.timestamp))
+            logProperty.logFile.appendText("$dateTime : ${logMessage.message}\n")
         } catch (e: Exception) {
             logger.warn("Fail to save the logs($logMessage)", e)
         }
@@ -348,7 +366,7 @@ object LoggerService {
     ) {
         try {
             currentTaskLineNo = 0
-            logger.info("Start to finish the log")
+            logger.info("Start to finish the log, property: ${elementId2LogProperty[tag]}")
             val result = logResourceApi.finishLog(
                 tag = tag,
                 jobId = jobId,
@@ -362,6 +380,19 @@ object LoggerService {
         } catch (e: Exception) {
             logger.warn("Fail to finish the logs", e)
         }
+    }
+
+    private fun fixUploadMessage(logMessage: LogMessage) {
+        // 字符数超过32766时analyzer索引分析将失效，同时为保护系统稳定性，若配置值为空或负数则限制为32KB
+        if (logMessage.message.length > LOG_MESSAGE_LENGTH_LIMIT) {
+            logMessage.message = Ansi().bold().fgYellow()
+                .a("[Length exceeds limit]")
+                .reset().toString()
+        }
+        logMessage.message = CommonUtils.interceptStringInLength(
+            string = logMessage.message,
+            length = LOG_MESSAGE_LENGTH_LIMIT
+        ) ?: ""
     }
 
     private fun disableLogUpload() {

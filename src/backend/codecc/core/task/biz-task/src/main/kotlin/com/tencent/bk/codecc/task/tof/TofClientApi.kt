@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component
 
 @Component
 class TofClientApi @Autowired constructor(
-        private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper
 ) {
 
     @Value("\${tof.codecc.appcode:#{null}}")
@@ -26,7 +26,7 @@ class TofClientApi @Autowired constructor(
     @Value("\${tof.rootpath:#{null}}")
     private val rootPath: String? = null
 
-    private val operator: String = "xxxxxxx"
+    private val operator: String = "austinshen"
 
     /**
      * 根据名字获取员工信息
@@ -132,5 +132,14 @@ class TofClientApi @Autowired constructor(
         )
         val result = OkhttpUtils.doHttpPost(url, objectMapper.writeValueAsString(requestBody))
         return objectMapper.readValue(result, object : TypeReference<Response<List<TofDeptInfo>>>() {})
+    }
+
+    /**
+     * 按RTX获取组织架构信息
+     */
+    fun getTofOrgInfoByUserName(userName: String): TofOrganizationInfo? {
+        val tofStaffInfo = getStaffInfoByUserName(userName).data
+        val groupId = tofStaffInfo?.GroupId ?: return null
+        return getOrganizationInfoByGroupId(groupId)
     }
 }

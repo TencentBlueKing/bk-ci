@@ -26,6 +26,10 @@
 
 package com.tencent.bk.codecc.defect.api;
 
+import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_PROJECT_ID;
+import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_TASK_ID;
+import static com.tencent.devops.common.api.auth.HeaderKt.AUTH_HEADER_DEVOPS_USER_ID;
+
 import com.tencent.bk.codecc.defect.vo.TaskLogRepoInfoVO;
 import com.tencent.bk.codecc.defect.vo.TaskLogVO;
 import com.tencent.bk.codecc.defect.vo.UploadTaskLogStepVO;
@@ -33,18 +37,22 @@ import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.devops.common.api.GetLastAnalysisResultsVO;
 import com.tencent.devops.common.api.analysisresult.BaseLastAnalysisResultVO;
 import com.tencent.devops.common.api.analysisresult.ToolLastAnalysisResultVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
-
-import javax.ws.rs.*;
-import javax.ws.rs.core.MediaType;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import static com.tencent.devops.common.api.auth.CodeCCHeaderKt.*;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.GET;
+import javax.ws.rs.HeaderParam;
+import javax.ws.rs.POST;
+import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 
 /**
  * task interface
@@ -61,7 +69,7 @@ public interface ServiceTaskLogRestResource
     @ApiOperation("停止正在运行的任务")
     @Path("/runningTask/pipelineId/{pipelineId}/streamName/{streamName}")
     @POST
-    CodeCCResult<Boolean> stopRunningTask(
+    Result<Boolean> stopRunningTask(
             @ApiParam(value = "流水线id", required = true)
             @PathParam("pipelineId")
                     String pipelineId,
@@ -71,20 +79,20 @@ public interface ServiceTaskLogRestResource
             @ApiParam(value = "工具清单", required = true)
                     Set<String> toolSet,
             @ApiParam(value = "项目id", required = true)
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_PROJECT_ID)
+            @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
                     String projectId,
             @ApiParam(value = "任务ID", required = true)
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_TASK_ID)
+            @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
                     long taskId,
             @ApiParam(value = "用户名", required = true)
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_USER_ID)
+            @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
                     String userName);
 
 
     @ApiOperation("获取最新分析记录")
     @Path("/latest/toolName/{toolName}/taskId/{taskId}")
     @GET
-    CodeCCResult<TaskLogVO> getLatestTaskLog(
+    Result<TaskLogVO> getLatestTaskLog(
             @ApiParam(value = "任务id", required = true)
             @PathParam("taskId")
                     long taskId,
@@ -96,14 +104,21 @@ public interface ServiceTaskLogRestResource
     @ApiOperation("平台侧获取任务所有有效工具的最近一次分析结果")
     @Path("/lastAnalysisResults")
     @POST
-    CodeCCResult<List<ToolLastAnalysisResultVO>> getLastAnalysisResults(
+    Result<List<ToolLastAnalysisResultVO>> getLastAnalysisResults(
             @ApiParam(value = "获取最近一次分析结果的请求对象", required = true)
                     GetLastAnalysisResultsVO getLastAnalysisResultsVO);
+
+    @ApiOperation("平台侧获取任务所有有效工具的某一次分析结果")
+    @Path("/analysisResults")
+    @POST
+    Result<List<ToolLastAnalysisResultVO>> getAnalysisResults(
+        @ApiParam(value = "获取某一次分析结果的请求对象", required = true)
+            GetLastAnalysisResultsVO getLastAnalysisResultsVO);
 
     @ApiOperation("获取最近统计信息")
     @Path("/lastStatisticResult")
     @POST
-    CodeCCResult<BaseLastAnalysisResultVO> getLastStatisticResult(
+    Result<BaseLastAnalysisResultVO> getLastStatisticResult(
             @ApiParam(value = "获取最近统计信息的请求对象", required = true)
                     ToolLastAnalysisResultVO toolLastAnalysisResultVO);
 
@@ -111,7 +126,7 @@ public interface ServiceTaskLogRestResource
     @ApiOperation("批量获取最新分析记录")
     @Path("/latest/batch/taskId/{taskId}")
     @POST
-    CodeCCResult<List<ToolLastAnalysisResultVO>> getBatchLatestTaskLog(
+    Result<List<ToolLastAnalysisResultVO>> getBatchLatestTaskLog(
             @ApiParam(value = "任务id", required = true)
             @PathParam("taskId")
                     long taskId,
@@ -121,14 +136,14 @@ public interface ServiceTaskLogRestResource
     @ApiOperation("任务维度批量获取最新分析记录")
     @Path("/latest/batchTask")
     @POST
-    CodeCCResult<Map<String, List<ToolLastAnalysisResultVO>>> getBatchTaskLatestTaskLog(
+    Result<Map<String, List<ToolLastAnalysisResultVO>>> getBatchTaskLatestTaskLog(
             @ApiParam(value = "任务id及工具集映射参数", required = true)
                     List<TaskDetailVO> taskDetailVOList);
 
     @ApiOperation("批量获取最新分析记录")
     @Path("/suggest/param")
     @PUT
-    CodeCCResult<Boolean> uploadDirStructSuggestParam(
+    Result<Boolean> uploadDirStructSuggestParam(
             @ApiParam(value = "上传参数建议值信息", required = true)
                     UploadTaskLogStepVO uploadTaskLogStepVO);
 
@@ -136,18 +151,18 @@ public interface ServiceTaskLogRestResource
     @ApiOperation("批量获取最新分析记录")
     @Path("/pipeline")
     @PUT
-    CodeCCResult<Boolean> refreshTaskLogByPipeline(
+    Result<Boolean> refreshTaskLogByPipeline(
             @ApiParam(value = "任务ID", required = true)
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_TASK_ID)
+            @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
             Long taskId,
             @ApiParam(value = "工具集合", required = true)
-            Set<String> toolNames);
+                    Set<String> toolNames);
 
-    @ApiOperation("批量获取最新分析的代码库信息")
+    @ApiOperation("批量获取最新分析记录")
     @Path("/latest/repo")
     @PUT
-    CodeCCResult<Map<String, TaskLogRepoInfoVO>> getLastAnalyzeRepoInfo(
+    Result<Map<String, TaskLogRepoInfoVO>> getLastAnalyzeRepoInfo(
             @ApiParam(value = "任务ID", required = true)
-            @HeaderParam(CODECC_AUTH_HEADER_DEVOPS_TASK_ID)
+            @HeaderParam(AUTH_HEADER_DEVOPS_TASK_ID)
                     Long taskId);
 }

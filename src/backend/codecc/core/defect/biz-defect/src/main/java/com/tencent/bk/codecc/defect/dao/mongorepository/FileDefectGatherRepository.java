@@ -64,4 +64,14 @@ public interface FileDefectGatherRepository extends MongoRepository<FileDefectGa
      * @return
      */
     List<FileDefectGatherEntity> findByTaskIdAndToolNameAndStatus(long taskId, String toolName, int status);
+
+
+    /**
+     * 通过任务id和工具名、状态查询告警文件清单
+     *
+     * @param taskId
+     * @param toolNameSet
+     * @return
+     */
+    List<FileDefectGatherEntity> findByTaskIdAndToolNameInAndStatus(long taskId, List<String> toolNameSet, int status);
 }
