@@ -82,7 +82,7 @@ class LogResourceApi : AbstractBuildResourceApi(), LogSDKApi {
     ): Result<Boolean> {
         val path = StringBuilder("/log/api/build/logs/mode")
         path.append("?jobId=$jobId")
-        path.append("?executeCount=$executeCount")
+        path.append("&executeCount=$executeCount")
         val requestBody = RequestBody.create(
             MediaType.parse("application/json; charset=utf-8"),
             objectMapper.writeValueAsString(propertyList)
