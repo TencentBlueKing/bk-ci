@@ -88,10 +88,11 @@ class BuildLogPrintService @Autowired constructor(
 
     fun asyncDispatchEvent(event: ILogEvent): Result<Boolean> {
         if (!isEnabled(storageProperties.enable)) {
+            val warnings = "Service refuses to write the log, the log file of the task will be archived."
             if (event is LogEvent && event.logs.isNotEmpty()) {
                 dispatchEvent(event.copy(
                     logs = listOf(event.logs.first().copy(
-                        message = Ansi().fgYellow().a("Service refuses to write the log.").reset().toString(),
+                        message = Ansi().fgYellow().a(warnings).reset().toString(),
                         logType = LogType.WARN
                     ))
                 ))
