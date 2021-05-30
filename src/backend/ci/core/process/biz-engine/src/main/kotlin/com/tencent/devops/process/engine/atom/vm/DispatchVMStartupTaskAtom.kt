@@ -97,6 +97,12 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
         var atomResponse: AtomResponse
         try {
             atomResponse = execute(task, param)
+            buildLogPrinter.stopLog(
+                buildId = task.buildId,
+                tag = task.taskId,
+                jobId = task.containerHashId,
+                executeCount = task.executeCount ?: 1
+            )
         } catch (e: BuildTaskException) {
             buildLogPrinter.addRedLine(
                 buildId = task.buildId,
@@ -126,12 +132,6 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 errorType = ErrorType.SYSTEM,
                 errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
                 errorMsg = ignored.message
-            )
-            buildLogPrinter.stopLog(
-                buildId = task.buildId,
-                tag = task.taskId,
-                jobId = task.containerHashId,
-                executeCount = task.executeCount ?: 1
             )
         }
         return atomResponse
