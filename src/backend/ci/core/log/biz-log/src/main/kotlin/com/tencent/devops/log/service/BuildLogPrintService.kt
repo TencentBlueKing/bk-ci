@@ -30,12 +30,17 @@ package com.tencent.devops.log.service
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.log.pojo.ILogEvent
+import com.tencent.devops.common.log.pojo.LogBatchEvent
 import com.tencent.devops.common.log.pojo.LogEvent
+import com.tencent.devops.common.log.pojo.enums.LogType
+import com.tencent.devops.common.log.pojo.message.LogMessage
+import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.mq.EXTEND_RABBIT_TEMPLATE_NAME
 import com.tencent.devops.log.configuration.LogServiceConfig
 import com.tencent.devops.log.configuration.StorageProperties
 import com.tencent.devops.log.jmx.LogPrintBean
+import com.tencent.devops.log.meta.Ansi
 import com.tencent.devops.log.util.LogErrorCodeEnum
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -83,6 +88,14 @@ class BuildLogPrintService @Autowired constructor(
 
     fun asyncDispatchEvent(event: ILogEvent): Result<Boolean> {
         if (!isEnabled(storageProperties.enable)) {
+            if (event is LogEvent && event.logs.isNotEmpty()) {
+                dispatchEvent(event.copy(
+                    logs = listOf(event.logs.first().copy(
+                        message = Ansi().fgYellow().a("Service refuses to write the log.").reset().toString(),
+                        logType = LogType.WARN
+                    ))
+                ))
+            }
             return Result(
                 status = 503,
                 message = LogErrorCodeEnum.PRINT_IS_DISABLED.formatErrorMessage,

@@ -238,6 +238,8 @@ object LoggerService {
                 this.uploadQueue.put(logMessage.copy(
                     message = "The number of log lines printed by the task exceeds the limit"
                 ))
+                addYellowLine("The number of Task[$elementId] log lines exceeds the limit, " +
+                    "the log file of the task will be archived.")
                 elementId2LogProperty[elementId]?.logStorageMode = LogStorageMode.LOCAL
             }
         } catch (e: InterruptedException) {
