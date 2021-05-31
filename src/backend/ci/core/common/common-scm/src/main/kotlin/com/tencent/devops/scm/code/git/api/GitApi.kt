@@ -88,7 +88,7 @@ open class GitApi {
         var page = 1
         val result = mutableListOf<GitBranch>()
         while (true) {
-            var searchReq = "page=$page&per_page=100&order_by=updated&sort=desc"
+            var searchReq = "page=$page&per_page=100"
             if (!search.isNullOrBlank()) {
                 searchReq = "$searchReq&search=$search"
             }
