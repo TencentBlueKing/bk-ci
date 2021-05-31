@@ -119,7 +119,7 @@ class GitCITriggerService @Autowired constructor(
         private const val ciFileExtensionYaml = ".yaml"
         private const val ciFileName = ".ci.yml"
         private const val ciFileDirectoryName = ".ci"
-        private const val noPipelineBuildEvent = "validatePipeline"
+        private const val noPipelineBuildEvent = "MR held, waiting until pipeline validation finish."
     }
 
     fun triggerBuild(userId: String, pipelineId: String, triggerBuildReq: TriggerBuildReq): Boolean {
