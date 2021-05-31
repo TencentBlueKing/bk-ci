@@ -136,6 +136,7 @@ install_ci_gateway (){
   local proj=$1
   rsync -ra --del "$BK_CI_SRC_DIR/gateway" "$BK_CI_HOME"
   rsync -ra --del "$BK_CI_SRC_DIR/frontend" "$BK_CI_HOME"  # frontend不必verbose.
+  rsync -ra "$BK_CI_SRC_DIR/agent-package" "$BK_CI_HOME"  # #3707 网关提供jars下载.
   if [ -d "$BK_CI_SRC_DIR/docs" ]; then
     rsync -ra --del "$BK_CI_SRC_DIR/docs" "$BK_CI_HOME" || return $?  # 可选docs
   fi
