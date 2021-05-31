@@ -28,7 +28,6 @@
 package com.tencent.devops.common.api.util
 
 import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_HTTP_RESPONSE_BODY_TOO_LARGE
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import okhttp3.Headers
 import okhttp3.MediaType
@@ -274,9 +273,9 @@ object OkhttpUtils {
                 while ((inStream.read(buf).also { len = it }) != -1) {
                     totalBytesRead += len
                     if (totalBytesRead >= readLimit) {
-                        throw ErrorCodeException(
-                            errorCode = ERROR_HTTP_RESPONSE_BODY_TOO_LARGE,
-                            defaultMessage = errorMsg ?: "response body cannot be exceeded $readLimit"
+                        throw RemoteServiceException(
+                            errorMessage = errorMsg ?: "response body cannot be exceeded $readLimit",
+                            httpStatus = ERROR_HTTP_RESPONSE_BODY_TOO_LARGE
                         )
                     }
                     outStream.write(buf, 0, len)
