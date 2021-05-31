@@ -1,8 +1,15 @@
 local timestamp = ngx.time()
 local token = "6fb7eb9f0e213e126bde00720d5553c5b785a97b1f0400b0ac4e"
-local sn = timestamp..token..timestamp
-local target = "__IDC_TO_DEVNET_TARGET__"
-local riodomain = "devcloud.esb.woa.com/devops-idc2devnet/"..target
+local sn = timestamp .. token .. timestamp
+
+local target = "devnet-backend_devops"
+if config.env == 'dev' then
+    target = 'dev_devnet-backend_devops'
+elseif config.env == 'test' then
+    target = 'test_devnet-backend_devops'
+end
+
+local riodomain = "devcloud.esb.woa.com/devops-idc2devnet/" .. target
 
 local resty_sha256 = require "resty.sha256"
 local resty_str = require "resty.string"
