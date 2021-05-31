@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
+import com.tencent.devops.gitci.pojo.GitCIBuildHistory
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
 import com.tencent.devops.scm.api.ServiceGitResource
 import org.jooq.DSLContext
@@ -76,11 +77,17 @@ class GitCIV2PipelineService @Autowired constructor(
             records = emptyList()
         )
         val count = pipelineResourceDao.getPipelineCount(dslContext, gitProjectId)
-        val latestBuilds = gitCIV2DetailService.batchGetBuildDetail(
-            userId = userId,
-            gitProjectId = gitProjectId,
-            buildIds = pipelines.map { it.latestBuildId }
-        )
+        val latestBuilds =
+            try {
+                gitCIV2DetailService.batchGetBuildDetail(
+                    userId = userId,
+                    gitProjectId = gitProjectId,
+                    buildIds = pipelines.map { it.latestBuildId }
+                )
+            } catch (e: Exception) {
+                logger.info("getPipelineList batchGetBuildDetail error gitProjectId: $gitProjectId")
+                emptyMap<String, GitCIBuildHistory>()
+            }
         return Page(
             count = count.toLong(),
             page = pageNotNull,

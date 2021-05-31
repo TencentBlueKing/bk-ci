@@ -97,13 +97,19 @@ class ScmService @Autowired constructor(
     ): GitCIProjectInfo? {
         logger.info("GitCIProjectInfo: [$gitProjectId|$token|$useAccessToken]")
         return try {
-            client.getScm(ServiceGitCiResource::class).getProjectInfo(
+            val result = client.getScm(ServiceGitCiResource::class).getProjectInfo(
                 accessToken = token,
                 gitProjectId = gitProjectId,
                 useAccessToken = useAccessToken
-            ).data
+            )
+            if (result.status.toString() == CommonMessageCode.SYSTEM_ERROR) {
+                logger.error("getProjectInfo error [$gitProjectId|$token|$useAccessToken]")
+                null
+            } else {
+                result.data
+            }
         } catch (e: Exception) {
-            logger.error("getProjectInfo error", e)
+            logger.error("getProjectInfo error [$gitProjectId|$token|$useAccessToken]", e)
             null
         }
     }

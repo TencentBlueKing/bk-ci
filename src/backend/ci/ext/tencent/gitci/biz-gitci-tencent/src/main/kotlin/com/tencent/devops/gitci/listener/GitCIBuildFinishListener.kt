@@ -812,7 +812,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                 "$projectName($branchName) - $pipelineName #${build.buildNum} run ${state.third} \n " +
                 request +
                 costTime +
-                "[View it on  工蜂内网版]" +
+                "[查看详情]" +
                 "(${GitCIPipelineUtils.genGitCIV2BuildUrl(
                     homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
                     projectName = projectName,
