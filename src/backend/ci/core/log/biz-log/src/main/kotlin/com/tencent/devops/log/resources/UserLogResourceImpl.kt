@@ -30,6 +30,7 @@ package com.tencent.devops.log.resources
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.UserLogResource
 import com.tencent.devops.common.log.pojo.QueryLogs
@@ -59,7 +60,7 @@ class UserLogResourceImpl @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
-        validateAuth(userId, projectId, pipelineId, buildId)
+        validateAuth(userId, projectId, pipelineId, buildId, AuthPermission.VIEW)
         return logDispatcher.getInitLogs(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -87,7 +88,7 @@ class UserLogResourceImpl @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
-        validateAuth(userId, projectId, pipelineId, buildId)
+        validateAuth(userId, projectId, pipelineId, buildId, AuthPermission.VIEW)
         return logDispatcher.getMoreLogs(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -116,7 +117,7 @@ class UserLogResourceImpl @Autowired constructor(
         jobId: String?,
         executeCount: Int?
     ): Result<QueryLogs> {
-        validateAuth(userId, projectId, pipelineId, buildId)
+        validateAuth(userId, projectId, pipelineId, buildId, AuthPermission.VIEW)
         return logDispatcher.getAfterLogs(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -141,7 +142,7 @@ class UserLogResourceImpl @Autowired constructor(
         executeCount: Int?,
         fileName: String?
     ): Response {
-        validateAuth(userId, projectId, pipelineId, buildId)
+        validateAuth(userId, projectId, pipelineId, buildId, AuthPermission.DOWNLOAD)
         return logDispatcher.downloadLogs(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -154,7 +155,13 @@ class UserLogResourceImpl @Autowired constructor(
         )
     }
 
-    private fun validateAuth(userId: String, projectId: String, pipelineId: String, buildId: String) {
+    private fun validateAuth(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        permission: AuthPermission
+    ) {
         if (userId.isBlank()) {
             throw ParamBlankException("Invalid userId")
         }
@@ -170,10 +177,11 @@ class UserLogResourceImpl @Autowired constructor(
         if (!logPermissionService.verifyUserLogPermission(
                 userId = userId,
                 pipelineId = pipelineId,
-                projectCode = projectId
+                projectCode = projectId,
+                permission = permission
             )
         ) {
-            throw PermissionForbiddenException("用户($userId)无权限在工程($projectId)下查看流水线")
+            throw PermissionForbiddenException("用户($userId)无权限在工程($projectId)下${permission.alias}流水线")
         }
     }
 }
