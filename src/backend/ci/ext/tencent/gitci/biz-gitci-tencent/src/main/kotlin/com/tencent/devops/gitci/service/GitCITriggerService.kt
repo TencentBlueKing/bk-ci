@@ -297,7 +297,7 @@ class GitCITriggerService @Autowired constructor(
             logger.info("It takes ${LocalDateTime.now().timestampmilli() - start}ms to match trigger pipeline")
         }
     }
-    
+
     @Suppress("ALL")
     private fun matchAndTriggerPipeline(
         gitRequestEvent: GitRequestEvent,
