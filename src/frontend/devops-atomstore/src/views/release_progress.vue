@@ -487,7 +487,7 @@
                 this.$bkInfo({
                     type: 'warning',
                     subHeader,
-                    okText: this.$t('store.提交'),
+                    okText: this.$t('store.已确认兼容新增参数，继续'),
                     confirmFn
                 })
             },
