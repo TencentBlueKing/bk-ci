@@ -106,7 +106,7 @@ function _M:get_sub_path(tag)
             ngx.log(ngx.ERR, "tag failed to new redis ", err)
             return tag
         end
-        sub_path = red:get("gw:sub:path")
+        sub_path = red:get("gw:sub:path:" .. tag)
         if not sub_path or sub_path == ngx.null then
             sub_path = "prod"
         end
