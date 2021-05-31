@@ -54,7 +54,7 @@ class ProjectLabelDao {
 
     fun countByName(dslContext: DSLContext, labelName: String): Int {
         with(TProjectLabel.T_PROJECT_LABEL) {
-            return dslContext.selectCount().from(this).where(LABEL_NAME.eq(labelName)).fetchOne(0, Int::class.java)
+            return dslContext.selectCount().from(this).where(LABEL_NAME.eq(labelName)).fetchOne(0, Int::class.java)!!
         }
     }
 

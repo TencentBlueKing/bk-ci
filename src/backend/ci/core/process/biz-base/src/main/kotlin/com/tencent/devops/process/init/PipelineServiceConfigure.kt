@@ -30,9 +30,7 @@ package com.tencent.devops.process.init
 import com.tencent.devops.process.engine.service.PipelineBuildExtService
 import com.tencent.devops.process.engine.service.PipelinePauseExtService
 import com.tencent.devops.process.service.PipelineBuildExtServiceImpl
-import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.service.PipelinePauseExtServiceImpl
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
@@ -47,8 +45,7 @@ class PipelineServiceConfigure {
 
     @Bean
     @ConditionalOnMissingBean(PipelineBuildExtService::class)
-    fun pipelineBuildExtService(@Autowired pipelineContextService: PipelineContextService) =
-        PipelineBuildExtServiceImpl(pipelineContextService)
+    fun pipelineBuildExtService() = PipelineBuildExtServiceImpl()
 
     @Bean
     @ConditionalOnMissingBean(PipelinePauseExtService::class)

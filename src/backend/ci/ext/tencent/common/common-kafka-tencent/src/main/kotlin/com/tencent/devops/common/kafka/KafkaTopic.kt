@@ -51,4 +51,7 @@ object KafkaTopic {
 
     // 标准日志上报topic
     const val LANDUN_LOG_FORMAT_TOPIC = "tendata-bkdevops-296-topic-landun-log-format"
+
+    // APP上报topic
+    const val BK_CI_APP_LOGIN_TOPIC = "tendata-bkdevops-296-topic-landun-app-login"
 }

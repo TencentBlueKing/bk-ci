@@ -36,6 +36,7 @@ import com.tencent.bkrepo.common.query.model.PageLimit
 import com.tencent.bkrepo.common.query.model.QueryModel
 import com.tencent.bkrepo.common.query.model.Rule
 import com.tencent.bkrepo.common.query.model.Sort
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_NAME
@@ -49,10 +50,12 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
+import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.archive.pojo.BkRepoAccessToken
 import com.tencent.devops.worker.common.api.archive.pojo.BkRepoResponse
 import com.tencent.devops.worker.common.api.archive.pojo.TokenType
+import com.tencent.devops.worker.common.api.pojo.FileGatewayInfo
 import com.tencent.devops.worker.common.api.pojo.QueryData
 import com.tencent.devops.worker.common.api.pojo.QueryNodeInfo
 import com.tencent.devops.worker.common.utils.IosUtils
@@ -68,15 +71,25 @@ import java.util.Base64
 import java.util.Locale
 
 class BkRepoResourceApi : AbstractBuildResourceApi() {
-    fun useBkRepo(): Boolean {
+
+    private fun getFileGateway(): String? {
         return try {
-            val request = buildGet("/dummy", useFileGateway = true)
-            val host = request.url().host()
-            host.contains("bkrepo", true)
+            val path = "/artifactory/api/build/fileGateway/get"
+            val request = buildGet(path)
+            val response = request(request, "获取构建机基本信息失败")
+            val fileGatewayResult = objectMapper.readValue<Result<FileGatewayInfo>>(response)
+            fileGatewayResult.data!!.fileGateway
         } catch (e: Exception) {
-            logger.warn("check useBkRepo error, cause: ${e.message}")
-            false
+            logger.warn("get file gateway exception", e)
+            null
         }
+    }
+
+    fun tokenAccess(): Boolean {
+        if (CommonEnv.fileGateway == null) {
+            CommonEnv.fileGateway = getFileGateway()
+        }
+        return CommonEnv.fileGateway != null && CommonEnv.fileGateway!!.contains("bkrepo", true)
     }
 
     fun createBkRepoTemporaryToken(projectId: String, repoName: String, path: String, type: TokenType): String {
@@ -176,7 +189,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         buildVariables: BuildVariables,
         parseAppMetadata: Boolean
     ) {
-        if (useBkRepo()) {
+        if (tokenAccess()) {
             val token = createBkRepoTemporaryToken(
                 projectId = buildVariables.projectId,
                 repoName = repoName,
@@ -211,7 +224,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         fullPath: String,
         destPath: File
     ) {
-        if (useBkRepo()) {
+        if (tokenAccess()) {
             val token = createBkRepoTemporaryToken(
                 projectId = projectId,
                 repoName = repoName,

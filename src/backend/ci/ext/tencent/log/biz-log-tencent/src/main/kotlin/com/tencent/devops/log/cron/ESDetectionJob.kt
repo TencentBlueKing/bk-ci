@@ -27,7 +27,7 @@
 
 package com.tencent.devops.log.cron
 
-import com.google.common.cache.CacheBuilder
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.log.pojo.message.LogMessageWithLineNo
 import com.tencent.devops.common.redis.RedisLock
@@ -62,7 +62,7 @@ class ESDetectionJob @Autowired constructor(
     private val logClient: MultiESLogClient
 ) {
 
-    private val indexCache = CacheBuilder.newBuilder()
+    private val indexCache = Caffeine.newBuilder()
         .maximumSize(100)
         .expireAfterWrite(2, TimeUnit.DAYS)
         .build<String/*index*/, Boolean>()

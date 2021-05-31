@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.enums.RepositoryTypeNew
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.TriggerContainer
@@ -68,6 +67,7 @@ import com.tencent.devops.process.pojo.code.github.GithubEvent
 import com.tencent.devops.process.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.process.pojo.code.github.GithubPushEvent
 import com.tencent.devops.process.pojo.code.svn.SvnCommitEvent
+import com.tencent.devops.process.service.perm.PermFixService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
@@ -85,7 +85,7 @@ class PipelineBuildWebhookService @Autowired constructor(
     private val pipelineWebhookService: PipelineWebhookService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineBuildService: PipelineBuildService,
-    private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val permFixService: PermFixService,
     private val scmWebhookMatcherBuilder: ScmWebhookMatcherBuilder,
     private val gitWebhookUnlockDispatcher: GitWebhookUnlockDispatcher,
     private val pipelineWebHookQueueService: PipelineWebHookQueueService,
@@ -462,6 +462,8 @@ class PipelineBuildWebhookService @Autowired constructor(
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(pipelineId)
             ?: throw RuntimeException("Pipeline($pipelineId) not found")
+
+        permFixService.checkPermission(pipelineInfo.lastModifyUser, projectId, pipelineId = pipelineId)
 
         val model = pipelineRepositoryService.getModel(pipelineId)
         if (model == null) {

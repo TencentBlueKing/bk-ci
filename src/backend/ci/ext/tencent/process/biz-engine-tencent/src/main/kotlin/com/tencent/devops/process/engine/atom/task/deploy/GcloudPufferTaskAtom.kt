@@ -31,19 +31,15 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.archive.client.BkRepoClient
-import com.tencent.devops.common.archive.client.JfrogClient
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.gcloud.DynamicGcloudClient
 import com.tencent.devops.common.gcloud.api.pojo.CommonParam
 import com.tencent.devops.common.gcloud.api.pojo.PrePublishParam
 import com.tencent.devops.common.gcloud.api.pojo.UploadResParam
 import com.tencent.devops.common.gcloud.api.pojo.dyn.DynNewResourceParam
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.element.GcloudPufferElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.common.service.gray.RepoGray
-import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.plugin.api.ServiceGcloudConfResource
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
@@ -61,9 +57,6 @@ class GcloudPufferTaskAtom @Autowired constructor(
     private val client: Client,
     private val objectMapper: ObjectMapper,
     private val buildLogPrinter: BuildLogPrinter,
-    private val commonConfig: CommonConfig,
-    private val redisOperation: RedisOperation,
-    private val repoGray: RepoGray,
     private val bkRepoClient: BkRepoClient
 ) : IAtomTask<GcloudPufferElement> {
 
@@ -82,34 +75,25 @@ class GcloudPufferTaskAtom @Autowired constructor(
         with(param) {
             val host = client.get(ServiceGcloudConfResource::class).getByConfigId(configId.toInt()).data
             if (host == null) {
-                buildLogPrinter.addRedLine(task.buildId, "unknown configId($configId)", task.taskId, task.containerHashId, task.executeCount
-                    ?: 1)
+                buildLogPrinter.addRedLine(task.buildId, "unknown configId($configId)", task.taskId,
+                    task.containerHashId, task.executeCount ?: 1)
                 return AtomResponse(BuildStatus.FAILED)
             }
             val isCustom = fileSource.toUpperCase() == "CUSTOMIZE"
             val destPath = Files.createTempDirectory("gcloud").toAbsolutePath().toString()
-            val isRepoGray = repoGray.isGray(projectId, redisOperation)
-            buildLogPrinter.addLine(buildId, "use bkrepo: $isRepoGray", taskId, task.containerHashId, task.executeCount
-                ?: 1)
-
-            val downloadFileList = if (isRepoGray) {
-                bkRepoClient.downloadFileByPattern(
-                    userId = userId,
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    repoName = if (isCustom) "custom" else "pipeline",
-                    pathPattern = filePath,
-                    destPath = destPath
-                )
-            } else {
-                val jfrogClient = JfrogClient(commonConfig.devopsHostGateway ?: "", projectId, pipelineId, buildId)
-                jfrogClient.downloadFile(filePath, isCustom, destPath)
-            }
+            val downloadFileList = bkRepoClient.downloadFileByPattern(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                repoName = if (isCustom) "custom" else "pipeline",
+                pathPattern = filePath,
+                destPath = destPath
+            )
 
             if (downloadFileList.isEmpty()) {
-                buildLogPrinter.addRedLine(buildId, "匹配不到待分发的文件: $filePath", taskId, task.containerHashId, task.executeCount
-                    ?: 1)
+                buildLogPrinter.addRedLine(buildId, "匹配不到待分发的文件: $filePath", taskId, task.containerHashId,
+                    task.executeCount ?: 1)
                 return AtomResponse(BuildStatus.FAILED)
             }
 
@@ -132,19 +116,26 @@ class GcloudPufferTaskAtom @Autowired constructor(
             downloadFileList.forEach { downloadFile ->
                 try {
                     // step 1
-                    buildLogPrinter.addLine(buildId, "开始对文件（${downloadFile.path}）执行Gcloud相关操作，详情请去gcloud官方地址查看：<a target='_blank' href='http://console.gcloud.oa.com/dolphin/channel/$gameId'>查看详情</a>\n", taskId, task.containerHashId, task.executeCount
-                        ?: 1)
+                    buildLogPrinter.addLine(
+                        buildId,
+                        "开始对文件（${downloadFile.path}）执行Gcloud相关操作，详情请去gcloud官方地址查看：" +
+                            "<a target='_blank' href='http://console.gcloud.oa.com/dolphin/channel/$gameId'>" +
+                            "查看详情</a>\n",
+                        taskId,
+                        task.containerHashId,
+                        task.executeCount ?: 1)
                     val gcloudClient = DynamicGcloudClient(objectMapper, host.address, host.fileAddress)
-                    buildLogPrinter.addLine(buildId, "开始执行 \"上传动态资源版本\" 操作\n", taskId, task.containerHashId, task.executeCount
-                        ?: 1)
-                    val uploadResParam = UploadResParam(productId.toInt(), resourceVersion, FileUtil.getMD5(downloadFile), null, null, https)
-                    buildLogPrinter.addLine(buildId, "\"上传动态资源版本\" 操作参数：$uploadResParam\n", taskId, task.containerHashId, task.executeCount
-                        ?: 1)
+                    buildLogPrinter.addLine(buildId, "开始执行 \"上传动态资源版本\" 操作\n", taskId, task.containerHashId,
+                        task.executeCount ?: 1)
+                    val uploadResParam = UploadResParam(productId.toInt(), resourceVersion,
+                        FileUtil.getMD5(downloadFile), null, null, https)
+                    buildLogPrinter.addLine(buildId, "\"上传动态资源版本\" 操作参数：$uploadResParam\n", taskId,
+                        task.containerHashId, task.executeCount ?: 1)
                     val uploadResult = gcloudClient.uploadDynamicRes(downloadFile, uploadResParam, commonParam)
 
                     // step 2
-                    buildLogPrinter.addLine(buildId, "开始执行 \"查询版本上传 CDN 任务状态\" 操作\n", taskId, task.containerHashId, task.executeCount
-                        ?: 1)
+                    buildLogPrinter.addLine(buildId, "开始执行 \"查询版本上传 CDN 任务状态\" 操作\n", taskId,
+                        task.containerHashId, task.executeCount ?: 1)
                     val gCloudTaskId = uploadResult.first
                     val versionInfo: String
                     loop@ while (true) {
@@ -153,41 +144,42 @@ class GcloudPufferTaskAtom @Autowired constructor(
                         val message = getTaskResult["message"] ?: ""
                         when (state) {
                             "waiting", "processing" -> {
-                                buildLogPrinter.addLine(buildId, "\"等待查询版本上传 CDN 任务状态\" 操作执行完毕: \n", taskId, task.containerHashId, task.executeCount
-                                    ?: 1)
-                                buildLogPrinter.addLine(buildId, "\"$getTaskResult\n\n", taskId, task.containerHashId, task.executeCount
-                                    ?: 1)
+                                buildLogPrinter.addLine(buildId, "\"等待查询版本上传 CDN 任务状态\" 操作执行完毕: \n",
+                                    taskId, task.containerHashId, task.executeCount ?: 1)
+                                buildLogPrinter.addLine(buildId, "\"$getTaskResult\n\n", taskId, task.containerHashId,
+                                    task.executeCount ?: 1)
                                 Thread.sleep(1000 * 6)
                             }
                             "finished" -> {
-                                buildLogPrinter.addLine(buildId, "\"查询版本上传 CDN 任务状态\" 操作 成功执行完毕\n", taskId, task.containerHashId, task.executeCount
-                                    ?: 1)
+                                buildLogPrinter.addLine(buildId, "\"查询版本上传 CDN 任务状态\" 操作 成功执行完毕\n", taskId,
+                                    task.containerHashId, task.executeCount ?: 1)
                                 versionInfo = getTaskResult["versionInfo"]!!
                                 break@loop
                             }
                             else -> {
-                                buildLogPrinter.addRedLine(buildId, "上传文件失败: $message($state)", taskId, task.containerHashId, task.executeCount
-                                    ?: 1)
+                                buildLogPrinter.addRedLine(buildId, "上传文件失败: $message($state)", taskId,
+                                    task.containerHashId, task.executeCount ?: 1)
                                 return AtomResponse(BuildStatus.FAILED)
                             }
                         }
                     }
 
                     // step 3
-                    buildLogPrinter.addLine(buildId, "开始执行 \"创建资源\" 操作\n", taskId, task.containerHashId, task.executeCount
-                        ?: 1)
-                    val newResParam = DynNewResourceParam(task.starter, productId.toInt(), resourceVersion, resourceName, versionInfo, versionType.toInt(), versionDes, customStr)
-                    buildLogPrinter.addLine(buildId, "\"创建资源\" 操作参数：$newResParam\n", taskId, task.containerHashId, task.executeCount
-                        ?: 1)
+                    buildLogPrinter.addLine(buildId, "开始执行 \"创建资源\" 操作\n", taskId, task.containerHashId,
+                        task.executeCount ?: 1)
+                    val newResParam = DynNewResourceParam(task.starter, productId.toInt(), resourceVersion,
+                        resourceName, versionInfo, versionType.toInt(), versionDes, customStr)
+                    buildLogPrinter.addLine(buildId, "\"创建资源\" 操作参数：$newResParam\n", taskId, task.containerHashId,
+                        task.executeCount ?: 1)
                     gcloudClient.newResource(newResParam, commonParam)
                     val prePublishParam = PrePublishParam(task.starter, productId.toInt())
 
                     // step 4
-                    buildLogPrinter.addLine(buildId, "开始执行 \"预发布\" 操作\n", taskId, task.containerHashId, task.executeCount
-                        ?: 1)
+                    buildLogPrinter.addLine(buildId, "开始执行 \"预发布\" 操作\n", taskId, task.containerHashId,
+                        task.executeCount ?: 1)
                     val prePubResult = gcloudClient.prePublish(prePublishParam, commonParam)
-                    buildLogPrinter.addLine(buildId, "预发布单个或多个渠道响应结果: $prePubResult\n", taskId, task.containerHashId, task.executeCount
-                        ?: 1)
+                    buildLogPrinter.addLine(buildId, "预发布单个或多个渠道响应结果: $prePubResult\n", taskId,
+                        task.containerHashId, task.executeCount ?: 1)
                 } finally {
                     downloadFile.delete()
                 }

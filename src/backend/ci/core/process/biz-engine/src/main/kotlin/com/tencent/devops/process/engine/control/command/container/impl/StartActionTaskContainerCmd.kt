@@ -45,7 +45,6 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
-import com.tencent.devops.process.service.PipelineContextService
 import com.tencent.devops.process.service.PipelineTaskService
 import com.tencent.devops.process.util.TaskUtils
 import com.tencent.devops.store.pojo.common.ATOM_POST_EXECUTE_TIP
@@ -58,8 +57,7 @@ class StartActionTaskContainerCmd(
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter,
-    private val pipelineTaskService: PipelineTaskService,
-    private val pipelineContextService: PipelineContextService
+    private val pipelineTaskService: PipelineTaskService
 ) : ContainerCmd {
 
     companion object {
@@ -194,7 +192,6 @@ class StartActionTaskContainerCmd(
     ): PipelineBuildTask? {
         val source = containerContext.event.source
         var toDoTask: PipelineBuildTask? = null
-        val contextMap = pipelineContextService.buildContext(buildId, containerId, containerContext.variables)
         when { // [post action] 包含对应的关机任务，优先开机失败startVMFail=true
             additionalOptions?.elementPostInfo != null -> { // 如果是[post task], elementPostInfo必不为空
                 toDoTask = additionalOptions?.elementPostInfo?.findPostActionTask(
@@ -224,7 +221,7 @@ class StartActionTaskContainerCmd(
                 buildId = buildId,
                 additionalOptions = additionalOptions,
                 containerFinalStatus = containerContext.buildStatus,
-                variables = containerContext.variables.plus(contextMap),
+                variables = containerContext.variables,
                 hasFailedTaskInSuccessContainer = hasFailedTaskInSuccessContainer,
                 buildLogPrinter = buildLogPrinter
             ) -> { // 检查条件跳过

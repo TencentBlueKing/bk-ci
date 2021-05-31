@@ -137,7 +137,7 @@ class PipelineInfoDao {
             dslContext.select(VERSION)
                 .from(this)
                 .where(PIPELINE_ID.eq(pipelineId))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
         logger.info("Update the pipeline $pipelineId add new version($version) and result=${count == 1}")
         return version
@@ -155,7 +155,7 @@ class PipelineInfoDao {
                 .and(PIPELINE_ID.`in`(pipelineIds))
                 .and(CHANNEL.eq(channelCode.name))
                 .and(DELETE.eq(false))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
@@ -171,7 +171,7 @@ class PipelineInfoDao {
             if (channelCode != null)
                 query.and(CHANNEL.eq(channelCode.name))
 
-            query.and(DELETE.eq(false)).fetchOne(0, Int::class.java)
+            query.and(DELETE.eq(false)).fetchOne(0, Int::class.java)!!
         }
     }
 

@@ -34,7 +34,6 @@ import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
-import com.tencent.devops.process.service.PipelineContextService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -43,8 +42,7 @@ import org.springframework.stereotype.Service
  */
 @Service
 class CheckConditionalSkipStageCmd constructor(
-    private val buildLogPrinter: BuildLogPrinter,
-    private val pipelineContextService: PipelineContextService
+    private val buildLogPrinter: BuildLogPrinter
 ) : StageCmd {
 
     override fun canExecute(commandContext: StageContext): Boolean {
@@ -80,10 +78,9 @@ class CheckConditionalSkipStageCmd constructor(
         var skip = false
         if (controlOption != null) {
             val conditions = controlOption.customVariables ?: emptyList()
-            val contextMap = pipelineContextService.buildContext(stage.buildId, null, variables)
             skip = ControlUtils.checkStageSkipCondition(
                 conditions = conditions,
-                variables = variables.plus(contextMap),
+                variables = variables,
                 buildId = stage.buildId,
                 runCondition = controlOption.runCondition,
                 customCondition = controlOption.customCondition,

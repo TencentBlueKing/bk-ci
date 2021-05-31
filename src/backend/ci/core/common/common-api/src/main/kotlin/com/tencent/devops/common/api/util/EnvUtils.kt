@@ -34,36 +34,20 @@ object EnvUtils {
         replaceWithEmpty: Boolean = false,
         isEscape: Boolean = false
     ): String {
-        return parseEnv(
-            command = command,
-            data = data,
-            replaceWithEmpty = replaceWithEmpty,
-            isEscape = isEscape,
-            contextMap = emptyMap()
-        )
-    }
-
-    fun parseEnv(
-        command: String?,
-        data: Map<String, String>,
-        replaceWithEmpty: Boolean = false,
-        isEscape: Boolean = false,
-        contextMap: Map<String, String>? = emptyMap()
-    ): String {
         if (command.isNullOrBlank()) {
             return command ?: ""
         }
         // 先处理${} 单个花括号的情况
         val value = parseWithSingleCurlyBraces(command, data, replaceWithEmpty, isEscape, contextMap)
         // 再处理${{}} 双花括号的情况
-        return parseWithDoubleCurlyBraces(value, data, isEscape, contextMap)
+        return parseWithDoubleCurlyBraces(value, data, replaceWithEmpty, isEscape)
     }
 
     fun parseWithDoubleCurlyBraces(
         value: String,
         data: Map<String, String>,
-        escape: Boolean = false,
-        contextMap: Map<String, String>? = emptyMap()
+        replaceWithEmpty: Boolean = false,
+        escape: Boolean = false
     ): String {
         val newValue = StringBuilder()
         var index = 0
@@ -71,7 +55,7 @@ object EnvUtils {
             val c = value[index]
             if (checkPrefix(c, index, value)) {
                 val inside = StringBuilder()
-                index = parseVariableWithDoubleCurlyBraces(value, index + 3, inside, data, contextMap)
+                index = parseVariableWithDoubleCurlyBraces(value, index + 3, inside, data, replaceWithEmpty)
                 if (escape) {
                     newValue.append(escapeSpecialWord(inside.toString()))
                 } else {
@@ -165,7 +149,7 @@ object EnvUtils {
         start: Int,
         newValue: StringBuilder,
         data: Map<String, String>,
-        contextMap: Map<String, String>? = emptyMap()
+        replaceWithEmpty: Boolean = false
     ): Int {
         val token = StringBuilder()
         var index = start
@@ -176,8 +160,12 @@ object EnvUtils {
                 index = parseVariableWithDoubleCurlyBraces(command, index + 3, inside, data)
                 token.append(inside)
             } else if (c == '}' && index + 1 < command.length && command[index + 1] == '}') {
-                val tokenStr = token.toString().trim()
-                val value = data[tokenStr] ?: contextMap?.get(tokenStr) ?: "\${{$token}}"
+                val value = data[token.toString().trim()] ?: if (replaceWithEmpty) {
+                    ""
+                } else {
+                    "\${$token}"
+                }
+
                 newValue.append(value)
                 return index + 2
             } else {

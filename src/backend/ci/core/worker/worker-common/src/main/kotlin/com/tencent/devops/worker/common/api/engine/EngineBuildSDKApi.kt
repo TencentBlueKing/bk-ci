@@ -48,6 +48,4 @@ interface EngineBuildSDKApi : WorkerRestApiSDK {
     fun heartbeat(): Result<Boolean>
 
     fun timeout(): Result<Boolean>
-
-    fun getCiToken(): String
 }

@@ -29,19 +29,34 @@ package com.tencent.devops.worker.common.api.archive
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.google.gson.JsonParser
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.ApiPriority
+import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.logger.LoggerService
+import okhttp3.MediaType
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import java.io.File
 
 @ApiPriority(priority = 9)
 class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
-    private val bkRepoResourceApi = BkRepoResourceApi()
+    private val bkrepoResourceApi = BkRepoResourceApi()
+
+    private fun getParentFolder(path: String): String {
+        val tmpPath = path.removeSuffix("/")
+        return tmpPath.removeSuffix(getFileName(tmpPath))
+    }
+
+    private fun getFileName(path: String): String {
+        return path.removeSuffix("/").split("/").last()
+    }
 
     override fun getFileDownloadUrls(
         userId: String,
@@ -65,7 +80,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             fileName = getFileName(customFilePath!!)
         }
 
-        return bkRepoResourceApi.queryByPathEqOrNameMatchOrMetadataEqAnd(
+        return bkrepoResourceApi.queryByPathEqOrNameMatchOrMetadataEqAnd(
             userId = userId,
             projectId = projectId,
             repoNames = listOf(repoName),
@@ -77,33 +92,98 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         ).map { it.fullPath }
     }
 
-    override fun uploadCustomize(file: File, destPath: String, buildVariables: BuildVariables) {
-        val relativePath = destPath.removePrefix("/").removePrefix("./").removeSuffix("/")
-        val destFullPath = "/$relativePath/${file.name}"
-        bkRepoResourceApi.uploadBkRepoFile(
-            file = file,
-            repoName = "custom",
-            destFullPath = destFullPath,
-            tokenAuthPath = "/",
-            buildVariables = buildVariables,
-            parseAppMetadata = true
+    private fun uploadBkRepoCustomize(file: File, destPath: String, buildVariables: BuildVariables) {
+        val bkRepoPath = destPath.removeSuffix("/") + "/" + file.name
+        val url = "/bkrepo/api/build/generic/${buildVariables.projectId}/custom/$bkRepoPath"
+        val request = buildPut(
+            url,
+            RequestBody.create(MediaType.parse("application/octet-stream"), file),
+            bkrepoResourceApi.getUploadHeader(file, buildVariables, true),
+            useFileGateway = true
         )
+        val response = request(request, "上传自定义文件失败")
+        try {
+            val obj = JsonParser().parse(response).asJsonObject
+            if (obj.has("code") && obj["code"].asString != "0") throw RuntimeException()
+        } catch (e: Exception) {
+            logger.error(e.message ?: "")
+            throw TaskExecuteException(
+                errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
+                errorType = ErrorType.USER,
+                errorMsg = "archive fail: $response"
+            )
+        }
+    }
+
+    override fun uploadCustomize(file: File, destPath: String, buildVariables: BuildVariables) {
+        if (bkrepoResourceApi.tokenAccess()) {
+            val relativePath = destPath.removePrefix("/").removePrefix("./").removeSuffix("/")
+            val destFullPath = "/$relativePath/${file.name}"
+            val token = bkrepoResourceApi.createBkRepoTemporaryToken(
+                projectId = buildVariables.projectId,
+                repoName = "custom",
+                path = "/",
+                type = TokenType.UPLOAD
+            )
+            bkrepoResourceApi.uploadFileByToken(
+                file = file,
+                projectId = buildVariables.projectId,
+                repoName = "custom",
+                destFullPath = destFullPath,
+                token = token,
+                buildVariables = buildVariables,
+                parseAppMetadata = true
+            )
+        } else {
+            uploadBkRepoCustomize(file, destPath, buildVariables)
+        }
     }
 
     override fun uploadPipeline(file: File, buildVariables: BuildVariables) {
-        bkRepoResourceApi.uploadBkRepoFile(
-            file = file,
-            repoName = "pipeline",
-            destFullPath = "/${buildVariables.pipelineId}/${buildVariables.buildId}/${file.name}",
-            tokenAuthPath = "/${buildVariables.pipelineId}/${buildVariables.buildId}",
-            buildVariables = buildVariables,
-            parseAppMetadata = true
+        if (bkrepoResourceApi.tokenAccess()) {
+            val destFullPath = "/${buildVariables.pipelineId}/${buildVariables.buildId}/${file.name}"
+            val token = bkrepoResourceApi.createBkRepoTemporaryToken(
+                projectId = buildVariables.projectId,
+                repoName = "pipeline",
+                path = "/${buildVariables.pipelineId}/${buildVariables.buildId}",
+                type = TokenType.UPLOAD
+            )
+            bkrepoResourceApi.uploadFileByToken(
+                file,
+                buildVariables.projectId,
+                "pipeline",
+                destFullPath,
+                token,
+                buildVariables,
+                parseAppMetadata = true
+            )
+        } else {
+            uploadBkRepoPipeline(file, buildVariables)
+        }
+        bkrepoResourceApi.setPipelineMetadata("pipeline", buildVariables)
+    }
+
+    private fun uploadBkRepoPipeline(file: File, buildVariables: BuildVariables) {
+        logger.info("upload file >>> ${file.name}")
+        val url = "/bkrepo/api/build/generic/${buildVariables.projectId}/pipeline/${buildVariables.pipelineId}/" +
+            "${buildVariables.buildId}/${file.name}"
+        val request = buildPut(
+            url,
+            RequestBody.create(MediaType.parse("application/octet-stream"), file),
+            bkrepoResourceApi.getUploadHeader(file, buildVariables, true),
+            useFileGateway = true
         )
-        bkRepoResourceApi.setPipelineMetadata("pipeline", buildVariables)
+        val response = request(request, "上传流水线文件失败")
+        try {
+            val obj = JsonParser().parse(response).asJsonObject
+            if (obj.has("code") && obj["code"].asString != "0") throw RuntimeException()
+        } catch (e: Exception) {
+            logger.error(e.message ?: "")
+        }
     }
 
     override fun uploadLog(file: File, destFullPath: String, buildVariables: BuildVariables) {
-        bkRepoResourceApi.uploadBkRepoFile(
+        bkrepoResourceApi.uploadBkRepoFile(
             file = file,
             repoName = "log",
             destFullPath = destFullPath,
@@ -113,13 +193,37 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         )
     }
 
+    private fun downloadBkRepoFile(
+        user: String,
+        projectId: String,
+        repoName: String,
+        fullpath: String,
+        destPath: File
+    ) {
+        val url = "/bkrepo/api/build/generic/$projectId/$repoName$fullpath"
+        var header = HashMap<String, String>()
+        header.set("X-BKREPO-UID", user)
+        val request = buildGet(url, header, true)
+        download(request, destPath)
+    }
+
     override fun downloadCustomizeFile(
         userId: String,
         projectId: String,
         uri: String,
         destPath: File
     ) {
-        bkRepoResourceApi.downloadBkRepoFile(userId, projectId, "custom", uri, destPath)
+        if (bkrepoResourceApi.tokenAccess()) {
+            val token = bkrepoResourceApi.createBkRepoTemporaryToken(
+                projectId = projectId,
+                repoName = "custom",
+                path = uri,
+                type = TokenType.DOWNLOAD
+            )
+            bkrepoResourceApi.downloadFileByToken(userId, projectId, "custom", uri, token, destPath)
+        } else {
+            downloadBkRepoFile(userId, projectId, "custom", uri, destPath)
+        }
     }
 
     override fun downloadPipelineFile(
@@ -130,7 +234,17 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         uri: String,
         destPath: File
     ) {
-        bkRepoResourceApi.downloadBkRepoFile(userId, projectId, "pipeline", uri, destPath)
+        if (bkrepoResourceApi.tokenAccess()) {
+            val token = bkrepoResourceApi.createBkRepoTemporaryToken(
+                projectId = projectId,
+                repoName = "pipeline",
+                path = uri,
+                type = TokenType.DOWNLOAD
+            )
+            bkrepoResourceApi.downloadFileByToken(userId, projectId, "pipeline", uri, token, destPath)
+        } else {
+            downloadBkRepoFile(userId, projectId, "pipeline", uri, destPath)
+        }
     }
 
     /*
@@ -159,14 +273,5 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         val request = buildPost(url, requestBody, headers ?: emptyMap(), useFileGateway = true)
         val responseContent = request(request, "upload file[$fileName] failed")
         return objectMapper.readValue(responseContent)
-    }
-
-    private fun getParentFolder(path: String): String {
-        val tmpPath = path.removeSuffix("/")
-        return tmpPath.removeSuffix(getFileName(tmpPath))
-    }
-
-    private fun getFileName(path: String): String {
-        return path.removeSuffix("/").split("/").last()
     }
 }
