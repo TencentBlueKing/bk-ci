@@ -238,6 +238,8 @@ object LoggerService {
                 this.uploadQueue.put(logMessage.copy(
                     message = "The number of log lines printed by the task exceeds the limit"
                 ))
+                addYellowLine("The number of Task[$elementId] log lines exceeds the limit, " +
+                    "the log file of the task will be archived.")
                 elementId2LogProperty[elementId]?.logStorageMode = LogStorageMode.LOCAL
             }
         } catch (e: InterruptedException) {
@@ -291,6 +293,12 @@ object LoggerService {
                     return@forEach
                 }
 
+                if (!property.logFile.exists()) {
+                    logger.warn("Cancel archiving task[$elementId] build log " +
+                        "file(${property.logFile.absolutePath}) which not exists")
+                    return@forEach
+                }
+
                 // 开始归档符合归档条件的日志文件
                 logger.info("Archive task[$elementId] build log file(${property.logFile.absolutePath})")
                 ArchiveUtils.archiveLogFile(property.logFile, property.childPath, buildVariables!!)
@@ -300,7 +308,7 @@ object LoggerService {
             logger.info("Finished archiving log $archivedCount files")
 
             // 同步所有存储状态到
-            logResourceApi.updateStorageMode(elementId2LogProperty.values.toList(), executeCount)
+            logResourceApi.updateStorageMode(elementId2LogProperty.values.toList(), jobId, executeCount)
             logger.info("Finished update mode to log service.")
         } catch (t: Throwable) {
             logger.warn("Fail to archive log files", t)
