@@ -242,6 +242,12 @@
                         templateId: this.templateId,
                         versionId: versionId
                     })
+                    if (res && res.template && res.template.tips) {
+                        this.$showTips({
+                            message: res.template.tips,
+                            theme: 'error'
+                        })
+                    }
                     this.template.templateName = res.templateName
                     this.template.creator = res.creator
                     this.template.description = res.description
