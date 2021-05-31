@@ -142,7 +142,8 @@ class ScmClient @Autowired constructor(
         status: GitCICommitCheckState,
         context: String,
         gitCIBasicSetting: GitCIBasicSetting,
-        pipelineId: String
+        pipelineId: String,
+        block: Boolean
     ) = try {
         val titleData = mutableListOf<String>()
         val resultMap = mutableMapOf<String, MutableList<List<String>>>()
@@ -167,7 +168,7 @@ class ScmClient @Autowired constructor(
             ),
             context = context,
             description = description,
-            block = false,
+            block = block,
             mrRequestId = mergeRequestId,
             reportData = Pair(titleData, resultMap)
         )

@@ -28,6 +28,7 @@
 package com.tencent.devops.gitci.v2.service
 
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
+import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -144,7 +145,8 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
                     status = GitCICommitCheckState.PENDING,
                     context = "${pipeline.displayName}(${pipeline.filePath})",
                     gitCIBasicSetting = gitCIBasicSetting,
-                    pipelineId = pipeline.pipelineId
+                    pipelineId = pipeline.pipelineId,
+                    block = event.objectKind == OBJECT_KIND_MERGE_REQUEST
                 )
             }
             return BuildId(buildId)
