@@ -3,17 +3,25 @@ package com.tencent.devops.log.service
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.auth.utils.GitCIUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.AuthPermission
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 class GitCILogPermissionServiceImpl @Autowired constructor(
     val client: Client
 ) : LogPermissionService {
-    override fun verifyUserLogPermission(projectCode: String, pipelineId: String, userId: String): Boolean {
+    override fun verifyUserLogPermission(
+        projectCode: String,
+        pipelineId: String,
+        userId: String,
+        permission: AuthPermission?
+    ): Boolean {
         val gitProjectId = GitCIUtils.getGitCiProjectId(projectCode)
+        val action = permission?.value ?: AuthPermission.VIEW.value
         logger.info("GitCILogPermissionServiceImpl user:$userId projectId: $projectCode gitProject: $gitProjectId")
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
-            userId, "", gitProjectId, null).data ?: false
+            userId, action, gitProjectId, AuthResourceType.PIPELINE_DEFAULT.value).data ?: false
     }
 
     companion object {
