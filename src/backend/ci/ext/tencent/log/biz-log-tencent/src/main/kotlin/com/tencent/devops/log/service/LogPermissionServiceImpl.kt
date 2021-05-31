@@ -40,7 +40,12 @@ class LogPermissionServiceImpl @Autowired constructor(
     private val pipelineAuthServiceCode: PipelineAuthServiceCode,
     private val managerService: ManagerService
 ) : LogPermissionService {
-    override fun verifyUserLogPermission(projectCode: String, pipelineId: String, userId: String): Boolean {
+    override fun verifyUserLogPermission(
+        projectCode: String,
+        pipelineId: String,
+        userId: String,
+        permission: AuthPermission?
+    ): Boolean {
         if (authPermissionApi.validateUserResourcePermission(
                 user = userId,
                 serviceCode = pipelineAuthServiceCode,
