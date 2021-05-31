@@ -91,7 +91,7 @@ object V2NotifyTemplate {
         <li style="list-style: none;display: block;line-height: 30px;"> <span
                 style="width: 130px;display: inline-block;text-align: right;">Commit： </span><a href="$webUrl"
                 style="color: #3a84ff;">$commitId</a> </li>
-    </ul> <a href="$webUrl" style="color: #3a84ff;line-height: 30px;">View it on 工蜂内网版</a>
+    </ul> <a href="$webUrl" style="color: #3a84ff;line-height: 30px;">查看详情</a>
 </body>
 
 </html>

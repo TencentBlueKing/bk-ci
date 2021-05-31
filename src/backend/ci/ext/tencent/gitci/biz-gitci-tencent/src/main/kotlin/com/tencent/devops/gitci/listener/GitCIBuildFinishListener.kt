@@ -36,7 +36,6 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.ci.OBJECT_KIND_MANUAL
-import com.tencent.devops.common.ci.OBJECT_KIND_MERGE_REQUEST
 import com.tencent.devops.common.ci.v2.NoticeIfType
 import com.tencent.devops.common.ci.v2.Notices
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
@@ -267,17 +266,7 @@ class GitCIBuildFinishListener @Autowired constructor(
         gitCIBasicSetting: GitCIBasicSetting,
         description: String
     ) {
-        if (objectKind == OBJECT_KIND_MERGE_REQUEST) {
-            scmClient.pushCommitCheckWithBlock(
-                commitId = commitId,
-                mergeRequestId = mergeRequestId,
-                userId = buildFinishEvent.userId,
-                context = "${pipeline.displayName}(${pipeline.filePath})",
-                block = false,
-                state = state,
-                gitCIBasicSetting = gitCIBasicSetting
-            )
-        } else if (objectKind != OBJECT_KIND_MANUAL) {
+        if (objectKind != OBJECT_KIND_MANUAL) {
             scmClient.pushCommitCheck(
                 commitId = commitId,
                 description = description,
@@ -287,7 +276,8 @@ class GitCIBuildFinishListener @Autowired constructor(
                 status = state,
                 context = "${pipeline.displayName}(${pipeline.filePath})",
                 gitCIBasicSetting = gitCIBasicSetting,
-                pipelineId = buildFinishEvent.pipelineId
+                pipelineId = buildFinishEvent.pipelineId,
+                block = false
             )
         }
     }
@@ -559,22 +549,22 @@ class GitCIBuildFinishListener @Autowired constructor(
         }
         val request = if (isMr) {
             "Merge requests [[!$requestId]]($gitUrl/$projectName/merge_requests/$requestId)" +
-                    "opened by $openUser \n"
+                "opened by $openUser \n"
         } else {
             if (requestId.length >= 8) {
                 "Commit [[${requestId.subSequence(0, 7)}]]($gitUrl/$projectName/commit/$requestId)" +
-                        "pushed by $openUser \n"
+                    "pushed by $openUser \n"
             } else {
                 "Manual Triggered by $openUser \n"
             }
         }
         val costTime = "Time cost ${DateTimeUtil.formatMillSecond(buildTime ?: 0)}.  \n   "
         return " <font color=\"${state.second}\"> ${state.first} </font> " +
-                "$projectName($branchName) - $pipelineName #$buildNum run ${state.third} \n " +
-                request +
-                costTime +
-                "[View it on  工蜂内网版]" +
-                "($gitUrl/$projectName/ci/pipelines#/detail/$pipelineId/?pipelineName=$pipelineName)"
+            "$projectName($branchName) - $pipelineName #$buildNum run ${state.third} \n " +
+            request +
+            costTime +
+            "[View it on  工蜂内网版]" +
+            "($gitUrl/$projectName/ci/pipelines#/detail/$pipelineId/?pipelineName=$pipelineName)"
     }
 
     private fun sendRtxCustomNotify(
@@ -798,27 +788,29 @@ class GitCIBuildFinishListener @Autowired constructor(
         }
         val request = if (isMr) {
             "Merge requests [[!$requestId]]($gitUrl/$projectName/merge_requests/$requestId)" +
-                    "opened by $openUser \n"
+                "opened by $openUser \n"
         } else {
             if (requestId.length >= 8) {
                 "Commit [[${requestId.subSequence(0, 7)}]]($gitUrl/$projectName/commit/$requestId)" +
-                        "pushed by $openUser \n"
+                    "pushed by $openUser \n"
             } else {
                 "Manual Triggered by $openUser \n"
             }
         }
         val costTime = "Time cost ${DateTimeUtil.formatMillSecond(buildTime ?: 0)}.  \n   "
         return " <font color=\"${state.second}\"> ${state.first} </font> " +
-                "$projectName($branchName) - $pipelineName #${build.buildNum} run ${state.third} \n " +
-                request +
-                costTime +
-                "[View it on  工蜂内网版]" +
-                "(${GitCIPipelineUtils.genGitCIV2BuildUrl(
+            "$projectName($branchName) - $pipelineName #${build.buildNum} run ${state.third} \n " +
+            request +
+            costTime +
+            "[查看详情]" +
+            "(${
+                GitCIPipelineUtils.genGitCIV2BuildUrl(
                     homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
                     projectName = projectName,
                     pipelineId = pipelineId,
                     buildId = build.id
-                )})"
+                )
+            })"
     }
 
     // 使用启动参数替换接收人

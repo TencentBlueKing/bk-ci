@@ -119,7 +119,7 @@ class GitCITriggerService @Autowired constructor(
         private const val ciFileExtensionYaml = ".yaml"
         private const val ciFileName = ".ci.yml"
         private const val ciFileDirectoryName = ".ci"
-        private const val noPipelineBuildEvent = "validatePipeline"
+        private const val noPipelineBuildEvent = "MR held, waiting until pipeline validation finish."
     }
 
     fun triggerBuild(userId: String, pipelineId: String, triggerBuildReq: TriggerBuildReq): Boolean {
@@ -636,19 +636,9 @@ class GitCITriggerService @Autowired constructor(
 
     private fun checkGitProjectConf(gitRequestEvent: GitRequestEvent, event: GitEvent): Boolean {
         val gitProjectSetting = gitCISettingDao.getSetting(dslContext, gitRequestEvent.gitProjectId)
+        // 完全没创建过得项目不存记录
         if (null == gitProjectSetting) {
             logger.info("git ci is not enabled, git project id: ${gitRequestEvent.gitProjectId}")
-            gitCIEventSaveService.saveNotBuildEvent(
-                userId = gitRequestEvent.userId,
-                eventId = gitRequestEvent.id!!,
-                pipelineId = null,
-                filePath = null,
-                originYaml = null,
-                normalizedYaml = null,
-                reason = TriggerReason.CI_DISABLED.name,
-                reasonDetail = TriggerReason.CI_DISABLED.detail,
-                gitProjectId = gitRequestEvent.gitProjectId
-            )
             return false
         }
         if (!gitProjectSetting.enableCi) {
