@@ -13,9 +13,12 @@
 package com.tencent.bk.codecc.defect.dao.mongorepository;
 
 import com.tencent.bk.codecc.defect.model.CodeRepoFromAnalyzeLogEntity;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -41,4 +44,12 @@ public interface CodeRepoFromAnalyzeLogRepository extends MongoRepository<CodeRe
      */
     Set<CodeRepoFromAnalyzeLogEntity> findByTaskIdIn(Set<Long> taskIds);
 
+    /**
+     * 根据任务id集合查询仓库信息
+     *
+     * @return
+     */
+    @Query(value = "{'task_id': {'$in': ?0}}")
+    List<CodeRepoFromAnalyzeLogEntity> findCodeRepoFromAnalyzeLogEntityByTaskIdIn(List<Long> taskIdList,
+            Pageable pageable);
 }

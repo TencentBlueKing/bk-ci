@@ -1,9 +1,11 @@
 package com.tencent.bk.codecc.defect.dao.mongorepository;
 
 import com.tencent.bk.codecc.defect.model.checkerset.CheckerSetEntity;
+import com.tencent.devops.common.constant.ComConstants;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
@@ -23,6 +25,13 @@ public interface CheckerSetRepository extends MongoRepository<CheckerSetEntity, 
      * @return
      */
     List<CheckerSetEntity> findByToolName(String toolName);
+
+    /**
+     * @param toolName
+     * @param version
+     * @return
+     */
+    List<CheckerSetEntity> findByToolNameAndVersion(String toolName, int version);
 
     /**
      * ---------已废弃--------通过工具名称、规则集ID、规则集版本号查询
@@ -79,12 +88,21 @@ public interface CheckerSetRepository extends MongoRepository<CheckerSetEntity, 
     CheckerSetEntity findByCheckerSetIdAndVersion(String checkerSetId, int version);
 
     /**
+     * 通过规则集ID和版本号批量查询
+     *
+     * @param checkerSetIds
+     * @param version
+     * @return
+     */
+    List<CheckerSetEntity> findByCheckerSetIdInAndVersion(Collection<String> checkerSetIds, Integer version);
+
+    /**
      * 通过规则集ID列表查询
      *
      * @param checkerSetIds
      * @return
      */
-    List<CheckerSetEntity> findByCheckerSetIdIn(Set<String> checkerSetIds);
+    List<CheckerSetEntity> findByCheckerSetIdIn(Collection<String> checkerSetIds);
 
     /**
      * 根据规则集ID或者规则集名称查询
@@ -110,4 +128,11 @@ public interface CheckerSetRepository extends MongoRepository<CheckerSetEntity, 
      * @return
      */
     List<CheckerSetEntity> findByProjectId(String projectId);
+
+    /**
+     * 根据规则集id和version进行删除
+     *
+     * @return
+     */
+    void deleteByCheckerSetIdInAndVersion(Collection<String> checkerSetIds, int version);
 }

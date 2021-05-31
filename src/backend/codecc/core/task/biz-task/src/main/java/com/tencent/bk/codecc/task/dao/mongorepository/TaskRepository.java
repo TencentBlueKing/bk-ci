@@ -47,16 +47,6 @@ import java.util.Set;
 public interface TaskRepository extends MongoRepository<TaskInfoEntity, String>
 {
     /**
-     * 根据任务负责人，平台项目id和是否有效条件查询对应代码扫描任务清单
-     *
-     * @param taskOwner
-     * @param projectId
-     * @return
-     */
-    @Query("{'task_owner': ?0, 'task_member': ?0, 'project_id': ?1, 'status': ?2}")
-    Set<TaskInfoEntity> findTaskList(String taskOwner, String projectId, int status);
-
-    /**
      * 根据业务id查询相应代码扫描任务
      *
      * @param taskId
@@ -191,15 +181,24 @@ public interface TaskRepository extends MongoRepository<TaskInfoEntity, String>
      * @param projectId
      * @return
      */
-    Set<TaskInfoEntity> findByProjectId(String projectId);
+    List<TaskInfoEntity> findByProjectId(String projectId);
 
+    List<TaskInfoEntity> findByProjectId(String projectId, Pageable pageable);
 
     /**
      * 根据gongfengid查询
      * @param gongfengProjectId
      * @return
      */
-    TaskInfoEntity findByGongfengProjectId(Integer gongfengProjectId);
+    TaskInfoEntity findFirstByGongfengProjectId(Integer gongfengProjectId);
+
+    /**
+     *
+     * @param createFrom
+     * @param gongfengProjectId
+     * @return
+     */
+    List<TaskInfoEntity> findByGongfengProjectIdIsAndCreateFromIs(Integer gongfengProjectId, String createFrom);
 
 
     /**
@@ -234,4 +233,38 @@ public interface TaskRepository extends MongoRepository<TaskInfoEntity, String>
     @Query(fields = "{'task_id': 1}")
     List<TaskInfoEntity> findByStatusAndCreateFromIn(Integer status, Collection<String> createFrom);
 
+    /**
+     * 根据业务id查询相应代码扫描任务
+     *
+     * @param taskId
+     * @return
+     */
+    TaskInfoEntity findByTaskIdAndStatus(long taskId, int status);
+
+    /**
+     * 根据gongfengid查询
+     * @param gongfengProjectId
+     * @return
+     */
+    TaskInfoEntity findByGongfengProjectIdAndStatusAndProjectIdRegex(Integer gongfengProjectId,
+                                                                     Integer status,
+                                                                     String projectId);
+
+    /**
+     * 通过项目ID和createFrom判断是否存在开源治理项目
+     *
+     * @param projectId
+     * @param createFrom
+     * @return
+     */
+    Boolean existsByProjectIdAndCreateFrom(String projectId, String createFrom);
+
+    /**
+     * 通过项目ID和createFrom查询任务
+     *
+     * @param projectId
+     * @param createFroms
+     * @return
+     */
+    Set<TaskInfoEntity>  findByProjectIdAndCreateFromIn(String projectId, Set<String> createFroms);
 }

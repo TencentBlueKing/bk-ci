@@ -33,6 +33,9 @@ public class CLOCLanguageVO
     @ApiModelProperty("空行总和")
     private Long blankSum;
 
-    @ApiModelProperty("评论总和")
+    @ApiModelProperty("注释总和")
     private Long commentSum;
+
+    @ApiModelProperty("有效注释总和")
+    private Long efficientCommentSum;
 }

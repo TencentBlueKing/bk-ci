@@ -6,7 +6,3 @@ dependencies {
     compile project(":core:schedule:model-schedule")
     compile "commons-io:commons-io"
 }
-
-version = null
-
-apply from: "$rootDir/task_spring_boot_package.gradle"

@@ -76,19 +76,19 @@ class PipelineSettingService @Autowired constructor(
         // 判断缓存中是否有值，没有值则从db中实时查
         return if (!redisOperation.hasKey(currentDayBuildCountKey)) {
             logger.info("getCurrentDayBuildCount $currentDayBuildCountKey is not exist!")
-            getCurrentDayBuildCountFromDb(currentDayStr, pipelineId)
+            getCurrentDayBuildCountFromDb(dslContext, currentDayStr, pipelineId)
         } else {
             redisOperation.get(currentDayBuildCountKey)!!.toInt()
         }
     }
 
-    fun setCurrentDayBuildCount(pipelineId: String): Int {
+    fun setCurrentDayBuildCount(transactionContext: DSLContext, pipelineId: String): Int {
         val currentDayStr = DateTimeUtil.formatDate(Date(), DateTimeUtil.YYYY_MM_DD)
         val currentDayBuildCountKey = getCurrentDayBuildCountKey(pipelineId, currentDayStr)
         // 判断缓存中是否有值，没有值则从db中实时查
         return if (!redisOperation.hasKey(currentDayBuildCountKey)) {
             logger.info("setCurrentDayBuildCount $currentDayBuildCountKey is not exist!")
-            getCurrentDayBuildCountFromDb(currentDayStr, pipelineId)
+            getCurrentDayBuildCountFromDb(transactionContext, currentDayStr, pipelineId)
         } else {
             // redis有值则每次自增1
             redisOperation.increment(currentDayBuildCountKey, 1)
@@ -100,7 +100,11 @@ class PipelineSettingService @Autowired constructor(
         return "$PIPELINE_CURRENT_DAY_BUILD_COUNT_KEY_PREFIX:$pipelineId:$currentDayStr"
     }
 
-    private fun getCurrentDayBuildCountFromDb(currentDayStr: String, pipelineId: String): Int {
+    private fun getCurrentDayBuildCountFromDb(
+        transactionContext: DSLContext,
+        currentDayStr: String,
+        pipelineId: String
+    ): Int {
         val startTime = DateTimeUtil.stringToLocalDateTime(
             dateTimeStr = currentDayStr,
             formatStr = DateTimeUtil.YYYY_MM_DD
@@ -113,7 +117,7 @@ class PipelineSettingService @Autowired constructor(
             )
         )
         val count = pipelineBuildDao.countBuildNumByTime(
-            dslContext = dslContext,
+            dslContext = transactionContext,
             pipelineId = pipelineId,
             startTime = startTime,
             endTime = endTime

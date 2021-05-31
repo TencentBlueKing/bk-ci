@@ -118,7 +118,7 @@ class PipelineModelTaskDao {
             return dslContext.select(DSL.countDistinct(PIPELINE_ID))
                 .from(this)
                 .where(condition)
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 

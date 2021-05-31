@@ -87,7 +87,7 @@ class QualityIndicatorDao {
         with(TQualityIndicator.T_QUALITY_INDICATOR) {
             return dslContext.selectCount().from(this)
                 .where(TYPE.eq(IndicatorType.SYSTEM.name))
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -100,7 +100,7 @@ class QualityIndicatorDao {
             if (enable != null) {
                 sql.where(ENABLE.eq(enable))
             }
-            return sql.fetchOne(0, Long::class.java)
+            return sql.fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -156,7 +156,7 @@ class QualityIndicatorDao {
                 indicatorUpdate.elementVersion ?: "",
                 indicatorUpdate.logPrompt ?: "",
                 indicatorUpdate.range ?: ""
-            ).returning(ID).fetchOne()
+            ).returning(ID).fetchOne()!!
             return record.id
         }
     }
@@ -207,7 +207,7 @@ class QualityIndicatorDao {
         return with(TQualityIndicator.T_QUALITY_INDICATOR) {
             dslContext.selectFrom(this)
                 .where(ID.eq(indicatorId))
-                .fetchOne()
+                .fetchOne()!!
         }
     }
 }

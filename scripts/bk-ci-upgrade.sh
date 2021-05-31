@@ -79,16 +79,10 @@ else
 fi
 
 for proj in "${enabled_proj[@]}"; do
-  log "尝试下线服务实例: $proj."
   sd_service=${sd_service_map[$proj]}
   svc_name=${svc_name_map[$proj]}
-  if is_sd_service_alive "$sd_service"; then
-    spring_instance_set_status "$instance_offline_status" "$proj"
-    echo "后台停止服务: $sd_service."
-    systemctl stop "$sd_service" &  # 直接后台systemctl, 方便后续wait.
-  else
-    echo "服务未启动: $proj, 无操作."
-  fi
+  log "后台停止服务: $sd_service."
+  systemctl stop "$sd_service" &  # 直接后台systemctl, 方便后续wait.
 done
 
 for proj in "${enabled_proj[@]}"; do
@@ -135,6 +129,7 @@ has_been_throttled (){
 }
 n=0
 declare -A pid_in_bg=()
+declare -A pending_services=()
 for proj in "${enabled_proj[@]}"; do
   if has_been_throttled; then
     log "检测到触发CGroup CPU限制, 等待${CPU_LIMIT_SLEEP}s."
@@ -143,6 +138,7 @@ for proj in "${enabled_proj[@]}"; do
   sd_service=${sd_service_map[$proj]}
   svc_name=${svc_name_map[$proj]}
   systemctl start "$sd_service" >/dev/null 2>&1 &
+  pending_services["$sd_service"]=1
   pid_in_bg[$!]="$sd_service"
   log "后台启动服务: $sd_service, pid=$!"
   ((++n))
@@ -150,17 +146,36 @@ done
 log "等待全部服务启动完毕."
 wait
 
-log "检查启动结果"
-
-log "上线服务实例"
-spring_instance_set_status "$instance_online_status" "${!svc_name_map[@]}"
-
-log "检查是否上线成功."
+log "检查服务是否启动成功."
+check_ci_service_up (){
+  local e=0 sd_service
+  for sd_service in "${!pending_services[@]}"; do
+    is_sd_service_alive "$sd_service" && unset pending_services["$sd_service"] || let ++e
+  done
+  return $e
+}
 wait=${BKI_UPGRADE_WAIT:-60}
-until spring_instance_check_status "$instance_online_status" "${!svc_name_map[@]}" >/dev/null; do
-  sleep 1;
-  let wait-- || { echo "等待超时"; break; }
+until check_ci_service_up; do
+  sleep 1
+  echo -n "${#pending_services[@]} "
+  let wait-- || { echo ""; log "等待超时"; break; }
 done
+if [ -n "${!pending_services[*]}" ]; then
+  echo "如下服务未能及时启动: ${!pending_services[*]}."
+  exit 19
+else
+  echo ""
+fi
+
+#log "上线服务实例"
+#spring_instance_set_status "$instance_online_status" "${!svc_name_map[@]}"
+#
+#log "检查是否上线成功."
+#wait=${BKI_UPGRADE_WAIT:-60}
+#until spring_instance_check_status "$instance_online_status" "${!svc_name_map[@]}" >/dev/null; do
+#  sleep 1;
+#  let wait-- || { log "等待超时"; break; }
+#done
 if spring_instance_check_status "$instance_online_status" "${!svc_name_map[@]}" >/dev/null; then
   log "全部服务启动成功. 耗时: $SECONDS."
 else

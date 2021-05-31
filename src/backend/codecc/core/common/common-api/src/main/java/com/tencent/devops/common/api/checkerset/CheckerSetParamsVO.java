@@ -29,4 +29,9 @@ public class CheckerSetParamsVO
      * 规则集列表
      */
     private List<CheckerSetVO> checkerSets;
+
+    /**
+     * 来源
+     */
+    private List<CheckerSetCategoryVO> checkerSetSource;
 }
