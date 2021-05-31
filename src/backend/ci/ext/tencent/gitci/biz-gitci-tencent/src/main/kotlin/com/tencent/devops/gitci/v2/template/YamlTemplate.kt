@@ -57,6 +57,8 @@ class YamlTemplate(
     // 添加图防止远程库之间循环依赖
     val repoTemplateGraph: TemplateGraph<String>,
 
+    // 来自文件
+    val fileFromPath: String? = null,
     // 当前文件
     var filePath: String,
     // 文件对象
@@ -109,6 +111,7 @@ class YamlTemplate(
             "The %s template can only contain parameters, resources and %s keywords"
         const val EXTENDS_TEMPLATE_EXTENDS_ERROR = "[%s]The extends keyword cannot be nested"
         const val EXTENDS_TEMPLATE_ON_ERROR = "[%s]Triggers are not supported in the template"
+        const val VALUE_NOT_IN_ENUM = "[%s][%s=%s]Parameter error, the expected value is [%s]"
     }
 
     // 存储当前库的模板信息，减少重复获取 key: templatePath value： template
@@ -121,11 +124,16 @@ class YamlTemplate(
     var stepTemplateGraph = TemplateGraph<String>()
 
     fun replace(
-        parameters: Map<String, String?>? = null
+        parameters: Map<String, Any?>? = null
     ): PreScriptBuildYaml {
         // 针对远程库进行打平替换时，根文件没有被替换Parameters
         val newYamlObject = if (repo != null) {
-            val template = parseTemplateParameters(filePath, getTemplate(filePath), parameters)
+            val template = parseTemplateParameters(
+                fromPath = fileFromPath ?: "",
+                path = filePath,
+                template = getTemplate(filePath),
+                parameters = parameters
+            )
             // 将根文件也保存在模板库中方便取出
             setTemplate(filePath, template)
             YamlObjects.getObjectFromYaml<PreTemplateScriptBuildYaml>(filePath, template)
@@ -321,7 +329,7 @@ class YamlTemplate(
                     // 保存并检查是否存在循环引用模板
                     saveAndCheckCyclicTemplate(fromPath, toPath, TemplateType.VARIABLE)
                     // 获取需要替换的变量
-                    val parameters = YamlObjects.transNullValue<Map<String, String?>>(
+                    val parameters = YamlObjects.transNullValue<Map<String, Any?>>(
                         file = fromPath,
                         type = PARAMETERS_KEY,
                         key = PARAMETERS_KEY,
@@ -379,7 +387,7 @@ class YamlTemplate(
                 val toPath = stage[TEMPLATE_KEY].toString()
                 saveAndCheckCyclicTemplate(fromPath, toPath, TemplateType.STAGE)
 
-                val parameters = YamlObjects.transNullValue<Map<String, String?>>(
+                val parameters = YamlObjects.transNullValue<Map<String, Any?>>(
                     file = fromPath,
                     type = PARAMETERS_KEY,
                     key = PARAMETERS_KEY,
@@ -423,7 +431,7 @@ class YamlTemplate(
                     val toPath = item[OBJECT_TEMPLATE_PATH].toString()
                     saveAndCheckCyclicTemplate(fromPath, toPath, TemplateType.JOB)
 
-                    val parameters = YamlObjects.transNullValue<Map<String, String?>>(
+                    val parameters = YamlObjects.transNullValue<Map<String, Any?>>(
                         file = fromPath,
                         type = PARAMETERS_KEY,
                         key = PARAMETERS_KEY,
@@ -477,7 +485,7 @@ class YamlTemplate(
                 val toPath = step[TEMPLATE_KEY].toString()
                 saveAndCheckCyclicTemplate(fromPath, toPath, TemplateType.STEP)
 
-                val parameters = YamlObjects.transNullValue<Map<String, String?>>(
+                val parameters = YamlObjects.transNullValue<Map<String, Any?>>(
                     file = fromPath,
                     type = PARAMETERS_KEY,
                     key = PARAMETERS_KEY,
@@ -508,7 +516,7 @@ class YamlTemplate(
     private fun replaceResAndParam(
         templateType: TemplateType,
         toPath: String,
-        parameters: Map<String, String?>?,
+        parameters: Map<String, Any?>?,
         fromPath: String
     ): Map<String, Any> {
         // 判断是否为远程库，如果是远程库将其远程库文件打平进行替换
@@ -529,6 +537,7 @@ class YamlTemplate(
         YamlObjects.checkTemplate(toPath, newTemplate, templateType)
         // 将需要替换的变量填入模板文件
         newTemplate = parseTemplateParameters(
+            fromPath = fromPath,
             path = toPath,
             template = newTemplate,
             parameters = parameters
@@ -553,7 +562,7 @@ class YamlTemplate(
     private fun replaceResTemplateFile(
         templateType: TemplateType,
         toPath: String,
-        parameters: Map<String, String?>?,
+        parameters: Map<String, Any?>?,
         toRepo: Repositories
     ): String {
         // 判断是否有库之间的循环依赖
@@ -564,6 +573,7 @@ class YamlTemplate(
 
         val resYamlObject = YamlTemplate(
             yamlObject = null,
+            fileFromPath = filePath,
             filePath = toPath.split(FILE_REPO_SPLIT)[0],
             sourceProjectId = sourceProjectId,
             triggerProjectId = triggerProjectId,
@@ -619,17 +629,25 @@ class YamlTemplate(
 
     // 为模板中的变量赋值
     private fun parseTemplateParameters(
+        fromPath: String,
         path: String,
         template: String,
-        parameters: Map<String, String?>?
+        parameters: Map<String, Any?>?
     ): String {
         val newParameters =
             YamlObjects.getObjectFromYaml<ParametersTemplateNull>(path, template).parameters?.toMutableList()
         if (!newParameters.isNullOrEmpty()) {
             newParameters.forEachIndexed { index, param ->
                 if (parameters != null) {
-                    if (parameters.keys.contains(param.name)) {
-                        newParameters[index] = param.copy(default = parameters[param.name].toString())
+                    val valueName = param.name
+                    val newValue = parameters[param.name]
+                    if (parameters.keys.contains(valueName)) {
+                        if (!param.values.isNullOrEmpty() && !param.values.contains(newValue)) {
+                            error(VALUE_NOT_IN_ENUM.format(fromPath, valueName, newValue,
+                                param.values.joinToString(",")))
+                        } else {
+                            newParameters[index] = param.copy(default = newValue)
+                        }
                     }
                 }
             }
@@ -637,10 +655,14 @@ class YamlTemplate(
             return template
         }
         // 模板替换 先替换调用模板传入的参数，再替换模板的默认参数
-        val parametersMap = newParameters.associate {
-            "parameters.${it.name}" to it.default
+        val parametersMap = newParameters.filter { it.default != null }.associate {
+            "parameters.${it.name}" to if (it.default == null) {
+                null
+            } else {
+                it.default.toString()
+            }
         }
-        return ScriptYmlUtils.parseVariableValue(template, parametersMap)!!
+        return ScriptYmlUtils.parseParameterValue(template, parametersMap)!!
     }
 
     // 构造对象,因为未保存远程库的template信息，所以在递归回溯时无法通过yaml文件直接生成，故手动构造

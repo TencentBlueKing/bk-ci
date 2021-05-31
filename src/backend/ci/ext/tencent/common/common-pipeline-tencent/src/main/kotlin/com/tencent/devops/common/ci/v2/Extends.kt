@@ -37,5 +37,5 @@ import com.fasterxml.jackson.annotation.JsonInclude
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class Extends(
     val template: String,
-    val parameters: Map<String, String>?
+    val parameters: Map<String, Any>?
 )

@@ -30,19 +30,19 @@ package com.tencent.devops.gitci.v2.template.pojo
 data class Parameters(
     val name: String,
     val type: String,
-    val default: String,
-    val values: List<String>?
+    val default: Any?,
+    val values: List<Any>?
 )
 
 enum class ParametersType(val value: String) {
     STRING("string"),
     NUMBER("number"),
     BOOLEAN("boolean"),
-    OBJECT("object"),
-    TASK("task"),
-    TASKLIST("taskList"),
-    JOB("job"),
-    JOBLIST("jobList"),
-    STAGE("stage"),
-    STAGELIST("stageList")
+//    OBJECT("object"),
+//    TASK("task"),
+//    TASKLIST("taskList"),
+//    JOB("job"),
+//    JOBLIST("jobList"),
+//    STAGE("stage"),
+//    STAGELIST("stageList")
 }
