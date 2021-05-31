@@ -114,6 +114,8 @@ class GitCIBuildFinishListener @Autowired constructor(
             )
         ))]
     )
+
+    @Suppress("ALL")
     fun listenPipelineBuildFinishBroadCastEvent(buildFinishEvent: PipelineBuildFinishBroadCastEvent) {
         try {
             val record = gitRequestEventBuildDao.getEventByBuildId(dslContext, buildFinishEvent.buildId)
@@ -598,18 +600,6 @@ class GitCIBuildFinishListener @Autowired constructor(
         } catch (e: Exception) {
             conf.name
         }
-    }
-
-    private fun pushCommitCheckV2(
-        objectKind: String,
-        commitId: String,
-        mergeRequestId: Long,
-        buildFinishEvent: PipelineBuildFinishBroadCastEvent,
-        pipeline: TGitPipelineResourceRecord,
-        state: GitCICommitCheckState,
-        gitCIBasicSetting: GitCIBasicSetting,
-        description: String
-    ) {
     }
 
     private fun sendNotifyV2(
