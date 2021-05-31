@@ -181,7 +181,7 @@ class UserLogResourceImpl @Autowired constructor(
                 permission = permission
             )
         ) {
-            throw PermissionForbiddenException("用户($userId)无权限在工程($projectId)下查看流水线")
+            throw PermissionForbiddenException("用户($userId)无权限在工程($projectId)下${permission.alias}流水线")
         }
     }
 }
