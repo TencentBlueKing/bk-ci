@@ -99,6 +99,7 @@ interface ServiceBuildResource {
         errorMsg: String? = null
     ): Result<Boolean>
 
+    @Deprecated("早已经没有使用，已经作废，请不要使用，未来将会进行删除")
     @ApiOperation("Notify process that the vm startup for the build")
     @PUT
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/vmStarted")
@@ -202,6 +203,9 @@ interface ServiceBuildResource {
         @ApiParam("要重试的原子任务ID", required = false)
         @QueryParam("taskId")
         taskId: String? = null,
+        @ApiParam("仅重试所有失败Job", required = false)
+        @QueryParam("failedContainer")
+        failedContainer: Boolean? = false,
         @ApiParam("渠道号，默认为DS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode

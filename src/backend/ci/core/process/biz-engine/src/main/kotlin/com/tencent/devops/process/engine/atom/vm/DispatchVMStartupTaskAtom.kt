@@ -214,7 +214,8 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 stageId = task.stageId,
                 containerId = task.containerId,
                 containerHashId = task.containerHashId,
-                containerType = task.containerType
+                containerType = task.containerType,
+                customBuildEnv = param.customBuildEnv
             )
         )
     }

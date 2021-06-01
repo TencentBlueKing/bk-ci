@@ -13,15 +13,19 @@
 package com.tencent.bk.codecc.task.resources;
 
 import com.tencent.bk.codecc.task.api.OpToolRestResource;
+import com.tencent.bk.codecc.task.service.EmailNotifyService;
 import com.tencent.bk.codecc.task.service.TaskService;
 import com.tencent.bk.codecc.task.service.ToolService;
+import com.tencent.bk.codecc.task.service.UserLogInfoService;
 import com.tencent.bk.codecc.task.vo.TaskDetailVO;
 import com.tencent.bk.codecc.task.vo.ToolConfigPlatformVO;
 import com.tencent.devops.common.api.exception.CodeCCException;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.auth.api.external.AuthExPermissionApi;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.web.RestResource;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
@@ -45,36 +49,84 @@ public class OpToolRestResourceImpl implements OpToolRestResource
     @Autowired
     private TaskService taskService;
 
+    @Autowired
+    private UserLogInfoService userLogInfoService;
+
+    @Autowired
+    private EmailNotifyService emailNotifyService;
 
     @Override
-    public CodeCCResult<Boolean> updateToolPlatformInfo(Long taskId, String userName,
-                                                        ToolConfigPlatformVO toolConfigPlatformVO)
+    public Result<Boolean> updateToolPlatformInfo(Long taskId, String userName,
+                                                  ToolConfigPlatformVO toolConfigPlatformVO)
     {
-        return new CodeCCResult<>(toolService.updateToolPlatformInfo(taskId, userName, toolConfigPlatformVO));
+        return new Result<>(toolService.updateToolPlatformInfo(taskId, userName, toolConfigPlatformVO));
+    }
+
+    @Override
+    public Result<Boolean> stopTask(Long taskId, String disabledReason, String userName) {
+        // 判断是否为管理员
+        if (!authExPermissionApi.isAdminMember(userName)) {
+            throw new CodeCCException(CommonMessageCode.IS_NOT_ADMIN_MEMBER, new String[]{"admin member"});
+        }
+        return new Result<>(taskService.stopTaskByAdmin(taskId, disabledReason, userName));
+    }
+
+    @Override
+    public Result<Boolean> startTask(Long taskId, String userName) {
+        // 判断是否为管理员
+        if (!authExPermissionApi.isAdminMember(userName)) {
+            throw new CodeCCException(CommonMessageCode.IS_NOT_ADMIN_MEMBER, new String[]{"admin member"});
+        }
+        return new Result<>(taskService.startTaskByAdmin(taskId, userName));
     }
 
 
     @Override
-    public CodeCCResult<Boolean> refreshTaskOrgInfo(String userName, TaskDetailVO reqVO)
+    public Result<Boolean> refreshTaskOrgInfo(String userName, TaskDetailVO reqVO)
     {
         // 判断是否为管理员
         if (!authExPermissionApi.isAdminMember(userName))
         {
             throw new CodeCCException(CommonMessageCode.IS_NOT_ADMIN_MEMBER);
         }
-        return new CodeCCResult<>(taskService.refreshTaskOrgInfo(reqVO.getTaskId()));
+        return new Result<>(taskService.refreshTaskOrgInfo(reqVO.getTaskId()));
     }
 
+
     @Override
-    public CodeCCResult<Boolean> refreshToolFollowStatus(String userName, Integer pageSize)
+    public Result<Boolean> refreshToolFollowStatus(String userName, Integer pageSize)
     {
         // 判断是否为管理员
         if (!authExPermissionApi.isAdminMember(userName))
         {
             throw new CodeCCException(CommonMessageCode.IS_NOT_ADMIN_MEMBER, new String[]{"admin member"});
         }
-        pageSize = pageSize == null ? 500 : pageSize;
-        return new CodeCCResult<>(toolService.batchUpdateToolFollowStatus(pageSize));
+        pageSize = pageSize == null ? Integer.valueOf(500) : pageSize;
+        return new Result<>(toolService.batchUpdateToolFollowStatus(pageSize));
     }
 
+    @Override
+    public Result<Boolean> intiUserLogInfoStatScript() {
+        return new Result<>(userLogInfoService.intiUserLogInfoStatScript());
+    }
+
+    @Override
+    public Result<Boolean> initToolCountScript(Integer day) {
+        return new Result<>(toolService.initToolCountScript(day));
+    }
+
+    @Override
+    public Result<Boolean> initTaskCountScript(Integer day) {
+        return new Result<>(taskService.initTaskCountScript(day));
+    }
+
+    @Override
+    public Result<String> setGongFengNotify(Integer bgId, Integer deptId, Integer centerId) {
+        List<Long> taskIds = emailNotifyService.turnOnWechatNotifyForGongFeng(bgId, deptId, centerId);
+        if (CollectionUtils.isNotEmpty(taskIds)) {
+            return new Result<>(StringUtils.join(taskIds, ", "));
+        }
+
+        return new Result<>("no data hit");
+    }
 }

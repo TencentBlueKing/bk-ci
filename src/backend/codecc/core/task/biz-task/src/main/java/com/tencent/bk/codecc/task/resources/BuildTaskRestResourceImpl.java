@@ -40,9 +40,10 @@ import com.tencent.bk.codecc.task.vo.ToolConfigPlatformVO;
 import com.tencent.bk.codecc.task.vo.path.CodeYmlFilterPathVO;
 import com.tencent.bk.codecc.task.vo.pipeline.PipelineTaskVO;
 import com.tencent.bk.codecc.task.vo.scanconfiguration.ScanConfigurationVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.util.JsonUtil;
 import com.tencent.devops.common.web.RestResource;
+import java.util.List;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -71,95 +72,100 @@ public class BuildTaskRestResourceImpl implements BuildTaskRestResource
     private ToolService toolService;
 
     @Override
-    public CodeCCResult<TaskDetailVO> getTaskInfoById(Long taskId)
+    public Result<TaskDetailVO> getTaskInfoById(Long taskId)
     {
-        return new CodeCCResult<>(taskService.getTaskInfoById(taskId));
+        return new Result<>(taskService.getTaskInfoById(taskId));
     }
 
     @Override
-    public CodeCCResult<TaskDetailVO> getTaskInfoByStreamName(String streamName)
+    public Result<TaskDetailVO> getTaskInfoByStreamName(String streamName)
     {
-        return new CodeCCResult<>(taskService.getTaskInfoByStreamName(streamName));
+        return new Result<>(taskService.getTaskInfoByStreamName(streamName));
     }
 
     @Override
-    public CodeCCResult<PipelineTaskVO> getTaskInfoByPipelineId(String pipelineId, String userId) {
-        return new CodeCCResult<>(taskService.getTaskInfoByPipelineId(pipelineId, userId));
+    public Result<PipelineTaskVO> getTaskInfoByPipelineId(String pipelineId, String userId) {
+        return new Result<>(taskService.getTaskInfoByPipelineId(pipelineId, userId));
     }
 
     @Override
-    public CodeCCResult<TaskIdVO> registerPipelineTask(TaskDetailVO taskDetailVO, String projectId, String userName)
+    public Result<TaskIdVO> registerPipelineTask(TaskDetailVO taskDetailVO, String projectId, String userName)
     {
         taskDetailVO.setProjectId(projectId);
         log.info("registerPipelineTask request body: {}", JsonUtil.INSTANCE.toJson(taskDetailVO));
-        return new CodeCCResult<>(taskRegisterService.registerTask(taskDetailVO, userName));
+        return new Result<>(taskRegisterService.registerTask(taskDetailVO, userName));
     }
 
     @Override
-    public CodeCCResult<Boolean> updateTask(TaskDetailVO taskDetailVO, String userName)
+    public Result<Boolean> updateTask(TaskDetailVO taskDetailVO, String userName)
     {
         log.info("upadte pipeline task request body: {}, username: {}", JsonUtil.INSTANCE.toJson(taskDetailVO), userName);
-        return new CodeCCResult<>(taskRegisterService.updateTask(taskDetailVO, userName));
+        return new Result<>(taskRegisterService.updateTask(taskDetailVO, userName));
     }
 
     @Override
-    public CodeCCResult<Boolean> stopTask(Long taskId, String disabledReason, String userName)
+    public Result<Boolean> stopTask(Long taskId, String disabledReason, String userName)
     {
-        return new CodeCCResult<>(taskService.stopTask(taskId, disabledReason, userName));
+        return new Result<>(taskService.stopTask(taskId, disabledReason, userName));
     }
 
     @Override
-    public CodeCCResult<Boolean> checkTaskExists(Long taskId)
+    public Result<Boolean> checkTaskExists(Long taskId)
     {
-        return new CodeCCResult<>(taskService.checkTaskExists(taskId));
+        return new Result<>(taskService.checkTaskExists(taskId));
     }
 
     @Override
-    public CodeCCResult<Boolean> addFilterPath(FilterPathInputVO filterPathInput, String userName) {
-        return new CodeCCResult<>(pathFilterService.addFilterPaths(filterPathInput, userName));
+    public Result<Boolean> addFilterPath(FilterPathInputVO filterPathInput, String userName) {
+        return new Result<>(pathFilterService.addFilterPaths(filterPathInput, userName));
     }
 
     @Override
-    public CodeCCResult<Boolean> deleteFilterPath(String path, String pathType, Long taskId, String userName) {
-        return new CodeCCResult<>(pathFilterService.deleteFilterPath(path, pathType, taskId, userName));
+    public Result<Boolean> deleteFilterPath(String path, String pathType, Long taskId, String userName) {
+        return new Result<>(pathFilterService.deleteFilterPath(path, pathType, taskId, userName));
     }
 
     @Override
-    public CodeCCResult<FilterPathOutVO> filterPath(Long taskId) {
-        return new CodeCCResult<>(pathFilterService.getFilterPath(taskId));
+    public Result<FilterPathOutVO> filterPath(Long taskId) {
+        return new Result<>(pathFilterService.getFilterPath(taskId));
     }
 
     @Override
-    public CodeCCResult<Boolean> codeYmlFilterPath(Long taskId, String userName, CodeYmlFilterPathVO codeYmlFilterPathVO) {
-        return new CodeCCResult<>(pathFilterService.codeYmlFilterPath(taskId, userName, codeYmlFilterPathVO));
+    public Result<Boolean> codeYmlFilterPath(Long taskId, String userName, CodeYmlFilterPathVO codeYmlFilterPathVO) {
+        return new Result<>(pathFilterService.codeYmlFilterPath(taskId, userName, codeYmlFilterPathVO));
     }
 
     @Override
-    public CodeCCResult<Boolean> updateScanConfiguration(Long taskId, String user, ScanConfigurationVO scanConfigurationVO) {
-        return new CodeCCResult<>(taskService.updateScanConfiguration(taskId, user, scanConfigurationVO));
+    public Result<Boolean> updateScanConfiguration(Long taskId, String user, ScanConfigurationVO scanConfigurationVO) {
+        return new Result<>(taskService.updateScanConfiguration(taskId, user, scanConfigurationVO));
     }
 
     @Override
-    public CodeCCResult<Boolean> updateTaskReportInfo(Long taskId, NotifyCustomVO notifyCustomVO) {
+    public Result<Boolean> updateTaskReportInfo(Long taskId, NotifyCustomVO notifyCustomVO) {
         taskService.updateReportInfo(taskId, notifyCustomVO);
-        return new CodeCCResult<>(true);
+        return new Result<>(true);
     }
 
     @Override
-    public CodeCCResult<ToolConfigPlatformVO> getToolConfigInfo(Long taskId, String toolName) {
-        return new CodeCCResult<>(toolService.getToolConfigPlatformInfo(taskId, toolName));
+    public Result<ToolConfigPlatformVO> getToolConfigInfo(Long taskId, String toolName) {
+        return new Result<>(toolService.getToolConfigPlatformInfo(taskId, toolName));
     }
 
     @Override
-    public CodeCCResult<Boolean> sendStartTaskSignal(Long taskId, String buildId)
+    public Result<Boolean> sendStartTaskSignal(Long taskId, String buildId)
     {
-        return new CodeCCResult<>(taskService.sendStartTaskSignal(taskId, buildId));
+        return new Result<>(taskService.sendStartTaskSignal(taskId, buildId));
     }
 
     @Override
-    public CodeCCResult<Boolean> executeTask(long taskId, String isFirstTrigger,
-                                      String userName) {
-        return new CodeCCResult<>(taskService.manualExecuteTask(taskId, isFirstTrigger, userName));
+    public Result<Boolean> executeTask(long taskId, String isFirstTrigger,
+                                       String userName) {
+        return new Result<>(taskService.manualExecuteTask(taskId, isFirstTrigger, userName));
+    }
+
+    @Override
+    public Result<Boolean> addWhitePath(String userName, long taskId, List<String> pathList) {
+        return new Result<>(taskService.addWhitePath(taskId, pathList));
     }
 
 }

@@ -46,7 +46,7 @@
                 <span> {{ $t('store.分类：') }} </span><span>{{detail.classifyName || '-'}}</span>
             </h5>
             <h5 class="detail-info">
-                <span> {{ $t('store.热度：') }} </span><span>{{detail.downloads || 0}}</span>
+                <span> {{ $t('store.热度：') }} </span><span>{{detail.recentExecuteNum || 0}}</span>
             </h5>
             <h5 class="detail-info detail-label">
                 <span> {{ $t('store.功能标签：') }} </span>

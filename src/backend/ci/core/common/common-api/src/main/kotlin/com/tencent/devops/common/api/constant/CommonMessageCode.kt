@@ -65,4 +65,5 @@ object CommonMessageCode {
     const val ERROR_SERVICE_NO_AUTH = "2100016" // 无访问服务的权限
     const val ERROR_QUERY_NUM_TOO_BIG = "2100017" // 查询的数量超过系统规定的值：{0}，请调整查询条件或咨询助手
     const val ERROR_QUERY_TIME_RANGE_TOO_LARGE = "2100018" // 查询的时间范围跨度最大，最长时间范围跨度不能超过{0}天
+    const val ERROR_HTTP_RESPONSE_BODY_TOO_LARGE = "2100019" // http请求返回体太大
 }

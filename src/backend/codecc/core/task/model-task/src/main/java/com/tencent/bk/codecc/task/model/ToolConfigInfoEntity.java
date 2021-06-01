@@ -48,10 +48,11 @@ import java.util.Map;
 @EqualsAndHashCode(callSuper = true)
 @Document(collection = "t_tool_config")
 @CompoundIndexes({
-        @CompoundIndex(name = "task_id_1_tool_name_1", def = "{'task_id': 1, 'tool_name': 1}")
+        @CompoundIndex(name = "task_id_1_tool_name_1", def = "{'task_id': 1, 'tool_name': 1}", background = true),
+        @CompoundIndex(name = "tool_name_1_follow_status_1", def = "{'tool_name': 1, 'follow_status': 1}",
+                background = true)
 })
-public class ToolConfigInfoEntity extends CommonEntity
-{
+public class ToolConfigInfoEntity extends CommonEntity {
     /**
      * 配置信息对应的项目ID
      */

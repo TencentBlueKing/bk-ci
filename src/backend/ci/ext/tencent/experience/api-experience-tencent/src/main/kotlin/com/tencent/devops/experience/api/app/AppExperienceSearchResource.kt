@@ -27,6 +27,7 @@
 
 package com.tencent.devops.experience.api.app
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_NAME
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PLATFORM
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
@@ -61,6 +62,9 @@ interface AppExperienceSearchResource {
         @ApiParam("平台", required = true)
         @HeaderParam(AUTH_HEADER_PLATFORM)
         platform: Int?,
+        @ApiParam("组织", required = false)
+        @HeaderParam(AUTH_HEADER_DEVOPS_ORGANIZATION_NAME)
+        organization: String? = null,
         @ApiParam("搜索内容(UrlEncode)", required = true)
         @PathParam("experienceName")
         experienceName: String,

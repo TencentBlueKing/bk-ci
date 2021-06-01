@@ -44,7 +44,6 @@ import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
-import com.tencent.devops.common.service.gray.RepoGray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
@@ -83,7 +82,6 @@ class TxProjectServiceImpl @Autowired constructor(
     private val s3Service: S3Service,
     private val tofService: TOFService,
     private val bkRepoClient: BkRepoClient,
-    private val repoGray: RepoGray,
     private val projectPaasCCService: ProjectPaasCCService,
     private val bkAuthProperties: BkAuthProperties,
     private val bsAuthProjectApi: AuthProjectApi,
@@ -131,17 +129,16 @@ class TxProjectServiceImpl @Autowired constructor(
         return projectVO
     }
 
-    override fun list(userId: String, accessToken: String?): List<ProjectVO> {
+    override fun list(userId: String, accessToken: String?, enabled: Boolean?): List<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         try {
 
             val projects = getProjectFromAuth(userId, accessToken).toSet()
-            if (projects == null || projects.isEmpty()) {
+            if (projects.isEmpty()) {
                 return emptyList()
             }
-            logger.info("项目列表：$projects")
             val list = ArrayList<ProjectVO>()
-            projectDao.list(dslContext, projects).map {
+            projectDao.list(dslContext, projects, enabled).map {
                 list.add(ProjectUtils.packagingBean(it, grayProjectSet()))
             }
             return list

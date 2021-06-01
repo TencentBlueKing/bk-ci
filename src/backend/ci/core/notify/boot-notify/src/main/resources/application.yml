@@ -1,4 +1,6 @@
 spring:
+  main:
+    allow-bean-definition-overriding: true
   application:
     name: notify${service-suffix}
     desc: DevOps Notify Service

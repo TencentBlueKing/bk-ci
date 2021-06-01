@@ -222,7 +222,7 @@ class CredentialDao {
             return dslContext.selectCount()
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
-                .fetchOne(0, kotlin.Long::class.java)
+                .fetchOne(0, kotlin.Long::class.java)!!
         }
     }
 
@@ -247,7 +247,7 @@ class CredentialDao {
             if (credentialIds.isNotEmpty()) {
                 query.and(CREDENTIAL_ID.`in`(credentialIds))
             }
-            query.fetchOne(0, kotlin.Long::class.java)
+            query.fetchOne(0, kotlin.Long::class.java)!!
         }
     }
 
@@ -271,7 +271,7 @@ class CredentialDao {
                     .from(this)
                     .where(PROJECT_ID.eq(projectId))
                     .and(CREDENTIAL_ID.like("%$credentialId%"))
-                    .fetchOne(0, Long::class.java)
+                    .fetchOne(0, Long::class.java)!!
         }
     }
 }

@@ -721,10 +721,11 @@ class PipelineInfoFacadeService @Autowired constructor(
             }
 
             // 部分老的模板实例没有templateId，需要手动加上
-            if (model.instanceFromTemplate == true && model.templateId.isNullOrBlank()) {
+            if (model.instanceFromTemplate == true) {
                 model.templateId = templateService.getTemplateIdByPipeline(pipelineId)
             }
-
+            // 将当前最新版本号传给前端
+            model.latestVersion = pipelineInfo.version
             return model
         } catch (e: Exception) {
             logger.warn("Fail to get the pipeline($pipelineId) definition of project($projectId)", e)

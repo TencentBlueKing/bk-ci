@@ -138,7 +138,7 @@ class InitResponseCode @Autowired constructor(private val objectMapper: ObjectMa
         val commonCode5 = GlobalMessage(
                 getUUID(), "2300005", "00", "无效的token，请先oauth认证", null, "Invalid token, please do oauth authentication first")
         val commonCode6 = GlobalMessage(
-                getUUID(), "2300006", "00", "{0}暂无权限。请联系管理员", null, "{0} has no permission")
+                getUUID(), "2300006", "00", "{0}暂无权限，请前往设置-人员权限进行处理。", null, "{0} has no permission")
         val commonCode7 = GlobalMessage(
                 getUUID(), "2300007", "00", "[{0}{1}]记录不存在", null, "[{0}{1}] record does not exist")
         val commonCode8 = GlobalMessage(
@@ -158,9 +158,9 @@ class InitResponseCode @Autowired constructor(private val objectMapper: ObjectMa
         val commonCode15 = GlobalMessage(
                 getUUID(), "2300015", "00", "找不到任何有效的{0}服务提供者", null, "Failed to find valid {0} service provider")
         val commonCode18 = GlobalMessage(
-            getUUID(), "2300018", "00", "无法从工蜂获取你的代码片段信息。请检查你的代码库是否被删除或设为私有。", null, "Fail to get code content from git, please check if that your repository is deleted or switched to private")
+                getUUID(), "2300018", "00", "无法从工蜂获取你的代码片段信息。请检查你的代码库是否被删除或设为私有。", null, "Fail to get code content from git, please check if that your repository is deleted or switched to private")
         val commonCode19 = GlobalMessage(
-            getUUID(), "2300019", "00", "无法从工蜂获取代码片段。请检查你是否对该仓库有权限。", null, "Fail to get code content from git, please check if that your repository is deleted or switched to private")
+                getUUID(), "2300019", "00", "无法从工蜂获取代码片段。请检查你是否对该仓库有权限。", null, "Fail to get code content from git, please check if that your repository is deleted or switched to private")
 
         // 公用响应码
         codeMap["0"] = objectMapper.writeValueAsString(commonCode)

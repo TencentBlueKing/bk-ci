@@ -105,7 +105,7 @@ class GitCiMarketAtomDao {
             return dslContext.selectCount()
                 .from(this)
                 .where(conditions)
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Long::class.java)!!
         }
     }
 

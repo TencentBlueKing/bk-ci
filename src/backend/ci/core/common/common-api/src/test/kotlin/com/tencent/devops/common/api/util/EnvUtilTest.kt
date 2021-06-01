@@ -39,5 +39,27 @@ class EnvUtilTest {
         println(command)
         val parseEnv = EnvUtils.parseEnv(command, map)
         println(parseEnv)
+
+        val command1 = "hello \${{variables.abc}} world"
+        val command2 = "\${{variables.abc}}world"
+        val command3 = "hello\${{variables.abc}}"
+        val command4 = "hello\${{variables.abc"
+        val command5 = "hello\${{variables.abc}"
+        val command6 = "hello\${variables.abc}}"
+        val command7 = "hello\$variables.abc}}"
+        val command8 = "echo \${{ variables.hello }}"
+        val data = mapOf(
+            "variables.abc" to "variables.value",
+            "variables.hello" to "hahahahaha"
+        )
+
+        println(EnvUtils.parseWithDoubleCurlyBraces(command1, data))
+        println(EnvUtils.parseWithDoubleCurlyBraces(command2, data))
+        println(EnvUtils.parseWithDoubleCurlyBraces(command3, data))
+        println(EnvUtils.parseWithDoubleCurlyBraces(command4, data))
+        println(EnvUtils.parseWithDoubleCurlyBraces(command5, data))
+        println(EnvUtils.parseWithDoubleCurlyBraces(command6, data))
+        println(EnvUtils.parseWithDoubleCurlyBraces(command7, data))
+        println(EnvUtils.parseWithDoubleCurlyBraces(command8, data))
     }
 }

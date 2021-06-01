@@ -103,7 +103,7 @@ class ProcessDao {
             return dslContext.select(DSL.max(BUILD_NUM))
                 .from(this)
                 .where(PROJECT_ID.eq(projectId).and(PIPELINE_ID.eq(pipelineId)))
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -118,7 +118,7 @@ class ProcessDao {
             return dslContext.select(DSL.max(BUILD_NUM))
                 .from(this)
                 .where(conditions)
-                .fetchOne(0, Long::class.java)
+                .fetchOne(0, Long::class.java)!!
         }
     }
 

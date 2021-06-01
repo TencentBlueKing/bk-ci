@@ -31,7 +31,7 @@ import com.tencent.bk.codecc.defect.service.IDataReportBizService;
 import com.tencent.bk.codecc.defect.service.TreeService;
 import com.tencent.bk.codecc.defect.vo.TreeNodeVO;
 import com.tencent.bk.codecc.defect.vo.common.CommonDataReportRspVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.service.BizServiceFactory;
 import com.tencent.devops.common.util.JsonUtil;
@@ -66,17 +66,17 @@ public class ServiceDefectTreeResourceImpl implements ServiceDefectTreeResource
     private BizServiceFactory<IDataReportBizService> dataReportBizServiceBizServiceFactory;
 
     @Override
-    public CodeCCResult<TreeNodeVO> getTreeNode(Long taskId, List<String> toolNames)
+    public Result<TreeNodeVO> getTreeNode(Long taskId, List<String> toolNames)
     {
-        return new CodeCCResult<>(treeService.getTreeNode(taskId, toolNames));
+        return new Result<>(treeService.getTreeNode(taskId, toolNames));
     }
 
     @Override
-    public CodeCCResult<JSONArray> getBatchDataReports(Long taskId, Set<String> toolNames)
+    public Result<JSONArray> getBatchDataReports(Long taskId, Set<String> toolNames)
     {
         if(CollectionUtils.isEmpty(toolNames))
         {
-            return new CodeCCResult<>(null);
+            return new Result<>(null);
         }
         List<CommonDataReportRspVO> dataReportList = new ArrayList<>();
         for(String toolName : toolNames)
@@ -86,7 +86,7 @@ public class ServiceDefectTreeResourceImpl implements ServiceDefectTreeResource
             dataReportList.add(dataReportBizService.getDataReport(taskId, toolName, 14, null, null));
         }
         JSONArray jsonArray = JSONArray.fromObject(JsonUtil.INSTANCE.toJson(dataReportList.stream().filter(Objects::nonNull).collect(Collectors.toList())));
-        return new CodeCCResult<>(jsonArray);
+        return new Result<>(jsonArray);
     }
 
 

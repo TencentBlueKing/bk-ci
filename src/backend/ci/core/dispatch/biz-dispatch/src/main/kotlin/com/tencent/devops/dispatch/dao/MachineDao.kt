@@ -86,13 +86,13 @@ class MachineDao {
 
     fun countByIp(dslContext: DSLContext, ip: String): Int {
         with(TDispatchMachine.T_DISPATCH_MACHINE) {
-            return dslContext.selectCount().from(this).where(MACHINE_IP.eq(ip)).fetchOne(0, Int::class.java)
+            return dslContext.selectCount().from(this).where(MACHINE_IP.eq(ip)).fetchOne(0, Int::class.java)!!
         }
     }
 
     fun countByName(dslContext: DSLContext, name: String): Int {
         with(TDispatchMachine.T_DISPATCH_MACHINE) {
-            return dslContext.selectCount().from(this).where(MACHINE_NAME.eq(name)).fetchOne(0, Int::class.java)
+            return dslContext.selectCount().from(this).where(MACHINE_NAME.eq(name)).fetchOne(0, Int::class.java)!!
         }
     }
 
