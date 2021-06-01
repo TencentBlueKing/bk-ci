@@ -160,14 +160,11 @@ open class AbsPermissionService @Autowired constructor(
         }
 
         val managerAction = "all_action"
-        val actionDTOs = mutableListOf<ActionDTO>()
         val managerActionDto = ActionDTO()
         managerActionDto.id = managerAction
-        actionDTOs.add(managerActionDto)
-        val actionPolicyDTOs = policyService.batchGetPolicyByActionList(userId, actionDTOs, null) ?: emptyList()
-        logger.info("[IAM] getUserProjects actionPolicyDTOs $actionPolicyDTOs")
-        val actionPolicy = actionPolicyDTOs[0]
-        val projectCodes = AuthUtils.getProjects(actionPolicy.condition)
+        val actionPolicyDTO = policyService.getPolicyByAction(userId, managerActionDto, null) ?: return false
+        logger.info("[IAM] getUserProjects actionPolicyDTO $actionPolicyDTO")
+        val projectCodes = AuthUtils.getProjects(actionPolicyDTO)
         projectManager.put(userId, projectCodes)
         return projectCodes.contains(projectCode)
     }
