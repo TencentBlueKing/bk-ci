@@ -77,17 +77,16 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
         gitBuildId: Long
     ): BuildId?
 
-    fun startBuild(
+    fun savePipeline(
         pipeline: GitProjectPipeline,
         event: GitRequestEvent,
         gitCIBasicSetting: GitCIBasicSetting,
-        model: Model,
-        gitBuildId: Long
-    ): BuildId? {
+        model: Model
+    ) {
         val processClient = client.get(ServicePipelineResource::class)
         if (pipeline.pipelineId.isBlank()) {
             // 直接新建
-            logger.info("create new gitBuildId:$gitBuildId, pipeline: $pipeline")
+            logger.info("create newpipeline: $pipeline")
 
             pipeline.pipelineId =
                 processClient.create(event.userId, gitCIBasicSetting.projectCode!!, model, channelCode).data!!.id
@@ -98,12 +97,12 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
             )
         } else if (needReCreate(processClient, event, gitCIBasicSetting, pipeline)) {
             // 先删除已有数据
-            logger.info("recreate gitBuildId:$gitBuildId, pipeline: $pipeline")
+            logger.info("recreate pipeline: $pipeline")
             try {
                 gitPipelineResourceDao.deleteByPipelineId(dslContext, pipeline.pipelineId)
                 processClient.delete(event.userId, gitCIBasicSetting.projectCode!!, pipeline.pipelineId, channelCode)
             } catch (e: Exception) {
-                logger.error("failed to delete pipeline resource gitBuildId:$gitBuildId, pipeline: $pipeline", e)
+                logger.error("failed to delete pipeline resource, pipeline: $pipeline", e)
             }
             // 再次新建
             pipeline.pipelineId =
@@ -115,7 +114,7 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
             )
         } else if (pipeline.pipelineId.isNotBlank()) {
             // 已有的流水线需要更新下工蜂CI这里的状态
-            logger.info("update gitPipeline gitBuildId:$gitBuildId, pipeline: $pipeline")
+            logger.info("update gitPipeline pipeline: $pipeline")
             gitPipelineResourceDao.updatePipeline(
                 dslContext = dslContext,
                 gitProjectId = gitCIBasicSetting.gitProjectId,
@@ -123,7 +122,16 @@ abstract class V2BaseBuildService<T> @Autowired constructor(
                 displayName = pipeline.displayName
             )
         }
+    }
 
+    fun startBuild(
+        pipeline: GitProjectPipeline,
+        event: GitRequestEvent,
+        gitCIBasicSetting: GitCIBasicSetting,
+        model: Model,
+        gitBuildId: Long
+    ): BuildId? {
+        val processClient = client.get(ServicePipelineResource::class)
         // 修改流水线并启动构建，需要加锁保证事务性
         try {
             logger.info("GitCI Build start, gitProjectId[${gitCIBasicSetting.gitProjectId}], " +
