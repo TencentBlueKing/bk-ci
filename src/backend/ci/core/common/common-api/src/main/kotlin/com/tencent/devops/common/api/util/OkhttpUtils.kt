@@ -275,7 +275,7 @@ object OkhttpUtils {
                     totalBytesRead += len
                     if (totalBytesRead >= readLimit) {
                         throw ErrorCodeException(
-                            statusCode = 200,
+                            statusCode = 413,
                             errorCode = ERROR_HTTP_RESPONSE_BODY_TOO_LARGE,
                             defaultMessage = errorMsg ?: "response body cannot be exceeded $readLimit"
                         )
