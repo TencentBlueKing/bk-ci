@@ -38,5 +38,5 @@ dependencies {
     api("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
     api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-base")
     api("com.fasterxml.jackson.module:jackson-module-kotlin")
-    api(group = "org.json", name = "json", version = "20180130")
+    api("org.json:json")
 }

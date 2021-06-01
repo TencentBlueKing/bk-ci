@@ -30,7 +30,6 @@ dependencies {
     api(project(":core:common:common-web"))
 }
 
-
 plugins {
     `task-deploy-to-maven`
 }

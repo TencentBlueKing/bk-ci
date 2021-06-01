@@ -27,5 +27,5 @@
 
 dependencies {
     api("org.mockito:mockito-all")
-    api("com.nhaarman:mockito-kotlin-kt1.1:1.6.0")
+    api("com.nhaarman:mockito-kotlin-kt1.1")
 }

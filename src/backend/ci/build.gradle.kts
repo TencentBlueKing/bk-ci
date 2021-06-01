@@ -113,8 +113,6 @@ subprojects {
     }
 
     configure<io.spring.gradle.dependencymanagement.dsl.DependencyManagementExtension> {
-        applyMavenExclusions(false)
-
         imports {
             mavenBom("org.springframework.boot:spring-boot-dependencies:${Versions.SpringBoot}")
         }
@@ -144,7 +142,6 @@ subprojects {
             dependency("commons-codec:commons-codec:${Versions.CommonCodec}")
             dependency("org.jooq:jooq:${Versions.Jooq}")
             dependency("org.apache.lucene:lucene-core:${Versions.Lucene}")
-            dependency("io.jsonwebtoken:jjwt:${Versions.Jjwt}")
             dependency("org.mockito:mockito-all:${Versions.Mockito}")
             dependency("net.sf.json-lib:json-lib:${Versions.JsonLib}")
             dependency("com.cronutils:cron-utils:${Versions.CronUtils}")
@@ -153,6 +150,42 @@ subprojects {
             dependency("com.tencent.devops.ci-plugins:sigar:${Versions.Sigar}")
             dependency("org.influxdb:influxdb-java:${Versions.InfluxDB}")
             dependency("com.github.ben-manes.caffeine:caffeine:${Versions.Caffeine}")
+            dependency("net.coobird:thumbnailator:${Versions.Thumbnailator}")
+            dependency("com.vdurmont:emoji-java:${Versions.EmojiJava}")
+            dependency("org.apache.commons:commons-csv:${Versions.CommonCsv}")
+            dependency("org.apache.commons:commons-collections4:${Versions.CommonCollections4}")
+            dependency("com.nhaarman:mockito-kotlin-kt1.1:${Versions.MockitoKt}")
+            dependency("org.tmatesoft.svnkit:svnkit:${Versions.Svnkit}")
+            dependency("org.eclipse.jgit:org.eclipse.jgit:${Versions.JGit}")
+            dependency("org.glassfish.jersey.containers:jersey-container-servlet:${Versions.Jersey}")
+            dependency("javax.websocket:javax.websocket-api:${Versions.WebSocketApi}")
+            dependency("com.googlecode.plist:dd-plist:${Versions.DdPlist}")
+            dependency("net.dongliu:apk-parser:${Versions.ApkParser}")
+            dependency("org.xerial:sqlite-jdbc:${Versions.SqlLiteJdbc}")
+            dependency("com.github.oshi:oshi-core:${Versions.OshiCore}")
+
+            dependencySet("com.tencent.bkrepo:${Versions.TencentBkRepo}") {
+                entry("api-generic")
+                entry("api-repository")
+            }
+
+            dependencySet("io.jsonwebtoken:${Versions.JJwt}") {
+                entry("jjwt-api")
+                entry("jjwt")
+                entry("jjwt-impl")
+                entry("jjwt-jackson")
+            }
+
+            dependencySet("org.glassfish.jersey.core:${Versions.Jersey}") {
+                entry("jersey-client")
+                entry("jersey-server")
+                entry("jersey-common")
+            }
+
+            dependencySet("com.github.docker-java:${Versions.DockerJava}") {
+                entry("docker-java")
+                entry("docker-java-transport-okhttp")
+            }
 
             dependencySet("org.springframework.cloud:${Versions.SpringConsul}") {
                 entry("spring-cloud-starter-consul-discovery")
