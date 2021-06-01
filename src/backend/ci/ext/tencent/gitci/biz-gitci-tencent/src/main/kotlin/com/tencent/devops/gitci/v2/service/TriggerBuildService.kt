@@ -918,7 +918,6 @@ class TriggerBuildService @Autowired constructor(
         )
     }
 
-
     private fun getBranchName(ref: String): String {
         return when {
             ref.startsWith("refs/heads/") ->
