@@ -50,6 +50,7 @@ import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.listener.TxIamV3CreateEvent
 import com.tencent.devops.project.pojo.Result
 import okhttp3.MediaType
+import org.springframework.beans.factory.annotation.Value
 
 class TxV3ProjectPermissionServiceImpl @Autowired constructor(
     val objectMapper: ObjectMapper,
@@ -57,8 +58,9 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
     val projectDispatcher: ProjectDispatcher,
     val client: Client
 ) : ProjectPermissionService {
-
-    private val authUrl = authProperties.apigwUrl
+    
+    @Value("\${iam.v0.url:#{null}}")
+    private val v0IamUrl: String = ""
 
     // 校验用户是否是项目成员
     override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String): Boolean {
@@ -131,7 +133,7 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
         userDeptDetail: UserDeptDetail?
     ): String {
         // 创建AUTH项目
-        val authUrl = "$authUrl/projects?access_token=$accessToken"
+        val authUrl = "$v0IamUrl/projects?access_token=$accessToken"
         val param: MutableMap<String, String> = mutableMapOf("project_code" to projectCreateInfo.resourceCode)
         if (userDeptDetail != null) {
             param["bg_id"] = userDeptDetail.bgId
@@ -147,17 +149,17 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
         val result = objectMapper.readValue<Result<AuthProjectForCreateResult>>(responseContent)
         if (result.isNotOk()) {
             logger.warn("Fail to create the project of response $responseContent")
-            throw OperationException("调用权限中心创建项目失败: ${result.message}")
+            throw OperationException("调用权限中心V0创建项目失败: ${result.message}")
         }
         val authProjectForCreateResult = result.data
         return if (authProjectForCreateResult != null) {
             if (authProjectForCreateResult.project_id.isBlank()) {
-                throw OperationException("权限中心创建的项目ID无效")
+                throw OperationException("权限中心创建V0的项目ID无效")
             }
             authProjectForCreateResult.project_id
         } else {
             logger.warn("Fail to get the project id from response $responseContent")
-            throw OperationException("权限中心创建的项目ID无效")
+            throw OperationException("权限中心V0创建的项目ID无效")
         }
     }
 

@@ -27,15 +27,25 @@
 
 package com.tencent.devops.auth
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.helper.AuthHelper
+import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.bk.sdk.iam.service.impl.ApigwHttpClientServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.DefaultHttpClientServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.ManagerServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.PolicyServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.TokenServiceImpl
+import com.tencent.devops.auth.service.AuthDeptServiceImpl
+import com.tencent.devops.auth.service.DeptService
+import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
+import com.tencent.devops.auth.service.iam.PermissionRoleService
 import com.tencent.devops.auth.service.permission.empty.EmptyPermissionProjectServiceImpl
 import com.tencent.devops.auth.service.permission.empty.EmptyPermissionServiceImpl
+import com.tencent.devops.auth.service.permission.iam.TxPermissionProjectServiceImpl
+import com.tencent.devops.auth.service.permission.iam.TxPermissionServiceImpl
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -89,10 +99,48 @@ class AuthConfiguration {
     fun authHelper() = AuthHelper(tokenService(), policyService(), iamConfiguration())
 
     @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
+    @ConditionalOnMissingBean
     fun emptyPermissionService() = EmptyPermissionServiceImpl()
 
     @Bean
-    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
+    @ConditionalOnMissingBean
     fun emptyPermissionProjectServiceImpl() = EmptyPermissionProjectServiceImpl()
+    
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
+    fun deptService(
+        redisOperation: RedisOperation,
+        objectMapper: ObjectMapper
+    ) = AuthDeptServiceImpl(redisOperation, objectMapper)
+    
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
+    fun txPermissionProjectService(
+        permissionRoleService: PermissionRoleService,
+        permissionRoleMemberService: PermissionRoleMemberService,
+        authHelper: AuthHelper,
+        policyService: PolicyService,
+        client: Client,
+        iamConfiguration: IamConfiguration,
+        deptService: DeptService
+    ) = TxPermissionProjectServiceImpl(
+        permissionRoleService = permissionRoleService,
+        permissionRoleMemberService = permissionRoleMemberService,
+        authHelper = authHelper,
+        policyService = policyService,
+        client = client,
+        iamConfiguration = iamConfiguration,
+        deptService = deptService)
+    
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
+    fun txPermissionService(
+        authHelper: AuthHelper,
+        policyService: PolicyService,
+        iamConfiguration: IamConfiguration
+    ) = TxPermissionServiceImpl(
+        authHelper = authHelper,
+        policyService = policyService,
+        iamConfiguration = iamConfiguration
+    )
 }

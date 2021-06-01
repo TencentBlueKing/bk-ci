@@ -27,6 +27,9 @@
 
 package com.tencent.devops.project.service.impl
 
+import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.bkrepo.common.api.util.JsonUtils.objectMapper
+import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -42,14 +45,18 @@ import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
+import com.tencent.devops.project.pojo.AuthProjectForList
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
+import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectPaasCCService
 import com.tencent.devops.project.service.ProjectPermissionService
@@ -61,6 +68,7 @@ import okhttp3.Request
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.File
 
@@ -85,8 +93,9 @@ class TxProjectServiceImpl @Autowired constructor(
     private val projectAuthServiceCode: ProjectAuthServiceCode,
     private val managerService: ManagerService
 ) : AbsProjectServiceImpl(projectPermissionService, dslContext, projectDao, projectJmxApi, redisOperation, gray, client, projectDispatcher, authPermissionApi, projectAuthServiceCode) {
-
-    private var authUrl: String = "${bkAuthProperties.url}/projects"
+    
+    @Value("\${iam.v0.url:#{null}}")
+    private var v0IamUrl: String = ""
 
     override fun getByEnglishName(userId: String, englishName: String, accessToken: String?): ProjectVO? {
         val projectVO = getInfoByEnglishName(englishName)
@@ -181,27 +190,20 @@ class TxProjectServiceImpl @Autowired constructor(
         projectPermissionService.deleteResource(projectId)
     }
 
-    // 此处分别对接V0,V3实现, V3,V0的projectId不通用,故此处调整返回为english_name
+    // 此处为兼容V0,V3并存的情况, 拉群用户有权限的项目列表需取V0+V3的并集, 无论啥集群, 都需取两个iam环境下的数据, 完全迁移完后可直接指向V3
     override fun getProjectFromAuth(userId: String?, accessToken: String?): List<String> {
-//        val url = "$authUrl?access_token=$accessToken"
-//        logger.info("Start to get auth projects - ($url)")
-//        val request = Request.Builder().url(url).get().build()
-//        val responseContent = request(request, MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_QUERY_ERROR))
-//        val result = objectMapper.readValue<Result<ArrayList<AuthProjectForList>>>(responseContent)
-//        if (result.isNotOk()) {
-//            logger.warn("Fail to get the project info with response $responseContent")
-//            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_QUERY_ERROR))
-//        }
-//        if (result.data == null) {
-//            return emptyList()
-//        }
-//
-//        return result.data!!.map {
-//            it.project_id
-//        }
-        val projectEnglishNames = projectPermissionService.getUserProjects(userId!!)
-        logger.info("$userId has permission project: $projectEnglishNames")
-        return projectEnglishNames
+        // 全部迁移完后,直接用此实现
+//        val projectEnglishNames = projectPermissionService.getUserProjects(userId!!)
+        val iamV0List = getV0UserProject(userId, accessToken)
+        logger.info("$userId V0 project: $iamV0List")
+        val iamV3List = client.get(ServiceProjectAuthResource::class).getUserProjects(userId!!).data
+        logger.info("$userId V0 project: $iamV3List")
+        val projectList = mutableSetOf<String>()
+        projectList.addAll(iamV0List)
+        if (!iamV3List.isNullOrEmpty()) {
+            projectList.addAll(iamV3List)
+        }
+        return projectList.toList()
     }
 
     override fun updateInfoReplace(projectUpdateInfo: ProjectUpdateInfo) {
@@ -279,6 +281,25 @@ class TxProjectServiceImpl @Autowired constructor(
             deptName = deptName,
             englishName = projectCreateInfo.englishName
         )
+    }
+    
+    private fun getV0UserProject(userId: String?, accessToken: String?): List<String>{
+        val url = "$v0IamUrl/projects?access_token=$accessToken"
+        logger.info("Start to get auth projects - ($url)")
+        val request = Request.Builder().url(url).get().build()
+        val responseContent = request(request, MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_QUERY_ERROR))
+        val result = objectMapper.readValue<Result<ArrayList<AuthProjectForList>>>(responseContent)
+        if (result.isNotOk()) {
+            logger.warn("Fail to get the project info with response $responseContent")
+            throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_QUERY_ERROR))
+        }
+        if (result.data == null) {
+            return emptyList()
+        }
+
+        return result.data!!.map {
+            it.project_code
+        }
     }
 
     companion object {
