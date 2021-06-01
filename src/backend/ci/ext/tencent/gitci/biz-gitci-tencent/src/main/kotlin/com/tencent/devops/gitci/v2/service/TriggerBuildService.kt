@@ -785,6 +785,7 @@ class TriggerBuildService @Autowired constructor(
         startParams[CI_BUILD_URL] = v2GitUrl ?: ""
         startParams[BK_CI_RUN] = "true"
         startParams[CI_ACTOR] = event.userId
+        startParams[CI_BRANCH] = event.branch
         startParams[CI_REPO] = GitCommonUtils.getRepoOwner(gitBasicSetting.gitHttpUrl) + "/" + gitBasicSetting.name
         startParams[CI_EVENT_CONTENT] = JsonUtil.toJson(event)
         startParams[CI_COMMIT_MESSAGE] = event.commitMsg ?: ""
