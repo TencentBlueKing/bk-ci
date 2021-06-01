@@ -58,6 +58,8 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
 import com.tencent.devops.model.process.tables.records.TTemplateInstanceItemRecord
 import com.tencent.devops.model.process.tables.records.TTemplatePipelineRecord
@@ -133,6 +135,7 @@ import kotlin.reflect.jvm.isAccessible
 @RefreshScope
 class TemplateFacadeService @Autowired constructor(
     private val dslContext: DSLContext,
+    private val redisOperation: RedisOperation,
     private val templateDao: TemplateDao,
     private val templatePipelineDao: TemplatePipelineDao,
     private val pipelineSettingDao: PipelineSettingDao,
@@ -163,7 +166,7 @@ class TemplateFacadeService @Autowired constructor(
     fun createTemplate(projectId: String, userId: String, template: Model): String {
         logger.info("Start to create the template $template by user $userId")
         checkPermission(projectId, userId)
-        checkTemplate(template)
+        checkTemplate(template, projectId)
         val templateId = UUIDUtil.generate()
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
@@ -396,7 +399,7 @@ class TemplateFacadeService @Autowired constructor(
     ): Long {
         logger.info("Start to update the template $templateId by user $userId - ($template)")
         checkPermission(projectId, userId)
-        checkTemplate(template)
+        checkTemplate(template, projectId)
         val latestTemplate = templateDao.getLatestTemplate(dslContext, projectId, templateId)
         var version: Long = 0
         dslContext.transaction { configuration ->
@@ -931,7 +934,15 @@ class TemplateFacadeService @Autowired constructor(
             labels.addAll(it.labels)
         }
         model.labels = labels
+        model.labels = labels
         val templateResult = instanceParamModel(userId, projectId, model)
+        try {
+            checkTemplate(templateResult, projectId)
+        } catch (ignored: ErrorCodeException) {
+            // 兼容历史数据，模板内容有问题给出错误提示
+            val message = MessageCodeUtil.getCodeMessage(ignored.errorCode, ignored.params)
+            templateResult.tips = message ?: ignored.defaultMessage
+        }
         val params = (templateResult.stages[0].containers[0] as TriggerContainer).params
         val templateParams = (templateResult.stages[0].containers[0] as TriggerContainer).templateParams
         return TemplateModelDetail(
@@ -1890,13 +1901,25 @@ class TemplateFacadeService @Autowired constructor(
     /**
      * 检查模板是不是合法
      */
-    private fun checkTemplate(template: Model) {
+    private fun checkTemplate(template: Model, projectId: String? = null) {
         if (template.name.isBlank()) {
-            throw ErrorCodeException(defaultMessage = "模板名不能为空字符串",
-                errorCode = ProcessMessageCode.TEMPLATE_NAME_CAN_NOT_NULL)
+            throw ErrorCodeException(
+                defaultMessage = "模板名不能为空字符串",
+                errorCode = ProcessMessageCode.TEMPLATE_NAME_CAN_NOT_NULL
+            )
         }
-        modelCheckPlugin.checkModelIntegrity(model = template, projectId = null)
+        modelCheckPlugin.checkModelIntegrity(model = template, projectId = projectId)
         checkPipelineParam(template)
+    }
+
+    fun checkTemplate(templateId: String, projectId: String? = null): Boolean {
+        val templateRecord = templateDao.getLatestTemplate(dslContext, templateId)
+        val modelStr = templateRecord.template
+        if (modelStr != null) {
+            val model = JsonUtil.to(modelStr, Model::class.java)
+            checkTemplate(model, projectId)
+        }
+        return true
     }
 
     /**
@@ -1990,6 +2013,17 @@ class TemplateFacadeService @Autowired constructor(
         val publicFlag = addMarketTemplateRequest.publicFlag // 是否为公共模板
         val category = JsonUtil.toJson(addMarketTemplateRequest.categoryCodeList ?: listOf<String>())
         val projectCodeList = addMarketTemplateRequest.projectCodeList
+        // 校验安装的模板是否合法
+        if (!publicFlag && redisOperation.get("checkInstallTemplateModelSwitch")?.toBoolean() != false) {
+            val templateRecord = templateDao.getLatestTemplate(dslContext, templateCode)
+            val modelStr = templateRecord.template
+            if (modelStr != null) {
+                val model = JsonUtil.to(modelStr, Model::class.java)
+                projectCodeList.forEach {
+                    checkTemplate(model, it)
+                }
+            }
+        }
         val projectTemplateMap = mutableMapOf<String, String>()
         if (publicFlag) {
             dslContext.transaction { t ->

@@ -92,6 +92,27 @@ interface ServiceMarketAtomArchiveResource {
         version: String
     ): Result<GetAtomConfigResult?>
 
+    @ApiOperation("校验插件发布类型是否合法")
+    @GET
+    @Path("/users/{userId}/projects/{projectCode}/atoms/{atomCode}/versions/{version}/releaseType/verify")
+    fun validateReleaseType(
+        @ApiParam("用户ID", required = true)
+        @PathParam("userId")
+        userId: String,
+        @ApiParam("项目代码", required = true)
+        @PathParam("projectCode")
+        projectCode: String,
+        @ApiParam("插件代码", required = true)
+        @PathParam("atomCode")
+        atomCode: String,
+        @ApiParam("版本号", required = true)
+        @PathParam("version")
+        version: String,
+        @ApiParam("插件字段校验确认标识", required = false)
+        @QueryParam("fieldCheckConfirmFlag")
+        fieldCheckConfirmFlag: Boolean?
+    ): Result<Boolean>
+
     @ApiOperation("更新插件执行包相关信息")
     @PUT
     @Path("/users/{userId}/atoms/{atomId}/pkg/info/update")

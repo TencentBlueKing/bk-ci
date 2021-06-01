@@ -37,6 +37,17 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_MESSAGE
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_CONTENT
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REF
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REF
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_GROUP
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_NAME
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
@@ -248,17 +259,28 @@ class PipelineContextService@Autowired constructor(
         varMap["ci.build_num"] = buildVar[PIPELINE_BUILD_NUM] ?: ""
         varMap["ci.pipeline_name"] = modelDetail.pipelineName
         varMap["ci.actor"] = modelDetail.userId
-        varMap["ci.ref"] = buildVar["ci.ref"] ?: ""
-        varMap["ci.head_ref"] = buildVar["ci.head_ref"] ?: ""
-        varMap["ci.base_ref"] = buildVar["ci.base_ref"] ?: ""
-        varMap["ci.repo"] = buildVar["ci.repo"] ?: ""
-        varMap["ci.repo_name"] = buildVar["ci.repo_name"] ?: ""
-        varMap["ci.repo_group"] = buildVar["ci.repo_group"] ?: ""
-        varMap["ci.event"] = buildVar["ci.event"] ?: ""
-        varMap["ci.event_content"] = buildVar["ci.event_content"] ?: ""
-        varMap["ci.sha"] = buildVar["ci.sha"] ?: ""
-        varMap["ci.sha_short"] = buildVar["ci.sha_short"] ?: ""
-        varMap["ci.commit_message"] = buildVar["ci.commit_message"] ?: ""
+        if (!buildVar[PIPELINE_GIT_REF].isNullOrBlank())
+            varMap[PIPELINE_GIT_REF] = buildVar[PIPELINE_GIT_REF]!!
+        if (!buildVar[PIPELINE_GIT_HEAD_REF].isNullOrBlank())
+            varMap[PIPELINE_GIT_HEAD_REF] = buildVar[PIPELINE_GIT_HEAD_REF]!!
+        if (!buildVar[PIPELINE_GIT_BASE_REF].isNullOrBlank())
+            varMap[PIPELINE_GIT_BASE_REF] = buildVar[PIPELINE_GIT_BASE_REF]!!
+        if (!buildVar[PIPELINE_GIT_REPO].isNullOrBlank())
+            varMap[PIPELINE_GIT_REPO] = buildVar[PIPELINE_GIT_REPO]!!
+        if (!buildVar[PIPELINE_GIT_REPO_NAME].isNullOrBlank())
+            varMap[PIPELINE_GIT_REPO_NAME] = buildVar[PIPELINE_GIT_REPO_NAME]!!
+        if (!buildVar[PIPELINE_GIT_REPO_GROUP].isNullOrBlank())
+            varMap[PIPELINE_GIT_REPO_GROUP] = buildVar[PIPELINE_GIT_REPO_GROUP]!!
+        if (!buildVar[PIPELINE_GIT_EVENT].isNullOrBlank())
+            varMap[PIPELINE_GIT_EVENT] = buildVar[PIPELINE_GIT_EVENT]!!
+        if (!buildVar[PIPELINE_GIT_EVENT_CONTENT].isNullOrBlank())
+            varMap[PIPELINE_GIT_EVENT_CONTENT] = buildVar[PIPELINE_GIT_EVENT_CONTENT]!!
+        if (!buildVar[PIPELINE_GIT_SHA].isNullOrBlank())
+            varMap[PIPELINE_GIT_SHA] = buildVar[PIPELINE_GIT_SHA]!!
+        if (!buildVar[PIPELINE_GIT_SHA_SHORT].isNullOrBlank())
+            varMap[PIPELINE_GIT_SHA_SHORT] = buildVar[PIPELINE_GIT_SHA_SHORT]!!
+        if (!buildVar[PIPELINE_GIT_COMMIT_MESSAGE].isNullOrBlank())
+            varMap[PIPELINE_GIT_COMMIT_MESSAGE] = buildVar[PIPELINE_GIT_COMMIT_MESSAGE]!!
     }
 
     private fun buildStepContext(
