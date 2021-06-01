@@ -46,30 +46,32 @@ class V2WebHookMatcher(private val event: GitEvent) {
 
     fun isMatch(
         triggerOn: TriggerOn
-    ): Boolean {
-        if (triggerOn.mr != null || triggerOn.push != null || triggerOn.tag != null) {
-            val eventBranch = getBranch()
-            val eventTag = getTag()
-            val eventType = getEventType()
+    ): Pair<Boolean, Boolean> {
+        val eventBranch = getBranch()
+        val eventTag = getTag()
+        val eventType = getEventType()
 
+        if (triggerOn.mr != null || triggerOn.push != null || triggerOn.tag != null) {
             when (eventType) {
                 CodeEventType.PUSH -> {
-                    if (isPushMatch(triggerOn, eventBranch)) return true
+                    if (isPushMatch(triggerOn, eventBranch)) return Pair(first = true, second = false)
                 }
                 CodeEventType.TAG_PUSH -> {
-                    if (isTagPushMatch(triggerOn, eventTag)) return true
+                    if (isTagPushMatch(triggerOn, eventTag)) return Pair(first = true, second = false)
                 }
                 CodeEventType.MERGE_REQUEST -> {
-                    if (isMrMatch(triggerOn, eventBranch)) return true
+                    if (isMrMatch(triggerOn, eventBranch)) return Pair(first = true, second = false)
                 }
                 else -> {
-                    return false
+                    return Pair(first = false, second = false)
                 }
             }
+        } else if (triggerOn.schedules != null) {
+            if (isSchedulesMatch(triggerOn, eventBranch)) return Pair(first = false, second = true)
         }
 
         logger.info("The triggerOn doesn't match the git event($event)")
-        return false
+        return Pair(first = false, second = false)
     }
 
     private fun isPushMatch(triggerOn: TriggerOn, eventBranch: String): Boolean {
@@ -173,6 +175,15 @@ class V2WebHookMatcher(private val event: GitEvent) {
         }
 
         return false
+    }
+
+    private fun isSchedulesMatch(triggerOn: TriggerOn, eventBranch: String): Boolean {
+        // TODO 需要进一步迭代定时任务的检查与分支匹配检测
+        if (triggerOn.schedules == null || triggerOn.schedules?.cron.isNullOrBlank()) {
+            logger.info("The schedules cron is invalid($eventBranch)")
+            return false
+        }
+        return true
     }
 
     private fun isIgnoreBranchMatch(branchList: List<String>?): Boolean {

@@ -42,12 +42,19 @@ class V2GitCIRequestTriggerListener @Autowired constructor(
 
     fun listenGitCIRequestTriggerEvent(v2GitCIRequestTriggerEvent: V2GitCIRequestTriggerEvent) {
         try {
-            triggerBuildService.gitStartBuild(
+            // 如果事件未传gitBuildId说明是不做触发只做流水线保存
+            if (v2GitCIRequestTriggerEvent.gitBuildId != null) triggerBuildService.gitStartBuild(
                 pipeline = v2GitCIRequestTriggerEvent.pipeline,
                 event = v2GitCIRequestTriggerEvent.event,
                 yaml = v2GitCIRequestTriggerEvent.yaml,
                 gitBuildId = v2GitCIRequestTriggerEvent.gitBuildId
-            )
+            ) else {
+                triggerBuildService.savePipelineModel(
+                    pipeline = v2GitCIRequestTriggerEvent.pipeline,
+                    event = v2GitCIRequestTriggerEvent.event,
+                    yaml = v2GitCIRequestTriggerEvent.yaml
+                )
+            }
         } catch (e: Throwable) {
             logger.error("Fail to start the git ci build(${v2GitCIRequestTriggerEvent.event})", e)
             with(v2GitCIRequestTriggerEvent) {

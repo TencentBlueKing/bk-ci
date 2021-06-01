@@ -228,8 +228,24 @@ class TriggerBuildService @Autowired constructor(
 
         val model = createPipelineModel(event, gitBasicSetting, yaml)
         logger.info("Git request gitBuildId:$gitBuildId, pipeline:$pipeline, model: $model")
-
+        savePipeline(pipeline, event, gitBasicSetting, model)
         return startBuild(pipeline, event, gitBasicSetting, model, gitBuildId)
+    }
+
+    fun savePipelineModel(
+        pipeline: GitProjectPipeline,
+        event: GitRequestEvent,
+        yaml: ScriptBuildYaml
+    ) {
+        logger.info("Git request save pipeline, pipeline:$pipeline, event: $event, yaml: $yaml")
+
+        // create or refresh pipeline
+        val gitBasicSetting = gitCIBasicSettingDao.getSetting(dslContext, event.gitProjectId)
+            ?: throw OperationException("git ci projectCode not exist")
+
+        val model = createPipelineModel(event, gitBasicSetting, yaml)
+        logger.info("Git request , pipeline:$pipeline, model: $model")
+        savePipeline(pipeline, event, gitBasicSetting, model)
     }
 
     private fun createPipelineSetting(
