@@ -34,6 +34,7 @@ import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
 import com.tencent.bk.sdk.iam.dto.manager.ManagerPath
 import com.tencent.bk.sdk.iam.dto.manager.ManagerResources
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.utils.TActionUtils
 
 object AuthorizationUtils {
 
@@ -91,28 +92,28 @@ object AuthorizationUtils {
             projectName = projectName,
             iamConfiguration = iamConfiguration,
             actions = experienceGroupAction.split(","),
-            resourceType = "experience_group"
+            resourceType = TActionUtils.extResourceType(AuthResourceType.EXPERIENCE_GROUP)
         ))
         authorizationScopes.add(buildResource(
             projectId = projectId,
             projectName = projectName,
             iamConfiguration = iamConfiguration,
             actions = experienceTaskAction.split(","),
-            resourceType = "experience_task"
+            resourceType = TActionUtils.extResourceType(AuthResourceType.EXPERIENCE_TASK)
         ))
         authorizationScopes.add(buildResource(
             projectId = projectId,
             projectName = projectName,
             iamConfiguration = iamConfiguration,
             actions = groupAction.split(","),
-            resourceType = AuthResourceType.QUALITY_GROUP.value
+            resourceType = TActionUtils.extResourceType(AuthResourceType.QUALITY_GROUP)
         ))
         authorizationScopes.add(buildResource(
             projectId = projectId,
             projectName = projectName,
             iamConfiguration = iamConfiguration,
             actions = ruleAction.split(","),
-            resourceType = AuthResourceType.QUALITY_RULE.value
+            resourceType = TActionUtils.extResourceType(AuthResourceType.QUALITY_RULE)
         ))
         return authorizationScopes
     }
