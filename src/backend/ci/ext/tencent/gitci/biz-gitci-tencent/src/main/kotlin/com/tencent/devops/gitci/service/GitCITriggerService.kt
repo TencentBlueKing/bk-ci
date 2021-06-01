@@ -298,6 +298,7 @@ class GitCITriggerService @Autowired constructor(
         }
     }
 
+    @Suppress("ALL")
     private fun matchAndTriggerPipeline(
         gitRequestEvent: GitRequestEvent,
         event: GitEvent,

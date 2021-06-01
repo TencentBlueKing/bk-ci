@@ -114,6 +114,8 @@ class GitCIBuildFinishListener @Autowired constructor(
             )
         ))]
     )
+
+    @Suppress("ALL")
     fun listenPipelineBuildFinishBroadCastEvent(buildFinishEvent: PipelineBuildFinishBroadCastEvent) {
         try {
             val record = gitRequestEventBuildDao.getEventByBuildId(dslContext, buildFinishEvent.buildId)
@@ -167,16 +169,33 @@ class GitCIBuildFinishListener @Autowired constructor(
                 }
 
                 // 推送结束构建消息,当人工触发时不推送CommitCheck消息
-                pushCommitCheck(
-                    objectKind = objectKind,
-                    commitId = commitId,
-                    mergeRequestId = mergeRequestId,
-                    buildFinishEvent = buildFinishEvent,
-                    pipeline = pipeline,
-                    state = state,
-                    gitCIBasicSetting = v2GitSetting!!,
-                    description = description
-                )
+                if (objectKind != OBJECT_KIND_MANUAL) {
+                    if (isV2) {
+                        scmClient.pushCommitCheck(
+                            commitId = commitId,
+                            description = description,
+                            mergeRequestId = mergeRequestId,
+                            buildId = buildFinishEvent.buildId,
+                            userId = buildFinishEvent.userId,
+                            status = state,
+                            context = "${pipeline.displayName}(${pipeline.filePath})",
+                            gitCIBasicSetting = v2GitSetting!!,
+                            pipelineId = buildFinishEvent.pipelineId,
+                            block = false
+                        )
+                    } else {
+                        scmClient.pushCommitCheck(
+                            commitId = commitId,
+                            description = description,
+                            mergeRequestId = mergeRequestId,
+                            buildId = buildFinishEvent.buildId,
+                            userId = buildFinishEvent.userId,
+                            status = state,
+                            context = "${pipeline.displayName}(${pipeline.filePath})",
+                            gitProjectConf = gitProjectConf!!
+                        )
+                    }
+                }
 
                 // 发送通知兼容v1的老数据
                 // v1 校验是否发送通知
@@ -193,7 +212,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                 val buildInfo = client.get(ServiceBuildResource::class)
                     .getBatchBuildStatus(
                         projectId = if (isV2) {
-                            v2GitSetting.projectCode!!
+                            v2GitSetting!!.projectCode!!
                         } else {
                             gitProjectConf!!.projectCode!!
                         },
@@ -219,7 +238,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                             mergeRequestId = mergeRequestId,
                             commitId = commitId,
                             state = state.value,
-                            conf = v2GitSetting,
+                            conf = v2GitSetting!!,
                             event = event,
                             pipeline = pipeline,
                             build = buildInfo.first(),
@@ -253,32 +272,6 @@ class GitCIBuildFinishListener @Autowired constructor(
             }
         } catch (e: Throwable) {
             logger.error("Fail to push commit check build(${buildFinishEvent.buildId})", e)
-        }
-    }
-
-    private fun pushCommitCheck(
-        objectKind: String,
-        commitId: String,
-        mergeRequestId: Long,
-        buildFinishEvent: PipelineBuildFinishBroadCastEvent,
-        pipeline: TGitPipelineResourceRecord,
-        state: GitCICommitCheckState,
-        gitCIBasicSetting: GitCIBasicSetting,
-        description: String
-    ) {
-        if (objectKind != OBJECT_KIND_MANUAL) {
-            scmClient.pushCommitCheck(
-                commitId = commitId,
-                description = description,
-                mergeRequestId = mergeRequestId,
-                buildId = buildFinishEvent.buildId,
-                userId = buildFinishEvent.userId,
-                status = state,
-                context = "${pipeline.displayName}(${pipeline.filePath})",
-                gitCIBasicSetting = gitCIBasicSetting,
-                pipelineId = buildFinishEvent.pipelineId,
-                block = false
-            )
         }
     }
 

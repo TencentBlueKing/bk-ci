@@ -134,6 +134,24 @@ object ScriptYmlUtils {
         return newValue
     }
 
+    fun parseParameterValue(value: String?, settingMap: Map<String, String?>): String? {
+        if (value.isNullOrBlank()) {
+            return ""
+        }
+
+        var newValue = value
+        val pattern = Pattern.compile("\\$\\{\\{([^{}]+?)}}")
+        val matcher = pattern.matcher(value)
+        while (matcher.find()) {
+            if (settingMap.containsKey(matcher.group(1).trim())) {
+                val realValue = settingMap[matcher.group(1).trim()]
+                newValue = newValue!!.replace(matcher.group(), realValue ?: "")
+            }
+        }
+
+        return newValue
+    }
+
     fun parseImage(imageNameInput: String): Triple<String, String, String> {
         val imageNameStr = imageNameInput.removePrefix("http://").removePrefix("https://")
         val arry = imageNameStr.split(":")

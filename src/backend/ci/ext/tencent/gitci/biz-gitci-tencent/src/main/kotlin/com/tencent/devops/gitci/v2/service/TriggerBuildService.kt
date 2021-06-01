@@ -785,7 +785,6 @@ class TriggerBuildService @Autowired constructor(
         startParams[BK_CI_RUN] = "true"
         startParams[CI_ACTOR] = event.userId
         startParams[CI_REPO] = GitCommonUtils.getRepoOwner(gitBasicSetting.gitHttpUrl) + "/" + gitBasicSetting.name
-        startParams[CI_EVENT] = event.event
         startParams[CI_EVENT_CONTENT] = JsonUtil.toJson(event)
         startParams[CI_COMMIT_MESSAGE] = event.commitMsg ?: ""
         startParams[CI_SHA] = event.commitId
@@ -804,13 +803,16 @@ class TriggerBuildService @Autowired constructor(
         val gitProjectName = when (originEvent) {
             is GitPushEvent -> {
                 startParams[CI_REF] = originEvent.ref
+                startParams[CI_EVENT] = GitPushEvent.classType
                 GitUtils.getProjectName(originEvent.repository.git_http_url)
             }
             is GitTagPushEvent -> {
                 startParams[CI_REF] = originEvent.ref
+                startParams[CI_EVENT] = GitTagPushEvent.classType
                 GitUtils.getProjectName(originEvent.repository.git_http_url)
             }
             is GitMergeRequestEvent -> {
+                startParams[CI_EVENT] = GitMergeRequestEvent.classType
                 startParams[CI_HEAD_BRANCH] = originEvent.object_attributes.target_branch
                 startParams[CI_BASE_BRANCH] = originEvent.object_attributes.source_branch
                 startParams[PIPELINE_WEBHOOK_EVENT_TYPE] = CodeEventType.MERGE_REQUEST.name
@@ -865,52 +867,6 @@ class TriggerBuildService @Autowired constructor(
         }
 
         return result
-    }
-
-    private fun addContext(
-        yaml: ScriptBuildYaml,
-        originEvent: GitEvent,
-        startParams: MutableMap<String, String>,
-        event: GitRequestEvent
-    ) {
-        // 上下文
-        startParams["ci.pipeline_name"] = yaml.name ?: ""
-        startParams["ci.actor"] = event.userId
-        startParams["ci.build_url"] = "https://git-ci.woa.com/" // FIXME
-
-        val gitProjectName = when (originEvent) {
-            is GitPushEvent -> {
-                startParams["ci.ref"] = originEvent.ref
-                GitUtils.getProjectName(originEvent.repository.git_http_url)
-            }
-            is GitTagPushEvent -> {
-                startParams["ci.ref"] = originEvent.ref
-                GitUtils.getProjectName(originEvent.repository.git_http_url)
-            }
-            is GitMergeRequestEvent -> {
-                startParams["ci.head_ref"] = originEvent.object_attributes.target_branch
-                startParams["ci.base_ref"] = originEvent.object_attributes.source_branch
-                GitUtils.getProjectName(originEvent.object_attributes.source.http_url)
-            }
-            else -> {
-                return
-            }
-        }
-
-        startParams["ci.repo"] = gitProjectName
-        val repoName = gitProjectName.split("/")
-        startParams["ci.repo_name"] = if (repoName.size >= 2) {
-            gitProjectName.removePrefix(repoName[0] + "/")
-        } else {
-            gitProjectName
-        }
-        startParams["ci.repo_group"] = repoName[0]
-        startParams["ci.event"] = GitPushEvent.classType
-        startParams["ci.event_content"] = event.event
-
-        startParams["ci.sha"] = event.commitId
-        startParams["ci.sha_short"] = event.commitId.substring(0, 8)
-        startParams["ci.commit_message"] = event.commitMsg.toString()
     }
 
     private fun putVariables2StartParams(

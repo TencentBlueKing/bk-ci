@@ -1,7 +1,10 @@
 parameters:
   - name: username
     type: string
-    default: world
+    values:
+      - aaa
+      - bbb
+      - ccc
 
 variables:
   RES_REPOA_VAR2_USERNAME:

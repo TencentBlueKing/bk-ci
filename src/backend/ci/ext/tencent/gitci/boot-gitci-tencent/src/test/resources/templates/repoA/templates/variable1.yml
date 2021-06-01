@@ -9,7 +9,6 @@ resources:
 parameters:
   - name: username
     type: string
-    default: world
 
 variables:
   RES_REPOA_VAR1_USERNAME:
@@ -17,7 +16,7 @@ variables:
   template:
     - name: variable2.yml
       parameters:
-        username: RES_REPOA_VARIABLES
-    - name: variable1.yml@repoB
-      parameters:
-        username: RES_REPOA_VARIABLES
+        username: aaa
+#    - name: variable1.yml@repoB
+#      parameters:
+#        username: RES_REPOA_VARIABLES
