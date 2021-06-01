@@ -1189,7 +1189,7 @@ class GitCITriggerService @Autowired constructor(
             extensionAction = null,
             gitProjectId = triggerBuildReq.gitProjectId,
             sourceGitProjectId = null,
-            branch = triggerBuildReq.branch.removePrefix("refs/heads/"),
+            branch = getBranchName(triggerBuildReq.branch),
             targetBranch = null,
             commitId = triggerBuildReq.commitId ?: "",
             commitMsg = triggerBuildReq.customCommitMsg,
@@ -1248,6 +1248,16 @@ class GitCITriggerService @Autowired constructor(
 //                else -> gitRequestEvent.branch
 //            }
 //        }
+    }
+
+    private fun getBranchName(ref: String): String {
+        return when {
+            ref.startsWith("refs/heads/") ->
+                ref.removePrefix("refs/heads/")
+            ref.startsWith("refs/tags/") ->
+                ref.removePrefix("refs/tags/")
+            else -> ref
+        }
     }
 
     fun getYaml(gitProjectId: Long, buildId: String): String {

@@ -101,6 +101,7 @@ import com.tencent.devops.gitci.utils.GitCIPipelineUtils
 import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.v2.common.CommonVariables.CI_ACTOR
 import com.tencent.devops.gitci.v2.common.CommonVariables.CI_BASE_BRANCH
+import com.tencent.devops.gitci.v2.common.CommonVariables.CI_BRANCH
 import com.tencent.devops.gitci.v2.common.CommonVariables.CI_BUILD_URL
 import com.tencent.devops.gitci.v2.common.CommonVariables.CI_COMMIT_MESSAGE
 import com.tencent.devops.gitci.v2.common.CommonVariables.CI_EVENT
@@ -784,6 +785,7 @@ class TriggerBuildService @Autowired constructor(
         startParams[CI_BUILD_URL] = v2GitUrl ?: ""
         startParams[BK_CI_RUN] = "true"
         startParams[CI_ACTOR] = event.userId
+        startParams[CI_BRANCH] = event.branch
         startParams[CI_REPO] = GitCommonUtils.getRepoOwner(gitBasicSetting.gitHttpUrl) + "/" + gitBasicSetting.name
         startParams[CI_EVENT_CONTENT] = JsonUtil.toJson(event)
         startParams[CI_COMMIT_MESSAGE] = event.commitMsg ?: ""
@@ -803,11 +805,13 @@ class TriggerBuildService @Autowired constructor(
         val gitProjectName = when (originEvent) {
             is GitPushEvent -> {
                 startParams[CI_REF] = originEvent.ref
+                startParams[CI_BRANCH] = getBranchName(originEvent.ref)
                 startParams[CI_EVENT] = GitPushEvent.classType
                 GitUtils.getProjectName(originEvent.repository.git_http_url)
             }
             is GitTagPushEvent -> {
                 startParams[CI_REF] = originEvent.ref
+                startParams[CI_BRANCH] = getBranchName(originEvent.ref)
                 startParams[CI_EVENT] = GitTagPushEvent.classType
                 GitUtils.getProjectName(originEvent.repository.git_http_url)
             }
@@ -913,5 +917,15 @@ class TriggerBuildService @Autowired constructor(
             buildConf.devCloudToken,
             buildConf.devCloudUrl
         )
+    }
+
+    private fun getBranchName(ref: String): String {
+        return when {
+            ref.startsWith("refs/heads/") ->
+                ref.removePrefix("refs/heads/")
+            ref.startsWith("refs/tags/") ->
+                ref.removePrefix("refs/tags/")
+            else -> ref
+        }
     }
 }
