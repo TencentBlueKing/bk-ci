@@ -136,8 +136,8 @@ class V2RequestTrigger @Autowired constructor(
             gitBasicSettingService.updateGitCISetting(gitRequestEvent.gitProjectId)
         } else if (matchResult.second) {
             // 只有定时任务的保存任务
-            logger.warn("Only schedules matched, only save the pipeline, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
-                "eventId: ${gitRequestEvent.id}")
+            logger.warn("Only schedules matched, only save the pipeline, " +
+                "gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}")
             V2GitCIRequestDispatcher.dispatch(
                 rabbitTemplate,
                 V2GitCIRequestTriggerEvent(
