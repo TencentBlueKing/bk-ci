@@ -124,7 +124,7 @@ class YamlTemplateService @Autowired constructor(
 
     private fun getKey(personalAccessToken: String): Pair<Boolean, String> {
         return if (personalAccessToken.contains("\${{") && personalAccessToken.contains("}}")) {
-            val str = personalAccessToken.split("\${{")[1].split("}}")[0]
+            val str = personalAccessToken.split("\${{")[1].split("}}")[0].trim()
             if (str.startsWith("settings.")) {
                 Pair(true, str.removePrefix("settings."))
             } else {
