@@ -31,6 +31,17 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_MESSAGE
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_CONTENT
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REF
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REF
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_GROUP
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_NAME
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineBuildExtService
@@ -57,8 +68,53 @@ class PipelineBuildExtTencentService @Autowired constructor(
             val turboTaskId = getTurboTask(task.pipelineId, task.taskId)
             extMap[PIPELINE_TURBO_TASK_ID] = turboTaskId
         }
+        val buildVar = pipelineContextService.buildContext(task.buildId, task.containerId, variable).toMutableMap()
 
-        extMap.putAll(pipelineContextService.buildContext(task.buildId, task.containerId, variable))
+        if (buildVar[PIPELINE_GIT_REF].isNullOrBlank()) {
+            buildVar["ci.ref"] = buildVar[PIPELINE_GIT_REF]!!
+            buildVar.remove(PIPELINE_GIT_REF)
+        }
+        if (buildVar[PIPELINE_GIT_HEAD_REF].isNullOrBlank()) {
+            buildVar["ci.head_ref"] = buildVar[PIPELINE_GIT_HEAD_REF]!!
+            buildVar.remove(PIPELINE_GIT_HEAD_REF)
+        }
+        if (buildVar[PIPELINE_GIT_BASE_REF].isNullOrBlank()) {
+            buildVar["ci.base_ref"] = buildVar[PIPELINE_GIT_BASE_REF]!!
+            buildVar.remove(PIPELINE_GIT_BASE_REF)
+        }
+        if (buildVar[PIPELINE_GIT_REPO].isNullOrBlank()) {
+            buildVar["ci.repo"] = buildVar[PIPELINE_GIT_REPO]!!
+            buildVar.remove(PIPELINE_GIT_REPO)
+        }
+        if (buildVar[PIPELINE_GIT_REPO_NAME].isNullOrBlank()) {
+            buildVar["ci.repo_name"] = buildVar[PIPELINE_GIT_REPO_NAME]!!
+            buildVar.remove(PIPELINE_GIT_REPO_NAME)
+        }
+        if (buildVar[PIPELINE_GIT_REPO_GROUP].isNullOrBlank()) {
+            buildVar["ci.repo_group"] = buildVar[PIPELINE_GIT_REPO_GROUP]!!
+            buildVar.remove(PIPELINE_GIT_REPO_GROUP)
+        }
+        if (buildVar[PIPELINE_GIT_EVENT].isNullOrBlank()) {
+            buildVar["ci.event"] = buildVar[PIPELINE_GIT_EVENT]!!
+            buildVar.remove(PIPELINE_GIT_EVENT)
+        }
+        if (buildVar[PIPELINE_GIT_EVENT_CONTENT].isNullOrBlank()) {
+            buildVar["ci.event_content"] = buildVar[PIPELINE_GIT_EVENT_CONTENT]!!
+            buildVar.remove(PIPELINE_GIT_EVENT_CONTENT)
+        }
+        if (buildVar[PIPELINE_GIT_SHA].isNullOrBlank()) {
+            buildVar["ci.sha"] = buildVar[PIPELINE_GIT_SHA]!!
+            buildVar.remove(PIPELINE_GIT_SHA)
+        }
+        if (buildVar[PIPELINE_GIT_SHA_SHORT].isNullOrBlank()) {
+            buildVar["ci.sha_short"] = buildVar[PIPELINE_GIT_SHA_SHORT]!!
+            buildVar.remove(PIPELINE_GIT_SHA_SHORT)
+        }
+        if (buildVar[PIPELINE_GIT_COMMIT_MESSAGE].isNullOrBlank()) {
+            buildVar["ci.commit_message"] = buildVar[PIPELINE_GIT_COMMIT_MESSAGE]!!
+            buildVar.remove(PIPELINE_GIT_COMMIT_MESSAGE)
+        }
+        extMap.putAll(buildVar)
         return extMap
     }
 
