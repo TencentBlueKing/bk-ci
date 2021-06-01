@@ -153,12 +153,12 @@ fun main(args: Array<String>) {
 
             Runner.run(object : WorkspaceInterface {
                 override fun getWorkspace(variables: Map<String, String>, pipelineId: String): File {
-                    val workspace = System.getProperty("devops_workspace")
-
+                    val workspace = System.getProperty("DEVOPS_MACOS_DIR") ?: System.getenv("DEVOPS_MACOS_DIR")
+                    System.out.println("MacOS workspace: $workspace")
                     val dir = if (workspace.isNullOrBlank()) {
-                        File("/Users/bkdevops/Landun/workspace") // v1 内部版用的/data/landun/workspace 保持一致
+                        File("/Volumes/data/workspace") // v1 内部版用的/data/landun/workspace 保持一致
                     } else {
-                        File(workspace)
+                        File(workspace + "/workspace")
                     }
                     dir.mkdirs()
                     return dir
