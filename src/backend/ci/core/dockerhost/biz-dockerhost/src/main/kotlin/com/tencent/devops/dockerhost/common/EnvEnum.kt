@@ -24,9 +24,16 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+
 package com.tencent.devops.dockerhost.common
 
-object Constants {
-    const val DOCKER_EXIST_CODE = 255 // docker容器状态异常退出码
-    const val DISPATCH_DOCKER_PREFIX = "ms/dispatch-docker"
+enum class EnvEnum(
+    val value: String
+) {
+    DEV_ENV("dev"),
+    TEST_ENV("test"),
+    GRAY_ENV("gray"),
+    PROD_ENV("prod"),
+    AUTO_ENV("auto"),
+    GITCI_PROD_ENV("gitci-prod")
 }
