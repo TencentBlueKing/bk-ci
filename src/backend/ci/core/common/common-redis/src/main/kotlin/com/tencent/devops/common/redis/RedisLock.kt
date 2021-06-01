@@ -112,6 +112,7 @@ open class RedisLock(
      * @return
      */
     private fun set(key: String, value: String, seconds: Long): String? {
+        val finalLockKey = getFinalLockKey(key)
         return redisOperation.execute(RedisCallback { connection ->
             val result =
                 when (val nativeConnection = connection.nativeConnection) {
@@ -119,14 +120,14 @@ open class RedisLock(
                         (nativeConnection as RedisAsyncCommands<ByteArray, ByteArray>)
                             .statefulConnection.sync()
                             .set(
-                                key.toByteArray(), value.toByteArray(), SetArgs.Builder.nx().ex(seconds)
+                                finalLockKey.toByteArray(), value.toByteArray(), SetArgs.Builder.nx().ex(seconds)
                             )
                     }
                     is RedisAdvancedClusterAsyncCommands<*, *> -> {
                         (nativeConnection as RedisAdvancedClusterAsyncCommands<ByteArray, ByteArray>)
                             .statefulConnection.sync()
                             .set(
-                                key.toByteArray(), value.toByteArray(), SetArgs.Builder.nx().ex(seconds)
+                                finalLockKey.toByteArray(), value.toByteArray(), SetArgs.Builder.nx().ex(seconds)
                             )
                     }
                     else -> {
@@ -136,6 +137,11 @@ open class RedisLock(
                 }
             result
         })
+    }
+
+    private fun getFinalLockKey(key: String): String {
+        val redisName = redisOperation.getRedisName()
+        return if (!redisName.isNullOrBlank()) "$redisName:$key" else key
     }
 
     /**
@@ -153,8 +159,8 @@ open class RedisLock(
 //            logger.info("Start to unlock the key($lockKey) of value($lockValue)")
             return redisOperation.execute(RedisCallback { connection ->
                 val nativeConnection = connection.nativeConnection
-
-                val keys = arrayOf(lockKey.toByteArray())
+                val finalLockKey = getFinalLockKey(lockKey)
+                val keys = arrayOf(finalLockKey.toByteArray())
                 val result =
                     when (nativeConnection) {
                         is RedisAsyncCommands<*, *> -> {

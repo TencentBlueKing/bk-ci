@@ -78,6 +78,9 @@ public class CCNDefectQueryRspVO extends CommonDefectQueryRspVO
     @ApiModelProperty("已忽略告警数")
     private int ignoreCount;
 
+    @ApiModelProperty("已屏蔽告警数")
+    private int maskCount;
+
     /**
      * 新增告警的个数
      */

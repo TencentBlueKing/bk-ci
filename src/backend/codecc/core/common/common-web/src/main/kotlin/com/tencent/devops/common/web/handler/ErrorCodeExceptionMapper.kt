@@ -27,7 +27,7 @@
 package com.tencent.devops.common.web.handler
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.pojo.CodeCCResult
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
@@ -42,7 +42,7 @@ class ErrorCodeExceptionMapper : ExceptionMapper<ErrorCodeException> {
         val errorMsg = MessageCodeUtil.generateResponseDataObject<String>(exception.errorCode, exception.params)
         return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
                 .entity(
-                        CodeCCResult<Void>(
+                        Result<Void>(
                                 status = status.statusCode,
                                 message = errorMsg.message ?: exception.message
                                 ?: "Unknown Error: ${exception.errorCode}"

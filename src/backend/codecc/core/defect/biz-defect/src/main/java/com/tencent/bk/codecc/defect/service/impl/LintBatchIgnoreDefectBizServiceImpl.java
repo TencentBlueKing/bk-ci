@@ -30,5 +30,7 @@ public class LintBatchIgnoreDefectBizServiceImpl extends AbstractLintBatchDefect
         defectList.forEach(defectEntity -> ((LintDefectV2Entity) defectEntity).setStatus(status));
         defectDao.batchUpdateDefectStatusIgnoreBit(batchDefectProcessReqVO.getTaskId(), defectList, batchDefectProcessReqVO.getIgnoreReasonType(),
                 batchDefectProcessReqVO.getIgnoreReason(), batchDefectProcessReqVO.getIgnoreAuthor());
+
+        refreshOverviewData(batchDefectProcessReqVO.getTaskId());
     }
 }

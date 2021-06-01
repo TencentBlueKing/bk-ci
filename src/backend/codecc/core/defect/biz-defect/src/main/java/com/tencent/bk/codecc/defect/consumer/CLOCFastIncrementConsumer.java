@@ -60,7 +60,7 @@ public class CLOCFastIncrementConsumer extends AbstractFastIncrementConsumer
         {
             baseBuildId = StringUtils.isNotEmpty(toolBuildStackEntity.getBaseBuildId()) ? toolBuildStackEntity.getBaseBuildId() : "";
         }
-        List<CLOCStatisticEntity> lastClocStatisticEntityList = clocStatisticRepository.findByTaskIdAndBuildId(taskId, baseBuildId);
+        List<CLOCStatisticEntity> lastClocStatisticEntityList = clocStatisticRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, baseBuildId);
 
         long currentTime = System.currentTimeMillis();
         lastClocStatisticEntityList.forEach(clocStatisticEntity ->

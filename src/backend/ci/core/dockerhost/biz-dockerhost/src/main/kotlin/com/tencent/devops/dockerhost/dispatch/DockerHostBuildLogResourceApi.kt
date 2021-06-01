@@ -29,7 +29,6 @@ package com.tencent.devops.dockerhost.dispatch
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.dispatch.docker.pojo.FormatLog
 import com.tencent.devops.dispatch.docker.pojo.LogType
 import com.tencent.devops.dockerhost.config.DockerHostConfig
@@ -42,9 +41,8 @@ import java.time.format.DateTimeFormatter
 
 @Service
 class DockerHostBuildLogResourceApi constructor(
-    dockerHostConfig: DockerHostConfig,
-    gray: Gray
-) : AbstractBuildResourceApi(dockerHostConfig, gray) {
+    dockerHostConfig: DockerHostConfig
+) : AbstractBuildResourceApi(dockerHostConfig) {
     private val logger = LoggerFactory.getLogger(DockerHostBuildLogResourceApi::class.java)
 
     fun sendFormatLog(logMap: Map<String, String>) {

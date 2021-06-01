@@ -4,6 +4,9 @@ import com.tencent.bk.codecc.defect.model.incremental.CodeRepoInfoEntity;
 import org.springframework.data.mongodb.repository.MongoRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+import java.util.Set;
+
 /**
  * 代码仓库信息查询
  *
@@ -21,4 +24,13 @@ public interface CodeRepoInfoRepository extends MongoRepository<CodeRepoInfoEnti
      * @return
      */
     CodeRepoInfoEntity findByTaskIdAndBuildId(long taskId, String buildId);
+
+    /**
+     * 按任务ID查询
+     *
+     * @param taskId
+     * @param buildIdSet
+     * @return
+     */
+    List<CodeRepoInfoEntity> findByTaskIdAndBuildIdIn(long taskId, Set<String> buildIdSet);
 }

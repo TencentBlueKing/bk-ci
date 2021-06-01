@@ -12,7 +12,10 @@
  
 package com.tencent.bk.codecc.defect.service;
 
+import com.tencent.bk.codecc.defect.vo.CLOCDefectQueryRspInfoVO;
 import com.tencent.bk.codecc.defect.vo.ToolClocRspVO;
+
+import java.util.Collection;
 
 /**
  * cloc查询代码行数接口
@@ -27,5 +30,22 @@ public interface ICLOCQueryCodeLineService
      * @param taskId
      * @return
      */
-    ToolClocRspVO getCodeLineInfo(Long taskId);
+    ToolClocRspVO getCodeLineInfo(Long taskId, String toolName);
+
+    /**
+     * 按任务ID获取代码行数
+     *
+     * @param taskIds 任务ID集合
+     * @return int
+     */
+    Long queryCodeLineByTaskIds(Collection<Long> taskIds);
+
+    /**
+     * 根据特定task_id和语言查询
+     * @param language
+     * @param taskId
+     * @return
+     */
+    CLOCDefectQueryRspInfoVO generateSpecificLanguage(long taskId, String toolName, String language);
+
 }

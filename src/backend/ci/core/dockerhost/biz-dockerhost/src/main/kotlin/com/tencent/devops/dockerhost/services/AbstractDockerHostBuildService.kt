@@ -28,18 +28,28 @@
 package com.tencent.devops.dockerhost.services
 
 import com.github.dockerjava.api.DockerClient
+import com.github.dockerjava.api.exception.NotFoundException
 import com.github.dockerjava.api.exception.NotModifiedException
+import com.github.dockerjava.api.exception.UnauthorizedException
+import com.github.dockerjava.api.model.PullResponseItem
 import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
+import com.github.dockerjava.core.command.PullImageResultCallback
 import com.github.dockerjava.okhttp.OkDockerHttpClient
 import com.github.dockerjava.transport.DockerHttpClient
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
+import com.tencent.devops.dockerhost.common.ErrorCodeEnum
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
+import com.tencent.devops.dockerhost.exception.ContainerException
+import com.tencent.devops.dockerhost.utils.CommonUtils
+import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import org.slf4j.LoggerFactory
 
 abstract class AbstractDockerHostBuildService constructor(
-    dockerHostConfig: DockerHostConfig,
+    private val dockerHostConfig: DockerHostConfig,
     private val dockerHostBuildApi: DockerHostBuildResourceApi
 ) {
 
@@ -109,6 +119,93 @@ abstract class AbstractDockerHostBuildService constructor(
         }
     }
 
+    fun createPullImage(dockerBuildInfo: DockerHostBuildInfo) {
+        val imageName = CommonUtils.normalizeImageName(dockerBuildInfo.imageName)
+        val taskId = VMUtils.genStartVMTaskId(dockerBuildInfo.vmSeqId.toString())
+        // docker pull
+        if (dockerBuildInfo.imagePublicFlag == true &&
+            dockerBuildInfo.imageRDType.equals(ImageRDTypeEnum.SELF_DEVELOPED.name, ignoreCase = true)) {
+            log(
+                buildId = dockerBuildInfo.buildId,
+                message = "自研公共镜像，不从仓库拉取，直接从本地启动...",
+                tag = taskId,
+                containerHashId = dockerBuildInfo.containerHashId
+            )
+        } else {
+            try {
+                LocalImageCache.saveOrUpdate(imageName)
+                createPullImage(
+                    imageType = dockerBuildInfo.imageType,
+                    imageName = dockerBuildInfo.imageName,
+                    registryUser = dockerBuildInfo.registryUser,
+                    registryPwd = dockerBuildInfo.registryPwd,
+                    buildId = dockerBuildInfo.buildId,
+                    containerId = dockerBuildInfo.vmSeqId.toString(),
+                    containerHashId = dockerBuildInfo.containerHashId
+                )
+            } catch (t: UnauthorizedException) {
+                val errorMessage = "无权限拉取镜像：$imageName，请检查镜像路径或凭证是否正确；" +
+                        "[buildId=${dockerBuildInfo.buildId}][containerHashId=${dockerBuildInfo.containerHashId}]"
+                logger.error(errorMessage, t)
+                // 直接失败，禁止使用本地镜像
+                throw ContainerException(
+                    errorCodeEnum = ErrorCodeEnum.NO_AUTH_PULL_IMAGE_ERROR,
+                    message = errorMessage
+                )
+                // throw NoSuchImageException(errorMessage)
+            } catch (t: NotFoundException) {
+                val errorMessage = "镜像不存在：$imageName，请检查镜像路径或凭证是否正确；" +
+                        "[buildId=${dockerBuildInfo.buildId}][containerHashId=${dockerBuildInfo.containerHashId}]"
+                logger.error(errorMessage, t)
+                // 直接失败，禁止使用本地镜像
+                throw ContainerException(
+                    errorCodeEnum = ErrorCodeEnum.IMAGE_NOT_EXIST_ERROR,
+                    message = errorMessage
+                )
+                // throw NoSuchImageException(errorMessage)
+            } catch (t: Throwable) {
+                logger.warn("Fail to pull the image $imageName of build ${dockerBuildInfo.buildId}", t)
+                log(
+                    buildId = dockerBuildInfo.buildId,
+                    message = "拉取镜像失败，错误信息：${t.message}",
+                    tag = taskId,
+                    containerHashId = dockerBuildInfo.containerHashId
+                )
+                log(
+                    buildId = dockerBuildInfo.buildId,
+                    message = "尝试使用本地镜像启动...",
+                    tag = taskId,
+                    containerHashId = dockerBuildInfo.containerHashId
+                )
+            }
+        }
+    }
+
+    fun createPullImage(
+        imageType: String?,
+        imageName: String,
+        registryUser: String?,
+        registryPwd: String?,
+        buildId: String,
+        containerId: String?,
+        containerHashId: String?
+    ): Result<Boolean> {
+        val authConfig = CommonUtils.getAuthConfig(
+            imageType = imageType,
+            dockerHostConfig = dockerHostConfig,
+            imageName = imageName,
+            registryUser = registryUser,
+            registryPwd = registryPwd
+        )
+        val dockerImageName = CommonUtils.normalizeImageName(imageName)
+        val taskId = if (!containerId.isNullOrBlank()) VMUtils.genStartVMTaskId(containerId!!) else ""
+        log(buildId, "开始拉取镜像，镜像名称：$dockerImageName", taskId, containerHashId)
+        httpLongDockerCli.pullImageCmd(dockerImageName).withAuthConfig(authConfig)
+            .exec(MyPullImageResultCallback(buildId, dockerHostBuildApi, taskId, containerHashId)).awaitCompletion()
+        log(buildId, "拉取镜像成功，准备启动构建环境...", taskId, containerHashId)
+        return Result(true)
+    }
+
     fun log(buildId: String, message: String, tag: String?, containerHashId: String?) {
         return log(buildId, false, message, tag, containerHashId)
     }
@@ -131,6 +228,43 @@ abstract class AbstractDockerHostBuildService constructor(
             )
         } catch (t: Throwable) {
             logger.info("write log to dispatch failed")
+        }
+    }
+
+    inner class MyPullImageResultCallback internal constructor(
+        private val buildId: String,
+        private val dockerHostBuildApi: DockerHostBuildResourceApi,
+        private val startTaskId: String?,
+        private val containerHashId: String?
+    ) : PullImageResultCallback() {
+        private val totalList = mutableListOf<Long>()
+        private val step = mutableMapOf<Int, Long>()
+        override fun onNext(item: PullResponseItem?) {
+            val text = item?.progressDetail
+            if (text?.current != null && text?.total != null && text.total != 0L) {
+                val lays = if (!totalList.contains(text.total!!)) {
+                    totalList.add(text.total!!)
+                    totalList.size + 1
+                } else {
+                    totalList.indexOf(text.total!!) + 1
+                }
+                var currentProgress = text.current!! * 100 / text.total!!
+                if (currentProgress > 100) {
+                    currentProgress = 100
+                }
+
+                if (currentProgress >= step[lays]?.plus(25) ?: 5) {
+                    dockerHostBuildApi.postLog(
+                        buildId = buildId,
+                        red = false,
+                        message = "正在拉取镜像,第${lays}层，进度：$currentProgress%",
+                        tag = startTaskId,
+                        jobId = containerHashId
+                    )
+                    step[lays] = currentProgress
+                }
+            }
+            super.onNext(item)
         }
     }
 }

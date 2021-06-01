@@ -72,7 +72,7 @@ class MessageCodeDetailDao {
             if (null != messageCode && messageCode.isNotBlank()) {
                 conditions.add(MESSAGE_CODE.contains(messageCode))
             }
-            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Long::class.java)
+            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Long::class.java)!!
         }
     }
 

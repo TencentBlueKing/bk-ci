@@ -29,6 +29,8 @@ package com.tencent.devops.worker.common.task.script
 
 import com.tencent.devops.common.api.util.ReplacementUtils
 import com.tencent.devops.store.pojo.app.BuildEnv
+import com.tencent.devops.worker.common.CI_TOKEN_CONTEXT
+import com.tencent.devops.worker.common.WORKSPACE_CONTEXT
 import com.tencent.devops.worker.common.utils.CredentialUtils
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -48,19 +50,26 @@ interface ICommand {
         errorMessage: String? = null
     )
 
-    fun parseTemplate(buildId: String, command: String, data: Map<String, String>): String {
+    fun parseTemplate(buildId: String, command: String, data: Map<String, String>, dir: File): String {
         return ReplacementUtils.replace(command, object : ReplacementUtils.KeyReplacement {
-            override fun getReplacement(key: String): String? = if (data[key] != null) {
+            override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? = if (data[key] != null) {
                 data[key]!!
             } else {
                 try {
                     CredentialUtils.getCredential(buildId, key, false)[0]
                 } catch (ignored: Exception) {
                     logger.warn("环境变量($key)不存在", ignored)
-                    "\${$key}"
+                    if (doubleCurlyBraces) {
+                        "\${{$key}}"
+                    } else {
+                        "\${$key}"
+                    }
                 }
             }
-        })
+        }, mapOf(
+            WORKSPACE_CONTEXT to dir.absolutePath,
+            CI_TOKEN_CONTEXT to (data[CI_TOKEN_CONTEXT] ?: "")
+        ))
     }
 
     companion object {

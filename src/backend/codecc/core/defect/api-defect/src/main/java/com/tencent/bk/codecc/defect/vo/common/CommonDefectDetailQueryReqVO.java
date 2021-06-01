@@ -53,8 +53,10 @@ public class CommonDefectDetailQueryReqVO
     private String entityId;
 
     @ApiModelProperty(value = "工具名", required = true)
-    @NotNull(message = "工具名不能为空")
     private String toolName;
+
+    @ApiModelProperty(value = "工具维度", required = true)
+    private String dimension;
 
     @ApiModelProperty(value = "工具模型", required = true)
     @NotNull(message = "工具模型不能为空")

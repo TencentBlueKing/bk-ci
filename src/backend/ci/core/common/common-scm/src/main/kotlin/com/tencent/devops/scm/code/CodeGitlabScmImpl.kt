@@ -94,7 +94,7 @@ class CodeGitlabScmImpl constructor(
 
     override fun checkTokenAndUsername() {
         try {
-            getBranches()
+            getBranches(full = false)
         } catch (ignored: Throwable) {
             logger.warn("Fail to check the gitlab token", ignored)
             throw ScmException(

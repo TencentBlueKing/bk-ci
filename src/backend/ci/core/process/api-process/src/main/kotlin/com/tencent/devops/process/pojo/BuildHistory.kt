@@ -87,5 +87,7 @@ data class BuildHistory(
     @ApiModelProperty("流水线任务执行错误", required = false)
     var errorInfoList: List<ErrorInfo>?,
     @ApiModelProperty("构建信息", required = false)
-    var buildMsg: String?
+    var buildMsg: String?,
+    @ApiModelProperty("自定义构建版本号", required = false)
+    val buildNumAlias: String? = null
 )

@@ -55,7 +55,7 @@ class AppCodeService(
         .maximumSize(10000)
         .expireAfterWrite(5, TimeUnit.MINUTES)
         .build<String, Map<String, String>>(
-            object : CacheLoader<String,Map<String, String>>() {
+            object : CacheLoader<String, Map<String, String>>() {
                 override fun load(appCode: String): Map<String, String> {
                     return try {
                         val projectMap = getAppCodeProject(appCode)
@@ -104,7 +104,7 @@ class AppCodeService(
 
     private fun getAppCodeGroup(appCode: String): List<OrgDetailEntity> {
         val appCodeOrgEntity = appCodeOrgDao.findByAppCode(appCode)
-        return when{
+        return when {
             null == appCodeOrgEntity -> listOf()
             appCodeOrgEntity.orgList.isNullOrEmpty() -> listOf()
             else -> {
@@ -113,9 +113,10 @@ class AppCodeService(
         }
     }
 
-    fun validAppCode(appCode: String, projectId: String, taskId : String): Boolean {
-        val taskDetailVO = client.get(ServiceTaskRestResource::class.java).getTaskInfoWithoutToolsByTaskId(taskId.toLong()).data
-        if(taskDetailVO == null || taskDetailVO.projectId != projectId){
+    fun validAppCode(appCode: String, projectId: String, taskId: String): Boolean {
+        val taskDetailVO =
+            client.get(ServiceTaskRestResource::class.java).getTaskInfoWithoutToolsByTaskId(taskId.toLong()).data
+        if (taskDetailVO == null || taskDetailVO.projectId != projectId) {
             logger.info("task id[$taskId] has different project id[${taskDetailVO?.projectId ?: ""}] with the input[$projectId]")
             return false
         }

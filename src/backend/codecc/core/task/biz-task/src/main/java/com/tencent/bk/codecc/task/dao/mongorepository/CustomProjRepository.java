@@ -16,6 +16,7 @@ import com.tencent.bk.codecc.task.model.CustomProjEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.repository.MongoRepository;
+import org.springframework.data.mongodb.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -71,4 +72,44 @@ public interface CustomProjRepository extends MongoRepository<CustomProjEntity, 
      * @return
      */
     CustomProjEntity findFirstByTaskId(Long taskId);
+
+    /**
+     * 通过代码库地址查找
+     *
+     * @param id
+     * @param customProjSource
+     * @return
+     */
+    CustomProjEntity findByGongfengProjectIdAndCustomProjSource(Integer id, String customProjSource);
+
+    /**
+     * 通过工蜂ID查找
+     *
+     */
+    CustomProjEntity findByGongfengProjectId(Integer gongfengProjectId);
+
+    /**
+     * 通过工蜂id查找
+     * @param customProjSource
+     * @param ids
+     * @return
+     */
+    @Query(fields = "{'gongfeng_project_id':1}")
+    List<CustomProjEntity> findByCustomProjSourceAndGongfengProjectIdIn(String customProjSource, List<Integer> ids);
+
+    /**
+     * 根据流水线Id查询
+     *
+     * @param pipelineIds
+     * @return
+     */
+    List<CustomProjEntity> findByPipelineIdIn(List<String> pipelineIds);
+
+    /**
+     * 根据任务Id查询
+     *
+     * @param taskIds
+     * @return
+     */
+    List<CustomProjEntity> findByTaskIdIn(List<Long> taskIds);
 }

@@ -27,7 +27,7 @@
 package com.tencent.bk.codecc.schedule.api;
 
 import com.tencent.bk.codecc.schedule.vo.*;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
@@ -54,7 +54,7 @@ public interface BuildFSRestResource
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    CodeCCResult<Boolean> upload(
+    Result<Boolean> upload(
             @NotNull(message = "文件名不能为空")
             @ApiParam(value = "文件名", required = true)
             @FormDataParam("fileName")
@@ -69,6 +69,9 @@ public interface BuildFSRestResource
             @ApiParam(value = "上传类型")
             @FormDataParam("uploadType")
                     String uploadType,
+            @ApiParam(value = "构建id")
+            @FormDataParam("buildId")
+                    String buildId,
             @NotNull(message = "文件内容不能为空")
             @ApiParam(value = "文件", required = true)
             @FormDataParam("file")
@@ -86,7 +89,7 @@ public interface BuildFSRestResource
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    CodeCCResult<Boolean> chunksMerge(
+    Result<Boolean> chunksMerge(
             @ApiParam(value = "分片合并的请求信息", required = true)
                     FileChunksMergeVO fileChunksMergeVO);
 
@@ -96,7 +99,7 @@ public interface BuildFSRestResource
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    CodeCCResult<Long> getFileSize(
+    Result<Long> getFileSize(
             @ApiParam(value = "获取待下载文件大小的请求信息", required = true)
                     GetFileSizeVO getFileSizeVO);
 
@@ -115,7 +118,7 @@ public interface BuildFSRestResource
     @POST
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    CodeCCResult<FileInfoModel> getFileInfo(
+    Result<FileInfoModel> getFileInfo(
             @ApiParam(value = "获取待下载文件信息的请求信息", required = true)
                     GetFileSizeVO getFileSizeVO);
 
@@ -125,7 +128,7 @@ public interface BuildFSRestResource
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    CodeCCResult<FileIndexVO> index(
+    Result<FileIndexVO> index(
             @ApiParam(value = "文件名", required = true)
             @PathParam("fileName")
                     String fileName,
@@ -139,7 +142,7 @@ public interface BuildFSRestResource
     @GET
     @Produces(MediaType.APPLICATION_JSON)
     @Consumes(MediaType.APPLICATION_JSON)
-    CodeCCResult<FileIndexVO> getFileIndex(
+    Result<FileIndexVO> getFileIndex(
             @ApiParam(value = "文件名", required = true)
             @PathParam("fileName")
                     String fileName,

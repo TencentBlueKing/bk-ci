@@ -1462,6 +1462,7 @@ class TemplateFacadeService @Autowired constructor(
                 templateInstanceBaseDao.createTemplateInstanceBase(
                     dslContext = context,
                     baseId = baseId,
+                    templateId = templateId,
                     templateVersion = version.toString(),
                     useTemplateSettingsFlag = useTemplateSettings,
                     projectId = projectId,
