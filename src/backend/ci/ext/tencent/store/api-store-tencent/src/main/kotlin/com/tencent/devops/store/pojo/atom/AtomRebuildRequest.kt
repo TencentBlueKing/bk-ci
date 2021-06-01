@@ -25,26 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.resources.atom
+package com.tencent.devops.store.pojo.atom
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.atom.TxUserAtomReleaseResource
-import com.tencent.devops.store.pojo.atom.AtomRebuildRequest
-import com.tencent.devops.store.service.atom.TxAtomReleaseService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@RestResource
-class TxUserAtomReleaseResourceImpl @Autowired constructor(
-    private val atomReleaseService: TxAtomReleaseService
-) : TxUserAtomReleaseResource {
-
-    override fun rebuild(
-        userId: String,
-        projectId: String,
-        atomId: String,
-        atomRebuildRequest: AtomRebuildRequest
-    ): Result<Boolean> {
-        return atomReleaseService.rebuild(projectId, userId, atomId, atomRebuildRequest)
-    }
-}
+@ApiModel("插件重新构建请求报文体")
+data class AtomRebuildRequest(
+    @ApiModelProperty(value = "插件字段校验确认标识", required = false)
+    val fieldCheckConfirmFlag: Boolean? = false
+)
