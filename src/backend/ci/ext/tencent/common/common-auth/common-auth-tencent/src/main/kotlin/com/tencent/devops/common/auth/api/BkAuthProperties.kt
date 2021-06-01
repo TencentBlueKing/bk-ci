@@ -64,4 +64,6 @@ class BkAuthProperties {
     val wetestSecret: String? = null
     @Value("\${auth.ignore:#{null}}")
     val ignoreService: String? = null
+    @Value("\${auth.apigwUrl:#{null}}")
+    val apigwUrl: String? = null
 }

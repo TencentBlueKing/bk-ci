@@ -161,10 +161,10 @@ object AuthorizationUtils {
             projectId,
             projectName
         )
-        val resourceManagerPath = ManagerPath(iamConfiguration.systemId, resourceType, "*", "")
+//        val resourceManagerPath = ManagerPath(iamConfiguration.systemId, resourceType, "*", "")
         val managerPaths = mutableListOf<ManagerPath>()
         managerPaths.add(projectManagerPath)
-        managerPaths.add(resourceManagerPath)
+//        managerPaths.add(resourceManagerPath)
         val paths = mutableListOf<List<ManagerPath>>()
         paths.add(managerPaths)
         val resource = ManagerResources.builder()

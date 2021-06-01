@@ -58,7 +58,7 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
     val client: Client
 ) : ProjectPermissionService {
 
-    private val authUrl = authProperties.url
+    private val authUrl = authProperties.apigwUrl
 
     // 校验用户是否是项目成员
     override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String): Boolean {
