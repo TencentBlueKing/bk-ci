@@ -25,34 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api
+package com.tencent.devops.process.pojo.setting
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.user.UserPipelineSettingResource
-import com.tencent.devops.process.pojo.setting.PipelineCommonSetting
-import com.tencent.devops.process.pojo.setting.PipelineSetting
-import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@RestResource
-class UserPipelineSettingResourceImpl @Autowired constructor(
-    private val pipelineSettingFacadeService: PipelineSettingFacadeService
-) : UserPipelineSettingResource {
-    override fun saveSetting(userId: String, setting: PipelineSetting): Result<String> {
-        return Result(pipelineSettingFacadeService.saveSetting(userId, setting))
-    }
-
-    override fun getSetting(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        version: Int
-    ): Result<PipelineSetting> {
-        return Result(pipelineSettingFacadeService.userGetSetting(userId, projectId, pipelineId, version = version))
-    }
-
-    override fun getCommonSetting(userId: String): Result<PipelineCommonSetting> {
-        return Result(pipelineSettingFacadeService.getCommonSetting(userId))
-    }
-}
+@ApiModel("流水线job公共配置信息")
+data class JobCommonSetting(
+    @ApiModelProperty("每个job最大task个数", required = true)
+    val maxTaskNum: Int,
+    @ApiModelProperty("task公共配置", required = true)
+    val taskCommonSetting: TaskCommonSetting
+)

@@ -80,6 +80,8 @@ object StoreMessageCode {
     const val USER_ATOM_NOT_COMPATIBLE_INPUT_FIELD = "2120029" // 研发商店：插件当前版本新增了无默认值的必填入参[{0}]，将导致存量流水线执行异常，请修改发布类型进行非兼容式升级
     const val USER_ATOM_COMPATIBLE_INPUT_FIELD_CONFIRM = "2120030" // 研发商店：插件当前版本新增了入参[{0}]，请确认插件执行逻辑对这些参数不存在或值为空的情况做了兼容处理，否则有可能导致存量流水线执行异常
     const val USER_ATOM_COMPATIBLE_OUTPUT_FIELD_CONFIRM = "2120031" // 研发商店：插件当前版本减少了出参[{0}]，请确认插件执行逻辑对这些参数不存在或值为空的情况做了兼容处理，否则有可能导致存量流水线执行异常
+    const val USER_ATOM_INPUT_NUM_IS_TOO_MANY = "2120032" // 研发商店：插件入参数量太多，系统规定的数量最大为：{0}
+    const val USER_ATOM_OUTPUT_NUM_IS_TOO_MANY = "2120033" // 研发商店：插件出参数量太多，系统规定的数量最大为：{0}
 
     // 模板相关的错误提示
     const val USER_TEMPLATE_VERSION_IS_NOT_FINISH = "2120201" // 研发商店：模板{0}的{1}版本发布未结束，请稍后再试

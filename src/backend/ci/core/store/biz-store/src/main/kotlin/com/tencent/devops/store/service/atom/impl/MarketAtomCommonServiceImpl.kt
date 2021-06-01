@@ -74,6 +74,7 @@ import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.util.StringUtils
 import javax.ws.rs.core.Response
@@ -105,6 +106,12 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
 
     @Autowired
     private lateinit var storeCommonService: StoreCommonService
+
+    @Value("\${pipeline.setting.common.stage.job.task.maxInputNum:100}")
+    private val maxInputNum: Int = 100
+
+    @Value("\${pipeline.setting.common.stage.job.task.maxOutputNum:100}")
+    private val maxOutputNum: Int = 100
 
     private val logger = LoggerFactory.getLogger(MarketAtomCommonServiceImpl::class.java)
 
@@ -354,6 +361,22 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             throw ErrorCodeException(
                 errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
                 params = arrayOf(KEY_EXECUTION)
+            )
+        }
+
+        // 校验参数输入参数和输出参数是否超过最大值
+        val inputDataMap = taskDataMap[KEY_INPUT] as? Map<String, Any>
+        if (inputDataMap != null && inputDataMap.size > maxInputNum) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_ATOM_INPUT_NUM_IS_TOO_MANY,
+                params = arrayOf(maxInputNum.toString())
+            )
+        }
+        val outputDataMap = taskDataMap[KEY_OUTPUT] as? Map<String, Any>
+        if (outputDataMap != null && outputDataMap.size > maxOutputNum) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_ATOM_OUTPUT_NUM_IS_TOO_MANY,
+                params = arrayOf(maxOutputNum.toString())
             )
         }
 

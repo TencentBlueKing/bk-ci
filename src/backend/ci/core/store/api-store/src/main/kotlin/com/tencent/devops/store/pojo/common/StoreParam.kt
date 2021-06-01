@@ -25,34 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api
+package com.tencent.devops.store.pojo.common
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.user.UserPipelineSettingResource
-import com.tencent.devops.process.pojo.setting.PipelineCommonSetting
-import com.tencent.devops.process.pojo.setting.PipelineSetting
-import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@RestResource
-class UserPipelineSettingResourceImpl @Autowired constructor(
-    private val pipelineSettingFacadeService: PipelineSettingFacadeService
-) : UserPipelineSettingResource {
-    override fun saveSetting(userId: String, setting: PipelineSetting): Result<String> {
-        return Result(pipelineSettingFacadeService.saveSetting(userId, setting))
-    }
-
-    override fun getSetting(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        version: Int
-    ): Result<PipelineSetting> {
-        return Result(pipelineSettingFacadeService.userGetSetting(userId, projectId, pipelineId, version = version))
-    }
-
-    override fun getCommonSetting(userId: String): Result<PipelineCommonSetting> {
-        return Result(pipelineSettingFacadeService.getCommonSetting(userId))
-    }
-}
+@ApiModel("组件参数信息")
+data class StoreParam(
+    @ApiModelProperty("组件代码", required = true)
+    var storeCode: String,
+    @ApiModelProperty("组件名称", required = true)
+    var storeName: String,
+    @ApiModelProperty("版本号", required = true)
+    var version: String,
+    @ApiModelProperty("输入参数", required = false)
+    var inputParam: Map<String, Any?>?
+)
