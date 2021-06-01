@@ -110,6 +110,7 @@ install_ci__ms_common (){
 
 install_ci_dockerhost (){
   local proj=$1
+  os_pkg_install sysstat || return $?
   install_docker || return $?
   install_ci__ms_common "$proj" || return $?
   # 安装libsigar.
