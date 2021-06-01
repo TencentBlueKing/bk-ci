@@ -181,7 +181,7 @@ class ImageFeatureDao {
                 .on(tImageFeature.IMAGE_CODE.eq(tImage.IMAGE_CODE))
                 .join(tStoreProjectRel).on(tImageFeature.IMAGE_CODE.eq(tStoreProjectRel.STORE_CODE))
                 .where(conditions)
-        return baseQuery.fetchOne().get(0, Int::class.java)
+        return baseQuery.fetchOne()!!.get(0, Int::class.java)
     }
 
     fun countByCode(dslContext: DSLContext, imageCode: String): Int {
@@ -190,7 +190,7 @@ class ImageFeatureDao {
             val baseQuery =
                 dslContext.select(DSL.countDistinct(IMAGE_CODE)).from(this)
                     .where(IMAGE_CODE.eq(imageCode))
-            return baseQuery.fetchOne().get(0, Int::class.java)
+            return baseQuery.fetchOne()!!.get(0, Int::class.java)
         }
     }
 }

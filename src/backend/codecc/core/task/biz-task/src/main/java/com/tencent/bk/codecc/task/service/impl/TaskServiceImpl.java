@@ -1183,7 +1183,11 @@ public class TaskServiceImpl implements TaskService {
     @Override
     @OperationHistory(funcId = FUNC_TASK_SWITCH, operType = ENABLE_ACTION)
     public Boolean startTask(Long taskId, String userName) {
-        return doStartTask(taskId, userName, true);
+        if (authExPermissionApi.isAdminMember(userName)) {
+            return doStartTask(taskId, userName, false);
+        } else {
+            return doStartTask(taskId, userName, true);
+        }
     }
 
 
@@ -1273,7 +1277,12 @@ public class TaskServiceImpl implements TaskService {
             log.error("taskInfo not exists! task id is: {}", taskId);
             throw new CodeCCException(CommonMessageCode.RECORD_NOT_EXITS, new String[]{String.valueOf(taskId)}, null);
         }
-        return doStopTask(taskEntity, disabledReason, userName, true);
+
+        if (authExPermissionApi.isAdminMember(userName)) {
+            return doStopTask(taskEntity, disabledReason, userName, false);
+        } else {
+            return doStopTask(taskEntity, disabledReason, userName, true);
+        }
     }
 
     /**

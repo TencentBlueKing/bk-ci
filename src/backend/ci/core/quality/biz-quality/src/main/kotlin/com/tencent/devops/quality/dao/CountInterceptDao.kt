@@ -80,7 +80,7 @@ class CountInterceptDao {
                 now
             )
                 .returning(ID)
-                .fetchOne()
+                .fetchOne()!!
             return record.id
         }
     }

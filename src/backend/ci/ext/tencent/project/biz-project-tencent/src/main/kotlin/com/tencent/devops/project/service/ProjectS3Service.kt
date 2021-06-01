@@ -42,7 +42,8 @@ import org.springframework.stereotype.Service
 class ProjectS3Service @Autowired constructor(
     private val projectDao: ProjectDao,
     private val dslContext: DSLContext,
-    private val projectService: ProjectService
+    private val projectService: ProjectService,
+    val projectTagService: ProjectTagService
 ) {
 
     companion object {
@@ -50,7 +51,7 @@ class ProjectS3Service @Autowired constructor(
     }
 
     fun createCodeCCScanProject(userId: String, projectCreateInfo: ProjectCreateInfo): ProjectVO {
-        logger.info("start to create public scan project!")
+        logger.info("start to create public scan project $projectCreateInfo!")
         var publicScanProject = projectDao.getByEnglishName(dslContext, projectCreateInfo.englishName)
         if (null != publicScanProject) {
             return packagingBean(publicScanProject, setOf())
@@ -69,6 +70,9 @@ class ProjectS3Service @Autowired constructor(
                 projectId = projectCreateInfo.englishName,
                 channel = ProjectChannelCode.CODECC
             )
+
+            // codecc任务自动将流量指向auto集群
+            projectTagService.updateTagByProject(projectCreateInfo.englishName, null)
         } catch (e: Throwable) {
             logger.error("Create project failed,", e)
             throw e

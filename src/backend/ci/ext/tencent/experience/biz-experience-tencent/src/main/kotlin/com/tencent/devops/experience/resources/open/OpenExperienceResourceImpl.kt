@@ -12,8 +12,13 @@ import org.springframework.beans.factory.annotation.Autowired
 class OpenExperienceResourceImpl @Autowired constructor(
     private val experienceOuterService: ExperienceOuterService
 ) : OpenExperienceResource {
-    override fun outerLogin(realIp: String, params: OuterLoginParam): Result<String> {
-        return Result(experienceOuterService.outerLogin(realIp, params))
+    override fun outerLogin(
+        platform: Int,
+        appVersion: String?,
+        realIp: String,
+        params: OuterLoginParam
+    ): Result<String> {
+        return Result(experienceOuterService.outerLogin(platform, appVersion, realIp, params))
     }
 
     override fun outerAuth(token: String): Result<OuterProfileVO> {

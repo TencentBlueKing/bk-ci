@@ -47,7 +47,7 @@ class ProjectDao {
             if (!projectIdList.isNullOrEmpty()) {
                 baseStep.where(ENGLISH_NAME.`in`(projectIdList))
             }
-            return baseStep.fetchOne(0, Long::class.java)
+            return baseStep.fetchOne(0, Long::class.java)!!
         }
     }
 
@@ -60,7 +60,7 @@ class ProjectDao {
             if (!projectIdList.isNullOrEmpty()) {
                 baseStep.where(ENGLISH_NAME.`in`(projectIdList))
             }
-            return baseStep.fetchOne(0, Long::class.java)
+            return baseStep.fetchOne(0, Long::class.java)!!
         }
     }
 

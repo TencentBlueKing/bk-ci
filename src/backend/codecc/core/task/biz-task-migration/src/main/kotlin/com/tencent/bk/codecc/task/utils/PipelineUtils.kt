@@ -2,6 +2,7 @@ package com.tencent.bk.codecc.task.utils
 
 import com.tencent.bk.codecc.task.model.TaskInfoEntity
 import com.tencent.bk.codecc.task.vo.BatchRegisterVO
+import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.exception.CodeCCException
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.constant.ComConstants
@@ -12,7 +13,9 @@ import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.CodePullStrategy
+import com.tencent.devops.common.pipeline.enums.GitPullModeType
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
+import com.tencent.devops.common.pipeline.enums.SvnDepth
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.option.JobControlOption
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -23,26 +26,63 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.GithubElement
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxCodeCCScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
+import com.tencent.devops.common.pipeline.pojo.git.GitPullMode
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import net.sf.json.JSONArray
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 
-object PipelineUtils {
+@Component
+class PipelineUtils {
 
     private val logger = LoggerFactory.getLogger(PipelineUtils::class.java)
 
-    const val CODECC_ATOM_CODE = "CodeccCheckAtomDebug"
-    const val GIT_ATOM_CODE = "gitCodeRepo"
-    const val GITLAB_ATOM_CODE = "GitLab"
-    const val GITHUB_ATOM_CODE = "PullFromGithub"
-    const val SVN_ATOM_CODE = "svnCodeRepo"
-    const val GIT_SCM_TYPE = "CODE_GIT"
-    const val GITLAB_SCM_TYPE = "CODE_GITLAB"
-    const val GITHUB_SCM_TYPE = "GITHUB"
-    const val SVN_SCM_TYPE = "CODE_SVN"
-    const val GIT_URL_TYPE = "GIT_URL_TYPE"
+    @Value("\${pipeline.atomCode.codecc:CodeccCheckAtomDebug}")
+    public lateinit var CODECC_ATOM_CODE: String
+    @Value("\${pipeline.atomCode.codeccVersion:4.*}")
+    public lateinit var CODECC_ATOM_VERSION: String
+
+    @Value("\${pipeline.atomCode.git:gitCodeRepo}")
+    public lateinit var GIT_ATOM_CODE: String
+    @Value("\${pipeline.atomCode.gitVersion:4.*}")
+    public lateinit var GIT_ATOM_CODE_VERSION: String
+    @Value("\${pipeline.atomCode.gitlab:GitLab}")
+    public lateinit var GITLAB_ATOM_CODE: String
+    @Value("\${pipeline.atomCode.github:PullFromGithub}")
+    public lateinit var GITHUB_ATOM_CODE: String
+    @Value("\${pipeline.atomCode.githubVersion:4.*}")
+    public lateinit var GITHUB_ATOM_CODE_VERSION: String
+    @Value("\${pipeline.atomCode.svn:svnCodeRepo}")
+    public lateinit var SVN_ATOM_CODE: String
+    @Value("\${pipeline.atomCode.svnVersion:4.*}")
+    public lateinit var SVN_ATOM_CODE_VERSION: String
+    @Value("\${pipeline.scmType.git:CODE_GIT}")
+    public lateinit var GIT_SCM_TYPE: String
+    @Value("\${pipeline.scmType.gitlab:CODE_GITLAB}")
+    public lateinit var GITLAB_SCM_TYPE: String
+    @Value("\${pipeline.scmType.github:GITHUB}")
+    public lateinit var GITHUB_SCM_TYPE: String
+    @Value("\${pipeline.scmType.svn:CODE_SVN}")
+    public lateinit var SVN_SCM_TYPE: String
+    @Value("\${pipeline.scmType.gitUrl:GIT_URL_TYPE}")
+    public lateinit var GIT_URL_TYPE: String
+
+    @Value("\${pipeline.atomCode.gitCommon:gitCodeRepoCommon}")
+    public lateinit var GIT_COMMON_ATOM_CODE: String
+    @Value("\${pipeline.atomCode.gitCommonVersion:2 .*}")
+    public lateinit var GIT_COMMON_ATOM_CODE_VERSION: String
+
+    @Value("\${pipeline.scmType.github.old:false}")
+    public var GITHUB_SCM_TYPE_OLD: Boolean = false
+
+    @Value("\${pipeline.scmType.svn.old:false}")
+    public var SVN_SCM_TYPE_OLD: Boolean = false
+
+    @Value("\${pipeline.imageType:BKSTORE}")
+    public var PIPELINE_IMAGE_TYPE: ImageType = ImageType.BKSTORE
 
     /**
      * 创建流水线
@@ -102,7 +142,7 @@ object PipelineUtils {
             id = null,
             status = null,
             atomCode = CODECC_ATOM_CODE,
-            version = "4.*",
+            version = CODECC_ATOM_VERSION,
             data = mapOf("input" to mapOf<String, String>())
         )
 
@@ -165,7 +205,7 @@ object PipelineUtils {
                 id = null,
                 status = null,
                 atomCode = GIT_ATOM_CODE,
-                version = "4.*",
+                version = GIT_ATOM_CODE_VERSION,
                 data = mapOf("input" to mapOf(
                     "repositoryType" to "ID",
                     "repositoryHashId" to codeElementData.repoHashId,
@@ -190,47 +230,77 @@ object PipelineUtils {
                     "autoCrlf" to "false",
                     "scmType" to GIT_SCM_TYPE
                 )))
-            SVN_SCM_TYPE -> MarketBuildAtomElement(
-                name = "下载代码",
-                id = null,
-                status = null,
-                atomCode = SVN_ATOM_CODE,
-                version = "4.*",
-                data = mapOf("input" to mapOf(
-                    "repositoryType" to "ID",
-                    "repositoryHashId" to codeElementData.repoHashId,
-                    "repositoryName" to "",
-                    "svnPath" to "",
-                    "codePath" to (codeElementData.relPath ?: ""),
-                    "strategy" to CodePullStrategy.FRESH_CHECKOUT,
-                    "svnDepth" to "infinity",
-                    "enableSubmodule" to true,
-                    "specifyRevision" to false,
-                    "reversion" to ""
-                )))
-            GITHUB_SCM_TYPE -> MarketBuildAtomElement(
-                name = "下载代码",
-                id = null,
-                status = null,
-                atomCode = GITHUB_ATOM_CODE,
-                version = "4.*",
-                data = mapOf("input" to mapOf(
-                    "repositoryType" to "ID",
-                    "repositoryHashId" to codeElementData.repoHashId,
-                    "aliasName" to "",
-                    "pullType" to "BRANCH",
-                    "branchName" to codeElementData.branch,
-                    "tagName" to "",
-                    "commitId" to "",
-                    "localPath" to (codeElementData.relPath ?: ""),
-                    "strategy" to CodePullStrategy.FRESH_CHECKOUT,
-                    "enableSubmodule" to true,
-                    "enableVirtualMergeBranch" to false
-                )))
+            SVN_SCM_TYPE -> if (SVN_SCM_TYPE_OLD) {
+                CodeSvnElement(
+                    name = "下载代码",
+                    id = null,
+                    status = null,
+                    repositoryHashId = codeElementData.repoHashId,
+                    svnPath = "",
+                    path = codeElementData.relPath ?: "",
+                    strategy = CodePullStrategy.FRESH_CHECKOUT,
+                    svnDepth = SvnDepth.infinity,
+                    enableSubmodule = false,
+                    specifyRevision = false,
+                    revision = ""
+                )
+            } else {
+                MarketBuildAtomElement(
+                    name = "下载代码",
+                    id = null,
+                    status = null,
+                    atomCode = SVN_ATOM_CODE,
+                    version = SVN_ATOM_CODE_VERSION,
+                    data = mapOf("input" to mapOf(
+                        "repositoryType" to "ID",
+                        "repositoryHashId" to codeElementData.repoHashId,
+                        "repositoryName" to "",
+                        "svnPath" to "",
+                        "codePath" to (codeElementData.relPath ?: ""),
+                        "strategy" to CodePullStrategy.FRESH_CHECKOUT,
+                        "svnDepth" to "infinity",
+                        "enableSubmodule" to true,
+                        "specifyRevision" to false,
+                        "reversion" to ""
+                    )))
+            }
+            GITHUB_SCM_TYPE -> if (GITHUB_SCM_TYPE_OLD) {
+                GithubElement(
+                    name = "下载代码",
+                    id = null,
+                    status = null,
+                    repositoryType = RepositoryType.ID,
+                    repositoryHashId = codeElementData.repoHashId,
+                    gitPullMode = GitPullMode(GitPullModeType.BRANCH, codeElementData.branch),
+                    path = codeElementData.relPath ?: ",",
+                    enableSubmodule = true,
+                    enableVirtualMergeBranch = false
+                )
+            } else {
+                MarketBuildAtomElement(
+                    name = "下载代码",
+                    id = null,
+                    status = null,
+                    atomCode = GITHUB_ATOM_CODE,
+                    version = GITHUB_ATOM_CODE_VERSION,
+                    data = mapOf("input" to mapOf(
+                        "repositoryType" to "ID",
+                        "repositoryHashId" to codeElementData.repoHashId,
+                        "aliasName" to "",
+                        "pullType" to "BRANCH",
+                        "branchName" to codeElementData.branch,
+                        "tagName" to "",
+                        "commitId" to "",
+                        "localPath" to (codeElementData.relPath ?: ""),
+                        "strategy" to CodePullStrategy.FRESH_CHECKOUT,
+                        "enableSubmodule" to true,
+                        "enableVirtualMergeBranch" to false
+                    )))
+            }
             GIT_URL_TYPE -> MarketBuildAtomElement(
                 name = "拉取代码",
-                atomCode = "gitCodeRepoCommon",
-                version = "2.*",
+                atomCode = GIT_COMMON_ATOM_CODE,
+                version = GIT_COMMON_ATOM_CODE_VERSION,
                 data = mapOf(
                     "input" to
                             mapOf(
@@ -257,20 +327,22 @@ object PipelineUtils {
                 )
 
             )
-            else -> CodeGitlabElement(
-                name = "下载代码",
-                id = null,
-                status = null,
-                repositoryHashId = codeElementData.repoHashId,
-                branchName = if (codeElementData.branch.isBlank()) "" else codeElementData.branch,
-                revision = null,
-                strategy = CodePullStrategy.FRESH_CHECKOUT,
-                path = codeElementData.relPath,
-                enableSubmodule = null,
-                gitPullMode = null,
-                repositoryType = null,
-                repositoryName = null
-            )
+            else -> {
+                CodeGitlabElement(
+                    name = "下载代码",
+                    id = null,
+                    status = null,
+                    repositoryHashId = codeElementData.repoHashId,
+                    branchName = if (codeElementData.branch.isBlank()) "" else codeElementData.branch,
+                    revision = null,
+                    strategy = CodePullStrategy.FRESH_CHECKOUT,
+                    path = codeElementData.relPath,
+                    enableSubmodule = null,
+                    gitPullMode = null,
+                    repositoryType = null,
+                    repositoryName = null
+                )
+            }
         }
     }
 
@@ -339,18 +411,18 @@ object PipelineUtils {
         }
     }
 
-    fun getDispatchType(buildType: String, imageName: String, imageVersion: String, imageCode: String, dockerBuildVersion: String): DispatchType {
+    fun getDispatchType(buildType: String, imageName: String, imageVersion: String): DispatchType {
         return when (buildType) {
             "DEVCLOUD" ->
             {
-                getDevCloudDispatchType(imageName, imageCode, imageVersion)!!
+                getDevCloudDispatchType(imageName, imageName, imageVersion)!!
             }
             else ->
             {
                 DockerDispatchType(
-                    imageType = ImageType.BKSTORE,
-                    dockerBuildVersion = dockerBuildVersion,
-                    imageCode = imageCode,
+                    imageType = PIPELINE_IMAGE_TYPE,
+                    dockerBuildVersion = imageName,
+                    imageCode = imageName,
                     imageVersion = imageVersion,
                     imageName = imageName
                 )
@@ -414,18 +486,20 @@ object PipelineUtils {
             id = null,
             status = null,
             atomCode = CODECC_ATOM_CODE,
-            version = "4.*",
+            version = CODECC_ATOM_VERSION,
             data = mapOf("input" to mapOf<String, String>())
         )
     }
 
-    data class CodeElementData(
-        val scmType: String?,
-        val url: String? = null,
-        val branch: String,
-        val repoHashId: String,
-        val relPath: String?,
-        val userName: String? = null,
-        val passWord: String? = null
-    )
+    companion object {
+        data class CodeElementData(
+            val scmType: String?,
+            val url: String? = null,
+            val branch: String,
+            val repoHashId: String,
+            val relPath: String?,
+            val userName: String? = null,
+            val passWord: String? = null
+        )
+    }
 }

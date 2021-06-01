@@ -14,6 +14,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -22,6 +23,9 @@ class GongfengTriggerOldServiceImpl @Autowired constructor(
     private val enumValueByBaseDataComponent: EnumValueByBaseDataComponent,
     private val taskRepository: TaskRepository
 ) : GongfengTriggerOldService {
+
+    @Value("\${codecc.public.url}")
+    private val codeccGateWay: String? = null
 
     companion object {
         private val logger = LoggerFactory.getLogger(GongfengTriggerServiceImpl::class.java)
@@ -70,7 +74,7 @@ class GongfengTriggerOldServiceImpl @Autowired constructor(
                     else
                         emptyList()
                 TriggerPipelineOldRsp(
-                    displayAddress = "http://v2.codecc.oa.com/codecc/$projectId/task/$taskId/detail",
+                    displayAddress = "$codeccGateWay/codecc/$projectId/task/$taskId/detail",
                     buildId = buildResult.data!!.id,
                     taskId = taskId,
                     toolList = toolList
@@ -96,7 +100,7 @@ class GongfengTriggerOldServiceImpl @Autowired constructor(
                     else
                         emptyList()
                 TriggerPipelineOldRsp(
-                    displayAddress = "http://v2.codecc.oa.com/codecc/$projectId/task/$taskId/detail",
+                    displayAddress = "$codeccGateWay/codecc/$projectId/task/$taskId/detail",
                     buildId = buildResult.data!!.id,
                     taskId = taskId,
                     toolList = toolList

@@ -90,7 +90,7 @@ class MarketIdeAtomVersionLogDao {
         with(TIdeAtomVersionLog.T_IDE_ATOM_VERSION_LOG) {
             return dslContext.selectFrom(this)
                 .where(ATOM_ID.eq(atomId))
-                .fetchOne()
+                .fetchOne()!!
         }
     }
 }

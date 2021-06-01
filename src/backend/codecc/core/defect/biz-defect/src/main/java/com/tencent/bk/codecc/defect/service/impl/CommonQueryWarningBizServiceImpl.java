@@ -673,7 +673,7 @@ public class CommonQueryWarningBizServiceImpl extends AbstractQueryWarningBizSer
                 String projectId = taskDefectVO.getProjectId();
                 long taskId = taskDetailVO.getTaskId();
                 taskDefectVO.setRepoUrl(
-                        String.format("http://v2.codecc.oa.com/codecc/%s/task/%s/detail", projectId, taskId));
+                        String.format("%s/codecc/%s/task/%s/detail", codeccGateWay, projectId, taskId));
                 setAnalyzeDateStatus(taskId, taskLogVoMap, taskDefectVO);
 
                 CommonChartAuthorVO newAddCount = new CommonChartAuthorVO();

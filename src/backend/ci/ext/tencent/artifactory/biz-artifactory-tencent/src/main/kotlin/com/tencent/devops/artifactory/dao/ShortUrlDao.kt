@@ -52,7 +52,7 @@ class ShortUrlDao {
                 expireTime,
                 createdUser,
                 LocalDateTime.now()
-            ).returning(ID).fetchOne()
+            ).returning(ID).fetchOne()!!
             return record.id
         }
     }

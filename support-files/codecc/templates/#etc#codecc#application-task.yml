@@ -23,11 +23,21 @@ devops:
     interval: 1000
   dispatch:
     imageName: __BK_CODECC_DISPATCH_IMAGE_NAME__
-    buildType: DOCKER
-    imageCode: __BK_CODECC_DISPATCH_IMAGE_NAME__
+    buildType: __BK_CODECC_DISPATCH_BUILD_TYPE__
     imageVersion: __BK_CODECC_DISPATCH_IMAGE_VERSION__
-    dockerBuildVersion: __BK_CODECC_DISPATCH_IMAGE_NAME__
 
 aes:
   encryptor:
     password: __BK_CODECC_ENCRYPTOR_KEY__
+
+pipeline:
+  atomCode:
+    codecc: __BK_CODECC_ATOM_CODE__
+    codeccVersion: __BK_CODECC_ATOM_CODE_VERSION__
+    git: __
+  imageType: __BK_CODECC_PIPELINE_IMAGE_TYPE__
+  scmType:
+    svn:
+      old: __SVN_SCM_TYPE_OLD__
+    github:
+      old: __GITHUB_SCM_TYPE_OLD__

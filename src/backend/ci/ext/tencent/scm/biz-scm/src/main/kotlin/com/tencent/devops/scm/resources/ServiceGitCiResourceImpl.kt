@@ -29,14 +29,21 @@ package com.tencent.devops.scm.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.repository.pojo.git.GitMember
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.api.ServiceGitCiResource
+import com.tencent.devops.scm.pojo.GitCIProjectInfo
+import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
+import com.tencent.devops.scm.pojo.GitCodeBranchesSort
+import com.tencent.devops.scm.pojo.GitCodeProjectInfo
+import com.tencent.devops.scm.services.GitCiService
 import com.tencent.devops.scm.services.GitService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceGitCiResourceImpl @Autowired constructor(
-    private val gitService: GitService
+    private val gitService: GitService,
+    private val gitCiService: GitCiService
 ) : ServiceGitCiResource {
 
     override fun getToken(gitProjectId: String): Result<GitToken> {
@@ -49,5 +56,70 @@ class ServiceGitCiResourceImpl @Autowired constructor(
 
     override fun clearToken(token: String): Result<Boolean> {
         return Result(gitService.clearToken(token))
+    }
+
+    override fun getMembers(
+        token: String,
+        gitProjectId: String,
+        page: Int,
+        pageSize:
+        Int,
+        search: String?
+    ): Result<List<GitMember>> {
+        return Result(gitCiService.getGitCIMembers(token, gitProjectId, page, pageSize, search))
+    }
+
+    override fun getBranches(
+        token: String,
+        gitProjectId: String,
+        page: Int,
+        pageSize: Int,
+        search: String?,
+        orderBy: GitCodeBranchesOrder?,
+        sort: GitCodeBranchesSort?
+    ): Result<List<String>> {
+        return Result(gitCiService.getBranch(token, gitProjectId, page, pageSize, search, orderBy, sort))
+    }
+
+    override fun getGitUserId(rtxUserId: String, gitProjectId: String): Result<String?> {
+        return Result(gitService.getGitCIUserId(rtxUserId, gitProjectId))
+    }
+
+    override fun getGitCIFileContent(
+        gitProjectId: Long,
+        filePath: String,
+        token: String,
+        ref: String,
+        useAccessToken: Boolean
+    ): Result<String> {
+        return Result(gitCiService.getGitCIFileContent(
+            gitProjectId = gitProjectId,
+            filePath = filePath,
+            token = token,
+            ref = ref,
+            useAccessToken = useAccessToken
+        ))
+    }
+
+    override fun getProjectInfo(
+        accessToken: String,
+        gitProjectId: String,
+        useAccessToken: Boolean
+    ): Result<GitCIProjectInfo?> {
+        return gitCiService.getGitCIProjectInfo(
+            gitProjectId = gitProjectId,
+            token = accessToken,
+            useAccessToken = useAccessToken
+        )
+    }
+
+    override fun getGitCodeProjectInfo(
+        gitProjectId: String
+    ): Result<GitCodeProjectInfo?> {
+        return gitCiService.getGitCodeProjectInfo(
+            gitProjectId = gitProjectId,
+            token = gitService.getToken(gitProjectId).accessToken,
+            useAccessToken = true
+        )
     }
 }

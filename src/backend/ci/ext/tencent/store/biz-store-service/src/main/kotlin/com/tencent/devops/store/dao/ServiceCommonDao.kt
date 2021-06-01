@@ -89,7 +89,7 @@ class ServiceCommonDao : AbstractStoreCommonDao() {
         val tesei = TExtensionServiceEnvInfo.T_EXTENSION_SERVICE_ENV_INFO.`as`("tesei")
         val language = dslContext.select(tesei.LANGUAGE).from(tes).join(tesei).on(tes.ID.eq(tesei.SERVICE_ID))
             .where(tes.SERVICE_CODE.eq(storeCode).and(tes.LATEST_FLAG.eq(true)))
-            .fetchOne(0, String()::class.java)
+            .fetchOne(0, String()::class.java)!!
         return arrayListOf(language, JS)
     }
 
@@ -113,7 +113,7 @@ class ServiceCommonDao : AbstractStoreCommonDao() {
         return if (serviceRecord != null) {
             val publicFlag = dslContext.select(tesf.PUBLIC_FLAG).from(tesf)
                 .where(tesf.SERVICE_CODE.eq(storeCode))
-                .fetchOne(0, Boolean::class.java)
+                .fetchOne(0, Boolean::class.java)!!
             StoreBaseInfo(
                 storeId = serviceRecord.id,
                 storeCode = serviceRecord.serviceCode,
