@@ -538,6 +538,7 @@ class PipelineRepositoryService constructor(
                 canElementSkip = canElementSkip,
                 taskCount = taskCount
             )
+            model.latestVersion = 1
             pipelineResDao.create(
                 dslContext = transactionContext,
                 pipelineId = pipelineId,
@@ -660,6 +661,7 @@ class PipelineRepositoryService constructor(
                 // 传过来的latestVersion已经不是最新
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_IS_NOT_THE_LATEST)
             }
+            model.latestVersion = version
             pipelineResDao.create(
                 dslContext = transactionContext,
                 pipelineId = pipelineId,
