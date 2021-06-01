@@ -66,13 +66,15 @@ class V2GitCIBuildQueueListener @Autowired constructor(
         ))]
     )
     fun listenPipelineBuildQueueBroadCastEvent(buildQueueEvent: PipelineBuildQueueBroadCastEvent) {
+        logger.info("listenPipelineBuildQueueBroadCastEvent: event: $buildQueueEvent")
+
         val projectId = buildQueueEvent.projectId
         if (!projectId.startsWith("git_")) {
             return
         }
-        val records = gitRequestEventBuildDao.getEventsByPipelineId(
+        val records = gitRequestEventBuildDao.getLastEventByPipelineId(
             dslContext = dslContext,
-            gitProjectId = projectId.split("git_")[1].toLong(),
+            gitProjectId = projectId.removePrefix("git_").toLong(),
             pipelineId = buildQueueEvent.pipelineId
         )
         if (records.isNullOrEmpty()) {
@@ -80,7 +82,7 @@ class V2GitCIBuildQueueListener @Autowired constructor(
             return
         }
         // 有定时任务过来时，复制当前流水线在工蜂CI的最后一条记录，部分数据做替换生成新的记录
-        with(records.last()) {
+        with(records.first()) {
             gitRequestEventBuildDao.saveWhole(
                 dslContext = dslContext,
                 eventId = eventId,
