@@ -565,6 +565,8 @@
     "日": "day",
     "适用机器类型：": "Machine",
     "editLogo": "Edit",
+    "请确认": "Please Confirm",
+    "已确认兼容新增参数，继续": "Confirmed compatibility with newly added parameters, continue",
     "请选择起止时间": "Please select the start and end time",
     "请输入版本": "Please enter the version",
     "导出": "Export",
