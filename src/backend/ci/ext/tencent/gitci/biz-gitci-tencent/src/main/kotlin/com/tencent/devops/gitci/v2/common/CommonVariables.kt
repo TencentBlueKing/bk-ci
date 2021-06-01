@@ -37,6 +37,7 @@ object CommonVariables {
     const val CI_EVENT = "ci.event"
     const val CI_EVENT_CONTENT = "ci.event_content"
     const val CI_REF = "ci.ref"
+    const val CI_BRANCH = "ci.branch"
     const val CI_SHA = "ci.sha"
     const val CI_SHA_SHORT = "ci.sha_short"
     const val CI_COMMIT_MESSAGE = "ci.commit_message"
