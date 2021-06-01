@@ -197,7 +197,7 @@ class TxProjectServiceImpl @Autowired constructor(
         val iamV0List = getV0UserProject(userId, accessToken)
         logger.info("$userId V0 project: $iamV0List")
         val iamV3List = client.get(ServiceProjectAuthResource::class).getUserProjects(userId!!).data
-        logger.info("$userId V0 project: $iamV3List")
+        logger.info("$userId V3 project: $iamV3List")
         val projectList = mutableSetOf<String>()
         projectList.addAll(iamV0List)
         if (!iamV3List.isNullOrEmpty()) {

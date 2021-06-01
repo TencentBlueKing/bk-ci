@@ -143,8 +143,11 @@ class TxPermissionProjectServiceImpl @Autowired constructor(
         val actionPolicyDTOs = policyService.batchGetPolicyByActionList(userId, actionDTOs, null)
             ?: return emptyList()
         logger.info("[IAM] getUserProjects actionPolicyDTOs $actionPolicyDTOs")
-        val actionPolicy = actionPolicyDTOs[0]
-        return AuthUtils.getProjects(actionPolicy.condition)
+        val projects = mutableSetOf<String>()
+        actionPolicyDTOs.forEach {
+            projects.addAll(AuthUtils.getProjects(it.condition))
+        }
+        return projects.toList()
     }
 
     /**
