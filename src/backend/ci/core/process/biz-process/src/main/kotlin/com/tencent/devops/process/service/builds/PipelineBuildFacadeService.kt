@@ -1069,7 +1069,8 @@ class PipelineBuildFacadeService(
             buildMsg = buildHistory.buildMsg,
             retry = buildHistory.retry,
             errorInfoList = buildHistory.errorInfoList,
-            buildNumAlias = buildHistory.buildNumAlias
+            buildNumAlias = buildHistory.buildNumAlias,
+            webhookInfo = buildHistory.webhookInfo
         )
     }
 
