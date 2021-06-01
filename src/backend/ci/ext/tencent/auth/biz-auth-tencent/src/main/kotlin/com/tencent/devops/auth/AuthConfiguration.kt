@@ -97,14 +97,6 @@ class AuthConfiguration {
     @Bean
     @ConditionalOnMissingBean
     fun authHelper() = AuthHelper(tokenService(), policyService(), iamConfiguration())
-
-    @Bean
-    @ConditionalOnMissingBean
-    fun emptyPermissionService() = EmptyPermissionServiceImpl()
-
-    @Bean
-    @ConditionalOnMissingBean
-    fun emptyPermissionProjectServiceImpl() = EmptyPermissionProjectServiceImpl()
     
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "new_v3")
