@@ -41,7 +41,7 @@
                                 v-validate.initial="`required|unique:${data.params.map(p => p.key).join(&quot;,&quot;)}|max: 50|${snonVarRule}`"
                                 name="key"
                                 :placeholder="isMetadataVar ? $t('view.key') : 'Key'"
-                                :value="param.key" />
+                                :value="param.chineseName ? param.chineseName : param.key" />
                         </form-field>
                         <span :class="{ 'default-required': true ,'is-required': param.required }" />
                         <div :class="{ 'bk-form-item': true, 'required-error-item': param.required && !param.value.length && isShowReuired && !isBooleanParam(param.valueType) }">

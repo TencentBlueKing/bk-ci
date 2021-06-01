@@ -54,10 +54,16 @@ class UserArchiveAtomResourceImpl @Autowired constructor(private val archiveAtom
         os: String
     ): Result<ArchiveAtomResponse?> {
         return archiveAtomService.archiveAtom(
-            userId,
-            inputStream,
-            disposition,
-            ArchiveAtomRequest(projectCode, atomCode, version, releaseType, os)
+            userId = userId,
+            inputStream = inputStream,
+            disposition = disposition,
+            archiveAtomRequest = ArchiveAtomRequest(
+                projectCode = projectCode,
+                atomCode = atomCode,
+                version = version,
+                releaseType = releaseType,
+                os = os
+            )
         )
     }
 
@@ -68,13 +74,20 @@ class UserArchiveAtomResourceImpl @Autowired constructor(private val archiveAtom
         atomCode: String,
         version: String,
         inputStream: InputStream,
-        disposition: FormDataContentDisposition
+        disposition: FormDataContentDisposition,
+        fieldCheckConfirmFlag: Boolean?
     ): Result<ArchiveAtomResponse?> {
         return archiveAtomService.reArchiveAtom(
-            userId,
-            inputStream,
-            disposition,
-            ReArchiveAtomRequest(projectCode, atomId, atomCode, version)
+            userId = userId,
+            inputStream = inputStream,
+            disposition = disposition,
+            reArchiveAtomRequest = ReArchiveAtomRequest(
+                projectCode = projectCode,
+                atomId = atomId,
+                atomCode = atomCode,
+                version = version,
+                fieldCheckConfirmFlag = fieldCheckConfirmFlag
+            )
         )
     }
 }
