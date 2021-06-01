@@ -284,7 +284,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
             atomCode = atomCode,
             atomName = atomEnv.atomName,
             version = atomEnv.version,
-            initProjectCode = atomEnv.projectCode!!,
+            initProjectCode = atomEnv.projectCode ?: "",
             jobType = atomEnv.jobType,
             buildLessRunFlag = atomEnv.buildLessRunFlag,
             inputTypeInfos = marketAtomCommonService.generateInputTypeInfos(atomEnv.props)
@@ -325,7 +325,7 @@ class MarketAtomEnvServiceImpl @Autowired constructor(
                     atomId = atom.id,
                     atomCode = atom.atomCode,
                     atomName = atom.name,
-                    atomStatus = AtomStatusEnum.getAtomStatus(atom.atomStatus.toInt()),
+                    atomStatus = atom.atomStatus,
                     creator = atom.creator,
                     version = atom.version,
                     summary = atom.summary,

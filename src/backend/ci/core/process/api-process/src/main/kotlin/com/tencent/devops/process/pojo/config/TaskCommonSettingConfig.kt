@@ -25,34 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api
+package com.tencent.devops.process.pojo.config
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.process.api.user.UserPipelineSettingResource
-import com.tencent.devops.process.pojo.setting.PipelineCommonSetting
-import com.tencent.devops.process.pojo.setting.PipelineSetting
-import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
-import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 
-@RestResource
-class UserPipelineSettingResourceImpl @Autowired constructor(
-    private val pipelineSettingFacadeService: PipelineSettingFacadeService
-) : UserPipelineSettingResource {
-    override fun saveSetting(userId: String, setting: PipelineSetting): Result<String> {
-        return Result(pipelineSettingFacadeService.saveSetting(userId, setting))
-    }
+@Component
+class TaskCommonSettingConfig {
 
-    override fun getSetting(
-        userId: String,
-        projectId: String,
-        pipelineId: String,
-        version: Int
-    ): Result<PipelineSetting> {
-        return Result(pipelineSettingFacadeService.userGetSetting(userId, projectId, pipelineId, version = version))
-    }
+    @Value("\${pipeline.setting.common.stage.job.task.maxInputNum:100}")
+    val maxInputNum: Int = 100
 
-    override fun getCommonSetting(userId: String): Result<PipelineCommonSetting> {
-        return Result(pipelineSettingFacadeService.getCommonSetting(userId))
-    }
+    @Value("\${pipeline.setting.common.stage.job.task.maxOutputNum:100}")
+    val maxOutputNum: Int = 100
+
+    @Value("\${pipeline.setting.common.stage.job.task.inputComponent.input.size:1024}")
+    val maxInputComponentSize: Int = 1024
+
+    @Value("\${pipeline.setting.common.stage.job.task.inputComponent.textarea.size:16384}")
+    val maxTextareaComponentSize: Int = 16384
+
+    @Value("\${pipeline.setting.common.stage.job.task.inputComponent.codeEditor.size:16384}")
+    val maxCodeEditorComponentSize: Int = 16384
+
+    @Value("\${pipeline.setting.common.stage.job.task.inputComponent.default.size:1024}")
+    val maxDefaultInputComponentSize: Int = 1024
+
+    @Value("\${pipeline.setting.common.stage.job.task.inputComponent.multiple.member:dynamic-parameter}")
+    val multipleInputComponents: String = "dynamic-parameter"
+
+    @Value("\${pipeline.setting.common.stage.job.task.inputComponent.multiple.size:4000}")
+    val maxMultipleInputComponentSize: Int = 4000
+
+    @Value("\${pipeline.setting.common.stage.job.task.outputComponent.default.size:4000}")
+    val maxDefaultOutputComponentSize: Int = 4000
 }
