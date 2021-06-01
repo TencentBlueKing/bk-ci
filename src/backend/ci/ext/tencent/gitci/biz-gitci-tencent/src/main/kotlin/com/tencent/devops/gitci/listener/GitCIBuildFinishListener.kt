@@ -230,7 +230,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                     ).notices
                     notices?.forEach { notice ->
                         if (!checkStatus(notice, buildStatus)) {
-                            return
+                            return@forEach
                         }
                         sendNotifyV2(
                             gitProjectId = gitProjectId,
