@@ -31,6 +31,8 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.ci.OBJECT_KIND_SCHEDULE
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_MESSAGE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT
@@ -45,6 +47,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineBuildExtService
+import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_TURBO_TASK_ID
 import okhttp3.Request
 import org.slf4j.LoggerFactory
@@ -94,10 +97,6 @@ class PipelineBuildExtTencentService @Autowired constructor(
             buildVar["ci.repo_group"] = buildVar[PIPELINE_GIT_REPO_GROUP]!!
             buildVar.remove(PIPELINE_GIT_REPO_GROUP)
         }
-        if (buildVar[PIPELINE_GIT_EVENT].isNullOrBlank()) {
-            buildVar["ci.event"] = buildVar[PIPELINE_GIT_EVENT]!!
-            buildVar.remove(PIPELINE_GIT_EVENT)
-        }
         if (buildVar[PIPELINE_GIT_EVENT_CONTENT].isNullOrBlank()) {
             buildVar["ci.event_content"] = buildVar[PIPELINE_GIT_EVENT_CONTENT]!!
             buildVar.remove(PIPELINE_GIT_EVENT_CONTENT)
@@ -113,6 +112,15 @@ class PipelineBuildExtTencentService @Autowired constructor(
         if (buildVar[PIPELINE_GIT_COMMIT_MESSAGE].isNullOrBlank()) {
             buildVar["ci.commit_message"] = buildVar[PIPELINE_GIT_COMMIT_MESSAGE]!!
             buildVar.remove(PIPELINE_GIT_COMMIT_MESSAGE)
+        }
+        // 特殊处理触发类型以免定时触发无法记录
+        if (buildVar[PIPELINE_GIT_EVENT].isNullOrBlank()) {
+            buildVar["ci.event"] = if (buildVar[PIPELINE_START_TYPE] == StartType.TIME_TRIGGER.name) {
+                OBJECT_KIND_SCHEDULE
+            } else {
+                buildVar[PIPELINE_GIT_EVENT]!!
+            }
+            buildVar.remove(PIPELINE_GIT_EVENT)
         }
         extMap.putAll(buildVar)
         return extMap
