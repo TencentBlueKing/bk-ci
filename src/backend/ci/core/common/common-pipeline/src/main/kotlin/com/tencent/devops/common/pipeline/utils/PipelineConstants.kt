@@ -31,6 +31,7 @@ const val PIPELINE_SUBPIPELINE_CALL_ELEMENT_ID = "pipeline.subpipeline.call.elem
 
 const val PIPELINE_SUBPIPELINE_CALL_ELEMENT_NAME = "pipeline.subpipeline.call.element.name"
 
+// 代码库构建Key常量
 const val PIPELINE_GIT_REF = "GIT_CI_REF"
 const val PIPELINE_GIT_HEAD_REF = "GIT_CI_HEAD_REF"
 const val PIPELINE_GIT_BASE_REF = "GIT_CI_BASE_REF"
@@ -42,3 +43,6 @@ const val PIPELINE_GIT_EVENT_CONTENT = "GIT_CI_EVENT_CONTENT"
 const val PIPELINE_GIT_SHA = "GIT_CI_SHA"
 const val PIPELINE_GIT_SHA_SHORT = "GIT_CI_SHA_SHORT"
 const val PIPELINE_GIT_COMMIT_MESSAGE = "GIT_CI_COMMIT_MESSAGE"
+
+// 代码库构建Value常量
+const val PIPELINE_GIT_TIME_TRIGGER_KIND = "schedule"
