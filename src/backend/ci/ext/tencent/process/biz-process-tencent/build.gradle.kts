@@ -52,6 +52,7 @@ dependencies {
     api(project(":ext:tencent:image:api-image-tencent"))
     api(project(":ext:tencent:project:api-project-tencent"))
     api(project(":ext:tencent:auth:sdk-auth-tencent"))
+    api(project(":core:auth:api-auth"))
     api("org.apache.poi:poi")
     api("org.apache.poi:poi-ooxml")
 }

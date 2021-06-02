@@ -59,6 +59,10 @@ class TencentGitCiService @Autowired constructor(
         return client.getScm(ServiceGitCiResource::class).getToken(gitProjectId).data
     }
 
+    fun clearToken(token: String): Boolean {
+        return client.getScm(ServiceGitCiResource::class).clearToken(token).data ?: false
+    }
+
     fun getFileContent(repoUrl: String, filePath: String, ref: String?, subModule: String?): String {
         val projectName = if (subModule.isNullOrBlank()) GitUtils.getProjectName(repoUrl) else subModule!!
         val token = projectTokenCache.get(projectName)

@@ -53,7 +53,7 @@ class PipelineTransferJob @Autowired constructor(
         private const val PIPELINE_BUILD_HISTORY_PAGE_SIZE = 14
     }
 
-    @Scheduled(initialDelay = 12000, fixedDelay = 150000)
+    @Scheduled(initialDelay = 12000, fixedDelay = 60000)
     fun transfer() {
         if (!miscPipelineTransferContext.enable()) {
             return

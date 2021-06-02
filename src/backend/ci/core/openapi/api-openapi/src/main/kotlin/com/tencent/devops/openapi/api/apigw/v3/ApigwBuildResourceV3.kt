@@ -138,7 +138,7 @@ interface ApigwBuildResourceV3 {
         failedContainer: Boolean? = false
     ): Result<BuildId>
 
-    @ApiOperation("查看构建状态信息")
+    @ApiOperation("查看构建状态信息,#4295增加stageStatus等")
     @GET
     @Path("/{buildId}/status")
     fun getStatus(

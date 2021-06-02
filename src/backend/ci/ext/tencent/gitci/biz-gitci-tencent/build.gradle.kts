@@ -42,10 +42,18 @@ dependencies {
     api(project(":ext:tencent:gitci:api-gitci-tencent"))
     api(project(":ext:tencent:project:api-project-tencent"))
     api(project(":ext:tencent:project:api-project-op"))
+    api(project(":ext:tencent:environment:api-environment-tencent"))
     api(project(":core:store:api-store"))
     api(project(":core:project:api-project"))
     api(project(":ext:tencent:gitci:model-gitci-tencent"))
     api(project(":ext:tencent:scm:api-scm"))
+    api(project(":core:repository:api-repository"))
+
+    api(project(":ext:tencent:notify:api-notify-tencent"))
+
+    api(project(":core:auth:api-auth"))
+    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
+
     api("com.zaxxer:HikariCP")
     api("mysql:mysql-connector-java")
     api("org.apache.commons:commons-exec")
@@ -53,11 +61,11 @@ dependencies {
 //    api("org.apache.poi:poi"
 //    api("org.apache.poi:poi-ooxml"
     api("org.springframework.boot:spring-boot-starter-websocket")
-    api(group= "javax.websocket", name= "javax.websocket-api", version= "1.1")
+    api(group = "javax.websocket", name = "javax.websocket-api", version = "1.1")
     api("io.undertow:undertow-servlet")
     api("io.undertow:undertow-websockets-jsr")
     api("com.vmware:vijava")
     api("org.json:json")
-    api(group= "org.apache.ant", name= "ant", version= "1.10.5")
+    api(group = "org.apache.ant", name = "ant", version = "1.10.5")
     testImplementation(project(":core:common:common-test"))
 }

@@ -72,6 +72,7 @@ EOF
 }
 
 # 检查docker是否有被其他软件占用(以修改data-root计).
+mkdir -p "$(dirname "$conf_daemon")"
 [ -f "$conf_daemon" ] || echo '{}' > "$conf_daemon"
 old_data_root=$(jq -r '.["data-root"] // ""' "$conf_daemon")
 data_root_default="/var/lib/docker"

@@ -43,5 +43,7 @@ data class ManualReviewParam(
     @ApiModelProperty("参数描述", required = false)
     val desc: String? = "",
     @ApiModelProperty("下拉框列表")
-    val options: List<ManualReviewParamPair>? = null
+    val options: List<ManualReviewParamPair>? = null,
+    @ApiModelProperty("中文名称", required = false)
+    val chineseName: String? = null
 )
