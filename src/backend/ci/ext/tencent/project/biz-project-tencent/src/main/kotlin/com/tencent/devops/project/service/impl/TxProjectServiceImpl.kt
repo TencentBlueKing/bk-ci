@@ -138,9 +138,7 @@ class TxProjectServiceImpl @Autowired constructor(
             logger.info("项目列表：$englishNames")
             val list = ArrayList<ProjectVO>()
             projectDao.listByCodes(dslContext, englishNames).map {
-                if (it.enabled == true) {
-                    list.add(ProjectUtils.packagingBean(it, grayProjectSet()))
-                }
+                list.add(ProjectUtils.packagingBean(it, grayProjectSet()))
             }
             return list
         } finally {
