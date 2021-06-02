@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineIdAndName
+import com.tencent.devops.process.pojo.PipelineTemplateAndCollect
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -77,6 +78,24 @@ interface UserPipelineInfoResource {
         projectId: String,
         @ApiParam("搜索名称")
         @QueryParam("pipelineName")
-        pipelineName: String?
+        pipelineName: String?,
+        @ApiParam("流水线Id")
+        @QueryParam("pipelineId")
+        pipelineId: String?
     ): Result<List<PipelineIdAndName>>
+    
+    @ApiOperation("获取流水线详情")
+    @GET
+    @Path("{projectId}/{pipelineId}/detail")
+    fun getPipelineInfo(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线Id")
+        @QueryParam("pipelineId")
+        pipelineId: String
+    ): Result<PipelineTemplateAndCollect?>
 }
