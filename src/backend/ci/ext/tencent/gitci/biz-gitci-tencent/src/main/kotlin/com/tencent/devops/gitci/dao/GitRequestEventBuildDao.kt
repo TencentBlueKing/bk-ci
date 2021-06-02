@@ -441,7 +441,7 @@ class GitRequestEventBuildDao {
         }
     }
 
-    fun getEventsByPipelineId(
+    fun getLastEventByPipelineId(
         dslContext: DSLContext,
         gitProjectId: Long,
         pipelineId: String
@@ -450,6 +450,8 @@ class GitRequestEventBuildDao {
             return dslContext.selectFrom(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
                 .and(PIPELINE_ID.eq(pipelineId))
+                .orderBy(ID.desc())
+                .limit(1)
                 .fetch()
         }
     }

@@ -82,6 +82,17 @@ import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.gitci.GitCIDispatchType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_COMMIT_MESSAGE
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_EVENT_CONTENT
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_HEAD_REF
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REF
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_GROUP
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_NAME
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.gitci.client.ScmClient
 import com.tencent.devops.gitci.dao.GitCIServicesConfDao
@@ -100,20 +111,9 @@ import com.tencent.devops.gitci.utils.GitCIParameterUtils
 import com.tencent.devops.gitci.utils.GitCIPipelineUtils
 import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.gitci.v2.common.CommonVariables.CI_ACTOR
-import com.tencent.devops.gitci.v2.common.CommonVariables.CI_BASE_BRANCH
 import com.tencent.devops.gitci.v2.common.CommonVariables.CI_BRANCH
 import com.tencent.devops.gitci.v2.common.CommonVariables.CI_BUILD_URL
-import com.tencent.devops.gitci.v2.common.CommonVariables.CI_COMMIT_MESSAGE
-import com.tencent.devops.gitci.v2.common.CommonVariables.CI_EVENT
-import com.tencent.devops.gitci.v2.common.CommonVariables.CI_EVENT_CONTENT
-import com.tencent.devops.gitci.v2.common.CommonVariables.CI_HEAD_BRANCH
 import com.tencent.devops.gitci.v2.common.CommonVariables.CI_PIPELINE_NAME
-import com.tencent.devops.gitci.v2.common.CommonVariables.CI_REF
-import com.tencent.devops.gitci.v2.common.CommonVariables.CI_REPO
-import com.tencent.devops.gitci.v2.common.CommonVariables.CI_REPO_GROUP
-import com.tencent.devops.gitci.v2.common.CommonVariables.CI_REPO_NAME
-import com.tencent.devops.gitci.v2.common.CommonVariables.CI_SHA
-import com.tencent.devops.gitci.v2.common.CommonVariables.CI_SHA_SHORT
 import com.tencent.devops.gitci.v2.dao.GitCIBasicSettingDao
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.user.UserPipelineGroupResource
@@ -228,8 +228,24 @@ class TriggerBuildService @Autowired constructor(
 
         val model = createPipelineModel(event, gitBasicSetting, yaml)
         logger.info("Git request gitBuildId:$gitBuildId, pipeline:$pipeline, model: $model")
-
+        savePipeline(pipeline, event, gitBasicSetting, model)
         return startBuild(pipeline, event, gitBasicSetting, model, gitBuildId)
+    }
+
+    fun savePipelineModel(
+        pipeline: GitProjectPipeline,
+        event: GitRequestEvent,
+        yaml: ScriptBuildYaml
+    ) {
+        logger.info("Git request save pipeline, pipeline:$pipeline, event: $event, yaml: $yaml")
+
+        // create or refresh pipeline
+        val gitBasicSetting = gitCIBasicSettingDao.getSetting(dslContext, event.gitProjectId)
+            ?: throw OperationException("git ci projectCode not exist")
+
+        val model = createPipelineModel(event, gitBasicSetting, yaml)
+        logger.info("Git request , pipeline:$pipeline, model: $model")
+        savePipeline(pipeline, event, gitBasicSetting, model)
     }
 
     private fun createPipelineSetting(
@@ -458,7 +474,7 @@ class TriggerBuildService @Autowired constructor(
             startEpoch = null,
             systemElapsed = null,
             elementElapsed = null,
-            baseOS = VMBaseOS.LINUX,
+            baseOS = getBaseOs(job.runsOn.agentSelector),
             vmNames = setOf(),
             maxQueueMinutes = 60,
             maxRunningMinutes = job.timeoutMinutes ?: 900,
@@ -473,6 +489,18 @@ class TriggerBuildService @Autowired constructor(
             dispatchType = getDispatchType(job)
         )
         containerList.add(vmContainer)
+    }
+
+    private fun getBaseOs(agentSelector: List<String>?): VMBaseOS {
+        if (agentSelector.isNullOrEmpty()) {
+            return VMBaseOS.LINUX
+        }
+        return when (agentSelector[0]) {
+            "linux" -> VMBaseOS.LINUX
+            "macos" -> VMBaseOS.MACOS
+            "windows" -> VMBaseOS.WINDOWS
+            else -> VMBaseOS.LINUX
+        }
     }
 
     fun getDispatchType(job: Job): DispatchType {
@@ -786,12 +814,11 @@ class TriggerBuildService @Autowired constructor(
         startParams[BK_CI_RUN] = "true"
         startParams[CI_ACTOR] = event.userId
         startParams[CI_BRANCH] = event.branch
-        startParams[CI_REPO] = GitCommonUtils.getRepoOwner(gitBasicSetting.gitHttpUrl) + "/" + gitBasicSetting.name
-        startParams[CI_EVENT_CONTENT] = JsonUtil.toJson(event)
-        startParams[CI_COMMIT_MESSAGE] = event.commitMsg ?: ""
-        startParams[CI_SHA] = event.commitId
+        startParams[PIPELINE_GIT_EVENT_CONTENT] = JsonUtil.toJson(event)
+        startParams[PIPELINE_GIT_COMMIT_MESSAGE] = event.commitMsg ?: ""
+        startParams[PIPELINE_GIT_SHA] = event.commitId
         if (!event.commitId.isBlank() && event.commitId.length >= 8) {
-            startParams[CI_SHA_SHORT] = event.commitId.substring(0, 8)
+            startParams[PIPELINE_GIT_SHA_SHORT] = event.commitId.substring(0, 8)
         }
 
         // 写入WEBHOOK触发环境变量
@@ -804,21 +831,21 @@ class TriggerBuildService @Autowired constructor(
 
         val gitProjectName = when (originEvent) {
             is GitPushEvent -> {
-                startParams[CI_REF] = originEvent.ref
+                startParams[PIPELINE_GIT_REF] = originEvent.ref
                 startParams[CI_BRANCH] = getBranchName(originEvent.ref)
-                startParams[CI_EVENT] = GitPushEvent.classType
+                startParams[PIPELINE_GIT_EVENT] = GitPushEvent.classType
                 GitUtils.getProjectName(originEvent.repository.git_http_url)
             }
             is GitTagPushEvent -> {
-                startParams[CI_REF] = originEvent.ref
+                startParams[PIPELINE_GIT_REF] = originEvent.ref
                 startParams[CI_BRANCH] = getBranchName(originEvent.ref)
-                startParams[CI_EVENT] = GitTagPushEvent.classType
+                startParams[PIPELINE_GIT_EVENT] = GitTagPushEvent.classType
                 GitUtils.getProjectName(originEvent.repository.git_http_url)
             }
             is GitMergeRequestEvent -> {
-                startParams[CI_EVENT] = GitMergeRequestEvent.classType
-                startParams[CI_HEAD_BRANCH] = originEvent.object_attributes.target_branch
-                startParams[CI_BASE_BRANCH] = originEvent.object_attributes.source_branch
+                startParams[PIPELINE_GIT_EVENT] = GitMergeRequestEvent.classType
+                startParams[PIPELINE_GIT_HEAD_REF] = originEvent.object_attributes.target_branch
+                startParams[PIPELINE_GIT_BASE_REF] = originEvent.object_attributes.source_branch
                 startParams[PIPELINE_WEBHOOK_EVENT_TYPE] = CodeEventType.MERGE_REQUEST.name
                 startParams[PIPELINE_WEBHOOK_SOURCE_BRANCH] = originEvent.object_attributes.source_branch
                 startParams[PIPELINE_WEBHOOK_TARGET_BRANCH] = originEvent.object_attributes.target_branch
@@ -827,11 +854,12 @@ class TriggerBuildService @Autowired constructor(
                 GitUtils.getProjectName(originEvent.object_attributes.source.http_url)
             }
             else -> {
-                ""
+                startParams[PIPELINE_GIT_EVENT] = OBJECT_KIND_MANUAL
+                GitCommonUtils.getRepoOwner(gitBasicSetting.gitHttpUrl) + "/" + gitBasicSetting.name
             }
         }
 
-        startParams[CI_REPO] = gitProjectName
+        startParams[PIPELINE_GIT_REPO] = gitProjectName
         val repoName = gitProjectName.split("/")
         val repoProjectName = if (repoName.size >= 2) {
             val index = gitProjectName.lastIndexOf("/")
@@ -844,8 +872,8 @@ class TriggerBuildService @Autowired constructor(
         } else {
             gitProjectName
         }
-        startParams[CI_REPO_NAME] = repoProjectName
-        startParams[CI_REPO_GROUP] = repoGroupName
+        startParams[PIPELINE_GIT_REPO_NAME] = repoProjectName
+        startParams[PIPELINE_GIT_REPO_GROUP] = repoGroupName
 
         // 用户自定义变量
         // startParams.putAll(yaml.variables ?: mapOf())

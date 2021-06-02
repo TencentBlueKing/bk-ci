@@ -100,7 +100,9 @@ class V2RequestTrigger @Autowired constructor(
         gitProjectPipeline.displayName =
             if (!yamlObject.name.isNullOrBlank()) yamlObject.name!! else filePath.removeSuffix(".yml")
 
-        if (isMatch(event, yamlObjects)) {
+        val matchResult = isMatch(event, yamlObjects)
+        if (matchResult.first) {
+            // 正常匹配仓库操作触发
             logger.info(
                 "Matcher is true, display the event, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
                         "eventId: ${gitRequestEvent.id}, dispatched pipeline: $gitProjectPipeline"
@@ -132,6 +134,22 @@ class V2RequestTrigger @Autowired constructor(
                 )
             )
             gitBasicSettingService.updateGitCISetting(gitRequestEvent.gitProjectId)
+        } else if (matchResult.second) {
+            // 只有定时任务的保存任务
+            logger.warn("Only schedules matched, only save the pipeline, " +
+                "gitProjectId: ${gitRequestEvent.gitProjectId}, eventId: ${gitRequestEvent.id}")
+            V2GitCIRequestDispatcher.dispatch(
+                rabbitTemplate,
+                V2GitCIRequestTriggerEvent(
+                    pipeline = gitProjectPipeline,
+                    event = gitRequestEvent,
+                    yaml = yamlObject,
+                    parsedYaml = parsedYaml,
+                    originYaml = originYaml!!,
+                    normalizedYaml = normalizedYaml,
+                    gitBuildId = null
+                )
+            )
         } else {
             logger.warn("Matcher is false, return, gitProjectId: ${gitRequestEvent.gitProjectId}, " +
                 "eventId: ${gitRequestEvent.id}")
@@ -152,7 +170,7 @@ class V2RequestTrigger @Autowired constructor(
         return true
     }
 
-    override fun isMatch(event: GitEvent, ymlObject: YamlObjects): Boolean {
+    override fun isMatch(event: GitEvent, ymlObject: YamlObjects): Pair<Boolean, Boolean> {
         return V2WebHookMatcher(event).isMatch(ymlObject.normalYaml.triggerOn!!)
     }
 

@@ -88,7 +88,9 @@ data class RunsOn(
     val container: Container = Container(
         image = "http://mirrors.tencent.com/ci/tlinux3_ci:0.1.1.0",
         credentials = null
-    )
+    ),
+    @JsonProperty("agent-selector")
+    val agentSelector: List<String>? = emptyList()
 )
 
 enum class JobRunsOnType(val type: String) {
