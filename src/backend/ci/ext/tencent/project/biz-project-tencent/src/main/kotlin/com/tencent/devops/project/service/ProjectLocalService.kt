@@ -72,7 +72,6 @@ import org.springframework.stereotype.Service
 import java.io.File
 import java.io.InputStream
 import java.nio.file.Files
-import java.util.ArrayList
 
 @Service
 class ProjectLocalService @Autowired constructor(
@@ -107,7 +106,11 @@ class ProjectLocalService @Autowired constructor(
             searchName.isNotEmpty() &&
             projectDao.countByEnglishName(dslContext, projectIds) < 1000
         ) {
-            val records = projectDao.listByEnglishName(dslContext, projectIds).asSequence().filter {
+            val records = projectDao.listByEnglishName(
+                dslContext = dslContext,
+                englishNameList = projectIds,
+                enabled = true
+            ).asSequence().filter {
                 it.projectName.contains(searchName, true)
             }.map {
                 AppProjectVO(
@@ -115,7 +118,7 @@ class ProjectLocalService @Autowired constructor(
                     projectName = it.projectName,
                     logoUrl = if (it.logoAddr.startsWith("http://radosgw.open.oa.com")) {
                         "https://dev-download.bkdevops.qq.com/images" +
-                            it.logoAddr.removePrefix("http://radosgw.open.oa.com")
+                                it.logoAddr.removePrefix("http://radosgw.open.oa.com")
                     } else {
                         it.logoAddr
                     }
@@ -124,13 +127,20 @@ class ProjectLocalService @Autowired constructor(
 
             return Pagination(false, records)
         } else {
-            val records = projectDao.listByEnglishName(dslContext, projectIds, offset, limit, searchName).map {
+            val records = projectDao.listByEnglishName(
+                dslContext = dslContext,
+                englishNameList = projectIds,
+                offset = offset,
+                limit = limit,
+                searchName = searchName,
+                enabled = true
+            ).map {
                 AppProjectVO(
                     projectCode = it.englishName,
                     projectName = it.projectName,
                     logoUrl = if (it.logoAddr.startsWith("http://radosgw.open.oa.com")) {
                         "https://dev-download.bkdevops.qq.com/images" +
-                            it.logoAddr.removePrefix("http://radosgw.open.oa.com")
+                                it.logoAddr.removePrefix("http://radosgw.open.oa.com")
                     } else {
                         it.logoAddr
                     }
