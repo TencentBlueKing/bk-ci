@@ -46,6 +46,7 @@ import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import javax.ws.rs.core.Response
@@ -68,8 +69,15 @@ class PipelineAtomRollBackCronService @Autowired constructor(
         private const val HISTORY_PAGE_SIZE = 100
     }
 
+    @Value("\${pipeline.atom.replaceSwitch:true}")
+    private val switch: Boolean = true
+
     @Scheduled(cron = "0 0/1 * * * ?")
     fun pipelineAtomRollBack() {
+        if (!switch) {
+            // 开关关闭，则不替换回滚
+            return
+        }
         val lock = RedisLock(redisOperation, LOCK_KEY, 3000)
         try {
             if (!lock.tryLock()) {
@@ -244,6 +252,7 @@ class PipelineAtomRollBackCronService @Autowired constructor(
                     )
                 )
             }
+            sourceModel.latestVersion = 0 // latestVersion置为0以便适配修改流水线的校验逻辑
             pipelineRepositoryService.deployPipeline(
                 model = sourceModel,
                 projectId = pipelineReplaceHistory.projectId,
