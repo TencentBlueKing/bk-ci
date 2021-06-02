@@ -814,7 +814,6 @@ class TriggerBuildService @Autowired constructor(
         startParams[BK_CI_RUN] = "true"
         startParams[CI_ACTOR] = event.userId
         startParams[CI_BRANCH] = event.branch
-        startParams[PIPELINE_GIT_REPO] = GitCommonUtils.getRepoOwner(gitBasicSetting.gitHttpUrl) + "/" + gitBasicSetting.name
         startParams[PIPELINE_GIT_EVENT_CONTENT] = JsonUtil.toJson(event)
         startParams[PIPELINE_GIT_COMMIT_MESSAGE] = event.commitMsg ?: ""
         startParams[PIPELINE_GIT_SHA] = event.commitId
@@ -856,7 +855,7 @@ class TriggerBuildService @Autowired constructor(
             }
             else -> {
                 startParams[PIPELINE_GIT_EVENT] = OBJECT_KIND_MANUAL
-                ""
+                GitCommonUtils.getRepoOwner(gitBasicSetting.gitHttpUrl) + "/" + gitBasicSetting.name
             }
         }
 
