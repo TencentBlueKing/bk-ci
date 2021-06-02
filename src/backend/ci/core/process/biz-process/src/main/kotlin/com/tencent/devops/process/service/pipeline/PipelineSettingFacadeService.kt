@@ -115,14 +115,16 @@ class PipelineSettingFacadeService @Autowired constructor(
             labels.addAll(it.labels)
         }
         if (settingInfo == null) {
-            val model = client.get(ServicePipelineResource::class).get(userId, projectId, pipelineId, channelCode).data
-            val name = model?.name ?: "unknown pipeline name"
-            val desc = model?.desc ?: ""
+            val pipeline = client.get(ServicePipelineResource::class).getPipelineInfo(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                channelCode = channelCode
+            ).data
             settingInfo = PipelineSetting(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                pipelineName = name,
-                desc = desc,
+                pipelineName = pipeline?.pipelineName ?: "unknown pipeline name",
+                desc = pipeline?.pipelineDesc ?: "",
                 runLockType = PipelineRunLockType.MULTIPLE,
                 successSubscription = Subscription(),
                 failSubscription = Subscription(),
