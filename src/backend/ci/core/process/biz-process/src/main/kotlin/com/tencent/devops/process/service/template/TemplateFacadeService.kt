@@ -314,9 +314,12 @@ class TemplateFacadeService @Autowired constructor(
         val template = templateDao.getLatestTemplate(dslContext, templateId)
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            val pipelines =
-                templatePipelineDao.listPipeline(context, PipelineInstanceTypeEnum.CONSTRAINT.type, setOf(templateId))
-            if (pipelines.isNotEmpty) {
+            val instanceSize = templatePipelineDao.countByTemplates(
+                dslContext = context,
+                instanceType = PipelineInstanceTypeEnum.CONSTRAINT.type,
+                templateIds = setOf(templateId)
+            )
+            if (instanceSize > 0) {
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_HAVE_INSTANCE,
                     defaultMessage = "模板还存在实例，不允许删除")
@@ -352,19 +355,20 @@ class TemplateFacadeService @Autowired constructor(
         checkPermission(projectId, userId)
         return dslContext.transactionResult { configuration ->
             val context = DSL.using(configuration)
-            val pipelines =
-                templatePipelineDao.listPipeline(
+            val instanceSize =
+                templatePipelineDao.countByVersionFeat(
                     dslContext = context,
                     templateId = templateId,
                     instanceType = PipelineInstanceTypeEnum.CONSTRAINT.type,
                     version = version
                 )
-            if (pipelines.isNotEmpty) {
-                logger.warn("There are ${pipelines.size} pipeline attach to $templateId of version $version")
+            if (instanceSize > 0) {
+                logger.warn("There are $instanceSize pipeline attach to $templateId of version $version")
                 throw ErrorCodeException(
                     errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_HAVE_INSTANCE,
                     defaultMessage = "模板还存在实例，不允许删除")
             }
+            templatePipelineDao.deleteByTemplateId(dslContext, templateId)
             templateDao.delete(dslContext, templateId, setOf(version)) == 1
         }
     }
@@ -374,17 +378,18 @@ class TemplateFacadeService @Autowired constructor(
         checkPermission(projectId, userId)
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            val pipelines =
-                templatePipelineDao.listPipeline(
+            val instanceSize =
+                templatePipelineDao.countByVersionFeat(
                     dslContext = context,
                     templateId = templateId,
                     instanceType = PipelineInstanceTypeEnum.CONSTRAINT.type,
                     versionName = versionName
                 )
-            if (pipelines.isNotEmpty) {
-                logger.warn("There are ${pipelines.size} pipeline attach to $templateId of versionName $versionName")
+            if (instanceSize > 0) {
+                logger.warn("There are $instanceSize pipeline attach to $templateId of versionName $versionName")
                 throw ErrorCodeException(errorCode = ProcessMessageCode.TEMPLATE_CAN_NOT_DELETE_WHEN_HAVE_INSTANCE)
             }
+            templatePipelineDao.deleteByTemplateId(dslContext, templateId)
             templateDao.delete(dslContext = dslContext, templateId = templateId, versionName = versionName)
         }
         return true
@@ -1817,7 +1822,7 @@ class TemplateFacadeService @Autowired constructor(
     fun serviceCountTemplateInstances(projectId: String, templateIds: Collection<String>): Int {
         logger.info("[$projectId|$templateIds] List the templates instances")
         if (templateIds.isEmpty()) return 0
-        return templatePipelineDao.listPipeline(dslContext, PipelineInstanceTypeEnum.CONSTRAINT.type, templateIds).size
+        return templatePipelineDao.countByTemplates(dslContext, PipelineInstanceTypeEnum.CONSTRAINT.type, templateIds)
     }
 
     fun serviceCountTemplateInstancesDetail(projectId: String, templateIds: Collection<String>): Map<String, Int> {
