@@ -82,6 +82,8 @@ class BkRepoSearchService @Autowired constructor(
         )
 
         val pipelineHasPermissionList = pipelineService.filterPipeline(userId, projectId)
+        logger.info("pipelineHasPermissionList is $pipelineHasPermissionList")
+        logger.info("nodeList is $nodeList")
         val fileInfoList = bkRepoService.transferFileInfo(projectId, nodeList, pipelineHasPermissionList)
         return Pair(LocalDateTime.now().timestamp(), fileInfoList)
     }

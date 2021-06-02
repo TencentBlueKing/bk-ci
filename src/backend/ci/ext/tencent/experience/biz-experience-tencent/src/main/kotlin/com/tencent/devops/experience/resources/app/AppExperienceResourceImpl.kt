@@ -41,7 +41,9 @@ import com.tencent.devops.experience.pojo.ExperienceChangeLog
 import com.tencent.devops.experience.pojo.ExperienceCreate
 import com.tencent.devops.experience.pojo.ExperienceLastParams
 import com.tencent.devops.experience.pojo.ProjectGroupAndUsers
+import com.tencent.devops.experience.pojo.outer.OuterSelectorVO
 import com.tencent.devops.experience.service.ExperienceAppService
+import com.tencent.devops.experience.service.ExperienceOuterService
 import com.tencent.devops.experience.service.ExperienceService
 import com.tencent.devops.experience.service.GroupService
 import org.springframework.beans.factory.annotation.Autowired
@@ -50,7 +52,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class AppExperienceResourceImpl @Autowired constructor(
     private val experienceAppService: ExperienceAppService,
     private val experienceService: ExperienceService,
-    private val groupService: GroupService
+    private val groupService: GroupService,
+    private val experienceOuterService: ExperienceOuterService
 ) : AppExperienceResource {
     override fun list(userId: String, page: Int?, pageSize: Int?): Result<List<AppExperience>> {
         checkParam(userId)
@@ -130,6 +133,10 @@ class AppExperienceResourceImpl @Autowired constructor(
         checkParam(userId, projectId)
         experienceService.create(userId, projectId, experience)
         return Result(true)
+    }
+
+    override fun outerList(userId: String, projectId: String): Result<List<OuterSelectorVO>> {
+        return Result(experienceOuterService.outerList(projectId).map { OuterSelectorVO(it) })
     }
 
     override fun lastParams(

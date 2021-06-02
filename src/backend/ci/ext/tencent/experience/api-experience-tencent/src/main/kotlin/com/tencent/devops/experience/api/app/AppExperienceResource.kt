@@ -42,6 +42,7 @@ import com.tencent.devops.experience.pojo.ExperienceChangeLog
 import com.tencent.devops.experience.pojo.ExperienceCreate
 import com.tencent.devops.experience.pojo.ExperienceLastParams
 import com.tencent.devops.experience.pojo.ProjectGroupAndUsers
+import com.tencent.devops.experience.pojo.outer.OuterSelectorVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -212,4 +213,16 @@ interface AppExperienceResource {
         @QueryParam("bundleIdentifier")
         bundleIdentifier: String
     ): Result<ExperienceLastParams>
+
+    @ApiOperation("列出外部用户列表")
+    @Path("/outer/list")
+    @GET
+    fun outerList(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String
+    ): Result<List<OuterSelectorVO>>
 }

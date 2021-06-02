@@ -33,6 +33,10 @@ const val BUILD_TYPE = "build.type"
 
 const val WORKSPACE_ENV = "WORKSPACE"
 
+const val WORKSPACE_CONTEXT = "ci.workspace"
+
+const val CI_TOKEN_CONTEXT = "ci.token"
+
 const val SLAVE_AGENT_START_FILE = "devops.slave.agent.start.file"
 
 const val CLEAN_WORKSPACE = "DEVOPS_CLEAN_WORKSPACE"

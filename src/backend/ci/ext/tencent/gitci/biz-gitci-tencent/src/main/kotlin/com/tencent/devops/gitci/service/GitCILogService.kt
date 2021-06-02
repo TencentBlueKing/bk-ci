@@ -66,7 +66,6 @@ class GitCILogService @Autowired constructor(
     ): QueryLogs {
         logger.info("get init logs, gitProjectId: $gitProjectId, pipelineId: $pipelineId, build: $buildId")
         val pipeline = getProjectPipeline(gitProjectId, pipelineId)
-
         return client.get(ServiceLogResource::class).getInitLogs(
             projectId = GitCIPipelineUtils.genGitProjectCode(pipeline.gitProjectId),
             pipelineId = pipeline.pipelineId,

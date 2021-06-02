@@ -150,7 +150,7 @@ class GitPipelineResourceDao {
             if (!keyword.isNullOrBlank()) {
                 dsl.and(DISPLAY_NAME.like("%$keyword%"))
             }
-            return dsl.orderBy(ENABLED.desc(), UPDATE_TIME.desc())
+            return dsl.orderBy(ENABLED.desc(), DISPLAY_NAME)
                 .limit(limit).offset(offset)
                 .fetch()
         }
@@ -163,7 +163,7 @@ class GitPipelineResourceDao {
         with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
             return dslContext.selectFrom(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
-                .orderBy(UPDATE_TIME.desc())
+                .orderBy(ENABLED.desc(), DISPLAY_NAME)
                 .fetch()
         }
     }
@@ -264,6 +264,17 @@ class GitPipelineResourceDao {
                 .set(UPDATE_TIME, buildTime)
                 .where(PIPELINE_ID.eq(pipelineId))
                 .execute()
+        }
+    }
+
+    fun getPipelines(
+        dslContext: DSLContext,
+        gitProjectId: Long
+    ): List<TGitPipelineResourceRecord> {
+        with(TGitPipelineResource.T_GIT_PIPELINE_RESOURCE) {
+            return dslContext.selectFrom(this)
+                .where(GIT_PROJECT_ID.eq(gitProjectId))
+                .fetch()
         }
     }
 }

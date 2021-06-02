@@ -187,7 +187,7 @@ class ExperienceBaseService @Autowired constructor(
     }
 
     fun isPublic(experienceId: Long) =
-        experiencePublicDao.countByRecordId(dslContext, experienceId)?.value1() ?: 0 > 0
+        experiencePublicDao.countByRecordId(dslContext, experienceId, true, LocalDateTime.now())?.value1() ?: 0 > 0
 
     fun isPrivate(experienceId: Long, isOuter: Boolean = false): Boolean {
         return experienceGroupDao.listGroupIdsByRecordId(dslContext, experienceId)

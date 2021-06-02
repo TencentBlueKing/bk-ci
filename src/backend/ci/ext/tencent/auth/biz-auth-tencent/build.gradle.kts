@@ -28,4 +28,7 @@
 dependencies {
     api(project(":core:auth:biz-auth"))
     api(project(":core:project:api-project"))
+    api(project(":core:repository:api-repository"))
+    api(project(":ext:tencent:scm:api-scm"))
+    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
 }
