@@ -50,7 +50,7 @@ class UserPipelineInfoResourceImpl @Autowired constructor(
     override fun searchByName(
         userId: String,
         projectId: String,
-        pipelineName: String
+        pipelineName: String?
     ): Result<List<PipelineIdAndName>> {
         checkParam(userId, projectId)
         val pipelineInfos = pipelineListFacadeService.searchByPipelineName(projectId, pipelineName, null, null)
