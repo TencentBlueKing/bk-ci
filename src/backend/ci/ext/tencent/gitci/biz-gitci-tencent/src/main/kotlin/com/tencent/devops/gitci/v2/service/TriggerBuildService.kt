@@ -474,7 +474,7 @@ class TriggerBuildService @Autowired constructor(
             startEpoch = null,
             systemElapsed = null,
             elementElapsed = null,
-            baseOS = VMBaseOS.LINUX,
+            baseOS = getBaseOs(job.runsOn.agentSelector),
             vmNames = setOf(),
             maxQueueMinutes = 60,
             maxRunningMinutes = job.timeoutMinutes ?: 900,
@@ -489,6 +489,18 @@ class TriggerBuildService @Autowired constructor(
             dispatchType = getDispatchType(job)
         )
         containerList.add(vmContainer)
+    }
+
+    private fun getBaseOs(agentSelector: List<String>?): VMBaseOS {
+        if (agentSelector.isNullOrEmpty()) {
+            return VMBaseOS.LINUX
+        }
+        return when (agentSelector[0]) {
+            "linux" -> VMBaseOS.LINUX
+            "macos" -> VMBaseOS.MACOS
+            "windows" -> VMBaseOS.WINDOWS
+            else -> VMBaseOS.LINUX
+        }
     }
 
     fun getDispatchType(job: Job): DispatchType {
