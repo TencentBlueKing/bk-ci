@@ -49,5 +49,5 @@ data class PreTemplateScriptBuildYaml(
     val extends: Extends?,
     val resources: Resources?,
     val notices: List<Notices>?,
-    var finally: List<PreStage>?
+    var finally: Map<String, Any>?
 )

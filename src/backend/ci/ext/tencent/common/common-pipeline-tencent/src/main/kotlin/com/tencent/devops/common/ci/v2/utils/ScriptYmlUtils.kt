@@ -495,7 +495,11 @@ object ScriptYmlUtils {
             resource = preScriptBuildYaml.resources,
             notices = preScriptBuildYaml.notices,
             stages = stages,
-            finally = preStages2Stages(preScriptBuildYaml.finally),
+            finally = preStages2Stages(if (preScriptBuildYaml.finally == null) {
+                null
+            } else {
+                listOf(preScriptBuildYaml.finally!!)
+            }),
             label = preScriptBuildYaml.label ?: emptyList()
         )
     }

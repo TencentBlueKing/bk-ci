@@ -40,9 +40,12 @@ import com.tencent.devops.gitci.v2.template.pojo.ParametersTemplateNull
 import com.tencent.devops.gitci.v2.template.pojo.TemplateGraph
 import com.tencent.devops.gitci.v2.template.pojo.enums.TemplateType
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
-import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.gitci.v2.template.pojo.NoReplaceTemplate
 import org.slf4j.LoggerFactory
+import org.springframework.core.io.ClassPathResource
+import java.io.BufferedReader
+import java.io.InputStream
+import java.io.InputStreamReader
 
 @Suppress("ALL")
 class YamlTemplate(
@@ -112,6 +115,7 @@ class YamlTemplate(
         const val EXTENDS_TEMPLATE_EXTENDS_ERROR = "[%s]The extends keyword cannot be nested"
         const val EXTENDS_TEMPLATE_ON_ERROR = "[%s]Triggers are not supported in the template"
         const val VALUE_NOT_IN_ENUM = "[%s][%s=%s]Parameter error, the expected value is [%s]"
+        const val FINALLY_FORMAT_ERROR = "final stage not support stage's template"
     }
 
     // 存储当前库的模板信息，减少重复获取 key: templatePath value： template
@@ -154,8 +158,7 @@ class YamlTemplate(
                 label = label,
                 triggerOn = triggerOn,
                 resources = resources,
-                notices = notices,
-                finally = finally
+                notices = notices
             )
         }
 
@@ -173,6 +176,9 @@ class YamlTemplate(
         }
         if (newYamlObject.steps != null) {
             replaceSteps(newYamlObject.steps!!, preYamlObject)
+        }
+        if (newYamlObject.finally != null) {
+            replaceFinally(newYamlObject.finally!!, preYamlObject)
         }
 
         return preYamlObject
@@ -215,12 +221,17 @@ class YamlTemplate(
                 preYamlObject
             )
         }
+        if (templateObject[TemplateType.FINALLY.content] != null) {
+            replaceFinally(
+                transValue(filePath, TemplateType.FINALLY.text, templateObject[TemplateType.FINALLY.content]),
+                preYamlObject
+            )
+        }
         // 将不用替换的直接传入
         val newYaml = YamlObjects.getObjectFromYaml<NoReplaceTemplate>(toPath, YamlUtil.toYaml(templateObject))
         preYamlObject.label = newYaml.label
         preYamlObject.resources = newYaml.resources
         preYamlObject.notices = newYaml.notices
-        preYamlObject.finally = newYaml.finally
     }
 
     private fun replaceVariables(
@@ -263,6 +274,20 @@ class YamlTemplate(
             refreshTemplateDeep()
         }
         preYamlObject.stages = stageList
+    }
+
+    private fun replaceFinally(
+        finally: Map<String, Any>,
+        preYamlObject: PreScriptBuildYaml
+    ) {
+        // finally只支持一个stage所以不支持stage模板
+        if (finally.keys.contains(TEMPLATE_KEY)) {
+            error(YAML_FORMAT_ERROR.format(filePath, FINALLY_FORMAT_ERROR))
+        }
+        val stage = replaceStageTemplate(listOf(finally), filePath).first()
+        // 每个参数独立计算模板深度
+        refreshTemplateDeep()
+        preYamlObject.finally = stage
     }
 
     private fun replaceJobs(
@@ -751,47 +776,47 @@ class YamlTemplate(
     private fun getTemplate(path: String): String {
         if (!templates.keys.contains(path)) {
 //             没有库信息说明是触发库
-            val template = if (repo == null) {
-                SpringContextUtil.getBean(YamlTemplateService::class.java).getTemplate(
-                    gitProjectId = triggerProjectId,
-                    token = triggerToken,
-                    ref = triggerRef,
-                    fileName = path
-                )
-            } else {
-                SpringContextUtil.getBean(YamlTemplateService::class.java).getResTemplate(
-                    gitProjectId = sourceProjectId,
-                    repo = repo.repository,
-                    ref = repo.ref ?: triggerRef,
-                    personalAccessToken = repo.credentials?.personalAccessToken,
-                    fileName = path
-                )
-            }
-//            val template = getTestTemplate(path, repo)
+//            val template = if (repo == null) {
+//                SpringContextUtil.getBean(YamlTemplateService::class.java).getTemplate(
+//                    gitProjectId = triggerProjectId,
+//                    token = triggerToken,
+//                    ref = triggerRef,
+//                    fileName = path
+//                )
+//            } else {
+//                SpringContextUtil.getBean(YamlTemplateService::class.java).getResTemplate(
+//                    gitProjectId = sourceProjectId,
+//                    repo = repo.repository,
+//                    ref = repo.ref ?: triggerRef,
+//                    personalAccessToken = repo.credentials?.personalAccessToken,
+//                    fileName = path
+//                )
+//            }
+            val template = getTestTemplate(path, repo)
             setTemplate(path, template)
         }
         return templates[path]!!
     }
 
-//    private fun getTestTemplate(path: String, repo: Repositories?): String {
-//        val newPath = if (repo == null) {
-//            "templates/$path"
-//        } else {
-//            "templates/${repo.name}/templates/$path"
-//        }
-//        val classPathResource = ClassPathResource(newPath)
-//        val inputStream: InputStream = classPathResource.inputStream
-//        val isReader = InputStreamReader(inputStream)
-//
-//        val reader = BufferedReader(isReader)
-//        val sb = StringBuffer()
-//        var str: String?
-//        while (reader.readLine().also { str = it } != null) {
-//            sb.append(str).append("\n")
-//        }
-//        inputStream.close()
-//        return sb.toString()
-//    }
+    private fun getTestTemplate(path: String, repo: Repositories?): String {
+        val newPath = if (repo == null) {
+            "templates/$path"
+        } else {
+            "templates/${repo.name}/templates/$path"
+        }
+        val classPathResource = ClassPathResource(newPath)
+        val inputStream: InputStream = classPathResource.inputStream
+        val isReader = InputStreamReader(inputStream)
+
+        val reader = BufferedReader(isReader)
+        val sb = StringBuffer()
+        var str: String?
+        while (reader.readLine().also { str = it } != null) {
+            sb.append(str).append("\n")
+        }
+        inputStream.close()
+        return sb.toString()
+    }
 
     private fun addAndCheckTemplateNumb(file: String) {
         if (templateNumb.containsKey(file)) {
