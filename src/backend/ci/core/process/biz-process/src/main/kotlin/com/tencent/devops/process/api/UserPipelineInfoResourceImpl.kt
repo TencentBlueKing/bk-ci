@@ -59,8 +59,8 @@ class UserPipelineInfoResourceImpl @Autowired constructor(
             projectId = projectId,
             pipelineName = pipelineName,
             pipelineId = pipelineId,
-            limit = null,
-            offset = null
+            page = null,
+            pageSize = null
         )
         return Result(pipelineInfos)
     }

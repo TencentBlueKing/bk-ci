@@ -1328,11 +1328,13 @@ class PipelineListFacadeService @Autowired constructor(
         projectId: String,
         pipelineName: String?,
         pipelineId: String?,
-        limit: Int?,
-        offset: Int?
+        page: Int?,
+        pageSize: Int?
     ): List<PipelineIdAndName> {
-        logger.info("searchIdAndName |$projectId|$pipelineName| $limit| $offset")
-        val page = PageUtil.convertPageSizeToSQLLimit(limit, offset)
+        logger.info("searchIdAndName |$projectId|$pipelineName| $page| $pageSize")
+        val pageNotNull = page ?: 0
+        val pageSizeNotNull = pageSize ?: 10
+        val page = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         val pipelineRecords =
             pipelineInfoDao.searchByPipelineName(
                 dslContext = dslContext,
