@@ -1284,7 +1284,7 @@ class PipelineListFacadeService @Autowired constructor(
 
     fun searchByPipelineName(
         projectId: String,
-        pipelineName: String,
+        pipelineName: String?,
         limit: Int?,
         offset: Int?
     ): PipelineViewPipelinePage<PipelineInfo> {
@@ -1295,7 +1295,7 @@ class PipelineListFacadeService @Autowired constructor(
             pipelineInfoDao.searchByPipelineName(
                 dslContext = dslContext,
                 pipelineName = pipelineName,
-                projectId = projectId,
+                projectCode = projectId,
                 limit = limitNotNull,
                 offset = offsetNotNull
             )
@@ -1306,7 +1306,7 @@ class PipelineListFacadeService @Autowired constructor(
         val count = pipelineInfoDao.countPipelineInfoByProject(
             dslContext = dslContext,
             pipelineName = pipelineName,
-            projectId = projectId
+            projectCode = projectId
         )
         return PipelineViewPipelinePage(
             page = limitNotNull,
