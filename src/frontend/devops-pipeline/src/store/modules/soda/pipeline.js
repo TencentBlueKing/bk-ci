@@ -299,7 +299,7 @@ export const actions = {
         })
     },
     requestFileInfo: async ({ commit }, { projectId, path, type }) => {
-        return request.get(`/${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/${projectId}/${type}/show?path=${path}`).then(response => {
+        return request.get(`/${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/${projectId}/${type}/show?path=${encodeURIComponent(path)}`).then(response => {
             return response.data
         })
     },

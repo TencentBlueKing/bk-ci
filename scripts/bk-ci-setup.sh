@@ -253,25 +253,15 @@ setup_ci_gateway (){
   fi
   # 更新conf目录的指向.
   update_link_to_target "$gateway_dir/conf" "$nginx_conf_dir" || return 3
-  # 修正nginx启动用户.
-  if [ "$MS_USER" != "root" ]; then
-    echo >&2 "  openresty should run as $MS_USER."
-    if grep -qE "^[ \t]*user[ \t]" "$nginx_conf"; then
-      sed -i "s/^[ \t]*user.*$/  user $MS_USER;/" "$nginx_conf"
-    else
-      sed -i "1 i   user $MS_USER;" "$nginx_conf"
-    fi
-    grep -E "^[ \t]*user[ \t]" "$nginx_conf" || return 7
-  fi
   # 创建并更新logs目录.
   mkdir -p "$BK_CI_LOGS_DIR/nginx" || return 2
-  chown "$MS_USER:$MS_USER" "$BK_CI_LOGS_DIR/nginx" || return 5
+  chown -R "$MS_USER:$MS_USER" "$BK_CI_LOGS_DIR/nginx" || return 5
   update_link_to_target "$gateway_dir/logs" "$BK_CI_LOGS_DIR/nginx" || return 3
   update_link_to_target "$gateway_dir/run" "$BK_CI_LOGS_DIR/nginx" || return 3
   # 在数据目录创建运行时的存储目录, 并更新链接.
   local gateway_data_dir="$BK_CI_DATA_DIR/gateway" temp_dir=
   mkdir -p "$gateway_data_dir" || return 1
-  for temp_dir in client_body_temp fastcgi_temp proxy_temp scgi_temp uwsgi_temp; do
+  for temp_dir in client_body_temp fastcgi_temp proxy_temp scgi_temp uwsgi_temp files; do
     mkdir -p "$gateway_data_dir/$temp_dir" || return 2
     chown "$MS_USER:$MS_USER" "$gateway_data_dir/$temp_dir" || return 5
     update_link_to_target "$gateway_dir/$temp_dir" "$gateway_data_dir/$temp_dir" || return 3
@@ -284,6 +274,9 @@ setup_ci_gateway (){
       return 6
     fi
   fi
+  # prod目录指向agent-package.
+  # 预期200: curl -I bk-ci.service.consul/static/files/jar/worker-agent.jar
+  update_link_to_target "$gateway_data_dir/files/prod" "$BK_CI_HOME/agent-package"
   # 在全部 ci-gateway 节点上注册主入口域名: bk-ci.service.consul, 用于在集群内提供web服务.
   if [ -x $CTRL_DIR/bin/reg_consul_svc ]; then
     check_empty_var LAN_IP || return 15

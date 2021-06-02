@@ -1,13 +1,3 @@
-package com.tencent.devops.ticket
-
-import com.tencent.devops.auth.service.ManagerService
-import com.tencent.devops.common.client.Client
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
-import org.springframework.core.Ordered
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
@@ -20,12 +10,13 @@ import org.springframework.core.Ordered
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -34,10 +25,83 @@ import org.springframework.core.Ordered
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+package com.tencent.devops.ticket
+
+import com.tencent.devops.auth.service.ManagerService
+import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthResourceApi
+import com.tencent.devops.common.auth.code.TicketAuthServiceCode
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.ticket.dao.CertDao
+import com.tencent.devops.ticket.dao.CredentialDao
+import com.tencent.devops.ticket.service.CertPermissionServiceImpl
+import com.tencent.devops.ticket.service.CredentialPermissionServiceImpl
+import com.tencent.devops.ticket.service.GitCICertPermissionServiceImpl
+import com.tencent.devops.ticket.service.GitCICredentialPermissionServiceImpl
+import org.jooq.DSLContext
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
+
 @Configuration
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class TicketConfiguration {
     @Bean
     fun managerService(client: Client) = ManagerService(client)
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
+    fun gitCICertPermissionServiceImpl(
+        client: Client,
+        certDao: CertDao,
+        dslContext: DSLContext
+    ) = GitCICertPermissionServiceImpl(client, certDao, dslContext)
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
+    fun gitCICredentialPermissionServiceImpl(
+        client: Client,
+        credentialDao: CredentialDao,
+        dslContext: DSLContext
+    ) = GitCICredentialPermissionServiceImpl(client, credentialDao, dslContext)
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
+    fun certPermissionServiceImpl(
+        authResourceApi: AuthResourceApi,
+        authPermissionApi: AuthPermissionApi,
+        ticketAuthServiceCode: TicketAuthServiceCode,
+        managerService: ManagerService,
+        certDao: CertDao,
+        dslContext: DSLContext
+    ) = CertPermissionServiceImpl(
+        authResourceApi = authResourceApi,
+        authPermissionApi = authPermissionApi,
+        ticketAuthServiceCode = ticketAuthServiceCode,
+        managerService = managerService,
+        certDao = certDao,
+        dslContext = dslContext
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
+    fun credentialPermissionServiceImpl(
+        authResourceApi: AuthResourceApi,
+        authPermissionApi: AuthPermissionApi,
+        ticketAuthServiceCode: TicketAuthServiceCode,
+        managerService: ManagerService,
+        credentialDao: CredentialDao,
+        dslContext: DSLContext
+    ) = CredentialPermissionServiceImpl(
+        authResourceApi = authResourceApi,
+        authPermissionApi = authPermissionApi,
+        ticketAuthServiceCode = ticketAuthServiceCode,
+        managerService = managerService,
+        credentialDao = credentialDao,
+        dslContext = dslContext
+    )
 }

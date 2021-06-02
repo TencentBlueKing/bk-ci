@@ -46,5 +46,11 @@ data class Pool(
     val envName: String? = null,
     val envId: String? = null,
     val os: VMBaseOS? = null,
-    val workspace: String? = null
+    val workspace: String? = null,
+    val buildType: BuildType? = BuildType.DEVCLOUD
 )
+
+enum class BuildType {
+    DOCKER_VM,
+    DEVCLOUD
+}

@@ -607,24 +607,8 @@ class PipelineInfoFacadeService @Autowired constructor(
         name: String,
         channelCode: ChannelCode
     ) {
-        val pipeline = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
-            ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                defaultMessage = "流水线不存在"
-            )
-
-        if (pipeline.channelCode != channelCode) {
-            throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_CHANNEL_CODE,
-                defaultMessage = "指定要复制的流水线渠道来源${pipeline.channelCode}不符合$channelCode",
-                params = arrayOf(pipeline.channelCode.name)
-            )
-        }
-
-        val setting = pipelineRepositoryService.getSetting(pipelineId)?.copy(pipelineName = name)
-            ?: PipelineSetting(projectId = projectId, pipelineId = pipelineId, pipelineName = name)
+        val setting = pipelineSettingFacadeService.userGetSetting(userId, projectId, pipelineId, channelCode)
+        setting.pipelineName = name
         pipelineSettingFacadeService.saveSetting(userId = userId, setting = setting, checkPermission = true)
     }
 
