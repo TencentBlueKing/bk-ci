@@ -29,6 +29,7 @@ package com.tencent.devops.process.service
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.utils.LogUtils
@@ -61,7 +62,7 @@ class PipelineBuildExtTencentService @Autowired constructor(
         val extMap = mutableMapOf<String, String>()
         if (taskType.contains("linuxPaasCodeCCScript") || taskType.contains("linuxScript")) {
             logger.info("task need turbo, ${task.buildId}, ${task.taskName}, ${task.taskType}")
-            val turboTaskId = getTurboTask(task.pipelineId, task.taskId)
+            val turboTaskId = getTurboTask(task.projectId, task.pipelineId, task.taskId)
             extMap[PIPELINE_TURBO_TASK_ID] = turboTaskId
         }
 
@@ -81,9 +82,9 @@ class PipelineBuildExtTencentService @Autowired constructor(
         }
     }
 
-    fun getTurboTask(pipelineId: String, elementId: String): String {
+    fun getTurboTask(projectId: String, pipelineId: String, elementId: String): String {
         try {
-            val instances = consulClient!!.getInstances("turbo")
+            val instances = consulClient!!.getInstances("turbo-new")
                     ?: return ""
             if (instances.isEmpty()) {
                 return ""
@@ -97,8 +98,7 @@ class PipelineBuildExtTencentService @Autowired constructor(
 
             logger.info("Get turbo task info, request url: $url")
             val startTime = System.currentTimeMillis()
-            val request = Request.Builder().url(url).get().build()
-            OkhttpUtils.doHttp(request).use { response ->
+            OkhttpUtils.doGet(url, mapOf(AUTH_HEADER_DEVOPS_PROJECT_ID to projectId)).use { response ->
                 val data = response.body()?.string() ?: return ""
                 logger.info("Get turbo task info, response: $data")
                 LogUtils.costTime("call turbo ", startTime)
