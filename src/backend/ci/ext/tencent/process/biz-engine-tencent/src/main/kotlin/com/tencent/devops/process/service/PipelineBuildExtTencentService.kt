@@ -36,7 +36,6 @@ import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.service.PipelineBuildExtService
 import com.tencent.devops.process.utils.PIPELINE_TURBO_TASK_ID
-import okhttp3.Request
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.client.ServiceInstance
