@@ -29,6 +29,7 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.PageUtil
@@ -41,6 +42,7 @@ import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.dao.PipelineFavorDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.template.TemplatePipelineDao
@@ -52,7 +54,9 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.Pipeline
+import com.tencent.devops.process.pojo.PipelineIdAndName
 import com.tencent.devops.process.pojo.PipelineSortType
+import com.tencent.devops.process.pojo.PipelineTemplateAndCollect
 import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.app.PipelinePage
 import com.tencent.devops.process.pojo.classify.PipelineViewAndPipelines
@@ -91,7 +95,8 @@ class PipelineListFacadeService @Autowired constructor(
     private val dslContext: DSLContext,
     private val templatePipelineDao: TemplatePipelineDao,
     private val pipelineInfoDao: PipelineInfoDao,
-    private val pipelineBuildSummaryDao: PipelineBuildSummaryDao
+    private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
+    private val pipelineFavorDao: PipelineFavorDao
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -1316,6 +1321,71 @@ class PipelineListFacadeService @Autowired constructor(
             pageSize = offsetNotNull,
             records = pipelineInfos,
             count = count.toLong()
+        )
+    }
+    
+    fun searchIdAndName(
+        projectId: String,
+        pipelineName: String?,
+        pipelineId: String?,
+        limit: Int?,
+        offset: Int?
+    ): List<PipelineIdAndName> {
+        logger.info("searchIdAndName |$projectId|$pipelineName| $limit| $offset")
+        val page = PageUtil.convertPageSizeToSQLLimit(limit, offset)
+        val pipelineRecords =
+            pipelineInfoDao.searchByPipelineName(
+                dslContext = dslContext,
+                pipelineName = pipelineName,
+                projectCode = projectId,
+                limit = page.limit,
+                offset = page.offset
+            )
+        val pipelineInfos = mutableListOf<PipelineIdAndName>()
+        var needGetPipeline = false
+        pipelineRecords?.map {
+            pipelineInfos.add(PipelineIdAndName(it.pipelineId, it.pipelineName))
+        }
+        if (!pipelineId.isNullOrEmpty()) {
+            val pipelineIds = pipelineInfos.map { it.pipelineId }
+            if (!pipelineIds.contains(pipelineId)) {
+                needGetPipeline = true
+            }
+        }
+        if (needGetPipeline) {
+            val pipelineInfo = pipelineInfoDao.getPipelineInfo(dslContext, pipelineId!!)
+            if (pipelineInfo != null) {
+                pipelineInfos.add(PipelineIdAndName(pipelineInfo.pipelineId, pipelineInfo.pipelineName))
+            }
+        }
+        return pipelineInfos
+    }
+    
+    fun getPipelineDetail(
+        userId: String,
+        projectId: String,
+        pipelineId: String
+    ): PipelineTemplateAndCollect? {
+        if (!pipelinePermissionService.checkPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.VIEW
+        )) {
+            throw PermissionForbiddenException("$userId 无流水线$pipelineId 查看权限")
+        }
+        val pipelineInfo = pipelineInfoDao.getPipelineInfo(
+            dslContext = dslContext,
+            pipelineId = pipelineId
+        ) ?: return null
+        val instanceFromTemplate = templatePipelineDao.get(dslContext, pipelineId) != null
+        val hasCollect = pipelineFavorDao.listByPipelineId(dslContext, pipelineId, userId) != null
+        return PipelineTemplateAndCollect(
+            pipelineId = pipelineInfo.pipelineId,
+            pipelineName = pipelineInfo.pipelineName,
+            instanceFromTemplate = instanceFromTemplate,
+            hasCollect = hasCollect,
+            canManualStartup = pipelineInfo.manualStartup
         )
     }
 
