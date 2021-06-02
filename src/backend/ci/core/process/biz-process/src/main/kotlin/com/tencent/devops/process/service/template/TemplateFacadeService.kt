@@ -94,7 +94,6 @@ import com.tencent.devops.process.pojo.template.TemplateInstanceItemStatus
 import com.tencent.devops.process.pojo.template.TemplateInstancePage
 import com.tencent.devops.process.pojo.template.TemplateInstanceParams
 import com.tencent.devops.process.pojo.template.TemplateInstanceUpdate
-import com.tencent.devops.process.pojo.template.TemplateInstances
 import com.tencent.devops.process.pojo.template.TemplateListModel
 import com.tencent.devops.process.pojo.template.TemplateModel
 import com.tencent.devops.process.pojo.template.TemplateModelDetail
@@ -1835,72 +1834,6 @@ class TemplateFacadeService @Autowired constructor(
             instanceType = PipelineInstanceTypeEnum.CONSTRAINT.type,
             templateIds = templateIds
         ).groupBy { it.templateId }.map { it.key to it.value.size }.toMap()
-    }
-
-    fun listTemplateInstances(projectId: String, userId: String, templateId: String): TemplateInstances {
-        return listTemplateInstances(projectId = projectId, userId = userId, templateIds = setOf(templateId)).first()
-    }
-
-    fun listTemplateInstances(projectId: String, userId: String, templateIds: Set<String>): List<TemplateInstances> {
-        logger.info("[$projectId|$userId|$templateIds] List the templates instances")
-        val associateTemplatePipelines =
-            templatePipelineDao.listPipeline(
-                dslContext = dslContext,
-                instanceType = PipelineInstanceTypeEnum.CONSTRAINT.type,
-                templateIds = templateIds
-            ).groupBy { it.templateId }
-        return templateIds.map { tid ->
-            val associatePipelines = associateTemplatePipelines[tid] ?: listOf()
-
-            val pipelineIds = associatePipelines.map { it.pipelineId }.toSet()
-            logger.info("Get the pipelineIds - $associatePipelines")
-            val pipelineSettings = pipelineSettingDao.getSettings(dslContext, pipelineIds).groupBy { it.pipelineId }
-            logger.info("Get the pipeline settings - $pipelineSettings")
-            val hasPermissionList = pipelinePermissionService.getResourceByPermission(
-                userId = userId,
-                projectId = projectId,
-                permission = AuthPermission.EDIT
-            )
-
-            val latestVersion = getLatestVersion(projectId, tid)
-            val version = latestVersion.version
-            val templateInstanceItems = templateInstanceItemDao.getTemplateInstanceItemListByPipelineIds(
-                dslContext = dslContext,
-                pipelineIds = pipelineIds
-            )
-            val templatePipelines = associatePipelines.map {
-                val pipelineSetting = pipelineSettings[it.pipelineId]
-                if (pipelineSetting == null || pipelineSetting.isEmpty()) {
-                    throw ErrorCodeException(
-                        defaultMessage = "流水线设置配置不存在",
-                        errorCode = ProcessMessageCode.PIPELINE_SETTING_NOT_EXISTS
-                    )
-                }
-                val templatePipelineStatus = generateTemplatePipelineStatus(templateInstanceItems, it, version)
-                TemplatePipeline(
-                    templateId = it.templateId,
-                    versionName = it.versionName,
-                    version = it.version,
-                    pipelineId = it.pipelineId,
-                    pipelineName = pipelineSetting[0].name,
-                    updateTime = it.updatedTime.timestampmilli(),
-                    hasPermission = hasPermissionList.contains(it.pipelineId),
-                    status = templatePipelineStatus
-                )
-            }
-
-            TemplateInstances(
-                projectId = projectId,
-                templateId = tid,
-                instances = templatePipelines,
-                latestVersion = TemplateVersion(
-                    version = latestVersion.version,
-                    versionName = latestVersion.versionName,
-                    updateTime = latestVersion.createdTime.timestampmilli(),
-                    creator = latestVersion.creator
-                )
-            )
-        }
     }
 
     /**
