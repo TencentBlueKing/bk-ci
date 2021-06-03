@@ -30,6 +30,7 @@ package com.tencent.devops.gitci.resources
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.ci.CiYamlUtils
+import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.gitci.api.GitCITriggerResource
 import com.tencent.devops.gitci.pojo.GitYamlString
@@ -57,6 +58,10 @@ class GitCITriggerResourceImpl @Autowired constructor(
 
     override fun checkYaml(userId: String, yaml: GitYamlString): Result<String> {
         try {
+            if (ScriptYmlUtils.isV2Version(yaml.yaml)) {
+                return Result("OK")
+            }
+
             val yamlStr = CiYamlUtils.formatYaml(yaml.yaml)
             logger.debug("yaml str : $yamlStr")
 
