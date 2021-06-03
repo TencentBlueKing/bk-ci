@@ -95,7 +95,7 @@ interface UserPipelineInfoResource {
         @PathParam("projectId")
         projectId: String,
         @ApiParam("流水线Id")
-        @QueryParam("pipelineId")
+        @PathParam("pipelineId")
         pipelineId: String
     ): Result<PipelineTemplateAndCollect?>
 }
