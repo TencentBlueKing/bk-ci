@@ -188,7 +188,7 @@ class GitRequestEventBuildDao {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             return dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
-                .fetchOne()
+                .fetchAny()
         }
     }
 
@@ -204,7 +204,7 @@ class GitRequestEventBuildDao {
         )
             .from(t2).leftJoin(t1).on(t1.EVENT_ID.eq(t2.ID))
             .where(t1.BUILD_ID.eq(buildId))
-            .fetchOne()
+            .fetchAny()
     }
 
     fun getByEventIds(
