@@ -89,7 +89,7 @@ class BkRepoSearchService @Autowired constructor(
     }
 
     fun serviceSearch(
-        userId: String,
+        userId: String?,
         projectId: String,
         searchProps: List<Property>,
         page: Int,
