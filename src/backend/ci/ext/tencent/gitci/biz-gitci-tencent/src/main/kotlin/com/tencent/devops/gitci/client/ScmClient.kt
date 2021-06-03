@@ -35,6 +35,7 @@ import com.tencent.devops.gitci.pojo.GitRepositoryConf
 import com.tencent.devops.gitci.pojo.enums.GitCICommitCheckState
 import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
 import com.tencent.devops.gitci.utils.GitCIPipelineUtils
+import com.tencent.devops.gitci.utils.GitCommonUtils
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.CommitCheckRequest
@@ -236,10 +237,7 @@ class ScmClient @Autowired constructor(
 
     private fun getProjectName(conf: GitCIBasicSetting): String {
         return try {
-            val names = conf.homepage.split("/")
-            val userName = names[names.lastIndex - 1]
-            val projectName = names.last()
-            "$userName/$projectName"
+            GitCommonUtils.getRepoName(conf.gitHttpUrl, conf.name)
         } catch (e: java.lang.Exception) {
             conf.name
         }
