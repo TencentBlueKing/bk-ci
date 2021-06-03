@@ -166,7 +166,7 @@ class ExperienceOuterService @Autowired constructor(
 
     fun outerList(projectId: String): List<String> {
         return profileApi.v2ProfilesList(
-            null, null, null, listOf("username", "departments"), "domain", listOf(domain),
+            null, null, 100000, listOf("username", "departments"), "domain", listOf(domain),
             null, null, null, null, null, null, null, null
         ).results
             .filter { it.departments?.filter { d -> d.fullName == projectId }?.any() ?: false }
