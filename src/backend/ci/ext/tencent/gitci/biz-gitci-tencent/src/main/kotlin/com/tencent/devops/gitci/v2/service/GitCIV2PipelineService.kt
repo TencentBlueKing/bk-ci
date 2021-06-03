@@ -182,8 +182,8 @@ class GitCIV2PipelineService @Autowired constructor(
                     enabled = enabled
                 ) == 1
             }
-            model.stages.forEach { it.containers.forEach { it.elements } }
-            timerTrigger.forEach { it.additionalOptions.enable = enabled }
+            timerTrigger.forEach { it.additionalOptions?.enable = enabled }
+            return saveModel(processClient, userId, gitProjectId, pipelineId, model) ?: false
         } catch (e: Exception) {
             logger.error("gitProjectId: $gitProjectId enable pipeline[$pipelineId] to $enabled error ${e.message}")
             return false
@@ -239,6 +239,33 @@ class GitCIV2PipelineService @Autowired constructor(
             return response.data
         } catch (e: Exception) {
             logger.error("get pipeline failed, pipelineId: " +
+                "$pipelineId, projectCode: $gitProjectId, error msg: ${e.message}")
+            return null
+        }
+    }
+
+    private fun saveModel(
+        processClient: ServicePipelineResource,
+        userId: String,
+        gitProjectId: Long,
+        pipelineId: String,
+        model: Model
+    ): Boolean? {
+        try {
+            val response = processClient.edit(
+                    userId = userId,
+                    projectId = "$DEVOPS_PROJECT_PREFIX$gitProjectId",
+                    pipelineId = pipelineId,
+                    pipeline = model,
+                    channelCode = channelCode
+                )
+            if (response.isNotOk()) {
+                logger.error("edit pipeline failed, msg: ${response.message}")
+                return null
+            }
+            return response.data
+        } catch (e: Exception) {
+            logger.error("edit pipeline failed, pipelineId: " +
                 "$pipelineId, projectCode: $gitProjectId, error msg: ${e.message}")
             return null
         }
