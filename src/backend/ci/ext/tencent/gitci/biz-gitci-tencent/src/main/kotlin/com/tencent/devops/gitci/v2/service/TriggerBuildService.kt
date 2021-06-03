@@ -285,17 +285,18 @@ class TriggerBuildService @Autowired constructor(
         if (yaml.triggerOn?.schedules != null &&
             yaml.triggerOn?.schedules!!.cron != null
         ) {
-            triggerElementList.add(
-                TimerTriggerElement(
-                    id = "T-1-1-2",
-                    name = "定时触发",
-                    advanceExpression = listOf(
-                        yaml.triggerOn!!.schedules!!.cron!!
-                    )
+            val timerTrigger = TimerTriggerElement(
+                id = "T-1-1-2",
+                name = "定时触发",
+                advanceExpression = listOf(
+                    yaml.triggerOn!!.schedules!!.cron!!
                 )
             )
+            timerTrigger.additionalOptions = ElementAdditionalOptions(
+                runCondition = RunCondition.PRE_TASK_SUCCESS
+            )
+            triggerElementList.add(timerTrigger)
         }
-
         val params = createPipelineParams(yaml, gitBasicSetting, event)
         val triggerContainer = TriggerContainer(
             id = "0",
