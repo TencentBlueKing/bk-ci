@@ -30,9 +30,15 @@ package com.tencent.devops.gitci.v2.service
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.gitci.constant.GitCIConstant.DEVOPS_PROJECT_PREFIX
 import com.tencent.devops.gitci.dao.GitPipelineResourceDao
 import com.tencent.devops.gitci.pojo.GitCIBuildHistory
 import com.tencent.devops.gitci.pojo.GitProjectPipeline
+import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.scm.api.ServiceGitResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -45,10 +51,12 @@ class GitCIV2PipelineService @Autowired constructor(
     private val client: Client,
     private val pipelineResourceDao: GitPipelineResourceDao,
     private val gitCIV2DetailService: GitCIV2DetailService,
-    private val scmService: ScmService
+    private val scmService: ScmService,
+    private val redisOperation: RedisOperation
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitCIV2PipelineService::class.java)
+        private val channelCode = ChannelCode.GIT
     }
 
     fun getPipelineList(
@@ -157,12 +165,31 @@ class GitCIV2PipelineService @Autowired constructor(
         pipelineId: String,
         enabled: Boolean
     ): Boolean {
-        logger.info("gitProjectId: $gitProjectId enable pipeline[$pipelineId] to $enabled")
-        return pipelineResourceDao.enablePipelineById(
-            dslContext = dslContext,
-            pipelineId = pipelineId,
-            enabled = enabled
-        ) == 1
+        // 关闭流水线时同时关闭其定时触发任务
+        val lock = getLock(gitProjectId = gitProjectId, pipelineId = pipelineId)
+        try {
+            lock.lock()
+            val processClient = client.get(ServicePipelineResource::class)
+            val model = getModel(processClient, userId, gitProjectId, pipelineId) ?: return false
+            val timerTrigger = model.stages.first()
+                .containers.first()
+                .elements.filter { it.getClassType() == "timerTrigger" }
+            // 如果没有定时触发器就不管
+            if (timerTrigger.isNullOrEmpty()) {
+                return pipelineResourceDao.enablePipelineById(
+                    dslContext = dslContext,
+                    pipelineId = pipelineId,
+                    enabled = enabled
+                ) == 1
+            }
+            model.stages.forEach { it.containers.forEach { it.elements } }
+            timerTrigger.forEach { it.additionalOptions.enable = enabled }
+        } catch (e: Exception) {
+            logger.error("gitProjectId: $gitProjectId enable pipeline[$pipelineId] to $enabled error ${e.message}")
+            return false
+        } finally {
+            lock.unlock()
+        }
     }
 
     fun getYamlByPipeline(
@@ -186,5 +213,34 @@ class GitCIV2PipelineService @Autowired constructor(
             ref = ref,
             useAccessToken = true
         )
+    }
+
+    private fun getLock(gitProjectId: Long, pipelineId: String): RedisLock {
+        return RedisLock(
+            redisOperation = redisOperation,
+            lockKey = "GITCI_PIPELINE_ENABLE_LOCK_${gitProjectId}_$pipelineId",
+            expiredTimeInSeconds = 60L
+        )
+    }
+
+    private fun getModel(
+        processClient: ServicePipelineResource,
+        userId: String,
+        gitProjectId: Long,
+        pipelineId: String
+    ): Model? {
+        try {
+            val response =
+                processClient.get(userId, "$DEVOPS_PROJECT_PREFIX$gitProjectId", pipelineId, channelCode)
+            if (response.isNotOk()) {
+                logger.error("get pipeline failed, msg: ${response.message}")
+                return null
+            }
+            return response.data
+        } catch (e: Exception) {
+            logger.error("get pipeline failed, pipelineId: " +
+                "$pipelineId, projectCode: $gitProjectId, error msg: ${e.message}")
+            return null
+        }
     }
 }
