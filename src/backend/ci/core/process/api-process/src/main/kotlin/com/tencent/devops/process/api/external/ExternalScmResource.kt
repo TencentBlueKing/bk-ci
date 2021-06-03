@@ -53,7 +53,16 @@ interface ExternalScmResource {
     @POST
     @Path("/codegit/commit")
     fun webHookCodeGitCommit(
-        event: String
+        @ApiParam("X-Event")
+        @HeaderParam("X-Event")
+        event: String,
+        @ApiParam("X-Token")
+        @HeaderParam("X-Token")
+        secret: String? = null,
+        @ApiParam("X-TRACE-ID")
+        @HeaderParam("X-TRACE-ID")
+        traceId: String,
+        body: String
     ): Result<Boolean>
 
     @ApiOperation("Gitlab仓库提交")

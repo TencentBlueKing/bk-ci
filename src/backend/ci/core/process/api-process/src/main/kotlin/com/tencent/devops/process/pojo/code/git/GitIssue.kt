@@ -28,64 +28,38 @@
 package com.tencent.devops.process.pojo.code.git
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
-import com.fasterxml.jackson.annotation.JsonSubTypes
-import com.fasterxml.jackson.annotation.JsonTypeInfo
-import com.tencent.devops.process.pojo.code.WebHookEvent
-
-@JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "object_kind")
-@JsonSubTypes(
-    JsonSubTypes.Type(value = GitPushEvent::class, name = GitPushEvent.classType),
-    JsonSubTypes.Type(value = GitTagPushEvent::class, name = GitTagPushEvent.classType),
-    JsonSubTypes.Type(value = GitMergeRequestEvent::class, name = GitMergeRequestEvent.classType)
-)
-abstract class GitEvent : WebHookEvent
-
-@Suppress("ALL")
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class GitCommitRepository(
-    val name: String,
-    val git_http_url: String,
-    val git_ssh_url: String
-)
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.process.pojo.code.github.GithubUser
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-data class GitCommit(
-    val id: String,
-    val message: String,
-    val timestamp: String,
-    val author: GitCommitAuthor,
-    val modified: List<String>?,
-    val added: List<String>?,
-    val removed: List<String>?
-)
+data class GitIssue(
+    val user: GithubUser,
+    val repository: GitRepository,
+    @JsonProperty("object_attributes")
+    val objectAttributes: GitIssueAttributes
+) : GitEvent() {
+    companion object {
+        const val classType = "issue"
+    }
+}
 
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class GitCommitAuthor(
-    val name: String,
-    val email: String
-)
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class GitUser(
-    val name: String,
-    val username: String
-)
-
-@Suppress("ALL")
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class GitProject(
-    val name: String,
-    val ssh_url: String,
-    val http_url: String,
-    val web_url: String,
-    val namespace: String,
-    val visibility_level: Int
-)
-
-@JsonIgnoreProperties(ignoreUnknown = true)
-data class GitRepository(
-    val name: String,
-    val url: String,
+data class GitIssueAttributes(
+    val id: Long,
+    val title: String,
+    @JsonProperty("assignee_id")
+    val assigneeId: String,
+    @JsonProperty("author_id")
+    val authorId: String,
+    @JsonProperty("project_id")
+    val projectId: String,
+    val position: Long,
+    @JsonProperty("branch_name")
+    val branchName: String? = null,
     val description: String? = null,
-    val homepage: String
+    @JsonProperty("milestone_id")
+    val milestoneId: String? = null,
+    val state: String,
+    val iid: String,
+    val url: String,
+    val action: String
 )

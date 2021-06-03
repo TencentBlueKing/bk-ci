@@ -58,6 +58,7 @@ include(":core:common:common-websocket")
 include(":core:common:common-util")
 include(":core:common:common-security")
 include(":core:common:common-dispatch-sdk")
+include(":core:common:common-webhook")
 
 include(":core:project")
 include(":core:project:api-project")
