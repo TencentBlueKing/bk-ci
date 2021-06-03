@@ -17,6 +17,10 @@
 -- SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 local _M = {}
 function _M:isSafe()
+    if ngx.var.safe == 'true' then
+        return true
+    end
+
     local host = ngx.var.host
     local path = ngx.var.uri
     -- 外部链接安全检查
