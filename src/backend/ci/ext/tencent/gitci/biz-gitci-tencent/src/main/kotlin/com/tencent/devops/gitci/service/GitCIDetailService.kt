@@ -163,6 +163,7 @@ class GitCIDetailService @Autowired constructor(
         val prop = listOf(Property("pipelineId", pipelineId), Property("buildId", buildId))
 
         return client.get(ServiceArtifactoryResource::class).search(
+            userId = userId,
             projectId = conf.projectCode!!,
             page = page,
             pageSize = pageSize,
