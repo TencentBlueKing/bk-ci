@@ -1386,8 +1386,9 @@ class PipelineListFacadeService @Autowired constructor(
         }
         val instanceFromTemplate = templatePipelineDao.get(dslContext, pipelineId) != null
         val favorInfos = pipelineFavorDao.listByPipelineId(dslContext, pipelineId, userId)
-        logger.info("$userId $pipelineId , favor: $favorInfos")
-        val hasCollect = !favorInfos.isNullOrEmpty()
+        val hasCollect = if (favorInfos.count() > 0) {
+            true
+        } else false
         return PipelineTemplateAndCollect(
             pipelineId = pipelineInfo.pipelineId,
             pipelineName = pipelineInfo.pipelineName,
