@@ -316,8 +316,8 @@ class TriggerBuildService @Autowired constructor(
             stageList.add(createStage(stage, event, gitBasicSetting))
         }
 
-        yaml.finally?.forEach {
-            stageList.add(createStage(it, event, gitBasicSetting, true))
+        if (yaml.finally != null) {
+            stageList.add(createStage(yaml.finally!!, event, gitBasicSetting, true))
         }
 
         return Model(

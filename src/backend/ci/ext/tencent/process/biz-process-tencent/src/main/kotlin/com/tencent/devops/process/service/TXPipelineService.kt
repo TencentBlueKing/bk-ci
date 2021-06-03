@@ -1098,6 +1098,7 @@ class TXPipelineService @Autowired constructor(
             resource = null,
             notices = null,
             finally = getV2FinalFromStage(userId, projectId, pipelineId, model.stages.filter { it.finally }, yamlSb)
+                .first()
         )
         var yamlStr = YamlUtil.toYaml(yamlObj)
         yamlSb.append(replaceTaskType(yamlStr))
