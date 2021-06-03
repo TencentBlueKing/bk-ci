@@ -133,8 +133,10 @@ jobs:
           cp -f bkci/frontend/pipeline/frontend#pipeline#index.html bkci/support-files/templates/frontend#pipeline#index.html
 
           cp -f bkci/frontend/assets_bundle.json bkci/support-files/templates/project#assets_bundle.json
-          echo "::set-output name=version::$(basename $GITHUB_REF)"
-          basename $GITHUB_REF > bkci/VERSION
+          version="$(basename $GITHUB_REF)"
+          echo "::set-output name=version::$version"
+          echo "$version" > bkci/VERSION
+          echo "BK_CI_VERSION=\"$version\"" >> bkci/scripts/bkenv.properties
 
       - name: Create Slim Package dir
         id: create-slim-dir
