@@ -40,12 +40,9 @@ import com.tencent.devops.gitci.v2.template.pojo.ParametersTemplateNull
 import com.tencent.devops.gitci.v2.template.pojo.TemplateGraph
 import com.tencent.devops.gitci.v2.template.pojo.enums.TemplateType
 import com.tencent.devops.common.ci.v2.utils.ScriptYmlUtils
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.gitci.v2.template.pojo.NoReplaceTemplate
 import org.slf4j.LoggerFactory
-import org.springframework.core.io.ClassPathResource
-import java.io.BufferedReader
-import java.io.InputStream
-import java.io.InputStreamReader
 
 @Suppress("ALL")
 class YamlTemplate(
@@ -776,47 +773,47 @@ class YamlTemplate(
     private fun getTemplate(path: String): String {
         if (!templates.keys.contains(path)) {
 //             没有库信息说明是触发库
-//            val template = if (repo == null) {
-//                SpringContextUtil.getBean(YamlTemplateService::class.java).getTemplate(
-//                    gitProjectId = triggerProjectId,
-//                    token = triggerToken,
-//                    ref = triggerRef,
-//                    fileName = path
-//                )
-//            } else {
-//                SpringContextUtil.getBean(YamlTemplateService::class.java).getResTemplate(
-//                    gitProjectId = sourceProjectId,
-//                    repo = repo.repository,
-//                    ref = repo.ref ?: triggerRef,
-//                    personalAccessToken = repo.credentials?.personalAccessToken,
-//                    fileName = path
-//                )
-//            }
-            val template = getTestTemplate(path, repo)
+            val template = if (repo == null) {
+                SpringContextUtil.getBean(YamlTemplateService::class.java).getTemplate(
+                    gitProjectId = triggerProjectId,
+                    token = triggerToken,
+                    ref = triggerRef,
+                    fileName = path
+                )
+            } else {
+                SpringContextUtil.getBean(YamlTemplateService::class.java).getResTemplate(
+                    gitProjectId = sourceProjectId,
+                    repo = repo.repository,
+                    ref = repo.ref ?: triggerRef,
+                    personalAccessToken = repo.credentials?.personalAccessToken,
+                    fileName = path
+                )
+            }
+//            val template = getTestTemplate(path, repo)
             setTemplate(path, template)
         }
         return templates[path]!!
     }
 
-    private fun getTestTemplate(path: String, repo: Repositories?): String {
-        val newPath = if (repo == null) {
-            "templates/$path"
-        } else {
-            "templates/${repo.name}/templates/$path"
-        }
-        val classPathResource = ClassPathResource(newPath)
-        val inputStream: InputStream = classPathResource.inputStream
-        val isReader = InputStreamReader(inputStream)
-
-        val reader = BufferedReader(isReader)
-        val sb = StringBuffer()
-        var str: String?
-        while (reader.readLine().also { str = it } != null) {
-            sb.append(str).append("\n")
-        }
-        inputStream.close()
-        return sb.toString()
-    }
+//    private fun getTestTemplate(path: String, repo: Repositories?): String {
+//        val newPath = if (repo == null) {
+//            "templates/$path"
+//        } else {
+//            "templates/${repo.name}/templates/$path"
+//        }
+//        val classPathResource = ClassPathResource(newPath)
+//        val inputStream: InputStream = classPathResource.inputStream
+//        val isReader = InputStreamReader(inputStream)
+//
+//        val reader = BufferedReader(isReader)
+//        val sb = StringBuffer()
+//        var str: String?
+//        while (reader.readLine().also { str = it } != null) {
+//            sb.append(str).append("\n")
+//        }
+//        inputStream.close()
+//        return sb.toString()
+//    }
 
     private fun addAndCheckTemplateNumb(file: String) {
         if (templateNumb.containsKey(file)) {
