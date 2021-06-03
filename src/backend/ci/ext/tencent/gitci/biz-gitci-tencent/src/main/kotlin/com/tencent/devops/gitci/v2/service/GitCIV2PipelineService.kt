@@ -171,19 +171,18 @@ class GitCIV2PipelineService @Autowired constructor(
             lock.lock()
             val processClient = client.get(ServicePipelineResource::class)
             val model = getModel(processClient, userId, gitProjectId, pipelineId) ?: return false
-            val timerTrigger = model.stages.first()
+            model.stages.first()
                 .containers.first()
                 .elements.filter { it.getClassType() == "timerTrigger" }
-            // 如果没有定时触发器就不管
-            if (timerTrigger.isNullOrEmpty()) {
-                return pipelineResourceDao.enablePipelineById(
-                    dslContext = dslContext,
-                    pipelineId = pipelineId,
-                    enabled = enabled
-                ) == 1
-            }
-            timerTrigger.forEach { it.additionalOptions?.enable = enabled }
-            return saveModel(processClient, userId, gitProjectId, pipelineId, model) ?: false
+                .forEach { it.additionalOptions?.enable = enabled }
+            val edited = saveModel(processClient, userId, gitProjectId, pipelineId, model)
+            logger.info("gitProjectId: $gitProjectId enable pipeline[$pipelineId] to $enabled" +
+                ", edit timerTrigger with $edited")
+            return pipelineResourceDao.enablePipelineById(
+                dslContext = dslContext,
+                pipelineId = pipelineId,
+                enabled = enabled
+            ) == 1
         } catch (e: Exception) {
             logger.error("gitProjectId: $gitProjectId enable pipeline[$pipelineId] to $enabled error ${e.message}")
             return false
