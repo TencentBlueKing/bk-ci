@@ -29,6 +29,7 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.model.SQLPage
@@ -1380,8 +1381,12 @@ class PipelineListFacadeService @Autowired constructor(
             dslContext = dslContext,
             pipelineId = pipelineId
         ) ?: return null
+        if (pipelineInfo.projectId != projectId) {
+            throw ParamBlankException("$pipelineId 非 $projectId 流水线")
+        }
         val instanceFromTemplate = templatePipelineDao.get(dslContext, pipelineId) != null
-        val hasCollect = pipelineFavorDao.listByPipelineId(dslContext, pipelineId, userId) != null
+        val favorInfos = pipelineFavorDao.listByPipelineId(dslContext, pipelineId, userId)
+        val hasCollect = !favorInfos.isNullOrEmpty()
         return PipelineTemplateAndCollect(
             pipelineId = pipelineInfo.pipelineId,
             pipelineName = pipelineInfo.pipelineName,
