@@ -36,6 +36,7 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthTokenCreate
 import com.tencent.devops.common.auth.api.pojo.BkAuthTokenCreateRequest
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.code.BSAuthServiceCode
+import com.tencent.devops.common.auth.code.BSCommonAuthServiceCode
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import okhttp3.MediaType
@@ -141,6 +142,7 @@ class BSAuthTokenApi @Autowired constructor(
         secretMap[BSAuthServiceCode.QUALITY.value] = bkAuthProperties.qualitySecret
         secretMap[BSAuthServiceCode.WETEST.value] = bkAuthProperties.wetestSecret
         secretMap[BSAuthServiceCode.PROJECT.value] = bkAuthProperties.pipelineSecret
+        secretMap[BSAuthServiceCode.COMMON.value] = bkAuthProperties.authSecret
 
         secretMap.forEach { (key, value) ->
             logger.info("[secretMap] key: $key , value: $value")
