@@ -29,7 +29,6 @@
                             :id="option.categoryCode"
                             :name="option.categoryName"
                             :placeholder="$t('store.请选择范畴')"
-                            @click.native="changeShowAgentType(option)"
                         >
                         </bk-option>
                     </bk-select>
@@ -54,24 +53,6 @@
                 </bk-form-item>
                 <bk-form-item :label="$t('store.标签')" property="labelIdList">
                     <bk-tag-input v-model="form.labelIdList" :list="labelList" display-key="labelName" search-key="labelName" trigger="focus" :placeholder="$t('store.请选择标签')"></bk-tag-input>
-                </bk-form-item>
-                <bk-form-item :label="$t('store.适用机器')"
-                    property="agentTypeScope"
-                    :required="true"
-                    :rules="[requireRule]"
-                    ref="agentTypeScope"
-                    v-if="needAgentType"
-                    error-display-type="normal"
-                >
-                    <bk-select v-model="form.agentTypeScope" searchable multiple show-select-all>
-                        <bk-option v-for="(option, index) in agentTypes"
-                            :key="index"
-                            :id="option.id"
-                            :name="option.name"
-                            :placeholder="$t('store.请选择适用机器')"
-                        >
-                        </bk-option>
-                    </bk-select>
                 </bk-form-item>
                 <bk-form-item :label="$t('store.简介')"
                     property="summary"
@@ -258,24 +239,17 @@
                     versionContent: '',
                     ticketId: '',
                     projectCode: '',
-                    category: '',
-                    agentTypeScope: []
+                    category: ''
                 },
                 docsLink: `${DOCS_URL_PREFIX}/document/6.0/129/7518`,
                 ticketList: [],
                 classifys: [],
                 labelList: [],
                 categoryList: [],
-                agentTypes: [
-                    { name: this.$t('store.Devnet 物理机'), id: 'DOCKER' },
-                    { name: 'IDC CVM', id: 'IDC' },
-                    { name: 'DevCloud', id: 'PUBLIC_DEVCLOUD' }
-                ],
                 imageList: [],
                 imageVersionList: [],
                 isLoading: false,
                 isLoadingTag: false,
-                needAgentType: false,
                 originVersion: '',
                 requireRule: {
                     required: true,
@@ -335,11 +309,6 @@
                 'requestTicketList',
                 'requestReleaseImage'
             ]),
-
-            changeShowAgentType (option) {
-                const settings = option.settings || {}
-                this.needAgentType = settings.needAgentType === 'NEED_AGENT_TYPE_TRUE'
-            },
 
             submitImage () {
                 if (this.form.dockerFileType === 'INPUT') this.form.dockerFileContent = this.$refs.codeEditor.getValue()
@@ -416,9 +385,6 @@
                             this.labelList = labels
                             this.categoryList = categorys
                             this.ticketList = ticket.records || []
-                            const currentCategory = categorys.find((category) => (res.category === category.categoryCode)) || {}
-                            const settings = currentCategory.settings || {}
-                            this.needAgentType = settings.needAgentType === 'NEED_AGENT_TYPE_TRUE'
                             
                             if (this.form.imageRepoName && this.form.imageSourceType === 'BKDEVOPS') {
                                 const imageRepo = this.form.imageRepoName
