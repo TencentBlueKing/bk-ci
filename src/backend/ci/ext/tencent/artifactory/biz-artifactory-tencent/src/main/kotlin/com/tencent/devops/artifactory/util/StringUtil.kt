@@ -54,4 +54,3 @@ object StringUtil {
         return resultURL
     }
 }
-
