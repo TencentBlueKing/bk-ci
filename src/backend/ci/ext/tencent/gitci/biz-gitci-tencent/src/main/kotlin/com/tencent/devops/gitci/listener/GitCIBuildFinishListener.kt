@@ -63,6 +63,7 @@ import com.tencent.devops.model.gitci.tables.records.TGitRequestEventBuildRecord
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServiceVarResource
 import com.tencent.devops.process.pojo.BuildHistory
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -121,7 +122,8 @@ class GitCIBuildFinishListener @Autowired constructor(
             val record = gitRequestEventBuildDao.getEventByBuildId(dslContext, buildFinishEvent.buildId)
             if (record != null) {
                 val pipelineId = record["PIPELINE_ID"] as String
-                logger.info("listenPipelineBuildFinishBroadCastEvent , pipelineId : $pipelineId, buildFinishEvent: $buildFinishEvent")
+                logger.info("listenPipelineBuildFinishBroadCastEvent , " +
+                    "pipelineId : $pipelineId, buildFinishEvent: $buildFinishEvent")
 
                 val objectKind = record["OBJECT_KIND"] as String
                 val buildStatus = BuildStatus.valueOf(buildFinishEvent.status)
@@ -224,9 +226,15 @@ class GitCIBuildFinishListener @Autowired constructor(
                 }
 
                 // 构建结束发送通知
+                val build = buildInfo.first()
                 if (isV2) {
+                    // 获取需要进行替换的variables
+                    val variables =
+                        client.get(ServiceVarResource::class).getBuildVar(buildId = build.id, varName = null).data
+                    // 将yaml直接替换，使用替换后的发送通知
+                    val newYaml = EnvUtils.parseEnv(event.normalizedYaml, variables ?: mapOf())
                     val notices = YamlUtil.getObjectMapper().readValue(
-                        event.normalizedYaml, ScriptBuildYaml::class.java
+                        newYaml, ScriptBuildYaml::class.java
                     ).notices
                     notices?.forEach { notice ->
                         if (!checkStatus(notice, buildStatus)) {
@@ -241,7 +249,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                             conf = v2GitSetting!!,
                             event = event,
                             pipeline = pipeline,
-                            build = buildInfo.first(),
+                            build = build,
                             receivers = notice.receivers ?: setOf(),
                             ccs = notice.ccs?.toMutableSet() ?: mutableSetOf(),
                             chatIds = notice.chatId ?: mutableSetOf(),
@@ -260,7 +268,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                         conf = gitProjectConf!!,
                         event = event,
                         pipeline = pipeline,
-                        build = buildInfo.first()
+                        build = build
                     )
                 }
                 // 更新流水线执行状态
@@ -633,7 +641,6 @@ class GitCIBuildFinishListener @Autowired constructor(
         } else {
             commitId
         }
-        val buildNum = build.buildNum.toString()
         var realReceivers = replaceReceivers(receivers, build.buildParameters)
         // 接收人默认带触发人
         if (realReceivers.isEmpty()) {
