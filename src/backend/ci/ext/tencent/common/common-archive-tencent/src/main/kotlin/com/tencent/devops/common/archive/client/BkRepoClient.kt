@@ -766,7 +766,12 @@ class BkRepoClient constructor(
     ): String {
         logger.info("createShareUri, userId: $userId, projectId: $projectId, repoName: $repoName, " +
             "fullPath: $fullPath, downloadUsers: $downloadUsers, downloadIps: $downloadIps, timeoutInSeconds: $timeoutInSeconds")
-        val url = "${getGatewaytUrl()}/bkrepo/api/service/repository/api/share/$projectId/$repoName/${fullPath.removePrefix("/")}"
+        val url = "${getGatewaytUrl()}/bkrepo/api/service/repository/api/share/$projectId/$repoName/${
+            fullPath.removePrefix("/").replace(
+                "#",
+                "%23"
+            )
+        }"
         val requestData = ShareRecordCreateRequest(
             authorizedUserList = downloadUsers,
             authorizedIpList = downloadIps,
