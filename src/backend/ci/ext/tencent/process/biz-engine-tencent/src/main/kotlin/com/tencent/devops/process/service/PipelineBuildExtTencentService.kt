@@ -88,10 +88,9 @@ class PipelineBuildExtTencentService @Autowired constructor(
                     throw RemoteServiceException(data)
                 }
                 val responseData: Map<String, Any> = jacksonObjectMapper().readValue(data)
-                val code = responseData["status"] as Int
+                val code = responseData["code"] as Int
                 if (0 == code) {
-                    val dataMap = responseData["data"] as Map<String, Any>
-                    return dataMap["taskId"] as String? ?: ""
+                    return responseData["data"] as? String ?: ""
                 } else {
                     throw RemoteServiceException(data)
                 }
