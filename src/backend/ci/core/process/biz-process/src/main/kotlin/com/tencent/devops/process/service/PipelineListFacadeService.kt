@@ -1385,7 +1385,11 @@ class PipelineListFacadeService @Autowired constructor(
             throw ParamBlankException("$pipelineId 非 $projectId 流水线")
         }
         val instanceFromTemplate = templatePipelineDao.get(dslContext, pipelineId) != null
-        val favorInfos = pipelineFavorDao.listByPipelineId(dslContext, pipelineId, userId)
+        val favorInfos = pipelineFavorDao.listByPipelineId(
+            dslContext = dslContext,
+            userId = userId,
+            pipelineId = pipelineId
+        )
         val hasCollect = if (favorInfos != null) {
             favorInfos.size > 0
         } else false
