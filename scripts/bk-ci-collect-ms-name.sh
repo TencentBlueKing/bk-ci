@@ -9,8 +9,11 @@ BK_CI_SRC_DIR="${my_path%/*/*}"
 cd "$BK_CI_SRC_DIR"
 shopt -s nullglob
 # agentless, dockerhost, assembly特殊处理. 不计入.
-ci_ms_names=$(ls */boot-*.jar */META-INF/MANIFEST.MF | sed 's@/.*@@' |
-  grep -xv -e dockerhost -e agentless -e assembly | sort -u)
+possible_ci_ms_dirs=(*/boot-*.jar */META-INF/MANIFEST.MF)
 shopt -u nullglob
-
-echo "$ci_ms_names"
+if [ ${#possible_ci_ms_dirs[@]} -eq 0 ]; then
+  echo >&2 "invalid install package dirs."
+else
+  printf "%s\n" "${possible_ci_ms_dirs[@]}" | sed 's@/[^ ]*@@g' |
+  grep -xv -e dockerhost -e agentless -e assembly | sort -u
+fi
