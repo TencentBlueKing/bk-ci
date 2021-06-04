@@ -143,6 +143,7 @@ open class AbsPermissionRoleServiceImpl @Autowired constructor(
 
     private fun addDevelopPermission(roleId: Int, projectCode: String) {
         val actions = mutableListOf<String>()
+        actions.add(PROJECT)
         actions.add(PIPELINEACTION)
         actions.add(CREDENTIALACTION)
         actions.add(CERTACTION)
@@ -155,6 +156,7 @@ open class AbsPermissionRoleServiceImpl @Autowired constructor(
 
     private fun addTestPermission(roleId: Int, projectCode: String) {
         val actions = mutableListOf<String>()
+        actions.add(PROJECT)
         actions.add(PIPELINEACTION)
         actions.add(CREDENTIALACTION)
         actions.add(REPERTORYACTION)
@@ -166,6 +168,7 @@ open class AbsPermissionRoleServiceImpl @Autowired constructor(
 
     private fun addPMPermission(roleId: Int, projectCode: String) {
         val actions = mutableListOf<String>()
+        actions.add(PROJECT)
         actions.add(CREDENTIALACTION)
         actions.add(REPERTORYACTION)
         val authorizationScopes = buildCreateAuthorizationScopes(actions, projectCode)
@@ -174,6 +177,7 @@ open class AbsPermissionRoleServiceImpl @Autowired constructor(
 
     private fun addQCPermission(roleId: Int, projectCode: String) {
         val createActions = mutableListOf<String>()
+        createActions.add(PROJECT)
         createActions.add(CREDENTIALACTION)
         createActions.add(REPERTORYACTION)
         createActions.add(RULECREATEACTION)
@@ -190,6 +194,7 @@ open class AbsPermissionRoleServiceImpl @Autowired constructor(
 
     private fun addMaintainerPermission(roleId: Int, projectCode: String) {
         val actions = mutableListOf<String>()
+        actions.add(PROJECT)
         actions.add(PIPELINEACTION)
         actions.add(CREDENTIALACTION)
         actions.add(REPERTORYACTION)
@@ -288,6 +293,7 @@ open class AbsPermissionRoleServiceImpl @Autowired constructor(
 
     companion object {
         val logger = LoggerFactory.getLogger(AbsPermissionRoleMemberImpl::class.java)
+        const val PROJECT = "project_view"
         const val PIPELINEACTION = "pipeline_create"
         const val REPORTACTION = "list_repo"
         const val CREDENTIALACTION = "credential_create"
