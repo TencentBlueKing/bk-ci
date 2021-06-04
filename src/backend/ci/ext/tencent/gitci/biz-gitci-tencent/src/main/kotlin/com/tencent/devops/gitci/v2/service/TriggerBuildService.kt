@@ -107,6 +107,7 @@ import com.tencent.devops.gitci.pojo.git.GitMergeRequestEvent
 import com.tencent.devops.gitci.pojo.git.GitPushEvent
 import com.tencent.devops.gitci.pojo.git.GitTagPushEvent
 import com.tencent.devops.gitci.pojo.v2.GitCIBasicSetting
+import com.tencent.devops.common.ci.v2.Stage as GitCIV2Stage
 import com.tencent.devops.gitci.utils.GitCIParameterUtils
 import com.tencent.devops.gitci.utils.GitCIPipelineUtils
 import com.tencent.devops.gitci.utils.GitCommonUtils
@@ -315,9 +316,23 @@ class TriggerBuildService @Autowired constructor(
         yaml.stages.forEachIndexed { stageIndex, stage ->
             stageList.add(createStage(stage, event, gitBasicSetting))
         }
-
+        // 添加finally
         if (yaml.finally != null) {
-            stageList.add(createStage(yaml.finally!!, event, gitBasicSetting, true))
+            stageList.add(
+                createStage(
+                    stage = GitCIV2Stage(
+                        name = null,
+                        id = null,
+                        label = emptyList(),
+                        // TODO: 询问方案
+                        ifField = null,
+                        fastKill = false,
+                        jobs = yaml.finally ?: emptyList()
+                    ),
+                    event = event,
+                    gitBasicSetting = gitBasicSetting,
+                    finalStage = true)
+            )
         }
 
         return Model(
@@ -348,18 +363,18 @@ class TriggerBuildService @Autowired constructor(
                 if (!checkPipelineLabel(it, pipelineGroups)) {
                     client.get(UserPipelineGroupResource::class).addGroup(
                         event.userId, PipelineGroupCreate(
-                            projectId = gitBasicSetting.projectCode!!,
-                            name = it
-                        )
+                        projectId = gitBasicSetting.projectCode!!,
+                        name = it
+                    )
                     )
 
                     val pipelineGroup = getPipelineGroup(it, event.userId, gitBasicSetting.projectCode!!)
                     if (pipelineGroup != null) {
                         client.get(UserPipelineGroupResource::class).addLabel(
                             event.userId, PipelineLabelCreate(
-                                groupId = pipelineGroup.id,
-                                name = it
-                            )
+                            groupId = pipelineGroup.id,
+                            name = it
+                        )
                         )
                     }
                 }
@@ -401,7 +416,7 @@ class TriggerBuildService @Autowired constructor(
     }
 
     private fun createStage(
-        stage: com.tencent.devops.common.ci.v2.Stage,
+        stage: GitCIV2Stage,
         event: GitRequestEvent,
         gitBasicSetting: GitCIBasicSetting,
         finalStage: Boolean = false

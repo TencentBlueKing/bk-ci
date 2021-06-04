@@ -49,5 +49,5 @@ data class PreScriptBuildYaml(
     var extends: Extends? = null,
     var resources: Resources?,
     var notices: List<Notices>?,
-    var finally: PreStage? = null
+    var finally: Map<String, PreJob>? = null
 )

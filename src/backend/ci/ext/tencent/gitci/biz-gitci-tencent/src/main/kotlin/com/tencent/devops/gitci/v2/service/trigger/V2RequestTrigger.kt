@@ -46,6 +46,7 @@ import com.tencent.devops.gitci.v2.listener.V2GitCIRequestTriggerEvent
 import com.tencent.devops.gitci.v2.service.GitCIEventSaveService
 import com.tencent.devops.gitci.v2.service.ScmService
 import com.tencent.devops.gitci.v2.template.YamlTemplate
+import com.tencent.devops.gitci.v2.template.YamlTemplateService
 import com.tencent.devops.gitci.v2.template.pojo.TemplateGraph
 import com.tencent.devops.gitci.v2.utils.V2WebHookMatcher
 import com.tencent.devops.repository.pojo.oauth.GitToken
@@ -62,7 +63,8 @@ class V2RequestTrigger @Autowired constructor(
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitBasicSettingService: GitRepositoryConfService,
     private val rabbitTemplate: RabbitTemplate,
-    private val gitCIEventSaveService: GitCIEventSaveService
+    private val gitCIEventSaveService: GitCIEventSaveService,
+    private val yamlTemplateService: YamlTemplateService
 ) : RequestTriggerInterface<YamlObjects> {
 
     companion object {
@@ -259,7 +261,8 @@ class V2RequestTrigger @Autowired constructor(
                     gitToken.accessToken
                 },
                 repo = null,
-                repoTemplateGraph = TemplateGraph()
+                repoTemplateGraph = TemplateGraph(),
+                getTemplateMethod = yamlTemplateService::getTemplate
             ).replace()
         } catch (e: Exception) {
             logger.error("git ci yaml template replace error", e)

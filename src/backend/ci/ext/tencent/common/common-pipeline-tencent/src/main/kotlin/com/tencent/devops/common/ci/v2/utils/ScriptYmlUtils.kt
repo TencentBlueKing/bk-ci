@@ -509,7 +509,7 @@ object ScriptYmlUtils {
             resource = preScriptBuildYaml.resources,
             notices = preScriptBuildYaml.notices,
             stages = stages,
-            finally = preStage2Stage(preScriptBuildYaml.finally),
+            finally = preJobs2Jobs(preScriptBuildYaml.finally),
             label = preScriptBuildYaml.label ?: emptyList()
         )
     }
