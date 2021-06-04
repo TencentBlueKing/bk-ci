@@ -158,7 +158,7 @@ class GitCIBuildFinishListener @Autowired constructor(
                 // 检查yml版本，根据yml版本选择不同的实现
                 // TODO: 目前V1的yaml转换会因为!-< 报错，后续订最终方案
                 val isV2 = try {
-                     ScriptYmlUtils.isV2Version(event.normalizedYaml)
+                    ScriptYmlUtils.isV2Version(event.normalizedYaml)
                 } catch (e: Exception) {
                     logger.error("$buildFinishEvent.buildId ，${e.message}")
                     false
