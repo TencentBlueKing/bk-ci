@@ -42,12 +42,16 @@ import java.lang.reflect.Field
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
-import javax.annotation.PostConstruct
 
 @Component
 class InfluxdbClient {
     companion object {
         private val logger = LoggerFactory.getLogger(InfluxdbClient::class.java)
+        private const val actions = 1000
+        private const val flushDuration = 100
+        private const val bufferLimit = 100
+        private const val jitterDuration = 100
+        private const val mod = 1000000
     }
 
     @Value("\${influxdb.server:}")
@@ -63,49 +67,49 @@ class InfluxdbClient {
     private val monitoringRetentionPolicy = "monitoring_retention"
     private val atomInt = AtomicInteger()
 
-    private lateinit var influxDB: InfluxDB
+    private val influxDB by lazy {
 
-    @PostConstruct
-    fun init() {
-        influxDB = InfluxDBFactory.connect(influxdbServer, influxdbUserName, influxdbPassword)
-
+        val influxdb = InfluxDBFactory.connect(influxdbServer, influxdbUserName, influxdbPassword)
+//
         try {
             // 如果指定的数据库不存在，则新建一个新的数据库，并新建一个默认的数据保留规则
-            if (!this.databaseExist(dbName)) {
-                createDatabase()
-                createRetentionPolicy()
+            if (!databaseExist(influxdb, dbName)) {
+                createDatabase(influxdb)
+                createRetentionPolicy(influxdb)
             }
-        } catch (e: Exception) {
-            logger.error("Create influxdb failed:", e)
+        } catch (ignored: Exception) {
+            logger.error("BKSystemErrorMonitor|Create influxdb failed:", ignored)
         } finally {
-            influxDB.setRetentionPolicy(monitoringRetentionPolicy)
+            influxdb.setRetentionPolicy(monitoringRetentionPolicy)
         }
-        influxDB.setLogLevel(InfluxDB.LogLevel.NONE)
-        influxDB.enableBatch(BatchOptions.DEFAULTS
-            .actions(1000)
-            .flushDuration(100)
-            .bufferLimit(100)
-            .jitterDuration(100)
+
+        influxdb.setLogLevel(InfluxDB.LogLevel.NONE)
+        influxdb.enableBatch(BatchOptions.DEFAULTS
+            .actions(actions)
+            .flushDuration(flushDuration)
+            .bufferLimit(bufferLimit)
+            .jitterDuration(jitterDuration)
             .exceptionHandler { points: Iterable<Point>, e: Throwable? ->
                 try {
                     points.forEach { logger.error("failed to write point $it", e) }
-                } catch (e: Exception) {
+                } catch (ignored: Exception) {
                     // Do nothing , 这个handler不能抛异常,否则influxdb批量插入的线程就会停止
                 }
             }
             .threadFactory(
                 Executors.defaultThreadFactory()
             ))
+        influxdb
     }
 
-    private fun createDatabase() {
-        influxDB.query(Query("CREATE DATABASE $dbName", ""))
-        influxDB.query(Query("CREATE USER $influxdbUserName WITH PASSWORD '$influxdbPassword'", ""))
-        influxDB.query(Query("GRANT ALL PRIVILEGES ON $dbName TO $influxdbUserName", ""))
+    private fun createDatabase(influxdb: InfluxDB) {
+        influxdb.query(Query("CREATE DATABASE $dbName", ""))
+        influxdb.query(Query("CREATE USER $influxdbUserName WITH PASSWORD '$influxdbPassword'", ""))
+        influxdb.query(Query("GRANT ALL PRIVILEGES ON $dbName TO $influxdbUserName", ""))
     }
 
-    private fun createRetentionPolicy() {
-        influxDB.query(
+    private fun createRetentionPolicy(influxdb: InfluxDB) {
+        influxdb.query(
             Query(
                 "CREATE RETENTION POLICY $monitoringRetentionPolicy ON $dbName DURATION 30d REPLICATION 1 DEFAULT",
                 ""
@@ -113,8 +117,17 @@ class InfluxdbClient {
         )
     }
 
-    private fun databaseExist(database: String?): Boolean {
-        return influxDB.databaseExists(database)
+    private fun databaseExist(influxdb: InfluxDB, dbName: String): Boolean {
+        val result = influxdb.query(Query("SHOW DATABASES", ""))
+        val databaseNames = result.results?.get(index = 0)?.series?.get(index = 0)?.values
+        if (databaseNames != null) {
+            for (database in databaseNames) {
+                if (dbName == database[0].toString()) {
+                    return true
+                }
+            }
+        }
+        return false
     }
 
     fun insert(any: Any) {
@@ -126,7 +139,7 @@ class InfluxdbClient {
         val builder: Point.Builder = measurement(measurement)
         builder.tag(tags)
         builder.fields(fields)
-        builder.time(System.currentTimeMillis() * 1000000 + getTail() % 1000000, TimeUnit.NANOSECONDS)
+        builder.time(System.currentTimeMillis() * mod + getTail() % mod, TimeUnit.NANOSECONDS)
         influxDB.write(dbName, monitoringRetentionPolicy, builder.build())
     }
 
