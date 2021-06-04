@@ -78,10 +78,7 @@ interface UserPipelineInfoResource {
         projectId: String,
         @ApiParam("搜索名称")
         @QueryParam("pipelineName")
-        pipelineName: String?,
-        @ApiParam("流水线Id")
-        @QueryParam("pipelineId")
-        pipelineId: String?
+        pipelineName: String?
     ): Result<List<PipelineIdAndName>>
     
     @ApiOperation("获取流水线详情")

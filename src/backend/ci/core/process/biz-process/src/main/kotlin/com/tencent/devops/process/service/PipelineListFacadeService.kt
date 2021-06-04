@@ -1329,7 +1329,6 @@ class PipelineListFacadeService @Autowired constructor(
     fun searchIdAndName(
         projectId: String,
         pipelineName: String?,
-        pipelineId: String?,
         page: Int?,
         pageSize: Int?
     ): List<PipelineIdAndName> {
@@ -1346,22 +1345,10 @@ class PipelineListFacadeService @Autowired constructor(
                 offset = page.offset
             )
         val pipelineInfos = mutableListOf<PipelineIdAndName>()
-        var needGetPipeline = false
         pipelineRecords?.map {
             pipelineInfos.add(PipelineIdAndName(it.pipelineId, it.pipelineName))
         }
-        if (!pipelineId.isNullOrEmpty()) {
-            val pipelineIds = pipelineInfos.map { it.pipelineId }
-            if (!pipelineIds.contains(pipelineId)) {
-                needGetPipeline = true
-            }
-        }
-        if (needGetPipeline) {
-            val pipelineInfo = pipelineInfoDao.getPipelineInfo(dslContext, pipelineId!!)
-            if (pipelineInfo != null) {
-                pipelineInfos.add(PipelineIdAndName(pipelineInfo.pipelineId, pipelineInfo.pipelineName))
-            }
-        }
+        
         return pipelineInfos
     }
     

@@ -51,14 +51,12 @@ class UserPipelineInfoResourceImpl @Autowired constructor(
     override fun searchByName(
         userId: String,
         projectId: String,
-        pipelineName: String?,
-        pipelineId: String?
+        pipelineName: String?
     ): Result<List<PipelineIdAndName>> {
         checkParam(userId, projectId)
         val pipelineInfos = pipelineListFacadeService.searchIdAndName(
             projectId = projectId,
             pipelineName = pipelineName,
-            pipelineId = pipelineId,
             page = null,
             pageSize = null
         )
