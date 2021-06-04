@@ -34,7 +34,7 @@ import com.tencent.devops.process.api.user.UserPipelineInfoResource
 import com.tencent.devops.process.service.PipelineListFacadeService
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineIdAndName
-import com.tencent.devops.process.pojo.PipelineTemplateAndCollect
+import com.tencent.devops.process.pojo.PipelineDetailInfo
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -65,7 +65,7 @@ class UserPipelineInfoResourceImpl @Autowired constructor(
         return Result(pipelineInfos)
     }
     
-    override fun getPipelineInfo(userId: String, projectId: String, pipelineId: String): Result<PipelineTemplateAndCollect?> {
+    override fun getPipelineInfo(userId: String, projectId: String, pipelineId: String): Result<PipelineDetailInfo?> {
         return Result(pipelineListFacadeService.getPipelineDetail(userId, projectId, pipelineId))
     }
     

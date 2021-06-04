@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineIdAndName
-import com.tencent.devops.process.pojo.PipelineTemplateAndCollect
+import com.tencent.devops.process.pojo.PipelineDetailInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -97,5 +97,5 @@ interface UserPipelineInfoResource {
         @ApiParam("流水线Id")
         @PathParam("pipelineId")
         pipelineId: String
-    ): Result<PipelineTemplateAndCollect?>
+    ): Result<PipelineDetailInfo?>
 }
