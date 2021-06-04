@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.model.SQLPage
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
@@ -58,7 +59,7 @@ import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineIdAndName
 import com.tencent.devops.process.pojo.PipelineSortType
-import com.tencent.devops.process.pojo.PipelineTemplateAndCollect
+import com.tencent.devops.process.pojo.PipelineDetailInfo
 import com.tencent.devops.process.pojo.PipelineWithModel
 import com.tencent.devops.process.pojo.app.PipelinePage
 import com.tencent.devops.process.pojo.classify.PipelineViewAndPipelines
@@ -100,14 +101,14 @@ class PipelineListFacadeService @Autowired constructor(
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineFavorDao: PipelineFavorDao
 ) {
-
+    
     @Value("\${process.deletedPipelineStoreDays:30}")
     private val deletedPipelineStoreDays: Int = 30
-
+    
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineListFacadeService::class.java)
     }
-
+    
     fun sortPipelines(pipelines: MutableList<Pipeline>, sortType: PipelineSortType) {
         pipelines.sortWith(Comparator { a, b ->
             when (sortType) {
@@ -123,7 +124,7 @@ class PipelineListFacadeService @Autowired constructor(
             }
         })
     }
-
+    
     fun getBatchPipelinesWithModel(
         userId: String,
         projectId: String,
@@ -151,7 +152,7 @@ class PipelineListFacadeService @Autowired constructor(
                 )
             }
         }
-
+        
         val pipelines = mutableListOf<PipelineWithModel>()
         val pipelineGroupLabel = pipelineGroupService.getPipelinesGroupLabel(pipelineIds.toList())
         val pipelineBuildSummaries = pipelineBuildSummaryDao.listPipelineInfoBuildSummary(
@@ -161,7 +162,7 @@ class PipelineListFacadeService @Autowired constructor(
             sortType = null,
             pipelineIds = pipelineIds
         )
-
+        
         for (it in pipelineBuildSummaries) {
             val pipelineId = it["PIPELINE_ID"] as String
             val version = it["VERSION"] as Int
@@ -205,7 +206,7 @@ class PipelineListFacadeService @Autowired constructor(
         }
         return pipelines
     }
-
+    
     fun listPipelineInfo(userId: String, projectId: String, pipelineIdList: List<String>?): List<Pipeline> {
         val pipelines = listPermissionPipeline(
             userId = userId,
@@ -216,14 +217,14 @@ class PipelineListFacadeService @Autowired constructor(
             channelCode = ChannelCode.BS,
             checkPermission = false
         )
-
+        
         return if (pipelineIdList == null) {
             pipelines.records
         } else {
             pipelines.records.filter { pipelineIdList.contains(it.pipelineId) }
         }
     }
-
+    
     fun listPipelineInfo(
         userId: String,
         projectId: String,
@@ -231,7 +232,7 @@ class PipelineListFacadeService @Autowired constructor(
         templateIdList: Collection<String>? = null
     ): List<Pipeline> {
         val resultPipelineIds = mutableSetOf<String>()
-
+        
         val pipelines = listPermissionPipeline(
             userId = userId,
             projectId = projectId,
@@ -241,25 +242,25 @@ class PipelineListFacadeService @Autowired constructor(
             channelCode = ChannelCode.BS,
             checkPermission = false
         )
-
+        
         if (pipelineIdList != null) {
             resultPipelineIds.addAll(pipelineIdList)
         }
-
+        
         if (templateIdList != null) {
             val templatePipelineIds =
                 templatePipelineDao.listPipeline(dslContext, PipelineInstanceTypeEnum.CONSTRAINT.type, templateIdList)
                     .map { it.pipelineId }
             resultPipelineIds.addAll(templatePipelineIds)
         }
-
+        
         return if (resultPipelineIds.isEmpty()) {
             pipelines.records
         } else {
             pipelines.records.filter { it.pipelineId in resultPipelineIds }
         }
     }
-
+    
     fun listPermissionPipeline(
         userId: String,
         projectId: String,
@@ -269,10 +270,10 @@ class PipelineListFacadeService @Autowired constructor(
         channelCode: ChannelCode,
         checkPermission: Boolean
     ): PipelinePage<Pipeline> {
-
+        
         val watcher = Watcher(id = "listPermissionPipeline|$projectId|$userId")
         try {
-
+            
             val hasCreatePermission =
                 if (!checkPermission) {
                     true
@@ -284,7 +285,7 @@ class PipelineListFacadeService @Autowired constructor(
                     watcher.stop()
                     validateUserResourcePermission
                 }
-
+            
             val pageNotNull = page ?: 0
             val pageSizeNotNull = pageSize ?: -1
             var slqLimit: SQLLimit? = null
@@ -311,45 +312,45 @@ class PipelineListFacadeService @Autowired constructor(
             } else {
                 emptyList()
             }
-
+            
             watcher.start("s_r_summary")
             val pipelineBuildSummary =
                 pipelineRuntimeService.getBuildSummaryRecords(
                     projectId = projectId, channelCode = channelCode, pipelineIds = hasPermissionList
                 )
             watcher.stop()
-
+            
             if (pageSizeNotNull != -1) slqLimit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
-
+            
             val offset = slqLimit?.offset ?: 0
             val limit = slqLimit?.limit ?: -1
             var hasFavorPipelines = false
             val hasPermissionPipelines = hasPermissionList.isNotEmpty()
-
+            
             val allPipelines = mutableListOf<Pipeline>()
-
+            
             watcher.start("s_r_fav")
             if (pipelineBuildSummary.isNotEmpty) {
                 val favorPipelines = pipelineGroupService.getFavorPipelines(userId = userId, projectId = projectId)
                 hasFavorPipelines = favorPipelines.isNotEmpty()
-
+                
                 val pipelines = buildPipelines(
                     pipelineBuildSummary = pipelineBuildSummary,
                     favorPipelines = favorPipelines,
                     authPipelines = hasPermissionList
                 )
                 allPipelines.addAll(pipelines)
-
+                
                 sortPipelines(allPipelines, sortType)
             }
-
+            
             val toIndex =
                 if (limit == -1 || allPipelines.size <= (offset + limit)) allPipelines.size else offset + limit
             val pagePipelines =
                 if (offset >= allPipelines.size) listOf<Pipeline>() else allPipelines.subList(offset, toIndex)
-
+            
             watcher.stop()
-
+            
             return PipelinePage(
                 page = pageNotNull,
                 pageSize = pageSizeNotNull,
@@ -366,7 +367,7 @@ class PipelineListFacadeService @Autowired constructor(
             processJmxApi.execute(ProcessJmxApi.LIST_APP_PIPELINES, watcher.totalTimeMillis)
         }
     }
-
+    
     fun hasPermissionList(
         userId: String,
         projectId: String,
@@ -375,7 +376,7 @@ class PipelineListFacadeService @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): SQLPage<Pipeline> {
-
+        
         val watcher = Watcher(id = "hasPermissionList|$projectId|$userId")
         try {
             watcher.start("perm_r_perm")
@@ -397,7 +398,7 @@ class PipelineListFacadeService @Autowired constructor(
                     pageSize = pageSize
                 )
             watcher.stop()
-
+            
             watcher.start("s_r_fav")
             val count = pipelineBuildSummary.size + 0L
             val pagePipelines =
@@ -411,7 +412,7 @@ class PipelineListFacadeService @Autowired constructor(
                 } else {
                     mutableListOf()
                 }
-
+            
             watcher.stop()
             return SQLPage(count = count, records = pagePipelines)
         } finally {
@@ -419,7 +420,7 @@ class PipelineListFacadeService @Autowired constructor(
             processJmxApi.execute(ProcessJmxApi.LIST_APP_PIPELINES, watcher.totalTimeMillis)
         }
     }
-
+    
     /**
      * 根据视图ID获取流水线编
      * 其中 PIPELINE_VIEW_FAVORITE_PIPELINES，PIPELINE_VIEW_MY_PIPELINES，PIPELINE_VIEW_ALL_PIPELINES
@@ -451,7 +452,7 @@ class PipelineListFacadeService @Autowired constructor(
             authPipelineIds
         }
         watcher.stop()
-
+        
         watcher.start("s_r_summary")
         try {
             val favorPipelines = pipelineGroupService.getFavorPipelines(userId = userId, projectId = projectId)
@@ -490,7 +491,7 @@ class PipelineListFacadeService @Autowired constructor(
                 pipelineFilterParamList.add(pipelineViewFilterParam)
             }
             pipelineViewService.addUsingView(userId = userId, projectId = projectId, viewId = viewId)
-
+            
             // 查询有权限查看的流水线总数
             val totalAvailablePipelineSize = pipelineBuildSummaryDao.listPipelineInfoBuildSummaryCount(
                 dslContext = dslContext,
@@ -503,7 +504,7 @@ class PipelineListFacadeService @Autowired constructor(
                 pipelineFilterParamList = pipelineFilterParamList,
                 permissionFlag = true
             )
-
+            
             // 查询无权限查看的流水线总数
             val totalInvalidPipelineSize =
                 if (filterInvalid) 0 else pipelineBuildSummaryDao.listPipelineInfoBuildSummaryCount(
@@ -602,7 +603,7 @@ class PipelineListFacadeService @Autowired constructor(
                     page = page,
                     pageSize = pageSize
                 )
-
+                
                 if (filterInvalid) {
                     handlePipelineQueryList(
                         pipelineList = pipelineList,
@@ -620,7 +621,7 @@ class PipelineListFacadeService @Autowired constructor(
                 }
             }
             watcher.stop()
-
+            
             return PipelineViewPipelinePage(
                 page = page ?: 1,
                 pageSize = pageSize ?: totalSize.toInt(),
@@ -632,7 +633,7 @@ class PipelineListFacadeService @Autowired constructor(
             processJmxApi.execute(ProcessJmxApi.LIST_NEW_PIPELINES, watcher.totalTimeMillis)
         }
     }
-
+    
     private fun handlePipelineQueryList(
         pipelineList: MutableList<Pipeline>,
         projectId: String,
@@ -665,7 +666,7 @@ class PipelineListFacadeService @Autowired constructor(
         )
         pipelineList.addAll(buildPipelines(pipelineRecords, favorPipelines, authPipelines))
     }
-
+    
     private fun List<PipelineViewFilterByLabel>.generateLabelToPipelineMap(): Map<String, List<String>>? {
         var labelToPipelineMap: Map<String, List<String>>? = null
         if (isNotEmpty()) {
@@ -677,7 +678,7 @@ class PipelineListFacadeService @Autowired constructor(
         }
         return labelToPipelineMap
     }
-
+    
     fun filterViewPipelines(
         userId: String,
         projectId: String,
@@ -686,10 +687,10 @@ class PipelineListFacadeService @Autowired constructor(
     ): List<Pipeline> {
         val view = pipelineViewService.getView(userId = userId, projectId = projectId, viewId = viewId)
         val filters = pipelineViewService.getFilters(view)
-
+        
         return filterViewPipelines(pipelines, view.logic, filters.first, filters.second, filters.third)
     }
-
+    
     /**
      * 视图的基础上增加简单过滤
      */
@@ -700,17 +701,17 @@ class PipelineListFacadeService @Autowired constructor(
         filterByLabels: String?
     ): List<Pipeline> {
         logger.info("filter view pipelines $filterByName $filterByCreator $filterByLabels")
-
+        
         val (filterByPipelineNames, filterByPipelineCreators, filterByPipelineLabels) = generatePipelineFilterInfo(
             filterByName,
             filterByCreator,
             filterByLabels
         )
-
+        
         if (filterByPipelineNames.isEmpty() && filterByPipelineCreators.isEmpty() && filterByPipelineLabels.isEmpty()) {
             return pipelines
         }
-
+        
         return filterViewPipelines(
             pipelines,
             Logic.AND,
@@ -719,7 +720,7 @@ class PipelineListFacadeService @Autowired constructor(
             filterByPipelineLabels
         )
     }
-
+    
     private fun generatePipelineFilterInfo(
         filterByName: String?,
         filterByCreator: String?,
@@ -730,26 +731,26 @@ class PipelineListFacadeService @Autowired constructor(
         } else {
             listOf(PipelineViewFilterByName(Condition.LIKE, filterByName!!))
         }
-
+        
         val filterByPipelineCreators = if (filterByCreator.isNullOrEmpty()) {
             emptyList()
         } else {
             listOf(PipelineViewFilterByCreator(Condition.INCLUDE, filterByCreator!!.split(",")))
         }
-
+        
         val filterByPipelineLabels = if (filterByLabels.isNullOrEmpty()) {
             emptyList()
         } else {
             val labelIds = filterByLabels!!.split(",")
             val labelGroupToLabelMap = pipelineGroupService.getGroupToLabelsMap(labelIds)
-
+            
             labelGroupToLabelMap.map {
                 PipelineViewFilterByLabel(Condition.INCLUDE, it.key, it.value)
             }
         }
         return Triple(filterByPipelineNames, filterByPipelineCreators, filterByPipelineLabels)
     }
-
+    
     /**
      * 视图过滤
      */
@@ -760,7 +761,7 @@ class PipelineListFacadeService @Autowired constructor(
         filterByPipelineCreators: List<PipelineViewFilterByCreator>,
         filterByLabels: List<PipelineViewFilterByLabel>
     ): List<Pipeline> {
-
+        
         // filter by pipeline name
         val nameFilterPipelines = if (filterByPipelineNames.isEmpty()) {
             if (logic == Logic.AND) pipelines else emptyList()
@@ -780,12 +781,12 @@ class PipelineListFacadeService @Autowired constructor(
             }
         }
         logger.info("Filter by name size(${nameFilterPipelines.size})")
-
+        
         if (logic == Logic.AND && nameFilterPipelines.isEmpty()) {
             logger.info("All pipelines filter by name $filterByPipelineNames")
             return nameFilterPipelines
         }
-
+        
         // filter by creator, creator's condition is only include
         val creatorFilterPipelines = if (filterByPipelineCreators.isEmpty()) {
             if (logic == Logic.AND) pipelines else emptyList()
@@ -793,10 +794,10 @@ class PipelineListFacadeService @Autowired constructor(
             pipelines.filter { pipeline ->
                 val user = pipeline.creator
                 var filter: Boolean = (logic == Logic.AND)
-
+                
                 filterByPipelineCreators.forEach { filterByCreator ->
                     val result = filterByCreator.userIds.contains(user)
-
+                    
                     filter = if (logic == Logic.AND) {
                         filter && result
                     } else {
@@ -807,12 +808,12 @@ class PipelineListFacadeService @Autowired constructor(
             }
         }
         logger.info("Filter by creator size(${creatorFilterPipelines.size})")
-
+        
         if (logic == Logic.AND && creatorFilterPipelines.isEmpty()) {
             logger.info("All pipelines filter by creator $filterByPipelineCreators")
             return creatorFilterPipelines
         }
-
+        
         // filter by label, label's condition is only include
         val labelIds = mutableListOf<String>()
         filterByLabels.forEach {
@@ -822,21 +823,21 @@ class PipelineListFacadeService @Autowired constructor(
             if (logic == Logic.AND) pipelines else emptyList()
         } else {
             val labelToPipelineMap = pipelineGroupService.getViewLabelToPipelinesMap(labelIds)
-
+            
             pipelines.filter { pipeline ->
                 val pipelineId = pipeline.pipelineId
                 var filter: Boolean = (logic == Logic.AND)
-
+                
                 filterByLabels.forEach { filterByLabel ->
                     var result = false
-
+                    
                     filterByLabel.labelIds.forEach {
                         val labelPipelineIds = labelToPipelineMap[it]
                         if (labelPipelineIds != null) {
                             result = result || labelPipelineIds.contains(pipelineId)
                         }
                     }
-
+                    
                     filter = if (logic == Logic.AND) {
                         filter && result
                     } else {
@@ -847,12 +848,12 @@ class PipelineListFacadeService @Autowired constructor(
             }
         }
         logger.info("Filter by label size(${labelFilterPipelines.size})")
-
+        
         if (logic == Logic.AND && labelFilterPipelines.isEmpty()) {
             logger.info("All pipelines filter by label $filterByLabels")
             return labelFilterPipelines
         }
-
+        
         return if (logic == Logic.AND) {
             nameFilterPipelines
                 .intersect(creatorFilterPipelines.asIterable())
@@ -865,7 +866,7 @@ class PipelineListFacadeService @Autowired constructor(
                 .toList()
         }
     }
-
+    
     fun listViewAndPipelines(
         userId: String,
         projectId: String,
@@ -875,7 +876,7 @@ class PipelineListFacadeService @Autowired constructor(
         val currentViewIdAndViewList = pipelineViewService.getCurrentViewIdAndList(userId, projectId)
         val currentViewId = currentViewIdAndViewList.first
         val currentViewList = currentViewIdAndViewList.second
-
+        
         val pipelinePage = listViewPipelines(
             userId = userId,
             projectId = projectId,
@@ -886,12 +887,12 @@ class PipelineListFacadeService @Autowired constructor(
             viewId = currentViewId,
             checkPermission = true
         )
-
+        
         return PipelineViewAndPipelines(currentViewId, currentViewList, pipelinePage)
     }
-
+    
     fun listPipelines(projectId: Set<String>, channelCode: ChannelCode): List<Pipeline> {
-
+        
         val watcher = Watcher(id = "listPipelines|${projectId.size}")
         val pipelines = mutableListOf<Pipeline>()
         try {
@@ -908,7 +909,7 @@ class PipelineListFacadeService @Autowired constructor(
         }
         return pipelines
     }
-
+    
     fun getPipelineInfoNum(
         dslContext: DSLContext,
         projectIds: Set<String>?,
@@ -916,7 +917,7 @@ class PipelineListFacadeService @Autowired constructor(
     ): Int? {
         return pipelineInfoDao.getPipelineInfoNum(dslContext, projectIds, channelCodes)!!.value1()
     }
-
+    
     fun listPagedPipelines(
         dslContext: DSLContext,
         projectIds: Set<String>,
@@ -939,7 +940,7 @@ class PipelineListFacadeService @Autowired constructor(
         }
         return pipelines
     }
-
+    
     fun listPipelinesByIds(channelCodes: Set<ChannelCode>?, pipelineIds: Set<String>): List<Pipeline> {
         val watcher = Watcher(id = "listPipelinesByIds|${pipelineIds.size}")
         val pipelines = mutableListOf<Pipeline>()
@@ -955,17 +956,17 @@ class PipelineListFacadeService @Autowired constructor(
         }
         return pipelines
     }
-
+    
     fun isPipelineRunning(projectId: String, buildId: String, channelCode: ChannelCode): Boolean {
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
         return buildInfo != null && buildInfo.status == BuildStatus.RUNNING
     }
-
+    
     fun isRunning(projectId: String, buildId: String, channelCode: ChannelCode): Boolean {
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
         return buildInfo != null && buildInfo.status.isRunning()
     }
-
+    
     fun getPipelineStatus(userId: String, projectId: String, pipelines: Set<String>): List<Pipeline> {
         val watcher = Watcher(id = "getPipelineStatus|$projectId|$userId|${pipelines.size}")
         val channelCode = ChannelCode.BS
@@ -991,7 +992,7 @@ class PipelineListFacadeService @Autowired constructor(
             LogUtils.printCostTimeWE(watcher = watcher)
         }
     }
-
+    
     // 获取单条流水线的运行状态
     fun getSinglePipelineStatus(userId: String, projectId: String, pipeline: String): Pipeline? {
         val pipelines = setOf(pipeline)
@@ -1002,7 +1003,7 @@ class PipelineListFacadeService @Autowired constructor(
             pipelineList[0]
         }
     }
-
+    
     fun count(projectId: Set<String>, channelCode: ChannelCode?): Int {
         val watcher = Watcher(id = "count|${projectId.size}")
         try {
@@ -1012,10 +1013,10 @@ class PipelineListFacadeService @Autowired constructor(
             LogUtils.printCostTimeWE(watcher = watcher)
         }
     }
-
+    
     fun getPipelineByIds(pipelineIds: Set<String>, projectId: String? = null): List<SimplePipeline> {
         if (pipelineIds.isEmpty() || projectId.isNullOrBlank()) return listOf()
-
+        
         val watcher = Watcher(id = "getPipelineByIds|$projectId|${pipelineIds.size}")
         try {
             watcher.start("s_r_list_b_ps")
@@ -1045,16 +1046,16 @@ class PipelineListFacadeService @Autowired constructor(
             LogUtils.printCostTimeWE(watcher = watcher)
         }
     }
-
+    
     fun getPipelineNameByIds(
         projectId: String,
         pipelineIds: Set<String>,
         filterDelete: Boolean = true
     ): Map<String, String> {
-
+        
         if (pipelineIds.isEmpty()) return mapOf()
         if (projectId.isBlank()) return mapOf()
-
+        
         val watcher = Watcher(id = "getPipelineNameByIds|$projectId|${pipelineIds.size}")
         try {
             watcher.start("s_r_list_b_ps")
@@ -1067,10 +1068,10 @@ class PipelineListFacadeService @Autowired constructor(
             LogUtils.printCostTimeWE(watcher = watcher, warnThreshold = 500)
         }
     }
-
+    
     fun getBuildNoByByPair(buildIds: Set<String>): Map<String, String> {
         if (buildIds.isEmpty()) return mapOf()
-
+        
         val watcher = Watcher(id = "getBuildNoByByPair|${buildIds.size}")
         try {
             watcher.start("s_r_bs")
@@ -1079,14 +1080,14 @@ class PipelineListFacadeService @Autowired constructor(
             LogUtils.printCostTimeWE(watcher = watcher, warnThreshold = 500)
         }
     }
-
+    
     fun buildPipelines(
         pipelineBuildSummary: Result<out Record>,
         favorPipelines: List<String>,
         authPipelines: List<String>,
         excludePipelineId: String? = null
     ): MutableList<Pipeline> {
-
+        
         val pipelines = mutableListOf<Pipeline>()
         val currentTimestamp = System.currentTimeMillis()
         val latestBuildEstimatedExecutionSeconds = 1L
@@ -1147,25 +1148,25 @@ class PipelineListFacadeService @Autowired constructor(
             it.instanceFromTemplate = pipelineTemplateMap[it.pipelineId] != null
             it.groupLabel = pipelineGroupLabel[it.pipelineId]
         }
-
+        
         return pipelines
     }
-
+    
     fun listPermissionPipelineName(projectId: String, userId: String): List<Map<String, String>> {
         val pipelines = pipelinePermissionService.getResourceByPermission(
             userId = userId, projectId = projectId, permission = AuthPermission.EXECUTE
         )
-
+        
         val pipelineIds = pipelines.toSet()
         val newPipelineNameList = pipelineRepositoryService.listPipelineNameByIds(projectId, pipelineIds)
         val list = mutableListOf<Map<String, String>>()
         newPipelineNameList.forEach {
             list.add(mapOf(Pair("pipelineId", it.key), Pair("pipelineName", it.value)))
         }
-
+        
         return list
     }
-
+    
     fun getAllBuildNo(projectId: String, pipelineId: String): List<Map<String, String>> {
         val watcher = Watcher(id = "getAllBuildNo|$pipelineId")
         try {
@@ -1181,7 +1182,7 @@ class PipelineListFacadeService @Autowired constructor(
             LogUtils.printCostTimeWE(watcher, warnThreshold = 999)
         }
     }
-
+    
     // 获取整条流水线的所有运行状态
     fun getPipelineAllStatus(userId: String, projectId: String, pipeline: String): List<Pipeline>? {
         val pipelines = setOf(pipeline)
@@ -1192,7 +1193,7 @@ class PipelineListFacadeService @Autowired constructor(
             return pipelineList
         }
     }
-
+    
     // 旧接口
     fun getPipelineIdAndProjectIdByBuildId(buildId: String): Pair<String, String> {
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
@@ -1204,7 +1205,7 @@ class PipelineListFacadeService @Autowired constructor(
             )
         return Pair(buildInfo.pipelineId, buildInfo.projectId)
     }
-
+    
     fun listDeletePipelineIdByProject(
         userId: String,
         projectId: String,
@@ -1217,7 +1218,7 @@ class PipelineListFacadeService @Autowired constructor(
         val pageSizeNotNull = pageSize ?: -1
         var slqLimit: SQLLimit? = null
         if (pageSizeNotNull != -1) slqLimit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
-
+        
         val offset = slqLimit?.offset ?: 0
         val limit = slqLimit?.limit ?: -1
         // 数据量不多，直接全拉
@@ -1238,7 +1239,7 @@ class PipelineListFacadeService @Autowired constructor(
             records = list
         )
     }
-
+    
     fun listPermissionPipelineCount(
         userId: String,
         projectId: String,
@@ -1259,7 +1260,7 @@ class PipelineListFacadeService @Autowired constructor(
             LogUtils.printCostTimeWE(watcher = watcher)
         }
     }
-
+    
     fun getPipelinePage(projectId: String, limit: Int?, offset: Int?): PipelineViewPipelinePage<PipelineInfo> {
         logger.info("getPipeline |$projectId| $limit| $offset")
         val limitNotNull = limit ?: 10
@@ -1287,7 +1288,7 @@ class PipelineListFacadeService @Autowired constructor(
             count = count.toLong()
         )
     }
-
+    
     fun searchByPipelineName(
         projectId: String,
         pipelineName: String?,
@@ -1365,13 +1366,13 @@ class PipelineListFacadeService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String
-    ): PipelineTemplateAndCollect? {
+    ): PipelineDetailInfo? {
         if (!pipelinePermissionService.checkPipelinePermission(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            permission = AuthPermission.VIEW
-        )) {
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.VIEW
+            )) {
             throw PermissionForbiddenException("$userId 无流水线$pipelineId 查看权限")
         }
         val pipelineInfo = pipelineInfoDao.getPipelineInfo(
@@ -1387,26 +1388,35 @@ class PipelineListFacadeService @Autowired constructor(
             userId = userId,
             pipelineId = pipelineId
         )
+        val hasEditPermission = pipelinePermissionService.checkPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = AuthPermission.EDIT
+        )
         val hasCollect = if (favorInfos != null) {
             favorInfos.size > 0
         } else false
-        return PipelineTemplateAndCollect(
+        return PipelineDetailInfo(
             pipelineId = pipelineInfo.pipelineId,
             pipelineName = pipelineInfo.pipelineName,
             instanceFromTemplate = instanceFromTemplate,
             hasCollect = hasCollect,
-            canManualStartup = pipelineInfo.manualStartup
+            canManualStartup = pipelineInfo.manualStartup,
+            pipelineVersion = pipelineInfo.version.toString(),
+            deploymentTime = DateTimeUtil.toDateTime(pipelineInfo.updateTime, "yyyy-MM-dd"),
+            hasPermission = hasEditPermission
         )
     }
-
+    
     fun getPipelineIdByNames(
         projectId: String,
         pipelineNames: Set<String>,
         filterDelete: Boolean
     ): Map<String, String> {
-
+        
         if (pipelineNames.isEmpty() || projectId.isBlank()) return mapOf()
-
+        
         return pipelineRepositoryService.listPipelineIdByName(projectId, pipelineNames, filterDelete)
     }
 }

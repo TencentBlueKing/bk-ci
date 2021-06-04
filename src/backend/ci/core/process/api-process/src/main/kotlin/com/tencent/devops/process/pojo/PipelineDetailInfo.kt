@@ -31,7 +31,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("流水线名称与Id")
-data class PipelineTemplateAndCollect(
+data class PipelineDetailInfo(
     @ApiModelProperty("流水线Id")
     val pipelineId: String,
     @ApiModelProperty("流水线名称")
@@ -41,5 +41,11 @@ data class PipelineTemplateAndCollect(
     @ApiModelProperty("canManualStartup")
     val canManualStartup: Int,
     @ApiModelProperty("是否关联模板")
-    val instanceFromTemplate: Boolean
+    val instanceFromTemplate: Boolean,
+    @ApiModelProperty("流水线版本")
+    val pipelineVersion: String,
+    @ApiModelProperty("部署时间")
+    val deploymentTime: String,
+    @ApiModelProperty("是否有编辑权限")
+    val hasPermission: Boolean
 )
