@@ -1404,7 +1404,7 @@ class PipelineListFacadeService @Autowired constructor(
             hasCollect = hasCollect,
             canManualStartup = pipelineInfo.manualStartup,
             pipelineVersion = pipelineInfo.version.toString(),
-            deploymentTime = DateTimeUtil.toDateTime(pipelineInfo.updateTime, "yyyy-MM-dd"),
+            deploymentTime = DateTimeUtil.toDateTime(pipelineInfo.updateTime),
             hasPermission = hasEditPermission
         )
     }
