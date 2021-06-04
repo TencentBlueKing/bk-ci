@@ -25,30 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.pojo.event
+package com.tencent.devops.common.web.handler
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.enums.ActionType
-import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
-import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.pipeline.pojo.BuildNoType
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.Profile
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.annotation.BkExceptionMapper
+import org.slf4j.LoggerFactory
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
+import javax.ws.rs.ext.ExceptionMapper
 
-/**
- *
- *
- * @version 1.0
- */
-@Event(MQ.ENGINE_PROCESS_LISTENER_EXCHANGE, MQ.ROUTE_PIPELINE_BUILD_START)
-data class PipelineBuildStartEvent(
-    override val source: String,
-    override val projectId: String,
-    override val pipelineId: String,
-    override val userId: String,
-    val buildId: String,
-    val taskId: String,
-    val status: BuildStatus? = null,
-    override var actionType: ActionType,
-    override var delayMills: Int = 0,
-    val buildNoType: BuildNoType? = null
-) : IPipelineEvent(actionType, source, projectId, pipelineId, userId, delayMills)
+@BkExceptionMapper
+class TokenForbiddenExceptionMapper : ExceptionMapper<PermissionForbiddenException> {
+    companion object {
+        val logger = LoggerFactory.getLogger(TokenForbiddenExceptionMapper::class.java)!!
+    }
+
+    override fun toResponse(exception: PermissionForbiddenException): Response {
+        logger.warn("Encounter token exception(${exception.message})")
+        val status = Response.Status.FORBIDDEN
+        val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
+            exception.defaultMessage
+        } else {
+            "auth token 校验失败"
+        }
+        return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
+            .entity(Result(status = status.statusCode, message = message, data = exception.message)).build()
+    }
+}

@@ -25,56 +25,44 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.cron
+package com.tencent.devops.auth.filter
 
-import com.tencent.devops.auth.entity.ManagerChangeType
-import com.tencent.devops.auth.refresh.dispatch.AuthRefreshDispatch
-import com.tencent.devops.auth.refresh.event.ManagerOrganizationChangeEvent
-import com.tencent.devops.auth.service.ManagerOrganizationService
-import com.tencent.devops.auth.service.ManagerUserService
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
+import com.tencent.devops.common.api.exception.TokenForbiddenException
 import com.tencent.devops.common.client.ClientTokenService
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
+import javax.servlet.Filter
+import javax.servlet.FilterChain
+import javax.servlet.FilterConfig
+import javax.servlet.ServletRequest
+import javax.servlet.ServletResponse
+import javax.servlet.http.HttpServletRequest
 
 @Component
-class ManagerUserTimeoutCron @Autowired constructor(
-    val managerUserService: ManagerUserService,
-    val managerOrganizationService: ManagerOrganizationService,
-    val refreshDispatch: AuthRefreshDispatch,
+class TokenCheckFilter @Autowired constructor (
     val clientTokenService: ClientTokenService
-) {
-
-    /**
-     * 每2分钟，清理过期管理员
-     */
-    @Scheduled(cron = "0 0/2 * * * ?")
-    fun newClearTimeoutCache() {
-        managerUserService.deleteTimeoutUser()
-    }
-
-    /**
-     * 每5分钟，刷新缓存数据
-     */
-    @Scheduled(cron = "0 0/5 * * * ?")
-    fun refreshCache() {
-        val managerList = managerOrganizationService.listManager() ?: return
-        managerList.forEach {
-            refreshDispatch.dispatch(
-                ManagerOrganizationChangeEvent(
-                    refreshType = "updateManagerOrganization",
-                    managerId = it.id!!,
-                    managerChangeType = ManagerChangeType.UPDATE
-                )
-            )
-        }
-    }
+) : Filter {
+    override fun destroy() = Unit
     
-    /**
-     * 每天凌晨1点刷新默认系统的token
-     */
-    @Scheduled(cron = "0 0 1 * * ?")
-    fun refreshToken() {
-        clientTokenService.setSystemToken(null)
+    override fun doFilter(request: ServletRequest?, response: ServletResponse?, chain: FilterChain?) {
+        if (request == null || chain == null) {
+            return
+        }
+        val httpServletRequest = request as HttpServletRequest
+        val token = httpServletRequest.getHeader(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        if (token != clientTokenService.getSystemToken(null)) {
+            logger.warn("auth token fail: $token")
+            throw TokenForbiddenException("token check fail")
+        }
+        
+        chain.doFilter(request, response)
+    }
+
+    override fun init(filterConfig: FilterConfig?) = Unit
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(TokenCheckFilter:: class.java)
     }
 }
