@@ -7,21 +7,15 @@ on_ERR (){
   echo >&2 "ERROR $fn exit with $ret at line $lineno: $(sed -n ${lineno}p $0)."
 }
 
-set -a
-CTRL_DIR="${CTRL_DIR:-/data/install}"
-source $CTRL_DIR/load_env.sh
-BK_PKG_SRC_PATH=${BK_PKG_SRC_PATH:-/data/src}
-BK_CI_SRC_DIR=${BK_CI_SRC_DIR:-$BK_PKG_SRC_PATH/ci}
-set +a
-ci_env_03="$CTRL_DIR/bin/03-userdef/ci.env"
 my_path="$(readlink -f "$0")"
 cmd_collect_ci_ms_name="${my_path%/*}/bk-ci-collect-ms-name.sh"
 
 show_ci_installconfig_example (){
+  echo " 参考示例：（请修改IP1等为合适的IP）"
   # 列出全部微服务, 大概5个1行.
   cat <<EOF
-# 服务端(微服务), 单节点要求最低配置8核16G. 如构建量大导致CPU及内存不足, 可升级配置或增加更多节点.
-IP1 ci(gateway)$($cmd_collect_ci_ms_name | awk '{name="ci("$1")"; if(++n%5==1){ printf "\nIP1 "; comma=""}; printf comma name; comma=","}')
+# 服务端(网关+微服务), 单节点要求最低配置8核16G. 后期可升级节点硬件配置或分散微服务到不同节点.
+IP1 ci(gateway)$($cmd_collect_ci_ms_name | awk -v RS="( |\n)+" '{name="ci("$1")"; if(++n%5==1){ printf "\nIP1 "; comma=""}; printf comma name; comma=","}')
 # 可选的无编译环境. 资源开销较dockerhost低, 可以和服务端混合部署. 如无则无法使用"无编译环境".
 IP2 ci(agentless)
 # 可选的公共构建机. 至少1台, 按需新增. 建议16核32G内存500GB磁盘.
@@ -29,11 +23,24 @@ IP3 ci(dockerhost)
 # 私有构建机无需配置install.config, 默认仅支持Linux系统, 其他系统需参考官网文档完成实施.
 EOF
 }
+set -a
+CTRL_DIR="${CTRL_DIR:-/data/install}"
+echo "加载 $CTRL_DIR/load_env.sh."
+if [ -r "$CTRL_DIR/load_env.sh" ]; then
+  source $CTRL_DIR/load_env.sh
+else
+  echo "请先安装蓝鲸社区版, 在中控机修改install.config, 然后执行本脚本."
+  show_ci_installconfig_example
+  exit 3
+fi
+BK_PKG_SRC_PATH=${BK_PKG_SRC_PATH:-/data/src}
+BK_CI_SRC_DIR=${BK_CI_SRC_DIR:-$BK_PKG_SRC_PATH/ci}
+set +a
+ci_env_03="$CTRL_DIR/bin/03-userdef/ci.env"
 
 # 判断环境变量, 提示先填写 install.config.
 if [ -z "${BK_CI_IP_COMMA:-}" ]; then
   echo " 请先更新 $CTRL_DIR/install.config 文件，新增 CI 的分布规则。"
-  echo " 参考示例：（请修改IP1等为合适的IP）"
   show_ci_installconfig_example
   exit 1
 else
