@@ -30,7 +30,7 @@ package com.tencent.devops.common.pipeline.event
 /*
 // 构建事件
 {
-    "event": "BUILD_START/BUILD_END/BUILD_TASK_START/BUILD_TASK_END",
+    "event": "BUILD_START/BUILD_END/BUILD_TASK_START/BUILD_TASK_END/BUILD_STAGE_START/BUILD_STAGE_END",
     "data": {
         "pipelineId": "流水线ID",
         "pipelineName": "流水线名称",
@@ -92,17 +92,19 @@ enum class CallBackEvent {
     BUILD_START,
     BUILD_END,
     BUILD_TASK_START,
-    BUILD_TASK_END
+    BUILD_TASK_END,
+    BUILD_STAGE_START,
+    BUILD_STAGE_END
 }
 
-class PipelineEvent(
+data class PipelineEvent(
     val pipelineId: String,
     val pipelineName: String,
     val userId: String,
     val updateTime: Long
 )
 
-class BuildEvent(
+data class BuildEvent(
     val buildId: String,
     val pipelineId: String,
     val pipelineName: String,
@@ -115,11 +117,11 @@ class BuildEvent(
     val trigger: String
 )
 
-class SimpleModel(
+data class SimpleModel(
     val stages: List<SimpleStage>
 )
 
-class SimpleStage(
+data class SimpleStage(
     val stageName: String,
     var status: String,
     var startTime: Long = 0,
@@ -127,7 +129,7 @@ class SimpleStage(
     val jobs: List<SimpleJob>
 )
 
-class SimpleJob(
+data class SimpleJob(
     val jobName: String,
     val status: String,
     val startTime: Long = 0,
@@ -135,7 +137,7 @@ class SimpleJob(
     val tasks: List<SimpleTask>
 )
 
-class SimpleTask(
+data class SimpleTask(
     val taskId: String,
     val taskName: String,
     val atomCode: String,
