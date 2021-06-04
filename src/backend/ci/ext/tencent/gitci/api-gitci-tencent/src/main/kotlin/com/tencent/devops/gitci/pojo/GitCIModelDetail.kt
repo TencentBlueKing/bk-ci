@@ -38,5 +38,7 @@ data class GitCIModelDetail(
     @ApiModelProperty("工蜂Event事件", required = true)
     val gitRequestEvent: GitRequestEvent,
     @ApiModelProperty("构建详情-构建信息", required = true)
-    val modelDetail: ModelDetail
+    val modelDetail: ModelDetail,
+    @ApiModelProperty("构建历史-备注信息")
+    val buildHistoryRemark: String? = null
 )

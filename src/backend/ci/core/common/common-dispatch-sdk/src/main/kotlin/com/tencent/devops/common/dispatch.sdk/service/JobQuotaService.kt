@@ -48,7 +48,7 @@ class JobQuotaService constructor(
     @Value("\${dispatch.jobQuota.systemAlertReceiver:#{null}}")
     private val alertReceiver: String? = null
 
-    @Value("\${dispatch.jobQuota.enable}")
+    @Value("\${dispatch.jobQuota.enable:false}")
     private val jobQuotaEnable: Boolean = false
 
     fun addRunningJob(projectId: String, vmType: JobQuotaVmType?, buildId: String, vmSeqId: String) {

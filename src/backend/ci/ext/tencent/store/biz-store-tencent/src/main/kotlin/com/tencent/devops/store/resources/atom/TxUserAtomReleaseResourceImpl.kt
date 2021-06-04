@@ -30,6 +30,7 @@ package com.tencent.devops.store.resources.atom
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.atom.TxUserAtomReleaseResource
+import com.tencent.devops.store.pojo.atom.AtomRebuildRequest
 import com.tencent.devops.store.service.atom.TxAtomReleaseService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -38,7 +39,12 @@ class TxUserAtomReleaseResourceImpl @Autowired constructor(
     private val atomReleaseService: TxAtomReleaseService
 ) : TxUserAtomReleaseResource {
 
-    override fun rebuild(userId: String, projectId: String, atomId: String): Result<Boolean> {
-        return atomReleaseService.rebuild(projectId, userId, atomId)
+    override fun rebuild(
+        userId: String,
+        projectId: String,
+        atomId: String,
+        atomRebuildRequest: AtomRebuildRequest
+    ): Result<Boolean> {
+        return atomReleaseService.rebuild(projectId, userId, atomId, atomRebuildRequest)
     }
 }

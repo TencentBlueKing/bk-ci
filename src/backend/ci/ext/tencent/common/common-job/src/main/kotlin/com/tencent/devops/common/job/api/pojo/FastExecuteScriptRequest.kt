@@ -28,9 +28,7 @@
 package com.tencent.devops.common.job.api.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import org.springframework.stereotype.Component
 
-@Component
 data class FastExecuteScriptRequest(
     val userId: String,
     val scriptContent: String,

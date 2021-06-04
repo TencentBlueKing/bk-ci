@@ -32,6 +32,7 @@ const val OBJECT_KIND_MANUAL = "manual"
 const val OBJECT_KIND_PUSH = "push"
 const val OBJECT_KIND_TAG_PUSH = "tag_push"
 const val OBJECT_KIND_MERGE_REQUEST = "merge_request"
+const val OBJECT_KIND_SCHEDULE = "schedule"
 const val SERVICE_TYPE = "type"
 
 const val NORMAL_JOB = "normal"

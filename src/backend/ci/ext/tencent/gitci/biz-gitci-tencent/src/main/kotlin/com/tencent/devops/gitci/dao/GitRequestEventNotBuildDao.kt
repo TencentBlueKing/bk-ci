@@ -40,6 +40,7 @@ class GitRequestEventNotBuildDao {
         dslContext: DSLContext,
         eventId: Long,
         originYaml: String?,
+        parsedYaml: String? = null,
         normalizedYaml: String?,
         reason: String?,
         reasonDetail: String?,
@@ -53,6 +54,7 @@ class GitRequestEventNotBuildDao {
                 ORIGIN_YAML,
                 PIPELINE_ID,
                 FILE_PATH,
+                PARSED_YAML,
                 NORMALIZED_YAML,
                 REASON,
                 REASON_DETAIL,
@@ -63,6 +65,7 @@ class GitRequestEventNotBuildDao {
                 originYaml,
                 pipelineId,
                 filePath,
+                parsedYaml,
                 normalizedYaml,
                 reason,
                 reasonDetail,
@@ -81,6 +84,17 @@ class GitRequestEventNotBuildDao {
         with(TGitRequestEventNotBuild.T_GIT_REQUEST_EVENT_NOT_BUILD) {
             return dslContext.selectFrom(this)
                 .where(EVENT_ID.eq(eventId))
+                .fetch()
+        }
+    }
+
+    fun getListByEventIds(
+        dslContext: DSLContext,
+        eventIds: Set<Long>
+    ): List<TGitRequestEventNotBuildRecord> {
+        with(TGitRequestEventNotBuild.T_GIT_REQUEST_EVENT_NOT_BUILD) {
+            return dslContext.selectFrom(this)
+                .where(EVENT_ID.`in`(eventIds))
                 .fetch()
         }
     }

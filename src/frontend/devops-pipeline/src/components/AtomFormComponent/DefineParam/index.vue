@@ -120,10 +120,20 @@
                         <vuex-textarea
                             v-validate.initial="'excludeComma'"
                             :disabled="disabled"
-                            :handle-change="(name, value) => editOption(name, value, index)" name="options"
+                            :handle-change="(name, value) => editOption(name, value, index)"
+                            name="options"
                             :data-vv-scope="`param-${param.key}`"
                             :placeholder="$t('editPage.optionTips')"
                             :value="getOptions(param)" />
+                    </bk-form-item>
+                    <bk-form-item label-width="auto" :label="$t('editPage.chineseName')">
+                        <vuex-input
+                            :disabled="disabled"
+                            :handle-change="(name, value) => handleParamChange(name, value, index)"
+                            name="chineseName"
+                            max-length="20"
+                            :placeholder="$t('editPage.chineseNameTips')"
+                            :value="param.chineseName" />
                     </bk-form-item>
                     <bk-form-item label-width="auto" :label="$t('desc')">
                         <vuex-input
