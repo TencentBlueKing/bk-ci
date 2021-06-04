@@ -59,6 +59,7 @@ class AuthCronManager @Autowired constructor(
     @Scheduled(cron = "0 0/2 * * * ?")
     fun newClearTimeoutCache() {
         managerUserService.deleteTimeoutUser()
+        
     }
 
     /**
