@@ -27,22 +27,21 @@
 
 package com.tencent.devops.misc.dao.auto.tsource
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.model.process.Tables
 import com.tencent.devops.model.process.Tables.T_PIPELINE_RESOURCE
 import com.tencent.devops.model.process.tables.TPipelineInfo
 import com.tencent.devops.model.process.tables.TPipelineSetting
+import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineResourceRecord
 import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
 import org.jooq.DSLContext
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Repository
 
 @Repository
-class SourcePipelineDao @Autowired constructor(private val objectMapper: ObjectMapper) {
+class SourcePipelineDao {
 
     fun listPipelineInfos(dslContext: DSLContext, projectId: String): Collection<TPipelineInfoRecord> {
         with(TPipelineInfo.T_PIPELINE_INFO) {
@@ -87,6 +86,14 @@ class SourcePipelineDao @Autowired constructor(private val objectMapper: ObjectM
         return with(Tables.T_PIPELINE_BUILD_SUMMARY) {
             dslContext.selectFrom(this)
                 .where(PIPELINE_ID.eq(pipelineId))
+                .fetchAny()
+        }
+    }
+
+    fun getPipelineBuildDetail(dslContext: DSLContext, buildId: String): TPipelineBuildDetailRecord? {
+        return with(Tables.T_PIPELINE_BUILD_DETAIL) {
+            dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId))
                 .fetchAny()
         }
     }
