@@ -257,11 +257,13 @@ class PipelineContextService@Autowired constructor(
         modelDetail: ModelDetail,
         buildVar: Map<String, String>
     ) {
-        varMap["ci.pipeline_name"] = modelDetail.pipelineName
+        varMap["ci.pipeline_id"] = modelDetail.pipelineId
         varMap["ci.pipeline_name"] = modelDetail.pipelineName
         varMap["ci.actor"] = modelDetail.userId
-        varMap["ci.build_id"] = buildVar[PIPELINE_BUILD_ID] ?: ""
-        varMap["ci.build_num"] = buildVar[PIPELINE_BUILD_NUM] ?: ""
+        if (!buildVar[PIPELINE_BUILD_ID].isNullOrBlank())
+            varMap["ci.build_id"] = buildVar[PIPELINE_BUILD_ID]!!
+        if (!buildVar[PIPELINE_BUILD_NUM].isNullOrBlank())
+            varMap["ci.build_num"] = buildVar[PIPELINE_BUILD_NUM]!!
         if (!buildVar[PIPELINE_GIT_REF].isNullOrBlank())
             varMap["ci.ref"] = buildVar[PIPELINE_GIT_REF]!!
         if (!buildVar[PIPELINE_GIT_HEAD_REF].isNullOrBlank())
