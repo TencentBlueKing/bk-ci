@@ -28,7 +28,10 @@ function _M:isSafe()
         if string.find(path, "/api/app/") == nil -- app 路径
         and string.find(path, "/api/open/") == nil -- open路径
         and string.find(path, "/bkrepo/api/external/generic") == nil -- 仓库的external/generic路径
-        and string.find(path, "/bkrepo/api/external/repository") == nil then -- 仓库的external/repository路径
+        and string.find(path, "/bkrepo/api/external/repository") == nil -- 仓库的external/repository路径
+        and string.find(path, "/process/api/external/scm/codetgit/commit") == nil -- TGit回调
+        and string.find(path, "/external/api/external/github/webhook/commit") == nil -- Github回调
+        then
             ngx.log(ngx.ERR, "it is unsafe , host : ", host, " , path : ", path)
             return false
         end
