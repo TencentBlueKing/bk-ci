@@ -97,7 +97,7 @@ class GitRequestEventDao {
             if (commitMsg != null) {
                 dsl.and(COMMIT_MSG.like("%$commitMsg%"))
             }
-            val record = dsl.fetchOne()
+            val record = dsl.fetchAny()
             return if (record == null) {
                 null
             } else {
@@ -135,7 +135,7 @@ class GitRequestEventDao {
             if (commitMsg != null) {
                 dsl.and(COMMIT_MSG.like("%$commitMsg%"))
             }
-            val record = dsl.fetchOne()
+            val record = dsl.fetchAny()
             return if (record == null) {
                 null
             } else {

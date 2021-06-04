@@ -30,6 +30,7 @@ package com.tencent.devops.gitci.listener
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.gitci.dao.GitRequestEventBuildDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -72,6 +73,11 @@ class V2GitCIBuildQueueListener @Autowired constructor(
         if (!projectId.startsWith("git_")) {
             return
         }
+        // 只监听定时触发
+        if (buildQueueEvent.triggerType != StartType.TIME_TRIGGER.name) {
+            return
+        }
+
         val records = gitRequestEventBuildDao.getLastEventByPipelineId(
             dslContext = dslContext,
             gitProjectId = projectId.removePrefix("git_").toLong(),
