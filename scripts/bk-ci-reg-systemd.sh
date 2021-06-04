@@ -13,6 +13,7 @@ if [ "${BASH_VERSINFO[0]:-0}" -lt 4 ]; then
   exit 1
 fi
 
+BK_CI_SRC_DIR="${BK_CI_SRC_DIR:-$BK_PKG_SRC_PATH/ci}"
 sd_ci_target="bk-ci.target"
 # 剥离dns重定向能力为独立服务, 默认启用.
 sd_dns_redirect="bk-ci-docker-dns-redirect.service"
@@ -95,6 +96,7 @@ Environment=DNS_CACHE_SERVER=127.0.0.1:53
 Environment=IPTABLES_RULE_MARKER=bk-ci-docker-dns-hijack
 EnvironmentFile=-$sysconfig_dir/${sd_dns_redirect%.service}
 ExecStartPre=/bin/bash -c 'command -v iptables'
+ExecStart=/usr/bin/env sysctl -w net.ipv4.ip_forward=1
 ExecStart=/usr/bin/env sysctl -w net.ipv4.conf.\${NIC_DEVICE}.route_localnet=1
 ExecStart=/bin/bash -c 'if iptables -t nat -S PREROUTING | grep -- "\${IPTABLES_RULE_MARKER}"; then echo "iptables rule exist yet, do nothing."; else iptables -t nat -I PREROUTING 1 -i "\${NIC_DEVICE}" -p udp --dport "\${CONTAINER_DNS_DPORT}" -j DNAT --to-destination "\${DNS_CACHE_SERVER}" -m comment --comment "\${IPTABLES_RULE_MARKER}"; fi'
 ExecStop=/bin/bash -c 'if iptables -t nat -S PREROUTING | grep -- "\${IPTABLES_RULE_MARKER}"; then echo "iptables rule exist, cleanup it."; iptables -t nat -D PREROUTING -i "\${NIC_DEVICE}" -p udp --dport "\${CONTAINER_DNS_DPORT}" -j DNAT --to-destination "\${DNS_CACHE_SERVER}" -m comment --comment "\${IPTABLES_RULE_MARKER}"; else echo "iptables rule was cleaned already, do nothing."; fi'
@@ -216,9 +218,17 @@ if [ -z "${BK_CI_HOME:-}" ]; then
   echo >&2 "ERROR: env BK_CI_HOME is not set or empty. please set it first."
   exit 2
 fi
-if ! [ -d "$BK_CI_HOME" ]; then
-  echo >&2 "ERROR: dir BK_CI_HOME does not exsit: $BK_CI_HOME, you should install bk-ci first."
-  exit 4
+
+invalid_proj=""
+for MS_NAME in "$@"; do
+  [ -d "$BK_CI_SRC_DIR/$MS_NAME" ] || {
+    echo "dir $BK_CI_SRC_DIR/$MS_NAME not eixst."
+    invalid_proj="$invalid_proj,$MS_NAME"
+  }
+done
+if [ "${#invalid_proj}" -gt 1 ]; then
+  echo "ERROR: invalid proj: $invalid_proj."
+  exit 15
 fi
 
 gen_systemd_ci__target

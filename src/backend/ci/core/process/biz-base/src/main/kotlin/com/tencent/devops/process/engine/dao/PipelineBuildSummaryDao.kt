@@ -340,7 +340,7 @@ class PipelineBuildSummaryDao {
         bkCondition: com.tencent.devops.process.pojo.classify.enums.Condition,
         field: TableField<TPipelineInfoRecord, String>,
         fieldValue: String
-    ): Condition? {
+    ): Condition {
         return when (bkCondition) {
             com.tencent.devops.process.pojo.classify.enums.Condition.LIKE -> field.contains(
                 fieldValue

@@ -68,6 +68,22 @@ class ServiceMarketAtomArchiveResourceImpl @Autowired constructor(
         return marketAtomArchiveService.verifyAtomTaskJson(userId, projectCode, atomCode, version)
     }
 
+    override fun validateReleaseType(
+        userId: String,
+        projectCode: String,
+        atomCode: String,
+        version: String,
+        fieldCheckConfirmFlag: Boolean?
+    ): Result<Boolean> {
+        return marketAtomArchiveService.validateReleaseType(
+            userId = userId,
+            projectCode = projectCode,
+            atomCode = atomCode,
+            version = version,
+            fieldCheckConfirmFlag = fieldCheckConfirmFlag
+        )
+    }
+
     override fun updateAtomPkgInfo(
         userId: String,
         atomId: String,

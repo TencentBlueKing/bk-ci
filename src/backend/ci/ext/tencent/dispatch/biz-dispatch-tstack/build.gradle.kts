@@ -28,4 +28,5 @@
 dependencies {
     api(project(":core:dispatch:biz-dispatch"))
     api(project(":ext:tencent:dispatch:api-dispatch-tstack"))
+    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
 }

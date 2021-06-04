@@ -28,6 +28,7 @@
 package com.tencent.devops.common.pipeline.pojo.element.market
 
 import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -44,7 +45,9 @@ data class MarketBuildAtomElement(
     @ApiModelProperty("插件版本", required = false)
     override var version: String = "1.*",
     @ApiModelProperty("插件参数数据", required = true)
-    val data: Map<String, Any> = mapOf()
+    val data: Map<String, Any> = mapOf(),
+    @ApiModelProperty("附加参数", required = false)
+    override var additionalOptions: ElementAdditionalOptions? = null
 ) : Element(name, id, status) {
 
     companion object {
