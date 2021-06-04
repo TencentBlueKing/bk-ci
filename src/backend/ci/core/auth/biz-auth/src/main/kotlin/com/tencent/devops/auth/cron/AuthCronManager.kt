@@ -33,18 +33,26 @@ import com.tencent.devops.auth.refresh.event.ManagerOrganizationChangeEvent
 import com.tencent.devops.auth.service.ManagerOrganizationService
 import com.tencent.devops.auth.service.ManagerUserService
 import com.tencent.devops.common.client.ClientTokenService
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
+import javax.annotation.PostConstruct
 
 @Component
-class ManagerUserTimeoutCron @Autowired constructor(
+class AuthCronManager @Autowired constructor(
     val managerUserService: ManagerUserService,
     val managerOrganizationService: ManagerOrganizationService,
     val refreshDispatch: AuthRefreshDispatch,
     val clientTokenService: ClientTokenService
 ) {
-
+    
+    @PostConstruct
+    fun init() {
+        logger.info("start init system authToken")
+        clientTokenService.setSystemToken(null)
+        logger.info("init system authToken success ${clientTokenService.getSystemToken(null)}")
+    }    
     /**
      * 每2分钟，清理过期管理员
      */
@@ -76,5 +84,9 @@ class ManagerUserTimeoutCron @Autowired constructor(
     @Scheduled(cron = "0 0 1 * * ?")
     fun refreshToken() {
         clientTokenService.setSystemToken(null)
+    }
+    
+    companion object {
+        val logger = LoggerFactory.getLogger(AuthCronManager::class.java)
     }
 }
