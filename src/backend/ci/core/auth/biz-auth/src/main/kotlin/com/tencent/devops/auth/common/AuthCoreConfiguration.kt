@@ -124,10 +124,7 @@ class AuthCoreConfiguration {
         container.setMessageListener(adapter)
         return container
     }
-    
-    @Bean
-    fun clientTokenService(redisOperation: RedisOperation) = ClientTokenService(redisOperation)
-    
+
     @Bean
     fun tokenFilter(clientTokenService: ClientTokenService) = TokenCheckFilter(clientTokenService)
 }

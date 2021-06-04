@@ -39,11 +39,16 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
     val permissionService: PermissionService
 ) : ServicePermissionAuthResource {
 
-    override fun validateUserActionPermission(userId: String, action: String): Result<Boolean> {
+    override fun validateUserActionPermission(
+        token: String,
+        userId: String,
+        action: String
+    ): Result<Boolean> {
         return Result(permissionService.validateUserActionPermission(userId, action))
     }
 
     override fun validateUserResourcePermission(
+        token: String,
         userId: String,
         action: String,
         projectCode: String,
@@ -53,6 +58,7 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
     }
 
     override fun validateUserResourcePermissionByRelation(
+        token: String,
         userId: String,
         action: String,
         projectCode: String,
@@ -73,6 +79,7 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
     }
 
     override fun getUserResourceByPermission(
+        token: String,
         userId: String,
         action: String,
         projectCode: String,
@@ -89,6 +96,7 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
     }
 
     override fun getUserResourcesByPermissions(
+        token: String,
         userId: String,
         actions: List<String>,
         projectCode: String,
