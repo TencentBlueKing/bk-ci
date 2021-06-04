@@ -387,7 +387,7 @@ class GitCIBuildFinishListener @Autowired constructor(
         build: BuildHistory
     ) {
 
-        val projectName = getProjectName(conf)
+        val projectName = getProjectName(conf.gitHttpUrl, conf.name)
         val branchName = GitCommonUtils.checkAndGetForkBranchName(
             gitProjectId = gitProjectId,
             sourceGitProjectId = sourceProjectId,
@@ -580,25 +580,11 @@ class GitCIBuildFinishListener @Autowired constructor(
     }
 
     // 获取 name/projectName格式的项目名称
-    private fun getProjectName(conf: GitRepositoryConf): String {
+    private fun getProjectName(gitHttpUrl: String, name: String): String {
         return try {
-            val names = conf.homepage.split("/")
-            val userName = names[names.lastIndex - 1]
-            val projectName = names.last()
-            "$userName/$projectName"
+            GitCommonUtils.getRepoName(gitHttpUrl, name)
         } catch (e: Exception) {
-            conf.name
-        }
-    }
-
-    private fun getProjectName(conf: GitCIBasicSetting): String {
-        return try {
-            val names = conf.homepage.split("/")
-            val userName = names[names.lastIndex - 1]
-            val projectName = names.last()
-            "$userName/$projectName"
-        } catch (e: Exception) {
-            conf.name
+            name
         }
     }
 
@@ -619,7 +605,7 @@ class GitCIBuildFinishListener @Autowired constructor(
         title: String?,
         content: String?
     ) {
-        val projectName = getProjectName(conf)
+        val projectName = getProjectName(conf.gitHttpUrl, conf.name)
         val branchName = GitCommonUtils.checkAndGetForkBranchName(
             gitProjectId = gitProjectId,
             sourceGitProjectId = sourceProjectId,
