@@ -347,7 +347,7 @@ class MutexControl @Autowired constructor(
         if (buildId.isNullOrBlank() || containerId.isNullOrBlank()) {
             return false
         }
-        val container = pipelineRuntimeService.getContainer(buildId!!, stageId = null, containerId = containerId!!)
-        return container == null || BuildStatusSwitcher.finish(container.status) == container.status
+        val container = pipelineRuntimeService.getContainer(buildId, stageId = null, containerId = containerId)
+        return container == null || container.status.isFinish()
     }
 }
