@@ -30,7 +30,7 @@ package com.tencent.devops.common.pipeline.pojo.element
 import com.tencent.devops.common.pipeline.NameAndValue
 
 data class ElementAdditionalOptions(
-    val enable: Boolean = true,
+    var enable: Boolean = true,
     var continueWhenFailed: Boolean = false,
     val retryWhenFailed: Boolean = false,
     val retryCount: Int = 0,

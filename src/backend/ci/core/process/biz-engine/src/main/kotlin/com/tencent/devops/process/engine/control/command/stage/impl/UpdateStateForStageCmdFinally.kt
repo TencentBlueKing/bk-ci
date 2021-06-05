@@ -31,7 +31,6 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.process.engine.common.BS_STAGE_CANCELED_END_SOURCE
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.command.CmdFlowState
@@ -167,7 +166,7 @@ class UpdateStateForStageCmdFinally(
             return
         }
         commandContext.containers.forEach { c ->
-            if (c.status != BuildStatusSwitcher.forceFinish(c.status)) { // 与结束的状态不一样的，都需要刷新
+            if (!c.status.isFinish()) { // #4315 未结束的，都需要刷新
                 pipelineRuntimeService.updateContainerStatus(
                     buildId = c.buildId,
                     stageId = c.stageId,
@@ -177,9 +176,11 @@ class UpdateStateForStageCmdFinally(
                 )
 
                 if (commandContext.fastKill) {
-                    val tag = VMUtils.genStartVMTaskId(c.containerId)
                     buildLogPrinter.addYellowLine(
-                        buildId = c.buildId, tag = tag, jobId = tag, executeCount = c.executeCount,
+                        buildId = c.buildId,
+                        tag = VMUtils.genStartVMTaskId(c.containerId),
+                        jobId = c.containerId,
+                        executeCount = c.executeCount,
                         message = "job(${c.containerId}) stop by fast kill"
                     )
                 }
