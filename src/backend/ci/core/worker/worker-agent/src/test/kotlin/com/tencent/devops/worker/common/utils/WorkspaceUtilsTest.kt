@@ -27,59 +27,19 @@
 
 package com.tencent.devops.worker.common.utils
 
-import com.tencent.devops.common.api.enums.OSType
-import com.tencent.devops.worker.common.env.AgentEnv.getOS
-import java.io.File
+import org.junit.Assert
+import org.junit.Test
 
-object WorkspaceUtils {
+class WorkspaceUtilsTest {
 
-    fun getLandun() = File(".")
-
-    fun getWorkspace() = File(getLandun(), "workspace")
-
-    fun getAgentJar() = File(getLandun(), "worker-agent.jar")
-
-    fun getAgentInstallScript(): File {
-        val os = getOS()
-        return if (os == OSType.WINDOWS) {
-            File(getLandun(), "agent_install.bat")
-        } else {
-            File(getLandun(), "agent_install.sh")
-        }
-    }
-
-    fun getAgentUnInstallScript(): File {
-        val os = getOS()
-        return if (os == OSType.WINDOWS) {
-            File(getLandun(), "agent_uninstall.bat")
-        } else {
-            File(getLandun(), "agent_uninstall.sh")
-        }
-    }
-
-    fun getAgentStartScript(): File {
-        val os = getOS()
-        return if (os == OSType.WINDOWS) {
-            File(getLandun(), "agent_start.bat")
-        } else {
-            File(getLandun(), "agent_start.sh")
-        }
-    }
-
-    fun getAgentStopScript(): File {
-        val os = getOS()
-        return if (os == OSType.WINDOWS) {
-            File(getLandun(), "agent_stop.bat")
-        } else {
-            File(getLandun(), "agent_stop.sh")
-        }
-    }
-
-    fun getPipelineWorkspace(pipelineId: String, workspace: String): File {
-        return if (workspace.isNotBlank()) {
-            File(workspace).normalize()
-        } else {
-            File(getWorkspace(), "$pipelineId/src").normalize()
-        }
+    @Test
+    fun getPipelineWorkspace() {
+        val pipelineId = "p-abcdefghijklmnopqrstuvwxyz123456"
+        val workspaceAsAssign = WorkspaceUtils.getPipelineWorkspace(pipelineId = pipelineId, workspace = "src")
+        println(workspaceAsAssign.absolutePath)
+        Assert.assertTrue(workspaceAsAssign.exists() && workspaceAsAssign.isDirectory)
+        val workspaceWithPipelineId = WorkspaceUtils.getPipelineWorkspace(pipelineId = pipelineId, workspace = "")
+        println(workspaceWithPipelineId.absolutePath)
+        Assert.assertTrue(workspaceAsAssign.exists() && workspaceAsAssign.isDirectory)
     }
 }
