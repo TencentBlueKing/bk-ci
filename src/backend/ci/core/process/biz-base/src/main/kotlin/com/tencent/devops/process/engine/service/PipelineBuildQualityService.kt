@@ -191,7 +191,7 @@ class PipelineBuildQualityService(
     }
 
     fun getAuditUserList(projectId: String, pipelineId: String, buildId: String, taskId: String): Set<String> {
-        return try {
+        try {
             val auditUsers = client.get(ServiceQualityRuleResource::class).getAuditUserList(
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -199,17 +199,19 @@ class PipelineBuildQualityService(
                 taskId = taskId
             ).data ?: setOf()
 
+            if (auditUsers.isEmpty()) {
+                return auditUsers
+            }
+
             // 处理填写变量的情况
             val variable = buildVariableService.getAllVariable(buildId)
 
-            val parseAuditUser = auditUsers.map {
+            return auditUsers.map {
                 EnvUtils.parseEnv(it, variable)
             }.toSet()
-
-            parseAuditUser
         } catch (e: Exception) {
             logger.error("quality get audit user list fail: ${e.message}", e)
-            setOf()
+            return setOf()
         }
     }
 

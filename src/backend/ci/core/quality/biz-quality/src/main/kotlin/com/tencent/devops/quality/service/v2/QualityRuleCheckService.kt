@@ -40,6 +40,7 @@ import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.plugin.api.ServiceCodeccElementResource
 import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.quality.api.v2.pojo.QualityHisMetadata
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
@@ -252,6 +253,7 @@ class QualityRuleCheckService @Autowired constructor(
                                 endNotifyGroupList = rule.notifyGroupList ?: listOf(),
                                 endNotifyUserList = rule.notifyUserList ?: listOf())
                         } else {
+                            val startUser = runtimeVariable?.get(PIPELINE_START_USER_ID) ?: ""
                             sendAuditNotification(
                                 projectId = projectId,
                                 pipelineId = pipelineId,
@@ -259,7 +261,7 @@ class QualityRuleCheckService @Autowired constructor(
                                 buildNo = buildNo,
                                 createTime = createTime,
                                 resultList = resultList,
-                                auditNotifyUserList = rule.auditUserList ?: listOf())
+                                auditNotifyUserList = (rule.auditUserList ?: listOf()).toSet().plus(startUser))
                         }
                     } catch (t: Throwable) {
                         logger.error("send notification fail", t)
@@ -497,7 +499,7 @@ class QualityRuleCheckService @Autowired constructor(
         buildNo: String,
         createTime: LocalDateTime,
         resultList: List<RuleCheckSingleResult>,
-        auditNotifyUserList: List<String>
+        auditNotifyUserList: Set<String>
     ) {
         val projectName = getProjectName(projectId)
         val pipelineName = getPipelineName(projectId, pipelineId)
