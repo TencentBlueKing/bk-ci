@@ -80,7 +80,7 @@ interface UserPipelineInfoResource {
         @QueryParam("pipelineName")
         pipelineName: String?
     ): Result<List<PipelineIdAndName>>
-    
+
     @ApiOperation("获取流水线详情")
     @GET
     @Path("{projectId}/{pipelineId}/detail")
