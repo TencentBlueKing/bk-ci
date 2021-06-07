@@ -70,11 +70,6 @@
                 return `${API_URL_PREFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?executeCount=1&fileName=${fileName}`
             },
 
-            artifactoryDownloadLink () {
-                const routerParams = this.$route.params
-                return `${API_URL_PREFIX}/artifactory/api/user/artifactories/log/plugin/${routerParams.projectId}/${routerParams.pipelineId}/${this.execDetail.id}/${this.currentElement.id}/${this.postData.currentExe}`
-            },
-
             currentElement () {
                 const {
                     editingElementPos: { stageIndex, containerIndex, elementIndex },
@@ -96,7 +91,8 @@
             ...mapActions('atom', [
                 'getInitLog',
                 'getAfterLog',
-                'getLogStatus'
+                'getLogStatus',
+                'getDownloadLogFromArtifactory'
             ]),
 
             getLog () {
@@ -207,7 +203,7 @@
                     const logStatusRes = await this.getLogStatus(pluginData)
                     const data = logStatusRes.data || {}
                     const logMode = data.logMode || ''
-                    downloadLink = logMode === 'ARCHIVED' ? this.artifactoryDownloadLink : this.downloadLink
+                    downloadLink = logMode === 'ARCHIVED' ? await this.getDownloadLogFromArtifactory(pluginData) : this.downloadLink
                     if (logMode === 'LOCAL') {
                         this.$bkMessage({ theme: 'primary', message: this.$t('history.uploadLog') })
                         return
