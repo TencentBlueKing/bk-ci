@@ -230,7 +230,14 @@ class PipelineInfoDao {
         }
     }
 
-    fun searchByPipelineName(dslContext: DSLContext, pipelineName: String?, projectCode: String, limit: Int, offset: Int): Result<TPipelineInfoRecord>? {
+    fun searchByPipelineName(
+        dslContext: DSLContext,
+        pipelineName: String?,
+        projectCode: String,
+        limit: Int,
+        offset: Int,
+        channelCode: ChannelCode? = ChannelCode.BS
+    ): Result<TPipelineInfoRecord>? {
         return with(T_PIPELINE_INFO) {
             val conditions = mutableListOf<Condition>()
             conditions.add(PROJECT_ID.eq(projectCode))
@@ -238,6 +245,7 @@ class PipelineInfoDao {
             if (!pipelineName.isNullOrEmpty()) {
                 conditions.add(PIPELINE_NAME.like("%$pipelineName%"))
             }
+            conditions.add(CHANNEL.eq(channelCode!!.name))
             dslContext.selectFrom(this)
                     .where(conditions)
                     .orderBy(CREATE_TIME.desc())
