@@ -25,21 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.pojo
+package com.tencent.devops.process.pojo.config
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Component
 
-@ApiModel("插件市场-重新归档插件包请求报文体")
-data class ReArchiveAtomRequest(
-    @ApiModelProperty("项目编码", required = true)
-    val projectCode: String,
-    @ApiModelProperty("插件ID", required = true)
-    val atomId: String,
-    @ApiModelProperty("插件代码", required = true)
-    val atomCode: String,
-    @ApiModelProperty("插件版本号", required = true)
-    val version: String,
-    @ApiModelProperty(value = "插件字段校验确认标识", required = false)
-    val fieldCheckConfirmFlag: Boolean? = false
-)
+@Component
+class TaskCommonSettingConfig {
+
+    @Value("\${pipeline.setting.common.stage.job.task.maxInputNum:100}")
+    val maxInputNum: Int = 100
+
+    @Value("\${pipeline.setting.common.stage.job.task.maxOutputNum:100}")
+    val maxOutputNum: Int = 100
+
+    @Value("\${pipeline.setting.common.stage.job.task.inputComponent.input.size:1024}")
+    val maxInputComponentSize: Int = 1024
+
+    @Value("\${pipeline.setting.common.stage.job.task.inputComponent.textarea.size:16384}")
+    val maxTextareaComponentSize: Int = 16384
+
+    @Value("\${pipeline.setting.common.stage.job.task.inputComponent.codeEditor.size:16384}")
+    val maxCodeEditorComponentSize: Int = 16384
+
+    @Value("\${pipeline.setting.common.stage.job.task.inputComponent.default.size:1024}")
+    val maxDefaultInputComponentSize: Int = 1024
+
+    @Value("\${pipeline.setting.common.stage.job.task.inputComponent.multiple.member:dynamic-parameter}")
+    val multipleInputComponents: String = "dynamic-parameter"
+
+    @Value("\${pipeline.setting.common.stage.job.task.inputComponent.multiple.size:4000}")
+    val maxMultipleInputComponentSize: Int = 4000
+
+    @Value("\${pipeline.setting.common.stage.job.task.outputComponent.default.size:4000}")
+    val maxDefaultOutputComponentSize: Int = 4000
+}

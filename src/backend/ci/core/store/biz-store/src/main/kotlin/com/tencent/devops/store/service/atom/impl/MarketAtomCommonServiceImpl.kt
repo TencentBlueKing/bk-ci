@@ -41,6 +41,7 @@ import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomEnvInfoDao
+import com.tencent.devops.store.dao.atom.MarketAtomVersionLogDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.atom.AtomPostInfo
@@ -55,6 +56,14 @@ import com.tencent.devops.store.pojo.common.ATOM_POST_ENTRY_PARAM
 import com.tencent.devops.store.pojo.common.ATOM_POST_FLAG
 import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PREFIX
 import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
+import com.tencent.devops.store.pojo.common.KEY_DEFAULT
+import com.tencent.devops.store.pojo.common.KEY_DEMANDS
+import com.tencent.devops.store.pojo.common.KEY_EXECUTION
+import com.tencent.devops.store.pojo.common.KEY_INPUT
+import com.tencent.devops.store.pojo.common.KEY_LANGUAGE
+import com.tencent.devops.store.pojo.common.KEY_MINIMUM_VERSION
+import com.tencent.devops.store.pojo.common.KEY_OUTPUT
+import com.tencent.devops.store.pojo.common.KEY_TARGET
 import com.tencent.devops.store.pojo.common.TASK_JSON_NAME
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -65,8 +74,10 @@ import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import org.springframework.util.StringUtils
+import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -88,10 +99,19 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
     private lateinit var marketAtomEnvInfoDao: MarketAtomEnvInfoDao
 
     @Autowired
+    private lateinit var marketAtomVersionLogDao: MarketAtomVersionLogDao
+
+    @Autowired
     private lateinit var storeProjectRelDao: StoreProjectRelDao
 
     @Autowired
     private lateinit var storeCommonService: StoreCommonService
+
+    @Value("\${pipeline.setting.common.stage.job.task.maxInputNum:100}")
+    private val maxInputNum: Int = 100
+
+    @Value("\${pipeline.setting.common.stage.job.task.maxOutputNum:100}")
+    private val maxOutputNum: Int = 100
 
     private val logger = LoggerFactory.getLogger(MarketAtomCommonServiceImpl::class.java)
 
@@ -148,6 +168,135 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
     }
 
     @Suppress("UNCHECKED_CAST")
+    override fun validateReleaseType(
+        atomId: String,
+        atomCode: String,
+        version: String,
+        releaseType: ReleaseTypeEnum,
+        taskDataMap: Map<String, Any>,
+        fieldCheckConfirmFlag: Boolean?
+    ) {
+        val validateReleaseTypeList = listOf(ReleaseTypeEnum.COMPATIBILITY_FIX, ReleaseTypeEnum.COMPATIBILITY_UPGRADE)
+        val validateFlag = releaseType in validateReleaseTypeList
+        val dbAtomProps = marketAtomDao.getLatestAtomByCode(dslContext, atomCode)?.props
+        if (dbAtomProps != null && (validateFlag || getCancelValidateFlag(
+                atomId = atomId,
+                releaseType = releaseType,
+                validateReleaseTypeList = validateReleaseTypeList
+            ))
+        ) {
+            val dbAtomPropMap = JsonUtil.toMap(dbAtomProps)
+            val dbAtomInputMap = dbAtomPropMap[KEY_INPUT] as? Map<String, Any>
+            val dbAtomOutputMap = dbAtomPropMap[KEY_OUTPUT] as? Map<String, Any>
+            val currentAtomInputMap = taskDataMap[KEY_INPUT] as? Map<String, Any>
+            val currentAtomOutputMap = taskDataMap[KEY_OUTPUT] as? Map<String, Any>
+            val dbAtomInputNames = dbAtomInputMap?.keys
+            val dbAtomOutputNames = dbAtomOutputMap?.keys?.toMutableSet()
+            val currentAtomInputNames = currentAtomInputMap?.keys?.toMutableSet()
+            val currentAtomOutputNames = currentAtomOutputMap?.keys
+            // 判断插件是否有新增输入参数
+            if (dbAtomInputNames?.isNotEmpty() == true) {
+                currentAtomInputNames?.removeAll(dbAtomInputNames)
+                if (currentAtomInputNames?.isNotEmpty() == true) {
+                    validateAtomAddInputField(
+                        atomAddInputNames = currentAtomInputNames,
+                        atomInputMap = currentAtomInputMap,
+                        atomCode = atomCode,
+                        version = version,
+                        fieldCheckConfirmFlag = fieldCheckConfirmFlag
+                    )
+                }
+            } else if (dbAtomInputNames?.isEmpty() == true && currentAtomInputNames?.isNotEmpty() == true) {
+                // 当前版本的插件有输入参数且上一个版本有输入参数也需要校验
+                validateAtomAddInputField(
+                    atomAddInputNames = currentAtomInputNames,
+                    atomInputMap = currentAtomInputMap,
+                    atomCode = atomCode,
+                    version = version,
+                    fieldCheckConfirmFlag = fieldCheckConfirmFlag
+                )
+            }
+            // 判断插件是否有减少的输出参数
+            handleAtomDecreaseField(currentAtomOutputNames, dbAtomOutputNames, fieldCheckConfirmFlag)
+        }
+    }
+
+    private fun getCancelValidateFlag(
+        atomId: String,
+        releaseType: ReleaseTypeEnum,
+        validateReleaseTypeList: List<ReleaseTypeEnum>
+    ): Boolean {
+        var cancelValidateFlag = false
+        val atomVersionRecord = marketAtomVersionLogDao.getAtomVersion(dslContext, atomId)
+        val dbReleaseType = ReleaseTypeEnum.getReleaseTypeObj(atomVersionRecord.releaseType.toInt())!!
+        if (releaseType == ReleaseTypeEnum.CANCEL_RE_RELEASE && dbReleaseType in validateReleaseTypeList) {
+            cancelValidateFlag = true
+        }
+        return cancelValidateFlag
+    }
+
+    private fun handleAtomDecreaseField(
+        currentAtomOutputNames: Set<String>?,
+        dbAtomOutputNames: MutableSet<String>?,
+        fieldCheckConfirmFlag: Boolean? = false
+    ) {
+        var flag = false
+        if (currentAtomOutputNames?.isNotEmpty() == true) {
+            dbAtomOutputNames?.removeAll(currentAtomOutputNames)
+            if (dbAtomOutputNames?.isNotEmpty() == true) {
+                // 当前版本的插件有减少的输出参数，让用户确定是否继续发布
+                flag = true
+            }
+        } else if (currentAtomOutputNames?.isEmpty() == true && dbAtomOutputNames?.isNotEmpty() == true) {
+            // 当前版本的插件无输出参数且上一个版本有输出参数，让用户确定是否继续发布
+            flag = true
+        }
+        if (flag && fieldCheckConfirmFlag != true) {
+            if (dbAtomOutputNames?.isNotEmpty() == true) {
+                throw ErrorCodeException(
+                    statusCode = Response.Status.OK.statusCode,
+                    errorCode = StoreMessageCode.USER_ATOM_COMPATIBLE_OUTPUT_FIELD_CONFIRM,
+                    params = arrayOf(JsonUtil.toJson(dbAtomOutputNames))
+                )
+            }
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun validateAtomAddInputField(
+        atomAddInputNames: MutableSet<String>,
+        atomInputMap: Map<String, Any>,
+        atomCode: String,
+        version: String,
+        fieldCheckConfirmFlag: Boolean? = false
+    ) {
+        val invalidAtomInputNames = mutableSetOf<String>()
+        // 判断新增的参数是否有默认值
+        atomAddInputNames.forEach { atomInputName ->
+            val atomInputField = atomInputMap[atomInputName] as? Map<String, Any>
+            if (atomInputField?.get(KEY_DEFAULT) == null) {
+                invalidAtomInputNames.add(atomInputName)
+            }
+        }
+        if (invalidAtomInputNames.isNotEmpty()) {
+            // 存在没有默认值的不兼容新增参数，中断发布流程
+            logger.info("validateVersion $atomCode,$version,invalidAtomInputNames:$invalidAtomInputNames")
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_ATOM_NOT_COMPATIBLE_INPUT_FIELD,
+                params = arrayOf(JsonUtil.toJson(invalidAtomInputNames))
+            )
+        } else if (fieldCheckConfirmFlag != true) {
+            // 存在有默认值的不兼容新增参数，让用户确定是否继续发布
+            logger.info("validateVersion $atomCode,$version,confirmAtomInputNames:$atomAddInputNames")
+            throw ErrorCodeException(
+                statusCode = Response.Status.OK.statusCode,
+                errorCode = StoreMessageCode.USER_ATOM_COMPATIBLE_INPUT_FIELD_CONFIRM,
+                params = arrayOf(JsonUtil.toJson(atomAddInputNames))
+            )
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
     override fun parseBaseTaskJson(
         taskJsonStr: String,
         atomCode: String,
@@ -165,20 +314,20 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
         val taskAtomCode = taskDataMap["atomCode"] as? String
         if (atomCode != taskAtomCode) {
             // 如果用户输入的插件代码和其代码库配置文件的不一致，则抛出错误提示给用户
-            return GetAtomConfigResult(
-                StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NOT_MATCH,
-                arrayOf("atomCode"), null, null
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NOT_MATCH,
+                params = arrayOf("atomCode")
             )
         }
-        val executionInfoMap = taskDataMap["execution"] as? Map<String, Any>
+        val executionInfoMap = taskDataMap[KEY_EXECUTION] as? Map<String, Any>
         var atomPostInfo: AtomPostInfo? = null
         if (null != executionInfoMap) {
-            val target = executionInfoMap["target"]
+            val target = executionInfoMap[KEY_TARGET]
             if (StringUtils.isEmpty(target)) {
                 // 执行入口为空则校验失败
-                return GetAtomConfigResult(
-                    StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
-                    arrayOf("target"), null, null
+                throw ErrorCodeException(
+                    errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
+                    params = arrayOf(KEY_TARGET)
                 )
             }
             val atomPostMap = executionInfoMap[ATOM_POST] as? Map<String, Any>
@@ -209,20 +358,36 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
             }
         } else {
             // 抛出错误提示
-            return GetAtomConfigResult(
-                StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
-                arrayOf("execution"), null, null
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_REPOSITORY_TASK_JSON_FIELD_IS_NULL,
+                params = arrayOf(KEY_EXECUTION)
+            )
+        }
+
+        // 校验参数输入参数和输出参数是否超过最大值
+        val inputDataMap = taskDataMap[KEY_INPUT] as? Map<String, Any>
+        if (inputDataMap != null && inputDataMap.size > maxInputNum) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_ATOM_INPUT_NUM_IS_TOO_MANY,
+                params = arrayOf(maxInputNum.toString())
+            )
+        }
+        val outputDataMap = taskDataMap[KEY_OUTPUT] as? Map<String, Any>
+        if (outputDataMap != null && outputDataMap.size > maxOutputNum) {
+            throw ErrorCodeException(
+                errorCode = StoreMessageCode.USER_ATOM_OUTPUT_NUM_IS_TOO_MANY,
+                params = arrayOf(maxOutputNum.toString())
             )
         }
 
         val atomEnvRequest = AtomEnvRequest(
             userId = userId,
             pkgPath = "",
-            language = executionInfoMap["language"] as? String,
-            minVersion = executionInfoMap["minimumVersion"] as? String,
-            target = executionInfoMap["target"] as String,
+            language = executionInfoMap[KEY_LANGUAGE] as? String,
+            minVersion = executionInfoMap[KEY_MINIMUM_VERSION] as? String,
+            target = executionInfoMap[KEY_TARGET] as String,
             shaContent = null,
-            preCmd = JsonUtil.toJson(executionInfoMap["demands"] ?: ""),
+            preCmd = JsonUtil.toJson(executionInfoMap[KEY_DEMANDS] ?: ""),
             atomPostInfo = atomPostInfo
         )
         return GetAtomConfigResult("0", arrayOf(""), taskDataMap, atomEnvRequest)
@@ -231,10 +396,7 @@ class MarketAtomCommonServiceImpl : MarketAtomCommonService {
     override fun checkEditCondition(atomCode: String): Boolean {
         // 查询插件的最新记录
         val newestAtomRecord = atomDao.getNewestAtomByCode(dslContext, atomCode)
-        logger.info("checkEditCondition newestAtomRecord is :$newestAtomRecord")
-        if (null == newestAtomRecord) {
-            throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(atomCode))
-        }
+            ?: throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(atomCode))
         val atomFinalStatusList = listOf(
             AtomStatusEnum.AUDIT_REJECT.status.toByte(),
             AtomStatusEnum.RELEASED.status.toByte(),
