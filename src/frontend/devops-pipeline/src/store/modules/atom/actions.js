@@ -486,6 +486,10 @@ export default {
         })
     },
 
+    getLogStatus ({ commit }, { projectId, pipelineId, buildId, tag, executeCount }) {
+        return request.get(`${API_URL_PREFIX}/${LOG_API_URL_PREFIX}/user/logs/${projectId}/${pipelineId}/${buildId}/mode`, { params: { tag, executeCount } })
+    },
+
     getMacSysVersion () {
         return request.get(`${MACOS_API_URL_PREFIX}/user/systemVersions`)
     },

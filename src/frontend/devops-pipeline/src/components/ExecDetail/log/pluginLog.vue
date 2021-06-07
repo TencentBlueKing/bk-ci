@@ -1,8 +1,9 @@
 <template>
     <section class="plugin-log">
-        <bk-log-search :down-load-link="id === undefined ? downLoadAllLink : downLoadLink" :execute-count="executeCount" @change-execute="changeExecute" class="log-tools">
+        <bk-log-search :execute-count="executeCount" @change-execute="changeExecute" class="log-tools">
             <template v-slot:tool>
                 <li class="more-button" @click="toggleShowDebugLog">{{ showDebug ? 'Hide Debug Log' : 'Show Debug Log' }}</li>
+                <li class="more-button" @click="downloadLog">Download Log</li>
             </template>
         </bk-log-search>
         <bk-log class="bk-log" ref="scroll" @tag-change="tagChange"></bk-log>
@@ -12,8 +13,14 @@
 <script>
     import { mapActions, mapState } from 'vuex'
     import { hashID } from '@/utils/util.js'
+    import { bkLogSearch, bkLog } from '@blueking/log'
 
     export default {
+        components: {
+            bkLogSearch,
+            bkLog
+        },
+
         props: {
             id: {
                 type: String,
@@ -51,16 +58,21 @@
                 'editingElementPos'
             ]),
 
-            downLoadLink () {
+            downloadLink () {
                 const editingElementPos = this.editingElementPos
                 const fileName = encodeURI(encodeURI(`${editingElementPos.stageIndex + 1}-${editingElementPos.containerIndex + 1}-${editingElementPos.elementIndex + 1}-${this.currentElement.name}`))
                 const tag = this.currentElement.id
                 return `${API_URL_PREFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?tag=${tag}&executeCount=${this.postData.currentExe}&fileName=${fileName}`
             },
 
-            downLoadAllLink () {
+            downloadAllLink () {
                 const fileName = encodeURI(encodeURI(this.execDetail.pipelineName))
                 return `${API_URL_PREFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?executeCount=1&fileName=${fileName}`
+            },
+
+            artifactoryDownloadLink () {
+                const routerParams = this.$route.params
+                return `${API_URL_PREFIX}/artifactory/api/user/artifactories/log/plugin/${routerParams.projectId}/${routerParams.pipelineId}/${this.execDetail.id}/${this.currentElement.id}/${this.postData.currentExe}`
             },
 
             currentElement () {
@@ -83,7 +95,8 @@
         methods: {
             ...mapActions('atom', [
                 'getInitLog',
-                'getAfterLog'
+                'getAfterLog',
+                'getLogStatus'
             ]),
 
             getLog () {
@@ -177,6 +190,30 @@
                 this.postData.lineNo = 0
                 this.closeLog()
                 this.getLog()
+            },
+
+            async downloadLog () {
+                const isPluginLog = this.id !== undefined
+                let downloadLink = this.downloadAllLink
+
+                if (isPluginLog) {
+                    const pluginData = {
+                        projectId: this.$route.params.projectId,
+                        pipelineId: this.$route.params.pipelineId,
+                        buildId: this.buildId,
+                        tag: this.id,
+                        executeCount: this.postData.currentExe
+                    }
+                    const logStatusRes = await this.getLogStatus(pluginData)
+                    const data = logStatusRes.data || {}
+                    const logMode = data.logMode || ''
+                    downloadLink = logMode === 'ARCHIVED' ? this.artifactoryDownloadLink : this.downloadLink
+                    if (logMode === 'LOCAL') {
+                        this.$bkMessage({ theme: 'primary', message: this.$t('history.uploadLog') })
+                        return
+                    }
+                }
+                location.href = downloadLink
             }
         }
     }
@@ -187,16 +224,15 @@
         display: flex;
         flex-direction: column;
         flex: 1;
-    }
-
-    .log-tools {
-        position: absolute;
-        right: 20px;
-        top: 13px;
-        display: flex;
-        align-items: center;
-        line-height: 30px;
-        user-select: none;
-        background: none;
+        .log-tools {
+            position: absolute;
+            right: 20px;
+            top: 13px;
+            display: flex;
+            align-items: center;
+            line-height: 30px;
+            user-select: none;
+            background: none;
+        }
     }
 </style>
