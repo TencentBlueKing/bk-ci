@@ -23,16 +23,16 @@ collect_frontend (){
 
 collect_goagent (){
   mkdir -p "$1"
-  cp -r "$ci_bin_goagent_dir/"* "$1"
+  cp -rv "$ci_bin_goagent_dir/"* "$1"
 }
 collect_workeragent (){
   mkdir -p "$1"
-  cp -r "$ci_bin_agentjar_dir/"worker-agent.jar "$1"
+  cp -rv "$ci_bin_agentjar_dir/"worker-agent.jar "$1"
 }
 collect_agentpackage (){
   cp -r "$ci_code_dir/support-files/agent-package" "$ci_pkg_dir"
-  collect_workeragent "$ci_pkg_dir/agent-package"
-  collect_goagent "$ci_pkg_dir/agent-package/jar"
+  collect_workeragent "$ci_pkg_dir/agent-package/jar"
+  collect_goagent "$ci_pkg_dir/agent-package/upgrade"
 }
 
 collect_backend (){
@@ -87,6 +87,7 @@ packager_ci (){
   echo "gen version:"
   echo "$VERSION" | tee "$ci_pkg_dir/VERSION"
   echo "BK_CI_VERSION=\"$VERSION\"" | tee -a "$ci_pkg_dir/scripts/bkenv.properties"
+  echo "generate $ci_pkg_path from $ci_pkg_dir."
   (cd "$ci_pkg_dir/.."; tar acf "$ci_pkg_path" "$(basename "$ci_pkg_dir")"; )
   ls -l "$ci_pkg_path"
 }
@@ -102,8 +103,8 @@ if [ $# -lt 2 ]; then
   echo " ci_ms_wip    ms still wip, should be removed if exist. comma separated."
   exit 0
 else
-  VERSION=$1
-  ci_pkg_path=$2
+  VERSION="$1"
+  ci_pkg_path="$(readlink -f "$2")"
   ci_code_dir="${3:-${my_dir%/*}}"  # 默认为本脚本的上层目录.
   ci_pkg_dir="${ci_pkg_dir:-$ci_code_dir/ci}"  # 默认为代码目录下的ci目录.
   ci_ms_wip="${ci_ms_wip:-sign}"  # sign需要重构优化, 暂不能用.
