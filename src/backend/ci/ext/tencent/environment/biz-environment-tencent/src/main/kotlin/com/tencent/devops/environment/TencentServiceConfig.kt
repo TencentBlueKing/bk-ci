@@ -32,10 +32,12 @@ import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.EnvironmentAuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.permission.impl.EnvironmentPermissionServiceImpl
+import com.tencent.devops.environment.permission.impl.GitCIEnvironmentPermissionServiceImpl
 import com.tencent.devops.environment.permission.impl.TxV3EnvironmentPermissionService
 import com.tencent.devops.environment.service.TencentAgentUrlServiceImpl
 import org.jooq.DSLContext
@@ -56,6 +58,16 @@ class TencentServiceConfig {
 
     @Bean
     fun managerService(client: Client) = ManagerService(client)
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "gitCI")
+    fun gitCIEnvironmentPermissionServiceImpl(
+        client: Client,
+        dslContext: DSLContext,
+        nodeDao: NodeDao,
+        envDao: EnvDao,
+        tokenCheckService: ClientTokenService
+    ) = GitCIEnvironmentPermissionServiceImpl(client, dslContext, nodeDao, envDao, tokenCheckService)
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "client")
@@ -84,12 +96,14 @@ class TencentServiceConfig {
         envDao: EnvDao,
         nodeDao: NodeDao,
         dslContext: DSLContext,
-        managerService: ManagerService
+        managerService: ManagerService,
+        tokenCheckService: ClientTokenService
     ) = TxV3EnvironmentPermissionService(
         client = client,
         envDao = envDao,
         nodeDao = nodeDao,
         dslContext = dslContext,
-        managerService = managerService
+        managerService = managerService,
+        tokenCheckService = tokenCheckService
     )
 }

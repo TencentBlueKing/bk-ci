@@ -31,6 +31,7 @@ import com.tencent.devops.common.auth.api.BSAuthPermissionApi
 import com.tencent.devops.common.auth.api.BSAuthResourceApi
 import com.tencent.devops.common.auth.code.BSExperienceAuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.GroupDao
 import org.jooq.DSLContext
@@ -61,8 +62,9 @@ class ExperienceConfiguration {
         client: Client,
         dslContext: DSLContext,
         experienceDao: ExperienceDao,
-        groupDao: GroupDao
+        groupDao: GroupDao,
+        tokenService: ClientTokenService
     ) = TxV3ExperiencePermissionServiceImpl(
-        client, dslContext, experienceDao, groupDao
+        client, dslContext, experienceDao, groupDao, tokenService
     )
 }

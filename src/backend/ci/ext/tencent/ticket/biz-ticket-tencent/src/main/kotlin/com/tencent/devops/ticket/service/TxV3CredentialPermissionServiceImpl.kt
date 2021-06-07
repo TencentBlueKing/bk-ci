@@ -35,6 +35,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.utils.TActionUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.ticket.dao.CredentialDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -44,7 +45,8 @@ class TxV3CredentialPermissionServiceImpl @Autowired constructor(
     val client: Client,
     val credentialDao: CredentialDao,
     val dslContext: DSLContext,
-    val managerService: ManagerService
+    val managerService: ManagerService,
+    val tokenService: ClientTokenService
 ) : CredentialPermissionService {
 
     override fun validatePermission(
@@ -75,6 +77,7 @@ class TxV3CredentialPermissionServiceImpl @Autowired constructor(
             return true
         }
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+            token = tokenService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
             resourceCode = projectId,
@@ -94,6 +97,7 @@ class TxV3CredentialPermissionServiceImpl @Autowired constructor(
             return true
         }
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+            token = tokenService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
             resourceCode = resourceCode,
@@ -105,6 +109,7 @@ class TxV3CredentialPermissionServiceImpl @Autowired constructor(
 
     override fun filterCredential(userId: String, projectId: String, authPermission: AuthPermission): List<String> {
         val credentialList = client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
+            token = tokenService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
             action = buildCredentialAction(authPermission),
@@ -126,6 +131,7 @@ class TxV3CredentialPermissionServiceImpl @Autowired constructor(
         val actions = TActionUtils.buildActionList(authPermissions, AuthResourceType.TICKET_CREDENTIAL)
 
         val credentialAuthResult = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
+            token = tokenService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
             action = actions,

@@ -34,6 +34,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.TActionUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
@@ -45,7 +46,8 @@ class TxV3EnvironmentPermissionService constructor(
     private val client: Client,
     private val envDao: EnvDao,
     private val nodeDao: NodeDao,
-    private val managerService: ManagerService
+    private val managerService: ManagerService,
+    private val tokenCheckService: ClientTokenService
 ) : EnvironmentPermissionService {
 
     override fun checkEnvPermission(
@@ -64,6 +66,7 @@ class TxV3EnvironmentPermissionService constructor(
         }
 
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+            token = tokenCheckService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
             resourceCode = envId.toString(),
@@ -83,6 +86,7 @@ class TxV3EnvironmentPermissionService constructor(
             return true
         }
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+            token = tokenCheckService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
             resourceCode = projectId,
@@ -107,6 +111,7 @@ class TxV3EnvironmentPermissionService constructor(
             return true
         }
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+            token = tokenCheckService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
             resourceCode = nodeId.toString(),
@@ -126,6 +131,7 @@ class TxV3EnvironmentPermissionService constructor(
             return true
         }
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+            token = tokenCheckService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
             resourceCode = projectId,
@@ -138,6 +144,7 @@ class TxV3EnvironmentPermissionService constructor(
     // 解密后
     override fun listEnvByPermission(userId: String, projectId: String, permission: AuthPermission): Set<Long> {
         val resourceInstances = client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
+            token = tokenCheckService.getSystemToken(null)!!,
             userId = userId,
             action = buildEnvAction(permission),
             projectCode = projectId,
@@ -155,6 +162,7 @@ class TxV3EnvironmentPermissionService constructor(
     ): Map<AuthPermission, List<String>> {
         val actions = TActionUtils.buildActionList(permissions, AuthResourceType.ENVIRONMENT_ENVIRONMENT)
         val instanceResourcesMap = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
+            token = tokenCheckService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
             resourceType = AuthResourceType.ENVIRONMENT_ENVIRONMENT.value,
@@ -173,6 +181,7 @@ class TxV3EnvironmentPermissionService constructor(
     // 解密后
     override fun listNodeByPermission(userId: String, projectId: String, permission: AuthPermission): Set<Long> {
         val resourceInstances = client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
+            token = tokenCheckService.getSystemToken(null)!!,
             userId = userId,
             action = buildNodeAction(permission),
             projectCode = projectId,
@@ -191,6 +200,7 @@ class TxV3EnvironmentPermissionService constructor(
         val actions = TActionUtils.buildActionList(permissions, AuthResourceType.ENVIRONMENT_ENV_NODE)
 
         val instanceResourcesMap = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
+            token = tokenCheckService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
             resourceType = AuthResourceType.ENVIRONMENT_ENV_NODE.value,

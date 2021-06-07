@@ -5,6 +5,7 @@ import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.CodeAuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.service.impl.RepositoryPermissionServiceImpl
 import com.tencent.devops.repository.service.impl.TxV3RepositoryPermissionServiceImpl
@@ -73,11 +74,13 @@ class RepositoryConfiguration {
         managerService: ManagerService,
         repositoryDao: RepositoryDao,
         dslContext: DSLContext,
-        client: Client
+        client: Client,
+        tokenService: ClientTokenService
     ) = TxV3RepositoryPermissionServiceImpl(
         managerService = managerService,
         repositoryDao = repositoryDao,
         dslContext = dslContext,
-        client = client
+        client = client,
+        tokenService = tokenService
     )
 }

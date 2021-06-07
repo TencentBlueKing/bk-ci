@@ -6,6 +6,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.TActionUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.quality.dao.v2.QualityRuleDao
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -14,7 +15,8 @@ class TxV3QualityPermissionService @Autowired constructor(
     val client: Client,
     val dslContext: DSLContext,
     val ruleDao: QualityRuleDao,
-    val groupDao: QualityRuleDao
+    val groupDao: QualityRuleDao,
+    val tokenService: ClientTokenService
 ): QualityPermissionService {
     override fun validateGroupPermission(
         userId: String,
@@ -24,6 +26,7 @@ class TxV3QualityPermissionService @Autowired constructor(
         message: String
     ) {
         val permissionCheck = client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+            token = tokenService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
             resourceCode = groupId.toString(),
@@ -58,6 +61,7 @@ class TxV3QualityPermissionService @Autowired constructor(
             actions.add(TActionUtils.buildAction(it, AuthResourceType.QUALITY_GROUP))
         }
         val instancesMap = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
+            token = tokenService.getSystemToken(null)!!,
             userId = user,
             projectCode = projectId,
             resourceType = TActionUtils.extResourceType(AuthResourceType.QUALITY_GROUP),
@@ -81,6 +85,7 @@ class TxV3QualityPermissionService @Autowired constructor(
 
     override fun validateRulePermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
+            token = tokenService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
             action = TActionUtils.buildAction(authPermission, AuthResourceType.QUALITY_RULE),
@@ -102,6 +107,7 @@ class TxV3QualityPermissionService @Autowired constructor(
         message: String
     ) {
         val checkPermission = client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+            token = tokenService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
             resourceCode = ruleId.toString(),
@@ -136,6 +142,7 @@ class TxV3QualityPermissionService @Autowired constructor(
             actions.add(TActionUtils.buildAction(it, AuthResourceType.QUALITY_RULE))
         }
         val instancesMap = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
+            token = tokenService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
             resourceType = TActionUtils.extResourceType(AuthResourceType.QUALITY_RULE),

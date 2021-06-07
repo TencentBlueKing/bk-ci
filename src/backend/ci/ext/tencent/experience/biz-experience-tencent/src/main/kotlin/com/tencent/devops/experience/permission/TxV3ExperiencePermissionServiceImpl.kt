@@ -6,6 +6,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.TActionUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.GroupDao
 import com.tencent.devops.experience.service.ExperiencePermissionService
@@ -16,7 +17,8 @@ class TxV3ExperiencePermissionServiceImpl @Autowired constructor(
     val client: Client,
     val dslContext: DSLContext,
     val experienceDao: ExperienceDao,
-    val groupDao: GroupDao
+    val groupDao: GroupDao,
+    val tokenService: ClientTokenService
 ): ExperiencePermissionService {
 
     override fun validateTaskPermission(
@@ -27,6 +29,7 @@ class TxV3ExperiencePermissionServiceImpl @Autowired constructor(
         message: String
     ) {
         val checkPermission = client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+            token = tokenService.getSystemToken(null)!!,
             userId = user,
             projectCode = projectId,
             resourceCode = experienceId.toString(),
@@ -50,6 +53,7 @@ class TxV3ExperiencePermissionServiceImpl @Autowired constructor(
     ): Map<AuthPermission, List<Long>> {
         val actions = TActionUtils.buildActionList(authPermissions, AuthResourceType.EXPERIENCE_TASK)
         val instanceMap = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
+            token = tokenService.getSystemToken(null)!!,
             userId = user,
             projectCode = projectId,
             action = actions,
@@ -70,6 +74,7 @@ class TxV3ExperiencePermissionServiceImpl @Autowired constructor(
 
     override fun validateGroupPermission(userId: String, projectId: String, groupId: Long, authPermission: AuthPermission, message: String) {
         val checkPermission = client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+            token = tokenService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
             resourceCode = groupId.toString(),
@@ -97,6 +102,7 @@ class TxV3ExperiencePermissionServiceImpl @Autowired constructor(
     override fun filterGroup(user: String, projectId: String, authPermissions: Set<AuthPermission>): Map<AuthPermission, List<Long>> {
         val actions = TActionUtils.buildActionList(authPermissions, AuthResourceType.EXPERIENCE_GROUP)
         val instanceMap = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
+            token = tokenService.getSystemToken(null)!!,
             userId = user,
             projectCode = projectId,
             action = actions,

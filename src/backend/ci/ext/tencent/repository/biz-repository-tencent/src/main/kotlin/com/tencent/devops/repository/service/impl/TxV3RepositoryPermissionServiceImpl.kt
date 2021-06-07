@@ -34,6 +34,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.TActionUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.service.RepositoryPermissionService
 import org.jooq.DSLContext
@@ -43,7 +44,8 @@ class TxV3RepositoryPermissionServiceImpl @Autowired constructor(
     private val managerService: ManagerService,
     private val repositoryDao: RepositoryDao,
     private val dslContext: DSLContext,
-    private val client: Client
+    private val client: Client,
+    private val tokenService: ClientTokenService
 ) : RepositoryPermissionService {
 
     override fun validatePermission(
@@ -72,6 +74,7 @@ class TxV3RepositoryPermissionServiceImpl @Autowired constructor(
         }
 
         val resourceCodeList = client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
+            token = tokenService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
             resourceType = AuthResourceType.CODE_REPERTORY.value,
@@ -98,6 +101,7 @@ class TxV3RepositoryPermissionServiceImpl @Autowired constructor(
         }
 
         val permissionResourcesMap = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
+            token = tokenService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
             action = actions,
@@ -146,6 +150,7 @@ class TxV3RepositoryPermissionServiceImpl @Autowired constructor(
         val resourceCode = repositoryId?.toString() ?: projectId
 
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+            token = tokenService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
             resourceType = AuthResourceType.CODE_REPERTORY.toString(),

@@ -7,6 +7,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.TActionUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.ticket.dao.CertDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -16,7 +17,8 @@ class TxV3CertPermissionServiceImpl @Autowired constructor(
     val client: Client,
     val certDao: CertDao,
     val dslContext: DSLContext,
-    val managerService: ManagerService
+    val managerService: ManagerService,
+    val tokenService: ClientTokenService
 ): CertPermissionService {
     override fun validatePermission(
         userId: String,
@@ -37,6 +39,7 @@ class TxV3CertPermissionServiceImpl @Autowired constructor(
         message: String
     ) {
         val checkResult = client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+            token = tokenService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
             relationResourceType = null,
@@ -58,6 +61,7 @@ class TxV3CertPermissionServiceImpl @Autowired constructor(
             return true
         }
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+            token = tokenService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
             relationResourceType = null,
@@ -77,6 +81,7 @@ class TxV3CertPermissionServiceImpl @Autowired constructor(
             return true
         }
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+            token = tokenService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
             relationResourceType = null,
@@ -92,6 +97,7 @@ class TxV3CertPermissionServiceImpl @Autowired constructor(
         authPermission: AuthPermission
     ): List<String> {
         val certIamInfo = client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
+            token = tokenService.getSystemToken(null)!!,
             userId = userId,
             action = buildCertAction(authPermission),
             resourceType = AuthResourceType.TICKET_CERT.value,
@@ -112,6 +118,7 @@ class TxV3CertPermissionServiceImpl @Autowired constructor(
         val actions = TActionUtils.buildActionList(authPermissions, AuthResourceType.TICKET_CERT)
         val certResultMap = mutableMapOf<AuthPermission, List<String>>()
         val certIamInfo = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
+            token = tokenService.getSystemToken(null)!!,
             userId = userId,
             action = actions,
             resourceType = AuthResourceType.TICKET_CERT.value,

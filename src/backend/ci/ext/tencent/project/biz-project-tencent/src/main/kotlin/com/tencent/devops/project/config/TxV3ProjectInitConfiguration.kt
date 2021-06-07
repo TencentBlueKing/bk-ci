@@ -32,6 +32,7 @@ import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.service.ManagerService
 import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.impl.TxV3ProjectPermissionServiceImpl
@@ -53,11 +54,13 @@ class TxV3ProjectInitConfiguration {
         objectMapper: ObjectMapper,
         bkAuthProperties: BkAuthProperties,
         projectDispatcher: ProjectDispatcher,
-        client: Client
+        client: Client,
+        tokenService: ClientTokenService
     ): ProjectPermissionService = TxV3ProjectPermissionServiceImpl(
         objectMapper = objectMapper,
         authProperties = bkAuthProperties,
         projectDispatcher = projectDispatcher,
-        client = client
+        client = client,
+        tokenService = tokenService
     )
 }
