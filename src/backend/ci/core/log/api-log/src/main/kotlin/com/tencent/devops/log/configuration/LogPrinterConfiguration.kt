@@ -25,10 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.log.meta
+package com.tencent.devops.log.configuration
 
-enum class AnsiErase(val value: Int) {
-    FORWARD(0),
-    BACKWARD(1),
-    ALL(2);
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.log.utils.BuildLogPrinter
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
+import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
+
+@Configuration
+@ConditionalOnWebApplication
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+class LogPrinterConfiguration {
+
+    @Bean
+    fun buildLogPrinter(client: Client) = BuildLogPrinter(client)
 }

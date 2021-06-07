@@ -30,7 +30,7 @@ package com.tencent.devops.plugin.worker.task.unitymetascan
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.log.Ansi.Companion.ansi
+import com.tencent.devops.log.meta.Ansi.Companion.ansi
 import com.tencent.devops.common.pipeline.element.MetaFileScanElement
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables

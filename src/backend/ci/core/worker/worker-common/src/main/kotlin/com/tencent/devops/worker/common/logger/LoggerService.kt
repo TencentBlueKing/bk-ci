@@ -27,7 +27,7 @@
 
 package com.tencent.devops.worker.common.logger
 
-import com.tencent.devops.common.log.Ansi
+import com.tencent.devops.log.meta.Ansi
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.worker.common.LOG_DEBUG_FLAG

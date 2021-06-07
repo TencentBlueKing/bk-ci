@@ -35,7 +35,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.UserLogResource
 import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.log.service.LogPermissionService
-import com.tencent.devops.log.service.LogServiceDispatcher
+import com.tencent.devops.log.service.BuildLogQueryService
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
@@ -45,7 +45,7 @@ import javax.ws.rs.core.Response
  */
 @RestResource
 class UserLogResourceImpl @Autowired constructor(
-    private val logDispatcher: LogServiceDispatcher,
+    private val buildLogQuery: BuildLogQueryService,
     private val logPermissionService: LogPermissionService
 ) : UserLogResource {
 
@@ -61,7 +61,7 @@ class UserLogResourceImpl @Autowired constructor(
         executeCount: Int?
     ): Result<QueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId, AuthPermission.VIEW)
-        return logDispatcher.getInitLogs(
+        return buildLogQuery.getInitLogs(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
@@ -89,7 +89,7 @@ class UserLogResourceImpl @Autowired constructor(
         executeCount: Int?
     ): Result<QueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId, AuthPermission.VIEW)
-        return logDispatcher.getMoreLogs(
+        return buildLogQuery.getMoreLogs(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
@@ -118,7 +118,7 @@ class UserLogResourceImpl @Autowired constructor(
         executeCount: Int?
     ): Result<QueryLogs> {
         validateAuth(userId, projectId, pipelineId, buildId, AuthPermission.VIEW)
-        return logDispatcher.getAfterLogs(
+        return buildLogQuery.getAfterLogs(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
@@ -143,7 +143,7 @@ class UserLogResourceImpl @Autowired constructor(
         fileName: String?
     ): Response {
         validateAuth(userId, projectId, pipelineId, buildId, AuthPermission.DOWNLOAD)
-        return logDispatcher.downloadLogs(
+        return buildLogQuery.downloadLogs(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
