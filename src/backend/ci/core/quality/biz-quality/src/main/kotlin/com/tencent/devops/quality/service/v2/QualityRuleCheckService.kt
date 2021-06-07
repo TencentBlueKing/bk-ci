@@ -29,6 +29,7 @@ package com.tencent.devops.quality.service.v2
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.NotifyType
@@ -251,7 +252,9 @@ class QualityRuleCheckService @Autowired constructor(
                                 interceptRecordList = interceptRecordList,
                                 endNotifyTypeList = rule.notifyTypeList ?: listOf(),
                                 endNotifyGroupList = rule.notifyGroupList ?: listOf(),
-                                endNotifyUserList = rule.notifyUserList ?: listOf())
+                                endNotifyUserList = (rule.notifyUserList ?: listOf()).map {
+                                    EnvUtils.parseEnv(it, runtimeVariable ?: mapOf())
+                                })
                         } else {
                             val startUser = runtimeVariable?.get(PIPELINE_START_USER_ID) ?: ""
                             sendAuditNotification(
@@ -261,7 +264,9 @@ class QualityRuleCheckService @Autowired constructor(
                                 buildNo = buildNo,
                                 createTime = createTime,
                                 resultList = resultList,
-                                auditNotifyUserList = (rule.auditUserList ?: listOf()).toSet().plus(startUser))
+                                auditNotifyUserList = (rule.auditUserList ?: listOf()).toSet().plus(startUser).map {
+                                    EnvUtils.parseEnv(it, runtimeVariable ?: mapOf())
+                                })
                         }
                     } catch (t: Throwable) {
                         logger.error("send notification fail", t)
@@ -499,7 +504,7 @@ class QualityRuleCheckService @Autowired constructor(
         buildNo: String,
         createTime: LocalDateTime,
         resultList: List<RuleCheckSingleResult>,
-        auditNotifyUserList: Set<String>
+        auditNotifyUserList: List<String>
     ) {
         val projectName = getProjectName(projectId)
         val pipelineName = getPipelineName(projectId, pipelineId)
