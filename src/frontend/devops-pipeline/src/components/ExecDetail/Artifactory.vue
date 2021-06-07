@@ -79,15 +79,12 @@
             },
 
             downLoadFile (row) {
-                Promise.all([
-                    this.$store.dispatch('common/requestDevnetGateway'),
-                    this.$store.dispatch('common/requestDownloadUrl', {
-                        projectId: this.$route.params.projectId,
-                        artifactoryType: row.artifactoryType,
-                        path: row.path
-                    })
-                ]).then(([isDevnet, res]) => {
-                    const url = isDevnet ? res.url : res.url2
+                this.$store.dispatch('common/requestDownloadUrl', {
+                    projectId: this.$route.params.projectId,
+                    artifactoryType: row.artifactoryType,
+                    path: row.path
+                }).then((res) => {
+                    const url = res.url2
                     window.location.href = url
                 }).catch((err) => {
                     this.$bkMessage({ theme: 'error', message: err.message || err })
