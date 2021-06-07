@@ -190,8 +190,13 @@ class PipelineBuildQualityService(
         }
     }
 
-    fun getAuditUserList(projectId: String, pipelineId: String, buildId: String, taskId: String,
-                         variablesParam: Map<String, String> = mapOf()): Set<String> {
+    fun getAuditUserList(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        taskId: String,
+        variablesParam: Map<String, String> = mapOf()
+    ): Set<String> {
         val runVariables = if (variablesParam.isEmpty()) {
             buildVariableService.getAllVariable(buildId)
         } else {
