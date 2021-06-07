@@ -27,9 +27,9 @@
 
 package com.tencent.devops.common.webhook.service.code.matcher
 
-import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
+import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.repository.pojo.Repository
 
 @Suppress("TooManyFunctions")
@@ -70,25 +70,6 @@ interface ScmWebhookMatcher {
     fun getMessage(): String?
 
     fun getWebHookParamsMap(): Map<String/*pipelineId*/, WebHookParams/*pipeline webhookParams*/> = emptyMap()
-
-    data class WebHookParams(
-        val repositoryConfig: RepositoryConfig,
-        var branchName: String? = null,
-        var excludeBranchName: String? = null,
-        var tagName: String? = null,
-        var excludeTagName: String? = null,
-        var includePaths: String? = null,
-        var excludePaths: String? = null,
-        var eventType: CodeEventType? = null,
-        var block: Boolean = false,
-        var relativePath: String? = null,
-        var excludeUsers: String? = "",
-        var includeUsers: String? = null,
-        var codeType: CodeType = CodeType.GIT,
-        var excludeSourceBranchName: String? = null,
-        var includeSourceBranchName: String? = null,
-        var webhookQueue: Boolean = false
-    )
 
     data class MatchResult(
         val isMatch: Boolean,

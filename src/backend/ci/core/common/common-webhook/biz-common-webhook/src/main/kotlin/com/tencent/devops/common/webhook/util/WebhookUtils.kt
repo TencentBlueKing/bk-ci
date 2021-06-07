@@ -52,4 +52,27 @@ object WebhookUtils {
     fun getTag(ref: String): String {
         return ref.removePrefix("refs/tags/")
     }
+
+    fun getRelativePath(url: String): String {
+        val urlArray = url.split("//")
+        if (urlArray.size < 2) {
+            return ""
+        }
+
+        val path = urlArray[1]
+        val repoSplit = path.split("/")
+        if (repoSplit.size < 4) {
+            return ""
+        }
+        val domain = repoSplit[0]
+        val first = repoSplit[1]
+        val second = repoSplit[2]
+
+        return path.removePrefix("$domain/$first/$second").removePrefix("/")
+    }
+
+    fun getFullPath(projectRelativePath: String, relativeSubPath: String): String {
+        return ("${projectRelativePath.removeSuffix("/")}/" +
+            relativeSubPath.removePrefix("/")).removePrefix("/")
+    }
 }

@@ -25,20 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.service.code.filter
+package com.tencent.devops.common.webhook.service.code.filter
 
-import com.tencent.devops.scm.utils.code.git.GitUtils
+import org.slf4j.LoggerFactory
 
-class UrlFilter(
+class ProjectNameFilter(
     private val pipelineId: String,
-    private val triggerOnUrl: String,
-    private val repositoryUrl: String
+    private val projectName: String,
+    private val triggerOnProjectName: String
 ) : WebhookFilter {
 
-    override fun doFilter(response: WebhookFilterResponse): Boolean {
-        val triggerRepository = GitUtils.getDomainAndRepoName(triggerOnUrl)
-        val repository = GitUtils.getDomainAndRepoName(repositoryUrl)
+    companion object {
+        private val logger = LoggerFactory.getLogger(ProjectNameFilter::class.java)
+    }
 
-        return triggerRepository.first == repository.first && triggerRepository.second == repository.second
+    override fun doFilter(response: WebhookFilterResponse): Boolean {
+        logger.info("$pipelineId|$projectName|$triggerOnProjectName project name filter")
+        return projectName == triggerOnProjectName || getProjectName(projectName) == triggerOnProjectName
+    }
+
+    fun getProjectName(projectName: String): String {
+        // 如果项目名是三层的，比如a/b/c，那对应的rep_name是b
+        val repoSplit = projectName.split("/")
+        if (repoSplit.size != 3) {
+            return projectName
+        }
+        return repoSplit[1].trim()
     }
 }

@@ -25,82 +25,73 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.webhook.service.code.handler
+package com.tencent.devops.common.webhook.service.code.handler.github
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
-import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
+import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
-import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterChain
-import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
+import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.scm.utils.code.git.GitUtils
+import org.slf4j.LoggerFactory
 
-@Suppress("TooManyFunctions")
-interface CodeWebhookTriggerHandler<T : CodeWebhookEvent> {
+@CodeWebhookHandler
+class GithubPushTriggerHandler : GitHookTriggerHandler<GithubPushEvent> {
 
-    /**
-     * 处理类是否能够处理
-     */
-    fun eventClass(): Class<T>
-
-    fun getUrl(event: T): String
-
-    fun getUsername(event: T): String
-
-    fun getRevision(event: T): String
-
-    fun getRepoName(event: T): String
-
-    fun getBranchName(event: T): String
-
-    fun getEventType(): CodeEventType
-
-    fun getHookSourceUrl(event: T): String? = null
-
-    fun getHookTargetUrl(event: T): String? = null
-
-    fun getEnv(event: T): Map<String, Any> = emptyMap()
-
-    fun getMergeRequestId(event: T): Long? = null
-
-    fun getMessage(event: T): String?
-
-    fun preMatch(event: T): ScmWebhookMatcher.MatchResult = ScmWebhookMatcher.MatchResult(isMatch = true)
-
-    /**
-     * 匹配事件
-     */
-    fun isMatch(
-        event: T,
-        projectId: String,
-        pipelineId: String,
-        repository: Repository,
-        webHookParams: WebHookParams
-    ): ScmWebhookMatcher.MatchResult {
-        val filters = getWebhookFilters(
-            event = event,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            repository = repository,
-            webHookParams = webHookParams
-        )
-        val response = WebhookFilterResponse()
-        return if (filters.isNotEmpty()) {
-            ScmWebhookMatcher.MatchResult(
-                isMatch = WebhookFilterChain(filters = filters).doFilter(response),
-                extra = response.getParam()
-            )
-        } else {
-            ScmWebhookMatcher.MatchResult(isMatch = true)
-        }
+    companion object {
+        private val logger = LoggerFactory.getLogger(GithubPushTriggerHandler::class.java)
     }
 
-    fun getWebhookFilters(
-        event: T,
+    override fun eventClass(): Class<GithubPushEvent> {
+        return GithubPushEvent::class.java
+    }
+
+    override fun getUrl(event: GithubPushEvent): String {
+        return event.repository.ssh_url
+    }
+
+    override fun getUsername(event: GithubPushEvent): String {
+        return event.sender.login
+    }
+
+    override fun getRevision(event: GithubPushEvent): String {
+        return event.head_commit.id
+    }
+
+    override fun getRepoName(event: GithubPushEvent): String {
+        return GitUtils.getProjectName(event.repository.ssh_url)
+    }
+
+    override fun getBranchName(event: GithubPushEvent): String {
+        return org.eclipse.jgit.lib.Repository.shortenRefName(event.ref)
+    }
+
+    override fun getEventType(): CodeEventType {
+        return CodeEventType.PUSH
+    }
+
+    override fun getMessage(event: GithubPushEvent): String? {
+        return event.head_commit.message
+    }
+
+    override fun preMatch(event: GithubPushEvent): ScmWebhookMatcher.MatchResult {
+        if (event.commits.isEmpty()) {
+            logger.info("Github web hook no commit")
+            return ScmWebhookMatcher.MatchResult(false)
+        }
+        return ScmWebhookMatcher.MatchResult(true)
+    }
+
+    override fun getEventFilters(
+        event: GithubPushEvent,
         projectId: String,
         pipelineId: String,
         repository: Repository,
         webHookParams: WebHookParams
-    ): List<WebhookFilter>
+    ): List<WebhookFilter> {
+        return emptyList()
+    }
 }

@@ -29,7 +29,11 @@ package com.tencent.devops.process.engine.service.code
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitGenericWebHookTriggerElement
-import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
+import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+import com.tencent.devops.common.webhook.service.code.matcher.GitWebHookMatcher
+import com.tencent.devops.common.webhook.service.code.matcher.GithubWebHookMatcher
+import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.common.webhook.service.code.matcher.SvnWebHookMatcher
 import com.tencent.devops.process.pojo.code.ScmWebhookStartParams
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_BRANCH
@@ -54,7 +58,7 @@ import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_USERNAME
 class GitGenericWebHookElementStartParam(
     private val projectId: String,
     private val repo: Repository,
-    private val params: ScmWebhookMatcher.WebHookParams,
+    private val params: WebHookParams,
     private val matcher: ScmWebhookMatcher,
     private val matchResult: ScmWebhookMatcher.MatchResult
 ) : ScmWebhookStartParams<CodeGitGenericWebHookTriggerElement> {

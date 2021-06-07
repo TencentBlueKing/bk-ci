@@ -29,7 +29,7 @@ package com.tencent.devops.process.webhook.pojo.event.commit
 
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.process.pojo.code.github.GithubWebhook
+import com.tencent.devops.common.webhook.pojo.code.github.GithubWebhook
 
 @Event(MQ.EXCHANGE_GITHUB_BUILD_REQUEST_EVENT, MQ.ROUTE_GITHUB_BUILD_REQUEST_EVENT)
 data class GithubWebhookEvent(

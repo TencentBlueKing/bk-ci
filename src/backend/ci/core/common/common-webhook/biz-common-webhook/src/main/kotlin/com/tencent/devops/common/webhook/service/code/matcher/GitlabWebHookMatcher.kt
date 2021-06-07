@@ -25,19 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.service.code.filter
+package com.tencent.devops.common.webhook.service.code.matcher
 
-/**
- * webhook过滤器返回结果
- */
-class WebhookFilterResponse {
-    private val params = mutableMapOf<String, String>()
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
+import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.service.code.loader.CodeWebhookHandlerRegistrar
+import com.tencent.devops.repository.pojo.CodeGitlabRepository
+import com.tencent.devops.repository.pojo.Repository
+import org.slf4j.LoggerFactory
 
-    fun addParam(key: String, value: String) {
-        params[key] = value
+class GitlabWebHookMatcher(gitlabEvent: GitEvent) : GitWebHookMatcher(gitlabEvent) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(GitlabWebHookMatcher::class.java)
     }
 
-    fun getParam(): Map<String, String> {
-        return params
+    private val eventHandler = CodeWebhookHandlerRegistrar.getHandler(webhookEvent = event)
+
+    override fun isMatch(
+        projectId: String,
+        pipelineId: String,
+        repository: Repository,
+        webHookParams: WebHookParams
+    ): ScmWebhookMatcher.MatchResult {
+        if (repository !is CodeGitlabRepository) {
+            logger.warn("The repo($repository) is not code git repo for git web hook")
+            return ScmWebhookMatcher.MatchResult(isMatch = false)
+        }
+        return eventHandler.isMatch(
+            event = event,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            repository = repository,
+            webHookParams = webHookParams
+        )
     }
+
+    override fun getCodeType() = CodeType.GITLAB
 }

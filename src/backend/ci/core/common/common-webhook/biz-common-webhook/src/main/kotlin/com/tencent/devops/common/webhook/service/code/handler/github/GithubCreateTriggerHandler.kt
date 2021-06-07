@@ -25,53 +25,58 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.service.code.handler.tgit
+package com.tencent.devops.common.webhook.service.code.handler.github
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
-import com.tencent.devops.process.engine.service.code.filter.BranchFilter
-import com.tencent.devops.process.engine.service.code.filter.WebhookFilter
-import com.tencent.devops.process.engine.service.code.handler.WebhookUtils
-import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
-import com.tencent.devops.process.pojo.code.WebHookEvent
-import com.tencent.devops.process.pojo.code.git.GitTagPushEvent
+import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+import com.tencent.devops.common.webhook.pojo.code.github.GithubCreateEvent
+import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
+import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
 import com.tencent.devops.repository.pojo.Repository
-import org.springframework.stereotype.Service
+import com.tencent.devops.scm.utils.code.git.GitUtils
 
-@Service
-class TGitTabPushTriggerHandler : TGitHookTriggerHandler {
+@CodeWebhookHandler
+class GithubCreateTriggerHandler : CodeWebhookTriggerHandler<GithubCreateEvent> {
+    override fun eventClass(): Class<GithubCreateEvent> {
+        return GithubCreateEvent::class.java
+    }
 
-    override fun canHandler(event: WebHookEvent): Boolean {
-        return event is GitTagPushEvent
+    override fun getUrl(event: GithubCreateEvent): String {
+        return event.repository.ssh_url
+    }
+
+    override fun getUsername(event: GithubCreateEvent): String {
+        return event.sender.login
+    }
+
+    override fun getRevision(event: GithubCreateEvent): String {
+        return ""
+    }
+
+    override fun getRepoName(event: GithubCreateEvent): String {
+        return GitUtils.getProjectName(event.repository.ssh_url)
+    }
+
+    override fun getBranchName(event: GithubCreateEvent): String {
+       return org.eclipse.jgit.lib.Repository.shortenRefName(event.ref)
     }
 
     override fun getEventType(): CodeEventType {
-        return CodeEventType.TAG_PUSH
+        return CodeEventType.CREATE
     }
 
-    override fun getUrl(event: WebHookEvent): String {
-        return (event as GitTagPushEvent).repository.git_http_url
+    override fun getMessage(event: GithubCreateEvent): String? {
+        return ""
     }
 
-    override fun getUser(event: WebHookEvent): String {
-        return (event as GitTagPushEvent).user_name
-    }
-
-    override fun getEventFilters(
-        event: WebHookEvent,
+    override fun getWebhookFilters(
+        event: GithubCreateEvent,
         projectId: String,
         pipelineId: String,
         repository: Repository,
-        webHookParams: ScmWebhookMatcher.WebHookParams
+        webHookParams: WebHookParams
     ): List<WebhookFilter> {
-        event as GitTagPushEvent
-        with(webHookParams) {
-            val branchFilter = BranchFilter(
-                pipelineId = pipelineId,
-                triggerOnBranchName = WebhookUtils.getTag(event.ref),
-                includedBranches = WebhookUtils.convert(tagName),
-                excludedBranches = WebhookUtils.convert(excludeTagName)
-            )
-            return listOf(branchFilter)
-        }
+        return emptyList()
     }
 }

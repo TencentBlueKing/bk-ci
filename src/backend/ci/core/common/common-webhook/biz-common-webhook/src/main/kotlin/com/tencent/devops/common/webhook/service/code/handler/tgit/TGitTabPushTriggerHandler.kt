@@ -29,12 +29,10 @@ package com.tencent.devops.common.webhook.service.code.handler.tgit
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
+import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
-import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
-import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
-import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.utils.code.git.GitUtils
 
@@ -78,16 +76,8 @@ class TGitTabPushTriggerHandler : GitHookTriggerHandler<GitTagPushEvent> {
         projectId: String,
         pipelineId: String,
         repository: Repository,
-        webHookParams: ScmWebhookMatcher.WebHookParams
+        webHookParams: WebHookParams
     ): List<WebhookFilter> {
-        with(webHookParams) {
-            val branchFilter = BranchFilter(
-                pipelineId = pipelineId,
-                triggerOnBranchName = WebhookUtils.getTag(event.ref),
-                includedBranches = WebhookUtils.convert(tagName),
-                excludedBranches = WebhookUtils.convert(excludeTagName)
-            )
-            return listOf(branchFilter)
-        }
+        return emptyList()
     }
 }

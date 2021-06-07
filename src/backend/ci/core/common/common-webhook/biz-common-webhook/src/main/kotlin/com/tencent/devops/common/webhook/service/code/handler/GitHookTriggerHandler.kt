@@ -28,11 +28,12 @@
 package com.tencent.devops.common.webhook.service.code.handler
 
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
+import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
 import com.tencent.devops.common.webhook.service.code.filter.EventTypeFilter
 import com.tencent.devops.common.webhook.service.code.filter.UrlFilter
 import com.tencent.devops.common.webhook.service.code.filter.UserFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
-import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.Repository
 
@@ -43,7 +44,7 @@ interface GitHookTriggerHandler<T : CodeWebhookEvent> : CodeWebhookTriggerHandle
         projectId: String,
         pipelineId: String,
         repository: Repository,
-        webHookParams: ScmWebhookMatcher.WebHookParams
+        webHookParams: WebHookParams
     ): List<WebhookFilter> {
         val filters = mutableListOf<WebhookFilter>()
         filters.addAll(
@@ -71,7 +72,7 @@ interface GitHookTriggerHandler<T : CodeWebhookEvent> : CodeWebhookTriggerHandle
         projectId: String,
         pipelineId: String,
         repository: Repository,
-        webHookParams: ScmWebhookMatcher.WebHookParams
+        webHookParams: WebHookParams
     ): List<WebhookFilter>
 
     fun getAction(event: T): String? = null
@@ -80,13 +81,14 @@ interface GitHookTriggerHandler<T : CodeWebhookEvent> : CodeWebhookTriggerHandle
         event: T,
         pipelineId: String,
         repository: Repository,
-        webHookParams: ScmWebhookMatcher.WebHookParams
+        webHookParams: WebHookParams
     ): List<WebhookFilter> {
         with(webHookParams) {
             val urlFilter = UrlFilter(
                 pipelineId = pipelineId,
                 triggerOnUrl = getUrl(event),
-                repositoryUrl = repository.url
+                repositoryUrl = repository.url,
+                includeHost = includeHost
             )
             val eventTypeFilter = EventTypeFilter(
                 pipelineId = pipelineId,
@@ -100,7 +102,13 @@ interface GitHookTriggerHandler<T : CodeWebhookEvent> : CodeWebhookTriggerHandle
                 includedUsers = WebhookUtils.convert(includeUsers),
                 excludedUsers = WebhookUtils.convert(excludeUsers)
             )
-            return listOf(urlFilter, eventTypeFilter, userFilter)
+            val branchFilter = BranchFilter(
+                pipelineId = pipelineId,
+                triggerOnBranchName = getBranchName(event),
+                includedBranches = WebhookUtils.convert(branchName),
+                excludedBranches = WebhookUtils.convert(excludeBranchName)
+            )
+            return listOf(urlFilter, eventTypeFilter, userFilter, branchFilter)
         }
     }
 }

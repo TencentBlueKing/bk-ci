@@ -29,11 +29,12 @@ package com.tencent.devops.process.engine.service.code
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
-import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
+import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+import com.tencent.devops.common.webhook.pojo.code.github.GithubCreateEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequest
+import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
+import com.tencent.devops.common.webhook.service.code.matcher.GithubWebHookMatcher
 import com.tencent.devops.process.pojo.code.ScmWebhookStartParams
-import com.tencent.devops.process.pojo.code.github.GithubCreateEvent
-import com.tencent.devops.process.pojo.code.github.GithubPullRequest
-import com.tencent.devops.process.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.scm.pojo.BK_REPO_GITHUB_WEBHOOK_CREATE_REF_NAME
 import com.tencent.devops.scm.pojo.BK_REPO_GITHUB_WEBHOOK_CREATE_REF_TYPE
 import com.tencent.devops.scm.pojo.BK_REPO_GITHUB_WEBHOOK_CREATE_USERNAME
@@ -64,7 +65,7 @@ import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_USERNAME
 import org.slf4j.LoggerFactory
 
 class GithubWebHookStartParam(
-    private val params: ScmWebhookMatcher.WebHookParams,
+    private val params: WebHookParams,
     private val matcher: GithubWebHookMatcher
 ) : ScmWebhookStartParams<CodeGithubWebHookTriggerElement> {
 

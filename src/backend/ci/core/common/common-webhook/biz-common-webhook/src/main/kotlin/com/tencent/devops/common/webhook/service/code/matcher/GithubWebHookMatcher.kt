@@ -25,82 +25,83 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.webhook.service.code.handler
+package com.tencent.devops.common.webhook.service.code.matcher
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
-import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
-import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
-import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterChain
-import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
-import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.common.webhook.pojo.code.github.GithubEvent
+import com.tencent.devops.common.webhook.service.code.loader.CodeWebhookHandlerRegistrar
+import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
+import org.slf4j.LoggerFactory
 
-@Suppress("TooManyFunctions")
-interface CodeWebhookTriggerHandler<T : CodeWebhookEvent> {
+@Suppress("ALL")
+class GithubWebHookMatcher(val event: GithubEvent) : ScmWebhookMatcher {
 
-    /**
-     * 处理类是否能够处理
-     */
-    fun eventClass(): Class<T>
+    companion object {
+        private val logger = LoggerFactory.getLogger(GithubWebHookMatcher::class.java)
+    }
+    private val eventHandler = CodeWebhookHandlerRegistrar.getHandler(webhookEvent = event)
 
-    fun getUrl(event: T): String
+    override fun preMatch(): ScmWebhookMatcher.MatchResult {
+        return eventHandler.preMatch(event)
+    }
 
-    fun getUsername(event: T): String
-
-    fun getRevision(event: T): String
-
-    fun getRepoName(event: T): String
-
-    fun getBranchName(event: T): String
-
-    fun getEventType(): CodeEventType
-
-    fun getHookSourceUrl(event: T): String? = null
-
-    fun getHookTargetUrl(event: T): String? = null
-
-    fun getEnv(event: T): Map<String, Any> = emptyMap()
-
-    fun getMergeRequestId(event: T): Long? = null
-
-    fun getMessage(event: T): String?
-
-    fun preMatch(event: T): ScmWebhookMatcher.MatchResult = ScmWebhookMatcher.MatchResult(isMatch = true)
-
-    /**
-     * 匹配事件
-     */
-    fun isMatch(
-        event: T,
+    override fun isMatch(
         projectId: String,
         pipelineId: String,
         repository: Repository,
         webHookParams: WebHookParams
     ): ScmWebhookMatcher.MatchResult {
-        val filters = getWebhookFilters(
+        if (repository !is GithubRepository) {
+            logger.warn("The repo($repository) is not code git repo for github web hook")
+            return ScmWebhookMatcher.MatchResult(isMatch = false)
+        }
+        return eventHandler.isMatch(
             event = event,
             projectId = projectId,
             pipelineId = pipelineId,
             repository = repository,
             webHookParams = webHookParams
         )
-        val response = WebhookFilterResponse()
-        return if (filters.isNotEmpty()) {
-            ScmWebhookMatcher.MatchResult(
-                isMatch = WebhookFilterChain(filters = filters).doFilter(response),
-                extra = response.getParam()
-            )
-        } else {
-            ScmWebhookMatcher.MatchResult(isMatch = true)
-        }
     }
 
-    fun getWebhookFilters(
-        event: T,
-        projectId: String,
-        pipelineId: String,
-        repository: Repository,
-        webHookParams: WebHookParams
-    ): List<WebhookFilter>
+    override fun getUsername(): String {
+        return eventHandler.getUsername(event)
+    }
+
+    override fun getRevision(): String {
+        return eventHandler.getRevision(event)
+    }
+
+    override fun getEventType(): CodeEventType {
+        return eventHandler.getEventType()
+    }
+
+    override fun getHookSourceUrl(): String? {
+        return eventHandler.getHookSourceUrl(event)
+    }
+
+    override fun getHookTargetUrl(): String? {
+        return eventHandler.getHookTargetUrl(event)
+    }
+
+    override fun getCodeType() = CodeType.GITHUB
+
+    override fun getRepoName(): String {
+        return eventHandler.getRepoName(event)
+    }
+
+    override fun getBranchName(): String {
+        return eventHandler.getBranchName(event)
+    }
+
+    override fun getEnv(): Map<String, Any> {
+        return eventHandler.getEnv(event)
+    }
+
+    override fun getMessage(): String? {
+        return eventHandler.getMessage(event)
+    }
 }

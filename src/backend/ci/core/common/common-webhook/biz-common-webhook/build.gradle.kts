@@ -28,7 +28,6 @@ dependencies {
     api(project(":core:common:common-webhook:api-common-webhook"))
     api(project(":core:common:common-scm"))
     api(project(":core:common:common-client"))
-    api(project(":core:common:common-pipeline"))
     api(project(":core:repository:api-repository"))
     api(project(":core:ticket:api-ticket"))
 }

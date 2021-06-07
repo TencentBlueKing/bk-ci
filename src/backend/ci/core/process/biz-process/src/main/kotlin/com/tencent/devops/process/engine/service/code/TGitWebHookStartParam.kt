@@ -28,7 +28,9 @@
 package com.tencent.devops.process.engine.service.code
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
-import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
+import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+import com.tencent.devops.common.webhook.service.code.matcher.GitWebHookMatcher
+import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.process.pojo.code.ScmWebhookStartParams
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_COMMIT_ID
@@ -44,7 +46,7 @@ import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_INCLUDE_PATHS
 class TGitWebHookStartParam(
     projectId: String,
     repo: Repository,
-    private val params: ScmWebhookMatcher.WebHookParams,
+    private val params: WebHookParams,
     private val matcher: GitWebHookMatcher,
     private val matchResult: ScmWebhookMatcher.MatchResult
 ) : ScmWebhookStartParams<CodeTGitWebHookTriggerElement> {

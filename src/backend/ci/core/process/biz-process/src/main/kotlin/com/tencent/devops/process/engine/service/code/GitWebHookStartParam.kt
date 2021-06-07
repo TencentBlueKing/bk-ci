@@ -31,12 +31,14 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
+import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
+import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
+import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
+import com.tencent.devops.common.webhook.service.code.matcher.GitWebHookMatcher
+import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.process.pojo.code.ScmWebhookStartParams
-import com.tencent.devops.process.pojo.code.git.GitCommit
-import com.tencent.devops.process.pojo.code.git.GitMergeRequestEvent
-import com.tencent.devops.process.pojo.code.git.GitPushEvent
-import com.tencent.devops.process.pojo.code.git.GitTagPushEvent
 import com.tencent.devops.process.service.scm.GitScmService
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_MR_COMMITTER
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_MR_ID
@@ -106,7 +108,7 @@ import org.slf4j.LoggerFactory
 class GitWebHookStartParam(
     private val projectId: String,
     private val repo: Repository,
-    private val params: ScmWebhookMatcher.WebHookParams,
+    private val params: WebHookParams,
     private val matcher: GitWebHookMatcher,
     private val matchResult: ScmWebhookMatcher.MatchResult
 ) : ScmWebhookStartParams<CodeGitWebHookTriggerElement> {
@@ -156,7 +158,7 @@ class GitWebHookStartParam(
         startParams[PIPELINE_WEBHOOK_TARGET_REPO_NAME] =
             GitUtils.getProjectName(gitMrEvent.object_attributes.target.http_url)
         startParams[BK_REPO_GIT_WEBHOOK_MR_URL] = gitMrEvent.object_attributes.url
-        val lastCommit = matcher.event.object_attributes.last_commit
+        val lastCommit = gitMrEvent.object_attributes.last_commit
         startParams[BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT] = lastCommit.id
         startParams[BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT_MSG] = lastCommit.message
     }

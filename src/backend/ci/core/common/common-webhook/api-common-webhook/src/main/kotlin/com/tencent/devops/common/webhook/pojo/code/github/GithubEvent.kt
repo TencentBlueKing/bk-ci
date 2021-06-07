@@ -28,12 +28,13 @@
 package com.tencent.devops.common.webhook.pojo.code.github
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
+import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 
 @Suppress("ALL")
 @JsonIgnoreProperties(ignoreUnknown = true)
 abstract class GithubEvent(
     open val sender: GithubSender
-)
+) : CodeWebhookEvent
 
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class GithubCommit(

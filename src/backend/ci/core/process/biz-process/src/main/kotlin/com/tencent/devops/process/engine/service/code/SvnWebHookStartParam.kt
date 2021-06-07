@@ -28,6 +28,7 @@
 package com.tencent.devops.process.engine.service.code
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
+import com.tencent.devops.common.webhook.service.code.matcher.SvnWebHookMatcher
 import com.tencent.devops.process.pojo.code.ScmWebhookStartParams
 import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_COMMIT_TIME
 import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_EXCLUDE_PATHS

@@ -42,10 +42,10 @@ class PathPrefixFilter(
     }
 
     override fun doFilter(response: WebhookFilterResponse): Boolean {
-        return hasNoBranchSpecs() || (isPathNotExcluded() && isPathIncluded(response))
+        return hasNoPathSpecs() || (isPathNotExcluded() && isPathIncluded(response))
     }
 
-    private fun hasNoBranchSpecs(): Boolean {
+    private fun hasNoPathSpecs(): Boolean {
         return includedPaths.isEmpty() && excludedPaths.isEmpty()
     }
 

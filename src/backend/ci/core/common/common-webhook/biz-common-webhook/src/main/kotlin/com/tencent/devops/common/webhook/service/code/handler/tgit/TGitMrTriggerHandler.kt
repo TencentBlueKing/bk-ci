@@ -30,6 +30,7 @@ package com.tencent.devops.common.webhook.service.code.handler.tgit
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
 import com.tencent.devops.common.webhook.constant.GIT_MR_NUMBER
+import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
 import com.tencent.devops.common.webhook.service.code.GitScmService
 import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
@@ -127,15 +128,9 @@ class TGitMrTriggerHandler(
         projectId: String,
         pipelineId: String,
         repository: Repository,
-        webHookParams: ScmWebhookMatcher.WebHookParams
+        webHookParams: WebHookParams
     ): List<WebhookFilter> {
         with(webHookParams) {
-            val targetBranchFilter = BranchFilter(
-                pipelineId = pipelineId,
-                triggerOnBranchName = getBranch(event.object_attributes.target_branch),
-                includedBranches = convert(branchName),
-                excludedBranches = convert(excludeBranchName)
-            )
             val sourceBranchFilter = BranchFilter(
                 pipelineId = pipelineId,
                 triggerOnBranchName = getBranch(event.object_attributes.source_branch),
@@ -170,7 +165,7 @@ class TGitMrTriggerHandler(
                 includedPaths = convert(includePaths),
                 excludedPaths = convert(excludePaths)
             )
-            return listOf(targetBranchFilter, sourceBranchFilter, skipCiFilter, pathFilter)
+            return listOf(sourceBranchFilter, skipCiFilter, pathFilter)
         }
     }
 }

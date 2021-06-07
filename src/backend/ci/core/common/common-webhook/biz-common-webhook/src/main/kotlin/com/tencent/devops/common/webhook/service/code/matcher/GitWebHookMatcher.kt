@@ -29,14 +29,24 @@ package com.tencent.devops.common.webhook.service.code.matcher
 
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
+import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.service.code.loader.CodeWebhookHandlerRegistrar
+import com.tencent.devops.repository.pojo.CodeGitRepository
+import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.Repository
+import org.slf4j.LoggerFactory
 
 @Suppress("ALL")
 open class GitWebHookMatcher(
     val event: GitEvent
 ) : ScmWebhookMatcher {
+    companion object {
+        private val logger = LoggerFactory.getLogger(GitWebHookMatcher::class.java)
+        const val MATCH_BRANCH = "matchBranch"
+        const val MATCH_PATHS = "matchPaths"
+    }
+
     private val eventHandler = CodeWebhookHandlerRegistrar.getHandler(webhookEvent = event)
 
     override fun preMatch(): ScmWebhookMatcher.MatchResult {
@@ -47,8 +57,14 @@ open class GitWebHookMatcher(
         projectId: String,
         pipelineId: String,
         repository: Repository,
-        webHookParams: ScmWebhookMatcher.WebHookParams
+        webHookParams: WebHookParams
     ): ScmWebhookMatcher.MatchResult {
+        if (repository !is CodeGitRepository &&
+            repository !is CodeTGitRepository
+        ) {
+            logger.warn("Is not code repo for git web hook for repo and pipeline: $repository, $pipelineId")
+            return ScmWebhookMatcher.MatchResult(isMatch = false)
+        }
         return eventHandler.isMatch(
             event = event,
             projectId = projectId,

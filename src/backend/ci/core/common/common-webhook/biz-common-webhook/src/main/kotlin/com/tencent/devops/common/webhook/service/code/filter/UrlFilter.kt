@@ -32,13 +32,18 @@ import com.tencent.devops.scm.utils.code.git.GitUtils
 class UrlFilter(
     private val pipelineId: String,
     private val triggerOnUrl: String,
-    private val repositoryUrl: String
+    private val repositoryUrl: String,
+    private val includeHost: String? = null
 ) : WebhookFilter {
 
     override fun doFilter(response: WebhookFilterResponse): Boolean {
         val triggerRepository = GitUtils.getDomainAndRepoName(triggerOnUrl)
         val repository = GitUtils.getDomainAndRepoName(repositoryUrl)
 
-        return triggerRepository.first == repository.first && triggerRepository.second == repository.second
+        return (
+            triggerRepository.first == repository.first ||
+                includeHost?.contains(triggerRepository.first) == true
+            ) &&
+            triggerRepository.second == repository.second
     }
 }
