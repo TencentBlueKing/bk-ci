@@ -38,6 +38,7 @@ import com.tencent.bkrepo.common.query.model.QueryModel
 import com.tencent.bkrepo.common.query.model.Rule
 import com.tencent.bkrepo.common.query.model.Sort
 import com.tencent.bkrepo.generic.pojo.FileInfo
+import com.tencent.bkrepo.generic.pojo.TemporaryAccessToken
 import com.tencent.bkrepo.generic.pojo.TemporaryAccessUrl
 import com.tencent.bkrepo.repository.pojo.metadata.UserMetadataSaveRequest
 import com.tencent.bkrepo.repository.pojo.node.NodeDetail
@@ -92,7 +93,7 @@ class BkRepoClient constructor(
     }
 
     fun createBkRepoResource(userId: String, projectId: String): Boolean {
-        val logRepoCredentialsKey = if(bkRepoConfig.logRepoCredentialsKey.isNullOrBlank()){
+        val logRepoCredentialsKey = if (bkRepoConfig.logRepoCredentialsKey.isNullOrBlank()) {
             null
         } else {
             bkRepoConfig.logRepoCredentialsKey
@@ -149,7 +150,7 @@ class BkRepoClient constructor(
     ) {
         logger.info("createRepo, userId: $userId, projectId: $projectId, repoName: $repoName")
         val requestData = RepoCreateRequest(
-            category =  RepositoryCategory.LOCAL,
+            category = RepositoryCategory.LOCAL,
             name = repoName,
             projectId = projectId,
             type = RepositoryType.GENERIC,
@@ -835,6 +836,49 @@ class BkRepoClient constructor(
             }
 
             return responseData.data!!.shareUrl
+        }
+    }
+
+    fun createTemporaryToken(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        fullPath: String,
+        timeoutInSeconds: Long,
+        type: TokenType
+    ): String {
+        val url = "${getGatewaytUrl()}/bkrepo/api/service/generic/temporary/token/create"
+        val requestData = TemporaryTokenCreateRequest(
+            projectId = projectId,
+            repoName = repoName,
+            fullPathSet = setOf(fullPath),
+            expireSeconds = timeoutInSeconds,
+            type = type
+        )
+        val requestBody = objectMapper.writeValueAsString(requestData)
+        val request = Request.Builder().url(url)
+            .header(BK_REPO_UID, userId)
+            .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
+            .post(
+                RequestBody.create(
+                    MediaType.parse("application/json; charset=utf-8"),
+                    requestBody
+                )
+            ).build()
+        OkhttpUtils.doHttp(request).use { response ->
+            val responseContent = response.body()!!.string()
+            if (!response.isSuccessful) {
+                logger.error("create temporary token failed, requestBody: $requestBody, responseContent: " +
+                    "$responseContent")
+                throw RuntimeException("create temporary token failed")
+            }
+
+            val responseData = objectMapper.readValue<Response<List<TemporaryAccessToken>>>(responseContent)
+            if (responseData.isNotOk()) {
+                throw RuntimeException("create share uri failed: ${responseData.message}")
+            }
+
+            return responseData.data!!.first().token
         }
     }
 

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.artifactory.service.bkrepo
 
+import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.service.LogFileService
 import com.tencent.devops.artifactory.util.RepoUtils.LOG_REPO
@@ -35,6 +36,7 @@ import com.tencent.devops.common.service.utils.HomeHostUtil
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import javax.ws.rs.NotFoundException
 
 @Service
 class BkRepoLogFileService @Autowired constructor(
@@ -56,15 +58,21 @@ class BkRepoLogFileService @Autowired constructor(
         executeCount: String
     ): Url {
         val fullPath = "/$pipelineId/$buildId/$elementId/$executeCount.log"
-        val shareUrl = bkRepoClient.createShareUri(
+        bkRepoClient.getFileDetail(
+            userId = userId,
+            projectId = projectId,
+            repoName = pipelineId,
+            path = fullPath
+        ) ?: throw NotFoundException("file[$fullPath] not found")
+        val token = bkRepoClient.createTemporaryToken(
             userId = userId,
             projectId = projectId,
             repoName = LOG_REPO,
             fullPath = fullPath,
-            downloadUsers = listOf(),
-            downloadIps = listOf(),
-            timeoutInSeconds = (24 * 3600).toLong()
+            timeoutInSeconds = (24 * 3600).toLong(),
+            type = TokenType.DOWNLOAD
         )
-        return Url("${HomeHostUtil.getHost(bkRepoDevnetHost!!)}/repository/$shareUrl")
+        return Url("${HomeHostUtil.getHost(bkRepoDevnetHost!!)
+        }/generic/temporary/download/$projectId/log$fullPath?token=$token&download=true")
     }
 }
