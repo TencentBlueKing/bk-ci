@@ -10,7 +10,7 @@
                         :key="childPanel.name"
                         @click="childTabChange(childPanel.name)"
                         :class="['transition-child-tab', { active: activeChildTab === childPanel.name }]"
-                    >{{ childPanel.label }}</li>1
+                    >{{ childPanel.label }}</li>
                 </ul>
             </transition>
             <slot></slot>
