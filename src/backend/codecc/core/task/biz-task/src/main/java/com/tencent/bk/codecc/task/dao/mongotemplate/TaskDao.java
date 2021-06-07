@@ -46,6 +46,8 @@ import org.springframework.data.mongodb.core.query.Update;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.CollectionUtils;
 
+import static com.tencent.devops.common.constant.ComConstants.BsTaskCreateFrom.BS_CODECC;
+
 /**
  * 任务持久层代码
  */
@@ -93,20 +95,19 @@ public class TaskDao
     public Boolean updateFilterPath(FilterPathInputVO pathInput, String userName)
     {
         Update update = new Update();
-        if (StringUtils.isNotBlank(pathInput.getSvnRevision()))
-        {
-            update.set("svn_revision", pathInput.getSvnRevision());
-        }
+
         if (ComConstants.PATH_TYPE_DEFAULT.equalsIgnoreCase(pathInput.getPathType()))
         {
             update.set("default_filter_path", pathInput.getDefaultFilterPath());
         }
-        else
-        {
-            update.set("filter_path", pathInput.getFilterDir());
+        else if (ComConstants.PATH_TYPE_CODE_YML.equalsIgnoreCase(pathInput.getPathType())) {
             update.set("test_source_filter_path", pathInput.getTestSourceFilterPath());
             update.set("auto_gen_filter_path", pathInput.getAutoGenFilterPath());
             update.set("third_party_filter_path", pathInput.getThirdPartyFilterPath());
+            update.set("scan_test_source", pathInput.getScanTestSource());
+        }
+        else {
+            update.set("filter_path", pathInput.getFilterDir());
         }
 
         update.set("updated_date", System.currentTimeMillis());
@@ -137,6 +138,89 @@ public class TaskDao
         Query query = new Query();
         query.addCriteria(Criteria.where("task_id").is(taskInfoEntity.getTaskId()));
         return mongoTemplate.updateFirst(query, update, TaskInfoEntity.class).isUpdateOfExisting();
+    }
+
+    /**
+     * 更新項目id或者流水线id
+     * @param projectId
+     * @param pipelineId
+     * @param taskId
+     */
+    public void updateProjectIdAndPipelineId(String projectId, String pipelineId, Long taskId) {
+        if (StringUtils.isBlank(projectId) && StringUtils.isBlank(pipelineId)) {
+            return;
+        }
+        Update update = new Update();
+        if (StringUtils.isNotBlank(projectId)) {
+            update.set("project_id", projectId);
+        }
+        if (StringUtils.isNotBlank(pipelineId)) {
+            update.set("pipeline_id", pipelineId);
+        }
+        Query query = new Query();
+        query.addCriteria(Criteria.where("task_id").is(taskId));
+        mongoTemplate.updateFirst(query, update, TaskInfoEntity.class);
+    }
+
+
+    /**
+     * 更新失效原因
+     * @param openSourceDisableReason
+     * @param taskId
+     */
+    public void updateOpenSourceDisableReason(Integer openSourceDisableReason, Long taskId)
+    {
+        Update update = new Update();
+        update.set("opensource_disable_reason", openSourceDisableReason);
+        Query query = new Query();
+        query.addCriteria(Criteria.where("task_id").is(taskId));
+        mongoTemplate.updateFirst(query, update, TaskInfoEntity.class);
+    }
+
+
+    /**
+     * 触发扫描后更新动作
+     * @param nameCn
+     * @param commitId
+     * @param taskId
+     */
+    public void updateNameCnAndCommitId(String nameCn, String commitId, Long updatedDate, Long taskId) {
+        if (StringUtils.isBlank(nameCn) && StringUtils.isBlank(commitId)) {
+            return;
+        }
+        Update update = new Update();
+        if (StringUtils.isNotBlank(nameCn)) {
+            update.set("name_cn", nameCn);
+        }
+        if (StringUtils.isNotBlank(commitId)) {
+            update.set("gongfeng_commit_id", commitId);
+        }
+        update.set("updated_date", updatedDate);
+        Query query = new Query();
+        query.addCriteria(Criteria.where("task_id").is(taskId));
+        mongoTemplate.updateFirst(query, update, TaskInfoEntity.class);
+    }
+
+    /**
+     * 设置"通知"接收人类型
+     *
+     * @param taskIds
+     * @param rtxReceiverType
+     * @param emailReceiverType
+     */
+    public void updateNotifyReceiverType(Collection<Long> taskIds, String rtxReceiverType, String emailReceiverType) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("task_id").in(taskIds));
+
+        Update update = new Update();
+        if (StringUtils.isNotEmpty(rtxReceiverType)) {
+            update.set("notify_custom_info.rtx_receiver_type", rtxReceiverType);
+        }
+        if (StringUtils.isNotEmpty(emailReceiverType)) {
+            update.set("notify_custom_info.email_receiver_type", emailReceiverType);
+        }
+
+        mongoTemplate.updateMulti(query, update, TaskInfoEntity.class);
     }
 
     /**
@@ -175,7 +259,7 @@ public class TaskDao
      * @return task list
      */
     public List<TaskInfoEntity> queryTaskInfoEntityList(Integer status, Integer bgId, Collection<Integer> deptIds,
-            Collection<Long> taskIds, Collection<String> createFrom)
+                                                        Collection<Long> taskIds, Collection<String> createFrom, String userId)
     {
         BasicDBObject fieldsObj = new BasicDBObject();
         fieldsObj.put("execute_time", false);
@@ -214,6 +298,9 @@ public class TaskDao
         {
             query.addCriteria(Criteria.where("create_from").in(createFrom));
         }
+        if (StringUtils.isNotBlank(userId)) {
+            query.addCriteria(Criteria.where("task_members").in(userId));
+        }
 
         return mongoTemplate.find(query, TaskInfoEntity.class);
     }
@@ -245,7 +332,7 @@ public class TaskDao
      * @param nCustomParam 不匹配自定义参数
      */
     public List<TaskInfoEntity> queryTaskInfoByCustomParam(Map<String, Object> customParam,
-            Map<String, Object> nCustomParam) {
+                                                           Map<String, Object> nCustomParam) {
         if (customParam == null || customParam.isEmpty()) {
             throw new IllegalArgumentException("查询条件不能为空");
         }
@@ -280,5 +367,95 @@ public class TaskDao
         Query query = new Query();
         query.addCriteria(criteria);
         return mongoTemplate.find(query, TaskInfoEntity.class);
+    }
+
+    /**
+     * 查找每日任务数量
+     *
+     * @param endTime    结束时间
+     * @param createFrom 来源
+     * @return
+     */
+    public Long findDailyTaskCount(Long endTime, String createFrom) {
+        Query query = new Query();
+        if (ComConstants.BsTaskCreateFrom.GONGFENG_SCAN.value().equals(createFrom)) {
+            query.addCriteria(Criteria.where("create_from").is(createFrom));
+        } else {
+            query.addCriteria(Criteria.where("create_from")
+                    .in(BS_CODECC.value(), ComConstants.BsTaskCreateFrom.BS_PIPELINE.value()));
+        }
+        if (endTime != null && endTime != 0) {
+            query.addCriteria(Criteria.where("create_date").lte(endTime));
+        }
+        query.addCriteria(Criteria.where("status").is(ComConstants.Status.ENABLE.value()));
+
+        return mongoTemplate.count(query, TaskInfoEntity.class, "t_task_detail");
+    }
+
+    /**
+     * 通过来源/状态/项目id/工具名查找
+     * @param createFrom
+     * @param status
+     * @param projectId
+     * @param toolNames
+     * @return
+     */
+    public List<TaskInfoEntity> findByCreateFromAndStatusAndProjectIdContainingAndToolNamesContaining(String createFrom,
+                                                                                            Integer status,
+                                                                                            String projectId,
+                                                                                            String toolNames,
+                                                                                            Integer skip,
+                                                                                            Integer limit) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("create_from").is(createFrom))
+                .addCriteria(Criteria.where("status").is(status))
+                .addCriteria(Criteria.where("project_id").regex(projectId))
+                .addCriteria(Criteria.where("tool_names").regex(toolNames));
+        query.skip(skip).limit(limit);
+        return mongoTemplate.find(query, TaskInfoEntity.class);
+    }
+
+    /**
+     * 通过来源/状态/项目id/语言查找
+     * @param createFrom
+     * @param status
+     * @param projectId
+     * @return
+     */
+    public List<TaskInfoEntity> findByCreateFromAndStatusAndProjectIdContaining(String createFrom,
+                                                                                      Integer status,
+                                                                                      String projectId,
+                                                                                      Integer skip,
+                                                                                      Integer limit) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("create_from").is(createFrom))
+                .addCriteria(Criteria.where("status").is(status))
+                .addCriteria(Criteria.where("project_id").regex(projectId));
+        query.skip(skip).limit(limit);
+        return mongoTemplate.find(query, TaskInfoEntity.class);
+    }
+
+    /**
+     * 更新路径白名单
+     * @param taskId
+     * @param pathList
+     */
+    public boolean upsertPathOfTask(long taskId, List<String> pathList) {
+        Query query = new Query(Criteria.where("task_id").is(taskId));
+        Update update = new Update();
+        update.set("white_paths", pathList);
+        return mongoTemplate.upsert(query, update, TaskInfoEntity.class).isUpdateOfExisting();
+    }
+
+    public List<TaskInfoEntity> findByCodeccNameCn(String projectId, String nameCn, Long offset, Long limit) {
+        Query query = new Query();
+        query.addCriteria(Criteria.where("project_id").regex(projectId));
+        query.addCriteria(Criteria.where("nameCn").regex(nameCn));
+
+        if (offset != null && limit != null) {
+            query.skip(Math.toIntExact(offset)).limit(Math.toIntExact(limit));
+        }
+
+        return mongoTemplate.find(query, TaskInfoEntity.class, "t_task_detail");
     }
 }

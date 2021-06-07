@@ -52,7 +52,7 @@ class StoreApproveDao {
     ): Long {
         with(TStoreApprove.T_STORE_APPROVE) {
             val conditions = getStoreApproveInfoConditions(storeCode, storeType, applicant, approveType, approveStatus)
-            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Long::class.java)
+            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Long::class.java)!!
         }
     }
 

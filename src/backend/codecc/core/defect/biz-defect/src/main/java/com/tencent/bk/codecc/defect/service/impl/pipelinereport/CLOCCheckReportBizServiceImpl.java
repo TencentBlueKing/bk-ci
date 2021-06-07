@@ -20,7 +20,7 @@ import java.util.List;
 @Slf4j
 @Service("CLOCCheckerReportBizService")
 public class CLOCCheckReportBizServiceImpl implements ICheckReportBizService {
-    @Value("${devopsGateway.idchost:#{null}}")
+    @Value("${bkci.public.url:#{null}}")
     private String devopsHost;
 
     @Autowired
@@ -51,7 +51,7 @@ public class CLOCCheckReportBizServiceImpl implements ICheckReportBizService {
 
         // 获取CLOC工具统计结果信息
         List<CLOCStatisticEntity> clocStatisticEntityList =
-                clocStatisticRepository.findByTaskIdAndBuildId(taskId, buildId);
+                clocStatisticRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
 
         if (CollectionUtils.isEmpty(clocStatisticEntityList)) {
             log.warn("cloc statistic entity is null, taskId: {} | buildId: {}",

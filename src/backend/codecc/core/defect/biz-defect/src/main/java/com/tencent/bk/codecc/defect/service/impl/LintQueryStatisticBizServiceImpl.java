@@ -31,12 +31,16 @@ import com.tencent.bk.codecc.defect.model.LintStatisticEntity;
 import com.tencent.bk.codecc.defect.service.IQueryStatisticBizService;
 import com.tencent.devops.common.api.analysisresult.BaseLastAnalysisResultVO;
 import com.tencent.devops.common.api.analysisresult.LintLastAnalysisResultVO;
+import com.tencent.devops.common.api.analysisresult.NotRepairedAuthorVO;
 import com.tencent.devops.common.api.analysisresult.ToolLastAnalysisResultVO;
 import com.tencent.devops.common.constant.ComConstants;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
+import java.util.stream.Collectors;
 
 /**
  * Lint类查询分析统计结果的业务逻辑类
@@ -46,22 +50,45 @@ import org.springframework.stereotype.Service;
  */
 @Slf4j
 @Service("LINTQueryStatisticBizService")
-public class LintQueryStatisticBizServiceImpl implements IQueryStatisticBizService
-{
+public class LintQueryStatisticBizServiceImpl implements IQueryStatisticBizService {
     @Autowired
     private LintStatisticRepository lintStatisticRepository;
 
     @Override
-    public BaseLastAnalysisResultVO processBiz(ToolLastAnalysisResultVO arg)
-    {
+    public BaseLastAnalysisResultVO processBiz(ToolLastAnalysisResultVO arg, boolean isLast) {
         long taskId = arg.getTaskId();
         String toolName = arg.getToolName();
+        String buildId = arg.getBuildId();
 
-        LintStatisticEntity statisticEntity = lintStatisticRepository.findFirstByTaskIdAndToolNameOrderByTimeDesc(taskId, toolName);
+        LintStatisticEntity statisticEntity;
+        if (isLast) {
+            statisticEntity = lintStatisticRepository.findFirstByTaskIdAndToolNameOrderByTimeDesc(taskId, toolName);
+        } else {
+            statisticEntity = lintStatisticRepository.findByTaskIdAndToolNameAndBuildId(taskId, toolName, buildId);
+        }
         LintLastAnalysisResultVO lastAnalysisResultVO = new LintLastAnalysisResultVO();
-        if (statisticEntity != null)
-        {
+        if (statisticEntity != null) {
             BeanUtils.copyProperties(statisticEntity, lastAnalysisResultVO);
+
+            if (!CollectionUtils.isEmpty(statisticEntity.getAuthorStatistic())) {
+                lastAnalysisResultVO.setAuthorStatistic(
+                        statisticEntity.getAuthorStatistic().stream().map(source -> {
+                            NotRepairedAuthorVO targetVO = new NotRepairedAuthorVO();
+                            BeanUtils.copyProperties(source, targetVO);
+                            return targetVO;
+                        }).collect(Collectors.toList())
+                );
+            }
+
+            if (!CollectionUtils.isEmpty(statisticEntity.getExistAuthorStatistic())) {
+                lastAnalysisResultVO.setExistAuthorStatistic(
+                        statisticEntity.getExistAuthorStatistic().stream().map(source -> {
+                            NotRepairedAuthorVO targetVO = new NotRepairedAuthorVO();
+                            BeanUtils.copyProperties(source, targetVO);
+                            return targetVO;
+                        }).collect(Collectors.toList())
+                );
+            }
         }
         lastAnalysisResultVO.setPattern(ComConstants.ToolPattern.LINT.name());
 //        log.info("task_id:{}, toolName: {}, lint statistic :{}", taskId, toolName, lastAnalysisResultVO);

@@ -29,6 +29,8 @@ package com.tencent.bk.codecc.task.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.tencent.bk.codecc.task.enums.TaskSortType;
 import com.tencent.bk.codecc.task.model.TaskInfoEntity;
+import com.tencent.bk.codecc.task.vo.MetadataVO;
+import com.tencent.bk.codecc.task.pojo.GongfengPublicProjModel;
 import com.tencent.bk.codecc.task.vo.NotifyCustomVO;
 import com.tencent.bk.codecc.task.vo.TaskBaseVO;
 import com.tencent.bk.codecc.task.vo.TaskCodeLibraryVO;
@@ -47,6 +49,8 @@ import com.tencent.bk.codecc.task.vo.tianyi.TaskInfoVO;
 import com.tencent.devops.common.api.QueryTaskListReqVO;
 import com.tencent.devops.common.api.ToolMetaBaseVO;
 import com.tencent.devops.common.api.pojo.Page;
+import com.tencent.devops.common.constant.ComConstants;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -59,6 +63,7 @@ import java.util.Set;
  */
 public interface TaskService
 {
+
     /**
      * 查询任务清单
      *
@@ -140,8 +145,15 @@ public interface TaskService
      * @param taskId
      * @return
      */
-    TaskOverviewVO getTaskOverview(Long taskId);
+    TaskOverviewVO getTaskOverview(Long taskId, String buildNum);
 
+    /**
+     * 获取任务信息概览
+     *
+     * @param taskId
+     * @return
+     */
+    TaskOverviewVO getTaskOverview(Long taskId, String buildNum, String orderBy);
 
     /**
      * 开启任务
@@ -171,6 +183,26 @@ public interface TaskService
      * @return
      */
     Boolean stopTask(String pipelineId, String disabledReason, String userName);
+
+
+    /**
+     * 停用任务
+     *
+     * @param taskId
+     * @param userName
+     * @return
+     */
+    Boolean stopTaskByAdmin(Long taskId, String disabledReason, String userName);
+
+    /**
+     * 开启任务
+     *
+     * @param taskId
+     * @param userName
+     * @return
+     */
+    Boolean startTaskByAdmin(Long taskId, String userName);
+
 
     /**
      * 获取代码库配置信息
@@ -214,6 +246,15 @@ public interface TaskService
      * @return
      */
     Map<String, ToolMetaBaseVO> getToolMetaListFromCache();
+
+    /**
+     * 手动触发分析-不加代理
+     * @param taskId
+     * @param isFirstTrigger
+     * @param userName
+     * @return
+     */
+    Boolean manualExecuteTaskNoProxy(long taskId, String isFirstTrigger, String userName);
 
     /**
      * 手动触发分析
@@ -357,7 +398,7 @@ public interface TaskService
      */
     TaskInfoEntity getTaskByGongfengId(Integer gongfengProjectId);
 
-     /** 多条件查询任务列表
+    /** 多条件查询任务列表
      *
      * @param taskListReqVO 请求体
      * @return 任务列表
@@ -397,4 +438,69 @@ public interface TaskService
      *
      */
     Boolean triggerBkPluginScoring();
+
+    List<MetadataVO> listTaskToolDimension(Long taskId);
+
+    /**
+     * 根据代码库别名获取任务信息
+     *
+     * @param aliasName
+     */
+    TaskDetailVO getTaskInfoByAliasName(String aliasName);
+
+    /**
+     * 根据代码库id获取任务状态
+     *
+     * @param id
+     */
+    TaskDetailVO getTaskInfoByGongfengId(int id, GongfengPublicProjModel gongfengPublicProjModel);
+
+    /**
+     * 根据工蜂代码库创建扫描任务并计入开源扫描任务
+     */
+//    Boolean createTaskByRepoId(String repoId, List<String> langs);
+
+    /**
+     * 按创建来源查询任务ID
+     * @param taskCreateFrom 任务来源列表
+     * @return list
+     */
+    List<Long> queryTaskIdByCreateFrom(List<String> taskCreateFrom);
+
+    /**
+     * 获取开源或非开源的任务ID
+     *
+     * @param defectStatType enum
+     * @return list
+     */
+    List<Long> queryTaskIdByType(ComConstants.DefectStatType defectStatType);
+
+
+    /**
+     * 仅用于查询获取任务数量脚本
+     *
+     * @param day 天数
+     * @return boolean
+     */
+    Boolean initTaskCountScript(Integer day);
+
+    /**
+     * 根据任务英文名查询任务信息，不包含工具信息
+     *
+     * @param nameEn 流名称
+     * @return vo
+     */
+    TaskDetailVO getTaskInfoWithoutToolsByStreamName(String nameEn);
+
+
+    /**
+     * 获取工蜂代码库信息
+     */
+    TaskCodeLibraryVO getRepoInfo(Long taskId);
+
+    /**
+     * 添加路径白名单
+     *
+     */
+    boolean addWhitePath(long taskId, List<String> pathList);
 }

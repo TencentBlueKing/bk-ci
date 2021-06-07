@@ -34,4 +34,4 @@ class PermissionForbiddenException(
     errorCode: String = PERMISSION_DENIED,
     params: Array<String>? = null
 ) :
-    ErrorCodeException(errorCode = errorCode, defaultMessage = message, params = params?: emptyArray())
+    ErrorCodeException(errorCode = errorCode, defaultMessage = message, params = params ?: emptyArray())

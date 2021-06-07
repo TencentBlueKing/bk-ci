@@ -96,7 +96,7 @@ class PipelineDockerBuildDao {
                     poolNo
                 )
                 .returning(ID)
-                .fetchOne().id
+                .fetchOne()!!.id
         }
     }
 

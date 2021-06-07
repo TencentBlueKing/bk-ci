@@ -118,7 +118,7 @@ class PipelineWebhookBuildLogDetailDao {
             if (repoName != null) {
                 where.and(REPO_NAME.eq(repoName))
             }
-            where.fetchOne(0, Long::class.java)
+            where.fetchOne(0, Long::class.java)!!
         }
     }
 

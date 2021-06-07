@@ -94,21 +94,21 @@ class CategoryDao {
     fun countByName(dslContext: DSLContext, categoryName: String, type: Byte): Int {
         with(TCategory.T_CATEGORY) {
             return dslContext.selectCount().from(this).where(CATEGORY_NAME.eq(categoryName).and(TYPE.eq(type)))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
     fun countByCode(dslContext: DSLContext, categoryCode: String, type: Byte): Int {
         with(TCategory.T_CATEGORY) {
             return dslContext.selectCount().from(this).where(CATEGORY_CODE.eq(categoryCode).and(TYPE.eq(type)))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
     fun countById(dslContext: DSLContext, categoryId: String, type: Byte): Int {
         with(TCategory.T_CATEGORY) {
             return dslContext.selectCount().from(this).where(ID.eq(categoryId).and(TYPE.eq(type)))
-                .fetchOne(0, Int::class.java)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
