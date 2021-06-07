@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.webhook.service.code.handler.tgit
 
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
 import com.tencent.devops.common.webhook.constant.GIT_MR_NUMBER
@@ -44,6 +45,35 @@ import com.tencent.devops.common.webhook.util.WebhookUtils.getBranch
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_MANUAL_UNLOCK
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_AUTHOR
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_CREATE_TIME
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_CREATE_TIMESTAMP
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_ID
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_LABELS
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT_MSG
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_MILESTONE
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_MILESTONE_DUE_DATE
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_NUMBER
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_REVIEWERS
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_SOURCE_URL
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_TARGET_URL
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_TITLE
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_URL
+import com.tencent.devops.scm.pojo.PIPELINE_WEBHOOK_MR_COMMITTER
+import com.tencent.devops.scm.pojo.PIPELINE_WEBHOOK_MR_ID
+import com.tencent.devops.scm.pojo.PIPELINE_WEBHOOK_SOURCE_BRANCH
+import com.tencent.devops.scm.pojo.PIPELINE_WEBHOOK_SOURCE_PROJECT_ID
+import com.tencent.devops.scm.pojo.PIPELINE_WEBHOOK_SOURCE_REPO_NAME
+import com.tencent.devops.scm.pojo.PIPELINE_WEBHOOK_TARGET_BRANCH
+import com.tencent.devops.scm.pojo.PIPELINE_WEBHOOK_TARGET_PROJECT_ID
+import com.tencent.devops.scm.pojo.PIPELINE_WEBHOOK_TARGET_REPO_NAME
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 
@@ -167,5 +197,75 @@ class TGitMrTriggerHandler(
             )
             return listOf(sourceBranchFilter, skipCiFilter, pathFilter)
         }
+    }
+
+    override fun retrieveParams(
+        event: GitMergeRequestEvent,
+        projectId: String?,
+        repository: Repository?
+    ): Map<String, Any> {
+        val startParams = mutableMapOf<String, Any>()
+        startParams.putAll(
+            mrStartParam(
+                event = event,
+                projectId = projectId,
+                repository = repository
+            )
+        )
+        startParams[PIPELINE_WEBHOOK_SOURCE_BRANCH] = event.object_attributes.source_branch
+        startParams[PIPELINE_WEBHOOK_TARGET_BRANCH] = event.object_attributes.target_branch
+        startParams[BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH] = event.object_attributes.target_branch
+        startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH] = event.object_attributes.source_branch
+        startParams[PIPELINE_WEBHOOK_SOURCE_PROJECT_ID] = event.object_attributes.source_project_id
+        startParams[PIPELINE_WEBHOOK_TARGET_PROJECT_ID] = event.object_attributes.target_project_id
+        startParams[PIPELINE_WEBHOOK_SOURCE_REPO_NAME] =
+            GitUtils.getProjectName(event.object_attributes.source.http_url)
+        startParams[PIPELINE_WEBHOOK_TARGET_REPO_NAME] =
+            GitUtils.getProjectName(event.object_attributes.target.http_url)
+        startParams[BK_REPO_GIT_WEBHOOK_MR_URL] = event.object_attributes.url
+        val lastCommit = event.object_attributes.last_commit
+        startParams[BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT] = lastCommit.id
+        startParams[BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT_MSG] = lastCommit.message
+        return startParams
+    }
+
+    @SuppressWarnings("ComplexMethod")
+    private fun mrStartParam(
+        event: GitMergeRequestEvent,
+        projectId: String?,
+        repository: Repository?
+    ): Map<String, Any> {
+        if (projectId == null || repository == null) {
+            return emptyMap()
+        }
+        val startParams = mutableMapOf<String, Any>()
+        val mrRequestId = if (repository is CodeGitlabRepository) {
+            event.object_attributes.iid
+        } else {
+            event.object_attributes.id
+        }
+        // MR提交人
+        val mrInfo = gitScmService.getMergeRequestInfo(projectId, mrRequestId, repository)
+        val reviewers = gitScmService.getMergeRequestReviewersInfo(projectId, mrRequestId, repository)?.reviewers
+
+        startParams[PIPELINE_WEBHOOK_MR_ID] = mrRequestId
+        startParams[PIPELINE_WEBHOOK_MR_COMMITTER] = mrInfo?.author?.username ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_AUTHOR] = mrInfo?.author?.username ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_TARGET_URL] = event.object_attributes.target.http_url
+        startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_URL] = event.object_attributes.source.http_url
+        startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIME] = mrInfo?.createTime ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME] = mrInfo?.updateTime ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIMESTAMP] = DateTimeUtil.zoneDateToTimestamp(mrInfo?.createTime)
+        startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIMESTAMP] = DateTimeUtil.zoneDateToTimestamp(mrInfo?.updateTime)
+        startParams[BK_REPO_GIT_WEBHOOK_MR_ID] = mrInfo?.mrId ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_NUMBER] = mrInfo?.mrNumber ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION] = mrInfo?.description ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_TITLE] = mrInfo?.title ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE] = mrInfo?.assignee?.username ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_REVIEWERS] = reviewers?.joinToString(",") { it.username } ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE] = mrInfo?.milestone?.title ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE_DUE_DATE] = mrInfo?.milestone?.dueDate ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_LABELS] = mrInfo?.labels?.joinToString(",") ?: ""
+        return startParams
     }
 }

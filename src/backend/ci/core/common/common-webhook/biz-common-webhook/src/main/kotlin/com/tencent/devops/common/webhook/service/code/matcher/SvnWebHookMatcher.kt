@@ -30,26 +30,17 @@ package com.tencent.devops.common.webhook.service.code.matcher
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.svn.SvnCommitEvent
-import com.tencent.devops.common.webhook.service.code.loader.CodeWebhookHandlerRegistrar
 import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.repository.pojo.Repository
 import org.slf4j.LoggerFactory
-import java.util.regex.Pattern
 
 @Suppress("ALL")
 class SvnWebHookMatcher(
-    val event: SvnCommitEvent
-) : ScmWebhookMatcher {
+    override val event: SvnCommitEvent
+) : AbstractScmWebhookMatcher<SvnCommitEvent>(event) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(SvnWebHookMatcher::class.java)
-        private val regex = Pattern.compile("[,;]")
-    }
-
-    private val eventHandler = CodeWebhookHandlerRegistrar.getHandler(webhookEvent = event)
-
-    override fun preMatch(): ScmWebhookMatcher.MatchResult {
-        return eventHandler.preMatch(event)
     }
 
     override fun isMatch(
@@ -71,17 +62,5 @@ class SvnWebHookMatcher(
         )
     }
 
-    override fun getUsername() = eventHandler.getUsername(event)
-
-    override fun getRevision() = eventHandler.getRevision(event)
-
-    override fun getRepoName() = eventHandler.getRepoName(event)
-
-    override fun getBranchName(): String = eventHandler.getBranchName(event)
-
-    override fun getEventType() = eventHandler.getEventType()
-
     override fun getCodeType() = CodeType.SVN
-
-    override fun getMessage(): String? = eventHandler.getMessage(event)
 }

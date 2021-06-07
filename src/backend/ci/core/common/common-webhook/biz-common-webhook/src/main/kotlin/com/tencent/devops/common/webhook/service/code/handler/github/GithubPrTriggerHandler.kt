@@ -31,11 +31,29 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventTy
 import com.tencent.devops.common.webhook.annotation.CodeWebhookHandler
 import com.tencent.devops.common.webhook.constant.GITHUB_PR_NUMBER
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
+import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequest
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_AUTHOR
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_CREATE_TIME
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_ID
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_LABELS
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_MILESTONE
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_MILESTONE_DUE_DATE
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_NUMBER
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_REVIEWERS
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_SOURCE_URL
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_TARGET_URL
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_TITLE
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_MR_URL
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 
@@ -107,5 +125,39 @@ class GithubPrTriggerHandler : CodeWebhookTriggerHandler<GithubPullRequestEvent>
         webHookParams: WebHookParams
     ): List<WebhookFilter> {
         return emptyList()
+    }
+
+    override fun retrieveParams(
+        event: GithubPullRequestEvent,
+        projectId: String?,
+        repository: Repository?
+    ): Map<String, Any> {
+        val startParams = mutableMapOf<String, Any>()
+        startParams[BK_REPO_GIT_WEBHOOK_MR_AUTHOR] = event.sender.login
+        startParams[BK_REPO_GIT_WEBHOOK_MR_NUMBER] = event.number
+        pullRequestStartParam(pullRequest = event.pull_request, startParams = startParams)
+        return startParams
+    }
+
+    private fun pullRequestStartParam(pullRequest: GithubPullRequest, startParams: MutableMap<String, Any>) {
+        startParams[BK_REPO_GIT_WEBHOOK_MR_TARGET_URL] = pullRequest.base.repo.clone_url
+        startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_URL] = pullRequest.head.repo.clone_url
+        startParams[BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH] = pullRequest.base.ref
+        startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH] = pullRequest.head.ref
+        startParams[BK_REPO_GIT_WEBHOOK_MR_CREATE_TIME] = pullRequest.created_at ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_UPDATE_TIME] = pullRequest.update_at ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_ID] = pullRequest.id
+        startParams[BK_REPO_GIT_WEBHOOK_MR_DESCRIPTION] = pullRequest.comments_url ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_TITLE] = pullRequest.title ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_ASSIGNEE] =
+            pullRequest.assignees.joinToString(",") { it.login ?: "" }
+        startParams[BK_REPO_GIT_WEBHOOK_MR_URL] = pullRequest.url
+        startParams[BK_REPO_GIT_WEBHOOK_MR_REVIEWERS] =
+            pullRequest.requested_reviewers.joinToString(",") { it.login ?: "" }
+        startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE] = pullRequest.milestone?.title ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_MILESTONE_DUE_DATE] =
+            pullRequest.milestone?.due_on ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_MR_LABELS] =
+            pullRequest.labels.joinToString(",") { it.name }
     }
 }

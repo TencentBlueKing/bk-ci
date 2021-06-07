@@ -38,6 +38,9 @@ import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
 import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_COMMIT_TIME
+import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_REVERSION
+import com.tencent.devops.scm.pojo.BK_REPO_SVN_WEBHOOK_USERNAME
 
 @CodeWebhookHandler
 class SvnCommitTriggerHandler : CodeWebhookTriggerHandler<SvnCommitEvent> {
@@ -111,5 +114,17 @@ class SvnCommitTriggerHandler : CodeWebhookTriggerHandler<SvnCommitEvent> {
             )
             return listOf(projectNameFilter, userFilter, pathFilter)
         }
+    }
+
+    override fun retrieveParams(
+        event: SvnCommitEvent,
+        projectId: String?,
+        repository: Repository?
+    ): Map<String, Any> {
+        val startParams = mutableMapOf<String, Any>()
+        startParams[BK_REPO_SVN_WEBHOOK_REVERSION] = event.revision.toString()
+        startParams[BK_REPO_SVN_WEBHOOK_USERNAME] = event.userName
+        startParams[BK_REPO_SVN_WEBHOOK_COMMIT_TIME] = event.commitTime ?: 0L
+        return startParams
     }
 }

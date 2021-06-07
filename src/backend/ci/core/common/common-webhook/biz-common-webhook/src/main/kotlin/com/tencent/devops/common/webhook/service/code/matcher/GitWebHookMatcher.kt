@@ -27,11 +27,9 @@
 
 package com.tencent.devops.common.webhook.service.code.matcher
 
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
-import com.tencent.devops.common.webhook.service.code.loader.CodeWebhookHandlerRegistrar
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeTGitRepository
 import com.tencent.devops.repository.pojo.Repository
@@ -39,18 +37,10 @@ import org.slf4j.LoggerFactory
 
 @Suppress("ALL")
 open class GitWebHookMatcher(
-    val event: GitEvent
-) : ScmWebhookMatcher {
+    override val event: GitEvent
+) : AbstractScmWebhookMatcher<GitEvent>(event) {
     companion object {
         private val logger = LoggerFactory.getLogger(GitWebHookMatcher::class.java)
-        const val MATCH_BRANCH = "matchBranch"
-        const val MATCH_PATHS = "matchPaths"
-    }
-
-    private val eventHandler = CodeWebhookHandlerRegistrar.getHandler(webhookEvent = event)
-
-    override fun preMatch(): ScmWebhookMatcher.MatchResult {
-        return eventHandler.preMatch(event = event)
     }
 
     override fun isMatch(
@@ -74,45 +64,5 @@ open class GitWebHookMatcher(
         )
     }
 
-    override fun getUsername(): String {
-        return eventHandler.getUsername(event)
-    }
-
-    override fun getRevision(): String {
-       return eventHandler.getRevision(event)
-    }
-
-    override fun getEventType(): CodeEventType {
-        return eventHandler.getEventType()
-    }
-
-    override fun getHookSourceUrl(): String? {
-        return eventHandler.getHookSourceUrl(event)
-    }
-
-    override fun getHookTargetUrl(): String? {
-        return eventHandler.getHookTargetUrl(event)
-    }
-
     override fun getCodeType() = CodeType.GIT
-
-    override fun getEnv(): Map<String, Any> {
-        return eventHandler.getEnv(event)
-    }
-
-    override fun getRepoName(): String {
-        return eventHandler.getRepoName(event)
-    }
-
-    override fun getBranchName(): String {
-        return eventHandler.getBranchName(event)
-    }
-
-    override fun getMergeRequestId(): Long? {
-        return eventHandler.getMergeRequestId(event)
-    }
-
-    override fun getMessage(): String? {
-        return eventHandler.getMessage(event)
-    }
 }

@@ -71,6 +71,11 @@ interface ScmWebhookMatcher {
 
     fun getWebHookParamsMap(): Map<String/*pipelineId*/, WebHookParams/*pipeline webhookParams*/> = emptyMap()
 
+    fun retrieveParams(
+        projectId: String? = null,
+        repository: Repository? = null
+    ): Map<String, Any>
+
     data class MatchResult(
         val isMatch: Boolean,
         val extra: Map<String, String> = mapOf()

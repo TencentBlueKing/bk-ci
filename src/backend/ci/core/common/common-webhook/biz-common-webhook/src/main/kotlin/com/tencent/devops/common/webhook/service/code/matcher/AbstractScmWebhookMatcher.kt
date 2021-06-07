@@ -27,39 +27,62 @@
 
 package com.tencent.devops.common.webhook.service.code.matcher
 
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
-import com.tencent.devops.common.webhook.pojo.code.WebHookParams
-import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
-import com.tencent.devops.repository.pojo.CodeGitlabRepository
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
+import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
+import com.tencent.devops.common.webhook.service.code.loader.CodeWebhookHandlerRegistrar
 import com.tencent.devops.repository.pojo.Repository
-import org.slf4j.LoggerFactory
 
-class GitlabWebHookMatcher(
-    override val event: GitEvent
-) : AbstractScmWebhookMatcher<GitEvent>(event) {
+@Suppress("TooManyFunctions")
+abstract class AbstractScmWebhookMatcher<T : CodeWebhookEvent>(
+    open val event: T
+) : ScmWebhookMatcher {
+    protected val eventHandler by lazy { CodeWebhookHandlerRegistrar.getHandler(webhookEvent = event) }
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(GitlabWebHookMatcher::class.java)
+    override fun preMatch(): ScmWebhookMatcher.MatchResult {
+        return eventHandler.preMatch(event)
     }
 
-    override fun isMatch(
-        projectId: String,
-        pipelineId: String,
-        repository: Repository,
-        webHookParams: WebHookParams
-    ): ScmWebhookMatcher.MatchResult {
-        if (repository !is CodeGitlabRepository) {
-            logger.warn("The repo($repository) is not code git repo for git web hook")
-            return ScmWebhookMatcher.MatchResult(isMatch = false)
-        }
-        return eventHandler.isMatch(
+    override fun getUsername(): String {
+        return eventHandler.getUsername(event)
+    }
+
+    override fun getRevision(): String {
+        return eventHandler.getRevision(event)
+    }
+
+    override fun getEventType(): CodeEventType {
+        return eventHandler.getEventType()
+    }
+
+    override fun getHookSourceUrl(): String? {
+        return eventHandler.getHookSourceUrl(event)
+    }
+
+    override fun getHookTargetUrl(): String? {
+        return eventHandler.getHookTargetUrl(event)
+    }
+
+    override fun getRepoName(): String {
+        return eventHandler.getRepoName(event)
+    }
+
+    override fun getBranchName(): String {
+        return eventHandler.getBranchName(event)
+    }
+
+    override fun getEnv(): Map<String, Any> {
+        return eventHandler.getEnv(event)
+    }
+
+    override fun getMessage(): String? {
+        return eventHandler.getMessage(event)
+    }
+
+    override fun retrieveParams(projectId: String?, repository: Repository?): Map<String, Any> {
+        return eventHandler.retrieveParams(
             event = event,
             projectId = projectId,
-            pipelineId = pipelineId,
-            repository = repository,
-            webHookParams = webHookParams
+            repository = repository
         )
     }
-
-    override fun getCodeType() = CodeType.GITLAB
 }

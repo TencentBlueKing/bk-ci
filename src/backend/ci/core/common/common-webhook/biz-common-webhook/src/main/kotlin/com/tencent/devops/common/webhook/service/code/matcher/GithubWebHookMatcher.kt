@@ -27,25 +27,20 @@
 
 package com.tencent.devops.common.webhook.service.code.matcher
 
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.github.GithubEvent
-import com.tencent.devops.common.webhook.service.code.loader.CodeWebhookHandlerRegistrar
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
 import org.slf4j.LoggerFactory
 
 @Suppress("ALL")
-class GithubWebHookMatcher(val event: GithubEvent) : ScmWebhookMatcher {
+class GithubWebHookMatcher(
+    override val event: GithubEvent
+) : AbstractScmWebhookMatcher<GithubEvent>(event) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(GithubWebHookMatcher::class.java)
-    }
-    private val eventHandler = CodeWebhookHandlerRegistrar.getHandler(webhookEvent = event)
-
-    override fun preMatch(): ScmWebhookMatcher.MatchResult {
-        return eventHandler.preMatch(event)
     }
 
     override fun isMatch(
@@ -67,41 +62,5 @@ class GithubWebHookMatcher(val event: GithubEvent) : ScmWebhookMatcher {
         )
     }
 
-    override fun getUsername(): String {
-        return eventHandler.getUsername(event)
-    }
-
-    override fun getRevision(): String {
-        return eventHandler.getRevision(event)
-    }
-
-    override fun getEventType(): CodeEventType {
-        return eventHandler.getEventType()
-    }
-
-    override fun getHookSourceUrl(): String? {
-        return eventHandler.getHookSourceUrl(event)
-    }
-
-    override fun getHookTargetUrl(): String? {
-        return eventHandler.getHookTargetUrl(event)
-    }
-
     override fun getCodeType() = CodeType.GITHUB
-
-    override fun getRepoName(): String {
-        return eventHandler.getRepoName(event)
-    }
-
-    override fun getBranchName(): String {
-        return eventHandler.getBranchName(event)
-    }
-
-    override fun getEnv(): Map<String, Any> {
-        return eventHandler.getEnv(event)
-    }
-
-    override fun getMessage(): String? {
-        return eventHandler.getMessage(event)
-    }
 }

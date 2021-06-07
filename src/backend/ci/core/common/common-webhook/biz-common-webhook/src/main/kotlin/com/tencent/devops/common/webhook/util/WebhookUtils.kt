@@ -28,11 +28,24 @@
 package com.tencent.devops.common.webhook.util
 
 import com.google.common.base.Splitter
+import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.webhook.pojo.code.git.GitCommit
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_ADD_FILE_COUNT
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_ADD_FILE_PREFIX
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_AUTHOR_PREFIX
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_MSG_PREFIX
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_PREFIX
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_TIMESTAMP_PREFIX
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_DELETE_FILE_COUNT
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_DELETE_FILE_PREFIX
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_MODIFY_FILE_COUNT
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_MODIFY_FILE_PREFIX
 import java.util.regex.Pattern
 
 object WebhookUtils {
 
     private val separatorPattern = Pattern.compile("[,;]")
+    private const val MAX_VARIABLE_COUNT = 32
 
     fun convert(commaSeparatedString: String?): List<String> {
         if (commaSeparatedString == null) {
@@ -53,6 +66,7 @@ object WebhookUtils {
         return ref.removePrefix("refs/tags/")
     }
 
+    @SuppressWarnings("ALL")
     fun getRelativePath(url: String): String {
         val urlArray = url.split("//")
         if (urlArray.size < 2) {
@@ -74,5 +88,46 @@ object WebhookUtils {
     fun getFullPath(projectRelativePath: String, relativeSubPath: String): String {
         return ("${projectRelativePath.removeSuffix("/")}/" +
             relativeSubPath.removePrefix("/")).removePrefix("/")
+    }
+
+    fun genCommitsParam(commits: List<GitCommit>): Map<String, Any> {
+        val startParams = mutableMapOf<String, Any>()
+        commits.forEachIndexed { index, gitCommit ->
+            val curIndex = index + 1
+            startParams[BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_PREFIX + curIndex] = gitCommit.id
+            startParams[BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_MSG_PREFIX + curIndex] = gitCommit.message
+            startParams[BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_TIMESTAMP_PREFIX + curIndex] =
+                DateTimeUtil.zoneDateToTimestamp(gitCommit.timestamp)
+            startParams[BK_REPO_GIT_WEBHOOK_PUSH_COMMIT_AUTHOR_PREFIX + curIndex] = gitCommit.author
+            startParams[BK_REPO_GIT_WEBHOOK_PUSH_ADD_FILE_COUNT] = gitCommit.added?.size ?: 0
+            startParams[BK_REPO_GIT_WEBHOOK_PUSH_MODIFY_FILE_COUNT] = gitCommit.modified?.size ?: 0
+            startParams[BK_REPO_GIT_WEBHOOK_PUSH_DELETE_FILE_COUNT] = gitCommit.removed?.size ?: 0
+
+            var count = 0
+            run {
+                gitCommit.added?.forEachIndexed { innerIndex, file ->
+                    startParams[BK_REPO_GIT_WEBHOOK_PUSH_ADD_FILE_PREFIX + curIndex + "_" + (innerIndex + 1)] = file
+                    count++
+                    if (count > MAX_VARIABLE_COUNT) return@run
+                }
+            }
+
+            run {
+                gitCommit.modified?.forEachIndexed { innerIndex, file ->
+                    startParams[BK_REPO_GIT_WEBHOOK_PUSH_MODIFY_FILE_PREFIX + curIndex + "_" + (innerIndex + 1)] = file
+                    count++
+                    if (count > MAX_VARIABLE_COUNT) return@run
+                }
+            }
+
+            run {
+                gitCommit.removed?.forEachIndexed { innerIndex, file ->
+                    startParams[BK_REPO_GIT_WEBHOOK_PUSH_DELETE_FILE_PREFIX + curIndex + "_" + (innerIndex + 1)] = file
+                    count++
+                    if (count > MAX_VARIABLE_COUNT) return@run
+                }
+            }
+        }
+        return startParams
     }
 }

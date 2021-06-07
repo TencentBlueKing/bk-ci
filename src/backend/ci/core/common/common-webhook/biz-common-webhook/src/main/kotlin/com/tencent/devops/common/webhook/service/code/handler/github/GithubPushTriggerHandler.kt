@@ -35,10 +35,13 @@ import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_BRANCH
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_USERNAME
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 
 @CodeWebhookHandler
+@Suppress("TooManyFunctions")
 class GithubPushTriggerHandler : GitHookTriggerHandler<GithubPushEvent> {
 
     companion object {
@@ -93,5 +96,16 @@ class GithubPushTriggerHandler : GitHookTriggerHandler<GithubPushEvent> {
         webHookParams: WebHookParams
     ): List<WebhookFilter> {
         return emptyList()
+    }
+
+    override fun retrieveParams(
+        event: GithubPushEvent,
+        projectId: String?,
+        repository: Repository?
+    ): Map<String, Any> {
+        val startParams = mutableMapOf<String, Any>()
+        startParams[BK_REPO_GIT_WEBHOOK_PUSH_USERNAME] = event.sender.login
+        startParams[BK_REPO_GIT_WEBHOOK_BRANCH] = getBranchName(event)
+        return startParams
     }
 }

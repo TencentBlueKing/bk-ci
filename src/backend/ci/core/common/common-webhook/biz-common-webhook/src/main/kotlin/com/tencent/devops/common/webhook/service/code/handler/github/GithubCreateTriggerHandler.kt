@@ -34,6 +34,9 @@ import com.tencent.devops.common.webhook.pojo.code.github.GithubCreateEvent
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.CodeWebhookTriggerHandler
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.scm.pojo.BK_REPO_GITHUB_WEBHOOK_CREATE_REF_NAME
+import com.tencent.devops.scm.pojo.BK_REPO_GITHUB_WEBHOOK_CREATE_REF_TYPE
+import com.tencent.devops.scm.pojo.BK_REPO_GITHUB_WEBHOOK_CREATE_USERNAME
 import com.tencent.devops.scm.utils.code.git.GitUtils
 
 @CodeWebhookHandler
@@ -78,5 +81,17 @@ class GithubCreateTriggerHandler : CodeWebhookTriggerHandler<GithubCreateEvent> 
         webHookParams: WebHookParams
     ): List<WebhookFilter> {
         return emptyList()
+    }
+
+    override fun retrieveParams(
+        event: GithubCreateEvent,
+        projectId: String?,
+        repository: Repository?
+    ): Map<String, Any> {
+        val startParams = mutableMapOf<String, Any>()
+        startParams[BK_REPO_GITHUB_WEBHOOK_CREATE_REF_NAME] = event.ref
+        startParams[BK_REPO_GITHUB_WEBHOOK_CREATE_REF_TYPE] = event.ref_type
+        startParams[BK_REPO_GITHUB_WEBHOOK_CREATE_USERNAME] = event.sender.login
+        return startParams
     }
 }

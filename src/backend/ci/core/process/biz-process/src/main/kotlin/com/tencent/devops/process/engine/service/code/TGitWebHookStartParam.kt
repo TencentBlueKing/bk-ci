@@ -42,22 +42,16 @@ import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_BRANCH
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_PATH
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_INCLUDE_BRANCHS
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_INCLUDE_PATHS
+import com.tencent.devops.scm.pojo.MATCH_BRANCH
+import com.tencent.devops.scm.pojo.MATCH_PATHS
 
 class TGitWebHookStartParam(
-    projectId: String,
-    repo: Repository,
+    val projectId: String,
+    val repo: Repository,
     private val params: WebHookParams,
     private val matcher: GitWebHookMatcher,
     private val matchResult: ScmWebhookMatcher.MatchResult
 ) : ScmWebhookStartParams<CodeTGitWebHookTriggerElement> {
-
-    private val gitWebHookStartParam = GitWebHookStartParam(
-        projectId = projectId,
-        repo = repo,
-        params = params,
-        matcher = matcher,
-        matchResult = matchResult
-    )
 
     override fun getStartParams(element: CodeTGitWebHookTriggerElement): Map<String, Any> {
         val startParams = mutableMapOf<String, Any>()
@@ -70,9 +64,14 @@ class TGitWebHookStartParam(
             startParams[BK_REPO_GIT_WEBHOOK_EXCLUDE_PATHS] = excludePaths ?: ""
             startParams[BK_REPO_GIT_WEBHOOK_EXCLUDE_USERS] = excludeUsers?.joinToString(",") ?: ""
             startParams[BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_BRANCH] =
-                matchResult.extra[GitWebHookMatcher.MATCH_BRANCH] ?: ""
-            startParams[BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_PATH] = matchResult.extra[GitWebHookMatcher.MATCH_PATHS] ?: ""
-            gitWebHookStartParam.getEventTypeStartParams(startParams)
+                matchResult.extra[MATCH_BRANCH] ?: ""
+            startParams[BK_REPO_GIT_WEBHOOK_FINAL_INCLUDE_PATH] = matchResult.extra[MATCH_PATHS] ?: ""
+            startParams.putAll(
+                matcher.retrieveParams(
+                    projectId = projectId,
+                    repository = repo
+                )
+            )
         }
 
         return startParams

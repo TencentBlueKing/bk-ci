@@ -103,4 +103,10 @@ interface CodeWebhookTriggerHandler<T : CodeWebhookEvent> {
         repository: Repository,
         webHookParams: WebHookParams
     ): List<WebhookFilter>
+
+    fun retrieveParams(
+        event: T,
+        projectId: String? = null,
+        repository: Repository? = null
+    ): Map<String, Any>
 }

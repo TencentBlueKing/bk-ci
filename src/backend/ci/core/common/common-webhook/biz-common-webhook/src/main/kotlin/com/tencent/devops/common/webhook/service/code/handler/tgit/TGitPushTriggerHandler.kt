@@ -36,12 +36,21 @@ import com.tencent.devops.common.webhook.service.code.filter.SkipCiFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.common.webhook.util.WebhookUtils
 import com.tencent.devops.common.webhook.util.WebhookUtils.convert
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_BRANCH
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_ACTION_KIND
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_AFTER_COMMIT
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_BEFORE_COMMIT
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_OPERATION_KIND
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT
+import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_PUSH_USERNAME
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 
 @CodeWebhookHandler
+@Suppress("TooManyFunctions")
 class TGitPushTriggerHandler : GitHookTriggerHandler<GitPushEvent> {
 
     companion object {
@@ -123,5 +132,22 @@ class TGitPushTriggerHandler : GitHookTriggerHandler<GitPushEvent> {
             )
             return listOf(skipCiFilter, pathPrefixFilter)
         }
+    }
+
+    override fun retrieveParams(
+        event: GitPushEvent,
+        projectId: String?,
+        repository: Repository?
+    ): Map<String, Any> {
+        val startParams = mutableMapOf<String, Any>()
+        startParams[BK_REPO_GIT_WEBHOOK_PUSH_USERNAME] = event.user_name
+        startParams[BK_REPO_GIT_WEBHOOK_PUSH_BEFORE_COMMIT] = event.before
+        startParams[BK_REPO_GIT_WEBHOOK_PUSH_AFTER_COMMIT] = event.after
+        startParams[BK_REPO_GIT_WEBHOOK_PUSH_TOTAL_COMMIT] = event.total_commits_count
+        startParams[BK_REPO_GIT_WEBHOOK_PUSH_ACTION_KIND] = event.action_kind ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_PUSH_OPERATION_KIND] = event.operation_kind ?: ""
+        startParams[BK_REPO_GIT_WEBHOOK_BRANCH] = getBranchName(event)
+        startParams.putAll(WebhookUtils.genCommitsParam(commits = event.commits))
+        return startParams
     }
 }
