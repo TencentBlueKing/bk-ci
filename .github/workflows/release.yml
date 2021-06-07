@@ -102,7 +102,7 @@ jobs:
           name: frontend
           path: src/frontend/frontend
 
-      - name: Create artifact - Step4: make package
+      - name: Create artifact - Step4:make package
         id: create-artifact
         run: |
           version="$(basename $GITHUB_REF)"
