@@ -26,14 +26,18 @@
 
 package com.tencent.bk.codecc.defect.model;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.springframework.data.mongodb.core.index.CompoundIndex;
 import org.springframework.data.mongodb.core.index.CompoundIndexes;
 import org.springframework.data.mongodb.core.mapping.Document;
 import org.springframework.data.mongodb.core.mapping.Field;
-
-import java.util.Set;
 
 /**
  * 任务分析记录持久化对象
@@ -42,6 +46,8 @@ import java.util.Set;
  * @date 2019/5/2
  */
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @Document(collection = "t_statistic")
 @CompoundIndexes({
@@ -49,6 +55,10 @@ import java.util.Set;
 })
 public class CommonStatisticEntity extends StatisticEntity
 {
+    /**
+     * 新增告警数
+     * 注：指真实新增，不考虑newDefectJudgeTime的逻辑过滤
+     */
     @Field("new_count")
     private Integer newCount;
 
@@ -82,9 +92,95 @@ public class CommonStatisticEntity extends StatisticEntity
     @Field("new_serious_count")
     private Integer newSeriousCount;
 
+    @Field("normal_fixed_count")
+    private long normalFixedCount;
+
+    @Field("prompt_fixed_count")
+    private long promptFixedCount;
+
+    @Field("serious_fixed_count")
+    private long seriousFixedCount;
+
+    @Field("normal_ignore_count")
+    private long normalIgnoreCount;
+
+    @Field("prompt_ignore_count")
+    private long promptIgnoreCount;
+
+    @Field("serious_ignore_count")
+    private long seriousIgnoreCount;
+
+    @Field("normal_mask_count")
+    private long normalMaskCount;
+
+    @Field("prompt_mask_count")
+    private long promptMaskCount;
+
+    @Field("serious_mask_count")
+    private long seriousMaskCount;
+    
     @Field("new_authors")
     private Set<String> newAuthors;
 
+    /**
+     * 仅指存量告警的处理人；原来的existAuthors指新+存量，2021.03.11
+     */
     @Field("exist_authors")
     private Set<String> existAuthors;
+
+    /**
+     * "新"提示级别处理人(原指"新+存量”,2021.03.11)
+     */
+    @Field("prompt_authors")
+    private Set<String> promptAuthors;
+
+    /**
+     * "新"一般级别处理人(原指"新+存量”,2021.03.11)
+     */
+    @Field("normal_authors")
+    private Set<String> normalAuthors;
+
+    /**
+     * "新"严重级别处理人(原指"新+存量”,2021.03.11)
+     */
+    @Field("serious_authors")
+    private Set<String> seriousAuthors;
+
+    @Field("checker_statistic")
+    private List<CheckerStatisticEntity> checkerStatistic;
+
+    /**
+     * 存量提示级别处理人
+     */
+    @Field("exist_prompt_authors")
+    private Set<String> existPromptAuthors;
+
+    /**
+     * 存量一般级别处理人
+     */
+    @Field("exist_normal_authors")
+    private Set<String> existNormalAuthors;
+
+    /**
+     * 存量严重级别处理人
+     */
+    @Field("exist_serious_authors")
+    private Set<String> existSeriousAuthors;
+
+    /**
+     * 构造"零值"实例
+     * 注意：由于common类提单CovDefectServiceImpl#commitDefect(..)是选择性upload/update，这会导致部分字段丢失，引发相关业务报空引用
+     *
+     * @return
+     */
+    public static CommonStatisticEntity constructByZeroVal() {
+        return new CommonStatisticEntity(0, 0, 0, 0,
+                0, 0, 0, 0,
+                0, 0, 0, 0L,
+                0L, 0L, 0L, 0L,
+                0L, 0L, 0L, 0L,
+                new HashSet<>(), new HashSet<>(), new HashSet<>(), new HashSet<>(),
+                new HashSet<>(), new ArrayList<>(), new HashSet<>(), new HashSet<>(),
+                new HashSet<>());
+    }
 }

@@ -27,14 +27,17 @@
 
 package com.tencent.devops.process.engine.control
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TIMEOUT_IN_BUILD_QUEUE
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_TIMEOUT_IN_RUNNING
 import com.tencent.devops.process.engine.common.Timeout
@@ -45,6 +48,7 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildMonitorEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
+import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineSettingService
@@ -67,7 +71,8 @@ class BuildMonitorControl @Autowired constructor(
     private val pipelineSettingService: PipelineSettingService,
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
-    private val pipelineStageService: PipelineStageService
+    private val pipelineStageService: PipelineStageService,
+    private val pipelineBuildDetailService: PipelineBuildDetailService
 ) {
 
     companion object {
@@ -78,7 +83,7 @@ class BuildMonitorControl @Autowired constructor(
 
         val buildId = event.buildId
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
-        if (buildInfo == null || buildInfo.status.isFinish()) {
+        if (buildInfo == null || buildInfo.isFinish()) {
             LOG.info("ENGINE|$buildId|${event.source}|BUILD_MONITOR|status=${buildInfo?.status}")
             return true
         }
@@ -132,7 +137,7 @@ class BuildMonitorControl @Autowired constructor(
     private fun monitorStage(event: PipelineBuildMonitorEvent): Long {
 
         val stages = pipelineStageService.listStages(event.buildId)
-            .filter { !it.status.isFinish() }
+            .filter { !it.status.isFinish() && it.status != BuildStatus.STAGE_SUCCESS }
 
         var minInterval = Timeout.STAGE_MAX_MILLS
 
@@ -142,12 +147,10 @@ class BuildMonitorControl @Autowired constructor(
         }
 
         stages.forEach Next@{ stage ->
-            if (!stage.status.isFinish()) {
-                val interval = stage.checkNextStageMonitorIntervals(event.userId)
-                // 根据最小的超时时间来决定下一次监控执行的时间
-                if (interval in 1 until minInterval) {
-                    minInterval = interval
-                }
+            val interval = stage.checkNextStageMonitorIntervals(event.userId)
+            // 根据最小的超时时间来决定下一次监控执行的时间
+            if (interval in 1 until minInterval) {
+                minInterval = interval
             }
         }
 
@@ -208,7 +211,7 @@ class BuildMonitorControl @Autowired constructor(
     private fun PipelineBuildStage.checkNextStageMonitorIntervals(userId: String): Long {
         var interval: Long = 0
 
-        if (status.isFinish() || controlOption?.stageControlOption?.manualTrigger != true) {
+        if (controlOption?.stageControlOption?.manualTrigger != true) {
             return interval
         }
 
@@ -273,7 +276,13 @@ class BuildMonitorControl @Autowired constructor(
                 projectId = event.projectId, pipelineId = event.pipelineId, buildId = buildInfo.buildId
             )
             if (canStart) {
-                LOG.info("ENGINE|${event.buildId}|${event.source}|BUILD_QUEUE_TRY_START")
+                val buildId = event.buildId
+                LOG.info("ENGINE|$buildId|${event.source}|BUILD_QUEUE_TRY_START")
+                val model = pipelineBuildDetailService.getBuildModel(buildInfo.buildId) ?: throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+                    params = arrayOf(buildInfo.buildId)
+                )
+                val triggerContainer = model.stages[0].containers[0] as TriggerContainer
                 pipelineEventDispatcher.dispatch(
                     PipelineBuildStartEvent(
                         source = "start_monitor",
@@ -283,7 +292,8 @@ class BuildMonitorControl @Autowired constructor(
                         buildId = buildInfo.buildId,
                         taskId = buildInfo.firstTaskId,
                         status = BuildStatus.RUNNING,
-                        actionType = ActionType.START
+                        actionType = ActionType.START,
+                        buildNoType = triggerContainer.buildNo?.buildNoType
                     )
                 )
             }

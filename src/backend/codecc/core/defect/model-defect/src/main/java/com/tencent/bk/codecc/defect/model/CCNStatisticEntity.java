@@ -104,9 +104,81 @@ public class CCNStatisticEntity extends StatisticEntity
     @Field("ccn_beyond_threshold_sum")
     private Integer ccnBeyondThresholdSum;
 
+    @Field("high_fixed_count")
+    private long highFixedCount;
+
+    @Field("super_high_fixed_count")
+    private long superHighFixedCount;
+
+    @Field("middle_fixed_count")
+    private long middleFixedCount;
+
+    @Field("low_fixed_count")
+    private long lowFixedCount;
+
+    @Field("high_ignore_count")
+    private long highIgnoreCount;
+
+    @Field("super_high_ignore_count")
+    private long superHighIgnoreCount;
+
+    @Field("middle_ignore_count")
+    private long middleIgnoreCount;
+
+    @Field("low_ignore_count")
+    private long lowIgnoreCount;
+
+    @Field("high_mask_count")
+    private long highMaskCount;
+
+    @Field("super_high_mask_count")
+    private long superHighMaskCount;
+
+    @Field("middle_mask_count")
+    private long middleMaskCount;
+
+    @Field("low_mask_count")
+    private long lowMaskCount;
+
     /**
      * 5日圈复杂度趋势图
      */
     @Field("average_list")
     private List<ChartAverageEntity> averageList;
+
+    /**
+     * 新告警处理人统计
+     */
+    @Field("new_author_statistic")
+    private List<CCNNotRepairedAuthorEntity> newAuthorStatistic;
+
+    /**
+     * 存量告警处理人统计
+     */
+    @Field("exist_author_statistic")
+    private List<CCNNotRepairedAuthorEntity> existAuthorStatistic;
+
+    /**
+     * 新增极高风险告警数
+     */
+    @Field("new_super_high_count")
+    private int newSuperHighCount;
+
+    /**
+     * 新增高风险告警数
+     */
+    @Field("new_high_count")
+    private int newHighCount;
+
+    /**
+     * 新增中风险告警数
+     */
+    @Field("new_medium_count")
+    private int newMediumCount;
+
+    /**
+     * 新增低风险告警数
+     */
+    @Field("new_low_count")
+    private int newlowCount;
 }

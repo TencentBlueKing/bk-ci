@@ -33,9 +33,35 @@ build:
       switch: false
       maxMonitorDataSize: 1677216
  
-# 使用插件的流水线查询导出配置 
+# 流水线相关配置 
 pipeline:
-  editPath: "console/pipeline/{0}/{1}/edit" # 流水线编辑路径
+  setting:
+    common:
+      maxModelSize: 16777215
+      maxStageNum: 20
+      stage:
+        maxJobNum: 20
+        job:
+          maxTaskNum: 50
+          task:
+            maxInputNum: 100
+            maxOutputNum: 100
+            inputComponent:
+              input:
+                size: 1024
+              textarea:
+                size: 16384
+              codeEditor:
+                size: 16384
+              default:
+                size: 1024
+              multiple:
+                member: "selector,select-input,devops-select,atom-checkbox-list,staff-input,company-staff-input,parameter,dynamic-parameter"
+                size: 4000
+            outputComponent:
+              default:
+                size: 4000
+  editPath: "console/pipeline/{0}/{1}/edit"
   atom:
     maxRelQueryNum: 2000  # 最大查询数量
     maxRelQueryRangeTime: 30  # 最大查询时间跨度

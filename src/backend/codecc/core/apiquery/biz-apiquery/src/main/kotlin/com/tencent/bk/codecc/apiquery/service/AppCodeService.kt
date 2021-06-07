@@ -30,6 +30,7 @@ import com.google.common.cache.CacheLoader
 import com.tencent.bk.codecc.apiquery.op.dao.AppCodeAuthDao
 import com.tencent.bk.codecc.apiquery.op.model.AppCodeAdminEntity
 import com.tencent.bk.codecc.apiquery.op.model.OrgDetailEntity
+import com.tencent.bk.codecc.apiquery.task.TaskQueryReq
 import com.tencent.bk.codecc.apiquery.task.dao.TaskDao
 import com.tencent.bk.codecc.apiquery.task.model.TaskInfoModel
 import org.slf4j.LoggerFactory
@@ -54,7 +55,7 @@ class AppCodeService(
         .maximumSize(10000)
         .expireAfterWrite(5, TimeUnit.MINUTES)
         .build<String, Map<String, String>>(
-            object : CacheLoader<String,Map<String, String>>() {
+            object : CacheLoader<String, Map<String, String>>() {
                 override fun load(appCode: String): Map<String, String> {
                     return try {
                         val projectMap = getAppCodeProject(appCode)
@@ -86,6 +87,23 @@ class AppCodeService(
             }
         )
 
+    private val appCodeToolCache = CacheBuilder.newBuilder()
+        .maximumSize(10000)
+        .expireAfterWrite(5, TimeUnit.MINUTES)
+        .build<String, Map<String, String>>/*Map<projectId,AppCodeGroup>*/(
+            object : CacheLoader<String, Map<String, String>>() {
+                override fun load(appCode: String): Map<String, String> {
+                    return try {
+                        val toolMap = getAppCodeTool(appCode)
+                        logger.info("appCode[$appCode] openapi toolMap:$toolMap.")
+                        toolMap
+                    } catch (t: Throwable) {
+                        logger.info("appCode[$appCode] failed to get projectMap.")
+                        mutableMapOf()
+                    }
+                }
+            }
+        )
 
     private val appCodeAdminCache = CacheBuilder.newBuilder()
         .maximumSize(10000)
@@ -95,9 +113,9 @@ class AppCodeService(
                 override fun load(appCode: String): Boolean {
                     return try {
                         val appCodeAdminList = getAppCodeAdmin()
-                        if(!appCodeAdminList.isNullOrEmpty()){
+                        if (!appCodeAdminList.isNullOrEmpty()) {
                             appCodeAdminList[0].appCode.contains(appCode)
-                        } else{
+                        } else {
                             false
                         }
                     } catch (t: Throwable) {
@@ -125,7 +143,7 @@ class AppCodeService(
 
     private fun getAppCodeGroup(appCode: String): List<OrgDetailEntity> {
         val appCodeOrgEntity = appCodeAuthDao.findOrgInfoByAppCode(appCode)
-        return when{
+        return when {
             null == appCodeOrgEntity -> listOf()
             appCodeOrgEntity.orgList.isNullOrEmpty() -> listOf()
             else -> {
@@ -134,23 +152,44 @@ class AppCodeService(
         }
     }
 
-    private fun getAppCodeAdmin() : List<AppCodeAdminEntity>? {
+    private fun getAppCodeTool(appCode: String): Map<String, String> {
+        val appCodeToolEntity = appCodeAuthDao.findToolInfoByAppCode(appCode)
+        val result = mutableMapOf<String, String>()
+        return when {
+            null == appCodeToolEntity -> mapOf()
+            appCodeToolEntity.toolNameList.isNullOrEmpty() -> mapOf()
+            else -> {
+                appCodeToolEntity.toolNameList.forEach {
+                    result[it] = it
+                }
+                result
+            }
+        }
+    }
+
+    private fun getAppCodeAdmin(): List<AppCodeAdminEntity>? {
         return appCodeAuthDao.findAdminInfoByAppCode()
     }
 
-    fun validAppCode(appCode: String, projectId: String?, taskIds : List<Long>?): Boolean {
-        if(appCodeAdminCache.get(appCode)){
+    fun validAppCode(
+        appCode: String,
+        projectId: String?,
+        taskIds: List<Long>?,
+        toolName: String?,
+        taskQueryReq: TaskQueryReq?
+    ): Boolean {
+        if (appCodeAdminCache.get(appCode)) {
             logger.info("app code admin [$appCode]")
             return true
         }
-        //1. 当projectid和taskIds都不为空时，校验之间的对应关系
-        var taskInfoList : List<TaskInfoModel> = mutableListOf()
-        if(!taskIds.isNullOrEmpty()){
-            //当taskIds不为空时，进行赋值
+        // 1. 当projectid和taskIds都不为空时，校验之间的对应关系
+        var taskInfoList: List<TaskInfoModel> = mutableListOf()
+        if (!taskIds.isNullOrEmpty()) {
+            // 当taskIds不为空时，进行赋值
             taskInfoList = taskDao.findTaskInfoListByTaskIds(taskIds)
-            if(!projectId.isNullOrBlank()){
+            if (!projectId.isNullOrBlank()) {
                 logger.info("appCode[$appCode] projectId[$projectId] task ids [$taskIds] validate mapping.")
-                if(taskInfoList.isNullOrEmpty() || taskInfoList.any { it.projectId != projectId }){
+                if (taskInfoList.isNullOrEmpty() || taskInfoList.any { it.projectId != projectId }) {
                     logger.info("task id list[$taskIds] has different project id with the input[$projectId]")
                     return false
                 }
@@ -158,8 +197,8 @@ class AppCodeService(
         }
 
         val appCodeProject = appCodeProjectCache.get(appCode)
-        //2. 当projectid不为空时，单独校验projectid
-        if(!projectId.isNullOrBlank()){
+        // 2. 当projectid不为空时，单独校验projectid
+        if (!projectId.isNullOrBlank()) {
             logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeProjectCache:$appCodeProject.")
             if (appCodeProject.isNotEmpty()) {
                 if (appCodeProject.containsKey(projectId)) {
@@ -170,29 +209,29 @@ class AppCodeService(
             logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeProjectCache no matched.")
         }
 
-        //3. 当taskIds不为空时，先校验taskIds的project权限，再校验组织架构权限
-        if(!taskInfoList.isNullOrEmpty()){
+        // 3. 当taskIds不为空时，先校验taskIds的project权限，再校验组织架构权限
+        val orgDetailList = appCodeGroupCache.get(appCode)
+        if (!taskInfoList.isNullOrEmpty()) {
             logger.info("appCode[$appCode] taskId[$taskIds] openapi appCodeProjectCache:$appCodeProject.")
-            if(taskInfoList.all { appCodeProject.containsKey(it.projectId) }){
+            if (taskInfoList.all { appCodeProject.containsKey(it.projectId) }) {
                 logger.info("appCode[$appCode] taskIds[$taskIds] openapi appCodeProjectCache matched.")
                 return true
             }
             logger.info("appCode[$appCode] taskIds[$taskIds] openapi appCodeProjectCache no matched.")
 
-            val orgDetailList = appCodeGroupCache.get(appCode)
             logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeGroupCache:$orgDetailList.")
             if (!orgDetailList.isNullOrEmpty()) {
                 logger.info("appCode[$appCode] projectId[$taskIds] openapi appCodeGroupCache taskDetailVO:$taskInfoList.")
                 orgDetailList.forEach {
-                    if (it.centerId != null && taskInfoList.all { taskInfoModel -> taskInfoModel.centerId != 0 && it.centerId == taskInfoModel.centerId}) {
+                    if (it.centerId != null && taskInfoList.all { taskInfoModel -> taskInfoModel.centerId != 0 && it.centerId == taskInfoModel.centerId }) {
                         logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeGroupCache centerId matched.")
                         return true
                     }
-                    if (it.deptId != null && taskInfoList.all { taskInfoModel -> taskInfoModel.deptId != 0 && it.deptId == taskInfoModel.deptId}) {
+                    if (it.deptId != null && taskInfoList.all { taskInfoModel -> taskInfoModel.deptId != 0 && it.deptId == taskInfoModel.deptId }) {
                         logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeGroupCache deptId matched.")
                         return true
                     }
-                    if (it.bgId != null && taskInfoList.all { taskInfoModel -> taskInfoModel.bgId != 0 && it.bgId == taskInfoModel.bgId}) {
+                    if (it.bgId != null && taskInfoList.all { taskInfoModel -> taskInfoModel.bgId != 0 && it.bgId == taskInfoModel.bgId }) {
                         logger.info("appCode[$appCode] projectId[$projectId] openapi appCodeGroupCache bgId matched.")
                         return true
                     }
@@ -204,6 +243,40 @@ class AppCodeService(
             }
         }
 
+        // 4. 当toolName参数不为空时，校验工具名参数权限
+        val appCodeTool = appCodeToolCache.get(appCode)
+        if (!toolName.isNullOrBlank()) {
+            logger.info("appCode[$appCode] tool[$toolName] openapi appCodeToolCache:$appCodeTool.")
+            if (appCodeTool.isNotEmpty()) {
+                if (appCodeTool.containsKey(toolName)) {
+                    logger.info("appCode[$appCode] tool[$toolName] openapi appCodeProjectCache matched.")
+                    return true
+                }
+            }
+            logger.info("appCode[$appCode] tool[$toolName] openapi appCodeProjectCache no matched.")
+        }
+
+        // 5.当taskQueryReq不为空时，校验传入组织架构权限
+        if (taskQueryReq != null) {
+            if (taskQueryReq.deptId != null) {
+                logger.info("appCode[$appCode] deptId[${taskQueryReq.deptId}] openapi appCodeGroupCache:$orgDetailList.")
+                orgDetailList.forEach {
+                    if (it.deptId != null && taskQueryReq.deptId == it.deptId) {
+                        logger.info("appCode[$appCode] deptId[${taskQueryReq.deptId}] openapi appCodeGroupCache deptId matched.")
+                        return true
+                    }
+                }
+            }
+            if (taskQueryReq.bgId != null) {
+                logger.info("appCode[$appCode] bgId[${taskQueryReq.bgId}] openapi appCodeGroupCache:$orgDetailList.")
+                orgDetailList.forEach {
+                    if (it.bgId != null && taskQueryReq.bgId == it.bgId) {
+                        logger.info("appCode[$appCode] bgId[${taskQueryReq.bgId}] openapi appCodeGroupCache bgId matched.")
+                        return true
+                    }
+                }
+            }
+        }
 
         logger.info("appCode[$appCode] projectId[$projectId] taskId[$taskIds] openapi appCodeGroupCache no matched.")
         return false

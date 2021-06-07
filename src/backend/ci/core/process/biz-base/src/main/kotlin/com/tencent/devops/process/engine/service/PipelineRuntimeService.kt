@@ -43,6 +43,7 @@ import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
@@ -65,9 +66,10 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElem
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
-import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
+import com.tencent.devops.common.redis.RedisLock
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.model.process.tables.records.TPipelineBuildContainerRecord
@@ -87,6 +89,7 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.context.StartBuildContext
 import com.tencent.devops.process.engine.control.DependOnUtils
 import com.tencent.devops.process.engine.control.VmOperateTaskGenerator
+import com.tencent.devops.process.engine.control.lock.PipelineBuildNoLock
 import com.tencent.devops.process.engine.dao.PipelineBuildContainerDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildStageDao
@@ -107,6 +110,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildMonitorEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
+import com.tencent.devops.process.engine.service.rule.PipelineRuleService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
@@ -117,16 +121,20 @@ import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.code.WebhookInfo
 import com.tencent.devops.process.pojo.mq.PipelineBuildContainerEvent
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
+import com.tencent.devops.process.pojo.pipeline.enums.PipelineRuleBusCodeEnum
 import com.tencent.devops.process.service.BuildStartupParamService
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.service.ProjectCacheService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.util.BuildMsgUtils
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.FIXVERSION
 import com.tencent.devops.process.utils.MAJORVERSION
 import com.tencent.devops.process.utils.MINORVERSION
+import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
+import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM_ALIAS
 import com.tencent.devops.process.utils.PIPELINE_BUILD_REMARK
 import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
@@ -135,6 +143,8 @@ import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_COMMIT_MESSAGE
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.process.utils.PIPELINE_WEBHOOK_TYPE
+import com.tencent.devops.process.utils.PROJECT_NAME
+import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
 import com.tencent.devops.scm.pojo.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
 import com.tencent.devops.scm.pojo.BK_REPO_WEBHOOK_REPO_URL
 import org.jooq.DSLContext
@@ -169,7 +179,11 @@ class PipelineRuntimeService @Autowired constructor(
     private val buildDetailDao: BuildDetailDao,
     private val buildStartupParamService: BuildStartupParamService,
     private val buildVariableService: BuildVariableService,
-    private val vmOperatorTaskGenerator: VmOperateTaskGenerator
+    private val pipelineSettingService: PipelineSettingService,
+    private val pipelineRuleService: PipelineRuleService,
+    private val projectCacheService: ProjectCacheService,
+    private val vmOperatorTaskGenerator: VmOperateTaskGenerator,
+    private val redisOperation: RedisOperation
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineRuntimeService::class.java)
@@ -618,7 +632,8 @@ class PipelineRuntimeService @Autowired constructor(
                     buildMsg = buildMsg,
                     startType = StartType.toStartType(trigger),
                     channelCode = ChannelCode.valueOf(channel)
-                )
+                ),
+                buildNumAlias = buildNumAlias
             )
         }
     }
@@ -730,7 +745,9 @@ class PipelineRuntimeService @Autowired constructor(
         pipelineInfo: PipelineInfo,
         fullModel: Model,
         startParamsWithType: List<BuildParameters>,
-        buildNo: Int? = null
+        buildNo: Int? = null,
+        buildNumRule: String? = null,
+        acquire: Boolean? = false
     ): String {
         val params = startParamsWithType.associate { it.key to it.value }
         val startBuildStatus: BuildStatus = BuildStatus.QUEUE // 默认都是排队状态
@@ -756,6 +773,7 @@ class PipelineRuntimeService @Autowired constructor(
         val updateContainerExistsRecord: MutableList<TPipelineBuildContainerRecord> = mutableListOf()
 
         var currentBuildNo = buildNo
+        var buildNoType: BuildNoType? = null
         // --- 第1层循环：Stage遍历处理 ---
         fullModel.stages.forEachIndexed nextStage@{ index, stage ->
 //            val stageId = stage.id!!
@@ -780,25 +798,34 @@ class PipelineRuntimeService @Autowired constructor(
                 if (container is TriggerContainer) { // 寻找触发点
                     val buildNoObj = container.buildNo
                     if (buildNoObj != null && context.actionType == ActionType.START) {
-                        val buildNoType = buildNoObj.buildNoType
-                        if (buildNoType == BuildNoType.CONSISTENT) {
-                            if (currentBuildNo != null) {
-                                // 只有用户勾选中"锁定构建号"这种类型才允许指定构建号
+                        buildNoType = buildNoObj.buildNoType
+                        val buildNoLock = if (acquire != true) PipelineBuildNoLock(
+                            redisOperation = redisOperation,
+                            pipelineId = pipelineId
+                        ) else null
+                        try {
+                            buildNoLock?.lock()
+                            if (buildNoType == BuildNoType.CONSISTENT) {
+                                if (currentBuildNo != null) {
+                                    // 只有用户勾选中"锁定构建号"这种类型才允许指定构建号
+                                    updateBuildNo(pipelineId, currentBuildNo!!)
+                                    logger.info("[$pipelineId] buildNo was changed to [$currentBuildNo]")
+                                }
+                            } else if (buildNoType == BuildNoType.EVERY_BUILD_INCREMENT) {
+                                val buildSummary = getBuildSummaryRecord(pipelineId)
+                                // buildNo根据数据库的记录值每次新增1
+                                currentBuildNo = if (buildSummary == null || buildSummary.buildNo == null) {
+                                    1
+                                } else buildSummary.buildNo + 1
                                 updateBuildNo(pipelineId, currentBuildNo!!)
-                                logger.info("[$pipelineId] buildNo was changed to [$currentBuildNo]")
                             }
-                        } else if (buildNoType == BuildNoType.EVERY_BUILD_INCREMENT) {
-                            val buildSummary = getBuildSummaryRecord(pipelineId)
-                            // buildNo根据数据库的记录值每次新增1
-                            currentBuildNo = if (buildSummary == null || buildSummary.buildNo == null) {
-                                1
-                            } else buildSummary.buildNo + 1
-                            updateBuildNo(pipelineId, currentBuildNo!!)
-                        }
-                        // 兼容“以每次成功构建加1”方式调用子流水线等方式buildNo为空的情况
-                        if (currentBuildNo == null) {
-                            currentBuildNo = getBuildSummaryRecord(pipelineId)?.buildNo
-                                ?: buildNoObj.buildNo
+                            // 兼容buildNo为空的情况
+                            if (currentBuildNo == null) {
+                                currentBuildNo = getBuildSummaryRecord(pipelineId)?.buildNo
+                                    ?: buildNoObj.buildNo
+                            }
+                        } finally {
+                            buildNoLock?.unlock()
                         }
                     }
                     container.executeCount = context.retryCount + 1
@@ -977,6 +1004,8 @@ class PipelineRuntimeService @Autowired constructor(
                             lastTimeBuildContainerRecords.forEach {
                                 if (it.containerId == container.id) { // #958 在Element.initStatus 位置确认重试插件
                                     it.status = BuildStatus.QUEUE.ordinal
+                                    it.startTime = null
+                                    it.endTime = null
                                     it.executeCount += 1
                                     updateContainerExistsRecord.add(it)
                                     return@findHistoryContainer
@@ -1047,6 +1076,8 @@ class PipelineRuntimeService @Autowired constructor(
                         lastTimeBuildStageRecords.forEach {
                             if (it.stageId == stage.id!!) {
                                 it.status = BuildStatus.QUEUE.ordinal
+                                it.startTime = null
+                                it.endTime = null
                                 it.executeCount += 1
                                 updateStageExistsRecord.add(it)
                                 return@findHistoryStage
@@ -1068,104 +1099,150 @@ class PipelineRuntimeService @Autowired constructor(
                 )
             }
         }
-        dslContext.transaction { configuration ->
-
-            val transactionContext = DSL.using(configuration)
-
-            if (buildHistoryRecord != null) {
-                buildHistoryRecord.status = startBuildStatus.ordinal
-                transactionContext.batchStore(buildHistoryRecord).execute()
-                // 重置状态和人
-                buildDetailDao.update(transactionContext, buildId, JsonUtil.toJson(fullModel), startBuildStatus, "")
-            } else { // 创建构建记录
-                // 构建号递增
-                val buildNum = pipelineBuildSummaryDao.updateBuildNum(transactionContext, pipelineInfo.pipelineId)
-                pipelineBuildDao.create(
+        val lock = if (!buildNumRule.isNullOrBlank()) {
+            RedisLock(redisOperation, "process:build:history:lock:$pipelineId", 10)
+        } else null
+        try {
+            lock?.lock()
+            val projectName = projectCacheService.getProjectName(pipelineInfo.projectId) ?: ""
+            dslContext.transaction { configuration ->
+                val transactionContext = DSL.using(configuration)
+                // 保存参数
+                val buildVariables = startParamsWithType.toMutableList()
+                val varMap = mapOf(
+                    PIPELINE_BUILD_ID to buildId,
+                    PROJECT_NAME to pipelineInfo.projectId,
+                    PROJECT_NAME_CHINESE to projectName
+                )
+                buildVariables.addAll(
+                    varMap.map { BuildParameters(it.key, it.value, BuildFormPropertyType.STRING) }
+                )
+                buildVariableService.batchSetVariable(
                     dslContext = transactionContext,
                     projectId = pipelineInfo.projectId,
                     pipelineId = pipelineInfo.pipelineId,
                     buildId = buildId,
-                    version = params[PIPELINE_VERSION] as Int,
-                    buildNum = buildNum,
-                    trigger = context.startType.name,
-                    status = startBuildStatus,
-                    startUser = context.userId,
-                    triggerUser = context.triggerUser,
-                    taskCount = context.taskCount,
-                    firstTaskId = context.firstTaskId,
-                    channelCode = context.channelCode,
-                    parentBuildId = context.parentBuildId,
-                    parentTaskId = context.parentTaskId,
-                    webhookType = params[PIPELINE_WEBHOOK_TYPE] as String?,
-                    webhookInfo = getWebhookInfo(params),
-                    buildMsg = getBuildMsg(params[PIPELINE_BUILD_MSG] as String?)
+                    variables = buildVariables
                 )
-                // detail记录,未正式启动，先排队状态
-                buildDetailDao.create(
-                    dslContext = transactionContext,
-                    buildId = buildId,
-                    startUser = context.userId,
-                    startType = context.startType,
-                    buildNum = buildNum,
-                    model = JsonUtil.toJson(fullModel),
-                    buildStatus = BuildStatus.QUEUE
-                )
-                // 写入版本号
-                buildVariableService.saveVariable(
-                    dslContext = transactionContext,
-                    projectId = pipelineInfo.projectId,
-                    pipelineId = pipelineInfo.pipelineId,
-                    buildId = buildId,
-                    name = PIPELINE_BUILD_NUM,
-                    value = buildNum
-                )
-                // 写入BuildNo
-                if (currentBuildNo != null && context.actionType == ActionType.START) {
+                if (buildHistoryRecord != null) {
+                    buildHistoryRecord.endTime = null
+                    buildHistoryRecord.status = startBuildStatus.ordinal
+                    transactionContext.batchStore(buildHistoryRecord).execute()
+                    // 重置状态和人
+                    buildDetailDao.update(transactionContext, buildId, JsonUtil.toJson(fullModel), startBuildStatus, "")
+                } else { // 创建构建记录
+                    // 构建号递增
+                    val buildNum = pipelineBuildSummaryDao.updateBuildNum(
+                        dslContext = transactionContext,
+                        pipelineId = pipelineId
+                    )
                     buildVariableService.setVariable(
                         projectId = pipelineInfo.projectId,
                         pipelineId = pipelineId,
                         buildId = buildId,
-                        varName = BUILD_NO,
-                        varValue = currentBuildNo.toString()
+                        varName = PIPELINE_BUILD_NUM,
+                        varValue = buildNum
                     )
+                    val buildNumAlias = if (!buildNumRule.isNullOrBlank()) {
+                        val parsedValue = pipelineRuleService.parsePipelineRule(
+                            pipelineId = pipelineId,
+                            buildId = buildId,
+                            busCode = PipelineRuleBusCodeEnum.BUILD_NUM.name,
+                            ruleStr = buildNumRule
+                        )
+                        if (parsedValue.length > 256) parsedValue.substring(0, 256) else parsedValue
+                    } else null
+                    // 写自定义构建号信息
+                    if (!buildNumAlias.isNullOrBlank()) {
+                        pipelineBuildSummaryDao.updateBuildNumAlias(
+                            dslContext = transactionContext,
+                            pipelineId = pipelineId,
+                            buildNumAlias = buildNumAlias
+                        )
+                        buildVariableService.setVariable(
+                            projectId = pipelineInfo.projectId,
+                            pipelineId = pipelineId,
+                            buildId = buildId,
+                            varName = PIPELINE_BUILD_NUM_ALIAS,
+                            varValue = buildNumAlias
+                        )
+                    }
+                    pipelineBuildDao.create(
+                        dslContext = transactionContext,
+                        projectId = pipelineInfo.projectId,
+                        pipelineId = pipelineInfo.pipelineId,
+                        buildId = buildId,
+                        version = params[PIPELINE_VERSION] as Int,
+                        buildNum = buildNum,
+                        trigger = context.startType.name,
+                        status = startBuildStatus,
+                        startUser = context.userId,
+                        triggerUser = context.triggerUser,
+                        taskCount = context.taskCount,
+                        firstTaskId = context.firstTaskId,
+                        channelCode = context.channelCode,
+                        parentBuildId = context.parentBuildId,
+                        parentTaskId = context.parentTaskId,
+                        webhookType = params[PIPELINE_WEBHOOK_TYPE] as String?,
+                        webhookInfo = getWebhookInfo(params),
+                        buildMsg = getBuildMsg(params[PIPELINE_BUILD_MSG] as String?),
+                        buildNumAlias = buildNumAlias
+                    )
+                    // detail记录,未正式启动，先排队状态
+                    buildDetailDao.create(
+                        dslContext = transactionContext,
+                        buildId = buildId,
+                        startUser = context.userId,
+                        startType = context.startType,
+                        buildNum = buildNum,
+                        model = JsonUtil.toJson(fullModel),
+                        buildStatus = BuildStatus.QUEUE
+                    )
+                    // 写入BuildNo
+                    if (buildNoType != BuildNoType.SUCCESS_BUILD_INCREMENT && currentBuildNo != null &&
+                        context.actionType == ActionType.START
+                    ) {
+                        buildVariableService.setVariable(
+                            projectId = pipelineInfo.projectId,
+                            pipelineId = pipelineId,
+                            buildId = buildId,
+                            varName = BUILD_NO,
+                            varValue = currentBuildNo.toString()
+                        )
+                    }
+                    // 设置流水线每日构建次数
+                    pipelineSettingService.setCurrentDayBuildCount(transactionContext, pipelineId)
                 }
+
+                // 保存链路信息
+                addTraceVar(projectId = pipelineInfo.projectId, pipelineId = pipelineInfo.pipelineId, buildId = buildId)
+
+                // 上一次存在的需要重试的任务直接Update，否则就插入
+                if (updateExistsRecord.isEmpty()) {
+                    // 保持要执行的任务
+                    logger.info("batch save to pipelineBuildTask, buildTaskList size: ${buildTaskList.size}")
+                    pipelineBuildTaskDao.batchSave(transactionContext, buildTaskList)
+                } else {
+                    logger.info("batch store to pipelineBuildTask, updateExistsRecord size: ${updateExistsRecord.size}")
+                    pipelineBuildTaskDao.batchUpdate(transactionContext, updateExistsRecord)
+                }
+
+                if (updateContainerExistsRecord.isEmpty()) {
+                    pipelineBuildContainerDao.batchSave(transactionContext, buildContainers)
+                } else {
+                    pipelineBuildContainerDao.batchUpdate(transactionContext, updateContainerExistsRecord)
+                }
+
+                if (updateStageExistsRecord.isEmpty()) {
+                    pipelineBuildStageDao.batchSave(transactionContext, buildStages)
+                } else {
+                    pipelineBuildStageDao.batchUpdate(transactionContext, updateStageExistsRecord)
+                }
+                // 排队计数+1
+                pipelineBuildSummaryDao.updateQueueCount(transactionContext, pipelineInfo.pipelineId, 1)
             }
-
-            // 保存参数
-            buildVariableService.batchSetVariable(
-                dslContext = transactionContext,
-                projectId = pipelineInfo.projectId,
-                pipelineId = pipelineInfo.pipelineId,
-                buildId = buildId,
-                variables = startParamsWithType
-            )
-
-            // 保存链路信息
-            addTraceVar(projectId = pipelineInfo.projectId, pipelineId = pipelineInfo.pipelineId, buildId = buildId)
-
-            // 上一次存在的需要重试的任务直接Update，否则就插入
-            if (updateExistsRecord.isEmpty()) {
-                // 保持要执行的任务
-                logger.info("batch save to pipelineBuildTask, buildTaskList size: ${buildTaskList.size}")
-                pipelineBuildTaskDao.batchSave(transactionContext, buildTaskList)
-            } else {
-                logger.info("batch store to pipelineBuildTask, updateExistsRecord size: ${updateExistsRecord.size}")
-                pipelineBuildTaskDao.batchUpdate(transactionContext, updateExistsRecord)
-            }
-
-            if (updateContainerExistsRecord.isEmpty()) {
-                pipelineBuildContainerDao.batchSave(transactionContext, buildContainers)
-            } else {
-                pipelineBuildContainerDao.batchUpdate(transactionContext, updateContainerExistsRecord)
-            }
-
-            if (updateStageExistsRecord.isEmpty()) {
-                pipelineBuildStageDao.batchSave(transactionContext, buildStages)
-            } else {
-                pipelineBuildStageDao.batchUpdate(transactionContext, updateStageExistsRecord)
-            }
-            // 排队计数+1
-            pipelineBuildSummaryDao.updateQueueCount(transactionContext, pipelineInfo.pipelineId, 1)
+        } finally {
+            lock?.unlock()
         }
 
         // 发送开始事件
@@ -1178,7 +1255,8 @@ class PipelineRuntimeService @Autowired constructor(
                 buildId = buildId,
                 taskId = context.firstTaskId,
                 status = startBuildStatus,
-                actionType = context.actionType
+                actionType = context.actionType,
+                buildNoType = buildNoType
             ), // 监控事件
             PipelineBuildMonitorEvent(
                 source = "startBuild",
@@ -1400,6 +1478,8 @@ class PipelineRuntimeService @Autowired constructor(
         container: Container,
         atomElement: Element?
     ) {
+        target.startTime = null
+        target.endTime = null
         target.executeCount = retryCount + 1 // 执行次数增1
         target.status = BuildStatus.QUEUE.ordinal // 进入排队状态
         stage.status = null
@@ -1637,11 +1717,10 @@ class PipelineRuntimeService @Autowired constructor(
             }
             logger.info("[$pipelineId]|getRecommendVersion-$buildId recommendVersion: $recommendVersion")
             val remark = buildVariableService.getVariable(buildId, PIPELINE_BUILD_REMARK)
-            val finalStatus = BuildStatusSwitcher.forceFinish(status)
             pipelineBuildDao.finishBuild(
                 dslContext = dslContext,
                 buildId = buildId,
-                buildStatus = finalStatus,
+                buildStatus = status,
                 executeTime = executeTime,
                 buildParameters = JsonUtil.toJson(buildParameters),
                 recommendVersion = recommendVersion,

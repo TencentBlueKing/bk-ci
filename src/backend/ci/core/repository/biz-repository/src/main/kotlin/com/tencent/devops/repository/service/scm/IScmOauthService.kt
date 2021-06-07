@@ -58,7 +58,9 @@ interface IScmOauthService {
         passPhrase: String?,
         token: String?,
         region: CodeSvnRegion?,
-        userName: String?
+        userName: String?,
+        search: String? = null,
+        full: Boolean = true
     ): List<String>
 
     fun listTags(
@@ -66,7 +68,9 @@ interface IScmOauthService {
         url: String,
         type: ScmType,
         token: String,
-        userName: String
+        userName: String,
+        search: String? = null,
+        full: Boolean = true
     ): List<String>
 
     fun checkPrivateKeyAndToken(

@@ -8,7 +8,7 @@
                 :disabled="disabled"
                 :handle-change="handleUpdateElement"
                 :show-content="disabled"
-                :name="key" v-validate.initial="Object.assign({}, obj.rule, { required: obj.required })" />
+                :name="key" v-validate.initial="Object.assign({}, { max: getMaxLengthByType(obj.component) }, obj.rule, { required: obj.required })" />
         </form-field>
         <accordion show-content show-checkbox>
             <header class="var-header" slot="header">

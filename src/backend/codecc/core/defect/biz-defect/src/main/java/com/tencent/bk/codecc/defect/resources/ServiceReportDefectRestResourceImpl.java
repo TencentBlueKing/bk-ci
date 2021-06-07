@@ -29,9 +29,9 @@ package com.tencent.bk.codecc.defect.resources;
 import com.tencent.bk.codecc.defect.api.ServiceReportDefectRestResource;
 import com.tencent.bk.codecc.defect.service.IUpdateDefectBizService;
 import com.tencent.bk.codecc.defect.service.impl.CommonQueryWarningBizServiceImpl;
-import com.tencent.bk.codecc.defect.vo.UpdateDefectStatusVO;
+import com.tencent.bk.codecc.defect.vo.UpdateDefectVO;
 import com.tencent.bk.codecc.defect.vo.UploadDefectVO;
-import com.tencent.devops.common.api.pojo.CodeCCResult;
+import com.tencent.devops.common.api.pojo.Result;
 import com.tencent.devops.common.constant.ComConstants;
 import com.tencent.devops.common.constant.CommonMessageCode;
 import com.tencent.devops.common.service.BizServiceFactory;
@@ -64,26 +64,32 @@ public class ServiceReportDefectRestResourceImpl implements ServiceReportDefectR
     private CommonQueryWarningBizServiceImpl commonQueryWarningBizService;
 
     @Override
-    public CodeCCResult<Set<Long>> queryIds(long taskId, String toolName)
+    public Result<Set<Long>> queryIds(long taskId, String toolName)
     {
         Set<Long> idSet = commonQueryWarningBizService.queryIds(taskId, toolName);
-        return new CodeCCResult<>(idSet);
+        return new Result<>(idSet);
     }
 
     @Override
-    public CodeCCResult updateDefectStatus(UpdateDefectStatusVO updateDefectStatusVO)
+    public Result updateDefectStatus(UpdateDefectVO updateDefectVO)
     {
-        updateDefectBizService.updateDefectStatus(updateDefectStatusVO);
-        return new CodeCCResult(CommonMessageCode.SUCCESS, "update defectStatus success.");
+        updateDefectBizService.updateDefectStatus(updateDefectVO);
+        return new Result(CommonMessageCode.SUCCESS, "update defectStatus success.");
     }
 
     @Override
-    public CodeCCResult reportDefects(UploadDefectVO uploadDefectVO)
+    public Result reportDefects(UploadDefectVO uploadDefectVO)
     {
         log.info("report defects, taskId:{}, toolName:{}, buildId:{}", uploadDefectVO.getTaskId(), uploadDefectVO.getToolName(), uploadDefectVO.getBuildId());
 
         IBizService uploadDefectService = bizServiceFactory.createBizService(uploadDefectVO.getToolName(),
                     ComConstants.BusinessType.UPLOAD_DEFECT.value(), IBizService.class);
         return uploadDefectService.processBiz(uploadDefectVO);
+    }
+
+    @Override
+    public Result updateDefects(UpdateDefectVO updateDefectVO) {
+        updateDefectBizService.updateDefects(updateDefectVO);
+        return new Result(CommonMessageCode.SUCCESS, "update defectDetail success.");
     }
 }
