@@ -30,7 +30,6 @@ package com.tencent.devops.process.engine.utils
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -250,10 +249,9 @@ object QualityUtils {
                     projectId = projectId,
                     pipelineId = pipelineId,
                     buildId = buildId,
-                    taskId = interceptTask
-                ).map {
-                    EnvUtils.parseEnv(it, runVariables)
-                }
+                    taskId = interceptTask,
+                    variablesParam = runVariables
+                )
                 buildLogPrinter.addLine(
                     buildId = buildId,
                     message = "质量红线($atomDesc)待审核!审核人：$auditUsers",
