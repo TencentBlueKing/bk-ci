@@ -58,6 +58,14 @@ interface MarketAtomArchiveService {
         version: String
     ): Result<GetAtomConfigResult?>
 
+    fun validateReleaseType(
+        userId: String,
+        projectCode: String,
+        atomCode: String,
+        version: String,
+        fieldCheckConfirmFlag: Boolean? = false
+    ): Result<Boolean>
+
     fun updateAtomPkgInfo(
         userId: String,
         atomId: String,

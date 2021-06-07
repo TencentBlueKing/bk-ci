@@ -233,6 +233,9 @@ class CredentialServiceImpl @Autowired constructor(
                 AuthPermission.EDIT
             )
         )
+        if (permissionToListMap.isNullOrEmpty()) {
+            return SQLPage(0, emptyList())
+        }
         val hasListPermissionCredentialIdList = permissionToListMap[AuthPermission.LIST]!!
         val hasDeletePermissionCredentialIdList = permissionToListMap[AuthPermission.DELETE]!!
         val hasViewPermissionCredentialIdList = permissionToListMap[AuthPermission.VIEW]!!

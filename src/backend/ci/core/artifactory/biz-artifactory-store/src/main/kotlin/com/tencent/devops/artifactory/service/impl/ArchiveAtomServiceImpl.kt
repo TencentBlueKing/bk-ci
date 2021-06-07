@@ -89,7 +89,14 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
         val releaseType = archiveAtomRequest.releaseType
         val os = archiveAtomRequest.os
         val verifyAtomPackageResult = client.get(ServiceMarketAtomArchiveResource::class)
-            .verifyAtomPackageByUserId(userId, projectCode, atomCode, version, releaseType, os)
+            .verifyAtomPackageByUserId(
+                userId = userId,
+                projectCode = projectCode,
+                atomCode = atomCode,
+                version = version,
+                releaseType = releaseType,
+                os = os
+            )
         if (verifyAtomPackageResult.isNotOk()) {
             return Result(verifyAtomPackageResult.status, verifyAtomPackageResult.message, null)
         }
@@ -159,10 +166,24 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
         disposition: FormDataContentDisposition,
         reArchiveAtomRequest: ReArchiveAtomRequest
     ): Result<ArchiveAtomResponse?> {
+        val atomCode = reArchiveAtomRequest.atomCode
+        val version = reArchiveAtomRequest.version
+        // 校验发布类型是否正确
+        val verifyReleaseTypeResult =
+            client.get(ServiceMarketAtomArchiveResource::class).validateReleaseType(
+                userId = userId,
+                projectCode = reArchiveAtomRequest.projectCode,
+                atomCode = atomCode,
+                version = version,
+                fieldCheckConfirmFlag = reArchiveAtomRequest.fieldCheckConfirmFlag
+            )
+        if (verifyReleaseTypeResult.isNotOk()) {
+            return Result(verifyReleaseTypeResult.status, verifyReleaseTypeResult.message, null)
+        }
         val archiveAtomRequest = ArchiveAtomRequest(
             projectCode = reArchiveAtomRequest.projectCode,
-            atomCode = reArchiveAtomRequest.atomCode,
-            version = reArchiveAtomRequest.version,
+            atomCode = atomCode,
+            version = version,
             releaseType = null,
             os = null
         )
