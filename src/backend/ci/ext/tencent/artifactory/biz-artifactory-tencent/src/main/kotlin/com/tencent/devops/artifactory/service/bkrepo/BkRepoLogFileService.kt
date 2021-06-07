@@ -43,10 +43,10 @@ class BkRepoLogFileService @Autowired constructor(
     private val bkRepoClient: BkRepoClient
 ) : LogFileService {
 
-    @Value("\${bkrepo.bkrepoUrl")
+    @Value("\${bkrepo.bkrepoUrl}")
     private var bkRepoIdcHost: String? = null
 
-    @Value("\${bkrepo.bkrepoDevnetUrl")
+    @Value("\${bkrepo.bkrepoDevnetUrl}")
     private var bkRepoDevnetHost: String? = null
 
     override fun getPluginLogUrl(
@@ -61,7 +61,7 @@ class BkRepoLogFileService @Autowired constructor(
         bkRepoClient.getFileDetail(
             userId = userId,
             projectId = projectId,
-            repoName = pipelineId,
+            repoName = LOG_REPO,
             path = fullPath
         ) ?: throw NotFoundException("file[$fullPath] not found")
         val token = bkRepoClient.createTemporaryToken(
