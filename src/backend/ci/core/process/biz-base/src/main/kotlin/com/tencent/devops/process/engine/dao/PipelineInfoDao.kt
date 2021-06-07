@@ -247,10 +247,10 @@ class PipelineInfoDao {
             }
             conditions.add(CHANNEL.eq(channelCode!!.name))
             dslContext.selectFrom(this)
-                    .where(conditions)
-                    .orderBy(CREATE_TIME.desc())
-                    .limit(limit).offset(offset)
-                    .fetch()
+                .where(conditions)
+                .orderBy(CREATE_TIME.desc())
+                .limit(limit).offset(offset)
+                .fetch()
         }
     }
 
@@ -263,8 +263,8 @@ class PipelineInfoDao {
                 conditions.add(PIPELINE_NAME.like("%$pipelineName%"))
             }
             dslContext.selectCount().from(this)
-                    .where(conditions)
-                    .fetchOne(0, Int::class.java)!!
+                .where(conditions)
+                .fetchOne(0, Int::class.java)!!
         }
     }
 
