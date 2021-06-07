@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -31,6 +32,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_AGENT_SECRET_KEY
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_TYPE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.dockerhost.common.Constants
+import com.tencent.devops.dockerhost.common.EnvEnum
+import com.tencent.devops.dockerhost.config.DockerHostConfig
 import okhttp3.Headers
 import okhttp3.MediaType
 import okhttp3.Request
@@ -38,10 +42,15 @@ import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import java.net.URLEncoder
 
-abstract class AbstractBuildResourceApi {
-    private val grayProject = "grayproject"
-
+@Suppress("ALL")
+abstract class AbstractBuildResourceApi constructor(
+    private val dockerHostConfig: DockerHostConfig
+) {
     companion object {
+        const val GRAY_PROJECT = "grayproject"
+        const val AUTO_PROJECT = "autoproject"
+        const val GITCI_PROJECT = "gitciproject"
+
         private val gateway: String by lazy {
             DockerEnv.getGatway().removePrefix("http://").removePrefix("https://")
         }
@@ -104,11 +113,13 @@ abstract class AbstractBuildResourceApi {
         return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).put(requestBody).build()
     }
 
+    @Suppress("UNUSED")
     fun buildDelete(path: String, headers: Map<String, String> = emptyMap()): Request {
         val url = buildUrl(path)
         return Request.Builder().url(url).headers(Headers.of(getAllHeaders(headers))).delete().build()
     }
 
+    @Suppress("UNUSED")
     fun getJsonRequest(data: Any): RequestBody {
         return RequestBody.create(
             MediaType.parse("application/json; charset=utf-8"),
@@ -116,18 +127,48 @@ abstract class AbstractBuildResourceApi {
         )
     }
 
+    @Suppress("UNUSED")
     fun encode(parameter: String): String {
         return URLEncoder.encode(parameter, "UTF-8")
     }
 
-    private fun buildUrl(path: String): String = "http://$gateway/${path.removePrefix("/")}"
+    private fun buildUrl(path: String): String {
+        return if (path.startsWith("http://") || path.startsWith("https://")) {
+            path
+        } else {
+            fixUrl(gateway, path)
+        }
+    }
+
+    private fun fixUrl(server: String, path: String): String {
+        return if (server.startsWith("http://") || server.startsWith("https://")) {
+            "$server/${path.removePrefix("/")}"
+        } else {
+            "http://$server/${path.removePrefix("/")}"
+        }
+    }
 
     private fun getAllHeaders(headers: Map<String, String>): Map<String, String> {
-        val gray = System.getProperty("gray.project", "none")
-        if (gray == grayProject) {
-            logger.info("Now is gray environment, request with the x-devops-project-id header.")
-            return buildArgs.plus(headers).plus(mapOf("x-devops-project-id" to grayProject))
+        return when (dockerHostConfig.landunEnv ?: EnvEnum.PROD_ENV.value) {
+            EnvEnum.GRAY_ENV.value -> {
+                logger.info("Now is gray environment, request with the x-devops-project-id header.")
+                buildArgs.plus(headers).plus(mapOf("x-devops-project-id" to GRAY_PROJECT))
+            }
+            EnvEnum.AUTO_ENV.value -> {
+                logger.info("Now is auto environment, request with the x-devops-project-id header.")
+                buildArgs.plus(headers).plus(mapOf(AUTH_HEADER_DEVOPS_PROJECT_ID to AUTO_PROJECT))
+            }
+            EnvEnum.GITCI_PROD_ENV.value -> {
+                logger.info("Now is gitci environment, request with the x-devops-project-id header.")
+                buildArgs.plus(headers).plus(mapOf(AUTH_HEADER_DEVOPS_PROJECT_ID to GITCI_PROJECT))
+            }
+            else -> {
+                buildArgs.plus(headers)
+            }
         }
-        return buildArgs.plus(headers)
+    }
+
+    fun getUrlPrefix(): String {
+        return dockerHostConfig.dispatchUrlPrefix ?: Constants.DISPATCH_DOCKER_PREFIX
     }
 }

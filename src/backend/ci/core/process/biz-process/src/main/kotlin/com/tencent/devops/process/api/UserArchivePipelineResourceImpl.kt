@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -30,12 +31,12 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.user.UserArchivePipelineResource
-import com.tencent.devops.process.service.ArchivePipelineService
+import com.tencent.devops.process.service.ArchivePipelineFacadeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserArchivePipelineResourceImpl @Autowired constructor(
-    private val archivePipelineService: ArchivePipelineService
+    private val archivePipelineFacadeService: ArchivePipelineFacadeService
 ) : UserArchivePipelineResource {
 
     override fun getAllPipelines(userId: String, projectId: String): Result<List<Map<String, String>>> {
@@ -46,7 +47,7 @@ class UserArchivePipelineResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid projectId")
         }
 
-        return Result(archivePipelineService.getDownloadAllPipelines(userId, projectId))
+        return Result(archivePipelineFacadeService.getDownloadAllPipelines(userId, projectId))
     }
 
     override fun getDownloadAllPipelines(userId: String, projectId: String): Result<List<Map<String, String>>> {
@@ -57,7 +58,7 @@ class UserArchivePipelineResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid projectId")
         }
 
-        return Result(archivePipelineService.getDownloadAllPipelines(userId, projectId))
+        return Result(archivePipelineFacadeService.getDownloadAllPipelines(userId, projectId))
     }
 
     override fun getAllBuildNo(
@@ -75,6 +76,6 @@ class UserArchivePipelineResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid projectId")
         }
 
-        return Result(archivePipelineService.getAllBuildNo(userId, pipelineId, projectId))
+        return Result(archivePipelineFacadeService.getAllBuildNo(userId, pipelineId, projectId))
     }
 }

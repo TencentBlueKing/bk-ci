@@ -42,10 +42,12 @@ export default {
         containerTypeList: [],
         editingElementPos: null,
         isPropertyPanelVisible: false,
+        showPanelType: '',
         isShowCompleteLog: false,
         isStagePopupShow: false,
         isAddParallelContainer: false,
         insertStageIndex: null,
+        insertStageIsFinally: false,
         buildParamsMap: {},
         execDetail: null,
         globalEnvs: null,
@@ -56,7 +58,15 @@ export default {
         defaultStageTags: [],
         showReviewDialog: false,
         reviewInfo: null,
-        showStageReviewPanel: false
+        showStageReviewPanel: false,
+        importedPipelineJson: null,
+        atomVersionChangedKeys: [],
+        pipelineLimit: {
+            stageLimit: 20,
+            jobLimit: 20,
+            atomLimit: 50
+        },
+        pipelineCommonSetting: {}
     },
     mutations,
     actions,

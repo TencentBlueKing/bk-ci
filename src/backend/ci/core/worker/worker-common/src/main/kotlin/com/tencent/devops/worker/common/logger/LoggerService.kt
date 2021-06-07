@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -27,8 +28,13 @@
 package com.tencent.devops.worker.common.logger
 
 import com.tencent.devops.common.log.Ansi
-import com.tencent.devops.log.model.message.LogMessage
-import com.tencent.devops.log.model.pojo.enums.LogType
+import com.tencent.devops.common.log.pojo.message.LogMessage
+import com.tencent.devops.common.log.pojo.enums.LogType
+import com.tencent.devops.worker.common.LOG_DEBUG_FLAG
+import com.tencent.devops.worker.common.LOG_ERROR_FLAG
+import com.tencent.devops.worker.common.LOG_SUBTAG_FINISH_FLAG
+import com.tencent.devops.worker.common.LOG_SUBTAG_FLAG
+import com.tencent.devops.worker.common.LOG_WARN_FLAG
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.log.LogSDKApi
 import org.slf4j.LoggerFactory
@@ -40,6 +46,7 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.locks.ReentrantLock
 
+@Suppress("ALL")
 object LoggerService {
 
     private val logResourceApi = ApiFactory.create(LogSDKApi::class)
@@ -150,19 +157,38 @@ object LoggerService {
     fun finishTask() = finishLog(elementId, jobId, executeCount)
 
     fun addNormalLine(message: String) {
+        var subTag: String? = null
+        var realMessage = message
+        if (message.startsWith(LOG_SUBTAG_FLAG)) {
+            val list = message.removePrefix(LOG_SUBTAG_FLAG).split(LOG_SUBTAG_FLAG)
+            subTag = list.first()
+            realMessage = list.last()
+            if (realMessage.startsWith(LOG_SUBTAG_FINISH_FLAG)) {
+                finishLog(elementId, jobId, executeCount, subTag)
+                realMessage = realMessage.removePrefix(LOG_SUBTAG_FINISH_FLAG)
+            }
+        }
+
+        val logType = when {
+            realMessage.startsWith(LOG_DEBUG_FLAG) -> LogType.DEBUG
+            realMessage.startsWith(LOG_ERROR_FLAG) -> LogType.ERROR
+            realMessage.startsWith(LOG_WARN_FLAG) -> LogType.WARN
+            else -> LogType.LOG
+        }
         val logMessage = LogMessage(
-            message = message,
+            message = realMessage,
             timestamp = System.currentTimeMillis(),
             tag = elementId,
+            subTag = subTag,
             jobId = jobId,
-            logType = LogType.LOG,
+            logType = logType,
             executeCount = executeCount
         )
         logger.info(logMessage.toString())
         try {
             this.queue.put(logMessage)
         } catch (e: InterruptedException) {
-            logger.error("写入普通日志行失败：", e)
+            logger.error("写入 $logType 日志行失败：", e)
         }
     }
 
@@ -196,30 +222,6 @@ object LoggerService {
         addLog(logMessage)
     }
 
-    fun addRangeStartLine(rangeName: String) {
-        val logMessage = LogMessage(
-            message = "[START] $rangeName",
-            timestamp = System.currentTimeMillis(),
-            tag = elementId,
-            jobId = jobId,
-            logType = LogType.START,
-            executeCount = executeCount
-        )
-        addLog(logMessage)
-    }
-
-    fun addRangeEndLine(rangeName: String) {
-        val logMessage = LogMessage(
-            message = "[END] $rangeName",
-            timestamp = System.currentTimeMillis(),
-            tag = elementId,
-            jobId = jobId,
-            logType = LogType.END,
-            executeCount = executeCount
-        )
-        addLog(logMessage)
-    }
-
     private fun addLog(message: LogMessage) = queue.put(message)
 
     private fun sendMultiLog(logMessages: List<LogMessage>) {
@@ -234,10 +236,10 @@ object LoggerService {
         }
     }
 
-    private fun finishLog(tag: String?, jobId: String?, executeCount: Int?) {
+    private fun finishLog(tag: String?, jobId: String?, executeCount: Int?, subTag: String? = null) {
         try {
             logger.info("Start to finish the log")
-            val result = logResourceApi.finishLog(tag, jobId, executeCount)
+            val result = logResourceApi.finishLog(tag, jobId, executeCount, subTag)
             if (result.isNotOk()) {
                 logger.error("上报日志状态日志失败：${result.message}")
             }

@@ -7,7 +7,7 @@
                 :name="option.name">
             </bk-option>
         </bk-select>
-        <a href="">{{$t('op.新增')}}<i class="bk-icon icon-edit"></i></a>
+        <a href="">{{$t('新增')}}<i class="bk-icon icon-link"></i></a>
     </div>
 </template>
 

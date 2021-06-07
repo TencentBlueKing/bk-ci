@@ -104,7 +104,7 @@
             }
         }
         logout (): void {
-            // logout logic
+          window.location.href = window.getLoginUrl()
         }
     }
 </script>

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -49,6 +50,7 @@ import com.tencent.devops.process.pojo.setting.PipelineSetting
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import javax.validation.Valid
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -60,11 +62,13 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
 
 @Api(tags = ["USER_PIPELINE"], description = "用户-流水线资源")
 @Path("/user/pipelines")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("ALL")
 interface UserPipelineResource {
 
     @ApiOperation("用户是否拥有创建流水线权限")
@@ -132,6 +136,9 @@ interface UserPipelineResource {
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
+        @ApiParam("是否使用模板配置", required = false)
+        @QueryParam("useTemplateSettings")
+        useTemplateSettings: Boolean? = false,
         @ApiParam(value = "流水线模型", required = true)
         pipeline: Model
     ): Result<PipelineId>
@@ -206,6 +213,7 @@ interface UserPipelineResource {
         @PathParam("pipelineId")
         pipelineId: String,
         @ApiParam(value = "流水线模型与设置", required = true)
+        @Valid
         modelAndSetting: PipelineModelAndSetting
     ): Result<Boolean>
 
@@ -243,6 +251,24 @@ interface UserPipelineResource {
         pipelineId: String
     ): Result<Model>
 
+    @ApiOperation("获取流水线编排版本")
+    @GET
+    @Path("/{projectId}/{pipelineId}/{version}")
+    fun getVersion(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("流水线编排版本", required = true)
+        @PathParam("version")
+        version: Int
+    ): Result<Model>
+
     @ApiOperation("生成远程执行token")
     @PUT
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/remoteToken")
@@ -273,6 +299,24 @@ interface UserPipelineResource {
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
         pipelineId: String
+    ): Result<Boolean>
+
+    @ApiOperation("删除流水线版本")
+    @DELETE
+    @Path("/{projectId}/{pipelineId}/{version}/")
+    fun deleteVersion(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("流水线编排版本", required = true)
+        @PathParam("version")
+        version: Int
     ): Result<Boolean>
 
     @ApiOperation("用户获取视图设置和流水线编排列表")
@@ -464,4 +508,55 @@ interface UserPipelineResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<List<PipelineStageTag>>
+
+    @ApiOperation("导出流水线模板")
+    @GET
+    @Path("{pipelineId}/projects/{projectId}/export")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
+    fun exportPipeline(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "流水线Id", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String
+    ): Response
+
+    @ApiOperation("导入流水线模板")
+    @POST
+    @Path("/projects/{projectId}/upload")
+    fun uploadPipeline(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "项目Id", required = true)
+        pipelineInfo: PipelineModelAndSetting,
+        @ApiParam(value = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<String?>
+
+    @ApiOperation("流水线编排版本列表")
+    @GET
+    @Path("/{projectId}/{pipelineId}/version")
+    fun versionList(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("第几页", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页多少条", required = false, defaultValue = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?
+    ): Result<PipelineViewPipelinePage<PipelineInfo>>
 }

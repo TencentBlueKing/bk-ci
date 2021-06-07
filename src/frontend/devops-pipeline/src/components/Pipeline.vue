@@ -133,6 +133,7 @@
                 'editingElementPos',
                 'isStagePopupShow',
                 'insertStageIndex',
+                'insertStageIsFinally',
                 'isAddParallelContainer',
                 'showStageReviewPanel'
             ]),
@@ -205,6 +206,7 @@
                 'toggleAtomSelectorPopup',
                 'toggleStageSelectPopup',
                 'togglePropertyPanel',
+                'setInertStageIndex',
                 'addStage',
                 'addContainer',
                 'fetchAtoms',
@@ -239,11 +241,20 @@
                 })
             },
             insert (type) {
-                const { pipeline, insertStageIndex, isAddParallelContainer } = this
+                if (!this.isStagePopupShow) return
+                const { pipeline, insertStageIndex, isAddParallelContainer, insertStageIsFinally, setInertStageIndex } = this
                 if (!isAddParallelContainer) {
                     this.addStage({
                         stages: pipeline.stages,
-                        insertStageIndex
+                        insertStageIndex,
+                        insertStageIsFinally
+                    })
+                    if (insertStageIsFinally) {
+                        const element = document.getElementsByClassName('bk-tab-section')[0]
+                        element && (element.scrollLeft = element.scrollWidth + 300)
+                    }
+                    setInertStageIndex({
+                        insertStageIndex: insertStageIndex + 1
                     })
                 }
                 this.insertContainer(type, insertStageIndex)
@@ -295,12 +306,11 @@
 
     .scroll-container {
         position: relative;
-        overflow: auto;
         flex: 1;
+        overflow: auto;
         .scroll-wraper {
             padding: 20px 0 40px 30px;
             min-height: 100%;
-            overflow: auto;
         }
         &:before {
             position: absolute;

@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -29,6 +30,7 @@ package com.tencent.devops.plugin.codecc.element
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxPaasCodeCCScriptElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.plugin.codecc.CodeccApi
 import com.tencent.devops.process.plugin.ElementBizPlugin
 import com.tencent.devops.process.plugin.annotation.ElementBiz
@@ -53,6 +55,7 @@ class LinuxPaasCodeCCScriptElementBizPlugin constructor(
         }
     }
 
+    @Suppress("ALL")
     override fun afterCreate(
         element: LinuxPaasCodeCCScriptElement,
         projectId: String,
@@ -94,14 +97,14 @@ class LinuxPaasCodeCCScriptElementBizPlugin constructor(
         }
     }
 
-    override fun beforeDelete(element: LinuxPaasCodeCCScriptElement, userId: String, pipelineId: String?) {
+    override fun beforeDelete(element: LinuxPaasCodeCCScriptElement, param: BeforeDeleteParam) {
         with(element) {
-            logger.info("Start to delete the codecc task($codeCCTaskId) in codecc by user $userId")
+            logger.info("Start to delete the codecc task($codeCCTaskId) in codecc by user ${param.userId}")
             if (codeCCTaskId.isNullOrEmpty()) {
                 logger.warn("The codecc task id is empty")
                 return
             }
-            coverityApi.deleteTask(codeCCTaskId!!, userId)
+            coverityApi.deleteTask(codeCCTaskId!!, param.userId)
             codeCCTaskId = null
         }
     }

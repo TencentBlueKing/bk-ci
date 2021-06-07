@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -27,9 +28,11 @@
 package com.tencent.devops.process.pojo
 
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.store.pojo.app.BuildEnv
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
+import java.util.concurrent.TimeUnit
 
 @ApiModel("流水线模型-构建参数变量")
 data class BuildVariables(
@@ -52,5 +55,7 @@ data class BuildVariables(
     @ApiModelProperty("container或者job的id", required = false)
     val containerHashId: String,
     @ApiModelProperty("参数类型集合", required = false)
-    val variablesWithType: List<BuildParameters>
+    val variablesWithType: List<BuildParameters>,
+    @ApiModelProperty("Job超时时间（毫秒）", required = true)
+    var timeoutMills: Long = TimeUnit.MINUTES.toMillis(Timeout.DEFAULT_TIMEOUT_MIN.toLong())
 )

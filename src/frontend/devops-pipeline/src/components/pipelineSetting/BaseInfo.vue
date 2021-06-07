@@ -5,7 +5,7 @@
                 <vuex-input :placeholder="$t('pipelineNameInputTips')" name="pipelineName" :value="pipelineSetting.pipelineName" v-validate.initial="&quot;required|max:40&quot;" max-length="40" :handle-change="handleBaseInfoChange" />
             </bk-form-item>
 
-            <bk-form-item :required="false" :label="$t('settings.group')" v-if="tagGroupList.length">
+            <bk-form-item :required="false" :label="$t('settings.label')" v-if="tagGroupList.length">
                 <div class="tag-group-row">
                     <div class="group-col" v-for="(filter, index) in tagGroupList" :key="index">
                         <label class="group-title">{{filter.name}}</label>
@@ -79,7 +79,7 @@
                 return `${BADGE_URL_PREFIX}/process/api/external/pipelines/projects/${this.projectId}/${this.pipelineId}/badge?X-DEVOPS-PROJECT-ID=${this.projectId}`
             },
             badgeMarkdownLink () {
-                return `[![BK Pipelines Status](${BADGE_URL_PREFIX}/process/api/external/pipelines/projects/${this.projectId}/${this.pipelineId}/badge?X-DEVOPS-PROJECT-ID=${this.projectId})](${AJAX_URL_PIRFIX}/process/api-html/user/builds/projects/${this.projectId}/pipelines/${this.pipelineId}/latestFinished?X-DEVOPS-PROJECT-ID=${this.projectId})`
+                return `[![BK Pipelines Status](${BADGE_URL_PREFIX}/process/api/external/pipelines/projects/${this.projectId}/${this.pipelineId}/badge?X-DEVOPS-PROJECT-ID=${this.projectId})](${location.origin}/process/api-html/user/builds/projects/${this.projectId}/pipelines/${this.pipelineId}/latestFinished?X-DEVOPS-PROJECT-ID=${this.projectId})`
             },
             urlList () {
                 return [{

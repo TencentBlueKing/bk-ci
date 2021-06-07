@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -41,13 +42,14 @@ class QualityGatewayResourceApi : QualityGatewaySDKApi, AbstractBuildResourceApi
     override fun saveScriptHisMetadata(elementType: String, data: Map<String, String>): Result<String> {
         try {
             val path = "/ms/quality/api/build/metadata/saveHisMetadata?elementType=$elementType"
-            val requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), objectMapper.writeValueAsString(data))
+            val requestBody = RequestBody.create(MediaType.parse("application/json; charset=utf-8"),
+                objectMapper.writeValueAsString(data))
             val request = buildPost(path, requestBody)
             val responseContent = request(request, "保存脚本元数据失败")
             return Result(responseContent)
-        } catch (e: Exception) {
-            LoggerService.addRedLine("保存脚本元数据失败: ${e.message}")
-            logger.error(e.message, e)
+        } catch (ignore: Exception) {
+            LoggerService.addRedLine("保存脚本元数据失败: ${ignore.message}")
+            logger.warn("saveScriptHisMetadata|${ignore.message}", ignore)
         }
         return Result("")
     }

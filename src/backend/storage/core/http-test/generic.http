@@ -1,0 +1,264 @@
+### 上传空文件
+PUT http://{{genericHost}}/{{project}}/{{repo}}/empty
+Authorization: Basic {{username}} {{password}}
+X-BKREPO-OVERWRITE: true
+X-BKREPO-META-key: value
+
+> {%
+    client.test('Request executed successfully', function() {
+        client.assert(response.status === 200, 'Response status is not 200');
+    });
+%}
+
+### 下载空文件
+GET http://{{genericHost}}/{{project}}/{{repo}}/empty
+Authorization: Basic {{username}} {{password}}
+
+> {%
+    client.test('Request executed successfully', function() {
+        client.assert(response.status === 200, 'Response status is not 200');
+        client.assert(response.body === '', 'Response content invalid');
+    });
+%}
+
+### 上传文件
+PUT http://{{genericHost}}/{{project}}/{{repo}}/test.txt
+Authorization: Basic {{username}} {{password}}
+X-BKREPO-OVERWRITE: true
+X-BKREPO-META-key: value
+
+Hello, World!!!!
+
+> {%
+    client.test('Request executed successfully', function() {
+        client.assert(response.status === 200, 'Response status is not 200');
+    });
+%}
+
+### 下载文件
+GET http://{{genericHost}}/{{project}}/{{repo}}/test.txt
+Authorization: Basic {{username}} {{password}}
+
+> {%
+    client.test('Request executed successfully', function() {
+        client.assert(response.status === 200, 'Response status is not 200');
+        client.assert(response.body === 'Hello, World!!!!', 'Response content invalid');
+    });
+%}
+
+### HEAD下载文件
+HEAD http://{{genericHost}}/{{project}}/{{repo}}/test.txt
+Authorization: Basic {{username}} {{password}}
+
+> {%
+    client.test('Request executed successfully', function() {
+        client.assert(response.status === 200, 'Response status is not 200');
+        client.assert(response.body.length === 0, 'Response body is not empty');
+    });
+%}
+
+### 上传文件
+PUT http://{{genericHost}}/{{project}}/{{repo}}/test1.txt
+Authorization: Basic {{username}} {{password}}
+X-BKREPO-OVERWRITE: true
+X-BKREPO-META-key: value
+
+Hello, World!!!!!
+
+> {%
+    client.test('Request executed successfully', function() {
+        client.assert(response.status === 200, 'Response status is not 200');
+    });
+%}
+
+### 删除文件
+DELETE http://{{genericHost}}/{{project}}/{{repo}}/test1.txt
+Authorization: Basic {{username}} {{password}}
+
+> {%
+    client.test('Request executed successfully', function() {
+        client.assert(response.status === 200, 'Response status is not 200');
+    });
+%}
+
+### 删除不存在文件
+DELETE http://{{genericHost}}/{{project}}/{{repo}}/test1.txt
+Authorization: Basic {{username}} {{password}}
+
+> {%
+    client.test('Request executed successfully', function() {
+        client.assert(response.status === 404, 'Response status is not 404');
+    });
+%}
+
+### 删除非空根目录
+DELETE http://{{genericHost}}/{{project}}/{{repo}}/
+Authorization: Basic {{username}} {{password}}
+
+> {%
+    client.test('Request executed successfully', function() {
+        client.assert(response.status === 405, 'Response status is not 405');
+    });
+%}
+
+### 分块上传文件, 获取uploadId
+POST http://{{genericHost}}/block/{{project}}/{{repo}}/block.txt
+Authorization: Basic {{username}} {{password}}
+Content-Type: application/json
+X-BKREPO-OVERWRITE: true
+
+> {%
+    client.test('Request executed successfully', function() {
+        client.assert(response.status === 200, 'Response status is not 200');
+        client.global.set("uploadId", response.body.data.uploadId);
+    });
+%}
+
+### 上传第一个分块
+PUT http://{{genericHost}}/{{project}}/{{repo}}/block.txt
+Authorization: Basic {{username}} {{password}}
+X-BKREPO-UPLOAD-ID: {{uploadId}}
+X-BKREPO-OVERWRITE: true
+X-BKREPO-SEQUENCE: 1
+
+111111
+
+### 上传第一个分块，覆盖第一次
+PUT http://{{genericHost}}/{{project}}/{{repo}}/block.txt
+Authorization: Basic {{username}} {{password}}
+X-BKREPO-UPLOAD-ID: {{uploadId}}
+X-BKREPO-OVERWRITE: true
+X-BKREPO-SEQUENCE: 1
+
+11111
+
+> {%
+    client.test('Request executed successfully', function() {
+        client.assert(response.status === 200, 'Response status is not 200');
+    });
+%}
+
+### 上传第二个分块
+PUT http://{{genericHost}}/{{project}}/{{repo}}/block.txt
+Authorization: Basic {{username}} {{password}}
+X-BKREPO-UPLOAD-ID: {{uploadId}}
+X-BKREPO-SEQUENCE: 2
+
+22222
+
+> {%
+    client.test('Request executed successfully', function() {
+        client.assert(response.status === 200, 'Response status is not 200');
+    });
+%}
+
+### 查询分块
+GET http://{{genericHost}}/block/{{project}}/{{repo}}/block.txt
+Authorization: Basic {{username}} {{password}}
+X-BKREPO-UPLOAD-ID: {{uploadId}}
+
+> {%
+    client.test('Request executed successfully', function() {
+        client.assert(response.status === 200, 'Response status is not 200');
+    });
+%}
+
+### 完成分块上传
+PUT http://{{genericHost}}/block/{{project}}/{{repo}}/block.txt
+Authorization: Basic {{username}} {{password}}
+X-BKREPO-UPLOAD-ID: {{uploadId}}
+
+> {%
+    client.test('Request executed successfully', function() {
+        client.assert(response.status === 200, 'Response status is not 200');
+    });
+%}
+
+### 下载文件
+GET http://{{genericHost}}/{{project}}/{{repo}}/block.txt
+Authorization: Basic {{username}} {{password}}
+
+> {%
+    client.test('Request executed successfully', function() {
+        client.assert(response.status === 200, 'Response status is not 200');
+        client.assert(response.body === '1111122222', 'Response content invalid');
+    });
+%}
+
+### 断点续传 0-1
+GET http://{{genericHost}}/{{project}}/{{repo}}/block.txt
+Authorization: Basic {{username}} {{password}}
+Range: bytes=0-1
+
+> {%
+    client.test('Request executed successfully', function() {
+        client.assert(response.status === 206, 'Response status is not 206');
+        client.assert(response.headers.valueOf("Content-Range") === 'bytes 0-1/10', 'Response Content-Range invalid');
+        client.assert(response.body === '11', 'Response content invalid');
+    });
+%}
+
+### 断点续传 2-
+GET http://{{genericHost}}/{{project}}/{{repo}}/block.txt
+Authorization: Basic {{username}} {{password}}
+Range: bytes=2-
+
+> {%
+    client.test('Request executed successfully', function() {
+        client.assert(response.status === 206, 'Response status is not 206');
+        client.assert(response.headers.valueOf("Content-Range") === 'bytes 2-9/10', 'Response Content-Range invalid');
+        client.assert(response.body === '11122222', 'Response content invalid');
+    });
+%}
+
+### 断点续传 -2
+GET http://{{genericHost}}/{{project}}/{{repo}}/block.txt
+Authorization: Basic {{username}} {{password}}
+Range: bytes=-2
+
+> {%
+    client.test('Request executed successfully', function() {
+        client.assert(response.status === 206, 'Response status is not 206');
+        client.assert(response.headers.valueOf("Content-Range") === 'bytes 8-9/10', 'Response Content-Range invalid');
+        client.assert(response.body === '22', 'Response content invalid');
+    });
+%}
+
+### 断点续传 full
+GET http://{{genericHost}}/{{project}}/{{repo}}/block.txt
+Authorization: Basic {{username}} {{password}}
+Range: bytes=0-9
+
+> {%
+    client.test('Request executed successfully', function() {
+        client.assert(response.status === 206, 'Response status is not 206');
+        client.assert(response.headers.valueOf("Content-Range") === 'bytes 0-9/10', 'Response Content-Range invalid');
+        client.assert(response.body === '1111122222', 'Response content invalid');
+    });
+%}
+
+### 断点续传 full + 1
+GET http://{{genericHost}}/{{project}}/{{repo}}/block.txt
+Authorization: Basic {{username}} {{password}}
+Range: bytes=0-10
+
+> {%
+    client.test('Request executed successfully', function() {
+        client.assert(response.status === 206, 'Response status is not 206');
+        client.assert(response.headers.valueOf("Content-Range") === 'bytes 0-9/10', 'Response Content-Range invalid');
+        client.assert(response.body === '1111122222', 'Response content invalid');
+    });
+%}
+
+### 断点续传 error
+GET http://{{genericHost}}/{{project}}/{{repo}}/block.txt
+Authorization: Basic {{username}} {{password}}
+Range: bytes=-2-1
+
+> {%
+    client.test('Request executed successfully', function() {
+        client.assert(response.status === 416, 'Response status is not 416');
+    });
+%}
+###
+

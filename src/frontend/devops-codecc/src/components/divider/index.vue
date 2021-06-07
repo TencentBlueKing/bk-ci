@@ -26,7 +26,7 @@
         display: block;
         clear: both;
         width: 100%;
-        min-width: 100%;
+        /* min-width: 100%; */
         height: 1px;
         margin: 20px 0;
         background: #f0f1f5;

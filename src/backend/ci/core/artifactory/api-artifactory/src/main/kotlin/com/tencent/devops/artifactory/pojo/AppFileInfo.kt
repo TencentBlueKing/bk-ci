@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -30,7 +31,7 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("版本仓库-文件信息")
+@ApiModel("版本仓库-文件信息-APP")
 data class AppFileInfo(
     @ApiModelProperty("文件名", required = true)
     val name: String,
@@ -45,7 +46,7 @@ data class AppFileInfo(
     @ApiModelProperty("是否文件夹", required = true)
     val folder: Boolean,
     @ApiModelProperty("更新时间", required = true)
-    val modifiedTime: Long,
+    var modifiedTime: Long,
     @ApiModelProperty("仓库类型", required = true)
     val artifactoryType: ArtifactoryType,
     @ApiModelProperty("是否显示", required = true)
@@ -53,5 +54,11 @@ data class AppFileInfo(
     @ApiModelProperty("是否可下载", required = true)
     val canDownload: Boolean,
     @ApiModelProperty("版本信息", required = true)
-    val version: String? = null
+    val version: String? = null,
+    @ApiModelProperty("logo链接", required = false)
+    val logoUrl: String? = null,
+    @ApiModelProperty("版本体验BundleIdentifier", required = true)
+    val bundleIdentifier: String? = null,
+    @ApiModelProperty("MD5", required = false)
+    var md5: String? = null
 )

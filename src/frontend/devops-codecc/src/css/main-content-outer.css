@@ -10,13 +10,25 @@
     }
 
     margin: 0 auto;
-    width: 1280px;
+    width: 1180px;
 
     .main-title {
         font-size: 24px;
-        margin: 20px 0;
+        margin: 40px 0;
         color: #313238;
         text-align: center;
         font-weight: normal;
+    }
+    .main-lang {
+        text-align: center;
+        margin-top: -30px;
+        padding-bottom: 20px;
+        .rec-lan {
+            background: #f7f9fb;
+            border: 1px solid #d9e2e8;
+            font-size: 14px;
+            margin-left: 8px;
+            padding: 0 10px;
+        }
     }
 }

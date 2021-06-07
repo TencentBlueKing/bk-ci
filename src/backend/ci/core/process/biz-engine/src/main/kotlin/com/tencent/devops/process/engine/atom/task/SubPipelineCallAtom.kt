@@ -1,0 +1,200 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+package com.tencent.devops.process.engine.atom.task
+
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
+import com.tencent.devops.common.pipeline.pojo.element.atom.SubPipelineType
+import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_SUBPIPELINEID_NOT_EXISTS
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_SUBPIPELINEID_NULL
+import com.tencent.devops.process.engine.atom.AtomResponse
+import com.tencent.devops.process.engine.atom.IAtomTask
+import com.tencent.devops.process.engine.exception.BuildTaskException
+import com.tencent.devops.process.engine.pojo.PipelineBuildTask
+import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.service.pipeline.PipelineBuildService
+import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
+import com.tencent.devops.process.utils.PIPELINE_START_PIPELINE_USER_ID
+import com.tencent.devops.process.utils.PIPELINE_START_TYPE
+import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
+import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Component
+
+@Suppress("UNUSED")
+@Component
+class SubPipelineCallAtom constructor(
+    private val buildLogPrinter: BuildLogPrinter,
+    private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelineBuildService: PipelineBuildService,
+    private val pipelineRepositoryService: PipelineRepositoryService
+) : IAtomTask<SubPipelineCallElement> {
+
+    override fun getParamElement(task: PipelineBuildTask): SubPipelineCallElement {
+        return JsonUtil.mapTo(task.taskParams, SubPipelineCallElement::class.java)
+    }
+
+    override fun tryFinish(
+        task: PipelineBuildTask,
+        param: SubPipelineCallElement,
+        runVariables: Map<String, String>,
+        force: Boolean
+    ): AtomResponse {
+        return if (task.subBuildId.isNullOrBlank()) {
+            AtomResponse(
+                buildStatus = BuildStatus.FAILED,
+                errorType = ErrorType.USER,
+                errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
+                errorMsg = "找不到对应子流水线"
+            )
+        } else {
+            val subBuildId = task.subBuildId!!
+            val subBuildInfo = pipelineRuntimeService.getBuildInfo(subBuildId)
+            return if (subBuildInfo == null) {
+                buildLogPrinter.addRedLine(
+                    buildId = task.buildId,
+                    message = "Can not found sub pipeline build record(${task.subBuildId})",
+                    tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+                )
+                AtomResponse(
+                    buildStatus = BuildStatus.FAILED,
+                    errorType = ErrorType.USER,
+                    errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
+                    errorMsg = "找不到对应子流水线的构建记录"
+                )
+            } else { // 此处逻辑与 研发商店上架的BuildSubPipelineResourceImpl.getSubPipelineStatus 不同，
+                // 原因是后者在插件实现上检测这种情况并判断，本处为内置的子流水线插件，需在此增加判断处理
+                var status: BuildStatus = when {
+                    subBuildInfo.isSuccess() && subBuildInfo.isStageSuccess() -> BuildStatus.SUCCEED
+                    subBuildInfo.isFinish() -> subBuildInfo.status
+                    subBuildInfo.isReadyToRun() -> BuildStatus.RUNNING // QUEUE状态
+                    subBuildInfo.isStageSuccess() -> BuildStatus.RUNNING // stage 特性， 未结束，只是卡在Stage审核中
+                    else -> subBuildInfo.status
+                }
+
+                buildLogPrinter.addYellowLine(
+                    buildId = task.buildId,
+                    message = "sub pipeline status: ${status.name}",
+                    tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+                )
+
+                if (force && !status.isFinish()) { // 补充强制终止对子流水线插件的处理
+                    pipelineRuntimeService.cancelBuild(
+                        projectId = subBuildInfo.projectId,
+                        pipelineId = subBuildInfo.pipelineId,
+                        buildId = subBuildId,
+                        userId = subBuildInfo.startUser,
+                        buildStatus = BuildStatus.CANCELED
+                    )
+                    status = BuildStatus.CANCELED
+                }
+
+                AtomResponse(
+                    buildStatus = status,
+                    errorType = ErrorType.getErrorType(subBuildInfo.errorInfoList?.last()?.errorType),
+                    errorCode = subBuildInfo.errorInfoList?.last()?.errorCode,
+                    errorMsg = subBuildInfo.errorInfoList?.last()?.errorMsg
+                )
+            }
+        }
+    }
+
+    override fun execute(
+        task: PipelineBuildTask,
+        param: SubPipelineCallElement,
+        runVariables: Map<String, String>
+    ): AtomResponse {
+        val subPipelineId =
+            if (param.subPipelineType == SubPipelineType.NAME && !param.subPipelineName.isNullOrBlank()) {
+                val subPipelineRealName = parseVariable(param.subPipelineName, runVariables)
+                pipelineRepositoryService.listPipelineIdByName(
+                    projectId = task.projectId,
+                    pipelineNames = setOf(subPipelineRealName),
+                    filterDelete = true
+                )[subPipelineRealName]
+            } else {
+                parseVariable(param.subPipelineId, runVariables)
+            }
+
+        if (subPipelineId.isNullOrBlank()) {
+            throw BuildTaskException(
+                errorType = ErrorType.USER,
+                errorCode = ERROR_BUILD_TASK_SUBPIPELINEID_NULL.toInt(),
+                errorMsg = "子流水线ID参数为空，请检查流水线重新保存后并重新执行",
+                pipelineId = task.pipelineId, buildId = task.buildId, taskId = task.taskId
+            )
+        }
+
+        val pipelineInfo = pipelineRepositoryService.getPipelineInfo(task.projectId, subPipelineId!!)
+            ?: throw BuildTaskException(
+                errorType = ErrorType.USER,
+                errorCode = ERROR_BUILD_TASK_SUBPIPELINEID_NOT_EXISTS.toInt(),
+                errorMsg = "子流水线[$subPipelineId]不存在,请检查流水线是否还存在",
+                pipelineId = task.pipelineId, buildId = task.buildId, taskId = task.taskId
+            )
+
+        val startType = runVariables.getValue(PIPELINE_START_TYPE)
+        val userId = if (startType == StartType.PIPELINE.name) {
+            runVariables.getValue(PIPELINE_START_PIPELINE_USER_ID)
+        } else {
+            runVariables.getValue(PIPELINE_START_USER_ID)
+        }
+        val startParams = mutableMapOf<String, Any>()
+        param.parameters?.forEach {
+            startParams[it.key] = parseVariable(it.value, runVariables)
+        }
+        val subBuildId = pipelineBuildService.subPipelineStartup(
+            userId = userId,
+            projectId = task.projectId,
+            parentPipelineId = task.pipelineId,
+            parentBuildId = task.buildId,
+            parentTaskId = task.taskId,
+            pipelineId = subPipelineId,
+            channelCode = ChannelCode.valueOf(runVariables.getValue(PIPELINE_START_CHANNEL)),
+            parameters = startParams
+        )
+        buildLogPrinter.addLine(
+            buildId = task.buildId,
+            message = "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/pipeline/${task.projectId}/" +
+                "$subPipelineId/detail/$subBuildId'>Click Link[${pipelineInfo.pipelineName}]</a>",
+            tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
+        )
+        return AtomResponse(if (param.asynchronous) BuildStatus.SUCCEED else BuildStatus.CALL_WAITING)
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(SubPipelineCallAtom::class.java)
+    }
+}

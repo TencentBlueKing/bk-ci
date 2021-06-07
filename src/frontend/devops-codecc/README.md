@@ -70,7 +70,7 @@ codecc-frontend
 1. 配置 host
 
     ```
-    127.0.0.1       my.codecc.tencent.com
+    127.0.0.1       dev.codecc.com
     ```
 
 2. 运行 npm 脚本
@@ -80,8 +80,8 @@ codecc-frontend
     npm run local
     ```
 
-3. 打开浏览器，访问 <http://my.codecc.tencent.com:8009>
+3. 打开浏览器，访问 <http://dev.codecc.com:8009>
 
+## 组件
 
-
-
+本工程是基于BKUI-CLI脚手架搭建的Vue项目，更多组件可参考[MagicBox Vue组件](https://magicbox.bk.tencent.com/static_api/v3/components_vue/2.0/example/index.html#/changelog)

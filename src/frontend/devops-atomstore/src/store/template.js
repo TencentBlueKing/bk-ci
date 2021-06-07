@@ -174,7 +174,7 @@ export const actions = {
     /**
      * 根据templateCode获取模板详情
      */
-    requestTemplate ({ commit }, { templateCode }) {
+    requestTemplate ({ commit }, templateCode) {
         return vue.$ajax.get(`${prefix}/user/market/template/templateCodes/${templateCode}`)
     },
 

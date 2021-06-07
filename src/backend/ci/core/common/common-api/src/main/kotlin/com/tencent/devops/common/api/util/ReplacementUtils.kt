@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -29,6 +30,14 @@ package com.tencent.devops.common.api.util
 object ReplacementUtils {
 
     fun replace(command: String, replacement: KeyReplacement): String {
+        return replace(command, replacement, emptyMap())
+    }
+
+    fun replace(
+        command: String,
+        replacement: KeyReplacement,
+        contextMap: Map<String, String>? = emptyMap()
+    ): String {
         if (command.isBlank()) {
             return command
         }
@@ -40,7 +49,10 @@ object ReplacementUtils {
             val template = if (line.trim().startsWith("#")) {
                 line
             } else {
-                parseTemplate(line, replacement)
+                // 先处理${} 单个花括号的情况
+                val lineTmp = parseTemplate(line, replacement, contextMap)
+                // 再处理${{}} 双花括号的情况
+                parseWithDoubleCurlyBraces(lineTmp, replacement, contextMap)
             }
             sb.append(template)
             if (index != lines.size - 1) {
@@ -50,7 +62,11 @@ object ReplacementUtils {
         return sb.toString()
     }
 
-    private fun parseTemplate(command: String, replacement: KeyReplacement): String {
+    private fun parseTemplate(
+        command: String,
+        replacement: KeyReplacement,
+        contextMap: Map<String, String>? = emptyMap()
+    ): String {
         if (command.isBlank()) {
             return command
         }
@@ -60,7 +76,7 @@ object ReplacementUtils {
             val c = command[index]
             if (c == '$' && (index + 1) < command.length && command[index + 1] == '{') {
                 val inside = StringBuilder()
-                index = parseVariable(command, index + 2, inside, replacement)
+                index = parseVariable(command, index + 2, inside, replacement, contextMap)
                 newValue.append(inside)
             } else {
                 newValue.append(c)
@@ -70,7 +86,37 @@ object ReplacementUtils {
         return newValue.toString()
     }
 
-    private fun parseVariable(command: String, start: Int, newValue: StringBuilder, replacement: KeyReplacement): Int {
+    private fun parseWithDoubleCurlyBraces(
+        command: String,
+        replacement: KeyReplacement,
+        contextMap: Map<String, String>? = emptyMap()
+    ): String {
+        if (command.isBlank()) {
+            return command
+        }
+        val newValue = StringBuilder()
+        var index = 0
+        while (index < command.length) {
+            val c = command[index]
+            if (checkPrefix(c, index, command)) {
+                val inside = StringBuilder()
+                index = parseVariableWithDoubleCurlyBraces(command, index + 3, inside, replacement, contextMap)
+                newValue.append(inside)
+            } else {
+                newValue.append(c)
+                index++
+            }
+        }
+        return newValue.toString()
+    }
+
+    private fun parseVariable(
+        command: String,
+        start: Int,
+        newValue: StringBuilder,
+        replacement: KeyReplacement,
+        contextMap: Map<String, String>? = emptyMap()
+    ): Int {
         val token = StringBuilder()
         var index = start
         while (index < command.length) {
@@ -80,7 +126,10 @@ object ReplacementUtils {
                 index = parseVariable(command, index + 2, inside, replacement)
                 token.append(inside)
             } else if (c == '}') {
-                val tokenValue = getVariable(token.toString(), replacement) ?: "\${$token}"
+                var tokenValue = getVariable(token.toString(), replacement, false)
+                if (tokenValue == "\${$token}") {
+                    tokenValue = contextMap?.get(token.toString()) ?: "\${$token}"
+                }
                 newValue.append(tokenValue)
                 return index + 1
             } else {
@@ -92,9 +141,46 @@ object ReplacementUtils {
         return index
     }
 
-    private fun getVariable(key: String, replacement: KeyReplacement) = replacement.getReplacement(key)
+    private fun parseVariableWithDoubleCurlyBraces(
+        command: String,
+        start: Int,
+        newValue: StringBuilder,
+        replacement: KeyReplacement,
+        contextMap: Map<String, String>? = emptyMap()
+    ): Int {
+        val token = StringBuilder()
+        var index = start
+
+        while (index < command.length) {
+            val c = command[index]
+            if (checkPrefix(c, index, command)) {
+                val inside = StringBuilder()
+                index = parseVariableWithDoubleCurlyBraces(command, index + 3, inside, replacement, contextMap)
+                token.append(inside)
+            } else if (c == '}' && index + 1 < command.length && command[index + 1] == '}') {
+                val tokenStr = token.toString().trim()
+                var tokenValue = getVariable(token.toString().trim(), replacement, true)
+                if (tokenValue == "\${{$tokenStr}}") {
+                    tokenValue = contextMap?.get(tokenStr) ?: "\${{$token}}"
+                }
+                newValue.append(tokenValue)
+                return index + 2
+            } else {
+                token.append(c)
+                index++
+            }
+        }
+        newValue.append("\${{").append(token)
+        return index
+    }
+
+    private fun checkPrefix(c: Char, index: Int, command: String) =
+        c == '$' && (index + 2) < command.length && command[index + 1] == '{' && command[index + 2] == '{'
+
+    private fun getVariable(key: String, replacement: KeyReplacement, doubleCurlyBraces: Boolean) =
+        replacement.getReplacement(key, doubleCurlyBraces)
 
     interface KeyReplacement {
-        fun getReplacement(key: String): String?
+        fun getReplacement(key: String, doubleCurlyBraces: Boolean): String?
     }
 }

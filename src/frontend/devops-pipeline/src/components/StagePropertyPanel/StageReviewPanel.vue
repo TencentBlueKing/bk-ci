@@ -1,6 +1,6 @@
 <template>
     <bk-sideslider class="bkci-property-panel" width="640" :is-show.sync="visible" :quick-close="true">
-        <header class="stage-panel-header" slot="header">
+        <header :title="stageTitle" class="stage-panel-header" slot="header">
             {{ stageTitle }}
         </header>
         <stage-review-control slot="content" v-bind="$props"></stage-review-control>

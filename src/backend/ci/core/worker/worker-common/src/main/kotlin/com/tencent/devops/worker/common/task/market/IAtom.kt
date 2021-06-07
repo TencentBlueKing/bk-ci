@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -34,6 +35,7 @@ import java.io.File
 
 interface IAtom {
 
+    @Suppress("ALL")
     fun execute(
         buildId: String,
         script: String,
@@ -47,14 +49,18 @@ interface IAtom {
 
     fun parseTemplate(buildId: String, command: String, data: Map<String, String>): String {
         return ReplacementUtils.replace(command, object : ReplacementUtils.KeyReplacement {
-            override fun getReplacement(key: String): String? = if (data[key] != null) {
+            override fun getReplacement(key: String, doubleCurlyBraces: Boolean): String? = if (data[key] != null) {
                 data[key]!!
             } else {
                 try {
                     CredentialUtils.getCredential(buildId, key, false)[0]
-                } catch (e: Exception) {
-                    logger.warn("环境变量($key)不存在", e)
-                    "\${$key}"
+                } catch (ignored: Exception) {
+                    logger.warn("环境变量($key)不存在", ignored)
+                    if (doubleCurlyBraces) {
+                        "\${{$key}}"
+                    } else {
+                        "\${$key}"
+                    }
                 }
             }
         })

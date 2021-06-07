@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -54,6 +55,7 @@ import org.springframework.stereotype.Service
  * store审批业务逻辑类
  * since: 2019-08-05
  */
+@Suppress("ALL")
 @Service
 class StoreApproveServiceImpl : StoreApproveService {
 
@@ -84,7 +86,11 @@ class StoreApproveServiceImpl : StoreApproveService {
         val storeApproveRecord = storeApproveDao.getStoreApproveInfo(dslContext, approveId)
         logger.info("approveStoreInfo storeApproveRecord is :$storeApproveRecord")
         if (null == storeApproveRecord) {
-            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(approveId), false)
+            return MessageCodeUtil.generateResponseDataObject(
+                messageCode = CommonMessageCode.PARAMETER_IS_INVALID,
+                params = arrayOf(approveId),
+                data = false
+            )
         }
         val storeCode = storeApproveRecord.storeCode
         val storeType = storeApproveRecord.storeType
@@ -94,7 +100,13 @@ class StoreApproveServiceImpl : StoreApproveService {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
         }
         val busInfoService = getStoreApproveSpecifyBusInfoService(storeApproveRecord.type)
-        val approveResult = busInfoService.approveStoreSpecifyBusInfo(userId, StoreTypeEnum.getStoreTypeObj(storeType.toInt())!!, storeCode, approveId, storeApproveRequest)
+        val approveResult = busInfoService.approveStoreSpecifyBusInfo(
+            userId = userId,
+            storeType = StoreTypeEnum.getStoreTypeObj(storeType.toInt())!!,
+            storeCode = storeCode,
+            approveId = approveId,
+            storeApproveRequest = storeApproveRequest
+        )
         logger.info("approveStoreInfo approveResult is :$approveResult")
         if (approveResult.isNotOk()) {
             return approveResult
@@ -112,8 +124,6 @@ class StoreApproveServiceImpl : StoreApproveService {
         page: Int,
         pageSize: Int
     ): Result<Page<StoreApproveInfo>?> {
-        logger.info("getStoreApproveInfos userId is :$userId, storeCode is :$storeCode, storeType is :$storeType, page is :$page, pageSize is :$pageSize")
-        logger.info("getStoreApproveInfos applicant is :$applicant, approveType is :$approveType, approveStatus is :$approveStatus")
         // 判断查看用户是否是当前插件的成员
         val flag = storeMemberDao.isStoreMember(dslContext, userId, storeCode, storeType.type.toByte())
         if (!flag) {
@@ -131,8 +141,15 @@ class StoreApproveServiceImpl : StoreApproveService {
             ?.map {
                 generateStoreApproveInfo(it)
             }
-        val storeApproveInfoCount = storeApproveDao.getStoreApproveInfoCount(dslContext, storeCode, storeType, applicant, approveType, approveStatus)
-        logger.info("the storeApproveInfoList is :$storeApproveInfoList, storeApproveInfoCount is :$storeApproveInfoCount")
+        val storeApproveInfoCount = storeApproveDao.getStoreApproveInfoCount(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeType,
+            applicant = applicant,
+            approveType = approveType,
+            approveStatus = approveStatus
+        )
+        logger.info("the storeApproveInfoList is :$storeApproveInfoList, InfoCount is :$storeApproveInfoCount")
         val totalPages = PageUtil.calTotalPage(pageSize, storeApproveInfoCount)
         return Result(Page(
             count = storeApproveInfoCount,
@@ -150,7 +167,13 @@ class StoreApproveServiceImpl : StoreApproveService {
         approveType: ApproveTypeEnum
     ): Result<StoreApproveInfo?> {
         logger.info("getUserStoreApproveInfo userId is :$userId, storeType is :$storeType, storeCode is :$storeCode")
-        val storeApproveInfoRecord = storeApproveDao.getUserStoreApproveInfo(dslContext, userId, storeType, storeCode, approveType)
+        val storeApproveInfoRecord = storeApproveDao.getUserStoreApproveInfo(
+            dslContext = dslContext,
+            userId = userId,
+            storeType = storeType,
+            storeCode = storeCode,
+            approveType = approveType
+        )
         logger.info("getUserStoreApproveInfo storeApproveInfoRecord is :$storeApproveInfoRecord")
         return if (null != storeApproveInfoRecord) {
             Result(generateStoreApproveInfo(storeApproveInfoRecord))
@@ -165,7 +188,12 @@ class StoreApproveServiceImpl : StoreApproveService {
         logger.info("getUserStoreApproveInfo storeApproveRecord is :$storeApproveRecord")
         if (null != storeApproveRecord) {
             // 判断查看用户是否是当前插件的成员
-            val flag = storeMemberDao.isStoreMember(dslContext, userId, storeApproveRecord.storeCode, storeApproveRecord.storeType)
+            val flag = storeMemberDao.isStoreMember(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = storeApproveRecord.storeCode,
+                storeType = storeApproveRecord.storeType
+            )
             if (!flag) {
                 return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED)
             }
@@ -200,7 +228,10 @@ class StoreApproveServiceImpl : StoreApproveService {
     }
 
     private fun getStoreApproveSpecifyBusInfoService(approveType: String): AbstractStoreApproveSpecifyBusInfoService {
-        return SpringContextUtil.getBean(AbstractStoreApproveSpecifyBusInfoService::class.java, "${approveType}_APPROVE_SERVICE")
+        return SpringContextUtil.getBean(
+            clazz = AbstractStoreApproveSpecifyBusInfoService::class.java,
+            beanName = "${approveType}_APPROVE_SERVICE"
+        )
     }
 
     private fun generateStoreApproveInfo(it: TStoreApproveRecord): StoreApproveInfo {

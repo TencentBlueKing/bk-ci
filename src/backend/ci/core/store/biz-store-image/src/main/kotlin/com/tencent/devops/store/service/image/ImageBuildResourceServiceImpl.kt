@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -28,6 +29,7 @@ package com.tencent.devops.store.service.image
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.container.BuildResourceDao
 import com.tencent.devops.store.pojo.common.enums.BusinessEnum
@@ -44,6 +46,7 @@ import org.springframework.stereotype.Service
  *
  * since: 2018-12-20
  */
+@Suppress("ALL")
 @Service
 @Primary
 class ImageBuildResourceServiceImpl @Autowired constructor(
@@ -56,18 +59,32 @@ class ImageBuildResourceServiceImpl @Autowired constructor(
 
     override fun getDefaultBuildResource(buildType: BuildType): Any? {
         logger.info("Input(${buildType.name})")
-        if (buildType.name == BuildType.DOCKER.name || buildType.name == BuildType.IDC.name || buildType.name == BuildType.PUBLIC_DEVCLOUD.name) {
-            val record = businessConfigDao.get(dslContext, BusinessEnum.BUILD_TYPE.name, "defaultBuildResource", buildType.name)
+        if (buildType.name == BuildType.DOCKER.name ||
+            buildType.name == BuildType.IDC.name ||
+            buildType.name == BuildType.PUBLIC_DEVCLOUD.name) {
+            val record = businessConfigDao.get(
+                dslContext = dslContext,
+                business = BusinessEnum.BUILD_TYPE.name,
+                feature = "defaultBuildResource",
+                businessValue = buildType.name
+            )
             if (record == null) {
                 logger.warn("defaultBuildResource of ${buildType.name} not configed, plz config in op")
                 return null
             } else {
-                try {
+                return try {
                     logger.info("configValue=${record.configValue}")
-                    return JsonUtil.to(record.configValue, BaseImageInfo::class.java)
-                } catch (e: Exception) {
+                    val baseImageInfo = JsonUtil.to(record.configValue, BaseImageInfo::class.java)
+                    if (baseImageInfo.imageType == null) {
+                        baseImageInfo.imageType = ImageType.BKSTORE.name
+                    }
+                    if (baseImageInfo.imageType.equals(ImageType.BKSTORE.name)) {
+                        baseImageInfo.value = baseImageInfo.code
+                    }
+                    baseImageInfo
+                } catch (ignored: Exception) {
                     logger.error("defaultBuildResource value wrong format, plz config in op:${record.configValue}")
-                    return null
+                    null
                 }
             }
         } else {

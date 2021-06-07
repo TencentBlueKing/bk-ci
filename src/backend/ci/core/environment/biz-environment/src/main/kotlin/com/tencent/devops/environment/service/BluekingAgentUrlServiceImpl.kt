@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -29,14 +30,14 @@ package com.tencent.devops.environment.service
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.environment.service.slave.SlaveGatewayService
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
 
 /**
  * 蓝鲸企业版/开源版专用Url实现
  */
 class BluekingAgentUrlServiceImpl constructor(
-    private val slaveGatewayService: SlaveGatewayService
+    private val commonConfig: CommonConfig
 ) : AgentUrlService {
 
     override fun genAgentInstallUrl(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
@@ -61,6 +62,23 @@ class BluekingAgentUrlServiceImpl constructor(
     }
 
     override fun genGateway(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
-        return slaveGatewayService.fixGateway(agentRecord.gateway)
+        return fixGateway(agentRecord.gateway)
+    }
+
+    override fun genFileGateway(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
+        return if (agentRecord.fileGateway.isNullOrBlank()) {
+            genGateway(agentRecord)
+        } else {
+            fixGateway(agentRecord.fileGateway)
+        }
+    }
+
+    override fun fixGateway(gateway: String?): String {
+        val gw = if (gateway.isNullOrBlank()) commonConfig.devopsBuildGateway else gateway
+        return if (gw!!.startsWith("http")) {
+            gw.removeSuffix("/")
+        } else {
+            "http://$gw"
+        }
     }
 }

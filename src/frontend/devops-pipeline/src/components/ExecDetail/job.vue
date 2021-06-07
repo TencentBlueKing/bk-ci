@@ -5,13 +5,15 @@
         :current-tab="currentTab"
     >
         <span class="head-tab" slot="tab">
-            <span @click="currentTab = 'log'" :class="{ active: currentTab === 'log' }">{{ $t('execDetail.log') }}</span><span @click="currentTab = 'setting'" :class="{ active: currentTab === 'setting' }">{{ $t('execDetail.setting') }}</span>
+            <span @click="currentTab = 'log'" :class="{ active: currentTab === 'log' }">{{ $t('execDetail.log') }}</span>
+            <span @click="currentTab = 'setting'" :class="{ active: currentTab === 'setting' }">{{ $t('execDetail.setting') }}</span>
         </span>
         <template v-slot:content>
             <job-log v-show="currentTab === 'log'"
                 :plugin-list="pluginList"
                 :build-id="execDetail.id"
                 :down-load-link="downLoadJobLink"
+                :execute-count="executeCount"
                 ref="jobLog"
             />
             <container-content v-show="currentTab === 'setting'"
@@ -55,9 +57,7 @@
                 const editingElementPos = this.editingElementPos
                 const fileName = encodeURI(encodeURI(`${editingElementPos.stageIndex + 1}-${editingElementPos.containerIndex + 1}-${this.currentJob.name}`))
                 const jobId = this.currentJob.containerId
-                // to add job exec
-                const currentExe = 1
-                return `${AJAX_URL_PIRFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?jobId=${jobId}&executeCount=${currentExe}&fileName=${fileName}`
+                return `${API_URL_PREFIX}/log/api/user/logs/${this.$route.params.projectId}/${this.$route.params.pipelineId}/${this.execDetail.id}/download?jobId=${jobId}&fileName=${fileName}`
             },
 
             currentJob () {
@@ -71,6 +71,11 @@
             pluginList () {
                 const startUp = { name: 'Set up job', status: this.currentJob.startVMStatus, id: `startVM-${this.currentJob.id}`, executeCount: this.currentJob.executeCount || 1 }
                 return [startUp, ...this.currentJob.elements]
+            },
+
+            executeCount () {
+                const executeCountList = this.pluginList.map((plugin) => plugin.executeCount || 1)
+                return Math.max(...executeCountList)
             }
         }
     }

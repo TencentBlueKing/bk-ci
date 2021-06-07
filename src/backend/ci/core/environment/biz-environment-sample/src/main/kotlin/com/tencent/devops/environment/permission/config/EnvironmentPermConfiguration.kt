@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -29,11 +30,14 @@ package com.tencent.devops.environment.permission.config
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.EnvironmentAuthServiceCode
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.permission.service.impl.BluekingEnvironmentPermissionService
 import com.tencent.devops.environment.permission.service.impl.MockEnvironmentPermissionService
+import com.tencent.devops.environment.permission.service.impl.V3EnvironmentPermissionService
 import org.jooq.DSLContext
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -42,7 +46,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
 
-@Suppress("UNUSED")
+@Suppress("ALL")
 @Configuration
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
@@ -76,5 +80,27 @@ class EnvironmentPermConfiguration {
         authResourceApi = authResourceApi,
         authPermissionApi = authPermissionApi,
         environmentAuthServiceCode = environmentAuthServiceCode
+    )
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
+    fun v3EnvironmentPermissionService(
+        dslContext: DSLContext,
+        envDao: EnvDao,
+        nodeDao: NodeDao,
+        client: Client,
+        redisOperation: RedisOperation,
+        authResourceApi: AuthResourceApi,
+        authPermissionApi: AuthPermissionApi,
+        environmentAuthServiceCode: EnvironmentAuthServiceCode
+    ): EnvironmentPermissionService = V3EnvironmentPermissionService(
+        dslContext = dslContext,
+        envDao = envDao,
+        nodeDao = nodeDao,
+        authResourceApi = authResourceApi,
+        authPermissionApi = authPermissionApi,
+        environmentAuthServiceCode = environmentAuthServiceCode,
+        client = client,
+        redisOperation = redisOperation
     )
 }

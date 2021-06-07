@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -44,6 +45,7 @@ import org.tmatesoft.svn.core.wc2.SvnTarget
 import java.io.File
 import java.sql.DriverManager
 
+@Suppress("ALL")
 object SvnUtil {
     private val logger = LoggerFactory.getLogger(this::class.java)
 
@@ -171,17 +173,22 @@ object SvnUtil {
         }
     }
 
-    fun getSvnCredential(repository: CodeSvnRepository, credentials: List<String>, credentialType: CredentialType): SvnCredential {
+    fun getSvnCredential(
+        repository: CodeSvnRepository,
+        credentials: List<String>,
+        credentialType: CredentialType
+    ): SvnCredential {
         if (repository.svnType == CodeSvnRepository.SVN_TYPE_HTTP) {
             // 兼容老的数据，老的数据是用的是password, 新的是username_password
             return if (credentialType == CredentialType.USERNAME_PASSWORD) {
                 if (credentials.size <= 1) {
                     logger.warn("Fail to get the username($credentials) of the svn repo $repository")
-                    SvnCredential(repository.userName, credentials[0], null)
-                } else
-                    SvnCredential(credentials[0], credentials[1], null)
+                    SvnCredential(username = repository.userName, password = credentials[0], passphrase = null)
+                } else {
+                    SvnCredential(username = credentials[0], password = credentials[1], passphrase = null)
+                }
             } else {
-                SvnCredential(repository.userName, credentials[0], null)
+                SvnCredential(username = repository.userName, password = credentials[0], passphrase = null)
             }
         } else {
             val privateKey = credentials[0]
@@ -195,7 +202,7 @@ object SvnUtil {
             } else {
                 null
             }
-            return SvnCredential(repository.userName, privateKey, passPhrase)
+            return SvnCredential(username = repository.userName, password = privateKey, passphrase = passPhrase)
         }
     }
 }

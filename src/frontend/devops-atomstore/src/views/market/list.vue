@@ -1,6 +1,6 @@
 <template>
     <article v-bkloading="{ isLoading, opacity: 1 }">
-        <h3 class="list-type" v-clickoutside="closeOrderList">
+        <h3 class="list-type" v-bk-clickoutside="closeOrderList">
             <span class="list-count"> {{ $t('store.总数 :') }} <strong>{{count}}</strong></span>
             <span class="list-sort"> {{ $t('store.排序：') }} </span>
             <span :class="[{ 'show-type': showOrderList }, 'list-order']" @click.stop="showOrderList = !showOrderList">{{ orderType.name }}</span>
@@ -18,15 +18,10 @@
 
 <script>
     import card from '@/components/common/card'
-    import clickoutside from '@/directives/clickoutside'
 
     export default {
         components: {
             card
-        },
-
-        directives: {
-            clickoutside
         },
 
         data () {
@@ -39,14 +34,30 @@
                 cards: [],
                 count: 0,
                 orderType: { id: 'DOWNLOAD_COUNT', name: this.$t('store.按热度') },
-                showOrderList: false,
-                orderList: [
+                showOrderList: false
+            }
+        },
+
+        computed: {
+            orderList () {
+                const orderMap = {
+                    atom: [
+                        { id: 'NAME', name: this.$t('store.按名称A-Z') },
+                        { id: 'CREATE_TIME', name: this.$t('store.按创建时间') },
+                        { id: 'UPDATE_TIME', name: this.$t('store.按修改时间') },
+                        { id: 'PUBLISHER', name: this.$t('store.按发布者') },
+                        { id: 'RECENT_EXECUTE_NUM', name: this.$t('store.按热度') }
+                    ]
+                }
+                const defaultOrder = [
                     { id: 'NAME', name: this.$t('store.按名称A-Z') },
                     { id: 'CREATE_TIME', name: this.$t('store.按创建时间') },
                     { id: 'UPDATE_TIME', name: this.$t('store.按修改时间') },
                     { id: 'PUBLISHER', name: this.$t('store.按发布者') },
                     { id: 'DOWNLOAD_COUNT', name: this.$t('store.按热度') }
                 ]
+                const type = this.$route.query.pipeType || 'atom'
+                return orderMap[type] || defaultOrder
             }
         },
 
@@ -74,7 +85,11 @@
             },
 
             initData () {
-                const orderType = this.$route.query.sortType || 'DOWNLOAD_COUNT'
+                const { sortType, pipeType } = this.$route.query
+                const defaultOrderTypeMap = {
+                    'atom': 'RECENT_EXECUTE_NUM'
+                }
+                const orderType = sortType || defaultOrderTypeMap[pipeType] || 'DOWNLOAD_COUNT'
                 const order = this.orderList.find((order) => (order.id === orderType))
                 this.orderType = order
             },

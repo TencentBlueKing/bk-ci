@@ -10,12 +10,13 @@
  *
  * Terms of the MIT License:
  * ---------------------------------------------------
- * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation
- * files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy,
- * modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the
- * Software is furnished to do so, subject to the following conditions:
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
  * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
@@ -26,9 +27,15 @@
 
 package com.tencent.devops.worker.common
 
+const val BUILD_ID = "devops.build.id"
+
 const val BUILD_TYPE = "build.type"
 
 const val WORKSPACE_ENV = "WORKSPACE"
+
+const val WORKSPACE_CONTEXT = "ci.workspace"
+
+const val CI_TOKEN_CONTEXT = "ci.token"
 
 const val SLAVE_AGENT_START_FILE = "devops.slave.agent.start.file"
 
@@ -37,3 +44,15 @@ const val CLEAN_WORKSPACE = "DEVOPS_CLEAN_WORKSPACE"
 const val JAVA_PATH_ENV = "bk_java_path"
 
 const val NODEJS_PATH_ENV = "bk_nodejs_path"
+
+const val LOG_DEBUG_FLAG = "##[debug]"
+
+const val LOG_ERROR_FLAG = "##[error]"
+
+const val LOG_WARN_FLAG = "##[warning]"
+
+const val LOG_SUBTAG_FLAG = "##subTag##"
+
+const val LOG_SUBTAG_FINISH_FLAG = "##subTagFinish##"
+
+val PIPELINE_SCRIPT_ATOM_CODE = listOf("PipelineScriptDev", "PipelineScriptTest", "PipelineScript")

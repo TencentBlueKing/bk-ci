@@ -1,29 +1,33 @@
 <template>
     <div :class="[{ 'pipeline-drag': editable && !isTriggerStage, 'readonly': !editable || stageDisabled }, 'pipeline-stage']" ref="stageRef">
         <span :class="{ 'stage-review-logo': true, 'pointer': true }" v-bk-tooltips.top="reviewTooltip" @click.stop="startNextStage">
-            <logo v-if="!isTriggerStage" :name="reviewStatausIcon" size="28" />
+            <logo v-if="!isTriggerStage && !isFinallyStage" :name="reviewStatausIcon" size="28" />
         </span>
         <bk-button :class="['pipeline-stage-entry', [stageStatusCls], { 'editable-stage-entry': editable, 'stage-disabled': stageDisabled }]" @click.stop="showStagePanel">
-            <logo v-if="stage.status === 'SKIP'" v-bk-tooltips="$t('skipStageDesc')" class="skip-icon redo-arrow" name="redo-arrow" size="16"></logo>
-            <i v-else-if="stageStatusIcon" :class="`stage-status-icon bk-icon icon-${stageStatusIcon}`"></i>
-            <span :class="{ 'stage-entry-name': true, 'skip-name': stageDisabled || stage.status === 'SKIP' }">{{ stageTitle }}</span>
+            <span :title="stageTitle" :class="{ 'stage-entry-name': true, 'skip-name': stageDisabled || stage.status === 'SKIP', 'show-right-icon': (showCheckedToatal || canStageRetry) }">
+                <logo v-if="stage.status === 'SKIP'" v-bk-tooltips="$t('skipStageDesc')" class="skip-icon redo-arrow" name="redo-arrow" size="16"></logo>
+                <i v-else-if="stageStatusIcon" :class="`stage-status-icon bk-icon icon-${stageStatusIcon}`"></i>
+                {{ stageTitle }}
+            </span>
             <i v-if="isStageError" class="bk-icon icon-exclamation-triangle-shape stage-entry-error-icon" />
-            <span @click.stop v-if="showCheckedToatal && canSkipElement" class="check-total-stage">
+            <span @click.stop v-if="showCheckedToatal" class="check-total-stage">
                 <bk-checkbox class="atom-canskip-checkbox" v-model="stage.runStage" :disabled="stageDisabled"></bk-checkbox>
             </span>
-            <span class="stage-single-retry" v-if="canStageRetry" @click.stop="singleRetry(stage.id)">{{ $t('retry') }}</span>
-            <span v-if="showCopyStage" class="stage-entry-btns">
-                <span :title="$t('editPage.copyStage')" v-if="!stage.isError" class="bk-icon copy-stage" @click.stop="copyStage">
+            <span v-if="canStageRetry" @click.stop="() => showRetryStageDialog = true" class="stage-single-retry">
+                {{ $t('retry') }}
+            </span>
+            <span class="stage-entry-btns">
+                <span :title="$t('editPage.copyStage')" v-if="!stage.isError && showCopyStage" class="bk-icon copy-stage" @click.stop="copyStage">
                     <Logo name="copy" size="16"></Logo>
                 </span>
                 <i @click.stop="deleteStageHandler" class="add-plus-icon close" />
             </span>
         </bk-button>
-        <cruveLine v-if="!isTriggerStage" class="first-connect-line connect-line left" :width="60" :height="60"></cruveLine>
         <draggable v-model="computedContainer" v-bind="dragOptions" :move="checkMove" tag="ul">
             <stage-container v-for="(container, index) in computedContainer"
                 :key="container.containerId"
                 :stage-index="stageIndex"
+                :pre-container="containers[index - 1]"
                 :container-index="index"
                 :stage-length="stageLength"
                 :editable="editable"
@@ -34,7 +38,6 @@
                 :container="container">
             </stage-container>
         </draggable>
-        <cruve-line class="first-connect-line connect-line right" :width="60" :direction="false" :height="60"></cruve-line>
         <span class="stage-connector">
             <i class="devops-icon icon-right-shape connector-angle"></i>
         </span>
@@ -43,11 +46,17 @@
                 <i :class="{ [iconCls]: true, 'active': isAddMenuShow }" />
                 <template v-if="isAddMenuShow">
                     <cruve-line class="add-connector connect-line left" :width="60" :height="cruveHeight"></cruve-line>
-                    <span class="insert-tip direction line-add" @click.stop="showStageSelectPopup(false)">
-                        <i class="tip-icon" />
-                        <span>
-                            {{ $t('editPage.insert') }}
-                        </span>
+                    <span class="insert-stage direction">
+                        <div class="click-item" @click.stop="appendStage(false)">
+                            <span>
+                                {{ $t('editPage.insertStage') }}
+                            </span>
+                        </div>
+                        <div :class="{ 'disabled-item': hasFinallyStage, 'click-item': true }" @click.stop="appendStage(true)">
+                            <span>
+                                {{ $t('editPage.insertFinallyStage') }}
+                            </span>
+                        </div>
                     </span>
                     <div @click.stop="showStageSelectPopup(true)" class="insert-tip parallel-add" :style="`top: ${cruveHeight}px`">
                         <i class="tip-icon" />
@@ -57,10 +66,37 @@
                     </div>
                 </template>
             </span>
-            <span v-if="isLastStage && editable" @click="appendStage" class="append-stage pointer">
+            <span v-bk-clickoutside="toggleLastMenu" v-if="isLastStage && !isFinallyStage && editable" @click="toggleLastMenu(!lastAddMenuShow)" class="append-stage pointer">
                 <i class="add-plus-icon" />
+                <template v-if="lastAddMenuShow">
+                    <span class="insert-stage direction">
+                        <div class="click-item" @click.stop="appendStage(false, true)">
+                            <span>
+                                {{ $t('editPage.insertStage') }}
+                            </span>
+                        </div>
+                        <div :class="{ 'click-item': true, 'disabled-item': hasFinallyStage }" @click.stop="appendStage(true)">
+                            <span>
+                                {{ $t('editPage.insertFinallyStage') }}
+                            </span>
+                        </div>
+                    </span>
+                </template>
             </span>
         </template>
+        <bk-dialog
+            v-model="showRetryStageDialog"
+            render-directive="if"
+            ext-cls="stage-retry-dialog"
+            :width="400"
+            :auto-close="false"
+            @confirm="confirmRetry"
+        >
+            <bk-radio-group v-model="failedContainer">
+                <bk-radio :value="false">{{ $t('editPage.retryAllJobs') }}</bk-radio>
+                <bk-radio :value="true">{{ $t('editPage.retryFailJobs') }}</bk-radio>
+            </bk-radio-group>
+        </bk-dialog>
     </div>
 </template>
 
@@ -69,7 +105,7 @@
     import Vue from 'vue'
     import { mapActions, mapState, mapGetters } from 'vuex'
     import StageContainer from './StageContainer'
-    import { getOuterHeight, hashID } from '@/utils/util'
+    import { getOuterHeight, hashID, randomString } from '@/utils/util'
     import Logo from '@/components/Logo'
     import CruveLine from '@/components/Stages/CruveLine'
 
@@ -107,16 +143,21 @@
         data () {
             return {
                 isAddMenuShow: false,
-                cruveHeight: 0
+                lastAddMenuShow: false,
+                cruveHeight: 0,
+                failedContainer: false,
+                showRetryStageDialog: false
             }
         },
         computed: {
             ...mapState('atom', [
                 'insertStageIndex',
-                'pipeline'
+                'pipeline',
+                'pipelineLimit'
             ]),
             ...mapGetters('atom', [
-                'isTriggerContainer'
+                'isTriggerContainer',
+                'hasFinallyStage'
             ]),
             isStageError () {
                 try {
@@ -127,10 +168,10 @@
                 }
             },
             canStageRetry () {
-                return this.stage.status === 'FAILED' || this.stage.status === 'CANCELED'
+                return this.stage.canRetry === true
             },
             showCopyStage () {
-                return !this.isTriggerStage && this.editable
+                return !this.isTriggerStage && !this.isFinallyStage && this.editable
             },
             isFirstStage () {
                 return this.stageIndex === 0
@@ -140,6 +181,9 @@
             },
             isTriggerStage () {
                 return this.checkIsTriggerStage(this.stage)
+            },
+            isFinallyStage () {
+                return this.stage.finally === true
             },
             stageTitle () {
                 return this.stage ? this.stage.name : 'stage'
@@ -174,7 +218,7 @@
             },
             dragOptions () {
                 return {
-                    group: 'pipeline-job',
+                    group: this.stage.finally ? 'finally-stage-job' : 'pipeline-job',
                     ghostClass: 'sortable-ghost-atom',
                     chosenClass: 'sortable-chosen-atom',
                     animation: 130,
@@ -280,6 +324,7 @@
             ...mapActions('pipelines', ['requestRetryPipeline']),
             ...mapActions('atom', [
                 'setInertStageIndex',
+                'setInsertStageIsFinally',
                 'togglePropertyPanel',
                 'toggleStageSelectPopup',
                 'setPipelineContainer',
@@ -289,6 +334,10 @@
                 'toggleReviewDialog',
                 'toggleStageReviewPanel'
             ]),
+            confirmRetry () {
+                this.showRetryStageDialog = false
+                this.singleRetry(this.stage.id)
+            },
             async singleRetry (stageId) {
                 let message, theme
                 try {
@@ -297,28 +346,26 @@
                         projectId: this.$route.params.projectId,
                         pipelineId: this.$route.params.pipelineId,
                         buildId: this.$route.params.buildNo,
-                        taskId: stageId
+                        taskId: stageId,
+                        failedContainer: this.failedContainer
                     })
                     if (res.id) {
                         message = this.$t('subpage.retrySuc')
+                        theme = 'success'
                     } else {
                         message = this.$t('subpage.retryFail')
                         theme = 'error'
                     }
                 } catch (err) {
-                    if (err.code === 403) { // 没有权限执行
-                        this.$showAskPermissionDialog({
-                            noPermissionList: [{
-                                resource: this.$t('pipeline'),
-                                option: this.$t('exec')
-                            }],
-                            applyPermissionUrl: `${PERM_URL_PREFIX}`
-                        })
-                        return
-                    } else {
-                        message = err.message || err
-                        theme = 'error'
-                    }
+                    this.handleError(err, [{
+                        actionId: this.$permissionActionMap.execute,
+                        resourceId: this.$permissionResourceMap.pipeline,
+                        instanceId: [{
+                            id: this.$route.params.pipelineId,
+                            name: this.$route.params.pipelineId
+                        }],
+                        projectId: this.$route.params.projectId
+                    }])
                 } finally {
                     message && this.$showTips({
                         message,
@@ -353,23 +400,44 @@
                 const relatedelement = relatedContext.element || {}
                 const isRelatedTrigger = relatedelement['@type'] === 'trigger'
                 const isTriggerStage = this.checkIsTriggerStage(relatedelement)
+                const isFinallyStage = relatedelement.finally === true
 
-                return !isTrigger && !isRelatedTrigger && !isTriggerStage
+                return !isTrigger && !isRelatedTrigger && !isTriggerStage && !isFinallyStage
             },
 
-            appendStage () {
-                const { stageIndex, setInertStageIndex, showStageSelectPopup } = this
+            appendStage (isFinally = false, fromLast = false) {
+                const { stageIndex, setInertStageIndex, setInsertStageIsFinally, hasFinallyStage, showStageSelectPopup } = this
+                if (isFinally && hasFinallyStage) return
                 setInertStageIndex({
-                    insertStageIndex: stageIndex + 1
+                    insertStageIndex: isFinally ? this.stageLength : (fromLast ? stageIndex + 1 : stageIndex)
+                })
+                setInsertStageIsFinally({
+                    insertStageIsFinally: isFinally
                 })
                 showStageSelectPopup(false)
+                this.toggleAddMenu(false)
             },
             showStageSelectPopup (isParallel) {
+                let limitMsg = ''
+                if (!isParallel && this.stageLength >= this.pipelineLimit.stageLimit) {
+                    limitMsg = this.$t('storeMap.stageLimit') + this.pipelineLimit.stageLimit
+                } else if (isParallel && this.stage.containers.length >= this.pipelineLimit.jobLimit) {
+                    limitMsg = this.$t('storeMap.jobLimit') + this.pipelineLimit.jobLimit
+                }
+                if (limitMsg) {
+                    this.$showTips({
+                        theme: 'error',
+                        message: limitMsg
+                    })
+                    return
+                }
+
                 this.toggleStageSelectPopup({
                     isStagePopupShow: true,
                     isAddParallelContainer: isParallel
                 })
             },
+            
             toggleAddMenu (isAddMenuShow) {
                 if (!this.editable) return
                 const { stageIndex, setInertStageIndex } = this
@@ -379,6 +447,11 @@
                         insertStageIndex: stageIndex
                     })
                 }
+            },
+
+            toggleLastMenu (isAddMenuShow) {
+                if (!this.editable) return
+                this.lastAddMenuShow = typeof isAddMenuShow === 'boolean' ? isAddMenuShow : false
             },
 
             startNextStage () {
@@ -409,6 +482,13 @@
                 })
             },
             copyStage () {
+                if (this.stageLength >= this.pipelineLimit.stageLimit) {
+                    this.$showTips({
+                        theme: 'error',
+                        message: this.$t('storeMap.stageLimit') + this.pipelineLimit.stageLimit
+                    })
+                    return
+                }
                 try {
                     const copyStage = JSON.parse(JSON.stringify(this.stage))
                     const stage = {
@@ -416,11 +496,17 @@
                         id: `s-${hashID(32)}`,
                         containers: copyStage.containers.map(container => ({
                             ...container,
+                            jobId: `job_${randomString(3)}`,
                             containerId: `c-${hashID(32)}`,
                             elements: container.elements.map(element => ({
                                 ...element,
                                 id: `e-${hashID(32)}`
-                            }))
+                            })),
+                            jobControlOption: container.jobControlOption ? {
+                                ...container.jobControlOption,
+                                dependOnType: 'ID',
+                                dependOnId: []
+                            } : undefined
                         }))
 
                     }
@@ -459,7 +545,7 @@
             position: absolute;
             left: -$reviewIconSize / 2;
             top: ($stageEntryHeight - $reviewIconSize) / 2;
-            z-index: 2;
+            z-index: 3;
         }
 
         .pipeline-stage-entry {
@@ -470,7 +556,15 @@
             background-color: #EFF5FF;
             border-color: #D4E8FF;
             color: $primaryColor;
-            z-index: 1;
+            z-index: 2;
+
+            .stage-entry-name {
+                @include ellipsis();
+                width: 90%;
+                &.show-right-icon {
+                    width: 70%;
+                }
+            }
 
             &:not(.editable-stage-entry),
             &.stage-disabled {
@@ -527,6 +621,9 @@
                 .stage-entry-error-icon {
                     display: none;
                 }
+                .stage-entry-name {
+                    width: 70%;
+                }
             }
 
             .stage-single-retry {
@@ -571,17 +668,6 @@
             }
         }
 
-        .first-connect-line {
-            height: 76px;
-            width: $svgWidth;
-            top: $stageEntryHeight / 2 - 2;
-            left: $addIconLeft + $addBtnSize / 2;
-            &.right {
-                left: auto;
-                right: -$StageMargin - $addIconLeft - $addBtnSize / 2;
-            }
-        }
-
         .add-connector {
             stroke-dasharray: 4,4;
             top: 7px;
@@ -595,6 +681,10 @@
             z-index: 3;
             .add-plus-icon {
                 box-shadow: 0px 2px 4px 0px rgba(60, 150, 255, 0.2);
+            }
+            .line-add {
+                top: -46px;
+                left: -16px;
             }
         }
 
@@ -611,7 +701,7 @@
                 z-index: 4;
             }
             .line-add {
-                top: -30px;
+                top: -46px;
                 left: -16px;
             }
             .parallel-add {
@@ -651,6 +741,41 @@
                 position: absolute;
                 right: -$angleSize;
                 top: -$angleSize;
+            }
+        }
+
+        .insert-stage {
+            position: absolute;
+            display: block;
+            width: 160px;
+            background-color: #ffffff;
+            border: 1px solid #dcdee5;
+            .click-item {
+                padding: 0 15px;
+                font-size: 12px;
+                line-height: 32px;
+                
+                &:hover, :hover {
+                    color: #3c96ff;
+                    background-color: #eaf3ff;
+                }
+            }
+            .disabled-item {
+                cursor: not-allowed;
+                color: #c4cdd6;
+                &:hover, :hover {
+                    color: #c4cdd6;
+                    background-color: #ffffff;
+                }
+            }
+        }
+    }
+    .stage-retry-dialog {
+        .bk-form-radio {
+            display: block;
+            margin-top: 15px;
+            .bk-radio-text {
+                font-size: 14px;
             }
         }
     }
