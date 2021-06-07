@@ -40,30 +40,40 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceProjectAuthResourceImpl @Autowired constructor(
     val permissionProjectService: PermissionProjectService
 ) : ServiceProjectAuthResource {
-    override fun getProjectUsers(serviceCode: String, projectCode: String, group: BkAuthGroup?): Result<List<String>> {
+    override fun getProjectUsers(
+        token: String,
+        projectCode: String,
+        group: BkAuthGroup?
+    ): Result<List<String>> {
         return Result(
             permissionProjectService.getProjectUsers(
-                serviceCode = serviceCode,
                 projectCode = projectCode,
                 group = group
             )
         )
     }
 
-    override fun getProjectGroupAndUserList(serviceCode: String, projectCode: String): Result<List<BkAuthGroupAndUserList>> {
+    override fun getProjectGroupAndUserList(
+        token: String,
+        projectCode: String
+    ): Result<List<BkAuthGroupAndUserList>> {
         return Result(
             permissionProjectService.getProjectGroupAndUserList(
-                serviceCode = serviceCode,
                 projectCode = projectCode
             )
         )
     }
 
-    override fun getUserProjects(userId: String): Result<List<String>> {
+    override fun getUserProjects(token: String, userId: String): Result<List<String>> {
         return Result(permissionProjectService.getUserProjects(userId))
     }
 
-    override fun isProjectUser(userId: String, projectCode: String, group: BkAuthGroup?): Result<Boolean> {
+    override fun isProjectUser(
+        token: String,
+        userId: String,
+        projectCode: String,
+        group: BkAuthGroup?
+    ): Result<Boolean> {
         return Result(permissionProjectService.isProjectUser(
             userId = userId,
             projectCode = projectCode,
@@ -71,7 +81,12 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
         ))
     }
 
-    override fun createProjectUser(userId: String, projectCode: String, role: String): Result<Boolean> {
+    override fun createProjectUser(
+        token: String,
+        userId: String,
+        projectCode: String,
+        role: String
+    ): Result<Boolean> {
         return Result(
             permissionProjectService.createProjectUser(
                 userId = userId,
@@ -81,7 +96,7 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getProjectRoles(projectCode: String, projectId: String): Result<List<BKAuthProjectRolesResources>> {
+    override fun getProjectRoles(token: String, projectCode: String, projectId: String): Result<List<BKAuthProjectRolesResources>> {
         return Result(
             permissionProjectService.getProjectRoles(
                 projectCode = projectCode,
