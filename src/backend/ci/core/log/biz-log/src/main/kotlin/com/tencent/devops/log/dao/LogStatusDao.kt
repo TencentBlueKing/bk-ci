@@ -77,7 +77,6 @@ class LogStatusDao {
     fun updateStorageMode(
         dslContext: DSLContext,
         buildId: String,
-        jobId: String,
         executeCount: Int,
         modeList: Map<String, LogStorageMode>
     ) {
@@ -90,7 +89,6 @@ class LogStatusDao {
                         .set(MODE, mode.name)
                         .where(BUILD_ID.eq(buildId))
                         .and(TAG.eq(tag))
-                        .and(JOB_ID.eq(jobId))
                         .and(EXECUTE_COUNT.eq(executeCount))
                 )
             }

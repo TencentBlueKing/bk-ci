@@ -64,7 +64,6 @@ class LogStatusService @Autowired constructor(
 
     fun updateStorageMode(
         buildId: String,
-        jobId: String,
         executeCount: Int,
         propertyList: List<TaskBuildLogProperty>
     ) {
@@ -74,7 +73,6 @@ class LogStatusService @Autowired constructor(
         logStatusDao.updateStorageMode(
             dslContext = dslContext,
             buildId = buildId,
-            jobId = jobId,
             executeCount = executeCount,
             modeList = modeList
         )
