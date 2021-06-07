@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.control.command.stage.impl
 
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.engine.control.ControlUtils
 import com.tencent.devops.process.engine.control.FastKillUtils
@@ -83,7 +84,10 @@ class StartContainerStageCmd(
             }
 
             when {
-                newActionType.isStart() -> stageStatus = BuildStatus.RUNNING // 要启动Stage
+                newActionType.isStart() -> {
+                    sendStageStartCallback(commandContext)
+                    stageStatus = BuildStatus.RUNNING // 要启动Stage
+                }
                 newActionType.isEnd() -> stageStatus = BuildStatus.CANCELED // 若为终止命令，直接设置为取消
                 newActionType == ActionType.SKIP -> stageStatus = BuildStatus.SKIP // 要跳过Stage
             }
@@ -101,6 +105,20 @@ class StartContainerStageCmd(
                 else -> BuildStatus.SUCCEED
             }
         }
+    }
+
+    private fun sendStageStartCallback(commandContext: StageContext) {
+        pipelineEventDispatcher.dispatch(
+            PipelineBuildStatusBroadCastEvent(
+                source = "StartContainerStageCmd",
+                projectId = commandContext.stage.projectId,
+                pipelineId = commandContext.stage.pipelineId,
+                userId = commandContext.event.userId,
+                buildId = commandContext.stage.buildId,
+                actionType = ActionType.START,
+                stageId = commandContext.stage.stageId
+            )
+        )
     }
 
     /**

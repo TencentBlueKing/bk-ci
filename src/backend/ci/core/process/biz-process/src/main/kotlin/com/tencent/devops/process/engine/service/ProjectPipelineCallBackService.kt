@@ -101,7 +101,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
             throw ParamBlankException("Invalid event")
         }
         val events = event.split(",").map {
-            CallBackEvent.valueOf(it)
+            CallBackEvent.valueOf(it.trim())
         }
 
         val successEvents = mutableListOf<String>()
