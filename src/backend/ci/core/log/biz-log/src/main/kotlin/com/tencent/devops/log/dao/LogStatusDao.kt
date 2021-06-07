@@ -136,7 +136,6 @@ class LogStatusDao {
             return dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId))
                 .and(TAG.eq(tag))
-                .and(SUB_TAG.isNull)
                 .and(EXECUTE_COUNT.eq(executeCount ?: 1))
                 .fetchAny()
         }
