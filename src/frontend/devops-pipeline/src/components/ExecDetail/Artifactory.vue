@@ -62,8 +62,8 @@
                 }
                 this.isLoading = true
                 Promise.all([
-                    this.$store.dispatch('soda/requestPartFile', postData),
-                    this.$store.dispatch('soda/requestExecPipPermission', permissionData)
+                    this.$store.dispatch('common/requestPartFile', postData),
+                    this.$store.dispatch('common/requestExecPipPermission', permissionData)
                 ]).then(([res, permission]) => {
                     this.artifactories = res.records || []
                     this.hasPermission = permission
@@ -80,8 +80,8 @@
 
             downLoadFile (row) {
                 Promise.all([
-                    this.$store.dispatch('soda/requestDevnetGateway'),
-                    this.$store.dispatch('soda/requestDownloadUrl', {
+                    this.$store.dispatch('common/requestDevnetGateway'),
+                    this.$store.dispatch('common/requestDownloadUrl', {
                         projectId: this.$route.params.projectId,
                         artifactoryType: row.artifactoryType,
                         path: row.path

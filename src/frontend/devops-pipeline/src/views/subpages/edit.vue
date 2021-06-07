@@ -165,7 +165,7 @@
                 'updatePipelineSetting',
                 'resetPipelineSetting'
             ]),
-            ...mapActions('soda', [
+            ...mapActions('common', [
                 'requestQualityAtom',
                 'requestInterceptAtom'
             ]),
@@ -212,20 +212,20 @@
                 return this.confirmMsg
             },
             requestQualityAtom () {
-                this.$store.dispatch('soda/requestQualityAtom', {
+                this.$store.dispatch('common/requestQualityAtom', {
                     projectId: this.projectId
                 })
             },
             requestInterceptAtom () {
                 if (this.projectId && this.pipelineId) {
-                    this.$store.dispatch('soda/requestInterceptAtom', {
+                    this.$store.dispatch('common/requestInterceptAtom', {
                         projectId: this.projectId,
                         pipelineId: this.pipelineId
                     })
                 }
             },
             requestMatchTemplateRules (templateId) {
-                this.$store.dispatch('soda/requestMatchTemplateRuleList', {
+                this.$store.dispatch('common/requestMatchTemplateRuleList', {
                     projectId: this.projectId,
                     templateId
                 })
