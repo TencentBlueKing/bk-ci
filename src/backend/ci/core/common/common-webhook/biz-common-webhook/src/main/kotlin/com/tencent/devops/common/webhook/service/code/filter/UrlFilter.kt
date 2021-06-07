@@ -42,7 +42,7 @@ class UrlFilter(
 
         return (
             triggerRepository.first == repository.first ||
-                includeHost?.contains(triggerRepository.first) == true
+                includeHost?.split(",")?.contains(triggerRepository.first) == true
             ) &&
             triggerRepository.second == repository.second
     }
