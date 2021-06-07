@@ -38,6 +38,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
+import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
@@ -162,6 +163,12 @@ class PipelineListFacadeService @Autowired constructor(
             val runningCount = it["RUNNING_COUNT"] as Int? ?: 0
             val buildStatusOrd = it["LATEST_STATUS"] as Int?
             val model = pipelineRepositoryService.getModel(pipelineId, version) ?: continue
+            val pipelineBuildStatus = if (buildStatusOrd != null) {
+                val tmpStatus = BuildStatus.values()[buildStatusOrd.coerceAtMost(BuildStatus.values().size - 1)]
+                BuildStatusSwitcher.pipelineStatusMaker.finish(tmpStatus)
+            } else {
+                null
+            }
             // todo还没想好与Pipeline 结合，减少这部分的代码，收归一处
             pipelines.add(
                 PipelineWithModel(
@@ -175,15 +182,7 @@ class PipelineListFacadeService @Autowired constructor(
                     canManualStartup = it["MANUAL_STARTUP"] as Int == 1,
                     latestBuildStartTime = (it["LATEST_START_TIME"] as LocalDateTime?)?.timestampmilli() ?: 0,
                     latestBuildEndTime = (it["LATEST_END_TIME"] as LocalDateTime?)?.timestampmilli() ?: 0,
-                    latestBuildStatus = if (buildStatusOrd != null) {
-                        if (buildStatusOrd == BuildStatus.QUALITY_CHECK_FAIL.ordinal) {
-                            BuildStatus.FAILED
-                        } else {
-                            BuildStatus.values()[buildStatusOrd.coerceAtMost(BuildStatus.values().size - 1)]
-                        }
-                    } else {
-                        null
-                    },
+                    latestBuildStatus = pipelineBuildStatus,
                     latestBuildNum = it["BUILD_NUM"] as Int,
                     latestBuildTaskName = it["LATEST_TASK_NAME"] as String?,
                     latestBuildId = it["LATEST_BUILD_ID"] as String?,
@@ -1095,6 +1094,12 @@ class PipelineListFacadeService @Autowired constructor(
             val finishCount = it["FINISH_COUNT"] as Int? ?: 0
             val runningCount = it["RUNNING_COUNT"] as Int? ?: 0
             val buildStatusOrd = it["LATEST_STATUS"] as Int?
+            val pipelineBuildStatus = if (buildStatusOrd != null) {
+                val tmpStatus = BuildStatus.values()[buildStatusOrd.coerceAtMost(BuildStatus.values().size - 1)]
+                BuildStatusSwitcher.pipelineStatusMaker.finish(tmpStatus)
+            } else {
+                null
+            }
             // todo还没想好与PipelineWithModel结合，减少这部分的代码，收归一处
             pipelines.add(
                 Pipeline(
@@ -1108,15 +1113,7 @@ class PipelineListFacadeService @Autowired constructor(
                     canManualStartup = it["MANUAL_STARTUP"] as Int == 1,
                     latestBuildStartTime = (it["LATEST_START_TIME"] as LocalDateTime?)?.timestampmilli() ?: 0,
                     latestBuildEndTime = (it["LATEST_END_TIME"] as LocalDateTime?)?.timestampmilli() ?: 0,
-                    latestBuildStatus = if (buildStatusOrd != null) {
-                        if (buildStatusOrd == BuildStatus.QUALITY_CHECK_FAIL.ordinal) {
-                            BuildStatus.FAILED
-                        } else {
-                            BuildStatus.values()[buildStatusOrd.coerceAtMost(BuildStatus.values().size - 1)]
-                        }
-                    } else {
-                        null
-                    },
+                    latestBuildStatus = pipelineBuildStatus,
                     latestBuildNum = it["BUILD_NUM"] as Int,
                     latestBuildTaskName = it["LATEST_TASK_NAME"] as String?,
                     latestBuildEstimatedExecutionSeconds = latestBuildEstimatedExecutionSeconds,
