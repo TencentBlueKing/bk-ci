@@ -81,14 +81,10 @@ jobs:
       - name: Gradle Build Backend Service
         working-directory: src/backend/ci
         run: ./gradlew clean test build :core:worker:worker-agent:shadowJar -DmavenRepoUrl="https://maven.aliyun.com/nexus/content/groups/public/"
+
       - name: Create artifact - Step1:init
         run: |
-          mkdir -p bkci/frontend
-          mkdir -p bkci/gateway
-          mkdir -p bkci/agent-package
-          mkdir -p bkci/agent-package/script/linux
-          mkdir -p bkci/agent-package/upgrade
-          mkdir -p bkci/agent-package/jar
+          true  # 暂无init需求, 保留此步骤.
 
       - name: Create artifact - Step2:get Agent
         uses: actions/download-artifact@v1
