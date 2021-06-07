@@ -43,9 +43,8 @@ bk-ci提供了流水线、代码库、凭证管理、环境管理、研发商店
 - [一分钟安装部署](docs/overview/installation.md)
 
 ## Support
-1. [wiki](https://github.com/Tencent/bk-ci/wiki)
-2. [蓝鲸社区](https://bk.tencent.com/s-mart/community)
-3. QQ群：744672165
+1. [蓝鲸社区](https://bk.tencent.com/s-mart/community)
+2. QQ群：744672165
 
 ## BlueKing Community
 - [BK-BCS](https://github.com/Tencent/bk-bcs)：蓝鲸容器管理平台是以容器技术为基础，为微服务业务提供编排管理的基础服务平台。

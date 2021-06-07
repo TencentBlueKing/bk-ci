@@ -1051,6 +1051,7 @@ class PipelineBuildFacadeService(
             startTime = buildHistory.startTime,
             endTime = buildHistory.endTime,
             status = buildHistory.status,
+            stageStatus = buildHistory.stageStatus,
             deleteReason = buildHistory.deleteReason,
             currentTimestamp = buildHistory.currentTimestamp,
             isMobileStart = buildHistory.isMobileStart,
@@ -1065,7 +1066,11 @@ class PipelineBuildFacadeService(
             startType = buildHistory.startType,
             recommendVersion = buildHistory.recommendVersion,
             variables = variables,
-            buildMsg = buildHistory.buildMsg
+            buildMsg = buildHistory.buildMsg,
+            retry = buildHistory.retry,
+            errorInfoList = buildHistory.errorInfoList,
+            buildNumAlias = buildHistory.buildNumAlias,
+            webhookInfo = buildHistory.webhookInfo
         )
     }
 
