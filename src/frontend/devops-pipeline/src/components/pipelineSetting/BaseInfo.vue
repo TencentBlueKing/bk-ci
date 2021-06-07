@@ -25,7 +25,9 @@
             </bk-form-item>
             <bk-form-item :label="$t('settings.buildNumberFormat')" :is-error="errors.has(&quot;buildNumRule&quot;)" :error-msg="errors.first(&quot;buildNumRule&quot;)">
                 <vuex-input style="max-width: 350px;" name="buildNumRule" :value="pipelineSetting.buildNumRule" :placeholder="$t('buildDescInputTips')" v-validate.initial="{ buildNumRule: true }" max-length="256" :handle-change="handleBaseInfoChange" />
-                <logo size="16" class="build-num-rule-warn" name="feedback" v-bk-tooltips="$t('buildNumRuleWarn')" />
+                <span @click="handleGoDocumentInfo">
+                    <logo size="16" class="build-num-rule-warn" name="feedback" v-bk-tooltips="$t('buildNumRuleWarn')" />
+                </span>
                 <p class="error-tips"
                     v-show="errors.has('buildNumRule')">
                     {{ $t('settings.validatebuildNum') }}
@@ -102,6 +104,7 @@
             }
         },
         created () {
+            console.log(this.pipelineSetting, '222222')
             this.clipboard = new Clipboard('.copy-icon').on('success', e => {
                 this.$showTips({
                     theme: 'success',
@@ -139,6 +142,9 @@
                     else labels = labels.concat(value)
                 })
                 this.handleBaseInfoChange('labels', labels)
+            },
+            handleGoDocumentInfo () {
+                window.open('https://docs.bkci.net/services/pipelines/pipeline-edit/alias-buildno')
             }
         }
     }
@@ -194,6 +200,7 @@
             }
         }
         .build-num-rule-warn {
+            cursor: pointer;
             position: relative;
             top: 5px;
             left: 5px;
