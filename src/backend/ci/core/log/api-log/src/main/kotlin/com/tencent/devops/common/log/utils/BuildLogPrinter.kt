@@ -106,6 +106,48 @@ class BuildLogPrinter(
         executeCount = executeCount
     )
 
+    fun addErrorLine(
+        buildId: String,
+        message: String,
+        tag: String,
+        jobId: String? = null,
+        executeCount: Int,
+        subTag: String? = null
+    ) {
+        genLogPrintPrintResource().addLogLine(
+            buildId = buildId,
+            logMessage = genLogMessage(
+                message = message,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                logType = LogType.ERROR,
+                executeCount = executeCount
+            )
+        )
+    }
+
+    fun addDebugLine(
+        buildId: String,
+        message: String,
+        tag: String,
+        jobId: String? = null,
+        executeCount: Int,
+        subTag: String? = null
+    ) {
+        genLogPrintPrintResource().addLogLine(
+            buildId = buildId,
+            logMessage = genLogMessage(
+                message = message,
+                tag = tag,
+                subTag = subTag,
+                jobId = jobId,
+                logType = LogType.DEBUG,
+                executeCount = executeCount
+            )
+        )
+    }
+
     fun addYellowLine(
         buildId: String,
         message: String,
