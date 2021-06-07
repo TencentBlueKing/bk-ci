@@ -26,17 +26,14 @@
  */
 
 dependencies {
-    api(project(":core:common:common-api"))
-    api(project(":core:common:common-auth:common-auth-api"))
-    api(project(":core:common:common-redis"))
-    api(project(":core:common:common-web"))
-    api(project(":core:common:common-service"))
+    api(project(":ext:tencent:common:common-digest-tencent"))
+    api(project(":core:project:biz-project"))
+    api(project(":core:project:api-project"))
+    api(project(":ext:tencent:project:api-project-tencent"))
+    api(project(":ext:tencent:store:api-store-service"))
+    api(project(":ext:tencent:common:common-auth:common-auth-tencent"))
+    api(project(":ext:tencent:monitoring:api-monitoring-tencent"))
+    api(project(":ext:tencent:common:common-archive-tencent"))
+    api(project(":ext:tencent:auth:sdk-auth-tencent"))
     api(project(":core:auth:api-auth"))
-    api("com.fasterxml.jackson.core:jackson-databind")
-    api("com.fasterxml.jackson.core:jackson-core")
-    api("com.fasterxml.jackson.core:jackson-annotations")
-    api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider")
-    api("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
-    api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-base")
-    api("com.fasterxml.jackson.module:jackson-module-kotlin")
 }
