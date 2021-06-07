@@ -159,7 +159,9 @@ class CallBackControl @Autowired constructor(
             endTime = modelDetail.endTime ?: 0,
             model = SimpleModel(stages),
             projectId = projectId,
-            trigger = modelDetail.trigger
+            trigger = modelDetail.trigger,
+            stageId = event.stageId,
+            taskId = event.taskId
         )
 
         sendToCallBack(CallBackData(event = callBackEvent, data = buildEvent), list)

@@ -114,7 +114,9 @@ data class BuildEvent(
     val endTime: Long = 0,
     val model: SimpleModel,
     val projectId: String,
-    val trigger: String
+    val trigger: String,
+    val stageId: String?, // 仅当 BUILD_STAGE_START/BUILD_STAGE_END
+    val taskId: String? // 仅当 BUILD_TASK_START/BUILD_TASK_END
 )
 
 data class SimpleModel(
