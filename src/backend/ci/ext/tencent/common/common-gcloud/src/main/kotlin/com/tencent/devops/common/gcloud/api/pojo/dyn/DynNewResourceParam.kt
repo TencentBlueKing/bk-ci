@@ -27,11 +27,9 @@
 
 package com.tencent.devops.common.gcloud.api.pojo.dyn
 
-import org.springframework.stereotype.Component
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.api.param.ReqParam
 
-@Component
 data class DynNewResourceParam(
     @field:JsonProperty("Uin")
     val uin: String,

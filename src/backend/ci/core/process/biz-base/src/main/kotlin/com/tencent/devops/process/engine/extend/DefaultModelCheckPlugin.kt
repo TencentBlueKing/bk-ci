@@ -29,6 +29,7 @@ package com.tencent.devops.process.engine.extend
 
 import com.tencent.devops.common.api.check.Preconditions
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
@@ -50,16 +51,46 @@ import com.tencent.devops.process.engine.control.DependOnUtils
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.plugin.load.ContainerBizRegistrar
 import com.tencent.devops.process.plugin.load.ElementBizRegistrar
+import com.tencent.devops.process.pojo.config.JobCommonSettingConfig
+import com.tencent.devops.process.pojo.config.PipelineCommonSettingConfig
+import com.tencent.devops.process.pojo.config.StageCommonSettingConfig
+import com.tencent.devops.process.pojo.config.TaskCommonSettingConfig
+import com.tencent.devops.process.utils.KEY_JOB
+import com.tencent.devops.process.utils.KEY_STAGE
+import com.tencent.devops.process.utils.KEY_TASK
+import com.tencent.devops.store.pojo.common.KEY_INPUT
+import com.tencent.devops.store.pojo.common.StoreParam
+import com.tencent.devops.store.pojo.common.StoreVersion
 import org.slf4j.LoggerFactory
 
-open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelCheckPlugin {
+open class DefaultModelCheckPlugin constructor(
+    open val client: Client,
+    open val pipelineCommonSettingConfig: PipelineCommonSettingConfig,
+    open val stageCommonSettingConfig: StageCommonSettingConfig,
+    open val jobCommonSettingConfig: JobCommonSettingConfig,
+    open val taskCommonSettingConfig: TaskCommonSettingConfig
+) : ModelCheckPlugin {
 
     override fun checkModelIntegrity(model: Model, projectId: String?) {
-
         // 检查流水线名称
         PipelineUtils.checkPipelineName(model.name)
-
-        val stage = model.stages.getOrNull(0)
+        // 检查流水线model是否过大
+        val modelSize = JsonUtil.toJson(model).length
+        if (modelSize > pipelineCommonSettingConfig.maxModelSize.toLong()) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_TOO_LARGE,
+                params = arrayOf(pipelineCommonSettingConfig.maxModelSize.toString())
+            )
+        }
+        val stages = model.stages
+        // 判断stage数量是否超过系统限制
+        if (stages.size > pipelineCommonSettingConfig.maxStageNum) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_COMPONENT_NUM_TOO_LARGE,
+                params = arrayOf("", KEY_STAGE, pipelineCommonSettingConfig.maxStageNum.toString())
+            )
+        }
+        val stage = stages.getOrNull(0)
             ?: throw ErrorCodeException(
                 defaultMessage = "流水线Stage为空",
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
@@ -77,10 +108,21 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
 
         val elementCnt = mutableMapOf<String, Int>()
         val containerCnt = mutableMapOf<String, Int>()
-        val storeAtomList = mutableListOf<String>()
         val lastPosition = model.stages.size - 1
         model.stages.forEachIndexed { nowPosition, s ->
-            if (s.containers.isEmpty()) {
+            val containers = s.containers
+            // 判断stage下container数量是否超过系统限制
+            if (containers.size > stageCommonSettingConfig.maxJobNum) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_COMPONENT_NUM_TOO_LARGE,
+                    params = arrayOf(
+                        s.name ?: "stage_$nowPosition",
+                        KEY_JOB,
+                        stageCommonSettingConfig.maxJobNum.toString()
+                    )
+                )
+            }
+            if (containers.isEmpty()) {
                 throw ErrorCodeException(
                     defaultMessage = "流水线Stage为空",
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
@@ -102,21 +144,25 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_STAGE_NO_TRIGGER_USER
                 )
             }
-            checkElements(s, containerCnt, elementCnt, storeAtomList)
-            DependOnUtils.checkRepeatedJobId(s)
-        }
-
-        if (storeAtomList.isNotEmpty() && !projectId.isNullOrEmpty()) {
-            val projectInstallCheck = AtomUtils.isProjectInstallAtom(storeAtomList, projectId, client)
-            if (projectInstallCheck.isNotEmpty()) {
-                logger.warn("save model project not install atom  $projectId| ${model.name}| $storeAtomList")
-                val unInstallAtom = projectInstallCheck.joinToString(",")
-                throw ErrorCodeException(
-                    defaultMessage = "流水线内存在该项目未安装的插件$unInstallAtom. 请先安装插件",
-                    errorCode = ProcessMessageCode.MODEL_ATOMCODE_PROJECT_NOT_INSTALL,
-                    params = arrayOf(unInstallAtom)
+            val atomVersions = mutableSetOf<StoreVersion>()
+            val atomInputParamList = mutableListOf<StoreParam>()
+            checkElements(
+                stage = s,
+                containerCnt = containerCnt,
+                elementCnt = elementCnt,
+                atomVersions = atomVersions,
+                atomInputParamList = atomInputParamList
+            )
+            if (!projectId.isNullOrEmpty() && atomVersions.isNotEmpty()) {
+                AtomUtils.checkModelAtoms(
+                    projectCode = projectId,
+                    atomVersions = atomVersions,
+                    atomInputParamList = atomInputParamList,
+                    inputTypeConfigMap = AtomUtils.getInputTypeConfigMap(taskCommonSettingConfig),
+                    client = client
                 )
             }
+            DependOnUtils.checkRepeatedJobId(stage)
         }
     }
 
@@ -124,25 +170,88 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
         stage: Stage,
         containerCnt: MutableMap<String, Int>,
         elementCnt: MutableMap<String, Int>,
-        storeAtomList: MutableList<String>
+        atomVersions: MutableSet<StoreVersion>,
+        atomInputParamList: MutableList<StoreParam>
     ) {
         stage.containers.forEach { c ->
+            val tasks = c.elements
+            // 判断job下task数量是否超过系统限制
+            if (tasks.size > jobCommonSettingConfig.maxTaskNum) {
+                throw ErrorCodeException(
+                    errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_COMPONENT_NUM_TOO_LARGE,
+                    params = arrayOf(c.name, KEY_TASK, jobCommonSettingConfig.maxTaskNum.toString())
+                )
+            }
             val cCnt = containerCnt.computeIfPresent(c.getClassType()) { _, oldValue -> oldValue + 1 }
                 ?: containerCnt.computeIfAbsent(c.getClassType()) { 1 } // 第一次时出现1次
             ContainerBizRegistrar.getPlugin(c)?.check(c, cCnt)
-            Preconditions.checkTrue(c.elements.isNotEmpty(), ErrorCodeException(
-                defaultMessage = "流水线: Model信息不完整，Stage[{0}] Job[{1}]下没有插件",
-                errorCode = ProcessMessageCode.ERROR_EMPTY_JOB, params = arrayOf(stage.name!!, c.name)
-            ))
+            Preconditions.checkTrue(
+                c.elements.isNotEmpty(), ErrorCodeException(
+                    defaultMessage = "流水线: Model信息不完整，Stage[{0}] Job[{1}]下没有插件",
+                    errorCode = ProcessMessageCode.ERROR_EMPTY_JOB, params = arrayOf(stage.name!!, c.name)
+                )
+            )
             c.elements.forEach { e ->
                 val eCnt = elementCnt.computeIfPresent(e.getAtomCode()) { _, oldValue -> oldValue + 1 }
                     ?: elementCnt.computeIfAbsent(e.getAtomCode()) { 1 } // 第一次时出现1次
                 ElementBizRegistrar.getPlugin(e)?.check(e, eCnt)
-                if (isStoreAtom(e)) {
-                    storeAtomList.add(e.getAtomCode())
-                    checkoutAtomExist(e)
-                }
+                addAtomInputDataInfo(e, atomVersions, atomInputParamList)
             }
+        }
+    }
+
+    @Suppress("UNCHECKED_CAST")
+    private fun addAtomInputDataInfo(
+        e: Element,
+        atomVersions: MutableSet<StoreVersion>,
+        atomInputParamList: MutableList<StoreParam>
+    ) {
+        var version = e.version
+        if (version.isBlank()) {
+            version = "1.*"
+        }
+        val atomCode = e.getAtomCode()
+        atomVersions.add(
+            StoreVersion(
+                storeCode = atomCode,
+                storeName = e.name,
+                version = version,
+                historyFlag = AtomUtils.isHisAtomElement(e)
+            )
+        )
+        // 获取插件的输入参数
+        val atomInputDataMap = when (e) {
+            is MarketBuildAtomElement -> {
+                e.data[KEY_INPUT]
+            }
+            is MarketBuildLessAtomElement -> {
+                e.data[KEY_INPUT]
+            }
+            else -> {
+                // 获取老插件的输入参数
+                val baseFields = Element::class.java.declaredFields.filter { it.name != "Companion" }
+                val filterFieldNames = baseFields.map { it.name }.toMutableSet()
+                filterFieldNames.addAll(
+                    setOf(
+                        "@type",
+                        "classType",
+                        "elementEnable",
+                        "atomCode",
+                        "taskAtom"
+                    )
+                )
+                JsonUtil.toMap(e).filter { it.key !in filterFieldNames }
+            }
+        } as? Map<String, Any?>
+        if (atomInputDataMap != null) {
+            atomInputParamList.add(
+                StoreParam(
+                    storeCode = atomCode,
+                    storeName = e.name,
+                    version = version,
+                    inputParam = atomInputDataMap
+                )
+            )
         }
     }
 
@@ -171,25 +280,6 @@ open class DefaultModelCheckPlugin constructor(open val client: Client) : ModelC
 
             return false
         }
-    }
-
-    private fun checkoutAtomExist(e: Element) {
-        if (e is MarketBuildLessAtomElement || e is MarketBuildAtomElement) {
-            if (!AtomUtils.isAtomExist(e.getAtomCode(), client)) {
-                logger.warn("save model atom is notExist  ${e.getAtomCode()}")
-                throw ErrorCodeException(
-                    defaultMessage = "流水线内包含插件市场不存在的插件${e.getAtomCode()}",
-                    errorCode = ProcessMessageCode.MODEL_ATOMCODE_NOT_EXSIT
-                )
-            }
-        }
-    }
-
-    private fun isStoreAtom(element: Element): Boolean {
-        if (element is MarketBuildLessAtomElement || element is MarketBuildAtomElement) {
-            return true
-        }
-        return false
     }
 
     /**

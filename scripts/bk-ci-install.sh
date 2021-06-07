@@ -98,9 +98,13 @@ install_ci__ms_common (){
   tip_dir_exist "$BK_CI_SRC_DIR/$MS_NAME" || return 16
   # 检查安装java
   install_java || return $?
-  # 复制整个安装目录?
-  rsync -ra "$BK_CI_SRC_DIR/" "$BK_CI_HOME"
-  # 保持微服务目录的一致性.
+  # 增量复制.
+  for f in agent-package jars-public jars-private scripts VERSION; do
+    [ -e "$BK_CI_SRC_DIR/$f" ] || continue
+    echo "install $BK_CI_SRC_DIR/$f to $BK_CI_HOME."
+    rsync -ra "$BK_CI_SRC_DIR/" "$BK_CI_HOME"
+  done
+  # 保持微服务目录的强一致性.
   rsync -ra --del "$BK_CI_SRC_DIR/$MS_NAME/" "$BK_CI_HOME/$MS_NAME"
 }
 
@@ -132,6 +136,7 @@ install_ci_gateway (){
   local proj=$1
   rsync -ra --del "$BK_CI_SRC_DIR/gateway" "$BK_CI_HOME"
   rsync -ra --del "$BK_CI_SRC_DIR/frontend" "$BK_CI_HOME"  # frontend不必verbose.
+  rsync -ra "$BK_CI_SRC_DIR/agent-package" "$BK_CI_HOME"  # #3707 网关提供jars下载.
   if [ -d "$BK_CI_SRC_DIR/docs" ]; then
     rsync -ra --del "$BK_CI_SRC_DIR/docs" "$BK_CI_HOME" || return $?  # 可选docs
   fi

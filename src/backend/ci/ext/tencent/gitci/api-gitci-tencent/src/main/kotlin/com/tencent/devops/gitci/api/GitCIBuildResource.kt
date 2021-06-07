@@ -30,6 +30,7 @@ package com.tencent.devops.gitci.api
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.gitci.pojo.GitCIStartupVO
 import com.tencent.devops.process.pojo.BuildId
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -88,4 +89,15 @@ interface GitCIBuildResource {
         @PathParam("buildId")
         buildId: String
     ): Result<Boolean>
+
+    @ApiOperation("gitci启动流水线")
+    @POST
+    @Path("/pipeline/startup")
+    fun gitCIStartupPipeline(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("启动信息", required = true)
+        gitCIStartupVO: GitCIStartupVO
+    ): Result<BuildId?>
 }

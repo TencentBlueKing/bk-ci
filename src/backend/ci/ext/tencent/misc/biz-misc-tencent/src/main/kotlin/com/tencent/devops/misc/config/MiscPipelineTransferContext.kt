@@ -47,8 +47,14 @@ class MiscPipelineTransferContext @Autowired constructor(private val redisOperat
         private const val TRANSFER_PROJECT_LIST_KEY = "misc:pipeline:transfer:project:list"
         private const val TRANSFER_PROJECT_ID_KEY = "misc:pipeline:transfer:project:id"
         private const val TRANSFER_PROJECT_BATCH_SIZE_KEY = "misc:pipeline:transfer:project:batchSize"
-        private const val expiredTimeInSeconds: Long = 3000
+        private const val expiredTimeInSeconds: Long = 360000
     }
+
+    private val finishSetKey = redisOperation.getRedisName() + ":" + FINISH_PROJECT_SET_KEY
+    private val channelKey = redisOperation.getRedisName() + ":" + TRANSFER_PROJECT_CHANNELS_KEY
+    private val projectListKey = redisOperation.getRedisName() + ":" + TRANSFER_PROJECT_LIST_KEY
+    private val projectIdKey = redisOperation.getRedisName() + ":" + TRANSFER_PROJECT_ID_KEY
+    private val batchSizeKey = redisOperation.getRedisName() + ":" + TRANSFER_PROJECT_BATCH_SIZE_KEY
 
     @Value("\${misc.pipeline.transfer.enable:false}")
     private val enable: String = "false"
@@ -72,7 +78,7 @@ class MiscPipelineTransferContext @Autowired constructor(private val redisOperat
         .build(object : CacheLoader<String, Boolean>() {
             override fun load(key: String): Boolean {
                 val channelSet = mutableSetOf<String>()
-                val channels = redisOperation.get(TRANSFER_PROJECT_CHANNELS_KEY) ?: "CODECC"
+                val channels = redisOperation.get(channelKey) ?: "CODECC"
                 channelSet.addAll(channels.split(","))
                 return channelSet.contains(key)
             }
@@ -88,7 +94,7 @@ class MiscPipelineTransferContext @Autowired constructor(private val redisOperat
      * return p1,p2,p3
      */
     fun needTransferProjectIdList(): List<String> {
-        val projectIdListConfig = redisOperation.get(TRANSFER_PROJECT_LIST_KEY)
+        val projectIdListConfig = redisOperation.get(projectListKey)
         if (!projectIdListConfig.isNullOrBlank()) {
             return projectIdListConfig.split(",")
         }
@@ -98,19 +104,19 @@ class MiscPipelineTransferContext @Autowired constructor(private val redisOperat
     /**
      * return Long
      */
-    fun getLastTransferProjectSeqId(): Long? = redisOperation.get(TRANSFER_PROJECT_ID_KEY)?.toLong()
+    fun getLastTransferProjectSeqId(): Long? = redisOperation.get(projectIdKey)?.toLong()
 
-    fun dealProjectBatchSize(): Int = intCache.get(TRANSFER_PROJECT_BATCH_SIZE_KEY).coerceAtLeast(1)
+    fun dealProjectBatchSize(): Int = intCache.get(batchSizeKey).coerceAtLeast(1)
 
     fun setLastProjectSeqId(maxHandleProjectPrimaryId: Long) {
-        redisOperation.set(TRANSFER_PROJECT_ID_KEY, maxHandleProjectPrimaryId.toString())
+        redisOperation.set(projectIdKey, maxHandleProjectPrimaryId.toString())
     }
 
     fun checkTransferChannel(channel: String): Boolean = channelCache.get(channel)
 
     fun addFinishProject(projectId: String) {
-        redisOperation.sadd(FINISH_PROJECT_SET_KEY, projectId)
+        redisOperation.sadd(finishSetKey, projectId)
     }
 
-    fun isFinishProject(projectId: String): Boolean = redisOperation.isMember(FINISH_PROJECT_SET_KEY, projectId)
+    fun isFinishProject(projectId: String): Boolean = redisOperation.isMember(finishSetKey, projectId)
 }

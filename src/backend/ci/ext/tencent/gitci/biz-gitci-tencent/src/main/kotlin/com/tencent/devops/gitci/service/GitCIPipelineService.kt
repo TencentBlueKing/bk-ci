@@ -181,7 +181,8 @@ class GitCIPipelineService @Autowired constructor(
             pipelineIds = pipelineIds
         )
         if (pipelines.isEmpty()) return emptyList()
-        val latestBuilds = gitCIDetailService.batchGetBuildDetail(userId, gitProjectId, pipelines.map { it.latestBuildId })
+        val latestBuilds =
+            gitCIDetailService.batchGetBuildDetail(userId, gitProjectId, pipelines.map { it.latestBuildId })
         return pipelines.map {
             GitProjectPipeline(
                 gitProjectId = gitProjectId,

@@ -9,7 +9,7 @@ today=$(date +%Y-%m-%d)
 
 CTRL_DIR=${CTRL_DIR:-/data/install}
 
-dispatch_api_prefix="http://127.0.0.1:21922/api/op/dispatchDocker"
+dispatch_api_prefix="http://127.0.0.1:21938/api/op/dispatchDocker"
 
 jq_filter_get=".id,.dockerIp,.dockerHostPort,.enable,.capacity,.createTime"
 jq_filter_get_v=".id,.dockerIp,.dockerHostPort,.enable,.grayEnv,.specialOn,.capacity,.usedNum,.averageCpuLoad,.averageMemLoad,.averageDiskLoad,.averageDiskIOLoad,.createTime"
