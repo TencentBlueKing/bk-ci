@@ -104,7 +104,6 @@
             }
         },
         created () {
-            console.log(this.pipelineSetting, '222222')
             this.clipboard = new Clipboard('.copy-icon').on('success', e => {
                 this.$showTips({
                     theme: 'success',
