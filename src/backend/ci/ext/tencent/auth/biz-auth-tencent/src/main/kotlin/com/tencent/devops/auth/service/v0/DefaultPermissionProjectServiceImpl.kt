@@ -13,7 +13,7 @@ class DefaultPermissionProjectServiceImpl @Autowired constructor(
     val authServiceCode: BSCommonAuthServiceCode
 ) : PermissionProjectService {
     
-    override fun getProjectUsers(serviceCode: String, projectCode: String, group: BkAuthGroup?): List<String> {
+    override fun getProjectUsers(projectCode: String, group: BkAuthGroup?): List<String> {
         
         return authProjectApi.getProjectUsers(
             serviceCode = authServiceCode,
@@ -22,7 +22,7 @@ class DefaultPermissionProjectServiceImpl @Autowired constructor(
         )
     }
     
-    override fun getProjectGroupAndUserList(serviceCode: String, projectCode: String): List<BkAuthGroupAndUserList> {
+    override fun getProjectGroupAndUserList(projectCode: String): List<BkAuthGroupAndUserList> {
         return authProjectApi.getProjectGroupAndUserList(
             serviceCode = authServiceCode,
             projectCode = projectCode
