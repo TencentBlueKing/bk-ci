@@ -66,7 +66,6 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElem
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
-import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 import com.tencent.devops.common.redis.RedisLock
@@ -1718,11 +1717,10 @@ class PipelineRuntimeService @Autowired constructor(
             }
             logger.info("[$pipelineId]|getRecommendVersion-$buildId recommendVersion: $recommendVersion")
             val remark = buildVariableService.getVariable(buildId, PIPELINE_BUILD_REMARK)
-            val finalStatus = BuildStatusSwitcher.forceFinish(status)
             pipelineBuildDao.finishBuild(
                 dslContext = dslContext,
                 buildId = buildId,
-                buildStatus = finalStatus,
+                buildStatus = status,
                 executeTime = executeTime,
                 buildParameters = JsonUtil.toJson(buildParameters),
                 recommendVersion = recommendVersion,

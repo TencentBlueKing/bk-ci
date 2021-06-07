@@ -124,7 +124,7 @@ class BuildEndControl @Autowired constructor(
     private fun PipelineBuildFinishEvent.finish() {
 
         // 将状态设置正确
-        val buildStatus = BuildStatusSwitcher.fixPipelineFinish(status)
+        val buildStatus = BuildStatusSwitcher.pipelineStatusMaker.finish(status)
 
         val buildInfo = pipelineRuntimeService.getBuildInfo(buildId)
 
