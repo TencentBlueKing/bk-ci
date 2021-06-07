@@ -538,6 +538,7 @@ class PipelineRepositoryService constructor(
                 canElementSkip = canElementSkip,
                 taskCount = taskCount
             )
+            model.latestVersion = 1
             pipelineResDao.create(
                 dslContext = transactionContext,
                 pipelineId = pipelineId,
@@ -660,6 +661,7 @@ class PipelineRepositoryService constructor(
                 // 传过来的latestVersion已经不是最新
                 throw ErrorCodeException(errorCode = ProcessMessageCode.ERROR_PIPELINE_IS_NOT_THE_LATEST)
             }
+            model.latestVersion = version
             pipelineResDao.create(
                 dslContext = transactionContext,
                 pipelineId = pipelineId,
@@ -841,8 +843,8 @@ class PipelineRepositoryService constructor(
                     name = deleteName,
                     desc = "DELETE BY $userId in $deleteTime"
                 )
-                // 删除关联之模板
-                templatePipelineDao.delete(dslContext = transactionContext, pipelineId = pipelineId)
+                // #4201 标志关联模板为删除
+                templatePipelineDao.softDelete(dslContext = transactionContext, pipelineId = pipelineId)
             }
 
             pipelineModelTaskDao.deletePipelineTasks(transactionContext, projectId, pipelineId)
@@ -1124,6 +1126,10 @@ class PipelineRepositoryService constructor(
                 userId = userId,
                 channelCode = channelCode
             )
+
+            // #4012 还原与模板的绑定关系
+            templatePipelineDao.restore(dslContext = transactionContext, pipelineId = pipelineId)
+
             // 只初始化相关信息
             val tasks = initModel(
                 model = existModel,

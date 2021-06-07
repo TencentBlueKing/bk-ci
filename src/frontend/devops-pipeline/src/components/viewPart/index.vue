@@ -250,11 +250,12 @@
                 })
 
                 try {
+                    const encodePath = encodeURIComponent(row.path)
                     if (key === 'url') {
                         const res = await this.$store.dispatch('soda/requestExternalUrl', {
                             projectId: this.projectId,
                             artifactoryType: row.artifactoryType,
-                            path: row.path
+                            path: encodePath
                         })
 
                         this.curIndexItemUrl = res.url
@@ -263,7 +264,7 @@
                         const res = await this.$store.dispatch('soda/requestDownloadUrl', {
                             projectId: this.projectId,
                             artifactoryType: row.artifactoryType,
-                            path: row.path
+                            path: encodePath
                         })
                         const url = isDevnet ? res.url : res.url2
                         window.location.href = type ? `${API_URL_PREFIX}/pc/download/devops_pc_forward.html?downloadUrl=${url}` : url

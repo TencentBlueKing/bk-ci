@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.control
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.ErrorCode.PLUGIN_DEFAULT_ERROR
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -46,6 +47,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.websocket.enum.RefreshType
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildNoLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildStartLock
@@ -57,7 +59,6 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
-import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.utils.PIPELINE_MESSAGE_STRING_LENGTH_MAX
@@ -78,7 +79,6 @@ class BuildEndControl @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
-    private val pipelineRepositoryService: PipelineRepositoryService,
     private val buildLogPrinter: BuildLogPrinter
 ) {
 
@@ -196,7 +196,7 @@ class BuildEndControl @Autowired constructor(
     }
 
     private fun setBuildNoWhenBuildSuccess(pipelineId: String, buildId: String) {
-        val model = pipelineRepositoryService.getModel(pipelineId) ?: return
+        val model = pipelineBuildDetailService.getBuildModel(buildId) ?: return
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
         val buildNoObj = triggerContainer.buildNo ?: return
 
@@ -214,8 +214,8 @@ class BuildEndControl @Autowired constructor(
 
     private fun updateBuildNoInfo(pipelineId: String, buildId: String) {
         val buildSummary = pipelineRuntimeService.getBuildSummaryRecord(pipelineId = pipelineId)
-        if (buildSummary?.buildNo != null) {
-            val buildNo = buildSummary.buildNo
+        val buildNo = buildSummary?.buildNo
+        if (buildNo != null && pipelineRuntimeService.getBuildInfo(buildId)?.retryFlag != true) {
             pipelineRuntimeService.updateBuildNo(pipelineId = pipelineId, buildNo = buildNo + 1)
             // 更新历史表的推荐版本号
             val buildParameters = pipelineRuntimeService.getBuildParametersFromStartup(buildId)
@@ -333,6 +333,11 @@ class BuildEndControl @Autowired constructor(
         }
 
         LOG.info("ENGINE|$buildId|$source|FETCH_QUEUE|next build: ${nextBuild.buildId} ${nextBuild.status}")
+        val model = pipelineBuildDetailService.getBuildModel(nextBuild.buildId) ?: throw ErrorCodeException(
+            errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+            params = arrayOf(nextBuild.buildId)
+        )
+        val triggerContainer = model.stages[0].containers[0] as TriggerContainer
         pipelineEventDispatcher.dispatch(
             PipelineBuildStartEvent(
                 source = "build_finish_$buildId",
@@ -342,7 +347,8 @@ class BuildEndControl @Autowired constructor(
                 buildId = nextBuild.buildId,
                 taskId = nextBuild.firstTaskId,
                 status = nextBuild.status,
-                actionType = ActionType.START
+                actionType = ActionType.START,
+                buildNoType = triggerContainer.buildNo?.buildNoType
             )
         )
     }
