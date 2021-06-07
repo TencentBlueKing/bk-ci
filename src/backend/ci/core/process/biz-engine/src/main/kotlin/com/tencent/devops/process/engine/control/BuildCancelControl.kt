@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.control
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
@@ -38,6 +39,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildCancelEvent
@@ -64,6 +66,7 @@ class BuildCancelControl @Autowired constructor(
     private val pipelineStageService: PipelineStageService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val buildVariableService: BuildVariableService,
+    private val buildLogPrinter: BuildLogPrinter,
     @Autowired(required = false)
     private val measureService: MeasureService?
 ) {
@@ -100,7 +103,7 @@ class BuildCancelControl @Autowired constructor(
 
         val model = pipelineBuildDetailService.getBuildModel(buildId = event.buildId)
         return if (model != null) {
-            LOG.info("ENGINE|${event.buildId}|{${event.source}}|CANCEL|status=${event.status}")
+            LOG.info("ENGINE|${event.buildId}|${event.source}|CANCEL|status=${event.status}")
 
             cancelAllPendingTask(event = event, model = model)
             // 修改detail model
@@ -184,6 +187,19 @@ class BuildCancelControl @Autowired constructor(
                     } else if (container is NormalContainer) { // 非编译环境关机
                         container.shutdown(event = event, executeCount = executeCount)
                     }
+                    buildLogPrinter.addYellowLine(
+                        buildId = event.buildId,
+                        message = "[$executeCount]|Job#${container.id} was cancel by ${event.userId}",
+                        tag = VMUtils.genStartVMTaskId(container.id!!),
+                        jobId = container.containerId,
+                        executeCount = executeCount
+                    )
+                    buildLogPrinter.stopLog(
+                        buildId = event.buildId,
+                        tag = VMUtils.genStartVMTaskId(container.id!!),
+                        jobId = container.containerId,
+                        executeCount = executeCount
+                    )
                 }
             }
         }
