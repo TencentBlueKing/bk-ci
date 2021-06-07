@@ -46,6 +46,14 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGithubWebHook
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeGitlabWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeSVNWebHookTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.CodeTGitWebHookTriggerElement
+import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubCheckRunEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubCreateEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
+import com.tencent.devops.common.webhook.pojo.code.svn.SvnCommitEvent
+import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
@@ -56,23 +64,11 @@ import com.tencent.devops.process.engine.service.code.GitWebhookUnlockDispatcher
 import com.tencent.devops.process.engine.service.code.ScmWebhookMatcherBuilder
 import com.tencent.devops.process.engine.service.code.ScmWebhookParamsFactory
 import com.tencent.devops.process.engine.utils.RepositoryUtils
-import com.tencent.devops.process.pojo.code.ScmWebhookMatcher
 import com.tencent.devops.process.pojo.code.WebhookCommit
-import com.tencent.devops.process.pojo.code.git.GitEvent
-import com.tencent.devops.process.pojo.code.git.GitMergeRequestEvent
-import com.tencent.devops.process.pojo.code.git.GitPushEvent
-import com.tencent.devops.process.pojo.code.github.GithubCheckRunEvent
-import com.tencent.devops.process.pojo.code.github.GithubCreateEvent
-import com.tencent.devops.process.pojo.code.github.GithubEvent
-import com.tencent.devops.process.pojo.code.github.GithubPullRequestEvent
-import com.tencent.devops.process.pojo.code.github.GithubPushEvent
-import com.tencent.devops.process.pojo.code.svn.SvnCommitEvent
-import com.tencent.devops.process.service.perm.PermFixService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.repository.api.ServiceRepositoryResource
-import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -104,7 +100,7 @@ class PipelineBuildWebhookService @Autowired constructor(
             return false
         }
 
-        val svnWebHookMatcher = scmWebhookMatcherBuilder.createSvnWebHookMatcher(event, pipelineWebhookService)
+        val svnWebHookMatcher = scmWebhookMatcherBuilder.createSvnWebHookMatcher(event)
 
         return startProcessByWebhook(CodeSVNWebHookTriggerElement.classType, svnWebHookMatcher)
     }
@@ -119,29 +115,10 @@ class PipelineBuildWebhookService @Autowired constructor(
             return false
         }
 
-        when (event) {
-            is GitPushEvent -> {
-                if (event.total_commits_count <= 0) {
-                    logger.info("Git web hook no commit(${event.total_commits_count})")
-                    return true
-                }
-                if (GitUtils.isPrePushBranch(event.ref)) {
-                    logger.info("Git web hook is pre-push event|branchName=${event.ref}")
-                    return true
-                }
-            }
-            is GitMergeRequestEvent -> {
-                if (event.object_attributes.action == "close" ||
-                    (event.object_attributes.action == "update" &&
-                        event.object_attributes.extension_action != "push-update")
-                ) {
-                    logger.info("Git web hook is ${event.object_attributes.action} merge request")
-                    return true
-                }
-            }
-        }
-
         val gitWebHookMatcher = scmWebhookMatcherBuilder.createGitWebHookMatcher(event)
+        if (!gitWebHookMatcher.preMatch().isMatch) {
+            return true
+        }
 
         return startProcessByWebhook(codeRepositoryType, gitWebHookMatcher)
     }
@@ -174,47 +151,33 @@ class PipelineBuildWebhookService @Autowired constructor(
                 return true
             }
         }
-
-        when (event) {
-            is GithubPushEvent -> {
-                if (event.commits.isEmpty()) {
-                    logger.info("Github web hook no commit")
-                    return true
-                }
-            }
-            is GithubPullRequestEvent -> {
-                if (!(event.action == "opened" || event.action == "reopened" || event.action == "synchronize")) {
-                    logger.info("Github pull request no open or update")
-                    return true
-                }
-            }
-            is GithubCheckRunEvent -> {
-                if (event.action != "rerequested") {
-                    logger.info("Unsupported check run action:${event.action}")
-                    return true
-                }
-                if (event.checkRun.externalId == null) {
-                    logger.info("github check run externalId is empty")
-                    return true
-                }
-                val buildInfo = event.checkRun.externalId!!.split("_")
-                if (buildInfo.size < 4) {
-                    logger.info("the buildInfo of github check run is error")
-                    return true
-                }
-                client.get(ServiceBuildResource::class).retry(
-                    userId = buildInfo[0],
-                    projectId = buildInfo[1],
-                    pipelineId = buildInfo[2],
-                    buildId = buildInfo[3],
-                    channelCode = ChannelCode.BS
-                )
+        val githubWebHookMatcher = scmWebhookMatcherBuilder.createGithubWebHookMatcher(event)
+        if (!githubWebHookMatcher.preMatch().isMatch) {
+            return true
+        }
+        if (event is GithubCheckRunEvent) {
+            if (event.action != "rerequested") {
+                logger.info("Unsupported check run action:${event.action}")
                 return true
             }
+            if (event.checkRun.externalId == null) {
+                logger.info("github check run externalId is empty")
+                return true
+            }
+            val buildInfo = event.checkRun.externalId!!.split("_")
+            if (buildInfo.size < 4) {
+                logger.info("the buildInfo of github check run is error")
+                return true
+            }
+            client.get(ServiceBuildResource::class).retry(
+                userId = buildInfo[0],
+                projectId = buildInfo[1],
+                pipelineId = buildInfo[2],
+                buildId = buildInfo[3],
+                channelCode = ChannelCode.BS
+            )
+            return true
         }
-
-        val githubWebHookMatcher = scmWebhookMatcherBuilder.createGithubWebHookMatcher(event)
-
         return startProcessByWebhook(CodeGithubWebHookTriggerElement.classType, githubWebHookMatcher)
     }
 
