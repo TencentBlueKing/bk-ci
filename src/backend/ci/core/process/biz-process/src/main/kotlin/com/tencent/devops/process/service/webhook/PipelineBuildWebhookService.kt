@@ -65,6 +65,7 @@ import com.tencent.devops.process.engine.service.code.ScmWebhookMatcherBuilder
 import com.tencent.devops.process.engine.service.code.ScmWebhookParamsFactory
 import com.tencent.devops.process.engine.utils.RepositoryUtils
 import com.tencent.devops.process.pojo.code.WebhookCommit
+import com.tencent.devops.process.service.perm.PermFixService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
 import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
