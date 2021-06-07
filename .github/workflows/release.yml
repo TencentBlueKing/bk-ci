@@ -90,13 +90,13 @@ jobs:
           mkdir -p bkci/agent-package/upgrade
           mkdir -p bkci/agent-package/jar
 
-      - name: Create artifact - Step2: get Agent
+      - name: Create artifact - Step2:get Agent
         uses: actions/download-artifact@v1
         with:
           name: agent
           path: src/agent/bin/
 
-      - name: Create artifact - Step3: get Frontend
+      - name: Create artifact - Step3:get Frontend
         uses: actions/download-artifact@v1
         with:
           name: frontend
@@ -120,7 +120,6 @@ jobs:
           draft: true
           prerelease: true
 
-      - run: tar czvf bkci-slim.tar.gz ci
       - name: Upload Release Asset
         uses: actions/upload-release-asset@v1
         env:
