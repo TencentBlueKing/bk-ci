@@ -57,7 +57,7 @@ class LogStatusService @Autowired constructor(
             subTags = subTag,
             jobId = jobId,
             executeCount = executeCount,
-            logStorageMode = logStorageMode,
+            logStorageMode = logStorageMode ?: LogStorageMode.UPLOAD,
             finish = finish
         )
     }

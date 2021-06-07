@@ -46,7 +46,7 @@ class LogStatusDao {
         subTags: String?,
         jobId: String?,
         executeCount: Int?,
-        logStorageMode: LogStorageMode?,
+        logStorageMode: LogStorageMode,
         finish: Boolean
     ) {
         with(TLogStatus.T_LOG_STATUS) {
@@ -66,10 +66,10 @@ class LogStatusDao {
                 jobId,
                 executeCount ?: 1,
                 finish,
-                logStorageMode?.name ?: LogStorageMode.UPLOAD.name
+                logStorageMode.name
             ).onDuplicateKeyUpdate()
                 .set(FINISHED, finish)
-                .set(MODE, logStorageMode?.name ?: LogStorageMode.UPLOAD.name)
+                .set(MODE, logStorageMode.name)
                 .execute()
         }
     }
