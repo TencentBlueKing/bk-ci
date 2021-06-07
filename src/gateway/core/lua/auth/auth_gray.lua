@@ -38,6 +38,8 @@ else
     ngx.var.static_dir = config.static_dir
     ngx.var.static_dir_codecc = config.static_dir_codecc
     ngx.header["X-DEVOPS-GRAY"] = "false"
-    ngx.header["X-DEVOPS-GRAY-DIR"] = "prod"
 end
+
+ngx.header["X-DEVOPS-GRAY-DIR"] = tagUtil:get_sub_path(tag)
+
 ngx.exit(200)

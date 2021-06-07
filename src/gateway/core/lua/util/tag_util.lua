@@ -94,4 +94,28 @@ function _M:get_tag(ns_config)
     return tag
 end
 
+-- 获取tag对应的路径
+function _M:get_sub_path(tag)
+    -- 从缓存获取
+    local sub_path_cache = ngx.shared.tag_sub_path_store
+    local sub_path = sub_path_cache:get(tag)
+    if sub_path == nil then
+        -- 从redis获取
+        local red, err = redisUtil:new()
+        if not red then
+            ngx.log(ngx.ERR, "tag failed to new redis ", err)
+            return tag
+        end
+        sub_path = red:get("gw:sub:path:" .. tag)
+        if not sub_path or sub_path == ngx.null then
+            sub_path = "prod"
+        end
+        sub_path_cache:set(tag, sub_path, 30)
+        red:set_keepalive(config.redis.max_idle_time, config.redis.pool_size)
+        return sub_path
+    else
+        return sub_path
+    end
+end
+
 return _M

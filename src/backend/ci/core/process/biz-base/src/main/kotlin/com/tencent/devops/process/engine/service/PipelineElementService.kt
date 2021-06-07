@@ -50,6 +50,7 @@ import com.tencent.devops.store.pojo.common.ATOM_POST_NORMAL_PROJECT_FLAG_KEY_PR
 import com.tencent.devops.store.pojo.common.ATOM_POST_VERSION_TEST_FLAG_KEY_PREFIX
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 /**
@@ -66,6 +67,9 @@ class PipelineElementService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineElementService::class.java)
     }
+
+    @Value("\${pipeline.atom.postPrompt:POST：}")
+    private val postPrompt: String = "POST："
 
     fun handlePostElements(
         projectId: String,
@@ -218,9 +222,10 @@ class PipelineElementService @Autowired constructor(
             elementPostInfo = elementPostInfo
         )
         // 生成post操作的element
+        val postElementName = "$postPrompt$elementName"
         if (originAtomElement is MarketBuildAtomElement) {
             val marketBuildAtomElement = MarketBuildAtomElement(
-                name = elementName,
+                name = postElementName,
                 id = modelTaskIdGenerator.getNextId(),
                 status = elementStatus,
                 atomCode = originAtomElement.getAtomCode(),
@@ -231,7 +236,7 @@ class PipelineElementService @Autowired constructor(
             finalElementList.add(marketBuildAtomElement)
         } else if (originAtomElement is MarketBuildLessAtomElement) {
             val marketBuildLessAtomElement = MarketBuildLessAtomElement(
-                name = elementName,
+                name = postElementName,
                 id = modelTaskIdGenerator.getNextId(),
                 status = elementStatus,
                 atomCode = originAtomElement.getAtomCode(),

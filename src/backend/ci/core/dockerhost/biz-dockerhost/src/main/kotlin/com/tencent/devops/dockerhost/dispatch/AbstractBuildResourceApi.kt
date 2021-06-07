@@ -50,6 +50,7 @@ abstract class AbstractBuildResourceApi constructor(
     companion object {
         const val GRAY_PROJECT = "grayproject"
         const val AUTO_PROJECT = "autoproject"
+        const val GITCI_PROJECT = "gitciproject"
         const val CODECC_BUILD = "codecc_build"
 
         private val gateway: String by lazy {
@@ -160,6 +161,10 @@ abstract class AbstractBuildResourceApi constructor(
             CODECC_BUILD -> {
                 logger.info("Now is auto environment, request with the x-devops-project-id header.")
                 buildArgs.plus(headers).plus(mapOf(AUTH_HEADER_DEVOPS_PROJECT_ID to AUTO_PROJECT))
+            }
+            EnvEnum.GITCI_PROD_ENV.value -> {
+                logger.info("Now is gitci environment, request with the x-devops-project-id header.")
+                buildArgs.plus(headers).plus(mapOf(AUTH_HEADER_DEVOPS_PROJECT_ID to GITCI_PROJECT))
             }
             else -> {
                 buildArgs.plus(headers)
