@@ -63,10 +63,16 @@
                     v-if="needAgentType"
                     error-display-type="normal"
                 >
-                    <bk-select v-model="form.agentTypeScope" searchable multiple show-select-all @toggle="handlerFetchAgentTypes">
+                    <bk-select
+                        v-model="form.agentTypeScope"
+                        searchable
+                        multiple
+                        show-select-all
+                        :loading="isLoadingAgent"
+                        @toggle="handlerFetchAgentTypes">
                         <bk-option v-for="(option, index) in agentTypes"
                             :key="index"
-                            :id="option.id"
+                            :id="option.code"
                             :name="option.name"
                             :placeholder="$t('store.请选择适用机器')"
                         >
@@ -271,6 +277,7 @@
                 imageVersionList: [],
                 isLoading: false,
                 isLoadingTag: false,
+                isLoadingAgent: false,
                 needAgentType: false,
                 originVersion: '',
                 requireRule: {
@@ -329,13 +336,27 @@
                 'requestImageList',
                 'requestImageTagList',
                 'requestTicketList',
-                'requestReleaseImage'
+                'requestReleaseImage',
+                'fetchAgentTypes'
             ]),
 
-            async handlerFetchAgentTypes (v) {
+            handlerFetchAgentTypes (v) {
                 if (v) {
-                    const res = await this.$store.dispatch('store/fetchAgentTypes')
-                    console.log(res)
+                    let message, theme
+                    this.isLoadingAgent = true
+                    this.fetchAgentTypes().then((res) => {
+                        this.agentTypes = res
+                    }).catch((err) => {
+                        message = err.message ? err.message : err
+                        theme = 'error'
+
+                        this.$bkMessage({
+                            message,
+                            theme
+                        })
+                    }).finally(() => {
+                        this.isLoadingAgent = false
+                    })
                 }
             },
 
