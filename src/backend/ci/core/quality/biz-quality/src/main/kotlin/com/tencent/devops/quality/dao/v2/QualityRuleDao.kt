@@ -279,7 +279,7 @@ class QualityRuleDao {
                 .from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(NAME.like("%$name%"))
-                .fetchOne(0, kotlin.Long::class.java)
+                .fetchOne(0, kotlin.Long::class.java)!!
         }
     }
 }
