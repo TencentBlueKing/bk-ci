@@ -403,8 +403,8 @@ class YamlTemplate(
                 }
             } else {
                 // 不是模板文件则直接实例化
-                if (value is String) {
-                    variableMap[key] = Variable(value, false)
+                if (value !is Map<*, *>) {
+                    variableMap[key] = Variable(value.toString(), false)
                 } else {
                     variableMap[key] = YamlObjects.getVariable(transValue(fromPath, TemplateType.VARIABLE.text, value))
                 }
