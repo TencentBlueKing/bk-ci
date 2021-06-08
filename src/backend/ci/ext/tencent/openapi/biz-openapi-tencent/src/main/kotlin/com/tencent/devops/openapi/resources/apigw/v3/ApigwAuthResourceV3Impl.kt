@@ -44,7 +44,7 @@ class ApigwAuthResourceV3Impl @Autowired constructor(
                 )
             )
         }
-        
+
         client.get(ServiceGroupResource::class).batchCreateGroup(
             userId,
             projectCode,
@@ -52,7 +52,7 @@ class ApigwAuthResourceV3Impl @Autowired constructor(
         )
         return Result(true)
     }
-    
+
     companion object {
         val logger = LoggerFactory.getLogger(ApigwAuthResourceV3Impl::class.java)
     }

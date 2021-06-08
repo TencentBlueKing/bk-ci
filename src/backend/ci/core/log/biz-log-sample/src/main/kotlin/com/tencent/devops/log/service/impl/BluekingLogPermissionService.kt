@@ -38,14 +38,19 @@ class BluekingLogPermissionService @Autowired constructor(
     private val authPermissionApi: AuthPermissionApi,
     private val pipelineAuthServiceCode: PipelineAuthServiceCode
 ) : LogPermissionService {
-    override fun verifyUserLogPermission(projectCode: String, pipelineId: String, userId: String): Boolean {
+    override fun verifyUserLogPermission(
+        projectCode: String,
+        pipelineId: String,
+        userId: String,
+        permission: AuthPermission?
+    ): Boolean {
         if (authPermissionApi.validateUserResourcePermission(
                 user = userId,
                 serviceCode = pipelineAuthServiceCode,
                 resourceType = AuthResourceType.PIPELINE_DEFAULT,
                 projectCode = projectCode,
                 resourceCode = pipelineId,
-                permission = AuthPermission.VIEW
+                permission = permission ?: AuthPermission.VIEW
             )
         ) {
             return true

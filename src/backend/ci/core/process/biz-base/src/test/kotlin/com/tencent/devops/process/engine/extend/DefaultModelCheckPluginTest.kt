@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.engine.extend
 
+import com.nhaarman.mockito_kotlin.any
 import com.nhaarman.mockito_kotlin.mock
 import com.nhaarman.mockito_kotlin.whenever
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
@@ -36,11 +37,18 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.atom.BeforeDeleteParam
 import com.tencent.devops.process.TestBase
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.pojo.config.JobCommonSettingConfig
+import com.tencent.devops.process.pojo.config.PipelineCommonSettingConfig
+import com.tencent.devops.process.pojo.config.StageCommonSettingConfig
+import com.tencent.devops.process.pojo.config.TaskCommonSettingConfig
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.store.api.atom.ServiceAtomResource
+import com.tencent.devops.store.api.atom.ServiceMarketAtomEnvResource
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
+import com.tencent.devops.store.pojo.atom.AtomRunInfo
 import com.tencent.devops.store.pojo.atom.AtomVersion
 import com.tencent.devops.store.pojo.atom.InstalledAtom
+import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.StoreUserCommentInfo
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import org.junit.Assert
@@ -50,10 +58,20 @@ import org.junit.Test
 class DefaultModelCheckPluginTest : TestBase() {
 
     private val client: Client = mock()
-
-    private val checkPlugin = DefaultModelCheckPlugin(client)
+    private val pipelineCommonSettingConfig: PipelineCommonSettingConfig = mock()
+    private val stageCommonSettingConfig: StageCommonSettingConfig = mock()
+    private val jobCommonSettingConfig: JobCommonSettingConfig = mock()
+    private val taskCommonSettingConfig: TaskCommonSettingConfig = mock()
+    private val checkPlugin = DefaultModelCheckPlugin(
+        client = client,
+        pipelineCommonSettingConfig = pipelineCommonSettingConfig,
+        stageCommonSettingConfig = stageCommonSettingConfig,
+        jobCommonSettingConfig = jobCommonSettingConfig,
+        taskCommonSettingConfig = taskCommonSettingConfig
+    )
     private val serviceMarketAtomResource: ServiceMarketAtomResource = mock()
     private val serviceAtomResource: ServiceAtomResource = mock()
+    private val serviceMarketAtomEnvResource: ServiceMarketAtomEnvResource = mock()
 
     private fun genAtomVersion() = AtomVersion(atomId = "1",
         atomCode = "atomCode",
@@ -113,6 +131,40 @@ class DefaultModelCheckPluginTest : TestBase() {
         ).thenReturn(
             Result(genInstallAtomInfo())
         )
+        whenever(client.get(ServiceMarketAtomEnvResource::class)).thenReturn(serviceMarketAtomEnvResource)
+        whenever(
+            serviceMarketAtomEnvResource.batchGetAtomRunInfos(
+                projectCode = any(),
+                atomVersions = any()
+            )
+        ).thenReturn(
+            Result(
+                mapOf(
+                    "manualTrigger:1.*" to AtomRunInfo(
+                        atomCode = "manualTrigger",
+                        atomName = "手动触发",
+                        version = "1.*",
+                        initProjectCode = projectId,
+                        jobType = JobTypeEnum.AGENT,
+                        buildLessRunFlag = false,
+                        inputTypeInfos = null
+                    )
+                )
+            )
+        )
+        whenever(pipelineCommonSettingConfig.maxModelSize).thenReturn(16777215)
+        whenever(pipelineCommonSettingConfig.maxStageNum).thenReturn(20)
+        whenever(stageCommonSettingConfig.maxJobNum).thenReturn(20)
+        whenever(jobCommonSettingConfig.maxTaskNum).thenReturn(20)
+        whenever(taskCommonSettingConfig.maxInputNum).thenReturn(50)
+        whenever(taskCommonSettingConfig.maxOutputNum).thenReturn(50)
+        whenever(taskCommonSettingConfig.maxInputComponentSize).thenReturn(1024)
+        whenever(taskCommonSettingConfig.maxTextareaComponentSize).thenReturn(4096)
+        whenever(taskCommonSettingConfig.maxCodeEditorComponentSize).thenReturn(16384)
+        whenever(taskCommonSettingConfig.maxDefaultInputComponentSize).thenReturn(1024)
+        whenever(taskCommonSettingConfig.multipleInputComponents).thenReturn("dynamic-parameter")
+        whenever(taskCommonSettingConfig.maxMultipleInputComponentSize).thenReturn(4000)
+        whenever(taskCommonSettingConfig.maxDefaultOutputComponentSize).thenReturn(4000)
     }
 
     private fun genInstallAtomInfo(): List<InstalledAtom> {
@@ -186,6 +238,10 @@ class DefaultModelCheckPluginTest : TestBase() {
         }
 
         val fulModel = genModel(stageSize = 3, jobSize = 2, elementSize = 2)
-        checkPlugin.checkModelIntegrity(fulModel, projectId)
+        try {
+            checkPlugin.checkModelIntegrity(fulModel, projectId)
+        } catch (actual: ErrorCodeException) {
+            Assert.assertEquals(ProcessMessageCode.ERROR_ATOM_RUN_BUILD_ENV_INVALID, actual.errorCode)
+        }
     }
 }

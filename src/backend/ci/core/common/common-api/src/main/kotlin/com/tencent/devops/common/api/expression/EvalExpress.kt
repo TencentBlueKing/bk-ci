@@ -32,10 +32,7 @@ import org.slf4j.LoggerFactory
 @Suppress("ALL")
 object EvalExpress {
     private val logger = LoggerFactory.getLogger(EvalExpress::class.java)
-    private const val varPrefix = "variables."
-    private const val settingsPrefix = "settings."
-    private const val envsPrefix = "envs."
-    private const val contextPrefix = "ci." // 更多上下文前缀，暂不支持
+    private val contextPrefix = listOf("variables.", "settings", "envs.", "ci.", "job.", "jobs.", "steps.")
 
     fun eval(
         buildId: String,
@@ -84,9 +81,12 @@ object EvalExpress {
 
     private fun replaceVariable(str: String, variables: Map<String, Any>): String {
         // 暂时判断这些前缀，根据需要再加
-        if (str.startsWith(varPrefix) || str.startsWith(settingsPrefix) || str.startsWith(envsPrefix)) {
-            return variables[str] as String? ?: str
+        contextPrefix.forEach {
+            if (str.startsWith(it)) {
+                return variables[str] as String? ?: str
+            }
         }
+
         return str
     }
 }

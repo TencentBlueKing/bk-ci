@@ -134,7 +134,8 @@
             ...mapState('atom', [
                 'execDetail',
                 'atomMap',
-                'pipeline'
+                'pipeline',
+                'pipelineLimit'
             ]),
             ...mapGetters('atom', [
                 'isTriggerContainer',
@@ -324,6 +325,13 @@
             editAtom (atomIndex, isAdd) {
                 const { stageIndex, containerIndex, container, addAtom, deleteAtom } = this
                 const editAction = isAdd ? addAtom : deleteAtom
+                if (isAdd && this.container.elements.length >= this.pipelineLimit.atomLimit) {
+                    this.$showTips({
+                        theme: 'error',
+                        message: this.$t('storeMap.atomLimit') + this.pipelineLimit.atomLimit
+                    })
+                    return
+                }
                 editAction({
                     container,
                     atomIndex,
@@ -332,6 +340,13 @@
                 })
             },
             copyAtom (atomIndex) {
+                if (this.container.elements.length >= this.pipelineLimit.atomLimit) {
+                    this.$showTips({
+                        theme: 'error',
+                        message: this.$t('storeMap.atomLimit') + this.pipelineLimit.atomLimit
+                    })
+                    return
+                }
                 try {
                     const { id, ...element } = this.container.elements[atomIndex]
                     this.container.elements.splice(atomIndex + 1, 0, JSON.parse(JSON.stringify({

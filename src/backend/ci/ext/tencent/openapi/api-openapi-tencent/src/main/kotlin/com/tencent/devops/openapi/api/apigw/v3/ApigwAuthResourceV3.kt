@@ -41,5 +41,5 @@ interface ApigwAuthResourceV3 {
         @ApiParam("用户组信息", required = true)
         groupInfos: List<GroupDTO>
     ): Result<Boolean>
-    
+
 }

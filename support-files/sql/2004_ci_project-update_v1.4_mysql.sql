@@ -19,15 +19,6 @@ BEGIN
             ADD COLUMN `router_tag` VARCHAR(32);
     END IF;
 
-    IF NOT EXISTS(SELECT 1
-                    FROM information_schema.COLUMNS
-                    WHERE TABLE_SCHEMA = db
-                        AND TABLE_NAME = 'T_PROJECT'
-                        AND COLUMN_NAME = 'relation_id') THEN
-        ALTER TABLE T_PROJECT
-            ADD COLUMN `relation_id` VARCHAR(32);
-    END IF;
-
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

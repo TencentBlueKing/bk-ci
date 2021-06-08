@@ -40,7 +40,7 @@ import org.springframework.stereotype.Service
 @Service
 class GroupUserService @Autowired constructor(
     val dslContext: DSLContext,
-    val groupService: GroupService,
+    val authGroupService: AuthGroupService,
     val groupUserDao: AuthGroupUserDao
 ) {
     fun addUser2Group(userId: String, groupId: Int): Result<Boolean> {
@@ -54,7 +54,7 @@ class GroupUserService @Autowired constructor(
             logger.warn("addUser2Group user $userId already in this group $groupId")
             throw OperationException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.GROUP_USER_ALREADY_EXIST))
         }
-        val groupRecord = groupService.getGroupCode(groupId)
+        val groupRecord = authGroupService.getGroupCode(groupId)
 
         if (groupRecord == null) {
             logger.warn("addUser2Group group $groupId is not exist")

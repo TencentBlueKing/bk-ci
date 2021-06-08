@@ -25,9 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.archive.api.pojo
+package com.tencent.devops.dockerhost.common
 
-data class JFrogPropertyItem(
-    val name: String,
+enum class EnvEnum(
     val value: String
-)
+) {
+    DEV_ENV("dev"),
+    TEST_ENV("test"),
+    GRAY_ENV("gray"),
+    PROD_ENV("prod"),
+    AUTO_ENV("auto"),
+    GITCI_PROD_ENV("gitci-prod")
+}
