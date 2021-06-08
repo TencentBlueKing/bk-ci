@@ -156,7 +156,13 @@ class GitCIBuildFinishListener @Autowired constructor(
                     ?: throw OperationException("git ci buildEvent not exist")
 
                 // 检查yml版本，根据yml版本选择不同的实现
-                val isV2 = ScriptYmlUtils.isV2Version(event.normalizedYaml)
+                // TODO: 目前V1的yaml转换会因为!-< 报错，后续订最终方案
+                val isV2 = try {
+                    ScriptYmlUtils.isV2Version(event.normalizedYaml)
+                } catch (e: Exception) {
+                    logger.error("$buildFinishEvent.buildId ，${e.message}")
+                    false
+                }
 
                 if (isV2) {
                     if (v2GitSetting == null) {
@@ -387,7 +393,7 @@ class GitCIBuildFinishListener @Autowired constructor(
         build: BuildHistory
     ) {
 
-        val projectName = getProjectName(conf)
+        val projectName = getProjectName(conf.gitHttpUrl, conf.name)
         val branchName = GitCommonUtils.checkAndGetForkBranchName(
             gitProjectId = gitProjectId,
             sourceGitProjectId = sourceProjectId,
@@ -580,25 +586,11 @@ class GitCIBuildFinishListener @Autowired constructor(
     }
 
     // 获取 name/projectName格式的项目名称
-    private fun getProjectName(conf: GitRepositoryConf): String {
+    private fun getProjectName(gitHttpUrl: String, name: String): String {
         return try {
-            val names = conf.homepage.split("/")
-            val userName = names[names.lastIndex - 1]
-            val projectName = names.last()
-            "$userName/$projectName"
+            GitCommonUtils.getRepoName(gitHttpUrl, name)
         } catch (e: Exception) {
-            conf.name
-        }
-    }
-
-    private fun getProjectName(conf: GitCIBasicSetting): String {
-        return try {
-            val names = conf.homepage.split("/")
-            val userName = names[names.lastIndex - 1]
-            val projectName = names.last()
-            "$userName/$projectName"
-        } catch (e: Exception) {
-            conf.name
+            name
         }
     }
 
@@ -619,7 +611,7 @@ class GitCIBuildFinishListener @Autowired constructor(
         title: String?,
         content: String?
     ) {
-        val projectName = getProjectName(conf)
+        val projectName = getProjectName(conf.gitHttpUrl, conf.name)
         val branchName = GitCommonUtils.checkAndGetForkBranchName(
             gitProjectId = gitProjectId,
             sourceGitProjectId = sourceProjectId,

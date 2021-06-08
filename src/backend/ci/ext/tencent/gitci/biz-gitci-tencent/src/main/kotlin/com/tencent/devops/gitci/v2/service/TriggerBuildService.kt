@@ -73,6 +73,7 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
+import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
@@ -285,17 +286,18 @@ class TriggerBuildService @Autowired constructor(
         if (yaml.triggerOn?.schedules != null &&
             yaml.triggerOn?.schedules!!.cron != null
         ) {
-            triggerElementList.add(
-                TimerTriggerElement(
-                    id = "T-1-1-2",
-                    name = "定时触发",
-                    advanceExpression = listOf(
-                        yaml.triggerOn!!.schedules!!.cron!!
-                    )
+            val timerTrigger = TimerTriggerElement(
+                id = "T-1-1-2",
+                name = "定时触发",
+                advanceExpression = listOf(
+                    yaml.triggerOn!!.schedules!!.cron!!
                 )
             )
+            timerTrigger.additionalOptions = ElementAdditionalOptions(
+                runCondition = RunCondition.PRE_TASK_SUCCESS
+            )
+            triggerElementList.add(timerTrigger)
         }
-
         val params = createPipelineParams(yaml, gitBasicSetting, event)
         val triggerContainer = TriggerContainer(
             id = "0",
@@ -348,18 +350,18 @@ class TriggerBuildService @Autowired constructor(
                 if (!checkPipelineLabel(it, pipelineGroups)) {
                     client.get(UserPipelineGroupResource::class).addGroup(
                         event.userId, PipelineGroupCreate(
-                            projectId = gitBasicSetting.projectCode!!,
-                            name = it
-                        )
+                        projectId = gitBasicSetting.projectCode!!,
+                        name = it
+                    )
                     )
 
                     val pipelineGroup = getPipelineGroup(it, event.userId, gitBasicSetting.projectCode!!)
                     if (pipelineGroup != null) {
                         client.get(UserPipelineGroupResource::class).addLabel(
                             event.userId, PipelineLabelCreate(
-                                groupId = pipelineGroup.id,
-                                name = it
-                            )
+                            groupId = pipelineGroup.id,
+                            name = it
+                        )
                         )
                     }
                 }
@@ -612,15 +614,29 @@ class TriggerBuildService @Autowired constructor(
 
             val element: Element = when {
                 step.run != null -> {
-                    LinuxScriptElement(
+                    val linux = LinuxScriptElement(
                         name = step.name ?: "run",
                         id = step.id,
-                        // todo: 如何判断类型
                         scriptType = BuildScriptType.SHELL,
                         script = step.run!!,
                         continueNoneZero = false,
                         additionalOptions = additionalOptions
                     )
+                    if (job.runsOn.agentSelector.isNullOrEmpty()) {
+                        linux
+                    } else {
+                        when (job.runsOn.agentSelector!!.first()) {
+                            "linux" -> linux
+                            "macos" -> linux
+                            "windows" -> WindowsScriptElement(
+                                name = step.name ?: "run",
+                                id = step.id,
+                                scriptType = BuildScriptType.BAT,
+                                script = step.run!!
+                            )
+                            else -> linux
+                        }
+                    }
                 }
                 step.checkout != null -> {
                     // checkout插件装配

@@ -99,17 +99,19 @@ install_ci__ms_common (){
   # 检查安装java
   install_java || return $?
   # 增量复制.
+  rsync -ra "$BK_CI_SRC_DIR/$MS_NAME/" "$BK_CI_HOME/$MS_NAME"
   for f in agent-package jars-public jars-private scripts VERSION; do
     [ -e "$BK_CI_SRC_DIR/$f" ] || continue
     echo "install $BK_CI_SRC_DIR/$f to $BK_CI_HOME."
-    rsync -ra "$BK_CI_SRC_DIR/" "$BK_CI_HOME"
+    rsync -ra "$BK_CI_SRC_DIR/${f%/}" "$BK_CI_HOME"
   done
-  # 保持微服务目录的强一致性.
-  rsync -ra --del "$BK_CI_SRC_DIR/$MS_NAME/" "$BK_CI_HOME/$MS_NAME"
+  # 保持微服务部分子目录的强一致性.
+  rsync -ra --del "$BK_CI_SRC_DIR/$MS_NAME/lib" "$BK_CI_SRC_DIR/$MS_NAME/com" "$BK_CI_HOME/$MS_NAME"
 }
 
 install_ci_dockerhost (){
   local proj=$1
+  os_pkg_install sysstat || return $?
   install_docker || return $?
   install_ci__ms_common "$proj" || return $?
   # 安装libsigar.
@@ -134,6 +136,7 @@ install_ci_agentless (){
 # 复制gateway及frontend目录
 install_ci_gateway (){
   local proj=$1
+  install_openresty || return $?
   rsync -ra --del "$BK_CI_SRC_DIR/gateway" "$BK_CI_HOME"
   rsync -ra --del "$BK_CI_SRC_DIR/frontend" "$BK_CI_HOME"  # frontend不必verbose.
   rsync -ra "$BK_CI_SRC_DIR/agent-package" "$BK_CI_HOME"  # #3707 网关提供jars下载.

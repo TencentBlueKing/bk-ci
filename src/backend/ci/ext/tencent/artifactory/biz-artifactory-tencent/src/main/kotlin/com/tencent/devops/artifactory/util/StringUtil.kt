@@ -45,7 +45,7 @@ object StringUtil {
     fun chineseUrlEncode(url: String): String {
         var resultURL = ""
         url.toList().forEach {
-            resultURL += if (it.toString().matches(Regex("[\u4e00-\u9fa5]"))) {
+            resultURL += if (it.toString().matches(Regex("[\u4e00-\u9fa5]")) || it == '#') {
                 URLEncoder.encode(it.toString(), "UTF-8")
             } else {
                 it

@@ -28,6 +28,7 @@
 package com.tencent.devops.misc.service.auto.ttarget
 
 import com.tencent.devops.misc.dao.auto.ttarget.TargetPipelineDao
+import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
@@ -61,6 +62,12 @@ class TargetPipelineService @Autowired constructor(
     fun addSummaryRecord(summaryRecord: TPipelineBuildSummaryRecord?) {
         if (summaryRecord != null) {
             targetPipelineDao.savePipelineSummary(dslContext, summaryRecord)
+        }
+    }
+
+    fun addDetailRecord(detailRecord: TPipelineBuildDetailRecord?) {
+        if (detailRecord != null) {
+            targetPipelineDao.savePipelineBuildDetail(dslContext, detailRecord)
         }
     }
 

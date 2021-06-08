@@ -27,6 +27,8 @@
 
 package com.tencent.devops.gitci.v2.listener
 
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.gitci.pojo.GitCITriggerLock
 import com.tencent.devops.gitci.pojo.enums.TriggerReason
 import com.tencent.devops.gitci.v2.service.GitCIEventSaveService
 import com.tencent.devops.gitci.v2.service.TriggerBuildService
@@ -37,11 +39,18 @@ import org.springframework.stereotype.Service
 @Service
 class V2GitCIRequestTriggerListener @Autowired constructor(
     private val triggerBuildService: TriggerBuildService,
-    private val gitCIEventSaveService: GitCIEventSaveService
+    private val gitCIEventSaveService: GitCIEventSaveService,
+    private val redisOperation: RedisOperation
 ) {
 
     fun listenGitCIRequestTriggerEvent(v2GitCIRequestTriggerEvent: V2GitCIRequestTriggerEvent) {
+        val triggerLock = GitCITriggerLock(
+            redisOperation = redisOperation,
+            gitProjectId = v2GitCIRequestTriggerEvent.event.gitProjectId,
+            pipelineId = v2GitCIRequestTriggerEvent.pipeline.pipelineId
+        )
         try {
+            triggerLock.lock()
             // 如果事件未传gitBuildId说明是不做触发只做流水线保存
             if (v2GitCIRequestTriggerEvent.gitBuildId != null) triggerBuildService.gitStartBuild(
                 pipeline = v2GitCIRequestTriggerEvent.pipeline,
@@ -71,6 +80,8 @@ class V2GitCIRequestTriggerListener @Autowired constructor(
                     gitProjectId = event.gitProjectId
                 )
             }
+        } finally {
+            triggerLock.unlock()
         }
     }
 
