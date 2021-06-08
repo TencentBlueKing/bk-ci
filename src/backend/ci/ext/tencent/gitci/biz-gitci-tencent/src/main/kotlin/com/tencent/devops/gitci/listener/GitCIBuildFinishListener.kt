@@ -663,52 +663,49 @@ class GitCIBuildFinishListener @Autowired constructor(
                 )
                 client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
             }
-            GitCINotifyType.RTX_CUSTOM -> {
+            GitCINotifyType.RTX_CUSTOM, GitCINotifyType.RTX_GROUP -> {
                 val accessToken =
                     RtxCustomApi.getAccessToken(urlPrefix = rtxUrl, corpSecret = corpSecret, corpId = corpId)
-                val newContent = (content ?: getRtxCustomContentV2(
-                    isSuccess = state == "success",
-                    projectName = projectName,
-                    branchName = branchName,
-                    pipelineName = pipelineName,
-                    pipelineId = pipeline.pipelineId,
-                    build = build,
-                    isMr = isMr,
-                    requestId = requestId,
-                    buildTime = build.totalTime,
-                    openUser = build.userId
-                ))
-                sendRtxCustomNotify(
-                    accessToken = accessToken,
-                    content = newContent,
-                    messageType = MessageType.MARKDOWN,
-                    receiverType = ReceiverType.SINGLE,
-                    receivers = realReceivers
-                )
-            }
-            GitCINotifyType.RTX_GROUP -> {
-                val realGroups = replaceReceivers(chatIds, build.buildParameters)
-                val accessToken =
-                    RtxCustomApi.getAccessToken(urlPrefix = rtxUrl, corpSecret = corpSecret, corpId = corpId)
-                val newContent = (content ?: getRtxCustomContentV2(
-                    isSuccess = state == "success",
-                    projectName = projectName,
-                    branchName = branchName,
-                    pipelineName = pipelineName,
-                    pipelineId = pipeline.pipelineId,
-                    build = build,
-                    isMr = isMr,
-                    requestId = requestId,
-                    buildTime = build.totalTime,
-                    openUser = build.userId
-                ))
-                sendRtxCustomNotify(
-                    accessToken = accessToken,
-                    content = newContent,
-                    messageType = MessageType.MARKDOWN,
-                    receiverType = ReceiverType.GROUP,
-                    receivers = realGroups
-                )
+                val newContent = if (content.isNullOrBlank()) {
+                    getRtxCustomContentV2(
+                        isSuccess = state == "success",
+                        projectName = projectName,
+                        branchName = branchName,
+                        pipelineName = pipelineName,
+                        pipelineId = pipeline.pipelineId,
+                        build = build,
+                        isMr = isMr,
+                        requestId = requestId,
+                        buildTime = build.totalTime,
+                        openUser = build.userId
+                    )
+                } else {
+                    getRtxCustomContentV2(
+                        isSuccess = state == "success",
+                        projectName = projectName,
+                        pipelineId = pipeline.pipelineId,
+                        build = build,
+                        content = content
+                    )
+                }
+                if (notifyType == GitCINotifyType.RTX_GROUP) {
+                    val realGroups = replaceReceivers(chatIds, build.buildParameters)
+                    sendRtxCustomNotify(
+                        accessToken = accessToken,
+                        content = newContent,
+                        messageType = MessageType.MARKDOWN,
+                        receiverType = ReceiverType.GROUP,
+                        receivers = realGroups
+                    )
+                } else {
+                    sendRtxCustomNotify(
+                        accessToken = accessToken,
+                        content = newContent,
+                        messageType = MessageType.MARKDOWN,
+                        receiverType = ReceiverType.SINGLE,
+                        receivers = realReceivers
+                    )
+                }
             }
             else -> {
                 return
@@ -767,6 +764,28 @@ class GitCIBuildFinishListener @Autowired constructor(
             bodyParams = bodyParams,
             notifyType = mutableSetOf(NotifyType.EMAIL.name)
         )
+    }
+
+    // 为用户的内容增加链接
+    private fun getRtxCustomContentV2(
+        isSuccess: Boolean,
+        projectName: String,
+        pipelineId: String,
+        build: BuildHistory,
+        content: String
+    ): String {
+        val state = if (isSuccess) {
+            Triple("✔", "info", "success")
+        } else {
+            Triple("❌", "warning", "failed")
+        }
+        val detailUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(
+            homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
+            projectName = projectName,
+            pipelineId = pipelineId,
+            buildId = build.id
+        )
+        return " <font color=\"${state.second}\"> ${state.first} </font> $content \n [查看详情]($detailUrl)"
     }
 
     private fun getRtxCustomContentV2(
