@@ -45,6 +45,7 @@ import com.tencent.devops.common.ci.task.GitCiCodeRepoInput
 import com.tencent.devops.common.ci.task.GitCiCodeRepoTask
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudInput
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
+import com.tencent.devops.common.ci.v2.IfType
 import com.tencent.devops.common.ci.v2.Job
 import com.tencent.devops.common.ci.v2.JobRunsOnType
 import com.tencent.devops.common.ci.v2.ScriptBuildYaml
@@ -410,15 +411,15 @@ class TriggerBuildService @Autowired constructor(
         stage.jobs.forEachIndexed { jobIndex, job ->
             val elementList = makeElementList(job, gitBasicSetting, event.userId)
             if (job.runsOn.poolName == JobRunsOnType.AGENT_LESS.type) {
-                addNormalContainer(job, elementList, containerList, jobIndex)
+                addNormalContainer(job, elementList, containerList, jobIndex, finalStage)
             } else {
-                addVmBuildContainer(job, elementList, containerList, jobIndex)
+                addVmBuildContainer(job, elementList, containerList, jobIndex, finalStage)
             }
         }
 
         // 根据if设置stageController
         var stageControlOption = StageControlOption()
-        if (stage.ifField != null) {
+        if (!finalStage && !stage.ifField.isNullOrBlank()) {
             stageControlOption = StageControlOption(
                 runCondition = StageRunCondition.CUSTOM_CONDITION_MATCH,
                 customCondition = stage.ifField.toString()
@@ -440,7 +441,8 @@ class TriggerBuildService @Autowired constructor(
         job: Job,
         elementList: List<Element>,
         containerList: MutableList<Container>,
-        jobIndex: Int
+        jobIndex: Int,
+        finalStage: Boolean = false
     ) {
 
 /*        val listPreAgentResult =
@@ -485,7 +487,7 @@ class TriggerBuildService @Autowired constructor(
             thirdPartyWorkspace = null,
             dockerBuildVersion = null,
             tstackAgentId = null,
-            jobControlOption = getJobControlOption(job),
+            jobControlOption = getJobControlOption(job, finalStage),
             dispatchType = getDispatchType(job)
         )
         containerList.add(vmContainer)
@@ -546,7 +548,8 @@ class TriggerBuildService @Autowired constructor(
         job: Job,
         elementList: List<Element>,
         containerList: MutableList<Container>,
-        jobIndex: Int
+        jobIndex: Int,
+        finalStage: Boolean = false
     ) {
 
         containerList.add(
@@ -562,22 +565,40 @@ class TriggerBuildService @Autowired constructor(
                 enableSkip = false,
                 conditions = null,
                 canRetry = false,
-                jobControlOption = getJobControlOption(job),
+                jobControlOption = getJobControlOption(job, finalStage),
                 mutexGroup = null
             )
         )
     }
 
-    private fun getJobControlOption(job: Job): JobControlOption {
+    private fun getJobControlOption(
+        job: Job,
+        finalStage: Boolean = false
+    ): JobControlOption {
         return if (job.ifField != null) {
-            JobControlOption(
-                timeout = job.timeoutMinutes,
-                runCondition = JobRunCondition.CUSTOM_CONDITION_MATCH,
-                customCondition = job.ifField.toString(),
-                dependOnType = DependOnType.ID,
-                dependOnId = job.dependOn,
-                continueWhenFailed = job.continueOnError
-            )
+            if (finalStage) {
+                JobControlOption(
+                    timeout = job.timeoutMinutes,
+                    runCondition = when (job.ifField) {
+                        IfType.SUCCESS.name -> JobRunCondition.PREVIOUS_STAGE_SUCCESS
+                        IfType.FAILURE.name -> JobRunCondition.PREVIOUS_STAGE_FAILED
+                        IfType.CANCELLED.name -> JobRunCondition.PREVIOUS_STAGE_CANCEL
+                        else -> JobRunCondition.STAGE_RUNNING
+                    },
+                    dependOnType = DependOnType.ID,
+                    dependOnId = job.dependOn,
+                    continueWhenFailed = job.continueOnError
+                )
+            } else {
+                JobControlOption(
+                    timeout = job.timeoutMinutes,
+                    runCondition = JobRunCondition.CUSTOM_CONDITION_MATCH,
+                    customCondition = job.ifField.toString(),
+                    dependOnType = DependOnType.ID,
+                    dependOnId = job.dependOn,
+                    continueWhenFailed = job.continueOnError
+                )
+            }
         } else {
             JobControlOption(
                 timeout = job.timeoutMinutes,

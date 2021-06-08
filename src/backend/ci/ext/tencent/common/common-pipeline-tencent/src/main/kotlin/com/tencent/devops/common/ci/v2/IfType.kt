@@ -27,7 +27,7 @@
 
 package com.tencent.devops.common.ci.v2
 
-enum class NoticeIfType {
+enum class IfType {
     SUCCESS,
     FAILURE,
     CANCELLED,
